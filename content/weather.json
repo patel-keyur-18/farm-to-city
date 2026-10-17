@@ -1,0 +1,33 @@
+{
+  "weatherTypes": [
+    { "id": "sun",        "nameKey": "weather.sun",        "isSevere": false },
+    { "id": "cloudy",     "nameKey": "weather.cloudy",     "isSevere": false },
+    { "id": "rain",       "nameKey": "weather.rain",       "isSevere": false },
+    { "id": "heavy_rain", "nameKey": "weather.heavy_rain", "isSevere": true },
+    { "id": "heatwave",   "nameKey": "weather.heatwave",   "isSevere": true },
+    { "id": "frost",      "nameKey": "weather.frost",      "isSevere": true },
+    { "id": "storm",      "nameKey": "weather.storm",      "isSevere": true }
+  ],
+  "climates": [
+    {
+      "season": "spring",
+      "persistence": 0.50,
+      "weights": { "sun": 45, "cloudy": 30, "rain": 20, "heavy_rain": 3, "heatwave": 0, "frost": 2, "storm": 0 }
+    },
+    {
+      "season": "summer",
+      "persistence": 0.55,
+      "weights": { "sun": 50, "cloudy": 15, "rain": 5, "heavy_rain": 0, "heatwave": 25, "frost": 0, "storm": 5 }
+    },
+    {
+      "season": "monsoon",
+      "persistence": 0.60,
+      "weights": { "sun": 10, "cloudy": 25, "rain": 35, "heavy_rain": 20, "heatwave": 0, "frost": 0, "storm": 10 }
+    },
+    {
+      "season": "winter",
+      "persistence": 0.50,
+      "weights": { "sun": 45, "cloudy": 30, "rain": 5, "heavy_rain": 0, "heatwave": 0, "frost": 20, "storm": 0 }
+    }
+  ]
+}

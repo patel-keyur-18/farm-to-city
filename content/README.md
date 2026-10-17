@@ -9,3 +9,5 @@ Balancing data for the simulation, as JSON (ADR 0018, 0020). Every number the ga
 
 | File | Spec | Contents |
 | --- | --- | --- |
+| `clock.json` | 001 | `ClockDef`: season length, weather spell length, life clock, away cap and threshold, forecast |
+| `weather.json` | 001 | `WeatherTypeDef` list and one `ClimateDef` per season (weights, persistence) |

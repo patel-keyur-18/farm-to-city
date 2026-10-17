@@ -1,0 +1,9 @@
+{
+  "daysPerSeason": 4,
+  "weatherSpellHours": 6,
+  "lifeYearsPerSeason": 1.0,
+  "awayCapHours": 72,
+  "awayThresholdSeconds": 60,
+  "forecastDays": 3,
+  "forecastAccuracy": [1.0, 0.80, 0.65]
+}
