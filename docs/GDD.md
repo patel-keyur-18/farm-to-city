@@ -421,7 +421,15 @@ From the Village era the player also runs the town treasury. Public money pays f
 | Tourism promotion | Visitors, hotels, restaurants | Marketing spend; crowding |
 | Night market | Retail, nightlife | Noise; police cost |
 
-**Approval and elections.** Approval comes from happiness, jobs, tax levels and fulfilled petitions. From the Town era there is an election every 5 game years. Low approval limits how much tax citizens accept and slows migration into the town. Whether the player can lose office is an open decision, listed at the end of this doc.
+**Approval and elections.** Approval comes from happiness, jobs, tax levels and fulfilled petitions. From the Town era there is an election every 5 game years (80 real days). Low approval limits how much tax citizens accept and slows migration into the town. The player never loses office (ADR 0004). Instead, the election result sets the **council mood** for the next term:
+
+| Council mood | Effect for the term |
+| --- | --- |
+| Supportive (high approval) | Higher tax ceiling, more policy slots, eligible for regional grants |
+| Neutral | Baseline ceilings and slots |
+| Hostile (low approval) | Lower tax ceiling, fewer active policies, budget revisions need a council vote that can fail, unanswered petitions escalate into protests |
+
+The thresholds live in data. The mood lasts until the next election, so recovering means governing well for a term.
 
 **Public debt.** Bonds fund big infrastructure such as a power plant or a highway link. The town has a credit rating that sets its interest rate. Too much debt crowds out services, which is a direct lesson in leverage at public scale.
 
@@ -912,7 +920,7 @@ These choices need the owner's call before their feature specs can be written. T
 | Setting and culture | A fictional, culturally neutral river valley; or an Indian-inspired village and town | Art, names, crops, festivals | **Decided:** Indian-inspired, fictional valley ([ADR 0001](decisions/0001-setting-and-culture.md)) |
 | Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec | **Decided:** real-time clock; the world runs while closed, capped at 72 hours ([ADR 0002](decisions/0002-real-time-clock-model.md)) |
 | Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | **Decided:** ageless founder; heirs considered after launch ([ADR 0003](decisions/0003-ageless-founder.md)) |
-| Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | Open |
+| Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | **Decided:** never lose office; the result sets the council mood ([ADR 0004](decisions/0004-elections-council-mood.md)) |
 | Orientation | Landscape only; or landscape map with portrait menus | UI layout | Open |
 | Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | Open |
 | Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | Open |
