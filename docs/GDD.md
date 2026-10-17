@@ -711,7 +711,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 | Advisor inbox | Guidance | Warnings, tips, event choices |
 | Codex | Learn | Concept cards, scenario list |
 | Chronicle | Remember | Timeline, Almanacs, citizen stories |
-| Settings and saves | Control | Save slots, backup, difficulty, accessibility, language |
+| Settings and saves | Control | Save now, export and import town, new game, difficulty, accessibility, language |
 
 **Onboarding (ADR 0015).** A short first session, then a guided first week. The grandparent's letter and the advisors guide each lesson, never a pop-up wall.
 
@@ -755,7 +755,8 @@ The game needs no account and no server. All content ships in the build, and the
 **Save system**
 
 - **Autosave** every real hour, after every command batch, and whenever the app goes to the background.
-- **Slots:** 3 rotating autosaves plus 5 manual slots.
+- **One town at a time (ADR 0023).** Starting a new game replaces the current town after a confirmation, and the game offers to export it first.
+- **Save points are a safety guard, never an undo.** The game keeps the latest save plus rotating backups (the last 3 hourly saves and one per day for the last 3 days). A *Save now* button saves immediately. After a crash or a corrupt save, the game automatically loads the newest valid save point and says which one. Players can never load an older save point to rewind.
 - **Atomic writes:** write to a temporary file, verify its checksum, then rename. A crash can never corrupt the last good save.
 - **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
 - **Size target:** under 5 MB at City scale.
