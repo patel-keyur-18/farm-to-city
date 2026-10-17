@@ -1,6 +1,6 @@
 # 001. Time and weather
 
-- Status: In review
+- Status: Approved (2026-10-17)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Time and world simulation; Offline play and saves (time while closed, clock safety); Technical architecture (simulation core, determinism rules)
@@ -309,9 +309,11 @@ All tests are in `tests/Sim.Core.Tests`.
 
 ## 10. Open questions
 
-1. **HUD time display.** Should the HUD show the sim clock (14:05) or only the time of day as a sky icon? I recommend showing the clock: it matches the device's time, and it makes "your wheat is ready at 18:00" readable.
-2. **Daylight saving and travel.** Sim time follows UTC deltas, so after a daylight-saving change the town's clock is 1 hour off the phone's clock. I recommend accepting this for v1, and adding a gentle realignment (for example, shift by up to 1 h during the next away advance) only if testers notice.
-3. **Real-time crops in the first session.** The first session uses a 5-minute crop (spec 015 onboarding). Nothing in this spec blocks that. I'm flagging it only so we remember the clock has no "tutorial speed": every duration is real.
+All three were resolved at approval (2026-10-17), following the recommendations:
+
+1. **HUD time display:** the HUD shows the sim clock (for example 14:05). It matches the device's time, and makes ready times readable.
+2. **Daylight saving and travel:** accepted for v1. After a daylight-saving change the town's clock may be 1 hour off the phone's. A gentle realignment is added only if testers notice.
+3. **Real-time first session:** noted. The clock has no tutorial speed, so the first session (spec 015, onboarding) relies on a 5-minute crop.
 
 ## 11. Cut first
 
