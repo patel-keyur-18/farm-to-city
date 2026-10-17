@@ -1,6 +1,6 @@
 # 0017. Phase 1 scope and the implementation model
 
-- Status: Accepted
+- Status: Accepted. Phase 1 scope extended by ADR 0021 (fruit trees).
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0007 (zero budget, personal builds), ADR 0015 (onboarding)

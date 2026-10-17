@@ -92,12 +92,16 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
 
 **Seasons**
 
-| Season | Farming | Economy |
-| --- | --- | --- |
-| Spring | Sowing for most crops | Seed and labour prices rise |
-| Summer | Growth; water demand peaks | Heat lowers outdoor productivity |
-| Monsoon | Main harvest | Crop prices fall from oversupply |
-| Winter | Few crops; orchards and dairy carry on | Stored goods sell at a premium |
+Sowing windows follow India's cropping seasons, so every season has something to plant (ADR 0021):
+
+| Season | Cropping season | Crops sowable (Phase 1 crops first) | Economy |
+| --- | --- | --- | --- |
+| Spring | Late rabi and early zaid | Radish, potato | Seed and labour prices rise |
+| Summer | Zaid | Radish, lentils (moong-type pulses), early rice | Heat lowers outdoor productivity; water demand peaks; mangoes fruit |
+| Monsoon | Kharif | Radish, rice; later maize, cotton, sugarcane | Abundant rain; harvest gluts push crop prices down |
+| Winter | Rabi | Radish, wheat, potato, lentils; later onion | Stored goods sell at a premium |
+
+Radish can be sown all year. A sowing window only limits *sowing*: a crop keeps growing into the next season. Outside its window, a crop can't be sown, and the *Why?* breakdown explains which season it belongs to.
 
 **Weather.** Weather changes in 6-hour spells, each drawn from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65% (spec 001). Big events like droughts are signalled days ahead.
 
@@ -116,7 +120,7 @@ Farming is the first business the player runs, so it introduces every core idea:
 
 The map grows as the player buys adjacent parcels. Price depends on soil and location.
 
-**Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane, cotton, plus one multi-year orchard (mango or apple). Each crop defines:
+**Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:
 
 - a sowing window (the seasons it can be sown in)
 - a growth duration in real time
@@ -138,6 +142,23 @@ Yield = Base × Soil × Water × Care × Seed × Weather × Tools × Fertiliser 
 - **The cap** is in data, and the *Why?* breakdown shows when it applied (ADR 0014).
 
 Care is the labour hours delivered divided by the hours needed, capped at 1.1. Labour comes from the founder (ADR 0010) and from hired workers. The Weather factor comes from the weather spells during growth.
+
+**Fruit trees (ADR 0021).** A tree is the player's first long-term asset: pay now, wait, then harvest season after season.
+
+| Tree | First fruit (indicative) | Fruits in | Lifespan |
+| --- | --- | --- | --- |
+| Banana | About 1 week | All seasons | Short, replanted after a set number of harvests |
+| Papaya | About 1 week | All seasons | Short |
+| Guava | About 2 weeks | Monsoon, Winter | Whole game |
+| Mango | About 3–4 weeks | Summer | Whole game |
+| Apple | About 3–4 weeks | Monsoon | Whole game; hill parcels only, from the phase that adds hill terrain |
+
+- **Where trees go:**
+  - yard slots around the house (about 4, with more for bigger houses)
+  - field-edge slots (about 2 per acre), which don't take field area but slightly shade the next crop
+  - whole-acre orchards come in Phase 2
+- **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
+- **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 
 **Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
 
@@ -1039,7 +1060,7 @@ flowchart TB
 | --- | --- |
 | Time | Scheduler, calendar, weather spells, away rules, local notifications, dev time-travel panel |
 | Land | 2 inherited acres plus buying adjacent parcels, fertility, moisture, soil type |
-| Crops | Radish, wheat, rice, potato, lentils; full yield formula; *ready to harvest* |
+| Crops | Radish, wheat, rice, potato, lentils with seasonal sowing windows; full yield formula; *ready to harvest*; fruit trees (banana, papaya, guava, mango) in yard and field-edge slots |
 | Founder | Labour, diet plan, work hours, health, day labour |
 | Inputs | Certified or saved seed, compost and chemical fertiliser, pest risk and spraying |
 | People | Hiring a farm hand, season contracts with prepaid wages, standing orders |
@@ -1060,6 +1081,7 @@ flowchart TB
 - the Chronicle
 - events beyond weather and pests
 - the remaining crops
+- whole-acre orchards and apple trees (apple needs hill parcels)
 
 Phase 1 is the most important. If the first days on the Homestead don't make players come back, adding more systems won't fix it, so the slice gets tuned until they do.
 
