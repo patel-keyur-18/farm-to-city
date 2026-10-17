@@ -186,7 +186,7 @@ Players can buy, lease, or hire a machine for a day from a neighbour.
 
 **Storage and selling**
 
-- Produce spoils at a rate set per good. A granary, and later cold storage, slows spoilage.
+- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
 - **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
 
@@ -1004,7 +1004,7 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 
 **Playtests.** Begin with friends and colleagues at the Homestead slice, and run a structured test each milestone. To check the learning outcome, give players a 10-question quiz on margins, cash flow, depreciation and hiring before and after 5 hours of play.
 
-**Telemetry.** There is no server, so the game keeps an opt-in local log of milestones and decisions. A tester can export it as a file and share it.
+**Telemetry.** There is no server, so the game keeps an opt-in local log of session start and end times, milestones and decisions. A tester can export it as a file and share it. It ships in Phase 1, where it measures the exit gate (ADR 0024).
 
 ## Spec-driven workflow
 
@@ -1082,7 +1082,8 @@ flowchart TB
 | Market | Tradeable goods market, regional trader |
 | Money | Cash ledger, seasonal P&L, prepaid accounting, moneylender and bank loans, foreclosure |
 | Saves | Atomic saves, autosave, export and import |
-| UI | Homestead HUD, *While you were away* report, field and founder panels with *Why?* |
+| Storage | Hut store with limited capacity; spoilage per good per day (ADR 0024) |
+| UI | Homestead HUD, *While you were away* report, field and founder panels with *Why?*; string tables (English) and locale number formatting with Indian grouping; opt-in local play log with export (ADR 0024) |
 | Onboarding | First session plus the letter chapters up to the Hamlet unlock |
 
 **Not in Phase 1:**
