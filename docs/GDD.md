@@ -646,7 +646,7 @@ The town's future comes from the sum of these. A script never decides it.
 | Factory near homes | Jobs, taxes | Health and land value fall | Externalities |
 | Promote from within | Training cost | Loyalty, knowledge kept | Investing in people |
 
-**No single best strategy.** Balancing must keep at least three town archetypes viable, such as the agri-hub, the merchant town and the education town. No archetype may finish more than 20% ahead of the others on the standard benchmarks.
+**No single best strategy.** Balancing must keep at least three town archetypes viable, such as the agri-hub, the merchant town and the education town. The best archetype's median net worth and median happiness must be within 20% of the worst archetype's on the standard benchmarks (ADR 0016).
 
 **Mistakes are recoverable.** Bankruptcy (foreclosure, ADR 0009), a failed harvest or a hostile council costs time and wealth, but never ends the save. A new game is always the player's choice. Real life rarely gives a game over, and the learning comes from recovering.
 
@@ -899,12 +899,14 @@ The balance is proven by machines before people play it. A headless balancer run
 
 **Bot strategies**
 
-- farm-only
-- business-heavy
-- education-first
-- debt-fuelled expansion
-- cautious saver
-- random
+| Bot | Role |
+| --- | --- |
+| farm-only | Archetype: agri-hub |
+| business-heavy | Archetype: merchant town |
+| education-first | Archetype: education town |
+| debt-fuelled expansion | Stress bot |
+| cautious saver | Stress bot |
+| random | Stress bot |
 
 Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the expected City milestone) on a fake clock.
 
@@ -925,7 +927,10 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 - **Stable population.** Population stays stable when the player does nothing, and recovers after a disaster.
 - **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 3 game years (48 real days).
 - **Never stuck.** A bot with no cash and no credit, holding only the inherited plot, reaches a profitable season of farming within a set number of seasons, using day labour.
-- **Balanced strategies.** No strategy beats the second best by more than 20% on net worth or happiness.
+- **Balanced strategies (ADR 0016).**
+  - At 12 game years, the best archetype bot's median net worth and median happiness are at most 20% above the worst archetype bot's.
+  - No stress bot beats the best archetype by more than 20%.
+  - Random finishes below every archetype.
 - **Reachable eras.** Every era gate is reachable within the calendar targets for each town archetype (ADR 0011).
 - **Exact ledgers.** The ledger reconciles to the coin after every season.
 
