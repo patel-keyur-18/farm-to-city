@@ -24,7 +24,8 @@
 - PR #3 is merged to `main`.
 - **Sprint 0 progress:**
   - US-001 to US-004 (F00.1 repository, build and CI): done. CI is green on the sprint branch.
-  - Spec 001: F01.1 sim foundations done (US-025 to US-028: `Fixed`, RNG, state hash, clock and weather content). `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
+  - Spec 001: F01.1 sim foundations done (US-025 to US-028: `Fixed`, RNG, state hash, clock and weather content).
+  - US-029 calendar and life clock done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
 
