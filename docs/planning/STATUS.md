@@ -28,7 +28,7 @@
   - F01.2 calendar and scheduler done (US-029 to US-031). The golden replay `tests/Sim.Core.Tests/golden/001-basic.json` covers every spec 001 command and is now frozen (hash `0x0A11B9AED3656FC1`). Re-pin it (`FTC_UPDATE_GOLDEN=1 dotnet test`) only when a later spec deliberately changes the state hash, and say so in the commit.
   - F01.3 weather and forecast done (US-032, US-033).
   - F01.4 live and away time done (US-034, US-035).
-  - US-036 time-travel commands done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
+  - F01.5 developer time travel done (US-036, US-037). Measured: 72 h advance about 0.2 ms, 1 game year about 1.2 ms (guards: 20 ms and 100 ms). `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
 

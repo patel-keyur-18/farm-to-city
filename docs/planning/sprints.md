@@ -50,7 +50,7 @@
 | US-034 | Live, away and anomalies | [F01.4](features/F01.4-live-and-away-time.md) | 3 | Must | Done |
 | US-035 | Upcoming jobs for notifications | [F01.4](features/F01.4-live-and-away-time.md) | 1 | Must | Done |
 | US-036 | Time-travel commands | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Must | Done |
-| US-037 | Performance guard | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Should | To do |
+| US-037 | Performance guard | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Should | Done |
 
 **Sprint end checklist**
 
