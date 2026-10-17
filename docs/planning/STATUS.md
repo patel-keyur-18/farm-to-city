@@ -34,7 +34,7 @@
 | --- | --- | --- |
 | 1 | When feature specs are written | Decided: rolling wave (ADR 0019) |
 | 2 | Seasons table vs real-time crops; sowing windows (plus fruit trees) | Decided (ADR 0021) |
-| 3 | Hiring before Hamlet: who the first worker is and where they live | Open |
+| 3 | Hiring before Hamlet: who the first worker is and where they live | Decided (ADR 0022) |
 | 4 | Save slots vs undoing mistakes | Open |
 | 5 | Phase 1 scope additions: storage and spoilage, localisation groundwork | Open |
 | 6 | Sprint mechanics: length, estimation, definition of done, merging | Open |

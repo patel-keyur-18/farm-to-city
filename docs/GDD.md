@@ -29,8 +29,8 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
-| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour |
-| 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | Hiring, wages, storage, first processing (flour mill) |
+| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
+| 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | More roles, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -321,7 +321,21 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 - **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
 - **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
 
-**Hiring**
+**Hiring starts in Homestead (ADR 0022)**
+
+| | Day labourer | Resident farm hand |
+| --- | --- | --- |
+| Source | Neighbouring villages, commuting | A migrant who moves onto your land |
+| Contract | One day, paid upfront | One season, paid upfront |
+| Cost per day | Higher (about 25% premium) | Lower, and grows in skill |
+| Housing | None | Needs a hand's hut on your land |
+| Availability | Limited daily pool, scarce at harvest | Applicants arrive over a few days |
+| Standing orders | No | Yes |
+| Population | Not counted | Counted: the town's first citizens |
+
+A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
+
+**Hiring flow (full version, from Phase 2)**
 
 1. **Post a job:** role, wage, hours, required skills, benefits.
 2. **Receive applicants:** unemployed citizens, citizens already employed but looking, and migrants.
@@ -1063,7 +1077,7 @@ flowchart TB
 | Crops | Radish, wheat, rice, potato, lentils with seasonal sowing windows; full yield formula; *ready to harvest*; fruit trees (banana, papaya, guava, mango) in yard and field-edge slots |
 | Founder | Labour, diet plan, work hours, health, day labour |
 | Inputs | Certified or saved seed, compost and chemical fertiliser, pest risk and spraying |
-| People | Hiring a farm hand, season contracts with prepaid wages, standing orders |
+| People | Day labourers from neighbouring villages; a resident farm hand (simplified hiring, hand's hut, season contract with prepaid wages, standing orders); regulars who ask to move in |
 | Market | Tradeable goods market, regional trader |
 | Money | Cash ledger, seasonal P&L, prepaid accounting, moneylender and bank loans, foreclosure |
 | Saves | Atomic saves, autosave, export and import |
