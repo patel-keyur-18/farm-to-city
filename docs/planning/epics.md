@@ -19,9 +19,9 @@
 | --- | --- | --- | --- | --- | --- |
 | E00 | Delivery foundations | 0 | Everything needed before Phase 1 coding: build and CI, the Phase 1 specs, the economy model, the Unity project, the performance spike and the art style check. | [F00.1](features/F00.1-repository-build-and-ci.md), [F00.2](features/F00.2-phase-1-feature-specs.md), [F00.3](features/F00.3-economy-model.md), [F00.4](features/F00.4-unity-project-and-bootstrap.md), [F00.5](features/F00.5-performance-spike.md), [F00.6](features/F00.6-art-style-check.md) | 63 |
 | E01 | Time and world | 1 | The real-time clock, calendar, scheduler, weather, forecast, away rules and developer time travel (spec 001). | [F01.1](features/F01.1-sim-foundations.md), [F01.2](features/F01.2-calendar-and-scheduler.md), [F01.3](features/F01.3-weather-and-forecast.md), [F01.4](features/F01.4-live-and-away-time.md), [F01.5](features/F01.5-developer-time-travel-sim.md) | 31 |
-| E02 | Land and farming | 1 | Land and soil, crops with seasonal sowing windows, the yield formula, inputs, pests and fruit trees. | [F02.1](features/F02.1-land-and-soil.md), [F02.2](features/F02.2-crops-and-yield.md), [F02.3](features/F02.3-fruit-trees.md) | 34 |
-| E03 | Founder household | 1 | The founder as the first worker: labour, diet, rest, health and day labour (ADR 0010). | [F03.1](features/F03.1-founder-labour-and-routine.md) | 10 |
-| E04 | Market and storage | 1 | Tradeable goods, the hourly market, the regional trader, the hut store and spoilage. | [F04.1](features/F04.1-goods-market-and-regional-trader.md), [F04.2](features/F04.2-hut-store-and-spoilage.md) | 15 |
+| E02 | Land and farming | 1 | Land and soil, crops with seasonal sowing windows, the yield formula, inputs, pests, the kitchen garden and fruit trees. | [F02.1](features/F02.1-land-and-soil.md), [F02.2](features/F02.2-crops-and-yield.md), [F02.3](features/F02.3-fruit-trees.md) | 37 |
+| E03 | Founder household | 1 | The founder as the first worker: labour, diet, rest, health and day labour (ADR 0010). | [F03.1](features/F03.1-founder-labour-and-routine.md) | 11 |
+| E04 | Market and storage | 1 | Tradeable goods, the hourly market, the regional trader, the mandi trip, buying inputs, the hut store and spoilage. | [F04.1](features/F04.1-goods-market-and-regional-trader.md), [F04.2](features/F04.2-hut-store-and-spoilage.md) | 21 |
 | E05 | Money and credit | 1 | The ledger with accrual accounting, seasonal P&L, net worth, lenders, credit score and foreclosure. | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md), [F05.2](features/F05.2-credit-and-foreclosure.md) | 23 |
 | E06 | People | 1 | Day labourers from neighbouring villages, the first resident hand, season contracts and standing orders (ADR 0022). | [F06.1](features/F06.1-day-labourers.md), [F06.2](features/F06.2-resident-farm-hand.md), [F06.3](features/F06.3-standing-orders.md) | 19 |
 | E07 | Saves and platform services | 1 | Safety save points, export and import, local notifications and the local play log. | [F07.1](features/F07.1-save-system.md), [F07.2](features/F07.2-local-notifications.md), [F07.3](features/F07.3-local-play-log.md) | 16 |
@@ -54,12 +54,12 @@
 | [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Done | US-032–US-033 | 6 |
 | [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Done | US-034–US-035 | 4 |
 | [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Done | US-036–US-037 | 2 |
-| [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | [Spec 002](../specs/002-land-and-soil.md) | Backlog | US-038–US-041 | 10 |
-| [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | Spec 003 (to write) | Backlog | US-042–US-046 | 17 |
-| [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | Spec 003 (to write) | Backlog | US-047–US-049 | 7 |
-| [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | Spec 003 (to write) | Backlog | US-050–US-053 | 10 |
-| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | Spec 004 (to write) | Backlog | US-054–US-056 | 11 |
-| [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | Spec 004 (to write) | Backlog | US-057–US-058 | 4 |
+| [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | [Spec 002](../specs/002-land-and-soil.md) | Done | US-038–US-041 | 10 |
+| [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-042–US-046, US-177 | 20 |
+| [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-047–US-049 | 7 |
+| [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-050–US-053 | 11 |
+| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-054–US-056, US-178–US-180 | 17 |
+| [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-057–US-058 | 4 |
 | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Ready | US-059–US-062 | 14 |
 | [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Backlog | US-063–US-065 | 9 |
 | [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | Spec 006 (to write) | Backlog | US-066–US-067 | 5 |

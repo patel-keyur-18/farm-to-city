@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 1 in progress: 17 of 28 points done, 11 in review (owner device test and spec reviews) |
+| Sprint | Sprint 1 in progress: 23 of 28 points done; US-019 and US-020 (5 points) wait for the owner's device run |
 | Branch with latest work | `sprint/01-ledger-land-unity` (pull request #6 to `main`; must be merged before the next session) |
 | Last updated | 2026-10-17 |
 
@@ -38,27 +38,30 @@
   - **US-040 buy adjacent land: done** (spec 002 AC-11 to AC-14): `BuyParcel` and `SellParcel` (quick sale at 80%), with ledger postings (land at cost; gain or loss on sale), adjacency, the in-use and stranding guards. Financing joins with credit (Sprint 4).
   - **US-041 tree slots: done** (spec 002 AC-10): yard and field-edge slots, shade from mature edge trees with the floor, `SetTree` and `SetTreeMature` for spec 003, slot ids never reused. **Spec 002 is implemented: all 16 ACs pass.** Implementation notes are in spec 002 §10.
   - **US-019 code-first bootstrap and US-020 build guide: in review.** `GameRoot` (created by `[RuntimeInitializeOnLoadMethod]` after `Bootstrap.unity` loads) reads the content, starts a new game, syncs once per wall-clock second and shows date, time and weather in a UI Toolkit card. `Game.Services` holds `IEntitlementService` with the always-unlocked implementation. `ContentBuildStep` copies `content/*.json` into StreamingAssets before each build. Verified in play mode (through the Unity Pipeline CLI) and by an unsigned Xcode Release build for the device (BUILD SUCCEEDED). The owner's device run and guide dry run are pending: `docs/test-checklists/how-to-build-ios.md` and `s01-hello-iphone.md`. `unity/FarmToCity/README.md` maps the Unity concepts to Java and Spring.
-  - **US-007 spec 003 (crops, fruit trees and founder labour) and US-008 spec 004 (goods, market and storage): written, in review.** Every number is checked against ADR 0008's per-season realism (a crop cycle yields its share of a season) and ADR 0028's pacing; the pacing check found a conflict (open question A below).
+  - **US-007 spec 003 and US-008 spec 004: approved** in the open-question review with the owner (2026-10-17). All 12 open questions were answered; the owner asked for realism throughout:
+    - **ADR 0030:** the founder inherits 6 protected farm acres and the yard (two parcels on an 8 × 6 map), 20,000 coins and a store (certified seed potato, wheat, lentils, garden seed). Hamlet gate: 6 acres harvested in one season at average Care ≥ 0.9, a hand's house, a profitable season. Unowned land keeps its map fertility. **Implemented and tested** (96 tests).
+    - **ADR 0031:** Phase 1 adds the kitchen garden (2 beds, realistic season output), the mandi trip, buying inputs ahead (seasonal input prices; chemical fertiliser price-controlled), minimum prices on offers, warm clothing and medicine. New stories US-177 (S2) and US-178 to US-180 (S3); US-052 grows to 3 points.
+    - Saved seed ages per season of growth (radish certified only); radish is a 2-hour field crop; the moisture hook follows real Indian seasons (tuned in US-014); pro-rata selling stays; `com.unity.pipeline` stays as an Editor-only tool (ADR 0029), removed before any store build.
+    - The GDD, specs 002–005, CLAUDE.md and the planning files match the decisions. The crop guide the owner asked for is a crop-calendar card (US-011.T4) and seasonal hints in the letters (US-012.T3).
   - The GDD's engine row names Unity 6000.3.26f1 (ADR 0029).
 
 ## In progress
 
-Nothing half-built. Waiting on the owner: the device run (US-019, US-020) and the reviews of specs 003 and 004 (US-007, US-008).
+Nothing half-built. Waiting on the owner: the device run (US-019, US-020).
 
 ## Next up
 
-1. **Owner:** merge the Sprint 1 pull request; install the hello-iPhone build with `docs/test-checklists/how-to-build-ios.md` and work through `s01-hello-iphone.md`; review specs 003 and 004 and answer the open questions below.
+1. **Owner:** merge pull request #6; install the hello-iPhone build with `docs/test-checklists/how-to-build-ios.md` and work through `s01-hello-iphone.md`.
 2. **Next session (Claude):**
-   - Apply the owner's answers: approve or revise specs 003 and 004 (update the GDD in the same commit). If open question A is decided, write ADR 0030 and update specs 005 and 009 and the GDD to match.
    - Record the device results in the Sprint 1 review section of `sprints.md`; fix anything that failed; then close Sprint 1.
-   - Start Sprint 2 (`sprints.md`): crops, fruit trees and founder labour (spec 003), accrual accounting (US-060 to US-062), the economy model, specs 006 and 007.
+   - Start Sprint 2 (`sprints.md`, 53 points): crops, the kitchen garden, fruit trees and founder labour (spec 003), accrual accounting (US-060 to US-062), the economy model (US-013, US-014, including the moisture tuning and the inherited start), specs 006 and 007. Spec 006 must price the hand's hut (about 15,000 for the ADR 0030 pacing) and reuse spec 004's minimum price in standing orders.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
 | Now | Merge pull request #6 (Sprint 1) |
-| Sprint 1 | Install the hello-iPhone build (`how-to-build-ios.md`, `s01-hello-iphone.md`) and report. Review specs 003 and 004 and answer the open questions |
+| Sprint 1 | Install the hello-iPhone build (`how-to-build-ios.md`, `s01-hello-iphone.md`) and report |
 | Sprint 2 | Review specs 006 and 007 |
 | Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
@@ -66,14 +69,7 @@ Nothing half-built. Waiting on the owner: the device run (US-019, US-020) and th
 
 ## Open questions (with the owner)
 
-Each has a recommendation; the details are in the spec named.
-
-- **A. The Hamlet pace doesn't add up (spec 003 §9–10, question 1).** By the end of week 1 a competent player has about 90,000 coins; the 4 more acres the Hamlet gate needs cost about 4,60,000, and after the land loan and the moneylender about 2,28,000 must still come from cash. **Recommendation:** gate on 4 acres farmed, and raise the land-purchase loan's LTV to 0.80 (no score factor on the parcel being bought), via ADR 0030 and a spec 005 change.
-- **B. Seasonal moisture is off the spec 002 hook** (spec 003 question 2): a loam acre averages about 55 in the Monsoon and 64 in Winter (targets 70–85 and 10–35). **Recommendation:** tune `moistureByWeather` and the climate weights in the economy model (US-014); no rule change.
-- **C. Spec 003 questions 3–6:** saved-seed generation per crop kind; Phase 1 health from food and rest only; inputs bought at the moment of use; the 7 kg radish cycle. **Recommendation:** keep all four.
-- **D. Spec 004 questions 1–4:** selling is mostly to the trader in Phase 1; inputs at the regional price; pro-rata selling; limit prices with spec 006's standing orders. **Recommendation:** keep all four.
-- **E. Spec 002 question 6:** fertility also recovers on unowned land, so unbought parcels slowly get dearer. **Recommendation:** keep (implemented that way).
-- **F. The `com.unity.pipeline` package** (experimental, 0.8.0-exp.1) is in the Unity manifest. It's what lets Claude compile, play, capture and build through the `unity` CLI while the Editor is open, and it's disabled in player builds (no runtime config asset). **Recommendation:** keep it as a development tool; remove it before any store build.
+None. All 12 Sprint 1 questions were answered on 2026-10-17 (see Done so far, ADRs 0030 and 0031, and §10 of specs 002–004).
 
 **Noted for later specs (no decision needed now):**
 - Spec 007 (saves): the command log grows by one `Sync` per second of live play (the hello build syncs once per wall-clock second). Consecutive live `Sync`s can be merged without changing the result (chunking invariance), so the saves spec should compact them.
