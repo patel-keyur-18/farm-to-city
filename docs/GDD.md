@@ -672,7 +672,16 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 | Chronicle | Remember | Timeline, Almanacs, citizen stories |
 | Settings and saves | Control | Save slots, backup, difficulty, accessibility, language |
 
-**Onboarding.** A 20-minute playable prologue: the player inherits a grandparent's neglected 2-acre plot and a letter of advice. Each early lesson arrives as a line from the letter and an advisor nudge, never as a pop-up wall. The first sale, the first hire and the first loan are guided once.
+**Onboarding (ADR 0015).** A short first session, then a guided first week. The grandparent's letter and the advisors guide each lesson, never a pop-up wall.
+
+- **First session (15–20 minutes):** inherit the neglected 2-acre plot and the letter. Sow a quick crop, set the household plan, harvest and make the first sale to the travelling trader. Then sow a long crop, turn on notifications, and leave with a reason to come back.
+- **Guided first week:** each "first" is guided once, when it naturally happens, by a new letter page:
+  - the first return (*While you were away*, *ready to harvest*)
+  - the first season close (P&L, prepaid costs)
+  - the first loan offer, only when land or cash runs short, comparing moneylender and bank, never pushed
+  - the first hire, once fields exceed the founder's labour (contracts, standing orders)
+  - the first school, at the Village unlock
+- Letter chapters can be reopened at any time.
 
 **Mobile ergonomics**
 
