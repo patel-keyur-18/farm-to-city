@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.farmtocity.sim": {
-      "version": "file:/Users/pkeyur18/Documents/Professional/farm-to-city/sim",
+      "version": "file:../../../sim",
       "depth": 0,
       "source": "local",
       "dependencies": {
