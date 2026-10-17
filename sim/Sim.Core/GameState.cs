@@ -1,4 +1,6 @@
+using Sim.Core.Commands;
 using Sim.Core.Maths;
+using Sim.Core.Scheduling;
 using Sim.Core.Time;
 
 namespace Sim.Core
@@ -16,15 +18,24 @@ namespace Sim.Core
 
         public ClockState Clock { get; internal set; } = new ClockState();
 
+        public Scheduler Scheduler { get; internal set; } = new Scheduler();
+
+        public JobTable Jobs { get; internal set; } = new JobTable();
+
+        /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
+        public CommandLog CommandLog { get; internal set; } = new CommandLog();
+
         /// <summary>
         /// Writes the canonical byte stream: a fixed field order, entities in id order.
-        /// Each later spec appends its own section. The command log is input, not state, and is never hashed.
+        /// Each later spec appends its own section at the end. The command log is never hashed.
         /// </summary>
         public void WriteTo(StateHasher h)
         {
             h.WriteInt(HashFormatVersion);
             h.WriteULong(Seed);
             Clock.WriteTo(h);
+            Scheduler.WriteTo(h);
+            Jobs.WriteTo(h);
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>
@@ -38,7 +49,14 @@ namespace Sim.Core
         /// <summary>A deep copy (in-memory round-trip; saving to disk is spec 007).</summary>
         public GameState Clone()
         {
-            return new GameState { Seed = Seed, Clock = Clock.Clone() };
+            return new GameState
+            {
+                Seed = Seed,
+                Clock = Clock.Clone(),
+                Scheduler = Scheduler.Clone(),
+                Jobs = Jobs.Clone(),
+                CommandLog = CommandLog.Clone(),
+            };
         }
     }
 }
