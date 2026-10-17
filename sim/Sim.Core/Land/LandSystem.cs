@@ -197,6 +197,29 @@ namespace Sim.Core.Land
             else if (tile.Occupied) tile.VacantSince = sim.State.Clock.SimTime;
         }
 
+        /// <summary>Spec 003 puts a tree in a slot (a sapling), or empties it with treeId 0.</summary>
+        internal static void SetTree(Simulation sim, long slotId, long treeId)
+        {
+            TreeSlot slot = Slot(sim, slotId);
+            slot.TreeId = treeId;
+            slot.TreeMature = false;
+        }
+
+        /// <summary>Spec 003 marks the slot's tree mature; from then on it shades a field-edge tile.</summary>
+        internal static void SetTreeMature(Simulation sim, long slotId)
+        {
+            TreeSlot slot = Slot(sim, slotId);
+            if (slot.TreeId == 0) throw new System.InvalidOperationException("Slot " + slotId + " is empty.");
+            slot.TreeMature = true;
+        }
+
+        private static TreeSlot Slot(Simulation sim, long slotId)
+        {
+            TreeSlot slot = sim.State.Land.Slots.Find(x => x.Id == slotId);
+            if (slot == null) throw new System.ArgumentException("No slot " + slotId + ".", nameof(slotId));
+            return slot;
+        }
+
         private static void Apply(Tile tile, Fixed applied, FertilityReason reason)
         {
             tile.Fertility += applied;

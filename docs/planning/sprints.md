@@ -88,7 +88,7 @@
 | US-038 | Inherited land | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | Done |
 | US-039 | Soil properties | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
 | US-040 | Buy adjacent land | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
-| US-041 | Tree slots | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | To do |
+| US-041 | Tree slots | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | Done |
 | US-059 | Exact ledger | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 5 | Must | Done |
 
 **Sprint end checklist**

@@ -184,7 +184,7 @@ namespace Sim.Core.Tests
         }
     }
 
-    public class SoilFactorTests
+    public partial class SoilFactorTests
     {
         // Spec 002 AC-9.
         [Test]
@@ -201,6 +201,63 @@ namespace Sim.Core.Tests
             Tile sandy = LandTest.TileOf(sim, "sandy", "good");
             sandy.Fertility = Fixed.FromInt(60);
             Assert.That(LandRules.SoilFactor(sim, sandy), Is.EqualTo(LandTest.F("0.85")));
+        }
+    }
+
+    public partial class SoilFactorTests
+    {
+        // Spec 002 AC-10.
+        [Test]
+        public void Shade_MatureTreesOnly()
+        {
+            Simulation sim = NewFarm();
+            Tile tile = sim.State.Land.Tiles[14]; // inherited loam acre
+            tile.Fertility = Fixed.FromInt(60);   // fertility factor 1.00, so the Soil factor is the shade factor
+            TreeSlot[] slots = sim.State.Land.Slots.Where(x => x.TileId == 14 && x.Kind == SlotKind.FieldEdge).ToArray();
+            Assert.That(slots.Length, Is.EqualTo(2));
+
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One));
+            LandSystem.SetTree(sim, slots[0].Id, 1);
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One), "a sapling casts no shade");
+            LandSystem.SetTreeMature(sim, slots[0].Id);
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.97")));
+            LandSystem.SetTree(sim, slots[1].Id, 2);
+            LandSystem.SetTreeMature(sim, slots[1].Id);
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.94")));
+            Assert.That(LandRules.SoilFactor(sim, tile), Is.EqualTo(LandTest.F("0.94")));
+            Assert.That(LandRules.ShadeFactor(sim, sim.State.Land.Tiles[15]), Is.EqualTo(Fixed.One), "shade stays on its own tile");
+
+            // Removing a tree empties the slot and its shade.
+            LandSystem.SetTree(sim, slots[1].Id, 0);
+            Assert.That(slots[1].TreeMature, Is.False);
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.97")));
+
+            // The floor: 4 slots per acre and minShadeFactor 0.90 in test content.
+            Simulation four = NewFarm(game: TestContent.Game((f, j) => f != "land.json" ? j
+                : j.Replace("\"fieldEdgeSlotsPerAcre\": 2", "\"fieldEdgeSlotsPerAcre\": 4").Replace("\"minShadeFactor\": 0.85", "\"minShadeFactor\": 0.90")));
+            foreach (TreeSlot slot in four.State.Land.Slots.Where(x => x.TileId == 14 && x.Kind == SlotKind.FieldEdge))
+            {
+                LandSystem.SetTree(four, slot.Id, slot.Id);
+                LandSystem.SetTreeMature(four, slot.Id);
+            }
+            Assert.That(LandRules.ShadeFactor(four, four.State.Land.Tiles[14]), Is.EqualTo(LandTest.F("0.90")), "the floor, not 0.88");
+        }
+    }
+
+    public class TreeSlotTests
+    {
+        [Test]
+        public void SlotIds_AreNeverReused()
+        {
+            Simulation sim = NewFarm(game: ParcelTests.Rich());
+            sim.Execute(new Commands.BuyParcel(0, "w1"));
+            long[] first = sim.State.Land.Slots.Where(x => x.TileId == 12 || x.TileId == 13).Select(x => x.Id).ToArray();
+            sim.Execute(new Commands.SellParcel(0, "w1"));
+            sim.Execute(new Commands.BuyParcel(0, "w1"));
+            long[] second = sim.State.Land.Slots.Where(x => x.TileId == 12 || x.TileId == 13).Select(x => x.Id).ToArray();
+            Assert.That(second.Length, Is.EqualTo(4));
+            Assert.That(second.Min(), Is.GreaterThan(first.Max()));
+            Assert.That(sim.State.Land.Slots.Select(x => x.Id), Is.Ordered.And.Unique);
         }
     }
 

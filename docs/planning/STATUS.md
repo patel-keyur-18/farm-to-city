@@ -38,10 +38,11 @@
   - **US-038 inherited land: done** (spec 002 AC-1, AC-2). New content: `land.json`, `map.json` (6 × 5, 13 parcels), `buildings.json`, `start.json`, `finance.json`. Land and ledger are optional `GameDefs` in `SimConfig`: a sim without them hashes exactly as before, so golden 001 is unchanged.
   - **US-039 soil properties: done** (spec 002 AC-3 to AC-9, AC-15, AC-16). Hourly moisture with drainage and the well floor, daily fallow recovery, `AdjustFertility` with per-reason season totals, the Soil factor. 72 h with land advances in about 0.4 ms (budget 20 ms). AC-6 buys its tile once `BuyParcel` exists (US-040).
   - **US-040 buy adjacent land: done** (spec 002 AC-11 to AC-14): `BuyParcel` and `SellParcel` (quick sale at 80%), with ledger postings (land at cost; gain or loss on sale), adjacency, the in-use and stranding guards. Financing joins with credit (Sprint 4).
+  - **US-041 tree slots: done** (spec 002 AC-10): yard and field-edge slots, shade from mature edge trees with the floor, `SetTree` and `SetTreeMature` for spec 003, slot ids never reused. **Spec 002 is implemented: all 16 ACs pass.** Implementation notes are in spec 002 §10.
 
 ## In progress
 
-Sprint 1: US-041 (tree slots) next.
+Sprint 1: US-019 and US-020 (Unity bootstrap, iOS build guide) next.
 
 ## Next up
 

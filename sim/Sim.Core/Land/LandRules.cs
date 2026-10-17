@@ -13,7 +13,18 @@ namespace Sim.Core.Land
         public static Fixed SoilFactor(Simulation sim, Tile tile)
         {
             GameDefs defs = sim.Config.Game;
-            return defs.Soils[tile.Soil].YieldFactor * FertilityFactor(defs.Land, tile.Fertility);
+            return defs.Soils[tile.Soil].YieldFactor * FertilityFactor(defs.Land, tile.Fertility) * ShadeFactor(sim, tile);
+        }
+
+        /// <summary>max(minShadeFactor, 1 − shadePerMatureTree × n), n = mature trees in the tile's field-edge slots.</summary>
+        public static Fixed ShadeFactor(Simulation sim, Tile tile)
+        {
+            int n = 0;
+            foreach (TreeSlot slot in sim.State.Land.Slots)
+                if (slot.TileId == tile.Id && slot.Kind == SlotKind.FieldEdge && slot.TreeId != 0 && slot.TreeMature) n++;
+            LandDef land = sim.Config.Game.Land;
+            Fixed f = Fixed.One - land.ShadePerMatureTree * Fixed.FromInt(n);
+            return f < land.MinShadeFactor ? land.MinShadeFactor : f;
         }
 
         /// <summary>Piecewise linear through LandDef.fertilityFactorCurve: y0 + (y1 − y0) × (f − x0) ÷ (x1 − x0).</summary>

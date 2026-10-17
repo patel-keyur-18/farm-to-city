@@ -1,6 +1,6 @@
 # 002. Land and soil
 
-- Status: Approved (2026-10-17)
+- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, Fruit trees, Irrigation ladder); Assets and wealth (Farmland, Liquidity); City building (land bought parcel by parcel); Data model (`Tile` / `Parcel`)
@@ -323,6 +323,20 @@ All five were resolved at approval (2026-10-17), following the recommendations:
 3. **Shade goes inside the Soil factor,** so ADR 0014's formula and the 1.6× cap are unchanged. *Why?* shows shade as its own line.
 4. **Quick sale in Phase 1** at 80% of the price, immediately. The slow, better-priced sale comes with land value in Phase 3.
 5. **The map is hand-authored** for Phase 1 (6 × 5 acres, parcels of 1–4 acres).
+
+### Implementation notes (Sprint 1, 2026-10-17)
+
+None of these changes a formula or a rule.
+
+1. **"Exactly" in AC-3.** In Q31.32, 0.4 and 0.1 aren't exact binary fractions, so the 80 → 79.14 example lands 1 unit in the last place (2⁻³²) below `Fixed.Parse("79.14")`. The test checks 79.14 to that precision and also pins the raw value, so any change in the arithmetic still fails it. The other examples (51.2, the Soil factors, the shade factors) are exact.
+2. **The hour's weather.** At a spell boundary the weather buffer has already dropped the spell that just ended, so the land system records the weather of each hour as it starts (`LandState.HourWeather`) and applies it at the next hourly pass. The result is exactly §3.2's "the spell containing t − 3600".
+3. **Vacant since the start.** Every tile starts vacant since t = 0, so the first daily pass already counts as a fallow day. Fallow recovery follows the text of §3.3 and AC-7 literally: it applies to every farm tile, owned or not (see open question 6).
+4. **The well** is the building whose id is `well`; its parcel gets `WellDef.moistureFloor`.
+5. **Tree maturity.** A slot carries `TreeMature`. Spec 003 calls `SetTree(slot, treeId)` when it plants a sapling (or 0 to empty the slot) and `SetTreeMature(slot)` when the tree matures; only mature trees shade.
+6. **Optional content.** Land and ledger content is an optional `GameDefs` in `SimConfig`. A simulation without it runs only time and weather and hashes exactly as before, so the spec 001 golden replay keeps its frozen hash.
+7. **The default map** (`content/map.json`) has 13 parcels of 1–4 acres around the inherited parcel `home` (tiles 14–16). Its soils follow §4; drainage, fertility, moisture and location factors are placeholders for the economy model.
+
+6. **Open (raised in Sprint 1): does fertility recover on land nobody owns?** The text says "a farm tile", so unowned land also recovers, up to its soil's cap. A side effect is that unowned parcels slowly get dearer (loam at 50 reaches 75 in about 4 seasons, +10% price). **Recommendation:** keep it. It's simple, it teaches that rested land is worth more, and the economy model prices it in. The alternative is to freeze unowned tiles at their map values (neighbours farm them).
 
 ## 11. Cut first
 
