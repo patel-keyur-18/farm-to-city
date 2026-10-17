@@ -800,6 +800,13 @@ The UI sends commands down and listens for events coming up. Only the simulation
 
 Assembly definitions enforce the dependency direction: Presentation depends on Sim, and never the other way round.
 
+**Implementation model (ADR 0017)**
+
+- The simulation is large and fully tested from the terminal. The Unity layer is thin.
+- Unity is built code-first: one bootstrap scene, with everything else created by C# at runtime. UI uses UI Toolkit text files (UXML and USS).
+- Development builds include a time-travel panel (+1 hour, +1 day, +1 season, jump to the away cap). It is compiled out of release builds.
+- Every build handed to the owner comes with a test checklist in `docs/test-checklists/`.
+
 ## Data model and content configuration
 
 The data falls into two groups. Definitions are static content shipped with the game. Instances are the live state stored in saves. Every balancing number lives in definitions, so tuning never needs code changes.
@@ -961,39 +968,78 @@ This document is the master spec. No code is written for a feature until its fea
 8. **Acceptance criteria:** testable statements, for example "Given fertility 40 and full care, a wheat acre yields 1.6–1.9 t."
 9. **Balancing hooks:** which balancer metrics should move, and by how much.
 10. **Open questions.**
+11. **Cut first:** what to drop if the spec runs over (ADR 0017).
 
 **Per-feature loop:** spec → review → data definitions → simulation code with unit tests that meet the acceptance criteria → UI → playtest → tune numbers in data → update the spec to match reality.
 
-**Spec order for the vertical slice:** time and weather, land and soil, crops and yield, goods and the local market, the ledger, saves, the Homestead HUD, then onboarding.
+**Spec order for the vertical slice:**
+
+1. time and weather
+2. land and soil
+3. crops and yield (including founder labour)
+4. goods and the local market
+5. the ledger
+6. people: hiring and contracts
+7. saves
+8. the Homestead HUD
+9. onboarding
 
 ## Roadmap and milestones
 
-The build runs in six phases. A phase starts only when the previous gate passes, and each era ships as a playable slice before the next one begins. Durations assume about 15–20 hours a week of solo work, roughly 11–14 months in total.
+The build runs in six phases. A phase starts only when the previous gate passes, and each era ships as a playable slice before the next one begins. Claude writes the code and docs, and the owner reviews specs and tests builds on devices (ADR 0017). Phases are gated by exit criteria and device testing, not by calendar estimates.
 
 ```mermaid
 flowchart TB
-    P0["Phase 0 · Pre-production · 3–4 weeks<br/>Master spec, economy spreadsheet, art style-pipeline test, performance spike"]
-    P1["Phase 1 · Vertical slice: Homestead · 6–8 weeks<br/>Time, weather, farming, market, ledger, saves, onboarding"]
-    P2["Phase 2 · Hamlet and Village · 10–12 weeks<br/>Citizens, hiring, wages, businesses, needs, school, loans, Codex"]
-    P3["Phase 3 · Township · 10–12 weeks<br/>Zoning, utilities, treasury, taxes, land value, events, Chronicle"]
-    P4["Phase 4 · Town and City · 12–16 weeks<br/>Cohort simulation, transport, industry, investments, elections"]
-    P5["Phase 5 · Polish and launch · 6–8 weeks<br/>Store builds, localisation, accessibility, soft launch in one country"]
+    P0["Phase 0 · Pre-production<br/>Master spec, slice specs, economy model, performance spike"]
+    P1["Phase 1 · Vertical slice: Homestead to Hamlet unlock<br/>Time, weather, land, crops, founder, hiring, market, ledger, loans, saves, HUD, onboarding"]
+    P2["Phase 2 · Hamlet and Village<br/>Citizens, needs, businesses, school, larger loans, Codex"]
+    P3["Phase 3 · Township<br/>Zoning, utilities, treasury, taxes, land value, events, Chronicle"]
+    P4["Phase 4 · Town and City<br/>Cohort simulation, transport, industry, investments, elections"]
+    P5["Phase 5 · Polish<br/>Localisation, accessibility, art pipeline; store release only if the owner decides"]
 
-    P0 -->|"Gate: spreadsheet economy has no money loops; 2,000 agents at 60 fps"| P1
+    P0 -->|"Gate: economy model has no money loops; 2,000 agents at 60 fps"| P1
     P1 -->|"Gate: testers come back on day 2 and day 3 unprompted"| P2
     P2 -->|"Gate: a week of play; players can explain profit versus cash"| P3
     P3 -->|"Gate: 4 weeks of play; the balancer finds no exploits"| P4
     P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
 ```
 
-| Phase | Duration | Scope | Exit gate |
-| --- | --- | --- | --- |
-| 0 · Pre-production | 3–4 weeks | Master spec, economy spreadsheet, art style-pipeline test (Blender sprites beside CC0 tiles), performance spike | Spreadsheet economy has no money loops; 2,000 agents at 60 fps |
-| 1 · Vertical slice: Homestead | 6–8 weeks | Time, weather, farming, market, ledger, saves, onboarding | Testers come back on day 2 and day 3 unprompted |
-| 2 · Hamlet and Village | 10–12 weeks | Citizens, hiring, wages, businesses, needs, school, loans, Codex | A week of play; players can explain profit versus cash |
-| 3 · Township | 10–12 weeks | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
-| 4 · Town and City | 12–16 weeks | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
-| 5 · Polish and launch | 6–8 weeks | Store builds, localisation, accessibility, soft launch in one country | Launch |
+| Phase | Scope | Exit gate |
+| --- | --- | --- |
+| 0 · Pre-production | Master spec, slice specs, economy model, performance spike, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps |
+| 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Testers come back on day 2 and day 3 unprompted |
+| 2 · Hamlet and Village | Citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
+| 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
+| 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
+| 5 · Polish | Localisation, accessibility, Blender art pipeline; store release only if the owner decides | Owner's call |
+
+**Phase 1 scope (ADR 0017):**
+
+| System | In Phase 1 |
+| --- | --- |
+| Time | Scheduler, calendar, weather spells, away rules, local notifications, dev time-travel panel |
+| Land | 2 inherited acres plus buying adjacent parcels, fertility, moisture, soil type |
+| Crops | Radish, wheat, rice, potato, lentils; full yield formula; *ready to harvest* |
+| Founder | Labour, diet plan, work hours, health, day labour |
+| Inputs | Certified or saved seed, compost and chemical fertiliser, pest risk and spraying |
+| People | Hiring a farm hand, season contracts with prepaid wages, standing orders |
+| Market | Tradeable goods market, regional trader |
+| Money | Cash ledger, seasonal P&L, prepaid accounting, moneylender and bank loans, foreclosure |
+| Saves | Atomic saves, autosave, export and import |
+| UI | Homestead HUD, *While you were away* report, field and founder panels with *Why?* |
+| Onboarding | First session plus the letter chapters up to the Hamlet unlock |
+
+**Not in Phase 1:**
+- livestock
+- irrigation beyond the well
+- the equipment ladder
+- forward contracts
+- insurance
+- businesses
+- the Codex
+- the Chronicle
+- events beyond weather and pests
+- the remaining crops
 
 Phase 1 is the most important. If the first days on the Homestead don't make players come back, adding more systems won't fix it, so the slice gets tuned until they do.
 
@@ -1014,8 +1060,9 @@ These choices need the owner's call before their feature specs can be written. T
 
 **Risks**
 
-- **Scope.** This is the biggest risk. Mitigate it with a strict vertical slice, era-by-era releases, and cutting features before cutting polish.
+- **Scope.** This is the biggest risk. Mitigate it with a strict vertical slice (the Phase 1 scope table), era-by-era releases, a "Cut first" list in every spec, and cutting features before cutting polish.
+- **Unverifiable Unity work.** Claude can't run the Unity Editor. Mitigate it with a thin, code-first Unity layer, the time-travel panel, per-build test checklists, and optional GameCI compile checks (ADR 0017).
 - **Realism versus fun.** A faithful model can be dull. Keep cause and effect visible through *Why?* breakdowns, cut any system the player cannot perceive, and playtest every era.
 - **Performance at City scale.** Prototype cohort simulation and chunked rendering early, in Phase 0, not Phase 4.
 - **Accuracy of the lessons.** Get an expert review of the Codex and core formulas.
-- **Solo bandwidth.** This is part-time work beside a full-time job. Plan milestones as releasable slices, so progress is never all-or-nothing.
+- **Owner bandwidth.** The owner reviews specs and tests on devices beside a full-time job. Keep specs focused and builds small, so each review and test round stays short.
