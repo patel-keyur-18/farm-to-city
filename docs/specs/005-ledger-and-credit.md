@@ -317,7 +317,7 @@ Season report (opens at each season close)
 | Interest                                     -800      |
 | Net result                                 -1,625      |
 | --------------------------------------------------     |
-| Cash: start 60,000  in 40,000  out 71,600  end 28,400  |
+| Cash: start 20,000  in 40,000  out 31,600  end 28,400  |
 |   "Wages paid upfront: 9,000 is next season's cost,    |
 |    so cash fell more than profit."                     |
 | Net worth 6,92,400  (+3,100)              [Why?]       |
