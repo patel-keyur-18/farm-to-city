@@ -4,7 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, credit, personal bankruptcy, never stuck, liquidity); Time and world simulation (settlement cadence); Businesses (books); Learning layer (cash ledger, balance sheet); Balancing and testing (exact ledgers, never stuck, recoverable bankruptcy); Data model (`LedgerEntry`, `Loan`, `LenderDef`, `StartDef`)
-- Related ADRs: 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
+- Related ADRs: 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
 - Depends on specs: 001 (scheduler, passes). Uses 002 (land prices, protected parcel, seizure). Spec 003 (living costs, inputs, trees, day labour), 004 (sales, stored goods value) and 006 (wages) post through this ledger.
 
 ## 1. Goal
@@ -56,9 +56,9 @@ Money is `long` in 1/100 coin. Rates are `Fixed`. **Money × rate** (`MulRate`) 
 | Liabilities | 2100 Moneylender loans · 2200 Bank loans · 2300 Interest payable |
 | Equity | 3000 Opening equity (the inheritance) · 3100 Retained earnings |
 | Income | 4000 Crop sales · 4010 Fruit sales · 4100 Day-labour earnings · 4800 Gain on asset sales · 4900 Debt written off |
-| Expenses | 5000 Seeds and planting · 5010 Fertiliser and spraying · 5100 Hired labour · 5200 Living costs · 5300 Rent · 5400 Interest · 5410 Penalty interest · 5500 Depreciation · 5600 Loss on asset sales and seizure |
+| Expenses | 5000 Seeds and planting · 5010 Fertiliser and spraying · 5100 Hired labour · 5200 Living costs · 5250 Health costs · 5300 Rent · 5400 Interest · 5410 Penalty interest · 5500 Depreciation · 5600 Loss on asset sales and seizure · 5700 Transport and selling costs |
 
-**Opening balance sheet** (at `NewGame`): Dr Cash `StartDef.startingCash`, Dr Land (the inherited parcel's market value, spec 002), Dr Buildings (`BuildingDef.value` of the hut and the well), Cr Opening equity (their sum).
+**Opening balance sheet** (at `NewGame`): Dr Cash `StartDef.startingCash`, Dr Land (the inherited parcels' market value, spec 002), Dr Buildings (`BuildingDef.value` of the hut and the well), Cr Opening equity (their sum).
 
 ### 3.2 Accrual: prepaid costs
 
@@ -247,7 +247,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 | `restructureExtraSeasons` | int | 0–12 (0 = doesn't restructure) |
 | `eraCaps` | map era → money | Homestead required |
 
-`content/start.json` (`StartDef`, finance part): `startingCash`, money, placeholder **60,000 coins** (about 2 seasons of living costs plus first-season seeds and a buffer, ADR 0008; tuned by the economy model).
+`content/start.json` (`StartDef`, finance part): `startingCash`, money, placeholder **20,000 coins** (ADR 0030: with the inherited store of seed and grain it pays the first season's basic living costs and a little seed; less than a hand's season wage; tuned by the economy model). The inherited store itself is spec 004's.
 
 **State** (part of `GameState`):
 
@@ -345,7 +345,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | --- | --- | --- |
 | AC-1 | Posting an entry whose postings don't sum to zero throws and changes nothing; a balanced entry updates every account balance | `LedgerTests.Post_MustBalance` |
 | AC-2 | A posting that would make Cash negative throws; `CanAfford` is true exactly when cash ≥ the amount | `LedgerTests.Cash_NeverNegative` |
-| AC-3 | At a new game with the default content, Cash = 60,000 coins, Land = the inherited parcel's market value, Buildings = 55,000 coins, Opening equity = their sum, and the balance sheet balances | `LedgerTests.NewGame_OpeningBalanceSheet` |
+| AC-3 | At a new game with the default content, Cash = 20,000 coins, Land = the inherited parcels' market value, Buildings = 55,000 coins, Opening equity = their sum, and the balance sheet balances | `LedgerTests.NewGame_OpeningBalanceSheet` |
 | AC-4 | Over 3 game years of seeded random valid activity (purchases, sales, prepayments, loans, repayments, missed payments), the reconciliation check passes at every season close, and the sum of all postings to Cash equals the Cash balance | `LedgerTests.Reconciles_EverySeason` |
 | AC-5 | `MulRate(1,000.01 coins, 4%)` = 40.00 coins; `MulRate(1.25 coins, 10%)` = 0.13; `MulRate(−1.25 coins, 10%)` = −0.13 | `MoneyTests.MulRate_RoundsHalfAwayFromZero` |
 | AC-6 | 36,000 coins prepaid over a 4-day season is expensed 9,000 at each daily pass and the prepaid balance is 0 at the end; 10,000.01 coins is expensed 2,500.00 three times then 2,500.01 | `AccrualTests.Prepaid_ExpensedDaily_Exact` |
@@ -395,6 +395,12 @@ All seven were resolved at approval (2026-10-17), following the recommendations:
 5. **Inventory stays off the ledger in Phase 1.** Sales are income when sold, inputs are expenses when bought, and stored goods count only in net worth. Inventory accounting comes with the Phase 2 statements (F14.3).
 6. **Two schedules:** the moneylender's interest-only bullet loan, and the bank's equal-principal loan.
 7. **Foreclosure takes all non-protected assets** (ADR 0009). A surplus is returned as cash.
+
+### Changes after approval (Sprint 1 review, 2026-10-17)
+
+- **Starting cash 20,000** and the opening Land term covers every inherited parcel (ADR 0030). Implemented: AC-3 passes with the new values.
+- **Two expense accounts** join the chart (ADR 0031): 5250 Health costs (medicine, spec 003) and 5700 Transport and selling costs (cart hire, mandi commission and fees, spec 004). No formula changes.
+- The inherited land is never collateral (unchanged), so early in the game only the moneylender lends; land-purchase loans serve growth after the Hamlet.
 
 ## 11. Cut first
 
