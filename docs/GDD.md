@@ -832,7 +832,7 @@ The UI sends commands down and listens for events coming up. Only the simulation
 
 | Concern | Choice | Why |
 | --- | --- | --- |
-| Engine | The latest Unity LTS at project creation, pinned in an ADR; 2D URP | Stable, long support, good 2D lighting (ADR 0026) |
+| Engine | Unity 6.3 LTS (6000.3.26f1), pinned by ADR 0029; 2D URP | Stable, long support, good 2D lighting (ADR 0026, 0029) |
 | Map | Unity Tilemap (isometric) + custom chunked renderer at City scale | Built in; chunking keeps draw calls low |
 | UI | UI Toolkit for menus, uGUI for in-world labels | Data-binding for heavy report screens |
 | Agents | Plain C# struct arrays first; Unity DOTS/Entities only if profiling demands it | Simpler to start, a clear upgrade path |
