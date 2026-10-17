@@ -1,6 +1,6 @@
 # Farm to City — Game Design Spec
 
-Master spec · v1.0 · 16 Oct 2026 · Owner: Keyur Patel
+Master spec · v1.1 · 17 Oct 2026 · Owner: Keyur Patel
 
 > This is the master game design document (GDD). Feature specs in `docs/specs/` expand individual sections of it. When a feature spec and this doc disagree, update this doc in the same commit.
 
@@ -14,6 +14,8 @@ Farm to City is an offline life-and-business simulation in Unity C# for iOS and 
 2. **Learn by running it.** Lessons about business, assets and workforce sit inside the gameplay and are never delivered as lectures.
 3. **Your town, your story.** There is no fixed path. A town that builds its school first should turn out different from one that builds a factory first.
 4. **Calm, fair, offline.** No energy bars and no pay-to-win. The game plays fully offline from the first launch.
+
+**Setting.** A fictional, Indian-inspired river valley: village and small-town life, monsoon seasons, local foods and festivals. Place names are invented, and the game avoids real geography, politics, religious figures and brands. Festivals and places of worship are generic and inclusive. See ADR 0001.
 
 **Target player:** age 16 and up. Fans of Township, SimCity BuildIt, Stardew Valley and Banished, plus people who want to understand how money and businesses work. Sessions run 5–20 minutes on a phone and up to an hour on a tablet.
 
@@ -61,7 +63,7 @@ The world runs on a fixed game clock. One game day takes 2 real minutes at 1x sp
 | --- | --- | --- |
 | Spring | Sowing for most crops | Seed and labour prices rise |
 | Summer | Growth; water demand peaks | Heat lowers outdoor productivity |
-| Monsoon / Autumn | Main harvest | Crop prices fall from oversupply |
+| Monsoon | Main harvest | Crop prices fall from oversupply |
 | Winter | Few crops; orchards and dairy carry on | Stored goods sell at a premium |
 
 **Weather.** Each day's weather is drawn from that season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop growth, soil moisture, shop foot traffic, construction speed and energy demand. A 3-day forecast lets the player prepare, and big events like droughts are signalled days ahead.
@@ -523,7 +525,7 @@ The game teaches in three steps: the player decides, sees the result, and only t
 - **Standard:** the default.
 - **Realistic:** harsher markets, fewer hints, hidden traits stay hidden longer.
 
-**Accuracy.** All models are simplified but point the right way. Before launch, a finance educator should review the Codex and core formulas.
+**Accuracy.** All models are simplified but point the right way. Before launch, a finance educator should review the Codex and core formulas, and a cultural-accuracy reviewer should review names, festivals, foods and art (ADR 0001).
 
 ## Decisions and consequences
 
@@ -868,18 +870,18 @@ Phase 1 is the most important. If 30 minutes on the Homestead isn't fun, adding 
 
 ## Open decisions and risks
 
-These choices need the owner's call before their feature specs can be written. The proposed default is listed first in each row.
+These choices need the owner's call before their feature specs can be written. The proposed default is listed first in each row. Once a decision is made, its row links the ADR that records it.
 
-| Decision | Options | Blocks |
-| --- | --- | --- |
-| Setting and culture | A fictional, culturally neutral river valley; or an Indian-inspired village and town | Art, names, crops, festivals |
-| Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec |
-| Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame |
-| Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec |
-| Orientation | Landscape only; or landscape map with portrait menus | UI layout |
-| Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length |
-| Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline |
-| Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting |
+| Decision | Options | Blocks | Status |
+| --- | --- | --- | --- |
+| Setting and culture | A fictional, culturally neutral river valley; or an Indian-inspired village and town | Art, names, crops, festivals | **Decided:** Indian-inspired, fictional valley ([ADR 0001](decisions/0001-setting-and-culture.md)) |
+| Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec | Open |
+| Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | Open |
+| Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | Open |
+| Orientation | Landscape only; or landscape map with portrait menus | UI layout | Open |
+| Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | Open |
+| Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | Open |
+| Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting | Open |
 
 **Risks**
 
