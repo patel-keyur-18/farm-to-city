@@ -1,6 +1,6 @@
 # 0006. Business model: free with a one-time unlock
 
-- Status: Accepted
+- Status: Accepted, implementation deferred. Personal builds ship with no purchases and the full game unlocked (ADR 0007). This model applies if and when the game is published.
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0002 (real-time pacing: Village in about 1 week)

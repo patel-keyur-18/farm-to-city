@@ -658,7 +658,7 @@ The game needs no account and no server. All content ships in the build, and the
 - **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
 - **Size target:** under 5 MB at City scale.
 - **Backup:** manual export and import of a save file. iCloud on iOS and Google Play Games Saved Games on Android come later, only if the game is published to the stores (ADR 0007).
-- **Distribution, for now:** personal builds only. iOS uses a free developer account, with the build re-signed every 7 days. The bundle ID and signing team stay fixed, so the save data survives reinstalls. Android uses sideloaded APKs signed with the owner's key. The purchase unlock is a developer flag in these builds.
+- **Distribution, for now:** personal builds only. iOS uses a free developer account, with the build re-signed every 7 days. The bundle ID and signing team stay fixed, so the save data survives reinstalls. Android uses sideloaded APKs signed with the owner's key. These builds contain no purchases: the full game is unlocked.
 
 **Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in, grouped, and capped at 2 a day.
 
@@ -812,7 +812,7 @@ These would undermine the honesty of the economic lessons. Optional extras that 
 - new map biomes
 - scenario packs
 
-When the game is published, purchases use StoreKit 2 on iOS and Google Play Billing on Android. Personal builds use a developer unlock flag (ADR 0007). Entitlements are cached locally, so the game stays fully playable offline after one successful purchase.
+Purchases are not built yet. The simulation reads the unlock state through an `IEntitlementService` port, and personal builds use an always-unlocked implementation (ADR 0007). If the game is published, StoreKit 2 (iOS) and Google Play Billing (Android) implementations are added behind the same port. Entitlements are cached locally, so the game stays fully playable offline after one successful purchase.
 
 A later option is a school or classroom edition, with teacher-set scenarios and a progress export.
 

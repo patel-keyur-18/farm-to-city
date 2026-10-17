@@ -46,9 +46,10 @@ The owner will not spend money on development. The GDD's art options (asset pack
   | Service | Personal build | Later (if published) |
   | --- | --- | --- |
   | Cloud backup | Manual export and import of the save file | iCloud, Play Games Saved Games |
-  | Purchases (ADR 0006) | Developer flag that unlocks the full game | StoreKit 2, Play Billing |
+  | Purchases (ADR 0006) | **None.** `IEntitlementService` has an always-unlocked implementation: the full game is open and no unlock offer is shown | StoreKit 2 and Play Billing implementations of the same interface |
   | Local notifications | Fully supported | Same |
 
 - The Phase 0 **art test** becomes a **style-pipeline test**: render one hut, one field and one citizen through the Blender rig, and place them beside Kenney tiles to check that they match.
 - A Unity iOS build needs a Mac with Xcode, which the owner provides.
+- **In-app purchases are not built now.** The provision is the `IEntitlementService` port, which the era-unlock check reads. Adding real purchases later means one new platform implementation plus the unlock-offer screen, with no simulation changes.
 - When an iOS build expires, the app won't launch until it is re-signed. The save is unaffected, and the 72-hour away cap (ADR 0002) bounds what the town does in the meantime.
