@@ -33,7 +33,8 @@ Every session starts with no memory. The repository is the only memory.
 - **Specs are written rolling-wave** (ADR 0019): all of a phase's specs are written and approved in that phase's first sprint, before its coding starts.
 - **Every decision of lasting importance becomes an ADR** in `docs/decisions/NNNN-title.md` (context, options, decision, consequences). ADR numbers are never reused. To change a decision, write a new ADR that supersedes the old one.
 - **When a spec or ADR changes the GDD,** update `docs/GDD.md` in the same commit.
-- **Work on one branch per spec or feature**, unless the session assigns a branch. Use small conventional commits (`docs:`, `feat:`, `test:`, `fix:`, `chore:`).
+- **Sprints (ADR 0025)** are 1 week long, with at most 2 specs to review and 1 device build per sprint. Hierarchy: Epic → Feature → User story → Tasks. Story points, MoSCoW priority, and the Definition of Ready and Definition of Done in ADR 0025.
+- **Work on one branch per sprint** (`sprint/NN-short-name`), unless the session assigns a branch. Use small conventional commits (`docs:`, `feat:`, `test:`, `fix:`, `chore:`). One pull request per sprint, merged by the owner.
 - **Stop for the owner's review at the end of each task.** For anything ambiguous, give a recommendation and ask. Push back when something doesn't make sense.
 - **Every build handed to the owner comes with a test checklist** in `docs/test-checklists/`: what to try, what to expect, what to report.
 - **This file and `docs/` are the project's memory across sessions.** Keep them current.
@@ -118,6 +119,11 @@ These commands work once the solution skeleton exists, which is the first code t
 | 0018 | `Sim.Core` is a netstandard2.1 library tested with `dotnet test` and consumed by Unity as a local package |
 | 0019 | Rolling-wave specs (a phase's specs are written in its first sprint). The repository is the only memory: the session routine, `STATUS.md`, and a pull request merged to `main` after each session |
 | 0020 | Definition classes live in `Sim.Core`. `Sim.Content` is only the JSON loader and validator |
+| 0021 | Crop calendar follows Indian cropping seasons (radish all year). Fruit trees in yard and field-edge slots; apple on hills only, later |
+| 0022 | Hiring from Homestead: day labourers from neighbouring villages, and a resident hand who needs a hut. Regulars can move in |
+| 0023 | One town at a time. Save points are a crash-safety guard only, never an undo |
+| 0024 | Phase 1 adds the hut store and spoilage, string tables and Indian number formatting, and an opt-in local play log |
+| 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
 
 ## Current status
 

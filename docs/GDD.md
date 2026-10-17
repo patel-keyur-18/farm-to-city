@@ -1024,6 +1024,8 @@ This document is the master spec. No code is written for a feature until its fea
 10. **Open questions.**
 11. **Cut first:** what to drop if the spec runs over (ADR 0017).
 
+**Sprints (ADR 0025).** Work is planned as epics, features, user stories and tasks in `docs/planning/`, delivered in 1-week sprints. Each sprint ends with a device build, a test checklist and one pull request that the owner merges.
+
 **Per-feature loop:** spec → review → data definitions → simulation code with unit tests that meet the acceptance criteria → UI → playtest → tune numbers in data → update the spec to match reality.
 
 **Rolling-wave specs (ADR 0019).** All Phase 1 specs are written and approved in Sprint 0, before Phase 1 coding. Each later phase's specs are written in that phase's first sprint. Epics and features for every phase are planned in `docs/planning/`.
