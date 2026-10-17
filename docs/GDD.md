@@ -624,7 +624,8 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 **Mobile ergonomics**
 
-- Landscape is the primary orientation for the map. Menus work one-handed from bottom sheets.
+- The game is landscape only, on phones and tablets, in both landscape directions (ADR 0005). Menus work one-handed from bottom sheets, and the main actions (collect all, harvest, build) sit in thumb reach in the bottom corners.
+- Layouts support phone aspect ratios from 16:9 to 21:9, 4:3 tablets, and notch and home-indicator safe areas.
 - Touch targets are at least 44 pt. Long-press shows the *Why?* breakdown on any number.
 - Notifications group by importance: urgent (cash, safety), decisions, then information.
 - No decision is ever timed. Big decisions show their consequences before confirming.
@@ -921,7 +922,7 @@ These choices need the owner's call before their feature specs can be written. T
 | Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec | **Decided:** real-time clock; the world runs while closed, capped at 72 hours ([ADR 0002](decisions/0002-real-time-clock-model.md)) |
 | Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | **Decided:** ageless founder; heirs considered after launch ([ADR 0003](decisions/0003-ageless-founder.md)) |
 | Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | **Decided:** never lose office; the result sets the council mood ([ADR 0004](decisions/0004-elections-council-mood.md)) |
-| Orientation | Landscape only; or landscape map with portrait menus | UI layout | Open |
+| Orientation | Landscape only; or landscape map with portrait menus | UI layout | **Decided:** landscape only ([ADR 0005](decisions/0005-landscape-only.md)) |
 | Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | Open |
 | Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | Open |
 | Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting | Open |
