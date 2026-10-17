@@ -87,7 +87,7 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
   | --- | --- |
   | Every real hour | Production, movement, sales, and market prices clearing |
   | Every real day | Wage and rent costs are expensed in the P&L (no cash moves) and needs update |
-  | Every season (4 days) | Accounts close; contracts renew, and the next season's wages, rent and living costs are paid upfront; utilities, taxes and loan payments are settled in arrears |
+  | Every season (4 days) | Accounts close; then, in priority order, loan payments and other arrears are settled and the next season's living costs, wages and rent are paid upfront; anything unaffordable is reported, never turned into debt (spec 005) |
   | Every game year (16 days) | The year-end review and the Town Almanac |
 
 **Seasons**
@@ -541,12 +541,19 @@ The player's real score is **net worth**: everything they own minus everything t
 
 Each lender has a credit limit set by collateral, credit score and recent income, and the player can't borrow past it. Missed payments add penalty interest and lower the credit score. A payment overdue past the grace period is a default.
 
+- **The credit score** runs from 300 to 900, like India's CIBIL score, and starts at 650.
+- **The moneylender** lends small amounts with interest each season and all the principal at the end. **The bank** lends against bought land and buildings (never the inherited plot), with principal due every season. A bank loan can finance the land it buys.
+- **Loan payments come first** at each season close, before living costs and wages.
+- A loan in arrears can be cured by paying, selling land or restructuring once.
+- Spec 005 has the formulas and values.
+
 **Personal bankruptcy is foreclosure, not game over.**
 
 - The lenders seize the founder's collateral: bought land, buildings, equipment, livestock and businesses.
 - The inherited 2-acre plot and hut are protected and can never be seized.
 - Remaining debt is written off.
 - The credit score drops sharply and recovers slowly.
+- Foreclosure never happens while the player is away: a final notice waits for their return, with a day to put things right.
 - The town, its citizens, the treasury and the Chronicle carry on, and the founder starts again from Homestead level.
 
 **Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt.
@@ -887,10 +894,11 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `EventDef` | id, family, triggerConditions, weight, cooldown, choices[] with effects[] |
 | `FounderDef` | baseLabourHours, fatigue gain and recovery per hours option, health parameters |
 | `DietPlanDef` | id, costPerSeason, nutrition |
-| `LenderDef` | type, rate band, limit formula inputs, grace period, penalty rate |
+| `LenderDef` | id, baseRate, rate slope by score, penaltyRate, schedule (bullet or equal principal), term bounds, secured, baseLimit, collateralLtv, incomeMultiple, minScore, graceCloses, restructureExtraSeasons, eraCaps |
 | `LandDef` | moisture change by weather, fertility factor curve, fallow recovery, acre base price, fertility price factors, quick-sale factor, field-edge slots per acre, shade per mature tree |
 | `SoilDef` / `DrainageDef` | yield, moisture gain and loss, price factor, fallow cap / drain threshold, drain rate, price factor |
 | `MapDef` / `ParcelDef` | grid size and starting tiles / tiles, location factor |
+| `CreditScoreDef` | range, start score, gains and penalties, foreclosure score |
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
 | `RegionDef` | seasonal price factors, trader daily capacity per good, transport cost by road tier |
@@ -909,11 +917,12 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `Tile` / `Parcel` | terrain, soil, drainage, fertility, moisture, vacantSince, per-season fertility changes / owned, protected, costBasis (zone and landValue from Phase 3) |
 | `Building` | defId, position, level, condition, owner, constructionProgress |
 | `Business` | owner (player, rival or citizen), buildingId, staff, prices, quality, inventory, reputation, manager, plan |
-| `LedgerEntry` | simTime, accountId, amount, category, reference |
+| `JournalEntry` | simTime, period, descriptionKey, reference, postings (account, amount) summing to zero |
+| `Prepayment` / `Obligation` | expense account, total, start, end, expensed / kind, owner, amount, period |
 | `Job` | id, type, targetId, startTime, dueTime, state (running, ready, done) |
 | `StandingOrder` | id, workerId, targetId, action, conditions |
 | `Contract` | id, workerId, employerId, wagePerSeason, startTime, endTime, prepaidRemaining |
-| `Loan` | lender, principal, rate, termSeasons, schedule, collateral |
+| `Loan` | lender, original and outstanding principal, rate, penaltyRate, schedule, term, arrears, arrearsCloses, restructured, state |
 | `Asset` | type, purchasePrice, bookValue, marketValue, depreciationRule |
 | `Treasury` | balance, budget by department, policies, bonds, creditRating |
 | `ChronicleEntry` | simTime, type, text template, involved ids |
