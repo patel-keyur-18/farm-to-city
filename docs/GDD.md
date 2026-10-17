@@ -186,17 +186,24 @@ The economy is a local market that clears every real hour. Prices move with real
 5. Sugarcane → jaggery or sugar mill → sweets, tea stall
 6. Timber → sawmill → planks → carpenter → furniture
 
-**Price model.** Each good has a base price and an elasticity. The local price follows the ratio of demand to supply, bounded between 0.5x and 2x the base.
+**Price model (ADR 0012).** Each good has a year-0 base price and an elasticity. The regional price follows inflation and the season, and the local price follows the ratio of demand to supply around it.
 
 ```
-P_local = P_base × (Demand / Supply)^(1/e)      clamped to [0.5 × P_base, 2 × P_base]
+P_regional = P_base × PriceIndex × SeasonalFactor(good, season)
+P_local    = P_regional × (Demand / Supply)^(1/e)
 ```
+
+- **The working band comes from trade.**
+  - Floor = `P_regional − TransportCost`. Below it, the regional trader buys.
+  - Ceiling = `P_regional + TransportCost`. Above it, the trader imports.
+- **Trader capacity.** The trader buys and sells only a limited quantity each day, so a large glut or shortage can briefly push the local price past the band until the next delivery.
+- **Safety rail.** The local price is finally clamped to 0.5–2× `P_regional`. This only guards against bugs, and the balancer asserts that it almost never triggers.
 
 - **Demand** comes from household consumption plus businesses buying inputs.
 - **Supply** comes from local production plus imports.
 - **Elasticity (e)** is the key lever. Necessities like flour have low elasticity: prices swing hard on shortages. Luxuries like sweets have high elasticity: overprice them and customers simply stop buying.
 
-**Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport. This creates import and export decisions. It also explains why a town on a highway gets better prices than a remote one.
+**Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport, up to a daily capacity. This creates import and export decisions. Transport cost depends on the road link, which explains why a town on a highway gets better prices than a remote one.
 
 **Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
@@ -797,6 +804,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `LenderDef` | type, rate band, limit formula inputs, grace period, penalty rate |
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
+| `RegionDef` | seasonal price factors, trader daily capacity per good, transport cost by road tier |
 | `EraDef` | id, unlock conditions, new systems, UI theme |
 | `StartDef` | starting savings, plot, buildings |
 | `ClockDef` | secondsPerSeason, seasonsPerYear, weatherSpellSeconds, lifeYearsPerSeason, awayCapSeconds |
@@ -895,7 +903,7 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 **Health checks run on every build**
 
 - **No money loops.** Buying and reselling the same good can never make a profit, and no recipe yields more value than its inputs plus fair labour.
-- **Bounded prices.** Prices stay within their bounds, and no market sits in permanent shortage.
+- **Bounded prices.** The 0.5–2× safety rail triggers in under 0.1% of good-hours, and no market sits in permanent shortage.
 - **Stable population.** Population stays stable when the player does nothing, and recovers after a disaster.
 - **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 3 game years (48 real days).
 - **Never stuck.** A bot with no cash and no credit, holding only the inherited plot, reaches a profitable season of farming within a set number of seasons, using day labour.
