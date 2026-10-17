@@ -1,6 +1,6 @@
 # 0018. Sim.Core as a plain .NET library, tested with the dotnet CLI
 
-- Status: **Proposed**
+- Status: Accepted
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0002 (scheduler, determinism), ADR 0017 (code-first, thin Unity layer)
@@ -25,7 +25,7 @@ The GDD says `Sim.Core` is pure C# with no `UnityEngine` references, and plans i
    - The same `.cs` files compile in two ways: with `dotnet` (via a `.csproj`) for tests and tools, and inside Unity (via an `.asmdef` with `noEngineReferences: true`) for the game.
    - There's no copy step, and stepping through code in Unity works.
 
-## Proposed decision
+## Decision
 
 Option 3.
 
@@ -95,7 +95,7 @@ A GitHub Actions workflow on `ubuntu-latest` runs `dotnet build` and `dotnet tes
 | The same sim powers the game, the balancer, the economy model and replay tools | Unity package folders need `.meta` files once the owner creates the Unity project, and those must be committed |
 | Future-proof: Unity is moving to CoreCLR, and netstandard2.1 libraries keep working | |
 
-## Consequences if accepted
+## Consequences
 
 - **GDD updates:**
   - the tests row of the technology table becomes "NUnit via `dotnet test`; Unity Test Framework only for Presentation smoke tests"

@@ -780,25 +780,38 @@ The UI sends commands down and listens for events coming up. Only the simulation
 | Map | Unity Tilemap (isometric) + custom chunked renderer at City scale | Built in; chunking keeps draw calls low |
 | UI | UI Toolkit for menus, uGUI for in-world labels | Data-binding for heavy report screens |
 | Agents | Plain C# struct arrays first; Unity DOTS/Entities only if profiling demands it | Simpler to start, a clear upgrade path |
-| Async jobs | Unity Job System + Burst for pathfinding and market clearing | Multithreaded on phones |
-| Content | ScriptableObjects generated from spreadsheets via an editor importer | Designers tune numbers without code |
+| Async jobs | None in the simulation. Unity Job System and Burst only in Presentation (for example rendering helpers). Any sim parallelism must be deterministic: fixed partitions merged in id order | Burst floats differ across platforms and would break purity (ADR 0018) |
+| Content | JSON definitions in `content/`, loaded by `Sim.Content` with Newtonsoft.Json. No ScriptableObjects at runtime | Diffable, engine-free, testable with `dotnet test` (ADR 0018) |
 | Assets | Addressables | Smaller install, era packs load on demand |
-| Serialisation | MessagePack-CSharp | Fast, compact, versionable |
-| Tests | NUnit EditMode tests for the simulation; PlayMode smoke tests | The simulation is tested without the engine |
+| Serialisation | MessagePack-CSharp with generated (not reflection-based) formatters; final choice in the saves spec | Fast, compact, versionable, IL2CPP-safe |
+| Tests | NUnit via `dotnet test` for the simulation, content and balancer. Unity Test Framework only for Presentation smoke tests | Runs from the terminal and in free CI, with no Unity licence (ADR 0018) |
 | Source control | Git + Git LFS | Large art files |
-| CI | GitHub Actions with GameCI, or Unity Build Automation | Automated iOS and Android builds |
+| CI | GitHub Actions running `dotnet build` and `dotnet test` on every push. GameCI Unity compile checks are optional (ADR 0017) | Free, no Unity licence needed |
 | Pathfinding | Flow fields per destination type, with A* for vehicles | Cheap for many walkers |
 
 **Project structure**
 
-- `Sim.Core`: the pure C# assembly.
-- `Sim.Content`: the data definitions.
-- `Game.Presentation`: Unity rendering and UI.
-- `Game.Services`: saves, platform services, purchases.
-- `Tests.Sim`: simulation tests.
-- `Tools.Balancer`: a headless runner.
+```
+FarmToCity.sln, Directory.Build.props   C# 9.0, netstandard2.1 for the sim, output to /artifacts
+sim/                                    a Unity package (UPM) that is also a set of dotnet projects
+  Sim.Core/                             the pure C# simulation (.csproj + .asmdef, noEngineReferences)
+  Sim.Content/                          definition classes and the JSON loader
+tests/Sim.Core.Tests/                   NUnit tests, run with `dotnet test`
+tools/Tools.Balancer/                   headless balancer on a fake clock
+content/                                JSON definitions
+unity/FarmToCity/                       the Unity project; references sim/ as a local package
+  Game.Presentation                     Unity rendering and UI (asmdef)
+  Game.Services                         saves, platform services, entitlement port (asmdef)
+```
 
-Assembly definitions enforce the dependency direction: Presentation depends on Sim, and never the other way round.
+Each sim `.cs` file compiles twice: with `dotnet` (through the `.csproj`) for tests and tools, and inside Unity (through the `.asmdef` with `noEngineReferences: true`) for the game (ADR 0018). Assembly definitions enforce the dependency direction: Presentation depends on Sim, and never the other way round.
+
+**Determinism rules for the sim (ADR 0018)**
+
+- No floats in sim state or rules. Money and quantities are `long`. Rates and factors use the `Fixed` 64-bit fixed-point type.
+- The sim uses its own seeded RNG, never `System.Random`.
+- No order comes from iterating a `Dictionary` or `HashSet`. Entities are processed in id order.
+- Code must be IL2CPP-safe: no `dynamic`, no `Reflection.Emit`, no reflection-based serialisation.
 
 **Implementation model (ADR 0017)**
 
@@ -855,10 +868,9 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 **Content pipeline**
 
-1. Content is authored in spreadsheets, one tab per definition type, so balance can be tuned in bulk.
-2. Sheets are exported to CSV or JSON, which is version-controlled and diffable in code review.
-3. A Unity editor importer validates references and ranges, then generates ScriptableObjects.
-4. A content linter runs in CI and catches broken recipe chains, unreachable buildings and orphaned goods.
+1. Content is authored as JSON in `content/`, one file per definition type. Spreadsheet export is optional for bulk tuning. The files are version-controlled and diffable in code review.
+2. `Sim.Content` loads and validates the definitions (references and ranges) in both `dotnet` and Unity.
+3. A content linter runs as a `dotnet test` suite in CI and catches broken recipe chains, unreachable buildings, orphaned goods and tradeable goods with no trader capacity.
 
 **Money units.** Use 64-bit integers in the smallest coin unit, never floats, so that ledgers always reconcile exactly. Rates and percentages use fixed-point decimals.
 
