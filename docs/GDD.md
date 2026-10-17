@@ -1,0 +1,890 @@
+# Farm to City — Game Design Spec
+
+Master spec · v1.0 · 16 Oct 2026 · Owner: Keyur Patel
+
+> This is the master game design document (GDD). Feature specs in `docs/specs/` expand individual sections of it. When a feature spec and this doc disagree, update this doc in the same commit.
+
+## Vision and pillars
+
+Farm to City is an offline life-and-business simulation in Unity C# for iOS and Android. The player starts with one small plot of land and grows it into a city. Every building is a decision with real costs, and the town grows only as well as the player runs it.
+
+**Design pillars**
+
+1. **Real cause and effect.** The game uses no magic timers. Outcomes come from simulated supply, demand, skills, money and time.
+2. **Learn by running it.** Lessons about business, assets and workforce sit inside the gameplay and are never delivered as lectures.
+3. **Your town, your story.** There is no fixed path. A town that builds its school first should turn out different from one that builds a factory first.
+4. **Calm, fair, offline.** No energy bars and no pay-to-win. The game plays fully offline from the first launch.
+
+**Target player:** age 16 and up. Fans of Township, SimCity BuildIt, Stardew Valley and Banished, plus people who want to understand how money and businesses work. Sessions run 5–20 minutes on a phone and up to an hour on a tablet.
+
+**What "real life experience" means here:** real concepts with readable numbers. The game uses profit and loss, depreciation, interest, wages, productivity and price elasticity, at a simplified scale. One rule holds everywhere: every number shown can be explained in one tap with a *Why?* breakdown.
+
+**Non-goals:** multiplayer, combat, real-money trading and photoreal 3D.
+
+## Player journey and eras
+
+The town moves through six eras, and each one changes the player's role, not just the size of the map. Eras unlock by what the town *is*, not by a counter: a town cannot become a Township without schooling and a clinic.
+
+| Era | Player role | Unlock condition (what the player has built) | Population | New systems |
+| --- | --- | --- | --- | --- |
+| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, small savings | 1–3 | Crops, animals, selling to a travelling trader, cash ledger |
+| 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | Hiring, wages, storage, first processing (flour mill) |
+| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school | 15–80 | Businesses, household needs, loans from a cooperative bank, the treasury |
+| 4. Township | Council chair | 20 households, a clinic, a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
+| 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
+| 6. City | Mayor and tycoon | Population 3,000, a college, a hospital, a power plant | 3,000–20,000 | Districts, trade with other cities, shares in businesses, specialisation |
+
+**Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Village era there is also a *town treasury*, funded by taxes and spent on public services. Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
+
+**Town identity.** Cumulative choices give the town tags such as Agri-hub, Merchant town, Industrial town, Education town or Green town. Each tag unlocks unique buildings and small bonuses, so two playthroughs end in different cities.
+
+**Span of play.** One game year is about 2 real hours at normal speed. Farm to City takes roughly 30–40 game years, about 60–80 hours, so citizens are born, grow up, work and retire within one playthrough.
+
+## Time and world simulation
+
+The world runs on a fixed game clock. One game day takes 2 real minutes at 1x speed, and a year has 4 seasons of 15 days. Each season closes like a business quarter, with reports.
+
+**Clock and speeds**
+
+- Speeds are pause, 1x, 2x and 3x. Menus that need thought, like hiring or a loan offer, auto-pause in Guided mode.
+- A simulation tick is 1 game hour, which is 5 real seconds at 1x.
+- Each day has phases: dawn (5–7), work (8–17), evening (17–21) and night. Citizens follow daily schedules.
+- Settlement cadence:
+  - Every hour: production, movement and sales.
+  - Every day: market prices clear, wages accrue, needs update.
+  - Every season: accounts close, loan payments fall due, taxes are collected.
+  - Every year: the year-end review, ageing, and the Town Almanac.
+
+**Seasons**
+
+| Season | Farming | Economy |
+| --- | --- | --- |
+| Spring | Sowing for most crops | Seed and labour prices rise |
+| Summer | Growth; water demand peaks | Heat lowers outdoor productivity |
+| Monsoon / Autumn | Main harvest | Crop prices fall from oversupply |
+| Winter | Few crops; orchards and dairy carry on | Stored goods sell at a premium |
+
+**Weather.** Each day's weather is drawn from that season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop growth, soil moisture, shop foot traffic, construction speed and energy demand. A 3-day forecast lets the player prepare, and big events like droughts are signalled days ahead.
+
+**Determinism.** Each save has a random seed, and the simulation is deterministic for a given seed and command history. That makes offline catch-up reproducible, makes bugs replayable, and allows automated balancing runs.
+
+## Land, farming and livestock
+
+Farming is the first business the player runs, so it introduces every core idea: input costs, yield risk, storage, and the trade-off between short-term profit and long-term asset value.
+
+**Land.** Land comes in 1-acre tiles grouped into fields. Each tile has four properties:
+
+- fertility (0–100)
+- moisture
+- soil type (loam, clay, sandy)
+- drainage
+
+The map grows as the player buys adjacent parcels. Price depends on soil and location.
+
+**Crops (launch set).** Wheat, rice, maize, potato, tomato, onion, lentils, sugarcane, cotton, plus one multi-year orchard (mango or apple). Each crop defines:
+
+- a sowing window
+- growth days
+- water need
+- base yield per acre
+- labour hours per acre
+- the soil nutrients it uses
+- a base price
+
+**Yield formula.** The yield breakdown is shown to the player on every harvest.
+
+```
+Yield = Base × Soil × Water × Care × Seed × Weather × Tools
+```
+
+Care is the labour hours delivered divided by the hours needed, capped at 1.1. Weather factors come from the day-by-day weather during growth.
+
+**Inputs and trade-offs**
+
+- **Seeds.** Buy certified seed (higher yield, costs more) or save your own (free, slowly degrading quality).
+- **Fertiliser.** Chemical fertiliser gives +25% yield now but fertility falls 3 points a season. Compost from your own livestock is slower but builds soil. This teaches profit now versus land value later.
+- **Crop rotation.** Repeating a crop drains its nutrient. Lentils restore soil, and leaving a field fallow for a season restores fertility.
+- **Pests and disease.** Risk rises with monoculture and wet weather. Spraying costs money, and ignoring the risk can wipe out a field.
+
+**Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
+
+**Livestock.** Chickens, goats, cows and buffalo. Each needs feed, shelter, health care and breeding. Animals produce eggs, milk, wool and manure, and the manure becomes compost. Vet bills and disease outbreaks are a real risk.
+
+**Equipment ladder.** Hand tools, then an ox plough, then a tractor, then a harvester. Each machine has:
+
+- a purchase price
+- maintenance and fuel costs
+- depreciation
+- a resale value
+
+Players can buy, lease, or hire a machine for a day from a neighbour.
+
+**Storage and selling**
+
+- Produce spoils at a rate set per good. A granary, and later cold storage, slows spoilage.
+- **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
+- **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
+
+## Economy
+
+The economy is a local market that clears every game day. Prices move with real supply and demand, and a regional trader sets a floor and a ceiling so prices never run away.
+
+**Goods tiers**
+
+| Tier | Examples | Made by |
+| --- | --- | --- |
+| Raw | Wheat, milk, cotton, timber, clay, stone, ore | Farms, forestry, quarries, mines |
+| Processed | Flour, sugar, yarn, bricks, cement, dairy | Mills, kilns, plants |
+| Finished | Bread, clothes, furniture, sweets, tools | Workshops, factories |
+| Services | Meals, haircuts, tuition, healthcare, transport, lodging | Shops, clinics, schools, operators |
+
+**Example production chains**
+
+1. Wheat → flour mill → flour → bakery → bread
+2. Cotton → gin → spinning mill → weaving → tailor → clothes
+3. Clay → brick kiln → bricks → construction company → houses
+4. Milk → dairy → paneer, curd, ghee → sweet shop
+5. Sugarcane → jaggery or sugar mill → sweets, tea stall
+6. Timber → sawmill → planks → carpenter → furniture
+
+**Price model.** Each good has a base price and an elasticity. The local price follows the ratio of demand to supply, bounded between 0.5x and 2x the base.
+
+```
+P_local = P_base × (Demand / Supply)^(1/e)      clamped to [0.5 × P_base, 2 × P_base]
+```
+
+- **Demand** comes from household consumption plus businesses buying inputs.
+- **Supply** comes from local production plus imports.
+- **Elasticity (e)** is the key lever. Necessities like flour have low elasticity: prices swing hard on shortages. Luxuries like sweets have high elasticity: overprice them and customers simply stop buying.
+
+**Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport. This creates import and export decisions. It also explains why a town on a highway gets better prices than a remote one.
+
+**Household spending.** Each household splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
+
+**Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Wage expectations follow it with a lag. Cash under the mattress quietly loses value, which teaches why saving and investing differ.
+
+**Credit and payment terms.** From the Township era, sales between businesses use invoices with 15- or 30-day payment terms. A business can be profitable on paper and still run out of cash. That is one of the most important lessons in the game.
+
+## Businesses
+
+Every business is a small company with its own books, staff and customers. The player founds it, runs it, delegates it, sells it, or watches it fail.
+
+**Catalogue by era**
+
+| Era | Businesses |
+| --- | --- |
+| Hamlet | Farm stall, flour mill, dairy shed |
+| Village | Grocery, bakery, tea stall, tailor, carpenter, brick kiln |
+| Township | Restaurant, hardware store, private clinic, tuition centre, construction company, transport (tempo or truck) |
+| Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
+| City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |
+
+**Founding flow**
+
+1. **Pick a type.** Only types the era supports and the workforce can staff are offered.
+2. **Market research.** A screen shows local demand, existing competitors and their prices, expected foot traffic on a heat-map, and the average wage for the roles needed.
+3. **Business plan.** The player estimates price, volume and costs, and the game projects monthly profit and break-even. The plan is saved, and after a year the game compares forecast with actual results.
+4. **Location.** Buy land or rent a unit. Each spot gets a location score from traffic, nearby customers, competitors and rent.
+5. **Funding.** Choose among:
+   - own cash
+   - a bank loan (rate, term, collateral)
+   - an investor who takes an equity share
+   - a partner citizen who shares profits and decisions
+6. **Hire staff.** See Citizens and workforce.
+7. **Set operations.** Prices, product quality, opening hours, stock reorder levels, marketing budget, supplier.
+8. **Open.**
+
+**Operating levers:** price, quality, staffing, hours, stock policy, marketing, supplier choice, equipment upgrades, expansion and automation.
+
+**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money. Underpricing wins customers but kills margin. Overpricing invites a competitor.
+
+**Books for every business**
+
+- **Profit and loss:** revenue, cost of goods, gross margin, wages, rent, utilities, maintenance, interest, depreciation, tax, net profit.
+- **Cash flow:** profit adjusted for stock bought, loan principal, equipment purchases, and money still owed by customers.
+- **Balance sheet:** assets, liabilities, equity.
+
+Each line has a *Why?* tap with a plain-language explanation and the numbers behind it.
+
+**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out.
+
+**Lifecycle and trouble.** New businesses usually lose money for their first 1–3 seasons. Trouble arrives as events: a supplier shortage, a key worker quitting, a health inspection, a price war, a road closure, a viral rush of customers.
+
+**Failure is a lesson, not game over.** When cash falls below zero, the business uses an expensive overdraft. If that runs out, wages are missed, staff leave and suppliers stop delivering. The player can then:
+
+- inject personal cash
+- restructure the loan
+- sell assets
+- close the business
+
+The player's credit score drops, and later loans cost more.
+
+**Delegation.** The player can hire a manager to run a business, which is the only way to scale beyond a handful of businesses. Each manager has a skill level and a style: cost-cutter, growth-chaser, or quality-first. The player receives seasonal reports and sets targets.
+
+**Exit and valuation.** A business can be sold at a valuation of about 3–6x its annual profit, adjusted for growth and risk. Its value shows on the player's net worth. Successful businesses can open branches or become franchises.
+
+## Citizens and workforce
+
+Every citizen is a person with skills, a family and ambitions. Managing them well, through fair pay, training, structure and respect, decides how far the town gets.
+
+**Citizen profile**
+
+| Field | Detail |
+| --- | --- |
+| Identity | Name, age, household, home, portrait |
+| Life stage | Child (0–17), adult (18–59), elder (60+) |
+| Education | None, primary, secondary, college, specialist |
+| Skills (0–100) | Farming, crafting, sales, service, construction, management, teaching, medicine, engineering, finance |
+| Traits (2–3) | Hardworking, lazy, ambitious, loyal, creative, careless, frugal, sociable, perfectionist |
+| State | Health, happiness, fatigue, job satisfaction, savings, wage expectation |
+| Story | Where they came from, life events, and their relationship with the player |
+
+**Population flows**
+
+- **Births** depend on households, housing space, happiness and healthcare.
+- **Migration in** is pulled by open jobs, wages, housing, services and town reputation.
+- **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
+- **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
+
+**Hiring**
+
+1. **Post a job:** role, wage, hours, required skills, benefits.
+2. **Receive applicants:** unemployed citizens, citizens already employed but looking, and migrants.
+3. **Review candidates.** Skills are shown as ranges, and traits are partly hidden. An interview reveals one trait, and a reference check reveals another. This teaches hiring under uncertainty.
+4. **Make an offer.** Candidates can accept, reject, or negotiate the wage.
+5. **Probation:** 15 days, during which the employee can be let go without severance.
+
+**Wages.** Each skill level has a market wage, set by labour supply and demand and nudged by inflation. Paying above market raises loyalty and applicant quality. Paying below market raises quit rates and invites poaching. Later eras add minimum wage policy and worker associations.
+
+**Productivity.** Output depends on five factors, and each is shown in the worker's panel.
+
+```
+Output = Skill × Motivation × Tools × RoleFit × (1 − Fatigue)
+```
+
+Motivation comes from wage fairness, manager quality, working conditions, recognition and growth.
+
+**Hours and shifts.** Overtime raises output, but fatigue and accident risk climb with it. Night shifts need a premium. Rest days restore fatigue.
+
+**Training.** Skills grow by on-the-job experience, by paid courses (cost plus time away from work), or by sponsoring a citizen's education in return for a work bond. A trained worker is worth more, and is worth more to competitors, too.
+
+**Structure and span of control.** Roles run worker → senior → supervisor → manager. One supervisor manages 5–8 people well. Beyond that, productivity and quality decay, which teaches why organisations need structure.
+
+**Benefits.** Meals, health cover, housing, bonuses and paid leave. Each has a cost and a morale effect.
+
+**HR events.** A raise request, a resignation, a poaching offer, a conflict between two workers, sick leave, a family emergency, a workplace accident, a petition for better conditions. Each event offers choices with consequences.
+
+**Letting people go.** Firing costs severance and lowers the morale of colleagues. Fair treatment builds an **employer reputation** score, which decides the quality of future applicants.
+
+**Children go to school, not to work.** The game never allows child labour. Children attend school if one exists, and that education turns into a better workforce 10–15 game years later.
+
+## Community and civic services
+
+Happiness comes from layered household needs, and civic buildings meet them only when they are staffed and within reach. A school with no teachers is just a building.
+
+**Needs layers.** Happiness is a weighted score of how well each layer is met. A lower layer must be mostly met before the higher ones count fully.
+
+1. **Survival:** food, water, shelter.
+2. **Security:** a stable job, healthcare, safety.
+3. **Belonging:** community hall, market square, festivals, places of worship and culture.
+4. **Growth:** education, library, sports, leisure, culture.
+
+**Civic buildings**
+
+| Service | Early form | Late form | Needs staff | Effect |
+| --- | --- | --- | --- | --- |
+| Water | Well | Water tower, treatment plant | Engineers | Health, growth limit |
+| Education | Primary school | Secondary school, college, library | Teachers | Skills, literacy, era unlocks |
+| Health | Clinic | Hospital | Doctors, nurses | Life expectancy, fewer sick days |
+| Safety | Watchman | Police station, fire station | Officers | Crime and fire risk |
+| Community | Banyan-tree square | Community hall, stadium | Caretakers | Belonging, festivals |
+| Leisure | Playground | Park, cinema, museum | Staff | Happiness, tourism |
+
+**Coverage and capacity.** Each service has a radius and a capacity, such as seats or beds. Homes outside the radius get no benefit, and overcrowding lowers quality. Staff come from the workforce, so a clinic needs a doctor. Education, migration or a scholarship must produce one.
+
+**Education as a long-term investment.** A school's payoff comes 10–15 game years later, as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
+
+**Health.** Clean water, sanitation, nutrition and healthcare raise life expectancy and cut sick days, which feeds straight back into productivity.
+
+**Safety and fairness.** Crime rises with unemployment and inequality. Police lower crime, but jobs and fair wages lower it more cheaply. An inequality indicator tracks the gap between the richest and poorest tenth of the town. High inequality causes unrest and out-migration.
+
+**Festivals.** The player schedules festivals at a cost. They bring a happiness spike, visitors and trade, and they become memorable entries in the Chronicle.
+
+**Town reputation** has five scores: livability, business climate, education, health and environment. They attract migrants, investors and regional grants.
+
+**Citizen voice.** Citizens raise petitions such as "We need a school closer to the east side." Petitions show what the town needs and feed the approval rating.
+
+## City building
+
+The player places their own farms, businesses and civic buildings directly. From the Township era they also zone land, and private builders fill the zones when demand exists. The player shapes the city, and the city then grows itself.
+
+**Map.** An isometric tile grid set in a river valley. The terrain includes:
+
+- fertile plain
+- forest
+- hills
+- rocky land
+- a river
+
+The map holds deposits of clay, stone, timber and ore. Land outside the starting plot is bought parcel by parcel, and prices rise as the town develops.
+
+**Zoning (from Township):** residential, commercial, industrial, agricultural and mixed use. Each zone has a density level that rises with land value and with infrastructure.
+
+**Construction is real work.** Every building needs:
+
+- materials (bricks, timber, cement, steel)
+- builders
+- time
+
+The player can buy materials, produce them, or own the construction company. A shortage of bricks really does slow the city.
+
+**Roads.** Dirt path, then gravel, then paved road, then avenue. Each step raises capacity and speed. Congestion appears in the Town era and raises delivery costs and commute times.
+
+**Utilities**
+
+| Utility | Ladder | Without it |
+| --- | --- | --- |
+| Water | Well → tower → treatment plant | Growth capped, disease |
+| Power | None → diesel generator → grid plant → solar or wind | No factories, no night shifts |
+| Sanitation | Pit → drains → sewage plant | Disease, lower land value |
+| Waste | None → collection → recycling | Pollution, unhappiness |
+
+**Land value** rises with nearby services, parks, roads and jobs, and falls with pollution, noise and crime. It drives rents, property tax and what private builders choose to put up. An overlay shows it at any time.
+
+**Pollution** comes from industry, traffic and diesel power. It lowers health and land value. Clean alternatives cost more up front, which makes them a real decision.
+
+**Transport.** Citizens walk to places within a radius. A bus network extends that radius, and trucks move goods between businesses. Logistics cost shows up in every business's books.
+
+**Building upgrades.** Hut → house → villa, or row house → apartment block. Upgrades depend on land value, household income and infrastructure. The skyline grows from what the town can actually support.
+
+## Governance and public finance
+
+From the Village era the player also runs the town treasury. Public money pays for public goods, and every tax and policy has winners, losers and a lag.
+
+**Revenue**
+
+- property tax, based on land value
+- business tax on profit
+- sales tax
+- fees for market stalls, licences and building permits
+- regional grants, which come with conditions
+- municipal bonds and loans
+
+**Spending**
+
+- staff wages for public services
+- maintenance
+- new construction
+- subsidies
+- interest on public debt
+
+**Budget cycle.** At the start of each year the player sets an annual budget by department, and can revise it once at midyear. Each season the game reports actual spending against budget, with variances explained. Overspending a department drains the treasury, and underspending lets services decay.
+
+**Policies.** Each policy has a cost, an effect and a lag. The launch set:
+
+| Policy | Helps | Costs |
+| --- | --- | --- |
+| Free school meals | Enrolment, child health | Treasury spend |
+| Farm input subsidy | Farm incomes, food supply | Treasury; dependency risk |
+| Small business grant | New businesses | Treasury; some grants wasted |
+| Minimum wage | Worker income, fairness | Higher business costs, fewer jobs at the margin |
+| Rent control | Affordability | Less new housing built |
+| Pollution limits | Health, land value | Industry costs; some firms leave |
+| Tourism promotion | Visitors, hotels, restaurants | Marketing spend; crowding |
+| Night market | Retail, nightlife | Noise; police cost |
+
+**Approval and elections.** Approval comes from happiness, jobs, tax levels and fulfilled petitions. From the Town era there is an election every 5 game years. Low approval limits how much tax citizens accept and slows migration into the town. Whether the player can lose office is an open decision, listed at the end of this doc.
+
+**Public debt.** Bonds fund big infrastructure such as a power plant or a highway link. The town has a credit rating that sets its interest rate. Too much debt crowds out services, which is a direct lesson in leverage at public scale.
+
+**Conflicts of interest.** Treasury money can build a road to the player's own factory. Doing it repeatedly creates a scandal risk that hits approval and reputation. The game never preaches about this. It simply has consequences.
+
+## Assets and wealth
+
+The player's real score is **net worth**: everything they own minus everything they owe. Coins in hand are only part of it. The game teaches why some assets grow, some shrink, and some pay you while you sleep.
+
+**Asset classes**
+
+| Asset | Value over time | Income | Liquidity | Lesson |
+| --- | --- | --- | --- | --- |
+| Cash | Loses value to inflation | None | Instant | Keep an emergency fund, not a hoard |
+| Savings deposit | Grows at bank interest | Interest | 1 day | Compounding |
+| Farmland | Appreciates as the town grows | Crop profit or lease rent | Slow sale at a discount | Land as a long-term store of value |
+| Buildings | Depreciate; maintenance slows it | Rent or business use | Slow | Upkeep is a real cost |
+| Equipment and vehicles | Depreciate fast | Through productivity | Medium | Buy or lease? |
+| Livestock | Grows by breeding; risk of disease | Milk, eggs, wool | Medium | Living assets carry risk |
+| Businesses | About 3–6x annual profit | Profit | Slow, needs a buyer | Building versus buying cash flow |
+| Rental property | Tracks land value | Rent minus vacancy and upkeep | Slow | Passive income, yield |
+| Town bonds | Stable | Fixed coupon | Medium | Low risk, low return |
+| Shares (City era) | Volatile | Dividends | Fast | Diversification |
+
+**Depreciation.** Every building and machine loses book value each season on a straight-line schedule. Skipping maintenance speeds wear, then causes breakdowns and accidents. Market value can differ from book value, and the game shows both.
+
+**Leverage.** Loans let the player buy assets sooner. If the asset returns more than the interest, wealth grows faster. If it doesn't, debt grows faster. Defaulting on a secured loan means the bank takes the collateral.
+
+**Liquidity.** Land and businesses take days to sell and sell at a discount if rushed. A player with all their wealth in land and no cash can still go bankrupt in a bad season.
+
+**Diversification.** One crop, one business or one customer is fragile. Events hit specific sectors, and a spread of assets smooths the shocks.
+
+**Personal finance screen**
+
+- net worth trend
+- an asset allocation pie chart
+- the passive income ratio: income that arrives without the player's labour, against monthly spending
+- the debt-to-asset ratio
+- an emergency fund measured in months of costs covered
+
+**Wealth milestones** mark progress without telling players what to do: first 10,000 coins of net worth, first rental income, debt-free, passive income covering living costs.
+
+## Events, disasters and town history
+
+Events test the player's preparation and always offer a choice. The Chronicle turns the town's history into a story the player feels attached to.
+
+**Event families**
+
+| Family | Examples | Preparation that softens it |
+| --- | --- | --- |
+| Weather | Drought, flood, heatwave, hailstorm | Irrigation, drainage, crop insurance, diversified crops |
+| Economic | Regional price boom, recession, new highway, fuel spike | Cash reserve, contracts, diverse businesses |
+| Business | Supplier strike, viral popularity, health inspection, equipment breakdown | Second supplier, quality standards, maintenance |
+| Workforce | Mass resignation, skilled migrant arrives, poaching war | Fair wages, training, employer reputation |
+| Social | Wedding, festival, new family, a dispute between neighbours | Community spaces, happiness |
+| Opportunity | Investor offer, trade contract, regional grant, land auction | Good books, credit score, reputation |
+| Disaster | Fire, epidemic, river flood | Fire station, hospital, embankment, insurance |
+
+**Event rules**
+
+- Every event offers 2–3 choices with visible short-term costs and hinted long-term effects.
+- What the player prepared changes the impact. This shows the value of insurance and reserves.
+- Frequency: about one minor event a game week and one major event a game year. Disasters are rare and signalled days ahead.
+- Events are weighted by the town's state. A drought is more likely after a dry season, and a strike more likely after wage cuts.
+
+**Insurance.** Crop, property and business-interruption insurance are available. The player pays a premium every season, and a payout follows when a covered event strikes. Players learn the trade-off between a certain small cost and an uncertain large one.
+
+**The Chronicle.** An automatic history of the town:
+
+- the first settler's name
+- the first child born in town
+- the first graduate
+- record harvests
+- disasters survived
+- businesses founded and lost
+
+Entries are written in a warm, slightly poetic voice, and they become the emotional heart of the game.
+
+**Town Almanac.** At each year's end, a short illustrated summary: population, net worth, the year's best decision, its costliest mistake, and a citizen spotlight.
+
+**Citizen stories.** Notable citizens get small arcs. A hired hand saves up and opens a tea stall. A scholarship child returns as the town's first doctor. Arcs arise from the simulation, not a script, and are surfaced as short vignettes.
+
+## Learning layer
+
+The game teaches in three steps: the player decides, sees the result, and only then gets the concept named. A lesson the player felt lands harder than one they read.
+
+**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision.
+
+- **Farm advisor:** soil, crops, weather risk.
+- **Accountant:** margins, cash flow, loans, assets.
+- **People lead:** hiring, morale, training, structure.
+- **Town planner:** coverage, land value, budget, policies.
+
+**Reports every player can read**
+
+| Report | Cadence | Teaches |
+| --- | --- | --- |
+| Cash ledger | Daily | Where money goes |
+| Profit and loss | Each season | Margins, fixed and variable costs |
+| Cash flow statement | Each season | Profit is not cash |
+| Balance sheet | Each season | Assets, liabilities, equity |
+| Workforce report | Each season | Turnover, productivity, wage benchmarks |
+| Town report | Each season | Services, happiness, budget against actual |
+| Year-end review | Yearly | Best decision, costliest mistake, what to try next |
+
+**Concept Codex.** About 40 concept cards unlock the first time the player meets each idea in play. Every card has a plain definition, the player's own numbers as the example, and a one-line real-world link. Launch set:
+
+- **Business:** gross margin, break-even, fixed versus variable cost, unit economics, pricing power, competition and market entry, forecast versus actual.
+- **Money:** cash flow versus profit, working capital, interest and compounding, inflation, credit score, leverage, liquidity, emergency fund.
+- **Assets:** depreciation, appreciation, yield, valuation, diversification, insurance, hedging, opportunity cost.
+- **People:** hiring under uncertainty, market wage, retention, training ROI, span of control, delegation, employer reputation.
+- **Public:** public goods, taxes and services, externalities such as pollution, inequality, long-term investment.
+
+**Business plan tool.** Before founding a business, the player fills in a simple plan. After a year the game puts the plan beside actual results. Seeing your own optimism measured is a real-world planning skill.
+
+**Scenarios.** Short standalone challenges with a grade from A to F:
+
+- Save a failing bakery within one year.
+- Get through a two-season drought without layoffs.
+- Staff a clinic from scratch.
+- Pay off a big loan before it falls due.
+- Grow a town with no farmland.
+
+**Difficulty modes**
+
+- **Guided:** more advisor warnings, softer price swings, auto-pause on big decisions.
+- **Standard:** the default.
+- **Realistic:** harsher markets, fewer hints, hidden traits stay hidden longer.
+
+**Accuracy.** All models are simplified but point the right way. Before launch, a finance educator should review the Codex and core formulas.
+
+## Decisions and consequences
+
+Every decision in the spec has four parts, and each feature spec must fill them in:
+
+1. the immediate cost
+2. the delayed effect
+3. the side effects on other systems
+4. how reversible it is
+
+The town's future comes from the sum of these. A script never decides it.
+
+**How a decision ripples: building a school**
+
+1. The school costs coins and materials, and takes builders off other jobs.
+2. It needs teachers. The player hires them, trains them, or offers housing to attract migrants.
+3. Families with children rate the town higher, and migration rises.
+4. After 10–15 game years, graduates enter the workforce with higher skills.
+5. Skilled workers unlock clinics, engineering firms and banks, and wages rise.
+6. Land value near the school rises, and so do property tax receipts.
+
+**Trade-off examples**
+
+| Decision | Short term | Long term | The lesson |
+| --- | --- | --- | --- |
+| Chemical fertiliser | +25% yield | Soil fertility falls 3 points a season | Profit now versus asset value later |
+| Pay 15% above market wage | Higher costs | Lower turnover, better applicants | Margin versus stability |
+| School before factory | No revenue for years | Skilled workforce | Patience compounds |
+| Loan to expand | Interest cost | Faster growth; danger if sales dip | Leverage cuts both ways |
+| Undercut a rival's price | Thin margins | Rival exits, or you run out of cash first | Price wars |
+| Skip maintenance | Saves cash | Breakdowns, accidents | Operating cost versus reliability |
+| Factory near homes | Jobs, taxes | Health and land value fall | Externalities |
+| Promote from within | Training cost | Loyalty, knowledge kept | Investing in people |
+
+**No single best strategy.** Balancing must keep at least three town archetypes viable, such as the agri-hub, the merchant town and the education town. No archetype may finish more than 20% ahead of the others on the standard benchmarks.
+
+**Mistakes are recoverable.** Bankruptcy, a failed harvest or a lost election costs time and wealth, but never ends the save. Real life rarely gives a game over, and the learning comes from recovering.
+
+## UI/UX and screens
+
+The map is the home screen, and any lever is at most three taps away. The UI itself ages with the town: wood and paper in the Homestead era, modern glass in the City era.
+
+**Screen list**
+
+| Screen | Purpose | Key elements |
+| --- | --- | --- |
+| Map | Watch and place | Isometric map, pinch-zoom, tap to select, ghost placement preview |
+| HUD | Status at a glance | Date, season, weather, personal cash, treasury, population, happiness, speed controls, alerts |
+| Build menu | Construct | Categories by era, cost and material check, coverage preview |
+| Overlays | See the hidden | Fertility, land value, coverage, pollution, traffic, happiness, crime |
+| Building panel | Inspect | Status, staff, inputs and outputs, upgrades, financials tab |
+| Business dashboard | Run a company | KPIs, profit and loss, levers, manager, plan against actual |
+| People | Workforce | Citizen list and profiles, family tree, hiring board, workforce report |
+| Finance hub | Personal money | Ledger, statements, loans, assets, net worth |
+| Town hall | Public money | Budget, taxes, policies, petitions, approval |
+| Advisor inbox | Guidance | Warnings, tips, event choices |
+| Codex | Learn | Concept cards, scenario list |
+| Chronicle | Remember | Timeline, Almanacs, citizen stories |
+| Settings and saves | Control | Save slots, backup, difficulty, accessibility, language |
+
+**Onboarding.** A 20-minute playable prologue: the player inherits a grandparent's neglected 2-acre plot and a letter of advice. Each early lesson arrives as a line from the letter and an advisor nudge, never as a pop-up wall. The first sale, the first hire and the first loan are guided once.
+
+**Mobile ergonomics**
+
+- Landscape is the primary orientation for the map. Menus work one-handed from bottom sheets.
+- Touch targets are at least 44 pt. Long-press shows the *Why?* breakdown on any number.
+- Notifications group by importance: urgent (cash, safety), decisions, then information.
+- Players can pause anywhere. Big decisions show their consequences before confirming.
+
+**Accessibility.** Colour-blind-safe overlay palettes, scalable text, reduced-motion mode, haptic feedback that can be switched off, and full play without audio.
+
+**Localisation.** English first, with Hindi and other languages after launch. All text lives in string tables from day one, and numbers format by locale.
+
+## Offline play and saves
+
+The game needs no account and no server. All content ships in the build, and the network is used only for optional cloud backup and store purchases.
+
+**Time while the app is closed.** The proposed default: the town keeps living at a coarse rate for up to 8 real hours, then pauses. A *While you were away* report shows harvests, sales, wages paid and events. A setting lets players choose *Pause when closed* instead. This is an open decision.
+
+**Coarse catch-up mode.** Away time is simulated in whole-day steps using aggregate formulas: no pathfinding and no individual shop visits. Events that need a decision queue up and wait for the player. Big disasters never fire while the player is away.
+
+**Clock safety.** The game stores the last-saved wall-clock time. A backward jump grants nothing. A forward jump is capped at 8 hours, as above. In a single-player game nothing more is needed.
+
+**Save system**
+
+- **Autosave** every game day, and whenever the app goes to the background.
+- **Slots:** 3 rotating autosaves plus 5 manual slots.
+- **Atomic writes:** write to a temporary file, verify its checksum, then rename. A crash can never corrupt the last good save.
+- **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
+- **Size target:** under 5 MB at City scale.
+- **Backup:** optional iCloud on iOS and Google Play Games Saved Games on Android, synced when a network is available. Manual export and import of a save file as a fallback.
+
+**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are opt-in and capped at 2 a day.
+
+**Performance budget**
+
+| Target | Value |
+| --- | --- |
+| Frame rate | 60 fps on iPhone 11 and on a 4 GB Android phone from 2021 |
+| Fully simulated citizens | Up to about 2,000 |
+| Total population | 20,000, beyond the first 2,000 simulated as statistical cohorts with named notable citizens |
+| Cold start | Under 5 seconds to the map |
+| Offline catch-up | Under 2 seconds for 8 hours away |
+| Battery | Low-power mode when idle; capped frame rate in menus |
+
+## Technical architecture (Unity C#)
+
+The simulation is a pure C# library with no Unity dependency. Unity only draws the state and sends commands. This keeps the game logic testable, deterministic and fast enough to run 100 game years headless in a balancing test.
+
+```mermaid
+flowchart TB
+    PRES["Presentation (Unity)<br/>Map renderer, UI screens, view models<br/><i>reads state, never writes it</i>"]
+    PLAT["Platform services<br/>Cloud backup, purchases, notifications, haptics"]
+    CMD["Commands<br/>Build, Hire, SetPrice, Loan"]
+    EVT["Domain events<br/>Harvest, WorkerQuit, LoanDue"]
+    SIM["Simulation core (pure C#, deterministic)<br/>Time → Weather → Agriculture → Production → Market →<br/>Labour → Population → Finance → Civic → Treasury → Events"]
+    CON["Content definitions<br/>Crops, goods, recipes, buildings, events, policies"]
+    STATE["Game state<br/>Citizens, businesses, ledgers, land, treasury"]
+    SAVE["Save service<br/>Versioned, atomic saves, 3 rotating autosaves"]
+
+    PRES -->|player action| CMD
+    CMD -->|validated, applied| SIM
+    SIM -->|emits| EVT
+    EVT -->|updates UI| PRES
+    CON -->|loads| SIM
+    SIM <-->|reads, writes| STATE
+    STATE --> SAVE
+    SAVE -->|backup| PLAT
+    PRES --> PLAT
+```
+
+The UI sends commands down and listens for events coming up. Only the simulation changes game state.
+
+**Layers**
+
+1. **Content definitions.** Crops, goods, recipes, buildings, events, policies and Codex cards, authored as data rather than code.
+2. **Command layer.** UI actions become commands such as `BuildCommand`, `HireCommand`, `SetPriceCommand` and `TakeLoanCommand`. The simulation validates each one and rejects it or applies it. This works like CQRS in a backend: one entry point for every state change, easy to log, replay and test.
+3. **Simulation core.** Independent systems run in a fixed order each tick: Time → Weather → Agriculture → Production → Market → Labour → Population → Business finance → Civic → Treasury → Events. Each system reads and writes `GameState` only.
+4. **Game state.** Plain serialisable C# objects and struct arrays. This is the single source of truth.
+5. **Domain events.** Each tick emits events like `HarvestCompleted`, `WorkerQuit` and `LoanDefaulted`. The UI, the Chronicle, notifications and advisors all subscribe to them.
+6. **Presentation.** Unity scenes, an isometric tilemap renderer, citizen sprites with pooled game objects, and view models that read state. The UI never writes state directly.
+7. **Services.** Saving and loading, platform cloud backup, in-app purchases, local notifications, haptics, localisation.
+
+**Technology choices**
+
+| Concern | Choice | Why |
+| --- | --- | --- |
+| Engine | Current Unity LTS release, 2D URP | Stable, long support, good 2D lighting |
+| Map | Unity Tilemap (isometric) + custom chunked renderer at City scale | Built in; chunking keeps draw calls low |
+| UI | UI Toolkit for menus, uGUI for in-world labels | Data-binding for heavy report screens |
+| Agents | Plain C# struct arrays first; Unity DOTS/Entities only if profiling demands it | Simpler to start, a clear upgrade path |
+| Async jobs | Unity Job System + Burst for pathfinding and market clearing | Multithreaded on phones |
+| Content | ScriptableObjects generated from spreadsheets via an editor importer | Designers tune numbers without code |
+| Assets | Addressables | Smaller install, era packs load on demand |
+| Serialisation | MessagePack-CSharp | Fast, compact, versionable |
+| Tests | NUnit EditMode tests for the simulation; PlayMode smoke tests | The simulation is tested without the engine |
+| Source control | Git + Git LFS | Large art files |
+| CI | GitHub Actions with GameCI, or Unity Build Automation | Automated iOS and Android builds |
+| Pathfinding | Flow fields per destination type, with A* for vehicles | Cheap for many walkers |
+
+**Project structure**
+
+- `Sim.Core`: the pure C# assembly.
+- `Sim.Content`: the data definitions.
+- `Game.Presentation`: Unity rendering and UI.
+- `Game.Services`: saves, platform services, purchases.
+- `Tests.Sim`: simulation tests.
+- `Tools.Balancer`: a headless runner.
+
+Assembly definitions enforce the dependency direction: Presentation depends on Sim, and never the other way round.
+
+## Data model and content configuration
+
+The data falls into two groups. Definitions are static content shipped with the game. Instances are the live state stored in saves. Every balancing number lives in definitions, so tuning never needs code changes.
+
+**Definitions (static content)**
+
+| Definition | Key fields |
+| --- | --- |
+| `GoodDef` | id, tier, basePrice, elasticity, spoilagePerDay, unit |
+| `CropDef` | id, sowWindow, growthDays, waterNeed, baseYieldPerAcre, laborHoursPerAcre, nutrientUse, outputGood |
+| `AnimalDef` | id, feedPerDay, outputs, breedingDays, diseaseRisk, price |
+| `RecipeDef` | inputs[], outputs[], hours, requiredSkill, minSkill, equipment |
+| `BuildingDef` | id, category, era, footprint, coinCost, materials[], buildDays, staffSlots[], upkeepPerSeason, coverageRadius, capacity, pollution |
+| `BusinessDef` | type, buildingRef, recipes[], serviceType, customerSegments[], demandDrivers |
+| `RoleDef` | id, skills weighting, baseWage, supervisorOf |
+| `EventDef` | id, family, triggerConditions, weight, cooldown, choices[] with effects[] |
+| `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
+| `CodexCardDef` | id, title, body, triggerEvent |
+| `EraDef` | id, unlock conditions, new systems, UI theme |
+
+**Instances (live game state)**
+
+| Entity | Key fields |
+| --- | --- |
+| `Citizen` | id, name, birthDay, householdId, homeId, jobId, education, skills, traits, health, happiness, fatigue, savings, wageExpectation, storyFlags |
+| `Household` | members, income, budget shares, needs met, home |
+| `Tile` / `Parcel` | terrain, fertility, moisture, owner, zone, landValue, buildingId |
+| `Building` | defId, position, level, condition, owner, constructionProgress |
+| `Business` | owner (player, rival or citizen), buildingId, staff, prices, quality, inventory, reputation, manager, plan |
+| `LedgerEntry` | day, accountId, amount, category, reference |
+| `Loan` | lender, principal, rate, termSeasons, schedule, collateral |
+| `Asset` | type, purchasePrice, bookValue, marketValue, depreciationRule |
+| `Treasury` | balance, budget by department, policies, bonds, creditRating |
+| `ChronicleEntry` | day, type, text template, involved ids |
+
+**Content pipeline**
+
+1. Content is authored in spreadsheets, one tab per definition type, so balance can be tuned in bulk.
+2. Sheets are exported to CSV or JSON, which is version-controlled and diffable in code review.
+3. A Unity editor importer validates references and ranges, then generates ScriptableObjects.
+4. A content linter runs in CI and catches broken recipe chains, unreachable buildings and orphaned goods.
+
+**Money units.** Use 64-bit integers in the smallest coin unit, never floats, so that ledgers always reconcile exactly. Rates and percentages use fixed-point decimals.
+
+## Art, audio and feel
+
+The look is warm, hand-painted 2D isometric: readable at phone size, and cheaper and faster to produce than 3D.
+
+- **Lighting and seasons.** A day-night cycle with 2D lights, and seasonal palette shifts: spring greens, golden harvest, monsoon greys, winter haze.
+- **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.
+- **Buildings.** Every building shows its level and condition. Poor maintenance is visible as cracked walls and faded paint.
+- **The UI ages with the town.** Wood, paper and chalk in the Homestead era, brass and ledgers in the Village, clean glass in the City.
+- **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
+- **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
+- **Sourcing.** Asset-store packs for the prototype, then commissioned art in one consistent style for launch.
+
+**Monetisation**
+
+Recommended model: **free to download, with a one-time unlock**. The Homestead and Hamlet eras are free, and a single purchase unlocks the full game. Alternatively, sell the game outright at a premium price. Ruled out:
+
+- ads
+- energy timers
+- paid speed-ups
+
+These would undermine the honesty of the economic lessons. Optional extras that never touch the core economy:
+
+- cosmetic packs (decorations, building skins)
+- new map biomes
+- scenario packs
+
+Purchases use StoreKit 2 on iOS and Google Play Billing on Android. Entitlements are cached locally, so the game stays fully playable offline after one successful purchase.
+
+A later option is a school or classroom edition, with teacher-set scenarios and a progress export.
+
+## Balancing and testing
+
+The balance is proven by machines before people play it. A headless balancer runs thousands of seeded games with bot strategies, and the results gate every milestone.
+
+**Bot strategies**
+
+- farm-only
+- business-heavy
+- education-first
+- debt-fuelled expansion
+- cautious saver
+- random
+
+Each runs 1,000 seeds over 50 game years.
+
+**Targets (Standard difficulty, a competent player)**
+
+| Milestone | Target play time |
+| --- | --- |
+| Hamlet | 30–45 minutes |
+| Village | about 3 hours |
+| Township | about 10 hours |
+| Town | about 25 hours |
+| City | about 50–60 hours |
+
+**Health checks run on every build**
+
+- **No money loops.** Buying and reselling the same good can never make a profit, and no recipe yields more value than its inputs plus fair labour.
+- **Bounded prices.** Prices stay within their bounds, and no market sits in permanent shortage.
+- **Stable population.** Population stays stable when the player does nothing, and recovers after a disaster.
+- **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 10 game years.
+- **Balanced strategies.** No strategy beats the second best by more than 20% on net worth or happiness.
+- **Exact ledgers.** The ledger reconciles to the coin after every season.
+
+**Tests**
+
+- Unit tests cover every formula: yield, price, productivity, depreciation, loan schedules.
+- Property-based tests cover market clearing and the save round-trip, which must be byte-identical.
+- Golden-file replays check determinism: same seed and commands, same result.
+- Performance tests run on two reference devices at each era.
+
+**Playtests.** Begin with friends and colleagues at the Homestead slice, and run a structured test each milestone. To check the learning outcome, give players a 10-question quiz on margins, cash flow, depreciation and hiring before and after 5 hours of play.
+
+**Telemetry.** There is no server, so the game keeps an opt-in local log of milestones and decisions. A tester can export it as a file and share it.
+
+## Spec-driven workflow
+
+This document is the master spec. No code is written for a feature until its feature spec, which expands one section of this doc, is written and reviewed.
+
+**Feature spec template**
+
+1. **Goal:** the player experience in one sentence, and the lesson it teaches.
+2. **Scope:** what is in, and explicitly what is out.
+3. **Rules and formulas:** every number, with its units and its bounds.
+4. **Data:** the new or changed definitions and state fields.
+5. **Commands and events:** what the player can do, and what the system announces.
+6. **Decision card:** immediate cost, delayed effect, side effects, reversibility.
+7. **UI:** the screens touched, with a low-fidelity mock-up.
+8. **Acceptance criteria:** testable statements, for example "Given fertility 40 and full care, a wheat acre yields 1.6–1.9 t."
+9. **Balancing hooks:** which balancer metrics should move, and by how much.
+10. **Open questions.**
+
+**Per-feature loop:** spec → review → data definitions → simulation code with unit tests that meet the acceptance criteria → UI → playtest → tune numbers in data → update the spec to match reality.
+
+**Spec order for the vertical slice:** time and weather, land and soil, crops and yield, goods and the local market, the ledger, saves, the Homestead HUD, then onboarding.
+
+## Roadmap and milestones
+
+The build runs in six phases. A phase starts only when the previous gate passes, and each era ships as a playable slice before the next one begins. Durations assume about 15–20 hours a week of solo work, roughly 11–14 months in total.
+
+```mermaid
+flowchart TB
+    P0["Phase 0 · Pre-production · 3–4 weeks<br/>Master spec, economy spreadsheet, art test, performance spike"]
+    P1["Phase 1 · Vertical slice: Homestead · 6–8 weeks<br/>Time, weather, farming, market, ledger, saves, onboarding"]
+    P2["Phase 2 · Hamlet and Village · 10–12 weeks<br/>Citizens, hiring, wages, businesses, needs, school, loans, Codex"]
+    P3["Phase 3 · Township · 10–12 weeks<br/>Zoning, utilities, treasury, taxes, land value, events, Chronicle"]
+    P4["Phase 4 · Town and City · 12–16 weeks<br/>Cohort simulation, transport, industry, investments, elections"]
+    P5["Phase 5 · Polish and launch · 6–8 weeks<br/>Store builds, localisation, accessibility, soft launch in one country"]
+
+    P0 -->|"Gate: spreadsheet economy has no money loops; 2,000 agents at 60 fps"| P1
+    P1 -->|"Gate: testers play 30 minutes and want to keep going"| P2
+    P2 -->|"Gate: 3-hour playthrough; players can explain profit versus cash"| P3
+    P3 -->|"Gate: 10 hours of play; the balancer finds no exploits"| P4
+    P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
+```
+
+| Phase | Duration | Scope | Exit gate |
+| --- | --- | --- | --- |
+| 0 · Pre-production | 3–4 weeks | Master spec, economy spreadsheet, art test, performance spike | Spreadsheet economy has no money loops; 2,000 agents at 60 fps |
+| 1 · Vertical slice: Homestead | 6–8 weeks | Time, weather, farming, market, ledger, saves, onboarding | Testers play 30 minutes and want to keep going |
+| 2 · Hamlet and Village | 10–12 weeks | Citizens, hiring, wages, businesses, needs, school, loans, Codex | 3-hour playthrough; players can explain profit versus cash |
+| 3 · Township | 10–12 weeks | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 10 hours of play; the balancer finds no exploits |
+| 4 · Town and City | 12–16 weeks | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
+| 5 · Polish and launch | 6–8 weeks | Store builds, localisation, accessibility, soft launch in one country | Launch |
+
+Phase 1 is the most important. If 30 minutes on the Homestead isn't fun, adding more systems won't fix it, so the slice gets tuned until it is.
+
+## Open decisions and risks
+
+These choices need the owner's call before their feature specs can be written. The proposed default is listed first in each row.
+
+| Decision | Options | Blocks |
+| --- | --- | --- |
+| Setting and culture | A fictional, culturally neutral river valley; or an Indian-inspired village and town | Art, names, crops, festivals |
+| Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec |
+| Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame |
+| Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec |
+| Orientation | Landscape only; or landscape map with portrait menus | UI layout |
+| Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length |
+| Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline |
+| Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting |
+
+**Risks**
+
+- **Scope.** This is the biggest risk. Mitigate it with a strict vertical slice, era-by-era releases, and cutting features before cutting polish.
+- **Realism versus fun.** A faithful model can be dull. Keep cause and effect visible through *Why?* breakdowns, cut any system the player cannot perceive, and playtest every era.
+- **Performance at City scale.** Prototype cohort simulation and chunked rendering early, in Phase 0, not Phase 4.
+- **Accuracy of the lessons.** Get an expert review of the Codex and core formulas.
+- **Solo bandwidth.** This is part-time work beside a full-time job. Plan milestones as releasable slices, so progress is never all-or-nothing.
