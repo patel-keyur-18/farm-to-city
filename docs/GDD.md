@@ -31,8 +31,8 @@ The town moves through six eras, and each one changes the player's role, not jus
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 1–3 | Crops, animals, selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour |
 | 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | Hiring, wages, storage, first processing (flour mill) |
-| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
-| 4. Township | Council chair | 20 households, a clinic, a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
+| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
+| 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
 | 6. City | Mayor and tycoon | Population 3,000, a college, a hospital, a power plant | 3,000–20,000 | Districts, trade with other cities, shares in businesses, specialisation |
 
@@ -341,7 +341,14 @@ Happiness comes from layered household needs, and civic buildings meet them only
 
 **Coverage and capacity.** Each service has a radius and a capacity, such as seats or beds. Homes outside the radius get no benefit, and overcrowding lowers quality. Staff come from the workforce, so a clinic needs a doctor. Education, migration or a scholarship must produce one.
 
-**Education as a long-term investment.** A school's payoff comes 10–15 life-years later (about 40–60 real days), as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
+**Literacy versus skills (ADR 0011).** Education pays off at two speeds.
+
+- **Literacy** (the share of residents aged 7+ who can read) comes quickly. A child becomes literate after 4 life-years of primary school, about 16 real days. Adult literacy classes at the school take about 1 season. Migrants also arrive with some education.
+- **Skilled graduates** come slowly (below).
+
+The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan. The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
+
+**Education as a long-term investment.** A school's skilled payoff comes 10–15 life-years later (about 40–60 real days), as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
 
 **Health.** Clean water, sanitation, nutrition and healthcare raise life expectancy and cut sick days, which feeds straight back into productivity.
 
@@ -893,6 +900,7 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 - **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 3 game years (48 real days).
 - **Never stuck.** A bot with no cash and no credit, holding only the inherited plot, reaches a profitable season of farming within a set number of seasons, using day labour.
 - **Balanced strategies.** No strategy beats the second best by more than 20% on net worth or happiness.
+- **Reachable eras.** Every era gate is reachable within the calendar targets for each town archetype (ADR 0011).
 - **Exact ledgers.** The ledger reconciles to the coin after every season.
 
 **Tests**
