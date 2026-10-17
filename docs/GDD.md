@@ -36,6 +36,8 @@ The town moves through six eras, and each one changes the player's role, not jus
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
 | 6. City | Mayor and tycoon | Population 3,000, a college, a hospital, a power plant | 3,000–20,000 | Districts, trade with other cities, shares in businesses, specialisation |
 
+**The founder.** The player is the town's founder: a named household that owns the personal wallet. The founder does not age and is not part of the citizen simulation, but the household has personal living costs every season. Citizens around the founder are born, age and retire. See ADR 0003.
+
 **Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Village era there is also a *town treasury*, funded by taxes and spent on public services. Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
 
 **Town identity.** Cumulative choices give the town tags such as Agri-hub, Merchant town, Industrial town, Education town or Green town. Each tag unlocks unique buildings and small bonuses, so two playthroughs end in different cities.
@@ -909,7 +911,7 @@ These choices need the owner's call before their feature specs can be written. T
 | --- | --- | --- | --- |
 | Setting and culture | A fictional, culturally neutral river valley; or an Indian-inspired village and town | Art, names, crops, festivals | **Decided:** Indian-inspired, fictional valley ([ADR 0001](decisions/0001-setting-and-culture.md)) |
 | Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec | **Decided:** real-time clock; the world runs while closed, capped at 72 hours ([ADR 0002](decisions/0002-real-time-clock-model.md)) |
-| Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | Open |
+| Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | **Decided:** ageless founder; heirs considered after launch ([ADR 0003](decisions/0003-ageless-founder.md)) |
 | Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | Open |
 | Orientation | Landscape only; or landscape map with portrait menus | UI layout | Open |
 | Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | Open |
