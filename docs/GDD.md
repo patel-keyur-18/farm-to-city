@@ -1030,6 +1030,8 @@ This document is the master spec. No code is written for a feature until its fea
 
 **Rolling-wave specs (ADR 0019).** All Phase 1 specs are written and approved in Sprint 0, before Phase 1 coding. Each later phase's specs are written in that phase's first sprint. Epics and features for every phase are planned in `docs/planning/`.
 
+**Spec writing order (ADR 0027).** Specs are written in the order code needs them: 002 and 005 in Sprint 0, 003 and 004 in Sprint 1, 006 and 007 in Sprint 2, 008 and 009 in Sprint 3. Specs fix formulas, bounds and placeholder values. The economy model tunes the values afterwards, and only formula changes need re-approval.
+
 **Spec order for the vertical slice:**
 
 1. time and weather
@@ -1055,7 +1057,7 @@ flowchart TB
     P4["Phase 4 · Town and City<br/>Cohort simulation, transport, industry, investments, elections"]
     P5["Phase 5 · Polish<br/>Localisation, accessibility, art pipeline; store release only if the owner decides"]
 
-    P0 -->|"Gate: economy model has no money loops; 2,000 agents at 60 fps"| P1
+    P0 -->|"Gate: no money loops; 2,000 agents at 60 fps; replays match on iPhone"| P1
     P1 -->|"Gate: testers come back on day 2 and day 3 unprompted"| P2
     P2 -->|"Gate: a week of play; players can explain profit versus cash"| P3
     P3 -->|"Gate: 4 weeks of play; the balancer finds no exploits"| P4
@@ -1064,7 +1066,7 @@ flowchart TB
 
 | Phase | Scope | Exit gate |
 | --- | --- | --- |
-| 0 · Pre-production | Master spec, slice specs, economy model, performance spike, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps |
+| 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Testers come back on day 2 and day 3 unprompted |
 | 2 · Hamlet and Village | Citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
@@ -1085,7 +1087,7 @@ flowchart TB
 | Money | Cash ledger, seasonal P&L, prepaid accounting, moneylender and bank loans, foreclosure |
 | Saves | Atomic saves, autosave, export and import |
 | Storage | Hut store with limited capacity; spoilage per good per day (ADR 0024) |
-| UI | Homestead HUD, *While you were away* report, field and founder panels with *Why?*; string tables (English) and locale number formatting with Indian grouping; opt-in local play log with export (ADR 0024) |
+| UI | Homestead HUD, *While you were away* report, field and founder panels with *Why?*; string tables (English) and locale number formatting with Indian grouping; opt-in local play log with export (ADR 0024); (Could) basic feedback sounds (ADR 0027) |
 | Onboarding | First session plus the letter chapters up to the Hamlet unlock |
 
 **Not in Phase 1:**

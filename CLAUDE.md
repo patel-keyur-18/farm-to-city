@@ -31,6 +31,7 @@ Every session starts with no memory. The repository is the only memory.
 
 - **No game code until its feature spec is written and approved.** Specs follow `docs/specs/_TEMPLATE.md` and live in `docs/specs/NNN-name.md`.
 - **Specs are written rolling-wave** (ADR 0019): all of a phase's specs are written and approved in that phase's first sprint, before its coding starts.
+- **Specs fix formulas, bounds and placeholder values** (ADR 0027). The economy model tunes values in `content/`, and spec defaults are then updated without re-approval. A formula or rule change needs re-approval.
 - **Every decision of lasting importance becomes an ADR** in `docs/decisions/NNNN-title.md` (context, options, decision, consequences). ADR numbers are never reused. To change a decision, write a new ADR that supersedes the old one.
 - **When a spec or ADR changes the GDD,** update `docs/GDD.md` in the same commit.
 - **Sprints (ADR 0025)** are 1 week long, with at most 2 specs to review and 1 device build per sprint. Hierarchy: Epic → Feature → User story → Tasks. Story points, MoSCoW priority, and the Definition of Ready and Definition of Done in ADR 0025.
@@ -125,6 +126,7 @@ These commands work once the solution skeleton exists, which is the first code t
 | 0024 | Phase 1 adds the hut store and spoilage, string tables and Indian number formatting, and an opt-in local play log |
 | 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
+| 0027 | Audit corrections: specs 002 and 005 first, the ledger core in Sprint 1, Unity and a hello-iPhone build in Sprint 1, on-device determinism in the Phase 0 gate, the Hamlet-unlock feature, and later-phase coverage |
 
 ## Current status
 

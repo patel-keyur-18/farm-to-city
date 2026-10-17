@@ -21,7 +21,7 @@ The player experience, in one sentence, and the lesson it teaches.
 
 ## 3. Rules and formulas
 
-Give every number with its units and its bounds. Formulas use fixed-point or integer maths (ADR 0018), so state the rounding rule wherever division happens. Reference data values by their definition field, never by a hard-coded number.
+Give every number with its units and its bounds. Values can start as placeholders: the economy model tunes them in `content/` and the spec's defaults are then updated without re-approval. Formulas and rules need re-approval if they change (ADR 0027). Formulas use fixed-point or integer maths (ADR 0018), so state the rounding rule wherever division happens. Reference data values by their definition field, never by a hard-coded number.
 
 | Rule | Formula or behaviour | Units | Bounds |
 | --- | --- | --- | --- |

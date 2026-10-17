@@ -313,7 +313,7 @@ All three were resolved at approval (2026-10-17), following the recommendations:
 
 1. **HUD time display:** the HUD shows the sim clock (for example 14:05). It matches the device's time, and makes ready times readable.
 2. **Daylight saving and travel:** accepted for v1. After a daylight-saving change the town's clock may be 1 hour off the phone's. A gentle realignment is added only if testers notice.
-3. **Real-time first session:** noted. The clock has no tutorial speed, so the first session (spec 015, onboarding) relies on a 5-minute crop.
+3. **Real-time first session:** noted. The clock has no tutorial speed, so the first session (spec 009, onboarding) relies on a 5-minute crop.
 
 ## 11. Cut first
 

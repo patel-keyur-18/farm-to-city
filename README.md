@@ -15,9 +15,11 @@ Pre-production (Phase 0). Spec-driven: no feature is built before its spec is ap
 - [Game Design Spec](docs/GDD.md): the master spec
 - [Feature specs](docs/specs/)
 - [Architecture decisions](docs/decisions/)
+- [Planning: status, epics, features, sprints](docs/planning/)
+- [Instructions for Claude Code sessions](CLAUDE.md)
 
 ## Tech
-Unity (current LTS, 2D URP) · C# · pure-C# deterministic simulation core · Git LFS for assets
+Unity (latest LTS, 2D URP) · C# · pure-C# deterministic simulation core · Git LFS for assets
 
 ## License
 © 2026 Keyur Patel. All rights reserved.

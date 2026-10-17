@@ -6,20 +6,21 @@
 | --- | --- |
 | Phase | 0 · Pre-production |
 | Sprint | Sprint 0 is next (planned for 19–25 Oct 2026) |
-| Branch with latest work | `claude/gifted-wright-v54560`. Must be merged to `main` before the next session starts |
+| Branch with latest work | `claude/gifted-wright-v54560` (pull request #3). Must be merged to `main` before the next session starts |
 | Last updated | 2026-10-17 |
 
 ## Done so far
 
 - The GDD has been reviewed and updated (v1.2 plus later edits).
-- ADRs 0001–0026 are accepted.
+- ADRs 0001–0027 are accepted.
 - `CLAUDE.md` exists, with the session routine.
 - The spec template exists.
 - **Spec 001 (time and weather)** is approved.
-- **SDLC planning is created:**
-  - `epics.md`: 21 epics, 66 features
-  - `features/`: one file per feature, 151 user stories. Phases 0–1 are broken down into tasks
-  - `sprints.md`: Sprints 0–9 for Phases 0–1; later phases are planned at their start
+- **SDLC planning is created and audited:**
+  - `epics.md`: 21 epics, 79 features
+  - `features/`: one file per feature, 176 user stories. Phases 0–1 are broken down into tasks
+  - `sprints.md`: Sprints 0–9 for Phases 0–1
+  - An automated check confirmed that no story is scheduled before its spec is approved or before a feature it depends on (ADR 0027)
 - No code has been written yet.
 
 ## In progress
@@ -28,25 +29,28 @@ None.
 
 ## Next up
 
-1. **Owner:** review the planning files, then merge the pull request from `claude/gifted-wright-v54560` into `main`.
-2. **Next session, Sprint 0** (see `sprints.md`), in this order:
-   - US-001 to US-004: the skeleton, CI, the SessionStart hook and repository hygiene
-   - US-024 to US-036: implement spec 001
-   - US-005 and US-006: write specs 002 and 003 for owner review
+1. **Owner:** merge pull request #3 into `main`.
+2. **Next session: start Sprint 0** (see `sprints.md`), in this order:
+   - US-001 to US-004: the solution skeleton, CI, the SessionStart hook and repository hygiene
+   - US-025 to US-037: implement spec 001 (foundations, calendar, scheduler, weather, forecast, live and away time, time travel, performance guard)
+   - US-005 and US-006: write **spec 002 (land and soil)** and **spec 005 (ledger and credit)** for owner review
+
+## Owner action checklist (Phases 0–1)
+
+| When | Owner action |
+| --- | --- |
+| Now | Merge pull request #3 |
+| Sprint 0 | Review and approve specs 002 and 005. Merge the sprint pull request |
+| Sprint 1 (start) | Install the latest Unity LTS with iOS Build Support. Install Git LFS (`brew install git-lfs`, then `git lfs install`). Create the 2D URP project at `unity/FarmToCity/` and push it |
+| Sprint 1 | Review specs 003 and 004. Install the "hello iPhone" build on the iPhone 13 using `docs/test-checklists/how-to-build-ios.md` |
+| Sprint 2 | Review specs 006 and 007 |
+| Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
+| Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
+| Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
 ## Open questions (with the owner)
 
-None. The final GDD review closed these:
-
-| # | Question | Decision |
-| --- | --- | --- |
-| 1 | When feature specs are written | Rolling wave (ADR 0019) |
-| 2 | Seasons vs real-time crops; sowing windows; fruit trees | Indian crop calendar, fruit trees (ADR 0021) |
-| 3 | Hiring before Hamlet | Day labourers and a resident hand from Homestead (ADR 0022) |
-| 4 | Save slots vs undoing mistakes | One town; safety save points; no undo (ADR 0023) |
-| 5 | Phase 1 scope additions | Hut store and spoilage, localisation groundwork, play log (ADR 0024) |
-| 6 | Sprint mechanics | 1-week sprints, story points, MoSCoW, DoR and DoD (ADR 0025) |
-| 7 | Test devices and versions | iPhone 13, M2 Air with Xcode 27.1, latest LTS tools (ADR 0026) |
+None. All design questions are closed (ADRs 0019–0027).
 
 ## Half-done work
 
