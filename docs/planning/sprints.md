@@ -68,7 +68,7 @@
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 
-- **Status:** In progress (started 2026-10-17)
+- **Status:** In progress (started 2026-10-17). 17 of 28 points done; US-019 and US-020 wait for the owner's device run, US-007 and US-008 for spec review
 - **Branch:** `sprint/01-ledger-land-unity`
 - **Goal:** Ledger core and land implemented; Unity project created and a "hello iPhone" build running; specs 003 and 004 written.
 - **Points:** 28
@@ -93,10 +93,10 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [ ] All Must stories meet the Definition of Done (ADR 0025): waiting on the device run and the spec reviews
+- [x] Test checklist written in `docs/test-checklists/` (if there is a build): `s01-hello-iphone.md`, with `how-to-build-ios.md`
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
 **Review (owner's device results):** —
 
