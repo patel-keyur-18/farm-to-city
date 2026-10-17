@@ -43,5 +43,23 @@ namespace Sim.Core.Tests
             Assert.That(h72, Is.LessThan(20), "72 h advance");
             Assert.That(year, Is.LessThan(100), "1 game year advance");
         }
+    
+        // Spec 002 AC-16.
+        [Test]
+        public void Advance72h_WithLand()
+        {
+            double best = double.MaxValue;
+            for (int run = 0; run < 6; run++) // the first run warms up the JIT
+            {
+                Simulation sim = NewFarm(seed: 3, localSeconds: 8 * Hour);
+                long target = sim.State.Clock.SimTime + 72 * Hour;
+                var watch = Stopwatch.StartNew();
+                sim.AdvanceTo(target, AdvanceMode.Away);
+                watch.Stop();
+                if (run > 0) best = Math.Min(best, watch.Elapsed.TotalMilliseconds);
+            }
+            TestContext.Out.WriteLine("72 h with land: " + best.ToString("0.000") + " ms");
+            Assert.That(best, Is.LessThan(20));
+        }
     }
 }

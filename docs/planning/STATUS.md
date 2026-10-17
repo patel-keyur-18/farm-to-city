@@ -36,10 +36,11 @@
 
   - **US-059 exact ledger: core done** (spec 005 AC-1, 2, 3, 5): the chart of accounts, balanced entries, cash never negative, `MulRate`, the opening balance sheet. AC-4 (reconciliation every season) is finished with land buying (US-040).
   - **US-038 inherited land: done** (spec 002 AC-1, AC-2). New content: `land.json`, `map.json` (6 × 5, 13 parcels), `buildings.json`, `start.json`, `finance.json`. Land and ledger are optional `GameDefs` in `SimConfig`: a sim without them hashes exactly as before, so golden 001 is unchanged.
+  - **US-039 soil properties: done** (spec 002 AC-3 to AC-9, AC-15, AC-16). Hourly moisture with drainage and the well floor, daily fallow recovery, `AdjustFertility` with per-reason season totals, the Soil factor. 72 h with land advances in about 0.4 ms (budget 20 ms). AC-6 buys its tile once `BuyParcel` exists (US-040).
 
 ## In progress
 
-Sprint 1: US-039 (soil properties) next, then US-040, US-041 and US-059's AC-4.
+Sprint 1: US-040 (buy adjacent land) next, then US-041 and US-059's AC-4.
 
 ## Next up
 

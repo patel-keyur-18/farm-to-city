@@ -1,4 +1,5 @@
 using Sim.Core.Definitions;
+using Sim.Core.Maths;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
 
@@ -66,6 +67,86 @@ namespace Sim.Core.Land
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
+            LandState land = sim.State.Land;
+            long t = sim.State.Clock.SimTime;
+            switch (pass)
+            {
+                case ItemClass.Hourly:
+                    foreach (Tile tile in land.Tiles) UpdateMoisture(sim, tile, land.HourWeather);
+                    land.HourWeather = sim.State.Weather.WeatherOf(Calendar.SpellAt(t, sim.Clock));
+                    break;
+                case ItemClass.Daily:
+                    foreach (Tile tile in land.Tiles) RecoverFallow(sim, tile, t);
+                    break;
+                case ItemClass.Seasonal:
+                    foreach (Tile tile in land.Tiles) System.Array.Clear(tile.Changes, 0, Tile.ReasonCount);
+                    break;
+            }
+        }
+
+        /// <summary>One hour of moisture change on a tile under the given weather (spec 002 §3.2).</summary>
+        internal static void UpdateMoisture(Simulation sim, Tile tile, int weather)
+        {
+            GameDefs defs = sim.Config.Game;
+            SoilDef soil = defs.Soils[tile.Soil];
+            DrainageDef drainage = defs.Drainages[tile.Drainage];
+            Fixed d = defs.Land.MoistureByWeather[weather];
+            Fixed m = tile.Moisture;
+            if (d > Fixed.Zero) m += d * soil.GainFactor;
+            else if (d < Fixed.Zero) m += d * soil.LossFactor;
+            m = Clamp(m);
+            if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
+            if (tile.ParcelId == WellParcel(sim) && m < defs.Land.WellMoistureFloor) m = defs.Land.WellMoistureFloor;
+            tile.Moisture = m;
+        }
+
+        /// <summary>
+        /// A farm tile with no crop for the whole previous day gains fallowRecoveryPerSeason ÷ daysPerSeason,
+        /// up to its soil's cap (spec 002 §3.3).
+        /// </summary>
+        private static void RecoverFallow(Simulation sim, Tile tile, long t)
+        {
+            if (tile.Terrain != Terrain.Farm || tile.Occupied || tile.VacantSince > t - ClockDef.SecondsPerDay) return;
+            GameDefs defs = sim.Config.Game;
+            Fixed cap = defs.Soils[tile.Soil].FallowCap;
+            if (tile.Fertility >= cap) return;
+            Fixed gain = defs.Land.FallowRecoveryPerSeason / Fixed.FromInt(sim.Clock.DaysPerSeason);
+            Fixed next = tile.Fertility + gain;
+            Apply(tile, (next > cap ? cap : next) - tile.Fertility, FertilityReason.Fallow);
+        }
+
+        /// <summary>Adds <paramref name="delta"/> to a tile's fertility, clamped to [0, 100], and records the applied change.</summary>
+        internal static void AdjustFertility(Simulation sim, int tileId, Fixed delta, FertilityReason reason)
+        {
+            Tile tile = sim.State.Land.Tiles[tileId];
+            Apply(tile, Clamp(tile.Fertility + delta) - tile.Fertility, reason);
+        }
+
+        /// <summary>Spec 003 marks a tile occupied when sown and vacant when harvested or cleared.</summary>
+        internal static void SetOccupied(Simulation sim, int tileId, bool occupied)
+        {
+            Tile tile = sim.State.Land.Tiles[tileId];
+            if (occupied) tile.VacantSince = -1;
+            else if (tile.Occupied) tile.VacantSince = sim.State.Clock.SimTime;
+        }
+
+        private static void Apply(Tile tile, Fixed applied, FertilityReason reason)
+        {
+            tile.Fertility += applied;
+            tile.Changes[(int)reason] += applied;
+        }
+
+        private static readonly Fixed Hundred = Fixed.FromInt(100);
+
+        private static Fixed Clamp(Fixed v) { return v < Fixed.Zero ? Fixed.Zero : v > Hundred ? Hundred : v; }
+
+        /// <summary>The parcel holding the well, or −1.</summary>
+        private static int WellParcel(Simulation sim)
+        {
+            LandState land = sim.State.Land;
+            foreach (Building b in land.Buildings)
+                if (sim.Config.Game.Buildings[b.Def].Id == BuildingDef.WellId) return land.Tiles[b.TileId].ParcelId;
+            return -1;
         }
     }
 }

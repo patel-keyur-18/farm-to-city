@@ -9,6 +9,23 @@ namespace Sim.Core.Land
     {
         private static readonly Fixed Hundred = Fixed.FromInt(100);
 
+        /// <summary>SoilDef.yieldFactor × FertilityFactor(fertility) × ShadeFactor (spec 002 §3.4), used by the yield formula.</summary>
+        public static Fixed SoilFactor(Simulation sim, Tile tile)
+        {
+            GameDefs defs = sim.Config.Game;
+            return defs.Soils[tile.Soil].YieldFactor * FertilityFactor(defs.Land, tile.Fertility);
+        }
+
+        /// <summary>Piecewise linear through LandDef.fertilityFactorCurve: y0 + (y1 − y0) × (f − x0) ÷ (x1 − x0).</summary>
+        public static Fixed FertilityFactor(LandDef land, Fixed fertility)
+        {
+            var curve = land.FertilityFactorCurve;
+            int i = 1;
+            while (i < curve.Count - 1 && fertility > curve[i].X) i++;
+            CurvePoint a = curve[i - 1], b = curve[i];
+            return a.Y + (b.Y - a.Y) * (fertility - a.X) / (b.X - a.X);
+        }
+
         /// <summary>min + (max − min) × f ÷ 100.</summary>
         public static Fixed FertilityPriceFactor(LandDef land, Fixed fertility)
         {

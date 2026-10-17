@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Sim.Core.Definitions;
 using Sim.Core.Land;
 using Sim.Core.Maths;
+using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
@@ -31,6 +33,34 @@ namespace Sim.Core.Tests
 
             // Every other parcel starts unowned and unprotected.
             Assert.That(land.Parcels.Where(p => p.Id != home.Id).All(p => !p.Owned && !p.Protected), Is.True);
+        }
+    
+        // Spec 002 AC-15.
+        [Test]
+        public void ChunkingInvariance_WithLand()
+        {
+            Simulation Build()
+            {
+                return Simulation.NewGame(Config(systems: new[] { new FallowScheduleSystem() }, game: TestContent.Game()),
+                    new Commands.NewGame(11, Wall0, 7 * Hour + 13));
+            }
+
+            Simulation one = Build();
+            long end = one.State.Clock.SimTime + one.Clock.SecondsPerYear;
+            one.AdvanceTo(end);
+
+            Simulation many = Build();
+            long start = many.State.Clock.SimTime;
+            var targets = new List<long>();
+            for (ulong i = 0; i < 499; i++)
+                targets.Add(start + (long)Rng.Below(Rng.Next(11, (RngStream)902, i, 0), (ulong)(end - start)));
+            targets.Sort();
+            targets.Add(end);
+            foreach (long target in targets) many.AdvanceTo(target);
+
+            Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
+            Assert.That(one.State.ComputeHash(), Is.Not.EqualTo(Build().State.ComputeHash()), "land state is hashed and changes");
+            Assert.That(one.State.Land.Tiles[8].Fertility, Is.Not.EqualTo(Build().State.Land.Tiles[8].Fertility), "fallow recovered");
         }
     }
 }
