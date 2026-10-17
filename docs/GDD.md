@@ -129,8 +129,13 @@ The map grows as the player buys adjacent parcels. Price depends on soil and loc
 **Yield formula.** The yield breakdown is shown to the player on every harvest.
 
 ```
-Yield = Base × Soil × Water × Care × Seed × Weather × Tools
+Yield = Base × Soil × Water × Care × Seed × Weather × Tools × Fertiliser × CropHealth
+        capped at 1.6 × Base
 ```
+
+- **Fertiliser:** none 1.00; compost 1.05 (raises fertility over the following seasons); chemical 1.25 (−3 fertility per season of use, applied pro rata per crop cycle).
+- **CropHealth** starts at 1.0. An outbreak sets it to 0.4–0.8, and a rare severe outbreak sets it to about 0.
+- **The cap** is in data, and the *Why?* breakdown shows when it applied (ADR 0014).
 
 Care is the labour hours delivered divided by the hours needed, capped at 1.1. Labour comes from the founder (ADR 0010) and from hired workers. The Weather factor comes from the weather spells during growth.
 
@@ -143,7 +148,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Seeds.** Buy certified seed (higher yield, costs more) or save your own (free, slowly degrading quality).
 - **Fertiliser.** Chemical fertiliser gives +25% yield now but fertility falls 3 points a season. Compost from your own livestock is slower but builds soil. This teaches profit now versus land value later.
 - **Crop rotation.** Repeating a crop drains its nutrient. Lentils restore soil, and leaving a field fallow for a season restores fertility.
-- **Pests and disease.** Risk rises with monoculture and wet weather. Spraying costs money, and ignoring the risk can wipe out a field.
+- **Pests and disease.** Each crop cycle rolls a seeded risk. Risk rises with monoculture and wet weather, and falls with rotation and spraying, which costs money. Outbreaks are signalled during growth so the player can respond. Ignoring the risk can wipe out a field, but severe outbreaks never strike while the player is away.
 
 **Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
 
