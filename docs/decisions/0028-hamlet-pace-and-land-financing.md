@@ -1,6 +1,6 @@
 # 0028. Hamlet at the end of the first week, land priced by earning power, and land-purchase loans
 
-- Status: Accepted
+- Status: Accepted. The Hamlet no longer depends on buying land: ADR 0030 (inherited 6-acre farm, labour-based gate). The pacing targets and land-purchase loans stand
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Supersedes: the Hamlet, Village and Township pacing targets in ADR 0002 (and the GDD's balancing targets)

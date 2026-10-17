@@ -35,6 +35,7 @@ Option 1.
 | --- | --- |
 | Unity editor | **6000.3.26f1** (Unity 6.3 LTS, revision `de8167e7440c`), with iOS Build Support |
 | Packages | Exactly as in `unity/FarmToCity/Packages/packages-lock.json`. The sim is referenced as `file:../../../sim`, never by an absolute path |
+| Development tooling | `com.unity.pipeline` 0.8.0-exp.1 (experimental) stays as an Editor-only tool: through the `unity` CLI, Claude compiles, plays, captures and starts builds while the owner's Editor is open. Its runtime part is off in player builds (no runtime config asset). It is removed before any store build (F19.5) (owner decision, 2026-10-17) |
 | Sim language | **C# 9.0, netstandard2.1**, unchanged (ADR 0018). No `csc.rsp` overrides in the Unity project |
 | Scripting | IL2CPP on iOS; .NET Standard 2.1 API level |
 

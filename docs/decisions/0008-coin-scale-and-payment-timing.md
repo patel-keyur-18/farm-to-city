@@ -1,6 +1,6 @@
 # 0008. Coin scale, payment timing and starting package
 
-- Status: Accepted
+- Status: Accepted. The starting package is superseded by ADR 0030 (6 inherited acres, 20,000 coins and an inherited store)
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0001 (Indian-inspired setting), ADR 0002 (4-day seasons). This ADR amends ADR 0002's "wages are paid daily" and "if cash runs out, workers stop".

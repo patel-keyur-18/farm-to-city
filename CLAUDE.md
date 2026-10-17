@@ -116,7 +116,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0005 | Landscape only |
 | 0006 | Free with one-time unlock (implementation deferred) |
 | 0007 | Zero budget: CC0 art plus Blender sprites, personal builds only, no purchases (`IEntitlementService` is always unlocked) |
-| 0008 | Rupee-scale "coins" (1/100 unit). Realism per season. Season contracts, costs paid upfront. Starting package |
+| 0008 | Rupee-scale "coins" (1/100 unit). Realism per season. Season contracts, costs paid upfront. Starting package (superseded by 0030) |
 | 0009 | Moneylender and bank from day one. Bankruptcy is foreclosure, and the inherited plot is protected. The founder can do day labour |
 | 0010 | The founder is the first worker: labour = Hours × Nutrition × (1 − Fatigue) × Health. Never an energy bar |
 | 0011 | Literacy is separate from skilled graduates. The founder funds the first school. The first doctor is a migrant |
@@ -137,7 +137,9 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
 | 0027 | Audit corrections: specs 002 and 005 first, the ledger core in Sprint 1, Unity and a hello-iPhone build in Sprint 1, on-device determinism in the Phase 0 gate, the Hamlet-unlock feature, and later-phase coverage |
 | 0028 | Hamlet at the end of the first week (Village 2–3 weeks, Township 4–6 weeks). Land priced at 8–15 seasons of an acre's net income. Bank loans can be secured by the land they buy. No leasing in Phase 1 |
-| 0029 | Unity pinned to 6000.3.26f1 (6.3 LTS). Unity still compiles with `-langversion:9.0`, so the sim stays on C# 9. No upgrades mid-phase |
+| 0029 | Unity pinned to 6000.3.26f1 (6.3 LTS). Unity still compiles with `-langversion:9.0`, so the sim stays on C# 9. No upgrades mid-phase. `com.unity.pipeline` is an Editor-only dev tool |
+| 0030 | Inherit 6 protected acres and the yard, 20,000 coins and a store of seed and grain. Hamlet gate: 6 acres harvested in a season at Care ≥ 0.9, a hand's house, a profitable season. 8 × 6 map. Unowned land keeps its fertility |
+| 0031 | Phase 1 adds the kitchen garden, the mandi trip, buying inputs ahead (seasonal input prices; fertiliser price-controlled), minimum prices on offers, warm clothing and medicine |
 
 ## Current status
 
