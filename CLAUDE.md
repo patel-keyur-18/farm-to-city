@@ -128,6 +128,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
 | 0027 | Audit corrections: specs 002 and 005 first, the ledger core in Sprint 1, Unity and a hello-iPhone build in Sprint 1, on-device determinism in the Phase 0 gate, the Hamlet-unlock feature, and later-phase coverage |
+| 0028 | Hamlet at the end of the first week (Village 2–3 weeks, Township 4–6 weeks). Land priced at 8–15 seasons of an acre's net income. Bank loans can be secured by the land they buy. No leasing in Phase 1 |
 
 ## Current status
 

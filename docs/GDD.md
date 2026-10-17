@@ -124,6 +124,7 @@ The map grows as the player buys adjacent parcels. Price depends on soil and loc
 - **Fertility** recovers while a field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle.
 - **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
 - **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited parcel can never be sold or seized.
+- An acre costs about 8–15 seasons of its net farm income, so land pays back in 2–4 game years (ADR 0028).
 - Spec 002 has the formulas and values.
 
 **Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:
@@ -994,11 +995,13 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 
 | Milestone | Target real time since start |
 | --- | --- |
-| Hamlet | Day 1–2 |
-| Village | About 1 week |
-| Township | 3–4 weeks |
+| Hamlet | End of the first week (about 2 seasons) |
+| Village | 2–3 weeks |
+| Township | 4–6 weeks |
 | Town | 2–3 months |
 | City | 4–6 months (about 10–12 game years) |
+
+The Village and Township targets are provisional, and the reachable-eras check confirms them (ADR 0028).
 
 **Health checks run on every build**
 

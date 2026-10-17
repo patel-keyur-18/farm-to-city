@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 0 in review: all code stories done; specs 002 and 005 await the owner's approval |
+| Sprint | Sprint 0 done (44 of 44 points). Sprint 1 is next (planned for 26 Oct – 1 Nov 2026) |
 | Branch with latest work | `sprint/00-foundations-time-weather` (pull request #4). Must be merged to `main` before the next session starts |
 | Last updated | 2026-10-17 |
 
@@ -25,26 +25,27 @@
     - The golden replay `tests/Sim.Core.Tests/golden/001-basic.json` covers every spec 001 command and is **frozen** (hash `0x0A11B9AED3656FC1`). Re-pin it with `FTC_UPDATE_GOLDEN=1 dotnet test` only when a later spec deliberately changes the state hash, and say so in the commit.
     - `dotnet run --project tools/Tools.Balancer [years] [seed]` prints spec 001's balancing hooks.
     - Implementation clarifications (four owner decisions and two implementation choices) are recorded in spec 001 §10. ADR 0018's status line notes the SplitMix64 RNG and that C# 9 applies to `sim/` only.
-  - **US-005 spec 002 (land and soil) and US-006 spec 005 (ledger and credit): written, in review.** The GDD is updated to match both drafts.
+  - **US-005 spec 002 (land and soil) and US-006 spec 005 (ledger and credit): approved** (2026-10-17), with every open question answered as recommended (§10 of each). The GDD matches both.
+  - **ADR 0028:** the Hamlet target is the end of the first week (Village 2–3 weeks, Township 4–6 weeks, both provisional); land is priced at about 8–15 seasons of an acre's net farm income; bank loans can be secured by the land they buy; no leasing in Phase 1.
 
 ## In progress
 
-- Specs 002 and 005 are waiting for the owner's review. Their open questions are listed below.
+None.
 
 ## Next up
 
-1. **Owner:**
-   - Review spec 002 (`docs/specs/002-land-and-soil.md`) and spec 005 (`docs/specs/005-ledger-and-credit.md`), and answer their open questions (§10 of each). Spec 002 question 1 is the important one.
-   - Merge pull request #4 into `main`.
-2. **Next session:**
-   - Apply the review: update specs 002 and 005 (and the GDD if answers differ from the drafts), set them to Approved, tick US-005.T4 and US-006.T3, and close Sprint 0 in `sprints.md`.
-   - Start **Sprint 1** (see `sprints.md`): US-007 and US-008 (write specs 003 and 004), US-059 (exact ledger, spec 005), US-038 to US-041 (land, spec 002). The owner creates the Unity project (US-017 to US-020).
+1. **Owner:** merge pull request #4 into `main`.
+2. **Next session: start Sprint 1** (see `sprints.md`, branch `sprint/01-ledger-land-unity`):
+   - US-007 and US-008: write **spec 003** (crops, fruit trees and founder labour) and **spec 004** (goods, market and storage) for owner review. Spec 003 must charge the well's bucket-watering labour (spec 002 §3.2) and use the Soil factor from spec 002 §3.4; spec 004 must give the trader's buying price that net worth uses (spec 005 §3.5).
+   - US-059: the exact ledger (spec 005 §3.1, ACs 1–5), first, because land buying posts through it.
+   - US-038 to US-041: land and soil (spec 002).
+   - The owner creates the Unity project at the start of the sprint (US-017 to US-020).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Review specs 002 and 005. Merge pull request #4 |
+| Now | Merge pull request #4 |
 | Sprint 1 (start) | Install the latest Unity LTS with iOS Build Support. Install Git LFS (`brew install git-lfs`, then `git lfs install`). Create the 2D URP project at `unity/FarmToCity/` and push it |
 | Sprint 1 | Review specs 003 and 004. Install the "hello iPhone" build on the iPhone 13 using `docs/test-checklists/how-to-build-ios.md` |
 | Sprint 2 | Review specs 006 and 007 |
@@ -54,21 +55,7 @@
 
 ## Open questions (with the owner)
 
-**Spec 002 (land and soil), §10:**
-1. **Land prices and the Hamlet pace.** The GDD says Hamlet on "Day 1–2", ADR 0017 says the end of the guided first week, and the gate needs a profitable season (the first close is on day 4). *Recommendation:* Hamlet target "end of the first week"; land priced by earning power (placeholder 1,20,000 coins an acre); land-purchase loans.
-2. The well gives the inherited acres a moisture floor (bucket watering). *Recommendation:* yes.
-3. Field-edge shade folded into the Soil factor, so ADR 0014's formula is unchanged. *Recommendation:* yes.
-4. A quick sale of bought land at 80% in Phase 1. *Recommendation:* yes.
-5. A hand-authored 6 × 5 map. *Recommendation:* yes.
-
-**Spec 005 (ledger and credit), §10:**
-1. Season-close payment priority: loans, then living costs, then wages, then rent. *Recommendation:* yes.
-2. Land-purchase loans secured by the parcel bought. *Recommendation:* yes.
-3. Credit score 300–900 (CIBIL-like). *Recommendation:* yes.
-4. Foreclosure never while away: a final notice on return, then a day to cure. *Recommendation:* yes.
-5. Inventory off the ledger in Phase 1 (stored goods only in net worth). *Recommendation:* yes.
-6. Moneylender bullet loans, bank equal-principal loans. *Recommendation:* yes.
-7. Foreclosure takes all non-protected assets, and any surplus is returned as cash (ADR 0009). *Recommendation:* yes.
+None. Specs 002 and 005 were approved with every recommendation (2026-10-17).
 
 **Noted for later specs (no decision needed now):**
 - Spec 007 (saves): `Sync` runs every frame and every accepted command is logged, so the command log grows by about 3,600 entries an hour of live play. Consecutive live `Sync`s can be merged without changing the result (chunking invariance), so the saves spec should compact them.

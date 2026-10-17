@@ -1,10 +1,10 @@
 # 005. Ledger and credit
 
-- Status: In review
+- Status: Approved (2026-10-17)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, credit, personal bankruptcy, never stuck, liquidity); Time and world simulation (settlement cadence); Businesses (books); Learning layer (cash ledger, balance sheet); Balancing and testing (exact ledgers, never stuck, recoverable bankruptcy); Data model (`LedgerEntry`, `Loan`, `LenderDef`, `StartDef`)
-- Related ADRs: 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
+- Related ADRs: 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
 - Depends on specs: 001 (scheduler, passes). Uses 002 (land prices, protected parcel, seizure). Spec 003 (living costs, inputs, trees, day labour), 004 (sales, stored goods value) and 006 (wages) post through this ledger.
 
 ## 1. Goal
@@ -31,7 +31,7 @@ Every coin the founder earns, spends, borrows or owes is recorded exactly, and e
 - The town treasury, taxes, savings deposits, bonds and shares: later phases.
 - Inflation and the price index: 004.
 - Larger bank loans from the Village era: the era cap is data here; the Village unlock is F09.4.
-- Valuing stored goods in the ledger (inventory accounting): Phase 2 statements (open question 5). In Phase 1 stored goods appear only in net worth.
+- Valuing stored goods in the ledger (inventory accounting): Phase 2 statements (F14.3). In Phase 1 stored goods appear only in net worth.
 
 ## 3. Rules and formulas
 
@@ -99,7 +99,7 @@ At each season boundary, the seasonal pass of the finance system (system order B
 8. **Credit outcomes:** score changes (§3.7), default detection (§3.8) and, if needed, foreclosure (§3.9).
 9. Emit `SeasonClosed` with the report and the settlement results.
 
-Other systems never move money at the seasonal pass themselves; they register their season obligations (items 5–7) with the finance system, which pays them in this order and reports `ObligationPaid` or `ObligationUnpaid` back. This keeps one place in charge of who gets the cash when it runs short (open question 1).
+Other systems never move money at the seasonal pass themselves; they register their season obligations (items 5–7) with the finance system, which pays them in this order and reports `ObligationPaid` or `ObligationUnpaid` back. This keeps one place in charge of who gets the cash when it runs short.
 
 ### 3.5 Net worth
 
@@ -146,7 +146,7 @@ limit        = max(0, min(eraCap, rawLimit × scoreFactor) − owedToThisLender)
 ```
 
 - The inherited parcel and everything on it is never collateral (it can never be seized, ADR 0009).
-- **Land-purchase loans:** when a loan finances `BuyParcel`, the parcel being bought counts as collateral for that limit (open question 2).
+- **Land-purchase loans** (ADR 0028): when a loan finances `BuyParcel`, the parcel being bought counts as collateral for that limit.
 - Example (bank, score 650, nothing owed, 2 bought acres worth 2,40,000, average farm profit 20,000): scoreFactor = 0.5 + 0.5 × 100 ÷ 200 = 0.75; rawLimit = 0 + 0.60 × 2,40,000 + 1.0 × 20,000 = 1,64,000; limit = 1,23,000.
 
 **Rate** is fixed when the loan is taken: moneylender `ratePerSeason`; bank `baseRate + rateSlope × max(0, refScore − score) ÷ 100` (Fixed). At score 650 the bank charges 3.0% a season.
@@ -205,7 +205,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 5. **Credit damage:** the score is set to `foreclosureScore` (350). That is below the bank's minimum, so only the moneylender lends until the score recovers. At +10 a season of on-time payments, recovery takes about 5 game years.
 6. **Carries on:** the town and every other system. The founder's holdings are back at Homestead level. Emit `ForeclosureCompleted` with the seized items, proceeds and amount written off.
 
-**Not while away (ADR 0002: no disasters while away).** If a default is reached during an away advance, foreclosure is deferred. On the first live `Sync` after the away advance, a `FinalNotice` event is emitted, and foreclosure runs at the next daily pass that runs live, unless the arrears have been cured by then (open question 4).
+**Not while away (ADR 0002: no disasters while away).** If a default is reached during an away advance, foreclosure is deferred. On the first live `Sync` after the away advance, a `FinalNotice` event is emitted, and foreclosure runs at the next daily pass that runs live, unless the arrears have been cured by then.
 
 ### 3.10 Never stuck
 
@@ -386,13 +386,15 @@ All tests are in `tests/Sim.Core.Tests`.
 
 ## 10. Open questions
 
-1. **Who gets the cash first at a season close:** loans → living costs → wages → rent. *Recommendation:* yes. It matches how a lender sees it, and it never creates debt for living costs, because subsistence catches that (ADR 0009). The alternative (living costs first) protects the household but makes missed loan payments more common.
-2. **Land-purchase loans secured by the parcel bought** (a mortgage). Without them, the bank lends nothing until the player already owns bought land (the inherited plot can't be collateral), and the Hamlet's 6 acres are out of reach for days (spec 002 open question 1). *Recommendation:* yes, `BuyParcel` with financing, LTV 0.60.
-3. **Credit score scale 300–900** (CIBIL-like) rather than 0–100. *Recommendation:* 300–900. It fits the Indian setting and is a real-world literacy win.
-4. **Foreclosure never happens while away.** Instead, a final notice appears on return and the player has until the next daily pass to cure the default. *Recommendation:* yes. It follows "no disasters while away" without letting a player dodge default by staying away (an absence is capped at 72 h, less than a season).
-5. **Inventory stays off the ledger in Phase 1.** Sales are income when sold, inputs are expenses when bought, and stored goods count only in net worth. Proper inventory and cost-of-goods accounting come with the Phase 2 statements. *Recommendation:* yes. It keeps Phase 1's lesson on one idea (prepaid costs).
-6. **Two different schedules:** the moneylender's interest-only bullet loan and the bank's equal-principal loan. *Recommendation:* yes. They feel different and teach different risks (a big final payment, or steady payments).
-7. **Foreclosure takes all non-protected assets** (ADR 0009: holdings "fall back to Homestead level"), not just enough to cover the debt. A surplus is returned as cash. *Recommendation:* yes, as the ADR says. The loss is the 20% quick-sale discount and the credit damage.
+All seven were resolved at approval (2026-10-17), following the recommendations:
+
+1. **Settlement priority at a season close:** loan payments, then living costs, then wages, then rent (§3.4). Subsistence catches unpaid living costs, so no debt is ever created for them (ADR 0009).
+2. **Land-purchase loans** are secured by the parcel bought (LTV 0.60), through `BuyParcel` with financing (ADR 0028).
+3. **The credit score runs from 300 to 900**, like India's CIBIL score.
+4. **Foreclosure never happens while away.** A final notice appears on return, and foreclosure runs at the next live daily pass unless the default is cured.
+5. **Inventory stays off the ledger in Phase 1.** Sales are income when sold, inputs are expenses when bought, and stored goods count only in net worth. Inventory accounting comes with the Phase 2 statements (F14.3).
+6. **Two schedules:** the moneylender's interest-only bullet loan, and the bank's equal-principal loan.
+7. **Foreclosure takes all non-protected assets** (ADR 0009). A surplus is returned as cash.
 
 ## 11. Cut first
 

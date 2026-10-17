@@ -1,10 +1,10 @@
 # 002. Land and soil
 
-- Status: In review
+- Status: Approved (2026-10-17)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, Fruit trees, Irrigation ladder); Assets and wealth (Farmland, Liquidity); City building (land bought parcel by parcel); Data model (`Tile` / `Parcel`)
-- Related ADRs: 0008 (upfront payment, starting package), 0009 (protected inherited plot), 0014 (fertility and the Soil factor), 0017 (Phase 1 scope), 0021 (tree slots), 0024 (hut store)
+- Related ADRs: 0028 (Hamlet pace, land priced by earning power, land-purchase loans), 0008 (upfront payment, starting package), 0009 (protected inherited plot), 0014 (fertility and the Soil factor), 0017 (Phase 1 scope), 0021 (tree slots), 0024 (hut store)
 - Depends on specs: 001 (time, weather, scheduler). Spec 005 (ledger) records the money; spec 003 (crops and trees) uses the soil, moisture, occupancy and slots defined here.
 
 ## 1. Goal
@@ -34,7 +34,7 @@ The player inherits two neglected acres, learns that every acre is different (so
 - The hand's hut and other construction: 006 people (hand's hut), and later building specs.
 - Land value from services, zoning and appreciation as the town grows: Phase 3 (F15.3). In Phase 1 a parcel's price depends only on its soil, drainage, fertility and location.
 - Irrigation beyond the well, droughts and floods: Phase 2 (irrigation) and the Events spec.
-- Leasing land: not in Phase 1 (see open question 1).
+- Leasing land: not in Phase 1 (ADR 0028).
 - The map screen and overlays: 008 HUD. This spec defines what the field panel and the buy sheet show.
 
 ## 3. Rules and formulas
@@ -90,7 +90,7 @@ SoilFactor(tile) = SoilDef.yieldFactor × FertilityFactor(fertility) × ShadeFac
 - **FertilityFactor** is piecewise linear through the points in `LandDef.fertilityFactorCurve`, default `(0, 0.50)`, `(60, 1.00)`, `(100, 1.15)`. Between points: `y0 + (y1 − y0) × (f − x0) ÷ (x1 − x0)`, Fixed, rounded.
   - Examples on loam: fertility 30 → 0.75; 45 → 0.875; 60 → 1.00; 80 → 1.075.
 - **ShadeFactor** = `max(LandDef.minShadeFactor, 1 − LandDef.shadePerMatureTree × n)`, where n is the number of **mature** trees in that tile's field-edge slots. Default 0.03 per tree: 0 trees → 1.00, 1 → 0.97, 2 → 0.94.
-- Shade is folded into the Soil factor so the yield formula of ADR 0014 keeps its factor list (open question 3). The *Why?* breakdown still shows shade as its own line.
+- Shade is folded into the Soil factor so the yield formula of ADR 0014 keeps its factor list. The *Why?* breakdown still shows shade as its own line.
 
 ### 3.5 Parcel price, buying and quick sale
 
@@ -110,7 +110,7 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | Rule | Behaviour |
 | --- | --- |
 | Buy | Paid in full, upfront, at the current `ParcelPrice` (ADR 0008). The parcel becomes owned, its farm tiles gain field-edge slots, and its cost basis is recorded for the ledger (spec 005) |
-| Financing | A purchase can be part-financed by a land-purchase loan secured by the parcel itself (spec 005 §3.6, open question 2). This spec only needs the cash leg to succeed |
+| Financing | A purchase can be part-financed by a land-purchase loan secured by the parcel itself (spec 005 §3.6, ADR 0028). This spec only needs the cash leg to succeed |
 | Quick sale | A bought parcel can be sold at once to a neighbour for `round_coin(ParcelPrice × LandDef.quickSaleFactor)` (default 0.80). The discount teaches liquidity: land is slow to turn into cash |
 | Sale blocked | While any tile of the parcel has a crop (growing or ready) or any of its slots holds a tree, or while it holds a building. The player clears it first. The inherited parcel can never be sold |
 | Adjacency after a sale | Selling never strands other owned parcels: a sale is rejected if any remaining bought parcel would no longer connect to the inherited parcel through owned tiles |
@@ -153,13 +153,15 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | `LandDef` | `moistureByWeather` | map weather id → Fixed | sun −0.4, cloudy −0.15, rain 1.2, heavy_rain 2.5, heatwave −1.0, frost −0.05, storm 2.0 | −10 to 10 | Points per hour. Every weather id in `weather.json` must appear |
 | | `fertilityFactorCurve` | list of (fertility, factor) | (0, 0.50), (60, 1.00), (100, 1.15) | x ascending from 0 to 100; factors 0–2 | |
 | | `fallowRecoveryPerSeason` | Fixed | 6 | 0–25 | Points |
-| | `acreBasePrice` | money (coins) | 1,20,000 | > 0 | **Placeholder**, see open question 1 |
+| | `acreBasePrice` | money (coins) | 1,20,000 | > 0 | **Placeholder.** About 8–15 seasons of an acre's net farm income (ADR 0028); tuned by the economy model |
 | | `fertilityPriceMin`, `fertilityPriceMax` | Fixed | 0.80, 1.20 | 0.1–3, min ≤ max | |
 | | `quickSaleFactor` | Fixed | 0.80 | 0.3–1 | |
 | | `fieldEdgeSlotsPerAcre` | int | 2 | 0–4 | |
 | | `shadePerMatureTree` | Fixed | 0.03 | 0–0.2 | |
 | | `minShadeFactor` | Fixed | 0.85 | 0.5–1 | |
 | `WellDef` | `moistureFloor` | Fixed | 30 | 0–100 | Applies to the well's parcel |
+
+ADR 0021's `TreeSlotDef` (slot counts and shade) is realised as `LandDef.fieldEdgeSlotsPerAcre`, `LandDef.shadePerMatureTree`, `LandDef.minShadeFactor` and `BuildingDef.yardTreeSlots`, because yard slots depend on the building (more for bigger houses).
 
 `content/map.json` (`MapDef`, `ParcelDef`):
 
@@ -314,18 +316,13 @@ All tests are in `tests/Sim.Core.Tests`.
 
 ## 10. Open questions
 
-1. **Land prices and the Hamlet pace don't fit together.** This needs your decision.
-   - The GDD pacing table says Hamlet on "Day 1–2". ADR 0017 says Phase 1 ends at the Hamlet unlock after "the guided first week". The Hamlet gate (6 acres farmed, a hand's house, one profitable season) can't be met before the first season close on day 4 anyway.
-   - ADR 0008 prices land at "lakhs" per acre, and the starting savings deliberately can't buy it. Buying 4 more acres therefore needs credit, so the land price has to fit what a lender will finance.
-   - **Recommendation:**
-     - change the Hamlet target to "end of the first week" (about 2 seasons), matching ADR 0017
-     - price land by earning power, about 8–15 seasons of an acre's net farm income (placeholder 1,20,000 coins an acre, tuned by the economy model)
-     - allow land-purchase loans secured by the parcel bought (spec 005 open question 2)
-   - The alternative, leasing neighbours' acres in Phase 1, is realistic (theka) but adds a feature to Phase 1. I suggest keeping leasing for Phase 2.
-2. **The well waters the inherited acres** (a moisture floor of 30), and spec 003 charges the bucket-carrying labour. Bought land is rain-fed until irrigation arrives in Phase 2. *Recommendation:* yes. It makes the well matter and teaches why irrigation is worth paying for.
-3. **Shade goes inside the Soil factor** rather than becoming a tenth factor in ADR 0014's formula, so the formula and the 1.6× cap stay as approved. *Why?* still shows shade as its own line. *Recommendation:* yes.
-4. **Quick sale in Phase 1** (80% of price, immediate). It's needed so a player can cure a missed loan payment by selling land (ADR 0009). The slow, better-priced sale comes with land value in Phase 3. *Recommendation:* yes.
-5. **The map is hand-authored** (6 × 5 acres, parcels of 1–4 acres), not generated from the seed. A fixed map makes onboarding and the economy model predictable. *Recommendation:* yes, for Phase 1.
+All five were resolved at approval (2026-10-17), following the recommendations:
+
+1. **Land prices and the Hamlet pace (ADR 0028).** The Hamlet target is now the end of the first week (about 2 seasons), with the Village at 2–3 weeks and the Township at 4–6 weeks. Land is priced by earning power: an acre costs about 8–15 seasons of its net farm income (placeholder 1,20,000 coins). A bank loan can be secured by the parcel it buys (spec 005 §3.6). There is no leasing in Phase 1.
+2. **The well waters the inherited acres** (moisture floor 30), and spec 003 charges the bucket-carrying labour. Bought land is rain-fed until irrigation arrives in Phase 2.
+3. **Shade goes inside the Soil factor,** so ADR 0014's formula and the 1.6× cap are unchanged. *Why?* shows shade as its own line.
+4. **Quick sale in Phase 1** at 80% of the price, immediately. The slow, better-priced sale comes with land value in Phase 3.
+5. **The map is hand-authored** for Phase 1 (6 × 5 acres, parcels of 1–4 acres).
 
 ## 11. Cut first
 

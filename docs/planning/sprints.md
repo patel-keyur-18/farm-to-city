@@ -22,9 +22,9 @@
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
-- **Status:** In review (started and coded 2026-10-17). All code stories are done; specs 002 and 005 await the owner's approval
+- **Status:** Done (2026-10-17). Specs 002 and 005 approved by the owner the same day
 - **Branch:** `sprint/00-foundations-time-weather`
-- **Done:** 38 of 44 points. US-005 and US-006 (6 points) are written and in review
+- **Done:** 44 of 44 points
 - **Goal:** Foundations in place and spec 001 fully implemented and tested from the terminal; specs 002 (land) and 005 (ledger and credit) written.
 - **Points:** 44
 - **Specs for the owner to review:** 002, 005
@@ -37,8 +37,8 @@
 | US-002 | Continuous integration | [F00.1](features/F00.1-repository-build-and-ci.md) | 2 | Must | Done |
 | US-003 | SessionStart hook | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | Done |
 | US-004 | Repository hygiene | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | Done |
-| US-005 | Spec 002: land and soil | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review |
-| US-006 | Spec 005: ledger and credit | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review |
+| US-005 | Spec 002: land and soil | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-006 | Spec 005: ledger and credit | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
 | US-025 | Fixed-point numbers | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | Done |
 | US-026 | Counter-based RNG | [F01.1](features/F01.1-sim-foundations.md) | 2 | Must | Done |
 | US-027 | State hash | [F01.1](features/F01.1-sim-foundations.md) | 1 | Must | Done |
@@ -55,16 +55,16 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025). Code stories: yes. US-005 and US-006: waiting for the owner's approval
+- [x] All Must stories meet the Definition of Done (ADR 0025)
 - [x] Test checklist written in `docs/test-checklists/` (if there is a build): no build this sprint
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened (#4); owner merges to `main`
 
-**Review (owner's device results):** No device build this sprint. Terminal results: 72 tests pass in Debug and Release; CI green on every push; all 29 spec 001 acceptance criteria have their named tests.
+**Review (owner's device results):** No device build this sprint. Terminal results: 72 tests pass in Debug and Release; CI green on every push; all 29 spec 001 acceptance criteria have their named tests. The owner approved specs 002 and 005 with every recommended answer, which produced ADR 0028 (Hamlet pace, land priced by earning power, land-purchase loans).
 
 **Retro (Claude's draft, owner to amend):**
 - Went well: asking the four spec 001 questions up front kept coding unblocked, and pinning the RNG and hash golden values from an independent Python implementation verified them on the first run.
-- Improve: NUnit 4.6 needs C# 10+ in tests, which ADR 0018 didn't foresee (now noted in ADR 0018's status line). Golden replay hashes moved three times during the sprint; later specs should add their state before pinning their golden files.
+- Improve: NUnit 4.6 needs C# 10+ in tests, which ADR 0018 didn't foresee (now noted in ADR 0018's status line). Golden replay hashes moved three times during the sprint; later specs should add their state before pinning their golden files. Writing specs 002 and 005 exposed a pacing conflict in the GDD (ADR 0028); future specs should check their numbers against the pacing targets.
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 
