@@ -44,7 +44,7 @@
 | US-028 | Clock and weather content | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | Done |
 | US-029 | Calendar and life clock | [F01.2](features/F01.2-calendar-and-scheduler.md) | 2 | Must | Done |
 | US-030 | Scheduler | [F01.2](features/F01.2-calendar-and-scheduler.md) | 5 | Must | Done |
-| US-031 | Commands and replay | [F01.2](features/F01.2-calendar-and-scheduler.md) | 3 | Must | To do |
+| US-031 | Commands and replay | [F01.2](features/F01.2-calendar-and-scheduler.md) | 3 | Must | Done |
 | US-032 | Weather spells | [F01.3](features/F01.3-weather-and-forecast.md) | 3 | Must | To do |
 | US-033 | Forecast | [F01.3](features/F01.3-weather-and-forecast.md) | 3 | Must | To do |
 | US-034 | Live, away and anomalies | [F01.4](features/F01.4-live-and-away-time.md) | 3 | Must | To do |

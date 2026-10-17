@@ -90,4 +90,23 @@ namespace Sim.Core.Tests
             sim.CompleteJob(job);
         }
     }
+
+    /// <summary>A test-only stamped command that records when it was applied.</summary>
+    public sealed class MarkCommand : TimedCommand
+    {
+        private readonly List<string> _log;
+        public string Name { get; }
+
+        public MarkCommand(long at, string name, List<string> log) : base(at)
+        {
+            Name = name;
+            _log = log;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            _log.Add("Command(" + Name + ")@" + sim.State.Clock.SimTime);
+            return CommandResult.Ok;
+        }
+    }
 }

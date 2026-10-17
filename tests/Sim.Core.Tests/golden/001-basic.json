@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "description": "Spec 001 basic replay: new game at 08:30, live and away advances.",
+  "devCommandsEnabled": false,
+  "commands": [
+    {
+      "type": "NewGame",
+      "seed": 42,
+      "startWallUtc": 1800000000,
+      "localSecondsSinceMidnight": 30600
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 40000,
+      "mode": "live"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 400000,
+      "mode": "away"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 1500000,
+      "mode": "live"
+    }
+  ],
+  "expectedHash": "0x5333CDF44D432F98"
+}

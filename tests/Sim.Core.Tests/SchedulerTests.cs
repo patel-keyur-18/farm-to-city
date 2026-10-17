@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using Sim.Core.Commands;
 using Sim.Core.Events;
 using Sim.Core.Maths;
 using Sim.Core.Scheduling;
@@ -133,6 +134,28 @@ namespace Sim.Core.Tests
             Assert.That(manyEvents, Is.EqualTo(oneEvents));
             Assert.That(oneEvents.Count, Is.GreaterThan(16 * 24), "a year of hourly events at least");
             Assert.That(one.State.Jobs.All.Count, Is.EqualTo(3), "each dummy job keeps one successor alive");
+        }
+
+        // Spec 001 AC-12.
+        [Test]
+        public void Commands_ApplyAfterDueItems_RejectPast()
+        {
+            var log = new List<string>();
+            Simulation sim = New(handlers: new[] { new ProbeJobHandler("probe", SystemOrder.Agriculture, log) });
+            long t = 2 * Hour + 30;
+            sim.ScheduleJob("probe", 1, t);
+
+            Assert.That(sim.Execute(new MarkCommand(t, "a", log)).Accepted, Is.True);
+            Assert.That(sim.Execute(new MarkCommand(t, "b", log)).Accepted, Is.True);
+            Assert.That(log, Is.EqualTo(new[] { "Job(probe, entity=1)@" + t, "Command(a)@" + t, "Command(b)@" + t }),
+                "the due item first, then same-time commands in submission order");
+
+            int logged = sim.State.CommandLog.Entries.Count;
+            Assert.That(sim.Execute(new MarkCommand(t - 1, "late", log)).Reason, Is.EqualTo(RejectReason.TimeInPast));
+            Assert.That(sim.AdvanceTo(t - 1).Reason, Is.EqualTo(RejectReason.TimeInPast));
+            Assert.That(sim.State.CommandLog.Entries.Count, Is.EqualTo(logged), "rejected commands aren't logged");
+            Assert.That(log.Count, Is.EqualTo(3));
+            Assert.That(sim.State.Clock.SimTime, Is.EqualTo(t));
         }
     }
 }

@@ -61,6 +61,24 @@ namespace Sim.Core
             return sim;
         }
 
+        /// <summary>
+        /// Rebuilds a simulation from a command log: the first command must be <see cref="Commands.NewGame"/>.
+        /// Every command must be accepted again, or the replay has diverged and this throws.
+        /// </summary>
+        public static Simulation Replay(SimConfig config, IReadOnlyList<Command> commands)
+        {
+            if (commands == null || commands.Count == 0 || !(commands[0] is NewGame newGame))
+                throw new ArgumentException("A replay starts with a NewGame command.", nameof(commands));
+            Simulation sim = NewGame(config, newGame);
+            for (int i = 1; i < commands.Count; i++)
+            {
+                CommandResult r = sim.Execute(commands[i]);
+                if (!r.Accepted)
+                    throw new InvalidOperationException("Replay diverged: command " + i + " (" + commands[i].GetType().Name + ") was " + r + ".");
+            }
+            return sim;
+        }
+
         /// <summary>Validates and applies a command. Accepted commands are recorded in the command log.</summary>
         public CommandResult Execute(Command command)
         {
