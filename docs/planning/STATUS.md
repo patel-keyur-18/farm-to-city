@@ -27,7 +27,7 @@
   - Spec 001: F01.1 sim foundations done (US-025 to US-028: `Fixed`, RNG, state hash, clock and weather content).
   - F01.2 calendar and scheduler done (US-029 to US-031). The golden replay `tests/Sim.Core.Tests/golden/001-basic.json` is re-pinned with `FTC_UPDATE_GOLDEN=1 dotnet test` whenever spec 001 adds state; it is frozen once spec 001 is complete.
   - F01.3 weather and forecast done (US-032, US-033).
-  - US-034 live, away and anomalies done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
+  - F01.4 live and away time done (US-034, US-035). `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
 

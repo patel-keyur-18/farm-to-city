@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Sim.Core.Commands;
 using Sim.Core.Events;
@@ -156,6 +157,37 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.CommandLog.Entries.Count, Is.EqualTo(logged), "rejected commands aren't logged");
             Assert.That(log.Count, Is.EqualTo(3));
             Assert.That(sim.State.Clock.SimTime, Is.EqualTo(t));
+        }
+
+        // Spec 001 AC-26.
+        [Test]
+        public void UpcomingJobs_ForNotifications()
+        {
+            var log = new List<string>();
+            var agri = new ProbeJobHandler("agri", SystemOrder.Agriculture, log);
+            var market = new ProbeJobHandler("market", SystemOrder.Market, log);
+            Simulation sim = New(localSeconds: 9 * Hour, handlers: new IJobHandler[] { agri, market });
+            sim.Execute(new Sync(Wall0 + 40)); // sim time and wall time both move on 40 s
+            long now = sim.State.Clock.SimTime;
+            long cap = sim.Clock.AwayCapSeconds;
+
+            Job late = sim.ScheduleJob("agri", 1, now + cap + 1);    // beyond the cap
+            Job b = sim.ScheduleJob("market", 2, now + 10 * Hour);
+            Job a = sim.ScheduleJob("agri", 7, now + 10 * Hour);     // same time, earlier system
+            Job c = sim.ScheduleJob("agri", 3, now + cap);           // exactly at the cap
+            Job first = sim.ScheduleJob("market", 4, now + 5 * 60);
+
+            List<UpcomingJob> upcoming = sim.UpcomingJobs(now + cap);
+            Assert.That(upcoming.Select(u => u.JobId), Is.EqualTo(new[] { first.Id, a.Id, b.Id, c.Id }));
+            foreach (UpcomingJob u in upcoming)
+                Assert.That(u.WallDueUtc, Is.EqualTo(Wall0 + 40 + (u.DueTime - now)));
+            Assert.That(upcoming[0].Type, Is.EqualTo("market"));
+            Assert.That(upcoming[0].TargetId, Is.EqualTo(4));
+            Assert.That(upcoming.Select(u => u.JobId), Has.No.Member(late.Id));
+
+            // After the first job runs it's no longer upcoming.
+            sim.AdvanceTo(now + 5 * 60);
+            Assert.That(sim.UpcomingJobs(now + cap).Select(u => u.JobId), Is.EqualTo(new[] { a.Id, b.Id, c.Id }));
         }
     }
 }

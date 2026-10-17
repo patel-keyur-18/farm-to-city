@@ -127,6 +127,31 @@ namespace Sim.Core
             return WeatherSystem.ComputeForecast(this, Calendar.SpellAt(State.Clock.SimTime, Clock));
         }
 
+        /// <summary>
+        /// Jobs due at or before <paramref name="untilSimTime"/>, in processing order, with their wall-clock due
+        /// times (spec 001 §3.7). The platform layer asks for <c>simTime + awayCap</c>: later jobs can't complete
+        /// during a single absence.
+        /// </summary>
+        public List<UpcomingJob> UpcomingJobs(long untilSimTime)
+        {
+            var list = new List<UpcomingJob>();
+            foreach (ScheduledItem item in State.Scheduler.InOrder())
+            {
+                if (item.DueTime > untilSimTime) break;
+                if (item.Class != ItemClass.Job) continue;
+                Job job = State.Jobs.Find(item.JobId);
+                if (job == null || job.State != JobState.Running) continue;
+                list.Add(new UpcomingJob(job.Id, job.Type, job.TargetId, item.DueTime, WallTimeOf(item.DueTime)));
+            }
+            return list;
+        }
+
+        /// <summary>The wall-clock time (Unix seconds, UTC) of a sim time: lastWallUtc + (t − simTime).</summary>
+        public long WallTimeOf(long simTime)
+        {
+            return State.Clock.LastWallUtc + (simTime - State.Clock.SimTime);
+        }
+
         // ---- Used by systems, job handlers and commands ----
 
         internal void Emit(SimEvent e) { _events.Add(e); }
