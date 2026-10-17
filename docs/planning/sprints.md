@@ -68,8 +68,8 @@
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 
-- **Status:** Planned
-- **Branch:** `sprint/01-ledger-land-unity` (or the branch the session assigns)
+- **Status:** In progress (started 2026-10-17)
+- **Branch:** `sprint/01-ledger-land-unity`
 - **Goal:** Ledger core and land implemented; Unity project created and a "hello iPhone" build running; specs 003 and 004 written.
 - **Points:** 28
 - **Specs for the owner to review:** 003, 004
@@ -81,7 +81,7 @@
 | --- | --- | --- | --- | --- | --- |
 | US-007 | Spec 003: crops, fruit trees and founder labour | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
 | US-008 | Spec 004: goods, market and storage | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-017 | Create the Unity project | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | To do |
+| US-017 | Create the Unity project | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | Done |
 | US-018 | Pin the Unity version | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | To do |
 | US-019 | Code-first bootstrap | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 3 | Must | To do |
 | US-020 | Build-and-install guide | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 2 | Must | To do |

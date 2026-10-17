@@ -90,8 +90,10 @@ crashlytics-build.properties
 .DS_Store
 .idea/
 .vs/
-.vscode/*
-!.vscode/extensions.json
+# Editor settings at any depth (root and unity/FarmToCity/). Unity's VS Code package regenerates
+# launch.json and settings.json; only the extension recommendations are shared.
+**/.vscode/*
+!**/.vscode/extensions.json
 .gradle/
 *.suo
 *.user

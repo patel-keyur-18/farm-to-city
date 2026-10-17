@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 0 done (44 of 44 points). Sprint 1 is next (planned for 26 Oct – 1 Nov 2026) |
-| Branch with latest work | `sprint/00-foundations-time-weather` (pull request #4). Must be merged to `main` before the next session starts |
+| Sprint | Sprint 1 in progress (started 2026-10-17) |
+| Branch with latest work | `sprint/01-ledger-land-unity` |
 | Last updated | 2026-10-17 |
 
 ## Done so far
@@ -28,9 +28,13 @@
   - **US-005 spec 002 (land and soil) and US-006 spec 005 (ledger and credit): approved** (2026-10-17), with every open question answered as recommended (§10 of each). The GDD matches both.
   - **ADR 0028:** the Hamlet target is the end of the first week (Village 2–3 weeks, Township 4–6 weeks, both provisional); land is priced at about 8–15 seasons of an acre's net farm income; bank loans can be secured by the land they buy; no leasing in Phase 1.
 
+- **Sprint 1 (branch `sprint/01-ledger-land-unity`):**
+  - **US-017 Unity project: done by the owner** (PR #5): Unity 6.3 LTS (6000.3.26f1), Universal 2D template, iOS, bundle ID `com.keyurpatel.farmtocity`, landscape only, Input System only, sim package referenced as `file:../../../sim`.
+  - **Housekeeping:** the manifest and lock file use only the relative sim path; `.gitignore` now ignores `.vscode/*` at any depth except `extensions.json`, and the Unity-generated `launch.json` and `settings.json` were removed from git (Unity regenerates them). The GDD's Art section records Hay Day-like, code-driven motion and feedback; spec 008 (US-011.T3) and the art check (US-024.T4) carry it.
+
 ## In progress
 
-None.
+Sprint 1: US-018 next.
 
 ## Next up
 
