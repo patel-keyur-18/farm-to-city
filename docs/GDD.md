@@ -29,7 +29,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
-| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, small savings | 1–3 | Crops, animals, selling to a travelling trader, cash ledger |
+| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 1–3 | Crops, animals, selling to a travelling trader, cash ledger |
 | 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | Hiring, wages, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school | 15–80 | Businesses, household needs, loans from a cooperative bank, the treasury |
 | 4. Township | Council chair | 20 households, a clinic, a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
@@ -75,8 +75,8 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
   | Cadence | What settles |
   | --- | --- |
   | Every real hour | Production, movement, sales, and market prices clearing |
-  | Every real day | Wages are paid and needs update |
-  | Every season (4 days) | Accounts close, loan payments fall due, taxes are collected |
+  | Every real day | Wage and rent costs are expensed in the P&L (no cash moves) and needs update |
+  | Every season (4 days) | Accounts close; contracts renew, and the next season's wages, rent and living costs are paid upfront; utilities, taxes and loan payments are settled in arrears |
   | Every game year (16 days) | The year-end review and the Town Almanac |
 
 **Seasons**
@@ -211,7 +211,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 1. **Pick a type.** Only types the era supports and the workforce can staff are offered.
 2. **Market research.** A screen shows local demand, existing competitors and their prices, expected foot traffic on a heat-map, and the average wage for the roles needed.
-3. **Business plan.** The player estimates price, volume and costs, and the game projects monthly profit and break-even. The plan is saved, and after a year the game compares forecast with actual results.
+3. **Business plan.** The player estimates price, volume and costs, and the game projects profit per season and break-even. The plan is saved, and after a year the game compares forecast with actual results.
 4. **Location.** Buy land or rent a unit. Each spot gets a location score from traffic, nearby customers, competitors and rent.
 5. **Funding.** Choose among:
    - own cash
@@ -229,7 +229,7 @@ Every business is a small company with its own books, staff and customers. The p
 **Books for every business**
 
 - **Profit and loss:** revenue, cost of goods, gross margin, wages, rent, utilities, maintenance, interest, depreciation, tax, net profit.
-- **Cash flow:** profit adjusted for stock bought, loan principal, equipment purchases, and money still owed by customers.
+- **Cash flow:** profit adjusted for stock bought, prepaid wages and rent, loan principal, equipment purchases, and money still owed by customers.
 - **Balance sheet:** assets, liabilities, equity.
 
 Each line has a *Why?* tap with a plain-language explanation and the numbers behind it.
@@ -282,7 +282,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 4. **Make an offer.** Candidates can accept, reject, or negotiate the wage.
 5. **Probation:** one season, during which the employee can be let go without severance.
 
-**Wages.** Each skill level has a market wage, set by labour supply and demand and nudged by inflation. Paying above market raises loyalty and applicant quality. Paying below market raises quit rates and invites poaching. Later eras add minimum wage policy and worker associations.
+**Wages.** Workers are hired on season-long contracts at a fixed wage per season, paid upfront at the start of each season (ADR 0008). The wage is renegotiated at renewal. If the player can't afford a renewal, the contract lapses. A worker who leaves mid-season returns the unearned part, less any severance. Prepaid wages sit on the balance sheet and are expensed day by day, which is the game's main example of profit not being cash. Each skill level has a market wage, set by labour supply and demand and nudged by inflation. Paying above market raises loyalty and applicant quality. Paying below market raises quit rates and invites poaching. Later eras add minimum wage policy and worker associations.
 
 **Productivity.** Output depends on five factors, and each is shown in the worker's panel.
 
@@ -466,9 +466,9 @@ The player's real score is **net worth**: everything they own minus everything t
 
 - net worth trend
 - an asset allocation pie chart
-- the passive income ratio: income that arrives without the player's labour, against monthly spending
+- the passive income ratio: income that arrives without the player's labour, against spending per season
 - the debt-to-asset ratio
-- an emergency fund measured in months of costs covered
+- an emergency fund measured in seasons of costs covered
 
 **Wealth milestones** mark progress without telling players what to do: first 10,000 coins of net worth, first rental income, debt-free, passive income covering living costs.
 
@@ -638,13 +638,13 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 The game needs no account and no server. All content ships in the build, and the network is used only for optional cloud backup and store purchases.
 
-**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, workers follow their standing orders, and wages are paid. After 72 hours the world freezes, and it resumes from that point when the player returns. A *While you were away* report shows harvests, sales, wages paid and events.
+**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, and workers follow their standing orders. After 72 hours the world freezes, and it resumes from that point when the player returns. A *While you were away* report shows harvests, sales, wages paid and events.
 
 **Away rules**
 
 - Disasters never fire while the player is away.
 - Events that need a decision queue and wait for the player.
-- If cash runs out, workers stop working rather than pushing the player into debt.
+- Workers who are paid for the season keep working. Contracts that can't be renewed lapse. Nothing pushes the player into debt automatically while they are away (ADR 0008).
 
 **Catch-up.** On resume, the game issues one `AdvanceTo(simTime)` command, computed from the wall clock. The scheduler then runs the same hourly, daily and seasonal passes as live play, so there is no separate coarse model. At most 72 hourly passes are needed.
 
@@ -758,6 +758,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
 | `EraDef` | id, unlock conditions, new systems, UI theme |
+| `StartDef` | starting savings, plot, buildings |
 | `ClockDef` | secondsPerSeason, seasonsPerYear, weatherSpellSeconds, lifeYearsPerSeason, awayCapSeconds |
 
 **Instances (live game state)**
@@ -772,6 +773,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `LedgerEntry` | simTime, accountId, amount, category, reference |
 | `Job` | id, type, targetId, startTime, dueTime, state (running, ready, done) |
 | `StandingOrder` | id, workerId, targetId, action, conditions |
+| `Contract` | id, workerId, employerId, wagePerSeason, startTime, endTime, prepaidRemaining |
 | `Loan` | lender, principal, rate, termSeasons, schedule, collateral |
 | `Asset` | type, purchasePrice, bookValue, marketValue, depreciationRule |
 | `Treasury` | balance, budget by department, policies, bonds, creditRating |
@@ -785,6 +787,14 @@ The data falls into two groups. Definitions are static content shipped with the 
 4. A content linter runs in CI and catches broken recipe chains, unreachable buildings and orphaned goods.
 
 **Money units.** Use 64-bit integers in the smallest coin unit, never floats, so that ledgers always reconcile exactly. Rates and percentages use fixed-point decimals.
+
+**Coin scale (ADR 0008).**
+
+- The currency is "coins", with a coin icon and no ₹ symbol. Prices roughly match real rupee magnitudes: wheat is about 25 a kg, and a farm hand is about 36,000 a season.
+- The smallest unit is 1/100 coin.
+- One season equals one real-world quarter for every money flow (wages, rent, interest, upkeep, yield per acre). A crop cycle shorter than a season yields its share of the season's realistic output.
+- Number formatting follows the locale: Indian grouping and L/Cr short forms for en-IN and hi-IN, Western grouping and K/M elsewhere.
+- Costs are paid upfront: purchases, materials, construction, and wages, rent and living costs per season. Utilities, taxes and loan payments are paid in arrears at season close.
 
 ## Art, audio and feel
 
@@ -926,7 +936,7 @@ These choices need the owner's call before their feature specs can be written. T
 | Orientation | Landscape only; or landscape map with portrait menus | UI layout | **Decided:** landscape only ([ADR 0005](decisions/0005-landscape-only.md)) |
 | Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | **Decided:** free with a one-time unlock at the Village gate ([ADR 0006](decisions/0006-free-with-one-time-unlock.md)) |
 | Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | **Decided:** zero budget: CC0 packs plus Blender-rendered sprites; personal builds only ([ADR 0007](decisions/0007-zero-budget-art-and-distribution.md)) |
-| Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting | Open |
+| Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting | **Decided:** rupee-scale "coins", realism per season, costs upfront ([ADR 0008](decisions/0008-coin-scale-and-payment-timing.md)) |
 
 **Risks**
 
