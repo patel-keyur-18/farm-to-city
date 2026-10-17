@@ -23,6 +23,7 @@
   - An automated check confirmed that no story is scheduled before its spec is approved or before a feature it depends on (ADR 0027)
 - PR #3 is merged to `main`.
 - **Sprint 0 progress:**
+  - US-003 SessionStart hook: done.
   - US-001 solution skeleton: done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
@@ -60,5 +61,5 @@ None.
 
 ## Environment notes
 
-- The .NET 10 SDK isn't preinstalled in cloud sessions. Install it with `apt-get install -y dotnet-sdk-10.0` until the SessionStart hook exists (US-003, Sprint 0).
+- The SessionStart hook installs the .NET 10 SDK in cloud sessions (US-003). It runs synchronously, so the session starts only once the SDK is ready.
 - Android isn't tested for now (ADR 0026). All device testing happens on the owner's iPhone 13.

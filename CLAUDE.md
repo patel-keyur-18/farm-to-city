@@ -87,7 +87,7 @@ unity/FarmToCity/           Unity project, created by the owner in Unity Hub (pl
 
 ## Build and test
 
-The .NET 10 SDK (LTS) is required (ADR 0026). In the cloud container, install it with `apt-get install -y dotnet-sdk-10.0`. The SessionStart hook does this automatically once it exists.
+The .NET 10 SDK (LTS) is required (ADR 0026). In cloud sessions the SessionStart hook (`.claude/settings.json` → `.claude/hooks/session-start.sh`) installs `dotnet-sdk-10.0` when it's missing and restores NuGet packages, so `dotnet test` works straight away. If the hook ever fails, install by hand with `apt-get install -y dotnet-sdk-10.0`.
 
 ```
 dotnet build FarmToCity.sln
