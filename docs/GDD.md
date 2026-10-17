@@ -38,6 +38,17 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 **The founder.** The player is the town's founder: a named household that owns the personal wallet. The founder does not age and is not part of the citizen simulation, but the household has personal living costs every season. Citizens around the founder are born, age and retire. See ADR 0003.
 
+**The founder's routine (ADR 0010).** The founder is the farm's first worker.
+
+- Their labour tends the founder's own fields in the background, and the player taps to sow and harvest.
+- The household runs on a plan the player sets once and pays upfront each season: a diet plan, working hours, and spending on clothing, health and other needs.
+- Labour delivered each day = Hours × Nutrition × (1 − Fatigue) × Health.
+  - Better food raises nutrition.
+  - Long days build fatigue, and rest days and better housing clear it.
+  - Poor food, overwork, unsafe water or too little warm clothing in Winter lower health and risk sick days.
+- This is never an energy bar. It changes background output only, never blocks a tap, and can't be bought.
+- The founder splits labour between their own fields and day labour for neighbours. The base capacity tends about 2–3 acres, so growing beyond that is the reason to hire.
+
 **Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Village era there is also a *town treasury*, funded by taxes and spent on public services. Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
 
 **Town identity.** Cumulative choices give the town tags such as Agri-hub, Merchant town, Industrial town, Education town or Green town. Each tag unlocks unique buildings and small bonuses, so two playthroughs end in different cities.
@@ -121,7 +132,7 @@ The map grows as the player buys adjacent parcels. Price depends on soil and loc
 Yield = Base × Soil × Water × Care × Seed × Weather × Tools
 ```
 
-Care is the labour hours delivered divided by the hours needed, capped at 1.1. The Weather factor comes from the weather spells during growth.
+Care is the labour hours delivered divided by the hours needed, capped at 1.1. Labour comes from the founder (ADR 0010) and from hired workers. The Weather factor comes from the weather spells during growth.
 
 **Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
 
@@ -187,7 +198,7 @@ P_local = P_base × (Demand / Supply)^(1/e)      clamped to [0.5 × P_base, 2 ×
 
 **Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport. This creates import and export decisions. It also explains why a town on a highway gets better prices than a remote one.
 
-**Household spending.** Each household splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
+**Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
 **Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Wage expectations follow it with a lag. Cash under the mattress quietly loses value, which teaches why saving and investing differ.
 
@@ -774,6 +785,8 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `BusinessDef` | type, buildingRef, recipes[], serviceType, customerSegments[], demandDrivers |
 | `RoleDef` | id, skills weighting, baseWage, supervisorOf |
 | `EventDef` | id, family, triggerConditions, weight, cooldown, choices[] with effects[] |
+| `FounderDef` | baseLabourHours, fatigue gain and recovery per hours option, health parameters |
+| `DietPlanDef` | id, costPerSeason, nutrition |
 | `LenderDef` | type, rate band, limit formula inputs, grace period, penalty rate |
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
@@ -787,6 +800,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | --- | --- |
 | `Citizen` | id, name, birthTime, householdId, homeId, jobId, education, skills, traits, health, happiness, fatigue, savings, wageExpectation, storyFlags |
 | `Household` | members, income, budget shares, needs met, home |
+| `Founder` | householdId, dietPlan, workHours, labourSplit (own fields or day labour), nutrition, fatigue, health, creditScore |
 | `Tile` / `Parcel` | terrain, fertility, moisture, owner, zone, landValue, buildingId |
 | `Building` | defId, position, level, condition, owner, constructionProgress |
 | `Business` | owner (player, rival or citizen), buildingId, staff, prices, quality, inventory, reputation, manager, plan |

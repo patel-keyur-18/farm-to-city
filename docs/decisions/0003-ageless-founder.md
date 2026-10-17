@@ -1,6 +1,6 @@
 # 0003. Player lifetime: ageless founder
 
-- Status: Accepted
+- Status: Accepted. Amended by ADR 0010: the founder is the first worker and has a minimal body state (nutrition, fatigue, health).
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0002 (life clock: citizens age 1 life-year per season)
