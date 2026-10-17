@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 0 · Pre-production |
 | Sprint | Sprint 1 in progress: 17 of 28 points done, 11 in review (owner device test and spec reviews) |
-| Branch with latest work | `sprint/01-ledger-land-unity` (pull request to `main` open; must be merged before the next session) |
+| Branch with latest work | `sprint/01-ledger-land-unity` (pull request #6 to `main`; must be merged before the next session) |
 | Last updated | 2026-10-17 |
 
 ## Done so far
@@ -57,7 +57,7 @@ Nothing half-built. Waiting on the owner: the device run (US-019, US-020) and th
 
 | When | Owner action |
 | --- | --- |
-| Now | Merge the Sprint 1 pull request |
+| Now | Merge pull request #6 (Sprint 1) |
 | Sprint 1 | Install the hello-iPhone build (`how-to-build-ios.md`, `s01-hello-iphone.md`) and report. Review specs 003 and 004 and answer the open questions |
 | Sprint 2 | Review specs 006 and 007 |
 | Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
