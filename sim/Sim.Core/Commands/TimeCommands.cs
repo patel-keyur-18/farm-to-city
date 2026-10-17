@@ -109,3 +109,46 @@ namespace Sim.Core.Commands
         }
     }
 }
+
+namespace Sim.Core.Commands
+{
+    using Sim.Core.Definitions;
+    using Sim.Core.Time;
+
+    /// <summary>
+    /// Developer time travel (spec 001 §3.8). Rejected with DevCommandsDisabled unless
+    /// <c>SimOptions.DevCommandsEnabled</c>. Allowed steps, in either mode: +1 hour, +1 day, +1 season and the
+    /// away cap (owner decision, 2026-10-17). Live advances exactly; Away applies the away cap like Sync.
+    /// lastWallUtc is unchanged, so the next Sync carries on from the new sim time.
+    /// </summary>
+    public sealed class DebugAdvance : Command
+    {
+        public long Seconds { get; }
+        public AdvanceMode Mode { get; }
+
+        public DebugAdvance(long seconds, AdvanceMode mode)
+        {
+            Seconds = seconds;
+            Mode = mode;
+        }
+
+        internal override CommandResult Apply(Simulation sim)
+        {
+            if (!sim.Config.Options.DevCommandsEnabled) return CommandResult.Reject(RejectReason.DevCommandsDisabled);
+            ClockDef clock = sim.Clock;
+            if (Seconds != 3600 && Seconds != ClockDef.SecondsPerDay && Seconds != clock.SecondsPerSeason && Seconds != clock.AwayCapSeconds)
+                return CommandResult.Reject(RejectReason.InvalidStep);
+
+            if (Mode == AdvanceMode.Away)
+            {
+                long applied = AwayCap.Apply(Seconds, clock);
+                sim.AdvanceAway(Seconds, applied, applied != Seconds);
+            }
+            else
+            {
+                sim.AdvanceLive(sim.State.Clock.SimTime + Seconds);
+            }
+            return CommandResult.Ok;
+        }
+    }
+}

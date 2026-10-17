@@ -97,6 +97,10 @@ namespace Sim.Content
                 case "Sync":
                     OnlyFields(c, path, "type", "nowWallUtc");
                     return new Sync(Long(Required(c, path, "nowWallUtc"), path + ".nowWallUtc"));
+                case "DebugAdvance":
+                    OnlyFields(c, path, "type", "seconds", "mode");
+                    return new DebugAdvance(Long(Required(c, path, "seconds"), path + ".seconds"),
+                        Mode(Required(c, path, "mode"), path + ".mode"));
                 default:
                     throw new ContentException(path + ".type", "unknown command type '" + type + "'");
             }
@@ -121,6 +125,11 @@ namespace Sim.Content
                 case Sync sync:
                     Prop(w, "type", "Sync");
                     w.WritePropertyName("nowWallUtc"); w.WriteValue(sync.NowWallUtc);
+                    break;
+                case DebugAdvance d:
+                    Prop(w, "type", "DebugAdvance");
+                    w.WritePropertyName("seconds"); w.WriteValue(d.Seconds);
+                    Prop(w, "mode", ModeName(d.Mode));
                     break;
                 default:
                     throw new ArgumentException("Command type " + command.GetType().Name + " can't be written to a replay file.");

@@ -65,6 +65,7 @@ namespace Sim.Core.Tests
             file.Commands.Add(new NewGame(ulong.MaxValue, 1_800_000_000, 86_399));
             file.Commands.Add(new AdvanceTo(123_456, AdvanceMode.Away));
             file.Commands.Add(new Sync(1_800_000_030));
+            file.Commands.Add(new DebugAdvance(86_400, AdvanceMode.Live));
             string json = ReplayJson.Write(file);
             ReplayFile back = ReplayJson.Load(json);
             Assert.That(ReplayJson.Write(back), Is.EqualTo(json));

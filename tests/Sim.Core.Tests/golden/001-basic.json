@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "description": "Spec 001 basic replay: new game at 08:30, live and away advances.",
-  "devCommandsEnabled": false,
+  "description": "Spec 001 basic replay: new game at 08:30; live syncs, an away sync under the cap, one over the cap, a backward clock jump, dev time travel, and explicit advances.",
+  "devCommandsEnabled": true,
   "commands": [
     {
       "type": "NewGame",
@@ -10,20 +10,53 @@
       "localSecondsSinceMidnight": 30600
     },
     {
-      "type": "AdvanceTo",
-      "target": 40000,
+      "type": "Sync",
+      "nowWallUtc": 1800000030
+    },
+    {
+      "type": "Sync",
+      "nowWallUtc": 1800000090
+    },
+    {
+      "type": "Sync",
+      "nowWallUtc": 1800018090
+    },
+    {
+      "type": "Sync",
+      "nowWallUtc": 1800378090
+    },
+    {
+      "type": "Sync",
+      "nowWallUtc": 1800370890
+    },
+    {
+      "type": "Sync",
+      "nowWallUtc": 1800370920
+    },
+    {
+      "type": "DebugAdvance",
+      "seconds": 86400,
       "mode": "live"
     },
     {
-      "type": "AdvanceTo",
-      "target": 400000,
+      "type": "DebugAdvance",
+      "seconds": 345600,
       "mode": "away"
     },
     {
       "type": "AdvanceTo",
       "target": 1500000,
       "mode": "live"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 1600000,
+      "mode": "away"
+    },
+    {
+      "type": "Sync",
+      "nowWallUtc": 1800370980
     }
   ],
-  "expectedHash": "0xB728E26B178796B6"
+  "expectedHash": "0x0A11B9AED3656FC1"
 }
