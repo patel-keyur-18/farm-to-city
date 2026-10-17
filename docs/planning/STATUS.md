@@ -5,23 +5,28 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 0 is next (planned for 19–25 Oct 2026) |
-| Branch with latest work | `claude/gifted-wright-v54560` (pull request #3). Must be merged to `main` before the next session starts |
+| Sprint | Sprint 0 done (44 of 44 points). Sprint 1 is next (planned for 26 Oct – 1 Nov 2026) |
+| Branch with latest work | `sprint/00-foundations-time-weather` (pull request #4). Must be merged to `main` before the next session starts |
 | Last updated | 2026-10-17 |
 
 ## Done so far
 
-- The GDD has been reviewed and updated (v1.2 plus later edits).
-- ADRs 0001–0027 are accepted.
-- `CLAUDE.md` exists, with the session routine.
-- The spec template exists.
-- **Spec 001 (time and weather)** is approved.
-- **SDLC planning is created and audited:**
-  - `epics.md`: 21 epics, 79 features
-  - `features/`: one file per feature, 176 user stories. Phases 0–1 are broken down into tasks
-  - `sprints.md`: Sprints 0–9 for Phases 0–1
-  - An automated check confirmed that no story is scheduled before its spec is approved or before a feature it depends on (ADR 0027)
-- No code has been written yet.
+- **Before Sprint 0:** GDD reviewed (v1.2 plus later edits); ADRs 0001–0027 accepted; `CLAUDE.md` with the session routine; spec template; spec 001 approved; SDLC planning created and audited (21 epics, 79 features, 176 stories, Sprints 0–9). PR #3 merged.
+- **Sprint 0 (branch `sprint/00-foundations-time-weather`):**
+  - **F00.1 repository, build and CI (US-001 to US-004): done.**
+    - `FarmToCity.sln`, `Directory.Build.props` (C# 9, warnings as errors, output to `/artifacts`), the `sim/` UPM package with `Sim.Core` and `Sim.Content` (`.csproj` + `.asmdef` with `noEngineReferences`), `tests/Sim.Core.Tests` (NUnit 4.6.1), `tools/Tools.Balancer`, `content/`.
+    - CI (`.github/workflows/ci.yml`) builds and tests in Release on every push and pull request; green on every push this sprint.
+    - The SessionStart hook (`.claude/hooks/session-start.sh`) installs the .NET 10 SDK and restores packages in cloud sessions.
+    - `.gitignore` re-rooted for Unity, `ASSETS_LICENSES.md`, the device test checklist template.
+  - **Spec 001 fully implemented (US-025 to US-037, F01.1 to F01.5): done.**
+    - All 29 acceptance criteria have their named tests, passing; 72 tests in total.
+    - `Fixed` (Q31.32), the counter-based SplitMix64 RNG, the FNV-1a state hash, clock and weather content with a validating loader, the calendar and life clock, the scheduler and settlement passes, commands and replay, weather spells and the forecast, `Sync` with the away cap and clock anomalies, upcoming jobs for notifications, `DebugAdvance`, and the performance guard.
+    - Measured: a 72 h advance takes about 0.2 ms and a game year about 1.2 ms (guards: 20 ms and 100 ms).
+    - The golden replay `tests/Sim.Core.Tests/golden/001-basic.json` covers every spec 001 command and is **frozen** (hash `0x0A11B9AED3656FC1`). Re-pin it with `FTC_UPDATE_GOLDEN=1 dotnet test` only when a later spec deliberately changes the state hash, and say so in the commit.
+    - `dotnet run --project tools/Tools.Balancer [years] [seed]` prints spec 001's balancing hooks.
+    - Implementation clarifications (four owner decisions and two implementation choices) are recorded in spec 001 §10. ADR 0018's status line notes the SplitMix64 RNG and that C# 9 applies to `sim/` only.
+  - **US-005 spec 002 (land and soil) and US-006 spec 005 (ledger and credit): approved** (2026-10-17), with every open question answered as recommended (§10 of each). The GDD matches both.
+  - **ADR 0028:** the Hamlet target is the end of the first week (Village 2–3 weeks, Township 4–6 weeks, both provisional); land is priced at about 8–15 seasons of an acre's net farm income; bank loans can be secured by the land they buy; no leasing in Phase 1.
 
 ## In progress
 
@@ -29,18 +34,18 @@ None.
 
 ## Next up
 
-1. **Owner:** merge pull request #3 into `main`.
-2. **Next session: start Sprint 0** (see `sprints.md`), in this order:
-   - US-001 to US-004: the solution skeleton, CI, the SessionStart hook and repository hygiene
-   - US-025 to US-037: implement spec 001 (foundations, calendar, scheduler, weather, forecast, live and away time, time travel, performance guard)
-   - US-005 and US-006: write **spec 002 (land and soil)** and **spec 005 (ledger and credit)** for owner review
+1. **Owner:** merge pull request #4 into `main`.
+2. **Next session: start Sprint 1** (see `sprints.md`, branch `sprint/01-ledger-land-unity`):
+   - US-007 and US-008: write **spec 003** (crops, fruit trees and founder labour) and **spec 004** (goods, market and storage) for owner review. Spec 003 must charge the well's bucket-watering labour (spec 002 §3.2) and use the Soil factor from spec 002 §3.4; spec 004 must give the trader's buying price that net worth uses (spec 005 §3.5).
+   - US-059: the exact ledger (spec 005 §3.1, ACs 1–5), first, because land buying posts through it.
+   - US-038 to US-041: land and soil (spec 002).
+   - The owner creates the Unity project at the start of the sprint (US-017 to US-020).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Merge pull request #3 |
-| Sprint 0 | Review and approve specs 002 and 005. Merge the sprint pull request |
+| Now | Merge pull request #4 |
 | Sprint 1 (start) | Install the latest Unity LTS with iOS Build Support. Install Git LFS (`brew install git-lfs`, then `git lfs install`). Create the 2D URP project at `unity/FarmToCity/` and push it |
 | Sprint 1 | Review specs 003 and 004. Install the "hello iPhone" build on the iPhone 13 using `docs/test-checklists/how-to-build-ios.md` |
 | Sprint 2 | Review specs 006 and 007 |
@@ -50,7 +55,11 @@ None.
 
 ## Open questions (with the owner)
 
-None. All design questions are closed (ADRs 0019–0027).
+None. Specs 002 and 005 were approved with every recommendation (2026-10-17).
+
+**Noted for later specs (no decision needed now):**
+- Spec 007 (saves): `Sync` runs every frame and every accepted command is logged, so the command log grows by about 3,600 entries an hour of live play. Consecutive live `Sync`s can be merged without changing the result (chunking invariance), so the saves spec should compact them.
+- NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
 
 ## Half-done work
 
@@ -58,5 +67,6 @@ None.
 
 ## Environment notes
 
-- The .NET 10 SDK isn't preinstalled in cloud sessions. Install it with `apt-get install -y dotnet-sdk-10.0` until the SessionStart hook exists (US-003, Sprint 0).
+- The SessionStart hook installs the .NET 10 SDK in cloud sessions (US-003). It runs synchronously, so the session starts only once the SDK is ready. If it ever fails, install by hand with `apt-get install -y dotnet-sdk-10.0`.
+- Tests and tools use the latest C# (NUnit 4.6 needs C# 10+ overload resolution); `sim/` stays on C# 9 and the compiler enforces it.
 - Android isn't tested for now (ADR 0026). All device testing happens on the owner's iPhone 13.

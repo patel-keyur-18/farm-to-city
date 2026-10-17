@@ -315,6 +315,19 @@ All three were resolved at approval (2026-10-17), following the recommendations:
 2. **Daylight saving and travel:** accepted for v1. After a daylight-saving change the town's clock may be 1 hour off the phone's. A gentle realignment is added only if testers notice.
 3. **Real-time first session:** noted. The clock has no tutorial speed, so the first session (spec 009, onboarding) relies on a 5-minute crop.
 
+### Implementation clarifications (Sprint 0, 2026-10-17)
+
+The spec left these open. The owner decided 1–4; 5 and 6 are implementation choices with the same observable behaviour. None changes a formula.
+
+1. **Forecast RNG counters (§3.6).** The accuracy roll uses counter = bucket; the alternative pick uses counter = 16 + bucket (`WeatherRules.AlternativeCounterOffset`).
+2. **`DebugAdvance` steps (§3.8, AC-27).** +1 h, +1 day, +1 season and the away cap are allowed in both modes. In Away mode the cap applies: +1 day gives 24 h uncapped (like AC-22); +1 season (96 h) gives 72 h, capped, at the same time of day (like AC-23).
+3. **Command log and hash.** Every accepted command is logged (`NewGame`, `Sync`, `AdvanceTo`, `DebugAdvance`, later game commands); rejected commands are not. `StateHash` covers the world state only, never the command log.
+4. **`Fixed` overflow (§3.1).** Add, subtract, multiply and divide throw `OverflowException` in every build configuration, not only in debug builds, so behaviour never depends on the build.
+5. **New-game boundaries.** No pass fires at the exact moment a game starts; the first hourly, daily, seasonal and yearly passes are at the next boundary after the start time.
+6. **Passes as scheduler items.** Each pass is one scheduler item (systemOrder = Time) that calls every system in system order, then reschedules itself. This gives the same order as one item per system.
+
+Also fixed in content: `isSevere` is true for Heavy rain, Heatwave, Frost and Storm (`content/weather.json`; tunable data).
+
 ## 11. Cut first
 
 1. Forecast uncertainty: make days 2–3 exact.

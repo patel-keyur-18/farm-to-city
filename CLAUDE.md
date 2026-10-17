@@ -26,6 +26,12 @@ Every session starts with no memory. The repository is the only memory.
 2. Update `docs/planning/STATUS.md`: last done, next up, open questions, branch, anything half-done.
 3. Commit and push.
 4. At the end of a session or sprint, open a pull request to `main` and ask the owner to merge it. The next session clones `main`, so unmerged work is invisible to it.
+5. **Every pull request gets labels and a milestone** (owner rule, 2026-10-17). Use only labels and milestones that already exist in the repository:
+   - **Milestone:** the phase the sprint belongs to (`Phase 0 · Pre-production`, `Phase 1 · Homestead slice`, `Phase 2 · Hamlet & Village`, `Phase 3 · Township`, `Phase 4 · Town & City`, `Phase 5 · Launch`).
+   - **`type:` labels**, one for each kind of change in the pull request: `type:feature`, `type:spec`, `type:adr`, `type:bug`, `type:balance`.
+   - **`area:` labels**, one for each area touched: `area:sim`, `area:content`, `area:tooling`, `area:ui`, `area:art`.
+   - **`documentation`** when docs change.
+   - Re-check the labels whenever later pushes change what the pull request contains.
 
 ## Workflow (spec-driven)
 
@@ -64,17 +70,18 @@ docs/specs/                 feature specs (NNN-name.md) and _TEMPLATE.md
 docs/decisions/             ADRs (NNNN-title.md)
 docs/test-checklists/       per-build device test checklists
 docs/planning/              STATUS.md (session handoff), epics.md, features/, sprints.md
-FarmToCity.sln              solution for the dotnet projects              (planned)
+FarmToCity.sln              solution for the dotnet projects
 Directory.Build.props       LangVersion 9.0, warnings as errors,
-                            output to /artifacts                          (planned)
-sim/                        Unity package (UPM) + dotnet projects         (planned)
+                            output to /artifacts
+sim/                        Unity package com.farmtocity.sim (package.json)
+                            + dotnet projects
   Sim.Core/                 pure C# simulation: .csproj (netstandard2.1)
                             + .asmdef (noEngineReferences)
   Sim.Content/              JSON loader + validation (definition classes
                             live in Sim.Core, ADR 0020)
-tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)                       (planned)
-tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)   (planned)
-content/                    JSON definitions (balancing data)             (planned)
+tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)
+tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)
+content/                    JSON definitions (balancing data)
 unity/FarmToCity/           Unity project, created by the owner in Unity Hub (planned)
   Game.Presentation         rendering and UI (asmdef), built code-first
   Game.Services             saves, platform services, IEntitlementService (asmdef)
@@ -86,7 +93,7 @@ unity/FarmToCity/           Unity project, created by the owner in Unity Hub (pl
 
 ## Build and test
 
-The .NET 10 SDK (LTS) is required (ADR 0026). In the cloud container, install it with `apt-get install -y dotnet-sdk-10.0`. The SessionStart hook does this automatically once it exists.
+The .NET 10 SDK (LTS) is required (ADR 0026). In cloud sessions the SessionStart hook (`.claude/settings.json` → `.claude/hooks/session-start.sh`) installs `dotnet-sdk-10.0` when it's missing and restores NuGet packages, so `dotnet test` works straight away. If the hook ever fails, install by hand with `apt-get install -y dotnet-sdk-10.0`.
 
 ```
 dotnet build FarmToCity.sln
@@ -94,7 +101,7 @@ dotnet test
 dotnet run --project tools/Tools.Balancer
 ```
 
-These commands work once the solution skeleton exists, which is the first code task after spec 001 is approved. CI (GitHub Actions) runs `dotnet build` and `dotnet test` on every push. Unity builds are made by the owner on a MacBook Air M2 with Xcode 27.1, and tested on an iPhone 13 (ADR 0026).
+Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `dotnet build` and `dotnet test` on every push. Unity builds are made by the owner on a MacBook Air M2 with Xcode 27.1, and tested on an iPhone 13 (ADR 0026).
 
 ## Key decisions (see `docs/decisions/` for full text)
 
@@ -127,6 +134,7 @@ These commands work once the solution skeleton exists, which is the first code t
 | 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
 | 0027 | Audit corrections: specs 002 and 005 first, the ledger core in Sprint 1, Unity and a hello-iPhone build in Sprint 1, on-device determinism in the Phase 0 gate, the Hamlet-unlock feature, and later-phase coverage |
+| 0028 | Hamlet at the end of the first week (Village 2–3 weeks, Township 4–6 weeks). Land priced at 8–15 seasons of an acre's net income. Bank loans can be secured by the land they buy. No leasing in Phase 1 |
 
 ## Current status
 

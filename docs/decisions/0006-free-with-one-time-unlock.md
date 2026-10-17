@@ -3,7 +3,7 @@
 - Status: Accepted, implementation deferred. Personal builds ship with no purchases and the full game unlocked (ADR 0007). This model applies if and when the game is published.
 - Date: 2026-10-17
 - Deciders: Keyur Patel
-- Related: ADR 0002 (real-time pacing: Village in about 1 week)
+- Related: ADR 0002 (real-time pacing; the Village target is 2–3 weeks since ADR 0028)
 - GDD sections: Art, audio and feel (Monetisation), Offline play and saves, Open decisions and risks
 
 ## Context

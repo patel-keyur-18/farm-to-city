@@ -22,8 +22,9 @@
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
-- **Status:** Planned
-- **Branch:** `sprint/00-foundations-time-weather` (or the branch the session assigns)
+- **Status:** Done (2026-10-17). Specs 002 and 005 approved by the owner the same day
+- **Branch:** `sprint/00-foundations-time-weather`
+- **Done:** 44 of 44 points
 - **Goal:** Foundations in place and spec 001 fully implemented and tested from the terminal; specs 002 (land) and 005 (ledger and credit) written.
 - **Points:** 44
 - **Specs for the owner to review:** 002, 005
@@ -32,36 +33,38 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-001 | Solution skeleton | [F00.1](features/F00.1-repository-build-and-ci.md) | 3 | Must | To do |
-| US-002 | Continuous integration | [F00.1](features/F00.1-repository-build-and-ci.md) | 2 | Must | To do |
-| US-003 | SessionStart hook | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | To do |
-| US-004 | Repository hygiene | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | To do |
-| US-005 | Spec 002: land and soil | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-006 | Spec 005: ledger and credit | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-025 | Fixed-point numbers | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | To do |
-| US-026 | Counter-based RNG | [F01.1](features/F01.1-sim-foundations.md) | 2 | Must | To do |
-| US-027 | State hash | [F01.1](features/F01.1-sim-foundations.md) | 1 | Must | To do |
-| US-028 | Clock and weather content | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | To do |
-| US-029 | Calendar and life clock | [F01.2](features/F01.2-calendar-and-scheduler.md) | 2 | Must | To do |
-| US-030 | Scheduler | [F01.2](features/F01.2-calendar-and-scheduler.md) | 5 | Must | To do |
-| US-031 | Commands and replay | [F01.2](features/F01.2-calendar-and-scheduler.md) | 3 | Must | To do |
-| US-032 | Weather spells | [F01.3](features/F01.3-weather-and-forecast.md) | 3 | Must | To do |
-| US-033 | Forecast | [F01.3](features/F01.3-weather-and-forecast.md) | 3 | Must | To do |
-| US-034 | Live, away and anomalies | [F01.4](features/F01.4-live-and-away-time.md) | 3 | Must | To do |
-| US-035 | Upcoming jobs for notifications | [F01.4](features/F01.4-live-and-away-time.md) | 1 | Must | To do |
-| US-036 | Time-travel commands | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Must | To do |
-| US-037 | Performance guard | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Should | To do |
+| US-001 | Solution skeleton | [F00.1](features/F00.1-repository-build-and-ci.md) | 3 | Must | Done |
+| US-002 | Continuous integration | [F00.1](features/F00.1-repository-build-and-ci.md) | 2 | Must | Done |
+| US-003 | SessionStart hook | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | Done |
+| US-004 | Repository hygiene | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | Done |
+| US-005 | Spec 002: land and soil | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-006 | Spec 005: ledger and credit | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-025 | Fixed-point numbers | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | Done |
+| US-026 | Counter-based RNG | [F01.1](features/F01.1-sim-foundations.md) | 2 | Must | Done |
+| US-027 | State hash | [F01.1](features/F01.1-sim-foundations.md) | 1 | Must | Done |
+| US-028 | Clock and weather content | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | Done |
+| US-029 | Calendar and life clock | [F01.2](features/F01.2-calendar-and-scheduler.md) | 2 | Must | Done |
+| US-030 | Scheduler | [F01.2](features/F01.2-calendar-and-scheduler.md) | 5 | Must | Done |
+| US-031 | Commands and replay | [F01.2](features/F01.2-calendar-and-scheduler.md) | 3 | Must | Done |
+| US-032 | Weather spells | [F01.3](features/F01.3-weather-and-forecast.md) | 3 | Must | Done |
+| US-033 | Forecast | [F01.3](features/F01.3-weather-and-forecast.md) | 3 | Must | Done |
+| US-034 | Live, away and anomalies | [F01.4](features/F01.4-live-and-away-time.md) | 3 | Must | Done |
+| US-035 | Upcoming jobs for notifications | [F01.4](features/F01.4-live-and-away-time.md) | 1 | Must | Done |
+| US-036 | Time-travel commands | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Must | Done |
+| US-037 | Performance guard | [F01.5](features/F01.5-developer-time-travel-sim.md) | 1 | Should | Done |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025)
+- [x] Test checklist written in `docs/test-checklists/` (if there is a build): no build this sprint
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened (#4); owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results):** No device build this sprint. Terminal results: 72 tests pass in Debug and Release; CI green on every push; all 29 spec 001 acceptance criteria have their named tests. The owner approved specs 002 and 005 with every recommended answer, which produced ADR 0028 (Hamlet pace, land priced by earning power, land-purchase loans).
 
-**Retro:** —
+**Retro (Claude's draft, owner to amend):**
+- Went well: asking the four spec 001 questions up front kept coding unblocked, and pinning the RNG and hash golden values from an independent Python implementation verified them on the first run.
+- Improve: NUnit 4.6 needs C# 10+ in tests, which ADR 0018 didn't foresee (now noted in ADR 0018's status line). Golden replay hashes moved three times during the sprint; later specs should add their state before pinning their golden files. Writing specs 002 and 005 exposed a pacing conflict in the GDD (ADR 0028); future specs should check their numbers against the pacing targets.
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 

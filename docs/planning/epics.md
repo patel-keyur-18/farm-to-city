@@ -43,25 +43,25 @@
 
 | Feature | Title | Epic | Phase | Spec | Status | Stories | Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [F00.1](features/F00.1-repository-build-and-ci.md) | Repository, build and CI | E00 | 0 | ADR 0018, 0020, 0026 | Ready | US-001–US-004 | 7 |
+| [F00.1](features/F00.1-repository-build-and-ci.md) | Repository, build and CI | E00 | 0 | ADR 0018, 0020, 0026 | Done | US-001–US-004 | 7 |
 | [F00.2](features/F00.2-phase-1-feature-specs.md) | Phase 1 feature specs | E00 | 0 | GDD, ADR 0019 | In progress | US-005–US-012 | 24 |
 | [F00.3](features/F00.3-economy-model.md) | Economy model | E00 | 0 | GDD Balancing, ADR 0008, 0016 | Backlog | US-013–US-016 | 14 |
 | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | Unity project and bootstrap | E00 | 0 | ADR 0017, 0018, 0026 | Backlog | US-017–US-020 | 7 |
 | [F00.5](features/F00.5-performance-spike.md) | Performance spike | E00 | 0 | GDD performance budget, ADR 0026 | Backlog | US-021–US-023 | 9 |
 | [F00.6](features/F00.6-art-style-check.md) | Art style check | E00 | 0 | ADR 0007, 0017 | Backlog | US-024–US-024 | 2 |
-| [F01.1](features/F01.1-sim-foundations.md) | Sim foundations | E01 | 1 | Spec 001 §3.1 | Ready | US-025–US-028 | 9 |
-| [F01.2](features/F01.2-calendar-and-scheduler.md) | Calendar and scheduler | E01 | 1 | Spec 001 §3.2–3.3 | Ready | US-029–US-031 | 10 |
-| [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Ready | US-032–US-033 | 6 |
-| [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Ready | US-034–US-035 | 4 |
-| [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Ready | US-036–US-037 | 2 |
-| [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | Spec 002 (to write) | Backlog | US-038–US-041 | 10 |
+| [F01.1](features/F01.1-sim-foundations.md) | Sim foundations | E01 | 1 | Spec 001 §3.1 | Done | US-025–US-028 | 9 |
+| [F01.2](features/F01.2-calendar-and-scheduler.md) | Calendar and scheduler | E01 | 1 | Spec 001 §3.2–3.3 | Done | US-029–US-031 | 10 |
+| [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Done | US-032–US-033 | 6 |
+| [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Done | US-034–US-035 | 4 |
+| [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Done | US-036–US-037 | 2 |
+| [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | [Spec 002](../specs/002-land-and-soil.md) | Backlog | US-038–US-041 | 10 |
 | [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | Spec 003 (to write) | Backlog | US-042–US-046 | 17 |
 | [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | Spec 003 (to write) | Backlog | US-047–US-049 | 7 |
 | [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | Spec 003 (to write) | Backlog | US-050–US-053 | 10 |
 | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | Spec 004 (to write) | Backlog | US-054–US-056 | 11 |
 | [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | Spec 004 (to write) | Backlog | US-057–US-058 | 4 |
-| [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | Spec 005 (to write) | Backlog | US-059–US-062 | 14 |
-| [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | Spec 005 (to write) | Backlog | US-063–US-065 | 9 |
+| [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Ready | US-059–US-062 | 14 |
+| [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Backlog | US-063–US-065 | 9 |
 | [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | Spec 006 (to write) | Backlog | US-066–US-067 | 5 |
 | [F06.2](features/F06.2-resident-farm-hand.md) | Resident farm hand | E06 | 1 | Spec 006 (to write) | Backlog | US-068–US-070 | 8 |
 | [F06.3](features/F06.3-standing-orders.md) | Standing orders | E06 | 1 | Spec 006 (to write) | Backlog | US-071–US-072 | 6 |

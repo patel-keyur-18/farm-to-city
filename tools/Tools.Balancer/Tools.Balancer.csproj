@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Headless balancer: runs the sim on a fake clock (ADR 0016, 0018). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- C# 9 is for sim/ only (Unity). Tests and tools never ship to Unity, and NUnit 4.6 needs C# 10+ lambda overload resolution. -->
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Tools.Balancer</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\sim\Sim.Core\Sim.Core.csproj" />
+    <ProjectReference Include="..\..\sim\Sim.Content\Sim.Content.csproj" />
+  </ItemGroup>
+</Project>

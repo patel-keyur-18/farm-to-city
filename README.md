@@ -1,5 +1,7 @@
 # Farm to City (working title)
 
+[![CI](https://github.com/patel-keyur-18/farm-to-city/actions/workflows/ci.yml/badge.svg)](https://github.com/patel-keyur-18/farm-to-city/actions/workflows/ci.yml)
+
 An offline life-and-business simulation for iOS and Android. Start with two acres
 and a well; grow a hamlet, a village, a township and finally a city — by farming,
 founding businesses, hiring and training people, and investing in your town.
@@ -10,6 +12,16 @@ how to lead people.
 
 ## Status
 Pre-production (Phase 0). Spec-driven: no feature is built before its spec is approved.
+See [docs/planning/STATUS.md](docs/planning/STATUS.md) for where the work stands.
+
+## Build and test
+Requires the .NET 10 SDK.
+
+```
+dotnet build FarmToCity.sln
+dotnet test
+dotnet run --project tools/Tools.Balancer
+```
 
 ## Docs
 - [Game Design Spec](docs/GDD.md): the master spec

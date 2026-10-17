@@ -1,0 +1,32 @@
+# Builds the solution and runs every test on each push and pull request (ADR 0018).
+# No Unity licence is needed: the sim is a plain .NET library.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore FarmToCity.sln
+
+      - name: Build (Release)
+        run: dotnet build FarmToCity.sln --configuration Release --no-restore
+
+      # Includes the Perf category (spec 001 AC-28), whose thresholds assume a Release build.
+      - name: Test (Release)
+        run: dotnet test FarmToCity.sln --configuration Release --no-build --verbosity normal

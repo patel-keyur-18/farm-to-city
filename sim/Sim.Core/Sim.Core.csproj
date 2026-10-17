@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pure C# simulation. Also compiled by Unity through Sim.Core.asmdef (noEngineReferences). -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>Sim.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
