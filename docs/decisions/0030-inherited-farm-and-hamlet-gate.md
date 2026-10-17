@@ -28,7 +28,7 @@ Option 5.
 
 1. **The inheritance:** 6 farm acres and the yard (hut and well), in two parcels (`home_a` with the yard, `home_b`), all **protected**: never sold, never seized, never collateral (ADR 0009). `StartDef.inheritedParcels` is a list.
 2. **Starting cash: 20,000 coins** (placeholder for the economy model). It pays the first season's basic living costs with the stored grain, and leaves a little for seed. It is deliberately less than a hired hand's season wage (36,000).
-3. **The inherited store:** about 600 kg of seed potato (saved seed, 2 seasons old), 75 kg of wheat and 75 kg of lentils (food, or saved seed), and small packets of garden seed (radish, spinach, coriander). The first harvest sale is the first money the player earns.
+3. **The inherited store:** about 600 kg of certified seed potato (an input good, so the household never eats it), 75 kg of wheat and 75 kg of lentils (food, or saved seed), and small packets of garden seed (radish, spinach, coriander). The first harvest sale is the first money the player earns.
 4. **The well** keeps every inherited acre above its moisture floor (spec 002); spec 003 charges the bucket-carrying labour.
 5. **The Hamlet gate becomes:** 6 acres harvested in one season with an average Care of at least 0.9, a house for a hired hand, and one profitable season. The founder alone tends about 2.4 acres, so the gate needs a hired hand: hiring, not buying land, is the first lesson in growth.
 6. **The map grows to 8 × 6** (19 parcels, 41 acres to buy later), so buying land remains the next step after the Hamlet. Land-purchase loans (ADR 0028) stay as they are.
