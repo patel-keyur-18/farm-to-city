@@ -799,7 +799,7 @@ The look is warm, hand-painted 2D isometric: readable at phone size, and cheaper
 
 **Monetisation**
 
-Recommended model: **free to download, with a one-time unlock**. The Homestead and Hamlet eras are free, and a single purchase unlocks the full game. Alternatively, sell the game outright at a premium price. Ruled out:
+Model: **free to download, with a one-time unlock** (ADR 0006). The Homestead and Hamlet eras are free, which is about one week of real play, and a single non-consumable purchase unlocks the full game. The unlock offer appears when the player meets the Village conditions. It is a soft gate: if the player doesn't buy, the town keeps running as a Hamlet indefinitely, and the save never stalls or locks. The price is set near launch. Ruled out:
 
 - ads
 - energy timers
@@ -923,7 +923,7 @@ These choices need the owner's call before their feature specs can be written. T
 | Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | **Decided:** ageless founder; heirs considered after launch ([ADR 0003](decisions/0003-ageless-founder.md)) |
 | Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | **Decided:** never lose office; the result sets the council mood ([ADR 0004](decisions/0004-elections-council-mood.md)) |
 | Orientation | Landscape only; or landscape map with portrait menus | UI layout | **Decided:** landscape only ([ADR 0005](decisions/0005-landscape-only.md)) |
-| Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | Open |
+| Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | **Decided:** free with a one-time unlock at the Village gate ([ADR 0006](decisions/0006-free-with-one-time-unlock.md)) |
 | Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | Open |
 | Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting | Open |
 
