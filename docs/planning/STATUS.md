@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 0 · Pre-production |
 | Sprint | Sprint 0 in review: all code stories done; specs 002 and 005 await the owner's approval |
-| Branch with latest work | `sprint/00-foundations-time-weather` (Sprint 0 pull request). Must be merged to `main` before the next session starts |
+| Branch with latest work | `sprint/00-foundations-time-weather` (pull request #4). Must be merged to `main` before the next session starts |
 | Last updated | 2026-10-17 |
 
 ## Done so far
@@ -35,7 +35,7 @@
 
 1. **Owner:**
    - Review spec 002 (`docs/specs/002-land-and-soil.md`) and spec 005 (`docs/specs/005-ledger-and-credit.md`), and answer their open questions (§10 of each). Spec 002 question 1 is the important one.
-   - Merge the Sprint 0 pull request into `main`.
+   - Merge pull request #4 into `main`.
 2. **Next session:**
    - Apply the review: update specs 002 and 005 (and the GDD if answers differ from the drafts), set them to Approved, tick US-005.T4 and US-006.T3, and close Sprint 0 in `sprints.md`.
    - Start **Sprint 1** (see `sprints.md`): US-007 and US-008 (write specs 003 and 004), US-059 (exact ledger, spec 005), US-038 to US-041 (land, spec 002). The owner creates the Unity project (US-017 to US-020).
@@ -44,7 +44,7 @@
 
 | When | Owner action |
 | --- | --- |
-| Now | Review specs 002 and 005. Merge the Sprint 0 pull request |
+| Now | Review specs 002 and 005. Merge pull request #4 |
 | Sprint 1 (start) | Install the latest Unity LTS with iOS Build Support. Install Git LFS (`brew install git-lfs`, then `git lfs install`). Create the 2D URP project at `unity/FarmToCity/` and push it |
 | Sprint 1 | Review specs 003 and 004. Install the "hello iPhone" build on the iPhone 13 using `docs/test-checklists/how-to-build-ios.md` |
 | Sprint 2 | Review specs 006 and 007 |

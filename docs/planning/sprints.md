@@ -58,7 +58,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025). Code stories: yes. US-005 and US-006: waiting for the owner's approval
 - [x] Test checklist written in `docs/test-checklists/` (if there is a build): no build this sprint
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** No device build this sprint. Terminal results: 72 tests pass in Debug and Release; CI green on every push; all 29 spec 001 acceptance criteria have their named tests.
 
@@ -96,7 +96,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -136,7 +136,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -176,7 +176,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -207,7 +207,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -237,7 +237,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -265,7 +265,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -294,7 +294,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -324,7 +324,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
@@ -351,7 +351,7 @@
 - [ ] All Must stories meet the Definition of Done (ADR 0025)
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#4); owner merges to `main`
 
 **Review (owner's device results):** —
 
