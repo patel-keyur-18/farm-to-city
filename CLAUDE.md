@@ -10,9 +10,27 @@ Farm to City is an offline, single-player farming, township and city simulation 
 - **`docs/decisions/`** holds the ADRs, which record why the GDD says what it says.
 - **Roles:** Claude writes all code and docs. The owner, Keyur, reviews specs and tests builds on devices. Keyur is a senior Java/Spring Boot developer who is new to Unity, so explain Unity concepts briefly and map them to backend equivalents.
 
+## Session routine (ADR 0019): read this first
+
+Every session starts with no memory. The repository is the only memory.
+
+**At session start:**
+1. Read this file.
+2. Read `docs/planning/STATUS.md`: the current phase, sprint, next story, open questions and branch.
+3. Read the current sprint file named in `STATUS.md` (`docs/planning/sprints.md`) and the feature file(s) for the next story (`docs/planning/features/`).
+4. Read the spec(s) and ADR(s) those stories name.
+5. Continue from "Next up" in `STATUS.md`. If anything in it is unclear or contradicts the repository, ask the owner before acting.
+
+**At session end, or after each finished story:**
+1. Tick the story and task checkboxes in the feature file. Update the sprint file.
+2. Update `docs/planning/STATUS.md`: last done, next up, open questions, branch, anything half-done.
+3. Commit and push.
+4. At the end of a session or sprint, open a pull request to `main` and ask the owner to merge it. The next session clones `main`, so unmerged work is invisible to it.
+
 ## Workflow (spec-driven)
 
 - **No game code until its feature spec is written and approved.** Specs follow `docs/specs/_TEMPLATE.md` and live in `docs/specs/NNN-name.md`.
+- **Specs are written rolling-wave** (ADR 0019): all of a phase's specs are written and approved in that phase's first sprint, before its coding starts.
 - **Every decision of lasting importance becomes an ADR** in `docs/decisions/NNNN-title.md` (context, options, decision, consequences). ADR numbers are never reused. To change a decision, write a new ADR that supersedes the old one.
 - **When a spec or ADR changes the GDD,** update `docs/GDD.md` in the same commit.
 - **Work on one branch per spec or feature**, unless the session assigns a branch. Use small conventional commits (`docs:`, `feat:`, `test:`, `fix:`, `chore:`).
@@ -43,13 +61,15 @@ docs/GDD.md                 master game design spec (source of truth)
 docs/specs/                 feature specs (NNN-name.md) and _TEMPLATE.md
 docs/decisions/             ADRs (NNNN-title.md)
 docs/test-checklists/       per-build device test checklists
+docs/planning/              STATUS.md (session handoff), epics.md, features/, sprints.md
 FarmToCity.sln              solution for the dotnet projects              (planned)
 Directory.Build.props       LangVersion 9.0, warnings as errors,
                             output to /artifacts                          (planned)
 sim/                        Unity package (UPM) + dotnet projects         (planned)
   Sim.Core/                 pure C# simulation: .csproj (netstandard2.1)
                             + .asmdef (noEngineReferences)
-  Sim.Content/              definition classes + JSON loader
+  Sim.Content/              JSON loader + validation (definition classes
+                            live in Sim.Core, ADR 0020)
 tests/Sim.Core.Tests/       NUnit tests (net8.0)                          (planned)
 tools/Tools.Balancer/       headless balancer on a fake clock (net8.0)    (planned)
 content/                    JSON definitions (balancing data)             (planned)
@@ -96,8 +116,9 @@ These commands work once the solution skeleton exists, which is the first code t
 | 0016 | Balance rule: archetype bots within 20% of each other; stress bots as exploit detectors |
 | 0017 | Phase 1 runs from Homestead to the Hamlet unlock (hiring included). Code-first Unity. Dev time-travel panel |
 | 0018 | `Sim.Core` is a netstandard2.1 library tested with `dotnet test` and consumed by Unity as a local package |
+| 0019 | Rolling-wave specs (a phase's specs are written in its first sprint). The repository is the only memory: the session routine, `STATUS.md`, and a pull request merged to `main` after each session |
+| 0020 | Definition classes live in `Sim.Core`. `Sim.Content` is only the JSON loader and validator |
 
 ## Current status
 
-- **Phase 0 (pre-production).** The GDD has been reviewed, and ADRs 0001–0018 are accepted.
-- **Next:** spec 001 (time and weather), then the remaining slice specs in order: land and soil, crops and yield (with founder labour), goods and market, ledger, people, saves, HUD, onboarding.
+See `docs/planning/STATUS.md`. It is the single source of truth for where the work stands.

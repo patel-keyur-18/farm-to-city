@@ -29,7 +29,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
-| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 1–3 | Crops, animals, selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour |
+| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour |
 | 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | Hiring, wages, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
@@ -116,7 +116,7 @@ Farming is the first business the player runs, so it introduces every core idea:
 
 The map grows as the player buys adjacent parcels. Price depends on soil and location.
 
-**Crops (launch set).** Wheat, rice, maize, potato, tomato, onion, lentils, sugarcane, cotton, plus one multi-year orchard (mango or apple). Each crop defines:
+**Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane, cotton, plus one multi-year orchard (mango or apple). Each crop defines:
 
 - a sowing window (the seasons it can be sown in)
 - a growth duration in real time
@@ -522,7 +522,13 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - the debt-to-asset ratio
 - an emergency fund measured in seasons of costs covered
 
-**Wealth milestones** mark progress without telling players what to do: first 10,000 coins of net worth, first rental income, debt-free, passive income covering living costs.
+**Wealth milestones** mark progress without telling players what to do. At rupee scale (ADR 0008):
+
+- first 1 lakh coins of cash savings
+- net worth double the inherited estate
+- first rental income
+- debt-free
+- passive income covering living costs
 
 ## Events, disasters and town history
 
@@ -795,7 +801,7 @@ The UI sends commands down and listens for events coming up. Only the simulation
 FarmToCity.sln, Directory.Build.props   C# 9.0, netstandard2.1 for the sim, output to /artifacts
 sim/                                    a Unity package (UPM) that is also a set of dotnet projects
   Sim.Core/                             the pure C# simulation (.csproj + .asmdef, noEngineReferences)
-  Sim.Content/                          definition classes and the JSON loader
+  Sim.Content/                          JSON loader and validation; definition classes live in Sim.Core (ADR 0020)
 tests/Sim.Core.Tests/                   NUnit tests, run with `dotnet test`
 tools/Tools.Balancer/                   headless balancer on a fake clock
 content/                                JSON definitions
@@ -983,6 +989,8 @@ This document is the master spec. No code is written for a feature until its fea
 11. **Cut first:** what to drop if the spec runs over (ADR 0017).
 
 **Per-feature loop:** spec → review → data definitions → simulation code with unit tests that meet the acceptance criteria → UI → playtest → tune numbers in data → update the spec to match reality.
+
+**Rolling-wave specs (ADR 0019).** All Phase 1 specs are written and approved in Sprint 0, before Phase 1 coding. Each later phase's specs are written in that phase's first sprint. Epics and features for every phase are planned in `docs/planning/`.
 
 **Spec order for the vertical slice:**
 
