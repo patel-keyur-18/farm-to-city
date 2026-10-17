@@ -23,12 +23,11 @@
   - An automated check confirmed that no story is scheduled before its spec is approved or before a feature it depends on (ADR 0027)
 - PR #3 is merged to `main`.
 - **Sprint 0 progress:**
-  - US-003 SessionStart hook: done.
-  - US-001 solution skeleton: done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
+  - US-001 to US-004 (F00.1 repository, build and CI): done. CI is green on the sprint branch. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
 
-- Sprint 0, on `sprint/00-foundations-time-weather`. US-004 (repository hygiene): `.gitignore` fixed; licence log and checklist template to do.
+- Sprint 0, on `sprint/00-foundations-time-weather`. Next: US-025 to US-037 (spec 001).
 
 ## Next up
 
