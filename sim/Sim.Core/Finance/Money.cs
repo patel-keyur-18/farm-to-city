@@ -18,5 +18,12 @@ namespace Sim.Core.Finance
             if (r * 2 >= BigInteger.One << Fixed.FractionBits) q += 1;
             return (long)(negative ? -q : q);
         }
+
+        /// <summary>Rounds to a whole coin, ties away from zero.</summary>
+        public static long RoundToCoin(long money)
+        {
+            long whole = (System.Math.Abs(money) + Coin / 2) / Coin * Coin;
+            return money < 0 ? -whole : whole;
+        }
     }
 }

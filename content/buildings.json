@@ -1,0 +1,6 @@
+{
+  "buildings": [
+    { "id": "hut",  "nameKey": "building.hut",  "yardTreeSlots": 4, "value": 40000, "usefulLifeSeasons": 80 },
+    { "id": "well", "nameKey": "building.well", "yardTreeSlots": 0, "value": 15000, "usefulLifeSeasons": 120 }
+  ]
+}

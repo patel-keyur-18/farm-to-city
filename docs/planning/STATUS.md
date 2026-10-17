@@ -34,9 +34,12 @@
 
   - **US-018 Unity version pinned: done.** ADR 0029: Unity 6000.3.26f1. Unity still compiles every assembly with `-langversion:9.0` (checked in the response files under `Library/Bee/`), so the sim stays on C# 9.
 
+  - **US-059 exact ledger: core done** (spec 005 AC-1, 2, 3, 5): the chart of accounts, balanced entries, cash never negative, `MulRate`, the opening balance sheet. AC-4 (reconciliation every season) is finished with land buying (US-040).
+  - **US-038 inherited land: done** (spec 002 AC-1, AC-2). New content: `land.json`, `map.json` (6 × 5, 13 parcels), `buildings.json`, `start.json`, `finance.json`. Land and ledger are optional `GameDefs` in `SimConfig`: a sim without them hashes exactly as before, so golden 001 is unchanged.
+
 ## In progress
 
-Sprint 1: US-059 (exact ledger) next.
+Sprint 1: US-039 (soil properties) next, then US-040, US-041 and US-059's AC-4.
 
 ## Next up
 

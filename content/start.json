@@ -1,0 +1,8 @@
+{
+  "inheritedParcel": "home",
+  "buildings": [
+    { "building": "hut",  "tile": 16 },
+    { "building": "well", "tile": 16 }
+  ],
+  "startingCash": 60000
+}

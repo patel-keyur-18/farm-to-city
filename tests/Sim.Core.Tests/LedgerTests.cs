@@ -19,7 +19,7 @@ namespace Sim.Core.Tests
         }
     }
 
-    public class LedgerTests
+    public partial class LedgerTests
     {
         private static Ledger WithCash(long cash)
         {
@@ -80,6 +80,33 @@ namespace Sim.Core.Tests
             Assert.That(ledger.Reconcile(), Is.Null);
             Assert.That(ledger.TotalOf(AccountGroup.Assets), Is.EqualTo(1_200_00));
             Assert.That(ledger.NetIncome, Is.EqualTo(200_00));
+        }
+    }
+}
+
+namespace Sim.Core.Tests
+{
+    using NUnit.Framework;
+    using Sim.Core.Finance;
+    using Sim.Core.Land;
+
+    public partial class LedgerTests
+    {
+        // Spec 005 AC-3.
+        [Test]
+        public void NewGame_OpeningBalanceSheet()
+        {
+            Simulation sim = TestSim.NewFarm();
+            Ledger ledger = sim.State.Ledger;
+            long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]);
+
+            Assert.That(ledger.Cash, Is.EqualTo(60_000_00));
+            Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
+            Assert.That(homeValue, Is.EqualTo(3 * 1_17_600_00)); // 3 loam tiles at fertility 45 (price factor 0.98)
+            Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));
+            Assert.That(ledger.Balance(Account.OpeningEquity), Is.EqualTo(-(60_000_00 + homeValue + 55_000_00)));
+            Assert.That(ledger.Reconcile(), Is.Null);
+            Assert.That(sim.State.Land.Parcels[0].CostBasis, Is.EqualTo(homeValue));
         }
     }
 }

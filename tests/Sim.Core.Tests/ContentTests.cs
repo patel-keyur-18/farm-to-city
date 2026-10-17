@@ -7,7 +7,7 @@ using Sim.Core.Time;
 
 namespace Sim.Core.Tests
 {
-    public class ContentTests
+    public partial class ContentTests
     {
         private static string ClockJson(string field, string value)
         {
@@ -129,6 +129,54 @@ namespace Sim.Core.Tests
                 Is.EqualTo("weather.climates[1].season"));
             Assert.That(Err("{\"weatherTypes\": [{\"id\":\"sun\",\"nameKey\":\"k\",\"isSevere\":false},{\"id\":\"sun\",\"nameKey\":\"k\",\"isSevere\":false}], \"climates\": []}").FieldPath,
                 Is.EqualTo("weather.weatherTypes[1].id"));
+        }
+    }
+}
+
+namespace Sim.Core.Tests
+{
+    using System;
+    using NUnit.Framework;
+    using Sim.Content;
+
+    public partial class ContentTests
+    {
+        private static ContentException Error(string file, Func<string, string> edit)
+        {
+            return Assert.Throws<ContentException>(() => TestContent.Game((f, json) => f == file ? edit(json) : json));
+        }
+
+        // Spec 002 AC-2.
+        [Test]
+        public void Land_Validation()
+        {
+            // Tile 13 in two parcels.
+            ContentException e = Error("map.json", j => j.Replace("\"tiles\": [12, 13]", "\"tiles\": [12, 13, 15]"));
+            Assert.That(e.FieldPath, Is.EqualTo("map.parcels[6].tiles[2]"));
+            Assert.That(e.Message, Does.Contain("tile 15").And.Contain("two parcels"));
+
+            // Tile 13 in no parcel.
+            e = Error("map.json", j => j.Replace("\"tiles\": [12, 13]", "\"tiles\": [12]"));
+            Assert.That(e.FieldPath, Is.EqualTo("map.tiles[13]"));
+            Assert.That(e.Message, Does.Contain("no parcel"));
+
+            // A tile names an unknown soil.
+            e = Error("map.json", j => j.Replace("\"soil\": \"sandy\", \"drainage\": \"good\",     \"fertility\": 40", "\"soil\": \"peat\", \"drainage\": \"good\",     \"fertility\": 40"));
+            Assert.That(e.FieldPath, Is.EqualTo("map.tiles[0].soil"));
+
+            // moistureByWeather misses a weather id.
+            e = Error("land.json", j => j.Replace("\"frost\": -0.05, ", ""));
+            Assert.That(e.FieldPath, Is.EqualTo("land.land.moistureByWeather"));
+            Assert.That(e.Message, Does.Contain("frost"));
+
+            // Bounds and cross-file checks.
+            Assert.That(Error("land.json", j => j.Replace("\"quickSaleFactor\": 0.80", "\"quickSaleFactor\": 1.5")).FieldPath,
+                Is.EqualTo("land.land.quickSaleFactor"));
+            Assert.That(Error("start.json", j => j.Replace("\"inheritedParcel\": \"home\"", "\"inheritedParcel\": \"w1\"")).FieldPath,
+                Is.EqualTo("start.inheritedParcel"));
+            Assert.That(Error("start.json", j => j.Replace("\"tile\": 16 },\n    { \"building\": \"well\"", "\"tile\": 15 },\n    { \"building\": \"well\"")).FieldPath,
+                Is.EqualTo("start.buildings[0].tile"));
+            Assert.That(Error("finance.json", j => j.Replace("4", "0")).FieldPath, Is.EqualTo("finance.ledger.retainSeasons"));
         }
     }
 }
