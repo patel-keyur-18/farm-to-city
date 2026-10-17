@@ -25,7 +25,8 @@
 - **Sprint 0 progress:**
   - US-001 to US-004 (F00.1 repository, build and CI): done. CI is green on the sprint branch.
   - Spec 001: F01.1 sim foundations done (US-025 to US-028: `Fixed`, RNG, state hash, clock and weather content).
-  - F01.2 calendar and scheduler done (US-029 to US-031). The golden replay `tests/Sim.Core.Tests/golden/001-basic.json` is re-pinned with `FTC_UPDATE_GOLDEN=1 dotnet test` whenever spec 001 adds state; it is frozen once spec 001 is complete. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
+  - F01.2 calendar and scheduler done (US-029 to US-031). The golden replay `tests/Sim.Core.Tests/golden/001-basic.json` is re-pinned with `FTC_UPDATE_GOLDEN=1 dotnet test` whenever spec 001 adds state; it is frozen once spec 001 is complete.
+  - US-032 weather spells done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
 

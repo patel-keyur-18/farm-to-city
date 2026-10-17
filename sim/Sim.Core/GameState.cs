@@ -2,6 +2,7 @@ using Sim.Core.Commands;
 using Sim.Core.Maths;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
+using Sim.Core.Weather;
 
 namespace Sim.Core
 {
@@ -11,7 +12,7 @@ namespace Sim.Core
     public sealed class GameState
     {
         /// <summary>Bumped whenever the canonical write order changes, so stale golden hashes fail loudly.</summary>
-        public const int HashFormatVersion = 1;
+        public const int HashFormatVersion = 2;
 
         /// <summary>The world seed, set at new game.</summary>
         public ulong Seed { get; internal set; }
@@ -21,6 +22,8 @@ namespace Sim.Core
         public Scheduler Scheduler { get; internal set; } = new Scheduler();
 
         public JobTable Jobs { get; internal set; } = new JobTable();
+
+        public WeatherState Weather { get; internal set; } = new WeatherState();
 
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
@@ -36,6 +39,7 @@ namespace Sim.Core
             Clock.WriteTo(h);
             Scheduler.WriteTo(h);
             Jobs.WriteTo(h);
+            Weather.WriteTo(h);
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>
@@ -55,6 +59,7 @@ namespace Sim.Core
                 Clock = Clock.Clone(),
                 Scheduler = Scheduler.Clone(),
                 Jobs = Jobs.Clone(),
+                Weather = Weather.Clone(),
                 CommandLog = CommandLog.Clone(),
             };
         }

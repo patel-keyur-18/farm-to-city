@@ -5,6 +5,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
+using Sim.Core.Weather;
 
 namespace Sim.Core
 {
@@ -31,6 +32,7 @@ namespace Sim.Core
             State = state;
 
             AddSystem(new TimeSystem());
+            AddSystem(new WeatherSystem());
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             foreach (IJobHandler h in config.JobHandlers)
             {
@@ -50,6 +52,7 @@ namespace Sim.Core
             state.Clock.LastWallUtc = command.StartWallUtc;
             var sim = new Simulation(config, state);
             state.CommandLog.Add(state.Clock.SimTime, command);
+            WeatherSystem.Initialise(sim);
 
             // The first passes are at the next boundary strictly after the start time.
             long t = state.Clock.SimTime;
@@ -108,6 +111,21 @@ namespace Sim.Core
 
         /// <summary>The events of the most recent away advance, ending with AwayAdvanceCompleted (the While-you-were-away report).</summary>
         public IReadOnlyList<SimEvent> LastAwayReport { get { return _awayReport; } }
+
+        /// <summary>The weather of the current spell.</summary>
+        public WeatherTypeDef CurrentWeather
+        {
+            get { return Weather.Types[State.Weather.WeatherOf(Calendar.SpellAt(State.Clock.SimTime, Clock))]; }
+        }
+
+        /// <summary>
+        /// The forecast for the next forecastSpells spells (spec 001 §3.6). Deterministic: asking twice at the
+        /// same sim time gives the same answer.
+        /// </summary>
+        public IReadOnlyList<ForecastEntry> Forecast()
+        {
+            return WeatherSystem.ComputeForecast(this, Calendar.SpellAt(State.Clock.SimTime, Clock));
+        }
 
         // ---- Used by systems, job handlers and commands ----
 
