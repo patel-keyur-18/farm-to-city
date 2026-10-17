@@ -29,9 +29,9 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
-| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 1–3 | Crops, animals, selling to a travelling trader, cash ledger |
+| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 1–3 | Crops, animals, selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour |
 | 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | Hiring, wages, storage, first processing (flour mill) |
-| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school | 15–80 | Businesses, household needs, loans from a cooperative bank, the treasury |
+| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a clinic, a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
 | 6. City | Mayor and tycoon | Population 3,000, a college, a hospital, a power plant | 3,000–20,000 | Districts, trade with other cities, shares in businesses, specialisation |
@@ -245,7 +245,7 @@ Each line has a *Why?* tap with a plain-language explanation and the numbers beh
 - sell assets
 - close the business
 
-The player's credit score drops, and later loans cost more.
+The player's credit score drops, and later loans cost more. This applies to a business's own books. Personal bankruptcy, where the founder's own debts default, is covered under Assets and wealth.
 
 **Delegation.** The player can hire a manager to run a business, which is the only way to scale beyond a handful of businesses. Each manager has a skill level and a style: cost-cutter, growth-chaser, or quality-first. The player receives seasonal reports and sets targets.
 
@@ -458,6 +458,25 @@ The player's real score is **net worth**: everything they own minus everything t
 
 **Leverage.** Loans let the player buy assets sooner. If the asset returns more than the interest, wealth grows faster. If it doesn't, debt grows faster. Defaulting on a secured loan means the bank takes the collateral.
 
+**Credit (ADR 0009).** Borrowing is available from day one:
+
+| Lender | Available from | Rate | Terms |
+| --- | --- | --- | --- |
+| Village moneylender | Homestead | High (about 3–5% a season) | Small amounts, no collateral |
+| Cooperative bank | Homestead for farm loans, larger loans from Village | Low (about 2–3% a season) | Needs collateral and a credit score |
+
+Each lender has a credit limit set by collateral, credit score and recent income, and the player can't borrow past it. Missed payments add penalty interest and lower the credit score. A payment overdue past the grace period is a default.
+
+**Personal bankruptcy is foreclosure, not game over.**
+
+- The lenders seize the founder's collateral: bought land, buildings, equipment, livestock and businesses.
+- The inherited 2-acre plot and hut are protected and can never be seized.
+- Remaining debt is written off.
+- The credit score drops sharply and recovers slowly.
+- The town, its citizens, the treasury and the Chronicle carry on, and the founder starts again from Homestead level.
+
+**Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt.
+
 **Liquidity.** Land and businesses take days to sell and sell at a discount if rushed. A player with all their wealth in land and no cash can still go bankrupt in a bad season.
 
 **Diversification.** One crop, one business or one customer is fragile. Events hit specific sectors, and a spread of assets smooths the shocks.
@@ -596,7 +615,7 @@ The town's future comes from the sum of these. A script never decides it.
 
 **No single best strategy.** Balancing must keep at least three town archetypes viable, such as the agri-hub, the merchant town and the education town. No archetype may finish more than 20% ahead of the others on the standard benchmarks.
 
-**Mistakes are recoverable.** Bankruptcy, a failed harvest or a lost election costs time and wealth, but never ends the save. Real life rarely gives a game over, and the learning comes from recovering.
+**Mistakes are recoverable.** Bankruptcy (foreclosure, ADR 0009), a failed harvest or a hostile council costs time and wealth, but never ends the save. A new game is always the player's choice. Real life rarely gives a game over, and the learning comes from recovering.
 
 ## UI/UX and screens
 
@@ -755,6 +774,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `BusinessDef` | type, buildingRef, recipes[], serviceType, customerSegments[], demandDrivers |
 | `RoleDef` | id, skills weighting, baseWage, supervisorOf |
 | `EventDef` | id, family, triggerConditions, weight, cooldown, choices[] with effects[] |
+| `LenderDef` | type, rate band, limit formula inputs, grace period, penalty rate |
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
 | `EraDef` | id, unlock conditions, new systems, UI theme |
@@ -857,6 +877,7 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 - **Bounded prices.** Prices stay within their bounds, and no market sits in permanent shortage.
 - **Stable population.** Population stays stable when the player does nothing, and recovers after a disaster.
 - **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 3 game years (48 real days).
+- **Never stuck.** A bot with no cash and no credit, holding only the inherited plot, reaches a profitable season of farming within a set number of seasons, using day labour.
 - **Balanced strategies.** No strategy beats the second best by more than 20% on net worth or happiness.
 - **Exact ledgers.** The ledger reconciles to the coin after every season.
 
