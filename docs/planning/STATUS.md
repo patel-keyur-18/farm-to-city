@@ -39,10 +39,11 @@
   - **US-039 soil properties: done** (spec 002 AC-3 to AC-9, AC-15, AC-16). Hourly moisture with drainage and the well floor, daily fallow recovery, `AdjustFertility` with per-reason season totals, the Soil factor. 72 h with land advances in about 0.4 ms (budget 20 ms). AC-6 buys its tile once `BuyParcel` exists (US-040).
   - **US-040 buy adjacent land: done** (spec 002 AC-11 to AC-14): `BuyParcel` and `SellParcel` (quick sale at 80%), with ledger postings (land at cost; gain or loss on sale), adjacency, the in-use and stranding guards. Financing joins with credit (Sprint 4).
   - **US-041 tree slots: done** (spec 002 AC-10): yard and field-edge slots, shade from mature edge trees with the floor, `SetTree` and `SetTreeMature` for spec 003, slot ids never reused. **Spec 002 is implemented: all 16 ACs pass.** Implementation notes are in spec 002 §10.
+  - **US-019 code-first bootstrap and US-020 build guide: in review.** `GameRoot` (created by `[RuntimeInitializeOnLoadMethod]` after `Bootstrap.unity` loads) reads the content, starts a new game, syncs once per wall-clock second and shows date, time and weather in a UI Toolkit card. `Game.Services` holds `IEntitlementService` with the always-unlocked implementation. `ContentBuildStep` copies `content/*.json` into StreamingAssets before each build. Verified in play mode (through the Unity Pipeline CLI) and by an unsigned Xcode Release build for the device (BUILD SUCCEEDED). The owner's device run and guide dry run are pending: `docs/test-checklists/how-to-build-ios.md` and `s01-hello-iphone.md`. `unity/FarmToCity/README.md` maps the Unity concepts to Java and Spring.
 
 ## In progress
 
-Sprint 1: US-019 and US-020 (Unity bootstrap, iOS build guide) next.
+Sprint 1: US-007 and US-008 (specs 003 and 004) next.
 
 ## Next up
 

@@ -83,8 +83,10 @@ tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)
 tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)
 content/                    JSON definitions (balancing data)
 unity/FarmToCity/           Unity project (Unity 6000.3.26f1, ADR 0029)
-  Game.Presentation         rendering and UI (asmdef), built code-first
-  Game.Services             saves, platform services, IEntitlementService (asmdef)
+  Assets/Scenes/Bootstrap   the only scene; GameRoot builds everything else in C#
+  Assets/Game/Presentation  Game.Presentation asmdef: composition root, UI (UI Toolkit)
+  Assets/Game/Services      Game.Services asmdef: saves, platform ports, IEntitlementService
+  Assets/Game/Editor        Game.Editor asmdef: copies content/*.json into the build
 ```
 
 **Dependency direction:** Presentation and Services depend on Sim. The Sim never depends on Unity.

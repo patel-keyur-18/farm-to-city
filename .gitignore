@@ -51,6 +51,10 @@ mono_crash.*
 # Addressables
 /unity/FarmToCity/ServerData
 /unity/FarmToCity/[Aa]ssets/StreamingAssets/aa*
+# Content copied from content/ by ContentBuildStep before each player build
+/unity/FarmToCity/[Aa]ssets/StreamingAssets/content/
+/unity/FarmToCity/[Aa]ssets/StreamingAssets/content.meta
+/unity/FarmToCity/[Aa]ssets/StreamingAssets.meta
 /unity/FarmToCity/[Aa]ssets/AddressableAssetsData/link.xml*
 /unity/FarmToCity/[Aa]ssets/Addressables_Temp*
 /unity/FarmToCity/[Aa]ssets/AddressableAssetsData/*/*.bin*
