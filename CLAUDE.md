@@ -60,7 +60,7 @@ Every session starts with no memory. The repository is the only memory.
 - **Money** is `long` in 1/100 coin, never floats. **Quantities** are `long` in each good's smallest unit.
 - **All balancing numbers live in data** (`content/*.json`), never hard-coded.
 - **Every acceptance criterion in a spec maps to an automated test**, named in the spec.
-- **The sim's language level is C# 9.0 at netstandard2.1**, matching Unity 6 LTS. No file-scoped namespaces, global usings or record structs inside `sim/`.
+- **The sim's language level is C# 9.0 at netstandard2.1**, matching Unity 6000.3.26f1 (ADR 0029). No file-scoped namespaces, global usings or record structs inside `sim/`.
 
 ## Repository layout
 
@@ -82,7 +82,7 @@ sim/                        Unity package com.farmtocity.sim (package.json)
 tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)
 tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)
 content/                    JSON definitions (balancing data)
-unity/FarmToCity/           Unity project, created by the owner in Unity Hub (planned)
+unity/FarmToCity/           Unity project (Unity 6000.3.26f1, ADR 0029)
   Game.Presentation         rendering and UI (asmdef), built code-first
   Game.Services             saves, platform services, IEntitlementService (asmdef)
 ```
@@ -135,6 +135,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
 | 0027 | Audit corrections: specs 002 and 005 first, the ledger core in Sprint 1, Unity and a hello-iPhone build in Sprint 1, on-device determinism in the Phase 0 gate, the Hamlet-unlock feature, and later-phase coverage |
 | 0028 | Hamlet at the end of the first week (Village 2–3 weeks, Township 4–6 weeks). Land priced at 8–15 seasons of an acre's net income. Bank loans can be secured by the land they buy. No leasing in Phase 1 |
+| 0029 | Unity pinned to 6000.3.26f1 (6.3 LTS). Unity still compiles with `-langversion:9.0`, so the sim stays on C# 9. No upgrades mid-phase |
 
 ## Current status
 

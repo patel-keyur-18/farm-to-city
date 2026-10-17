@@ -1,6 +1,6 @@
 # 0026. Toolchain versions and test devices
 
-- Status: Accepted
+- Status: Accepted. The Unity version is pinned by ADR 0029 (6000.3.26f1; C# stays 9.0)
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Supersedes: the "net8.0" target for tests and tools in ADR 0018
