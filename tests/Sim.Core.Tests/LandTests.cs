@@ -18,12 +18,12 @@ namespace Sim.Core.Tests
             LandState land = sim.State.Land;
             GameDefs defs = sim.Config.Game;
 
-            Parcel home = land.Parcels.Single(p => p.Owned);
-            Assert.That(defs.Map.Parcels[home.Id].Id, Is.EqualTo("home"));
-            Assert.That(home.Protected, Is.True);
+            Parcel[] home = land.Parcels.Where(p => p.Owned).ToArray();
+            Assert.That(home.Select(p => defs.Map.Parcels[p.Id].Id), Is.EqualTo(new[] { "home_a", "home_b" }));
+            Assert.That(home.All(p => p.Protected), Is.True);
 
-            Tile[] tiles = land.Tiles.Where(t => t.ParcelId == home.Id).ToArray();
-            Assert.That(tiles.Count(t => t.Terrain == Terrain.Farm), Is.EqualTo(2));
+            Tile[] tiles = land.Tiles.Where(t => land.Parcels[t.ParcelId].Owned).ToArray();
+            Assert.That(tiles.Count(t => t.Terrain == Terrain.Farm), Is.EqualTo(6));
             Tile yard = tiles.Single(t => t.Terrain == Terrain.Yard);
 
             Assert.That(land.Buildings.Select(b => defs.Buildings[b.Def].Id), Is.EqualTo(new[] { "hut", "well" }));
@@ -31,8 +31,10 @@ namespace Sim.Core.Tests
             Assert.That(tiles.Where(t => t.Terrain == Terrain.Farm).Select(t => t.Fertility), Is.All.EqualTo(Fixed.FromInt(45)));
             Assert.That(land.Slots.Count(s => s.Kind == SlotKind.Yard && s.TileId == yard.Id), Is.EqualTo(4));
 
+            Assert.That(land.Slots.Count(s => s.Kind == SlotKind.FieldEdge), Is.EqualTo(12));
+
             // Every other parcel starts unowned and unprotected.
-            Assert.That(land.Parcels.Where(p => p.Id != home.Id).All(p => !p.Owned && !p.Protected), Is.True);
+            Assert.That(land.Parcels.Where(p => !home.Contains(p)).All(p => !p.Owned && !p.Protected), Is.True);
         }
     
         // Spec 002 AC-15.
@@ -60,7 +62,7 @@ namespace Sim.Core.Tests
 
             Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
             Assert.That(one.State.ComputeHash(), Is.Not.EqualTo(Build().State.ComputeHash()), "land state is hashed and changes");
-            Assert.That(one.State.Land.Tiles[8].Fertility, Is.Not.EqualTo(Build().State.Land.Tiles[8].Fertility), "fallow recovered");
+            Assert.That(one.State.Land.Tiles[27].Fertility, Is.Not.EqualTo(Build().State.Land.Tiles[27].Fertility), "fallow recovered");
         }
     }
 }

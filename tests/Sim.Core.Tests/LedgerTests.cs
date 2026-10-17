@@ -98,15 +98,15 @@ namespace Sim.Core.Tests
         {
             Simulation sim = TestSim.NewFarm();
             Ledger ledger = sim.State.Ledger;
-            long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]);
+            long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]) + LandRules.ParcelPrice(sim, sim.State.Land.Parcels[1]);
 
-            Assert.That(ledger.Cash, Is.EqualTo(60_000_00));
+            Assert.That(ledger.Cash, Is.EqualTo(20_000_00));
             Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
-            Assert.That(homeValue, Is.EqualTo(3 * 1_17_600_00)); // 3 loam tiles at fertility 45 (price factor 0.98)
+            Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00)); // 6 farm acres and the yard, loam at fertility 45 (price factor 0.98)
             Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));
-            Assert.That(ledger.Balance(Account.OpeningEquity), Is.EqualTo(-(60_000_00 + homeValue + 55_000_00)));
+            Assert.That(ledger.Balance(Account.OpeningEquity), Is.EqualTo(-(20_000_00 + homeValue + 55_000_00)));
             Assert.That(ledger.Reconcile(), Is.Null);
-            Assert.That(sim.State.Land.Parcels[0].CostBasis, Is.EqualTo(homeValue));
+            Assert.That(sim.State.Land.Parcels[0].CostBasis + sim.State.Land.Parcels[1].CostBasis, Is.EqualTo(homeValue));
         }
     }
 }
@@ -131,7 +131,7 @@ namespace Sim.Core.Tests
             for (ulong seed = 1; seed <= 5; seed++)
             {
                 Simulation sim = NewFarm(seed: seed, game: TestContent.Game((f, j) =>
-                    f == "start.json" ? j.Replace("\"startingCash\": 60000", "\"startingCash\": 20_00_000".Replace("_", ""))
+                    f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000")
                     : f == "finance.json" ? j.Replace("4", "16") : j));
                 string[] parcels = sim.Config.Game.Map.Parcels.Select(p => p.Id).ToArray();
                 long end = 3 * sim.Clock.SecondsPerYear;

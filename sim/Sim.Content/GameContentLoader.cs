@@ -199,12 +199,25 @@ namespace Sim.Content
         {
             const string root = "start";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "inheritedParcel", "buildings", "startingCash");
+            OnlyFields(o, root, "inheritedParcels", "buildings", "startingCash");
 
-            int parcel = Ref(o, root, "inheritedParcel", ParcelIds(map));
+            string ip = root + ".inheritedParcels";
+            List<JToken> parcelTokens = NonEmptyArray(o, root, "inheritedParcels");
+            var inherited = new List<int>();
+            var homeTiles = new List<int>();
+            for (int i = 0; i < parcelTokens.Count; i++)
+            {
+                string p = Index(ip, i);
+                string id = String(parcelTokens[i], p);
+                int parcel = map.IndexOfParcel(id);
+                if (parcel < 0) throw new ContentException(p, "unknown id '" + id + "'");
+                if (inherited.Contains(parcel)) throw new ContentException(p, "duplicate parcel '" + id + "'");
+                inherited.Add(parcel);
+                homeTiles.AddRange(map.Parcels[parcel].Tiles);
+            }
             bool hasYard = false;
-            foreach (int t in map.Parcels[parcel].Tiles) hasYard |= map.Tiles[t].Terrain == Terrain.Yard;
-            if (!hasYard) throw new ContentException(root + ".inheritedParcel", "the inherited parcel needs a yard tile");
+            foreach (int t in homeTiles) hasYard |= map.Tiles[t].Terrain == Terrain.Yard;
+            if (!hasYard) throw new ContentException(ip, "the inherited land needs a yard tile");
 
             List<JToken> tokens = NonEmptyArray(o, root, "buildings");
             var placed = new List<StartBuilding>();
@@ -218,15 +231,13 @@ namespace Sim.Content
                 int tile = Int(Required(b, p, "tile"), p + ".tile");
                 Range(tile, 0, map.Tiles.Count - 1, p + ".tile");
                 if (map.Tiles[tile].Terrain != Terrain.Yard) throw new ContentException(p + ".tile", "buildings stand on yard tiles only");
-                bool onHome = false;
-                foreach (int t in map.Parcels[parcel].Tiles) onHome |= t == tile;
-                if (!onHome) throw new ContentException(p + ".tile", "start buildings stand on the inherited parcel");
+                if (!homeTiles.Contains(tile)) throw new ContentException(p + ".tile", "start buildings stand on the inherited land");
                 hasWell |= buildings[def].Id == BuildingDef.WellId;
                 placed.Add(new StartBuilding(def, tile));
             }
-            if (!hasWell) throw new ContentException(root + ".buildings", "the inherited parcel needs the well");
+            if (!hasWell) throw new ContentException(root + ".buildings", "the inherited land needs the well");
 
-            return new StartDef(parcel, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"));
+            return new StartDef(inherited, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"));
         }
 
         private static LedgerDef LoadFinance(string json)

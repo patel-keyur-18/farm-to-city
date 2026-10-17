@@ -17,7 +17,8 @@ namespace Sim.Core.Finance
         public static void Initialise(Simulation sim)
         {
             GameDefs defs = sim.Config.Game;
-            long land = sim.State.Land.Parcels[defs.Start.InheritedParcel].CostBasis;
+            long land = 0;
+            foreach (int p in defs.Start.InheritedParcels) land += sim.State.Land.Parcels[p].CostBasis;
             long buildings = 0;
             foreach (Building b in sim.State.Land.Buildings) buildings += defs.Buildings[b.Def].Value;
             long cash = defs.Start.StartingCash;

@@ -33,10 +33,13 @@ namespace Sim.Core.Land
                 foreach (int tileId in defs.Map.Parcels[p].Tiles) land.Tiles[tileId].ParcelId = p;
             }
 
-            Parcel home = land.Parcels[defs.Start.InheritedParcel];
-            home.Protected = true;
-            home.CostBasis = LandRules.ParcelPrice(sim, home);
-            Acquire(sim, home, t);
+            foreach (int p in defs.Start.InheritedParcels)
+            {
+                Parcel home = land.Parcels[p];
+                home.Protected = true;
+                home.CostBasis = LandRules.ParcelPrice(sim, home);
+                Acquire(sim, home, t);
+            }
 
             foreach (StartBuilding b in defs.Start.Buildings)
             {
@@ -94,7 +97,7 @@ namespace Sim.Core.Land
         }
 
         /// <summary>
-        /// True if, without this parcel, some other owned tile would no longer connect to the inherited parcel
+        /// True if, without this parcel, some other owned tile would no longer connect to the inherited land
         /// through owned tiles (a flood fill over edges).
         /// </summary>
         internal static bool WouldStrand(Simulation sim, int parcelId)
@@ -103,7 +106,8 @@ namespace Sim.Core.Land
             LandState land = sim.State.Land;
             var reached = new bool[land.Tiles.Count];
             var queue = new System.Collections.Generic.Queue<int>();
-            foreach (int t in defs.Map.Parcels[defs.Start.InheritedParcel].Tiles) { reached[t] = true; queue.Enqueue(t); }
+            foreach (int p in defs.Start.InheritedParcels)
+                foreach (int t in defs.Map.Parcels[p].Tiles) { reached[t] = true; queue.Enqueue(t); }
             while (queue.Count > 0)
                 foreach (int n in Neighbours(defs.Map, queue.Dequeue()))
                 {
@@ -151,7 +155,7 @@ namespace Sim.Core.Land
             }
         }
 
-        /// <summary>One hour of moisture change on a tile under the given weather (spec 002 §3.2).</summary>
+        /// <summary>One hour of moisture change on a tile under the given weather (spec 002 §3.2). The well keeps the inherited acres above its floor.</summary>
         internal static void UpdateMoisture(Simulation sim, Tile tile, int weather)
         {
             GameDefs defs = sim.Config.Game;
@@ -163,17 +167,18 @@ namespace Sim.Core.Land
             else if (d < Fixed.Zero) m += d * soil.LossFactor;
             m = Clamp(m);
             if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
-            if (tile.ParcelId == WellParcel(sim) && m < defs.Land.WellMoistureFloor) m = defs.Land.WellMoistureFloor;
+            if (sim.State.Land.Parcels[tile.ParcelId].Protected && m < defs.Land.WellMoistureFloor) m = defs.Land.WellMoistureFloor;
             tile.Moisture = m;
         }
 
         /// <summary>
-        /// A farm tile with no crop for the whole previous day gains fallowRecoveryPerSeason ÷ daysPerSeason,
-        /// up to its soil's cap (spec 002 §3.3).
+        /// An owned farm tile with no crop for the whole previous day gains fallowRecoveryPerSeason ÷ daysPerSeason,
+        /// up to its soil's cap (spec 002 §3.3). Unowned land is neighbours' farms and keeps its fertility (ADR 0030).
         /// </summary>
         private static void RecoverFallow(Simulation sim, Tile tile, long t)
         {
             if (tile.Terrain != Terrain.Farm || tile.Occupied || tile.VacantSince > t - ClockDef.SecondsPerDay) return;
+            if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return;
             GameDefs defs = sim.Config.Game;
             Fixed cap = defs.Soils[tile.Soil].FallowCap;
             if (tile.Fertility >= cap) return;
@@ -230,13 +235,6 @@ namespace Sim.Core.Land
 
         private static Fixed Clamp(Fixed v) { return v < Fixed.Zero ? Fixed.Zero : v > Hundred ? Hundred : v; }
 
-        /// <summary>The parcel holding the well, or −1.</summary>
-        private static int WellParcel(Simulation sim)
-        {
-            LandState land = sim.State.Land;
-            foreach (Building b in land.Buildings)
-                if (sim.Config.Game.Buildings[b.Def].Id == BuildingDef.WellId) return land.Tiles[b.TileId].ParcelId;
-            return -1;
-        }
+
     }
 }

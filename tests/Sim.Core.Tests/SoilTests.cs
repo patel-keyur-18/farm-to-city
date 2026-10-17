@@ -17,12 +17,12 @@ namespace Sim.Core.Tests
 
         public static int Weather(Simulation sim, string id) { return sim.Weather.IndexOf(id); }
 
-        /// <summary>The first tile of the given soil and drainage on the default map that isn't on the well's parcel.</summary>
+        /// <summary>The first unowned farm tile of the given soil and drainage on the default map.</summary>
         public static Tile TileOf(Simulation sim, string soil, string drainage)
         {
             GameDefs d = sim.Config.Game;
             return sim.State.Land.Tiles.First(t => d.Soils[t.Soil].Id == soil && d.Drainages[t.Drainage].Id == drainage
-                && t.Terrain == Terrain.Farm && t.ParcelId != d.Start.InheritedParcel);
+                && t.Terrain == Terrain.Farm && !sim.State.Land.Parcels[t.ParcelId].Owned);
         }
 
         /// <summary>Weather content where every season has only the given weathers (equal weights).</summary>
@@ -37,7 +37,7 @@ namespace Sim.Core.Tests
             weather = Sim.Content.ContentLoader.LoadWeather(json);
             WeatherSet w = weather;
             return Sim.Content.ContentLoader.LoadGame(TestContent.ReadContent("land.json"), TestContent.ReadContent("map.json"),
-                TestContent.ReadContent("buildings.json"), TestContent.ReadContent("start.json").Replace("60000", "5000000"),
+                TestContent.ReadContent("buildings.json"), TestContent.ReadContent("start.json").Replace("20000", "5000000"),
                 TestContent.ReadContent("finance.json"), w);
         }
 
@@ -111,8 +111,7 @@ namespace Sim.Core.Tests
         {
             Simulation sim = LandTest.NewFarmWithWeather("sun", "heatwave");
             Assert.That(sim.Execute(new Commands.BuyParcel(sim.State.Clock.SimTime, "w1")).Accepted, Is.True);
-            int home = sim.Config.Game.Start.InheritedParcel;
-            Tile[] inherited = sim.State.Land.Tiles.Where(t => t.ParcelId == home && t.Terrain == Terrain.Farm).ToArray();
+            Tile[] inherited = sim.State.Land.Tiles.Where(t => sim.State.Land.Parcels[t.ParcelId].Protected && t.Terrain == Terrain.Farm).ToArray();
             Tile bought = sim.State.Land.Tiles.First(t => sim.Config.Game.Map.Parcels[t.ParcelId].Id == "w1");
             Assert.That(sim.Config.Game.Soils[bought.Soil].Id, Is.EqualTo("loam"));
 
@@ -136,9 +135,9 @@ namespace Sim.Core.Tests
         public void Fallow_RecoversProRata()
         {
             Simulation sim = NewFarm();
-            Tile fallow = LandTest.TileOf(sim, "loam", "moderate");
-            Tile busy = sim.State.Land.Tiles.First(t => t.Id != fallow.Id && sim.Config.Game.Soils[t.Soil].Id == "loam" && t.Terrain == Terrain.Farm && t.ParcelId != 0);
-            Tile capped = sim.State.Land.Tiles.First(t => t.Id != fallow.Id && t.Id != busy.Id && sim.Config.Game.Soils[t.Soil].Id == "loam" && t.Terrain == Terrain.Farm);
+            Tile fallow = sim.State.Land.Tiles[19], busy = sim.State.Land.Tiles[20], capped = sim.State.Land.Tiles[26]; // inherited loam
+            Tile unowned = LandTest.TileOf(sim, "loam", "moderate");
+            Fixed unownedStart = unowned.Fertility;
             fallow.Fertility = Fixed.FromInt(45);
             busy.Fertility = Fixed.FromInt(45);
             capped.Fertility = Fixed.FromInt(75);
@@ -156,6 +155,7 @@ namespace Sim.Core.Tests
             Assert.That(fallow.Fertility, Is.EqualTo(Fixed.FromInt(51)));
             Assert.That(busy.Fertility, Is.EqualTo(Fixed.FromInt(45)));
             Assert.That(capped.Fertility, Is.EqualTo(Fixed.FromInt(75)));
+            Assert.That(unowned.Fertility, Is.EqualTo(unownedStart), "neighbours farm unowned land: no fallow recovery (owner decision 2026-10-17)");
         }
 
         // Spec 002 AC-8.
@@ -211,9 +211,9 @@ namespace Sim.Core.Tests
         public void Shade_MatureTreesOnly()
         {
             Simulation sim = NewFarm();
-            Tile tile = sim.State.Land.Tiles[14]; // inherited loam acre
+            Tile tile = sim.State.Land.Tiles[18]; // inherited loam acre
             tile.Fertility = Fixed.FromInt(60);   // fertility factor 1.00, so the Soil factor is the shade factor
-            TreeSlot[] slots = sim.State.Land.Slots.Where(x => x.TileId == 14 && x.Kind == SlotKind.FieldEdge).ToArray();
+            TreeSlot[] slots = sim.State.Land.Slots.Where(x => x.TileId == 18 && x.Kind == SlotKind.FieldEdge).ToArray();
             Assert.That(slots.Length, Is.EqualTo(2));
 
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One));
@@ -225,7 +225,7 @@ namespace Sim.Core.Tests
             LandSystem.SetTreeMature(sim, slots[1].Id);
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.94")));
             Assert.That(LandRules.SoilFactor(sim, tile), Is.EqualTo(LandTest.F("0.94")));
-            Assert.That(LandRules.ShadeFactor(sim, sim.State.Land.Tiles[15]), Is.EqualTo(Fixed.One), "shade stays on its own tile");
+            Assert.That(LandRules.ShadeFactor(sim, sim.State.Land.Tiles[19]), Is.EqualTo(Fixed.One), "shade stays on its own tile");
 
             // Removing a tree empties the slot and its shade.
             LandSystem.SetTree(sim, slots[1].Id, 0);
@@ -235,12 +235,12 @@ namespace Sim.Core.Tests
             // The floor: 4 slots per acre and minShadeFactor 0.90 in test content.
             Simulation four = NewFarm(game: TestContent.Game((f, j) => f != "land.json" ? j
                 : j.Replace("\"fieldEdgeSlotsPerAcre\": 2", "\"fieldEdgeSlotsPerAcre\": 4").Replace("\"minShadeFactor\": 0.85", "\"minShadeFactor\": 0.90")));
-            foreach (TreeSlot slot in four.State.Land.Slots.Where(x => x.TileId == 14 && x.Kind == SlotKind.FieldEdge))
+            foreach (TreeSlot slot in four.State.Land.Slots.Where(x => x.TileId == 18 && x.Kind == SlotKind.FieldEdge))
             {
                 LandSystem.SetTree(four, slot.Id, slot.Id);
                 LandSystem.SetTreeMature(four, slot.Id);
             }
-            Assert.That(LandRules.ShadeFactor(four, four.State.Land.Tiles[14]), Is.EqualTo(LandTest.F("0.90")), "the floor, not 0.88");
+            Assert.That(LandRules.ShadeFactor(four, four.State.Land.Tiles[18]), Is.EqualTo(LandTest.F("0.90")), "the floor, not 0.88");
         }
     }
 
@@ -251,10 +251,10 @@ namespace Sim.Core.Tests
         {
             Simulation sim = NewFarm(game: ParcelTests.Rich());
             sim.Execute(new Commands.BuyParcel(0, "w1"));
-            long[] first = sim.State.Land.Slots.Where(x => x.TileId == 12 || x.TileId == 13).Select(x => x.Id).ToArray();
+            long[] first = sim.State.Land.Slots.Where(x => x.TileId == 16 || x.TileId == 17).Select(x => x.Id).ToArray();
             sim.Execute(new Commands.SellParcel(0, "w1"));
             sim.Execute(new Commands.BuyParcel(0, "w1"));
-            long[] second = sim.State.Land.Slots.Where(x => x.TileId == 12 || x.TileId == 13).Select(x => x.Id).ToArray();
+            long[] second = sim.State.Land.Slots.Where(x => x.TileId == 16 || x.TileId == 17).Select(x => x.Id).ToArray();
             Assert.That(second.Length, Is.EqualTo(4));
             Assert.That(second.Min(), Is.GreaterThan(first.Max()));
             Assert.That(sim.State.Land.Slots.Select(x => x.Id), Is.Ordered.And.Unique);
@@ -270,7 +270,7 @@ namespace Sim.Core.Tests
         {
             if (pass != ItemClass.Hourly) return;
             long hour = sim.State.Clock.SimTime / 3600;
-            foreach (int tile in new[] { 2, 8, 14, 21 })
+            foreach (int tile in new[] { 18, 19, 26, 28 })
                 if ((hour + tile) % 37 == 0) LandSystem.SetOccupied(sim, tile, !sim.State.Land.Tiles[tile].Occupied);
         }
     }

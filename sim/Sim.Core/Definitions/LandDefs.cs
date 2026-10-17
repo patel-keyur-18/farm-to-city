@@ -164,7 +164,7 @@ namespace Sim.Core.Definitions
     /// <summary>From <c>content/buildings.json</c> (spec 002 §4; later specs add fields).</summary>
     public sealed class BuildingDef
     {
-        /// <summary>The building whose parcel gets the well's moisture floor (spec 002 §3.2).</summary>
+        /// <summary>Every start needs the well: it keeps the inherited acres above the moisture floor (spec 002 §3.2).</summary>
         public const string WellId = "well";
 
         public string Id { get; }
@@ -201,16 +201,16 @@ namespace Sim.Core.Definitions
     /// <summary>The inherited start from <c>content/start.json</c> (spec 002 §4, spec 005 §4).</summary>
     public sealed class StartDef
     {
-        /// <summary>Index into <see cref="MapDef.Parcels"/>.</summary>
-        public int InheritedParcel { get; }
+        /// <summary>Indices into <see cref="MapDef.Parcels"/>: the protected inheritance (ADR 0030).</summary>
+        public IReadOnlyList<int> InheritedParcels { get; }
         public IReadOnlyList<StartBuilding> Buildings { get; }
 
         /// <summary>Money (1/100 coin).</summary>
         public long StartingCash { get; }
 
-        public StartDef(int inheritedParcel, IReadOnlyList<StartBuilding> buildings, long startingCash)
+        public StartDef(IReadOnlyList<int> inheritedParcels, IReadOnlyList<StartBuilding> buildings, long startingCash)
         {
-            InheritedParcel = inheritedParcel;
+            InheritedParcels = new List<int>(inheritedParcels).AsReadOnly();
             Buildings = new List<StartBuilding>(buildings).AsReadOnly();
             StartingCash = startingCash;
         }
