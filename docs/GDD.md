@@ -120,6 +120,12 @@ Farming is the first business the player runs, so it introduces every core idea:
 
 The map grows as the player buys adjacent parcels. Price depends on soil and location.
 
+- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters the inherited acres, so they never dry out completely; bought land is rain-fed until irrigation.
+- **Fertility** recovers while a field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle.
+- **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
+- **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited parcel can never be sold or seized.
+- Spec 002 has the formulas and values.
+
 **Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:
 
 - a sowing window (the seasons it can be sown in)
@@ -882,12 +888,16 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `FounderDef` | baseLabourHours, fatigue gain and recovery per hours option, health parameters |
 | `DietPlanDef` | id, costPerSeason, nutrition |
 | `LenderDef` | type, rate band, limit formula inputs, grace period, penalty rate |
+| `LandDef` | moisture change by weather, fertility factor curve, fallow recovery, acre base price, fertility price factors, quick-sale factor, field-edge slots per acre, shade per mature tree |
+| `SoilDef` / `DrainageDef` | yield, moisture gain and loss, price factor, fallow cap / drain threshold, drain rate, price factor |
+| `MapDef` / `ParcelDef` | grid size and starting tiles / tiles, location factor |
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
 | `RegionDef` | seasonal price factors, trader daily capacity per good, transport cost by road tier |
 | `EraDef` | id, unlock conditions, new systems, UI theme |
-| `StartDef` | starting savings, plot, buildings |
-| `ClockDef` | secondsPerSeason, seasonsPerYear, weatherSpellSeconds, lifeYearsPerSeason, awayCapSeconds |
+| `StartDef` | startingCash, inheritedParcel, buildings and their tiles |
+| `ClockDef` | daysPerSeason, weatherSpellHours, lifeYearsPerSeason, awayCapHours, awayThresholdSeconds, forecastDays, forecastAccuracy (spec 001) |
+| `WeatherTypeDef` / `ClimateDef` | id, nameKey, isSevere / season, weights, persistence (spec 001) |
 
 **Instances (live game state)**
 
@@ -896,7 +906,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `Citizen` | id, name, birthTime, householdId, homeId, jobId, education, skills, traits, health, happiness, fatigue, savings, wageExpectation, storyFlags |
 | `Household` | members, income, budget shares, needs met, home |
 | `Founder` | householdId, dietPlan, workHours, labourSplit (own fields or day labour), nutrition, fatigue, health, creditScore |
-| `Tile` / `Parcel` | terrain, fertility, moisture, owner, zone, landValue, buildingId |
+| `Tile` / `Parcel` | terrain, soil, drainage, fertility, moisture, vacantSince, per-season fertility changes / owned, protected, costBasis (zone and landValue from Phase 3) |
 | `Building` | defId, position, level, condition, owner, constructionProgress |
 | `Business` | owner (player, rival or citizen), buildingId, staff, prices, quality, inventory, reputation, manager, plan |
 | `LedgerEntry` | simTime, accountId, amount, category, reference |
