@@ -1,6 +1,6 @@
 # 0018. Sim.Core as a plain .NET library, tested with the dotnet CLI
 
-- Status: Accepted. Partly superseded by ADR 0020 (definition classes live in `Sim.Core`) and ADR 0026 (tests and tools target net10.0 with the .NET 10 SDK).
+- Status: Accepted. Partly superseded by ADR 0020 (definition classes live in `Sim.Core`) and ADR 0026 (tests and tools target net10.0 with the .NET 10 SDK). Rule 3 refined by spec 001: the RNG is counter-based SplitMix64 (`Next(seed, stream, key, counter)`), not PCG32 or xoshiro. Rule 1 applies to `sim/` only: tests and tools use the latest C# (Sprint 0, because NUnit 4.6 needs C# 10+ overload resolution).
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0002 (scheduler, determinism), ADR 0017 (code-first, thin Unity layer)
