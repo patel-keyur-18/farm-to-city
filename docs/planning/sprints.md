@@ -40,7 +40,7 @@
 | US-006 | Spec 005: ledger and credit | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
 | US-025 | Fixed-point numbers | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | Done |
 | US-026 | Counter-based RNG | [F01.1](features/F01.1-sim-foundations.md) | 2 | Must | Done |
-| US-027 | State hash | [F01.1](features/F01.1-sim-foundations.md) | 1 | Must | To do |
+| US-027 | State hash | [F01.1](features/F01.1-sim-foundations.md) | 1 | Must | Done |
 | US-028 | Clock and weather content | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | To do |
 | US-029 | Calendar and life clock | [F01.2](features/F01.2-calendar-and-scheduler.md) | 2 | Must | To do |
 | US-030 | Scheduler | [F01.2](features/F01.2-calendar-and-scheduler.md) | 5 | Must | To do |
