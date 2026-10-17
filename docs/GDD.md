@@ -559,7 +559,7 @@ The game teaches in three steps: the player decides, sees the result, and only t
 - **Standard:** the default.
 - **Realistic:** harsher markets, fewer hints, hidden traits stay hidden longer.
 
-**Accuracy.** All models are simplified but point the right way. Before launch, a finance educator should review the Codex and core formulas, and a cultural-accuracy reviewer should review names, festivals, foods and art (ADR 0001).
+**Accuracy.** All models are simplified but point the right way. Before launch, friends and relatives with the expertise review the Codex and core formulas for finance accuracy, and the names, festivals, foods and art for cultural accuracy (ADR 0001, ADR 0007).
 
 ## Decisions and consequences
 
@@ -657,7 +657,8 @@ The game needs no account and no server. All content ships in the build, and the
 - **Atomic writes:** write to a temporary file, verify its checksum, then rename. A crash can never corrupt the last good save.
 - **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
 - **Size target:** under 5 MB at City scale.
-- **Backup:** optional iCloud on iOS and Google Play Games Saved Games on Android, synced when a network is available. Manual export and import of a save file as a fallback.
+- **Backup:** manual export and import of a save file. iCloud on iOS and Google Play Games Saved Games on Android come later, only if the game is published to the stores (ADR 0007).
+- **Distribution, for now:** personal builds only. iOS uses a free developer account, with the build re-signed every 7 days. The bundle ID and signing team stay fixed, so the save data survives reinstalls. Android uses sideloaded APKs signed with the owner's key. The purchase unlock is a developer flag in these builds.
 
 **Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in, grouped, and capped at 2 a day.
 
@@ -787,7 +788,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 ## Art, audio and feel
 
-The look is warm, hand-painted 2D isometric: readable at phone size, and cheaper and faster to produce than 3D.
+The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs, such as Kenney's isometric sets, give the base style. Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs.
 
 - **Lighting and seasons.** A day-night cycle with 2D lights, and seasonal palette shifts: spring greens, golden harvest, monsoon greys, winter haze.
 - **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.
@@ -795,7 +796,7 @@ The look is warm, hand-painted 2D isometric: readable at phone size, and cheaper
 - **The UI ages with the town.** Wood, paper and chalk in the Homestead era, brass and ledgers in the Village, clean glass in the City.
 - **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
 - **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
-- **Sourcing.** Asset-store packs for the prototype, then commissioned art in one consistent style for launch.
+- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence. CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
 
 **Monetisation**
 
@@ -811,7 +812,7 @@ These would undermine the honesty of the economic lessons. Optional extras that 
 - new map biomes
 - scenario packs
 
-Purchases use StoreKit 2 on iOS and Google Play Billing on Android. Entitlements are cached locally, so the game stays fully playable offline after one successful purchase.
+When the game is published, purchases use StoreKit 2 on iOS and Google Play Billing on Android. Personal builds use a developer unlock flag (ADR 0007). Entitlements are cached locally, so the game stays fully playable offline after one successful purchase.
 
 A later option is a school or classroom edition, with teacher-set scenarios and a progress export.
 
@@ -887,7 +888,7 @@ The build runs in six phases. A phase starts only when the previous gate passes,
 
 ```mermaid
 flowchart TB
-    P0["Phase 0 · Pre-production · 3–4 weeks<br/>Master spec, economy spreadsheet, art test, performance spike"]
+    P0["Phase 0 · Pre-production · 3–4 weeks<br/>Master spec, economy spreadsheet, art style-pipeline test, performance spike"]
     P1["Phase 1 · Vertical slice: Homestead · 6–8 weeks<br/>Time, weather, farming, market, ledger, saves, onboarding"]
     P2["Phase 2 · Hamlet and Village · 10–12 weeks<br/>Citizens, hiring, wages, businesses, needs, school, loans, Codex"]
     P3["Phase 3 · Township · 10–12 weeks<br/>Zoning, utilities, treasury, taxes, land value, events, Chronicle"]
@@ -903,7 +904,7 @@ flowchart TB
 
 | Phase | Duration | Scope | Exit gate |
 | --- | --- | --- | --- |
-| 0 · Pre-production | 3–4 weeks | Master spec, economy spreadsheet, art test, performance spike | Spreadsheet economy has no money loops; 2,000 agents at 60 fps |
+| 0 · Pre-production | 3–4 weeks | Master spec, economy spreadsheet, art style-pipeline test (Blender sprites beside CC0 tiles), performance spike | Spreadsheet economy has no money loops; 2,000 agents at 60 fps |
 | 1 · Vertical slice: Homestead | 6–8 weeks | Time, weather, farming, market, ledger, saves, onboarding | Testers come back on day 2 and day 3 unprompted |
 | 2 · Hamlet and Village | 10–12 weeks | Citizens, hiring, wages, businesses, needs, school, loans, Codex | A week of play; players can explain profit versus cash |
 | 3 · Township | 10–12 weeks | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
@@ -924,7 +925,7 @@ These choices need the owner's call before their feature specs can be written. T
 | Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | **Decided:** never lose office; the result sets the council mood ([ADR 0004](decisions/0004-elections-council-mood.md)) |
 | Orientation | Landscape only; or landscape map with portrait menus | UI layout | **Decided:** landscape only ([ADR 0005](decisions/0005-landscape-only.md)) |
 | Business model | Free with a one-time unlock; or premium upfront | Store setup, onboarding length | **Decided:** free with a one-time unlock at the Village gate ([ADR 0006](decisions/0006-free-with-one-time-unlock.md)) |
-| Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | Open |
+| Art sourcing | Asset packs then a commissioned artist; or an artist from day one | Budget, slice timeline | **Decided:** zero budget: CC0 packs plus Blender-rendered sprites; personal builds only ([ADR 0007](decisions/0007-zero-budget-art-and-distribution.md)) |
 | Coin scale | Abstract coins; or prices that roughly mirror real rupees | Codex examples, UI formatting | Open |
 
 **Risks**
