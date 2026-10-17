@@ -26,6 +26,12 @@ Every session starts with no memory. The repository is the only memory.
 2. Update `docs/planning/STATUS.md`: last done, next up, open questions, branch, anything half-done.
 3. Commit and push.
 4. At the end of a session or sprint, open a pull request to `main` and ask the owner to merge it. The next session clones `main`, so unmerged work is invisible to it.
+5. **Every pull request gets labels and a milestone** (owner rule, 2026-10-17). Use only labels and milestones that already exist in the repository:
+   - **Milestone:** the phase the sprint belongs to (`Phase 0 · Pre-production`, `Phase 1 · Homestead slice`, `Phase 2 · Hamlet & Village`, `Phase 3 · Township`, `Phase 4 · Town & City`, `Phase 5 · Launch`).
+   - **`type:` labels**, one for each kind of change in the pull request: `type:feature`, `type:spec`, `type:adr`, `type:bug`, `type:balance`.
+   - **`area:` labels**, one for each area touched: `area:sim`, `area:content`, `area:tooling`, `area:ui`, `area:art`.
+   - **`documentation`** when docs change.
+   - Re-check the labels whenever later pushes change what the pull request contains.
 
 ## Workflow (spec-driven)
 
