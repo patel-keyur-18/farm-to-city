@@ -38,7 +38,7 @@
 | 4 | Save slots vs undoing mistakes | Decided: one town, safety save points, no undo (ADR 0023) |
 | 5 | Phase 1 scope additions: storage and spoilage, localisation groundwork, play log | Decided (ADR 0024) |
 | 6 | Sprint mechanics: length, estimation, definition of done, merging | Decided (ADR 0025) |
-| 7 | Owner's test devices and the Unity version | Open |
+| 7 | Owner's test devices and the Unity version | Decided (ADR 0026) |
 
 ## Half-done work
 
@@ -46,4 +46,4 @@ None.
 
 ## Environment notes
 
-- The .NET 8 SDK isn't preinstalled in cloud sessions. Install it with `apt-get install -y dotnet-sdk-8.0` until the SessionStart hook exists (Sprint 0).
+- The .NET 10 SDK isn't preinstalled in cloud sessions. Install it with `apt-get install -y dotnet-sdk-10.0` until the SessionStart hook exists (Sprint 0).

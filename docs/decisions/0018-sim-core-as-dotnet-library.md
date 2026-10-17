@@ -1,6 +1,6 @@
 # 0018. Sim.Core as a plain .NET library, tested with the dotnet CLI
 
-- Status: Accepted. Partly superseded by ADR 0020 (definition classes live in `Sim.Core`).
+- Status: Accepted. Partly superseded by ADR 0020 (definition classes live in `Sim.Core`) and ADR 0026 (tests and tools target net10.0 with the .NET 10 SDK).
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0002 (scheduler, determinism), ADR 0017 (code-first, thin Unity layer)

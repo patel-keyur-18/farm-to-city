@@ -71,8 +71,8 @@ sim/                        Unity package (UPM) + dotnet projects         (plann
                             + .asmdef (noEngineReferences)
   Sim.Content/              JSON loader + validation (definition classes
                             live in Sim.Core, ADR 0020)
-tests/Sim.Core.Tests/       NUnit tests (net8.0)                          (planned)
-tools/Tools.Balancer/       headless balancer on a fake clock (net8.0)    (planned)
+tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)                       (planned)
+tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)   (planned)
 content/                    JSON definitions (balancing data)             (planned)
 unity/FarmToCity/           Unity project, created by the owner in Unity Hub (planned)
   Game.Presentation         rendering and UI (asmdef), built code-first
@@ -85,7 +85,7 @@ unity/FarmToCity/           Unity project, created by the owner in Unity Hub (pl
 
 ## Build and test
 
-The .NET 8 SDK is required. In the cloud container, install it with `apt-get install -y dotnet-sdk-8.0`.
+The .NET 10 SDK (LTS) is required (ADR 0026). In the cloud container, install it with `apt-get install -y dotnet-sdk-10.0`. The SessionStart hook does this automatically once it exists.
 
 ```
 dotnet build FarmToCity.sln
@@ -93,7 +93,7 @@ dotnet test
 dotnet run --project tools/Tools.Balancer
 ```
 
-These commands work once the solution skeleton exists, which is the first code task after spec 001 is approved. CI (GitHub Actions) runs `dotnet build` and `dotnet test` on every push. Unity builds are made by the owner on a Mac with Xcode.
+These commands work once the solution skeleton exists, which is the first code task after spec 001 is approved. CI (GitHub Actions) runs `dotnet build` and `dotnet test` on every push. Unity builds are made by the owner on a MacBook Air M2 with Xcode 27.1, and tested on an iPhone 13 (ADR 0026).
 
 ## Key decisions (see `docs/decisions/` for full text)
 
@@ -124,6 +124,7 @@ These commands work once the solution skeleton exists, which is the first code t
 | 0023 | One town at a time. Save points are a crash-safety guard only, never an undo |
 | 0024 | Phase 1 adds the hut store and spoilage, string tables and Indian number formatting, and an opt-in local play log |
 | 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
+| 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
 
 ## Current status
 
