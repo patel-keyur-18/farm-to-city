@@ -34,13 +34,14 @@
 
   - **US-018 Unity version pinned: done.** ADR 0029: Unity 6000.3.26f1. Unity still compiles every assembly with `-langversion:9.0` (checked in the response files under `Library/Bee/`), so the sim stays on C# 9.
 
-  - **US-059 exact ledger: core done** (spec 005 AC-1, 2, 3, 5): the chart of accounts, balanced entries, cash never negative, `MulRate`, the opening balance sheet. AC-4 (reconciliation every season) is finished with land buying (US-040).
+  - **US-059 exact ledger: done** (spec 005 AC-1 to AC-5): the chart of accounts, balanced entries, cash never negative, `MulRate`, the opening balance sheet, the reconciliation check and entry retention at every season close. AC-4 covers land purchases and sales for now; US-060 and F05.2 add their activity to the same test.
   - **US-038 inherited land: done** (spec 002 AC-1, AC-2). New content: `land.json`, `map.json` (6 × 5, 13 parcels), `buildings.json`, `start.json`, `finance.json`. Land and ledger are optional `GameDefs` in `SimConfig`: a sim without them hashes exactly as before, so golden 001 is unchanged.
   - **US-039 soil properties: done** (spec 002 AC-3 to AC-9, AC-15, AC-16). Hourly moisture with drainage and the well floor, daily fallow recovery, `AdjustFertility` with per-reason season totals, the Soil factor. 72 h with land advances in about 0.4 ms (budget 20 ms). AC-6 buys its tile once `BuyParcel` exists (US-040).
+  - **US-040 buy adjacent land: done** (spec 002 AC-11 to AC-14): `BuyParcel` and `SellParcel` (quick sale at 80%), with ledger postings (land at cost; gain or loss on sale), adjacency, the in-use and stranding guards. Financing joins with credit (Sprint 4).
 
 ## In progress
 
-Sprint 1: US-040 (buy adjacent land) next, then US-041 and US-059's AC-4.
+Sprint 1: US-041 (tree slots) next.
 
 ## Next up
 

@@ -110,3 +110,65 @@ namespace Sim.Core.Tests
         }
     }
 }
+
+namespace Sim.Core.Tests
+{
+    using System.Collections.Generic;
+    using System.Linq;
+    using NUnit.Framework;
+    using Sim.Core.Commands;
+    using Sim.Core.Finance;
+    using Sim.Core.Maths;
+    using static Sim.Core.Tests.TestSim;
+
+    public partial class LedgerTests
+    {
+        // Spec 005 AC-4. Activity available so far: land purchases and quick sales (US-040). Prepayments,
+        // loans, repayments and missed payments join this test with US-060 and F05.2.
+        [Test]
+        public void Reconciles_EverySeason()
+        {
+            for (ulong seed = 1; seed <= 5; seed++)
+            {
+                Simulation sim = NewFarm(seed: seed, game: TestContent.Game((f, j) =>
+                    f == "start.json" ? j.Replace("\"startingCash\": 60000", "\"startingCash\": 20_00_000".Replace("_", ""))
+                    : f == "finance.json" ? j.Replace("4", "16") : j));
+                string[] parcels = sim.Config.Game.Map.Parcels.Select(p => p.Id).ToArray();
+                long end = 3 * sim.Clock.SecondsPerYear;
+                int accepted = 0;
+                for (ulong i = 0; ; i++)
+                {
+                    ulong r = Rng.Next(seed, (RngStream)903, i, 0);
+                    long at = sim.State.Clock.SimTime + 1 + (long)Rng.Below(r, 20 * 3600);
+                    if (at > end) break;
+                    string id = parcels[(int)Rng.Below(Rng.Next(seed, (RngStream)903, i, 1), (ulong)parcels.Length)];
+                    Command c = Rng.Below(Rng.Next(seed, (RngStream)903, i, 2), 3) == 0 ? new SellParcel(at, id) : (Command)new BuyParcel(at, id);
+                    if (sim.Execute(c).Accepted) accepted++;
+                }
+                sim.AdvanceTo(end); // every season close reconciles (strict: a failure throws)
+
+                Assert.That(accepted, Is.GreaterThan(10), "seed " + seed);
+                Ledger ledger = sim.State.Ledger;
+                Assert.That(ledger.Entries.First().DescriptionKey, Is.EqualTo("ledger.opening"), "nothing dropped yet");
+                long cashPostings = ledger.Entries.SelectMany(e => e.Postings).Where(p => p.Account == Account.Cash).Sum(p => p.Amount);
+                Assert.That(cashPostings, Is.EqualTo(ledger.Cash));
+                Assert.That(ledger.Reconcile(), Is.Null);
+            }
+        }
+
+        [Test]
+        public void Retention_KeepsCurrentAndLastSeasons()
+        {
+            Simulation sim = NewFarm(game: ParcelTests.Rich());
+            long s = sim.Clock.SecondsPerSeason;
+            for (int k = 0; k < 7; k++)
+            {
+                sim.Execute(new BuyParcel(k * s + 3600, k % 2 == 0 ? "w1" : "e1"));
+                sim.Execute(new SellParcel(k * s + 7200, k % 2 == 0 ? "w1" : "e1"));
+            }
+            sim.AdvanceTo(7 * s); // the close of season 6; retainSeasons = 4 keeps periods 3–6 and the current one
+            Assert.That(sim.State.Ledger.Entries.Min(e => e.Period), Is.EqualTo(3));
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+    }
+}

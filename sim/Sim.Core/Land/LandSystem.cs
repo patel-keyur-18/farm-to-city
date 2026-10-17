@@ -60,6 +60,73 @@ namespace Sim.Core.Land
             }
         }
 
+        /// <summary>Marks a parcel unowned and removes its slots (they are empty: spec 002 §3.5).</summary>
+        internal static void Release(Simulation sim, Parcel parcel)
+        {
+            LandState land = sim.State.Land;
+            parcel.Owned = false;
+            parcel.CostBasis = 0;
+            parcel.AcquiredAt = 0;
+            land.Slots.RemoveAll(slot => land.Tiles[slot.TileId].ParcelId == parcel.Id);
+        }
+
+        /// <summary>True if a tile of the parcel shares an edge with an owned tile.</summary>
+        internal static bool IsAdjacentToOwned(Simulation sim, int parcelId)
+        {
+            LandState land = sim.State.Land;
+            foreach (int tile in sim.Config.Game.Map.Parcels[parcelId].Tiles)
+                foreach (int n in Neighbours(sim.Config.Game.Map, tile))
+                    if (land.Parcels[land.Tiles[n].ParcelId].Owned) return true;
+            return false;
+        }
+
+        /// <summary>A crop on any tile, a tree in any slot, or a building on the parcel.</summary>
+        internal static bool InUse(Simulation sim, int parcelId)
+        {
+            LandState land = sim.State.Land;
+            foreach (Tile t in land.Tiles)
+                if (t.ParcelId == parcelId && t.Occupied) return true;
+            foreach (TreeSlot slot in land.Slots)
+                if (slot.TreeId != 0 && land.Tiles[slot.TileId].ParcelId == parcelId) return true;
+            foreach (Building b in land.Buildings)
+                if (land.Tiles[b.TileId].ParcelId == parcelId) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// True if, without this parcel, some other owned tile would no longer connect to the inherited parcel
+        /// through owned tiles (a flood fill over edges).
+        /// </summary>
+        internal static bool WouldStrand(Simulation sim, int parcelId)
+        {
+            GameDefs defs = sim.Config.Game;
+            LandState land = sim.State.Land;
+            var reached = new bool[land.Tiles.Count];
+            var queue = new System.Collections.Generic.Queue<int>();
+            foreach (int t in defs.Map.Parcels[defs.Start.InheritedParcel].Tiles) { reached[t] = true; queue.Enqueue(t); }
+            while (queue.Count > 0)
+                foreach (int n in Neighbours(defs.Map, queue.Dequeue()))
+                {
+                    int p = land.Tiles[n].ParcelId;
+                    if (reached[n] || p == parcelId || !land.Parcels[p].Owned) continue;
+                    reached[n] = true;
+                    queue.Enqueue(n);
+                }
+            foreach (Tile t in land.Tiles)
+                if (t.ParcelId != parcelId && land.Parcels[t.ParcelId].Owned && !reached[t.Id]) return true;
+            return false;
+        }
+
+        /// <summary>The 4 edge neighbours of a tile that are on the map, in a fixed order.</summary>
+        private static System.Collections.Generic.IEnumerable<int> Neighbours(MapDef map, int tile)
+        {
+            int x = tile % map.Width, y = tile / map.Width;
+            if (y > 0) yield return tile - map.Width;
+            if (x > 0) yield return tile - 1;
+            if (x < map.Width - 1) yield return tile + 1;
+            if (y < map.Height - 1) yield return tile + map.Width;
+        }
+
         private static void AddSlot(LandState land, SlotKind kind, int tileId)
         {
             land.Slots.Add(new TreeSlot { Id = land.NextSlotId++, Kind = kind, TileId = tileId });

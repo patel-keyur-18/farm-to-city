@@ -37,7 +37,7 @@ namespace Sim.Core.Tests
             weather = Sim.Content.ContentLoader.LoadWeather(json);
             WeatherSet w = weather;
             return Sim.Content.ContentLoader.LoadGame(TestContent.ReadContent("land.json"), TestContent.ReadContent("map.json"),
-                TestContent.ReadContent("buildings.json"), TestContent.ReadContent("start.json"),
+                TestContent.ReadContent("buildings.json"), TestContent.ReadContent("start.json").Replace("60000", "5000000"),
                 TestContent.ReadContent("finance.json"), w);
         }
 
@@ -110,7 +110,7 @@ namespace Sim.Core.Tests
         public void WellFloor_InheritedOnly()
         {
             Simulation sim = LandTest.NewFarmWithWeather("sun", "heatwave");
-            // US-040 adds: buy w1 first (spec 002 AC-6 says "a bought tile").
+            Assert.That(sim.Execute(new Commands.BuyParcel(sim.State.Clock.SimTime, "w1")).Accepted, Is.True);
             int home = sim.Config.Game.Start.InheritedParcel;
             Tile[] inherited = sim.State.Land.Tiles.Where(t => t.ParcelId == home && t.Terrain == Terrain.Farm).ToArray();
             Tile bought = sim.State.Land.Tiles.First(t => sim.Config.Game.Map.Parcels[t.ParcelId].Id == "w1");
