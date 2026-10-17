@@ -94,6 +94,9 @@ namespace Sim.Content
                     OnlyFields(c, path, "type", "target", "mode");
                     return new AdvanceTo(Long(Required(c, path, "target"), path + ".target"),
                         Mode(Required(c, path, "mode"), path + ".mode"));
+                case "Sync":
+                    OnlyFields(c, path, "type", "nowWallUtc");
+                    return new Sync(Long(Required(c, path, "nowWallUtc"), path + ".nowWallUtc"));
                 default:
                     throw new ContentException(path + ".type", "unknown command type '" + type + "'");
             }
@@ -114,6 +117,10 @@ namespace Sim.Content
                     Prop(w, "type", "AdvanceTo");
                     w.WritePropertyName("target"); w.WriteValue(a.Target);
                     Prop(w, "mode", ModeName(a.Mode));
+                    break;
+                case Sync sync:
+                    Prop(w, "type", "Sync");
+                    w.WritePropertyName("nowWallUtc"); w.WriteValue(sync.NowWallUtc);
                     break;
                 default:
                     throw new ArgumentException("Command type " + command.GetType().Name + " can't be written to a replay file.");

@@ -64,6 +64,7 @@ namespace Sim.Core.Tests
             var file = new ReplayFile { Description = "round trip", DevCommandsEnabled = true, ExpectedHash = 0xFEDCBA9876543210UL };
             file.Commands.Add(new NewGame(ulong.MaxValue, 1_800_000_000, 86_399));
             file.Commands.Add(new AdvanceTo(123_456, AdvanceMode.Away));
+            file.Commands.Add(new Sync(1_800_000_030));
             string json = ReplayJson.Write(file);
             ReplayFile back = ReplayJson.Load(json);
             Assert.That(ReplayJson.Write(back), Is.EqualTo(json));
