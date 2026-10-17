@@ -1,6 +1,6 @@
 # Farm to City — Game Design Spec
 
-Master spec · v1.1 · 17 Oct 2026 · Owner: Keyur Patel
+Master spec · v1.2 · 17 Oct 2026 · Owner: Keyur Patel
 
 > This is the master game design document (GDD). Feature specs in `docs/specs/` expand individual sections of it. When a feature spec and this doc disagree, update this doc in the same commit.
 
@@ -10,14 +10,14 @@ Farm to City is an offline life-and-business simulation in Unity C# for iOS and 
 
 **Design pillars**
 
-1. **Real cause and effect.** The game uses no magic timers. Outcomes come from simulated supply, demand, skills, money and time.
+1. **Real cause and effect.** Timers measure time; they never decide outcomes. Outcomes come from simulated supply, demand, skills, money and time.
 2. **Learn by running it.** Lessons about business, assets and workforce sit inside the gameplay and are never delivered as lectures.
 3. **Your town, your story.** There is no fixed path. A town that builds its school first should turn out different from one that builds a factory first.
 4. **Calm, fair, offline.** No energy bars and no pay-to-win. The game plays fully offline from the first launch.
 
 **Setting.** A fictional, Indian-inspired river valley: village and small-town life, monsoon seasons, local foods and festivals. Place names are invented, and the game avoids real geography, politics, religious figures and brands. Festivals and places of worship are generic and inclusive. See ADR 0001.
 
-**Target player:** age 16 and up. Fans of Township, SimCity BuildIt, Stardew Valley and Banished, plus people who want to understand how money and businesses work. Sessions run 5–20 minutes on a phone and up to an hour on a tablet.
+**Target player:** age 16 and up. Fans of Township, SimCity BuildIt, Stardew Valley and Banished, plus people who want to understand how money and businesses work. Sessions run 5–20 minutes on a phone and up to an hour on a tablet, several times a day. The town keeps running between sessions (see Time and world simulation).
 
 **What "real life experience" means here:** real concepts with readable numbers. The game uses profit and loss, depreciation, interest, wages, productivity and price elasticity, at a simplified scale. One rule holds everywhere: every number shown can be explained in one tap with a *Why?* breakdown.
 
@@ -40,22 +40,42 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 **Town identity.** Cumulative choices give the town tags such as Agri-hub, Merchant town, Industrial town, Education town or Green town. Each tag unlocks unique buildings and small bonuses, so two playthroughs end in different cities.
 
-**Span of play.** One game year is about 2 real hours at normal speed. Farm to City takes roughly 30–40 game years, about 60–80 hours, so citizens are born, grow up, work and retire within one playthrough.
+**Span of play.** The game runs on real time. One game year is 16 real days, and reaching the City takes about 4–6 months of real time (about 10–12 game years). Citizens age on a faster life clock (1 life-year per season), so they are born, grow up, work and retire within one playthrough. See ADR 0002.
 
 ## Time and world simulation
 
-The world runs on a fixed game clock. One game day takes 2 real minutes at 1x speed, and a year has 4 seasons of 15 days. Each season closes like a business quarter, with reports.
+The world runs on real time, like Hay Day or Township. Work you start keeps going while the app is closed, and you get a notification when it is done. Each season closes like a business quarter, with reports. See ADR 0002 for the full model.
 
-**Clock and speeds**
+**Three clocks**
 
-- Speeds are pause, 1x, 2x and 3x. Menus that need thought, like hiring or a loan offer, auto-pause in Guided mode.
-- A simulation tick is 1 game hour, which is 5 real seconds at 1x.
-- Each day has phases: dawn (5–7), work (8–17), evening (17–21) and night. Citizens follow daily schedules.
+1. **Task clock (real time).** Every job has a real-world duration from data:
+
+   | Job | Duration |
+   | --- | --- |
+   | Onboarding crops (radish, greens) | minutes |
+   | Wheat, onion | 4–8 hours |
+   | Rice, potato | about a day |
+   | Sugarcane, cotton | 2–3 days |
+   | Orchard, first fruit | about 2 weeks |
+   | Production batch (for example bread) | minutes |
+   | Construction | hours |
+
+   Jobs run whether the app is open or closed.
+2. **Calendar.** 1 season = 4 real days, and 1 game year = 4 seasons = 16 real days.
+3. **Life clock.** Citizens age 1 life-year per season. Childhood lasts about 72 real days, and a school pays off in about 40–60 real days.
+
+**Clock rules**
+
+- There are no speed controls and no pause in the live game, because no decision has to be made within seconds. Scenarios run in their own saves on an accelerated clock.
+- The day/night lighting follows the device's local time. Citizens follow daily schedules: dawn (5–7), work (8–17), evening (17–21) and night.
 - Settlement cadence:
-  - Every hour: production, movement and sales.
-  - Every day: market prices clear, wages accrue, needs update.
-  - Every season: accounts close, loan payments fall due, taxes are collected.
-  - Every year: the year-end review, ageing, and the Town Almanac.
+
+  | Cadence | What settles |
+  | --- | --- |
+  | Every real hour | Production, movement, sales, and market prices clearing |
+  | Every real day | Wages are paid and needs update |
+  | Every season (4 days) | Accounts close, loan payments fall due, taxes are collected |
+  | Every game year (16 days) | The year-end review and the Town Almanac |
 
 **Seasons**
 
@@ -66,9 +86,9 @@ The world runs on a fixed game clock. One game day takes 2 real minutes at 1x sp
 | Monsoon | Main harvest | Crop prices fall from oversupply |
 | Winter | Few crops; orchards and dairy carry on | Stored goods sell at a premium |
 
-**Weather.** Each day's weather is drawn from that season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop growth, soil moisture, shop foot traffic, construction speed and energy demand. A 3-day forecast lets the player prepare, and big events like droughts are signalled days ahead.
+**Weather.** Weather changes in 6-hour spells, each drawn from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare, and big events like droughts are signalled days ahead.
 
-**Determinism.** Each save has a random seed, and the simulation is deterministic for a given seed and command history. That makes offline catch-up reproducible, makes bugs replayable, and allows automated balancing runs.
+**Determinism.** Each save has a random seed. Sim time is a 64-bit count of seconds, kept separate from wall-clock time, and every command carries the sim time it applies at. The simulation is deterministic for a given seed and timestamped command history. That makes offline catch-up reproducible, makes bugs replayable, and allows automated balancing runs on a fake clock.
 
 ## Land, farming and livestock
 
@@ -85,8 +105,8 @@ The map grows as the player buys adjacent parcels. Price depends on soil and loc
 
 **Crops (launch set).** Wheat, rice, maize, potato, tomato, onion, lentils, sugarcane, cotton, plus one multi-year orchard (mango or apple). Each crop defines:
 
-- a sowing window
-- growth days
+- a sowing window (the seasons it can be sown in)
+- a growth duration in real time
 - water need
 - base yield per acre
 - labour hours per acre
@@ -99,7 +119,11 @@ The map grows as the player buys adjacent parcels. Price depends on soil and loc
 Yield = Base × Soil × Water × Care × Seed × Weather × Tools
 ```
 
-Care is the labour hours delivered divided by the hours needed, capped at 1.1. Weather factors come from the day-by-day weather during growth.
+Care is the labour hours delivered divided by the hours needed, capped at 1.1. The Weather factor comes from the weather spells during growth.
+
+**Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
+
+**Standing orders.** From the Hamlet era, hired workers follow standing orders, such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
 
 **Inputs and trade-offs**
 
@@ -129,7 +153,7 @@ Players can buy, lease, or hire a machine for a day from a neighbour.
 
 ## Economy
 
-The economy is a local market that clears every game day. Prices move with real supply and demand, and a regional trader sets a floor and a ceiling so prices never run away.
+The economy is a local market that clears every real hour. Prices move with real supply and demand, and a regional trader sets a floor and a ceiling so prices never run away.
 
 **Goods tiers**
 
@@ -165,7 +189,7 @@ P_local = P_base × (Demand / Supply)^(1/e)      clamped to [0.5 × P_base, 2 ×
 
 **Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Wage expectations follow it with a lag. Cash under the mattress quietly loses value, which teaches why saving and investing differ.
 
-**Credit and payment terms.** From the Township era, sales between businesses use invoices with 15- or 30-day payment terms. A business can be profitable on paper and still run out of cash. That is one of the most important lessons in the game.
+**Credit and payment terms.** From the Township era, sales between businesses use invoices with payment terms of half a season or a full season. A business can be profitable on paper and still run out of cash. That is one of the most important lessons in the game.
 
 ## Businesses
 
@@ -254,7 +278,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 2. **Receive applicants:** unemployed citizens, citizens already employed but looking, and migrants.
 3. **Review candidates.** Skills are shown as ranges, and traits are partly hidden. An interview reveals one trait, and a reference check reveals another. This teaches hiring under uncertainty.
 4. **Make an offer.** Candidates can accept, reject, or negotiate the wage.
-5. **Probation:** 15 days, during which the employee can be let go without severance.
+5. **Probation:** one season, during which the employee can be let go without severance.
 
 **Wages.** Each skill level has a market wage, set by labour supply and demand and nudged by inflation. Paying above market raises loyalty and applicant quality. Paying below market raises quit rates and invites poaching. Later eras add minimum wage policy and worker associations.
 
@@ -278,7 +302,7 @@ Motivation comes from wage fairness, manager quality, working conditions, recogn
 
 **Letting people go.** Firing costs severance and lowers the morale of colleagues. Fair treatment builds an **employer reputation** score, which decides the quality of future applicants.
 
-**Children go to school, not to work.** The game never allows child labour. Children attend school if one exists, and that education turns into a better workforce 10–15 game years later.
+**Children go to school, not to work.** The game never allows child labour. Children attend school if one exists, and that education turns into a better workforce 10–15 life-years later (about 40–60 real days).
 
 ## Community and civic services
 
@@ -304,7 +328,7 @@ Happiness comes from layered household needs, and civic buildings meet them only
 
 **Coverage and capacity.** Each service has a radius and a capacity, such as seats or beds. Homes outside the radius get no benefit, and overcrowding lowers quality. Staff come from the workforce, so a clinic needs a doctor. Education, migration or a scholarship must produce one.
 
-**Education as a long-term investment.** A school's payoff comes 10–15 game years later, as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
+**Education as a long-term investment.** A school's payoff comes 10–15 life-years later (about 40–60 real days), as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
 
 **Health.** Clean water, sanitation, nutrition and healthcare raise life expectancy and cut sick days, which feeds straight back into productivity.
 
@@ -458,7 +482,7 @@ Events test the player's preparation and always offer a choice. The Chronicle tu
 
 - Every event offers 2–3 choices with visible short-term costs and hinted long-term effects.
 - What the player prepared changes the impact. This shows the value of insurance and reserves.
-- Frequency: about one minor event a game week and one major event a game year. Disasters are rare and signalled days ahead.
+- Frequency: about one minor event a real day and one major event a game year (16 real days). Disasters are rare and signalled days ahead, and never fire while the player is away.
 - Events are weighted by the town's state. A drought is more likely after a dry season, and a strike more likely after wage cuts.
 
 **Insurance.** Crop, property and business-interruption insurance are available. The player pays a premium every season, and a payout follows when a covered event strikes. Players learn the trade-off between a certain small cost and an uncertain large one.
@@ -511,7 +535,7 @@ The game teaches in three steps: the player decides, sees the result, and only t
 
 **Business plan tool.** Before founding a business, the player fills in a simple plan. After a year the game puts the plan beside actual results. Seeing your own optimism measured is a real-world planning skill.
 
-**Scenarios.** Short standalone challenges with a grade from A to F:
+**Scenarios.** Short standalone challenges with a grade from A to F. Each runs in its own save on an accelerated clock, so a scenario year takes minutes, not 16 days:
 
 - Save a failing bakery within one year.
 - Get through a two-season drought without layoffs.
@@ -521,7 +545,7 @@ The game teaches in three steps: the player decides, sees the result, and only t
 
 **Difficulty modes**
 
-- **Guided:** more advisor warnings, softer price swings, auto-pause on big decisions.
+- **Guided:** more advisor warnings, softer price swings, and big decisions always ask for confirmation.
 - **Standard:** the default.
 - **Realistic:** harsher markets, fewer hints, hidden traits stay hidden longer.
 
@@ -543,7 +567,7 @@ The town's future comes from the sum of these. A script never decides it.
 1. The school costs coins and materials, and takes builders off other jobs.
 2. It needs teachers. The player hires them, trains them, or offers housing to attract migrants.
 3. Families with children rate the town higher, and migration rises.
-4. After 10–15 game years, graduates enter the workforce with higher skills.
+4. After 10–15 life-years (about 40–60 real days), graduates enter the workforce with higher skills.
 5. Skilled workers unlock clinics, engineering firms and banks, and wages rise.
 6. Land value near the school rises, and so do property tax receipts.
 
@@ -573,7 +597,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 | Screen | Purpose | Key elements |
 | --- | --- | --- |
 | Map | Watch and place | Isometric map, pinch-zoom, tap to select, ghost placement preview |
-| HUD | Status at a glance | Date, season, weather, personal cash, treasury, population, happiness, speed controls, alerts |
+| HUD | Status at a glance | Date, season, weather, personal cash, treasury, population, happiness, ready-to-collect count, alerts |
 | Build menu | Construct | Categories by era, cost and material check, coverage preview |
 | Overlays | See the hidden | Fertility, land value, coverage, pollution, traffic, happiness, crime |
 | Building panel | Inspect | Status, staff, inputs and outputs, upgrades, financials tab |
@@ -593,7 +617,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 - Landscape is the primary orientation for the map. Menus work one-handed from bottom sheets.
 - Touch targets are at least 44 pt. Long-press shows the *Why?* breakdown on any number.
 - Notifications group by importance: urgent (cash, safety), decisions, then information.
-- Players can pause anywhere. Big decisions show their consequences before confirming.
+- No decision is ever timed. Big decisions show their consequences before confirming.
 
 **Accessibility.** Colour-blind-safe overlay palettes, scalable text, reduced-motion mode, haptic feedback that can be switched off, and full play without audio.
 
@@ -603,22 +627,28 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 The game needs no account and no server. All content ships in the build, and the network is used only for optional cloud backup and store purchases.
 
-**Time while the app is closed.** The proposed default: the town keeps living at a coarse rate for up to 8 real hours, then pauses. A *While you were away* report shows harvests, sales, wages paid and events. A setting lets players choose *Pause when closed* instead. This is an open decision.
+**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, workers follow their standing orders, and wages are paid. After 72 hours the world freezes, and it resumes from that point when the player returns. A *While you were away* report shows harvests, sales, wages paid and events.
 
-**Coarse catch-up mode.** Away time is simulated in whole-day steps using aggregate formulas: no pathfinding and no individual shop visits. Events that need a decision queue up and wait for the player. Big disasters never fire while the player is away.
+**Away rules**
 
-**Clock safety.** The game stores the last-saved wall-clock time. A backward jump grants nothing. A forward jump is capped at 8 hours, as above. In a single-player game nothing more is needed.
+- Disasters never fire while the player is away.
+- Events that need a decision queue and wait for the player.
+- If cash runs out, workers stop working rather than pushing the player into debt.
+
+**Catch-up.** On resume, the game issues one `AdvanceTo(simTime)` command, computed from the wall clock. The scheduler then runs the same hourly, daily and seasonal passes as live play, so there is no separate coarse model. At most 72 hourly passes are needed.
+
+**Clock safety.** The game stores the last-saved wall-clock time. A backward jump grants nothing. A forward jump is capped at 72 hours, as above. Changing the device clock cannot be fully prevented offline. With no paid speed-ups, a player who does it only cheats themselves.
 
 **Save system**
 
-- **Autosave** every game day, and whenever the app goes to the background.
+- **Autosave** every real hour, after every command batch, and whenever the app goes to the background.
 - **Slots:** 3 rotating autosaves plus 5 manual slots.
 - **Atomic writes:** write to a temporary file, verify its checksum, then rename. A crash can never corrupt the last good save.
 - **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
 - **Size target:** under 5 MB at City scale.
 - **Backup:** optional iCloud on iOS and Google Play Games Saved Games on Android, synced when a network is available. Manual export and import of a save file as a fallback.
 
-**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are opt-in and capped at 2 a day.
+**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in, grouped, and capped at 2 a day.
 
 **Performance budget**
 
@@ -628,7 +658,7 @@ The game needs no account and no server. All content ships in the build, and the
 | Fully simulated citizens | Up to about 2,000 |
 | Total population | 20,000, beyond the first 2,000 simulated as statistical cohorts with named notable citizens |
 | Cold start | Under 5 seconds to the map |
-| Offline catch-up | Under 2 seconds for 8 hours away |
+| Offline catch-up | Under 2 seconds for 72 hours away |
 | Battery | Low-power mode when idle; capped frame rate in menus |
 
 ## Technical architecture (Unity C#)
@@ -663,9 +693,9 @@ The UI sends commands down and listens for events coming up. Only the simulation
 
 1. **Content definitions.** Crops, goods, recipes, buildings, events, policies and Codex cards, authored as data rather than code.
 2. **Command layer.** UI actions become commands such as `BuildCommand`, `HireCommand`, `SetPriceCommand` and `TakeLoanCommand`. The simulation validates each one and rejects it or applies it. This works like CQRS in a backend: one entry point for every state change, easy to log, replay and test.
-3. **Simulation core.** Independent systems run in a fixed order each tick: Time → Weather → Agriculture → Production → Market → Labour → Population → Business finance → Civic → Treasury → Events. Each system reads and writes `GameState` only.
+3. **Simulation core.** A scheduler advances sim time. It processes every due job in timestamp order, plus the hourly, daily, seasonal and yearly settlement passes. Within a pass, systems run in a fixed order: Time → Weather → Agriculture → Production → Market → Labour → Population → Business finance → Civic → Treasury → Events. Ties are broken by system order, then by entity id. Each system reads and writes `GameState` only.
 4. **Game state.** Plain serialisable C# objects and struct arrays. This is the single source of truth.
-5. **Domain events.** Each tick emits events like `HarvestCompleted`, `WorkerQuit` and `LoanDefaulted`. The UI, the Chronicle, notifications and advisors all subscribe to them.
+5. **Domain events.** Each settlement pass and each finished job emits events like `HarvestCompleted`, `WorkerQuit` and `LoanDefaulted`. The UI, the Chronicle, notifications and advisors all subscribe to them.
 6. **Presentation.** Unity scenes, an isometric tilemap renderer, citizen sprites with pooled game objects, and view models that read state. The UI never writes state directly.
 7. **Services.** Saving and loading, platform cloud backup, in-app purchases, local notifications, haptics, localisation.
 
@@ -706,31 +736,34 @@ The data falls into two groups. Definitions are static content shipped with the 
 | Definition | Key fields |
 | --- | --- |
 | `GoodDef` | id, tier, basePrice, elasticity, spoilagePerDay, unit |
-| `CropDef` | id, sowWindow, growthDays, waterNeed, baseYieldPerAcre, laborHoursPerAcre, nutrientUse, outputGood |
-| `AnimalDef` | id, feedPerDay, outputs, breedingDays, diseaseRisk, price |
-| `RecipeDef` | inputs[], outputs[], hours, requiredSkill, minSkill, equipment |
-| `BuildingDef` | id, category, era, footprint, coinCost, materials[], buildDays, staffSlots[], upkeepPerSeason, coverageRadius, capacity, pollution |
+| `CropDef` | id, sowSeasons, growthMinutes, waterNeed, baseYieldPerAcre, laborHoursPerAcre, nutrientUse, outputGood |
+| `AnimalDef` | id, feedPerDay, outputs, breedingMinutes, diseaseRisk, price |
+| `RecipeDef` | inputs[], outputs[], durationMinutes, requiredSkill, minSkill, equipment |
+| `BuildingDef` | id, category, era, footprint, coinCost, materials[], buildMinutes, staffSlots[], upkeepPerSeason, coverageRadius, capacity, pollution |
 | `BusinessDef` | type, buildingRef, recipes[], serviceType, customerSegments[], demandDrivers |
 | `RoleDef` | id, skills weighting, baseWage, supervisorOf |
 | `EventDef` | id, family, triggerConditions, weight, cooldown, choices[] with effects[] |
 | `PolicyDef` | id, era, costPerSeason, effects[], lagDays |
 | `CodexCardDef` | id, title, body, triggerEvent |
 | `EraDef` | id, unlock conditions, new systems, UI theme |
+| `ClockDef` | secondsPerSeason, seasonsPerYear, weatherSpellSeconds, lifeYearsPerSeason, awayCapSeconds |
 
 **Instances (live game state)**
 
 | Entity | Key fields |
 | --- | --- |
-| `Citizen` | id, name, birthDay, householdId, homeId, jobId, education, skills, traits, health, happiness, fatigue, savings, wageExpectation, storyFlags |
+| `Citizen` | id, name, birthTime, householdId, homeId, jobId, education, skills, traits, health, happiness, fatigue, savings, wageExpectation, storyFlags |
 | `Household` | members, income, budget shares, needs met, home |
 | `Tile` / `Parcel` | terrain, fertility, moisture, owner, zone, landValue, buildingId |
 | `Building` | defId, position, level, condition, owner, constructionProgress |
 | `Business` | owner (player, rival or citizen), buildingId, staff, prices, quality, inventory, reputation, manager, plan |
-| `LedgerEntry` | day, accountId, amount, category, reference |
+| `LedgerEntry` | simTime, accountId, amount, category, reference |
+| `Job` | id, type, targetId, startTime, dueTime, state (running, ready, done) |
+| `StandingOrder` | id, workerId, targetId, action, conditions |
 | `Loan` | lender, principal, rate, termSeasons, schedule, collateral |
 | `Asset` | type, purchasePrice, bookValue, marketValue, depreciationRule |
 | `Treasury` | balance, budget by department, policies, bonds, creditRating |
-| `ChronicleEntry` | day, type, text template, involved ids |
+| `ChronicleEntry` | simTime, type, text template, involved ids |
 
 **Content pipeline**
 
@@ -784,24 +817,24 @@ The balance is proven by machines before people play it. A headless balancer run
 - cautious saver
 - random
 
-Each runs 1,000 seeds over 50 game years.
+Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the expected City milestone) on a fake clock.
 
-**Targets (Standard difficulty, a competent player)**
+**Targets (Standard difficulty, a competent player doing several short sessions a day)**
 
-| Milestone | Target play time |
+| Milestone | Target real time since start |
 | --- | --- |
-| Hamlet | 30–45 minutes |
-| Village | about 3 hours |
-| Township | about 10 hours |
-| Town | about 25 hours |
-| City | about 50–60 hours |
+| Hamlet | Day 1–2 |
+| Village | About 1 week |
+| Township | 3–4 weeks |
+| Town | 2–3 months |
+| City | 4–6 months (about 10–12 game years) |
 
 **Health checks run on every build**
 
 - **No money loops.** Buying and reselling the same good can never make a profit, and no recipe yields more value than its inputs plus fair labour.
 - **Bounded prices.** Prices stay within their bounds, and no market sits in permanent shortage.
 - **Stable population.** Population stays stable when the player does nothing, and recovers after a disaster.
-- **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 10 game years.
+- **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 3 game years (48 real days).
 - **Balanced strategies.** No strategy beats the second best by more than 20% on net worth or happiness.
 - **Exact ledgers.** The ledger reconciles to the coin after every season.
 
@@ -851,22 +884,22 @@ flowchart TB
     P5["Phase 5 · Polish and launch · 6–8 weeks<br/>Store builds, localisation, accessibility, soft launch in one country"]
 
     P0 -->|"Gate: spreadsheet economy has no money loops; 2,000 agents at 60 fps"| P1
-    P1 -->|"Gate: testers play 30 minutes and want to keep going"| P2
-    P2 -->|"Gate: 3-hour playthrough; players can explain profit versus cash"| P3
-    P3 -->|"Gate: 10 hours of play; the balancer finds no exploits"| P4
+    P1 -->|"Gate: testers come back on day 2 and day 3 unprompted"| P2
+    P2 -->|"Gate: a week of play; players can explain profit versus cash"| P3
+    P3 -->|"Gate: 4 weeks of play; the balancer finds no exploits"| P4
     P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
 ```
 
 | Phase | Duration | Scope | Exit gate |
 | --- | --- | --- | --- |
 | 0 · Pre-production | 3–4 weeks | Master spec, economy spreadsheet, art test, performance spike | Spreadsheet economy has no money loops; 2,000 agents at 60 fps |
-| 1 · Vertical slice: Homestead | 6–8 weeks | Time, weather, farming, market, ledger, saves, onboarding | Testers play 30 minutes and want to keep going |
-| 2 · Hamlet and Village | 10–12 weeks | Citizens, hiring, wages, businesses, needs, school, loans, Codex | 3-hour playthrough; players can explain profit versus cash |
-| 3 · Township | 10–12 weeks | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 10 hours of play; the balancer finds no exploits |
+| 1 · Vertical slice: Homestead | 6–8 weeks | Time, weather, farming, market, ledger, saves, onboarding | Testers come back on day 2 and day 3 unprompted |
+| 2 · Hamlet and Village | 10–12 weeks | Citizens, hiring, wages, businesses, needs, school, loans, Codex | A week of play; players can explain profit versus cash |
+| 3 · Township | 10–12 weeks | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
 | 4 · Town and City | 12–16 weeks | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
 | 5 · Polish and launch | 6–8 weeks | Store builds, localisation, accessibility, soft launch in one country | Launch |
 
-Phase 1 is the most important. If 30 minutes on the Homestead isn't fun, adding more systems won't fix it, so the slice gets tuned until it is.
+Phase 1 is the most important. If the first days on the Homestead don't make players come back, adding more systems won't fix it, so the slice gets tuned until they do.
 
 ## Open decisions and risks
 
@@ -875,7 +908,7 @@ These choices need the owner's call before their feature specs can be written. T
 | Decision | Options | Blocks | Status |
 | --- | --- | --- | --- |
 | Setting and culture | A fictional, culturally neutral river valley; or an Indian-inspired village and town | Art, names, crops, festivals | **Decided:** Indian-inspired, fictional valley ([ADR 0001](decisions/0001-setting-and-culture.md)) |
-| Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec | Open |
+| Time when the app is closed | Keeps living for up to 8 hours; or always pauses | Offline catch-up spec | **Decided:** real-time clock; the world runs while closed, capped at 72 hours ([ADR 0002](decisions/0002-real-time-clock-model.md)) |
 | Player lifetime | One lifetime with a retirement ending; or generational heirs who carry on | Citizen ageing, endgame | Open |
 | Can the player lose an election? | Low approval limits powers only; or a full loss, with a rival term | Governance spec | Open |
 | Orientation | Landscape only; or landscape map with portrait menus | UI layout | Open |
