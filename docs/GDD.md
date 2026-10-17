@@ -199,8 +199,11 @@ P_local    = P_regional × (Demand / Supply)^(1/e)
 - **Trader capacity.** The trader buys and sells only a limited quantity each day, so a large glut or shortage can briefly push the local price past the band until the next delivery.
 - **Safety rail.** The local price is finally clamped to 0.5–2× `P_regional`. This only guards against bugs, and the balancer asserts that it almost never triggers.
 
-- **Demand** comes from household consumption plus businesses buying inputs.
-- **Supply** comes from local production plus imports.
+- **Demand** comes from household consumption plus businesses buying inputs. It follows a demand curve, `D(P) = D_ref × (P / P_regional)^(−e)`, where `D_ref` is the demand at the regional price. The price formula is that curve solved for demand = supply (ADR 0013).
+- **Supply** comes from local production plus the trader's import capacity at the ceiling, so it is never zero.
+- **Prices drift, they don't jump.** Each hour the price moves 25% of the way toward its target (the rate is in data). The maths is fixed-point and needs no solver.
+- **Shortages.** The quantity sold is `min(D, S)`. Buyers are served in a seeded, deterministic order, and unmet demand is recorded. It attracts competitors and feeds the shortage health check.
+- **Scope.** This hourly market covers tradeable goods. Services are priced by the businesses that provide them, and customers choose between them (see Businesses, Customer choice).
 - **Elasticity (e)** is the key lever. Necessities like flour have low elasticity: prices swing hard on shortages. Luxuries like sweets have high elasticity: overprice them and customers simply stop buying.
 
 **Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport, up to a daily capacity. This creates import and export decisions. Transport cost depends on the road link, which explains why a town on a highway gets better prices than a remote one.
@@ -791,7 +794,8 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 | Definition | Key fields |
 | --- | --- |
-| `GoodDef` | id, tier, basePrice, elasticity, spoilagePerDay, unit |
+| `GoodDef` | id, tier, basePrice, elasticity, spoilagePerDay, unit, tradeable |
+| `MarketDef` | adjustmentRate, safety rail bounds, unmet-demand window |
 | `CropDef` | id, sowSeasons, growthMinutes, waterNeed, baseYieldPerAcre, laborHoursPerAcre, nutrientUse, outputGood |
 | `AnimalDef` | id, feedPerDay, outputs, breedingMinutes, diseaseRisk, price |
 | `RecipeDef` | inputs[], outputs[], durationMinutes, requiredSkill, minSkill, equipment |
