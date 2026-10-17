@@ -1,6 +1,6 @@
 # 0002. Real-time clock model (task clock, calendar, life clock)
 
-- Status: Accepted
+- Status: Accepted. Refined by spec 001: day/night follows the sim's time of day, which starts aligned to the device's local time; the away cap drops whole days so the alignment holds.
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Supersedes: GDD v1.0 "Clock and speeds" (1 game day = 2 real minutes, speeds pause/1x/2x/3x) and the "keeps living for up to 8 hours" offline default

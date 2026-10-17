@@ -80,7 +80,7 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
 **Clock rules**
 
 - There are no speed controls and no pause in the live game, because no decision has to be made within seconds. Scenarios run in their own saves on an accelerated clock.
-- The day/night lighting follows the device's local time. Citizens follow daily schedules: dawn (5–7), work (8–17), evening (17–21) and night.
+- A new game starts at the device's local time of day, so the sim's time of day (which drives day/night lighting and work hours) matches the player's real day. Away caps drop whole days only, so the two stay aligned (spec 001). Citizens follow daily schedules: dawn (5–7), work (8–17), evening (17–21) and night.
 - Settlement cadence:
 
   | Cadence | What settles |
@@ -99,7 +99,7 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
 | Monsoon | Main harvest | Crop prices fall from oversupply |
 | Winter | Few crops; orchards and dairy carry on | Stored goods sell at a premium |
 
-**Weather.** Weather changes in 6-hour spells, each drawn from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare, and big events like droughts are signalled days ahead.
+**Weather.** Weather changes in 6-hour spells, each drawn from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65% (spec 001). Big events like droughts are signalled days ahead.
 
 **Determinism.** Each save has a random seed. Sim time is a 64-bit count of seconds, kept separate from wall-clock time, and every command carries the sim time it applies at. The simulation is deterministic for a given seed and timestamped command history. That makes offline catch-up reproducible, makes bugs replayable, and allows automated balancing runs on a fake clock.
 
@@ -699,7 +699,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 The game needs no account and no server. All content ships in the build, and the network is used only for optional cloud backup and store purchases.
 
-**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, and workers follow their standing orders. After 72 hours the world freezes, and it resumes from that point when the player returns. A *While you were away* report shows harvests, sales, wages paid and events.
+**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, and workers follow their standing orders. After 72 hours the world freezes, and it resumes from that point when the player returns. When the cap applies, whole days are dropped, so the town lives between 48 and 72 hours and its time of day stays in step with the device. A gap of up to 60 seconds counts as live play, and anything longer is an away advance (spec 001). A *While you were away* report shows harvests, sales, wages paid and events.
 
 **Away rules**
 
