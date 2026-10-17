@@ -22,8 +22,9 @@
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
-- **Status:** In progress (started 2026-10-17)
+- **Status:** In review (started and coded 2026-10-17). All code stories are done; specs 002 and 005 await the owner's approval
 - **Branch:** `sprint/00-foundations-time-weather`
+- **Done:** 38 of 44 points. US-005 and US-006 (6 points) are written and in review
 - **Goal:** Foundations in place and spec 001 fully implemented and tested from the terminal; specs 002 (land) and 005 (ledger and credit) written.
 - **Points:** 44
 - **Specs for the owner to review:** 002, 005
@@ -54,14 +55,16 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
+- [ ] All Must stories meet the Definition of Done (ADR 0025). Code stories: yes. US-005 and US-006: waiting for the owner's approval
+- [x] Test checklist written in `docs/test-checklists/` (if there is a build): no build this sprint
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results):** No device build this sprint. Terminal results: 72 tests pass in Debug and Release; CI green on every push; all 29 spec 001 acceptance criteria have their named tests.
 
-**Retro:** —
+**Retro (Claude's draft, owner to amend):**
+- Went well: asking the four spec 001 questions up front kept coding unblocked, and pinning the RNG and hash golden values from an independent Python implementation verified them on the first run.
+- Improve: NUnit 4.6 needs C# 10+ in tests, which ADR 0018 didn't foresee (now noted in ADR 0018's status line). Golden replay hashes moved three times during the sprint; later specs should add their state before pinning their golden files.
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 

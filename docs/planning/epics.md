@@ -43,17 +43,17 @@
 
 | Feature | Title | Epic | Phase | Spec | Status | Stories | Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [F00.1](features/F00.1-repository-build-and-ci.md) | Repository, build and CI | E00 | 0 | ADR 0018, 0020, 0026 | Ready | US-001–US-004 | 7 |
+| [F00.1](features/F00.1-repository-build-and-ci.md) | Repository, build and CI | E00 | 0 | ADR 0018, 0020, 0026 | Done | US-001–US-004 | 7 |
 | [F00.2](features/F00.2-phase-1-feature-specs.md) | Phase 1 feature specs | E00 | 0 | GDD, ADR 0019 | In progress | US-005–US-012 | 24 |
 | [F00.3](features/F00.3-economy-model.md) | Economy model | E00 | 0 | GDD Balancing, ADR 0008, 0016 | Backlog | US-013–US-016 | 14 |
 | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | Unity project and bootstrap | E00 | 0 | ADR 0017, 0018, 0026 | Backlog | US-017–US-020 | 7 |
 | [F00.5](features/F00.5-performance-spike.md) | Performance spike | E00 | 0 | GDD performance budget, ADR 0026 | Backlog | US-021–US-023 | 9 |
 | [F00.6](features/F00.6-art-style-check.md) | Art style check | E00 | 0 | ADR 0007, 0017 | Backlog | US-024–US-024 | 2 |
-| [F01.1](features/F01.1-sim-foundations.md) | Sim foundations | E01 | 1 | Spec 001 §3.1 | Ready | US-025–US-028 | 9 |
-| [F01.2](features/F01.2-calendar-and-scheduler.md) | Calendar and scheduler | E01 | 1 | Spec 001 §3.2–3.3 | Ready | US-029–US-031 | 10 |
-| [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Ready | US-032–US-033 | 6 |
-| [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Ready | US-034–US-035 | 4 |
-| [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Ready | US-036–US-037 | 2 |
+| [F01.1](features/F01.1-sim-foundations.md) | Sim foundations | E01 | 1 | Spec 001 §3.1 | Done | US-025–US-028 | 9 |
+| [F01.2](features/F01.2-calendar-and-scheduler.md) | Calendar and scheduler | E01 | 1 | Spec 001 §3.2–3.3 | Done | US-029–US-031 | 10 |
+| [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Done | US-032–US-033 | 6 |
+| [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Done | US-034–US-035 | 4 |
+| [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Done | US-036–US-037 | 2 |
 | [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | Spec 002 (in review) | Backlog | US-038–US-041 | 10 |
 | [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | Spec 003 (to write) | Backlog | US-042–US-046 | 17 |
 | [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | Spec 003 (to write) | Backlog | US-047–US-049 | 7 |
