@@ -1,0 +1,10 @@
+{
+  "name": "com.farmtocity.sim",
+  "version": "0.1.0",
+  "displayName": "Farm to City Simulation",
+  "description": "Pure C# simulation core (Sim.Core) and content loader (Sim.Content) for Farm to City. No UnityEngine references.",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  }
+}

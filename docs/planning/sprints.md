@@ -22,8 +22,8 @@
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
-- **Status:** Planned
-- **Branch:** `sprint/00-foundations-time-weather` (or the branch the session assigns)
+- **Status:** In progress (started 2026-10-17)
+- **Branch:** `sprint/00-foundations-time-weather`
 - **Goal:** Foundations in place and spec 001 fully implemented and tested from the terminal; specs 002 (land) and 005 (ledger and credit) written.
 - **Points:** 44
 - **Specs for the owner to review:** 002, 005
@@ -32,10 +32,10 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-001 | Solution skeleton | [F00.1](features/F00.1-repository-build-and-ci.md) | 3 | Must | To do |
+| US-001 | Solution skeleton | [F00.1](features/F00.1-repository-build-and-ci.md) | 3 | Must | Done |
 | US-002 | Continuous integration | [F00.1](features/F00.1-repository-build-and-ci.md) | 2 | Must | To do |
 | US-003 | SessionStart hook | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | To do |
-| US-004 | Repository hygiene | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | To do |
+| US-004 | Repository hygiene | [F00.1](features/F00.1-repository-build-and-ci.md) | 1 | Must | In progress |
 | US-005 | Spec 002: land and soil | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
 | US-006 | Spec 005: ledger and credit | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
 | US-025 | Fixed-point numbers | [F01.1](features/F01.1-sim-foundations.md) | 3 | Must | To do |

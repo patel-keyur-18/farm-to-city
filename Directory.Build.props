@@ -1,0 +1,14 @@
+<Project>
+  <!-- Shared build settings for every project in FarmToCity.sln (ADR 0018). -->
+  <PropertyGroup>
+    <!-- Unity 6 LTS compiles C# 9 against netstandard2.1, so the sim must not use newer syntax. -->
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <!-- All bin/ and obj/ output goes to /artifacts, outside the Unity package folder (ADR 0018 rule 8). -->
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+  </PropertyGroup>
+</Project>

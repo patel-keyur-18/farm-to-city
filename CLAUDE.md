@@ -64,17 +64,18 @@ docs/specs/                 feature specs (NNN-name.md) and _TEMPLATE.md
 docs/decisions/             ADRs (NNNN-title.md)
 docs/test-checklists/       per-build device test checklists
 docs/planning/              STATUS.md (session handoff), epics.md, features/, sprints.md
-FarmToCity.sln              solution for the dotnet projects              (planned)
+FarmToCity.sln              solution for the dotnet projects
 Directory.Build.props       LangVersion 9.0, warnings as errors,
-                            output to /artifacts                          (planned)
-sim/                        Unity package (UPM) + dotnet projects         (planned)
+                            output to /artifacts
+sim/                        Unity package com.farmtocity.sim (package.json)
+                            + dotnet projects
   Sim.Core/                 pure C# simulation: .csproj (netstandard2.1)
                             + .asmdef (noEngineReferences)
   Sim.Content/              JSON loader + validation (definition classes
                             live in Sim.Core, ADR 0020)
-tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)                       (planned)
-tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)   (planned)
-content/                    JSON definitions (balancing data)             (planned)
+tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)
+tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)
+content/                    JSON definitions (balancing data)
 unity/FarmToCity/           Unity project, created by the owner in Unity Hub (planned)
   Game.Presentation         rendering and UI (asmdef), built code-first
   Game.Services             saves, platform services, IEntitlementService (asmdef)
@@ -94,7 +95,7 @@ dotnet test
 dotnet run --project tools/Tools.Balancer
 ```
 
-These commands work once the solution skeleton exists, which is the first code task after spec 001 is approved. CI (GitHub Actions) runs `dotnet build` and `dotnet test` on every push. Unity builds are made by the owner on a MacBook Air M2 with Xcode 27.1, and tested on an iPhone 13 (ADR 0026).
+Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `dotnet build` and `dotnet test` on every push. Unity builds are made by the owner on a MacBook Air M2 with Xcode 27.1, and tested on an iPhone 13 (ADR 0026).
 
 ## Key decisions (see `docs/decisions/` for full text)
 

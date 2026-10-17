@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 0 is next (planned for 19–25 Oct 2026) |
-| Branch with latest work | `claude/gifted-wright-v54560` (pull request #3). Must be merged to `main` before the next session starts |
+| Sprint | Sprint 0 in progress (planned for 19–25 Oct 2026) |
+| Branch with latest work | `sprint/00-foundations-time-weather` (not yet merged to `main`) |
 | Last updated | 2026-10-17 |
 
 ## Done so far
@@ -21,11 +21,13 @@
   - `features/`: one file per feature, 176 user stories. Phases 0–1 are broken down into tasks
   - `sprints.md`: Sprints 0–9 for Phases 0–1
   - An automated check confirmed that no story is scheduled before its spec is approved or before a feature it depends on (ADR 0027)
-- No code has been written yet.
+- PR #3 is merged to `main`.
+- **Sprint 0 progress:**
+  - US-001 solution skeleton: done. `dotnet build` and `dotnet test` pass; a C# 10 construct in `sim/` fails to compile (checked by hand: CS8773).
 
 ## In progress
 
-None.
+- Sprint 0, on `sprint/00-foundations-time-weather`. US-004 (repository hygiene): `.gitignore` fixed; licence log and checklist template to do.
 
 ## Next up
 
