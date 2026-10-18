@@ -72,6 +72,10 @@ namespace Sim.Core.Finance
         public CashFlowSummary CashFlow { get; internal set; }
         public NetWorthSnapshot NetWorth { get; internal set; }
 
+        /// <summary>Home-grown food the household ate this season, and the garden's part (the household line's Why?, ADR 0032).</summary>
+        public long HomeUse { get; internal set; }
+        public long GardenHomeUse { get; internal set; }
+
         public ReportLine Line(string key)
         {
             foreach (ReportLine l in Lines)
@@ -95,6 +99,8 @@ namespace Sim.Core.Finance
             h.WriteLong(CashFlow.Inflows);
             h.WriteLong(CashFlow.Outflows);
             h.WriteLong(CashFlow.PaidUpfront);
+            h.WriteLong(HomeUse);
+            h.WriteLong(GardenHomeUse);
             h.WriteLong(NetWorth.Total);
             h.WriteLong(NetWorth.BookEquity);
         }

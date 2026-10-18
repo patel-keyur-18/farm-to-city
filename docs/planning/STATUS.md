@@ -51,6 +51,7 @@
   - **US-060 to US-062 accrual, season close, net worth: done** (spec 005 AC-6 to AC-12, AC-14, AC-15; AC-4 gains prepayments). Prepayments expensed daily, the season close (depreciation, the report with ADR 0032's lines and plain-language keys, close to retained earnings, reconciliation), net worth with inputs at replacement cost. Accounts 5250 and 5700 added. 114 tests.
   - **Well acres (ADR 0032) and spec 003 content: done.** **US-042 to US-045 and US-177 crops and the garden: done** (spec 003 AC-1 to AC-7, AC-9, AC-11 to AC-13, AC-17, AC-31 to AC-33): `Sow`, `Harvest`, `ClearField`, `SowGarden`, `PickGarden`; growth jobs; one accrual engine for crops and the founder (§3.7); the yield formula with the cap and breakdown; seeds (stock first, saved-seed age) and fertiliser; fertility effects; bucket labour on the well acres. CropHealth is 1.00 until US-046. 130 tests.
   - **US-047 and US-048 fruit trees: done** (spec 003 AC-24 to AC-26): `PlantTree` (capitalised to 1700), maturity jobs and shade, one batch per fruiting season, `PickFruit` with returns at the floor, lifespan and `RemoveTree` (book value to 5600). 133 tests.
+  - **US-050, US-051, US-053 founder: done** (spec 003 AC-8, AC-18, AC-20 to AC-23, AC-36, AC-37; spec 005 AC-28): labour as a time-weighted rate, day labour paid daily, diet plans paid upfront and changed with refunds, daily eating as home use, fatigue from the day worked, the health formula, automatic subsistence and recovery, the first season's living costs at the new game. With the crops: AC-10 chunking invariance over a game year of bot play, AC-28 ledger reconciliation, AC-29 performance (72 h in about 0.6 ms). 145 tests.
   - **Scope moved to Sprint 2:** the spec 004 core (new US-181: goods, regional prices with a fixed index, trader capacity, `UseInput`) and US-057 (the store), because crops need them; the health formula moves from US-052 into US-051. Pests, golden 003 and tree payback stay in Sprint 3. Sprint 2 is 58 points, Sprint 3 47.
 
 ## In progress
@@ -59,7 +60,7 @@ Sprint 2. Order: US-181 and US-057 (spec 004 core), US-060 to US-062 (accrual, s
 
 ## Next up
 
-1. **Claude:** US-050, US-051, US-053 (founder), then AC-10, AC-28 and AC-29 of spec 003, then the order under In progress.
+1. **Claude:** US-013 and US-014 (economy model and anchor numbers, the moisture tuning), then specs 006 and 007.
 2. Spec 006 must price the hand's hut (about 15,000 for the ADR 0030 pacing) and reuse spec 004's minimum price in standing orders. Spec 007 must compact the per-second `Sync` entries in the command log.
 
 ## Owner action checklist (Phases 0–1)

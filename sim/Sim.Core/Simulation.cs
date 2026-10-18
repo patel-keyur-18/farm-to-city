@@ -42,6 +42,7 @@ namespace Sim.Core
                 AddSystem(new LandSystem());
                 AddSystem(new FarmSystem());
                 AddSystem(new MarketSystem());
+                AddSystem(new FounderSystem());
                 AddSystem(new FinanceSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
@@ -76,6 +77,7 @@ namespace Sim.Core
                 MarketSystem.Initialise(sim);
                 FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
+                FounderRules.PayFirstSeason(sim);
             }
 
             // The first passes are at the next boundary strictly after the start time.

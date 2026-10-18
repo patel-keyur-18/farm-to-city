@@ -108,6 +108,23 @@ namespace Sim.Core.Tests
             Assert.That((picked.Grams, picked.RemainingGrams), Is.EqualTo((1_000L, 0L)));
         }
 
+        // Spec 003 §3.13 Why?: "Your garden saved N coins of groceries this season" (daily eating, ADR 0032).
+        [Test]
+        public void GroceriesSaved()
+        {
+            Simulation sim = NewFarm(game: RichGame());
+            Assert.That(sim.Execute(new SowGarden(0, 1, "garden_spinach")).Accepted, Is.True);
+            Assert.That(sim.Execute(new PickGarden(15 * 60, 1)).Accepted, Is.True);
+            sim.AdvanceTo(Day);
+            // Spinach spoils fastest, so it's eaten first: 4 kg at the Spring floor 20 × 1.10 − 1.50 = 20.50.
+            Assert.That(sim.State.Market.InStore(FarmTest.Good(sim, "spinach")), Is.EqualTo(0));
+            Assert.That(sim.State.Farm.Founder.GardenHomeUseSeason, Is.EqualTo(82_00));
+            Assert.That(sim.State.Farm.Founder.HomeUseSeason, Is.GreaterThan(82_00));
+            sim.AdvanceTo(FarmTest.S);
+            Assert.That(sim.State.Farm.Founder.GardenHomeUseSeason, Is.EqualTo(0), "reset for the new season");
+            Assert.That(sim.State.Finance.Reports.Single().GardenHomeUse, Is.EqualTo(82_00));
+        }
+
         // Spec 003 AC-33.
         [Test]
         public void Grow_Pick_NoLabour()

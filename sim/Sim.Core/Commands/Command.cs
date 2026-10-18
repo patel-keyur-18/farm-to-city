@@ -45,6 +45,9 @@ namespace Sim.Core.Commands
         TerrainNotAllowed,
         NoTree,
         NoRipeFruit,
+        UnknownPlan,
+        UnknownOption,
+        InvalidShare,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -15,7 +15,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Prepaid_ExpensedDaily_Exact()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             Ledger l = sim.State.Ledger;
             Prepayment p = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, 36_000_00, 0, S, "test:wages");
             Assert.That(l.Balance(Account.PrepaidWages), Is.EqualTo(36_000_00));
@@ -29,7 +29,7 @@ namespace Sim.Core.Tests
             Assert.That(l.Balance(Account.PrepaidWages), Is.EqualTo(0));
             Assert.That(sim.State.Finance.Prepayments, Is.Empty);
 
-            sim = NewFarm(game: RichGame());
+            sim = NewFarm(game: Quiet());
             Accrual.Open(sim, Account.LivingCosts, Account.PrepaidLivingCosts, 10_000_01, 0, S, "test:odd");
             var steps = new long[4];
             for (int d = 1; d <= 4; d++)
@@ -45,7 +45,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Prepaid_SpansSeasonClose()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             sim.AdvanceTo(2 * Day);
             Accrual.Open(sim, Account.Rent, Account.PrepaidRent, 36_000_00, 2 * Day, 6 * Day, "test:rent");
             sim.AdvanceTo(S);
@@ -58,7 +58,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Prepaid_EarlyClose_RefundsUnearned()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             Prepayment p = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, 36_000_00, 0, S, "test:wages");
             sim.AdvanceTo(Day + Day / 2);
             long cash = sim.State.Ledger.Cash;
@@ -86,7 +86,7 @@ namespace Sim.Core.Tests
         [Test]
         public void CutOff()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, 36_000_00, 0, S, "test:before");
             sim.AdvanceTo(S);
             // A payment made at the boundary, after the close: the new season.
@@ -104,7 +104,7 @@ namespace Sim.Core.Tests
         [Test]
         public void PnL_ClosesToRetainedEarnings()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             Ledger l = sim.State.Ledger;
             l.Post(10, 0, "test.sale", null, new Posting(Account.Cash, 18_400_00), new Posting(Account.CropSales, -18_400_00));
             l.Post(11, 0, "test.seed", null, new Posting(Account.SeedsAndPlanting, 3_200_00), new Posting(Account.Cash, -3_200_00));
@@ -139,7 +139,7 @@ namespace Sim.Core.Tests
         [Test]
         public void CashFlow_ProfitIsNotCash()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             long opening = sim.State.Ledger.Cash;
             sim.AdvanceTo(Day);
             sim.State.Ledger.Post(Day, 0, "test.sale", null, new Posting(Account.Cash, 5_000_00), new Posting(Account.CropSales, -5_000_00));
@@ -160,14 +160,14 @@ namespace Sim.Core.Tests
         [Test]
         public void Depreciation_StraightLine()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             sim.AdvanceTo(S);
             Assert.That(sim.State.Finance.Reports[0].ByAccount.Single(kv => kv.Key == Account.Depreciation).Value, Is.EqualTo(-625_00));
             Assert.That(sim.State.Land.Buildings[0].Depreciated, Is.EqualTo(500_00));
             Assert.That(sim.State.Land.Buildings[1].Depreciated, Is.EqualTo(125_00));
 
             // A cost that doesn't divide evenly: 1,000.01 over 3 seasons is 333.33, 333.33, then 333.35, then nothing.
-            sim = NewFarm(game: TestContent.Game((f, j) => f == "buildings.json"
+            sim = NewFarm(game: Quiet((f, j) => f == "buildings.json"
                 ? j.Replace("\"value\": 15000, \"usefulLifeSeasons\": 120", "\"value\": 1000.01, \"usefulLifeSeasons\": 3") : j));
             var steps = new long[5];
             for (int k = 1; k <= 5; k++)
@@ -187,7 +187,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Composition()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             Accrual.Open(sim, Account.LivingCosts, Account.PrepaidLivingCosts, 18_000_00, 0, 4 * Day, "test:living");
             Assert.That(sim.Execute(new BuyParcel(0, "n3")).Accepted, Is.True);
             sim.AdvanceTo(4 * Day);
@@ -214,7 +214,7 @@ namespace Sim.Core.Tests
         [Test]
         public void BuyLand_IsAnAssetSwap()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: Quiet());
             long before = Reporting.NetWorth(sim).Total;
             Assert.That(sim.Execute(new BuyParcel(0, "n3")).Accepted, Is.True);
             Assert.That(Reporting.NetWorth(sim).Total, Is.EqualTo(before));

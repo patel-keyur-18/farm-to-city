@@ -149,3 +149,87 @@ namespace Sim.Core.Events
         protected override string Describe() { return "TreeRemoved(slot=" + SlotId + ", tree=" + TreeId + ", bookValue=" + BookValue + ")"; }
     }
 }
+
+namespace Sim.Core.Events
+{
+    /// <summary>Day labour paid at the daily pass for the hours since the last (spec 003 §5).</summary>
+    public sealed class DayLabourPaid : SimEvent
+    {
+        public Maths.Fixed Hours { get; }
+        public long Amount { get; }
+
+        public DayLabourPaid(long simTime, Maths.Fixed hours, long amount) : base(simTime)
+        {
+            Hours = hours;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "DayLabourPaid(hours=" + Hours + ", amount=" + Amount + ")"; }
+    }
+
+    /// <summary>The diet plan changed, by the player or automatically (subsistence and back) (spec 003 §5).</summary>
+    public sealed class DietPlanChanged : SimEvent
+    {
+        public string Old { get; }
+        public string New { get; }
+        public bool Automatic { get; }
+
+        public DietPlanChanged(long simTime, string old, string @new, bool automatic) : base(simTime)
+        {
+            Old = old;
+            New = @new;
+            Automatic = automatic;
+        }
+
+        protected override string Describe() { return "DietPlanChanged(" + Old + " -> " + New + (Automatic ? ", automatic" : "") + ")"; }
+    }
+
+    /// <summary>The household ate from the store at a daily pass: home use, and the garden's part of it (ADR 0032).</summary>
+    public sealed class HomeUseEaten : SimEvent
+    {
+        public long Value { get; }
+        public long GardenValue { get; }
+
+        public HomeUseEaten(long simTime, long value, long gardenValue) : base(simTime)
+        {
+            Value = value;
+            GardenValue = gardenValue;
+        }
+
+        protected override string Describe() { return "HomeUseEaten(value=" + Value + ", garden=" + GardenValue + ")"; }
+    }
+
+    /// <summary>A season obligation paid at settlement (spec 005 §5). Kind: Living, Contract or Rent.</summary>
+    public sealed class ObligationPaid : SimEvent
+    {
+        public string Kind { get; }
+        public string OwnerRef { get; }
+        public long Amount { get; }
+
+        public ObligationPaid(long simTime, string kind, string ownerRef, long amount) : base(simTime)
+        {
+            Kind = kind;
+            OwnerRef = ownerRef;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "ObligationPaid(" + Kind + ", " + OwnerRef + ", " + Amount + ")"; }
+    }
+
+    /// <summary>A season obligation that couldn't be paid (spec 005 §5): living costs drop to subsistence, never debt.</summary>
+    public sealed class ObligationUnpaid : SimEvent
+    {
+        public string Kind { get; }
+        public string OwnerRef { get; }
+        public long Amount { get; }
+
+        public ObligationUnpaid(long simTime, string kind, string ownerRef, long amount) : base(simTime)
+        {
+            Kind = kind;
+            OwnerRef = ownerRef;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "ObligationUnpaid(" + Kind + ", " + OwnerRef + ", " + Amount + ")"; }
+    }
+}

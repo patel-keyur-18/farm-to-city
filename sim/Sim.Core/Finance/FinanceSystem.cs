@@ -58,7 +58,8 @@ namespace Sim.Core.Finance
             sim.State.Finance.SeasonOpeningCash = ledger.Cash;
 
             // Settle and pay upfront (these entries belong to the new season).
-            // Step 5, living costs, arrives with the founder (US-051).
+            // ponytail: one obligation kind so far, living costs (step 5); contracts (spec 006) and rent register later.
+            Farm.FounderSystem.SettleLiving(sim);
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));
             ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);

@@ -82,6 +82,8 @@ namespace Sim.Core.Finance
                 Lines = new List<ReportLine> { farmIncome, farmCosts, farmProfit, other, household, finance, losses, net }.AsReadOnly(),
                 CashFlow = cash,
                 NetWorth = NetWorth(sim),
+                HomeUse = sim.State.Farm == null ? 0 : sim.State.Farm.Founder.HomeUseSeason,
+                GardenHomeUse = sim.State.Farm == null ? 0 : sim.State.Farm.Founder.GardenHomeUseSeason,
             };
         }
 

@@ -86,6 +86,7 @@ namespace Sim.Core.Tests
 
 namespace Sim.Core.Tests
 {
+    using System.Linq;
     using NUnit.Framework;
     using Sim.Core.Finance;
     using Sim.Core.Land;
@@ -100,7 +101,13 @@ namespace Sim.Core.Tests
             Ledger ledger = sim.State.Ledger;
             long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]) + LandRules.ParcelPrice(sim, sim.State.Land.Parcels[1]);
 
-            Assert.That(ledger.Cash, Is.EqualTo(20_000_00));
+            // The opening entry holds the 20,000 inherited coins; the first season's basic living costs are then
+            // prepaid from them (spec 003 AC-21: 18,000 for the whole of season 0 at t = 0).
+            JournalEntry opening = ledger.Entries.First();
+            Assert.That(opening.DescriptionKey, Is.EqualTo("ledger.opening"));
+            Assert.That(opening.Postings.Single(p => p.Account == Account.Cash).Amount, Is.EqualTo(20_000_00));
+            Assert.That(ledger.Cash + ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(20_000_00));
+            Assert.That(ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(18_000_00));
             Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
             Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00)); // 6 farm acres and the yard, loam at fertility 45 (price factor 0.98)
             Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));

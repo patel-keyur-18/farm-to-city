@@ -16,7 +16,7 @@ namespace Sim.Core.Tests
         [Test]
         public void InheritedStore()
         {
-            Simulation sim = TestSim.NewFarm();
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
             Assert.That(sim.State.Market.InStore(Good(sim, "seed_potato")), Is.EqualTo(600_000));
             Assert.That(sim.State.Market.InStore(Good(sim, "wheat")), Is.EqualTo(75_000));
             Assert.That(sim.State.Market.InStore(Good(sim, "lentils")), Is.EqualTo(75_000));
@@ -36,7 +36,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Capacity_AndOverflow()
         {
-            Simulation sim = TestSim.NewFarm();
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
             int potato = Good(sim, "potato");
             long free = 2_000_000 - 750_300;
             ulong before = sim.State.ComputeHash();
@@ -76,7 +76,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Valuation_AtTraderPrice()
         {
-            Simulation sim = TestSim.NewFarm();
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
             int potato = Good(sim, "potato");
             Store.Add(sim, potato, 100_000, Overflow.StoreOnly, "test");
             long expected = 0;
@@ -97,7 +97,7 @@ namespace Sim.Core.Tests
         [Test]
         public void UseInput_StockFirst()
         {
-            Simulation sim = TestSim.NewFarm();
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
             int seed = Good(sim, "seed_potato");
             long cash = sim.State.Ledger.Cash;
 

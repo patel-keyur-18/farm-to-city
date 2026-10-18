@@ -600,6 +600,18 @@ Rule changes approved by the owner before coding:
 
 **Sprint split (no rule change):** in Sprint 2, CropHealth is 1.00 and no pest check is scheduled (pests, spraying, AC-14 to AC-16 and the golden replay AC-30 come with US-046 in Sprint 3); sick days (AC-19), warm clothing (AC-34) and medicine (AC-35) come with US-052; tree payback (AC-27) with US-049. AC-28 runs in Sprint 2 without market sales and gains them in Sprint 3.
 
+### Implementation notes (Sprint 2, 2026-10-18)
+
+None of these changes a formula or a rule.
+
+1. **One accrual engine.** Crops' Water, Care and Weather sums and the founder's day-labour hours, nutrition and food allowance accrue together at the same accrual points (`FarmSystem.Accrue`, then `Refresh`). AC-10 checks one game year of seeded play (crops, garden, trees, plan changes) in one advance against 500 random chunks: identical state hashes.
+2. **The hour's weather.** Rates refreshed at an hourly pass use the weather of the hour just starting; spell boundaries fall on hour boundaries, so weather is constant between accrual points.
+3. **The food allowance** accrues in money as `Fixed` and is rounded to 1/100 coin at the daily pass (so 0.6 × 18,000 ÷ 4 is exactly 2,700). Leftover allowance on a day with nothing to eat is not carried over. A `HomeUseEaten` event reports each day's home use; the season report carries `HomeUse` and `GardenHomeUse` for the household line's *Why?*.
+4. **A new game at t = 0** prepays the whole of season 0 (18,000 on basic), leaving 2,000 of the 20,000; AC-21's 10:00 start prepays 16,125. Spec 005 AC-3's test checks the opening entry (20,000) and that cash plus prepaid living costs is 20,000.
+5. **Automatic subsistence** keeps the plan to return to (`PreviousPlan`, `AutoSubsistence`); choosing a plan clears it.
+6. **The first day's health** uses the mean nutrition since the new game's start.
+7. **Inherited grain without an age** can't be sown as saved seed; the default start lists wheat and lentils.
+
 ## 11. Cut first
 
 1. Tree payback *Why?* (keep cost and returns).

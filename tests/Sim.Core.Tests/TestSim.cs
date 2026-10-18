@@ -38,6 +38,21 @@ namespace Sim.Core.Tests
             });
         }
 
+        /// <summary>
+        /// Rich content without the household's money flows: the founder starts on subsistence (no living costs) and
+        /// doesn't eat from the store. For ledger and store tests that count every coin.
+        /// </summary>
+        public static GameDefs Quiet(System.Func<string, string, string> edit = null)
+        {
+            return RichGame((f, j) =>
+            {
+                if (f == "founder.json")
+                    j = j.Replace("\"startDietPlan\": \"basic\"", "\"startDietPlan\": \"subsistence\"")
+                        .Replace("\"startEatFromStore\": true", "\"startEatFromStore\": false");
+                return edit == null ? j : edit(f, j);
+            });
+        }
+
         public static Simulation New(ulong seed = 42, long localSeconds = 0, SimOptions options = null,
             IEnumerable<ISimSystem> systems = null, IEnumerable<IJobHandler> handlers = null)
         {

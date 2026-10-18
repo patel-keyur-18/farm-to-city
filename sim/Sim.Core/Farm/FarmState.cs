@@ -250,7 +250,12 @@ namespace Sim.Core.Farm
     {
         /// <summary>Indices into the diet plans and work-hours options.</summary>
         public int DietPlan { get; internal set; }
+
+        /// <summary>The plan to return to after an automatic drop to subsistence (spec 003 §3.11).</summary>
         public int PreviousPlan { get; internal set; }
+
+        /// <summary>True while on subsistence because a season's living costs couldn't be paid.</summary>
+        public bool AutoSubsistence { get; internal set; }
         public int WorkHours { get; internal set; }
 
         /// <summary>The option worked today (normal while away), fixed at the daily pass; its fatigue change applies at the next.</summary>
@@ -277,6 +282,9 @@ namespace Sim.Core.Farm
         public Fixed DayLabourHours { get; internal set; }
         public Fixed NutritionSum { get; internal set; }
 
+        /// <summary>When the current day's accruals started (the last daily pass, or the new game's start).</summary>
+        public long DayStart { get; internal set; }
+
         /// <summary>The food allowance accrued since the last daily pass, in money (Fixed for exact time-weighting).</summary>
         public Fixed AllowanceSum { get; internal set; }
 
@@ -290,6 +298,8 @@ namespace Sim.Core.Farm
         {
             h.WriteInt(DietPlan);
             h.WriteInt(PreviousPlan);
+            h.WriteBool(AutoSubsistence);
+            h.WriteLong(DayStart);
             h.WriteInt(WorkHours);
             h.WriteInt(TodayOption);
             h.WriteInt(DayLabourShare);
