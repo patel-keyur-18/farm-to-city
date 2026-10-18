@@ -22,10 +22,11 @@ namespace Sim.Core.Tests
         /// Golden replays run on a frozen copy of the content (golden/content/, ADR 0034), so tuning content/ never
         /// re-pins them; the device build bundles the same copy.
         /// </summary>
-        public static SimConfig GoldenConfig(bool game, bool dev = false)
+        public static SimConfig GoldenConfig(bool game, bool dev = false, bool credit = false)
         {
             string dir = TestContent.TestFile("golden/content");
-            string Read(string f) { return File.ReadAllText(Path.Combine(dir, f)); }
+            string overlay = TestContent.TestFile("golden/content-005"); // finance.json, lenders.json and a richer start.json for the credit golden (ADR 0038)
+            string Read(string f) { return File.ReadAllText(Path.Combine(credit && (f == "finance.json" || f == "lenders.json" || f == "start.json") ? overlay : dir, f)); }
             WeatherSet weather = ContentLoader.LoadWeather(Read("weather.json"));
             return new SimConfig(ContentLoader.LoadClock(Read("clock.json")), weather, new SimOptions { DevCommandsEnabled = dev },
                 game: game ? ContentLoader.LoadGame(Read, weather) : null);
@@ -33,7 +34,7 @@ namespace Sim.Core.Tests
 
         private static Simulation Replay(ReplayFile file)
         {
-            return Simulation.Replay(GoldenConfig(file.Game, file.DevCommandsEnabled), file.Commands);
+            return Simulation.Replay(GoldenConfig(file.Game, file.DevCommandsEnabled, file.Credit), file.Commands);
         }
 
         /// <summary>
@@ -42,12 +43,17 @@ namespace Sim.Core.Tests
         /// </summary>
         private static void CheckGameGolden(string name, string description, ulong seed, System.Action<Simulation> session, params string[] mustInclude)
         {
+            CheckGameGolden(name, description, seed, false, session, mustInclude);
+        }
+
+        private static void CheckGameGolden(string name, string description, ulong seed, bool credit, System.Action<Simulation> session, params string[] mustInclude)
+        {
             string path = TestContent.TestFile("golden/" + name);
             if (UpdateGolden || !File.Exists(path))
             {
-                Simulation live = Simulation.NewGame(GoldenConfig(true), new NewGame(seed, TestSim.Wall0, 9 * 3600));
+                Simulation live = Simulation.NewGame(GoldenConfig(true, false, credit), new NewGame(seed, TestSim.Wall0, 9 * 3600));
                 session(live);
-                var gen = new ReplayFile { Description = description, Game = true, ExpectedHash = live.State.ComputeHash() };
+                var gen = new ReplayFile { Description = description, Game = true, Credit = credit, ExpectedHash = live.State.ComputeHash() };
                 gen.Commands.AddRange(live.State.CommandLog.Entries.Select(e => e.Command));
                 File.WriteAllText(path, ReplayJson.Write(gen));
                 TestContext.Out.WriteLine(name + " written: 0x" + gen.ExpectedHash.Value.ToString("X16"));
@@ -55,6 +61,7 @@ namespace Sim.Core.Tests
             string text = File.ReadAllText(path);
             ReplayFile file = ReplayJson.Load(text);
             Assert.That(file.Game, Is.True);
+            Assert.That(file.Credit, Is.EqualTo(credit));
             Assert.That(ReplayJson.Write(file), Is.EqualTo(text), "every command writes back exactly as read");
             var types = file.Commands.Select(c => c.GetType().Name).Distinct().ToList();
             foreach (string t in mustInclude) Assert.That(types, Does.Contain(t), name + " covers " + t);
@@ -109,6 +116,39 @@ namespace Sim.Core.Tests
             }, "Offer", "Withdraw", "SellToTrader", "Buy", "GoToMandi", "Harvest");
         }
 
+        // Spec 005 AC-30: loans from both lenders, land-purchase financing, early repayment, a quick sale, missed payments, a default
+        // reached while away, the final notice and a foreclosure.
+        [Test]
+        public void Golden_005_Credit()
+        {
+            CheckGameGolden("005-credit.json", "Spec 005 AC-30: two game years of seeded farming and borrowing (the second reckless), then a default reached while away.", 5, true, sim =>
+            {
+                ulong k = 0;
+                long t0 = sim.State.Clock.SimTime, year = sim.Clock.SecondsPerYear, S = sim.Clock.SecondsPerSeason;
+                foreach (long t in FarmBot.Rounds(t0, t0 + year)) { FarmBot.Play(sim, t, 5, k); CreditBot.Play(sim, t, 5, k++, false); }
+                sim.AdvanceTo(sim.State.Clock.SimTime + 30 * TestSim.Hour, AdvanceMode.Away);
+                long t1 = sim.State.Clock.SimTime;
+                foreach (long t in FarmBot.Rounds(t1, t0 + 2 * year)) { FarmBot.Play(sim, t, 5, k); CreditBot.Play(sim, t, 5, k++, true); }
+                Assert.That(sim.State.Credit.Loans.Count, Is.GreaterThan(5));
+
+                // The end of the story: the farmer stops farming, borrows the moneylender's limit, spends the cash and cannot pay.
+                long boundary = (sim.State.Clock.SimTime / S + 1) * S;
+                sim.AdvanceTo(boundary);
+                foreach (Sim.Core.Finance.Loan l in sim.State.Credit.Loans.Where(l => l.IsOpen).ToList())
+                    sim.Execute(new RepayLoan(boundary, l.Id, long.MaxValue / 4));
+                sim.Execute(new SetEatFromStore(boundary, false));
+                long room = Sim.Core.Finance.CreditRules.Limit(sim, 0).Limit;
+                Assert.That(room, Is.GreaterThanOrEqualTo(100_000), "the moneylender still lends");
+                Assert.That(sim.Execute(new TakeLoan(boundary, "moneylender", room, 1)).Accepted, Is.True);
+                while (sim.Execute(new Buy(boundary, "seed_spinach", 100_000)).Accepted) { }
+                sim.AdvanceTo(boundary + 2 * S - 3 * 3600);                  // one close missed, the next about to be
+                sim.AdvanceTo(sim.State.Clock.SimTime + 30 * TestSim.Hour, AdvanceMode.Away); // the default is reached while away
+                sim.AdvanceTo(sim.State.Clock.SimTime + 24 * TestSim.Hour);  // a day of play: the foreclosure
+                Assert.That(sim.State.Credit.Foreclosures, Is.EqualTo(1), "the story ends in a foreclosure");
+                Assert.That(sim.State.Credit.Loans.Any(l => l.Lender == 1), Is.True, "the bank lent");
+            }, "TakeLoan", "RepayLoan", "BuyParcel", "SellParcel", "AdvanceTo");
+        }
+
         // Spec 001 AC-13.
         [Test]
         public void Golden_001_Basic()
@@ -155,12 +195,21 @@ namespace Sim.Core.Tests
             file.Commands.Add(new DebugAdvance(86_400, AdvanceMode.Live));
             file.Commands.Add(new Offer(90_000, "potato", 1_000, Maths.Fixed.Parse("6.8000000007")));
             file.Commands.Add(new GoToMandi(90_000, new[] { new Market.MandiLoad("wheat", 5_000) }));
+            file.Commands.Add(new TakeLoan(90_000, "moneylender", 2_500_000, 2));
+            file.Commands.Add(new RepayLoan(90_001, 1, 123_456));
+            file.Commands.Add(new RestructureLoan(90_002, 2));
+            file.Commands.Add(new BuyParcel(90_003, "w1", new Financing("coop_bank", 3_000_000, 8)));
+            file.Commands.Add(new BuyParcel(90_004, "n3"));
             string json = ReplayJson.Write(file);
             ReplayFile back = ReplayJson.Load(json);
             Assert.That(ReplayJson.Write(back), Is.EqualTo(json));
             Assert.That(((NewGame)back.Commands[0]).Seed, Is.EqualTo(ulong.MaxValue));
             Assert.That(back.ExpectedHash, Is.EqualTo(0xFEDCBA9876543210UL));
             Assert.That(((Offer)back.Commands[4]).MinPrice, Is.EqualTo(Maths.Fixed.Parse("6.8000000007")), "exact");
+            Assert.That(((TakeLoan)back.Commands[6]).Amount, Is.EqualTo(2_500_000));
+            Financing fin = ((BuyParcel)back.Commands[9]).Financing;
+            Assert.That(fin.LenderId + fin.Amount + fin.TermSeasons, Is.EqualTo("coop_bank30000008"));
+            Assert.That(((BuyParcel)back.Commands[10]).Financing, Is.Null);
 
             var bad = Assert.Throws<ContentException>(() => ReplayJson.Load("{\"format\":1,\"commands\":[{\"type\":\"Teleport\"}]}"));
             Assert.That(bad.FieldPath, Is.EqualTo("replay.commands[0].type"));

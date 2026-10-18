@@ -143,7 +143,7 @@ namespace Sim.Core.Tests
             {
                 Simulation sim = NewFarm(seed: seed, game: TestContent.Game((f, j) =>
                     f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000")
-                    : f == "finance.json" ? j.Replace("4", "16") : j));
+                    : f == "finance.json" ? j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 16") : j));
                 string[] parcels = sim.Config.Game.Map.Parcels.Select(p => p.Id).ToArray();
                 long end = 3 * sim.Clock.SecondsPerYear;
                 int accepted = 0;

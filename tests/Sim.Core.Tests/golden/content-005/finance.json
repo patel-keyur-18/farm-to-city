@@ -1,0 +1,10 @@
+{
+  "ledger": { "retainSeasons": 4 },
+  "credit": {
+    "min": 300, "max": 900, "startScore": 650, "fullScore": 750,
+    "onTimeGain": 10, "cleanSeasonGain": 5,
+    "missedPenalty": 40, "defaultPenalty": 150, "restructurePenalty": 20,
+    "foreclosureScore": 350,
+    "finalNoticeLiveHours": 24
+  }
+}

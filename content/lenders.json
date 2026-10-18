@@ -1,0 +1,22 @@
+{
+  "lenders": [
+    {
+      "id": "moneylender", "nameKey": "lender.moneylender",
+      "baseRate": 0.06, "rateSlopePer100": 0, "refScore": 650, "penaltyRate": 0.03,
+      "schedule": "bullet", "minTerm": 1, "maxTerm": 4, "minAmount": 1000,
+      "secured": false, "baseLimit": 25000, "collateralLtv": 0, "incomeMultiple": 0.5,
+      "minScore": 300, "scoreScaledLimit": false,
+      "graceCloses": 1, "restructureExtraSeasons": 0,
+      "eraCaps": { "homestead": 50000 }
+    },
+    {
+      "id": "coop_bank", "nameKey": "lender.coop_bank",
+      "baseRate": 0.025, "rateSlopePer100": 0.005, "refScore": 750, "penaltyRate": 0.015,
+      "schedule": "equalPrincipal", "minTerm": 2, "maxTerm": 16, "minAmount": 10000,
+      "secured": true, "baseLimit": 0, "collateralLtv": 0.6, "incomeMultiple": 1.0,
+      "minScore": 550, "scoreScaledLimit": true,
+      "graceCloses": 2, "restructureExtraSeasons": 4,
+      "eraCaps": { "homestead": 500000, "village": 2500000 }
+    }
+  ]
+}

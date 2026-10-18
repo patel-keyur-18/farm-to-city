@@ -77,6 +77,7 @@ namespace Sim.Core
                 LandSystem.Initialise(sim);
                 FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
+                if (config.Game.Credit != null) state.Credit = new CreditState { Score = config.Game.Credit.Score.StartScore, NoticeAnnounced = true };
                 FounderRules.PayFirstSeason(sim);
             }
 
@@ -231,6 +232,7 @@ namespace Sim.Core
             {
                 State.Clock.IsAway = false;
             }
+            CreditSystem.AnnounceAfterAway(this); // a default reached while away is shown again on return (ADR 0038)
             Emit(new AwayAdvanceCompleted(State.Clock.SimTime, from, State.Clock.SimTime, requested, applied, capped));
             _awayReport.Clear();
             for (int i = firstEvent; i < _events.Count; i++) _awayReport.Add(_events[i]);

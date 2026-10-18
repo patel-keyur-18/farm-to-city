@@ -213,7 +213,7 @@ A single founder credit score, 300–900, like India's CIBIL score.
 
 Foreclosure runs when any loan has defaulted and its final notice has run out. All the founder's lenders take part.
 
-0. **Final notice (ADR 0038).** A default, live or while away, emits `FinalNotice(loanIds, deadline)` and starts `noticeLiveSeconds` at 0. The counter grows only in hourly passes that run live (time away doesn't count). Foreclosure runs at the hourly pass where it reaches `LenderDef.finalNoticeLiveHours` (default 24), unless every defaulted loan's arrears have been cured by then (paying, selling land, restructuring); a cured notice is cancelled.
+0. **Final notice (ADR 0038).** A default, live or while away, emits `FinalNotice(loanIds, deadline)` and starts `noticeLiveSeconds` at 0. The counter grows only in hourly passes that run live (time away doesn't count). Foreclosure runs at the hourly pass where it reaches `CreditScoreDef.finalNoticeLiveHours` (default 24), unless every defaulted loan's arrears have been cured by then (paying, selling land, restructuring); a cured notice is cancelled.
 1. **Seize,** in this order, each group in id order, stopping once the debt is covered:
    - bought parcels, with everything on them (buildings, trees, and any crop, which is lost); each raises its quick-sale value (spec 002: 80% of market value)
    - non-protected buildings elsewhere (none in Phase 1)
@@ -249,6 +249,7 @@ Foreclosure runs when any loan has defaulted and its final notice has run out. A
 | | `onTimeGain`, `cleanSeasonGain` | int | 10, 5 | 0–100 |
 | | `missedPenalty`, `defaultPenalty`, `restructurePenalty` | int | 40, 150, 20 | 0–600 |
 | | `foreclosureScore` | int | 350 | min–max |
+| | `finalNoticeLiveHours` | int | 24 | 1–168 (ADR 0038) |
 
 `content/lenders.json` (`LenderDef`, one per lender; defaults in §3.6):
 
@@ -261,11 +262,11 @@ Foreclosure runs when any loan has defaulted and its final notice has run out. A
 | `schedule` | enum | `bullet`, `equalPrincipal` |
 | `minTerm`, `maxTerm` | int | 1 ≤ min ≤ max ≤ 40 |
 | `minAmount` | money | ≥ 1 coin; 1,000 / 10,000 |
-| `finalNoticeLiveHours` | int | 1–168; default 24 (ADR 0038) |
 | `secured` | bool | |
 | `baseLimit` | money | ≥ 0 |
 | `collateralLtv`, `incomeMultiple` | Fixed | 0–1, 0–4 |
 | `minScore` | int | in score range |
+| `scoreScaledLimit` | bool | false for the moneylender (its limit ignores the score above `minScore`), true for the bank |
 | `graceCloses` | int | 1–8 |
 | `restructureExtraSeasons` | int | 0–12 (0 = doesn't restructure) |
 | `eraCaps` | map era → money | Homestead required |
@@ -461,6 +462,19 @@ None of these changes a formula or a rule.
 3. **Prepayment for a later period.** A prepayment whose period hasn't started (next season's wages paid now) expenses nothing until its start; it shows in the cash flow as paid upfront.
 4. **Depreciation** counts season closes per building, so a building's first close depreciates a full season even if the game started mid-season (§3.3 has no pro rata).
 5. **Report lines** are `ReportLine`s with `report.<key>` label and `report.<key>.why` explanation keys and the accounts behind each, for spec 008's *Why?*.
+
+### Implementation notes (Sprint 4, 2026-10-18)
+
+None of these changes a rule or a lesson.
+
+1. **Payment order at a close.** The instalment due is added to the arrears and paid together: interest first (older arrears, then this season's), then principal arrears (including the instalment), so a short close takes all the cash, interest first (AC-21). Loans are paid in id order; a loan on the foreclosure clock (`Defaulted`) takes no new instalments.
+2. **Penalty interest.** Scheduled principal accrues at the rate; arrears (unpaid principal and unpaid interest) accrue at rate + penalty rate, the penalty part posted to 5410. A segment's three products are each rounded once.
+3. **Early repayment and sales** accrue the loan to now (posting the interest) before paying; `SellParcel` computes what it must repay without changing anything, so a refused sale changes nothing.
+4. **Restructuring a defaulted loan** is rejected with `LoanDefaulted` (a defaulted loan is on the foreclosure clock: pay, or sell land).
+5. **Net worth** counts interest accrued but not yet posted (`CreditRules.AccruedUnposted`).
+6. **The notice** is re-announced (before `AwayAdvanceCompleted`) when it was raised while away, so *While you were away* shows it; the clock counts only hourly passes that run live.
+7. **Golden 005** runs on the frozen content plus `golden/content-005/` (`finance.json` and `lenders.json` with credit, and a richer `start.json` of 4,00,000 coins so the session can finance land). Goldens 001, 003 and 004 have no credit block and keep their pins.
+8. **Measured (Sprint 4, 100 seeds, 2 game years):** the leverage bot ends at 0.999 × the competent bot's median net worth; the strategic defaulter at 1.024 (1.039 without seizing produce) and is foreclosed in every run (median score 340). Both are far inside ADR 0016's 1.20, so ADR 0038's rules are a safety margin rather than a repair of a large loop.
 
 ## 11. Cut first
 

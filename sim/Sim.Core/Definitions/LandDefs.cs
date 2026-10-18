@@ -281,9 +281,13 @@ namespace Sim.Core.Definitions
         /// <summary>Crops, the garden, trees and the founder (spec 003).</summary>
         public FarmDefs Farm { get; }
 
+        /// <summary>Lenders and the credit score rules, or null when the content has none (a game without credit, ADR 0038).</summary>
+        public CreditDefs Credit { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
-            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm)
+            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null)
         {
+            Credit = credit;
             Farm = farm ?? throw new ArgumentNullException(nameof(farm));
             Market = market ?? throw new ArgumentNullException(nameof(market));
             Soils = new List<SoilDef>(soils).AsReadOnly();

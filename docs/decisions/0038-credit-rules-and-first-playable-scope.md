@@ -34,7 +34,7 @@ The Sprint 4 planning review (2026-10-18) checked the credit stories (US-063 to 
 ## Implementation defaults (no rule change)
 
 - **Credit is optional content.** `finance.json`'s `credit` block and `lenders.json` are optional together; a game without them has no credit state and hashes as before, so goldens 001, 003 and 004 keep their pins. Golden 005 runs on the frozen content plus an overlay folder `golden/content-005/` holding `finance.json` and `lenders.json`.
-- **Penalty interest:** all outstanding principal (arrears included) accrues at `rate`; unpaid principal and unpaid interest additionally accrue at `penaltyRate`, posted to 5410.
+- **Penalty interest:** scheduled principal accrues at `rate`; arrears (unpaid principal and unpaid interest) accrue at `rate + penaltyRate`, the penalty part posted to 5410 (spec 005 §3.6 as written).
 - **Early repayment** pays interest accrued to now (posted then), then arrears, then principal, and shortens the schedule from the end. A restructured loan's remaining term is `min(remaining + restructureExtraSeasons, maxTerm)`.
 - **Net worth** includes interest accrued to now, not only posted interest.
 - **`Sim.View`** (`sim/Sim.View/`, netstandard2.1, C# 9) depends on `Sim.Core` and `Sim.Content` (for the JSON helpers); `UiDef` and the string tables live in `Sim.View`, not `Sim.Core` (view data, not rules; amends ADR 0020 only in that these definitions are view-side). The string coverage test finds ledger and report keys by scanning the sim sources, and enums and events by reflection.

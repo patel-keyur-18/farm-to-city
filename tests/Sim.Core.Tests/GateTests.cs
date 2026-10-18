@@ -62,5 +62,26 @@ namespace Sim.Core.Tests
             Assert.That(r.BasicWithinOneSeason, Is.EqualTo(1000));
             Assert.That(r.SeasonOfCostsWithinTwo, Is.GreaterThanOrEqualTo(990));
         }
+
+        // Spec 005 AC-36, ADR 0016, 0038: leverage and strategic default never beat the competent bot by more than 20%.
+        [Test]
+        public void Stress_Debt()
+        {
+            var debt = new System.Func<Bot>[] { () => new LeverageBot(), () => new StrategicDefaulterBot() };
+            foreach (Gate.StressResult s in Gate.Stress(Live(), 100, 8, debt).Skip(1))
+                Assert.That(s.Ratio, Is.LessThanOrEqualTo(1.2), s.Bot);
+        }
+
+        // ADR 0034 §7: every mechanic is used by at least one bot. The debt bots really borrow, and the defaulter really defaults.
+        [Test]
+        public void DebtBots_UseCredit()
+        {
+            Gate.DebtActivity leverage = Gate.DebtBotActivity(Live(), () => new LeverageBot(), 50);
+            Assert.That(leverage.BankLoans, Is.GreaterThan(0), "the leverage bot borrows from the bank");
+            Gate.DebtActivity defaulter = Gate.DebtBotActivity(Live(), () => new StrategicDefaulterBot(), 50);
+            Assert.That(defaulter.SeedsForeclosed, Is.GreaterThan(40), "the strategic defaulter is foreclosed");
+            Assert.That(defaulter.MedianScoreAtEnd, Is.LessThanOrEqualTo(400));
+        }
     }
 }
+
