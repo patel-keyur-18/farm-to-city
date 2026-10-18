@@ -163,8 +163,8 @@
 | --- | --- | --- | --- | --- | --- |
 | US-011 | Spec 008: HUD, presentation and localisation | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
 | US-012 | Spec 009: onboarding | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-015 | Money-loop checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | To do |
-| US-016 | Viability checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | To do |
+| US-015 | Money-loop checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
+| US-016 | Viability checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | To do |
 | US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | To do |
 | US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | To do |

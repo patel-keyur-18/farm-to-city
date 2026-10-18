@@ -91,6 +91,7 @@ namespace Tools.Balancer
         /// <summary>Sows the crop on vacant acres while the founder's hours cover the demand (Care ≥ 1.0).</summary>
         protected static void Sow(Simulation sim, long t, string cropId)
         {
+            if (sim.State.Farm.Founder.AutoSubsistence) return; // feed the household first: day labour until the plan is back
             FarmDefs farm = sim.Config.Game.Farm;
             CropDef crop = farm.Crops[farm.IndexOfCrop(cropId)];
             Fixed supply = FounderRules.LabourRate(sim) + FounderRules.MandiCut(sim);
@@ -173,6 +174,116 @@ namespace Tools.Balancer
                 long sell = Math.Min(surplus, MarketRules.TraderCapacityLeft(sim, g));
                 if (sell > 0) Ok(sim, new SellToTrader(t, defs.Goods[g].Id, sell));
             }
+        }
+    }
+}
+
+namespace Tools.Balancer
+{
+    using Sim.Core.Land;
+
+    /// <summary>Stress bot: holds ready crops in the field for the Monsoon price (ADR 0034 §5 should make it pay less).</summary>
+    public sealed class FieldHolderBot : FarmerBot
+    {
+        public override string Name { get { return "field-holder"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            if (Season(sim, t) == 2) { base.Play(sim, t); return; } // harvests only in the Monsoon
+            SprayOutbreaks(sim, t);
+            foreach (Tree tree in sim.State.Farm.Trees)
+                if (tree.RipeGrams > 0 && Season(sim, t) == 2) Ok(sim, new PickFruit(t, tree.SlotId, Overflow.SellRestToTrader));
+            Sow(sim, t, "potato");
+            Garden(sim, t);
+            SplitLabour(sim, t);
+        }
+    }
+
+    /// <summary>Stress bot: spends its cash on inputs just before each close to dodge living costs (ADR 0034 §6 should stop it).</summary>
+    public sealed class SubsistenceDodgerBot : FarmerBot
+    {
+        public override string Name { get { return "subsistence-dodger"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            Ok(sim, new SetDietPlan(t, "subsistence")); // always rejected: automatic only
+            long toClose = sim.Clock.SecondsPerSeason - t % sim.Clock.SecondsPerSeason;
+            if (toClose > 3600) return;
+            // Turn cash into seed in the store: an asset swap that leaves nothing to pay living costs with.
+            int seed = sim.Config.Game.Market.IndexOf("seed_lentils");
+            Fixed price = MarketRules.InputPrice(sim, seed);
+            long grams = (Fixed.FromInt(sim.State.Ledger.Cash / 100) / price).MulRatio(1000, 1).RoundToLong() - 1000;
+            grams = Math.Min(grams, Store.Fits(sim, seed));
+            if (grams > 0) Ok(sim, new Buy(t, "seed_lentils", grams));
+        }
+    }
+
+    /// <summary>Stress bot: buys adjacent land, leaves it fallow to raise its price, and sells it two seasons later.</summary>
+    public sealed class LandFlipperBot : FarmerBot
+    {
+        private long _boughtAt = -1;
+        private string _parcel;
+
+        public override string Name { get { return "land-flipper"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            if (_parcel == null)
+            {
+                foreach (Parcel p in sim.State.Land.Parcels)
+                {
+                    if (p.Owned) continue;
+                    string id = sim.Config.Game.Map.Parcels[p.Id].Id;
+                    if (Ok(sim, new BuyParcel(t, id))) { _parcel = id; _boughtAt = t; break; }
+                }
+            }
+            else if (t - _boughtAt >= 2 * sim.Clock.SecondsPerSeason && Ok(sim, new SellParcel(t, _parcel))) _parcel = null;
+        }
+    }
+
+    /// <summary>Stress bot: withdraws and re-offers everything every hour at the regional price, trying to game the market.</summary>
+    public sealed class OfferChurnerBot : FarmerBot
+    {
+        public override string Name { get { return "offer-churner"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            var goods = sim.Config.Game.Market.Goods;
+            for (int g = 0; g < goods.Count; g++)
+            {
+                if (goods[g].Kind != GoodKind.Produce) continue;
+                long on = sim.State.Market.OnOffer(g);
+                if (on > 0) Ok(sim, new Withdraw(t, goods[g].Id, on));
+                long free = sim.State.Market.InStore(g) - sim.State.Market.OnOffer(g) - Reserve(sim, g);
+                if (free > 0) Ok(sim, new Offer(t, goods[g].Id, free, MarketRules.RegionalPrice(sim, g)));
+            }
+            base.Play(sim, t);
+        }
+    }
+
+    /// <summary>Stress bot: goes to the mandi every day with whatever produce it has, worth it or not.</summary>
+    public sealed class MandiEveryDayBot : FarmerBot
+    {
+        public override string Name { get { return "mandi-every-day"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            MarketState m = sim.State.Market;
+            var goods = sim.Config.Game.Market.Goods;
+            var loads = new List<MandiLoad>();
+            long room = sim.Config.Game.Market.Mandi.CartCapacityGrams;
+            for (int g = 0; g < goods.Count && room > 0; g++)
+            {
+                if (goods[g].Kind != GoodKind.Produce) continue;
+                long q = Math.Min(m.InStore(g) - m.OnOffer(g) - Reserve(sim, g), room);
+                if (q <= 0) continue;
+                loads.Add(new MandiLoad(goods[g].Id, q));
+                room -= q;
+            }
+            if (loads.Count > 0) Ok(sim, new GoToMandi(t, loads));
+            base.Play(sim, t);
         }
     }
 }

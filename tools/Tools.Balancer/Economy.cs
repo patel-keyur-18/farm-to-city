@@ -29,18 +29,22 @@ namespace Tools.Balancer
         private static double Real(long money, Fixed index) { return money / 100.0 / ToDouble(index); }
 
         /// <summary>Runs a bot for <paramref name="years"/> from a new game at 08:00 and collects each season.</summary>
-        public static Run RunBot(SimConfig config, Bot bot, int years, ulong seed)
+        public static Run RunBot(SimConfig config, Bot bot, int years, ulong seed) { return RunBot(config, bot, years * 4, seed, null); }
+
+        /// <summary>Runs a bot for <paramref name="seasons"/> seasons, calling <paramref name="onHour"/> after each round.</summary>
+        public static Run RunBot(SimConfig config, Bot bot, int seasons, ulong seed, Action<Simulation> onHour)
         {
             Simulation sim = Simulation.NewGame(config, new NewGame(seed, 0, 8 * 3600));
             bot.Start(sim);
             var run = new Run { Sim = sim, Bot = bot };
             var season = new SeasonRow();
-            long end = years * sim.Clock.SecondsPerYear;
+            long end = seasons * sim.Clock.SecondsPerSeason;
             int reports = 0;
             for (long t = sim.State.Clock.SimTime + 600; t < end; t += 3600)
             {
                 sim.AdvanceTo(t);
                 bot.Play(sim, t);
+                onHour?.Invoke(sim);
                 foreach (SimEvent e in sim.DrainEvents()) season.Add(sim, e);
                 if (sim.State.Finance.Reports.Count > reports)
                 {
@@ -132,7 +136,9 @@ namespace Tools.Balancer
         /// <summary>One closed season: the report plus what the events showed.</summary>
         public sealed class SeasonRow
         {
-            public int Harvests, MandiTrips, Outbreaks;
+            public int Harvests, MandiTrips, Outbreaks, UnpaidLiving, OverCap;
+            private readonly Dictionary<long, long> _bedGrams = new Dictionary<long, long>(); // keyed lookups only
+            private readonly Dictionary<long, int> _treeBatches = new Dictionary<long, int>();
             public double Kg, CareSum, WaterSum, GardenKg, AcreSeasons, SpoiledKg;
             public long Trader, Local, Mandi, HomeUse;
             public SeasonReport Report;
@@ -154,13 +160,25 @@ namespace Tools.Balancer
                 {
                     case CropHarvested h:
                         Harvests++;
+                        if (h.Grams > (sim.Config.Game.Farm.Farm.YieldCap * h.Breakdown.Base).MulRatio(1000, 1).RoundToLong()) OverCap++;
                         Kg += h.Grams / 1000.0;
                         CareSum += ToDouble(h.Breakdown.Care);
                         WaterSum += ToDouble(h.Breakdown.Water);
                         FarmDefs f = sim.Config.Game.Farm;
                         AcreSeasons += ToDouble(FarmRules.CycleShare(sim.Clock, f.Crops[f.IndexOfCrop(h.CropId)]));
                         break;
-                    case GardenPicked g: GardenKg += g.Grams / 1000.0; break;
+                    case GardenPicked g:
+                        GardenKg += g.Grams / 1000.0;
+                        _bedGrams.TryGetValue(g.BedId, out long bed);
+                        _bedGrams[g.BedId] = bed + g.Grams;
+                        if (bed + g.Grams > sim.Config.Game.Farm.Farm.GardenSeasonOutputGrams) OverCap++;
+                        break;
+                    case FruitPicked p:
+                        _treeBatches.TryGetValue(p.SlotId, out int n);
+                        _treeBatches[p.SlotId] = n + 1;
+                        if (n + 1 > 1) OverCap++; // one batch per fruiting season
+                        break;
+                    case ObligationUnpaid u: if (u.Kind == "Living") UnpaidLiving++; break;
                     case SoldToTrader s: Trader += s.Amount; break;
                     case MarketSales m: Local += m.Amount; break;
                     case MandiTripReturned r: Mandi += r.Net; MandiTrips++; break;

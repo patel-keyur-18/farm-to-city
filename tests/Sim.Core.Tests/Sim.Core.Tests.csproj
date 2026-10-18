@@ -15,5 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\sim\Sim.Core\Sim.Core.csproj" />
     <ProjectReference Include="..\..\sim\Sim.Content\Sim.Content.csproj" />
+    <!-- The gate checks (US-015, US-016) run the balancer's bots. -->
+    <ProjectReference Include="..\..\tools\Tools.Balancer\Tools.Balancer.csproj" />
   </ItemGroup>
 </Project>
