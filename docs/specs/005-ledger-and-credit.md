@@ -1,10 +1,10 @@
 # 005. Ledger and credit
 
-- Status: Approved (2026-10-17)
+- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, credit, personal bankruptcy, never stuck, liquidity); Time and world simulation (settlement cadence); Businesses (books); Learning layer (cash ledger, balance sheet); Balancing and testing (exact ledgers, never stuck, recoverable bankruptcy); Data model (`LedgerEntry`, `Loan`, `LenderDef`, `StartDef`)
-- Related ADRs: 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
+- Related ADRs: 0032 (report lines, farm profit), 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
 - Depends on specs: 001 (scheduler, passes). Uses 002 (land prices, protected parcel, seizure). Spec 003 (living costs, inputs, trees, day labour), 004 (sales, stored goods value) and 006 (wages) post through this ledger.
 
 ## 1. Goal
@@ -98,6 +98,21 @@ At each season boundary, the seasonal pass of the finance system (system order B
 7. **Rent** (later specs).
 8. **Credit outcomes:** score changes (§3.7), default detection (§3.8) and, if needed, foreclosure (§3.9).
 9. Emit `SeasonClosed` with the report and the settlement results.
+
+**Report lines** (ADR 0032). The P&L groups the accounts like this; each line carries a plain-language label key and a *Why?* explanation key (text in spec 008), plus its accounts for drill-down:
+
+| Line | Accounts | Label (English) |
+| --- | --- | --- |
+| Farm income | 4000 Crop sales (including home use, spec 003), 4010 Fruit sales | Money from your harvests |
+| Farm costs | 5000, 5010, 5100, 5300, 5500 (all depreciation), 5700 | What farming cost you |
+| **Farm profit** | Farm income − farm costs | Did the farm pay for itself? |
+| Other income | 4100, 4800, 4900 | Other money earned |
+| Household | 5200, 5250 | Your family's living costs |
+| Finance | 5400, 5410 | Interest |
+| Other | 5600 | Losses on assets |
+| **Net result** | All income − all expenses | What's left after everything |
+
+Farm profit is the "farm profit" of the credit limit (§3.6) and the Hamlet gate's "profitable season" (farm profit above 0, ADR 0032).
 
 Other systems never move money at the seasonal pass themselves; they register their season obligations (items 5–7) with the finance system, which pays them in this order and reports `ObligationPaid` or `ObligationUnpaid` back. This keeps one place in charge of who gets the cash when it runs short.
 
@@ -401,6 +416,11 @@ All seven were resolved at approval (2026-10-17), following the recommendations:
 - **Starting cash 20,000** and the opening Land term covers every inherited parcel (ADR 0030). Implemented: AC-3 passes with the new values.
 - **Two expense accounts** join the chart (ADR 0031): 5250 Health costs (medicine, spec 003) and 5700 Transport and selling costs (cart hire, mandi commission and fees, spec 004). No formula changes.
 - The inherited land is never collateral (unchanged), so early in the game only the moneylender lends; land-purchase loans serve growth after the Hamlet.
+
+### Changes after approval (Sprint 2 planning review, 2026-10-18)
+
+- **Report lines** (§3.4, ADR 0032): the P&L grouping into farm profit and net result, with plain-language labels and *Why?* keys for the player. Farm profit is the credit limit's income measure and the Hamlet gate's test. No formula changes.
+- **Home use:** food the household eats from the store is credited to the good's sales account (spec 003), so it counts in farm income.
 
 ## 11. Cut first
 

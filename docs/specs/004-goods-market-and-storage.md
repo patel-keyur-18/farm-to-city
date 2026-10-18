@@ -355,6 +355,8 @@ All four were answered in the Sprint 1 review (2026-10-17):
 3. **Pro rata** among sellers when supply exceeds demand. ADR 0013's seeded order is for scarce supply among many buyers, which arrives with households and businesses (Phase 2).
 4. **Minimum prices** on offers are added now (§3.2); spec 006's standing orders reuse the rule.
 
+**Sprint split (Sprint 2 planning review, 2026-10-18; no rule change):** crops need goods, prices and the store, so a core of this spec is built in Sprint 2: `GoodDef`, the price part of `RegionDef`, P_regional, Floor and input prices (the price index stays at `startIndex` until the inflation step), the store with capacity, both overflow rules and the inheritance, the trader's daily capacity, `StoreValue` and `UseInput`. Its ACs (AC-1's goods checks, AC-2, AC-12, AC-14, AC-23) pass in Sprint 2. Inflation, spoilage, the hourly market, `Offer`, `SellToTrader`, `Buy`, minimum prices and the mandi trip stay in Sprint 3. Home use (spec 003, ADR 0032) values eaten food at the Floor and credits the sales account.
+
 ## 11. Cut first
 
 1. Unmet-demand history (keep only the current hour).

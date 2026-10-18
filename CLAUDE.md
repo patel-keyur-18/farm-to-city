@@ -140,6 +140,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0029 | Unity pinned to 6000.3.26f1 (6.3 LTS). Unity still compiles with `-langversion:9.0`, so the sim stays on C# 9. No upgrades mid-phase. `com.unity.pipeline` is an Editor-only dev tool |
 | 0030 | Inherit 6 protected acres and the yard, 20,000 coins and a store of seed and grain. Hamlet gate: 6 acres harvested in a season at Care ≥ 0.9, a hand's house, a profitable season. 8 × 6 map. Unowned land keeps its fertility |
 | 0031 | Phase 1 adds the kitchen garden, the mandi trip, buying inputs ahead (seasonal input prices; fertiliser price-controlled), minimum prices on offers, warm clothing and medicine |
+| 0032 | The well waters 2 well acres (the rest rain-fed). The household eats from the store daily, credited as home use. Founder nutrition and day labour are time-weighted. P&L grouping; the Hamlet gate needs farm profit > 0. Inherited seed age 2.0 |
 
 ## Current status
 

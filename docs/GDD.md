@@ -30,7 +30,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one profitable season (ADR 0030) | 4–15 | More roles, storage, first processing (flour mill) |
+| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -120,7 +120,7 @@ Farming is the first business the player runs, so it introduces every core idea:
 
 The founder inherits 6 farm acres and a yard (hut and well), protected forever (ADR 0030). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
 
-- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters the inherited acres, so they never dry out completely; bought land is rain-fed until irrigation. Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
+- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
 - **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
 - **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited land can never be sold, seized or used as collateral.

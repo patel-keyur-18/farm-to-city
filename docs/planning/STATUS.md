@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 1 done (28 of 28 points, 2026-10-18). Sprint 2 is next |
-| Branch with latest work | `sprint/01-ledger-land-unity` (pull request #6 to `main`; must be merged before the next session) |
-| Last updated | 2026-10-17 |
+| Sprint | Sprint 2 in progress (58 points after the planning review) |
+| Branch with latest work | `sprint/02-crops-trees-founder` |
+| Last updated | 2026-10-18 |
 
 ## Done so far
 
@@ -45,28 +45,31 @@
     - The GDD, specs 002–005, CLAUDE.md and the planning files match the decisions. The crop guide the owner asked for is a crop-calendar card (US-011.T4) and seasonal hints in the letters (US-012.T3).
   - The GDD's engine row names Unity 6000.3.26f1 (ADR 0029).
 
+- **Sprint 2 (branch `sprint/02-crops-trees-founder`):**
+  - **Planning review with the owner (2026-10-18), before coding.** Six gaps closed, recorded in **ADR 0032** and in §10 of specs 002–005: the well waters 2 well acres (tiles 20, 28), the rest rain-fed; the household eats from the store daily, credited to sales as home use; founder nutrition and day labour are time-weighted (closes a money loop); the P&L grouping (farm profit, net result) with plain-language labels, and the Hamlet gate on farm profit > 0; inherited seed age 2.0 for wheat and lentils.
+  - **Scope moved to Sprint 2:** the spec 004 core (new US-181: goods, regional prices with a fixed index, trader capacity, `UseInput`) and US-057 (the store), because crops need them; the health formula moves from US-052 into US-051. Pests, golden 003 and tree payback stay in Sprint 3. Sprint 2 is 58 points, Sprint 3 47.
+
 ## In progress
 
-None. Sprint 1 is closed.
+Sprint 2. Order: US-181 and US-057 (spec 004 core), US-060 to US-062 (accrual, season close, net worth), US-042 to US-045 and US-177 (crops, garden), US-047 and US-048 (trees), US-050, US-051, US-053 (founder), US-013 and US-014 (economy model, anchors, moisture tuning), then specs 006 and 007 for the owner's review.
 
 ## Next up
 
-1. **Owner:** merge pull request #6.
-2. **Next session (Claude):** branch `sprint/02-crops-trees-founder` from `main` and start Sprint 2 (`sprints.md`, 53 points): crops, the kitchen garden, fruit trees and founder labour (spec 003), accrual accounting (US-060 to US-062), the economy model (US-013, US-014, including the moisture tuning and the inherited start), specs 006 and 007. Spec 006 must price the hand's hut (about 15,000 for the ADR 0030 pacing) and reuse spec 004's minimum price in standing orders.
+1. **Claude:** US-181 (goods, prices, `UseInput`), then US-057 (store), then the order under In progress.
+2. Spec 006 must price the hand's hut (about 15,000 for the ADR 0030 pacing) and reuse spec 004's minimum price in standing orders. Spec 007 must compact the per-second `Sync` entries in the command log.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Merge pull request #6 (Sprint 1) |
-| Sprint 2 | Review specs 006 and 007 |
+| Sprint 2 | Review specs 006 and 007; merge the Sprint 2 pull request |
 | Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
 ## Open questions (with the owner)
 
-None. All 12 Sprint 1 questions were answered on 2026-10-17 (see Done so far, ADRs 0030 and 0031, and §10 of specs 002–004).
+None. The Sprint 2 planning review's six gaps were answered on 2026-10-18 (ADR 0032).
 
 **Noted for later specs (no decision needed now):**
 - Spec 007 (saves): the command log grows by one `Sync` per second of live play (the hello build syncs once per wall-clock second). Consecutive live `Sync`s can be merged without changing the result (chunking invariance), so the saves spec should compact them.

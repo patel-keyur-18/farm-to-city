@@ -58,7 +58,7 @@
 | [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-042–US-046, US-177 | 20 |
 | [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-047–US-049 | 7 |
 | [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-050–US-053 | 11 |
-| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-054–US-056, US-178–US-180 | 17 |
+| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-054–US-056, US-178–US-181 | 17 |
 | [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-057–US-058 | 4 |
 | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Ready | US-059–US-062 | 14 |
 | [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Backlog | US-063–US-065 | 9 |

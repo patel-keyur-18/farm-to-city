@@ -104,10 +104,10 @@
 
 ## Sprint 2 · 2–8 Nov 2026 · Phase 0
 
-- **Status:** Planned
+- **Status:** In progress (started 2026-10-18)
 - **Branch:** `sprint/02-crops-trees-founder` (or the branch the session assigns)
 - **Goal:** Crops, the kitchen garden, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written.
-- **Points:** 53
+- **Points:** 58 (53 planned; +5 from the Sprint 2 planning review, ADR 0032: the spec 004 core and the health formula moved in)
 - **Specs for the owner to review:** 006, 007
 - **Device build:** No
 - Economy model v0 prints seasonal cash flow from content data.
@@ -125,12 +125,14 @@
 | US-047 | Plant a sapling | [F02.3](features/F02.3-fruit-trees.md) | 2 | Must | To do |
 | US-048 | Maturity and fruiting | [F02.3](features/F02.3-fruit-trees.md) | 3 | Must | To do |
 | US-050 | Labour capacity | [F03.1](features/F03.1-founder-labour-and-routine.md) | 3 | Must | To do |
-| US-051 | Household plan | [F03.1](features/F03.1-founder-labour-and-routine.md) | 3 | Must | To do |
+| US-051 | Household plan | [F03.1](features/F03.1-founder-labour-and-routine.md) | 4 | Must | To do |
 | US-053 | Day labour and subsistence | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Must | To do |
 | US-060 | Accrual and prepaid costs | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
 | US-061 | Season close and P&L | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
 | US-062 | Net worth | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
 | US-177 | Kitchen garden | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | To do |
+| US-181 | Goods, prices and inputs at use (core) | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | To do |
+| US-057 | Store and capacity (from S3) | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | To do |
 
 **Sprint end checklist**
 
@@ -148,7 +150,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/03-market-spike-gate` (or the branch the session assigns)
 - **Goal:** Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review.
-- **Points:** 52
+- **Points:** 47 (52 planned; −5 to Sprint 2, ADR 0032)
 - **Specs for the owner to review:** 008, 009
 - **Device build:** Yes: spike and determinism build
 - Phase 0 gate: money-loop checks pass, the spike fits 8.3 ms, and golden replays match on the iPhone.
@@ -165,14 +167,13 @@
 | US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | To do |
 | US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | To do |
 | US-049 | Tree value and payback | [F02.3](features/F02.3-fruit-trees.md) | 2 | Should | To do |
-| US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 3 | Should | To do |
-| US-054 | Goods and regional prices | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
+| US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Should | To do |
+| US-054 | Price index and fixed-point powers | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | To do |
 | US-055 | Hourly clearing | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 5 | Must | To do |
 | US-056 | Sell and buy | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
-| US-057 | Store and capacity | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | To do |
 | US-058 | Spoilage | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | To do |
 | US-178 | Mandi trip | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
-| US-179 | Buy inputs ahead | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | To do |
+| US-179 | Buy inputs ahead | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 1 | Must | To do |
 | US-180 | Minimum-price offers | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 1 | Should | To do |
 
 **Sprint end checklist**
