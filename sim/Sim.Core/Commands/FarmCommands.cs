@@ -73,6 +73,8 @@ namespace Sim.Core.Commands
                 Seed = Seed, SeedAge = age, Fertiliser = f, SoilFactor = LandRules.SoilFactor(sim, tile),
             };
             sown.JobId = sim.ScheduleJob(FarmSystem.CropJob, id, sown.ReadyAt).Id;
+            sown.Repeats = PestRules.RepeatsAt(sim, TileId, c);
+            sown.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, id, t + crop.GrowthSeconds / 2).Id;
             farm.Crops.Add(sown);
             LandSystem.SetOccupied(sim, TileId, true);
             FarmSystem.Refresh(sim);
@@ -107,6 +109,8 @@ namespace Sim.Core.Commands
             FarmState farm = sim.State.Farm;
             farm.SavedSeedAge[c.Def] = c.SeedAge + FarmRules.CycleShare(sim.Clock, def);
             farm.HasSavedSeed[c.Def] = def.CanSaveSeed;
+            farm.TileRunCrop[TileId] = c.Def; // the run of same-crop harvests (spec 003 §3.8)
+            farm.TileRun[TileId] = c.Repeats + 1;
             farm.Crops.Remove(c);
             LandSystem.SetOccupied(sim, TileId, false);
             sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, grams, c.Breakdown));
@@ -127,10 +131,37 @@ namespace Sim.Core.Commands
             if (c == null) return CommandResult.Reject(RejectReason.NoCrop);
             FarmSystem.Accrue(sim);
             if (c.State == CropState.Growing) sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
+            if (c.PestJobId != 0) sim.CompleteJob(sim.State.Jobs.Find(c.PestJobId));
             sim.State.Farm.Crops.Remove(c);
             LandSystem.SetOccupied(sim, TileId, false);
             FarmSystem.Refresh(sim);
             sim.Emit(new FieldCleared(sim.State.Clock.SimTime, TileId, sim.Config.Game.Farm.Crops[c.Def].Id));
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Sprays a growing crop once a cycle (spec 003 §3.8): before the pest check it halves the risk; after a warning it
+    /// cuts the damage by 70%. The dose comes from the store first, the rest bought (Dr 5010).
+    /// </summary>
+    public sealed class Spray : TimedCommand
+    {
+        public int TileId { get; }
+
+        public Spray(long at, int tileId) : base(at) { TileId = tileId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Crop c = sim.State.Farm?.CropOn(TileId);
+            if (c == null) return CommandResult.Reject(RejectReason.NoCrop);
+            if (c.State != CropState.Growing) return CommandResult.Reject(RejectReason.NotGrowing);
+            if (c.Spray != SprayState.None) return CommandResult.Reject(RejectReason.AlreadySprayed);
+            if (c.PestChecked && c.Outbreak == Outbreak.None) return CommandResult.Reject(RejectReason.NoPestThreat);
+            PestRiskDef p = sim.Config.Game.Farm.Pests;
+            long dose = PestRules.Dose(sim, sim.Config.Game.Farm.Crops[c.Def]);
+            if (!sim.State.Ledger.CanAfford(Store.ShortfallCost(sim, p.SprayGood, dose))) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            Store.UseInput(sim, p.SprayGood, dose, Account.FertiliserAndSpraying, "crop:" + c.Id);
+            c.Spray = c.PestChecked ? SprayState.AfterWarning : SprayState.BeforeCheck;
             return CommandResult.Ok;
         }
     }

@@ -165,6 +165,7 @@ namespace Tools.Balancer
                     case MarketSales m: Local += m.Amount; break;
                     case MandiTripReturned r: Mandi += r.Net; MandiTrips++; break;
                     case HomeUseEaten u: HomeUse += u.Value; break;
+                    case PestWarning _: Outbreaks++; break;
                     case GoodsSpoiled s:
                         if (sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(s.GoodId)].Kind == GoodKind.Produce) SpoiledKg += s.Quantity / 1000.0;
                         break;

@@ -61,6 +61,7 @@ namespace Tools.Balancer
 
         public override void Play(Simulation sim, long t)
         {
+            SprayOutbreaks(sim, t);
             Harvest(sim, t);
             Sell(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
@@ -77,6 +78,13 @@ namespace Tools.Balancer
             }
             foreach (Tree tree in sim.State.Farm.Trees)
                 if (tree.RipeGrams > 0) Ok(sim, new PickFruit(t, tree.SlotId, Overflow.SellRestToTrader));
+        }
+
+        /// <summary>A curative spray on every warned crop: the dose costs far less than the damage it saves.</summary>
+        protected static void SprayOutbreaks(Simulation sim, long t)
+        {
+            foreach (Crop c in sim.State.Farm.Crops)
+                if (c.State == CropState.Growing && c.Outbreak != Outbreak.None && c.Spray == SprayState.None) Ok(sim, new Spray(t, c.TileId));
         }
 
         /// <summary>Sows the crop on vacant acres while the founder's hours cover the demand (Care ≥ 1.0).</summary>

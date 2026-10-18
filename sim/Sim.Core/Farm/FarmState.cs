@@ -71,6 +71,16 @@ namespace Sim.Core.Farm
         /// <summary>Set when the crop becomes ready.</summary>
         public YieldBreakdown Breakdown { get; internal set; }
 
+        /// <summary>Pests (spec 003 §3.8): seconds of wet weather so far, the current wet flag, same-crop harvests before it.</summary>
+        public long WetSeconds { get; internal set; }
+        public bool Wet { get; internal set; }
+        public int Repeats { get; internal set; }
+        public SprayState Spray { get; internal set; }
+        public bool PestChecked { get; internal set; }
+        public Outbreak Outbreak { get; internal set; }
+        public Fixed RolledHealth { get; internal set; } = Fixed.One;
+        public long PestJobId { get; internal set; }
+
         /// <summary>Grams lost while waiting ready after the grace (ADR 0034).</summary>
         public long SpoiledGrams { get; internal set; }
 
@@ -104,6 +114,14 @@ namespace Sim.Core.Farm
             h.WriteBool(Breakdown != null);
             if (Breakdown != null) Breakdown.WriteTo(h);
             h.WriteLong(SpoiledGrams);
+            h.WriteLong(WetSeconds);
+            h.WriteBool(Wet);
+            h.WriteInt(Repeats);
+            h.WriteInt((int)Spray);
+            h.WriteBool(PestChecked);
+            h.WriteInt((int)Outbreak);
+            h.WriteFixed(RolledHealth);
+            h.WriteLong(PestJobId);
         }
     }
 
@@ -208,6 +226,10 @@ namespace Sim.Core.Farm
 
         public List<GardenBed> Beds { get; } = new List<GardenBed>();
 
+        /// <summary>Per tile: the crop of the current run of harvests (−1 none) and its length (spec 003 §3.8).</summary>
+        internal int[] TileRunCrop;
+        internal int[] TileRun;
+
         public List<Tree> Trees { get; } = new List<Tree>();
         public long NextTreeId { get; internal set; } = 1;
 
@@ -225,6 +247,7 @@ namespace Sim.Core.Farm
             {
                 NextCropId = NextCropId, NextTreeId = NextTreeId, CareRatio = CareRatio, LastAccrual = LastAccrual,
                 SavedSeedAge = (Fixed[])SavedSeedAge.Clone(), HasSavedSeed = (bool[])HasSavedSeed.Clone(),
+                TileRunCrop = (int[])TileRunCrop.Clone(), TileRun = (int[])TileRun.Clone(),
                 Founder = Founder.Clone(),
             };
             foreach (Crop x in Crops) c.Crops.Add(x.Clone());
@@ -245,6 +268,7 @@ namespace Sim.Core.Farm
             }
             h.WriteInt(Crops.Count);
             foreach (Crop x in Crops) x.WriteTo(h);
+            for (int i = 0; i < TileRun.Length; i++) { h.WriteInt(TileRunCrop[i]); h.WriteInt(TileRun[i]); }
             h.WriteInt(Beds.Count);
             foreach (GardenBed b in Beds) b.WriteTo(h);
             h.WriteLong(NextTreeId);

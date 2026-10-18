@@ -169,7 +169,7 @@
 | US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | To do |
 | US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | To do |
 | US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | To do |
-| US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | To do |
+| US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | Done |
 | US-049 | Tree value and payback | [F02.3](features/F02.3-fruit-trees.md) | 2 | Should | To do |
 | US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Should | To do |
 | US-054 | Price index and fixed-point powers | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | Done |

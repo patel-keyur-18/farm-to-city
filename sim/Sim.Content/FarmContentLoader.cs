@@ -16,12 +16,13 @@ namespace Sim.Content
             List<GardenCropDef> garden;
             LoadCrops(cropsJson, market, out crops, out garden);
             List<FertiliserDef> fertilisers;
-            FarmDef farm = LoadFarming(farmingJson, market, weather, out fertilisers);
+            PestRiskDef pests;
+            FarmDef farm = LoadFarming(farmingJson, market, weather, crops, out fertilisers, out pests);
             List<TreeDef> trees = LoadTrees(treesJson, market);
             List<DietPlanDef> plans;
             List<WorkHoursDef> hours;
             FounderDef founder = LoadFounder(founderJson, out plans, out hours);
-            return new FarmDefs(crops, garden, farm, fertilisers, trees, founder, plans, hours);
+            return new FarmDefs(crops, garden, farm, fertilisers, trees, founder, plans, hours, pests);
         }
 
         private static void LoadCrops(string json, MarketDefs market, out List<CropDef> crops, out List<GardenCropDef> garden)
@@ -83,15 +84,16 @@ namespace Sim.Content
             }
         }
 
-        private static FarmDef LoadFarming(string json, MarketDefs market, WeatherSet weather, out List<FertiliserDef> fertilisers)
+        private static FarmDef LoadFarming(string json, MarketDefs market, WeatherSet weather, List<CropDef> crops,
+            out List<FertiliserDef> fertilisers, out PestRiskDef pests)
         {
             const string root = "farming";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "farm", "fertilisers");
+            OnlyFields(o, root, "farm", "fertilisers", "pests");
             string fp = root + ".farm";
             JObject f = Object(Required(o, root, "farm"), fp);
             OnlyFields(f, fp, "yieldCap", "careCap", "toolsFactor", "weatherYieldFactor", "waterDryFloor", "waterWetFloor",
-                "bucketHoursPerMoisturePoint", "gardenSeasonOutputKg", "readyGraceHours");
+                "bucketHoursPerMoisturePoint", "gardenSeasonOutputKg", "readyGraceHours", "wetWeathers");
 
             // Stored in the declared order of the weather types, never in JSON object order.
             string wp = fp + ".weatherYieldFactor";
@@ -133,6 +135,46 @@ namespace Sim.Content
             }
             if (fertilisers.Find(x => x.Id == "none" && x.Good < 0) == null)
                 throw new ContentException(root + ".fertilisers", "needs 'none' (no good)");
+
+            // Wet weathers (spec 003 §3.8): stored per weather index.
+            var wet = new bool[weather.Types.Count];
+            List<JToken> wetIds = Array(Required(f, fp, "wetWeathers"), fp + ".wetWeathers");
+            for (int i = 0; i < wetIds.Count; i++)
+            {
+                string id = String(wetIds[i], Index(fp + ".wetWeathers", i));
+                int k = weather.IndexOf(id);
+                if (k < 0) throw new ContentException(Index(fp + ".wetWeathers", i), "unknown weather id '" + id + "'");
+                wet[k] = true;
+            }
+
+            string pp = root + ".pests";
+            JObject pj = Object(Required(o, root, "pests"), pp);
+            OnlyFields(pj, pp, "baseRisk", "monocultureStep", "monocultureMaxRepeats", "wetStep", "sprayGood", "sprayMlPerAcrePerSeason",
+                "sprayRiskFactor", "sprayDamageFactor", "outbreakHealthMin", "outbreakHealthMax", "severeShare", "severeHealth");
+            string bp = pp + ".baseRisk";
+            JObject br = Object(Required(pj, pp, "baseRisk"), bp);
+            var risk = new Fixed?[crops.Count];
+            foreach (JProperty prop in br.Properties())
+            {
+                int c = crops.FindIndex(x => x.Id == prop.Name);
+                if (c < 0) throw new ContentException(Join(bp, prop.Name), "unknown crop '" + prop.Name + "'");
+                risk[c] = Number(prop.Value, Join(bp, prop.Name));
+                Range(risk[c].Value, Fixed.Zero, Fixed.One, Join(bp, prop.Name));
+            }
+            var riskList = new List<Fixed>();
+            for (int c = 0; c < crops.Count; c++)
+            {
+                if (risk[c] == null) throw new ContentException(bp, "missing crop '" + crops[c].Id + "'");
+                riskList.Add(risk[c].Value);
+            }
+            int repeats = Int(Required(pj, pp, "monocultureMaxRepeats"), pp + ".monocultureMaxRepeats");
+            Range(repeats, 0, 10, pp + ".monocultureMaxRepeats");
+            Fixed min = Bounded(pj, pp, "outbreakHealthMin", "0", "1"), max = Bounded(pj, pp, "outbreakHealthMax", "0", "1");
+            if (min > max) throw new ContentException(pp + ".outbreakHealthMax", "must be at least outbreakHealthMin");
+            pests = new PestRiskDef(riskList, Bounded(pj, pp, "monocultureStep", "0", "2"), repeats, Bounded(pj, pp, "wetStep", "0", "5"), wet,
+                GoodRef(pj, pp, "sprayGood", market, GoodKind.Input), Bounded(pj, pp, "sprayMlPerAcrePerSeason", "0", "100000"),
+                Bounded(pj, pp, "sprayRiskFactor", "0", "1"), Bounded(pj, pp, "sprayDamageFactor", "0", "1"), min, max,
+                Bounded(pj, pp, "severeShare", "0", "1"), Bounded(pj, pp, "severeHealth", "0", "1"));
             return farm;
         }
 

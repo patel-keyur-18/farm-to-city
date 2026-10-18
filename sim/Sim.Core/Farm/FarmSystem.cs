@@ -17,6 +17,7 @@ namespace Sim.Core.Farm
         public const string CropJob = "crop.grow";
         public const string GardenJob = "garden.grow";
         public const string TreeJob = "tree.mature";
+        public const string PestJob = "crop.pest";
 
         public SystemOrder Order { get { return SystemOrder.Agriculture; } }
 
@@ -29,7 +30,10 @@ namespace Sim.Core.Farm
                 LastAccrual = sim.State.Clock.SimTime,
                 SavedSeedAge = new Fixed[farm.Crops.Count],
                 HasSavedSeed = new bool[farm.Crops.Count],
+                TileRunCrop = new int[sim.State.Land.Tiles.Count],
+                TileRun = new int[sim.State.Land.Tiles.Count],
             };
+            for (int i = 0; i < state.TileRunCrop.Length; i++) state.TileRunCrop[i] = -1;
             for (int c = 0; c < farm.Crops.Count; c++)
             {
                 Fixed? age = defs.Start.SavedSeedAge[c];
@@ -78,6 +82,7 @@ namespace Sim.Core.Farm
                 c.WaterSum += c.WaterRate.MulRatio(dt, 1);
                 c.CareSum += farm.CareRatio.MulRatio(dt, 1);
                 c.WeatherSum += c.WeatherRate.MulRatio(dt, 1);
+                if (c.Wet) c.WetSeconds += dt;
             }
             FounderRules.Accrue(sim, dt);
             farm.LastAccrual = t;
@@ -97,6 +102,7 @@ namespace Sim.Core.Farm
                 Tile tile = sim.State.Land.Tiles[c.TileId];
                 c.WaterRate = FarmRules.WaterFactor(defs.Farm.Farm, def, tile.Moisture);
                 c.WeatherRate = defs.Farm.Farm.WeatherYieldFactor[weather];
+                c.Wet = defs.Farm.Pests.WetWeather[weather];
                 demand += def.LabourPerAcrePerDay + tile.WellLift.MulRatio(24, 1) * defs.Farm.Farm.BucketHoursPerMoisturePoint;
             }
             Fixed cap = defs.Farm.Farm.CareCap;
@@ -205,7 +211,7 @@ namespace Sim.Core.Farm
 
                 c.Breakdown = FarmRules.Yield(defs.Farm.Farm, def.SeasonYieldPerAcre * share, c.SoilFactor,
                     c.WaterSum.MulRatio(1, g), c.CareSum.MulRatio(1, g), FarmRules.SeedFactor(def, c.Seed, c.SeedAge),
-                    c.WeatherSum.MulRatio(1, g), fert.YieldFactor, Fixed.One); // CropHealth: pests join with US-046
+                    c.WeatherSum.MulRatio(1, g), fert.YieldFactor, PestRules.FinalHealth(defs.Farm.Pests, c));
                 c.State = CropState.Ready;
 
                 // Fertility for the cycle's share (§3.10).
@@ -220,6 +226,32 @@ namespace Sim.Core.Farm
                 c.JobId = 0;
                 Refresh(sim);
                 sim.Emit(new CropReady(sim.State.Clock.SimTime, c.TileId, def.Id, c.Breakdown.Grams));
+            }
+        }
+
+        /// <summary>
+        /// The pest check at half-growth (spec 003 §3.8): the risk from the crop, its repeats, the wet share so far and a
+        /// preventive spray; a seeded roll; an outbreak warns at once, and its health applies when the crop is ready.
+        /// </summary>
+        internal sealed class PestCheck : IJobHandler
+        {
+            public string JobType { get { return PestJob; } }
+            public SystemOrder System { get { return SystemOrder.Agriculture; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                Accrue(sim);
+                Crop c = sim.State.Farm.Crops.Find(x => x.Id == job.TargetId);
+                PestRiskDef p = sim.Config.Game.Farm.Pests;
+                long elapsed = sim.State.Clock.SimTime - c.SownAt;
+                Fixed wetShare = elapsed > 0 ? Fixed.FromRatio(c.WetSeconds, elapsed) : Fixed.Zero;
+                Fixed risk = PestRules.Risk(p, c.Def, c.Repeats, wetShare, c.Spray == SprayState.BeforeCheck);
+                c.RolledHealth = PestRules.Roll(p, sim.State.Seed, c.Id, risk, sim.State.Clock.IsAway, out Outbreak o);
+                c.Outbreak = o;
+                c.PestChecked = true;
+                c.PestJobId = 0;
+                sim.CompleteJob(job);
+                if (o != Outbreak.None) sim.Emit(new PestWarning(sim.State.Clock.SimTime, c.TileId, o, c.ReadyAt));
             }
         }
 

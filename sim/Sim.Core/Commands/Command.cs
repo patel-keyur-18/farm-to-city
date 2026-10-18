@@ -58,6 +58,9 @@ namespace Sim.Core.Commands
         UnknownPlan,
         UnknownOption,
         InvalidShare,
+        NotGrowing,
+        AlreadySprayed,
+        NoPestThreat,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
