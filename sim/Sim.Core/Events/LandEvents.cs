@@ -47,3 +47,25 @@ namespace Sim.Core.Events
         protected override string Describe() { return "LedgerReconciliationFailed(" + Reason + ")"; }
     }
 }
+
+namespace Sim.Core.Events
+{
+    /// <summary>Every season close, after settlement (spec 005 §5).</summary>
+    public sealed class SeasonClosed : SimEvent
+    {
+        public long Period { get; }
+        public Finance.SeasonReport Report { get; }
+
+        public SeasonClosed(long simTime, long period, Finance.SeasonReport report) : base(simTime)
+        {
+            Period = period;
+            Report = report;
+        }
+
+        protected override string Describe()
+        {
+            return "SeasonClosed(period=" + Period + ", farmProfit=" + Report.FarmProfit + ", net=" + Report.NetResult
+                + ", netWorth=" + Report.NetWorth.Total + ")";
+        }
+    }
+}

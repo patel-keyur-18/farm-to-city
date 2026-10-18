@@ -28,6 +28,16 @@ namespace Sim.Core.Tests
             return Simulation.NewGame(Config(options, game: game ?? TestContent.Game()), new NewGame(seed, Wall0, localSeconds));
         }
 
+        /// <summary>The default content with 20,00,000 coins of starting cash, for tests that spend freely.</summary>
+        public static GameDefs RichGame(System.Func<string, string, string> edit = null)
+        {
+            return TestContent.Game((f, j) =>
+            {
+                if (f == "start.json") j = j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000");
+                return edit == null ? j : edit(f, j);
+            });
+        }
+
         public static Simulation New(ulong seed = 42, long localSeconds = 0, SimOptions options = null,
             IEnumerable<ISimSystem> systems = null, IEnumerable<IJobHandler> handlers = null)
         {

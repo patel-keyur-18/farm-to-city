@@ -111,13 +111,28 @@ namespace Sim.Core.Land
         public int Def { get; internal set; }
         public int TileId { get; internal set; }
 
-        internal Building Clone() { return new Building { Id = Id, Def = Def, TileId = TileId }; }
+        /// <summary>Money: the book cost (the opening value for inherited buildings, spec 005 §3.1).</summary>
+        public long Cost { get; internal set; }
+
+        /// <summary>Money depreciated so far, and over how many season closes (spec 005 §3.3).</summary>
+        public long Depreciated { get; internal set; }
+        public int SeasonsDepreciated { get; internal set; }
+
+        public long BookValue { get { return Cost - Depreciated; } }
+
+        internal Building Clone()
+        {
+            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated };
+        }
 
         internal void WriteTo(StateHasher h)
         {
             h.WriteLong(Id);
             h.WriteInt(Def);
             h.WriteInt(TileId);
+            h.WriteLong(Cost);
+            h.WriteLong(Depreciated);
+            h.WriteInt(SeasonsDepreciated);
         }
     }
 

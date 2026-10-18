@@ -422,6 +422,16 @@ All seven were resolved at approval (2026-10-17), following the recommendations:
 - **Report lines** (§3.4, ADR 0032): the P&L grouping into farm profit and net result, with plain-language labels and *Why?* keys for the player. Farm profit is the credit limit's income measure and the Hamlet gate's test. No formula changes.
 - **Home use:** food the household eats from the store is credited to the good's sales account (spec 003), so it counts in farm income.
 
+### Implementation notes (Sprint 2, 2026-10-18)
+
+None of these changes a formula or a rule.
+
+1. **Daily accruals at a season boundary.** The daily pass at a boundary runs before the season close, and its postings for the day that ended (prepaid expensing, and spec 003's day labour and home use) belong to the closing season (`Simulation.AccrualPeriod`), as AC-9 requires.
+2. **Opening cash.** The season report's cash flow starts from the cash after the opening balance sheet; the opening entry (the inheritance) is not an inflow.
+3. **Prepayment for a later period.** A prepayment whose period hasn't started (next season's wages paid now) expenses nothing until its start; it shows in the cash flow as paid upfront.
+4. **Depreciation** counts season closes per building, so a building's first close depreciates a full season even if the game started mid-season (§3.3 has no pro rata).
+5. **Report lines** are `ReportLine`s with `report.<key>` label and `report.<key>.why` explanation keys and the accounts behind each, for spec 008's *Why?*.
+
 ## 11. Cut first
 
 1. `RestructureLoan`.

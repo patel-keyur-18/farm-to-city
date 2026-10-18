@@ -31,11 +31,13 @@ namespace Sim.Core.Finance
         FertiliserAndSpraying = 5010,
         HiredLabour = 5100,
         LivingCosts = 5200,
+        HealthCosts = 5250,
         Rent = 5300,
         Interest = 5400,
         PenaltyInterest = 5410,
         Depreciation = 5500,
         LossOnAssetSales = 5600,
+        TransportAndSelling = 5700,
     }
 
     public enum AccountGroup
@@ -57,8 +59,9 @@ namespace Sim.Core.Finance
             Account.MoneylenderLoans, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings,
             Account.CropSales, Account.FruitSales, Account.DayLabourEarnings, Account.GainOnAssetSales, Account.DebtWrittenOff,
-            Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.HiredLabour, Account.LivingCosts, Account.Rent,
-            Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
+            Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
+            Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
+            Account.TransportAndSelling,
         };
 
         /// <summary>The group is the id's thousands digit.</summary>

@@ -66,6 +66,7 @@ namespace Sim.Core
             {
                 state.Land = new LandState();
                 state.Ledger = new Ledger();
+                state.Finance = new FinanceState();
                 LandSystem.Initialise(sim);
                 MarketSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
@@ -131,6 +132,13 @@ namespace Sim.Core
 
         /// <summary>The season index since t = 0: the ledger period of an entry posted now (spec 005 §3.1).</summary>
         public long Period { get { return State.Clock.SimTime / Clock.SecondsPerSeason; } }
+
+        /// <summary>
+        /// The period of the time just ended: at a season boundary, the closing season. Daily-pass accruals for the
+        /// day that ended post here (prepaid expensing, day labour, home use), so they belong to the season they
+        /// were earned or used in (spec 005 AC-9).
+        /// </summary>
+        internal long AccrualPeriod { get { return State.Clock.SimTime == 0 ? 0 : (State.Clock.SimTime - 1) / Clock.SecondsPerSeason; } }
 
         /// <summary>The weather of the current spell.</summary>
         public WeatherTypeDef CurrentWeather

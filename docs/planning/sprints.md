@@ -127,9 +127,9 @@
 | US-050 | Labour capacity | [F03.1](features/F03.1-founder-labour-and-routine.md) | 3 | Must | To do |
 | US-051 | Household plan | [F03.1](features/F03.1-founder-labour-and-routine.md) | 4 | Must | To do |
 | US-053 | Day labour and subsistence | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Must | To do |
-| US-060 | Accrual and prepaid costs | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
-| US-061 | Season close and P&L | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
-| US-062 | Net worth | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
+| US-060 | Accrual and prepaid costs | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | Done |
+| US-061 | Season close and P&L | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | Done |
+| US-062 | Net worth | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | Done |
 | US-177 | Kitchen garden | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | To do |
 | US-181 | Goods, prices and inputs at use (core) | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | Done |
 | US-057 | Store and capacity (from S3) | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | Done |
