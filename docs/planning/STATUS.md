@@ -52,6 +52,7 @@
   - **Well acres (ADR 0032) and spec 003 content: done.** **US-042 to US-045 and US-177 crops and the garden: done** (spec 003 AC-1 to AC-7, AC-9, AC-11 to AC-13, AC-17, AC-31 to AC-33): `Sow`, `Harvest`, `ClearField`, `SowGarden`, `PickGarden`; growth jobs; one accrual engine for crops and the founder (§3.7); the yield formula with the cap and breakdown; seeds (stock first, saved-seed age) and fertiliser; fertility effects; bucket labour on the well acres. CropHealth is 1.00 until US-046. 130 tests.
   - **US-047 and US-048 fruit trees: done** (spec 003 AC-24 to AC-26): `PlantTree` (capitalised to 1700), maturity jobs and shade, one batch per fruiting season, `PickFruit` with returns at the floor, lifespan and `RemoveTree` (book value to 5600). 133 tests.
   - **US-050, US-051, US-053 founder: done** (spec 003 AC-8, AC-18, AC-20 to AC-23, AC-36, AC-37; spec 005 AC-28): labour as a time-weighted rate, day labour paid daily, diet plans paid upfront and changed with refunds, daily eating as home use, fatigue from the day worked, the health formula, automatic subsistence and recovery, the first season's living costs at the new game. With the crops: AC-10 chunking invariance over a game year of bot play, AC-28 ledger reconciliation, AC-29 performance (72 h in about 0.6 ms). 145 tests.
+  - **US-013 economy model and US-014 anchors: done.** `dotnet run --project tools/Tools.Balancer -- economy` (15 years in 0.13 s): the founder alone keeps about 1.8 acres busy for about 30,700 farm profit a season; the garden gives 200 kg; the first Spring ends with about 42,000. Moisture and climate weights tuned to spec 002's realistic hook (data only; golden 001 re-pinned), with `MoistureTests.SeasonalMeans_Realistic`. **ADR 0033** (owner, 2026-10-18): land payback is measured on an owner-operated acre (8.5 seasons at 1,20,000; a hired acre nets about 2,600); saplings priced with planting (banana 60, papaya 60, guava 180, mango 350). 146 tests.
   - **Scope moved to Sprint 2:** the spec 004 core (new US-181: goods, regional prices with a fixed index, trader capacity, `UseInput`) and US-057 (the store), because crops need them; the health formula moves from US-052 into US-051. Pests, golden 003 and tree payback stay in Sprint 3. Sprint 2 is 58 points, Sprint 3 47.
 
 ## In progress
@@ -60,7 +61,7 @@ Sprint 2. Order: US-181 and US-057 (spec 004 core), US-060 to US-062 (accrual, s
 
 ## Next up
 
-1. **Claude:** US-013 and US-014 (economy model and anchor numbers, the moisture tuning), then specs 006 and 007.
+1. **Claude:** specs 006 (people) and 007 (saves, notifications, play log), then stop for the owner's review.
 2. Spec 006 must price the hand's hut (about 15,000 for the ADR 0030 pacing) and reuse spec 004's minimum price in standing orders. Spec 007 must compact the per-second `Sync` entries in the command log.
 
 ## Owner action checklist (Phases 0–1)

@@ -133,7 +133,7 @@ NetWorth = Cash + Prepaid (1100–1120)
 
 ### 3.6 Loans
 
-**Lenders** (`content/lenders.json`, defaults are placeholders; ADR 0009 bands):
+**Lenders** (`content/lenders.json`, defaults are placeholders until loans are built and modelled in Sprint 4; ADR 0009 bands):
 
 | Field | Moneylender | Cooperative bank |
 | --- | --- | --- |
@@ -262,7 +262,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 | `restructureExtraSeasons` | int | 0–12 (0 = doesn't restructure) |
 | `eraCaps` | map era → money | Homestead required |
 
-`content/start.json` (`StartDef`, finance part): `startingCash`, money, placeholder **20,000 coins** (ADR 0030: with the inherited store of seed and grain it pays the first season's basic living costs and a little seed; less than a hand's season wage; tuned by the economy model). The inherited store itself is spec 004's.
+`content/start.json` (`StartDef`, finance part): `startingCash`, money, **20,000 coins** (confirmed by the economy model, US-013: the first Spring ends with about 42,000) (ADR 0030: with the inherited store of seed and grain it pays the first season's basic living costs and a little seed; less than a hand's season wage; tuned by the economy model). The inherited store itself is spec 004's.
 
 **State** (part of `GameState`):
 

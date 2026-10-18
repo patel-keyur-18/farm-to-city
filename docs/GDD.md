@@ -124,7 +124,7 @@ The founder inherits 6 farm acres and a yard (hut and well), protected forever (
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
 - **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
 - **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited land can never be sold, seized or used as collateral.
-- An acre costs about 8–15 seasons of its net farm income, so land pays back in 2–4 game years (ADR 0028).
+- An acre costs about 8–15 seasons of the net farm income it earns when the household farms it itself, so land pays back in 2–4 game years; with hired labour it pays back far more slowly, as in reality (ADR 0028, 0033).
 - Spec 002 has the formulas and values.
 
 **Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:

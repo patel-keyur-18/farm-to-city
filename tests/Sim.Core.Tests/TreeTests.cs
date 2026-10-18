@@ -30,8 +30,8 @@ namespace Sim.Core.Tests
             long cash = sim.State.Ledger.Cash;
 
             Assert.That(sim.Execute(new PlantTree(0, edge.Id, "banana")).Accepted, Is.True);
-            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(150_00));
-            Assert.That(sim.State.Ledger.Balance(Account.Trees), Is.EqualTo(150_00));
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(60_00));
+            Assert.That(sim.State.Ledger.Balance(Account.Trees), Is.EqualTo(60_00));
             Assert.That(edge.TreeId, Is.Not.EqualTo(0));
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(shade0), "saplings cast no shade");
             Assert.That(sim.Execute(new PlantTree(0, edge.Id, "mango")).Reason, Is.EqualTo(RejectReason.SlotOccupied));
@@ -48,7 +48,7 @@ namespace Sim.Core.Tests
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One - sim.Config.Game.Land.ShadePerMatureTree));
 
             // Net worth counts the tree at book value (spec 005 AC-14's tree term).
-            Assert.That(Reporting.NetWorth(sim).TreesAtBook, Is.EqualTo(150_00));
+            Assert.That(Reporting.NetWorth(sim).TreesAtBook, Is.EqualTo(60_00));
 
             var hill = Content.ContentLoader.LoadGame(f => f == "trees.json"
                 ? TestContent.ReadContent(f).Replace("\"terrain\": \"any\" },\n    { \"id\": \"papaya\"", "\"terrain\": \"hill\" },\n    { \"id\": \"papaya\"")
@@ -116,10 +116,10 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Farm.TreeIn(slot), Is.Null);
             Assert.That(sim.State.Land.Slots.Single(s => s.Id == slot).TreeId, Is.EqualTo(0));
             TreeSpent spent = sim.DrainEvents().OfType<TreeSpent>().Single();
-            Assert.That(spent.BookValue, Is.EqualTo(150_00));
+            Assert.That(spent.BookValue, Is.EqualTo(60_00));
             Assert.That(sim.State.Ledger.Balance(Account.Trees), Is.EqualTo(0));
             Assert.That(sim.State.Ledger.Entries.Single(e => e.DescriptionKey == "ledger.treeRemoved").Postings
-                .Single(p => p.Account == Account.LossOnAssetSales).Amount, Is.EqualTo(150_00));
+                .Single(p => p.Account == Account.LossOnAssetSales).Amount, Is.EqualTo(60_00));
 
             // RemoveTree at any time, even a sapling: same accounting; its maturity job is cancelled.
             Assert.That(sim.Execute(new PlantTree(t, slot, "guava")).Accepted, Is.True);

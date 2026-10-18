@@ -166,10 +166,23 @@ namespace Tools.Balancer
             long acrePrice = LandRules.TilePrice(defs, sim.State.Land.Tiles[18]) / 100;
             Console.WriteLine("  Farm profit per busy acre a season (founder's own labour unpaid): " + perAcreSeason.ToString("N0", CultureInfo.InvariantCulture));
             Console.WriteLine("  With a hired hand (36,000 a season ÷ " + acresPerHand + " acres = 14,400 an acre): about "
-                + netWithHand.ToString("N0", CultureInfo.InvariantCulture) + " an acre a season (spec 003 §9: about 8,000–12,000)");
+                + netWithHand.ToString("N0", CultureInfo.InvariantCulture) + " an acre a season (spec 003 §9, ADR 0033: about 2,000–5,000)");
             Console.WriteLine("  Land: an inherited loam acre is priced " + acrePrice.ToString("N0", CultureInfo.InvariantCulture) + " = "
-                + (netWithHand <= 0 ? "∞" : (acrePrice / netWithHand).ToString("0.0", CultureInfo.InvariantCulture))
-                + " seasons of that net income (ADR 0028: 8–15)");
+                + (acrePrice / perAcreSeason).ToString("0.0", CultureInfo.InvariantCulture) + " seasons of an owner-operated acre's net (ADR 0028, 0033: 8–15), "
+                + (netWithHand <= 0 ? "never" : (acrePrice / netWithHand).ToString("0", CultureInfo.InvariantCulture)) + " with a hired hand");
+            Console.WriteLine("  Fruit trees (sapling with planting, one batch at the floor in a fruiting season):");
+            foreach (TreeDef tree in defs.Farm.Trees)
+            {
+                long cost = MarketRules.Value(sim, tree.SaplingGood, 1, defs.Market.Goods[tree.SaplingGood].BasePrice * sim.State.Market.PriceIndex) / 100;
+                int season = Enumerable.Range(0, 4).First(q => tree.FruitingSeasons[q]);
+                Fixed floor = defs.Market.Goods[tree.FruitGood].BasePrice * defs.Market.Region.SeasonalFactor(tree.FruitGood, season)
+                    - defs.Market.Region.TransportCostPerKg * defs.Market.Goods[tree.FruitGood].WeightKg;
+                long batch = Money.Value(tree.BatchGrams, floor, 1000) / 100;
+                Console.WriteLine("    " + tree.Id.PadRight(8) + "sapling " + cost.ToString().PadLeft(4) + ", a batch " + batch.ToString("N0", CultureInfo.InvariantCulture).PadLeft(6)
+                    + ", " + (tree.HarvestLimit == 0 ? "the whole game" : tree.HarvestLimit + " batches") + "; first fruit after "
+                    + (tree.GrowthMinutes / 1440.0).ToString("0.#", CultureInfo.InvariantCulture) + " days");
+            }
+            Console.WriteLine("    A mature field-edge tree shades its acre 3%: about " + (perAcreSeason * 0.03).ToString("N0", CultureInfo.InvariantCulture) + " a season of farm profit.");
             Console.WriteLine();
             Console.WriteLine("Not modelled yet: the hired hand and the hand's hut (spec 006, Sprint 4), the local market, minimum prices and the");
             Console.WriteLine("mandi trip (Sprint 3), spoilage (Sprint 3), pests (Sprint 3), loans (Sprint 4).");

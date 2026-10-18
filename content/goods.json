@@ -22,9 +22,9 @@
     { "id": "compost",             "nameKey": "good.compost",             "kind": "input", "unit": "kg",    "basePrice": 2,   "spoilagePerDay": 0.001 },
     { "id": "fertiliser_chemical", "nameKey": "good.fertiliser_chemical", "kind": "input", "unit": "kg",    "basePrice": 30,  "spoilagePerDay": 0.001, "priceControlled": true },
     { "id": "spray",               "nameKey": "good.spray",               "kind": "input", "unit": "litre", "basePrice": 500, "spoilagePerDay": 0.001 },
-    { "id": "sapling_banana", "nameKey": "good.sapling_banana", "kind": "input", "unit": "each", "basePrice": 150, "weightKg": 2 },
-    { "id": "sapling_papaya", "nameKey": "good.sapling_papaya", "kind": "input", "unit": "each", "basePrice": 120, "weightKg": 2 },
-    { "id": "sapling_guava",  "nameKey": "good.sapling_guava",  "kind": "input", "unit": "each", "basePrice": 250, "weightKg": 2 },
-    { "id": "sapling_mango",  "nameKey": "good.sapling_mango",  "kind": "input", "unit": "each", "basePrice": 400, "weightKg": 2 }
+    { "id": "sapling_banana", "nameKey": "good.sapling_banana", "kind": "input", "unit": "each", "basePrice": 60, "weightKg": 2 },
+    { "id": "sapling_papaya", "nameKey": "good.sapling_papaya", "kind": "input", "unit": "each", "basePrice": 60, "weightKg": 2 },
+    { "id": "sapling_guava",  "nameKey": "good.sapling_guava",  "kind": "input", "unit": "each", "basePrice": 180, "weightKg": 2 },
+    { "id": "sapling_mango",  "nameKey": "good.sapling_mango",  "kind": "input", "unit": "each", "basePrice": 350, "weightKg": 2 }
   ]
 }

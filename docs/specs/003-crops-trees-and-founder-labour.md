@@ -551,7 +551,7 @@ All tests are in `tests/Sim.Core.Tests`.
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Net income of an average acre with hired labour (hand 36,000 a season ÷ about 2.5 acres = 14,400 an acre), competent play (about 75% of the anchor after soil, water, weather and idle time) | About 8,000–12,000 a season, so an acre at 1,20,000 costs 10–15 seasons of it (ADR 0028) | Economy model |
+| Net income of an average acre, competent play | Owner-operated (the founder's labour unpaid): about 15,000–20,000 a season, so an acre at 1,20,000 costs about 7–8 seasons of it (ADR 0028, 0033). With hired labour (hand 36,000 a season ÷ about 2.5 acres = 14,400 an acre): about 2,000–5,000 | Economy model (measured 17,000 and 2,600, selling at the floor) |
 | The founder alone on about 2 of the inherited acres (neglected soil 0.875) | About 30,000–38,000 a season, above basic living costs (18,000) and close to full-time day labour (36,000), so farming your own land is worth it but not overwhelming | ±20% |
 | Kitchen garden, 2 beds | About 200 kg (about 1,500 coins) of vegetables a season | ±30% |
 | Chemical fertiliser over 4 seasons | −12 fertility (ADR 0014) | ±0.5 |
@@ -561,14 +561,14 @@ All tests are in `tests/Sim.Core.Tests`.
 | Mango in a yard slot | Pays back its sapling in its first fruiting season | — |
 | Banana on a field edge | Earns less than the 3% shade it costs the acre (yard slots suit short trees) | Shape |
 
-**Pacing check against ADR 0030** (competent player; placeholders for the economy model):
+**Pacing check against ADR 0030** (competent player; Spring measured by the economy model, US-013, selling at the floor; the hand's seasons estimated until spec 006 is built):
 
 | When | What happens | Cash |
 | --- | --- | --- |
 | Start | 20,000 coins; store: 600 kg certified seed potato, 75 kg wheat, 75 kg lentils, garden seed | 20,000 |
 | Season 0 living costs | Basic, pro rata (about 16,100) prepaid; the inherited grain (about 6,800 at the floor) is eaten over the first 2–3 days and comes back as home use | about −9,300 |
-| Spring | Potato on the 2 well acres, 3 cycles, about 1,200 kg an acre-cycle (soil 0.875, water about 0.9); the 2,000 kg store forces sales at the floor (5.30); seed bought after the stock runs out | about +38,000 sales, −10,000 seed |
-| End of Spring | Hand's hut (about 15,000, spec 006) and a hand (36,000), with a moneylender loan of up to 25,000 | about 0–10,000 |
+| Spring | Potato on the 2 well acres, 3 cycles each (measured: about 8,800 kg, Care 1.02, Water 0.97); sales at the floor (5.30) and home use; seed bought after the stock runs out; the garden's greens | measured: farm income about 56,000, costs about 18,000; cash about 42,000 at the end |
+| End of Spring | Hand's hut (about 15,000, spec 006) and a hand (36,000), with a moneylender loan of about 10,000 | about 0 |
 | Summer | Lentils on all 6 acres (4 rain-fed at Water about 0.85–0.9, ADR 0032): about 12 hours a day plus about 1.5 of carrying for the 2 well acres needed, about 14 supplied (founder and hand), Care about 1.04; about 8 cycles | about +75,000 sales; farm profit above 0 |
 | End of week 1 | The Hamlet gate is met: 6 acres harvested at Care ≥ 0.9, a hand's house, a profitable season | |
 

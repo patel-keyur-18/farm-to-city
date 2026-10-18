@@ -45,7 +45,7 @@ namespace Sim.Core.Tests
             AssertPrice(MarketRules.InputPrice(sim, Good(sim, "seed_potato")), "22");     // Spring: sown
             AssertPrice(MarketRules.InputPrice(sim, Good(sim, "seed_wheat")), "42.75");   // Spring: not sown
             AssertPrice(MarketRules.InputPrice(sim, Good(sim, "fertiliser_chemical")), "31.5");
-            AssertPrice(MarketRules.InputPrice(sim, Good(sim, "sapling_mango")), "400");
+            AssertPrice(MarketRules.InputPrice(sim, Good(sim, "sapling_mango")), "350");
         }
 
         // Spec 004 §3: Value(q, P) = round(q × P × 100 ÷ unitSize), rounded once.
@@ -54,7 +54,7 @@ namespace Sim.Core.Tests
         {
             Assert.That(Money.Value(1_000_000, Fixed.Parse("5.30"), 1000), Is.EqualTo(5_300_00)); // 1,000 kg potato
             Assert.That(Money.Value(1, Fixed.Parse("5.30"), 1000), Is.EqualTo(1));                 // 1 g: 0.0053 coin → 0.01
-            Assert.That(Money.Value(1, Fixed.Parse("400"), 1), Is.EqualTo(400_00));                // one sapling
+            Assert.That(Money.Value(1, Fixed.Parse("350"), 1), Is.EqualTo(350_00));                // one sapling
             Assert.That(Money.Value(1_687_500, Fixed.Parse("42.75"), 1000), Is.EqualTo(7_214_063)); // 1,687.5 kg × 42.75 = 72,140.625 coins
         }
 
@@ -92,7 +92,7 @@ namespace Sim.Core.Tests
             Assert.That(MarketError("region.json", "\"mango\": 400, ", "").Message, Does.Contain("missing produce good 'mango'"));
             Assert.That(MarketError("region.json", "\"roadTier\": \"track\"", "\"roadTier\": \"rail\"").FieldPath, Is.EqualTo("region.roadTier"));
             Assert.That(MarketError("goods.json", "\"unit\": \"litre\"", "\"unit\": \"gallon\"").FieldPath, Is.EqualTo("goods.goods[20].unit"));
-            Assert.That(MarketError("goods.json", "\"basePrice\": 150, \"weightKg", "\"basePrice\": 0, \"weightKg").FieldPath, Is.EqualTo("goods.goods[21].basePrice"));
+            Assert.That(MarketError("goods.json", "\"basePrice\": 60, \"weightKg", "\"basePrice\": 0, \"weightKg").FieldPath, Is.EqualTo("goods.goods[21].basePrice"));
         }
     }
 }

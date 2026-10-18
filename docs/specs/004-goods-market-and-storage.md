@@ -191,7 +191,7 @@ The market needs `x^y` for non-integer y. `Sim.Core.Maths.Fixed` gains:
 | seed_radish, seed_wheat, seed_rice, seed_potato, seed_lentils, seed_spinach, seed_coriander | input | kg | 300, 45, 60, 20, 110, 200, 150 | — | 0.001 | — |
 | compost, fertiliser_chemical | input | kg | 2, 30 (`priceControlled`) | — | 0.001 | — |
 | spray | input | litre | 500 | — | 0.001 | — |
-| sapling_banana, sapling_papaya, sapling_guava, sapling_mango | input | each | 150, 120, 250, 400 | — | — | — |
+| sapling_banana, sapling_papaya, sapling_guava, sapling_mango | input | each | 60, 60, 180, 350 (with planting, ADR 0033) | — | — | — |
 
 Other `GoodDef` fields: `id`, `nameKey`, `edible` (produce: true), `weightKg` per unit (default 1; saplings 2), `tradeable` (all true), `priceControlled` (default false). Bounds: basePrice > 0; elasticity 0.1–3 (produce); spoilagePerDay 0–1; weightKg 0–100.
 

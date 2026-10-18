@@ -153,7 +153,7 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | `LandDef` | `moistureByWeather` | map weather id → Fixed | sun −0.7, cloudy −0.2, rain 3.0, heavy_rain 8.0, heatwave −1.2, frost −0.1, storm 5.0 (tuned, US-014) | −10 to 10 | Points per hour. Every weather id in `weather.json` must appear |
 | | `fertilityFactorCurve` | list of (fertility, factor) | (0, 0.50), (60, 1.00), (100, 1.15) | x ascending from 0 to 100; factors 0–2 | |
 | | `fallowRecoveryPerSeason` | Fixed | 6 | 0–25 | Points |
-| | `acreBasePrice` | money (coins) | 1,20,000 | > 0 | **Placeholder.** About 8–15 seasons of an acre's net farm income (ADR 0028); tuned by the economy model |
+| | `acreBasePrice` | money (coins) | 1,20,000 | > 0 | About 8–15 seasons of an owner-operated acre's net farm income (ADR 0028, 0033); the economy model measures about 7–8 |
 | | `fertilityPriceMin`, `fertilityPriceMax` | Fixed | 0.80, 1.20 | 0.1–3, min ≤ max | |
 | | `quickSaleFactor` | Fixed | 0.80 | 0.3–1 | |
 | | `fieldEdgeSlotsPerAcre` | int | 2 | 0–4 | |
@@ -313,7 +313,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | --- | --- | --- |
 | Mean moisture of an unwatered loam acre, by season (realistic Indian seasons; rabi crops grow on the moisture left by the monsoon) | Spring 30–50, Summer 15–35, Monsoon 65–85, Winter 40–60. Tuned by the economy model (US-014), with a test | ±5 |
 | Seasons of fallow to bring a neglected acre (45) to 60 | 2–3 seasons | ±1 season |
-| Price of an average acre, in seasons of that acre's net farm income | 8–15 seasons (payback within 2–4 game years) | Set by the economy model (F00.3) |
+| Price of an average acre, in seasons of an owner-operated acre's net farm income | 8–15 seasons (payback within 2–4 game years; ADR 0033). With a hired hand it is far slower (about 25–50 seasons) | Economy model (F00.3) |
 | Share of a 2-acre farm's yield lost to 4 mature edge trees | About 6% of the shaded acres | ±1 point |
 
 ## 10. Open questions
