@@ -4,5 +4,13 @@
     { "building": "hut",  "tile": 21 },
     { "building": "well", "tile": 21 }
   ],
-  "startingCash": 20000
+  "startingCash": 20000,
+  "store": [
+    { "good": "seed_potato",    "quantity": 600 },
+    { "good": "wheat",          "quantity": 75 },
+    { "good": "lentils",        "quantity": 75 },
+    { "good": "seed_radish",    "quantity": 0.1 },
+    { "good": "seed_spinach",   "quantity": 0.1 },
+    { "good": "seed_coriander", "quantity": 0.1 }
+  ]
 }

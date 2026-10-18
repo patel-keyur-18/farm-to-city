@@ -20,6 +20,10 @@ namespace Sim.Core.Commands
         Protected,
         ParcelInUse,
         WouldStrandLand,
+
+        // Spec 004 (goods and store)
+        StoreFull,
+        TraderFull,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

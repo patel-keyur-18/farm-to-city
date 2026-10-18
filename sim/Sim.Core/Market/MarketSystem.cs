@@ -10,6 +10,7 @@ namespace Sim.Core.Market
         public static void Initialise(Simulation sim)
         {
             sim.State.Market = new MarketState(sim.Config.Game.Market.Goods.Count) { PriceIndex = sim.Config.Game.Market.Economy.StartIndex };
+            foreach (Definitions.StartStock s in sim.Config.Game.Start.Store) sim.State.Market.Stock[s.Good] += s.Quantity;
         }
 
         public void OnPass(Simulation sim, ItemClass pass)

@@ -22,9 +22,9 @@ namespace Sim.Content
             LandDef land = LoadLand(read("land.json"), weather, soils, drainages);
             MapDef map = LoadMap(read("map.json"), soils, drainages);
             List<BuildingDef> buildings = LoadBuildings(read("buildings.json"));
-            StartDef start = LoadStart(read("start.json"), map, buildings);
-            LedgerDef ledger = LoadFinance(read("finance.json"));
             MarketDefs market = LoadMarketDefs(read("goods.json"), read("region.json"), read("market.json"));
+            StartDef start = LoadStart(read("start.json"), map, buildings, market);
+            LedgerDef ledger = LoadFinance(read("finance.json"));
             return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market);
         }
 
@@ -184,23 +184,25 @@ namespace Sim.Content
             {
                 string p = Index(root + ".buildings", i);
                 JObject b = Object(tokens[i], p);
-                OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons");
+                OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons", "storeCapacityKg");
                 string id = UniqueId(b, p, list.ConvertAll(x => x.Id));
                 int slots = Int(Required(b, p, "yardTreeSlots"), p + ".yardTreeSlots");
                 Range(slots, 0, 12, p + ".yardTreeSlots");
                 int life = Int(Required(b, p, "usefulLifeSeasons"), p + ".usefulLifeSeasons");
                 Range(life, 1, 400, p + ".usefulLifeSeasons");
+                int store = Int(Required(b, p, "storeCapacityKg"), p + ".storeCapacityKg");
+                Range(store, 0, 1_000_000, p + ".storeCapacityKg");
                 list.Add(new BuildingDef(id, String(Required(b, p, "nameKey"), p + ".nameKey"), slots,
-                    Money(Required(b, p, "value"), p + ".value"), life));
+                    Money(Required(b, p, "value"), p + ".value"), life, store));
             }
             return list;
         }
 
-        private static StartDef LoadStart(string json, MapDef map, List<BuildingDef> buildings)
+        private static StartDef LoadStart(string json, MapDef map, List<BuildingDef> buildings, MarketDefs market)
         {
             const string root = "start";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "inheritedParcels", "buildings", "startingCash");
+            OnlyFields(o, root, "inheritedParcels", "buildings", "startingCash", "store");
 
             string ip = root + ".inheritedParcels";
             List<JToken> parcelTokens = NonEmptyArray(o, root, "inheritedParcels");
@@ -238,7 +240,32 @@ namespace Sim.Content
             }
             if (!hasWell) throw new ContentException(root + ".buildings", "the inherited land needs the well");
 
-            return new StartDef(inherited, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"));
+            // The inherited store (spec 004 §3.5): quantities in each good's unit; it must fit the start buildings' store.
+            long capacityGrams = 0;
+            foreach (StartBuilding b in placed) capacityGrams += buildings[b.Building].StoreCapacityKg * 1000;
+            var store = new List<StartStock>();
+            long weight = 0;
+            string sp = root + ".store";
+            List<JToken> stockTokens = Array(Required(o, root, "store"), sp);
+            for (int i = 0; i < stockTokens.Count; i++)
+            {
+                string p = Index(sp, i);
+                JObject s = Object(stockTokens[i], p);
+                OnlyFields(s, p, "good", "quantity");
+                int good = Ref(s, p, "good", GoodIds(market));
+                foreach (StartStock seen in store)
+                    if (seen.Good == good) throw new ContentException(p + ".good", "duplicate good '" + market.Goods[good].Id + "'");
+                GoodDef g = market.Goods[good];
+                Fixed units = Number(Required(s, p, "quantity"), p + ".quantity");
+                if (units <= Fixed.Zero) throw new ContentException(p + ".quantity", "must be more than 0");
+                long q = units.MulRatio(g.UnitSize, 1).RoundToLong();
+                store.Add(new StartStock(good, q));
+                weight += Sim.Core.Market.Store.WeightGrams(g, q);
+            }
+            if (weight > capacityGrams)
+                throw new ContentException(sp, "the inherited store weighs " + weight / 1000 + " kg, more than the store's " + capacityGrams / 1000 + " kg");
+
+            return new StartDef(inherited, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"), store);
         }
 
         private static LedgerDef LoadFinance(string json)
@@ -255,6 +282,13 @@ namespace Sim.Content
         }
 
         // ---- helpers ----
+
+        private static List<string> GoodIds(MarketDefs market)
+        {
+            var ids = new List<string>();
+            foreach (GoodDef g in market.Goods) ids.Add(g.Id);
+            return ids;
+        }
 
         private static List<string> ParcelIds(MapDef map)
         {

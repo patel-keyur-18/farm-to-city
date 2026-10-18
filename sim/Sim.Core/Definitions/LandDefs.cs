@@ -175,8 +175,12 @@ namespace Sim.Core.Definitions
         public long Value { get; }
         public int UsefulLifeSeasons { get; }
 
-        public BuildingDef(string id, string nameKey, int yardTreeSlots, long value, int usefulLifeSeasons)
+        /// <summary>The store's capacity in kg (spec 004 §3.5; hut 2,000). The founder's store is the sum over their buildings.</summary>
+        public long StoreCapacityKg { get; }
+
+        public BuildingDef(string id, string nameKey, int yardTreeSlots, long value, int usefulLifeSeasons, long storeCapacityKg)
         {
+            StoreCapacityKg = storeCapacityKg;
             Id = id;
             NameKey = nameKey;
             YardTreeSlots = yardTreeSlots;
@@ -198,7 +202,20 @@ namespace Sim.Core.Definitions
         }
     }
 
-    /// <summary>The inherited start from <c>content/start.json</c> (spec 002 §4, spec 005 §4).</summary>
+    /// <summary>A good in the inherited store: an index into <see cref="MarketDefs.Goods"/> and a quantity in its units (grams, ml, each).</summary>
+    public readonly struct StartStock
+    {
+        public int Good { get; }
+        public long Quantity { get; }
+
+        public StartStock(int good, long quantity)
+        {
+            Good = good;
+            Quantity = quantity;
+        }
+    }
+
+    /// <summary>The inherited start from <c>content/start.json</c> (spec 002 §4, spec 004 §4, spec 005 §4).</summary>
     public sealed class StartDef
     {
         /// <summary>Indices into <see cref="MapDef.Parcels"/>: the protected inheritance (ADR 0030).</summary>
@@ -208,8 +225,13 @@ namespace Sim.Core.Definitions
         /// <summary>Money (1/100 coin).</summary>
         public long StartingCash { get; }
 
-        public StartDef(IReadOnlyList<int> inheritedParcels, IReadOnlyList<StartBuilding> buildings, long startingCash)
+        /// <summary>The inherited store (ADR 0030), in good order of the file.</summary>
+        public IReadOnlyList<StartStock> Store { get; }
+
+        public StartDef(IReadOnlyList<int> inheritedParcels, IReadOnlyList<StartBuilding> buildings, long startingCash,
+            IReadOnlyList<StartStock> store)
         {
+            Store = new List<StartStock>(store).AsReadOnly();
             InheritedParcels = new List<int>(inheritedParcels).AsReadOnly();
             Buildings = new List<StartBuilding>(buildings).AsReadOnly();
             StartingCash = startingCash;
