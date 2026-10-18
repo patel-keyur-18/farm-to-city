@@ -1,0 +1,144 @@
+using Sim.Core.Definitions;
+using Sim.Core.Events;
+using Sim.Core.Finance;
+using Sim.Core.Market;
+using Sim.Core.Maths;
+
+namespace Sim.Core.Commands
+{
+    /// <summary>Shared validation for the market commands (spec 004 §5).</summary>
+    internal static class MarketChecks
+    {
+        /// <summary>The good's index, or a rejection: UnknownGood, InvalidQuantity.</summary>
+        public static RejectReason Good(Simulation sim, string goodId, long quantity, out int good)
+        {
+            good = sim.Config.Game?.Market.IndexOf(goodId) ?? -1;
+            if (good < 0) return RejectReason.UnknownGood;
+            if (quantity <= 0) return RejectReason.InvalidQuantity;
+            return RejectReason.None;
+        }
+
+        public static bool IsProduce(Simulation sim, int good) { return sim.Config.Game.Market.Goods[good].Kind == GoodKind.Produce; }
+
+        /// <summary>Stock that isn't on offer.</summary>
+        public static long Free(Simulation sim, int good) { return sim.State.Market.Stock[good] - sim.State.Market.Offered[good]; }
+
+        public static bool IsSapling(Simulation sim, int good)
+        {
+            foreach (TreeDef t in sim.Config.Game.Farm.Trees)
+                if (t.SaplingGood == good) return true;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Puts stored produce on the local market stall (spec 004 §3.3). It sells hour by hour while it stays in the store.
+    /// The minimum price, if given, applies to the good's whole offer (the latest one given; none clears it).
+    /// </summary>
+    public sealed class Offer : TimedCommand
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+        public Fixed? MinPrice { get; }
+
+        public Offer(long at, string goodId, long quantity, Fixed? minPrice = null) : base(at)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+            MinPrice = minPrice;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
+            if (r != RejectReason.None) return CommandResult.Reject(r);
+            if (!MarketChecks.IsProduce(sim, g)) return CommandResult.Reject(RejectReason.NotProduce);
+            if (MinPrice.HasValue && MinPrice.Value <= Fixed.Zero) return CommandResult.Reject(RejectReason.InvalidArgument);
+            if (Quantity > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
+            sim.State.Market.Offered[g] += Quantity;
+            sim.State.Market.MinPrice[g] = MinPrice ?? Fixed.Zero;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Takes produce back off the stall (spec 004 §3.3); it stays in the store.</summary>
+    public sealed class Withdraw : TimedCommand
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+
+        public Withdraw(long at, string goodId, long quantity) : base(at)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
+            if (r != RejectReason.None) return CommandResult.Reject(r);
+            if (Quantity > sim.State.Market.Offered[g]) return CommandResult.Reject(RejectReason.NotOffered);
+            sim.State.Market.Offered[g] -= Quantity;
+            if (sim.State.Market.Offered[g] == 0) sim.State.Market.MinPrice[g] = Fixed.Zero;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Sells stock not on offer to the regional trader at the floor, now, up to its capacity today (spec 004 §3.3).</summary>
+    public sealed class SellToTrader : TimedCommand
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+
+        public SellToTrader(long at, string goodId, long quantity) : base(at)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
+            if (r != RejectReason.None) return CommandResult.Reject(r);
+            if (!MarketChecks.IsProduce(sim, g)) return CommandResult.Reject(RejectReason.NotProduce);
+            if (Quantity > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
+            if (Quantity > MarketRules.TraderCapacityLeft(sim, g)) return CommandResult.Reject(RejectReason.TraderFull);
+            Store.Take(sim, g, Quantity);
+            Store.SellToTrader(sim, g, Quantity, "trader:" + GoodId);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Buys an input (not saplings) into the store at today's input price (spec 004 §3.4): Dr 1200 Inputs in store,
+    /// Cr Cash, at average cost (ADR 0034).
+    /// </summary>
+    public sealed class Buy : TimedCommand
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+
+        public Buy(long at, string goodId, long quantity) : base(at)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
+            if (r != RejectReason.None) return CommandResult.Reject(r);
+            if (MarketChecks.IsProduce(sim, g) || MarketChecks.IsSapling(sim, g)) return CommandResult.Reject(RejectReason.NotAnInput);
+            if (Quantity > Store.Fits(sim, g)) return CommandResult.Reject(RejectReason.StoreFull);
+            long cost = MarketRules.Value(sim, g, Quantity, MarketRules.InputPrice(sim, g));
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (cost > 0)
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.inputsBought", "buy:" + GoodId,
+                    new Posting(Account.InputsInStore, cost), new Posting(Account.Cash, -cost));
+            sim.State.Market.Stock[g] += Quantity;
+            sim.State.Market.StockCost[g] += cost;
+            sim.Emit(new InputsBought(sim.State.Clock.SimTime, GoodId, Quantity, cost));
+            return CommandResult.Ok;
+        }
+    }
+}

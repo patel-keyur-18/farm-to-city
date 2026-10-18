@@ -120,12 +120,30 @@ namespace Sim.Core.Market
             long fromStock = System.Math.Min(quantity, sim.State.Market.Stock[good]);
             long shortfall = quantity - fromStock;
             long cost = ShortfallCost(sim, good, quantity);
-            sim.State.Market.Stock[good] -= fromStock;
-            if (shortfall == 0) return;
-            if (cost > 0)
-                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.inputsBought", reference,
-                    new Posting(account, cost), new Posting(Account.Cash, -cost));
-            sim.Emit(new InputsBought(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, shortfall, cost));
+            long book = RemoveStock(sim, good, fromStock);
+            if (book + cost > 0)
+            {
+                var postings = new System.Collections.Generic.List<Posting> { new Posting(account, book + cost) };
+                if (book > 0) postings.Add(new Posting(Account.InputsInStore, -book));
+                if (cost > 0) postings.Add(new Posting(Account.Cash, -cost));
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, shortfall > 0 ? "ledger.inputsBought" : "ledger.inputsUsed", reference, postings.ToArray());
+            }
+            if (shortfall > 0) sim.Emit(new InputsBought(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, shortfall, cost));
+        }
+
+        /// <summary>
+        /// Takes q of an input's stock and returns its book value at average cost (cost × q ÷ stock, rounded down; the
+        /// last unit takes the remainder), so 1200 always equals the inputs' book value (ADR 0034).
+        /// </summary>
+        internal static long RemoveStock(Simulation sim, int good, long quantity)
+        {
+            MarketState m = sim.State.Market;
+            if (quantity == 0) return 0;
+            long book = quantity == m.Stock[good] ? m.StockCost[good]
+                : (long)(new BigInteger(m.StockCost[good]) * quantity / m.Stock[good]);
+            m.Stock[good] -= quantity;
+            m.StockCost[good] -= book;
+            return book;
         }
 
         /// <summary>

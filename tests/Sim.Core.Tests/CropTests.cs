@@ -79,14 +79,14 @@ namespace Sim.Core.Tests
             Simulation sim = FarmTest.Farm();
             long cash = sim.State.Ledger.Cash;
             int seed = FarmTest.Good(sim, "seed_radish"), chem = FarmTest.Good(sim, "fertiliser_chemical");
-            // Radish: 8 kg × 0.0208333 = 167 g of seed (100 g in store, 67 g bought at 300 = 20.10); chemical 150 kg × 0.0208333 =
-            // 3,125 g at 31.50 (Spring rush) = 98.44.
+            // Radish: 8 kg × 0.0208333 = 167 g of seed (100 g in store, booked at 30.00; 67 g bought at 300 = 20.10); chemical
+            // 150 kg × 0.0208333 = 3,125 g at 31.50 (Spring rush) = 98.44.
             long expected = Store.ShortfallCost(sim, seed, 167) + Store.ShortfallCost(sim, chem, 3125);
             Assert.That(expected, Is.EqualTo(20_10 + 98_44));
 
             Assert.That(sim.Execute(new Sow(60, 19, "radish", SeedSource.Certified, "chemical")).Accepted, Is.True);
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(expected));
-            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(20_10));
+            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(30_00 + 20_10)); // stock at cost, then the shortfall
             Assert.That(sim.State.Ledger.Balance(Account.FertiliserAndSpraying), Is.EqualTo(98_44));
             Assert.That(sim.State.Land.Tiles[19].Occupied, Is.True);
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(0));

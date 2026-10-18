@@ -65,6 +65,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`):
 - **Planning review done** (2026-10-18): 9 gaps closed with the owner, recorded in **ADR 0034** and §10 of specs 002–007 (mandi labour 0.5 h, glut share, indexed coin amounts, 1200 Inputs in store, ready grace 72 h then spoilage, automatic subsistence, the gate checks and the spike defined, 12 clarifications).
 - **US-054 done:** `Fixed.Log2/Exp2/Pow`, the seasonal price index, `Indexed` coin amounts (land, buildings, living costs, day labour). 150 tests.
 - **US-055 done:** the hourly market (`MarketClearing`, pure): demand curve, supply with valley and imports, the damped step, the rail, pro-rata sales, the trader's hourly share of a glut, the minimum lot (0.1 kg: 1 kg glutted wheat's thin market), unmet demand, the price following the region. 72 h with the market: 4.0 ms. 156 tests.
+- **US-056 done:** `Offer` (optional minimum price), `Withdraw`, `SellToTrader`, `Buy`; account 1200 Inputs in store at average cost, the inherited inputs on the opening balance sheet (13,265), stock expensed at use. 160 tests.
 
 ## Next up
 

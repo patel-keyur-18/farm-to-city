@@ -174,7 +174,7 @@
 | US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Should | To do |
 | US-054 | Price index and fixed-point powers | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | Done |
 | US-055 | Hourly clearing | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 5 | Must | Done |
-| US-056 | Sell and buy | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
+| US-056 | Sell and buy | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | Done |
 | US-058 | Spoilage | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | To do |
 | US-178 | Mandi trip | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
 | US-179 | Buy inputs ahead | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 1 | Must | To do |

@@ -13,6 +13,9 @@ namespace Sim.Core.Market
         /// <summary>The hut store: quantity per good in its units (grams, ml, each), produce and inputs (spec 004 §3.5).</summary>
         internal long[] Stock;
 
+        /// <summary>The book value of each input's stock, 1/100 coin (account 1200, average cost; ADR 0034). 0 for produce.</summary>
+        internal long[] StockCost;
+
         /// <summary>The local market price per produce good (inputs: 0), and the P_regional it last cleared against.</summary>
         internal Fixed[] Price;
         internal Fixed[] LastRegional;
@@ -33,6 +36,7 @@ namespace Sim.Core.Market
         {
             TraderBoughtToday = new long[goods];
             Stock = new long[goods];
+            StockCost = new long[goods];
             Price = new Fixed[goods];
             LastRegional = new Fixed[goods];
             Offered = new long[goods];
@@ -47,6 +51,9 @@ namespace Sim.Core.Market
         public long TraderBought(int good) { return TraderBoughtToday[good]; }
 
         public long InStore(int good) { return Stock[good]; }
+
+        /// <summary>The book value of an input's stock (average cost), 1/100 coin.</summary>
+        public long StockCostOf(int good) { return StockCost[good]; }
 
         /// <summary>The local market price of a produce good, coins per kg.</summary>
         public Fixed MarketPrice(int good) { return Price[good]; }
@@ -74,6 +81,7 @@ namespace Sim.Core.Market
                 PriceIndex = PriceIndex,
                 TraderBoughtToday = (long[])TraderBoughtToday.Clone(),
                 Stock = (long[])Stock.Clone(),
+                StockCost = (long[])StockCost.Clone(),
                 Price = (Fixed[])Price.Clone(),
                 LastRegional = (Fixed[])LastRegional.Clone(),
                 Offered = (long[])Offered.Clone(),
@@ -93,6 +101,7 @@ namespace Sim.Core.Market
             h.WriteInt(TraderBoughtToday.Length);
             foreach (long q in TraderBoughtToday) h.WriteLong(q);
             foreach (long q in Stock) h.WriteLong(q);
+            foreach (long c in StockCost) h.WriteLong(c);
             for (int g = 0; g < Stock.Length; g++)
             {
                 h.WriteFixed(Price[g]);

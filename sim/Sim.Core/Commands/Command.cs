@@ -24,6 +24,12 @@ namespace Sim.Core.Commands
         // Spec 004 (goods and store)
         StoreFull,
         TraderFull,
+        UnknownGood,
+        NotProduce,
+        InvalidQuantity,
+        InsufficientStock,
+        NotOffered,
+        NotAnInput,
 
         // Spec 003 (crops, garden, trees, founder)
         UnknownTile,

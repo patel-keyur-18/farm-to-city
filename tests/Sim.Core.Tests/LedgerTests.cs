@@ -111,7 +111,11 @@ namespace Sim.Core.Tests
             Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
             Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00)); // 6 farm acres and the yard, loam at fertility 45 (price factor 0.98)
             Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));
-            Assert.That(ledger.Balance(Account.OpeningEquity), Is.EqualTo(-(20_000_00 + homeValue + 55_000_00)));
+            // The inherited inputs at their Spring input price (ADR 0034): 600 kg seed potato × 22 + 0.1 kg each of radish
+            // (300), spinach (200) and coriander (150) seed.
+            Assert.That(ledger.Balance(Account.InputsInStore), Is.EqualTo(13_200_00 + 30_00 + 20_00 + 15_00));
+            Assert.That(opening.Postings.Single(p => p.Account == Account.InputsInStore).Amount, Is.EqualTo(13_265_00));
+            Assert.That(ledger.Balance(Account.OpeningEquity), Is.EqualTo(-(20_000_00 + 13_265_00 + homeValue + 55_000_00)));
             Assert.That(ledger.Reconcile(), Is.Null);
             Assert.That(sim.State.Land.Parcels[0].CostBasis + sim.State.Land.Parcels[1].CostBasis, Is.EqualTo(homeValue));
         }
