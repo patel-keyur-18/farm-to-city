@@ -114,8 +114,8 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-009 | Spec 006: people | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-010 | Spec 007: saves, notifications and play log | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
+| US-009 | Spec 006: people | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review |
+| US-010 | Spec 007: saves, notifications and play log | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review |
 | US-013 | Seasonal farm cash-flow model | [F00.3](features/F00.3-economy-model.md) | 5 | Must | Done |
 | US-014 | Anchor numbers in content | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-042 | Sow in season | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | Done |
