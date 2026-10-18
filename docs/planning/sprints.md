@@ -104,7 +104,7 @@
 
 ## Sprint 2 · 2–8 Nov 2026 · Phase 0
 
-- **Status:** In progress (started 2026-10-18)
+- **Status:** In review: all code stories done (52 points); specs 006 and 007 (6 points) await the owner
 - **Branch:** `sprint/02-crops-trees-founder` (or the branch the session assigns)
 - **Goal:** Crops, the kitchen garden, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written.
 - **Points:** 58 (53 planned; +5 from the Sprint 2 planning review, ADR 0032: the spec 004 core and the health formula moved in)
@@ -136,14 +136,18 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [ ] All Must stories meet the Definition of Done (ADR 0025): all but US-009 and US-010, which need the owner's approval
+- [x] Test checklist written in `docs/test-checklists/` (if there is a build): no device build this sprint
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
 **Review (owner's device results):** —
 
-**Retro:** —
+**Retro:**
+- A planning review before coding found 10 gaps (8 before, 2 from the economy model); answering them one by one with the owner (ADRs 0032 and 0033) kept the code free of rework.
+- Pulling the spec 004 core forward was right: crops, the household and net worth all needed goods, prices and the store.
+- The real-sim economy model (a bot on the actual simulation) and the scratch moisture model found what tables couldn't: the land-payback measure and that moisture needed realistic climate weights, not a rule change.
+- To watch: `git add -A` swept an Editor-local Unity file into a commit; stage paths explicitly when the Editor may be open.
 
 ## Sprint 3 · 9–15 Nov 2026 · Phase 0
 
