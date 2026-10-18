@@ -1,10 +1,10 @@
 # 009. Onboarding: the letter, the first session, the guided first week and the Hamlet unlock
 
-- Status: In review (written 2026-10-18; open questions in §10)
+- Status: Approved (2026-10-18), all six open questions answered as recommended (§10)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens (Onboarding); Player journey and eras (Homestead, Hamlet); Learning layer
-- Related ADRs: 0015 (first session and guided first week), 0030 (the inherited farm, the Hamlet gate), 0031 (the kitchen garden, the mandi), 0032 (farm profit, the seed-keeping hint), 0021 (crop calendar), 0034 (ready grace, subsistence automatic), 0022 (hiring from Homestead), 0009 (loans only when needed), 0024 (the play log), 0001 (inclusive invented names)
+- Related ADRs: 0036 (the notification ask in the first session), 0015 (first session and guided first week), 0030 (the inherited farm, the Hamlet gate), 0031 (the kitchen garden, the mandi), 0032 (farm profit, the seed-keeping hint), 0021 (crop calendar), 0034 (ready grace, subsistence automatic), 0022 (hiring from Homestead), 0009 (loans only when needed), 0024 (the play log), 0001 (inclusive invented names)
 - Depends on specs: 001–007 (every trigger reads their state and events); 008 (the letter sheet, highlights, strings, *While you were away*)
 
 ## 1. Goal
@@ -37,7 +37,7 @@ A new player plays within a minute, makes their first sale within 15 minutes, le
 
 | Rule | Behaviour |
 | --- | --- |
-| Who | The founder's grandmother, who farmed the valley all her life (name: open question 1). Warm, plain English with a few village words explained in place (*baadi*, the kitchen garden; *mandi*, the town market) |
+| Who | **Kamla**, the founder's grandmother on the father's side, who farmed the valley all her life; she signs "Your Dadi, Kamla". Warm, plain English with a few village words explained the first time they appear (*beta*, *baadi*, the kitchen garden; *mandi*, the town market; *zaid*, *kharif*, *rabi*) |
 | Shape | Chapters of one page each (about 60–120 words), shown in the letter sheet (spec 008) over the map, with **Continue** or **Show me** (opens the relevant sheet with a highlight) |
 | Reopen | Menu → Letter lists every chapter seen so far, in order; any can be read again. Unseen ones stay hidden (no spoilers) |
 | Never a wall | A chapter is one sheet; it closes with one tap; it never blocks a command; at most one chapter opens at a time and the rest queue |
@@ -55,7 +55,7 @@ Steps run in order. Each has a goal (a condition on the state), a highlight (wha
 | 4 | First pick | A `GardenPicked` event | The ready bed (radish 10 min, spinach 15, coriander 5) | `firstPick` |
 | 5 | First sale | Any sale event (`SoldToTrader`, `MarketSales`) | The store button, then "Sell to trader" | `firstSale` |
 | 6 | A long crop | A `CropSown` of a crop with growth ≥ 12 h on a well acre | Well acre 20 | `longCrop` (potato: free from the inherited seed) |
-| 7 | Come back | The chapter is closed | — | `comeBack` (when the potato is ready; the notification prompt, open question 2) |
+| 7 | Come back | The chapter is closed | — | `comeBack`: when the potato is ready, and the first notification prompt ("Your potato will be ready at 14:05 tomorrow. Want a nudge when it is?"; ADR 0036). Declined: spec 007's second ask after the first season close |
 
 While the garden grows (steps 2–4, 5–15 minutes) the `household` chapter and a short farm tour fill the wait: the store (the inherited seed and grain), the well acres versus the rain-fed acres, the founder's labour.
 
@@ -183,13 +183,14 @@ The highlight: the target bounces once (spec 008 §3.12) and keeps a soft glow u
 
 **Letter text (English string table, `letter.<id>`):**
 
-- `welcome`: "My dear, the farm is yours now. Six acres by the river, the hut your grandfather built, and the well that never failed us. The fields have rested too long and the soil is tired, but it is honest: it gives back what you put in. You'll find seed potato, some wheat and lentils, and greens seed in the store, and a little money to begin. Start small."
+- `welcome`: "My dear *beta*, the farm is yours now. Six acres by the river, the hut your grandfather built, and the well that never failed us. The fields have rested too long and the soil is tired, but it is honest: it gives back what you put in. You'll find seed potato, some wheat and lentils, and greens seed in the store, and a little money to begin. Start small."
 - `garden`: "By the door is the *baadi*, our kitchen garden. Radish, spinach, coriander: they grow in minutes and feed the house. Sow one bed now; by the time you've looked around, it will be ready."
 - `household`: "A farm runs on the people who work it, and you are the first. Choose how the house eats and how long you work: good food and rest let you do more, day after day. The house eats from the store first. Your grandfather kept wheat and lentils from his last harvest; if you'd rather sow them than eat them, switch 'eat from the store' off for now."
 - `firstPick`: "There: your first basket. Everything you pick goes to the store, where it waits for you. Greens don't keep long, so eat them or sell them soon."
 - `firstSale`: "The trader comes to the gate every day and buys at a fair, low price. That's money today. Later you'll learn when it pays to wait, or to take a cart to the *mandi* in town."
 - `longCrop`: "Now something that takes longer. Potato does well in Spring on the well acres, and the seed is already in the store. It will be ready this time tomorrow. Crops wait in the field when they're ready, but not forever: after three days they start to spoil."
-- `comeBack`: "That's a good first day. The farm keeps going while you're away: the crops grow, the house eats, the trader buys. Come back when the potato is ready."
+- `comeBack`: "That's a good first day. The farm keeps going while you're away: the crops grow, the house eats, the trader buys. Your potato will be ready at {readyTime} tomorrow. Want a nudge when it is? At most twice a day, never at night."
+- Signature (every chapter): "Your Dadi, Kamla"
 - `firstReturn`: "Welcome back. Here's what happened while you were away. Tap Collect all to bring in what's ready."
 - `firstFieldHarvest`: "Your first field harvest. Tap *Why?* to see what made it: the soil, the water, your care, the weather, the seed. The weakest of them holds the rest back."
 - `pest`: "Pests on one of your fields. Spray now and you'll save most of the crop; leave it and you'll lose some. Fields that grow the same crop again and again draw more pests."
@@ -229,14 +230,14 @@ Tests in `tests/Sim.View.Tests` (triggers, steps, hints) and `tests/Sim.Core.Tes
 
 ## 10. Open questions
 
-For the owner's review, one at a time:
+All six were answered in the review with the owner (2026-10-18), each as recommended:
 
-1. **The grandmother's name and voice.** An invented, inclusive name (ADR 0001), for example "Kamla", signing "your Dadi" or "Nani". Plain English with a few village words explained in place (*baadi*, *mandi*, *zaid*, *kharif*, *rabi*). **Recommended:** a name you choose; light use of village words.
-2. **When to ask about notifications.** Spec 007 says "after the first field crop is harvested". In the first session the field crop is potato (24 h), so the first absence would have no reminder. Options: (a) as spec 007: on the first return; (b) ask in `comeBack`, right after the long crop is sown, which is when the reminder matters (ADR 0015's wording). **Recommended: (b)**, with spec 007's second ask after the first season close kept. This changes spec 007's rule, so it needs your approval.
-3. **The Hamlet gate's counting.** "6 acres harvested in one season at average Care ≥ 0.9" (ADR 0030): six *different* acres in the same season, with the mean Care over all that season's field harvests. **Recommended** as §3.6; the alternative (any 6 harvests, even on one acre) is too easy with 2-hour radish.
-4. **"One profitable season"**: any closed season so far, not necessarily the same season as the six acres. **Recommended** (a season with a hut and a hand's first wages often runs at a loss, which is realistic).
-5. **Skipping.** "I'll find my own way" ends the first session but keeps the week's chapters. **Recommended.**
-6. **Where seen flags live.** In the sim state, set by a `SeeChapter` command, so saves and replays reproduce them (§3.7). **Recommended** over a separate settings file.
+1. **The letter's author:** Kamla, the founder's Dadi (father's mother), signing "Your Dadi, Kamla"; plain English with a few village words explained in place (§3.1).
+2. **The notification prompt:** first asked in the `comeBack` chapter, right after the long crop is sown, with its ready time; spec 007's second ask after the first season close stays (ADR 0036 amends spec 007).
+3. **The Hamlet gate's counting:** in one season, field harvests on at least 6 different owned acres, with the mean Care of all that season's field harvests at least 0.9 (§3.6).
+4. **The profitable season:** any closed season so far with farm profit above 0, not necessarily the season of the six acres (§3.6).
+5. **Skipping:** "I'll find my own way" ends the first session's steps and highlights; the week's chapters still appear once each (§3.2).
+6. **Seen flags:** in the sim state (`Guidance`), set by the `SeeChapter` command, so they save, export and replay with the town (§3.7).
 
 ## 11. Cut first
 

@@ -30,7 +30,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
+| 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -732,7 +732,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 | Chronicle | Remember | Timeline, Almanacs, citizen stories |
 | Settings and saves | Control | Save now, export and import town, new game, difficulty, accessibility, language |
 
-**Onboarding (ADR 0015).** A short first session, then a guided first week. The grandparent's letter and the advisors guide each lesson, never a pop-up wall.
+**Onboarding (ADR 0015).** A short first session, then a guided first week. The letter from the founder's grandmother (Kamla, "your Dadi") and the advisors guide each lesson, never a pop-up wall (spec 009).
 
 - **First session (15–20 minutes):** inherit the neglected 6-acre farm, its store and the letter. Sow a quick crop in the kitchen garden, set the household plan, harvest and make the first sale to the travelling trader. Then sow a long crop, turn on notifications, and leave with a reason to come back.
 - **Guided first week:** each "first" is guided once, when it naturally happens, by a new letter page:
@@ -951,7 +951,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 ## Art, audio and feel
 
-The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs, such as Kenney's isometric sets, give the base style. Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs.
+The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs give the base style: Kenney's flat, low-poly *Isometric Landscape* set (ADR 0036). Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs.
 
 - **Lighting and seasons.** A day-night cycle with 2D lights, and seasonal palette shifts: spring greens, golden harvest, monsoon greys, winter haze.
 - **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.
@@ -960,7 +960,7 @@ The look is clean, stylised 2D isometric: readable at phone size, and producible
 - **Motion and feedback (Hay Day-like).** Every action answers with motion: a tapped field or building bounces (squash and stretch), harvested items and coins fly along a curve to the store or the wallet, numbers count up instead of jumping, and panels slide and scale in with easing, never snapping. All of it is driven by code (tweens on transforms and UI Toolkit elements, ADR 0017), not hand-made animation clips, and it reads only from domain events and state, so the simulation never waits on an animation. Spec 008 (HUD) defines the motion catalogue (which event triggers which motion, durations, easing curves), and the art style check (F00.6) includes a short motion sample alongside the still screenshot.
 - **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
 - **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
-- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence. CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
+- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence, plus SIL OFL for fonts only (Noto Sans, with Noto Sans Devanagari for Hindi; ADR 0036). CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
 
 **Monetisation**
 

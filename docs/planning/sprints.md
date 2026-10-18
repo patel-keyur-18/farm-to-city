@@ -161,8 +161,8 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-011 | Spec 008: HUD, presentation and localisation | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review (owner) |
-| US-012 | Spec 009: onboarding | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review (owner) |
+| US-011 | Spec 008: HUD, presentation and localisation | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-012 | Spec 009: onboarding | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
 | US-015 | Money-loop checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-016 | Viability checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | Built; device run (owner) |

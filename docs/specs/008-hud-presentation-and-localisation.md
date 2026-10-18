@@ -1,10 +1,10 @@
 # 008. HUD, presentation and localisation
 
-- Status: In review (written 2026-10-18; open questions in §10)
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation
-- Related ADRs: 0005 (landscape only), 0017 (code-first Unity, UI Toolkit, dev panel), 0024 (string tables, Indian number formatting), 0032 (report lines, plain-language labels and *Why?*), 0034 (ready grace, mandi labour, indexed amounts), 0002 (away rules, ready to harvest), 0007 (zero budget, CC0 art), 0015 (onboarding hooks), 0021 (crop calendar), 0026 (iPhone 13, half frame budget)
+- Related ADRs: 0036 (fonts under SIL OFL, the low-poly art base), 0005 (landscape only), 0017 (code-first Unity, UI Toolkit, dev panel), 0024 (string tables, Indian number formatting), 0032 (report lines, plain-language labels and *Why?*), 0034 (ready grace, mandi labour, indexed amounts), 0002 (away rules, ready to harvest), 0007 (zero budget, CC0 art), 0015 (onboarding hooks), 0021 (crop calendar), 0026 (iPhone 13, half frame budget)
 - Depends on specs: 001–007 (every screen shows their state and sends their commands). Spec 009 (onboarding) uses this spec's letter sheet, highlights and strings.
 
 ## 1. Goal
@@ -247,7 +247,9 @@ Alerts are derived from state each refresh (not stored), except dismissals, whic
 | Duration | 3 h 12 min · 2 d 4 h · 45 s | same | The two largest units |
 | Date | Spring · Day 2 of 4 · Year 1 | same | — |
 
-**Locale choice:** the device's region: India → en-IN, elsewhere Western; a settings switch overrides it (open question 3).
+**Locale choice:** the device's region: India → en-IN, elsewhere Western; a settings switch overrides it.
+
+**Font:** Noto Sans (SIL OFL, ADR 0036), bundled; Noto Sans Devanagari joins with Hindi (F19.1). Layouts leave about 30% room for longer translations.
 
 ### 3.12 The motion catalogue
 
@@ -396,16 +398,16 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 
 ## 10. Open questions
 
-For the owner's review, one at a time:
+All eight were answered in the review with the owner (2026-10-18), each as recommended:
 
-1. **The view layer.** A new pure C# assembly `Sim.View` (§3.1) with its own test project, so every screen's content is tested by `dotnet test` like the sim. **Recommended.** The alternative is view logic inside Unity, tested only on the device.
-2. **Money on screen.** Whole coins everywhere, paise only in the ledger's detail rows (§3.11). **Recommended:** realistic (nobody counts paise at the mandi) and readable.
-3. **Number format default.** By the device's region (ADR 0024), with a switch. Or Indian grouping for everyone, since the setting is an Indian valley (lakh and crore are part of the lesson). **Recommended: by region with the switch** (ADR 0024 as written).
-4. **Collect all with a full store.** Collect what fits and *offer* the rest to the trader with one prompt (§3.9), never sell without asking. **Recommended.**
-5. **"Earns per acre" on the crop card.** At the trader's floor (what a whole harvest reliably fetches), minus certified seed, for an acre kept busy all season, before labour. **Recommended**; the alternative (the regional price) flatters every crop.
-6. **The art style** (US-024's screenshots `docs/art/s03-style-*.png`): Kenney's flat low-poly landscape tiles (bright, Hay Day-like) or the textured miniature-farm pack (rustic), and whether to keep mixing them. **Recommended: the low-poly landscape style** as the base, with setting-specific Blender sprites (huts, crops, people) made to match it later (GDD Art).
-7. **Fonts.** The GDD allows CC0, CC-BY and the Unity Asset Store licence; most good free fonts (Noto Sans, which also covers Devanagari for Hindi) are SIL OFL. **Recommended:** allow SIL OFL for fonts only (an ADR), and use Noto Sans.
-8. **Phase 1 accessibility and sound.** Reduced motion and text size in Phase 1 (the rest in F19.2); feedback sounds as a Could. **Recommended** as written.
+1. **The view layer:** a pure C# `Sim.View` assembly (`sim/Sim.View/`, netstandard2.1, C# 9, no Unity references) with its own test project `tests/Sim.View.Tests`; Unity only draws (§3.1).
+2. **Money on screen:** whole coins everywhere, rounded half away from zero; paise only in the ledger's detail rows (§3.11).
+3. **Number format:** by the device's region (Indian grouping with lakh and crore for India, Western elsewhere), with a Settings switch (ADR 0024 as written).
+4. **Collect all with a full store:** collect what fits, nearest to spoiling first; one prompt offers the rest to the trader; never sells without asking (§3.9).
+5. **"Earns per acre"** on the crop-calendar card: at the trader's floor, minus certified seed, for an acre kept busy all season, before labour (§3.7).
+6. **Art style:** Kenney's low-poly *Isometric Landscape* is the base; setting-specific assets are made in Blender to match it (F19.3), with flat placeholders until then (ADR 0036).
+7. **Fonts:** SIL OFL is allowed for fonts only (ADR 0036): **Noto Sans**, and Noto Sans Devanagari when Hindi arrives. The game is mostly English; Hindi is supported (F19.1), so every string stays in the tables and every layout leaves room for longer text.
+8. **Phase 1 accessibility and sound:** reduced motion and text size in Phase 1; feedback sounds and haptics as Could; the rest in F19.2 (§3.13).
 
 ## 11. Cut first
 

@@ -143,6 +143,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0032 | The well waters 2 well acres (the rest rain-fed). The household eats from the store daily, credited as home use. Founder nutrition and day labour are time-weighted. P&L grouping; the Hamlet gate needs farm profit > 0. Inherited seed age 2.0 |
 | 0033 | Land payback measured on an owner-operated acre (1,20,000 stays; hired acres net 2,000–5,000). Saplings priced with planting: banana 60, papaya 60, guava 180, mango 350 |
 | 0034 | Sprint 3 review: mandi trip costs 0.5 h of labour; a glut drains hour by hour; every coin amount follows the price index (not loans or fertiliser); inputs in store are an asset (1200); ready crops and fruit spoil after 72 h; subsistence automatic only; Phase 0 gate checks and the spike defined |
+| 0036 | Fonts may be SIL OFL (Noto Sans, Devanagari for Hindi); the low-poly Kenney landscape style is the art base; the first notification ask comes in the first session after the long crop is sown. (0035 is reserved for the spike result) |
 
 ## Current status
 

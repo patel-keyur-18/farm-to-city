@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 3: code done (2026-10-18); specs 008, 009 and the device run with the owner |
+| Sprint | Sprint 3: code and specs done (2026-10-18); the device run and the findings with the owner |
 | Branch with latest work | `sprint/03-market-spike-gate` |
 | Last updated | 2026-10-18 |
 
@@ -82,21 +82,21 @@ Sprint 3 (branch `sprint/03-market-spike-gate`, pull request to `main` open). Al
 ## Next up
 
 1. **Owner:** run the device checklist `docs/test-checklists/s03-spike-determinism.md` on the iPhone 13 (Release, Development Build off) and send the screenshots: golden replays, spike, heat run, style check.
-2. **Owner with Claude:** close the open questions below one by one (spec 008: 8; spec 009: 6; the three Sprint 3 findings), then approve specs 008 and 009.
+2. **Owner with Claude:** close the Sprint 3 findings below one by one (specs 008 and 009 are approved).
 3. **Claude, next session:** write ADR 0035 with the device numbers (US-022) and hold the **Phase 0 gate review** with the owner: money loops and viability (pass), the spike within 8.3 ms, goldens matching on the iPhone. Then record the answers (ADR and §10), merge, and start Sprint 4 (credit and foreclosure, the first playable build) on `sprint/04-...`.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Run the Sprint 3 device checklist; review specs 008 and 009 (open questions); merge the Sprint 3 pull request once the review is done |
+| Now | Run the Sprint 3 device checklist; close the Sprint 3 findings; merge the Sprint 3 pull request once the review is done |
 | End of Sprint 3 | Phase 0 gate review with Claude, on the device results |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
 ## Open questions (with the owner)
 
-**Specs 008 and 009:** see §10 of each (008: the `Sim.View` layer, money on screen, number format default, Collect all with a full store, the crop card's "earns per acre", the art style, fonts and SIL OFL, Phase 1 accessibility and sound; 009: the grandmother's name and voice, when to ask about notifications (changes spec 007), the Hamlet gate's counting, which profitable season, skipping, where seen flags live).
+**Specs 008 and 009: approved** (2026-10-18), all 14 questions answered as recommended (§10 of each, ADR 0036: fonts under SIL OFL, the low-poly art base, the first notification ask after the long crop is sown).
 
 **Sprint 3 findings for the owner (from the economy model and the gate run; no data changed):**
 1. **The mandi never pays for the competent bot** over 15 years: after the cart hire (800), the 3% commission and the 0.5 h of labour, a full cart beats the trader by little or nothing, and the trader rarely runs out of capacity. It works, but it's a choice nobody would take. Options: realistic tuning (tractor-trolley hire of about 400 a tonne; commission and fees about 4%), a larger cart, or accept it as a relief valve for full stores.
@@ -114,7 +114,6 @@ Sprint 3 (branch `sprint/03-market-spike-gate`, pull request to `main` open). Al
 ## Half-done work
 
 - **US-022 (ADR 0035):** waits for the owner's device numbers.
-- **Specs 008 and 009:** written, in review.
 
 ## Environment notes
 
