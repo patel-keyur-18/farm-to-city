@@ -99,6 +99,7 @@ namespace Game.Presentation
             AddButton(bar, "Spike", () => StartSpike(false));
             AddButton(bar, "Heat run (5 min)", () => StartSpike(true));
             AddButton(bar, "Golden replays", RunGoldens);
+            AddButton(bar, "Style check", () => { _card.style.display = DisplayStyle.None; Phase0.StyleCheck.Start(); });
             _checks = AddLabel(root, 30);
             _checks.style.whiteSpace = WhiteSpace.Normal;
             _checks.style.backgroundColor = new Color(0.98f, 0.95f, 0.88f, 0.92f);
