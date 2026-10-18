@@ -5,6 +5,8 @@
 - **Tested by / date:** ____
 - **How to install:** see `how-to-build-ios.md`, with the two settings below
 
+**Round 3 (2026-10-18), Spike only (about 90 s):** rebuild from the branch head and tap **Spike** once. It now runs four 20-second views after the warm-up: **whole map with the 2,000 sprite agents**, **play zoom**, **the map with no agents** (the baseline: the screen and tiles alone), and **the agents without the map**. Screenshot the result panel. Dropped frames now count only frames over 25 ms (a missed screen refresh at 60 Hz is about 33 ms; round 2's 16.7 ms threshold counted normal vsync jitter), with the average fps. The render thread is shown for diagnosis: on iOS its time includes waiting for the screen. Round 2 already settled the golden replays (all pass) and the heat run (no throttling).
+
 **Round 2 (after the first run, 2026-10-18):** the CPU figure was wrong (it went negative) and the buttons didn't stop a running check, so the style check drew on top of the heat run. Both are fixed. **Rebuild from the branch head**, and tap one button at a time: each now stops the one before.
 
 **What this build is:** the hello card from Sprint 1 plus a **Phase 0 checks** bar with three buttons. They answer the two device questions of the Phase 0 gate (ADR 0027, ADR 0034 §8):

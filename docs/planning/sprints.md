@@ -193,7 +193,8 @@
 
 **Review (owner's device results):**
 - *Round 1 (2026-10-18, iPhone 13):* the spike runs smoothly with all 2,000 agents on the whole map; GPU 2.7 ms (whole map) and 3.4 ms (during the heat run), well inside 8.3 ms. The CPU figure was negative (a measurement bug: the present wait was subtracted from a time that already excludes it), and the buttons didn't stop a running check, so the style check drew over the heat run. The style check itself renders as designed. Golden replays and the result panels weren't captured. Both bugs fixed (4d9199a).
-- *Round 2:* — (rebuild; checklist checks 2–12)
+- *Round 2 (2026-10-18):* **golden replays 001, 003 and 004 all PASS on the iPhone 13 with the exact `dotnet test` hashes** (IL2CPP determinism proven); 72 h catch-up 1.8 ms (budget 2,000). Spike: main thread p95 7.45 ms (whole map), 3.5 ms (play zoom); GPU p95 2.8 ms; render thread p95 14.5–15.2 ms; "frames over 16.7 ms" 36% (the threshold counted normal 60 Hz vsync jitter). Heat run (5 min): the same numbers, the phone stayed cool. Style check approved (the low-poly look). Citizen stub avg 2.1–2.6 ms, max 11.6 ms.
+- *Round 3:* — (Spike only: the baseline and agents-only views, dropped frames over 25 ms)
 
 **Retro:** —
 

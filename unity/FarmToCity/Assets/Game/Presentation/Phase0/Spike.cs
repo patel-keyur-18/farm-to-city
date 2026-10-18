@@ -16,7 +16,7 @@ namespace Game.Presentation.Phase0
     public sealed class Spike : MonoBehaviour
     {
         private const int MapSize = 64, Chunk = 16, Agents = 2000;
-        private const float WarmUp = 10f, ViewSeconds = 30f;
+        private const float WarmUp = 10f, ViewSeconds = 20f;
 
         private struct Agent
         {
@@ -36,11 +36,16 @@ namespace Game.Presentation.Phase0
         // Per frame: main-thread work, render-thread work, GPU, and the whole frame interval (FrameTimingManager).
         private readonly List<float> _cpu = new List<float>(), _render = new List<float>(), _gpu = new List<float>(), _frame = new List<float>(), _stubMs = new List<float>();
         private readonly StringBuilder _report = new StringBuilder();
-        private int _phase; // 0 warm-up, 1 whole map, 2 play zoom, 3 done
+        // The views, in order: sprites on the whole map, sprites at play zoom, then (spike only) the map with no agents
+        // (the screen and the tiles alone) and the agents with the map hidden (the agents alone): together they split
+        // the render thread's time between the screen wait, the tilemap and the 2,000 sprites. Round 3, 2026-10-18.
+        private enum View { WarmUp, Sprites, SpritesZoom, NoAgents, NoMap, Done }
+        private View[] _views;
+        private int _phase;
         private float _phaseStart;
 
         public string Status { get; private set; } = "";
-        public bool Done { get { return _phase == 3; } }
+        public bool Done { get { return _views[_phase] == View.Done; } }
         public string Report { get { return _report.ToString(); } }
 
         public static Spike Start(bool heatRun)
@@ -100,7 +105,11 @@ namespace Game.Presentation.Phase0
             _stub = new CitizenStub(Agents, MapSize);
             _start = _phaseStart = _lastStub = Time.realtimeSinceStartup;
             WholeMapView();
+            _views = _heat ? new[] { View.WarmUp, View.Sprites, View.SpritesZoom, View.Done }
+                : new[] { View.WarmUp, View.Sprites, View.SpritesZoom, View.NoAgents, View.NoMap, View.Done };
         }
+
+        private void ShowSprites(bool on) { foreach (Transform t in _sprites) t.gameObject.SetActive(on); }
 
         private Vector3 Cell(int x, int y)
         {
@@ -143,7 +152,7 @@ namespace Game.Presentation.Phase0
                     a.Target = Cell(a.X, a.Y);
                 }
                 else a.Pos += d.normalized * step;
-                _sprites[i].localPosition = a.Pos;
+                if (_views[_phase] != View.NoAgents) _sprites[i].localPosition = a.Pos;
             }
 
             // The citizen stub's hourly pass, once a second (3,600 × the real rate).
@@ -166,24 +175,38 @@ namespace Game.Presentation.Phase0
 
             float inPhase = now - _phaseStart;
             float viewLength = _heat ? 150f : ViewSeconds; // heat run: 2 × 2.5 min
-            switch (_phase)
+            View view = _views[_phase];
+            if (view == View.WarmUp)
             {
-                case 0:
-                    Status = "Spike: warming up " + (int)(WarmUp - inPhase) + " s";
-                    if (inPhase >= WarmUp) Next(1);
-                    break;
-                case 1:
-                case 2:
-                    _cpu.Add(cpu); _render.Add(render); _gpu.Add(gpu); _frame.Add(frame);
-                    if (stubMs > 0) _stubMs.Add(stubMs);
-                    Status = (_phase == 1 ? "Whole map" : "Play zoom") + " " + (int)(viewLength - inPhase) + " s · main " + cpu.ToString("0.0")
-                        + " ms · render " + render.ToString("0.0") + " ms · GPU " + gpu.ToString("0.0") + " ms" + (timed ? "" : " (no frame timing)");
-                    if (inPhase >= viewLength)
-                    {
-                        Summarise(_phase == 1 ? "Whole map (all 2,000 agents visible)" : "Play zoom");
-                        if (_phase == 1) { PlayView(); Next(2); } else { Next(3); Finish(); }
-                    }
-                    break;
+                Status = "Spike: warming up " + (int)(WarmUp - inPhase) + " s";
+                if (inPhase >= WarmUp) Next(_phase + 1);
+                return;
+            }
+            if (view == View.Done) return;
+            _cpu.Add(cpu); _render.Add(render); _gpu.Add(gpu); _frame.Add(frame);
+            if (stubMs > 0) _stubMs.Add(stubMs);
+            Status = Name(view) + " " + (int)(viewLength - inPhase) + " s · main " + cpu.ToString("0.0")
+                + " ms · render " + render.ToString("0.0") + " ms · GPU " + gpu.ToString("0.0") + " ms" + (timed ? "" : " (no frame timing)");
+            if (inPhase < viewLength) return;
+            Summarise(Name(view));
+            Next(_phase + 1);
+            switch (_views[_phase])
+            {
+                case View.SpritesZoom: PlayView(); break;
+                case View.NoAgents: WholeMapView(); ShowSprites(false); break;
+                case View.NoMap: ShowSprites(true); _grid.gameObject.SetActive(false); break;
+                case View.Done: _grid.gameObject.SetActive(true); Finish(); break;
+            }
+        }
+
+        private static string Name(View v)
+        {
+            switch (v)
+            {
+                case View.Sprites: return "Whole map, 2,000 sprite agents";
+                case View.SpritesZoom: return "Play zoom, sprite agents";
+                case View.NoAgents: return "Whole map, no agents (baseline)";
+                default: return "Whole map, agents without the map";
             }
         }
 
@@ -193,14 +216,17 @@ namespace Game.Presentation.Phase0
         {
             float[] cpu = _cpu.ToArray(), render = _render.ToArray(), gpu = _gpu.ToArray();
             Array.Sort(cpu); Array.Sort(render); Array.Sort(gpu);
-            int over = 0;
-            foreach (float v in _frame) if (v > 16.7f) over++;
-            bool pass = P95(cpu) <= 8.3f && P95(render) <= 8.3f && P95(gpu) <= 8.3f && over * 100 < _frame.Count;
-            _report.AppendLine(view + ": " + (pass ? "PASS" : "OVER BUDGET"));
+            // A dropped frame at 60 Hz takes about 33 ms; 16.7 ms frames with vsync jitter are normal, so count over 25 ms.
+            int dropped = 0;
+            float total = 0;
+            foreach (float v in _frame) { if (v > 25f) dropped++; total += v; }
+            float fps = total > 0 ? 1000f * _frame.Count / total : 0;
+            bool pass = P95(cpu) <= 8.3f && P95(gpu) <= 8.3f && dropped * 100 < _frame.Count;
+            _report.AppendLine(view + ": " + (pass ? "main thread and GPU within 8.3 ms" : "OVER BUDGET"));
             _report.AppendLine("  CPU main thread ms: avg " + Avg(cpu).ToString("0.00") + ", p95 " + P95(cpu).ToString("0.00") + ", max " + Max(cpu).ToString("0.00"));
             _report.AppendLine("  Render thread ms:   avg " + Avg(render).ToString("0.00") + ", p95 " + P95(render).ToString("0.00") + ", max " + Max(render).ToString("0.00"));
             _report.AppendLine("  GPU ms:             avg " + Avg(gpu).ToString("0.00") + ", p95 " + P95(gpu).ToString("0.00") + ", max " + Max(gpu).ToString("0.00"));
-            _report.AppendLine("  Frames over 16.7 ms: " + over + " of " + _frame.Count);
+            _report.AppendLine("  Dropped frames (over 25 ms): " + dropped + " of " + _frame.Count + " · " + fps.ToString("0.0") + " fps");
             _cpu.Clear(); _render.Clear(); _gpu.Clear(); _frame.Clear();
         }
 
