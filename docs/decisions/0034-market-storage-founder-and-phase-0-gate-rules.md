@@ -28,7 +28,7 @@ The trip removes exactly `MandiDef.founderHours` (default **0.5 h**) of the foun
 
 ### 2. The trader absorbs a glut hour by hour
 
-When the hour's target is raised to the floor, the trader takes only that hour's unsold share: `toTrader = min(S_founder − sold, traderCapacityLeft)`, in kg for the hour. Each hour at least `min(eligible, MarketDef.minLotKg)` (default 1 kg) reaches the stall, so an offer always finishes. Sold quantities round down to the gram. `SellToTrader` stays the instant "sell it all now" way.
+When the hour's target is raised to the floor, the trader takes only that hour's unsold share: `toTrader = min(S_founder − sold, traderCapacityLeft)`, in kg for the hour. Each hour at least `min(eligible, MarketDef.minLotKg)` (default 0.1 kg, tuned in Sprint 3: 1 kg alone pushed wheat's thin local market to the floor) reaches the stall, so an offer always finishes. Sold quantities round down to the gram. `SellToTrader` stays the instant "sell it all now" way.
 
 ### 3. Every coin amount in content follows the price index
 

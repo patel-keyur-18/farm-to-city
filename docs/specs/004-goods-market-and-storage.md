@@ -95,7 +95,7 @@ unmet     = max(0, D − S)
 - **Payment:** `Value(sold, P) + Value(toTrader, Floor)`, Dr Cash, Cr the good's sales account (4000 Crop sales or 4010 Fruit sales). The goods leave the store and the offer. Emits `MarketSales` when anything sold.
 - **Pro rata:** when supply exceeds demand, every seller sells the same share of what they bring. In Phase 1 the only buyer is the valley's aggregate demand, so no rationing order is needed; ADR 0013's seeded order arrives with households and businesses.
 - **The trader holds the floor:** a target below the floor means the market is glutted; the trader buys the hour's unsold share of the founder's offer at the floor, up to its daily capacity, so a glut drains hour by hour (ADR 0034). When the capacity is used up, the floor no longer holds and the price can fall towards the rail.
-- **Minimum lot:** each hour at least `min(eligible, minLotKg)` reaches the stall (default 1 kg), so an offer always finishes.
+- **Minimum lot:** each hour at least `min(eligible, minLotKg)` reaches the stall (default 0.1 kg; 1 kg would glut thin markets like wheat's), so an offer always finishes.
 - **Following the region:** when P_regional changed since the last clearing (a new season or an index step), P is scaled by the same ratio first, so a neutral market stays exactly at P_regional (AC-5); damping then handles supply effects only.
 - **Defaults** make the market neutral when the founder offers nothing: `valleySupply + import = demand`, so P settles at P_regional.
 - **Damping:** with k = 0.25 the price closes 25% of the gap each hour, needs no solver and never overshoots (ADR 0013).
@@ -222,7 +222,7 @@ Other `GoodDef` fields: `id`, `nameKey`, `edible` (produce: true), `weightKg` pe
 | | `railMin`, `railMax` | 0.5, 2.0 | 0 < min < 1 < max |
 | | `offerSpreadHours` | 24 | 1–96 |
 | | `unmetWindowHours` | 96 | 1–384 |
-| | `minLotKg` | 1 | > 0 |
+| | `minLotKg` | 0.1 | > 0 |
 | `MandiDef` | `tripHours` | 6 | 1–24 |
 | | `cartCapacityKg` | 1,000 | > 0 |
 | | `cartHirePerTrip` | 800 coins | ≥ 0 |
@@ -384,7 +384,9 @@ None of these changes a formula or a rule.
 
 1. **Fixed powers.** `Log2` squares the mantissa in Q1.63 (33 bits, rounded: absolute error ≤ 2⁻³²); `Exp2` multiplies hard-coded Q1.63 constants 2^(2⁻ᵏ) (computed to 80 digits). A Q31.32 result below about 2⁻⁴ has fewer significant bits than a 2⁻²⁸ relative bound asks for, so AC-4 checks "relative bound, or within one unit in the last place". The tests use `double` only as the reference.
 2. **The index draw** is `Rng.Next(seed, Inflation, 0, season index)`, top 32 bits as u in [0, 1).
-3. **Initialisation order.** The market is set up before the land at a new game, because land prices and building costs read the price index.
+3. **Supply and demand in grams a day.** The clearing sums whole grams a day (the founder's lot × 24 + the valley's + imports), so a neutral market gives a ratio of exactly 1 and AC-5 holds bit for bit; the lot is whole grams an hour.
+4. **The minimum lot** is 0.1 kg (data): 1 kg alone raised wheat's thin, inelastic market (e = 0.4, 12.5 kg an hour) 8% and pushed it to the floor, so "selling a little each hour" wasn't possible.
+5. **Initialisation order.** The market is set up before the land at a new game, because land prices and building costs read the price index.
 
 ## 11. Cut first
 

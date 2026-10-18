@@ -61,5 +61,26 @@ namespace Sim.Core.Tests
             TestContext.Out.WriteLine("72 h with land: " + best.ToString("0.000") + " ms");
             Assert.That(best, Is.LessThan(20));
         }
+
+        // Spec 004 AC-17: the market (11 produce goods, every one on offer), the store and the default farm.
+        [Test]
+        public void Advance72h_WithMarket()
+        {
+            double best = double.MaxValue;
+            for (int run = 0; run < 6; run++) // the first run warms up the JIT
+            {
+                Simulation sim = NewFarm(seed: 3, localSeconds: 8 * Hour, game: RichGame());
+                var goods = sim.Config.Game.Market.Goods;
+                for (int g = 0; g < goods.Count; g++)
+                    if (goods[g].Kind == Sim.Core.Definitions.GoodKind.Produce) { sim.State.Market.Stock[g] += 100_000; sim.State.Market.Offered[g] += 100_000; }
+                long target = sim.State.Clock.SimTime + 72 * Hour;
+                var watch = Stopwatch.StartNew();
+                sim.AdvanceTo(target, AdvanceMode.Away);
+                watch.Stop();
+                if (run > 0) best = Math.Min(best, watch.Elapsed.TotalMilliseconds);
+            }
+            TestContext.Out.WriteLine("72 h with the market: " + best.ToString("0.000") + " ms");
+            Assert.That(best, Is.LessThan(20));
+        }
     }
 }

@@ -75,12 +75,14 @@ namespace Sim.Core.Market
             return Commands.RejectReason.None;
         }
 
-        /// <summary>Takes stock out of the store. The caller has checked there's enough.</summary>
+        /// <summary>Takes stock out of the store, stock not on offer first (spec 004 §3.5). The caller has checked there's enough.</summary>
         internal static void Take(Simulation sim, int good, long quantity)
         {
             if (quantity < 0 || quantity > sim.State.Market.Stock[good])
                 throw new System.InvalidOperationException("Can't take " + quantity + " of good " + good + " from the store.");
-            sim.State.Market.Stock[good] -= quantity;
+            MarketState m = sim.State.Market;
+            m.Stock[good] -= quantity;
+            if (m.Offered[good] > m.Stock[good]) m.Offered[good] = m.Stock[good]; // stock not on offer goes first
         }
 
         /// <summary>Sells to the trader at the current floor: Dr Cash, Cr the good's sales account. Uses trader capacity.</summary>

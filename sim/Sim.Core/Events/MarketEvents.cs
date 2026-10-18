@@ -2,6 +2,32 @@ using Sim.Core.Maths;
 
 namespace Sim.Core.Events
 {
+    /// <summary>An hourly pass sold some of the founder's offer: locally and to the trader at the floor (spec 004 §5).</summary>
+    public sealed class MarketSales : SimEvent
+    {
+        public string GoodId { get; }
+        public long LocalQuantity { get; }
+        public Fixed Price { get; }
+        public long TraderQuantity { get; }
+        public Fixed Floor { get; }
+        public long Amount { get; }
+
+        public MarketSales(long simTime, string goodId, long localQuantity, Fixed price, long traderQuantity, Fixed floor, long amount) : base(simTime)
+        {
+            GoodId = goodId;
+            LocalQuantity = localQuantity;
+            Price = price;
+            TraderQuantity = traderQuantity;
+            Floor = floor;
+            Amount = amount;
+        }
+
+        protected override string Describe()
+        {
+            return "MarketSales(good=" + GoodId + ", local=" + LocalQuantity + "@" + Price + ", trader=" + TraderQuantity + "@" + Floor + ", amount=" + Amount + ")";
+        }
+    }
+
     /// <summary>The seasonal inflation step moved the price index (spec 004 §5).</summary>
     public sealed class PriceIndexChanged : SimEvent
     {
