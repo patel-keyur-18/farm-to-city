@@ -1,10 +1,10 @@
 # 003. Crops, fruit trees and founder labour
 
-- Status: Approved (2026-10-17), with the Sprint 1 review decisions and the Sprint 2 planning review changes (ADR 0032) in §10
+- Status: Approved (2026-10-17), with the Sprint 1 review decisions the Sprint 2 planning review changes (ADR 0032) and the Sprint 3 planning review changes (ADR 0034) in §10
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Crops, Yield formula, Fruit trees, Ready to harvest, Inputs and trade-offs); Player journey and eras (The founder's routine); Data model (`CropDef`, `FounderDef`, `DietPlanDef`)
-- Related ADRs: 0032 (well acres, daily eating, time-weighted founder labour, farm profit, inherited seed age), 0030 (inherited farm, start, Hamlet gate), 0031 (kitchen garden, buying inputs ahead, health care), 0010 (founder labour and routine), 0014 (yield formula, fertiliser, crop health, cap), 0021 (crop calendar, fruit trees), 0008 (per-season realism, upfront payment), 0009 (day labour, subsistence), 0002 (ready to harvest, no disasters while away), 0024 (hut store), 0028 (pacing, land priced by earning power)
+- Related ADRs: 0034 (ready grace then spoilage, automatic subsistence, mandi labour, indexed coin amounts, inputs in store, pest repeats), 0032 (well acres, daily eating, time-weighted founder labour, farm profit, inherited seed age), 0030 (inherited farm, start, Hamlet gate), 0031 (kitchen garden, buying inputs ahead, health care), 0010 (founder labour and routine), 0014 (yield formula, fertiliser, crop health, cap), 0021 (crop calendar, fruit trees), 0008 (per-season realism, upfront payment), 0009 (day labour, subsistence), 0002 (ready to harvest, no disasters while away), 0024 (hut store), 0028 (pacing, land priced by earning power)
 - Depends on specs: 001 (time, weather, jobs), 002 (tiles, moisture, Soil factor, occupancy, slots, the well), 005 (ledger: purchases, sales, prepaid living costs, obligations, tree assets). Uses 004 (input prices, the store, selling). Spec 006 adds hired labour to the same Care pool.
 
 ## 1. Goal
@@ -75,7 +75,7 @@ So a player who keeps an acre busy all season gets that season's realistic outpu
 | --- | --- |
 | Growth | A crop grows for exactly `growthMinutes` of real time (ADR 0002: weather changes yield, never duration). The growth job is a spec 001 job, so it appears in `UpcomingJobs` for notifications |
 | Becomes ready | When the growth job falls due: the accrued factors are closed (§3.5–3.7), the pest outcome applied (§3.8), the yield computed (§3.4) and frozen, fertility changes applied (§3.10), and the crop enters **Ready**. Emits `CropReady` |
-| Ready waits | A ready crop never spoils or loses yield (ADR 0002). It keeps the tile occupied, so the cost of waiting is the lost growing time |
+| Ready waits | A ready crop keeps its frozen yield for `FarmDef.readyGraceHours` (72 h, the away cap) after it became ready. After that, each daily pass takes `round(grams × spoilagePerDay)` of its output good off the frozen yield and emits `GoodsSpoiled` (source field) (ADR 0034, amending ADR 0002). One absence runs at most 72 h, so nothing is lost only by being away. It keeps the tile occupied, so waiting also costs growing time |
 | Harvest | `Harvest(tile)` moves the frozen yield into the hut store (spec 004 sets the full-store rules), frees the tile (`SetOccupied(false)`), and emits `CropHarvested` with the *Why?* breakdown. It also sets the age of that crop's saved seed (§3.9) |
 | Clear | `ClearField(tile)` removes a growing or ready crop. Nothing is refunded or harvested. The tile becomes vacant |
 
@@ -177,7 +177,7 @@ risk = PestRiskDef.baseRisk(crop)
        × (sprayedBeforeCheck ? sprayRiskFactor : 1)
 ```
 
-- `repeats`: how many crops of the same kind were harvested on this tile in a row immediately before this one (0 after a different crop or fallow). Kept per tile.
+- `repeats`: how many crops of the same kind were **harvested** on this tile in a row immediately before this one. A different crop harvested, or a fallow day on the tile (spec 002: no crop for a whole day), resets it to 0; `ClearField` leaves it unchanged (ADR 0034). Kept per tile.
 - `wetShare`: the share of the growth so far spent in a weather listed in `FarmDef.wetWeathers` (rain, heavy rain, storm).
 - **The roll:** a seeded uniform draw u in [0, 1) (stream Pest, counter = crop id). An outbreak happens if u < risk.
 - **Severity:** a second draw v: if v < `severeShare` the outbreak is **severe** (CropHealth `severeHealth`, default 0.00); otherwise CropHealth = `outbreakHealthMin + (outbreakHealthMax − outbreakHealthMin) × w`, w a third draw (default 0.40–0.80).
@@ -186,6 +186,8 @@ risk = PestRiskDef.baseRisk(crop)
 - **Spraying** (`Spray(tile)`, once per crop cycle, paid at the input price for the cycle's dose, Dr 5010):
   - before the check: the risk is multiplied by `sprayRiskFactor` (0.50);
   - after a warning: the damage is reduced: `CropHealth = 1 − (1 − rolledHealth) × sprayDamageFactor` (0.30). A severe outbreak sprayed in time ends at 0.70.
+  - after a check that found no outbreak: rejected with `NoPestThreat` (ADR 0034).
+  - The dose comes from the store first, the rest bought (spec 004 `UseInput`).
 - Examples: wheat after wheat, in sun: 0.06 × 1.5 × 1 = 9% a cycle. Rice after rice after rice in a wet Monsoon (wet share 0.7): 0.10 × 2.0 × 1.7 = 34%.
 
 ### 3.9 Seed
@@ -219,7 +221,7 @@ Example: 4 seasons' worth of chemically fertilised cycles lower fertility by exa
 | Plan | One `DietPlanDef` at a time: subsistence, basic, balanced, rich. The cost per season covers food and the household's basics (clothing, kerosene, sundries). New games start on **basic** |
 | Paid upfront | At a new game, the first season's cost is paid at once, pro rata for what's left of season 0: `cost × (S − t₀) ÷ S` (integer division, rounded down). Each later season is paid at the season close as a Living obligation (spec 005 §3.4 step 5). Each payment is a prepayment (Dr 1100, Cr Cash) expensed daily to 5200 Living costs (spec 005 §3.2) |
 | Changing plan | `SetDietPlan` takes effect at once: the current prepayment is closed (the unearned part refunded, spec 005 `ClosePrepayment`) and the new plan is paid for the rest of the season. Rejected with `InsufficientFunds` if the new payment can't be met after the refund |
-| Subsistence | Chosen by the player, or automatic when the season's living obligation can't be paid (spec 005 `ObligationUnpaid`). Costs 0, nutrition 0.80. No debt is ever created (ADR 0009). The household returns to its previous plan at the next season close it can afford |
+| Subsistence | **Automatic only** (ADR 0034): when the season's living obligation can't be paid (spec 005 `ObligationUnpaid`). `SetDietPlan` rejects it with `NotSelectable`. Costs 0, nutrition 0.80. No debt is ever created (ADR 0009). The household returns to its previous plan at the **first daily pass** that can pay the rest of the season (pro rata, `cost × (end − t) ÷ S`), or at the next close |
 | Eat from own harvest | With `eatFromStore` on, at each daily pass the household eats edible goods from the store worth up to the day's allowance `DietPlanDef.foodShare × costPerSeason ÷ ClockDef.DaysPerSeason` (basic: 2,700), pro rata for a partial first day, valued at the trader's buying price (spec 004), most perishable first (highest `spoilagePerDay`, then good id). The value eaten is grocery money not spent: Dr Cash, Cr the good's sales account (4000 or 4010) as **home use** (ADR 0032), so eating or selling gives the same farm profit. The prepaid living cost is unchanged (gross). *Why?* shows "Home-grown food paid N of your living costs", with the garden's part (§3.13). Subsistence has no allowance |
 
 **Work hours, fatigue and rest** (daily pass, before founder hours are fixed):
@@ -250,7 +252,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 - Basic food and normal hours: +0.02 − 0.01 = +0.01 a day, so health stays at 1.
 - Subsistence: −0.01 a day net; about 50 days (12 seasons) to fall from 1.0 to 0.5.
 - Long days without rest: fatigue reaches 0.5 in 7 days, then health falls 0.01 a day and labour is down 50% from fatigue alone.
-- **Warm clothing** (ADR 0031): the plan's cost includes clothing, so only a household on subsistence goes without in Winter: a further −0.02 a day (`noWarmClothingPenalty`), so −0.03 a day net.
+- **Warm clothing** (ADR 0031): the plan's cost includes clothing, so only a household on subsistence goes without in Winter: a further −0.02 a day (`noWarmClothingPenalty`), so −0.03 a day net. The penalty is time-weighted by the share of the day that ended spent on subsistence in Winter (ADR 0034).
 - **Medicine** (ADR 0031): `BuyMedicine` buys from the village chemist for `FounderDef.medicineCost` (500 coins; Dr 5250 Health costs, Cr Cash) and raises health by `medicineHealthGain` (0.10, capped at 1), at most once a day. It doesn't undo today's sick day (today's hours are already fixed); it lowers the chance of the next ones.
 
 **Day labour** (ADR 0009):
@@ -269,11 +271,11 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | Planting | `PlantTree(slot, tree)` on an empty slot (spec 002) of owned land. The sapling is bought at its input price and **capitalised** (Dr 1700 Trees, Cr Cash; spec 005 §3.3). Calls `SetTree(slot, treeId)`. Rejected with `TerrainNotAllowed` if `TreeDef.terrain` doesn't match (apple: hills, not in Phase 1) |
 | Growing | A maturity job at `plantedAt + growthMinutes × 60`. Then `SetTreeMature(slot)`: from now it shades a field-edge tile (spec 002 §3.4). Emits `TreeMatured` |
 | Fruiting | A mature tree carries **one batch per fruiting season**. At each season start (seasonal pass), every mature tree whose `fruitingSeasons` include the new season and whose previous batch was picked gets a ripe batch of `batchYieldPerTree` kg. A tree that matures during one of its fruiting seasons gets that season's batch at once. Emits `FruitRipe` |
-| Waiting | Ripe fruit waits on the tree, like a ready crop (ADR 0002), and blocks the next batch until picked |
+| Waiting | Ripe fruit waits on the tree like a ready crop: no loss for `readyGraceHours`, then the batch spoils daily at its good's rate (§3.3, ADR 0034). It blocks the next batch until picked |
 | Picking | `PickFruit(slot)` moves the batch into the store (spec 004 full-store rules). Records the batch's value at the trader's buying price as the tree's returns. Emits `FruitPicked` |
 | Lifespan | `harvestLimit` batches (banana 4, papaya 8; 0 = whole game). After the last one the tree is **spent**: it is removed (`SetTree(slot, 0)`), its book value goes to 5600 Loss (spec 005), and `TreeSpent` is emitted |
 | Removal | `RemoveTree(slot)` at any time, same accounting as spent. Unpicked fruit is lost |
-| Payback (*Why?*) | Cost (book value), returns to date (Σ picked batches at the trader's buying price when picked), and the expected payback season: if returns ≥ cost, the season it was reached; otherwise now + ⌈(cost − returns) ÷ (batchYieldPerTree × today's buying price)⌉ fruiting seasons, mapped to calendar seasons |
+| Payback (*Why?*) | Cost (book value), returns to date (Σ picked batches at the trader's buying price when picked), and the expected payback season: if returns ≥ cost, the season it was reached; otherwise the first fruiting season at or after maturity (or now) + ⌈(cost − returns) ÷ (batchYieldPerTree × today's buying price)⌉ − 1 more fruiting seasons, mapped to calendar seasons. If the harvest limit ends the tree first, it doesn't pay back and *Why?* says so (ADR 0034) |
 
 ### 3.13 The kitchen garden (ADR 0031)
 
@@ -329,6 +331,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | | `wetWeathers` | rain, heavy_rain, storm | weather ids |
 | | `waterDryFloor`, `waterWetFloor` | 0.40, 0.60 | 0–1 |
 | | `bucketHoursPerMoisturePoint` | 0.1 | 0–2 |
+| | `readyGraceHours` | 72 | 0–720 |
 | | `gardenSeasonOutputKg` (per bed) | 100 | > 0 |
 | `FertiliserDef` | `id` | none, compost, chemical | |
 | | `good` | —, compost, fertiliser_chemical | input good or none |
@@ -412,11 +415,11 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | `PickGarden` | `bedId`, `overflow` | `UnknownBed`; `NotReady`; spec 004's store reasons | §3.13. Emits `GardenPicked` |
 | `Harvest` | `tileId`, `overflow` (spec 004) | `NoCrop`; `NotReady`; spec 004's store reasons | §3.3. Emits `CropHarvested` |
 | `ClearField` | `tileId` | `NoCrop` | §3.3. Emits `FieldCleared` |
-| `Spray` | `tileId` | `NoCrop`; `NotGrowing`; `AlreadySprayed`; `InsufficientFunds` | §3.8 |
+| `Spray` | `tileId` | `NoCrop`; `NotGrowing`; `AlreadySprayed`; `NoPestThreat`; `InsufficientFunds` | §3.8 |
 | `PlantTree` | `slotId`, `treeId` | `UnknownSlot`; `SlotOccupied`; `UnknownTree`; `TerrainNotAllowed`; `InsufficientFunds` | §3.12. Emits `TreePlanted` |
 | `PickFruit` | `slotId`, `overflow` | `NoTree`; `NoRipeFruit`; spec 004's store reasons | §3.12. Emits `FruitPicked` |
 | `RemoveTree` | `slotId` | `NoTree` | §3.12. Emits `TreeRemoved` |
-| `SetDietPlan` | `planId` | `UnknownPlan`; `InsufficientFunds` | §3.11 |
+| `SetDietPlan` | `planId` | `UnknownPlan`; `NotSelectable` (subsistence); `InsufficientFunds` | §3.11 |
 | `SetWorkHours` | `optionId` | `UnknownOption` | From the next daily pass |
 | `SetLabourSplit` | `sharePercent` | `InvalidShare` (not 0, 25, 50, 75 or 100) | Care ratio refreshed now; pay from the next daily pass |
 | `SetEatFromStore` | `on` | — | From the next living-cost payment |
@@ -447,7 +450,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | Buy medicine | 500 coins | Health +0.10: fewer sick days | — | — |
 | Fertiliser | Compost or chemical costs coins | Chemical +25% now, −3 fertility a season; compost +5% and +2 fertility | Soil factor and land price (002) later | Fertility recovers slowly (fallow 6 a season) |
 | Spray | Coins | Halves the risk, or cuts outbreak damage by 70% | — | Once a cycle |
-| Harvest now or let it wait | None | Waiting costs growing time | Store space (004) | — |
+| Harvest now or let it wait | None | Waiting costs growing time, and after 72 h the crop spoils | Store space (004) | — |
 | Plant a tree | The sapling | Fruit after 1–3.5 weeks, every fruiting season | Edge trees shade the acre 3% each | Remove (book value lost) |
 | Diet plan | Coins per season | Nutrition → labour; health | Care, sick days | Change any time (refund pro rata) |
 | Long hours | None | +25% labour now, fatigue builds | Health, sick days | Rest recovers |
@@ -502,7 +505,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-1 | Loading content where a crop names an unknown good, a sowing season that doesn't exist, `moistureMin ≥ moistureMax`, a diet plan list without `subsistence`, a nutrition outside 0.8–1.05, or a `weatherYieldFactor` missing a weather id fails validation naming the field | `ContentTests.Crops_Validation` |
 | AC-2 | cycleShare is exactly 0.0625 for wheat and 0.25 for rice; a wheat cycle's base yield is exactly 75 kg per acre and its certified seed need 1.6875 kg | `CropTests.CycleShare_PerSeasonRealism` |
 | AC-3 | `Sow` succeeds on a vacant owned farm tile in season: cash falls by seed + fertiliser cost, posted to 5000 and 5010; the tile is occupied; a growth job is due at exactly `sownAt + growthMinutes × 60`. Each rejection reason (unowned, yard, occupied, out of season, no saved seed, insufficient funds) leaves the state hash unchanged | `CropTests.Sow_RulesAndCosts` |
-| AC-4 | A crop becomes Ready exactly at its due time, emits `CropReady`, and its yield doesn't change however long it waits; `Harvest` moves exactly the frozen grams into the store and frees the tile | `CropTests.ReadyWaits_HarvestToStore` |
+| AC-4 | A crop becomes Ready exactly at its due time, emits `CropReady`, and its yield doesn't change for `readyGraceHours` (72 h); `Harvest` moves exactly the frozen grams into the store and frees the tile | `CropTests.ReadyWaits_HarvestToStore` |
 | AC-5 | The §3.4 example gives 70.74 kg to Fixed precision; with every factor at its maximum the yield equals exactly `yieldCap × Base` and the breakdown records that the cap applied | `YieldTests.Formula_AndCap` |
 | AC-6 | `WaterFactor` gives 0.742857 (wheat at 20), 1.00 inside the band, and the floors at moisture 0 and 100 | `YieldTests.WaterFactor_Piecewise` |
 | AC-7 | A crop whose growth spans a change of weather gets the exact time-weighted Weather factor (e.g. 2 h sun then 4 h heatwave for wheat: (2 × 1.00 + 4 × 0.85) ÷ 6 = 0.90) | `YieldTests.Weather_TimeWeighted` |
@@ -520,10 +523,10 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-19 | At health 0.5, over 10,000 seeded days the sick-day rate is within 1 point of 25%; a sick day delivers 0 hours and emits `FounderSick` | `FounderTests.SickDays` |
 | AC-20 | While away, the founder works normal hours whatever the chosen option; live, the chosen option applies | `FounderTests.Away_NormalHours` |
 | AC-21 | A new game started at 10:00 (eating from the store off) pays basic living costs of exactly `18,000 × (345,600 − 36,000) ÷ 345,600` = 16,125.00 coins as a prepayment; changing to balanced mid-season refunds the unearned basic part and prepays balanced for the rest, and the season's Living costs expense equals the time-weighted mix | `FounderTests.LivingCosts_UpfrontAndChange` |
-| AC-22 | When the season's living obligation is unpaid, the plan becomes subsistence (nutrition 0.80), no liability is created, and the previous plan returns at the next close that can pay it | `FounderTests.Subsistence_NeverStuck` |
+| AC-22 | When the season's living obligation is unpaid, the plan becomes subsistence (nutrition 0.80), no liability is created, and the previous plan returns at the first daily pass that can pay the rest of the season, pro rata; `SetDietPlan(subsistence)` is rejected with `NotSelectable` | `FounderTests.Subsistence_NeverStuck` |
 | AC-23 | With `eatFromStore` on and 50 kg of radish (spoilage 0.25) and 200 kg of wheat in store, each daily pass eats radish first, then wheat, up to the day's allowance (`foodShare × cost ÷ daysPerSeason`) at the trader's buying price, posts exactly that value Dr Cash, Cr 4000 (home use), and leaves the living prepayment unchanged; on subsistence nothing is eaten | `FounderTests.EatFromStore_Daily` |
 | AC-24 | `PlantTree` capitalises the sapling (Dr 1700), sets the slot; the tree matures exactly `growthMinutes` later and then shades its field-edge tile (spec 002 AC-10) | `TreeTests.Plant_Mature_Shade` |
-| AC-25 | A mature mango gets one 120 kg batch at the start of each Summer only, none while the previous batch is unpicked; a banana gets one batch every season; picking moves it to the store and adds its value to returns | `TreeTests.Fruiting_OnePerSeason` |
+| AC-25 | A mature mango gets one 120 kg batch at the start of each Summer only, none while the previous batch is unpicked (it spoils after the grace); a banana gets one batch every season; picking moves it to the store and adds its value to returns | `TreeTests.Fruiting_OnePerSeason` |
 | AC-26 | A banana is spent after 4 picked batches: the slot is emptied, its book value posted to 5600, `TreeSpent` emitted; `RemoveTree` does the same at any time | `TreeTests.Lifespan_AndRemoval` |
 | AC-27 | The payback season is reported exactly for a tree already paid back and for one not yet paid back | `TreeTests.Payback` |
 | AC-28 | Every money movement in this spec reconciles: over 2 game years of seeded random play (sow, spray, harvest, sell via spec 004, trees, plan changes, day labour) the ledger reconciles at every season close | `CropTests.Ledger_Reconciles` |
@@ -532,10 +535,11 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-31 | `Sow` uses certified seed and fertiliser from the store first and buys exactly the shortfall at today's input price; with enough stock it costs nothing | `CropTests.Sow_UsesStockFirst` |
 | AC-32 | A garden bed gives `min(harvestKg, remaining)` per picking: 20 pickings of 5 kg radish use the 100 kg season output, the 21st `SowGarden` is rejected with `BedRested`, and the bed is available again at the next season start with 100 kg | `GardenTests.SeasonOutput_AndRest` |
 | AC-33 | Garden crops grow in exactly their minutes, wait when ready, need no labour (the care ratio is unchanged by them), and the inherited garden seed lets the first sowing cost nothing | `GardenTests.Grow_Pick_NoLabour` |
-| AC-34 | In Winter, a founder on subsistence loses exactly `noWarmClothingPenalty` more health a day than on the same plan in Summer; on basic, no penalty | `FounderTests.WarmClothing_Winter` |
+| AC-34 | In Winter, a founder on subsistence loses exactly `noWarmClothingPenalty` more health a day than on the same plan in Summer; on basic, no penalty; half a Winter day on subsistence gives half the penalty | `FounderTests.WarmClothing_Winter` |
 | AC-35 | `BuyMedicine` pays 500 coins to 5250, raises health by 0.10 (capped at 1), and a second purchase the same day is rejected with `AlreadyTreatedToday` | `FounderTests.Medicine` |
 | AC-36 | A new game starts with 20,000 coins, the basic plan, normal hours, `eatFromStore` on, full health and saved-seed ages wheat 2.0 and lentils 2.0 (ADR 0030, 0032); the first daily passes eat the inherited wheat, then the lentils | `FounderTests.Start_State` |
 | AC-37 | Switching to the rich plan, or to 100% day labour, one minute before a daily pass and back one minute after changes that day's labour and day-labour pay only by those two minutes' worth (time-weighted); the day's health uses the time-weighted mean nutrition | `FounderTests.PlanChanges_TimeWeighted` |
+| AC-38 | A ready crop or ripe batch loses nothing for exactly 72 h; at each later daily pass it loses `round(grams × spoilagePerDay)` and emits `GoodsSpoiled`; an away advance of 72 h from readiness loses nothing | `CropTests.ReadyGrace_ThenSpoils` |
 
 ## 9. Balancing hooks
 
@@ -611,6 +615,20 @@ None of these changes a formula or a rule.
 5. **Automatic subsistence** keeps the plan to return to (`PreviousPlan`, `AutoSubsistence`); choosing a plan clears it.
 6. **The first day's health** uses the mean nutrition since the new game's start.
 7. **Inherited grain without an age** can't be sown as saved seed; the default start lists wheat and lentils.
+
+### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
+
+Rule changes approved by the owner before coding:
+
+1. **Ready grace, then spoilage** (§3.3, §3.12): ready crops and ripe fruit wait 72 h without loss, then spoil daily at their good's rate (new AC-38; AC-4 and AC-25 amended). Before, idle land was free storage that never spoiled.
+2. **Subsistence is automatic only**, and the plan returns at the first daily pass that can pay (AC-22). Before, choosing subsistence beat every plan by about 14,000 a season.
+3. **The warm-clothing penalty is time-weighted** (AC-34).
+4. **Pests:** repeats count harvests only; a fallow day resets them; `NoPestThreat` for a spray after a clean check (§3.8).
+5. **Tree payback** counts from maturity, and says when the harvest limit ends the tree first (§3.12).
+6. **Indexed coin amounts:** living costs, the day-labour wage and medicine are charged at `Indexed(amount)` (spec 004 §3.1).
+7. **The mandi trip** costs 0.5 h of the founder's delivered labour, time-weighted over the trip (spec 004 §3.6).
+8. **Inputs from stock** are expensed at average cost at sowing, in the garden and when spraying (spec 004 §3.4).
+9. Golden 003 runs on a frozen content snapshot committed next to it.
 
 ## 11. Cut first
 

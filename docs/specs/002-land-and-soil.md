@@ -105,7 +105,7 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 - The factors are multiplied as `Fixed` (rounded at each step), applied to the money amount once (rounded to 1/100 coin), then rounded to a whole coin (ties away from zero).
 - Example: 1 acre of loam, moderate drainage, fertility 50, location 1.0: `1,20,000 × 1.00 × 1.00 × 1.00 × 1.0` = **1,20,000 coins**.
 - Yard tiles are priced like farm tiles of their soil.
-- **Market value** (for net worth, spec 005) is the current `ParcelPrice`, including for the inherited parcels. Phase 1 prices change only through fertility.
+- **Market value** (for net worth, spec 005) is the current `ParcelPrice`, including for the inherited parcels. Phase 1 prices change through fertility and the price index: `acreBasePrice` is a year-0 price charged at `Indexed(acreBasePrice)` (spec 004 §3.1, ADR 0034). Book value (cost basis) stays at cost.
 
 | Rule | Behaviour |
 | --- | --- |
@@ -342,6 +342,10 @@ None of these changes a formula or a rule.
 5. **Tree maturity.** A slot carries `TreeMature`. Spec 003 calls `SetTree(slot, treeId)` when it plants a sapling (or 0 to empty the slot) and `SetTreeMature(slot)` when the tree matures; only mature trees shade.
 6. **Optional content.** Land and ledger content is an optional `GameDefs` in `SimConfig`. A simulation without it runs only time and weather and hashes exactly as before, so the spec 001 golden replay keeps its frozen hash.
 7. **The default map** (`content/map.json`) is 8 × 6 with 19 parcels of 1–4 acres around the inherited `home_a` (tiles 18–21, the yard is 21) and `home_b` (26–28). Its soils follow §4; drainage, fertility, moisture and location factors are placeholders for the economy model.
+
+### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
+
+- **Land prices follow the price index** (§3.5): `TilePrice` uses `Indexed(acreBasePrice)`, for buying, quick sale and net worth. Cost basis stays at cost, so a sale after inflation shows a gain (4800).
 
 ## 11. Cut first
 

@@ -1,10 +1,10 @@
 # 005. Ledger and credit
 
-- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18)
+- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18); inputs in store added by ADR 0034 (2026-10-18)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, credit, personal bankruptcy, never stuck, liquidity); Time and world simulation (settlement cadence); Businesses (books); Learning layer (cash ledger, balance sheet); Balancing and testing (exact ledgers, never stuck, recoverable bankruptcy); Data model (`LedgerEntry`, `Loan`, `LenderDef`, `StartDef`)
-- Related ADRs: 0032 (report lines, farm profit), 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
+- Related ADRs: 0034 (1200 Inputs in store, indexed coin amounts), 0032 (report lines, farm profit), 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
 - Depends on specs: 001 (scheduler, passes). Uses 002 (land prices, protected parcel, seizure). Spec 003 (living costs, inputs, trees, day labour), 004 (sales, stored goods value) and 006 (wages) post through this ledger.
 
 ## 1. Goal
@@ -31,7 +31,7 @@ Every coin the founder earns, spends, borrows or owes is recorded exactly, and e
 - The town treasury, taxes, savings deposits, bonds and shares: later phases.
 - Inflation and the price index: 004.
 - Larger bank loans from the Village era: the era cap is data here; the Village unlock is F09.4.
-- Valuing stored goods in the ledger (inventory accounting): Phase 2 statements (F14.3). In Phase 1 stored goods appear only in net worth.
+- Valuing stored produce in the ledger (inventory accounting): Phase 2 statements (F14.3). In Phase 1 stored produce appears only in net worth; inputs in store are on the ledger at cost (1200, ADR 0034).
 
 ## 3. Rules and formulas
 
@@ -52,13 +52,13 @@ Money is `long` in 1/100 coin. Rates are `Fixed`. **Money × rate** (`MulRate`) 
 
 | Group | Accounts |
 | --- | --- |
-| Assets | 1000 Cash · 1100 Prepaid living costs · 1110 Prepaid wages · 1120 Prepaid rent · 1500 Land · 1600 Buildings · 1650 Accumulated depreciation (contra) · 1700 Trees |
+| Assets | 1000 Cash · 1100 Prepaid living costs · 1200 Inputs in store · 1110 Prepaid wages · 1120 Prepaid rent · 1500 Land · 1600 Buildings · 1650 Accumulated depreciation (contra) · 1700 Trees |
 | Liabilities | 2100 Moneylender loans · 2200 Bank loans · 2300 Interest payable |
 | Equity | 3000 Opening equity (the inheritance) · 3100 Retained earnings |
 | Income | 4000 Crop sales · 4010 Fruit sales · 4100 Day-labour earnings · 4800 Gain on asset sales · 4900 Debt written off |
 | Expenses | 5000 Seeds and planting · 5010 Fertiliser and spraying · 5100 Hired labour · 5200 Living costs · 5250 Health costs · 5300 Rent · 5400 Interest · 5410 Penalty interest · 5500 Depreciation · 5600 Loss on asset sales and seizure · 5700 Transport and selling costs |
 
-**Opening balance sheet** (at `NewGame`): Dr Cash `StartDef.startingCash`, Dr Land (the inherited parcels' market value, spec 002), Dr Buildings (`BuildingDef.value` of the hut and the well), Cr Opening equity (their sum).
+**Opening balance sheet** (at `NewGame`): Dr Cash `StartDef.startingCash`, Dr Land (the inherited parcels' market value, spec 002), Dr Buildings (`BuildingDef.value` of the hut and the well), Dr Inputs in store (the inherited inputs at their start-time input price, spec 004), Cr Opening equity (their sum).
 
 ### 3.2 Accrual: prepaid costs
 
@@ -360,8 +360,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | --- | --- | --- |
 | AC-1 | Posting an entry whose postings don't sum to zero throws and changes nothing; a balanced entry updates every account balance | `LedgerTests.Post_MustBalance` |
 | AC-2 | A posting that would make Cash negative throws; `CanAfford` is true exactly when cash ≥ the amount | `LedgerTests.Cash_NeverNegative` |
-| AC-3 | At a new game with the default content, Cash = 20,000 coins, Land = the inherited parcels' market value, Buildings = 55,000 coins, Opening equity = their sum, and the balance sheet balances | `LedgerTests.NewGame_OpeningBalanceSheet` |
-| AC-4 | Over 3 game years of seeded random valid activity (purchases, sales, prepayments, loans, repayments, missed payments), the reconciliation check passes at every season close, and the sum of all postings to Cash equals the Cash balance | `LedgerTests.Reconciles_EverySeason` |
+| AC-3 | At a new game with the default content, Cash = 20,000 coins, Land = the inherited parcels' market value, Buildings = 55,000 coins, Inputs in store = the inherited inputs at their start-time input price, Opening equity = their sum, and the balance sheet balances | `LedgerTests.NewGame_OpeningBalanceSheet` |
+| AC-4 | Over 3 game years of seeded random valid activity (purchases, sales, inputs bought and used, prepayments, loans, repayments, missed payments), the reconciliation check passes at every season close, and the sum of all postings to Cash equals the Cash balance | `LedgerTests.Reconciles_EverySeason` |
 | AC-5 | `MulRate(1,000.01 coins, 4%)` = 40.00 coins; `MulRate(1.25 coins, 10%)` = 0.13; `MulRate(−1.25 coins, 10%)` = −0.13 | `MoneyTests.MulRate_RoundsHalfAwayFromZero` |
 | AC-6 | 36,000 coins prepaid over a 4-day season is expensed 9,000 at each daily pass and the prepaid balance is 0 at the end; 10,000.01 coins is expensed 2,500.00 three times then 2,500.01 | `AccrualTests.Prepaid_ExpensedDaily_Exact` |
 | AC-7 | A prepayment from mid-season to mid-next-season: the closing season's P&L includes exactly the part up to the boundary, and the rest stays prepaid | `AccrualTests.Prepaid_SpansSeasonClose` |
@@ -407,7 +407,7 @@ All seven were resolved at approval (2026-10-17), following the recommendations:
 2. **Land-purchase loans** are secured by the parcel bought (LTV 0.60), through `BuyParcel` with financing (ADR 0028).
 3. **The credit score runs from 300 to 900**, like India's CIBIL score.
 4. **Foreclosure never happens while away.** A final notice appears on return, and foreclosure runs at the next live daily pass unless the default is cured.
-5. **Inventory stays off the ledger in Phase 1.** Sales are income when sold, inputs are expenses when bought, and stored goods count only in net worth. Inventory accounting comes with the Phase 2 statements (F14.3).
+5. **Inventory stays off the ledger in Phase 1.** Sales are income when sold, and stored produce counts only in net worth. (Inputs in store moved onto the ledger in Sprint 3, ADR 0034.) Inventory accounting comes with the Phase 2 statements (F14.3).
 6. **Two schedules:** the moneylender's interest-only bullet loan, and the bank's equal-principal loan.
 7. **Foreclosure takes all non-protected assets** (ADR 0009). A surplus is returned as cash.
 
@@ -421,6 +421,11 @@ All seven were resolved at approval (2026-10-17), following the recommendations:
 
 - **Report lines** (§3.4, ADR 0032): the P&L grouping into farm profit and net result, with plain-language labels and *Why?* keys for the player. Farm profit is the credit limit's income measure and the Hamlet gate's test. No formula changes.
 - **Home use:** food the household eats from the store is credited to the good's sales account (spec 003), so it counts in farm income.
+
+### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
+
+- **1200 Inputs in store** (an asset, at average cost per good): bought inputs are an asset until used, then expensed to 5000 or 5010; spoiled inputs too. The inherited inputs are on the opening balance sheet (AC-3), and reconciliation covers them (AC-4). Net worth still values inputs at today's input price; the difference from book is a revaluation, like land (§3.5).
+- **Indexed coin amounts** (spec 004 §3.1): living costs and wages are charged at the price index when paid; loans stay nominal, and book values stay at cost.
 
 ### Implementation notes (Sprint 2, 2026-10-18)
 

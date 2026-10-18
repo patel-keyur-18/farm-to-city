@@ -293,6 +293,10 @@ All seven were answered in the review with the owner (2026-10-18):
 6. **Standing orders from Homestead** for any hand under contract (ADR 0022); the GDD line was updated (§3.8).
 7. **Traits:** the six of §3.7 in Phase 1; creative, frugal, sociable and perfectionist join in Phase 2 with their systems (F11.4).
 
+### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
+
+- **Coin amounts follow the price index** (spec 004 §3.1): wages are fixed at `Indexed(wage)` when a contract is signed or renewed (the GDD's lag), the day-labourer wage at each hire, and the hand's hut at `Indexed(value)` when built. Its book value then stays at cost.
+
 ## 11. Cut first
 
 1. Regulars (keep the day-labour pool).

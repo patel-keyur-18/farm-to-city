@@ -169,7 +169,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
 - **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 
-**Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
+**Ready to harvest.** A ripe crop (or a ripe fruit batch) waits without spoiling or losing quality for 72 hours, the away cap, so nothing is ever lost only by being away. After that it starts to spoil like produce in the store (ADR 0034). While it waits, the field cannot be resown, so waiting also costs a crop cycle.
 
 **Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
 
@@ -198,7 +198,8 @@ Players can buy, lease, or hire a machine for a day from a neighbour.
 
 - Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
-- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, any time, up to a daily limit. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** carts up to 1,000 kg to the town market for the regional price less commission, at the cost of a cart's hire and about 6 hours of the founder's day: worth it for full loads only.
+- **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
+- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, any time, up to a daily limit. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** carts up to 1,000 kg to the town market for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
 - **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
 
 ## Economy
@@ -247,7 +248,7 @@ P_local    = P_regional × (Demand / Supply)^(1/e)
 
 **Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
-**Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Wage expectations follow it with a lag. Cash under the mattress quietly loses value, which teaches why saving and investing differ.
+**Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Every coin amount (living costs, wages, land, buildings, services) is a year-0 price that follows the price index when charged; wages are fixed when a contract is signed or renewed, so they follow with a lag. Loans stay nominal, and price-controlled goods (chemical fertiliser) ignore it (ADR 0034). Cash under the mattress quietly loses value, which teaches why saving and investing differ.
 
 **Credit and payment terms.** From the Township era, sales between businesses use invoices with payment terms of half a season or a full season. A business can be profitable on paper and still run out of cash. That is one of the most important lessons in the game.
 
@@ -561,7 +562,7 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - Foreclosure never happens while the player is away: a final notice waits for their return, with a day to put things right.
 - The town, its citizens, the treasury and the Chronicle carry on, and the founder starts again from Homestead level.
 
-**Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt.
+**Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt, and returns to its plan as soon as it can pay. Subsistence is never chosen; it is what poverty forces (ADR 0034).
 
 **Liquidity.** Land and businesses take days to sell and sell at a discount if rushed. A player with all their wealth in land and no cash can still go bankrupt in a bad season.
 
