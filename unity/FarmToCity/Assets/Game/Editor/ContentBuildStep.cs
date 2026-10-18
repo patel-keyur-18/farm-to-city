@@ -7,7 +7,8 @@ namespace Game.Editor
 {
     /// <summary>
     /// Before every player build, copies the repository's <c>content/*.json</c> into
-    /// <c>Assets/StreamingAssets/content/</c> (git-ignored), so the build carries the current balancing data.
+    /// <c>Assets/StreamingAssets/content/</c> (git-ignored), so the build carries the current balancing data. In
+    /// Phase 0 it also copies the golden replays and their frozen content to <c>StreamingAssets/golden/</c>.
     /// Like a Maven resources step: <c>content/</c> stays the only source.
     /// </summary>
     public sealed class ContentBuildStep : IPreprocessBuildWithReport
@@ -24,6 +25,18 @@ namespace Game.Editor
             if (files.Length == 0) throw new BuildFailedException("No content JSON found in " + source);
             foreach (string file in files) File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
             Debug.Log("ContentBuildStep: copied " + files.Length + " content files to " + target);
+
+            // Phase 0 (US-023): the golden replays and their frozen content, for the on-device determinism check.
+            string golden = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "tests", "Sim.Core.Tests", "golden"));
+            string goldenTarget = Path.Combine(Application.dataPath, "StreamingAssets", "golden");
+            if (Directory.Exists(goldenTarget)) Directory.Delete(goldenTarget, true);
+            Directory.CreateDirectory(Path.Combine(goldenTarget, "content"));
+            foreach (string file in Directory.GetFiles(golden, "*.json")) File.Copy(file, Path.Combine(goldenTarget, Path.GetFileName(file)));
+            foreach (string file in Directory.GetFiles(Path.Combine(golden, "content"), "*.json"))
+                File.Copy(file, Path.Combine(goldenTarget, "content", Path.GetFileName(file)));
+
+            // Phase 0 (US-021): FrameTimingManager needs frame timing stats in the player.
+            UnityEditor.PlayerSettings.enableFrameTimingStats = true;
         }
     }
 }

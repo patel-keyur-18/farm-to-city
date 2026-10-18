@@ -21,7 +21,9 @@ namespace Game.Presentation
         public IEntitlementService Entitlements { get; } = new AlwaysUnlockedEntitlementService();
 
         private long _lastSyncWall;
-        private Label _date, _time, _weather;
+        private Label _date, _time, _weather, _checks;
+        private VisualElement _card;
+        private Phase0.Spike _spike;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
@@ -56,6 +58,7 @@ namespace Game.Presentation
             Sim.Execute(new Sync(now));
             Sim.DrainEvents(); // the hello build shows state only; later HUDs react to the events
             Refresh();
+            if (_spike != null) _checks.text = _spike.Done ? _spike.Report : _spike.Status;
         }
 
         private void BuildHud()
@@ -86,6 +89,52 @@ namespace Game.Presentation
             _date = AddLabel(card, 44);
             _time = AddLabel(card, 96);
             _weather = AddLabel(card, 44);
+            _card = card;
+
+            // Phase 0 checks (US-021, US-023, ADR 0034 §8): throwaway, removed after the gate.
+            var bar = new VisualElement();
+            bar.style.flexDirection = FlexDirection.Row;
+            bar.style.marginTop = 24;
+            root.Add(bar);
+            AddButton(bar, "Spike", () => StartSpike(false));
+            AddButton(bar, "Heat run (5 min)", () => StartSpike(true));
+            AddButton(bar, "Golden replays", RunGoldens);
+            _checks = AddLabel(root, 30);
+            _checks.style.whiteSpace = WhiteSpace.Normal;
+            _checks.style.backgroundColor = new Color(0.98f, 0.95f, 0.88f, 0.92f);
+            _checks.style.paddingLeft = _checks.style.paddingRight = 24;
+            _checks.style.marginTop = 16;
+        }
+
+        private static void AddButton(VisualElement parent, string text, System.Action onClick)
+        {
+            var b = new Button(onClick) { text = text };
+            b.style.fontSize = 36;
+            b.style.marginLeft = b.style.marginRight = 12;
+            b.style.paddingLeft = b.style.paddingRight = 24;
+            parent.Add(b);
+        }
+
+        private void StartSpike(bool heat)
+        {
+            if (_spike != null) Destroy(_spike.gameObject);
+            _card.style.display = DisplayStyle.None;
+            _spike = Phase0.Spike.Start(heat);
+        }
+
+        private void RunGoldens()
+        {
+            var sb = new System.Text.StringBuilder("Golden replays (on frozen content)\n");
+            bool all = true;
+            foreach (Phase0.GoldenCheck.Row r in Phase0.GoldenCheck.RunAll())
+            {
+                all &= r.Pass;
+                sb.Append(r.Name).Append(": ").Append(r.Pass ? "PASS" : "FAIL").Append("  ").Append(r.Actual)
+                  .Append(r.Pass ? "" : " (expected " + r.Expected + ")").Append("  ").Append(r.Milliseconds.ToString("0")).Append(" ms\n");
+            }
+            sb.Append(all ? "ALL PASS" : "SOME FAILED").Append("\n72 h away advance: ").Append(Phase0.GoldenCheck.Advance72hMilliseconds().ToString("0.0")).Append(" ms (budget 2,000)");
+            _checks.text = sb.ToString();
+            Debug.Log(_checks.text);
         }
 
         private static Label AddLabel(VisualElement parent, int size)
