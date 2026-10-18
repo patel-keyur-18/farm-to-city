@@ -35,7 +35,7 @@ namespace Tools.Balancer
                 Moisture.Print(Simulation.NewGame(Config(content), new NewGame(seed, 0, 0)), years);
                 return 0;
             }
-            if (mode == "economy") return Economy.Run(Config(content), years, seed);
+            if (mode == "economy") return Economy.Print(Config(content), years, seed);
 
             ClockDef clock = ContentLoader.LoadClock(File.ReadAllText(Path.Combine(content, "clock.json")));
             WeatherSet weather = ContentLoader.LoadWeather(File.ReadAllText(Path.Combine(content, "weather.json")));

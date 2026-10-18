@@ -69,6 +69,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`):
 - **US-058 done:** daily spoilage in the store (stock not on offer first; inputs at average cost), ready crops and ripe fruit after the 72 h grace, `GoodsSpoiled`. Implementation notes for the owner in spec 003 §10 (inclusive grace, rotted away under 1 kg, spoilage before eating). 162 tests.
 - **US-178 done:** `GoToMandi` (stock not on offer, cart capacity by weight, one trip a day, not on a sick day), the return job paying the regional price less 3%, cart hire and commission to 5700, the founder's rate cut by 2 h a day over the 6 h trip (0.5 h, any departure time). 164 tests.
 - **US-179 and US-180 done:** buying ahead as an asset at seasonal input prices (AC-19), minimum-price offers (AC-18). 166 tests.
+- **Economy model switched to the real commands and market** (`tools/Tools.Balancer/Bots.cs`: `FarmerBot` plays through `Execute` only; `InternalsVisibleTo("Tools.Balancer")` removed). Anchors at year-0 prices: farm profit about 34,900 a season, garden 200 kg and 1,690 saved, first Spring 19,800 (inherited seed now expensed). To raise in US-016: the bot never takes the mandi (a cart doesn't beat the trader after labour and hire); the local market takes 2% of sales; mango returns about 33× its sapling.
 
 ## Next up
 
