@@ -95,7 +95,7 @@ namespace Sim.Core.Farm
             return new LabourBreakdown
             {
                 Hours = farm.WorkHours[s.TodayOption].Hours, Nutrition = Nutrition(sim), Fatigue = s.Fatigue, Health = s.Health,
-                Sick = s.SickToday, Total = rate, OwnFields = rate - dayLabour, DayLabour = dayLabour,
+                Sick = s.SickToday, MandiCut = MandiCut(sim), Total = rate, OwnFields = rate - dayLabour, DayLabour = dayLabour,
                 DayLabourPay = Finance.Money.MulRate(Market.MarketRules.Indexed(sim, farm.Founder.DayLabourWagePerHour), dayLabour),
             };
         }
@@ -106,8 +106,23 @@ namespace Sim.Core.Farm
             return sim.Config.Game.Farm.DietPlans[sim.State.Farm.Founder.DietPlan].Nutrition;
         }
 
-        /// <summary>FounderLabourHours = Hours × Nutrition × (1 − Fatigue) × Health, hours a day (0 on a sick day).</summary>
-        public static Fixed LabourRate(Simulation sim) { return sim.State.Farm.Founder.TodayHours * Nutrition(sim); }
+        /// <summary>
+        /// FounderLabourHours = Hours × Nutrition × (1 − Fatigue) × Health, hours a day (0 on a sick day), less the mandi
+        /// trip's cut while one is under way (never below 0; ADR 0034).
+        /// </summary>
+        public static Fixed LabourRate(Simulation sim)
+        {
+            Fixed rate = sim.State.Farm.Founder.TodayHours * Nutrition(sim) - MandiCut(sim);
+            return rate > Fixed.Zero ? rate : Fixed.Zero;
+        }
+
+        /// <summary>founderHours × 24 ÷ tripHours while a mandi trip is under way, else 0: exactly founderHours over the trip.</summary>
+        public static Fixed MandiCut(Simulation sim)
+        {
+            if (sim.State.Market.Trip == null) return Fixed.Zero;
+            MandiDef m = sim.Config.Game.Market.Mandi;
+            return m.FounderHours.MulRatio(24, m.TripHours);
+        }
 
         /// <summary>The founder's hours a day on their own fields: rate × (1 − dayLabourShare). Spec 006 adds hired hours.</summary>
         public static Fixed FieldHours(Simulation sim)
@@ -138,6 +153,9 @@ namespace Sim.Core.Farm
         public Fixed Fatigue { get; internal set; }
         public Fixed Health { get; internal set; }
         public bool Sick { get; internal set; }
+
+        /// <summary>Hours a day taken by a mandi trip under way ("Mandi trip −0.5 h" over the trip).</summary>
+        public Fixed MandiCut { get; internal set; }
 
         /// <summary>Hours a day in all, on the founder's own fields, and as day labour.</summary>
         public Fixed Total { get; internal set; }

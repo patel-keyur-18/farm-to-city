@@ -30,6 +30,10 @@ namespace Sim.Core.Commands
         InsufficientStock,
         NotOffered,
         NotAnInput,
+        OverCartCapacity,
+        TripUnderway,
+        AlreadyWentToday,
+        FounderSick,
 
         // Spec 003 (crops, garden, trees, founder)
         UnknownTile,

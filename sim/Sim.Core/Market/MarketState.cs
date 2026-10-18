@@ -32,6 +32,10 @@ namespace Sim.Core.Market
         internal long[] RailHits;
         internal long Hours;
 
+        /// <summary>The mandi trip under way, or null; the day index of the last departure (−1 = never).</summary>
+        public MandiTrip Trip { get; internal set; }
+        public long LastTripDay { get; internal set; } = -1;
+
         internal MarketState(int goods, int unmetWindow)
         {
             TraderBoughtToday = new long[goods];
@@ -90,6 +94,8 @@ namespace Sim.Core.Market
                 UnmetHead = UnmetHead,
                 RailHits = (long[])RailHits.Clone(),
                 Hours = Hours,
+                Trip = Trip?.Clone(),
+                LastTripDay = LastTripDay,
             };
             for (int g = 0; g < Unmet.Length; g++) c.Unmet[g] = (Fixed[])Unmet[g].Clone();
             return c;
@@ -113,6 +119,9 @@ namespace Sim.Core.Market
             }
             h.WriteInt(UnmetHead);
             h.WriteLong(Hours);
+            h.WriteBool(Trip != null);
+            if (Trip != null) Trip.WriteTo(h);
+            h.WriteLong(LastTripDay);
         }
     }
 }

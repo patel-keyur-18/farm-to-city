@@ -57,6 +57,40 @@ namespace Sim.Core.Events
         protected override string Describe() { return "GoodsSpoiled(good=" + GoodId + ", q=" + Quantity + ", " + Source + " " + Where + ")"; }
     }
 
+    /// <summary>The cart left for the mandi (spec 004 §5).</summary>
+    public sealed class MandiTripStarted : SimEvent
+    {
+        public System.Collections.Generic.IReadOnlyList<Market.MandiLoad> Loads { get; }
+        public long CartHire { get; }
+        public long ReturnAt { get; }
+
+        public MandiTripStarted(long simTime, System.Collections.Generic.IReadOnlyList<Market.MandiLoad> loads, long cartHire, long returnAt) : base(simTime)
+        {
+            Loads = loads;
+            CartHire = cartHire;
+            ReturnAt = returnAt;
+        }
+
+        protected override string Describe() { return "MandiTripStarted(loads=" + Loads.Count + ", hire=" + CartHire + ", back=" + ReturnAt + ")"; }
+    }
+
+    /// <summary>The cart is back: gross sales, commission and net (spec 004 §5).</summary>
+    public sealed class MandiTripReturned : SimEvent
+    {
+        public long Gross { get; }
+        public long Commission { get; }
+        public long Net { get; }
+
+        public MandiTripReturned(long simTime, long gross, long commission, long net) : base(simTime)
+        {
+            Gross = gross;
+            Commission = commission;
+            Net = net;
+        }
+
+        protected override string Describe() { return "MandiTripReturned(gross=" + Gross + ", commission=" + Commission + ", net=" + Net + ")"; }
+    }
+
     /// <summary>The seasonal inflation step moved the price index (spec 004 §5).</summary>
     public sealed class PriceIndexChanged : SimEvent
     {

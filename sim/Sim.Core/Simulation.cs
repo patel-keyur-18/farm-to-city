@@ -47,7 +47,7 @@ namespace Sim.Core
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
-            if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity() });
+            if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity(), new MarketSystem.MandiReturn() });
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {

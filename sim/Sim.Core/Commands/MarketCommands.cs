@@ -142,3 +142,65 @@ namespace Sim.Core.Commands
         }
     }
 }
+
+namespace Sim.Core.Commands
+{
+    using System.Collections.Generic;
+    using Sim.Core.Farm;
+
+    /// <summary>
+    /// Carts produce to the town mandi (spec 004 §3.6, ADR 0031, 0034): the goods leave the store and the cart hire is
+    /// paid now; the trip takes the founder's delivered labour of MandiDef.founderHours; proceeds at return.
+    /// </summary>
+    public sealed class GoToMandi : TimedCommand
+    {
+        public IReadOnlyList<MandiLoad> Loads { get; }
+
+        public GoToMandi(long at, IReadOnlyList<MandiLoad> loads) : base(at) { Loads = new List<MandiLoad>(loads ?? new MandiLoad[0]).AsReadOnly(); }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (sim.Config.Game == null) return CommandResult.Reject(RejectReason.UnknownGood);
+            MandiDef def = sim.Config.Game.Market.Mandi;
+            int goods = sim.Config.Game.Market.Goods.Count;
+            var total = new long[goods];
+            long weight = 0;
+            if (Loads.Count == 0) return CommandResult.Reject(RejectReason.InvalidQuantity);
+            foreach (MandiLoad l in Loads)
+            {
+                RejectReason r = MarketChecks.Good(sim, l.GoodId, l.Quantity, out int g);
+                if (r != RejectReason.None) return CommandResult.Reject(r);
+                if (!MarketChecks.IsProduce(sim, g)) return CommandResult.Reject(RejectReason.NotProduce);
+                total[g] += l.Quantity;
+                if (total[g] > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
+                weight += Store.WeightGrams(sim.Config.Game.Market.Goods[g], l.Quantity);
+            }
+            if (weight > def.CartCapacityGrams) return CommandResult.Reject(RejectReason.OverCartCapacity);
+            MarketState m = sim.State.Market;
+            long t = sim.State.Clock.SimTime;
+            if (m.Trip != null) return CommandResult.Reject(RejectReason.TripUnderway);
+            if (m.LastTripDay == t / Definitions.ClockDef.SecondsPerDay) return CommandResult.Reject(RejectReason.AlreadyWentToday);
+            if (sim.State.Farm.Founder.SickToday) return CommandResult.Reject(RejectReason.FounderSick);
+            long hire = MarketRules.Indexed(sim, def.CartHirePerTrip);
+            if (!sim.State.Ledger.CanAfford(hire)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+
+            FarmSystem.Accrue(sim);
+            var trip = new MandiTrip { DepartedAt = t, ReturnAt = t + def.TripHours * 3600L, CartHire = hire };
+            for (int g = 0; g < goods; g++)
+            {
+                if (total[g] == 0) continue;
+                Store.Take(sim, g, total[g]);
+                trip.Loads.Add(new KeyValuePair<int, long>(g, total[g]));
+            }
+            if (hire > 0)
+                sim.State.Ledger.Post(t, sim.Period, "ledger.cartHire", "mandi",
+                    new Posting(Account.TransportAndSelling, hire), new Posting(Account.Cash, -hire));
+            m.Trip = trip;
+            m.LastTripDay = t / Definitions.ClockDef.SecondsPerDay;
+            trip.JobId = sim.ScheduleJob(MarketSystem.MandiJob, 0, trip.ReturnAt).Id;
+            FarmSystem.Refresh(sim);
+            sim.Emit(new MandiTripStarted(t, Loads, hire, trip.ReturnAt));
+            return CommandResult.Ok;
+        }
+    }
+}

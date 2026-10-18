@@ -28,6 +28,43 @@ namespace Sim.Core.Market
             if (pass == ItemClass.Seasonal) StepIndex(sim);
         }
 
+        public const string MandiJob = "mandi.trip";
+
+        /// <summary>
+        /// The cart is back from the mandi (spec 004 §3.6): the loads are sold at the town's regional price now, less the
+        /// commission. Dr Cash net, Dr 5700 the commission, Cr the sales accounts the gross value. The founder's rate
+        /// returns to normal (an accrual point).
+        /// </summary>
+        internal sealed class MandiReturn : IJobHandler
+        {
+            public string JobType { get { return MandiJob; } }
+            public SystemOrder System { get { return SystemOrder.Market; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                MarketState m = sim.State.Market;
+                MandiTrip trip = m.Trip;
+                Farm.FarmSystem.Accrue(sim);
+                long crop = 0, fruit = 0;
+                foreach (var load in trip.Loads)
+                {
+                    long v = MarketRules.Value(sim, load.Key, load.Value, MarketRules.RegionalPrice(sim, load.Key));
+                    if (Store.SalesAccount(sim, load.Key) == Finance.Account.FruitSales) fruit += v; else crop += v;
+                }
+                long gross = crop + fruit;
+                long commission = Finance.Money.MulRate(gross, sim.Config.Game.Market.Mandi.CommissionRate);
+                var postings = new System.Collections.Generic.List<Finance.Posting> { new Finance.Posting(Finance.Account.Cash, gross - commission) };
+                if (commission > 0) postings.Add(new Finance.Posting(Finance.Account.TransportAndSelling, commission));
+                if (crop > 0) postings.Add(new Finance.Posting(Finance.Account.CropSales, -crop));
+                if (fruit > 0) postings.Add(new Finance.Posting(Finance.Account.FruitSales, -fruit));
+                if (gross > 0) sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.mandiSales", "mandi", postings.ToArray());
+                m.Trip = null;
+                sim.CompleteJob(job);
+                Farm.FarmSystem.Refresh(sim);
+                sim.Emit(new Events.MandiTripReturned(sim.State.Clock.SimTime, gross, commission, gross - commission));
+            }
+        }
+
         /// <summary>
         /// Daily spoilage in the store (spec 004 §3.5): round(q × spoilagePerDay) per good in id order, stock not on offer
         /// first. Spoiled inputs are expensed at average cost to their use account (5000 seed, 5010 the rest; ADR 0034).
