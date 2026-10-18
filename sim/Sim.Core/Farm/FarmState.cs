@@ -321,6 +321,9 @@ namespace Sim.Core.Farm
         /// <summary>The food allowance accrued since the last daily pass, in money (Fixed for exact time-weighting).</summary>
         public Fixed AllowanceSum { get; internal set; }
 
+        /// <summary>Seconds of the current day spent on subsistence in Winter (the warm-clothing penalty, time-weighted; ADR 0034).</summary>
+        public long ColdSeconds { get; internal set; }
+
         /// <summary>Home-use value eaten this season, all goods and the garden's goods (Why?).</summary>
         public long HomeUseSeason { get; internal set; }
         public long GardenHomeUseSeason { get; internal set; }
@@ -329,6 +332,7 @@ namespace Sim.Core.Farm
 
         internal void WriteTo(StateHasher h)
         {
+            h.WriteLong(ColdSeconds);
             h.WriteInt(DietPlan);
             h.WriteInt(PreviousPlan);
             h.WriteBool(AutoSubsistence);

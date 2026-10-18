@@ -61,6 +61,8 @@ namespace Sim.Core.Commands
         NotGrowing,
         AlreadySprayed,
         NoPestThreat,
+        NotSelectable,
+        AlreadyTreatedToday,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

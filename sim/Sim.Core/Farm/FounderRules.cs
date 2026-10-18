@@ -137,6 +137,10 @@ namespace Sim.Core.Farm
             DietPlanDef plan = sim.Config.Game.Farm.DietPlans[s.DietPlan];
             s.DayLabourHours += LabourRate(sim).MulRatio(s.DayLabourShare * dt, 100 * Day);
             s.NutritionSum += plan.Nutrition.MulRatio(dt, 1);
+            // Accrual intervals never cross a season boundary (one falls on every daily pass), so the season at the
+            // interval's start is its season.
+            if (plan.Id == DietPlanDef.SubsistenceId && Time.Calendar.SeasonAt(sim.State.Farm.LastAccrual, sim.Clock) == Time.Season.Winter)
+                s.ColdSeconds += dt;
             if (s.EatFromStore)
                 s.AllowanceSum += (plan.FoodShare * Fixed.FromInt(plan.CostPerSeason) * sim.State.Market.PriceIndex).MulRatio(dt, sim.Clock.SecondsPerSeason);
         }

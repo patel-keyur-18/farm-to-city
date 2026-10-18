@@ -29,7 +29,7 @@ namespace Sim.Core.Tests
             new[] { "rice", "radish" },    // Monsoon
             new[] { "wheat", "lentils" },  // Winter
         };
-        private static readonly string[] Plans = { "basic", "balanced", "basic", "subsistence" };
+        private static readonly string[] Plans = { "basic", "balanced", "basic", "rich" }; // subsistence is automatic only (ADR 0034)
         private static readonly string[] Hours = { "normal", "long", "short", "normal", "rest" };
 
         /// <summary>One round of moves at sim time t (round k).</summary>
@@ -96,6 +96,7 @@ namespace Sim.Core.Tests
                 case 2: sim.Execute(new SetWorkHours(t, Hours[(int)Rng.Below(Rng.Next(seed, (RngStream)904, k, 11), 5)])); break;
                 case 3: sim.Execute(new SetEatFromStore(t, Rng.Below(Rng.Next(seed, (RngStream)904, k, 12), 2) == 0)); break;
                 case 4: if (sim.State.Farm.CropOn(19) != null) sim.Execute(new ClearField(t, 19)); break;
+                case 5: sim.Execute(new BuyMedicine(t)); break;
             }
         }
 

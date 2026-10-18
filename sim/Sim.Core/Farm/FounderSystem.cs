@@ -33,19 +33,47 @@ namespace Sim.Core.Farm
             if (change < Fixed.Zero) change = change * FounderRules.RestRecovery(sim);
             s.Fatigue = Clamp(s.Fatigue + change, Fixed.Zero, def.MaxFatigue);
 
-            // Health with the day's time-weighted nutrition (spec 003 §3.11). Sick days, warm clothing and medicine: US-052.
+            // Health with the day's time-weighted nutrition and the time-weighted Winter penalty without warm clothing
+            // (spec 003 §3.11, ADR 0031, 0034).
             long elapsed = t - s.DayStart;
             Fixed nutrition = elapsed > 0 ? s.NutritionSum.MulRatio(1, elapsed) : FounderRules.Nutrition(sim);
+            Fixed cold = elapsed > 0 ? def.NoWarmClothingPenalty.MulRatio(s.ColdSeconds, elapsed) : Fixed.Zero;
             s.Health = Clamp(s.Health + def.RecoveryPerDay
                 - def.NutritionPenalty * Max0(def.GoodNutrition - nutrition)
-                - def.FatiguePenalty * Max0(s.Fatigue - def.SafeFatigue), def.MinHealth, Fixed.One);
+                - def.FatiguePenalty * Max0(s.Fatigue - def.SafeFatigue)
+                - cold, def.MinHealth, Fixed.One);
 
-            // The day ahead: the chosen hours live, normal hours while away (ADR 0010).
-            s.TodayOption = sim.State.Clock.IsAway ? farm.IndexOfWorkHours(WorkHoursDef.NormalId) : s.WorkHours;
+            // A sick day (spec 003 §3.11): sickChance = atMinHealth × (1 − health) ÷ (1 − minHealth), seeded per day.
+            Fixed chance = def.SickChanceAtMinHealth * (Fixed.One - s.Health) / (Fixed.One - def.MinHealth);
+            long day = t / ClockDef.SecondsPerDay;
+            s.SickToday = Rng.Chance(Rng.Next(sim.State.Seed, RngStream.FounderSick, 0, (ulong)day), chance);
+
+            // The day ahead: the chosen hours live, normal hours while away (ADR 0010); a sick day counts as rest.
+            s.TodayOption = s.SickToday ? farm.IndexOfWorkHours("rest")
+                : sim.State.Clock.IsAway ? farm.IndexOfWorkHours(WorkHoursDef.NormalId) : s.WorkHours;
             s.TodayHours = FounderRules.FixHours(sim);
             s.NutritionSum = Fixed.Zero;
+            s.ColdSeconds = 0;
             s.DayStart = t;
+            if (s.SickToday) sim.Emit(new FounderSick(t, day));
+
+            // Back from automatic subsistence as soon as the rest of the season can be paid (ADR 0034); at a season
+            // boundary the season close's settlement does it.
+            if (s.AutoSubsistence && t % sim.Clock.SecondsPerSeason != 0) TryResumePlan(sim);
             FarmSystem.Refresh(sim);
+        }
+
+        /// <summary>Pays the previous plan for the rest of the season (pro rata) and returns to it, if cash allows.</summary>
+        private static void TryResumePlan(Simulation sim)
+        {
+            FounderState s = sim.State.Farm.Founder;
+            long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
+            long end = (t / S + 1) * S;
+            long cost = (long)((BigInteger)MarketRules.Indexed(sim, sim.Config.Game.Farm.DietPlans[s.PreviousPlan].CostPerSeason) * (end - t) / S);
+            if (cost == 0 || !sim.State.Ledger.CanAfford(cost)) return;
+            s.LivingPrepaymentId = Accrual.Open(sim, Account.LivingCosts, Account.PrepaidLivingCosts, cost, t, end, "founder:living").Id;
+            s.AutoSubsistence = false;
+            FounderRules.ChangePlan(sim, s.PreviousPlan, true);
         }
 
         /// <summary>Pays the day-labour hours accrued since the last daily pass (Dr Cash, Cr 4100).</summary>

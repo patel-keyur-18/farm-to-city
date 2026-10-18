@@ -62,6 +62,7 @@ namespace Tools.Balancer
         public override void Play(Simulation sim, long t)
         {
             SprayOutbreaks(sim, t);
+            if (sim.State.Farm.Founder.Health < Fixed.Parse("0.9")) Ok(sim, new BuyMedicine(t));
             Harvest(sim, t);
             Sell(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
