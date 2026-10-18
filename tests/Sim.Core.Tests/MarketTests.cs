@@ -24,6 +24,10 @@ namespace Sim.Core.Tests
             sim.State.Market.MinPrice[good] = minPrice;
         }
 
+        // Spec 004 AC-16 (with golden 004 in ReplayTests): a year of farming and trading, chunked or not, ends identical.
+        [Test]
+        public void ChunkingInvariance() { FarmPlayTests.AssertChunkingInvariant(11); }
+
         // Spec 004 AC-5: neutral when nothing is offered, across season changes and index steps.
         [Test]
         public void Neutral_WhenNothingOffered()

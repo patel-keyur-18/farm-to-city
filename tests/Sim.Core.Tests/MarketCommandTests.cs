@@ -34,7 +34,7 @@ namespace Sim.Core.Tests
                     long t = (step + 1) * H;
                     ulong r = Rng.Next(seed, (RngStream)901, 0, (ulong)step);
                     string id = produce[(int)Rng.Below(r, (ulong)produce.Length)];
-                    long q = (long)Rng.Below(r >> 7, 400_000) + 1;
+                    long q = (long)Rng.Below(Rng.Next(seed, (RngStream)901, 1, (ulong)step), 400_000) + 1;
                     Fixed? min = (r & 3) == 0 ? (Fixed?)MarketRules.RegionalPrice(sim, Good(sim, id)) : null;
                     if ((r & 4) == 0) sim.Execute(new Offer(sim.State.Clock.SimTime, id, q, min));
                     else sim.Execute(new Withdraw(sim.State.Clock.SimTime, id, Math.Min(q, sim.State.Market.OnOffer(Good(sim, id)))));

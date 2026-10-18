@@ -1,0 +1,25 @@
+{
+  "soils": [
+    { "id": "loam",  "nameKey": "soil.loam",  "yieldFactor": 1.00, "gainFactor": 1.0, "lossFactor": 1.0, "priceFactor": 1.00, "fallowCap": 75 },
+    { "id": "clay",  "nameKey": "soil.clay",  "yieldFactor": 0.95, "gainFactor": 1.1, "lossFactor": 0.7, "priceFactor": 0.90, "fallowCap": 70 },
+    { "id": "sandy", "nameKey": "soil.sandy", "yieldFactor": 0.85, "gainFactor": 0.8, "lossFactor": 1.5, "priceFactor": 0.75, "fallowCap": 55 }
+  ],
+  "drainages": [
+    { "id": "poor",     "drainAbove": 85, "drainRatePerHour": 0.02, "priceFactor": 0.85 },
+    { "id": "moderate", "drainAbove": 70, "drainRatePerHour": 0.15, "priceFactor": 1.00 },
+    { "id": "good",     "drainAbove": 65, "drainRatePerHour": 0.25, "priceFactor": 1.05 }
+  ],
+  "land": {
+    "moistureByWeather": { "sun": -0.7, "cloudy": -0.2, "rain": 3, "heavy_rain": 8, "heatwave": -1.2, "frost": -0.1, "storm": 5 },
+    "fertilityFactorCurve": [ [0, 0.50], [60, 1.00], [100, 1.15] ],
+    "fallowRecoveryPerSeason": 6,
+    "acreBasePrice": 120000,
+    "fertilityPriceMin": 0.80,
+    "fertilityPriceMax": 1.20,
+    "quickSaleFactor": 0.80,
+    "fieldEdgeSlotsPerAcre": 2,
+    "shadePerMatureTree": 0.03,
+    "minShadeFactor": 0.85
+  },
+  "well": { "moistureFloor": 30, "irrigatedTiles": [20, 28] }
+}
