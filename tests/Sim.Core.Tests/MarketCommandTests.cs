@@ -115,3 +115,74 @@ namespace Sim.Core.Tests
         }
     }
 }
+
+namespace Sim.Core.Tests
+{
+    public partial class MarketTests
+    {
+        // Spec 004 AC-19 (ADR 0034): Buy into the store at today's input price, as an asset (1200); use at average cost.
+        [Test]
+        public void Buy_AheadAndAtUse()
+        {
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet((f, j) => TestSim.NoSpoilage(f, j)));
+            int seed = Good(sim, "seed_wheat");
+            long cash = sim.State.Ledger.Cash, assets = sim.State.Ledger.Balance(Account.InputsInStore);
+
+            // Spring: wheat isn't sown, so its seed is at 0.95 (42.75); in Winter it's 1.10 (49.50), 15.8% dearer.
+            Assert.That(sim.Execute(new Buy(0, "seed_wheat", 100_000)).Accepted, Is.True);
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(4_275_00));
+            Assert.That(sim.State.Ledger.Balance(Account.InputsInStore) - assets, Is.EqualTo(4_275_00), "an asset, not an expense");
+            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(0));
+            Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(100_000));
+            sim.AdvanceTo(3 * FarmTest.S); // Winter
+            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "seed_wheat", 100_000)).Accepted, Is.True);
+            long winterCost = Money.Value(100_000, MarketRules.InputPrice(sim, seed), 1000);
+            Assert.That((double)winterCost / 4_275_00, Is.GreaterThan(1.15)); // 1.10 ÷ 0.95, plus the index
+            Assert.That(sim.State.Market.StockCostOf(seed), Is.EqualTo(4_275_00 + winterCost));
+
+            // Use takes stock first at average cost, then buys exactly the shortfall.
+            long book = sim.State.Market.StockCostOf(seed);
+            cash = sim.State.Ledger.Cash;
+            Store.UseInput(sim, seed, 250_000, Account.SeedsAndPlanting, "test");
+            long shortfall = Money.Value(50_000, MarketRules.InputPrice(sim, seed), 1000);
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(shortfall));
+            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(book + shortfall));
+            Assert.That(sim.State.Market.StockCostOf(seed), Is.EqualTo(0));
+
+            // Capacity and cash.
+            Rejects(sim, new Buy(sim.State.Clock.SimTime, "compost", 1_500_000), RejectReason.StoreFull); // 1,250 kg free
+            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "compost", 1_000_000)).Accepted, Is.True);
+            Simulation broke = TestSim.NewFarm(game: TestContent.Game());
+            Rejects(broke, new Buy(0, "spray", 100_000), RejectReason.InsufficientFunds); // 100 L × 525 = 52,500
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+
+        // Spec 004 AC-18: a minimum price keeps the offer off the stall while the price is below it; never to the trader below it.
+        [Test]
+        public void Offer_MinPrice()
+        {
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet(TestSim.NoSpoilage));
+            int potato = Good(sim, "potato");
+            sim.State.Market.Stock[potato] = 240_000;
+            Assert.That(sim.Execute(new Offer(0, "potato", 240_000, Fixed.Parse("6.50"))).Accepted, Is.True); // regional 6.80, floor 5.30
+
+            sim.AdvanceTo(H); // P = 6.80 ≥ 6.50: on the stall; a glut, but the trader may not take it at 5.30
+            MarketSales first = sim.DrainEvents().OfType<MarketSales>().Single();
+            Assert.That(first.LocalQuantity, Is.GreaterThan(0));
+            Assert.That(first.TraderQuantity, Is.EqualTo(0));
+            Assert.That(sim.State.Market.MarketPrice(potato), Is.LessThan(Fixed.Parse("6.50")));
+
+            sim.AdvanceTo(2 * H); // P < 6.50: off the stall, nothing sells, supply is neutral so P recovers
+            Assert.That(sim.DrainEvents().OfType<MarketSales>(), Is.Empty);
+            Assert.That(sim.State.Market.MarketPrice(potato), Is.GreaterThanOrEqualTo(Fixed.Parse("6.50")));
+            sim.AdvanceTo(3 * H);
+            Assert.That(sim.DrainEvents().OfType<MarketSales>().Single().Price, Is.LessThan(Fixed.Parse("6.80")));
+
+            // Over a day the trader never takes any, and a little sells each hour the price allows.
+            sim.AdvanceTo(TestSim.Day);
+            var day = sim.DrainEvents().OfType<MarketSales>().ToList();
+            Assert.That(day.All(e => e.TraderQuantity == 0));
+            Assert.That(sim.State.Market.OnOffer(potato), Is.LessThan(240_000).And.GreaterThan(0), "a little sells each hour");
+        }
+    }
+}

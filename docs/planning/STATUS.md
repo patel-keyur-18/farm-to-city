@@ -68,6 +68,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`):
 - **US-056 done:** `Offer` (optional minimum price), `Withdraw`, `SellToTrader`, `Buy`; account 1200 Inputs in store at average cost, the inherited inputs on the opening balance sheet (13,265), stock expensed at use. 160 tests.
 - **US-058 done:** daily spoilage in the store (stock not on offer first; inputs at average cost), ready crops and ripe fruit after the 72 h grace, `GoodsSpoiled`. Implementation notes for the owner in spec 003 §10 (inclusive grace, rotted away under 1 kg, spoilage before eating). 162 tests.
 - **US-178 done:** `GoToMandi` (stock not on offer, cart capacity by weight, one trip a day, not on a sick day), the return job paying the regional price less 3%, cart hire and commission to 5700, the founder's rate cut by 2 h a day over the 6 h trip (0.5 h, any departure time). 164 tests.
+- **US-179 and US-180 done:** buying ahead as an asset at seasonal input prices (AC-19), minimum-price offers (AC-18). 166 tests.
 
 ## Next up
 

@@ -386,7 +386,8 @@ None of these changes a formula or a rule.
 2. **The index draw** is `Rng.Next(seed, Inflation, 0, season index)`, top 32 bits as u in [0, 1).
 3. **Supply and demand in grams a day.** The clearing sums whole grams a day (the founder's lot × 24 + the valley's + imports), so a neutral market gives a ratio of exactly 1 and AC-5 holds bit for bit; the lot is whole grams an hour.
 4. **The minimum lot** is 0.1 kg (data): 1 kg alone raised wheat's thin, inelastic market (e = 0.4, 12.5 kg an hour) 8% and pushed it to the floor, so "selling a little each hour" wasn't possible.
-5. **Initialisation order.** The market is set up before the land at a new game, because land prices and building costs read the price index.
+5. **Minimum price and the hour's price.** Eligibility is checked against the price at the start of the hour, and the hour's sales are paid at the new price (§3.2), so an hour's lot can sell a little under the minimum (for example 6.43 against 6.50) before the offer leaves the stall. The trader never takes it below the minimum.
+6. **Initialisation order.** The market is set up before the land at a new game, because land prices and building costs read the price index.
 
 ## 11. Cut first
 
