@@ -68,7 +68,7 @@
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 
-- **Status:** In progress (started 2026-10-17). 23 of 28 points done; US-019 and US-020 wait for the owner's device run. Specs 003 and 004 approved in the open-question review (2026-10-17), with ADRs 0030 and 0031
+- **Status:** Done (2026-10-18). 28 of 28 points. Specs 003 and 004 approved in the open-question review (2026-10-17), with ADRs 0030 and 0031; the hello-iPhone build confirmed on the device (2026-10-18)
 - **Branch:** `sprint/01-ledger-land-unity`
 - **Goal:** Ledger core and land implemented; Unity project created and a "hello iPhone" build running; specs 003 and 004 written.
 - **Points:** 28
@@ -83,8 +83,8 @@
 | US-008 | Spec 004: goods, market and storage | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
 | US-017 | Create the Unity project | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | Done |
 | US-018 | Pin the Unity version | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | Done |
-| US-019 | Code-first bootstrap | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 3 | Must | In review (device test) |
-| US-020 | Build-and-install guide | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 2 | Must | In review (owner dry run) |
+| US-019 | Code-first bootstrap | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 3 | Must | Done |
+| US-020 | Build-and-install guide | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 2 | Must | Done |
 | US-038 | Inherited land | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | Done |
 | US-039 | Soil properties | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
 | US-040 | Buy adjacent land | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
@@ -93,14 +93,14 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025): waiting on the device run
+- [x] All Must stories meet the Definition of Done (ADR 0025)
 - [x] Test checklist written in `docs/test-checklists/` (if there is a build): `s01-hello-iphone.md`, with `how-to-build-ios.md`
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results, 2026-10-18, iPhone 13):** installed with `how-to-build-ios.md` alone, no issues. The app opens in landscape at the native 2532 × 1170 and shows `Year 1 · Spring · Day 1`, the live time (08:17) and the weather (Sun) on the cream card, clear of the notch. Checks 1, 2, 3 and 6 of `s01-hello-iphone.md` pass; checks 4, 5 and 7–10 weren't reported and are re-checked with the next device build.
 
-**Retro:** —
+**Retro:** The Unity Pipeline CLI let Claude verify Unity work (compile, play mode, screenshots, the iOS build) without waiting for the owner, and caught the missing-font bug before the device run. The open-question review turned up a pacing conflict that reshaped the start of the game (ADR 0030); doing that review before merging kept all the decisions in one pull request.
 
 ## Sprint 2 · 2–8 Nov 2026 · Phase 0
 
