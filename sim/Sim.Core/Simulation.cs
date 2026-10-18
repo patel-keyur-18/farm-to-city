@@ -5,6 +5,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Finance;
 using Sim.Core.Land;
+using Sim.Core.Market;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
 using Sim.Core.Weather;
@@ -38,6 +39,7 @@ namespace Sim.Core
             if (config.Game != null)
             {
                 AddSystem(new LandSystem());
+                AddSystem(new MarketSystem());
                 AddSystem(new FinanceSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
@@ -65,6 +67,7 @@ namespace Sim.Core
                 state.Land = new LandState();
                 state.Ledger = new Ledger();
                 LandSystem.Initialise(sim);
+                MarketSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
             }
 

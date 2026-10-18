@@ -36,8 +36,7 @@ namespace Game.Presentation
         private void Awake()
         {
             WeatherSet weather = ContentLoader.LoadWeather(ContentSource.Read("weather.json"));
-            GameDefs game = ContentLoader.LoadGame(ContentSource.Read("land.json"), ContentSource.Read("map.json"),
-                ContentSource.Read("buildings.json"), ContentSource.Read("start.json"), ContentSource.Read("finance.json"), weather);
+            GameDefs game = ContentLoader.LoadGame(ContentSource.Read, weather);
             var config = new SimConfig(ContentLoader.LoadClock(ContentSource.Read("clock.json")), weather, game: game);
 
             // ponytail: no saves yet (spec 007, Sprint 6), so every launch is a new game seeded from the clock.

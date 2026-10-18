@@ -11,20 +11,21 @@ namespace Sim.Content
         private static readonly Fixed Hundred = Fixed.FromInt(100);
 
         /// <summary>
-        /// Loads <c>land.json</c>, <c>map.json</c>, <c>buildings.json</c>, <c>start.json</c> and <c>finance.json</c>
-        /// and checks the bounds and cross-file rules of specs 002 and 005.
+        /// Loads the game content files (land, map, buildings, start, finance, goods, region, market) and checks the
+        /// bounds and cross-file rules of specs 002 to 005. <paramref name="read"/> returns a file's JSON text by
+        /// name, for example <c>read("land.json")</c>.
         /// </summary>
-        public static GameDefs LoadGame(string landJson, string mapJson, string buildingsJson, string startJson,
-            string financeJson, WeatherSet weather)
+        public static GameDefs LoadGame(System.Func<string, string> read, WeatherSet weather)
         {
             var soils = new List<SoilDef>();
             var drainages = new List<DrainageDef>();
-            LandDef land = LoadLand(landJson, weather, soils, drainages);
-            MapDef map = LoadMap(mapJson, soils, drainages);
-            List<BuildingDef> buildings = LoadBuildings(buildingsJson);
-            StartDef start = LoadStart(startJson, map, buildings);
-            LedgerDef ledger = LoadFinance(financeJson);
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger);
+            LandDef land = LoadLand(read("land.json"), weather, soils, drainages);
+            MapDef map = LoadMap(read("map.json"), soils, drainages);
+            List<BuildingDef> buildings = LoadBuildings(read("buildings.json"));
+            StartDef start = LoadStart(read("start.json"), map, buildings);
+            LedgerDef ledger = LoadFinance(read("finance.json"));
+            MarketDefs market = LoadMarketDefs(read("goods.json"), read("region.json"), read("market.json"));
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)

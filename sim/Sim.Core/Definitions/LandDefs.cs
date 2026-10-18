@@ -238,9 +238,13 @@ namespace Sim.Core.Definitions
         public StartDef Start { get; }
         public LedgerDef Ledger { get; }
 
+        /// <summary>Goods, the region and the economy (spec 004).</summary>
+        public MarketDefs Market { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
-            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger)
+            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market)
         {
+            Market = market ?? throw new ArgumentNullException(nameof(market));
             Soils = new List<SoilDef>(soils).AsReadOnly();
             Drainages = new List<DrainageDef>(drainages).AsReadOnly();
             Land = land ?? throw new ArgumentNullException(nameof(land));

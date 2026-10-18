@@ -36,9 +36,7 @@ namespace Sim.Core.Tests
             }
             weather = Sim.Content.ContentLoader.LoadWeather(json);
             WeatherSet w = weather;
-            return Sim.Content.ContentLoader.LoadGame(TestContent.ReadContent("land.json"), TestContent.ReadContent("map.json"),
-                TestContent.ReadContent("buildings.json"), TestContent.ReadContent("start.json").Replace("20000", "5000000"),
-                TestContent.ReadContent("finance.json"), w);
+            return TestContent.Game((f, j) => f == "start.json" ? j.Replace("20000", "5000000") : j, w);
         }
 
         public static Simulation NewFarmWithWeather(params string[] only)
