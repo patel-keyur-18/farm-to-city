@@ -542,7 +542,7 @@ The player's real score is **net worth**: everything they own minus everything t
 
 | Lender | Available from | Rate | Terms |
 | --- | --- | --- | --- |
-| Village moneylender | Homestead | High (about 3–5% a season) | Small amounts, no collateral |
+| Village moneylender | Homestead | High (6% a season, about 24% a year) | Small amounts, no collateral |
 | Cooperative bank | Homestead for farm loans, larger loans from Village | Low (about 2–3% a season) | Needs collateral and a credit score |
 
 Each lender has a credit limit set by collateral, credit score and recent income, and the player can't borrow past it. Missed payments add penalty interest and lower the credit score. A payment overdue past the grace period is a default.
@@ -550,16 +550,16 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - **The credit score** runs from 300 to 900, like India's CIBIL score, and starts at 650.
 - **The moneylender** lends small amounts with interest each season and all the principal at the end. **The bank** lends against bought land and buildings (never the inherited land), with principal due every season. A bank loan can finance the land it buys.
 - **Loan payments come first** at each season close, before living costs and wages.
-- A loan in arrears can be cured by paying, selling land or restructuring once.
+- A loan in arrears can be cured by paying, selling land or restructuring once. Selling land that secures a bank loan repays the bank first.
 - Spec 005 has the formulas and values.
 
 **Personal bankruptcy is foreclosure, not game over.**
 
-- The lenders seize the founder's collateral: bought land, buildings, equipment, livestock and businesses.
+- The lenders seize the founder's collateral: bought land, buildings, equipment, livestock and businesses, and then produce held in the store, until the debt is covered (ADR 0038).
 - The inherited 6-acre farm and the hut are protected and can never be seized.
 - Remaining debt is written off.
 - The credit score drops sharply and recovers slowly.
-- Foreclosure never happens while the player is away: a final notice waits for their return, with a day to put things right.
+- Every default brings a final notice and a day of play to put things right (repay, sell land, restructure). Time away doesn't count, so foreclosure never happens while the player is away (ADR 0038).
 - The town, its citizens, the treasury and the Chronicle carry on, and the founder starts again from Homestead level.
 
 **Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt, and returns to its plan as soon as it can pay. Subsistence is never chosen; it is what poverty forces (ADR 0034).
@@ -878,7 +878,7 @@ Each sim `.cs` file compiles twice: with `dotnet` (through the `.csproj`) for te
 
 - The simulation is large and fully tested from the terminal. The Unity layer is thin.
 - Unity is built code-first: one bootstrap scene, with everything else created by C# at runtime. UI uses UI Toolkit text files (UXML and USS).
-- Development builds include a time-travel panel (+1 hour, +1 day, +1 season, jump to the away cap). It is compiled out of release builds.
+- Development builds include a time-travel panel (+1 hour, +1 day, +1 season, jump to the away cap, snapshot and restore, the golden-replay check). It is compiled out of release builds.
 - Every build handed to the owner comes with a test checklist in `docs/test-checklists/`.
 
 ## Data model and content configuration
@@ -960,7 +960,7 @@ The look is clean, stylised 2D isometric: readable at phone size, and producible
 - **Motion and feedback (Hay Day-like).** Every action answers with motion: a tapped field or building bounces (squash and stretch), harvested items and coins fly along a curve to the store or the wallet, numbers count up instead of jumping, and panels slide and scale in with easing, never snapping. All of it is driven by code (tweens on transforms and UI Toolkit elements, ADR 0017), not hand-made animation clips, and it reads only from domain events and state, so the simulation never waits on an animation. Spec 008 (HUD) defines the motion catalogue (which event triggers which motion, durations, easing curves), and the art style check (F00.6) includes a short motion sample alongside the still screenshot.
 - **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
 - **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
-- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence, plus SIL OFL for fonts only (Noto Sans, with Noto Sans Devanagari for Hindi; ADR 0036). CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
+- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence, plus SIL OFL for fonts only (Baloo 2 for headings and buttons, Noto Sans for body text, with Noto Sans Devanagari for Hindi; ADR 0036, 0038). CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
 
 **Monetisation**
 

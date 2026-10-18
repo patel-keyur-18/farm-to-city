@@ -146,6 +146,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0035 | Performance spike passed on the iPhone 13 (main thread p95 ≤ 7.6 ms, GPU ≤ 2.8 ms, about 60 fps, under 1% dropped frames); golden replays match on IL2CPP; the Phase 0 gate is passed |
 | 0036 | Fonts may be SIL OFL (Noto Sans, Devanagari for Hindi); the low-poly Kenney landscape style is the art base; the first notification ask comes in the first session after the long crop is sown. (0035 is reserved for the spike result) |
 | 0037 | Mandi cart is a tractor-trolley (2,000 kg, 1,000 hire); shade per tree (mango, guava 0.08; banana, papaya 0.03; floor 0.80); first-season pacing accepted (the first loan before hiring) |
+| 0038 | Credit loopholes closed: foreclosure also seizes stored produce, selling collateral repays the bank first, a 24-live-hour final notice for every default; moneylender 6% a season; minimum loans; first playable scope (minimal HUD and Store sheet, painted placeholder sprites, Baloo 2 headings, dev builds, Phase 0 spike deleted, Blender pipeline in Sprint 6) |
 
 ## Current status
 

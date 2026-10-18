@@ -4,9 +4,9 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | 0 · Pre-production: **complete, gate passed 2026-10-18** (ADR 0035). Phase 1 · Homestead slice is next |
-| Sprint | Sprint 3 done (47 of 47 points, 2026-10-18). Sprint 4 is next |
-| Branch with latest work | `sprint/03-market-spike-gate` (pull request #8 to `main`; must be merged before the next session) |
+| Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
+| Sprint | Sprint 4 in progress (24 points): planning review done, coding not started |
+| Branch with latest work | `sprint/04-credit-first-playable` (from `main`, which has Sprint 3 / PR #8) |
 | Last updated | 2026-10-18 |
 
 ## Done so far
@@ -81,12 +81,15 @@
 
 ## In progress
 
-None. Sprint 3 is closed and Phase 0 is complete.
+**Sprint 4, planning review done (2026-10-18), no code yet.** 12 gaps closed one by one with the owner, recorded in **ADR 0038**, spec 005 (§3.4–3.9, §5, §8 AC-31 to AC-36, §10), specs 002 and 008, the GDD, CLAUDE.md and the planning files:
+- Credit: foreclosure also seizes stored produce (at the Floor, only until the debt is covered); selling collateral repays the bank first; moneylender 6% a season (+3% penalty), bank max term 16; every default gets a 24-live-hour final notice; score rules tightened and minimum loans (1,000 / 10,000); financing `amount` at most the price.
+- First playable: minimal HUD with Collect all and a minimal Store sheet (Sell to trader) in Sprint 4; the placement ghost moves to US-068 (Sprint 5); painted placeholder sprites and a motion-led feel, Baloo 2 headings; US-171 (Blender pipeline) pulled to Sprint 6 (**owner installs Blender before then**); the dev panel is Development-build only (time travel, snapshot, goldens), and the Phase 0 spike, style check and Kenney farm sprites are deleted (git `3b1c81c`); no saves until Sprint 6.
+- Order of work: credit sim (test-first, golden 005, debt-fuelled stress bot), then `Sim.View` (strings, formatter, HUD and Store view models), then the Unity map and tap-to-act, then the dev panel, then the build and checklist.
 
 ## Next up
 
-1. **Owner:** merge pull request #8 (Sprint 3 and the Phase 0 gate).
-2. **Next session (Claude):** branch `sprint/04-credit-first-playable` from `main` and start **Phase 1** with Sprint 4 (`sprints.md`): credit and foreclosure (spec 005 §3.6–3.9), golden 005, the homestead map with sow and harvest (spec 008 §3.4), string tables and the formatter (`Sim.View`, spec 008 §3.11), the developer panel, and the first playable build with its checklist. Start with the gap review as usual (memory: gaps one by one). Remove or hide the Phase 0 bar (ADR 0035).
+1. **Claude:** credit and foreclosure (US-063 to US-065), then `Sim.View` (US-085, US-086), the map and tap-to-act (US-078, US-079), the dev panel (US-088), the first playable build and its checklist.
+2. **Owner:** run the first playable on the iPhone 13 (Development build) when it is handed over; install Blender before Sprint 6.
 
 ## Owner action checklist (Phases 0–1)
 

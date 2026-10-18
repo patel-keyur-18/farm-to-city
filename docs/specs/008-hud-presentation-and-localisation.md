@@ -249,7 +249,7 @@ Alerts are derived from state each refresh (not stored), except dismissals, whic
 
 **Locale choice:** the device's region: India → en-IN, elsewhere Western; a settings switch overrides it.
 
-**Font:** Noto Sans (SIL OFL, ADR 0036), bundled; Noto Sans Devanagari joins with Hindi (F19.1). Layouts leave about 30% room for longer translations.
+**Fonts:** Baloo 2 (SIL OFL, rounded; headings, buttons and numbers on the HUD) and Noto Sans (body text), both bundled (ADR 0036, amended by ADR 0038); Noto Sans Devanagari joins with Hindi (F19.1). Layouts leave about 30% room for longer translations.
 
 ### 3.12 The motion catalogue
 
@@ -289,7 +289,7 @@ Settings live in the settings file beside the save (spec 007), never in the town
 
 ### 3.14 The developer panel (ADR 0017, spec 001 §7)
 
-Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`.
+Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035), and a number-format switch (en-IN / Western). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end.
 
 ## 4. Data
 
@@ -408,6 +408,12 @@ All eight were answered in the review with the owner (2026-10-18), each as recom
 6. **Art style:** Kenney's low-poly *Isometric Landscape* is the base; setting-specific assets are made in Blender to match it (F19.3), with flat placeholders until then (ADR 0036).
 7. **Fonts:** SIL OFL is allowed for fonts only (ADR 0036): **Noto Sans**, and Noto Sans Devanagari when Hindi arrives. The game is mostly English; Hindi is supported (F19.1), so every string stays in the tables and every layout leaves room for longer text.
 8. **Phase 1 accessibility and sound:** reduced motion and text size in Phase 1; feedback sounds and haptics as Could; the rest in F19.2 (§3.13).
+
+### Changes after approval (Sprint 4 planning review, 2026-10-18, ADR 0038)
+
+- **First playable scope:** a minimal HUD (time strip, cash, store %, **Collect all** with StoreOnly) and a minimal **Store sheet** (goods in store, trader price and capacity, Sell to trader) are built in Sprint 4; the rest of §3.3 and §3.5 stays in Sprint 7. The ghost preview for placement (§3.4) is built with the hand's hut in Sprint 5.
+- **Look:** flat painted placeholder sprites (supersampled, outlined, two-tone, soft shadows) over Kenney ground tiles until the Blender pipeline (US-171, Sprint 6) replaces them; the motion catalogue (§3.12) carries the feel.
+- **Dev panel and Phase 0 code:** see §3.14. Fonts: see §3.11.
 
 ## 11. Cut first
 

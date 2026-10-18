@@ -12,10 +12,10 @@
 | S1 | 26 Oct – 1 Nov 2026 | 0 | Ledger core and land implemented; Unity project created and a "hello iPhone" build running; specs 003 and 004 written. | 28 | 003, 004 | Yes: hello iPhone (date, time, weather) |
 | S2 | 2–8 Nov 2026 | 0 | Crops, the kitchen garden, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written. | 53 | 006, 007 | No |
 | S3 | 9–15 Nov 2026 | 0 | Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review. | 52 | 008, 009 | Yes: spike and determinism build |
-| S4 | 16–22 Nov 2026 | 1 | Credit and foreclosure; first playable build: the homestead map with sow and harvest, string tables and number formatting, and the dev panel. | 23 | — | Yes: first playable |
-| S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 19 | — | Yes |
-| S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; market, store and finance basics on screen. | 16 | — | Yes |
-| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings. | 18 | — | Yes |
+| S4 | 16–22 Nov 2026 | 1 | Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel. | 24 | — | Yes: first playable |
+| S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 21 | — | Yes |
+| S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; the Blender sprite pipeline (US-171, ADR 0038). | 24 | — | Yes |
+| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings. | 17 | — | Yes |
 | S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | — | Yes: release candidate |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
@@ -203,10 +203,10 @@
 
 ## Sprint 4 · 16–22 Nov 2026 · Phase 1
 
-- **Status:** Planned
+- **Status:** In progress. Planning review done (2026-10-18): 12 gaps closed with the owner, ADR 0038
 - **Branch:** `sprint/04-credit-first-playable` (or the branch the session assigns)
-- **Goal:** Credit and foreclosure; first playable build: the homestead map with sow and harvest, string tables and number formatting, and the dev panel.
-- **Points:** 23
+- **Goal:** Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel.
+- **Points:** 24 (23 planned; US-078 +1 minimal HUD with Collect all, US-079 +1 Store sheet −1 ghost preview moved to US-068, ADR 0038)
 - **Specs for the owner to review:** —
 - **Device build:** Yes: first playable
 
@@ -215,8 +215,8 @@
 | US-063 | Borrow | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | To do |
 | US-064 | Repayments and penalties | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | To do |
 | US-065 | Foreclosure | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | To do |
-| US-078 | Homestead map | [F08.1](features/F08.1-map-and-field-interaction.md) | 5 | Must | To do |
-| US-079 | Tap to act | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | To do |
+| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | To do |
+| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | To do |
 | US-085 | String tables | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | To do |
 | US-086 | Number formatting | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | To do |
 | US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | To do |
@@ -237,7 +237,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/05-people` (or the branch the session assigns)
 - **Goal:** People: day labourers, the resident hand and standing orders, with their UI.
-- **Points:** 20 (US-069 +1 for `PostJob`, spec 006 review)
+- **Points:** 21 (US-069 +1 for `PostJob`, spec 006 review; US-068 +1 for the placement ghost, ADR 0038)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -245,7 +245,7 @@
 | --- | --- | --- | --- | --- | --- |
 | US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | To do |
 | US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
-| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 2 | Must | To do |
+| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
 | US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | To do |
 | US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
 | US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
@@ -266,8 +266,8 @@
 
 - **Status:** Planned
 - **Branch:** `sprint/06-saves-notifications` (or the branch the session assigns)
-- **Goal:** Saves, notifications and the play log; market, store and finance basics on screen.
-- **Points:** 16
+- **Goal:** Saves, notifications and the play log; the Blender sprite pipeline (US-171, pulled forward by ADR 0038; the owner installs Blender first).
+- **Points:** 24 (16 + US-171 8: the owner decides at Sprint 6 planning what slips)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -278,6 +278,7 @@
 | US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
 | US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | To do |
 | US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | To do |
+| US-171 | Blender pipeline | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | To do |
 
 **Sprint end checklist**
 
@@ -295,7 +296,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 18
+- **Points:** 17 (US-082 −1: the Store sheet is built in Sprint 4)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -303,7 +304,7 @@
 | --- | --- | --- | --- | --- | --- |
 | US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | To do |
+| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
 | US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
