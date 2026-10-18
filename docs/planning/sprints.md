@@ -167,8 +167,8 @@
 | US-016 | Viability checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | Built; device run (owner) |
 | US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | Waiting on device results |
-| US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | Built; device run (owner) |
-| US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | Built; owner review |
+| US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | Done (all goldens pass on the iPhone) |
+| US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | Done |
 | US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | Done |
 | US-049 | Tree value and payback | [F02.3](features/F02.3-fruit-trees.md) | 2 | Should | Done |
 | US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Should | Done |
