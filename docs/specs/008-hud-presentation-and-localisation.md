@@ -415,6 +415,16 @@ All eight were answered in the review with the owner (2026-10-18), each as recom
 - **Look:** flat painted placeholder sprites (supersampled, outlined, two-tone, soft shadows) over Kenney ground tiles until the Blender pipeline (US-171, Sprint 6) replaces them; the motion catalogue (§3.12) carries the feel.
 - **Dev panel and Phase 0 code:** see §3.14. Fonts: see §3.11.
 
+### Implementation notes (Sprint 4, 2026-10-18)
+
+None of these changes a rule or a lesson.
+
+1. **`Sim.View`** (`sim/Sim.View/`, netstandard2.1, C# 9) depends on `Sim.Core` and `Sim.Content` (whose JSON helpers it reuses); `tests/Sim.View.Tests` holds its tests. `UiDef` and its loader live in `Sim.View` (view data, not rules).
+2. **Disabled actions use the sim's own answer.** `Simulation.Preview(command)` runs a command on a copy of the state (no log, no events out) and returns the result, so a greyed button shows the sim's rejection as a sentence and can never disagree with it. `GameState.Clone(withCommandLog: false)` backs it.
+3. **Built in Sprint 4:** string tables and the formatter (AC-2, AC-3, AC-4, AC-13), the HUD (AC-14), Collect all with StoreOnly (AC-11 without the trader prompt), the crop-calendar card (AC-6), the map view model, isometric geometry, the camera limits, tints, the field/garden/tree/store sheets, read-only checks (AC-1) and reduced motion (AC-10). **Left for Sprint 7:** the *Why?* sheets (AC-5; the sheets carry `WhyKey` ids), the season-report view (AC-7), *While you were away* (AC-8), the event map (AC-9), alerts (AC-12) and the "sell the rest" prompt of Collect all.
+4. **Coverage:** `StringTests.Coverage` finds ledger and score keys by scanning the sim sources, events and rejections by reflection and names from the content; `SheetTests.ViewKeys_AreAllInTheTable` scans `Sim.View`'s sources. Rejection sentences take optional `{crop}` and `{seasons}` arguments.
+5. **Short money** has no unit word (the HUD adds the coin); `Formatter.Coins` takes the singular for one coin.
+
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

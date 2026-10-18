@@ -24,6 +24,13 @@ namespace Game.Editor
             string[] files = Directory.GetFiles(source, "*.json");
             if (files.Length == 0) throw new BuildFailedException("No content JSON found in " + source);
             foreach (string file in files) File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
+            // The string tables (content/strings/*.json) go to StreamingAssets/content/strings/.
+            string stringsSource = Path.Combine(source, "strings");
+            if (Directory.Exists(stringsSource))
+            {
+                Directory.CreateDirectory(Path.Combine(target, "strings"));
+                foreach (string file in Directory.GetFiles(stringsSource, "*.json")) File.Copy(file, Path.Combine(target, "strings", Path.GetFileName(file)));
+            }
             Debug.Log("ContentBuildStep: copied " + files.Length + " content files to " + target);
 
             // Phase 0 (US-023): the golden replays and their frozen content, for the on-device determinism check.

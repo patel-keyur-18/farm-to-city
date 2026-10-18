@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- C# 9 is for sim/ only (Unity); tests use the latest (NUnit 4.6 needs C# 10+ overload resolution). -->
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Sim.View.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="NUnit" Version="4.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\sim\Sim.Core\Sim.Core.csproj" />
+    <ProjectReference Include="..\..\sim\Sim.Content\Sim.Content.csproj" />
+    <ProjectReference Include="..\..\sim\Sim.View\Sim.View.csproj" />
+  </ItemGroup>
+</Project>

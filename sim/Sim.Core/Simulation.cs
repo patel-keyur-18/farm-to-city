@@ -119,6 +119,17 @@ namespace Sim.Core
             return result;
         }
 
+        /// <summary>
+        /// What <see cref="Execute"/> would say about a command right now, without changing anything: it runs on a copy of the
+        /// state. The view layer uses it to grey out an action and show why (spec 008 §3.6, "a rejected action"). Never logged.
+        /// </summary>
+        public CommandResult Preview(Command command)
+        {
+            if (command == null) throw new ArgumentNullException(nameof(command));
+            var fork = new Simulation(Config, State.Clone(withCommandLog: false));
+            return command.Apply(fork);
+        }
+
         /// <summary>Shorthand for <c>Execute(new AdvanceTo(target, mode))</c>.</summary>
         public CommandResult AdvanceTo(long target, AdvanceMode mode = AdvanceMode.Live)
         {

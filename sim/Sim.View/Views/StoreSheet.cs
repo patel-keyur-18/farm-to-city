@@ -1,0 +1,61 @@
+using Sim.Core;
+using Sim.Core.Commands;
+using Sim.Core.Definitions;
+using Sim.Core.Market;
+using Sim.Core.Maths;
+
+namespace Sim.View.Views
+{
+    /// <summary>
+    /// The minimal Store sheet of the first playable (ADR 0038): what is in the store, what the trader pays now and its room today,
+    /// and Sell to trader for each produce. Offers, the mandi and buying inputs come with the full panels (Sprint 7).
+    /// </summary>
+    public static class StoreSheet
+    {
+        public static SheetVm Build(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            MarketState m = sim.State.Market;
+            long used = Store.UsedGrams(sim), capacity = Store.CapacityGrams(sim);
+            var vm = new SheetVm
+            {
+                Icon = "store", Title = ctx.Strings.Get("store.title"),
+                Subtitle = ctx.Strings.Get("store.fill", "used", ctx.Fmt.Kg(used), "capacity", ctx.Fmt.Kg(capacity)),
+            };
+            for (int g = 0; g < defs.Market.Goods.Count; g++)
+            {
+                GoodDef good = defs.Market.Goods[g];
+                if (m.Stock[g] == 0) continue;
+                string name = ctx.Strings.Get(good.NameKey);
+                if (good.Kind != GoodKind.Produce)
+                {
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", Quantity(ctx, good, m.Stock[g]))));
+                    continue;
+                }
+                Fixed floor = MarketRules.Floor(sim, g);
+                long free = m.InStore(g) - m.OnOffer(g);
+                long room = MarketRules.TraderCapacityLeft(sim, g);
+                long sell = System.Math.Min(free, room);
+                vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.produce", "qty", ctx.Fmt.Kg(m.Stock[g]), "price", ctx.Fmt.PricePerKg(floor)), "price"));
+                string id = good.Id;
+                long amount = MarketRules.Value(sim, g, sell, floor);
+                if (sell > 0)
+                    vm.Actions.Add(ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sell", "good", name), ctx.Strings.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(amount)),
+                        ActionKind.Primary, at => new SellToTrader(at, id, sell)));
+                else
+                    vm.Actions.Add(ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sell", "good", name), null, ActionKind.Primary,
+                        at => new SellToTrader(at, id, room == 0 ? free : 1)));
+            }
+            if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("store.empty");
+            return vm;
+        }
+
+        private static string Quantity(ViewContext ctx, GoodDef good, long q)
+        {
+            // Inputs are in grams, millilitres or units; show kg, litres or a count.
+            if (good.Unit == GoodUnit.Each) return ctx.Fmt.Integer(q);
+            return ctx.Fmt.Kg(q);
+        }
+    }
+}

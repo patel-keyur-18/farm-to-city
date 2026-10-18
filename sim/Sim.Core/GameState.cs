@@ -81,7 +81,7 @@ namespace Sim.Core
         }
 
         /// <summary>A deep copy (in-memory round-trip; saving to disk is spec 007).</summary>
-        public GameState Clone()
+        public GameState Clone(bool withCommandLog = true)
         {
             return new GameState
             {
@@ -96,7 +96,7 @@ namespace Sim.Core
                 Market = Market?.Clone(),
                 Farm = Farm?.Clone(),
                 Credit = Credit?.Clone(),
-                CommandLog = CommandLog.Clone(),
+                CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };
         }
     }
