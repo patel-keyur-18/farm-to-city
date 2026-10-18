@@ -104,7 +104,7 @@
 
 ## Sprint 2 · 2–8 Nov 2026 · Phase 0
 
-- **Status:** In review: all code stories done (52 points); specs 006 and 007 (6 points) await the owner
+- **Status:** Done (58 of 58 points, 2026-10-18). Specs 006 and 007 approved with all 13 open questions answered
 - **Branch:** `sprint/02-crops-trees-founder` (or the branch the session assigns)
 - **Goal:** Crops, the kitchen garden, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written.
 - **Points:** 58 (53 planned; +5 from the Sprint 2 planning review, ADR 0032: the spec 004 core and the health formula moved in)
@@ -114,8 +114,8 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-009 | Spec 006: people | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review |
-| US-010 | Spec 007: saves, notifications and play log | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review |
+| US-009 | Spec 006: people | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-010 | Spec 007: saves, notifications and play log | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
 | US-013 | Seasonal farm cash-flow model | [F00.3](features/F00.3-economy-model.md) | 5 | Must | Done |
 | US-014 | Anchor numbers in content | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-042 | Sow in season | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | Done |
@@ -136,12 +136,12 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025): all but US-009 and US-010, which need the owner's approval
+- [x] All Must stories meet the Definition of Done (ADR 0025)
 - [x] Test checklist written in `docs/test-checklists/` (if there is a build): no device build this sprint
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results):** no device build this sprint. Specs 006 and 007 reviewed and approved (2026-10-18).
 
 **Retro:**
 - A planning review before coding found 10 gaps (8 before, 2 from the economy model); answering them one by one with the owner (ADRs 0032 and 0033) kept the code free of rework.
@@ -227,7 +227,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/05-people` (or the branch the session assigns)
 - **Goal:** People: day labourers, the resident hand and standing orders, with their UI.
-- **Points:** 19
+- **Points:** 20 (US-069 +1 for `PostJob`, spec 006 review)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -236,7 +236,7 @@
 | US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | To do |
 | US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
 | US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 2 | Must | To do |
-| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
+| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | To do |
 | US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
 | US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
 | US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |

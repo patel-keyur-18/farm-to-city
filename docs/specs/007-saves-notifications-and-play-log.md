@@ -1,6 +1,6 @@
 # 007. Saves, notifications and the play log
 
-- Status: In review (draft 2026-10-18)
+- Status: Approved (2026-10-18), with the review answers in §10
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Offline play and saves (Save system, Local notifications, Clock safety, Performance budget); Technical architecture; Roadmap (Phase 1 exit gate)
@@ -17,7 +17,7 @@ The player never loses their town and never has to think about saving: it saves 
 
 **In:**
 - **The save codec** in `Sim.Core.Saves`: the whole game state to bytes and back, byte-identically (the same state hash), versioned, compressed and checksummed. Definitions are referenced by id, not index, so content can be reordered between builds.
-- **The command log** in the save, with consecutive live `Sync`s compacted into one entry (owner requirement), and a size cap.
+- **The command log** in the save, with consecutive live `Sync`s compacted into one entry (owner requirement), and a checkpoint at a size cap so a save stays replayable.
 - **Save points** (ADR 0023): atomic writes, the latest save plus rotating backups (3 hourly, 3 daily), automatic recovery from the newest valid one with a notice, *Save now*, never a rewind.
 - **When to save:** every real hour, after a player command (debounced), and when the app goes to the background.
 - **Export and import** of a town file, and **New game** replacing the town after a confirmation (with an offer to export first).
@@ -39,7 +39,7 @@ The player never loses their town and never has to think about saving: it saves 
 file      := header payload
 header    := magic "FTC1" (4 bytes) | formatVersion (int32) | schemaVersion (int32) | simVersion (string)
              | payloadLength (int64) | payloadChecksum (uint64, FNV-1a 64 of the compressed payload)
-payload   := gzip( state section | command-log section )
+payload   := gzip( state section | replay-base section (empty until the first checkpoint) | command-log section )
 ```
 
 | Rule | Behaviour |
@@ -63,7 +63,7 @@ The command log (spec 001 §4) is the record of what the player did. Saving it l
 | Replaying a run | Advances live by `simSeconds` and sets `lastWallUtc = toWallUtc`. Live advances are chunking-invariant (spec 001 AC), so one run of 3,600 one-second Syncs gives exactly the state of the 3,600 Syncs |
 | What breaks a run | Any other command (a sow, a harvest, a dev advance), an away `Sync` (Δ above the threshold: it stays a `Sync`, so the away rules and the cap replay exactly), and a backwards clock (`ClockAnomalyDetected`: stays a `Sync`) |
 | Effect | The log grows by about one entry per player action, not one per second: a 2-hour session with 300 actions is about 600 entries instead of 7,200 |
-| Cap | The log is kept while it's under `SaveDef.maxLogEntries` (100,000, about 2 MB uncompressed). Past that the oldest entries are dropped and the save records `logStartsAt` (the first kept entry's sim time); such a save is no longer replayable from the new game, which is fine for bug reports |
+| Checkpoint | When a save finds the log at `SaveDef.maxLogEntries` (100,000, about 2 MB uncompressed, months of play) or more, the current state is stored in the save as the **replay base** and the log restarts empty from there. The town itself is never touched: the log is only history. A save then holds at most two copies of the state, and replay starts from the base (or from the new game while there is no base), so a reported bug can always be reproduced |
 
 ### 3.3 Save points (ADR 0023)
 
@@ -81,7 +81,7 @@ The command log (spec 001 §4) is the record of what the player did. Saving it l
 
 | Rule | Behaviour |
 | --- | --- |
-| Export | Writes a copy of the latest save as `FarmToCity-<town>-<date>.ftc` into the app's Documents folder, which iOS shows in the Files app (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace` in the Xcode build); no plugin needed (ADR 0007). The player copies it anywhere from Files |
+| Export | Writes a copy of the latest save as `FarmToCity-<town>-<date>.ftc` into the app's Documents folder, which iOS shows in the Files app (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`, set by our build step); no plugin needed (ADR 0007). From Files the player can AirDrop, email or message it. A one-tap share sheet waits for store readiness (F19.5) |
 | Import | Any `.ftc` the player puts into the Documents folder is offered on the title screen ("Import <file>?"). It must load (checksum, version, content ids); importing replaces the current town after a confirmation that offers to export the current one first (ADR 0023). An old export can roll back progress: accepted, because it's a deliberate manual act |
 | New game | Replaces the current town after the same confirmation and export offer. The backups of the old town are deleted with it (one town at a time) |
 
@@ -93,14 +93,14 @@ plan = NotificationPlanner.Plan(sim, settings)        pure, in Sim.Core; the pla
 
 | Rule | Behaviour |
 | --- | --- |
-| Opt-in | Off until the player agrees. The prompt appears once, after the first harvest ("Want a nudge when your fields are ready?"); iOS's own permission dialog follows only if they say yes |
+| Opt-in | Off until the player agrees. The game's own prompt appears after the first **field crop** is harvested ("Want a nudge when your fields are ready? At most 2 a day, never at night."); iOS's one-time permission dialog follows only if they say yes. If they decline, it asks once more after the first season close, then never; Settings always has the switch |
 | Sources | `UpcomingJobs(simTime + awayCap)` (spec 001 §3.7): crop ready, garden bed ready, tree matured, hut built. Derived from known season boundaries within the cap: fruit ripening at the next season start for a mature tree whose fruiting season it is; contract renewals and loan payments due (from spec 006 and F05.2, when built) |
 | When | The platform asks for a plan when the app goes to the background and cancels every pending notification when it returns. Each item's wall time is `lastWallUtc + (due − simTime)` (spec 001) |
 | Grouping | Items of the same kind within `NotifyDef.groupWindowMinutes` (30) are one notification ("3 fields are ready") |
 | Quiet hours | Nothing between `quietFrom` and `quietTo` (22:00–07:00 device time): an item due then moves to `quietTo` and groups with others there |
 | Cap | At most `NotifyDef.maxPerDay` (2) a device-calendar day, the earliest first; the rest are dropped (the *While you were away* report still lists everything) |
 | Text | From the string table (spec 008): a kind key and a count; never a name or a number that could be wrong by the time it's read |
-| Platform | iOS local notifications through Unity's free Mobile Notifications package (`com.unity.mobile.notifications`), behind `INotificationService` in `Game.Services`. A package dependency, so it needs the owner's approval (open question 4) |
+| Platform | iOS local notifications through Unity's free Mobile Notifications package (`com.unity.mobile.notifications`), pinned, behind `INotificationService` in `Game.Services` (approved; ADR 0034 records the pin when it's added in Sprint 6). Only that one class touches the package; if the package fails on the device or is abandoned, a hand-written Objective-C plugin replaces it behind the same interface. Notifications never change the game state, so saves and determinism can't be affected |
 
 ### 3.6 The play log (ADR 0024)
 
@@ -129,7 +129,7 @@ plan = NotificationPlanner.Plan(sim, settings)        pure, in Sim.Core; the pla
 | | `quietFrom`, `quietTo` | hh:mm | 22:00, 07:00 | |
 | `PlayLogDef` | `maxBytes` | int | 1,048,576 | ≥ 10,000 |
 
-**State:** none new in `GameState` beyond the command log's `LiveRun` entries and `logStartsAt`. Player settings (notifications on, play log on, the opt-in prompt shown) live in a small settings file beside the save, not in the town.
+**State:** none new in `GameState` beyond the command log's `LiveRun` entries; the save adds the optional replay base. Player settings (notifications on, play log on, the opt-in prompt shown) live in a small settings file beside the save, not in the town.
 
 ## 5. Commands and events
 
@@ -190,7 +190,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-3 | A save written at schema 1 loads in a build at schema 2 with the new field's default; a save from a newer schema is refused with `SaveFromNewerVersion` | `SaveTests.Schema_MigrateAndRefuseNewer` |
 | AC-4 | A save loads correctly with content whose goods, crops and buildings are listed in a different order; a save naming an id the content lacks fails with `UnknownContentId` | `SaveTests.ContentIds_NotIndices` |
 | AC-5 | 3,600 one-second live Syncs leave one `LiveRun` entry; replaying the compacted log gives exactly the hash of the uncompacted run; a sow, an away Sync and a backwards clock each break the run | `SaveTests.SyncCompaction` |
-| AC-6 | After 10 game years of bot play (spec 003 `FarmBot`) with per-second Syncs, the save is under 200 KB and the log under `maxLogEntries`; past the cap the oldest entries are dropped and `logStartsAt` is set | `SaveTests.Size_AndLogCap` |
+| AC-6 | After 10 game years of bot play (spec 003 `FarmBot`) with per-second Syncs, the save is under 200 KB and the log under `maxLogEntries`; with a small cap in test content, a save at the cap checkpoints (replay base = the state, the log empty), the town's hash is unchanged, and replaying base + log reproduces the latest hash | `SaveTests.Size_AndCheckpoint` |
 | AC-7 | On an in-memory store, a crash injected at each step of an atomic write (after writing the temp file, before the rename) leaves the previous save loadable | `SavePointTests.AtomicWrite_CrashSafe` |
 | AC-8 | Over 5 simulated real days of hourly saves, exactly 1 latest, 3 hourly and 3 daily files exist with the right ages; with the latest corrupted, `LoadNewestValid` returns the newest valid backup and says which | `SavePointTests.Rotation_AndRecovery` |
 | AC-9 | Save triggers: a burst of 10 commands within 5 seconds causes one save; live Syncs alone cause none until the hourly save | `SavePointTests.Debounce` |
@@ -211,19 +211,19 @@ The atomic rename, `OnApplicationPause` and iOS notifications are checked on the
 
 ## 10. Open questions
 
-For the owner's review (each with a recommendation):
+All six were answered in the review with the owner (2026-10-18):
 
-1. **The serializer** (US-010.T2). Recommended: hand-written binary with GZip and the FNV checksum, in `Sim.Core.Saves`: no new dependency, IL2CPP-safe, and the same field-by-field pattern as the state hash. Alternative: MessagePack-CSharp with generated formatters (faster to extend, but a dependency and an AOT code-generation step in the Unity build).
-2. **The command log in saves.** Recommended: keep it, with live `Sync`s compacted into runs (§3.2) and a 100,000-entry cap, so a tester's save can be replayed when they report a bug. Alternative: don't save the log (smaller saves, no replay of real sessions).
-3. **Export and import through the Files app** (`UIFileSharingEnabled`). Recommended: no plugin, zero budget, and the same route serves the play log. Alternative: a share-sheet plugin (nicer, but a third-party dependency).
-4. **Notifications package.** Recommended: Unity's free Mobile Notifications package behind `INotificationService` (a small ADR on approval, like ADR 0029's pin). Alternative: a hand-written Objective-C plugin (no package, more native code to maintain).
-5. **Quiet hours** 22:00–07:00 (not in the GDD). Recommended: yes, a nudge at night breaks the "gentle" promise.
-6. **When to ask for notifications.** Recommended: after the first harvest, when the player has felt a crop finishing. Alternative: in the first session's letter.
+1. **The serializer:** hand-written binary with GZip and the FNV-1a checksum in `Sim.Core.Saves` (US-010.T2). It stores state only, never content; values are exact (`Fixed` raw, money in 1/100 coin); references are content ids; AC-1 proves the round trip and identical play after it.
+2. **The command log in saves:** kept, compacted, with a checkpoint at 100,000 entries (the state becomes the replay base and the log restarts), so progress is never touched and a save stays replayable (§3.2).
+3. **Export and import:** through the Files app in Phase 1; a share sheet at store readiness (F19.5) (§3.4).
+4. **Notifications package:** Unity's Mobile Notifications, pinned behind `INotificationService`; ADR 0034 when it's added (Sprint 6). The risks and their containment are in §3.5.
+5. **Quiet hours:** 22:00–07:00 device time, in data; items move to 07:00 and group.
+6. **When to ask:** after the first field harvest; once more after the first season close if declined.
 
 ## 11. Cut first
 
 1. Quiet hours (keep the 2-a-day cap).
-2. The command-log cap (no trimming; only matters after months).
+2. The command-log checkpoint (only matters after months of play).
 3. Daily backups (keep hourly ones).
 4. Import (keep export, which also serves bug reports).
 5. Grouping (one notification per item, still capped at 2).

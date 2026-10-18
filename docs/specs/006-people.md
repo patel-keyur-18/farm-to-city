@@ -1,6 +1,6 @@
 # 006. People: day labourers, the resident hand and standing orders
 
-- Status: In review (draft 2026-10-18)
+- Status: Approved (2026-10-18), with the review answers in §10
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring starts in Homestead, Wages); Land, farming and livestock (Standing orders); Player journey and eras (Homestead, the Hamlet gate); Data model
@@ -19,7 +19,7 @@ The founder runs out of hours at about 2 acres; hiring help is the first step in
 - **Day labourers** (ADR 0022): a roster of neighbours from nearby villages; a seasonal pool of who is free each day; hiring for the rest of the day, paid upfront; their hours join the Care pool.
 - **Regulars:** a labourer hired often asks to move to the village, as a resident-hand applicant whose skill and traits are known.
 - **The hand's hut:** a building on the yard, built in a day for about 15,000 coins, capitalised and depreciated.
-- **The resident hand:** applicants arrive while a hut stands empty; skill shown as a range and one trait; an interview reveals another; an offer at the asked wage, accepted or declined.
+- **The resident hand:** applicants walk in while a hut stands empty, or come faster after a job is posted (at the market wage or above it); skill shown as a range and one trait; an interview reveals another; an offer at the wage, accepted or declined.
 - **The season contract:** prepaid wages, renewal at each season close (spec 005 step 6), lapse when it can't be paid, letting a hand go with a refund.
 - **The hand's work:** hours a day by skill and traits, into the Care pool; skill grows with experience.
 - **Standing orders** for a hand: keep a crop on a field (re-sow it in season), harvest when ready, pick ripe fruit, and a sell rule (store, offer at a minimum price, or sell to the trader). They run live and while away.
@@ -76,6 +76,7 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | Where | On a yard tile of owned land with room: a yard tile holds up to `LandDef.yardBuildings` buildings (default 4: the hut, the well and two hands' huts). Rejected with `NoRoom`, `NotOwned` or `NotYard` |
 | Build | `BuildHandHut(tileId)`: `BuildingDef(hand_hut).value` (15,000 coins: materials and the builders' wages, upfront, ADR 0008), capitalised to 1600 Buildings (spec 005 §3.3). A construction job of `BuildingDef.buildHours` (24: about 3 real weeks) |
 | Ready | When the job ends the hut houses `BuildingDef.housesHands` (1) hand. Emits `HandHutBuilt`. Depreciated straight-line over `usefulLifeSeasons` (60) from the next season close |
+| *Why?* | "Materials 15,000; your family builds it" |
 | Why about 15,000 | A one-room kutcha hut with a tin or tiled roof costs about ₹40,000–80,000 to build; the game's 15,000 is set by ADR 0030's pacing (the hut and the hand's first season come to about 51,000, against about 42,000 in hand at the end of the first Spring, so a small moneylender loan bridges the gap) and stands for materials with the family's own labour on the build |
 | The Hamlet gate | "A house for a hired hand" (ADR 0030) is met by a finished hand's hut (spec 009 reads it) |
 
@@ -89,6 +90,7 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | Asked wage | `HandDef.marketWage × (wageBase + wagePerSkill × skill ÷ 100) × PriceIndex`, rounded to whole coins. Defaults 36,000 × (0.80 + 0.40 × skill ÷ 100): skill 50 asks 36,000 a season (ADR 0008), skill 30 asks 33,120, skill 70 asks 38,880 |
 | Offer | `OfferContract(applicantId)` at the asked wage. Seeded acceptance (stream Applicants, counter = applicant id, draw 2) with probability `HandDef.acceptChance` (0.85): accepted → §3.6; declined → the applicant leaves (`OfferDeclined`) |
 | Leaving | An applicant not hired within `HandDef.applicantWaitDays` (2) leaves (`ApplicantLeft`). Applicants never arrive or leave while away: the queue waits (ADR 0002: events needing a decision wait for the player) |
+| Post a job | `PostJob(wageOffer)` sends word through the village and the trader (owner decision, 2026-10-18). Needs an empty hut **or one being built**. Costs `JobPostDef.cost` (200 coins, Dr 5700, Cr Cash) and lasts until a hand is hired or `JobPostDef.days` (4) pass (`JobPostExpired`). While it lasts applicants come twice as often (`applicantEveryHours` × `JobPostDef.rateFactor` 0.5, jitter halved). `wageOffer`: **market** (as walk-ins) or **aboveMarket**: the wage is `JobPostDef.aboveMarketFactor` (1.10) × the asked wage, applicants' skill is drawn from `[skillMin + 10, skillMax + 10]` (30–80) and they accept with `JobPostDef.aboveMarketAccept` (0.95). One post at a time (`AlreadyPosted`). Paying above market brings better workers sooner (GDD Wages) |
 
 ### 3.6 The season contract (ADR 0008)
 
@@ -105,11 +107,11 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | Rule | Behaviour |
 | --- | --- |
 | Skill growth | At each season close a hand under contract gains `HandDef.skillGainPerSeason` (3) skill (×1.5 if **ambitious**), up to 100. Their hours and their asked wage at the next renewal rise with it |
-| Traits (Phase 1 set) | hardworking (hours ×1.10), lazy (hours ×0.85), loyal (keeps their wage at renewal), ambitious (skill grows ×1.5; asks 10% more at renewal), careless (an order's harvest is sold with `Overflow.SellRestToTrader` even if the rule says store; shown in *Why?*), steady (no effect: a neutral draw) |
+| Traits (Phase 1 set) | hardworking (hours ×1.10), lazy (hours ×0.85), loyal (keeps their wage at renewal), ambitious (skill grows ×1.5; asks 10% more at renewal), careless (an order's harvest is sold with `Overflow.SellRestToTrader` even if the rule says store; shown in *Why?*), steady (no effect: a neutral draw). Drawn evenly. The GDD's other four (creative, frugal, sociable, perfectionist) come in Phase 2 with their systems (F11.4) |
 
 ### 3.8 Standing orders
 
-An order belongs to one hand and covers one target. The grammar:
+Any hand under contract can have orders, from Homestead (ADR 0022; the GDD now says so). An order belongs to one hand and covers one target. The grammar:
 
 ```
 order    := field-order | tree-order
@@ -159,6 +161,8 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | | `severanceShare` | Fixed | 0.10 | 0–1 |
 | | `lapseGraceDays` | int | 2 | 0–8 |
 | | `maxOrders` | int | 6 | 1–20 |
+| `JobPostDef` | `cost`, `days`, `rateFactor` | money, int, Fixed | 200, 4, 0.5 | > 0, 1–14, 0.1–1 |
+| | `aboveMarketFactor`, `aboveMarketSkillBonus`, `aboveMarketAccept` | Fixed, int, Fixed | 1.10, 10, 0.95 | 1–2, 0–50, 0–1 |
 | `TraitDef` (list) | `id`, `nameKey`, `hoursFactor`, `keepsWage`, `skillGainFactor`, `renewalWageFactor`, `careless` | | hardworking 1.10; lazy 0.85; loyal keepsWage; ambitious 1.5 and 1.10; careless; steady | factors 0.5–2 |
 | `NameDef` (list) | `id`, `nameKey` | | 40 Indian given names in the string table | unique |
 
@@ -170,6 +174,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | --- | --- | --- | --- |
 | `Neighbour` (roster) | `id`, `nameId`, `trait`, `daysWorked`, `askedToMoveIn`, `hiredToday` | | In id order |
 | `People` | `freeToday` (roster ids), `nextApplicantAt`, `nextApplicantId`, `nextHandId`, `nextContractId`, `population` | | |
+| `JobPost` | `wageOffer`, `postedAt`, `expiresAt` | | At most one |
 | `Applicant` | `id`, `nameId`, `skill`, `traits[2]`, `secondTraitKnown`, `skillKnown`, `askedWage`, `arrivedAt`, `fromRosterId` | | Waiting applicants in id order |
 | `Hand` | `id`, `nameId`, `skill`, `traits[2]`, `hutBuildingId`, `hiredAt`, `seasonsWorked` | | |
 | `Contract` | `id`, `handId`, `wage`, `state` (Active, Lapsed), `prepaymentId`, `lapsedAt` | | |
@@ -184,6 +189,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | --- | --- | --- | --- |
 | `HireDayLabourers` | `count` | `InvalidArgument` (≤ 0); `NoneAvailable`; `InsufficientFunds` | §3.2. Emits `DayLabourersHired` |
 | `BuildHandHut` | `tileId` | `UnknownTile`; `NotOwned`; `NotYard`; `NoRoom`; `InsufficientFunds` | §3.4. Emits `ConstructionStarted` |
+| `PostJob` | `wageOffer` (market, aboveMarket) | `NoHut` (no empty or building hut); `AlreadyPosted`; `InsufficientFunds` | §3.5. Emits `JobPosted` |
 | `Interview` | `applicantId` | `UnknownApplicant`; `AlreadyInterviewed` | §3.5. Emits `ApplicantInterviewed` |
 | `OfferContract` | `applicantId` | `UnknownApplicant`; `NoEmptyHut`; `InsufficientFunds` | §3.5–3.6. Emits `OfferAccepted` and `HandHired`, or `OfferDeclined` |
 | `RenewContract` | `handId` | `NoHand`; `NotLapsed`; `InsufficientFunds` | §3.6 |
@@ -199,6 +205,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | `RegularAsksToMoveIn` | neighbour id, name | §3.3 | HUD (letter-style card), notifications |
 | `ConstructionStarted` / `HandHutBuilt` | building, tile, cost | §3.4 | HUD, notifications (built), Hamlet gate (009) |
 | `ApplicantArrived` / `ApplicantLeft` / `ApplicantInterviewed` | applicant | §3.5 | Hiring panel, notifications (arrived) |
+| `JobPosted` / `JobPostExpired` | wage offer, cost | §3.5 | Hiring panel, report |
 | `OfferAccepted` / `OfferDeclined` / `HandHired` | applicant, hand, wage | §3.5–3.6 | HUD, play log (first hire), population |
 | `ContractRenewed` / `ContractLapsed` / `HandLeft` / `HandDismissed` | hand, wage, refund, severance | §3.6 | HUD, report, notifications (lapsed) |
 | `OrderExecuted` / `OrderWaiting` | hand, target, action, quantity, amount / reason | §3.8 | While you were away, report |
@@ -209,6 +216,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | --- | --- | --- | --- | --- |
 | Hire day labourers | 11,250 a day each, pro rata | 8 hours of Care today | A regular may ask to move in | Each day is separate |
 | Build a hand's hut | 15,000 | A hand can move in; the Hamlet gate's house | Depreciation 250 a season; a yard building place | Permanent (Phase 1) |
+| Post a job | 200 coins | Applicants twice as often; above market: better and surer applicants, a 10% dearer wage | — | Expires after 4 days |
 | Interview | None | Know the second trait | — | — |
 | Hire a hand | The rest of the season's wage, upfront | About 7.6 hours a day of Care all season, live and away | Renewal every season close; population + 1 | Let go: refund less severance |
 | Renew or let lapse | The next season's wage | Work continues | Lapse: the hand idles, then leaves | Renew within the grace |
@@ -259,6 +267,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-15 | With too little cash an order sows nothing, emits `OrderWaiting(InsufficientFunds)` and never creates a liability; orders pause while the contract has lapsed | `OrderTests.NeverBorrows_PausesOnLapse` |
 | AC-16 | Over 2 game years of seeded play with day labourers, a hand, renewals, a lapse, a dismissal and orders, the ledger reconciles at every close and the chunking-invariance check holds | `PeopleTests.Ledger_And_Chunking` |
 | AC-17 | Performance (CI, Release): advancing 72 h with 2 hands, 12 orders and the default farm takes under 20 ms | `PerfTests.Advance72h_WithPeople` (category `Perf`) |
+| AC-18 | A posted job halves the time between applicants, costs 200 (Dr 5700) and expires after 4 days or at a hire; above market, applicants' skill lies in 30–80, they accept at 95% over 10,000 seeded offers, and the hired wage is 1.10 × the asked wage | `HiringTests.PostJob_RateAndQuality` |
+| AC-19 | A job posted while the hut is being built brings the first applicant only once the hut is finished, sooner than a walk-in would come; posting with no hut, or twice, is rejected and changes nothing | `HiringTests.PostJob_WhileBuilding` |
 
 ## 9. Balancing hooks
 
@@ -273,15 +283,15 @@ All tests are in `tests/Sim.Core.Tests`.
 
 ## 10. Open questions
 
-For the owner's review (each with a recommendation):
+All seven were answered in the review with the owner (2026-10-18):
 
-1. **Lapse.** Recommended: a lapsed hand stays idle for 2 days of grace (renew to resume), then leaves; never while away. Alternative: leaves at once (harsher, simpler).
-2. **The hut on the yard.** Recommended: up to 4 buildings on a yard tile (the hut, the well and two hands' huts), so Phase 1 holds at most 2 hands; more need Phase 2 housing. Alternative: a hand's hut on a farm tile (loses an acre).
-3. **The hut's price.** Recommended: 15,000 for the ADR 0030 pacing, explained as materials plus family labour (a real hut costs more). Alternative: a realistic 50,000, which delays the Hamlet by about half a season.
-4. **Day-labourer wage.** Recommended: 11,250 a game day (25% above a hand's day). Day labour is then a rescue, not routine (ADR 0033).
-5. **Applicants only with an empty hut.** Recommended: yes, so the queue makes sense ("we need a place to stay"). Alternative: applicants always arrive, and an offer needs a hut.
-6. **Standing orders in Homestead.** The GDD says "from the Hamlet era"; ADR 0022 gives hands orders from Homestead. Recommended: from Homestead (any hand under contract), because the Hamlet needs a hand first and away play needs orders. The GDD line would be updated.
-7. **Traits in Phase 1.** Recommended: the six in §3.7 (two with no hidden downside, so hiring isn't a trap). The full nine come in Phase 2.
+1. **Lapse:** a lapsed hand stops working and stays for 2 days of grace (`lapseGraceDays`); `RenewContract` resumes work; after that the hand leaves; never while away (§3.6).
+2. **The hut on the yard:** a yard tile holds up to 4 buildings (the hut, the well, two hands' huts), so Phase 1 has at most 2 hands; data, for Phase 2 to raise (§3.4).
+3. **The hut's price:** 15,000, materials with the family's own labour on the build; the *Why?* says so (§3.4).
+4. **The day-labourer wage:** 11,250 a game day, 25% above a hand's day; a rescue, not routine (§3.2).
+5. **Applicants:** both walk-ins while a hut stands empty and a posted job (`PostJob`, market or above market) that brings applicants twice as often, better ones above market, and can be posted while the hut is being built (§3.5, AC-18, AC-19). The Phase 2 hiring board builds on it.
+6. **Standing orders from Homestead** for any hand under contract (ADR 0022); the GDD line was updated (§3.8).
+7. **Traits:** the six of §3.7 in Phase 1; creative, frugal, sociable and perfectionist join in Phase 2 with their systems (F11.4).
 
 ## 11. Cut first
 

@@ -171,7 +171,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
 
-**Standing orders.** From the Hamlet era, hired workers follow standing orders, such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
+**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
 
 **Inputs and trade-offs**
 
@@ -344,7 +344,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | Standing orders | No | Yes |
 | Population | Not counted | Counted: the town's first citizens |
 
-A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
+Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
 
 **Hiring flow (full version, from Phase 2)**
 
@@ -776,12 +776,12 @@ The game needs no account and no server. All content ships in the build, and the
 - **One town at a time (ADR 0023).** Starting a new game replaces the current town after a confirmation, and the game offers to export it first.
 - **Save points are a safety guard, never an undo.** The game keeps the latest save plus rotating backups (the last 3 hourly saves and one per day for the last 3 days). A *Save now* button saves immediately. After a crash or a corrupt save, the game automatically loads the newest valid save point and says which one. Players can never load an older save point to rewind.
 - **Atomic writes:** write to a temporary file, verify its checksum, then rename. A crash can never corrupt the last good save.
-- **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
+- **Format:** a hand-written, versioned binary (no reflection, IL2CPP-safe), GZip-compressed, with a checksum. Content is referenced by id, so new builds load older saves. Every save carries a schema version, and migration functions upgrade older saves on load. The command log is kept with live syncs compacted, and checkpointed at a cap so a save can always be replayed for a bug report (spec 007).
 - **Size target:** under 5 MB at City scale.
 - **Backup:** manual export and import of a save file. iCloud on iOS and Google Play Games Saved Games on Android come later, only if the game is published to the stores (ADR 0007).
 - **Distribution, for now:** personal builds only. iOS uses a free developer account, with the build re-signed every 7 days. The bundle ID and signing team stay fixed, so the save data survives reinstalls. Android uses sideloaded APKs signed with the owner's key. These builds contain no purchases: the full game is unlocked.
 
-**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in, grouped, and capped at 2 a day.
+**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in (asked after the first field harvest), grouped, capped at 2 a day, and never sent between 22:00 and 07:00 (spec 007).
 
 **Performance budget**
 

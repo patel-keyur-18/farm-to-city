@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 2: all 52 code points done; specs 006 and 007 (6 points) in review with the owner |
-| Branch with latest work | `sprint/02-crops-trees-founder` |
+| Sprint | Sprint 2 done (58 of 58 points, 2026-10-18). Sprint 3 is next |
+| Branch with latest work | `sprint/02-crops-trees-founder` (pull request #7 to `main`; must be merged before the next session) |
 | Last updated | 2026-10-18 |
 
 ## Done so far
@@ -53,34 +53,33 @@
   - **US-047 and US-048 fruit trees: done** (spec 003 AC-24 to AC-26): `PlantTree` (capitalised to 1700), maturity jobs and shade, one batch per fruiting season, `PickFruit` with returns at the floor, lifespan and `RemoveTree` (book value to 5600). 133 tests.
   - **US-050, US-051, US-053 founder: done** (spec 003 AC-8, AC-18, AC-20 to AC-23, AC-36, AC-37; spec 005 AC-28): labour as a time-weighted rate, day labour paid daily, diet plans paid upfront and changed with refunds, daily eating as home use, fatigue from the day worked, the health formula, automatic subsistence and recovery, the first season's living costs at the new game. With the crops: AC-10 chunking invariance over a game year of bot play, AC-28 ledger reconciliation, AC-29 performance (72 h in about 0.6 ms). 145 tests.
   - **US-013 economy model and US-014 anchors: done.** `dotnet run --project tools/Tools.Balancer -- economy` (15 years in 0.13 s): the founder alone keeps about 1.8 acres busy for about 30,700 farm profit a season; the garden gives 200 kg; the first Spring ends with about 42,000. Moisture and climate weights tuned to spec 002's realistic hook (data only; golden 001 re-pinned), with `MoistureTests.SeasonalMeans_Realistic`. **ADR 0033** (owner, 2026-10-18): land payback is measured on an owner-operated acre (8.5 seasons at 1,20,000; a hired acre nets about 2,600); saplings priced with planting (banana 60, papaya 60, guava 180, mango 350). 146 tests.
-  - **US-009 spec 006 (people) and US-010 spec 007 (saves, notifications, play log): drafted, in review.** Spec 006 prices the hand's hut at 15,000 (ADR 0030 pacing) and its standing orders' OFFER rule reuses spec 004's minimum price; spec 007 compacts live `Sync`s into `LiveRun` entries (exact by chunking invariance) and recommends a hand-written save codec. Seven and six open questions in their §10.
+  - **US-009 spec 006 (people) and US-010 spec 007 (saves, notifications, play log): approved** (2026-10-18), all 13 open questions answered one by one:
+    - Spec 006: a lapsed hand gets 2 days of grace; the yard holds 4 buildings (at most 2 hands in Phase 1); the hand's hut costs 15,000 (materials, family-built); day labour 11,250 a game day; applicants walk in while a hut is empty **and** the founder can `PostJob` (market or above-market wage, also while the hut is built; new AC-18, AC-19; US-069 +1 point); standing orders from Homestead (the GDD updated); six Phase 1 traits, the other four in Phase 2 (F11.4 US-113.T1). The OFFER rule reuses spec 004's minimum price.
+    - Spec 007: a hand-written binary codec (state only, content by id, exact values); the compacted command log kept, with a replay-base checkpoint at 100,000 entries (progress is never touched); export and import through the Files app (share sheet in F19.5); Unity's Mobile Notifications package behind `INotificationService` (ADR 0034 when added in Sprint 6, risks in §3.5); quiet hours 22:00–07:00; ask after the first field harvest.
   - **Housekeeping:** Unity `.meta` files for the new sim sources are committed. An Editor-local change to `ProjectSettings.asset` (Apple team ID, automatic signing, an empty `preloadedAssets`) was swept into an early commit and then restored to `main`'s version in git; the owner's working copy still has it, uncommitted.
   - **Scope moved to Sprint 2:** the spec 004 core (new US-181: goods, regional prices with a fixed index, trader capacity, `UseInput`) and US-057 (the store), because crops need them; the health formula moves from US-052 into US-051. Pests, golden 003 and tree payback stay in Sprint 3. Sprint 2 is 58 points, Sprint 3 47.
 
 ## In progress
 
-Specs 006 and 007 await the owner's review (US-009.T3, US-010.T3). Everything else in Sprint 2 is done: 146 tests pass, CI is green.
+None. Sprint 2 is closed: 146 tests pass, CI is green.
 
 ## Next up
 
-1. **Owner:** review specs 006 and 007 (answer §10 of each), open the Unity Editor once so it recompiles the sim package (check the console is clean: `GameRoot` now calls `LoadGame(ContentSource.Read, weather)`), and merge the Sprint 2 pull request.
-2. **Next session (Claude):** record the spec 006 and 007 answers (approval, GDD updates: standing orders from Homestead if approved; an ADR for the notifications package if approved), close Sprint 2, then start Sprint 3 (`sprints.md`, 47 points): the market, spoilage, the mandi trip, buying ahead, minimum prices, pests (with golden 003), tree payback, health and sick days, specs 008 and 009, the performance spike and the on-device determinism check.
+1. **Owner:** open the Unity Editor once so it recompiles the sim package (check the console is clean: `GameRoot` now calls `LoadGame(ContentSource.Read, weather)`), then merge pull request #7.
+2. **Next session (Claude):** branch `sprint/03-market-spike-gate` from `main` and start Sprint 3 (`sprints.md`, 47 points): the market, spoilage, the mandi trip, buying ahead, minimum prices, pests (with golden 003), tree payback, health and sick days, specs 008 and 009, the performance spike and the on-device determinism check.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Sprint 2 | Review specs 006 and 007; open the Unity Editor once (recompile check); merge the Sprint 2 pull request |
+| Now | Open the Unity Editor once (recompile check); merge pull request #7 (Sprint 2) |
 | Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
 ## Open questions (with the owner)
 
-- **Spec 006 §10** (7 questions, each with a recommendation): a lapsed hand's grace, the hut on the yard (at most 2 hands in Phase 1), the hut's price, the day-labourer wage, applicants only with an empty hut, standing orders from Homestead, the Phase 1 traits.
-- **Spec 007 §10** (6 questions): the serializer (hand-written recommended), keeping the compacted command log in saves, export and import through the Files app, Unity's Mobile Notifications package, quiet hours, when to ask for notifications.
-
-Answered this sprint: the planning review's gaps 1–8 (ADR 0032) and the economy model's gaps 9–10 (ADR 0033).
+None. All 13 questions of specs 006 and 007 were answered on 2026-10-18 (§10 of each). Earlier this sprint: gaps 1–8 (ADR 0032) and 9–10 (ADR 0033).
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
