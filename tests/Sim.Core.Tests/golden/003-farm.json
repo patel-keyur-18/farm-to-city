@@ -632,14 +632,6 @@
       "mode": "live"
     },
     {
-      "type": "Sow",
-      "at": 162264,
-      "tile": 19,
-      "crop": "radish",
-      "seed": "certified",
-      "fertiliser": "chemical"
-    },
-    {
       "type": "PickGarden",
       "at": 162264,
       "bed": 1,
@@ -680,12 +672,6 @@
       "crop": "radish",
       "seed": "certified",
       "fertiliser": "chemical"
-    },
-    {
-      "type": "Harvest",
-      "at": 173081,
-      "tile": 19,
-      "overflow": "sellRest"
     },
     {
       "type": "Sow",
@@ -1123,12 +1109,17 @@
       "crop": "garden_radish"
     },
     {
+      "type": "Spray",
+      "at": 346043,
+      "tile": 27
+    },
+    {
       "type": "GoToMandi",
       "at": 346043,
       "loads": [
         {
           "good": "potato",
-          "quantity": 80475
+          "quantity": 85100
         }
       ]
     },
@@ -1207,11 +1198,6 @@
       "at": 367677,
       "bed": 2,
       "crop": "garden_radish"
-    },
-    {
-      "type": "Spray",
-      "at": 367677,
-      "tile": 18
     },
     {
       "type": "AdvanceTo",
@@ -1502,7 +1488,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 531714
+          "quantity": 514778
         }
       ]
     },
@@ -1914,16 +1900,6 @@
       "crop": "garden_radish"
     },
     {
-      "type": "GoToMandi",
-      "at": 540749,
-      "loads": [
-        {
-          "good": "rice",
-          "quantity": 156993
-        }
-      ]
-    },
-    {
       "type": "AdvanceTo",
       "target": 551566,
       "mode": "live"
@@ -1972,14 +1948,6 @@
     {
       "type": "Sow",
       "at": 562383,
-      "tile": 18,
-      "crop": "lentils",
-      "seed": "saved",
-      "fertiliser": "chemical"
-    },
-    {
-      "type": "Sow",
-      "at": 562383,
       "tile": 27,
       "crop": "lentils",
       "seed": "saved",
@@ -1990,14 +1958,6 @@
       "at": 562383,
       "tile": 28,
       "overflow": "sellRest"
-    },
-    {
-      "type": "Sow",
-      "at": 562383,
-      "tile": 28,
-      "crop": "rice",
-      "seed": "certified",
-      "fertiliser": "compost"
     },
     {
       "type": "PickGarden",
@@ -2072,12 +2032,6 @@
     {
       "type": "Harvest",
       "at": 594834,
-      "tile": 18,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "Harvest",
-      "at": 594834,
       "tile": 27,
       "overflow": "sellRest"
     },
@@ -2118,6 +2072,14 @@
       "at": 605651,
       "tile": 26,
       "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 605651,
+      "tile": 28,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "chemical"
     },
     {
       "type": "SetLabourSplit",
@@ -2226,12 +2188,6 @@
       "overflow": "sellRest"
     },
     {
-      "type": "Harvest",
-      "at": 648919,
-      "tile": 28,
-      "overflow": "sellRest"
-    },
-    {
       "type": "SetEatFromStore",
       "at": 648919,
       "on": false
@@ -2242,20 +2198,12 @@
       "mode": "live"
     },
     {
-      "type": "Sow",
-      "at": 659736,
-      "tile": 28,
-      "crop": "lentils",
-      "seed": "certified",
-      "fertiliser": "compost"
-    },
-    {
       "type": "GoToMandi",
       "at": 659736,
       "loads": [
         {
           "good": "rice",
-          "quantity": 295710
+          "quantity": 448270
         }
       ]
     },
@@ -2263,14 +2211,6 @@
       "type": "AdvanceTo",
       "target": 670553,
       "mode": "live"
-    },
-    {
-      "type": "Sow",
-      "at": 670553,
-      "tile": 26,
-      "crop": "rice",
-      "seed": "certified",
-      "fertiliser": "none"
     },
     {
       "type": "AdvanceTo",
@@ -2292,5 +2232,5 @@
       "fertiliser": "chemical"
     }
   ],
-  "expectedHash": "0xBCEB3F62A7E2CA80"
+  "expectedHash": "0x3298BCB6B36F689D"
 }

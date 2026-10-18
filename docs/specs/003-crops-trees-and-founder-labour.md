@@ -356,6 +356,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | `harvestLimit` | 4 | 8 | 0 | 0 | ≥ 0 (0 = no limit) |
 | `fruitGood` | banana | papaya | guava | mango | edible produce good |
 | `terrain` | any | any | any | any | any, hill (later) |
+| `shade` (on a field-edge acre, mature) | 0.03 | 0.03 | 0.08 | 0.08 | 0–0.3 (ADR 0037) |
 
 `content/founder.json` (`FounderDef`, `DietPlanDef`, `WorkHoursDef`):
 
@@ -563,7 +564,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | Founder with basic food and normal hours | Tends about 2–2.4 acres of wheat at full care | ±0.5 acre |
 | Share of harvests hit by an outbreak, rotated crops, unsprayed | 5–12% | Shape |
 | Mango in a yard slot | Pays back its sapling in its first fruiting season | — |
-| Banana on a field edge | Earns less than the 3% shade it costs the acre (yard slots suit short trees) | Shape |
+| Mango on a field edge | Roughly even: about 6,000 of fruit a year against 8% of an acre (about 5,400); the yard suits big trees (ADR 0037) | Shape |
+| Banana on a field edge | About 900 of fruit a year against 3% of an acre (about 2,000): small trees cost less shade but earn less | Shape |
 
 **Pacing check against ADR 0030** (competent player; Spring measured by the economy model, US-013, selling at the floor; the hand's seasons estimated until spec 006 is built):
 

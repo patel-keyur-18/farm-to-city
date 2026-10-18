@@ -153,7 +153,7 @@ proceeds at return     Σ Value(q, P_regional(good, return time)) × (1 − Mand
 | One at a time | One trip a day, and not while a trip is under way: `TripUnderway`, `AlreadyWentToday` |
 | Who | The founder only in Phase 1 (spec 006 may send a hand on a standing order). Not on a sick day (`FounderSick`). Loads come from stock not on offer |
 | Price | The town market's regional price: one cart doesn't move it (Phase 1). It isn't capped by the trader's capacity, which is the point of going |
-| Why it pays | Transport is a fixed cart hire, not per kg, so full loads beat the trader's floor and small loads don't. Example, potato in Spring: 1,000 kg gives 6.80 × 0.97 × 1,000 − 800 = 5,796 (trader: 5,300); 200 kg gives 519 (trader: 1,060). The 0.5 h of labour (about 560 coins at the day-labour wage) makes a full load about even when the trader buys, and a clear win when the trader or the store is full |
+| Why it pays | Transport is a fixed hire for a tractor-trolley (ADR 0037), not per kg, so full loads beat the trader's floor and small loads don't. Example, potato in Spring: 2,000 kg gives 6.80 × 0.97 × 2,000 − 1,000 = 12,192 (trader: 10,600); 1,000 kg gives 5,596 (trader: 5,300) before the founder's 0.5 h (about 560 coins), so only a full cart pays |
 | Away | A trip started live completes while away like any job; its proceeds appear in *While you were away* |
 
 ### 3.7 Fixed-point powers
@@ -224,8 +224,8 @@ Other `GoodDef` fields: `id`, `nameKey`, `edible` (produce: true), `weightKg` pe
 | | `unmetWindowHours` | 96 | 1–384 |
 | | `minLotKg` | 0.1 | > 0 |
 | `MandiDef` | `tripHours` | 6 | 1–24 |
-| | `cartCapacityKg` | 1,000 | > 0 |
-| | `cartHirePerTrip` | 800 coins | ≥ 0 |
+| | `cartCapacityKg` | 2,000 (a tractor-trolley, ADR 0037) | > 0 |
+| | `cartHirePerTrip` | 1,000 coins | ≥ 0 |
 | | `commissionRate` | 0.03 (commission and market fee) | 0–0.2 |
 | | `founderHours` | 0.5 (one real working day under per-season scaling) | 0–`tripHours` |
 | `EconomyDef` | `startIndex` | 1.00 | > 0 |
@@ -283,7 +283,7 @@ Hourly price moves emit no events; the HUD reads prices from state.
 | Offer on the market | None | Better prices if you offer little at a time; flooding drives the price to the floor | Goods keep spoiling while on offer | Withdraw any time |
 | Store for a better season | Spoilage (radish ¼ a day, wheat 0.5%) | Seasonal factors (potato +35% from Spring to Monsoon) and inflation | Store space; harvests may not fit | Sell any time |
 | Offer with a minimum price | None | Sells only at or above it, a little each hour; may not sell at all | Goods keep spoiling | Change or withdraw any time |
-| Go to the mandi | Cart hire, and 6 hours of the founder's day | The regional price for a full load (about 9% over the floor for potato) | Less care on the fields that day | — |
+| Go to the mandi | Cart hire, and 0.5 h of the founder's labour over a 6-hour trip | The regional price for a full 2,000 kg load (about 15% over the floor for potato) | Less care on the fields that day | — |
 | Buy inputs ahead | Cash now, store space | Avoids the sowing-season price rise | — | Inputs barely spoil |
 | Harvest when the store is full | Choose: leave the crop waiting, or sell the overflow at the floor | — | Field stays busy if it waits (003) | — |
 
@@ -338,8 +338,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-18 | An offer with `minPrice` above the current price adds nothing to supply and sells nothing that hour; once the price is at or above it, it sells as usual; the trader never takes it at a floor below its minimum | `MarketTests.Offer_MinPrice` |
 | AC-19 | `Buy` puts inputs into the store at today's input price (seed 10% dearer in its sowing season), counts against capacity, and posts Dr 1200 Inputs in store; `UseInput` takes stock first, expensed at average cost to 5000 or 5010, and buys exactly the shortfall; spoiled inputs are expensed at average cost | `MarketTests.Buy_AheadAndAtUse` |
 | AC-20 | Chemical fertiliser's input price is unchanged by 10 game years of inflation except for its seasonal factor; seed prices follow the index | `PriceTests.PriceControlled_IgnoresIndex` |
-| AC-21 | A mandi trip with 1,000 kg of potato in Spring pays exactly `Value(1,000 kg, P_regional at return) × 0.97` net of commission, charges 800 coins of cart hire at departure (both to 5700), returns after exactly 6 h, and reduces the founder's delivered labour by exactly 0.5 h, whatever the departure time | `MandiTests.Trip_PaysAndCosts` |
-| AC-22 | `GoToMandi` rejects more than 1,000 kg, a second trip the same day, a trip while one is under way, a sick day, and stock that isn't there or is on offer, without changing state | `MandiTests.Trip_Rejections` |
+| AC-21 | A mandi trip with 2,000 kg of potato in Spring pays exactly `Value(2,000 kg, P_regional at return) × 0.97` net of commission, charges 1,000 coins of cart hire at departure (both to 5700), returns after exactly 6 h, and reduces the founder's delivered labour by exactly 0.5 h, whatever the departure time | `MandiTests.Trip_PaysAndCosts` |
+| AC-22 | `GoToMandi` rejects more than 2,000 kg, a second trip the same day, a trip while one is under way, a sick day, and stock that isn't there or is on offer, without changing state | `MandiTests.Trip_Rejections` |
 | AC-23 | A new game's store holds exactly the inherited goods of `StartDef.store`, and loading a `store` that doesn't fit the hut fails validation | `StoreTests.InheritedStore` |
 | AC-24 | Every indexed coin amount (land, buildings, living costs, wages, day labour, medicine, cart hire) is charged at exactly `MulRate(amount, PriceIndex)`; price-controlled goods and loans ignore the index | `PriceTests.Indexed_CoinAmounts` |
 
@@ -353,7 +353,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | Storing potato from Spring to Monsoon | Floor rises from 5.30 to 7.70 (+45%) against about 22% lost to spoilage over the two seasons: storing pays, and store space is the real limit | Shape |
 | Hut store | Holds about one potato harvest of one acre, or a season of wheat from 2 acres | ±50% |
 | Price index after 10 game years | 1.22–1.79 (2–6% a year) | — |
-| Mandi trip versus the trader, a full 1,000 kg load | Cheap, heavy goods gain most (potato about 9% over the floor; break-even about 600 kg). Dear goods gain little or nothing (wheat: the 3% commission outweighs the trader's 1.50 a kg transport) | Shape |
+| Mandi trip versus the trader, a full 2,000 kg load | Cheap, heavy goods gain most (potato about 15% over the floor; break-even about 1,100 kg after the founder's labour). Measured: the competent bot takes the mandi about a third of its sales (ADR 0037). Dear goods gain little or nothing (wheat: the 3% commission outweighs the trader's 1.50 a kg transport) | Shape |
 | Buying seed a season ahead | Saves about 15% of the seed bill | Shape |
 
 ## 10. Open questions
@@ -377,6 +377,10 @@ Rule changes approved by the owner before coding:
 4. **The mandi trip's labour** is `founderHours` (0.5 h), taken as a time-weighted rate cut over the trip; not on a sick day; loads from stock not on offer.
 5. **The price follows the region:** P is rescaled when P_regional changes, so AC-5 holds across season changes.
 6. Golden 004 runs on a frozen content snapshot committed next to it.
+
+### Changes after approval (Sprint 3 findings, 2026-10-18, ADR 0037)
+
+- **The cart is a tractor-trolley:** 2,000 kg for 1,000 coins of hire (was a 1,000 kg bullock cart at 800). A full cart now beats the trader for cheap, heavy goods; half a load doesn't.
 
 ### Implementation notes (Sprint 3, 2026-10-18)
 

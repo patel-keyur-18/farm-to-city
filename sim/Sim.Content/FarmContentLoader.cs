@@ -190,7 +190,7 @@ namespace Sim.Content
                 string p = Index(root + ".trees", i);
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "saplingGood", "fruitGood", "growthMinutes", "fruitingSeasons", "batchYieldPerTree",
-                    "harvestLimit", "terrain");
+                    "harvestLimit", "terrain", "shade");
                 string id = UniqueId(t, p, trees.ConvertAll(x => x.Id));
                 int sapling = GoodRef(t, p, "saplingGood", market, GoodKind.Input);
                 if (market.Goods[sapling].Unit != GoodUnit.Each) throw new ContentException(p + ".saplingGood", "a sapling is sold each");
@@ -204,7 +204,7 @@ namespace Sim.Content
                 if (terrain != "any" && terrain != "hill") throw new ContentException(p + ".terrain", "expected any or hill");
                 trees.Add(new TreeDef(id, String(Required(t, p, "nameKey"), p + ".nameKey"), sapling,
                     GoodRef(t, p, "fruitGood", market, GoodKind.Produce), minutes, Seasons(t, p, "fruitingSeasons"),
-                    kg.MulRatio(1000, 1).RoundToLong(), limit, terrain == "hill"));
+                    kg.MulRatio(1000, 1).RoundToLong(), limit, terrain == "hill", Bounded(t, p, "shade", "0", "0.3")));
             }
             return trees;
         }

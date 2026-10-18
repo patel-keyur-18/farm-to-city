@@ -267,7 +267,7 @@ namespace Sim.Core.Farm
                 t.State = TreeState.Mature;
                 t.JobId = 0;
                 sim.CompleteJob(job);
-                LandSystem.SetTreeMature(sim, t.SlotId);
+                LandSystem.SetTreeMature(sim, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Shade);
                 sim.Emit(new TreeMatured(sim.State.Clock.SimTime, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Id));
                 Ripen(sim, t);
             }

@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 3: code and specs done (2026-10-18); the device run and the findings with the owner |
+| Sprint | Sprint 3: code, specs and findings done (2026-10-18); the device run with the owner |
 | Branch with latest work | `sprint/03-market-spike-gate` |
 | Last updated | 2026-10-18 |
 
@@ -82,14 +82,13 @@ Sprint 3 (branch `sprint/03-market-spike-gate`, pull request to `main` open). Al
 ## Next up
 
 1. **Owner:** run the device checklist `docs/test-checklists/s03-spike-determinism.md` on the iPhone 13 (Release, Development Build off) and send the screenshots: golden replays, spike, heat run, style check.
-2. **Owner with Claude:** close the Sprint 3 findings below one by one (specs 008 and 009 are approved).
-3. **Claude, next session:** write ADR 0035 with the device numbers (US-022) and hold the **Phase 0 gate review** with the owner: money loops and viability (pass), the spike within 8.3 ms, goldens matching on the iPhone. Then record the answers (ADR and §10), merge, and start Sprint 4 (credit and foreclosure, the first playable build) on `sprint/04-...`.
+2. **Claude, next session:** write ADR 0035 with the device numbers (US-022) and hold the **Phase 0 gate review** with the owner: money loops and viability (pass), the spike within 8.3 ms, goldens matching on the iPhone. Then record the answers (ADR and §10), merge, and start Sprint 4 (credit and foreclosure, the first playable build) on `sprint/04-...`.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Run the Sprint 3 device checklist; close the Sprint 3 findings; merge the Sprint 3 pull request once the review is done |
+| Now | Run the Sprint 3 device checklist; merge the Sprint 3 pull request once the review is done |
 | End of Sprint 3 | Phase 0 gate review with Claude, on the device results |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
@@ -98,11 +97,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`, pull request to `main` open). Al
 
 **Specs 008 and 009: approved** (2026-10-18), all 14 questions answered as recommended (§10 of each, ADR 0036: fonts under SIL OFL, the low-poly art base, the first notification ask after the long crop is sown).
 
-**Sprint 3 findings for the owner (from the economy model and the gate run; no data changed):**
-1. **The mandi never pays for the competent bot** over 15 years: after the cart hire (800), the 3% commission and the 0.5 h of labour, a full cart beats the trader by little or nothing, and the trader rarely runs out of capacity. It works, but it's a choice nobody would take. Options: realistic tuning (tractor-trolley hire of about 400 a tonne; commission and fees about 4%), a larger cart, or accept it as a relief valve for full stores.
-2. **Fruit trees are very lucrative:** a 350-coin mango returns about 7,300 a year (120 kg at about 50), realistic per tree, but 12 field-edge slots of mangoes would add about as much as the whole farm, for a 3% shade each. Options: fewer field-edge slots, a longer first fruit (real grafted mangoes take 3–5 years, the game 1.5), or accept.
-3. **Pacing:** the first Spring now ends with about 36,000 in cash (not 42,000): the inherited seed is now a cost, pests and spoilage take their share, and living costs follow the index. The hand's hut and first season (about 51,000) then need a moneylender loan of about 15,000 (it was 10,000). The Hamlet at the end of week 1 still holds (US-016); re-checked when spec 006 is built.
-4. **Implementation notes to confirm** (spec 003 §10, spec 004 §10): the grace is inclusive (exactly 72 h loses nothing); a waiting crop or batch under 1 kg is lost, and a batch past its grace is replaced by the next fruiting season's; store spoilage runs before the household eats (greens lose a day's spoilage); the minimum lot is 0.1 kg; an hour's lot can sell a little under its minimum price.
+**Sprint 3 findings: closed** (2026-10-18). ADR 0037: the mandi cart is a tractor-trolley (2,000 kg, 1,000 hire; the competent bot now takes it for about a third of its sales); shade per tree (mango and guava 0.08, banana and papaya 0.03, floor 0.80); the first-season pacing accepted (a first loan of about 15,000 before hiring, re-checked in Sprint 5). The five implementation notes were confirmed as built. Goldens re-pinned: 003 `0x3298BCB6B36F689D`, 004 `0x42A935851A1C8BB2`.
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.

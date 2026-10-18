@@ -45,13 +45,13 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(matures);
             Assert.That(sim.State.Farm.TreeIn(edge.Id).State, Is.EqualTo(TreeState.Mature));
             Assert.That(sim.DrainEvents().OfType<TreeMatured>().Count(), Is.EqualTo(1));
-            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One - sim.Config.Game.Land.ShadePerMatureTree));
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One - sim.Config.Game.Farm.Trees[sim.Config.Game.Farm.IndexOfTree("banana")].Shade)); // a banana: 0.03 (ADR 0037)
 
             // Net worth counts the tree at book value (spec 005 AC-14's tree term).
             Assert.That(Reporting.NetWorth(sim).TreesAtBook, Is.EqualTo(60_00));
 
             var hill = Content.ContentLoader.LoadGame(f => f == "trees.json"
-                ? TestContent.ReadContent(f).Replace("\"terrain\": \"any\" },\n    { \"id\": \"papaya\"", "\"terrain\": \"hill\" },\n    { \"id\": \"papaya\"")
+                ? TestContent.ReadContent(f).Replace("\"terrain\": \"any\", \"shade\": 0.03 },\n    { \"id\": \"papaya\"", "\"terrain\": \"hill\", \"shade\": 0.03 },\n    { \"id\": \"papaya\"")
                 : TestContent.ReadContent(f), TestContent.Weather());
             Simulation hills = NewFarm(game: hill);
             Assert.That(hills.Execute(new PlantTree(0, YardSlot(hills), "banana")).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed));

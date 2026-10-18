@@ -152,9 +152,13 @@ namespace Sim.Core.Definitions
         /// <summary>Hill-only trees (apple, later) can't be planted on the Phase 1 map.</summary>
         public bool HillOnly { get; }
 
+        /// <summary>The share of a field-edge acre's yield a mature tree shades away (ADR 0037).</summary>
+        public Fixed Shade { get; }
+
         public TreeDef(string id, string nameKey, int saplingGood, int fruitGood, int growthMinutes, IReadOnlyList<bool> fruitingSeasons,
-            long batchGrams, int harvestLimit, bool hillOnly)
+            long batchGrams, int harvestLimit, bool hillOnly, Fixed shade)
         {
+            Shade = shade;
             Id = id;
             NameKey = nameKey;
             SaplingGood = saplingGood;
