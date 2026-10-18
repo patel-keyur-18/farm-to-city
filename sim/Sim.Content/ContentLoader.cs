@@ -12,7 +12,7 @@ namespace Sim.Content
     /// tests read <c>content/</c>, Unity reads its bundled copy. Errors are <see cref="ContentException"/>s
     /// whose message starts with the field path.
     /// </summary>
-    public static class ContentLoader
+    public static partial class ContentLoader
     {
         /// <summary>Loads <c>clock.json</c> and checks the bounds in spec 001 §4.</summary>
         public static ClockDef LoadClock(string json)

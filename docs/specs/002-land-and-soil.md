@@ -1,10 +1,10 @@
 # 002. Land and soil
 
-- Status: Approved (2026-10-17)
+- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, Fruit trees, Irrigation ladder); Assets and wealth (Farmland, Liquidity); City building (land bought parcel by parcel); Data model (`Tile` / `Parcel`)
-- Related ADRs: 0028 (Hamlet pace, land priced by earning power, land-purchase loans), 0008 (upfront payment, starting package), 0009 (protected inherited plot), 0014 (fertility and the Soil factor), 0017 (Phase 1 scope), 0021 (tree slots), 0024 (hut store)
+- Related ADRs: 0030 (inherited 6-acre farm, 8 × 6 map, owned-only fallow), 0028 (land priced by earning power, land-purchase loans), 0008 (upfront payment, starting package), 0009 (protected inherited plot), 0014 (fertility and the Soil factor), 0017 (Phase 1 scope), 0021 (tree slots), 0024 (hut store)
 - Depends on specs: 001 (time, weather, scheduler). Spec 005 (ledger) records the money; spec 003 (crops and trees) uses the soil, moisture, occupancy and slots defined here.
 
 ## 1. Goal
@@ -17,7 +17,7 @@ The player inherits two neglected acres, learns that every acre is different (so
 
 **In:**
 - **The homestead map:** a small, hand-authored grid of 1-acre tiles, grouped into parcels that are bought whole.
-- **The inherited start:** a protected parcel with 2 farm acres and a yard holding the hut and the well.
+- **The inherited start:** protected parcels with 6 farm acres and a yard holding the hut and the well (ADR 0030).
 - **Soil properties per tile:** fertility, moisture, soil type and drainage.
   - moisture changes every hour with the weather, the soil and the drainage
   - the well keeps the inherited acres from drying out completely (bucket watering)
@@ -45,9 +45,9 @@ All soil quantities are `Fixed` (ADR 0018). Every `Fixed` multiply rounds to nea
 
 | Rule | Behaviour | Bounds |
 | --- | --- | --- |
-| Tile | One acre. Has a `terrain` (Farm or Yard), a soil type, a drainage class, fertility and moisture. Tile id = `y × width + x`; tiles are always processed in id order | Map from `MapDef`, default 6 × 5 tiles |
+| Tile | One acre. Has a `terrain` (Farm or Yard), a soil type, a drainage class, fertility and moisture. Tile id = `y × width + x`; tiles are always processed in id order | Map from `MapDef`, default 8 × 6 tiles |
 | Parcel | A group of tiles bought and sold together. Every tile belongs to exactly one parcel | 1–4 tiles per parcel |
-| Inherited parcel | Named by `StartDef.inheritedParcel`. Owned from the start and **protected**: it can never be sold or seized (ADR 0009). Everything on it (hut, well, trees) is protected with it | Exactly one |
+| Inherited parcels | Listed in `StartDef.inheritedParcels`. Owned from the start and **protected**: they can never be sold, seized or used as collateral (ADR 0009, 0030). Everything on them (hut, well, trees) is protected with them | At least one; together they hold a yard tile and the well |
 | Adjacency | A parcel can be bought only if one of its tiles shares an edge (not a corner) with an owned tile | 4-neighbour |
 | Yard tiles | Hold buildings and yard tree slots. They are never sown and never counted as farmed acres | |
 
@@ -60,7 +60,7 @@ Moisture runs from 0 (bone dry) to 100 (saturated). At every hourly pass (system
    - If `d < 0`: `m ← m + d × SoilDef.lossFactor` (how fast the soil dries).
 2. **Clamp** to `[0, 100]`.
 3. **Drainage:** if `m > DrainageDef.drainAbove`, then `m ← m − (m − drainAbove) × DrainageDef.drainRatePerHour`.
-4. **Well:** on tiles of the parcel that holds the well, `m ← max(m, WellDef.moistureFloor)`. This models the founder carrying buckets; spec 003 charges the labour hours for it.
+4. **Well:** on tiles of the inherited (protected) parcels, `m ← max(m, WellDef.moistureFloor)`. This models the founder carrying buckets; spec 003 charges the labour hours for it.
 
 Examples (loam, moderate drainage, defaults below):
 - `m = 50`, an hour of rain: `50 + 1.2 × 1.0 = 51.2`. Below 75, so no drainage. Result **51.2**.
@@ -76,7 +76,7 @@ Fertility runs from 0 to 100.
 | --- | --- | --- |
 | Starting fertility | From `MapDef` per tile. The inherited acres start **neglected** (default 45) | 0–100 |
 | Adjustments by other systems | `AdjustFertility(tile, delta, reason)`: adds `delta`, clamps to `[0, 100]`, and adds the *applied* change to the tile's per-season total for that reason (for *Why?*). Reasons: CropUse, Fertiliser, Compost, Lentils (spec 003), Fallow (this spec) | |
-| Fallow recovery | At each daily pass, a farm tile that had **no crop at any moment in the previous 24 hours** gains `LandDef.fallowRecoveryPerSeason ÷ ClockDef.daysPerSeason` (a Fixed division, rounded), but never rises above its `SoilDef.fallowCap`. A tile already at or above the cap is unchanged | Default 6 points per season (1.5 a day), cap by soil |
+| Fallow recovery | At each daily pass, an **owned** farm tile that had **no crop at any moment in the previous 24 hours** gains `LandDef.fallowRecoveryPerSeason ÷ ClockDef.daysPerSeason` (a Fixed division, rounded), but never rises above its `SoilDef.fallowCap`. A tile already at or above the cap is unchanged. Unowned land is neighbours' farms, cropped in a steady state, so it keeps its map fertility (ADR 0030) | Default 6 points per season (1.5 a day), cap by soil |
 | Occupancy | Spec 003 marks a tile occupied when sown and vacant when harvested or cleared. The tile records `vacantSince` (sim time, or −1 while occupied) | |
 
 The fallow rule uses "no crop for the whole previous day", so harvesting just before a daily pass and resowing just after earns nothing.
@@ -105,15 +105,15 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 - The factors are multiplied as `Fixed` (rounded at each step), applied to the money amount once (rounded to 1/100 coin), then rounded to a whole coin (ties away from zero).
 - Example: 1 acre of loam, moderate drainage, fertility 50, location 1.0: `1,20,000 × 1.00 × 1.00 × 1.00 × 1.0` = **1,20,000 coins**.
 - Yard tiles are priced like farm tiles of their soil.
-- **Market value** (for net worth, spec 005) is the current `ParcelPrice`, including for the inherited parcel. Phase 1 prices change only through fertility.
+- **Market value** (for net worth, spec 005) is the current `ParcelPrice`, including for the inherited parcels. Phase 1 prices change only through fertility.
 
 | Rule | Behaviour |
 | --- | --- |
 | Buy | Paid in full, upfront, at the current `ParcelPrice` (ADR 0008). The parcel becomes owned, its farm tiles gain field-edge slots, and its cost basis is recorded for the ledger (spec 005) |
 | Financing | A purchase can be part-financed by a land-purchase loan secured by the parcel itself (spec 005 §3.6, ADR 0028). This spec only needs the cash leg to succeed |
 | Quick sale | A bought parcel can be sold at once to a neighbour for `round_coin(ParcelPrice × LandDef.quickSaleFactor)` (default 0.80). The discount teaches liquidity: land is slow to turn into cash |
-| Sale blocked | While any tile of the parcel has a crop (growing or ready) or any of its slots holds a tree, or while it holds a building. The player clears it first. The inherited parcel can never be sold |
-| Adjacency after a sale | Selling never strands other owned parcels: a sale is rejected if any remaining bought parcel would no longer connect to the inherited parcel through owned tiles |
+| Sale blocked | While any tile of the parcel has a crop (growing or ready) or any of its slots holds a tree, or while it holds a building. The player clears it first. Inherited parcels can never be sold |
+| Adjacency after a sale | Selling never strands other owned parcels: a sale is rejected if any remaining bought parcel would no longer connect to the inherited land through owned tiles |
 
 ### 3.6 Tree slots
 
@@ -159,7 +159,7 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | | `fieldEdgeSlotsPerAcre` | int | 2 | 0–4 | |
 | | `shadePerMatureTree` | Fixed | 0.03 | 0–0.2 | |
 | | `minShadeFactor` | Fixed | 0.85 | 0.5–1 | |
-| `WellDef` | `moistureFloor` | Fixed | 30 | 0–100 | Applies to the well's parcel |
+| `WellDef` | `moistureFloor` | Fixed | 30 | 0–100 | Applies to the inherited parcels |
 
 ADR 0021's `TreeSlotDef` (slot counts and shade) is realised as `LandDef.fieldEdgeSlotsPerAcre`, `LandDef.shadePerMatureTree`, `LandDef.minShadeFactor` and `BuildingDef.yardTreeSlots`, because yard slots depend on the building (more for bigger houses).
 
@@ -186,18 +186,19 @@ ADR 0021's `TreeSlotDef` (slot counts and shade) is realised as `LandDef.fieldEd
 
 | Field | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `inheritedParcel` | parcel id | `home` | Must contain at least one yard tile and the well |
-| `buildings` | list of (building id, tile id) | hut and well on the home yard tile | Yard tiles only |
+| `inheritedParcels` | list of parcel ids | `home_a`, `home_b` | Non-empty, no duplicates; together they hold at least one yard tile and the well (ADR 0030) |
+| `buildings` | list of (building id, tile id) | hut and well on the yard tile 21 | Yard tiles of the inherited parcels only |
 
-Default map (6 × 5; `H` = the inherited parcel, letters are soils, `y` = yard):
+Default map (8 × 6, 19 parcels of 1–4 acres; `H` = inherited, `y` = yard; tile id = y × 8 + x):
 
 ```
-      x=0      x=1      x=2      x=3      x=4      x=5
-y=0   sandy    sandy    loam     loam     clay     clay      parcels n1..n3 (north)
-y=1   sandy    loam     loam     loam     clay     clay      parcels w1, e1, ...
-y=2   loam     loam     H:loam   H:loam   H:yard   clay      home = tiles 14, 15, 16
-y=3   loam     clay     clay     loam     loam     sandy     parcels s1..s3 (south)
-y=4   clay     clay     loam     loam     sandy    sandy
+      x=0    x=1    x=2    x=3    x=4    x=5    x=6    x=7
+y=0   sandy  sandy  loam   loam   clay   clay   sandy  sandy     nw1, n1, n2, ne1
+y=1   loam   loam   loam   clay   loam   clay   sandy  loam      nw1, n3, n4, ne1
+y=2   loam   loam   H:loam H:loam H:loam H:yard clay   clay      w1, home_a (18–21), e1
+y=3   loam   clay   H:loam H:loam H:loam loam   sandy  clay      w2, home_b (26–28), e2, e1
+y=4   loam   clay   clay   loam   loam   clay   sandy  sandy     sw, s1, s2, e2, se1
+y=5   clay   clay   loam   loam   loam   loam   sandy  sandy     s3, s4, s2, s5, se1
 ```
 
 The exact parcel layout, drainage and starting values are content, tuned with the economy model.
@@ -212,7 +213,7 @@ The exact parcel layout, drainage and starting values are content, tuned with th
 | | `vacantSince` | long | Sim time the tile became vacant, or −1 while occupied |
 | | `fertilityChanges` | list of (reason, Fixed) | Totals for the current season, in reason order; reset at season start |
 | `Parcel` | `id`, `owned`, `protected` | | |
-| | `costBasis` | long | 1/100 coin. The price paid, or the opening value for the inherited parcel |
+| | `costBasis` | long | 1/100 coin. The price paid, or the opening value for an inherited parcel |
 | | `acquiredAt` | long | Sim time |
 | `Building` | `id`, `defId`, `tileId` | | Hut and well for now |
 | `TreeSlot` | `id`, `kind`, `tileId`, `treeId` | | `treeId` is 0 when empty (spec 003 sets it) |
@@ -288,20 +289,20 @@ All tests are in `tests/Sim.Core.Tests`.
 
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
-| AC-1 | Given a new game with the default content, then the inherited parcel is owned and protected, has 2 farm tiles and 1 yard tile, the hut and the well stand on the yard tile, the inherited farm tiles have fertility 45, and the hut provides 4 yard slots | `LandTests.NewGame_InheritedPlot` |
-| AC-2 | Loading `map.json` where a tile is in two parcels, or in none, or a parcel names an unknown soil, or `land.json` misses a weather id in `moistureByWeather`, fails validation naming the field | `ContentTests.Land_Validation` |
+| AC-1 | Given a new game with the default content, then the inherited parcels (`home_a`, `home_b`) are owned and protected, hold 6 farm tiles and 1 yard tile, the hut and the well stand on the yard tile, the inherited farm tiles have fertility 45, the hut provides 4 yard slots, and the farm tiles have 12 field-edge slots | `LandTests.NewGame_InheritedPlot` |
+| AC-2 | Loading `map.json` where a tile is in two parcels, or in none, or a tile names an unknown soil, or `land.json` misses a weather id in `moistureByWeather`, or `start.json` lists inherited parcels without a yard or twice, fails validation naming the field | `ContentTests.Land_Validation` |
 | AC-3 | Given loam, moderate drainage, moisture 50, when an hour of rain passes, then moisture is exactly 51.2. Given moisture 80 and an hour of sun, then exactly 79.14 | `MoistureTests.HourlyUpdate_Exact` |
 | AC-4 | Given three tiles at moisture 95 with poor, moderate and good drainage, after 24 hours of sun their moisture is strictly ordered poor > moderate > good | `MoistureTests.Drainage_Order` |
 | AC-5 | Over 3 game years for 20 seeds, every tile's moisture stays within [0, 100] and fertility within [0, 100] | `MoistureTests.StaysInBounds` |
 | AC-6 | Through a Summer of only sun and heatwave, the inherited farm tiles never fall below the well floor (30), and a bought tile of the same soil falls below it | `MoistureTests.WellFloor_InheritedOnly` |
-| AC-7 | Given a vacant farm tile at fertility 45 (cap 75), after 4 daily passes it is exactly 51. A tile occupied at any moment of a day gains nothing for that day. A tile at the cap stays at the cap | `FertilityTests.Fallow_RecoversProRata` |
+| AC-7 | Given a vacant farm tile at fertility 45 (cap 75), after 4 daily passes it is exactly 51. A tile occupied at any moment of a day gains nothing for that day. A tile at the cap stays at the cap. An unowned tile keeps its fertility | `FertilityTests.Fallow_RecoversProRata` |
 | AC-8 | `AdjustFertility` clamps to [0, 100], records the applied (clamped) change under its reason, and the season totals reset at the next season start | `FertilityTests.Adjust_ClampsAndRecordsReasons` |
 | AC-9 | On loam with no trees, the Soil factor at fertility 30, 45, 60 and 80 is exactly 0.75, 0.875, 1.00 and 1.075; on sandy at 60 it is 0.85 | `SoilFactorTests.PiecewiseLinear` |
 | AC-10 | With 0, 1 and 2 mature edge trees on a tile, the shade factor is exactly 1.00, 0.97 and 0.94. With `fieldEdgeSlotsPerAcre` = 4 and `minShadeFactor` = 0.90 in test content, 4 mature trees give 0.90 (the floor, not 0.88). Saplings cast no shade | `SoilFactorTests.Shade_MatureTreesOnly` |
 | AC-11 | Given a 1-acre loam parcel with moderate drainage, fertility 50 and location 1.0, its price is exactly 1,20,000 coins; a 2-acre mixed parcel's price equals the sum of its tile prices, rounded per tile | `ParcelTests.Price_Formula` |
 | AC-12 | Buying an adjacent parcel with enough cash succeeds: cash falls by exactly the price, the parcel is owned, its farm tiles each gain 2 edge slots, and `ParcelBought` is emitted. A non-adjacent parcel is rejected with `NotAdjacent`, an owned one with `AlreadyOwned`, an unaffordable one with `InsufficientFunds`, and none of these change state | `ParcelTests.Buy_RulesAndPayment` |
 | AC-13 | After buying a parcel, parcels adjacent to it become buyable; diagonal neighbours do not | `ParcelTests.Adjacency_Grows` |
-| AC-14 | A quick sale pays exactly 80% of the current price, rounded to the coin. Selling the inherited parcel is rejected with `Protected`; a parcel with a crop, a tree or a building with `ParcelInUse`; a sale that would disconnect another bought parcel with `WouldStrandLand` | `ParcelTests.Sell_QuickSale_AndGuards` |
+| AC-14 | A quick sale pays exactly 80% of the current price, rounded to the coin. Selling an inherited parcel is rejected with `Protected`; a parcel with a crop, a tree or a building with `ParcelInUse`; a sale that would disconnect another bought parcel with `WouldStrandLand` | `ParcelTests.Sell_QuickSale_AndGuards` |
 | AC-15 | Land state is part of `StateHash`, and the spec 001 chunking-invariance check (1 game year in one call against 500 chunks) still holds with land and a fallow schedule | `LandTests.ChunkingInvariance_WithLand` |
 | AC-16 | Performance (CI, Release): advancing 72 h with clock, weather and the default map takes under 20 ms | `PerfTests.Advance72h_WithLand` (category `Perf`) |
 
@@ -309,20 +310,35 @@ All tests are in `tests/Sim.Core.Tests`.
 
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
-| Mean moisture of an unwatered loam acre, by season | Monsoon high (70–85), Summer and Winter low (10–35), Spring middling (35–60) | Shape, not exact numbers |
+| Mean moisture of an unwatered loam acre, by season (realistic Indian seasons; rabi crops grow on the moisture left by the monsoon) | Spring 30–50, Summer 15–35, Monsoon 65–85, Winter 40–60. Tuned by the economy model (US-014), with a test | ±5 |
 | Seasons of fallow to bring a neglected acre (45) to 60 | 2–3 seasons | ±1 season |
 | Price of an average acre, in seasons of that acre's net farm income | 8–15 seasons (payback within 2–4 game years) | Set by the economy model (F00.3) |
 | Share of a 2-acre farm's yield lost to 4 mature edge trees | About 6% of the shaded acres | ±1 point |
 
 ## 10. Open questions
 
-All five were resolved at approval (2026-10-17), following the recommendations:
+All six are resolved. Questions 1–5 were resolved at approval (2026-10-17), following the recommendations; question 6 and the change to question 1 in the Sprint 1 review (2026-10-17):
 
 1. **Land prices and the Hamlet pace (ADR 0028).** The Hamlet target is now the end of the first week (about 2 seasons), with the Village at 2–3 weeks and the Township at 4–6 weeks. Land is priced by earning power: an acre costs about 8–15 seasons of its net farm income (placeholder 1,20,000 coins). A bank loan can be secured by the parcel it buys (spec 005 §3.6). There is no leasing in Phase 1.
-2. **The well waters the inherited acres** (moisture floor 30), and spec 003 charges the bucket-carrying labour. Bought land is rain-fed until irrigation arrives in Phase 2.
+2. **The well waters the inherited acres** (moisture floor 30; all 6 acres since ADR 0030), and spec 003 charges the bucket-carrying labour. Bought land is rain-fed until irrigation arrives in Phase 2.
 3. **Shade goes inside the Soil factor,** so ADR 0014's formula and the 1.6× cap are unchanged. *Why?* shows shade as its own line.
 4. **Quick sale in Phase 1** at 80% of the price, immediately. The slow, better-priced sale comes with land value in Phase 3.
-5. **The map is hand-authored** for Phase 1 (6 × 5 acres, parcels of 1–4 acres).
+5. **The map is hand-authored** for Phase 1 (6 × 5 acres at approval, 8 × 6 since ADR 0030; parcels of 1–4 acres).
+6. **Fertility on land nobody owns (Sprint 1 review):** unowned land is neighbours' farms, so it keeps its map fertility and unbought parcels don't drift in price (ADR 0030). Implemented: fallow recovery applies to owned tiles only.
+7. **The inherited farm (Sprint 1 review, ADR 0030):** the player inherits 6 protected farm acres and the yard in two parcels, on an 8 × 6 map; the Hamlet no longer depends on buying land. The well's floor covers every inherited acre.
+8. **The moisture hook** was made realistic (Sprint 1 review): Spring 30–50, Summer 15–35, Monsoon 65–85, Winter 40–60, tuned in US-014.
+
+### Implementation notes (Sprint 1, 2026-10-17)
+
+None of these changes a formula or a rule.
+
+1. **"Exactly" in AC-3.** In Q31.32, 0.4 and 0.1 aren't exact binary fractions, so the 80 → 79.14 example lands 1 unit in the last place (2⁻³²) below `Fixed.Parse("79.14")`. The test checks 79.14 to that precision and also pins the raw value, so any change in the arithmetic still fails it. The other examples (51.2, the Soil factors, the shade factors) are exact.
+2. **The hour's weather.** At a spell boundary the weather buffer has already dropped the spell that just ended, so the land system records the weather of each hour as it starts (`LandState.HourWeather`) and applies it at the next hourly pass. The result is exactly §3.2's "the spell containing t − 3600".
+3. **Vacant since the start.** Every tile starts vacant since t = 0, so the first daily pass already counts as a fallow day for the inherited acres.
+4. **The well** is the building whose id is `well`; every start must place it on the inherited land, and the floor applies to all inherited parcels.
+5. **Tree maturity.** A slot carries `TreeMature`. Spec 003 calls `SetTree(slot, treeId)` when it plants a sapling (or 0 to empty the slot) and `SetTreeMature(slot)` when the tree matures; only mature trees shade.
+6. **Optional content.** Land and ledger content is an optional `GameDefs` in `SimConfig`. A simulation without it runs only time and weather and hashes exactly as before, so the spec 001 golden replay keeps its frozen hash.
+7. **The default map** (`content/map.json`) is 8 × 6 with 19 parcels of 1–4 acres around the inherited `home_a` (tiles 18–21, the yard is 21) and `home_b` (26–28). Its soils follow §4; drainage, fertility, moisture and location factors are placeholders for the economy model.
 
 ## 11. Cut first
 

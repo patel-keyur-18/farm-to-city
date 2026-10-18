@@ -10,8 +10,8 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | S0 | 19–25 Oct 2026 | 0 | Foundations in place and spec 001 fully implemented and tested from the terminal; specs 002 (land) and 005 (ledger and credit) written. | 44 | 002, 005 | No (no Unity project yet) |
 | S1 | 26 Oct – 1 Nov 2026 | 0 | Ledger core and land implemented; Unity project created and a "hello iPhone" build running; specs 003 and 004 written. | 28 | 003, 004 | Yes: hello iPhone (date, time, weather) |
-| S2 | 2–8 Nov 2026 | 0 | Crops, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written. | 50 | 006, 007 | No |
-| S3 | 9–15 Nov 2026 | 0 | Market and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review. | 45 | 008, 009 | Yes: spike and determinism build |
+| S2 | 2–8 Nov 2026 | 0 | Crops, the kitchen garden, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written. | 53 | 006, 007 | No |
+| S3 | 9–15 Nov 2026 | 0 | Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review. | 52 | 008, 009 | Yes: spike and determinism build |
 | S4 | 16–22 Nov 2026 | 1 | Credit and foreclosure; first playable build: the homestead map with sow and harvest, string tables and number formatting, and the dev panel. | 23 | — | Yes: first playable |
 | S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 19 | — | Yes |
 | S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; market, store and finance basics on screen. | 16 | — | Yes |
@@ -68,8 +68,8 @@
 
 ## Sprint 1 · 26 Oct – 1 Nov 2026 · Phase 0
 
-- **Status:** Planned
-- **Branch:** `sprint/01-ledger-land-unity` (or the branch the session assigns)
+- **Status:** Done (2026-10-18). 28 of 28 points. Specs 003 and 004 approved in the open-question review (2026-10-17), with ADRs 0030 and 0031; the hello-iPhone build confirmed on the device (2026-10-18)
+- **Branch:** `sprint/01-ledger-land-unity`
 - **Goal:** Ledger core and land implemented; Unity project created and a "hello iPhone" build running; specs 003 and 004 written.
 - **Points:** 28
 - **Specs for the owner to review:** 003, 004
@@ -79,35 +79,35 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-007 | Spec 003: crops, fruit trees and founder labour | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-008 | Spec 004: goods, market and storage | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-017 | Create the Unity project | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | To do |
-| US-018 | Pin the Unity version | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | To do |
-| US-019 | Code-first bootstrap | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 3 | Must | To do |
-| US-020 | Build-and-install guide | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 2 | Must | To do |
-| US-038 | Inherited land | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | To do |
-| US-039 | Soil properties | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | To do |
-| US-040 | Buy adjacent land | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | To do |
-| US-041 | Tree slots | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | To do |
-| US-059 | Exact ledger | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 5 | Must | To do |
+| US-007 | Spec 003: crops, fruit trees and founder labour | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-008 | Spec 004: goods, market and storage | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
+| US-017 | Create the Unity project | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | Done |
+| US-018 | Pin the Unity version | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 1 | Must | Done |
+| US-019 | Code-first bootstrap | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 3 | Must | Done |
+| US-020 | Build-and-install guide | [F00.4](features/F00.4-unity-project-and-bootstrap.md) | 2 | Must | Done |
+| US-038 | Inherited land | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | Done |
+| US-039 | Soil properties | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
+| US-040 | Buy adjacent land | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
+| US-041 | Tree slots | [F02.1](features/F02.1-land-and-soil.md) | 2 | Must | Done |
+| US-059 | Exact ledger | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 5 | Must | Done |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025)
+- [x] Test checklist written in `docs/test-checklists/` (if there is a build): `s01-hello-iphone.md`, with `how-to-build-ios.md`
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results, 2026-10-18, iPhone 13):** installed with `how-to-build-ios.md` alone, no issues. The app opens in landscape at the native 2532 × 1170 and shows `Year 1 · Spring · Day 1`, the live time (08:17) and the weather (Sun) on the cream card, clear of the notch. Checks 1, 2, 3 and 6 of `s01-hello-iphone.md` pass; checks 4, 5 and 7–10 weren't reported and are re-checked with the next device build.
 
-**Retro:** —
+**Retro:** The Unity Pipeline CLI let Claude verify Unity work (compile, play mode, screenshots, the iOS build) without waiting for the owner, and caught the missing-font bug before the device run. The open-question review turned up a pacing conflict that reshaped the start of the game (ADR 0030); doing that review before merging kept all the decisions in one pull request.
 
 ## Sprint 2 · 2–8 Nov 2026 · Phase 0
 
 - **Status:** Planned
 - **Branch:** `sprint/02-crops-trees-founder` (or the branch the session assigns)
-- **Goal:** Crops, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written.
-- **Points:** 50
+- **Goal:** Crops, the kitchen garden, fruit trees, founder labour and accrual accounting implemented; economy model running with anchor numbers; specs 006 and 007 written.
+- **Points:** 53
 - **Specs for the owner to review:** 006, 007
 - **Device build:** No
 - Economy model v0 prints seasonal cash flow from content data.
@@ -130,6 +130,7 @@
 | US-060 | Accrual and prepaid costs | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
 | US-061 | Season close and P&L | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
 | US-062 | Net worth | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | 3 | Must | To do |
+| US-177 | Kitchen garden | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | To do |
 
 **Sprint end checklist**
 
@@ -146,8 +147,8 @@
 
 - **Status:** Planned
 - **Branch:** `sprint/03-market-spike-gate` (or the branch the session assigns)
-- **Goal:** Market and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review.
-- **Points:** 45
+- **Goal:** Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review.
+- **Points:** 52
 - **Specs for the owner to review:** 008, 009
 - **Device build:** Yes: spike and determinism build
 - Phase 0 gate: money-loop checks pass, the spike fits 8.3 ms, and golden replays match on the iPhone.
@@ -164,12 +165,15 @@
 | US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | To do |
 | US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | To do |
 | US-049 | Tree value and payback | [F02.3](features/F02.3-fruit-trees.md) | 2 | Should | To do |
-| US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Should | To do |
+| US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 3 | Should | To do |
 | US-054 | Goods and regional prices | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
 | US-055 | Hourly clearing | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 5 | Must | To do |
 | US-056 | Sell and buy | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
 | US-057 | Store and capacity | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | To do |
 | US-058 | Spoilage | [F04.2](features/F04.2-hut-store-and-spoilage.md) | 2 | Must | To do |
+| US-178 | Mandi trip | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
+| US-179 | Buy inputs ahead | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 2 | Must | To do |
+| US-180 | Minimum-price offers | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 1 | Should | To do |
 
 **Sprint end checklist**
 

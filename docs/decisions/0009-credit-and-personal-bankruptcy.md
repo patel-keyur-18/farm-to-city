@@ -1,6 +1,6 @@
 # 0009. Credit from day one, and personal bankruptcy as foreclosure
 
-- Status: Accepted
+- Status: Accepted. The protected inheritance is 6 acres and the yard (ADR 0030)
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0003 (ageless founder), ADR 0008 (upfront costs, starting package)

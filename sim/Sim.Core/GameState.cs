@@ -1,4 +1,6 @@
 using Sim.Core.Commands;
+using Sim.Core.Finance;
+using Sim.Core.Land;
 using Sim.Core.Maths;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
@@ -25,6 +27,12 @@ namespace Sim.Core
 
         public WeatherState Weather { get; internal set; } = new WeatherState();
 
+        /// <summary>Land and soil (spec 002); null in a time-and-weather-only sim.</summary>
+        public LandState Land { get; internal set; }
+
+        /// <summary>The founder's ledger (spec 005); null in a time-and-weather-only sim.</summary>
+        public Ledger Ledger { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -40,6 +48,10 @@ namespace Sim.Core
             Scheduler.WriteTo(h);
             Jobs.WriteTo(h);
             Weather.WriteTo(h);
+            // Spec 002 and 005 sections, present only when the sim has game content, so a
+            // time-and-weather-only state (golden 001) hashes as before.
+            if (Land != null) Land.WriteTo(h);
+            if (Ledger != null) Ledger.WriteTo(h);
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>
@@ -60,6 +72,8 @@ namespace Sim.Core
                 Scheduler = Scheduler.Clone(),
                 Jobs = Jobs.Clone(),
                 Weather = Weather.Clone(),
+                Land = Land?.Clone(),
+                Ledger = Ledger?.Clone(),
                 CommandLog = CommandLog.Clone(),
             };
         }

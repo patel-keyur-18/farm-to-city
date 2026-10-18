@@ -51,6 +51,10 @@ mono_crash.*
 # Addressables
 /unity/FarmToCity/ServerData
 /unity/FarmToCity/[Aa]ssets/StreamingAssets/aa*
+# Content copied from content/ by ContentBuildStep before each player build
+/unity/FarmToCity/[Aa]ssets/StreamingAssets/content/
+/unity/FarmToCity/[Aa]ssets/StreamingAssets/content.meta
+/unity/FarmToCity/[Aa]ssets/StreamingAssets.meta
 /unity/FarmToCity/[Aa]ssets/AddressableAssetsData/link.xml*
 /unity/FarmToCity/[Aa]ssets/Addressables_Temp*
 /unity/FarmToCity/[Aa]ssets/AddressableAssetsData/*/*.bin*
@@ -90,8 +94,10 @@ crashlytics-build.properties
 .DS_Store
 .idea/
 .vs/
-.vscode/*
-!.vscode/extensions.json
+# Editor settings at any depth (root and unity/FarmToCity/). Unity's VS Code package regenerates
+# launch.json and settings.json; only the extension recommendations are shared.
+**/.vscode/*
+!**/.vscode/extensions.json
 .gradle/
 *.suo
 *.user

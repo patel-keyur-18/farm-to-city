@@ -10,6 +10,16 @@ namespace Sim.Core.Commands
         DevCommandsDisabled,
         InvalidStep,
         InvalidArgument,
+
+        // Spec 002 (land)
+        UnknownParcel,
+        AlreadyOwned,
+        NotAdjacent,
+        InsufficientFunds,
+        NotOwned,
+        Protected,
+        ParcelInUse,
+        WouldStrandLand,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

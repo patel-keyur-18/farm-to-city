@@ -9,6 +9,12 @@ namespace Sim.Core
     {
         /// <summary>Allows DebugAdvance (spec 001 §3.8). Development builds only; release builds never set it.</summary>
         public bool DevCommandsEnabled { get; set; }
+
+        /// <summary>
+        /// A failed ledger reconciliation throws (tests, development). When false it is only reported with
+        /// <c>LedgerReconciliationFailed</c>, for player builds to log (spec 005 §3.1). Default true.
+        /// </summary>
+        public bool StrictChecks { get; set; } = true;
     }
 
     /// <summary>
@@ -23,9 +29,14 @@ namespace Sim.Core
         public IReadOnlyList<ISimSystem> ExtraSystems { get; }
         public IReadOnlyList<IJobHandler> JobHandlers { get; }
 
+        /// <summary>Land, map, buildings, start and ledger content, or null for a time-and-weather-only sim.</summary>
+        public GameDefs Game { get; }
+
         public SimConfig(ClockDef clock, WeatherSet weather, SimOptions options = null,
-            IReadOnlyList<ISimSystem> extraSystems = null, IReadOnlyList<IJobHandler> jobHandlers = null)
+            IReadOnlyList<ISimSystem> extraSystems = null, IReadOnlyList<IJobHandler> jobHandlers = null,
+            GameDefs game = null)
         {
+            Game = game;
             Clock = clock;
             Weather = weather;
             Options = options ?? new SimOptions();

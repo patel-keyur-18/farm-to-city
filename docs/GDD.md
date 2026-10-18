@@ -29,8 +29,8 @@ The town moves through six eras, and each one changes the player's role, not jus
 
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
-| 1. Homestead | Farmer | Start: inherited 2-acre plot, a hut, a well, and savings covering about 2 seasons of living costs plus the first season's seeds (ADR 0008) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 acres farmed, a house for a hired hand, one profitable season | 4–15 | More roles, storage, first processing (flour mill) |
+| 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
+| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one profitable season (ADR 0030) | 4–15 | More roles, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -45,7 +45,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 - Labour delivered each day = Hours × Nutrition × (1 − Fatigue) × Health.
   - Better food raises nutrition.
   - Long days build fatigue, and rest days and better housing clear it.
-  - Poor food, overwork, unsafe water or too little warm clothing in Winter lower health and risk sick days.
+  - Poor food, overwork, unsafe water or too little warm clothing in Winter lower health and risk sick days. In Phase 1, a household on subsistence has no warm clothing in Winter, and the founder can buy medicine from the village chemist to recover faster; unsafe water arrives with the town's water network (ADR 0031).
 - This is never an energy bar. It changes background output only, never blocks a tap, and can't be bought.
 - The founder splits labour between their own fields and day labour for neighbours. The base capacity tends about 2–3 acres, so growing beyond that is the reason to hire.
 
@@ -118,12 +118,12 @@ Farming is the first business the player runs, so it introduces every core idea:
 - soil type (loam, clay, sandy)
 - drainage
 
-The map grows as the player buys adjacent parcels. Price depends on soil and location.
+The founder inherits 6 farm acres and a yard (hut and well), protected forever (ADR 0030). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
 
-- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters the inherited acres, so they never dry out completely; bought land is rain-fed until irrigation.
-- **Fertility** recovers while a field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle.
+- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters the inherited acres, so they never dry out completely; bought land is rain-fed until irrigation. Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
+- **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
 - **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
-- **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited parcel can never be sold or seized.
+- **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited land can never be sold, seized or used as collateral.
 - An acre costs about 8–15 seasons of its net farm income, so land pays back in 2–4 game years (ADR 0028).
 - Spec 002 has the formulas and values.
 
@@ -147,6 +147,8 @@ Yield = Base × Soil × Water × Care × Seed × Weather × Tools × Fertiliser 
 - **Fertiliser:** none 1.00; compost 1.05 (raises fertility over the following seasons); chemical 1.25 (−3 fertility per season of use, applied pro rata per crop cycle).
 - **CropHealth** starts at 1.0. An outbreak sets it to 0.4–0.8, and a rare severe outbreak sets it to about 0.
 - **The cap** is in data, and the *Why?* breakdown shows when it applied (ADR 0014).
+
+**Kitchen garden (ADR 0031).** Two beds by the hut grow quick greens: radish, spinach and coriander, in 5–15 minutes. Each picking gives a realistic basket of a few kg until the bed's realistic season output is reached; then the bed rests until the next season. It feeds the household, can be sold, and is where the first session's first crop grows. Radish is also a field crop.
 
 Care is the labour hours delivered divided by the hours needed, capped at 1.1. Labour comes from the founder (ADR 0010) and from hired workers. The Weather factor comes from the weather spells during growth.
 
@@ -173,7 +175,8 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Inputs and trade-offs**
 
-- **Seeds.** Buy certified seed (higher yield, costs more) or save your own (free, slowly degrading quality).
+- **Seeds.** Buy certified seed (higher yield, costs more) or save your own (free, slowly degrading quality: cereals and lentils lose about 2% a season of growth, potato tubers about 5%; radish seed can't be saved from the harvest).
+- **Buying inputs.** Seed, fertiliser and spray come from the village dealer. They can be bought ahead into the store, and cost more in the sowing rush. Chemical fertiliser has a government-controlled price that ignores inflation (ADR 0031).
 - **Fertiliser.** Chemical fertiliser gives +25% yield now but fertility falls 3 points a season. Compost from your own livestock is slower but builds soil. This teaches profit now versus land value later.
 - **Crop rotation.** Repeating a crop drains its nutrient. Lentils restore soil, and leaving a field fallow for a season restores fertility.
 - **Pests and disease.** Each crop cycle rolls a seeded risk. Risk rises with monoculture and wet weather, and falls with rotation and spraying, which costs money. Outbreaks are signalled during growth so the player can respond. Ignoring the risk can wipe out a field, but severe outbreaks never strike while the player is away.
@@ -195,6 +198,7 @@ Players can buy, lease, or hire a machine for a day from a neighbour.
 
 - Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
+- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, any time, up to a daily limit. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** carts up to 1,000 kg to the town market for the regional price less commission, at the cost of a cart's hire and about 6 hours of the founder's day: worth it for full loads only.
 - **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
 
 ## Economy
@@ -543,7 +547,7 @@ The player's real score is **net worth**: everything they own minus everything t
 Each lender has a credit limit set by collateral, credit score and recent income, and the player can't borrow past it. Missed payments add penalty interest and lower the credit score. A payment overdue past the grace period is a default.
 
 - **The credit score** runs from 300 to 900, like India's CIBIL score, and starts at 650.
-- **The moneylender** lends small amounts with interest each season and all the principal at the end. **The bank** lends against bought land and buildings (never the inherited plot), with principal due every season. A bank loan can finance the land it buys.
+- **The moneylender** lends small amounts with interest each season and all the principal at the end. **The bank** lends against bought land and buildings (never the inherited land), with principal due every season. A bank loan can finance the land it buys.
 - **Loan payments come first** at each season close, before living costs and wages.
 - A loan in arrears can be cured by paying, selling land or restructuring once.
 - Spec 005 has the formulas and values.
@@ -551,7 +555,7 @@ Each lender has a credit limit set by collateral, credit score and recent income
 **Personal bankruptcy is foreclosure, not game over.**
 
 - The lenders seize the founder's collateral: bought land, buildings, equipment, livestock and businesses.
-- The inherited 2-acre plot and hut are protected and can never be seized.
+- The inherited 6-acre farm and the hut are protected and can never be seized.
 - Remaining debt is written off.
 - The credit score drops sharply and recovers slowly.
 - Foreclosure never happens while the player is away: a final notice waits for their return, with a day to put things right.
@@ -729,7 +733,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 **Onboarding (ADR 0015).** A short first session, then a guided first week. The grandparent's letter and the advisors guide each lesson, never a pop-up wall.
 
-- **First session (15–20 minutes):** inherit the neglected 2-acre plot and the letter. Sow a quick crop, set the household plan, harvest and make the first sale to the travelling trader. Then sow a long crop, turn on notifications, and leave with a reason to come back.
+- **First session (15–20 minutes):** inherit the neglected 6-acre farm, its store and the letter. Sow a quick crop in the kitchen garden, set the household plan, harvest and make the first sale to the travelling trader. Then sow a long crop, turn on notifications, and leave with a reason to come back.
 - **Guided first week:** each "first" is guided once, when it naturally happens, by a new letter page:
   - the first return (*While you were away*, *ready to harvest*)
   - the first season close (P&L, prepaid costs)
@@ -832,7 +836,7 @@ The UI sends commands down and listens for events coming up. Only the simulation
 
 | Concern | Choice | Why |
 | --- | --- | --- |
-| Engine | The latest Unity LTS at project creation, pinned in an ADR; 2D URP | Stable, long support, good 2D lighting (ADR 0026) |
+| Engine | Unity 6.3 LTS (6000.3.26f1), pinned by ADR 0029; 2D URP | Stable, long support, good 2D lighting (ADR 0026, 0029) |
 | Map | Unity Tilemap (isometric) + custom chunked renderer at City scale | Built in; chunking keeps draw calls low |
 | UI | UI Toolkit for menus, uGUI for in-world labels | Data-binding for heavy report screens |
 | Agents | Plain C# struct arrays first; Unity DOTS/Entities only if profiling demands it | Simpler to start, a clear upgrade path |
@@ -904,7 +908,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `CodexCardDef` | id, title, body, triggerEvent |
 | `RegionDef` | seasonal price factors, trader daily capacity per good, transport cost by road tier |
 | `EraDef` | id, unlock conditions, new systems, UI theme |
-| `StartDef` | startingCash, inheritedParcel, buildings and their tiles |
+| `StartDef` | startingCash, inheritedParcels, buildings and their tiles, the inherited store |
 | `ClockDef` | daysPerSeason, weatherSpellHours, lifeYearsPerSeason, awayCapHours, awayThresholdSeconds, forecastDays, forecastAccuracy (spec 001) |
 | `WeatherTypeDef` / `ClimateDef` | id, nameKey, isSevere / season, weights, persistence (spec 001) |
 
@@ -952,6 +956,7 @@ The look is clean, stylised 2D isometric: readable at phone size, and producible
 - **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.
 - **Buildings.** Every building shows its level and condition. Poor maintenance is visible as cracked walls and faded paint.
 - **The UI ages with the town.** Wood, paper and chalk in the Homestead era, brass and ledgers in the Village, clean glass in the City.
+- **Motion and feedback (Hay Day-like).** Every action answers with motion: a tapped field or building bounces (squash and stretch), harvested items and coins fly along a curve to the store or the wallet, numbers count up instead of jumping, and panels slide and scale in with easing, never snapping. All of it is driven by code (tweens on transforms and UI Toolkit elements, ADR 0017), not hand-made animation clips, and it reads only from domain events and state, so the simulation never waits on an animation. Spec 008 (HUD) defines the motion catalogue (which event triggers which motion, durations, easing curves), and the art style check (F00.6) includes a short motion sample alongside the still screenshot.
 - **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
 - **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
 - **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence. CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
@@ -1009,7 +1014,7 @@ The Village and Township targets are provisional, and the reachable-eras check c
 - **Bounded prices.** The 0.5–2× safety rail triggers in under 0.1% of good-hours, and no market sits in permanent shortage.
 - **Stable population.** Population stays stable when the player does nothing, and recovers after a disaster.
 - **Recoverable bankruptcy.** A bankrupt bot reaches the Village era again within 3 game years (48 real days).
-- **Never stuck.** A bot with no cash and no credit, holding only the inherited plot, reaches a profitable season of farming within a set number of seasons, using day labour.
+- **Never stuck.** A bot with no cash and no credit, holding only the inherited farm, reaches a profitable season of farming within a set number of seasons, using day labour.
 - **Balanced strategies (ADR 0016).**
   - At 12 game years, the best archetype bot's median net worth and median happiness are at most 20% above the worst archetype bot's.
   - No stress bot beats the best archetype by more than 20%.
@@ -1100,12 +1105,12 @@ flowchart TB
 | System | In Phase 1 |
 | --- | --- |
 | Time | Scheduler, calendar, weather spells, away rules, local notifications, dev time-travel panel |
-| Land | 2 inherited acres plus buying adjacent parcels, fertility, moisture, soil type |
-| Crops | Radish, wheat, rice, potato, lentils with seasonal sowing windows; full yield formula; *ready to harvest*; fruit trees (banana, papaya, guava, mango) in yard and field-edge slots |
-| Founder | Labour, diet plan, work hours, health, day labour |
-| Inputs | Certified or saved seed, compost and chemical fertiliser, pest risk and spraying |
+| Land | 6 inherited acres (ADR 0030) plus buying adjacent parcels, fertility, moisture, soil type |
+| Crops | Radish, wheat, rice, potato, lentils with seasonal sowing windows; full yield formula; *ready to harvest*; fruit trees (banana, papaya, guava, mango) in yard and field-edge slots; the kitchen garden (ADR 0031) |
+| Founder | Labour, diet plan, work hours, health (warm clothing, medicine), day labour |
+| Inputs | Certified or saved seed, compost and chemical fertiliser, pest risk and spraying; buying ahead with seasonal input prices |
 | People | Day labourers from neighbouring villages; a resident farm hand (simplified hiring, hand's hut, season contract with prepaid wages, standing orders); regulars who ask to move in |
-| Market | Tradeable goods market, regional trader |
+| Market | Tradeable goods market with minimum-price offers, regional trader, the mandi trip |
 | Money | Cash ledger, seasonal P&L, prepaid accounting, moneylender and bank loans, foreclosure |
 | Saves | Atomic saves, autosave, export and import |
 | Storage | Hut store with limited capacity; spoilage per good per day (ADR 0024) |

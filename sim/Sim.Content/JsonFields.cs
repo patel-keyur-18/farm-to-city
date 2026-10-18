@@ -91,6 +91,20 @@ namespace Sim.Content
             }
         }
 
+        /// <summary>A coin amount with at most 2 decimal places, as money (1/100 coin). Never negative.</summary>
+        public static long Money(JToken t, string path)
+        {
+            decimal d;
+            if (t.Type == JTokenType.Integer) d = t.Value<long>();
+            else if (t.Type == JTokenType.Float && ((JValue)t).Value is decimal v) d = v;
+            else throw new ContentException(path, "expected a coin amount");
+            decimal hundredths = d * 100;
+            if (hundredths != decimal.Truncate(hundredths)) throw new ContentException(path, "more than 2 decimal places");
+            if (hundredths < 0) throw new ContentException(path, "must not be negative (was " + d + ")");
+            if (hundredths > long.MaxValue / 1000) throw new ContentException(path, "amount out of range");
+            return (long)hundredths;
+        }
+
         public static bool Bool(JToken t, string path)
         {
             if (t.Type != JTokenType.Boolean) throw new ContentException(path, "expected true or false");

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Sim.Core.Commands;
+using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Maths;
 using Sim.Core.Scheduling;
@@ -14,10 +15,17 @@ namespace Sim.Core.Tests
         public const long Hour = 3600;
         public const long Wall0 = 1_800_000_000; // an arbitrary Unix time
 
-        public static SimConfig Config(SimOptions options = null, IEnumerable<ISimSystem> systems = null, IEnumerable<IJobHandler> handlers = null)
+        public static SimConfig Config(SimOptions options = null, IEnumerable<ISimSystem> systems = null,
+            IEnumerable<IJobHandler> handlers = null, GameDefs game = null)
         {
             return new SimConfig(TestContent.Clock(), TestContent.Weather(), options,
-                systems?.ToList(), handlers?.ToList());
+                systems?.ToList(), handlers?.ToList(), game);
+        }
+
+        /// <summary>A new game with land and the ledger (the default content unless <paramref name="game"/> is given).</summary>
+        public static Simulation NewFarm(ulong seed = 42, long localSeconds = 0, GameDefs game = null, SimOptions options = null)
+        {
+            return Simulation.NewGame(Config(options, game: game ?? TestContent.Game()), new NewGame(seed, Wall0, localSeconds));
         }
 
         public static Simulation New(ulong seed = 42, long localSeconds = 0, SimOptions options = null,

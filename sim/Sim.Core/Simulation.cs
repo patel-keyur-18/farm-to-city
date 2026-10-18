@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Finance;
+using Sim.Core.Land;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
 using Sim.Core.Weather;
@@ -33,6 +35,11 @@ namespace Sim.Core
 
             AddSystem(new TimeSystem());
             AddSystem(new WeatherSystem());
+            if (config.Game != null)
+            {
+                AddSystem(new LandSystem());
+                AddSystem(new FinanceSystem());
+            }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             foreach (IJobHandler h in config.JobHandlers)
             {
@@ -53,6 +60,13 @@ namespace Sim.Core
             var sim = new Simulation(config, state);
             state.CommandLog.Add(state.Clock.SimTime, command);
             WeatherSystem.Initialise(sim);
+            if (config.Game != null)
+            {
+                state.Land = new LandState();
+                state.Ledger = new Ledger();
+                LandSystem.Initialise(sim);
+                FinanceSystem.Initialise(sim);
+            }
 
             // The first passes are at the next boundary strictly after the start time.
             long t = state.Clock.SimTime;
@@ -111,6 +125,9 @@ namespace Sim.Core
 
         /// <summary>The events of the most recent away advance, ending with AwayAdvanceCompleted (the While-you-were-away report).</summary>
         public IReadOnlyList<SimEvent> LastAwayReport { get { return _awayReport; } }
+
+        /// <summary>The season index since t = 0: the ledger period of an entry posted now (spec 005 §3.1).</summary>
+        public long Period { get { return State.Clock.SimTime / Clock.SecondsPerSeason; } }
 
         /// <summary>The weather of the current spell.</summary>
         public WeatherTypeDef CurrentWeather

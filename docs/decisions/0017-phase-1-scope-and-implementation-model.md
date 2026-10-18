@@ -1,6 +1,6 @@
 # 0017. Phase 1 scope and the implementation model
 
-- Status: Accepted. Phase 1 scope extended by ADR 0021 (fruit trees).
+- Status: Accepted. Phase 1 scope extended by ADR 0021 (fruit trees), ADR 0024 (storage, localisation, play log) and ADR 0031 (kitchen garden, mandi trip, buying inputs ahead, minimum prices, simple health care). The Land row's "2 inherited acres" is 6 since ADR 0030.
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0007 (zero budget, personal builds), ADR 0015 (onboarding)
