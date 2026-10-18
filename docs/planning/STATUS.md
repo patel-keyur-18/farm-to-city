@@ -81,7 +81,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`, pull request to `main` open). Al
 
 ## Next up
 
-1. **Owner:** run the device checklist `docs/test-checklists/s03-spike-determinism.md` on the iPhone 13 (Release, Development Build off) and send the screenshots: golden replays, spike, heat run, style check.
+1. **Owner:** round 2 of the device checklist `docs/test-checklists/s03-spike-determinism.md` (rebuild from the branch head; Release, Development Build off): screenshots of the golden replays, the spike's and the heat run's result panels, plus checks 9–12. Round 1 showed GPU 2.7–3.4 ms; its CPU figure was a bug, fixed.
 2. **Claude, next session:** write ADR 0035 with the device numbers (US-022) and hold the **Phase 0 gate review** with the owner: money loops and viability (pass), the spike within 8.3 ms, goldens matching on the iPhone. Then record the answers (ADR and §10), merge, and start Sprint 4 (credit and foreclosure, the first playable build) on `sprint/04-...`.
 
 ## Owner action checklist (Phases 0–1)

@@ -191,7 +191,9 @@
 
 **Done this session (Claude):** US-054, 055, 056, 058, 178, 179, 180 (spec 004 fully implemented); US-046, 049, 052 (spec 003 fully implemented); goldens 003 and 004; US-015 and US-016 (the money-loop and viability gate checks pass on 1,000 seeds); the economy model on real commands; the spike and determinism build (Unity Editor: all goldens pass; Xcode Release compiles); the style check; specs 008 and 009 written. 182 tests.
 
-**Review (owner's device results):** — (run `docs/test-checklists/s03-spike-determinism.md`; US-022 records the numbers in ADR 0035)
+**Review (owner's device results):**
+- *Round 1 (2026-10-18, iPhone 13):* the spike runs smoothly with all 2,000 agents on the whole map; GPU 2.7 ms (whole map) and 3.4 ms (during the heat run), well inside 8.3 ms. The CPU figure was negative (a measurement bug: the present wait was subtracted from a time that already excludes it), and the buttons didn't stop a running check, so the style check drew over the heat run. The style check itself renders as designed. Golden replays and the result panels weren't captured. Both bugs fixed (4d9199a).
+- *Round 2:* — (rebuild; checklist checks 2–12)
 
 **Retro:** —
 
