@@ -73,6 +73,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`):
 - **US-046 done:** the pest check at half-growth (risk from crop, repeats, wet share, preventive spray), seeded outbreaks with a warning, curative spraying, no severe outbreak while away, CropHealth in the yield. The competent bot sprays on a warning. 170 tests.
 - **Golden 003 and 004 done** (spec 003 AC-30, spec 004 AC-16): `ReplayJson` maps every land, farm, founder and market command (minimum prices as exact raw values); a `game` flag on replay files; all goldens run on the frozen content in `tests/Sim.Core.Tests/golden/content/` (ADR 0034 §9.7). 003 `0x4D4812B581E8E58D` (369 commands, an away advance), 004 `0xAEEA33AC67CDB1B4`; 001 unchanged. AC-28 now covers market sales, the mandi and inputs bought ahead. 173 tests.
 - **US-052 done:** seeded sick days (a sick day is rest), the Winter warm-clothing penalty time-weighted, `BuyMedicine`, subsistence automatic only (`NotSelectable`) with the return at the first affordable daily pass. Goldens 003 and 004 re-pinned for this rule change: 003 `0x2450068F6425C908`, 004 `0xCFF84887D1B141E3`. 176 tests.
+- **US-049 done:** `TreeRules.Payback` (paid-back season recorded at the pick; expected season counted from maturity; never when the harvest limit comes first). Goldens re-pinned for the new tree field: 003 `0xBCEB3F62A7E2CA80`, 004 `0x0FA391E3074DC38B`. 177 tests. **Spec 003 is fully implemented (38 ACs) and spec 004 too (24 ACs).**
 
 ## Next up
 

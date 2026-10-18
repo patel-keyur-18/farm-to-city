@@ -72,6 +72,7 @@ namespace Sim.Core.Commands
             tree.RipeGrams = 0;
             tree.Batches++;
             tree.Returns += value;
+            if (tree.PaidBackPeriod < 0 && tree.Returns >= tree.Cost) tree.PaidBackPeriod = sim.Period;
             sim.Emit(new FruitPicked(t, SlotId, def.Id, grams, value));
             if (def.HarvestLimit > 0 && tree.Batches >= def.HarvestLimit)
             {

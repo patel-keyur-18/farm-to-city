@@ -188,6 +188,9 @@ namespace Sim.Core.Farm
 
         /// <summary>Money: the sapling's cost, its book value (not depreciated in Phase 1).</summary>
         public long Cost { get; internal set; }
+
+        /// <summary>The season index in which returns first reached the cost (−1 = not yet).</summary>
+        public long PaidBackPeriod { get; internal set; } = -1;
         public long JobId { get; internal set; }
 
         internal Tree Clone() { return (Tree)MemberwiseClone(); }
@@ -204,6 +207,7 @@ namespace Sim.Core.Farm
             h.WriteInt(Batches);
             h.WriteLong(Returns);
             h.WriteLong(Cost);
+            h.WriteLong(PaidBackPeriod);
             h.WriteLong(JobId);
         }
     }
