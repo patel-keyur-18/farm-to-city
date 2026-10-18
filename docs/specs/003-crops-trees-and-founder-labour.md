@@ -230,7 +230,7 @@ fatigue ← clamp(fatigue + Δ, 0, FounderDef.maxFatigue)
   = WorkHoursDef.fatigueChange × BuildingDef.restRecovery(home)   if it is < 0     (hut 0.80)
 ```
 
-Defaults: rest −0.15, short −0.05, normal 0, long +0.08 a day; `maxFatigue` 0.50. A sick day counts as rest.
+Δ comes from the option the founder actually worked in the day that ended (normal while away), so tiredness shows the morning after a long day (Sprint 2 planning review). Defaults: rest −0.15, short −0.05, normal 0, long +0.08 a day; `maxFatigue` 0.50. A sick day counts as rest.
 
 **The start** (ADR 0030): basic diet, normal hours, no day labour, `eatFromStore` on, nutrition 0.90, fatigue 0, health 1.00, and 20,000 coins (spec 005).
 
@@ -595,6 +595,7 @@ Rule changes approved by the owner before coding:
 2. **Daily eating.** The household eats from the store at each daily pass, up to the day's food allowance, credited to the sales account as home use; living costs stay prepaid at the gross cost. Eating only at the season close let garden greens and fruit spoil first.
 3. **Founder labour as a rate.** Nutrition and the day-labour split are time-weighted, so switching just before a daily pass gains nothing (AC-37). Before, it was a money loop.
 4. **Farm profit.** The Hamlet gate's "profitable season" is a season with farm profit above 0 (spec 005's report grouping).
+6. **Fatigue timing.** The fatigue change at a daily pass comes from the option worked in the day that ended.
 5. **Inherited seed age.** `StartDef.savedSeedAge`: wheat and lentils 2.0 seasons of growth. No seed-reserve rule; a letter (spec 009) tells the player to switch eating from the store off to keep seed.
 
 **Sprint split (no rule change):** in Sprint 2, CropHealth is 1.00 and no pest check is scheduled (pests, spraying, AC-14 to AC-16 and the golden replay AC-30 come with US-046 in Sprint 3); sick days (AC-19), warm clothing (AC-34) and medicine (AC-35) come with US-052; tree payback (AC-27) with US-049. AC-28 runs in Sprint 2 without market sales and gains them in Sprint 3.

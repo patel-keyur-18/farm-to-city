@@ -123,7 +123,7 @@ NetWorth = Cash + Prepaid (1100–1120)
          + Σ land at market value (spec 002 ParcelPrice)
          + Σ buildings at book value (cost − accumulated depreciation)
          + Σ trees at book value
-         + Σ stored goods × the trader's buying price (spec 004)
+         + Σ stored goods (spec 004: produce at the trader's buying price, inputs at today's input price)
          − Σ loan principal outstanding (including principal arrears)
          − Interest payable (accrued and in arrears)
 ```

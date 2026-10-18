@@ -32,6 +32,11 @@ For plan changes: (a) time-weight nutrition and day labour like Care; (b) delay 
 4. **The P&L grouping and the gate.** Farm income is 4000 and 4010; farm costs are 5000, 5010, 5100, 5300, 5500 (all depreciation) and 5700; farm profit is their difference. Other income (4100, 4800, 4900), household costs (5200, 5250), finance costs (5400, 5410) and other losses (5600) complete the net result. **The Hamlet gate's "profitable season" is a season with farm profit above 0.** Each report line carries a plain-language label and a *Why?* explanation for the player (spec 008).
 5. **Inherited seed has an age:** `StartDef.savedSeedAge` per crop (wheat 2.0 and lentils 2.0 seasons of growth, seed factor 0.96). There is no seed-reserve rule: the player keeps grain for seed by switching eating from the store off, and a letter in spec 009 says so.
 
+Two clarifications from the same review (recorded in the specs, no rule change):
+
+6. **Stored inputs** count in net worth at today's input price (replacement cost); produce at the trader's price. Buying inputs ahead is then an asset swap, like buying land.
+7. **Fatigue** changes at the daily pass by the option the founder worked in the day that ended.
+
 ## Consequences
 
 - **Spec 002:** the well floor applies to `WellDef.irrigatedTiles` (validated as inherited farm tiles); AC-6 covers a well acre against a rain-fed inherited acre.
