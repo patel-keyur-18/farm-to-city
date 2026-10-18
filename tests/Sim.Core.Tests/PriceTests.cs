@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using Sim.Content;
 using Sim.Core.Definitions;
@@ -24,7 +25,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Regional_Band()
         {
-            Simulation sim = TestSim.NewFarm(); // t = 0: Spring
+            Simulation sim = TestSim.NewFarm(game: TestSim.NoInflation()); // t = 0: Spring; index 1.00 throughout
             int potato = Good(sim, "potato");
             AssertPrice(MarketRules.RegionalPrice(sim, potato), "6.80");
             AssertPrice(MarketRules.Floor(sim, potato), "5.30");
@@ -58,6 +59,80 @@ namespace Sim.Core.Tests
             Assert.That(Money.Value(1_687_500, Fixed.Parse("42.75"), 1000), Is.EqualTo(7_214_063)); // 1,687.5 kg × 42.75 = 72,140.625 coins
         }
 
+        // Spec 004 AC-3: the index rises every season by 0.5–1.5%, seeded.
+        [Test]
+        public void Index_SeasonalInflation()
+        {
+            Fixed[] Path(ulong seed)
+            {
+                Simulation sim = TestSim.NewFarm(seed, game: TestSim.Quiet());
+                var path = new Fixed[40];
+                for (int s = 1; s <= 40; s++)
+                {
+                    sim.AdvanceTo(s * sim.Clock.SecondsPerSeason);
+                    path[s - 1] = sim.State.Market.PriceIndex;
+                }
+                return path;
+            }
+            Fixed[] a = Path(7), b = Path(7), c = Path(8);
+            Fixed prev = Fixed.One;
+            foreach (Fixed index in a)
+            {
+                Fixed step = index / prev;
+                Assert.That(step, Is.GreaterThanOrEqualTo(Fixed.Parse("1.005")).And.LessThanOrEqualTo(Fixed.Parse("1.015")), "step " + step);
+                prev = index;
+            }
+            Assert.That(a, Is.EqualTo(b));
+            Assert.That(a, Is.Not.EqualTo(c));
+            Assert.That(a[39], Is.GreaterThanOrEqualTo(Fixed.Parse("1.22")).And.LessThanOrEqualTo(Fixed.Parse("1.79"))); // spec 004 §9
+        }
+
+        // Spec 004 AC-20: chemical fertiliser ignores the index; seed follows it.
+        [Test]
+        public void PriceControlled_IgnoresIndex()
+        {
+            Simulation sim = TestSim.NewFarm(3, game: TestSim.Quiet());
+            int fert = Good(sim, "fertiliser_chemical"), seed = Good(sim, "seed_wheat");
+            Fixed fert0 = MarketRules.InputPrice(sim, fert), seed0 = MarketRules.InputPrice(sim, seed);
+            sim.AdvanceTo(40 * sim.Clock.SecondsPerSeason); // 10 years later, Spring again
+            Assert.That(sim.State.Market.PriceIndex, Is.GreaterThan(Fixed.Parse("1.2")));
+            Assert.That(MarketRules.InputPrice(sim, fert), Is.EqualTo(fert0));
+            AssertPrice(MarketRules.InputPrice(sim, seed), (seed0 * sim.State.Market.PriceIndex).ToString());
+        }
+
+        // Spec 004 AC-24: every indexed coin amount is charged at MulRate(amount, PriceIndex).
+        [Test]
+        public void Indexed_CoinAmounts()
+        {
+            Simulation sim = TestSim.NewFarm(5, game: TestSim.RichGame());
+            sim.AdvanceTo(8 * sim.Clock.SecondsPerSeason); // two years of inflation
+            Fixed index = sim.State.Market.PriceIndex;
+            Assert.That(index, Is.GreaterThan(Fixed.One));
+            Assert.That(MarketRules.Indexed(sim, 18_000_00), Is.EqualTo(Money.MulRate(18_000_00, index)));
+
+            // Land: acreBasePrice × index × the tile's factors.
+            var tile = sim.State.Land.Tiles[18];
+            GameDefs defs = sim.Config.Game;
+            Fixed factor = defs.Soils[tile.Soil].PriceFactor * defs.Drainages[tile.Drainage].PriceFactor
+                * Sim.Core.Land.LandRules.FertilityPriceFactor(defs.Land, tile.Fertility) * defs.Map.Parcels[tile.ParcelId].LocationFactor;
+            Assert.That(Sim.Core.Land.LandRules.TilePrice(sim, tile),
+                Is.EqualTo(Money.RoundToCoin(Money.MulRate(Money.MulRate(defs.Land.AcreBasePrice, index), factor))));
+
+            // Living costs: the season's basic plan paid at the close at the index then.
+            long paid = 0;
+            foreach (var p in sim.State.Finance.Prepayments) if (p.Start == sim.State.Clock.SimTime) paid += p.Total;
+            Assert.That(paid, Is.EqualTo(Money.MulRate(18_000_00, index)));
+
+            // Day labour: 100% for one day at the indexed wage.
+            sim.Execute(new Sim.Core.Commands.SetLabourSplit(sim.State.Clock.SimTime, 100));
+            Fixed hours = Sim.Core.Farm.FounderRules.LabourRate(sim);
+            long cash = sim.State.Ledger.Cash;
+            var events = sim.DrainEvents();
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            var pay = sim.DrainEvents().OfType<Sim.Core.Events.DayLabourPaid>().Single();
+            Assert.That(pay.Amount, Is.EqualTo(Money.MulRate(Money.MulRate(defs.Farm.Founder.DayLabourWagePerHour, index), pay.Hours)));
+        }
+
         // Spec 004 §3.3: the trader's daily capacity resets at each daily pass.
         [Test]
         public void TraderCapacity_ResetsDaily()
@@ -79,7 +154,7 @@ namespace Sim.Core.Tests
             return Assert.Throws<ContentException>(() => TestContent.Game((f, j) => f == file ? j.Replace(from, to) : j));
         }
 
-        // Spec 004 AC-1 (the goods and region checks; the market checks join in Sprint 3).
+        // Spec 004 AC-1.
         [Test]
         public void Market_Validation()
         {
@@ -93,6 +168,11 @@ namespace Sim.Core.Tests
             Assert.That(MarketError("region.json", "\"roadTier\": \"track\"", "\"roadTier\": \"rail\"").FieldPath, Is.EqualTo("region.roadTier"));
             Assert.That(MarketError("goods.json", "\"unit\": \"litre\"", "\"unit\": \"gallon\"").FieldPath, Is.EqualTo("goods.goods[20].unit"));
             Assert.That(MarketError("goods.json", "\"basePrice\": 60, \"weightKg", "\"basePrice\": 0, \"weightKg").FieldPath, Is.EqualTo("goods.goods[21].basePrice"));
+            Assert.That(MarketError("region.json", "\"importCapacityPerDay\": { \"radish\": 15", "\"importCapacityPerDay\": { \"radish\": 0").FieldPath,
+                Is.EqualTo("region.importCapacityPerDay.radish"));
+            Assert.That(MarketError("market.json", "\"railMin\": 0.5", "\"railMin\": 1").FieldPath, Is.EqualTo("market.market.railMin"));
+            Assert.That(MarketError("market.json", "\"inflationMaxPerYear\": 0.06", "\"inflationMaxPerYear\": 0.01").FieldPath,
+                Is.EqualTo("market.economy.inflationMaxPerYear"));
         }
     }
 }

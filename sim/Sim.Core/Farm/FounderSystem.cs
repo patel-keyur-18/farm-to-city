@@ -54,7 +54,7 @@ namespace Sim.Core.Farm
             FounderState s = sim.State.Farm.Founder;
             Fixed hours = s.DayLabourHours;
             s.DayLabourHours = Fixed.Zero;
-            long amount = Money.MulRate(sim.Config.Game.Farm.Founder.DayLabourWagePerHour, hours);
+            long amount = Money.MulRate(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.DayLabourWagePerHour), hours);
             if (amount <= 0) return;
             sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.AccrualPeriod, "ledger.dayLabour", "founder",
                 new Posting(Account.Cash, amount), new Posting(Account.DayLabourEarnings, -amount));
@@ -127,7 +127,7 @@ namespace Sim.Core.Farm
             FarmSystem.Accrue(sim);
 
             int plan = s.AutoSubsistence ? s.PreviousPlan : s.DietPlan;
-            long cost = farm.DietPlans[plan].CostPerSeason;
+            long cost = MarketRules.Indexed(sim, farm.DietPlans[plan].CostPerSeason);
             if (cost == 0) return; // subsistence chosen by the player: nothing to pay
             if (sim.State.Ledger.CanAfford(cost))
             {

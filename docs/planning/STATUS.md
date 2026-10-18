@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 0 · Pre-production |
-| Sprint | Sprint 2 done (58 of 58 points, 2026-10-18). Sprint 3 is next |
-| Branch with latest work | `sprint/02-crops-trees-founder` (pull request #7 to `main`; must be merged before the next session) |
+| Sprint | Sprint 3 in progress (2026-10-18) |
+| Branch with latest work | `sprint/03-market-spike-gate` |
 | Last updated | 2026-10-18 |
 
 ## Done so far
@@ -61,7 +61,9 @@
 
 ## In progress
 
-None. Sprint 2 is closed: 146 tests pass, CI is green.
+Sprint 3 (branch `sprint/03-market-spike-gate`):
+- **Planning review done** (2026-10-18): 9 gaps closed with the owner, recorded in **ADR 0034** and §10 of specs 002–007 (mandi labour 0.5 h, glut share, indexed coin amounts, 1200 Inputs in store, ready grace 72 h then spoilage, automatic subsistence, the gate checks and the spike defined, 12 clarifications).
+- **US-054 done:** `Fixed.Log2/Exp2/Pow`, the seasonal price index, `Indexed` coin amounts (land, buildings, living costs, day labour). 150 tests.
 
 ## Next up
 

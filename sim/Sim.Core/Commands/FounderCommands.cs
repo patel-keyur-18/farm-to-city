@@ -23,7 +23,7 @@ namespace Sim.Core.Commands
             FounderState s = sim.State.Farm.Founder;
             long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
             long end = (t / S + 1) * S;
-            long cost = (long)((System.Numerics.BigInteger)farm.DietPlans[plan].CostPerSeason * (end - t) / S);
+            long cost = (long)((System.Numerics.BigInteger)Market.MarketRules.Indexed(sim, farm.DietPlans[plan].CostPerSeason) * (end - t) / S);
             long refund = s.LivingPrepaymentId == 0 ? 0 : Accrual.RefundIfClosed(sim, s.LivingPrepaymentId);
             if (sim.State.Ledger.Cash + refund < cost) return CommandResult.Reject(RejectReason.InsufficientFunds);
 

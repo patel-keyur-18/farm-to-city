@@ -10,6 +10,9 @@ namespace Sim.Core.Maths
     {
         Weather = 1,
         Forecast = 2,
+        Inflation = 3,
+        Pest = 4,
+        FounderSick = 5,
     }
 
     /// <summary>

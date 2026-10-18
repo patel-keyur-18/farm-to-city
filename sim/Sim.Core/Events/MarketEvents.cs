@@ -2,6 +2,21 @@ using Sim.Core.Maths;
 
 namespace Sim.Core.Events
 {
+    /// <summary>The seasonal inflation step moved the price index (spec 004 §5).</summary>
+    public sealed class PriceIndexChanged : SimEvent
+    {
+        public Fixed Old { get; }
+        public Fixed New { get; }
+
+        public PriceIndexChanged(long simTime, Fixed old, Fixed @new) : base(simTime)
+        {
+            Old = old;
+            New = @new;
+        }
+
+        protected override string Describe() { return "PriceIndexChanged(" + Old + " -> " + New + ")"; }
+    }
+
     /// <summary>Goods sold to the trader at the floor: a harvest's overflow, or SellToTrader (spec 004 §5).</summary>
     public sealed class SoldToTrader : SimEvent
     {

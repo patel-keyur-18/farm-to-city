@@ -378,6 +378,14 @@ Rule changes approved by the owner before coding:
 5. **The price follows the region:** P is rescaled when P_regional changes, so AC-5 holds across season changes.
 6. Golden 004 runs on a frozen content snapshot committed next to it.
 
+### Implementation notes (Sprint 3, 2026-10-18)
+
+None of these changes a formula or a rule.
+
+1. **Fixed powers.** `Log2` squares the mantissa in Q1.63 (33 bits, rounded: absolute error ≤ 2⁻³²); `Exp2` multiplies hard-coded Q1.63 constants 2^(2⁻ᵏ) (computed to 80 digits). A Q31.32 result below about 2⁻⁴ has fewer significant bits than a 2⁻²⁸ relative bound asks for, so AC-4 checks "relative bound, or within one unit in the last place". The tests use `double` only as the reference.
+2. **The index draw** is `Rng.Next(seed, Inflation, 0, season index)`, top 32 bits as u in [0, 1).
+3. **Initialisation order.** The market is set up before the land at a new game, because land prices and building costs read the price index.
+
 ## 11. Cut first
 
 1. Unmet-demand history (keep only the current hour).

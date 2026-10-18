@@ -73,8 +73,8 @@ namespace Sim.Core
                 state.Land = new LandState();
                 state.Ledger = new Ledger();
                 state.Finance = new FinanceState();
+                MarketSystem.Initialise(sim); // first: land prices and building costs read the price index
                 LandSystem.Initialise(sim);
-                MarketSystem.Initialise(sim);
                 FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
                 FounderRules.PayFirstSeason(sim);

@@ -33,7 +33,7 @@ namespace Sim.Core.Farm
             FounderState s = sim.State.Farm.Founder;
             long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
             long end = (t / S + 1) * S;
-            long cost = (long)((System.Numerics.BigInteger)sim.Config.Game.Farm.DietPlans[s.DietPlan].CostPerSeason * (end - t) / S);
+            long cost = (long)((System.Numerics.BigInteger)Market.MarketRules.Indexed(sim, sim.Config.Game.Farm.DietPlans[s.DietPlan].CostPerSeason) * (end - t) / S);
             if (cost == 0) return;
             if (!sim.State.Ledger.CanAfford(cost))
             {
@@ -96,7 +96,7 @@ namespace Sim.Core.Farm
             {
                 Hours = farm.WorkHours[s.TodayOption].Hours, Nutrition = Nutrition(sim), Fatigue = s.Fatigue, Health = s.Health,
                 Sick = s.SickToday, Total = rate, OwnFields = rate - dayLabour, DayLabour = dayLabour,
-                DayLabourPay = Finance.Money.MulRate(farm.Founder.DayLabourWagePerHour, dayLabour),
+                DayLabourPay = Finance.Money.MulRate(Market.MarketRules.Indexed(sim, farm.Founder.DayLabourWagePerHour), dayLabour),
             };
         }
 
@@ -123,7 +123,7 @@ namespace Sim.Core.Farm
             s.DayLabourHours += LabourRate(sim).MulRatio(s.DayLabourShare * dt, 100 * Day);
             s.NutritionSum += plan.Nutrition.MulRatio(dt, 1);
             if (s.EatFromStore)
-                s.AllowanceSum += (plan.FoodShare * Fixed.FromInt(plan.CostPerSeason)).MulRatio(dt, sim.Clock.SecondsPerSeason);
+                s.AllowanceSum += (plan.FoodShare * Fixed.FromInt(plan.CostPerSeason) * sim.State.Market.PriceIndex).MulRatio(dt, sim.Clock.SecondsPerSeason);
         }
     }
 }

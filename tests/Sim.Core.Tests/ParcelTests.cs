@@ -34,8 +34,8 @@ namespace Sim.Core.Tests
             // s1: tile 34 clay, poor, fertility 65 and tile 35 loam, moderate, fertility 55, location 0.95.
             GameDefs d = sim.Config.Game;
             Parcel s1 = P(sim, "s1");
-            long t20 = LandRules.TilePrice(d, sim.State.Land.Tiles[34]);
-            long t21 = LandRules.TilePrice(d, sim.State.Land.Tiles[35]);
+            long t20 = LandRules.TilePrice(sim, sim.State.Land.Tiles[34]);
+            long t21 = LandRules.TilePrice(sim, sim.State.Land.Tiles[35]);
             Assert.That(t20, Is.EqualTo(92_443_00)); // 1,20,000 × 0.90 × 0.85 × 1.06 × 0.95 = 92,442.60, rounded to the coin
             Assert.That(t21, Is.EqualTo(1_16_280_00)); // 1,20,000 × 1.00 × 1.00 × 1.02 × 0.95
             Assert.That(LandRules.ParcelPrice(sim, s1), Is.EqualTo(t20 + t21));

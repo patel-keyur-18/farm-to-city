@@ -43,7 +43,7 @@ namespace Sim.Core.Land
 
             foreach (StartBuilding b in defs.Start.Buildings)
             {
-                land.Buildings.Add(new Building { Id = land.NextBuildingId++, Def = b.Building, TileId = b.Tile, Cost = defs.Buildings[b.Building].Value });
+                land.Buildings.Add(new Building { Id = land.NextBuildingId++, Def = b.Building, TileId = b.Tile, Cost = Market.MarketRules.Indexed(sim, defs.Buildings[b.Building].Value) });
                 for (int k = 0; k < defs.Buildings[b.Building].YardTreeSlots; k++) AddSlot(land, SlotKind.Yard, b.Tile);
             }
             land.HourWeather = sim.State.Weather.WeatherOf(Calendar.SpellAt(t, sim.Clock));

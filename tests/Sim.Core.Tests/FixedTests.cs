@@ -4,7 +4,7 @@ using Sim.Core.Maths;
 
 namespace Sim.Core.Tests
 {
-    public class FixedTests
+    public partial class FixedTests
     {
         private static Fixed F(string s) { return Fixed.Parse(s); }
 

@@ -22,7 +22,7 @@ namespace Sim.Core.Finance
             long land = 0;
             foreach (int p in defs.Start.InheritedParcels) land += sim.State.Land.Parcels[p].CostBasis;
             long buildings = 0;
-            foreach (Building b in sim.State.Land.Buildings) buildings += defs.Buildings[b.Def].Value;
+            foreach (Building b in sim.State.Land.Buildings) buildings += b.Cost;
             long cash = defs.Start.StartingCash;
             sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, OpeningKey, null,
                 new Posting(Account.Cash, cash),

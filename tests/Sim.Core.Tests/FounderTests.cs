@@ -156,7 +156,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(0));
             sim.DrainEvents();
             sim.AdvanceTo(S);
-            Assert.That(sim.DrainEvents().OfType<ObligationUnpaid>().Single().Amount, Is.EqualTo(18_000_00));
+            Assert.That(sim.DrainEvents().OfType<ObligationUnpaid>().Single().Amount, Is.EqualTo(MarketRules.Indexed(sim, 18_000_00)));
             Assert.That(sim.Config.Game.Farm.DietPlans[F(sim).DietPlan].Id, Is.EqualTo("subsistence"));
             FarmTest.AssertNear(FounderRules.Nutrition(sim), "0.8", 4);
             Assert.That(sim.State.Ledger.TotalOf(AccountGroup.Liabilities), Is.EqualTo(0), "no debt is ever created");
@@ -165,7 +165,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new SetLabourSplit(S, 100)).Accepted, Is.True);
             sim.AdvanceTo(2 * S);
             Assert.That(sim.Config.Game.Farm.DietPlans[F(sim).DietPlan].Id, Is.EqualTo("basic"));
-            Assert.That(sim.State.Finance.FindPrepayment(F(sim).LivingPrepaymentId).Total, Is.EqualTo(18_000_00));
+            Assert.That(sim.State.Finance.FindPrepayment(F(sim).LivingPrepaymentId).Total, Is.EqualTo(MarketRules.Indexed(sim, 18_000_00)));
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
         }
 
