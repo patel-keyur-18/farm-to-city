@@ -65,14 +65,14 @@ None. Sprint 2 is closed: 146 tests pass, CI is green.
 
 ## Next up
 
-1. **Owner:** open the Unity Editor once so it recompiles the sim package (check the console is clean: `GameRoot` now calls `LoadGame(ContentSource.Read, weather)`), then merge pull request #7.
+1. **Owner:** merge pull request #7. (The Unity recompile check is done: no errors, owner 2026-10-18.)
 2. **Next session (Claude):** branch `sprint/03-market-spike-gate` from `main` and start Sprint 3 (`sprints.md`, 47 points): the market, spoilage, the mandi trip, buying ahead, minimum prices, pests (with golden 003), tree payback, health and sick days, specs 008 and 009, the performance spike and the on-device determinism check.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Open the Unity Editor once (recompile check); merge pull request #7 (Sprint 2) |
+| Now | Merge pull request #7 (Sprint 2) |
 | Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
@@ -97,4 +97,5 @@ None.
 - **On the owner's Mac** the .NET 10 SDK is installed per user in `~/.dotnet` (not on the default PATH): run `export PATH=$HOME/.dotnet:$PATH` before `dotnet test`.
 - **Unity from the terminal:** while the owner has the Editor open, the `unity` CLI (`~/.unity/bin/unity command …`, the Unity Pipeline package) can recompile (`recompile`, `recompile_status`), read the console (`console`), enter play mode (`editor_play`), capture the Game view (`capture_game_view --save_path` inside the project) and start builds (`build --target iOS --outputPath Builds/iOS`). Batch mode can't run while the Editor has the project open. UI Toolkit text needs an explicit font (`LegacyRuntime.ttf`); without it labels render empty.
 - Tests and tools use the latest C# (NUnit 4.6 needs C# 10+ overload resolution); `sim/` stays on C# 9 and the compiler enforces it.
+- The Editor console shows one expected warning at build time: "Pipeline: No RuntimePipelineConfig asset found … Pipeline will be disabled in Player builds." That is the intended state: `com.unity.pipeline` is an Editor-only tool and must not run in player builds (ADR 0029). Ignore it.
 - Android isn't tested for now (ADR 0026). All device testing happens on the owner's iPhone 13.
