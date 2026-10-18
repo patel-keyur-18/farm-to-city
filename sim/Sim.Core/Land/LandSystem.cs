@@ -155,7 +155,14 @@ namespace Sim.Core.Land
             }
         }
 
-        /// <summary>One hour of moisture change on a tile under the given weather (spec 002 §3.2). The well keeps the inherited acres above its floor.</summary>
+        internal static bool IsWellTile(GameDefs defs, int tileId)
+        {
+            foreach (int t in defs.Land.WellTiles)
+                if (t == tileId) return true;
+            return false;
+        }
+
+        /// <summary>One hour of moisture change on a tile under the given weather (spec 002 §3.2). The well keeps the well acres above its floor.</summary>
         internal static void UpdateMoisture(Simulation sim, Tile tile, int weather)
         {
             GameDefs defs = sim.Config.Game;
@@ -167,7 +174,13 @@ namespace Sim.Core.Land
             else if (d < Fixed.Zero) m += d * soil.LossFactor;
             m = Clamp(m);
             if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
-            if (sim.State.Land.Parcels[tile.ParcelId].Protected && m < defs.Land.WellMoistureFloor) m = defs.Land.WellMoistureFloor;
+            // The well acres only (ADR 0032); the lift is the founder's bucket-carrying, charged by spec 003.
+            tile.WellLift = Fixed.Zero;
+            if (m < defs.Land.WellMoistureFloor && IsWellTile(defs, tile.Id))
+            {
+                tile.WellLift = defs.Land.WellMoistureFloor - m;
+                m = defs.Land.WellMoistureFloor;
+            }
             tile.Moisture = m;
         }
 

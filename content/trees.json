@@ -1,0 +1,12 @@
+{
+  "trees": [
+    { "id": "banana", "nameKey": "tree.banana", "saplingGood": "sapling_banana", "fruitGood": "banana", "growthMinutes": 10080,
+      "fruitingSeasons": ["spring", "summer", "monsoon", "winter"], "batchYieldPerTree": 8,   "harvestLimit": 4, "terrain": "any" },
+    { "id": "papaya", "nameKey": "tree.papaya", "saplingGood": "sapling_papaya", "fruitGood": "papaya", "growthMinutes": 10080,
+      "fruitingSeasons": ["spring", "summer", "monsoon", "winter"], "batchYieldPerTree": 12,  "harvestLimit": 8, "terrain": "any" },
+    { "id": "guava",  "nameKey": "tree.guava",  "saplingGood": "sapling_guava",  "fruitGood": "guava",  "growthMinutes": 20160,
+      "fruitingSeasons": ["monsoon", "winter"],                     "batchYieldPerTree": 30,  "harvestLimit": 0, "terrain": "any" },
+    { "id": "mango",  "nameKey": "tree.mango",  "saplingGood": "sapling_mango",  "fruitGood": "mango",  "growthMinutes": 34560,
+      "fruitingSeasons": ["summer"],                                "batchYieldPerTree": 120, "harvestLimit": 0, "terrain": "any" }
+  ]
+}

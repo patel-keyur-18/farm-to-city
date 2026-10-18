@@ -103,26 +103,45 @@ namespace Sim.Core.Tests
             }
         }
 
-        // Spec 002 AC-6.
+        // Spec 002 AC-6 (the well acres only, ADR 0032).
         [Test]
-        public void WellFloor_InheritedOnly()
+        public void WellFloor_WellAcresOnly()
         {
             Simulation sim = LandTest.NewFarmWithWeather("sun", "heatwave");
             Assert.That(sim.Execute(new Commands.BuyParcel(sim.State.Clock.SimTime, "w1")).Accepted, Is.True);
-            Tile[] inherited = sim.State.Land.Tiles.Where(t => sim.State.Land.Parcels[t.ParcelId].Protected && t.Terrain == Terrain.Farm).ToArray();
+            Tile[] well = sim.Config.Game.Land.WellTiles.Select(t => sim.State.Land.Tiles[t]).ToArray();
+            Assert.That(well.Select(t => t.Id), Is.EqualTo(new[] { 20, 28 }));
+            Tile rainFed = sim.State.Land.Tiles[19]; // inherited, loam, not a well acre
             Tile bought = sim.State.Land.Tiles.First(t => sim.Config.Game.Map.Parcels[t.ParcelId].Id == "w1");
             Assert.That(sim.Config.Game.Soils[bought.Soil].Id, Is.EqualTo("loam"));
+            Assert.That(sim.Config.Game.Soils[rainFed.Soil].Id, Is.EqualTo("loam"));
 
             Fixed floor = sim.Config.Game.Land.WellMoistureFloor;
-            Fixed lowestBought = bought.Moisture;
+            Fixed lowestBought = bought.Moisture, lowestRainFed = rainFed.Moisture;
+            bool lifted = false;
             long end = sim.State.Clock.SimTime + sim.Clock.SecondsPerSeason;
             for (long t = Hour; t <= end; t += Hour)
             {
                 sim.AdvanceTo(t);
-                foreach (Tile tile in inherited) Assert.That(tile.Moisture, Is.GreaterThanOrEqualTo(floor));
+                foreach (Tile tile in well)
+                {
+                    Assert.That(tile.Moisture, Is.GreaterThanOrEqualTo(floor));
+                    lifted |= tile.WellLift > Fixed.Zero;
+                }
+                Assert.That(rainFed.WellLift, Is.EqualTo(Fixed.Zero));
                 if (bought.Moisture < lowestBought) lowestBought = bought.Moisture;
+                if (rainFed.Moisture < lowestRainFed) lowestRainFed = rainFed.Moisture;
             }
             Assert.That(lowestBought, Is.LessThan(floor));
+            Assert.That(lowestRainFed, Is.LessThan(floor));
+            Assert.That(lifted, Is.True, "the well lifted moisture (bucket labour, spec 003)");
+
+            var e = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) =>
+                f == "land.json" ? j.Replace("\"irrigatedTiles\": [20, 28]", "\"irrigatedTiles\": [20, 29]") : j));
+            Assert.That(e.FieldPath, Is.EqualTo("land.well.irrigatedTiles[1]"));
+            e = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) =>
+                f == "land.json" ? j.Replace("\"irrigatedTiles\": [20, 28]", "\"irrigatedTiles\": [21]") : j));
+            Assert.That(e.Message, Does.Contain("not an inherited farm tile")); // the yard
         }
     }
 

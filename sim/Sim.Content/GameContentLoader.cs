@@ -23,9 +23,10 @@ namespace Sim.Content
             MapDef map = LoadMap(read("map.json"), soils, drainages);
             List<BuildingDef> buildings = LoadBuildings(read("buildings.json"));
             MarketDefs market = LoadMarketDefs(read("goods.json"), read("region.json"), read("market.json"));
-            StartDef start = LoadStart(read("start.json"), map, buildings, market);
+            FarmDefs farm = LoadFarmDefs(read("crops.json"), read("farming.json"), read("trees.json"), read("founder.json"), market, weather);
+            StartDef start = LoadStart(read("start.json"), map, buildings, market, farm, land);
             LedgerDef ledger = LoadFinance(read("finance.json"));
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market);
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)
@@ -109,12 +110,20 @@ namespace Sim.Content
 
             string wp = root + ".well";
             JObject well = Object(Required(o, root, "well"), wp);
-            OnlyFields(well, wp, "moistureFloor");
+            OnlyFields(well, wp, "moistureFloor", "irrigatedTiles");
+            var wellTiles = new List<int>();
+            List<JToken> wt = NonEmptyArray(well, wp, "irrigatedTiles");
+            for (int i = 0; i < wt.Count; i++)
+            {
+                int tile = Int(wt[i], Index(wp + ".irrigatedTiles", i));
+                if (wellTiles.Contains(tile)) throw new ContentException(Index(wp + ".irrigatedTiles", i), "duplicate tile " + tile);
+                wellTiles.Add(tile); // checked against the map and the inheritance in LoadStart
+            }
 
             return new LandDef(moistureList, curve, Bounded(l, lp, "fallowRecoveryPerSeason", "0", "25"), acrePrice,
                 fpMin, fpMax, Bounded(l, lp, "quickSaleFactor", "0.3", "1"), slots,
                 Bounded(l, lp, "shadePerMatureTree", "0", "0.2"), Bounded(l, lp, "minShadeFactor", "0.5", "1"),
-                Bounded(well, wp, "moistureFloor", "0", "100"));
+                Bounded(well, wp, "moistureFloor", "0", "100"), wellTiles);
         }
 
         private static MapDef LoadMap(string json, List<SoilDef> soils, List<DrainageDef> drainages)
@@ -184,7 +193,7 @@ namespace Sim.Content
             {
                 string p = Index(root + ".buildings", i);
                 JObject b = Object(tokens[i], p);
-                OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons", "storeCapacityKg");
+                OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons", "storeCapacityKg", "restRecovery", "gardenBeds");
                 string id = UniqueId(b, p, list.ConvertAll(x => x.Id));
                 int slots = Int(Required(b, p, "yardTreeSlots"), p + ".yardTreeSlots");
                 Range(slots, 0, 12, p + ".yardTreeSlots");
@@ -193,16 +202,17 @@ namespace Sim.Content
                 int store = Int(Required(b, p, "storeCapacityKg"), p + ".storeCapacityKg");
                 Range(store, 0, 1_000_000, p + ".storeCapacityKg");
                 list.Add(new BuildingDef(id, String(Required(b, p, "nameKey"), p + ".nameKey"), slots,
-                    Money(Required(b, p, "value"), p + ".value"), life, store));
+                    Money(Required(b, p, "value"), p + ".value"), life, store, Bounded(b, p, "restRecovery", "0", "1"),
+                    BoundedInt(b, p, "gardenBeds", 0, 12)));
             }
             return list;
         }
 
-        private static StartDef LoadStart(string json, MapDef map, List<BuildingDef> buildings, MarketDefs market)
+        private static StartDef LoadStart(string json, MapDef map, List<BuildingDef> buildings, MarketDefs market, FarmDefs farm, LandDef land)
         {
             const string root = "start";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "inheritedParcels", "buildings", "startingCash", "store");
+            OnlyFields(o, root, "inheritedParcels", "buildings", "startingCash", "store", "savedSeedAge");
 
             string ip = root + ".inheritedParcels";
             List<JToken> parcelTokens = NonEmptyArray(o, root, "inheritedParcels");
@@ -221,6 +231,12 @@ namespace Sim.Content
             bool hasYard = false;
             foreach (int t in homeTiles) hasYard |= map.Tiles[t].Terrain == Terrain.Yard;
             if (!hasYard) throw new ContentException(ip, "the inherited land needs a yard tile");
+            for (int i = 0; i < land.WellTiles.Count; i++)
+            {
+                int t = land.WellTiles[i];
+                if (t < 0 || t >= map.Tiles.Count || !homeTiles.Contains(t) || map.Tiles[t].Terrain != Terrain.Farm)
+                    throw new ContentException(Index("land.well.irrigatedTiles", i), "tile " + t + " is not an inherited farm tile");
+            }
 
             List<JToken> tokens = NonEmptyArray(o, root, "buildings");
             var placed = new List<StartBuilding>();
@@ -265,7 +281,21 @@ namespace Sim.Content
             if (weight > capacityGrams)
                 throw new ContentException(sp, "the inherited store weighs " + weight / 1000 + " kg, more than the store's " + capacityGrams / 1000 + " kg");
 
-            return new StartDef(inherited, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"), store);
+            // Saved-seed age of the inherited grain (ADR 0032): crop id → seasons of growth.
+            var ages = new Fixed?[farm.Crops.Count];
+            string ap = root + ".savedSeedAge";
+            JObject ageObj = Object(Required(o, root, "savedSeedAge"), ap);
+            foreach (JProperty prop in ageObj.Properties())
+            {
+                int c = farm.IndexOfCrop(prop.Name);
+                if (c < 0) throw new ContentException(Join(ap, prop.Name), "unknown crop '" + prop.Name + "'");
+                if (!farm.Crops[c].CanSaveSeed) throw new ContentException(Join(ap, prop.Name), "this crop's seed can't be saved");
+                Fixed age = Number(prop.Value, Join(ap, prop.Name));
+                Range(age, Fixed.Zero, Fixed.FromInt(100), Join(ap, prop.Name));
+                ages[c] = age;
+            }
+
+            return new StartDef(inherited, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"), store, ages);
         }
 
         private static LedgerDef LoadFinance(string json)
@@ -318,6 +348,13 @@ namespace Sim.Content
             int i = ids.IndexOf(id);
             if (i < 0) throw new ContentException(Join(path, name), "unknown id '" + id + "'");
             return i;
+        }
+
+        private static int BoundedInt(JObject o, string path, string name, int min, int max)
+        {
+            int v = Int(Required(o, path, name), Join(path, name));
+            Range(v, min, max, Join(path, name));
+            return v;
         }
 
         private static Fixed Bounded(JObject o, string path, string name, string min, string max)

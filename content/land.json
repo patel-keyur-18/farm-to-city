@@ -21,5 +21,5 @@
     "shadePerMatureTree": 0.03,
     "minShadeFactor": 0.85
   },
-  "well": { "moistureFloor": 30 }
+  "well": { "moistureFloor": 30, "irrigatedTiles": [20, 28] }
 }
