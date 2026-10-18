@@ -131,6 +131,16 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
             var pay = sim.DrainEvents().OfType<Sim.Core.Events.DayLabourPaid>().Single();
             Assert.That(pay.Amount, Is.EqualTo(Money.MulRate(Money.MulRate(defs.Farm.Founder.DayLabourWagePerHour, index), pay.Hours)));
+
+            // Medicine and the mandi's cart hire.
+            index = sim.State.Market.PriceIndex;
+            cash = sim.State.Ledger.Cash;
+            Assert.That(sim.Execute(new Sim.Core.Commands.BuyMedicine(sim.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(Money.MulRate(defs.Farm.Founder.MedicineCost, index)));
+            sim.State.Market.Stock[Good(sim, "wheat")] += 10_000;
+            cash = sim.State.Ledger.Cash;
+            Assert.That(sim.Execute(new Sim.Core.Commands.GoToMandi(sim.State.Clock.SimTime, new[] { new MandiLoad("wheat", 10_000) })).Accepted, Is.True);
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(Money.MulRate(defs.Market.Mandi.CartHirePerTrip, index)));
         }
 
         // Spec 004 §3.3: the trader's daily capacity resets at each daily pass.
