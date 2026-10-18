@@ -161,14 +161,14 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-011 | Spec 008: HUD, presentation and localisation | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
-| US-012 | Spec 009: onboarding | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | To do |
+| US-011 | Spec 008: HUD, presentation and localisation | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review (owner) |
+| US-012 | Spec 009: onboarding | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | In review (owner) |
 | US-015 | Money-loop checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-016 | Viability checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
-| US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | To do |
-| US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | To do |
-| US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | To do |
-| US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | To do |
+| US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | Built; device run (owner) |
+| US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | Waiting on device results |
+| US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | Built; device run (owner) |
+| US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | Built; owner review |
 | US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | Done |
 | US-049 | Tree value and payback | [F02.3](features/F02.3-fruit-trees.md) | 2 | Should | Done |
 | US-052 | Health and sick days | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Should | Done |
@@ -182,12 +182,16 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
+- [ ] All Must stories meet the Definition of Done (ADR 0025): code stories done; specs 008 and 009 and the device stories (US-021 to US-024) wait on the owner
+- [x] Test checklist written in `docs/test-checklists/` (`s03-spike-determinism.md`)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Planning review (2026-10-18):** 9 gaps closed with the owner, ADR 0034.
+
+**Done this session (Claude):** US-054, 055, 056, 058, 178, 179, 180 (spec 004 fully implemented); US-046, 049, 052 (spec 003 fully implemented); goldens 003 and 004; US-015 and US-016 (the money-loop and viability gate checks pass on 1,000 seeds); the economy model on real commands; the spike and determinism build (Unity Editor: all goldens pass; Xcode Release compiles); the style check; specs 008 and 009 written. 182 tests.
+
+**Review (owner's device results):** — (run `docs/test-checklists/s03-spike-determinism.md`; US-022 records the numbers in ADR 0035)
 
 **Retro:** —
 
