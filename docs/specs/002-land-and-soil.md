@@ -63,8 +63,8 @@ Moisture runs from 0 (bone dry) to 100 (saturated). At every hourly pass (system
 4. **Well:** on the well acres (`WellDef.irrigatedTiles`, ADR 0032), `m ← max(m, WellDef.moistureFloor)`. This models the founder carrying buckets; spec 003 charges the labour hours for it. Every other tile, inherited or bought, is rain-fed.
 
 Examples (loam, moderate drainage, defaults below):
-- `m = 50`, an hour of rain: `50 + 1.2 × 1.0 = 51.2`. Below 75, so no drainage. Result **51.2**.
-- `m = 80`, an hour of sun: `80 − 0.4 × 1.0 = 79.6`, then `79.6 − 4.6 × 0.10 = 79.14`. Result **79.14**.
+- `m = 50`, an hour of rain: `50 + 3.0 × 1.0 = 53.0`. Below 70, so no drainage. Result **53.0**.
+- `m = 80`, an hour of sun: `80 − 0.7 × 1.0 = 79.3`, then `79.3 − 9.3 × 0.15 = 77.905`. Result **77.905**.
 
 What moisture does to a crop (too dry, waterlogged) is the Water factor in spec 003.
 
@@ -147,10 +147,10 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | | `priceFactor` | Fixed | 1.00 / 0.90 / 0.75 | 0.3–2 | |
 | | `fallowCap` | Fixed | 75 / 70 / 55 | 0–100 | Fallow recovery stops here |
 | `DrainageDef` | `id` | string | `poor`, `moderate`, `good` | | |
-| | `drainAbove` | Fixed | 85 / 75 / 65 | 0–100 | |
-| | `drainRatePerHour` | Fixed | 0.02 / 0.10 / 0.25 | 0–1 | Share of the excess drained each hour |
+| | `drainAbove` | Fixed | 85 / 70 / 65 | 0–100 | |
+| | `drainRatePerHour` | Fixed | 0.02 / 0.15 / 0.25 | 0–1 | Share of the excess drained each hour |
 | | `priceFactor` | Fixed | 0.85 / 1.00 / 1.05 | 0.3–2 | |
-| `LandDef` | `moistureByWeather` | map weather id → Fixed | sun −0.4, cloudy −0.15, rain 1.2, heavy_rain 2.5, heatwave −1.0, frost −0.05, storm 2.0 | −10 to 10 | Points per hour. Every weather id in `weather.json` must appear |
+| `LandDef` | `moistureByWeather` | map weather id → Fixed | sun −0.7, cloudy −0.2, rain 3.0, heavy_rain 8.0, heatwave −1.2, frost −0.1, storm 5.0 (tuned, US-014) | −10 to 10 | Points per hour. Every weather id in `weather.json` must appear |
 | | `fertilityFactorCurve` | list of (fertility, factor) | (0, 0.50), (60, 1.00), (100, 1.15) | x ascending from 0 to 100; factors 0–2 | |
 | | `fallowRecoveryPerSeason` | Fixed | 6 | 0–25 | Points |
 | | `acreBasePrice` | money (coins) | 1,20,000 | > 0 | **Placeholder.** About 8–15 seasons of an acre's net farm income (ADR 0028); tuned by the economy model |
@@ -292,7 +292,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | --- | --- | --- |
 | AC-1 | Given a new game with the default content, then the inherited parcels (`home_a`, `home_b`) are owned and protected, hold 6 farm tiles and 1 yard tile, the hut and the well stand on the yard tile, the inherited farm tiles have fertility 45, the hut provides 4 yard slots, and the farm tiles have 12 field-edge slots | `LandTests.NewGame_InheritedPlot` |
 | AC-2 | Loading `map.json` where a tile is in two parcels, or in none, or a tile names an unknown soil, or `land.json` misses a weather id in `moistureByWeather`, or `start.json` lists inherited parcels without a yard or twice, fails validation naming the field | `ContentTests.Land_Validation` |
-| AC-3 | Given loam, moderate drainage, moisture 50, when an hour of rain passes, then moisture is exactly 51.2. Given moisture 80 and an hour of sun, then exactly 79.14 | `MoistureTests.HourlyUpdate_Exact` |
+| AC-3 | Given loam, moderate drainage, moisture 50, when an hour of rain passes, then moisture is exactly 53.0. Given moisture 80 and an hour of sun, then exactly 77.905 (the tuned content, US-014) | `MoistureTests.HourlyUpdate_Exact` |
 | AC-4 | Given three tiles at moisture 95 with poor, moderate and good drainage, after 24 hours of sun their moisture is strictly ordered poor > moderate > good | `MoistureTests.Drainage_Order` |
 | AC-5 | Over 3 game years for 20 seeds, every tile's moisture stays within [0, 100] and fertility within [0, 100] | `MoistureTests.StaysInBounds` |
 | AC-6 | Through a Summer of only sun and heatwave, the well acres never fall below the well floor (30), and a rain-fed inherited tile and a bought tile of the same soil fall below it. Loading a well tile that isn't an inherited farm tile fails validation | `MoistureTests.WellFloor_WellAcresOnly` |
@@ -328,13 +328,14 @@ All six are resolved. Questions 1–5 were resolved at approval (2026-10-17), fo
 6. **Fertility on land nobody owns (Sprint 1 review):** unowned land is neighbours' farms, so it keeps its map fertility and unbought parcels don't drift in price (ADR 0030). Implemented: fallow recovery applies to owned tiles only.
 7. **The inherited farm (Sprint 1 review, ADR 0030):** the player inherits 6 protected farm acres and the yard in two parcels, on an 8 × 6 map; the Hamlet no longer depends on buying land. The well's floor covered every inherited acre until ADR 0032 limited it to two well acres.
 8. **The moisture hook** was made realistic (Sprint 1 review): Spring 30–50, Summer 15–35, Monsoon 65–85, Winter 40–60, tuned in US-014.
+10. **Moisture tuned (Sprint 2, US-014.T6).** `moistureByWeather`, moderate drainage (above 70 at 0.15 an hour, close to field capacity) and spec 001's climate weights were tuned so an unwatered loam acre averages about Spring 33, Summer 28, Monsoon 67 and Winter 52 over 200 years (`dotnet run --project tools/Tools.Balancer -- moisture`), inside every range. Clay holds about 20 points more and sandy about 17 less. Data only: the rule is unchanged. `MoistureTests.SeasonalMeans_Realistic` guards it.
 9. **The well acres (Sprint 2 planning review, ADR 0032):** the well waters two named inherited acres (`WellDef.irrigatedTiles`: 20 and 28), not all six. A hand-drawn well realistically waters 1–2 acres, and bucket labour on six acres made the Hamlet gate's Care of 0.9 unreachable. Implemented in Sprint 2 (rule change approved by the owner, 2026-10-18).
 
 ### Implementation notes (Sprint 1, 2026-10-17)
 
 None of these changes a formula or a rule.
 
-1. **"Exactly" in AC-3.** In Q31.32, 0.4 and 0.1 aren't exact binary fractions, so the 80 → 79.14 example lands 1 unit in the last place (2⁻³²) below `Fixed.Parse("79.14")`. The test checks 79.14 to that precision and also pins the raw value, so any change in the arithmetic still fails it. The other examples (51.2, the Soil factors, the shade factors) are exact.
+1. **"Exactly" in AC-3.** In Q31.32, decimals such as 0.7 and 0.15 aren't exact binary fractions, so the 80 → 77.905 example lands within a unit in the last place (2⁻³²) of `Fixed.Parse("77.905")`. The test checks it to that precision and also pins the raw value, so any change in the arithmetic still fails it. The other examples (53.0, the Soil factors, the shade factors) are exact. (Sprint 2: the examples follow the tuned content.)
 2. **The hour's weather.** At a spell boundary the weather buffer has already dropped the spell that just ended, so the land system records the weather of each hour as it starts (`LandState.HourWeather`) and applies it at the next hourly pass. The result is exactly §3.2's "the spell containing t − 3600".
 3. **Vacant since the start.** Every tile starts vacant since t = 0, so the first daily pass already counts as a fallow day for the inherited acres.
 4. **The well** is the building whose id is `well`; every start must place it on the inherited land. Since ADR 0032 the floor applies to `WellDef.irrigatedTiles` only (Sprint 2).

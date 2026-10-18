@@ -6,11 +6,11 @@
   ],
   "drainages": [
     { "id": "poor",     "drainAbove": 85, "drainRatePerHour": 0.02, "priceFactor": 0.85 },
-    { "id": "moderate", "drainAbove": 75, "drainRatePerHour": 0.10, "priceFactor": 1.00 },
+    { "id": "moderate", "drainAbove": 70, "drainRatePerHour": 0.15, "priceFactor": 1.00 },
     { "id": "good",     "drainAbove": 65, "drainRatePerHour": 0.25, "priceFactor": 1.05 }
   ],
   "land": {
-    "moistureByWeather": { "sun": -0.4, "cloudy": -0.15, "rain": 1.2, "heavy_rain": 2.5, "heatwave": -1.0, "frost": -0.05, "storm": 2.0 },
+    "moistureByWeather": { "sun": -0.7, "cloudy": -0.2, "rain": 3, "heavy_rain": 8, "heatwave": -1.2, "frost": -0.1, "storm": 5 },
     "fertilityFactorCurve": [ [0, 0.50], [60, 1.00], [100, 1.15] ],
     "fallowRecoveryPerSeason": 6,
     "acreBasePrice": 120000,

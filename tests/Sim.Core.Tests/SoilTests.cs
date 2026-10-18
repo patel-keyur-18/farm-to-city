@@ -58,14 +58,45 @@ namespace Sim.Core.Tests
 
             tile.Moisture = Fixed.FromInt(50);
             LandSystem.UpdateMoisture(sim, tile, LandTest.Weather(sim, "rain"));
-            Assert.That(tile.Moisture, Is.EqualTo(LandTest.F("51.2")));
+            Assert.That(tile.Moisture, Is.EqualTo(LandTest.F("53.0")));
 
             tile.Moisture = Fixed.FromInt(80);
             LandSystem.UpdateMoisture(sim, tile, LandTest.Weather(sim, "sun"));
-            // 79.14 to content precision; 0.4 and 0.1 aren't exact in binary, so Q31.32 lands 1 ulp below
-            // Fixed.Parse("79.14"). The raw value is pinned for determinism (spec 002 §10, implementation note).
-            Assert.That(Math.Abs(tile.Moisture.Raw - LandTest.F("79.14").Raw), Is.LessThanOrEqualTo(1));
-            Assert.That(tile.Moisture.Raw, Is.EqualTo(339_903_711_804L));
+            // 77.905 to content precision; 0.7 and 0.15 aren't exact in binary, so Q31.32 lands within an ulp of
+            // Fixed.Parse("77.905"). The raw value is pinned for determinism (spec 002 §10, implementation note).
+            Assert.That(Math.Abs(tile.Moisture.Raw - LandTest.F("77.905").Raw), Is.LessThanOrEqualTo(8));
+            Assert.That(tile.Moisture.Raw, Is.EqualTo(334_599_427_199L));
+        }
+
+        // Spec 002 §9 moisture hook (US-014.T6): an unwatered loam acre's mean moisture by season, over 100 years after
+        // a warm-up year, is inside the realistic Indian ranges. Deterministic (fixed seed), so the check isn't flaky.
+        [Test]
+        public void SeasonalMeans_Realistic()
+        {
+            Simulation sim = NewFarm(seed: 1);
+            var sum = new double[4];
+            var n = new long[4];
+            long year = sim.Clock.SecondsPerYear;
+            for (long t = Hour; t <= 101 * year; t += Hour)
+            {
+                sim.AdvanceTo(t);
+                if (t <= year) continue;
+                int season = (int)Time.Calendar.SeasonAt(t - 1, sim.Clock);
+                foreach (Tile tile in sim.State.Land.Tiles)
+                {
+                    if (tile.Terrain != Terrain.Farm || sim.State.Land.Parcels[tile.ParcelId].Owned) continue;
+                    if (sim.Config.Game.Soils[tile.Soil].Id != "loam") continue;
+                    sum[season] += tile.Moisture.Raw / 4294967296.0;
+                    n[season]++;
+                }
+            }
+            double[] mean = sum.Select((x, i) => x / n[i]).ToArray();
+            TestContext.Out.WriteLine("Loam means (Spring, Summer, Monsoon, Winter): " + string.Join(", ", mean.Select(m => m.ToString("0.0"))));
+            Assert.That(mean[0], Is.InRange(30, 50), "Spring");
+            Assert.That(mean[1], Is.InRange(15, 35), "Summer");
+            Assert.That(mean[2], Is.InRange(65, 85), "Monsoon");
+            Assert.That(mean[3], Is.InRange(40, 60), "Winter");
+            Assert.That(mean[2] > mean[3] && mean[3] > mean[0] && mean[0] > mean[1], Is.True, "Monsoon > Winter > Spring > Summer");
         }
 
         // Spec 002 AC-4.

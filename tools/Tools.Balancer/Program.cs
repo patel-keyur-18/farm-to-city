@@ -12,18 +12,31 @@ using Sim.Core.Weather;
 namespace Tools.Balancer
 {
     /// <summary>
-    /// Headless balancer on a fake clock (ADR 0016, 0018). For now it reports spec 001's balancing hooks
-    /// (§9): weather frequency per season, rainy Monsoon spells and measured forecast accuracy.
-    /// Usage: dotnet run --project tools/Tools.Balancer [years] [seed]
+    /// Headless balancer on a fake clock (ADR 0016, 0018). Modes:
+    /// <list type="bullet">
+    /// <item><c>[weather] [years] [seed]</c>: spec 001's hooks (weather frequency, rainy Monsoon spells, forecast accuracy).</item>
+    /// <item><c>moisture [years] [seed]</c>: spec 002's seasonal moisture hook per soil.</item>
+    /// <item><c>economy [years] [seed]</c>: the seasonal farm cash-flow model (US-013), 15 years by default.</item>
+    /// </list>
+    /// Usage: dotnet run --project tools/Tools.Balancer -- [mode] [years] [seed]
     /// </summary>
     public static class Program
     {
         public static int Main(string[] args)
         {
-            int years = args.Length > 0 ? int.Parse(args[0]) : 100;
-            ulong seed = args.Length > 1 ? ulong.Parse(args[1]) : 1;
-
             string content = FindContentFolder();
+            bool named = args.Length > 0 && !char.IsDigit(args[0][0]);
+            string mode = named ? args[0] : "weather";
+            if (named) args = args[1..];
+            int years = args.Length > 0 ? int.Parse(args[0]) : mode == "economy" ? 15 : 100;
+            ulong seed = args.Length > 1 ? ulong.Parse(args[1]) : 1;
+            if (mode == "moisture")
+            {
+                Moisture.Print(Simulation.NewGame(Config(content), new NewGame(seed, 0, 0)), years);
+                return 0;
+            }
+            if (mode == "economy") return Economy.Run(Config(content), years, seed);
+
             ClockDef clock = ContentLoader.LoadClock(File.ReadAllText(Path.Combine(content, "clock.json")));
             WeatherSet weather = ContentLoader.LoadWeather(File.ReadAllText(Path.Combine(content, "weather.json")));
             Simulation sim = Simulation.NewGame(new SimConfig(clock, weather), new NewGame(seed, 0, 0));
@@ -103,6 +116,14 @@ namespace Tools.Balancer
             for (int b = 0; b < clock.ForecastDays; b++)
                 Console.WriteLine("  Day " + (b + 1) + ": " + Pct(hits[b], samples[b]) + "% (" + (clock.ForecastAccuracy[b].Raw / 4294967296.0 * 100).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "%)");
             return 0;
+        }
+
+        /// <summary>The full game content from <paramref name="content"/>.</summary>
+        public static SimConfig Config(string content)
+        {
+            Func<string, string> read = f => File.ReadAllText(Path.Combine(content, f));
+            WeatherSet weather = ContentLoader.LoadWeather(read("weather.json"));
+            return new SimConfig(ContentLoader.LoadClock(read("clock.json")), weather, game: ContentLoader.LoadGame(read, weather));
         }
 
         private static string Pct(long part, long whole)

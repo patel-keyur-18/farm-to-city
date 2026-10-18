@@ -91,10 +91,10 @@ namespace Sim.Core.Tests
                 Is.EqualTo(new[] { "sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm" }));
 
             // Spec 001 §4, starting climate tables: Sun, Cloudy, Rain, Heavy rain, Heatwave, Frost, Storm.
-            Assert.That(w.ClimateFor(Season.Spring).Weights, Is.EqualTo(new[] { 45, 30, 20, 3, 0, 2, 0 }));
-            Assert.That(w.ClimateFor(Season.Summer).Weights, Is.EqualTo(new[] { 50, 15, 5, 0, 25, 0, 5 }));
+            Assert.That(w.ClimateFor(Season.Spring).Weights, Is.EqualTo(new[] { 47, 28, 15, 2, 5, 3, 0 }));
+            Assert.That(w.ClimateFor(Season.Summer).Weights, Is.EqualTo(new[] { 53, 10, 5, 0, 25, 0, 7 }));
             Assert.That(w.ClimateFor(Season.Monsoon).Weights, Is.EqualTo(new[] { 10, 25, 35, 20, 0, 0, 10 }));
-            Assert.That(w.ClimateFor(Season.Winter).Weights, Is.EqualTo(new[] { 45, 30, 5, 0, 0, 20, 0 }));
+            Assert.That(w.ClimateFor(Season.Winter).Weights, Is.EqualTo(new[] { 58, 24, 4, 0, 0, 14, 0 }));
             Assert.That(w.ClimateFor(Season.Spring).Persistence, Is.EqualTo(Fixed.Parse("0.50")));
             Assert.That(w.ClimateFor(Season.Summer).Persistence, Is.EqualTo(Fixed.Parse("0.55")));
             Assert.That(w.ClimateFor(Season.Monsoon).Persistence, Is.EqualTo(Fixed.Parse("0.60")));
@@ -165,7 +165,7 @@ namespace Sim.Core.Tests
             Assert.That(e.FieldPath, Is.EqualTo("map.tiles[0].soil"));
 
             // moistureByWeather misses a weather id.
-            e = Error("land.json", j => j.Replace("\"frost\": -0.05, ", ""));
+            e = Error("land.json", j => j.Replace("\"frost\": -0.1, ", ""));
             Assert.That(e.FieldPath, Is.EqualTo("land.land.moistureByWeather"));
             Assert.That(e.Message, Does.Contain("frost"));
 

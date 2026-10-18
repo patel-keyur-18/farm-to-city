@@ -317,10 +317,10 @@ namespace Sim.Core.Tests
             Assert.That(hot.State.Farm.CareRatio, Is.EqualTo(Fixed.Parse("1.1")));
             hot.AdvanceTo(Hour);
             Fixed lift = hot.State.Land.Tiles[20].WellLift;
-            Assert.That(lift, Is.EqualTo(Fixed.One)); // heatwave −1.0 an hour on loam
-            Fixed demand = Fixed.FromInt(6) + lift.MulRatio(24, 1) * Fixed.Parse("0.1"); // 6 + 2.4
+            Assert.That(lift, Is.EqualTo(Fixed.Parse("1.2"))); // a heatwave dries loam 1.2 an hour
+            Fixed demand = Fixed.FromInt(6) + lift.MulRatio(24, 1) * Fixed.Parse("0.1"); // 6 + 2.88
             Assert.That(FarmSystem.LabourDemand(hot), Is.EqualTo(demand));
-            FarmTest.AssertNear(hot.State.Farm.CareRatio, "0.857142857", 16); // 7.2 ÷ 8.4
+            FarmTest.AssertNear(hot.State.Farm.CareRatio, "0.810810810", 16); // 7.2 ÷ 8.88
 
             // The crop's Care factor is the time-weighted mean across the changes.
             Crop c = FarmTest.Crop(hot, 18);

@@ -12,12 +12,12 @@
     {
       "season": "spring",
       "persistence": 0.50,
-      "weights": { "sun": 45, "cloudy": 30, "rain": 20, "heavy_rain": 3, "heatwave": 0, "frost": 2, "storm": 0 }
+      "weights": { "sun": 47, "cloudy": 28, "rain": 15, "heavy_rain": 2, "heatwave": 5, "frost": 3, "storm": 0 }
     },
     {
       "season": "summer",
       "persistence": 0.55,
-      "weights": { "sun": 50, "cloudy": 15, "rain": 5, "heavy_rain": 0, "heatwave": 25, "frost": 0, "storm": 5 }
+      "weights": { "sun": 53, "cloudy": 10, "rain": 5, "heavy_rain": 0, "heatwave": 25, "frost": 0, "storm": 7 }
     },
     {
       "season": "monsoon",
@@ -27,7 +27,7 @@
     {
       "season": "winter",
       "persistence": 0.50,
-      "weights": { "sun": 45, "cloudy": 30, "rain": 5, "heavy_rain": 0, "heatwave": 0, "frost": 20, "storm": 0 }
+      "weights": { "sun": 58, "cloudy": 24, "rain": 4, "heavy_rain": 0, "heatwave": 0, "frost": 14, "storm": 0 }
     }
   ]
 }

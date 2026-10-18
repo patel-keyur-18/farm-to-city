@@ -172,10 +172,12 @@ The forecast covers the next 3 days, which is 12 spells by default. Each future 
 
 | Season | Sun | Cloudy | Rain | Heavy rain | Heatwave | Frost | Storm | Persistence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Spring | 45 | 30 | 20 | 3 | 0 | 2 | 0 | 0.50 |
-| Summer | 50 | 15 | 5 | 0 | 25 | 0 | 5 | 0.55 |
+| Spring | 47 | 28 | 15 | 2 | 5 | 3 | 0 | 0.50 |
+| Summer | 53 | 10 | 5 | 0 | 25 | 0 | 7 | 0.55 |
 | Monsoon | 10 | 25 | 35 | 20 | 0 | 0 | 10 | 0.60 |
-| Winter | 45 | 30 | 5 | 0 | 0 | 20 | 0 | 0.50 |
+| Winter | 58 | 24 | 4 | 0 | 0 | 14 | 0 | 0.50 |
+
+Tuned in Sprint 2 (US-014.T6, ADR 0027: data, no re-approval) so the land's seasonal moisture meets spec 002's realistic hook: a drier Spring (late rabi: rain in 15% of spells, the first heat), pre-monsoon thunderstorms in Summer, and a sunnier, drying Winter. The Monsoon is unchanged (55% rainy spells). The golden replay `001-basic.json` was re-pinned for it.
 
 **Example `content/clock.json`:**
 
