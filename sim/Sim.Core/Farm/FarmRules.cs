@@ -6,6 +6,9 @@ namespace Sim.Core.Farm
     /// <summary>Spec 003's pure formulas: per-season realism (§3.1), the water factor (§3.5), seed (§3.9) and yield (§3.4).</summary>
     public static class FarmRules
     {
+        /// <summary>Labour needed today by the growing crops, hours a day (spec 003 §3.6; the care ratio's Why?).</summary>
+        public static Fixed LabourDemand(Simulation sim) { return FarmSystem.LabourDemand(sim); }
+
         private static readonly Fixed Hundred = Fixed.FromInt(100);
 
         /// <summary>cycleShare = growthSeconds ÷ SecondsPerSeason.</summary>

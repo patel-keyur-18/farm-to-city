@@ -75,12 +75,14 @@ namespace Sim.Core.Market
             return Commands.RejectReason.None;
         }
 
-        /// <summary>Takes stock out of the store. The caller has checked there's enough.</summary>
+        /// <summary>Takes stock out of the store, stock not on offer first (spec 004 §3.5). The caller has checked there's enough.</summary>
         internal static void Take(Simulation sim, int good, long quantity)
         {
             if (quantity < 0 || quantity > sim.State.Market.Stock[good])
                 throw new System.InvalidOperationException("Can't take " + quantity + " of good " + good + " from the store.");
-            sim.State.Market.Stock[good] -= quantity;
+            MarketState m = sim.State.Market;
+            m.Stock[good] -= quantity;
+            if (m.Offered[good] > m.Stock[good]) m.Offered[good] = m.Stock[good]; // stock not on offer goes first
         }
 
         /// <summary>Sells to the trader at the current floor: Dr Cash, Cr the good's sales account. Uses trader capacity.</summary>
@@ -94,6 +96,14 @@ namespace Sim.Core.Market
                     new Posting(Account.Cash, amount), new Posting(SalesAccount(sim, good), -amount));
             sim.Emit(new SoldToTrader(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, quantity, floor, amount));
             return amount;
+        }
+
+        /// <summary>An input's expense account when used or spoiled: 5000 for seed, 5010 for fertiliser, compost and spray.</summary>
+        internal static Account UseAccount(Simulation sim, int good)
+        {
+            foreach (CropDef c in sim.Config.Game.Farm.Crops) if (c.SeedGood == good) return Account.SeedsAndPlanting;
+            foreach (GardenCropDef c in sim.Config.Game.Farm.GardenCrops) if (c.SeedGood == good) return Account.SeedsAndPlanting;
+            return Account.FertiliserAndSpraying;
         }
 
         /// <summary>4000 Crop sales or 4010 Fruit sales.</summary>
@@ -118,12 +128,30 @@ namespace Sim.Core.Market
             long fromStock = System.Math.Min(quantity, sim.State.Market.Stock[good]);
             long shortfall = quantity - fromStock;
             long cost = ShortfallCost(sim, good, quantity);
-            sim.State.Market.Stock[good] -= fromStock;
-            if (shortfall == 0) return;
-            if (cost > 0)
-                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.inputsBought", reference,
-                    new Posting(account, cost), new Posting(Account.Cash, -cost));
-            sim.Emit(new InputsBought(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, shortfall, cost));
+            long book = RemoveStock(sim, good, fromStock);
+            if (book + cost > 0)
+            {
+                var postings = new System.Collections.Generic.List<Posting> { new Posting(account, book + cost) };
+                if (book > 0) postings.Add(new Posting(Account.InputsInStore, -book));
+                if (cost > 0) postings.Add(new Posting(Account.Cash, -cost));
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, shortfall > 0 ? "ledger.inputsBought" : "ledger.inputsUsed", reference, postings.ToArray());
+            }
+            if (shortfall > 0) sim.Emit(new InputsBought(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, shortfall, cost));
+        }
+
+        /// <summary>
+        /// Takes q of an input's stock and returns its book value at average cost (cost × q ÷ stock, rounded down; the
+        /// last unit takes the remainder), so 1200 always equals the inputs' book value (ADR 0034).
+        /// </summary>
+        internal static long RemoveStock(Simulation sim, int good, long quantity)
+        {
+            MarketState m = sim.State.Market;
+            if (quantity == 0) return 0;
+            long book = quantity == m.Stock[good] ? m.StockCost[good]
+                : (long)(new BigInteger(m.StockCost[good]) * quantity / m.Stock[good]);
+            m.Stock[good] -= quantity;
+            m.StockCost[good] -= book;
+            return book;
         }
 
         /// <summary>

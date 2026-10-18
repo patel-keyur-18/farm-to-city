@@ -1,3 +1,5 @@
 {
-  "economy": { "startIndex": 1.00 }
+  "market": { "adjustmentRate": 0.25, "railMin": 0.5, "railMax": 2.0, "offerSpreadHours": 24, "unmetWindowHours": 96, "minLotKg": 0.1 },
+  "mandi": { "tripHours": 6, "cartCapacityKg": 2000, "cartHirePerTrip": 1000, "commissionRate": 0.03, "founderHours": 0.5 },
+  "economy": { "startIndex": 1.00, "inflationMinPerYear": 0.02, "inflationMaxPerYear": 0.06 }
 }

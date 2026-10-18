@@ -24,6 +24,16 @@ namespace Sim.Core.Commands
         // Spec 004 (goods and store)
         StoreFull,
         TraderFull,
+        UnknownGood,
+        NotProduce,
+        InvalidQuantity,
+        InsufficientStock,
+        NotOffered,
+        NotAnInput,
+        OverCartCapacity,
+        TripUnderway,
+        AlreadyWentToday,
+        FounderSick,
 
         // Spec 003 (crops, garden, trees, founder)
         UnknownTile,
@@ -48,6 +58,11 @@ namespace Sim.Core.Commands
         UnknownPlan,
         UnknownOption,
         InvalidShare,
+        NotGrowing,
+        AlreadySprayed,
+        NoPestThreat,
+        NotSelectable,
+        AlreadyTreatedToday,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

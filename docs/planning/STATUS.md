@@ -4,9 +4,9 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | 0 · Pre-production |
-| Sprint | Sprint 2 done (58 of 58 points, 2026-10-18). Sprint 3 is next |
-| Branch with latest work | `sprint/02-crops-trees-founder` (pull request #7 to `main`; must be merged before the next session) |
+| Phase | 0 · Pre-production: **complete, gate passed 2026-10-18** (ADR 0035). Phase 1 · Homestead slice is next |
+| Sprint | Sprint 3 done (47 of 47 points, 2026-10-18). Sprint 4 is next |
+| Branch with latest work | `sprint/03-market-spike-gate` (pull request #8 to `main`; must be merged before the next session) |
 | Last updated | 2026-10-18 |
 
 ## Done so far
@@ -59,33 +59,53 @@
   - **Housekeeping:** Unity `.meta` files for the new sim sources are committed. An Editor-local change to `ProjectSettings.asset` (Apple team ID, automatic signing, an empty `preloadedAssets`) was swept into an early commit and then restored to `main`'s version in git; the owner's working copy still has it, uncommitted.
   - **Scope moved to Sprint 2:** the spec 004 core (new US-181: goods, regional prices with a fixed index, trader capacity, `UseInput`) and US-057 (the store), because crops need them; the health formula moves from US-052 into US-051. Pests, golden 003 and tree payback stay in Sprint 3. Sprint 2 is 58 points, Sprint 3 47.
 
+- **Sprint 3 (branch `sprint/03-market-spike-gate`, PR #8): 47 of 47 points. The Phase 0 gate is passed (ADR 0035).**
+  - **Planning review done** (2026-10-18): 9 gaps closed with the owner, recorded in **ADR 0034** and §10 of specs 002–007 (mandi labour 0.5 h, glut share, indexed coin amounts, 1200 Inputs in store, ready grace 72 h then spoilage, automatic subsistence, the gate checks and the spike defined, 12 clarifications).
+  - **US-054 done:** `Fixed.Log2/Exp2/Pow`, the seasonal price index, `Indexed` coin amounts (land, buildings, living costs, day labour). 150 tests.
+  - **US-055 done:** the hourly market (`MarketClearing`, pure): demand curve, supply with valley and imports, the damped step, the rail, pro-rata sales, the trader's hourly share of a glut, the minimum lot (0.1 kg: 1 kg glutted wheat's thin market), unmet demand, the price following the region. 72 h with the market: 4.0 ms. 156 tests.
+  - **US-056 done:** `Offer` (optional minimum price), `Withdraw`, `SellToTrader`, `Buy`; account 1200 Inputs in store at average cost, the inherited inputs on the opening balance sheet (13,265), stock expensed at use. 160 tests.
+  - **US-058 done:** daily spoilage in the store (stock not on offer first; inputs at average cost), ready crops and ripe fruit after the 72 h grace, `GoodsSpoiled`. Implementation notes for the owner in spec 003 §10 (inclusive grace, rotted away under 1 kg, spoilage before eating). 162 tests.
+  - **US-178 done:** `GoToMandi` (stock not on offer, cart capacity by weight, one trip a day, not on a sick day), the return job paying the regional price less 3%, cart hire and commission to 5700, the founder's rate cut by 2 h a day over the 6 h trip (0.5 h, any departure time). 164 tests.
+  - **US-179 and US-180 done:** buying ahead as an asset at seasonal input prices (AC-19), minimum-price offers (AC-18). 166 tests.
+  - **Economy model switched to the real commands and market** (`tools/Tools.Balancer/Bots.cs`: `FarmerBot` plays through `Execute` only; `InternalsVisibleTo("Tools.Balancer")` removed). Anchors at year-0 prices: farm profit about 34,900 a season, garden 200 kg and 1,690 saved, first Spring 19,800 (inherited seed now expensed). To raise in US-016: the bot never takes the mandi (a cart doesn't beat the trader after labour and hire); the local market takes 2% of sales; mango returns about 33× its sapling.
+  - **US-046 done:** the pest check at half-growth (risk from crop, repeats, wet share, preventive spray), seeded outbreaks with a warning, curative spraying, no severe outbreak while away, CropHealth in the yield. The competent bot sprays on a warning. 170 tests.
+  - **Golden 003 and 004 done** (spec 003 AC-30, spec 004 AC-16): `ReplayJson` maps every land, farm, founder and market command (minimum prices as exact raw values); a `game` flag on replay files; all goldens run on the frozen content in `tests/Sim.Core.Tests/golden/content/` (ADR 0034 §9.7). 003 `0x4D4812B581E8E58D` (369 commands, an away advance), 004 `0xAEEA33AC67CDB1B4`; 001 unchanged. AC-28 now covers market sales, the mandi and inputs bought ahead. 173 tests.
+  - **US-052 done:** seeded sick days (a sick day is rest), the Winter warm-clothing penalty time-weighted, `BuyMedicine`, subsistence automatic only (`NotSelectable`) with the return at the first affordable daily pass. Goldens 003 and 004 re-pinned for this rule change: 003 `0x2450068F6425C908`, 004 `0xCFF84887D1B141E3`. 176 tests.
+  - **US-049 done:** `TreeRules.Payback` (paid-back season recorded at the pick; expected season counted from maturity; never when the harvest limit comes first). Goldens re-pinned for the new tree field: 003 `0xBCEB3F62A7E2CA80`, 004 `0x0FA391E3074DC38B`. 177 tests. **Spec 003 is fully implemented (38 ACs) and spec 004 too (24 ACs).**
+  - **US-015 and US-016 done (Phase 0 gate: money loops and viability pass):** `tools/Tools.Balancer/Gate.cs` and `GateTests` (category Balance, 1,000 seeds, about 16 s); `dotnet run --project tools/Tools.Balancer -- gate` prints the report. Five stress bots (field-holder 0.967, subsistence-dodger 1.049, land-flipper 1.000 and 0.977 over 4 years, offer-churner 1.000, mandi-every-day 0.998). Anchors at year-0 prices over 15 years: farm profit 30,900 a season, owner acre 17,100, hired acre 2,700, land 8.4 seasons, garden 1,670. 182 tests.
+
+  - **US-021, US-023, US-024 built (device run pending):** `Game.Presentation/Phase0/`: a **Phase 0 checks** bar under the hello card with **Spike** (64 × 64 isometric map in 16 × 16 chunks, 2,000 pooled agents, a 2,000-citizen `Fixed` stub once a second, FrameTimingManager CPU and GPU p95), **Heat run (5 min)**, **Golden replays** (001, 003, 004 on the frozen content from StreamingAssets, plus a timed 72 h advance) and **Style check** (Kenney CC0 tiles, seasonal tints, the motion sample). In the Unity Editor (Mono) all three goldens pass with the `dotnet test` hashes and 72 h takes 20 ms; the Editor's frame times are not meaningful (background-throttled Mono). The Xcode Release build compiles unsigned. `ContentBuildStep` also copies the goldens and turns on frame-timing stats. Checklist: `docs/test-checklists/s03-spike-determinism.md`. Screenshots: `docs/art/`.
+  - **US-011 and US-012 written (in review):** spec 008 (HUD, presentation, localisation: a pure C# `Sim.View` layer, the *Why?* system, the crop-calendar card, the season report's labels and *Why?* text, the motion catalogue, string tables and the en-IN formatter) and spec 009 (onboarding: the letter with its text, the first session, guided-once chapters, seasonal and seed-keeping hints, the Hamlet unlock check). 8 + 6 open questions.
+  - **The device run (three rounds, 2026-10-18):** golden replays 001, 003, 004 PASS on the iPhone 13 with the `dotnet test` hashes; 72 h catch-up 1.8 ms; the spike at about 60 fps with under 1% dropped frames, main thread p95 at most 7.59 ms, GPU at most 2.81 ms; the render thread's time is the screen wait (the no-agents baseline shows the same); the heat run showed no throttling; the low-poly look approved. **ADR 0035** records it and clarifies the pass rule (dropped frames over 25 ms).
+  - **The review:** specs 008 and 009 approved (ADR 0036); the findings closed (ADR 0037: the tractor-trolley mandi, shade per tree, first-season pacing).
+
 ## In progress
 
-None. Sprint 2 is closed: 146 tests pass, CI is green.
+None. Sprint 3 is closed and Phase 0 is complete.
 
 ## Next up
 
-1. **Owner:** merge pull request #7. (The Unity recompile check is done: no errors, owner 2026-10-18.)
-2. **Next session (Claude):** branch `sprint/03-market-spike-gate` from `main` and start Sprint 3 (`sprints.md`, 47 points): the market, spoilage, the mandi trip, buying ahead, minimum prices, pests (with golden 003), tree payback, health and sick days, specs 008 and 009, the performance spike and the on-device determinism check.
+1. **Owner:** merge pull request #8 (Sprint 3 and the Phase 0 gate).
+2. **Next session (Claude):** branch `sprint/04-credit-first-playable` from `main` and start **Phase 1** with Sprint 4 (`sprints.md`): credit and foreclosure (spec 005 §3.6–3.9), golden 005, the homestead map with sow and harvest (spec 008 §3.4), string tables and the formatter (`Sim.View`, spec 008 §3.11), the developer panel, and the first playable build with its checklist. Start with the gap review as usual (memory: gaps one by one). Remove or hide the Phase 0 bar (ADR 0035).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Merge pull request #7 (Sprint 2) |
-| Sprint 3 | Review specs 008 and 009. Run the performance spike and the on-device determinism check, then report the results (Phase 0 gate) |
+| Now | Merge pull request #8 (Sprint 3; the Phase 0 gate is passed) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
 ## Open questions (with the owner)
 
-None. All 13 questions of specs 006 and 007 were answered on 2026-10-18 (§10 of each). Earlier this sprint: gaps 1–8 (ADR 0032) and 9–10 (ADR 0033).
+None. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 findings and 5 implementation notes (ADR 0037), the gate (ADR 0035).
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
-- `ReplayJson` doesn't know the land, farm and founder commands yet; golden 003 (Sprint 3, with pests) and golden 005 (Sprint 4) add them.
-- The economy model sells to the trader through an internal operation (`InternalsVisibleTo("Tools.Balancer")`) until `SellToTrader` exists (Sprint 3); it then switches to the command and the market.
-- Spec 005 AC-4 (`LedgerTests.Reconciles_EverySeason`) covers land and prepayments; F05.2 adds loans and missed payments. Spec 003 AC-28 gains market sales in Sprint 3.
+- Golden 005 (Sprint 4) adds the credit commands to `ReplayJson`.
+- Spec 005 AC-4 covers land, prepayments and inputs in store; F05.2 adds loans and missed payments.
+- The Phase 0 bar and its code (`Phase0/`) are throwaway: removed or moved behind the dev panel in Sprint 4 (F08.4).
+- `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID, and now `enableFrameTimingStats: 1`, set by the build step each build). Leave it uncommitted.
 
 ## Half-done work
 
@@ -97,5 +117,6 @@ None.
 - **On the owner's Mac** the .NET 10 SDK is installed per user in `~/.dotnet` (not on the default PATH): run `export PATH=$HOME/.dotnet:$PATH` before `dotnet test`.
 - **Unity from the terminal:** while the owner has the Editor open, the `unity` CLI (`~/.unity/bin/unity command …`, the Unity Pipeline package) can recompile (`recompile`, `recompile_status`), read the console (`console`), enter play mode (`editor_play`), capture the Game view (`capture_game_view --save_path` inside the project) and start builds (`build --target iOS --outputPath Builds/iOS`). Batch mode can't run while the Editor has the project open. UI Toolkit text needs an explicit font (`LegacyRuntime.ttf`); without it labels render empty.
 - Tests and tools use the latest C# (NUnit 4.6 needs C# 10+ overload resolution); `sim/` stays on C# 9 and the compiler enforces it.
+- **Golden replays** run on the frozen content copy in `tests/Sim.Core.Tests/golden/content/`, not `content/`, so tuning never re-pins them. Goldens 003 and 004 are generated from a seeded `FarmBot` session when the file is missing or `FTC_UPDATE_GOLDEN=1`. Refresh the frozen copy (and re-pin) only with a rule change, and say so in the commit.
 - The Editor console shows one expected warning at build time: "Pipeline: No RuntimePipelineConfig asset found … Pipeline will be disabled in Player builds." That is the intended state: `com.unity.pipeline` is an Editor-only tool and must not run in player builds (ADR 0029). Ignore it.
 - Android isn't tested for now (ADR 0026). All device testing happens on the owner's iPhone 13.

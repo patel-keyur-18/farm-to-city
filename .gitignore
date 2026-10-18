@@ -54,6 +54,8 @@ mono_crash.*
 # Content copied from content/ by ContentBuildStep before each player build
 /unity/FarmToCity/[Aa]ssets/StreamingAssets/content/
 /unity/FarmToCity/[Aa]ssets/StreamingAssets/content.meta
+/unity/FarmToCity/[Aa]ssets/StreamingAssets/golden/
+/unity/FarmToCity/[Aa]ssets/StreamingAssets/golden.meta
 /unity/FarmToCity/[Aa]ssets/StreamingAssets.meta
 /unity/FarmToCity/[Aa]ssets/AddressableAssetsData/link.xml*
 /unity/FarmToCity/[Aa]ssets/Addressables_Temp*

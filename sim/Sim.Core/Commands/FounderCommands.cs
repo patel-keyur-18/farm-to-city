@@ -20,10 +20,11 @@ namespace Sim.Core.Commands
             FarmDefs farm = sim.Config.Game.Farm;
             int plan = farm.IndexOfDietPlan(PlanId);
             if (plan < 0) return CommandResult.Reject(RejectReason.UnknownPlan);
+            if (PlanId == DietPlanDef.SubsistenceId) return CommandResult.Reject(RejectReason.NotSelectable); // automatic only (ADR 0034)
             FounderState s = sim.State.Farm.Founder;
             long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
             long end = (t / S + 1) * S;
-            long cost = (long)((System.Numerics.BigInteger)farm.DietPlans[plan].CostPerSeason * (end - t) / S);
+            long cost = (long)((System.Numerics.BigInteger)Market.MarketRules.Indexed(sim, farm.DietPlans[plan].CostPerSeason) * (end - t) / S);
             long refund = s.LivingPrepaymentId == 0 ? 0 : Accrual.RefundIfClosed(sim, s.LivingPrepaymentId);
             if (sim.State.Ledger.Cash + refund < cost) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
@@ -83,6 +84,33 @@ namespace Sim.Core.Commands
             if (sim.State.Farm == null) return CommandResult.Reject(RejectReason.InvalidArgument);
             FarmSystem.Accrue(sim);
             sim.State.Farm.Founder.EatFromStore = On;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Buys medicine from the village chemist (spec 003 §3.11, ADR 0031): Dr 5250 Health costs, health +gain (at most 1),
+    /// once a day. Today's hours are already fixed, so it lowers the chance of the next sick days.
+    /// </summary>
+    public sealed class BuyMedicine : TimedCommand
+    {
+        public BuyMedicine(long at) : base(at) { }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (sim.State.Farm == null) return CommandResult.Reject(RejectReason.InvalidArgument);
+            FounderState s = sim.State.Farm.Founder;
+            FounderDef def = sim.Config.Game.Farm.Founder;
+            long day = sim.State.Clock.SimTime / ClockDef.SecondsPerDay;
+            if (s.MedicineDay == day) return CommandResult.Reject(RejectReason.AlreadyTreatedToday);
+            long cost = Market.MarketRules.Indexed(sim, def.MedicineCost);
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (cost > 0)
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.medicine", "founder",
+                    new Posting(Account.HealthCosts, cost), new Posting(Account.Cash, -cost));
+            Maths.Fixed h = s.Health + def.MedicineHealthGain;
+            s.Health = h > Maths.Fixed.One ? Maths.Fixed.One : h;
+            s.MedicineDay = day;
             return CommandResult.Ok;
         }
     }

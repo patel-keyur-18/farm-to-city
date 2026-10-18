@@ -40,6 +40,12 @@ namespace Sim.Core.Market
             return Money.Value(quantity, price, sim.Config.Game.Market.Goods[good].UnitSize);
         }
 
+        /// <summary>
+        /// A year-0 coin amount from content charged now: MulRate(amount, PriceIndex) (ADR 0034). Not for
+        /// price-controlled goods, loans or book values.
+        /// </summary>
+        public static long Indexed(Simulation sim, long amount) { return Money.MulRate(amount, sim.State.Market.PriceIndex); }
+
         /// <summary>What the trader can still buy of a good today, in quantity units.</summary>
         public static long TraderCapacityLeft(Simulation sim, int good)
         {

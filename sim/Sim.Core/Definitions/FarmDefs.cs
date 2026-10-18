@@ -94,9 +94,13 @@ namespace Sim.Core.Definitions
         /// <summary>Grams per bed per season.</summary>
         public long GardenSeasonOutputGrams { get; }
 
+        /// <summary>How long a ready crop or ripe batch waits without loss before it spoils (ADR 0034), seconds.</summary>
+        public long ReadyGraceSeconds { get; }
+
         public FarmDef(Fixed yieldCap, Fixed careCap, Fixed toolsFactor, IReadOnlyList<Fixed> weatherYieldFactor, Fixed waterDryFloor,
-            Fixed waterWetFloor, Fixed bucketHoursPerMoisturePoint, long gardenSeasonOutputGrams)
+            Fixed waterWetFloor, Fixed bucketHoursPerMoisturePoint, long gardenSeasonOutputGrams, long readyGraceSeconds)
         {
+            ReadyGraceSeconds = readyGraceSeconds;
             YieldCap = yieldCap;
             CareCap = careCap;
             ToolsFactor = toolsFactor;
@@ -148,9 +152,13 @@ namespace Sim.Core.Definitions
         /// <summary>Hill-only trees (apple, later) can't be planted on the Phase 1 map.</summary>
         public bool HillOnly { get; }
 
+        /// <summary>The share of a field-edge acre's yield a mature tree shades away (ADR 0037).</summary>
+        public Fixed Shade { get; }
+
         public TreeDef(string id, string nameKey, int saplingGood, int fruitGood, int growthMinutes, IReadOnlyList<bool> fruitingSeasons,
-            long batchGrams, int harvestLimit, bool hillOnly)
+            long batchGrams, int harvestLimit, bool hillOnly, Fixed shade)
         {
+            Shade = shade;
             Id = id;
             NameKey = nameKey;
             SaplingGood = saplingGood;
@@ -254,6 +262,48 @@ namespace Sim.Core.Definitions
     }
 
     /// <summary>Spec 003's content: crops, the garden, farming, trees and the founder.</summary>
+    /// <summary>Pests, disease and spraying (spec 003 §3.8, ADR 0014), from <c>farming.json</c>'s <c>pests</c>.</summary>
+    public sealed class PestRiskDef
+    {
+        /// <summary>Base risk per crop index.</summary>
+        public IReadOnlyList<Fixed> BaseRisk { get; }
+        public Fixed MonocultureStep { get; }
+        public int MonocultureMaxRepeats { get; }
+        public Fixed WetStep { get; }
+
+        /// <summary>Per weather index: does it count as wet (rain, heavy rain, storm)?</summary>
+        public IReadOnlyList<bool> WetWeather { get; }
+        public int SprayGood { get; }
+
+        /// <summary>The spray dose per acre per season, in the spray good's units (millilitres).</summary>
+        public Fixed SprayPerAcrePerSeason { get; }
+        public Fixed SprayRiskFactor { get; }
+        public Fixed SprayDamageFactor { get; }
+        public Fixed OutbreakHealthMin { get; }
+        public Fixed OutbreakHealthMax { get; }
+        public Fixed SevereShare { get; }
+        public Fixed SevereHealth { get; }
+
+        public PestRiskDef(IReadOnlyList<Fixed> baseRisk, Fixed monocultureStep, int monocultureMaxRepeats, Fixed wetStep,
+            IReadOnlyList<bool> wetWeather, int sprayGood, Fixed sprayPerAcrePerSeason, Fixed sprayRiskFactor, Fixed sprayDamageFactor,
+            Fixed outbreakHealthMin, Fixed outbreakHealthMax, Fixed severeShare, Fixed severeHealth)
+        {
+            BaseRisk = new List<Fixed>(baseRisk).AsReadOnly();
+            MonocultureStep = monocultureStep;
+            MonocultureMaxRepeats = monocultureMaxRepeats;
+            WetStep = wetStep;
+            WetWeather = new List<bool>(wetWeather).AsReadOnly();
+            SprayGood = sprayGood;
+            SprayPerAcrePerSeason = sprayPerAcrePerSeason;
+            SprayRiskFactor = sprayRiskFactor;
+            SprayDamageFactor = sprayDamageFactor;
+            OutbreakHealthMin = outbreakHealthMin;
+            OutbreakHealthMax = outbreakHealthMax;
+            SevereShare = severeShare;
+            SevereHealth = severeHealth;
+        }
+    }
+
     public sealed class FarmDefs
     {
         public IReadOnlyList<CropDef> Crops { get; }
@@ -264,11 +314,13 @@ namespace Sim.Core.Definitions
         public FounderDef Founder { get; }
         public IReadOnlyList<DietPlanDef> DietPlans { get; }
         public IReadOnlyList<WorkHoursDef> WorkHours { get; }
+        public PestRiskDef Pests { get; }
 
         public FarmDefs(IReadOnlyList<CropDef> crops, IReadOnlyList<GardenCropDef> gardenCrops, FarmDef farm,
             IReadOnlyList<FertiliserDef> fertilisers, IReadOnlyList<TreeDef> trees, FounderDef founder,
-            IReadOnlyList<DietPlanDef> dietPlans, IReadOnlyList<WorkHoursDef> workHours)
+            IReadOnlyList<DietPlanDef> dietPlans, IReadOnlyList<WorkHoursDef> workHours, PestRiskDef pests)
         {
+            Pests = pests ?? throw new ArgumentNullException(nameof(pests));
             Crops = new List<CropDef>(crops).AsReadOnly();
             GardenCrops = new List<GardenCropDef>(gardenCrops).AsReadOnly();
             Farm = farm ?? throw new ArgumentNullException(nameof(farm));

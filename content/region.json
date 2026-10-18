@@ -31,5 +31,8 @@
   "traderBuyPerDay": {
     "radish": 300, "wheat": 2000, "rice": 2000, "potato": 3000, "lentils": 500, "banana": 150,
     "papaya": 100, "guava": 150, "mango": 400, "spinach": 100, "coriander": 30
-  }
+  },
+  "demandPerDay": { "radish": 150, "wheat": 300, "rice": 300, "potato": 500, "lentils": 40, "banana": 60, "papaya": 40, "guava": 40, "mango": 80, "spinach": 60, "coriander": 15 },
+  "valleySupplyPerDay": { "radish": 135, "wheat": 270, "rice": 270, "potato": 450, "lentils": 36, "banana": 54, "papaya": 36, "guava": 36, "mango": 72, "spinach": 54, "coriander": 13.5 },
+  "importCapacityPerDay": { "radish": 15, "wheat": 30, "rice": 30, "potato": 50, "lentils": 4, "banana": 6, "papaya": 4, "guava": 4, "mango": 8, "spinach": 6, "coriander": 1.5 }
 }

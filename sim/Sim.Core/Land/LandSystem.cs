@@ -43,7 +43,7 @@ namespace Sim.Core.Land
 
             foreach (StartBuilding b in defs.Start.Buildings)
             {
-                land.Buildings.Add(new Building { Id = land.NextBuildingId++, Def = b.Building, TileId = b.Tile, Cost = defs.Buildings[b.Building].Value });
+                land.Buildings.Add(new Building { Id = land.NextBuildingId++, Def = b.Building, TileId = b.Tile, Cost = Market.MarketRules.Indexed(sim, defs.Buildings[b.Building].Value) });
                 for (int k = 0; k < defs.Buildings[b.Building].YardTreeSlots; k++) AddSlot(land, SlotKind.Yard, b.Tile);
             }
             land.HourWeather = sim.State.Weather.WeatherOf(Calendar.SpellAt(t, sim.Clock));
@@ -221,14 +221,16 @@ namespace Sim.Core.Land
             TreeSlot slot = Slot(sim, slotId);
             slot.TreeId = treeId;
             slot.TreeMature = false;
+            slot.Shade = Fixed.Zero;
         }
 
-        /// <summary>Spec 003 marks the slot's tree mature; from then on it shades a field-edge tile.</summary>
-        internal static void SetTreeMature(Simulation sim, long slotId)
+        /// <summary>Spec 003 marks the slot's tree mature with its shade; from then on it shades a field-edge tile.</summary>
+        internal static void SetTreeMature(Simulation sim, long slotId, Fixed shade)
         {
             TreeSlot slot = Slot(sim, slotId);
             if (slot.TreeId == 0) throw new System.InvalidOperationException("Slot " + slotId + " is empty.");
             slot.TreeMature = true;
+            slot.Shade = shade;
         }
 
         private static TreeSlot Slot(Simulation sim, long slotId)

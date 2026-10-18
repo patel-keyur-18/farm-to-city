@@ -29,7 +29,7 @@ namespace Sim.Core.Tests
             new[] { "rice", "radish" },    // Monsoon
             new[] { "wheat", "lentils" },  // Winter
         };
-        private static readonly string[] Plans = { "basic", "balanced", "basic", "subsistence" };
+        private static readonly string[] Plans = { "basic", "balanced", "basic", "rich" }; // subsistence is automatic only (ADR 0034)
         private static readonly string[] Hours = { "normal", "long", "short", "normal", "rest" };
 
         /// <summary>One round of moves at sim time t (round k).</summary>
@@ -66,6 +66,29 @@ namespace Sim.Core.Tests
                 sim.Execute(new PlantTree(t, slots[1], "banana"));
                 sim.Execute(new PlantTree(t, sim.State.Land.Slots.First(s => s.Kind == SlotKind.FieldEdge).Id, "papaya"));
             }
+            // The market (spec 004): spray warned crops, offer, withdraw, sell to the trader, buy ahead, cart to the mandi.
+            foreach (Crop c in sim.State.Farm.Crops.ToList())
+                if (c.State == CropState.Growing && c.Outbreak != Outbreak.None && c.Spray == SprayState.None && k % 2 == 0) sim.Execute(new Spray(t, c.TileId));
+            var goods = sim.Config.Game.Market.Goods;
+            ulong m = Rng.Next(seed, (RngStream)904, k, 20);
+            int g = (int)Rng.Below(m, (ulong)goods.Count);
+            long free = sim.State.Market.InStore(g) - sim.State.Market.OnOffer(g);
+            switch (Rng.Below(Rng.Next(seed, (RngStream)904, k, 21), 8))
+            {
+                case 0: if (free > 0) sim.Execute(new Offer(t, goods[g].Id, free / 2 + 1, k % 3 == 0 ? Market.MarketRules.RegionalPrice(sim, g) : (Fixed?)null)); break;
+                case 1: if (sim.State.Market.OnOffer(g) > 0) sim.Execute(new Withdraw(t, goods[g].Id, sim.State.Market.OnOffer(g) / 2 + 1)); break;
+                case 2: if (free > 0) sim.Execute(new SellToTrader(t, goods[g].Id, System.Math.Min(free, Market.MarketRules.TraderCapacityLeft(sim, g)))); break;
+                case 3: sim.Execute(new Buy(t, k % 2 == 0 ? "seed_potato" : "spray", 5_000)); break;
+                case 4:
+                case 5:
+                    // The produce with the most free stock, up to a cart load.
+                    int best = -1;
+                    for (int i = 0; i < goods.Count; i++)
+                        if (goods[i].Kind == GoodKind.Produce && (best < 0 || sim.State.Market.InStore(i) - sim.State.Market.OnOffer(i) > sim.State.Market.InStore(best) - sim.State.Market.OnOffer(best))) best = i;
+                    long q = System.Math.Min(sim.State.Market.InStore(best) - sim.State.Market.OnOffer(best), 1_000_000);
+                    if (q > 0) sim.Execute(new GoToMandi(t, new[] { new MandiLoad(goods[best].Id, q) }));
+                    break;
+            }
             switch (Rng.Below(r, 12))
             {
                 case 0: sim.Execute(new SetDietPlan(t, Plans[(int)Rng.Below(Rng.Next(seed, (RngStream)904, k, 9), 4)])); break;
@@ -73,6 +96,7 @@ namespace Sim.Core.Tests
                 case 2: sim.Execute(new SetWorkHours(t, Hours[(int)Rng.Below(Rng.Next(seed, (RngStream)904, k, 11), 5)])); break;
                 case 3: sim.Execute(new SetEatFromStore(t, Rng.Below(Rng.Next(seed, (RngStream)904, k, 12), 2) == 0)); break;
                 case 4: if (sim.State.Farm.CropOn(19) != null) sim.Execute(new ClearField(t, 19)); break;
+                case 5: sim.Execute(new BuyMedicine(t)); break;
             }
         }
 
@@ -87,25 +111,28 @@ namespace Sim.Core.Tests
     {
         // Spec 003 AC-10.
         [Test]
-        public void ChunkingInvariance()
+        public void ChunkingInvariance() { AssertChunkingInvariant(7); }
+
+        /// <summary>One game year of FarmBot play (farming and trading) in one advance against 500 random chunks.</summary>
+        public static void AssertChunkingInvariant(ulong seed)
         {
             GameDefs game = TestContent.Game();
-            Simulation one = NewFarm(seed: 7, localSeconds: 9 * Hour, game: game);
+            Simulation one = NewFarm(seed: seed, localSeconds: 9 * Hour, game: game);
             long start = one.State.Clock.SimTime, end = start + one.Clock.SecondsPerYear;
             ulong k = 0;
-            foreach (long t in FarmBot.Rounds(start, end)) FarmBot.Play(one, t, 7, k++);
+            foreach (long t in FarmBot.Rounds(start, end)) FarmBot.Play(one, t, seed, k++);
             one.AdvanceTo(end);
 
-            Simulation many = NewFarm(seed: 7, localSeconds: 9 * Hour, game: game);
+            Simulation many = NewFarm(seed: seed, localSeconds: 9 * Hour, game: game);
             var chunks = new List<long>();
-            for (ulong i = 0; i < 500; i++) chunks.Add(start + 1 + (long)Rng.Below(Rng.Next(7, (RngStream)905, i, 0), (ulong)(end - start - 1)));
+            for (ulong i = 0; i < 500; i++) chunks.Add(start + 1 + (long)Rng.Below(Rng.Next(seed, (RngStream)905, i, 0), (ulong)(end - start - 1)));
             chunks.Sort();
             int next = 0;
             k = 0;
             foreach (long t in FarmBot.Rounds(start, end))
             {
                 while (next < chunks.Count && chunks[next] < t) many.AdvanceTo(chunks[next++]);
-                FarmBot.Play(many, t, 7, k++);
+                FarmBot.Play(many, t, seed, k++);
             }
             while (next < chunks.Count) many.AdvanceTo(chunks[next++]);
             many.AdvanceTo(end);
@@ -114,7 +141,7 @@ namespace Sim.Core.Tests
             Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
         }
 
-        // Spec 003 AC-28 (market sales join in Sprint 3).
+        // Spec 003 AC-28, with the market's sales, the mandi and inputs bought ahead (spec 004).
         [Test]
         public void Ledger_Reconciles()
         {
@@ -131,7 +158,8 @@ namespace Sim.Core.Tests
                 Assert.That(l.Entries.First().DescriptionKey, Is.EqualTo("ledger.opening"), "nothing dropped");
                 Assert.That(l.Entries.SelectMany(e => e.Postings).Where(p => p.Account == Account.Cash).Sum(p => p.Amount), Is.EqualTo(l.Cash));
                 Assert.That(l.Reconcile(), Is.Null);
-                foreach (string key in new[] { "ledger.homeUse", "ledger.soldToTrader", "ledger.inputsBought", "ledger.prepaid", "ledger.treePlanted" })
+                foreach (string key in new[] { "ledger.homeUse", "ledger.soldToTrader", "ledger.inputsBought", "ledger.prepaid", "ledger.treePlanted",
+                    "ledger.marketSales", "ledger.mandiSales", "ledger.cartHire", "ledger.inputsUsed" })
                     Assert.That(l.Entries.Any(e => e.DescriptionKey == key), Is.True, key + ", seed " + seed);
             }
         }

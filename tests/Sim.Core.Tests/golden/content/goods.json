@@ -1,0 +1,30 @@
+{
+  "goods": [
+    { "id": "radish",    "nameKey": "good.radish",    "kind": "produce", "unit": "kg", "basePrice": 7,  "elasticity": 1.2, "spoilagePerDay": 0.25,  "sales": "crop" },
+    { "id": "wheat",     "nameKey": "good.wheat",     "kind": "produce", "unit": "kg", "basePrice": 25, "elasticity": 0.4, "spoilagePerDay": 0.005, "sales": "crop" },
+    { "id": "rice",      "nameKey": "good.rice",      "kind": "produce", "unit": "kg", "basePrice": 22, "elasticity": 0.4, "spoilagePerDay": 0.005, "sales": "crop" },
+    { "id": "potato",    "nameKey": "good.potato",    "kind": "produce", "unit": "kg", "basePrice": 8,  "elasticity": 0.6, "spoilagePerDay": 0.03,  "sales": "crop" },
+    { "id": "lentils",   "nameKey": "good.lentils",   "kind": "produce", "unit": "kg", "basePrice": 70, "elasticity": 0.5, "spoilagePerDay": 0.003, "sales": "crop" },
+    { "id": "banana",    "nameKey": "good.banana",    "kind": "produce", "unit": "kg", "basePrice": 30, "elasticity": 1.2, "spoilagePerDay": 0.30,  "sales": "fruit" },
+    { "id": "papaya",    "nameKey": "good.papaya",    "kind": "produce", "unit": "kg", "basePrice": 25, "elasticity": 1.2, "spoilagePerDay": 0.30,  "sales": "fruit" },
+    { "id": "guava",     "nameKey": "good.guava",     "kind": "produce", "unit": "kg", "basePrice": 40, "elasticity": 1.0, "spoilagePerDay": 0.25,  "sales": "fruit" },
+    { "id": "mango",     "nameKey": "good.mango",     "kind": "produce", "unit": "kg", "basePrice": 50, "elasticity": 1.5, "spoilagePerDay": 0.20,  "sales": "fruit" },
+    { "id": "spinach",   "nameKey": "good.spinach",   "kind": "produce", "unit": "kg", "basePrice": 20, "elasticity": 1.0, "spoilagePerDay": 0.35,  "sales": "crop" },
+    { "id": "coriander", "nameKey": "good.coriander", "kind": "produce", "unit": "kg", "basePrice": 60, "elasticity": 1.2, "spoilagePerDay": 0.40,  "sales": "crop" },
+
+    { "id": "seed_radish",    "nameKey": "good.seed_radish",    "kind": "input", "unit": "kg", "basePrice": 300, "spoilagePerDay": 0.001 },
+    { "id": "seed_wheat",     "nameKey": "good.seed_wheat",     "kind": "input", "unit": "kg", "basePrice": 45,  "spoilagePerDay": 0.001 },
+    { "id": "seed_rice",      "nameKey": "good.seed_rice",      "kind": "input", "unit": "kg", "basePrice": 60,  "spoilagePerDay": 0.001 },
+    { "id": "seed_potato",    "nameKey": "good.seed_potato",    "kind": "input", "unit": "kg", "basePrice": 20,  "spoilagePerDay": 0.001 },
+    { "id": "seed_lentils",   "nameKey": "good.seed_lentils",   "kind": "input", "unit": "kg", "basePrice": 110, "spoilagePerDay": 0.001 },
+    { "id": "seed_spinach",   "nameKey": "good.seed_spinach",   "kind": "input", "unit": "kg", "basePrice": 200, "spoilagePerDay": 0.001 },
+    { "id": "seed_coriander", "nameKey": "good.seed_coriander", "kind": "input", "unit": "kg", "basePrice": 150, "spoilagePerDay": 0.001 },
+    { "id": "compost",             "nameKey": "good.compost",             "kind": "input", "unit": "kg",    "basePrice": 2,   "spoilagePerDay": 0.001 },
+    { "id": "fertiliser_chemical", "nameKey": "good.fertiliser_chemical", "kind": "input", "unit": "kg",    "basePrice": 30,  "spoilagePerDay": 0.001, "priceControlled": true },
+    { "id": "spray",               "nameKey": "good.spray",               "kind": "input", "unit": "litre", "basePrice": 500, "spoilagePerDay": 0.001 },
+    { "id": "sapling_banana", "nameKey": "good.sapling_banana", "kind": "input", "unit": "each", "basePrice": 60, "weightKg": 2 },
+    { "id": "sapling_papaya", "nameKey": "good.sapling_papaya", "kind": "input", "unit": "each", "basePrice": 60, "weightKg": 2 },
+    { "id": "sapling_guava",  "nameKey": "good.sapling_guava",  "kind": "input", "unit": "each", "basePrice": 180, "weightKg": 2 },
+    { "id": "sapling_mango",  "nameKey": "good.sapling_mango",  "kind": "input", "unit": "each", "basePrice": 350, "weightKg": 2 }
+  ]
+}

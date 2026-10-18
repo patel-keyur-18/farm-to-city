@@ -79,7 +79,6 @@ namespace Sim.Core.Definitions
         public Fixed FertilityPriceMax { get; }
         public Fixed QuickSaleFactor { get; }
         public int FieldEdgeSlotsPerAcre { get; }
-        public Fixed ShadePerMatureTree { get; }
         public Fixed MinShadeFactor { get; }
         public Fixed WellMoistureFloor { get; }
 
@@ -88,7 +87,7 @@ namespace Sim.Core.Definitions
 
         public LandDef(IReadOnlyList<Fixed> moistureByWeather, IReadOnlyList<CurvePoint> fertilityFactorCurve,
             Fixed fallowRecoveryPerSeason, long acreBasePrice, Fixed fertilityPriceMin, Fixed fertilityPriceMax,
-            Fixed quickSaleFactor, int fieldEdgeSlotsPerAcre, Fixed shadePerMatureTree, Fixed minShadeFactor,
+            Fixed quickSaleFactor, int fieldEdgeSlotsPerAcre, Fixed minShadeFactor,
             Fixed wellMoistureFloor, IReadOnlyList<int> wellTiles)
         {
             WellTiles = new List<int>(wellTiles).AsReadOnly();
@@ -100,7 +99,6 @@ namespace Sim.Core.Definitions
             FertilityPriceMax = fertilityPriceMax;
             QuickSaleFactor = quickSaleFactor;
             FieldEdgeSlotsPerAcre = fieldEdgeSlotsPerAcre;
-            ShadePerMatureTree = shadePerMatureTree;
             MinShadeFactor = minShadeFactor;
             WellMoistureFloor = wellMoistureFloor;
         }

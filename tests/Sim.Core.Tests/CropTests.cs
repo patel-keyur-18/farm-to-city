@@ -55,7 +55,7 @@ namespace Sim.Core.Tests
         public static Crop Crop(Simulation sim, int tile) { return sim.State.Farm.CropOn(tile); }
     }
 
-    public class CropTests
+    public partial class CropTests
     {
         private const long S = FarmTest.S;
 
@@ -79,14 +79,14 @@ namespace Sim.Core.Tests
             Simulation sim = FarmTest.Farm();
             long cash = sim.State.Ledger.Cash;
             int seed = FarmTest.Good(sim, "seed_radish"), chem = FarmTest.Good(sim, "fertiliser_chemical");
-            // Radish: 8 kg × 0.0208333 = 167 g of seed (100 g in store, 67 g bought at 300 = 20.10); chemical 150 kg × 0.0208333 =
-            // 3,125 g at 31.50 (Spring rush) = 98.44.
+            // Radish: 8 kg × 0.0208333 = 167 g of seed (100 g in store, booked at 30.00; 67 g bought at 300 = 20.10); chemical
+            // 150 kg × 0.0208333 = 3,125 g at 31.50 (Spring rush) = 98.44.
             long expected = Store.ShortfallCost(sim, seed, 167) + Store.ShortfallCost(sim, chem, 3125);
             Assert.That(expected, Is.EqualTo(20_10 + 98_44));
 
             Assert.That(sim.Execute(new Sow(60, 19, "radish", SeedSource.Certified, "chemical")).Accepted, Is.True);
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(expected));
-            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(20_10));
+            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(30_00 + 20_10)); // stock at cost, then the shortfall
             Assert.That(sim.State.Ledger.Balance(Account.FertiliserAndSpraying), Is.EqualTo(98_44));
             Assert.That(sim.State.Land.Tiles[19].Occupied, Is.True);
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(0));
@@ -161,11 +161,11 @@ namespace Sim.Core.Tests
             long grams = c.Breakdown.Grams;
             Assert.That(grams, Is.InRange(50_000, 100_000)); // about 83 kg × the factors
 
-            sim.AdvanceTo(3 * S); // waits through two season closes
-            Assert.That(FarmTest.Crop(sim, 19).Breakdown.Grams, Is.EqualTo(grams));
+            sim.AdvanceTo(2 * Hour + 72 * Hour); // waits the whole grace (ADR 0034) without loss
+            Assert.That(FarmTest.Crop(sim, 19).HarvestGrams, Is.EqualTo(grams));
             int radish = FarmTest.Good(sim, "radish");
             long before = sim.State.Market.InStore(radish);
-            Assert.That(sim.Execute(new Harvest(3 * S, 19)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 19)).Accepted, Is.True);
             Assert.That(sim.State.Market.InStore(radish) - before, Is.EqualTo(grams));
             Assert.That(sim.State.Land.Tiles[19].Occupied, Is.False);
             Assert.That(FarmTest.Crop(sim, 19), Is.Null);

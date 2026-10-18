@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Sim.Content;
 using Sim.Core;
 using Sim.Core.Commands;
@@ -17,6 +18,7 @@ namespace Tools.Balancer
     /// <item><c>[weather] [years] [seed]</c>: spec 001's hooks (weather frequency, rainy Monsoon spells, forecast accuracy).</item>
     /// <item><c>moisture [years] [seed]</c>: spec 002's seasonal moisture hook per soil.</item>
     /// <item><c>economy [years] [seed]</c>: the seasonal farm cash-flow model (US-013), 15 years by default.</item>
+    /// <item><c>gate [seeds]</c>: the Phase 0 gate checks (US-015, US-016, ADR 0034 §7), 1,000 seeds by default.</item>
     /// </list>
     /// Usage: dotnet run --project tools/Tools.Balancer -- [mode] [years] [seed]
     /// </summary>
@@ -35,7 +37,8 @@ namespace Tools.Balancer
                 Moisture.Print(Simulation.NewGame(Config(content), new NewGame(seed, 0, 0)), years);
                 return 0;
             }
-            if (mode == "economy") return Economy.Run(Config(content), years, seed);
+            if (mode == "economy") return Economy.Print(Config(content), years, seed);
+            if (mode == "gate") return Gate.Print(edit => Config(content, edit), named && args.Length > 0 ? int.Parse(args[0]) : 1000);
 
             ClockDef clock = ContentLoader.LoadClock(File.ReadAllText(Path.Combine(content, "clock.json")));
             WeatherSet weather = ContentLoader.LoadWeather(File.ReadAllText(Path.Combine(content, "weather.json")));
@@ -119,9 +122,10 @@ namespace Tools.Balancer
         }
 
         /// <summary>The full game content from <paramref name="content"/>.</summary>
-        public static SimConfig Config(string content)
+        /// <summary>The game config from a content folder; <paramref name="edit"/> (file, JSON) → JSON changes one file (the gate's variants).</summary>
+        public static SimConfig Config(string content, Func<string, string, string> edit = null)
         {
-            Func<string, string> read = f => File.ReadAllText(Path.Combine(content, f));
+            Func<string, string> read = f => edit == null ? File.ReadAllText(Path.Combine(content, f)) : edit(f, File.ReadAllText(Path.Combine(content, f)));
             WeatherSet weather = ContentLoader.LoadWeather(read("weather.json"));
             return new SimConfig(ContentLoader.LoadClock(read("clock.json")), weather, game: ContentLoader.LoadGame(read, weather));
         }

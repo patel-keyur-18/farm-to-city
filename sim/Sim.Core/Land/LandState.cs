@@ -150,12 +150,13 @@ namespace Sim.Core.Land
         /// <summary>0 when empty.</summary>
         public long TreeId { get; internal set; }
 
-        /// <summary>Only mature trees cast shade (spec 002 §3.4).</summary>
+        /// <summary>Only mature trees cast shade (spec 002 §3.4), each its own tree's (ADR 0037).</summary>
         public bool TreeMature { get; internal set; }
+        public Fixed Shade { get; internal set; }
 
         internal TreeSlot Clone()
         {
-            return new TreeSlot { Id = Id, Kind = Kind, TileId = TileId, TreeId = TreeId, TreeMature = TreeMature };
+            return new TreeSlot { Id = Id, Kind = Kind, TileId = TileId, TreeId = TreeId, TreeMature = TreeMature, Shade = Shade };
         }
 
         internal void WriteTo(StateHasher h)
@@ -165,6 +166,7 @@ namespace Sim.Core.Land
             h.WriteInt(TileId);
             h.WriteLong(TreeId);
             h.WriteBool(TreeMature);
+            h.WriteFixed(Shade);
         }
     }
 

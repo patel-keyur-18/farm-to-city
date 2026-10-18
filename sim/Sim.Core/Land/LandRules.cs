@@ -16,14 +16,13 @@ namespace Sim.Core.Land
             return defs.Soils[tile.Soil].YieldFactor * FertilityFactor(defs.Land, tile.Fertility) * ShadeFactor(sim, tile);
         }
 
-        /// <summary>max(minShadeFactor, 1 − shadePerMatureTree × n), n = mature trees in the tile's field-edge slots.</summary>
+        /// <summary>max(minShadeFactor, 1 − Σ shade of the mature trees in the tile's field-edge slots) (ADR 0037: shade per tree).</summary>
         public static Fixed ShadeFactor(Simulation sim, Tile tile)
         {
-            int n = 0;
+            Fixed f = Fixed.One;
             foreach (TreeSlot slot in sim.State.Land.Slots)
-                if (slot.TileId == tile.Id && slot.Kind == SlotKind.FieldEdge && slot.TreeId != 0 && slot.TreeMature) n++;
+                if (slot.TileId == tile.Id && slot.Kind == SlotKind.FieldEdge && slot.TreeId != 0 && slot.TreeMature) f -= slot.Shade;
             LandDef land = sim.Config.Game.Land;
-            Fixed f = Fixed.One - land.ShadePerMatureTree * Fixed.FromInt(n);
             return f < land.MinShadeFactor ? land.MinShadeFactor : f;
         }
 
@@ -44,14 +43,15 @@ namespace Sim.Core.Land
         }
 
         /// <summary>
-        /// round_coin(acreBasePrice × soil × drainage × fertility × location): the factors multiplied as Fixed,
-        /// applied to the money once, then rounded to a whole coin.
+        /// round_coin(Indexed(acreBasePrice) × soil × drainage × fertility × location): the factors multiplied as Fixed,
+        /// applied to the money once, then rounded to a whole coin (spec 002 §3.5, ADR 0034).
         /// </summary>
-        public static long TilePrice(GameDefs defs, Tile tile)
+        public static long TilePrice(Simulation sim, Tile tile)
         {
+            GameDefs defs = sim.Config.Game;
             Fixed factor = defs.Soils[tile.Soil].PriceFactor * defs.Drainages[tile.Drainage].PriceFactor
                 * FertilityPriceFactor(defs.Land, tile.Fertility) * defs.Map.Parcels[tile.ParcelId].LocationFactor;
-            return Money.RoundToCoin(Money.MulRate(defs.Land.AcreBasePrice, factor));
+            return Money.RoundToCoin(Money.MulRate(Market.MarketRules.Indexed(sim, defs.Land.AcreBasePrice), factor));
         }
 
         /// <summary>The sum of the parcel's tile prices; also its market value for net worth.</summary>
@@ -59,7 +59,7 @@ namespace Sim.Core.Land
         {
             GameDefs defs = sim.Config.Game;
             long sum = 0;
-            foreach (int tileId in defs.Map.Parcels[parcel.Id].Tiles) sum += TilePrice(defs, sim.State.Land.Tiles[tileId]);
+            foreach (int tileId in defs.Map.Parcels[parcel.Id].Tiles) sum += TilePrice(sim, sim.State.Land.Tiles[tileId]);
             return sum;
         }
     }

@@ -9,6 +9,7 @@ namespace Sim.Core.Finance
         PrepaidLivingCosts = 1100,
         PrepaidWages = 1110,
         PrepaidRent = 1120,
+        InputsInStore = 1200,
         Land = 1500,
         Buildings = 1600,
         AccumulatedDepreciation = 1650,
@@ -54,7 +55,7 @@ namespace Sim.Core.Finance
         /// <summary>Every account in id order: the order balances are kept, hashed and reported in.</summary>
         public static readonly Account[] All =
         {
-            Account.Cash, Account.PrepaidLivingCosts, Account.PrepaidWages, Account.PrepaidRent, Account.Land,
+            Account.Cash, Account.PrepaidLivingCosts, Account.PrepaidWages, Account.PrepaidRent, Account.InputsInStore, Account.Land,
             Account.Buildings, Account.AccumulatedDepreciation, Account.Trees,
             Account.MoneylenderLoans, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings,

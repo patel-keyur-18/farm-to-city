@@ -8,7 +8,7 @@ using Sim.Core.Market;
 
 namespace Sim.Core.Tests
 {
-    public class StoreTests
+    public partial class StoreTests
     {
         private static int Good(Simulation sim, string id) { return sim.Config.Game.Market.IndexOf(id); }
 
@@ -36,7 +36,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Capacity_AndOverflow()
         {
-            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet(TestSim.NoSpoilage));
             int potato = Good(sim, "potato");
             long free = 2_000_000 - 750_300;
             ulong before = sim.State.ComputeHash();
@@ -105,6 +105,9 @@ namespace Sim.Core.Tests
             Store.UseInput(sim, seed, 175_000, Account.SeedsAndPlanting, "test");
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(425_000));
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash));
+            // Stock is expensed at average cost (ADR 0034): 175 of the inherited 600 kg booked at 13,200.
+            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(3_850_00));
+            Assert.That(sim.State.Ledger.Balance(Account.InputsInStore), Is.EqualTo(9_350_00 + 65_00));
 
             // 500 kg needed, 425 kg in store: the 75 kg shortfall costs 75 × 22 = 1,650 (Spring: potato seed season).
             Assert.That(Store.ShortfallCost(sim, seed, 500_000), Is.EqualTo(1_650_00));
@@ -112,7 +115,8 @@ namespace Sim.Core.Tests
             Store.UseInput(sim, seed, 500_000, Account.SeedsAndPlanting, "test");
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(0));
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - 1_650_00));
-            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(1_650_00));
+            Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(13_200_00 + 1_650_00));
+            Assert.That(sim.State.Market.StockCostOf(seed), Is.EqualTo(0));
             Assert.That(sim.DrainEvents().OfType<InputsBought>().Single().Quantity, Is.EqualTo(75_000));
         }
     }

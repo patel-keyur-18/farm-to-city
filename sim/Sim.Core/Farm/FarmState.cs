@@ -71,6 +71,22 @@ namespace Sim.Core.Farm
         /// <summary>Set when the crop becomes ready.</summary>
         public YieldBreakdown Breakdown { get; internal set; }
 
+        /// <summary>Pests (spec 003 §3.8): seconds of wet weather so far, the current wet flag, same-crop harvests before it.</summary>
+        public long WetSeconds { get; internal set; }
+        public bool Wet { get; internal set; }
+        public int Repeats { get; internal set; }
+        public SprayState Spray { get; internal set; }
+        public bool PestChecked { get; internal set; }
+        public Outbreak Outbreak { get; internal set; }
+        public Fixed RolledHealth { get; internal set; } = Fixed.One;
+        public long PestJobId { get; internal set; }
+
+        /// <summary>Grams lost while waiting ready after the grace (ADR 0034).</summary>
+        public long SpoiledGrams { get; internal set; }
+
+        /// <summary>What a harvest would move into the store now.</summary>
+        public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams; } }
+
         internal Crop Clone()
         {
             var c = (Crop)MemberwiseClone();
@@ -97,6 +113,15 @@ namespace Sim.Core.Farm
             h.WriteLong(JobId);
             h.WriteBool(Breakdown != null);
             if (Breakdown != null) Breakdown.WriteTo(h);
+            h.WriteLong(SpoiledGrams);
+            h.WriteLong(WetSeconds);
+            h.WriteBool(Wet);
+            h.WriteInt(Repeats);
+            h.WriteInt((int)Spray);
+            h.WriteBool(PestChecked);
+            h.WriteInt((int)Outbreak);
+            h.WriteFixed(RolledHealth);
+            h.WriteLong(PestJobId);
         }
     }
 
@@ -151,8 +176,9 @@ namespace Sim.Core.Farm
         public long PlantedAt { get; internal set; }
         public TreeState State { get; internal set; }
 
-        /// <summary>Grams of ripe fruit waiting on the tree (0 = none).</summary>
+        /// <summary>Grams of ripe fruit waiting on the tree (0 = none), and when the batch ripened.</summary>
         public long RipeGrams { get; internal set; }
+        public long RipeAt { get; internal set; }
 
         /// <summary>Batches picked so far.</summary>
         public int Batches { get; internal set; }
@@ -162,6 +188,9 @@ namespace Sim.Core.Farm
 
         /// <summary>Money: the sapling's cost, its book value (not depreciated in Phase 1).</summary>
         public long Cost { get; internal set; }
+
+        /// <summary>The season index in which returns first reached the cost (−1 = not yet).</summary>
+        public long PaidBackPeriod { get; internal set; } = -1;
         public long JobId { get; internal set; }
 
         internal Tree Clone() { return (Tree)MemberwiseClone(); }
@@ -174,9 +203,11 @@ namespace Sim.Core.Farm
             h.WriteLong(PlantedAt);
             h.WriteInt((int)State);
             h.WriteLong(RipeGrams);
+            h.WriteLong(RipeAt);
             h.WriteInt(Batches);
             h.WriteLong(Returns);
             h.WriteLong(Cost);
+            h.WriteLong(PaidBackPeriod);
             h.WriteLong(JobId);
         }
     }
@@ -199,6 +230,10 @@ namespace Sim.Core.Farm
 
         public List<GardenBed> Beds { get; } = new List<GardenBed>();
 
+        /// <summary>Per tile: the crop of the current run of harvests (−1 none) and its length (spec 003 §3.8).</summary>
+        internal int[] TileRunCrop;
+        internal int[] TileRun;
+
         public List<Tree> Trees { get; } = new List<Tree>();
         public long NextTreeId { get; internal set; } = 1;
 
@@ -216,6 +251,7 @@ namespace Sim.Core.Farm
             {
                 NextCropId = NextCropId, NextTreeId = NextTreeId, CareRatio = CareRatio, LastAccrual = LastAccrual,
                 SavedSeedAge = (Fixed[])SavedSeedAge.Clone(), HasSavedSeed = (bool[])HasSavedSeed.Clone(),
+                TileRunCrop = (int[])TileRunCrop.Clone(), TileRun = (int[])TileRun.Clone(),
                 Founder = Founder.Clone(),
             };
             foreach (Crop x in Crops) c.Crops.Add(x.Clone());
@@ -236,6 +272,7 @@ namespace Sim.Core.Farm
             }
             h.WriteInt(Crops.Count);
             foreach (Crop x in Crops) x.WriteTo(h);
+            for (int i = 0; i < TileRun.Length; i++) { h.WriteInt(TileRunCrop[i]); h.WriteInt(TileRun[i]); }
             h.WriteInt(Beds.Count);
             foreach (GardenBed b in Beds) b.WriteTo(h);
             h.WriteLong(NextTreeId);
@@ -288,6 +325,9 @@ namespace Sim.Core.Farm
         /// <summary>The food allowance accrued since the last daily pass, in money (Fixed for exact time-weighting).</summary>
         public Fixed AllowanceSum { get; internal set; }
 
+        /// <summary>Seconds of the current day spent on subsistence in Winter (the warm-clothing penalty, time-weighted; ADR 0034).</summary>
+        public long ColdSeconds { get; internal set; }
+
         /// <summary>Home-use value eaten this season, all goods and the garden's goods (Why?).</summary>
         public long HomeUseSeason { get; internal set; }
         public long GardenHomeUseSeason { get; internal set; }
@@ -296,6 +336,7 @@ namespace Sim.Core.Farm
 
         internal void WriteTo(StateHasher h)
         {
+            h.WriteLong(ColdSeconds);
             h.WriteInt(DietPlan);
             h.WriteInt(PreviousPlan);
             h.WriteBool(AutoSubsistence);

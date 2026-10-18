@@ -1,0 +1,1450 @@
+{
+  "format": 1,
+  "description": "Spec 004 AC-16: four live days of seeded farming and trading.",
+  "devCommandsEnabled": false,
+  "game": true,
+  "commands": [
+    {
+      "type": "NewGame",
+      "seed": 4,
+      "startWallUtc": 1800000000,
+      "localSecondsSinceMidnight": 32400
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 32460,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 32460,
+      "tile": 18,
+      "crop": "potato",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Sow",
+      "at": 32460,
+      "tile": 20,
+      "crop": "potato",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 32460,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Sow",
+      "at": 32460,
+      "tile": 27,
+      "crop": "potato",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "Sow",
+      "at": 32460,
+      "tile": 28,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "SowGarden",
+      "at": 32460,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "SowGarden",
+      "at": 32460,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PlantTree",
+      "at": 32460,
+      "slot": 13,
+      "tree": "mango"
+    },
+    {
+      "type": "PlantTree",
+      "at": 32460,
+      "slot": 14,
+      "tree": "banana"
+    },
+    {
+      "type": "PlantTree",
+      "at": 32460,
+      "slot": 1,
+      "tree": "papaya"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 43277,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 43277,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 43277,
+      "tile": 28,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 43277,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 43277,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 43277,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 43277,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "SetLabourSplit",
+      "at": 43277,
+      "share": 50
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 54094,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 54094,
+      "tile": 19,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Sow",
+      "at": 54094,
+      "tile": 28,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "PickGarden",
+      "at": 54094,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 54094,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 54094,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 54094,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "SellToTrader",
+      "at": 54094,
+      "good": "wheat",
+      "quantity": 75000
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 64911,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 64911,
+      "tile": 19,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 64911,
+      "tile": 28,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 64911,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 64911,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 64911,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 64911,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 75728,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 75728,
+      "tile": 19,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 75728,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "Sow",
+      "at": 75728,
+      "tile": 28,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "PickGarden",
+      "at": 75728,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 75728,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 75728,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 75728,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 86545,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 86545,
+      "tile": 19,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 86545,
+      "tile": 19,
+      "crop": "potato",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Harvest",
+      "at": 86545,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 86545,
+      "tile": 28,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 86545,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 86545,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 86545,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 86545,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "GoToMandi",
+      "at": 86545,
+      "loads": [
+        {
+          "good": "lentils",
+          "quantity": 60588
+        }
+      ]
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 97362,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 97362,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "PickGarden",
+      "at": 97362,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 97362,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 97362,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 97362,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 108179,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 108179,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 108179,
+      "tile": 26,
+      "crop": "potato",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "PickGarden",
+      "at": 108179,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 108179,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 108179,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 108179,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 118996,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 118996,
+      "tile": 18,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 118996,
+      "tile": 18,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Harvest",
+      "at": 118996,
+      "tile": 20,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 118996,
+      "tile": 27,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 118996,
+      "tile": 28,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "PickGarden",
+      "at": 118996,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 118996,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 118996,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 118996,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 129813,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 129813,
+      "tile": 20,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Harvest",
+      "at": 129813,
+      "tile": 28,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 129813,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 129813,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 129813,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 129813,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "SetEatFromStore",
+      "at": 129813,
+      "on": false
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 140630,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 140630,
+      "tile": 20,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 140630,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 140630,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 151447,
+      "mode": "live"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 162264,
+      "mode": "live"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 173081,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 173081,
+      "tile": 19,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 173081,
+      "tile": 19,
+      "crop": "potato",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 173081,
+      "tile": 20,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Sow",
+      "at": 173081,
+      "tile": 27,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "SowGarden",
+      "at": 173081,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "SowGarden",
+      "at": 173081,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 183898,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 183898,
+      "tile": 20,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 183898,
+      "tile": 27,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 183898,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 183898,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 183898,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 183898,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "Spray",
+      "at": 183898,
+      "tile": 18
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 194715,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 194715,
+      "tile": 20,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Harvest",
+      "at": 194715,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 194715,
+      "tile": 27,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "Sow",
+      "at": 194715,
+      "tile": 28,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "none"
+    },
+    {
+      "type": "PickGarden",
+      "at": 194715,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 194715,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 194715,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 194715,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 205532,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 205532,
+      "tile": 18,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 205532,
+      "tile": 20,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 205532,
+      "tile": 27,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 205532,
+      "tile": 27,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "none"
+    },
+    {
+      "type": "PickGarden",
+      "at": 205532,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 205532,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 205532,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 205532,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "BuyMedicine",
+      "at": 205532
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 216349,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 216349,
+      "tile": 18,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 216349,
+      "tile": 20,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "PickGarden",
+      "at": 216349,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 216349,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 216349,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 216349,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 227166,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 227166,
+      "tile": 18,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 227166,
+      "tile": 20,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 227166,
+      "tile": 20,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 227166,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "PickGarden",
+      "at": 227166,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 227166,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 227166,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 227166,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "SetWorkHours",
+      "at": 227166,
+      "option": "normal"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 237983,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 237983,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 237983,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 237983,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 237983,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 237983,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "ClearField",
+      "at": 237983,
+      "tile": 19
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 248800,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 248800,
+      "tile": 18,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 248800,
+      "tile": 19,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "PickGarden",
+      "at": 248800,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 248800,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 248800,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 248800,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 259617,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 259617,
+      "tile": 19,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 259617,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 259617,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 259617,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 259617,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 270434,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 270434,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "PickGarden",
+      "at": 270434,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 270434,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 270434,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 270434,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "Spray",
+      "at": 270434,
+      "tile": 28
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 281251,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 281251,
+      "tile": 19,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Harvest",
+      "at": 281251,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 281251,
+      "tile": 28,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 281251,
+      "tile": 28,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "PickGarden",
+      "at": 281251,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 281251,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 281251,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 281251,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 292068,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 292068,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Harvest",
+      "at": 292068,
+      "tile": 27,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 292068,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 292068,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 292068,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 292068,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "SetLabourSplit",
+      "at": 292068,
+      "share": 50
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 302885,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 302885,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 302885,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 302885,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "ClearField",
+      "at": 302885,
+      "tile": 19
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 313702,
+      "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 313702,
+      "tile": 19,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Harvest",
+      "at": 313702,
+      "tile": 20,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 313702,
+      "tile": 20,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "Sow",
+      "at": 313702,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 324519,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 324519,
+      "tile": 19,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 324519,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 335336,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 335336,
+      "tile": 18,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 335336,
+      "tile": 18,
+      "crop": "potato",
+      "seed": "saved",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "Sow",
+      "at": 335336,
+      "tile": 19,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 335336,
+      "tile": 26,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "SetDietPlan",
+      "at": 335336,
+      "plan": "basic"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 346153,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 346153,
+      "tile": 19,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 346153,
+      "tile": 19,
+      "crop": "lentils",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "Harvest",
+      "at": 346153,
+      "tile": 26,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 346153,
+      "tile": 26,
+      "crop": "lentils",
+      "seed": "certified",
+      "fertiliser": "none"
+    },
+    {
+      "type": "Sow",
+      "at": 346153,
+      "tile": 27,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "SowGarden",
+      "at": 346153,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "SowGarden",
+      "at": 346153,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 356970,
+      "mode": "live"
+    },
+    {
+      "type": "PickGarden",
+      "at": 356970,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 356970,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 356970,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 356970,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "Spray",
+      "at": 356970,
+      "tile": 20
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 367787,
+      "mode": "live"
+    },
+    {
+      "type": "Harvest",
+      "at": 367787,
+      "tile": 28,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 367787,
+      "tile": 28,
+      "crop": "lentils",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
+      "type": "PickGarden",
+      "at": 367787,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 367787,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "PickGarden",
+      "at": 367787,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 367787,
+      "bed": 2,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "Offer",
+      "at": 367787,
+      "good": "potato",
+      "quantity": 452263,
+      "minPriceRaw": 21474836480
+    },
+    {
+      "type": "Withdraw",
+      "at": 367787,
+      "good": "potato",
+      "quantity": 226131
+    },
+    {
+      "type": "SellToTrader",
+      "at": 367787,
+      "good": "potato",
+      "quantity": 452263
+    },
+    {
+      "type": "Buy",
+      "at": 367787,
+      "good": "seed_wheat",
+      "quantity": 20000
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 460800,
+      "mode": "live"
+    },
+    {
+      "type": "GoToMandi",
+      "at": 460800,
+      "loads": [
+        {
+          "good": "potato",
+          "quantity": 1000000
+        }
+      ]
+    },
+    {
+      "type": "AdvanceTo",
+      "target": 547200,
+      "mode": "live"
+    }
+  ],
+  "expectedHash": "0x42A935851A1C8BB2"
+}

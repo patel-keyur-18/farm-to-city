@@ -30,7 +30,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
+| 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -169,7 +169,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
 - **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 
-**Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
+**Ready to harvest.** A ripe crop (or a ripe fruit batch) waits without spoiling or losing quality for 72 hours, the away cap, so nothing is ever lost only by being away. After that it starts to spoil like produce in the store (ADR 0034). While it waits, the field cannot be resown, so waiting also costs a crop cycle.
 
 **Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
 
@@ -198,7 +198,8 @@ Players can buy, lease, or hire a machine for a day from a neighbour.
 
 - Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
-- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, any time, up to a daily limit. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** carts up to 1,000 kg to the town market for the regional price less commission, at the cost of a cart's hire and about 6 hours of the founder's day: worth it for full loads only.
+- **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
+- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, any time, up to a daily limit. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
 - **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
 
 ## Economy
@@ -247,7 +248,7 @@ P_local    = P_regional × (Demand / Supply)^(1/e)
 
 **Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
-**Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Wage expectations follow it with a lag. Cash under the mattress quietly loses value, which teaches why saving and investing differ.
+**Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Every coin amount (living costs, wages, land, buildings, services) is a year-0 price that follows the price index when charged; wages are fixed when a contract is signed or renewed, so they follow with a lag. Loans stay nominal, and price-controlled goods (chemical fertiliser) ignore it (ADR 0034). Cash under the mattress quietly loses value, which teaches why saving and investing differ.
 
 **Credit and payment terms.** From the Township era, sales between businesses use invoices with payment terms of half a season or a full season. A business can be profitable on paper and still run out of cash. That is one of the most important lessons in the game.
 
@@ -561,7 +562,7 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - Foreclosure never happens while the player is away: a final notice waits for their return, with a day to put things right.
 - The town, its citizens, the treasury and the Chronicle carry on, and the founder starts again from Homestead level.
 
-**Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt.
+**Never stuck.** The founder can always work as a day labourer for neighbours, earning a small daily income at the unskilled market wage. When living costs can't be paid, the household drops to subsistence level instead of going into debt, and returns to its plan as soon as it can pay. Subsistence is never chosen; it is what poverty forces (ADR 0034).
 
 **Liquidity.** Land and businesses take days to sell and sell at a discount if rushed. A player with all their wealth in land and no cash can still go bankrupt in a bad season.
 
@@ -731,7 +732,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 | Chronicle | Remember | Timeline, Almanacs, citizen stories |
 | Settings and saves | Control | Save now, export and import town, new game, difficulty, accessibility, language |
 
-**Onboarding (ADR 0015).** A short first session, then a guided first week. The grandparent's letter and the advisors guide each lesson, never a pop-up wall.
+**Onboarding (ADR 0015).** A short first session, then a guided first week. The letter from the founder's grandmother (Kamla, "your Dadi") and the advisors guide each lesson, never a pop-up wall (spec 009).
 
 - **First session (15–20 minutes):** inherit the neglected 6-acre farm, its store and the letter. Sow a quick crop in the kitchen garden, set the household plan, harvest and make the first sale to the travelling trader. Then sow a long crop, turn on notifications, and leave with a reason to come back.
 - **Guided first week:** each "first" is guided once, when it naturally happens, by a new letter page:
@@ -950,7 +951,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 ## Art, audio and feel
 
-The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs, such as Kenney's isometric sets, give the base style. Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs.
+The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs give the base style: Kenney's flat, low-poly *Isometric Landscape* set (ADR 0036). Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs.
 
 - **Lighting and seasons.** A day-night cycle with 2D lights, and seasonal palette shifts: spring greens, golden harvest, monsoon greys, winter haze.
 - **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.
@@ -959,7 +960,7 @@ The look is clean, stylised 2D isometric: readable at phone size, and producible
 - **Motion and feedback (Hay Day-like).** Every action answers with motion: a tapped field or building bounces (squash and stretch), harvested items and coins fly along a curve to the store or the wallet, numbers count up instead of jumping, and panels slide and scale in with easing, never snapping. All of it is driven by code (tweens on transforms and UI Toolkit elements, ADR 0017), not hand-made animation clips, and it reads only from domain events and state, so the simulation never waits on an animation. Spec 008 (HUD) defines the motion catalogue (which event triggers which motion, durations, easing curves), and the art style check (F00.6) includes a short motion sample alongside the still screenshot.
 - **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
 - **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
-- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence. CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
+- **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence, plus SIL OFL for fonts only (Noto Sans, with Noto Sans Devanagari for Hindi; ADR 0036). CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
 
 **Monetisation**
 
@@ -1093,7 +1094,7 @@ flowchart TB
 
 | Phase | Scope | Exit gate |
 | --- | --- | --- |
-| 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone |
+| 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Testers come back on day 2 and day 3 unprompted |
 | 2 · Hamlet and Village | Citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |

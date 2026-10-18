@@ -1,0 +1,32 @@
+{
+  "founder": {
+    "startDietPlan": "basic",
+    "startWorkHours": "normal",
+    "maxFatigue": 0.50,
+    "recoveryPerDay": 0.02,
+    "goodNutrition": 0.95,
+    "nutritionPenalty": 0.20,
+    "safeFatigue": 0.20,
+    "fatiguePenalty": 0.10,
+    "minHealth": 0.50,
+    "sickChanceAtMinHealth": 0.25,
+    "dayLabourWagePerHour": 1125,
+    "noWarmClothingPenalty": 0.02,
+    "medicineCost": 500,
+    "medicineHealthGain": 0.10,
+    "startDayLabourShare": 0,
+    "startEatFromStore": true
+  },
+  "dietPlans": [
+    { "id": "subsistence", "nameKey": "diet.subsistence", "costPerSeason": 0,     "nutrition": 0.80, "foodShare": 0 },
+    { "id": "basic",       "nameKey": "diet.basic",       "costPerSeason": 18000, "nutrition": 0.90, "foodShare": 0.6 },
+    { "id": "balanced",    "nameKey": "diet.balanced",    "costPerSeason": 24000, "nutrition": 1.00, "foodShare": 0.6 },
+    { "id": "rich",        "nameKey": "diet.rich",        "costPerSeason": 36000, "nutrition": 1.05, "foodShare": 0.6 }
+  ],
+  "workHours": [
+    { "id": "rest",   "hours": 0,  "fatigueChange": -0.15 },
+    { "id": "short",  "hours": 6,  "fatigueChange": -0.05 },
+    { "id": "normal", "hours": 8,  "fatigueChange": 0 },
+    { "id": "long",   "hours": 10, "fatigueChange": 0.08 }
+  ]
+}

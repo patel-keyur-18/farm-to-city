@@ -17,6 +17,7 @@ namespace Sim.Core.Farm
         public const string CropJob = "crop.grow";
         public const string GardenJob = "garden.grow";
         public const string TreeJob = "tree.mature";
+        public const string PestJob = "crop.pest";
 
         public SystemOrder Order { get { return SystemOrder.Agriculture; } }
 
@@ -29,7 +30,10 @@ namespace Sim.Core.Farm
                 LastAccrual = sim.State.Clock.SimTime,
                 SavedSeedAge = new Fixed[farm.Crops.Count],
                 HasSavedSeed = new bool[farm.Crops.Count],
+                TileRunCrop = new int[sim.State.Land.Tiles.Count],
+                TileRun = new int[sim.State.Land.Tiles.Count],
             };
+            for (int i = 0; i < state.TileRunCrop.Length; i++) state.TileRunCrop[i] = -1;
             for (int c = 0; c < farm.Crops.Count; c++)
             {
                 Fixed? age = defs.Start.SavedSeedAge[c];
@@ -54,6 +58,7 @@ namespace Sim.Core.Farm
                     // follows in the Labour system, which refreshes the rates again.
                     Accrue(sim);
                     Refresh(sim);
+                    if (pass == ItemClass.Daily) SpoilWaiting(sim);
                     break;
                 case ItemClass.Seasonal:
                     foreach (GardenBed b in sim.State.Farm.Beds) b.RemainingGrams = sim.Config.Game.Farm.Farm.GardenSeasonOutputGrams;
@@ -77,6 +82,7 @@ namespace Sim.Core.Farm
                 c.WaterSum += c.WaterRate.MulRatio(dt, 1);
                 c.CareSum += farm.CareRatio.MulRatio(dt, 1);
                 c.WeatherSum += c.WeatherRate.MulRatio(dt, 1);
+                if (c.Wet) c.WetSeconds += dt;
             }
             FounderRules.Accrue(sim, dt);
             farm.LastAccrual = t;
@@ -96,6 +102,7 @@ namespace Sim.Core.Farm
                 Tile tile = sim.State.Land.Tiles[c.TileId];
                 c.WaterRate = FarmRules.WaterFactor(defs.Farm.Farm, def, tile.Moisture);
                 c.WeatherRate = defs.Farm.Farm.WeatherYieldFactor[weather];
+                c.Wet = defs.Farm.Pests.WetWeather[weather];
                 demand += def.LabourPerAcrePerDay + tile.WellLift.MulRatio(24, 1) * defs.Farm.Farm.BucketHoursPerMoisturePoint;
             }
             Fixed cap = defs.Farm.Farm.CareCap;
@@ -116,15 +123,59 @@ namespace Sim.Core.Farm
             return demand;
         }
 
+        /// <summary>
+        /// Ready crops and ripe batches wait without loss for the grace, then lose their good's spoilage at each daily
+        /// pass, like the store (ADR 0034), crops then trees in id order.
+        /// </summary>
+        private static void SpoilWaiting(Simulation sim)
+        {
+            GameDefs defs = sim.Config.Game;
+            long t = sim.State.Clock.SimTime, grace = defs.Farm.Farm.ReadyGraceSeconds;
+            foreach (Crop c in sim.State.Farm.Crops)
+            {
+                if (c.State != CropState.Ready || t - c.ReadyAt <= grace) continue;
+                int good = defs.Farm.Crops[c.Def].OutputGood;
+                long lost = Rot(defs.Market.Goods[good].SpoilagePerDay, c.HarvestGrams);
+                if (lost <= 0) continue;
+                c.SpoiledGrams += lost;
+                sim.Emit(new GoodsSpoiled(t, defs.Market.Goods[good].Id, lost, SpoilSource.Field, c.TileId));
+            }
+            foreach (Tree tree in sim.State.Farm.Trees)
+            {
+                if (tree.RipeGrams == 0 || t - tree.RipeAt <= grace) continue;
+                int good = defs.Farm.Trees[tree.Def].FruitGood;
+                long lost = Rot(defs.Market.Goods[good].SpoilagePerDay, tree.RipeGrams);
+                if (lost <= 0) continue;
+                tree.RipeGrams -= lost;
+                sim.Emit(new GoodsSpoiled(t, defs.Market.Goods[good].Id, lost, SpoilSource.Tree, tree.SlotId));
+            }
+        }
+
+        /// <summary>round(grams × rate); when under 1 kg would remain, the rest is lost too (nothing worth picking).</summary>
+        private static long Rot(Fixed rate, long grams)
+        {
+            long lost = rate.MulRatio(grams, 1).RoundToLong();
+            return lost > 0 && grams - lost < 1000 ? grams : lost;
+        }
+
         // ---- trees (§3.12) ----
 
         /// <summary>A mature tree with no fruit waiting gets one batch if the current season is one of its fruiting seasons.</summary>
         internal static void Ripen(Simulation sim, Tree t)
         {
             TreeDef def = sim.Config.Game.Farm.Trees[t.Def];
-            if (t.State != TreeState.Mature || t.RipeGrams > 0) return;
-            if (!def.FruitingSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return;
+            long now = sim.State.Clock.SimTime;
+            if (t.State != TreeState.Mature) return;
+            if (!def.FruitingSeasons[(int)Calendar.SeasonAt(now, sim.Clock)]) return;
+            if (t.RipeGrams > 0)
+            {
+                // A batch still waiting within its grace blocks the next; one past it has been spoiling and is lost (ADR 0034).
+                if (now - t.RipeAt <= sim.Config.Game.Farm.Farm.ReadyGraceSeconds) return;
+                sim.Emit(new GoodsSpoiled(now, sim.Config.Game.Market.Goods[def.FruitGood].Id, t.RipeGrams, SpoilSource.Tree, t.SlotId));
+                t.RipeGrams = 0;
+            }
             t.RipeGrams = def.BatchGrams;
+            t.RipeAt = sim.State.Clock.SimTime;
             sim.Emit(new FruitRipe(sim.State.Clock.SimTime, t.SlotId, def.Id, t.RipeGrams));
         }
 
@@ -160,7 +211,7 @@ namespace Sim.Core.Farm
 
                 c.Breakdown = FarmRules.Yield(defs.Farm.Farm, def.SeasonYieldPerAcre * share, c.SoilFactor,
                     c.WaterSum.MulRatio(1, g), c.CareSum.MulRatio(1, g), FarmRules.SeedFactor(def, c.Seed, c.SeedAge),
-                    c.WeatherSum.MulRatio(1, g), fert.YieldFactor, Fixed.One); // CropHealth: pests join with US-046
+                    c.WeatherSum.MulRatio(1, g), fert.YieldFactor, PestRules.FinalHealth(defs.Farm.Pests, c));
                 c.State = CropState.Ready;
 
                 // Fertility for the cycle's share (§3.10).
@@ -178,6 +229,32 @@ namespace Sim.Core.Farm
             }
         }
 
+        /// <summary>
+        /// The pest check at half-growth (spec 003 §3.8): the risk from the crop, its repeats, the wet share so far and a
+        /// preventive spray; a seeded roll; an outbreak warns at once, and its health applies when the crop is ready.
+        /// </summary>
+        internal sealed class PestCheck : IJobHandler
+        {
+            public string JobType { get { return PestJob; } }
+            public SystemOrder System { get { return SystemOrder.Agriculture; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                Accrue(sim);
+                Crop c = sim.State.Farm.Crops.Find(x => x.Id == job.TargetId);
+                PestRiskDef p = sim.Config.Game.Farm.Pests;
+                long elapsed = sim.State.Clock.SimTime - c.SownAt;
+                Fixed wetShare = elapsed > 0 ? Fixed.FromRatio(c.WetSeconds, elapsed) : Fixed.Zero;
+                Fixed risk = PestRules.Risk(p, c.Def, c.Repeats, wetShare, c.Spray == SprayState.BeforeCheck);
+                c.RolledHealth = PestRules.Roll(p, sim.State.Seed, c.Id, risk, sim.State.Clock.IsAway, out Outbreak o);
+                c.Outbreak = o;
+                c.PestChecked = true;
+                c.PestJobId = 0;
+                sim.CompleteJob(job);
+                if (o != Outbreak.None) sim.Emit(new PestWarning(sim.State.Clock.SimTime, c.TileId, o, c.ReadyAt));
+            }
+        }
+
         /// <summary>A sapling matures: it shades its field-edge tile from now, and fruits if this is a fruiting season (§3.12).</summary>
         internal sealed class TreeMaturity : IJobHandler
         {
@@ -190,7 +267,7 @@ namespace Sim.Core.Farm
                 t.State = TreeState.Mature;
                 t.JobId = 0;
                 sim.CompleteJob(job);
-                LandSystem.SetTreeMature(sim, t.SlotId);
+                LandSystem.SetTreeMature(sim, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Shade);
                 sim.Emit(new TreeMatured(sim.State.Clock.SimTime, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Id));
                 Ripen(sim, t);
             }

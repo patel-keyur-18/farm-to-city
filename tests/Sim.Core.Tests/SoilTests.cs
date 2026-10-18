@@ -267,12 +267,12 @@ namespace Sim.Core.Tests
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One));
             LandSystem.SetTree(sim, slots[0].Id, 1);
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One), "a sapling casts no shade");
-            LandSystem.SetTreeMature(sim, slots[0].Id);
+            LandSystem.SetTreeMature(sim, slots[0].Id, LandTest.F("0.03")); // a small tree (banana, papaya)
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.97")));
             LandSystem.SetTree(sim, slots[1].Id, 2);
-            LandSystem.SetTreeMature(sim, slots[1].Id);
-            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.94")));
-            Assert.That(LandRules.SoilFactor(sim, tile), Is.EqualTo(LandTest.F("0.94")));
+            LandSystem.SetTreeMature(sim, slots[1].Id, LandTest.F("0.08")); // a large tree (mango, guava), ADR 0037
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.89")));
+            Assert.That(LandRules.SoilFactor(sim, tile), Is.EqualTo(LandTest.F("0.89")));
             Assert.That(LandRules.ShadeFactor(sim, sim.State.Land.Tiles[19]), Is.EqualTo(Fixed.One), "shade stays on its own tile");
 
             // Removing a tree empties the slot and its shade.
@@ -280,13 +280,13 @@ namespace Sim.Core.Tests
             Assert.That(slots[1].TreeMature, Is.False);
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.97")));
 
-            // The floor: 4 slots per acre and minShadeFactor 0.90 in test content.
+            // The floor: 4 slots per acre and minShadeFactor 0.90 in test content (4 × 0.03 would give 0.88).
             Simulation four = NewFarm(game: TestContent.Game((f, j) => f != "land.json" ? j
-                : j.Replace("\"fieldEdgeSlotsPerAcre\": 2", "\"fieldEdgeSlotsPerAcre\": 4").Replace("\"minShadeFactor\": 0.85", "\"minShadeFactor\": 0.90")));
+                : j.Replace("\"fieldEdgeSlotsPerAcre\": 2", "\"fieldEdgeSlotsPerAcre\": 4").Replace("\"minShadeFactor\": 0.80", "\"minShadeFactor\": 0.90")));
             foreach (TreeSlot slot in four.State.Land.Slots.Where(x => x.TileId == 18 && x.Kind == SlotKind.FieldEdge))
             {
                 LandSystem.SetTree(four, slot.Id, slot.Id);
-                LandSystem.SetTreeMature(four, slot.Id);
+                LandSystem.SetTreeMature(four, slot.Id, LandTest.F("0.03"));
             }
             Assert.That(LandRules.ShadeFactor(four, four.State.Land.Tiles[18]), Is.EqualTo(LandTest.F("0.90")), "the floor, not 0.88");
         }

@@ -89,7 +89,7 @@ SoilFactor(tile) = SoilDef.yieldFactor × FertilityFactor(fertility) × ShadeFac
 
 - **FertilityFactor** is piecewise linear through the points in `LandDef.fertilityFactorCurve`, default `(0, 0.50)`, `(60, 1.00)`, `(100, 1.15)`. Between points: `y0 + (y1 − y0) × (f − x0) ÷ (x1 − x0)`, Fixed, rounded.
   - Examples on loam: fertility 30 → 0.75; 45 → 0.875; 60 → 1.00; 80 → 1.075.
-- **ShadeFactor** = `max(LandDef.minShadeFactor, 1 − LandDef.shadePerMatureTree × n)`, where n is the number of **mature** trees in that tile's field-edge slots. Default 0.03 per tree: 0 trees → 1.00, 1 → 0.97, 2 → 0.94.
+- **ShadeFactor** = `max(LandDef.minShadeFactor, 1 − Σ TreeDef.shade)` over the **mature** trees in that tile's field-edge slots (ADR 0037: shade per tree; spec 003 passes it at maturity). Defaults: banana and papaya 0.03, mango and guava 0.08, floor 0.80. Two bananas → 0.94; a banana and a mango → 0.89.
 - Shade is folded into the Soil factor so the yield formula of ADR 0014 keeps its factor list. The *Why?* breakdown still shows shade as its own line.
 
 ### 3.5 Parcel price, buying and quick sale
@@ -105,7 +105,7 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 - The factors are multiplied as `Fixed` (rounded at each step), applied to the money amount once (rounded to 1/100 coin), then rounded to a whole coin (ties away from zero).
 - Example: 1 acre of loam, moderate drainage, fertility 50, location 1.0: `1,20,000 × 1.00 × 1.00 × 1.00 × 1.0` = **1,20,000 coins**.
 - Yard tiles are priced like farm tiles of their soil.
-- **Market value** (for net worth, spec 005) is the current `ParcelPrice`, including for the inherited parcels. Phase 1 prices change only through fertility.
+- **Market value** (for net worth, spec 005) is the current `ParcelPrice`, including for the inherited parcels. Phase 1 prices change through fertility and the price index: `acreBasePrice` is a year-0 price charged at `Indexed(acreBasePrice)` (spec 004 §3.1, ADR 0034). Book value (cost basis) stays at cost.
 
 | Rule | Behaviour |
 | --- | --- |
@@ -157,12 +157,11 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | | `fertilityPriceMin`, `fertilityPriceMax` | Fixed | 0.80, 1.20 | 0.1–3, min ≤ max | |
 | | `quickSaleFactor` | Fixed | 0.80 | 0.3–1 | |
 | | `fieldEdgeSlotsPerAcre` | int | 2 | 0–4 | |
-| | `shadePerMatureTree` | Fixed | 0.03 | 0–0.2 | |
-| | `minShadeFactor` | Fixed | 0.85 | 0.5–1 | |
+| | `minShadeFactor` | Fixed | 0.80 | 0.5–1 | The floor of the shade factor; each tree's shade is `TreeDef.shade` (spec 003, ADR 0037) |
 | `WellDef` | `moistureFloor` | Fixed | 30 | 0–100 | Applies to the well acres only |
 | | `irrigatedTiles` | list of tile ids | 20, 28 | Non-empty, no duplicates; farm tiles of the inherited parcels (ADR 0032) | The well acres |
 
-ADR 0021's `TreeSlotDef` (slot counts and shade) is realised as `LandDef.fieldEdgeSlotsPerAcre`, `LandDef.shadePerMatureTree`, `LandDef.minShadeFactor` and `BuildingDef.yardTreeSlots`, because yard slots depend on the building (more for bigger houses).
+ADR 0021's `TreeSlotDef` (slot counts and shade) is realised as `LandDef.fieldEdgeSlotsPerAcre`, `TreeDef.shade` (spec 003), `LandDef.minShadeFactor` and `BuildingDef.yardTreeSlots`, because yard slots depend on the building (more for bigger houses).
 
 `content/map.json` (`MapDef`, `ParcelDef`):
 
@@ -299,7 +298,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-7 | Given a vacant farm tile at fertility 45 (cap 75), after 4 daily passes it is exactly 51. A tile occupied at any moment of a day gains nothing for that day. A tile at the cap stays at the cap. An unowned tile keeps its fertility | `FertilityTests.Fallow_RecoversProRata` |
 | AC-8 | `AdjustFertility` clamps to [0, 100], records the applied (clamped) change under its reason, and the season totals reset at the next season start | `FertilityTests.Adjust_ClampsAndRecordsReasons` |
 | AC-9 | On loam with no trees, the Soil factor at fertility 30, 45, 60 and 80 is exactly 0.75, 0.875, 1.00 and 1.075; on sandy at 60 it is 0.85 | `SoilFactorTests.PiecewiseLinear` |
-| AC-10 | With 0, 1 and 2 mature edge trees on a tile, the shade factor is exactly 1.00, 0.97 and 0.94. With `fieldEdgeSlotsPerAcre` = 4 and `minShadeFactor` = 0.90 in test content, 4 mature trees give 0.90 (the floor, not 0.88). Saplings cast no shade | `SoilFactorTests.Shade_MatureTreesOnly` |
+| AC-10 | With no mature edge tree, a small one (0.03) and then a large one (0.08) on a tile, the shade factor is exactly 1.00, 0.97 and 0.89. With `fieldEdgeSlotsPerAcre` = 4 and `minShadeFactor` = 0.90 in test content, 4 mature trees give 0.90 (the floor, not 0.88). Saplings cast no shade | `SoilFactorTests.Shade_MatureTreesOnly` |
 | AC-11 | Given a 1-acre loam parcel with moderate drainage, fertility 50 and location 1.0, its price is exactly 1,20,000 coins; a 2-acre mixed parcel's price equals the sum of its tile prices, rounded per tile | `ParcelTests.Price_Formula` |
 | AC-12 | Buying an adjacent parcel with enough cash succeeds: cash falls by exactly the price, the parcel is owned, its farm tiles each gain 2 edge slots, and `ParcelBought` is emitted. A non-adjacent parcel is rejected with `NotAdjacent`, an owned one with `AlreadyOwned`, an unaffordable one with `InsufficientFunds`, and none of these change state | `ParcelTests.Buy_RulesAndPayment` |
 | AC-13 | After buying a parcel, parcels adjacent to it become buyable; diagonal neighbours do not | `ParcelTests.Adjacency_Grows` |
@@ -342,6 +341,14 @@ None of these changes a formula or a rule.
 5. **Tree maturity.** A slot carries `TreeMature`. Spec 003 calls `SetTree(slot, treeId)` when it plants a sapling (or 0 to empty the slot) and `SetTreeMature(slot)` when the tree matures; only mature trees shade.
 6. **Optional content.** Land and ledger content is an optional `GameDefs` in `SimConfig`. A simulation without it runs only time and weather and hashes exactly as before, so the spec 001 golden replay keeps its frozen hash.
 7. **The default map** (`content/map.json`) is 8 × 6 with 19 parcels of 1–4 acres around the inherited `home_a` (tiles 18–21, the yard is 21) and `home_b` (26–28). Its soils follow §4; drainage, fertility, moisture and location factors are placeholders for the economy model.
+
+### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
+
+- **Land prices follow the price index** (§3.5): `TilePrice` uses `Indexed(acreBasePrice)`, for buying, quick sale and net worth. Cost basis stays at cost, so a sale after inflation shows a gain (4800).
+
+### Changes after approval (Sprint 3 findings, 2026-10-18, ADR 0037)
+
+- **Shade per tree** (§3.4): `TreeDef.shade` (mango and guava 0.08, banana and papaya 0.03) replaces `LandDef.shadePerMatureTree`; the floor is 0.80. Real large canopies cut crops under bund trees by 10–30%; field-edge mangoes no longer dominate.
 
 ## 11. Cut first
 

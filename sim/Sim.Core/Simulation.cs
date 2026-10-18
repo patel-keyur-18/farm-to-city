@@ -47,7 +47,7 @@ namespace Sim.Core
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
-            if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity() });
+            if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity(), new FarmSystem.PestCheck(), new MarketSystem.MandiReturn() });
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {
@@ -73,8 +73,8 @@ namespace Sim.Core
                 state.Land = new LandState();
                 state.Ledger = new Ledger();
                 state.Finance = new FinanceState();
+                MarketSystem.Initialise(sim); // first: land prices and building costs read the price index
                 LandSystem.Initialise(sim);
-                MarketSystem.Initialise(sim);
                 FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
                 FounderRules.PayFirstSeason(sim);

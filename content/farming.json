@@ -7,11 +7,27 @@
     "waterDryFloor": 0.40,
     "waterWetFloor": 0.60,
     "bucketHoursPerMoisturePoint": 0.1,
-    "gardenSeasonOutputKg": 100
+    "gardenSeasonOutputKg": 100,
+    "readyGraceHours": 72,
+    "wetWeathers": ["rain", "heavy_rain", "storm"]
   },
   "fertilisers": [
     { "id": "none",     "kgPerAcrePerSeason": 0,    "yieldFactor": 1.00, "fertilityPerSeason": 0 },
     { "id": "compost",  "good": "compost",             "kgPerAcrePerSeason": 2000, "yieldFactor": 1.05, "fertilityPerSeason": 2 },
     { "id": "chemical", "good": "fertiliser_chemical", "kgPerAcrePerSeason": 150,  "yieldFactor": 1.25, "fertilityPerSeason": -3 }
-  ]
+  ],
+  "pests": {
+    "baseRisk": { "radish": 0.03, "wheat": 0.06, "rice": 0.10, "potato": 0.10, "lentils": 0.05 },
+    "monocultureStep": 0.5,
+    "monocultureMaxRepeats": 2,
+    "wetStep": 1.0,
+    "sprayGood": "spray",
+    "sprayMlPerAcrePerSeason": 2000,
+    "sprayRiskFactor": 0.50,
+    "sprayDamageFactor": 0.30,
+    "outbreakHealthMin": 0.40,
+    "outbreakHealthMax": 0.80,
+    "severeShare": 0.05,
+    "severeHealth": 0.00
+  }
 }

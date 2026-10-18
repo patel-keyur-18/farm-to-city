@@ -12,13 +12,19 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    public class FounderTests
+    public partial class FounderTests
     {
         private const long S = FarmTest.S;
 
         private static FounderState F(Simulation sim) { return sim.State.Farm.Founder; }
 
         /// <summary>The default start without eating from the store, so cash moves only as each test says.</summary>
+        /// <summary>No sick days (sickChanceAtMinHealth 0), so health and fatigue paths are exact.</summary>
+        private static string NoSickness(string f, string j) { return f == "founder.json" ? j.Replace("\"sickChanceAtMinHealth\": 0.25", "\"sickChanceAtMinHealth\": 0") : j; }
+
+        /// <summary>Starts the household on subsistence (content only: the player can't choose it, ADR 0034).</summary>
+        private static string StartSubsistence(string f, string j) { return f == "founder.json" ? j.Replace("\"startDietPlan\": \"basic\"", "\"startDietPlan\": \"subsistence\"") : j; }
+
         private static GameDefs NoEating(System.Func<string, string, string> edit = null)
         {
             return RichGame((f, j) =>
@@ -68,7 +74,7 @@ namespace Sim.Core.Tests
             Fixed recovery = Fixed.Parse("0.8");
 
             // Long hours: fatigue +0.08 a day from the day after the first long day, capped at 0.5; health follows §3.11.
-            Simulation sim = NewFarm(game: NoEating());
+            Simulation sim = NewFarm(game: NoEating(NoSickness));
             Assert.That(sim.Execute(new SetWorkHours(0, "long")).Accepted, Is.True);
             Fixed fatigue = Fixed.Zero, health = Fixed.One;
             for (int day = 1; day <= 12; day++)
@@ -94,12 +100,11 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new SetWorkHours(14 * Day, "sprint")).Reason, Is.EqualTo(RejectReason.UnknownOption));
 
             // Basic food and normal hours: +0.02 − 0.01 a day, so health stays at 1. Subsistence: −0.01 a day.
-            sim = NewFarm(game: NoEating());
+            sim = NewFarm(game: NoEating(NoSickness));
             sim.AdvanceTo(3 * Day);
             Assert.That(F(sim).Health, Is.EqualTo(Fixed.One));
-            Assert.That(sim.Execute(new SetDietPlan(3 * Day, "subsistence")).Accepted, Is.True);
-            sim.AdvanceTo(4 * Day - 1);
-            sim.AdvanceTo(5 * Day);
+            sim = NewFarm(game: NoEating((f, j) => StartSubsistence(f, NoSickness(f, j))));
+            sim.AdvanceTo(2 * Day);
             Fixed expected = Fixed.One + (d.RecoveryPerDay - d.NutritionPenalty * Pos(d.GoodNutrition - Fixed.Parse("0.8"))) * Fixed.FromInt(2);
             FarmTest.AssertNear(F(sim).Health, expected.ToString(), 16);
             FarmTest.AssertNear(F(sim).Health, "0.98", 64);
@@ -152,20 +157,30 @@ namespace Sim.Core.Tests
         {
             Simulation sim = NewFarm(game: TestContent.Game((f, j) =>
                 f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 18000")
-                : f == "founder.json" ? j.Replace("\"startEatFromStore\": true", "\"startEatFromStore\": false") : j));
+                : f == "founder.json" ? NoSickness(f, j.Replace("\"startEatFromStore\": true", "\"startEatFromStore\": false")) : j));
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(0));
             sim.DrainEvents();
             sim.AdvanceTo(S);
-            Assert.That(sim.DrainEvents().OfType<ObligationUnpaid>().Single().Amount, Is.EqualTo(18_000_00));
+            Assert.That(sim.DrainEvents().OfType<ObligationUnpaid>().Single().Amount, Is.EqualTo(MarketRules.Indexed(sim, 18_000_00)));
             Assert.That(sim.Config.Game.Farm.DietPlans[F(sim).DietPlan].Id, Is.EqualTo("subsistence"));
             FarmTest.AssertNear(FounderRules.Nutrition(sim), "0.8", 4);
             Assert.That(sim.State.Ledger.TotalOf(AccountGroup.Liabilities), Is.EqualTo(0), "no debt is ever created");
 
-            // Full-time day labour pays 8 × 0.8 × 1,125 = 7,200 a day, so the next close can pay: back to basic.
+            // The player can't choose subsistence (ADR 0034).
+            Assert.That(sim.Execute(new SetDietPlan(S, "subsistence")).Reason, Is.EqualTo(RejectReason.NotSelectable));
+
+            // Full-time day labour pays 8 × 0.8 × 1,125 = 7,200 a day. After one day 13,500 is needed for the 3 days left;
+            // after two, 9,000 for 2 days: the first daily pass that can pay it returns the household to basic (ADR 0034).
             Assert.That(sim.Execute(new SetLabourSplit(S, 100)).Accepted, Is.True);
-            sim.AdvanceTo(2 * S);
+            sim.AdvanceTo(S + Day);
+            Assert.That(sim.Config.Game.Farm.DietPlans[F(sim).DietPlan].Id, Is.EqualTo("subsistence"));
+            sim.AdvanceTo(S + 2 * Day);
             Assert.That(sim.Config.Game.Farm.DietPlans[F(sim).DietPlan].Id, Is.EqualTo("basic"));
-            Assert.That(sim.State.Finance.FindPrepayment(F(sim).LivingPrepaymentId).Total, Is.EqualTo(18_000_00));
+            Assert.That(sim.State.Finance.FindPrepayment(F(sim).LivingPrepaymentId).Total, Is.EqualTo(MarketRules.Indexed(sim, 18_000_00) / 2));
+            Assert.That(F(sim).AutoSubsistence, Is.False);
+            sim.DrainEvents();
+            sim.AdvanceTo(2 * S);
+            Assert.That(sim.State.Finance.FindPrepayment(F(sim).LivingPrepaymentId).Total, Is.EqualTo(MarketRules.Indexed(sim, 18_000_00)), "the next season in full");
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
         }
 
@@ -173,7 +188,7 @@ namespace Sim.Core.Tests
         [Test]
         public void EatFromStore_Daily()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: RichGame(NoSpoilage));
             int radish = FarmTest.Good(sim, "radish"), wheat = FarmTest.Good(sim, "wheat"), lentils = FarmTest.Good(sim, "lentils");
             sim.State.Market.Stock[radish] = 50_000;
             sim.State.Market.Stock[wheat] = 200_000;
@@ -195,17 +210,17 @@ namespace Sim.Core.Tests
             Assert.That(F(sim).HomeUseSeason, Is.EqualTo(eaten));
 
             // On subsistence nothing is eaten.
-            Assert.That(sim.Execute(new SetDietPlan(Day, "subsistence")).Accepted, Is.True);
-            long left = sim.State.Market.InStore(wheat);
-            sim.AdvanceTo(2 * Day);
-            Assert.That(sim.State.Market.InStore(wheat), Is.EqualTo(left));
+            Simulation poor = NewFarm(game: RichGame((f, j) => StartSubsistence(f, NoSpoilage(f, j))));
+            long left = poor.State.Market.InStore(wheat);
+            poor.AdvanceTo(2 * Day);
+            Assert.That(poor.State.Market.InStore(wheat), Is.EqualTo(left));
         }
 
         // Spec 003 AC-36.
         [Test]
         public void Start_State()
         {
-            Simulation sim = NewFarm();
+            Simulation sim = NewFarm(game: TestContent.Game(NoSpoilage));
             FarmDefs farm = sim.Config.Game.Farm;
             FounderState f = F(sim);
             Assert.That(sim.State.Ledger.Cash + sim.State.Ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(20_000_00));

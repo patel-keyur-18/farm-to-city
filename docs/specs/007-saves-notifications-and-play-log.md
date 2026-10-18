@@ -93,14 +93,14 @@ plan = NotificationPlanner.Plan(sim, settings)        pure, in Sim.Core; the pla
 
 | Rule | Behaviour |
 | --- | --- |
-| Opt-in | Off until the player agrees. The game's own prompt appears after the first **field crop** is harvested ("Want a nudge when your fields are ready? At most 2 a day, never at night."); iOS's one-time permission dialog follows only if they say yes. If they decline, it asks once more after the first season close, then never; Settings always has the switch |
+| Opt-in | Off until the player agrees. The game's own prompt first appears in the first session, in the letter's `comeBack` chapter right after the long crop is sown ("Your potato will be ready at 14:05 tomorrow. Want a nudge when it is?"; ADR 0036, spec 009); iOS's one-time permission dialog follows only if they say yes. If they decline, it asks once more after the first season close, then never; Settings always has the switch |
 | Sources | `UpcomingJobs(simTime + awayCap)` (spec 001 §3.7): crop ready, garden bed ready, tree matured, hut built. Derived from known season boundaries within the cap: fruit ripening at the next season start for a mature tree whose fruiting season it is; contract renewals and loan payments due (from spec 006 and F05.2, when built) |
 | When | The platform asks for a plan when the app goes to the background and cancels every pending notification when it returns. Each item's wall time is `lastWallUtc + (due − simTime)` (spec 001) |
 | Grouping | Items of the same kind within `NotifyDef.groupWindowMinutes` (30) are one notification ("3 fields are ready") |
 | Quiet hours | Nothing between `quietFrom` and `quietTo` (22:00–07:00 device time): an item due then moves to `quietTo` and groups with others there |
 | Cap | At most `NotifyDef.maxPerDay` (2) a device-calendar day, the earliest first; the rest are dropped (the *While you were away* report still lists everything) |
 | Text | From the string table (spec 008): a kind key and a count; never a name or a number that could be wrong by the time it's read |
-| Platform | iOS local notifications through Unity's free Mobile Notifications package (`com.unity.mobile.notifications`), pinned, behind `INotificationService` in `Game.Services` (approved; ADR 0034 records the pin when it's added in Sprint 6). Only that one class touches the package; if the package fails on the device or is abandoned, a hand-written Objective-C plugin replaces it behind the same interface. Notifications never change the game state, so saves and determinism can't be affected |
+| Platform | iOS local notifications through Unity's free Mobile Notifications package (`com.unity.mobile.notifications`), pinned, behind `INotificationService` in `Game.Services` (approved; an ADR, the next free number, records the pin when it's added in Sprint 6). Only that one class touches the package; if the package fails on the device or is abandoned, a hand-written Objective-C plugin replaces it behind the same interface. Notifications never change the game state, so saves and determinism can't be affected |
 
 ### 3.6 The play log (ADR 0024)
 
@@ -216,9 +216,9 @@ All six were answered in the review with the owner (2026-10-18):
 1. **The serializer:** hand-written binary with GZip and the FNV-1a checksum in `Sim.Core.Saves` (US-010.T2). It stores state only, never content; values are exact (`Fixed` raw, money in 1/100 coin); references are content ids; AC-1 proves the round trip and identical play after it.
 2. **The command log in saves:** kept, compacted, with a checkpoint at 100,000 entries (the state becomes the replay base and the log restarts), so progress is never touched and a save stays replayable (§3.2).
 3. **Export and import:** through the Files app in Phase 1; a share sheet at store readiness (F19.5) (§3.4).
-4. **Notifications package:** Unity's Mobile Notifications, pinned behind `INotificationService`; ADR 0034 when it's added (Sprint 6). The risks and their containment are in §3.5.
+4. **Notifications package:** Unity's Mobile Notifications, pinned behind `INotificationService`; an ADR (the next free number) when it's added (Sprint 6). The risks and their containment are in §3.5.
 5. **Quiet hours:** 22:00–07:00 device time, in data; items move to 07:00 and group.
-6. **When to ask:** after the first field harvest; once more after the first season close if declined.
+6. **When to ask:** after the first field harvest; once more after the first season close if declined. *Changed by ADR 0036 (2026-10-18): the first ask is in the first session, right after the long crop is sown.*
 
 ## 11. Cut first
 

@@ -122,6 +122,74 @@ namespace Sim.Core.Maths
             return FromBigRatio(new BigInteger(a.Raw) << FractionBits, b.Raw);
         }
 
+        // ---- Powers (spec 004 §3.7): integer arithmetic only, bit-identical on every platform ----
+
+        /// <summary>2^(2^-k) for k = 1..33 in Q1.63 (computed to 80 digits and rounded).</summary>
+        private static readonly ulong[] Exp2Steps =
+        {
+            0xB504F333F9DE6484UL, 0x9837F0518DB8A96FUL, 0x8B95C1E3EA8BD6E7UL, 0x85AAC367CC487B15UL,
+            0x82CD8698AC2BA1D7UL, 0x8164D1F3BC030773UL, 0x80B1ED4FD999AB6CUL, 0x8058D7D2D5E5F6B1UL,
+            0x802C6436D0E04F51UL, 0x8016302F17467628UL, 0x800B179C82028FD1UL, 0x80058BAF7FEE3B5DUL,
+            0x8002C5D00FDCFCB7UL, 0x800162E61BED4A49UL, 0x8000B17292F702A4UL, 0x800058B92ABBAE02UL,
+            0x80002C5C8DADE4D7UL, 0x8000162E44EAF636UL, 0x80000B1721FA7C19UL, 0x8000058B90DE7E4DUL,
+            0x800002C5C8678F37UL, 0x80000162E431DBA0UL, 0x800000B1721872D1UL, 0x80000058B90C1AA9UL,
+            0x8000002C5C8605A4UL, 0x800000162E4300E6UL, 0x8000000B17217FF8UL, 0x800000058B90BFDDUL,
+            0x80000002C5C85FE7UL, 0x8000000162E42FF2UL, 0x80000000B17217F8UL, 0x8000000058B90BFCUL,
+        };
+
+        /// <summary>log₂(x) for x &gt; 0. Absolute error ≤ 2⁻³² (spec: 2⁻²⁸).</summary>
+        public static Fixed Log2(Fixed x)
+        {
+            if (x.Raw <= 0) throw new ArgumentOutOfRangeException(nameof(x), "Log2 needs x > 0.");
+            ulong raw = (ulong)x.Raw;
+            int top = 63;
+            while ((raw >> top) == 0) top--;
+            long result = (long)(top - FractionBits) << FractionBits;
+            ulong m = raw << (63 - top); // x ÷ 2^n in Q1.63, in [1, 2)
+
+            // Each squaring of m doubles its log; a value ≥ 2 gives the next fraction bit. One extra bit to round.
+            long bits = 0;
+            for (int i = 0; i < FractionBits + 1; i++)
+            {
+                Wide.Multiply(m, m, out ulong hi, out ulong lo);
+                bits <<= 1;
+                if ((hi >> 63) != 0) { m = hi; bits |= 1; }
+                else m = (hi << 1) | (lo >> 63);
+            }
+            return new Fixed(result + ((bits + 1) >> 1));
+        }
+
+        /// <summary>2^y for y ≤ 30; results that underflow give 0. Relative error ≤ 2⁻²⁸ (or one ulp for tiny results).</summary>
+        public static Fixed Exp2(Fixed y)
+        {
+            if (y.Raw > (30L << FractionBits)) throw new ArgumentOutOfRangeException(nameof(y), "Exp2 needs y ≤ 30.");
+            long n = y.Raw >> FractionBits;           // floor
+            ulong f = (ulong)y.Raw & 0xFFFFFFFFUL;    // fraction bits
+            ulong m = 1UL << 63;                      // 1.0 in Q1.63
+            for (int k = 0; k < FractionBits; k++)
+            {
+                if (((f >> (FractionBits - 1 - k)) & 1) == 0) continue;
+                Wide.Multiply(m, Exp2Steps[k], out ulong hi, out ulong lo);
+                m = ((hi << 1) | (lo >> 63)) + ((lo >> 62) & 1); // Q2.126 → Q1.63, rounded
+            }
+            long shift = 31 - n; // Q1.63 × 2^n → Q31.32
+            if (shift > 64) return Zero;
+            if (shift == 64) return new Fixed((long)(m >> 63)); // rounds 2^-33 ≤ v < 2^-32 to one ulp
+            return new Fixed((long)((m >> (int)shift) + ((m >> (int)(shift - 1)) & 1)));
+        }
+
+        /// <summary>x^y = Exp2(y × Log2(x)) for x &gt; 0, or x = 0 with y &gt; 0 (gives 0).</summary>
+        public static Fixed Pow(Fixed x, Fixed y)
+        {
+            if (x.Raw < 0) throw new ArgumentOutOfRangeException(nameof(x), "Pow needs x ≥ 0.");
+            if (x.Raw == 0)
+            {
+                if (y.Raw <= 0) throw new ArgumentOutOfRangeException(nameof(y), "Pow(0, y) needs y > 0.");
+                return Zero;
+            }
+            return Exp2(y * Log2(x));
+        }
+
         public static bool operator ==(Fixed a, Fixed b) { return a.Raw == b.Raw; }
         public static bool operator !=(Fixed a, Fixed b) { return a.Raw != b.Raw; }
         public static bool operator <(Fixed a, Fixed b) { return a.Raw < b.Raw; }

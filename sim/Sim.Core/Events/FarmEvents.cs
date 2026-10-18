@@ -57,6 +57,33 @@ namespace Sim.Core.Events
         protected override string Describe() { return "CropHarvested(tile=" + TileId + ", crop=" + CropId + ", g=" + Grams + ")"; }
     }
 
+    /// <summary>The founder is sick today: no labour (spec 003 §5).</summary>
+    public sealed class FounderSick : SimEvent
+    {
+        public long Day { get; }
+
+        public FounderSick(long simTime, long day) : base(simTime) { Day = day; }
+
+        protected override string Describe() { return "FounderSick(day=" + Day + ")"; }
+    }
+
+    /// <summary>The pest check found an outbreak; its damage applies at readiness unless sprayed (spec 003 §5).</summary>
+    public sealed class PestWarning : SimEvent
+    {
+        public int TileId { get; }
+        public Outbreak Severity { get; }
+        public long ReadyAt { get; }
+
+        public PestWarning(long simTime, int tileId, Outbreak severity, long readyAt) : base(simTime)
+        {
+            TileId = tileId;
+            Severity = severity;
+            ReadyAt = readyAt;
+        }
+
+        protected override string Describe() { return "PestWarning(tile=" + TileId + ", " + Severity + ", readyAt=" + ReadyAt + ")"; }
+    }
+
     /// <summary>A growing or ready crop was removed without harvest (spec 003 §5).</summary>
     public sealed class FieldCleared : SimEvent
     {

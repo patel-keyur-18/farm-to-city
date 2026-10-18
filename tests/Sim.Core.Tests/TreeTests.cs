@@ -10,7 +10,7 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    public class TreeTests
+    public partial class TreeTests
     {
         private const long S = FarmTest.S;
 
@@ -45,13 +45,13 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(matures);
             Assert.That(sim.State.Farm.TreeIn(edge.Id).State, Is.EqualTo(TreeState.Mature));
             Assert.That(sim.DrainEvents().OfType<TreeMatured>().Count(), Is.EqualTo(1));
-            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One - sim.Config.Game.Land.ShadePerMatureTree));
+            Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One - sim.Config.Game.Farm.Trees[sim.Config.Game.Farm.IndexOfTree("banana")].Shade)); // a banana: 0.03 (ADR 0037)
 
             // Net worth counts the tree at book value (spec 005 AC-14's tree term).
             Assert.That(Reporting.NetWorth(sim).TreesAtBook, Is.EqualTo(60_00));
 
             var hill = Content.ContentLoader.LoadGame(f => f == "trees.json"
-                ? TestContent.ReadContent(f).Replace("\"terrain\": \"any\" },\n    { \"id\": \"papaya\"", "\"terrain\": \"hill\" },\n    { \"id\": \"papaya\"")
+                ? TestContent.ReadContent(f).Replace("\"terrain\": \"any\", \"shade\": 0.03 },\n    { \"id\": \"papaya\"", "\"terrain\": \"hill\", \"shade\": 0.03 },\n    { \"id\": \"papaya\"")
                 : TestContent.ReadContent(f), TestContent.Weather());
             Simulation hills = NewFarm(game: hill);
             Assert.That(hills.Execute(new PlantTree(0, YardSlot(hills), "banana")).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed));
@@ -61,7 +61,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Fruiting_OnePerSeason()
         {
-            Simulation sim = FarmTest.Farm();
+            Simulation sim = FarmTest.Farm(FarmTest.AnySeason(TestSim.NoSpoilage)); // waiting fruit spoils after the grace: AC-38
             long yard = YardSlot(sim);
             Assert.That(sim.Execute(new PlantTree(0, yard, "mango")).Accepted, Is.True);
             Tree mango = sim.State.Farm.TreeIn(yard);
@@ -130,6 +130,53 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new RemoveTree(t + 60, slot)).Reason, Is.EqualTo(RejectReason.NoTree));
             sim.AdvanceTo(t + 30 * Day);
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+    }
+}
+
+namespace Sim.Core.Tests
+{
+    using NUnit.Framework;
+    using Sim.Core.Commands;
+    using Sim.Core.Farm;
+
+    public partial class TreeTests
+    {
+        // Spec 003 AC-27 (ADR 0034): the payback season for a tree already paid back and for one not yet.
+        [Test]
+        public void Payback()
+        {
+            Simulation sim = FarmTest.Farm(FarmTest.AnySeason(TestSim.NoSpoilage));
+            long yard = sim.State.Land.Slots.First(s => s.Kind == Land.SlotKind.Yard).Id;
+            Assert.That(sim.Execute(new PlantTree(0, yard, "mango")).Accepted, Is.True);
+            Tree mango = sim.State.Farm.TreeIn(yard);
+
+            // Young: matures on day 24 (season 6, a Monsoon); its first batch is the next Summer, season 9, which pays
+            // the 350 back many times over.
+            TreePayback young = TreeRules.Payback(sim, mango);
+            Assert.That((young.Cost, young.Returns, young.PaidBack, young.Season), Is.EqualTo((350_00L, 0L, false, (long?)9)));
+
+            sim.AdvanceTo(9 * FarmTest.S);
+            Assert.That(TreeRules.Payback(sim, mango).Season, Is.EqualTo(9), "the batch is waiting this season");
+            sim.AdvanceTo(9 * FarmTest.S + TestSim.Day);
+            Assert.That(sim.Execute(new PickFruit(sim.State.Clock.SimTime, yard)).Accepted, Is.True);
+            TreePayback paid = TreeRules.Payback(sim, mango);
+            Assert.That((paid.PaidBack, paid.Season), Is.EqualTo((true, (long?)9)));
+            Assert.That(paid.Returns, Is.GreaterThan(paid.Cost));
+
+            // A banana whose batch is worth less than its cost needs two batches; with one batch left it never pays back.
+            Simulation b = FarmTest.Farm(FarmTest.AnySeason((f, j) => f == "goods.json"
+                ? j.Replace("\"id\": \"sapling_banana\", \"nameKey\": \"good.sapling_banana\", \"kind\": \"input\", \"unit\": \"each\", \"basePrice\": 60",
+                            "\"id\": \"sapling_banana\", \"nameKey\": \"good.sapling_banana\", \"kind\": \"input\", \"unit\": \"each\", \"basePrice\": 400")
+                : TestSim.NoSpoilage(f, j)));
+            long slot = b.State.Land.Slots.First(s => s.Kind == Land.SlotKind.Yard).Id;
+            Assert.That(b.Execute(new PlantTree(0, slot, "banana")).Accepted, Is.True);
+            Tree banana = b.State.Farm.TreeIn(slot);
+            b.AdvanceTo(7 * TestSim.Day + 1); // matures in Summer (season 1) with a batch at once: about 228 a batch
+            TreePayback two = TreeRules.Payback(b, banana);
+            Assert.That(two.Season, Is.EqualTo(2), "this season's batch and the next");
+            banana.Batches = 3; // one batch left of 4
+            Assert.That(TreeRules.Payback(b, banana).Season, Is.Null, "spent before it pays back");
         }
     }
 }
