@@ -1,10 +1,10 @@
 # 003. Crops, fruit trees and founder labour
 
-- Status: Approved (2026-10-17), with the Sprint 1 review decisions in §10
+- Status: Approved (2026-10-17), with the Sprint 1 review decisions and the Sprint 2 planning review changes (ADR 0032) in §10
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Crops, Yield formula, Fruit trees, Ready to harvest, Inputs and trade-offs); Player journey and eras (The founder's routine); Data model (`CropDef`, `FounderDef`, `DietPlanDef`)
-- Related ADRs: 0030 (inherited farm, start, Hamlet gate), 0031 (kitchen garden, buying inputs ahead, health care), 0010 (founder labour and routine), 0014 (yield formula, fertiliser, crop health, cap), 0021 (crop calendar, fruit trees), 0008 (per-season realism, upfront payment), 0009 (day labour, subsistence), 0002 (ready to harvest, no disasters while away), 0024 (hut store), 0028 (pacing, land priced by earning power)
+- Related ADRs: 0032 (well acres, daily eating, time-weighted founder labour, farm profit, inherited seed age), 0030 (inherited farm, start, Hamlet gate), 0031 (kitchen garden, buying inputs ahead, health care), 0010 (founder labour and routine), 0014 (yield formula, fertiliser, crop health, cap), 0021 (crop calendar, fruit trees), 0008 (per-season realism, upfront payment), 0009 (day labour, subsistence), 0002 (ready to harvest, no disasters while away), 0024 (hut store), 0028 (pacing, land priced by earning power)
 - Depends on specs: 001 (time, weather, jobs), 002 (tiles, moisture, Soil factor, occupancy, slots, the well), 005 (ledger: purchases, sales, prepaid living costs, obligations, tree assets). Uses 004 (input prices, the store, selling). Spec 006 adds hired labour to the same Care pool.
 
 ## 1. Goal
@@ -23,7 +23,7 @@ The player sows, tends and harvests their own fields and trees, and sees exactly
 - **Fertility effects** of crops, fertiliser, compost and lentils (through spec 002's `AdjustFertility`).
 - **Fruit trees** (banana, papaya, guava, mango) in yard and field-edge slots: planting, maturity, one fruit batch per fruiting season, picking, lifespan, removal, value and payback.
 - **The founder:** the starting state (ADR 0030), daily labour (hours, nutrition, fatigue, health), the diet plan and living costs, work hours and rest, sick days, warm clothing in Winter, medicine, eating from the store, the labour split with day labour, and subsistence.
-- **Care:** labour delivered against labour needed, including bucket-watering on the well's acres (spec 002 §3.2).
+- **Care:** labour delivered against labour needed, including bucket-watering on the two well acres (spec 002 §3.2, ADR 0032).
 
 **Out** (and where it goes instead):
 - Goods, prices, the market, the store's capacity and spoilage: 004. This spec says what goes into and out of the store.
@@ -128,16 +128,20 @@ careRatio    = careCap                                  if demandPerDay = 0
              = min(careCap, supplyPerDay ÷ demandPerDay) otherwise
 ```
 
-- `wellLift(tile)` is the moisture the well's floor added at the last hourly pass (spec 002 §3.2 step 4), 0 elsewhere. Carrying buckets is labour: about 1 extra hour a day per acre on a sunny Summer day, 2.4 on a heatwave day (defaults).
+- `wellLift(tile)` is the moisture the well's floor added at the last hourly pass (spec 002 §3.2 step 4) on a well acre, 0 elsewhere (ADR 0032: rain-fed acres need no carrying). Carrying buckets is labour: about 1 extra hour a day per acre on a sunny Summer day, 2.4 on a heatwave day (defaults).
 - Ready crops need no care. Crops on unowned land don't exist.
 - The ratio is recomputed at every hourly pass, at every daily pass (new founder hours), and whenever the set of growing crops or the founder's plan changes (sow, ready, clear, plan commands), so sowing many acres at once can't borrow an idle hour's ratio.
 - `careCap` (1.10) lets a well-staffed farm tend slightly better than "enough".
 
-**Founder labour** (ADR 0010), fixed at each daily pass for the day ahead:
+**Founder labour** (ADR 0010) is a rate in hours a day:
 
 ```
-FounderLabourHours(day) = Hours × Nutrition × (1 − Fatigue) × Health      (0 on a sick day)
+FounderLabourHours = Hours × Nutrition × (1 − Fatigue) × Health      (0 on a sick day)
 ```
+
+- Hours, Fatigue and Health (and a sick day) are fixed at each daily pass for the day ahead. Nutrition is the current diet plan's, so `SetDietPlan` changes the rate at once (ADR 0032).
+- The rate is time-weighted like Care (§3.7): own fields get `rate × (1 − dayLabourShare)` in the care ratio, and day-labour hours accrue as `rate × dayLabourShare × elapsed ÷ 86,400` between accrual points. A change of plan or split gains only the time it was in force.
+- A new game's first, partial day needs no special case: labour accrues from t₀.
 
 | Term | Rule | Default |
 | --- | --- | --- |
@@ -159,6 +163,7 @@ mean = Σ (rate_i × seconds_i) ÷ growthSeconds
 - Each growing crop keeps its current water factor, weather factor and wet flag, and the care ratio is shared. Between two **accrual points** each rate is constant.
 - Accrual points: every hourly pass (after spec 002's moisture update and the weather of the new hour), every daily pass, and every sow, ready, clear and plan command. At an accrual point every growing crop adds `rate × (now − lastAccrual)` to its sums, then the rates are refreshed.
 - A crop sown between two passes uses the rates in force at sowing until the next accrual point. (Garden crops have no factors, §3.13.)
+- The founder accrues at the same points: day-labour hours (§3.6) and `nutrition × seconds` for the day's mean nutrition (§3.11).
 - Accrual points are sim events, never `AdvanceTo` chunk boundaries, so the result doesn't depend on how time is advanced (chunking invariance).
 
 ### 3.8 Pests, disease and spraying (ADR 0014)
@@ -189,7 +194,7 @@ risk = PestRiskDef.baseRisk(crop)
 | --- | --- |
 | Certified | Seed factor 1.00. Uses `seedPerAcrePerSeason × cycleShare` kg of the crop's certified seed good (stock first, then bought) |
 | Saved | Free, but uses the crop's own good from the store. Only crops with `canSaveSeed` (not radish: its seed needs the plant to flower for months) |
-| Seed age | Saved seed ages by **seasons of growth**, like fertility (per-season realism, ADR 0008): a harvest sown with seed of age a (certified: 0) yields seed of age `a + cycleShare`. Kept per crop kind: the age of the last harvest of that crop. A simplification: mixing old and new seed in the store uses the latest age |
+| Seed age | Saved seed ages by **seasons of growth**, like fertility (per-season realism, ADR 0008): a harvest sown with seed of age a (certified: 0) yields seed of age `a + cycleShare`. Kept per crop kind: the age of the last harvest of that crop. A simplification: mixing old and new seed in the store uses the latest age. A new game starts with `StartDef.savedSeedAge` (wheat 2.0, lentils 2.0: about 2 years since certified seed, factor 0.96; ADR 0032) |
 | Seed factor | `max(savedSeedFloor, 1 − savedSeedLossPerSeason × age)`. Wheat, rice and lentils lose 0.02 a season of growth (floor 0.90); potato tubers 0.05 (floor 0.80). So saved wheat stays above 0.95 for about 2.5 seasons of continuous growing (Indian advice: replace self-pollinated seed every 3–4 years), and saved potato falls to 0.90 in 2 |
 
 ### 3.10 Fertility from crops and inputs
@@ -215,7 +220,7 @@ Example: 4 seasons' worth of chemically fertilised cycles lower fertility by exa
 | Paid upfront | At a new game, the first season's cost is paid at once, pro rata for what's left of season 0: `cost × (S − t₀) ÷ S` (integer division, rounded down). Each later season is paid at the season close as a Living obligation (spec 005 §3.4 step 5). Each payment is a prepayment (Dr 1100, Cr Cash) expensed daily to 5200 Living costs (spec 005 §3.2) |
 | Changing plan | `SetDietPlan` takes effect at once: the current prepayment is closed (the unearned part refunded, spec 005 `ClosePrepayment`) and the new plan is paid for the rest of the season. Rejected with `InsufficientFunds` if the new payment can't be met after the refund |
 | Subsistence | Chosen by the player, or automatic when the season's living obligation can't be paid (spec 005 `ObligationUnpaid`). Costs 0, nutrition 0.80. No debt is ever created (ADR 0009). The household returns to its previous plan at the next season close it can afford |
-| Eat from own harvest | With `eatFromStore` on, at each living-cost payment the household first takes edible goods from the store worth up to `DietPlanDef.foodShare × cost`, valued at the trader's buying price (spec 004), most perishable first (highest `spoilagePerDay`, then good id). Cash pays only the remainder. The goods leave the store at once ("eaten over the season") |
+| Eat from own harvest | With `eatFromStore` on, at each daily pass the household eats edible goods from the store worth up to the day's allowance `DietPlanDef.foodShare × costPerSeason ÷ ClockDef.DaysPerSeason` (basic: 2,700), pro rata for a partial first day, valued at the trader's buying price (spec 004), most perishable first (highest `spoilagePerDay`, then good id). The value eaten is grocery money not spent: Dr Cash, Cr the good's sales account (4000 or 4010) as **home use** (ADR 0032), so eating or selling gives the same farm profit. The prepaid living cost is unchanged (gross). *Why?* shows "Home-grown food paid N of your living costs", with the garden's part (§3.13). Subsistence has no allowance |
 
 **Work hours, fatigue and rest** (daily pass, before founder hours are fixed):
 
@@ -225,11 +230,11 @@ fatigue ← clamp(fatigue + Δ, 0, FounderDef.maxFatigue)
   = WorkHoursDef.fatigueChange × BuildingDef.restRecovery(home)   if it is < 0     (hut 0.80)
 ```
 
-Defaults: rest −0.15, short −0.05, normal 0, long +0.08 a day; `maxFatigue` 0.50. A sick day counts as rest.
+Δ comes from the option the founder actually worked in the day that ended (normal while away), so tiredness shows the morning after a long day (Sprint 2 planning review). Defaults: rest −0.15, short −0.05, normal 0, long +0.08 a day; `maxFatigue` 0.50. A sick day counts as rest.
 
 **The start** (ADR 0030): basic diet, normal hours, no day labour, `eatFromStore` on, nutrition 0.90, fatigue 0, health 1.00, and 20,000 coins (spec 005).
 
-**Health and sick days** (daily pass):
+**Health and sick days** (daily pass; `nutrition` is the time-weighted mean of the day that ended, ADR 0032):
 
 ```
 health ← clamp(health + recoveryPerDay
@@ -253,7 +258,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | Rule | Behaviour |
 | --- | --- |
 | Split | `SetLabourSplit(share)`, share ∈ {0, 25, 50, 75, 100} %. That share of the founder's daily hours goes to neighbours' farms; the rest tends the founder's own fields |
-| Pay | At each daily pass, for the day that ended: `hours × FounderDef.dayLabourWagePerHour`, Dr Cash, Cr 4100 Day-labour earnings. Emits `DayLabourPaid` |
+| Pay | At each daily pass, for the hours accrued since the last one (§3.6): `round(hours × FounderDef.dayLabourWagePerHour)`, Dr Cash, Cr 4100 Day-labour earnings. Emits `DayLabourPaid` |
 | Wage | 1,125 coins an hour: a full 8-hour day is 9,000, and a full season 36,000, the farm hand's season wage (ADR 0008) |
 | Away | Day labour continues while away, at normal hours |
 
@@ -372,6 +377,8 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 
 `content/buildings.json` gains `restRecovery` (hut 0.80; well 0) and `gardenBeds` (hut 2; well 0) for the founder's home.
 
+`content/start.json` gains `savedSeedAge`: a map crop id → Fixed seasons of growth (wheat 2.0, lentils 2.0; ADR 0032). Each crop must have `canSaveSeed`; ages ≥ 0. Crops not listed start with no saved-seed age (their saved seed comes from the player's own harvests).
+
 **State** (part of `GameState`):
 
 | Entity | Field | Type | Notes |
@@ -390,7 +397,9 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | `Tree` | `id`, `slotId`, `treeDef`, `plantedAt`, `state` (Growing, Mature), `ripeKg`, `batches`, `returns` (money) | | |
 | `Founder` | `dietPlan`, `previousPlan`, `workHours`, `dayLabourShare`, `eatFromStore` | | |
 | | `nutrition`, `fatigue`, `health` | Fixed | |
-| | `todayHours`, `sickToday`, `livingPrepaymentId`, `medicineDay` | | `medicineDay`: the day index of the last medicine |
+| | `todayHours`, `sickToday`, `livingPrepaymentId`, `medicineDay` | | `todayHours`: Hours × (1 − Fatigue) × Health fixed at the daily pass (nutrition applied as a rate); `medicineDay`: the day index of the last medicine |
+| | `dayLabourHours`, `nutritionSum`, `lastAccrual` | Fixed / long | §3.6, §3.7: accrued since the last daily pass |
+| | `homeUseSeason`, `gardenHomeUseSeason` | money | Home-use value eaten this season, for *Why?* |
 
 ## 5. Commands and events
 
@@ -498,7 +507,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-6 | `WaterFactor` gives 0.742857 (wheat at 20), 1.00 inside the band, and the floors at moisture 0 and 100 | `YieldTests.WaterFactor_Piecewise` |
 | AC-7 | A crop whose growth spans a change of weather gets the exact time-weighted Weather factor (e.g. 2 h sun then 4 h heatwave for wheat: (2 × 1.00 + 4 × 0.85) ÷ 6 = 0.90) | `YieldTests.Weather_TimeWeighted` |
 | AC-8 | With basic food, normal hours, health 1 and fatigue 0, the founder delivers exactly 7.2 h; at 25% day labour, 5.4 h go to the fields and 1.8 h × 1,125 = 2,025 coins are paid at the next daily pass (Dr Cash, Cr 4100) | `FounderTests.LabourHours_AndDayLabour` |
-| AC-9 | Care ratio: 2 acres of wheat with 7.2 h supply give 1.10 (capped); 3 acres give 0.80; adding watering demand on the well acres in a heatwave lowers it accordingly; a crop's Care factor is the time-weighted mean across the changes | `CareTests.SharedPool_TimeWeighted` |
+| AC-9 | Care ratio: 2 rain-fed acres of wheat with 7.2 h supply give 1.10 (capped); 3 give 0.80; adding watering demand on the well acres in a heatwave lowers it accordingly; a crop's Care factor is the time-weighted mean across the changes | `CareTests.SharedPool_TimeWeighted` |
 | AC-10 | Care, Water and Weather are identical whether a crop's growth is advanced in one call or in 500 random chunks (the spec 001 chunking check, with crops, trees and the founder over one game year) | `CropTests.ChunkingInvariance` |
 | AC-11 | A crop sown between hourly passes gets factors from the rates in force at sowing until the next accrual point, and becomes ready exactly `growthMinutes × 60` s after sowing | `CropTests.ShortCrop_UsesCurrentRates` |
 | AC-12 | Fertility after a wheat cycle with chemical fertiliser falls by exactly `(4 + 3) × 0.0625` = 0.4375, recorded under CropUse and Fertiliser; lentils raise it by 4 × cycleShare under Lentils; compost raises it by 2 × cycleShare | `CropTests.Fertility_FromCropsAndInputs` |
@@ -510,9 +519,9 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-18 | Fatigue moves by the option's change (×0.8 for recovery in the hut) and stays within [0, 0.5]; health follows §3.11 exactly for basic, subsistence and long-hours cases and stays within [0.5, 1] | `FounderTests.Fatigue_Health_Dynamics` |
 | AC-19 | At health 0.5, over 10,000 seeded days the sick-day rate is within 1 point of 25%; a sick day delivers 0 hours and emits `FounderSick` | `FounderTests.SickDays` |
 | AC-20 | While away, the founder works normal hours whatever the chosen option; live, the chosen option applies | `FounderTests.Away_NormalHours` |
-| AC-21 | A new game started at 10:00 pays basic living costs of exactly `18,000 × (345,600 − 36,000) ÷ 345,600` = 16,125.00 coins as a prepayment; changing to balanced mid-season refunds the unearned basic part and prepays balanced for the rest, and the season's Living costs expense equals the time-weighted mix | `FounderTests.LivingCosts_UpfrontAndChange` |
+| AC-21 | A new game started at 10:00 (eating from the store off) pays basic living costs of exactly `18,000 × (345,600 − 36,000) ÷ 345,600` = 16,125.00 coins as a prepayment; changing to balanced mid-season refunds the unearned basic part and prepays balanced for the rest, and the season's Living costs expense equals the time-weighted mix | `FounderTests.LivingCosts_UpfrontAndChange` |
 | AC-22 | When the season's living obligation is unpaid, the plan becomes subsistence (nutrition 0.80), no liability is created, and the previous plan returns at the next close that can pay it | `FounderTests.Subsistence_NeverStuck` |
-| AC-23 | With `eatFromStore` on and 50 kg of radish (spoilage 0.25) and 200 kg of wheat in store, the living-cost payment takes radish first, then wheat, up to `foodShare × cost` at the trader's buying price, and cash pays exactly the remainder | `FounderTests.EatFromStore` |
+| AC-23 | With `eatFromStore` on and 50 kg of radish (spoilage 0.25) and 200 kg of wheat in store, each daily pass eats radish first, then wheat, up to the day's allowance (`foodShare × cost ÷ daysPerSeason`) at the trader's buying price, posts exactly that value Dr Cash, Cr 4000 (home use), and leaves the living prepayment unchanged; on subsistence nothing is eaten | `FounderTests.EatFromStore_Daily` |
 | AC-24 | `PlantTree` capitalises the sapling (Dr 1700), sets the slot; the tree matures exactly `growthMinutes` later and then shades its field-edge tile (spec 002 AC-10) | `TreeTests.Plant_Mature_Shade` |
 | AC-25 | A mature mango gets one 120 kg batch at the start of each Summer only, none while the previous batch is unpicked; a banana gets one batch every season; picking moves it to the store and adds its value to returns | `TreeTests.Fruiting_OnePerSeason` |
 | AC-26 | A banana is spent after 4 picked batches: the slot is emptied, its book value posted to 5600, `TreeSpent` emitted; `RemoveTree` does the same at any time | `TreeTests.Lifespan_AndRemoval` |
@@ -525,7 +534,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-33 | Garden crops grow in exactly their minutes, wait when ready, need no labour (the care ratio is unchanged by them), and the inherited garden seed lets the first sowing cost nothing | `GardenTests.Grow_Pick_NoLabour` |
 | AC-34 | In Winter, a founder on subsistence loses exactly `noWarmClothingPenalty` more health a day than on the same plan in Summer; on basic, no penalty | `FounderTests.WarmClothing_Winter` |
 | AC-35 | `BuyMedicine` pays 500 coins to 5250, raises health by 0.10 (capped at 1), and a second purchase the same day is rejected with `AlreadyTreatedToday` | `FounderTests.Medicine` |
-| AC-36 | A new game starts with 20,000 coins, the basic plan, normal hours, `eatFromStore` on and full health (ADR 0030); the first living-cost payment uses the inherited grain first | `FounderTests.Start_State` |
+| AC-36 | A new game starts with 20,000 coins, the basic plan, normal hours, `eatFromStore` on, full health and saved-seed ages wheat 2.0 and lentils 2.0 (ADR 0030, 0032); the first daily passes eat the inherited wheat, then the lentils | `FounderTests.Start_State` |
+| AC-37 | Switching to the rich plan, or to 100% day labour, one minute before a daily pass and back one minute after changes that day's labour and day-labour pay only by those two minutes' worth (time-weighted); the day's health uses the time-weighted mean nutrition | `FounderTests.PlanChanges_TimeWeighted` |
 
 ## 9. Balancing hooks
 
@@ -541,7 +551,7 @@ All tests are in `tests/Sim.Core.Tests`.
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Net income of an average acre with hired labour (hand 36,000 a season ÷ about 2.5 acres = 14,400 an acre), competent play (about 75% of the anchor after soil, water, weather and idle time) | About 8,000–12,000 a season, so an acre at 1,20,000 costs 10–15 seasons of it (ADR 0028) | Economy model |
+| Net income of an average acre, competent play | Owner-operated (the founder's labour unpaid): about 15,000–20,000 a season, so an acre at 1,20,000 costs about 7–8 seasons of it (ADR 0028, 0033). With hired labour (hand 36,000 a season ÷ about 2.5 acres = 14,400 an acre): about 2,000–5,000 | Economy model (measured 17,000 and 2,600, selling at the floor) |
 | The founder alone on about 2 of the inherited acres (neglected soil 0.875) | About 30,000–38,000 a season, above basic living costs (18,000) and close to full-time day labour (36,000), so farming your own land is worth it but not overwhelming | ±20% |
 | Kitchen garden, 2 beds | About 200 kg (about 1,500 coins) of vegetables a season | ±30% |
 | Chemical fertiliser over 4 seasons | −12 fertility (ADR 0014) | ±0.5 |
@@ -551,15 +561,15 @@ All tests are in `tests/Sim.Core.Tests`.
 | Mango in a yard slot | Pays back its sapling in its first fruiting season | — |
 | Banana on a field edge | Earns less than the 3% shade it costs the acre (yard slots suit short trees) | Shape |
 
-**Pacing check against ADR 0030** (competent player; placeholders for the economy model):
+**Pacing check against ADR 0030** (competent player; Spring measured by the economy model, US-013, selling at the floor; the hand's seasons estimated until spec 006 is built):
 
 | When | What happens | Cash |
 | --- | --- | --- |
 | Start | 20,000 coins; store: 600 kg certified seed potato, 75 kg wheat, 75 kg lentils, garden seed | 20,000 |
-| Season 0 living costs | Basic, pro rata (about 16,100), part paid in stored grain | about −9,000 |
-| Spring | Potato on about 2 acres, 3 cycles, about 1,200 kg an acre-cycle (soil 0.875, water about 0.9); the 2,000 kg store forces sales at the floor (5.30); seed bought after the stock runs out | about +38,000 sales, −10,000 seed |
-| End of Spring | Hand's hut (about 15,000, spec 006) and a hand (36,000), with a moneylender loan of up to 25,000 | about 0–10,000 |
-| Summer | Lentils on all 6 acres: about 12 hours a day needed, about 14 supplied (founder and hand), Care 1.1; about 8 cycles | about +80,000 sales; a profitable season |
+| Season 0 living costs | Basic, pro rata (about 16,100) prepaid; the inherited grain (about 6,800 at the floor) is eaten over the first 2–3 days and comes back as home use | about −9,300 |
+| Spring | Potato on the 2 well acres, 3 cycles each (measured: about 8,800 kg, Care 1.02, Water 0.97); sales at the floor (5.30) and home use; seed bought after the stock runs out; the garden's greens | measured: farm income about 56,000, costs about 18,000; cash about 42,000 at the end |
+| End of Spring | Hand's hut (about 15,000, spec 006) and a hand (36,000), with a moneylender loan of about 10,000 | about 0 |
+| Summer | Lentils on all 6 acres (4 rain-fed at Water about 0.85–0.9, ADR 0032): about 12 hours a day plus about 1.5 of carrying for the 2 well acres needed, about 14 supplied (founder and hand), Care about 1.04; about 8 cycles | about +75,000 sales; farm profit above 0 |
 | End of week 1 | The Hamlet gate is met: 6 acres harvested at Care ≥ 0.9, a hand's house, a profitable season | |
 
 Without borrowing, the hand is affordable about half a season later, so the Hamlet comes at about 1.5 weeks. The balancer (F20.1) checks the target.
@@ -576,6 +586,31 @@ All six were answered in the Sprint 1 review (2026-10-17):
 6. **The tiny radish harvest.** Resolved by the kitchen garden (§3.13, ADR 0031): quick greens in two beds with generous pickings up to a realistic season output; radish in the fields becomes a 2-hour crop (about 83 kg an acre a cycle).
 
 **Also decided:** a crop-calendar card on the sow sheet (spec 008) and seasonal crop hints in the letters (spec 009) guide the player on which crop suits which season.
+
+### Changes after approval (Sprint 2 planning review, 2026-10-18, ADR 0032)
+
+Rule changes approved by the owner before coding:
+
+1. **Well acres.** Bucket-carrying labour applies only on the two well acres (spec 002); the other inherited acres are rain-fed. With all six watered, the Summer gate plan needed about 16.5 hours a day against 14 (Care 0.85).
+2. **Daily eating.** The household eats from the store at each daily pass, up to the day's food allowance, credited to the sales account as home use; living costs stay prepaid at the gross cost. Eating only at the season close let garden greens and fruit spoil first.
+3. **Founder labour as a rate.** Nutrition and the day-labour split are time-weighted, so switching just before a daily pass gains nothing (AC-37). Before, it was a money loop.
+4. **Farm profit.** The Hamlet gate's "profitable season" is a season with farm profit above 0 (spec 005's report grouping).
+6. **Fatigue timing.** The fatigue change at a daily pass comes from the option worked in the day that ended.
+5. **Inherited seed age.** `StartDef.savedSeedAge`: wheat and lentils 2.0 seasons of growth. No seed-reserve rule; a letter (spec 009) tells the player to switch eating from the store off to keep seed.
+
+**Sprint split (no rule change):** in Sprint 2, CropHealth is 1.00 and no pest check is scheduled (pests, spraying, AC-14 to AC-16 and the golden replay AC-30 come with US-046 in Sprint 3); sick days (AC-19), warm clothing (AC-34) and medicine (AC-35) come with US-052; tree payback (AC-27) with US-049. AC-28 runs in Sprint 2 without market sales and gains them in Sprint 3.
+
+### Implementation notes (Sprint 2, 2026-10-18)
+
+None of these changes a formula or a rule.
+
+1. **One accrual engine.** Crops' Water, Care and Weather sums and the founder's day-labour hours, nutrition and food allowance accrue together at the same accrual points (`FarmSystem.Accrue`, then `Refresh`). AC-10 checks one game year of seeded play (crops, garden, trees, plan changes) in one advance against 500 random chunks: identical state hashes.
+2. **The hour's weather.** Rates refreshed at an hourly pass use the weather of the hour just starting; spell boundaries fall on hour boundaries, so weather is constant between accrual points.
+3. **The food allowance** accrues in money as `Fixed` and is rounded to 1/100 coin at the daily pass (so 0.6 × 18,000 ÷ 4 is exactly 2,700). Leftover allowance on a day with nothing to eat is not carried over. A `HomeUseEaten` event reports each day's home use; the season report carries `HomeUse` and `GardenHomeUse` for the household line's *Why?*.
+4. **A new game at t = 0** prepays the whole of season 0 (18,000 on basic), leaving 2,000 of the 20,000; AC-21's 10:00 start prepays 16,125. Spec 005 AC-3's test checks the opening entry (20,000) and that cash plus prepaid living costs is 20,000.
+5. **Automatic subsistence** keeps the plan to return to (`PreviousPlan`, `AutoSubsistence`); choosing a plan clears it.
+6. **The first day's health** uses the mean nutrition since the new game's start.
+7. **Inherited grain without an age** can't be sown as saved seed; the default start lists wheat and lentils.
 
 ## 11. Cut first
 

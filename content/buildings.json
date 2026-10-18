@@ -1,6 +1,6 @@
 {
   "buildings": [
-    { "id": "hut",  "nameKey": "building.hut",  "yardTreeSlots": 4, "value": 40000, "usefulLifeSeasons": 80 },
-    { "id": "well", "nameKey": "building.well", "yardTreeSlots": 0, "value": 15000, "usefulLifeSeasons": 120 }
+    { "id": "hut",  "nameKey": "building.hut",  "yardTreeSlots": 4, "value": 40000, "usefulLifeSeasons": 80, "storeCapacityKg": 2000, "restRecovery": 0.80, "gardenBeds": 2 },
+    { "id": "well", "nameKey": "building.well", "yardTreeSlots": 0, "value": 15000, "usefulLifeSeasons": 120, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 }
   ]
 }

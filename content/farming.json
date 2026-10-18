@@ -1,0 +1,17 @@
+{
+  "farm": {
+    "yieldCap": 1.6,
+    "careCap": 1.1,
+    "toolsFactor": 1.00,
+    "weatherYieldFactor": { "sun": 1.00, "cloudy": 0.98, "rain": 1.00, "heavy_rain": 0.92, "heatwave": 0.85, "frost": 0.88, "storm": 0.85 },
+    "waterDryFloor": 0.40,
+    "waterWetFloor": 0.60,
+    "bucketHoursPerMoisturePoint": 0.1,
+    "gardenSeasonOutputKg": 100
+  },
+  "fertilisers": [
+    { "id": "none",     "kgPerAcrePerSeason": 0,    "yieldFactor": 1.00, "fertilityPerSeason": 0 },
+    { "id": "compost",  "good": "compost",             "kgPerAcrePerSeason": 2000, "yieldFactor": 1.05, "fertilityPerSeason": 2 },
+    { "id": "chemical", "good": "fertiliser_chemical", "kgPerAcrePerSeason": 150,  "yieldFactor": 1.25, "fertilityPerSeason": -3 }
+  ]
+}

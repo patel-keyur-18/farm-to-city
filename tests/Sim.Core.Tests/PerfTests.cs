@@ -11,7 +11,7 @@ namespace Sim.Core.Tests
     /// build. Each case warms up once (JIT), then takes the best of 5 runs to filter out noise on shared runners.
     /// </summary>
     [Category("Perf")]
-    public class PerfTests
+    public partial class PerfTests
     {
         private static double BestMilliseconds(long seconds)
         {

@@ -30,7 +30,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one profitable season (ADR 0030) | 4–15 | More roles, storage, first processing (flour mill) |
+| 2. Hamlet | Landowner | 6 acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -120,11 +120,11 @@ Farming is the first business the player runs, so it introduces every core idea:
 
 The founder inherits 6 farm acres and a yard (hut and well), protected forever (ADR 0030). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
 
-- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters the inherited acres, so they never dry out completely; bought land is rain-fed until irrigation. Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
+- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
 - **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
 - **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited land can never be sold, seized or used as collateral.
-- An acre costs about 8–15 seasons of its net farm income, so land pays back in 2–4 game years (ADR 0028).
+- An acre costs about 8–15 seasons of the net farm income it earns when the household farms it itself, so land pays back in 2–4 game years; with hired labour it pays back far more slowly, as in reality (ADR 0028, 0033).
 - Spec 002 has the formulas and values.
 
 **Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:
@@ -171,7 +171,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Ready to harvest.** A ripe crop waits in its field without spoiling or losing quality until it is harvested. While it waits, the field cannot be resown, so the cost of waiting is a lost crop cycle.
 
-**Standing orders.** From the Hamlet era, hired workers follow standing orders, such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
+**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
 
 **Inputs and trade-offs**
 
@@ -344,7 +344,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | Standing orders | No | Yes |
 | Population | Not counted | Counted: the town's first citizens |
 
-A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
+Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
 
 **Hiring flow (full version, from Phase 2)**
 
@@ -776,12 +776,12 @@ The game needs no account and no server. All content ships in the build, and the
 - **One town at a time (ADR 0023).** Starting a new game replaces the current town after a confirmation, and the game offers to export it first.
 - **Save points are a safety guard, never an undo.** The game keeps the latest save plus rotating backups (the last 3 hourly saves and one per day for the last 3 days). A *Save now* button saves immediately. After a crash or a corrupt save, the game automatically loads the newest valid save point and says which one. Players can never load an older save point to rewind.
 - **Atomic writes:** write to a temporary file, verify its checksum, then rename. A crash can never corrupt the last good save.
-- **Format:** versioned binary such as MessagePack, compressed. Every save carries a schema version, and migration functions upgrade older saves on load.
+- **Format:** a hand-written, versioned binary (no reflection, IL2CPP-safe), GZip-compressed, with a checksum. Content is referenced by id, so new builds load older saves. Every save carries a schema version, and migration functions upgrade older saves on load. The command log is kept with live syncs compacted, and checkpointed at a cap so a save can always be replayed for a bug report (spec 007).
 - **Size target:** under 5 MB at City scale.
 - **Backup:** manual export and import of a save file. iCloud on iOS and Google Play Games Saved Games on Android come later, only if the game is published to the stores (ADR 0007).
 - **Distribution, for now:** personal builds only. iOS uses a free developer account, with the build re-signed every 7 days. The bundle ID and signing team stay fixed, so the save data survives reinstalls. Android uses sideloaded APKs signed with the owner's key. These builds contain no purchases: the full game is unlocked.
 
-**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in, grouped, and capped at 2 a day.
+**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in (asked after the first field harvest), grouped, capped at 2 a day, and never sent between 22:00 and 07:00 (spec 007).
 
 **Performance budget**
 

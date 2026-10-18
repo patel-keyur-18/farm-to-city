@@ -19,6 +19,20 @@ namespace Sim.Core.Finance
             return (long)(negative ? -q : q);
         }
 
+        /// <summary>
+        /// Value(q, P) = round(q × P × 100 ÷ unitSize) (spec 004 §3): a quantity in grams, millilitres or units at a
+        /// price in coins per kg, litre or unit, rounded once to 1/100 coin, ties away from zero.
+        /// </summary>
+        public static long Value(long quantity, Fixed price, long unitSize)
+        {
+            BigInteger n = new BigInteger(quantity) * price.Raw * Coin;
+            BigInteger d = new BigInteger(unitSize) << Fixed.FractionBits;
+            bool negative = n.Sign < 0;
+            BigInteger q = BigInteger.DivRem(BigInteger.Abs(n), d, out BigInteger r);
+            if (r * 2 >= d) q += 1;
+            return (long)(negative ? -q : q);
+        }
+
         /// <summary>Rounds to a whole coin, ties away from zero.</summary>
         public static long RoundToCoin(long money)
         {

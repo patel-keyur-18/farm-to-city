@@ -83,11 +83,15 @@ namespace Sim.Core.Definitions
         public Fixed MinShadeFactor { get; }
         public Fixed WellMoistureFloor { get; }
 
+        /// <summary>The well acres (<c>WellDef.irrigatedTiles</c>, ADR 0032): the only tiles the well's floor applies to.</summary>
+        public IReadOnlyList<int> WellTiles { get; }
+
         public LandDef(IReadOnlyList<Fixed> moistureByWeather, IReadOnlyList<CurvePoint> fertilityFactorCurve,
             Fixed fallowRecoveryPerSeason, long acreBasePrice, Fixed fertilityPriceMin, Fixed fertilityPriceMax,
             Fixed quickSaleFactor, int fieldEdgeSlotsPerAcre, Fixed shadePerMatureTree, Fixed minShadeFactor,
-            Fixed wellMoistureFloor)
+            Fixed wellMoistureFloor, IReadOnlyList<int> wellTiles)
         {
+            WellTiles = new List<int>(wellTiles).AsReadOnly();
             MoistureByWeather = new List<Fixed>(moistureByWeather).AsReadOnly();
             FertilityFactorCurve = new List<CurvePoint>(fertilityFactorCurve).AsReadOnly();
             FallowRecoveryPerSeason = fallowRecoveryPerSeason;
@@ -175,8 +179,21 @@ namespace Sim.Core.Definitions
         public long Value { get; }
         public int UsefulLifeSeasons { get; }
 
-        public BuildingDef(string id, string nameKey, int yardTreeSlots, long value, int usefulLifeSeasons)
+        /// <summary>The store's capacity in kg (spec 004 §3.5; hut 2,000). The founder's store is the sum over their buildings.</summary>
+        public long StoreCapacityKg { get; }
+
+        /// <summary>How much of a rest day's fatigue recovery the home gives (spec 003 §3.11; hut 0.80).</summary>
+        public Fixed RestRecovery { get; }
+
+        /// <summary>Kitchen-garden beds by the home (spec 003 §3.13; hut 2).</summary>
+        public int GardenBeds { get; }
+
+        public BuildingDef(string id, string nameKey, int yardTreeSlots, long value, int usefulLifeSeasons, long storeCapacityKg,
+            Fixed restRecovery, int gardenBeds)
         {
+            RestRecovery = restRecovery;
+            GardenBeds = gardenBeds;
+            StoreCapacityKg = storeCapacityKg;
             Id = id;
             NameKey = nameKey;
             YardTreeSlots = yardTreeSlots;
@@ -198,7 +215,20 @@ namespace Sim.Core.Definitions
         }
     }
 
-    /// <summary>The inherited start from <c>content/start.json</c> (spec 002 §4, spec 005 §4).</summary>
+    /// <summary>A good in the inherited store: an index into <see cref="MarketDefs.Goods"/> and a quantity in its units (grams, ml, each).</summary>
+    public readonly struct StartStock
+    {
+        public int Good { get; }
+        public long Quantity { get; }
+
+        public StartStock(int good, long quantity)
+        {
+            Good = good;
+            Quantity = quantity;
+        }
+    }
+
+    /// <summary>The inherited start from <c>content/start.json</c> (spec 002 §4, spec 004 §4, spec 005 §4).</summary>
     public sealed class StartDef
     {
         /// <summary>Indices into <see cref="MapDef.Parcels"/>: the protected inheritance (ADR 0030).</summary>
@@ -208,8 +238,17 @@ namespace Sim.Core.Definitions
         /// <summary>Money (1/100 coin).</summary>
         public long StartingCash { get; }
 
-        public StartDef(IReadOnlyList<int> inheritedParcels, IReadOnlyList<StartBuilding> buildings, long startingCash)
+        /// <summary>The inherited store (ADR 0030), in good order of the file.</summary>
+        public IReadOnlyList<StartStock> Store { get; }
+
+        /// <summary>Saved-seed age per crop index in seasons of growth, or null for no age yet (ADR 0032).</summary>
+        public IReadOnlyList<Fixed?> SavedSeedAge { get; }
+
+        public StartDef(IReadOnlyList<int> inheritedParcels, IReadOnlyList<StartBuilding> buildings, long startingCash,
+            IReadOnlyList<StartStock> store, IReadOnlyList<Fixed?> savedSeedAge)
         {
+            SavedSeedAge = new List<Fixed?>(savedSeedAge).AsReadOnly();
+            Store = new List<StartStock>(store).AsReadOnly();
             InheritedParcels = new List<int>(inheritedParcels).AsReadOnly();
             Buildings = new List<StartBuilding>(buildings).AsReadOnly();
             StartingCash = startingCash;
@@ -238,9 +277,17 @@ namespace Sim.Core.Definitions
         public StartDef Start { get; }
         public LedgerDef Ledger { get; }
 
+        /// <summary>Goods, the region and the economy (spec 004).</summary>
+        public MarketDefs Market { get; }
+
+        /// <summary>Crops, the garden, trees and the founder (spec 003).</summary>
+        public FarmDefs Farm { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
-            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger)
+            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm)
         {
+            Farm = farm ?? throw new ArgumentNullException(nameof(farm));
+            Market = market ?? throw new ArgumentNullException(nameof(market));
             Soils = new List<SoilDef>(soils).AsReadOnly();
             Drainages = new List<DrainageDef>(drainages).AsReadOnly();
             Land = land ?? throw new ArgumentNullException(nameof(land));

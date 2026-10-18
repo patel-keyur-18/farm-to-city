@@ -136,10 +136,12 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |
 | 0027 | Audit corrections: specs 002 and 005 first, the ledger core in Sprint 1, Unity and a hello-iPhone build in Sprint 1, on-device determinism in the Phase 0 gate, the Hamlet-unlock feature, and later-phase coverage |
-| 0028 | Hamlet at the end of the first week (Village 2–3 weeks, Township 4–6 weeks). Land priced at 8–15 seasons of an acre's net income. Bank loans can be secured by the land they buy. No leasing in Phase 1 |
+| 0028 | Hamlet at the end of the first week (Village 2–3 weeks, Township 4–6 weeks). Land priced at 8–15 seasons of an owner-operated acre's net income (ADR 0033). Bank loans can be secured by the land they buy. No leasing in Phase 1 |
 | 0029 | Unity pinned to 6000.3.26f1 (6.3 LTS). Unity still compiles with `-langversion:9.0`, so the sim stays on C# 9. No upgrades mid-phase. `com.unity.pipeline` is an Editor-only dev tool |
 | 0030 | Inherit 6 protected acres and the yard, 20,000 coins and a store of seed and grain. Hamlet gate: 6 acres harvested in a season at Care ≥ 0.9, a hand's house, a profitable season. 8 × 6 map. Unowned land keeps its fertility |
 | 0031 | Phase 1 adds the kitchen garden, the mandi trip, buying inputs ahead (seasonal input prices; fertiliser price-controlled), minimum prices on offers, warm clothing and medicine |
+| 0032 | The well waters 2 well acres (the rest rain-fed). The household eats from the store daily, credited as home use. Founder nutrition and day labour are time-weighted. P&L grouping; the Hamlet gate needs farm profit > 0. Inherited seed age 2.0 |
+| 0033 | Land payback measured on an owner-operated acre (1,20,000 stays; hired acres net 2,000–5,000). Saplings priced with planting: banana 60, papaya 60, guava 180, mango 350 |
 
 ## Current status
 

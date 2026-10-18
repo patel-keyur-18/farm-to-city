@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
+using Sim.Core.Market;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
 using Sim.Core.Weather;
@@ -38,10 +40,16 @@ namespace Sim.Core
             if (config.Game != null)
             {
                 AddSystem(new LandSystem());
+                AddSystem(new FarmSystem());
+                AddSystem(new MarketSystem());
+                AddSystem(new FounderSystem());
                 AddSystem(new FinanceSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
-            foreach (IJobHandler h in config.JobHandlers)
+            var handlers = new List<IJobHandler>();
+            if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity() });
+            handlers.AddRange(config.JobHandlers);
+            foreach (IJobHandler h in handlers)
             {
                 if (_handlers.ContainsKey(h.JobType)) throw new ArgumentException("Duplicate job handler for '" + h.JobType + "'.");
                 _handlers.Add(h.JobType, h); // lookup only; never iterated
@@ -64,8 +72,12 @@ namespace Sim.Core
             {
                 state.Land = new LandState();
                 state.Ledger = new Ledger();
+                state.Finance = new FinanceState();
                 LandSystem.Initialise(sim);
+                MarketSystem.Initialise(sim);
+                FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
+                FounderRules.PayFirstSeason(sim);
             }
 
             // The first passes are at the next boundary strictly after the start time.
@@ -128,6 +140,13 @@ namespace Sim.Core
 
         /// <summary>The season index since t = 0: the ledger period of an entry posted now (spec 005 §3.1).</summary>
         public long Period { get { return State.Clock.SimTime / Clock.SecondsPerSeason; } }
+
+        /// <summary>
+        /// The period of the time just ended: at a season boundary, the closing season. Daily-pass accruals for the
+        /// day that ended post here (prepaid expensing, day labour, home use), so they belong to the season they
+        /// were earned or used in (spec 005 AC-9).
+        /// </summary>
+        internal long AccrualPeriod { get { return State.Clock.SimTime == 0 ? 0 : (State.Clock.SimTime - 1) / Clock.SecondsPerSeason; } }
 
         /// <summary>The weather of the current spell.</summary>
         public WeatherTypeDef CurrentWeather

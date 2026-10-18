@@ -32,14 +32,12 @@ namespace Sim.Core.Tests
         public static WeatherSet Weather() { return ContentLoader.LoadWeather(ReadContent("weather.json")); }
 
         /// <summary>
-        /// The land, map, buildings, start and finance content. <paramref name="edit"/> (file name, JSON) → JSON
+        /// The game content (everything but the clock and weather). <paramref name="edit"/> (file name, JSON) → JSON
         /// lets a test change one file.
         /// </summary>
-        public static GameDefs Game(Func<string, string, string> edit = null)
+        public static GameDefs Game(Func<string, string, string> edit = null, WeatherSet weather = null)
         {
-            Func<string, string> read = f => edit == null ? ReadContent(f) : edit(f, ReadContent(f));
-            return ContentLoader.LoadGame(read("land.json"), read("map.json"), read("buildings.json"),
-                read("start.json"), read("finance.json"), Weather());
+            return ContentLoader.LoadGame(f => edit == null ? ReadContent(f) : edit(f, ReadContent(f)), weather ?? Weather());
         }
     }
 }

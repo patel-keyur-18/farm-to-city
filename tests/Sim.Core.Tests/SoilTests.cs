@@ -36,9 +36,7 @@ namespace Sim.Core.Tests
             }
             weather = Sim.Content.ContentLoader.LoadWeather(json);
             WeatherSet w = weather;
-            return Sim.Content.ContentLoader.LoadGame(TestContent.ReadContent("land.json"), TestContent.ReadContent("map.json"),
-                TestContent.ReadContent("buildings.json"), TestContent.ReadContent("start.json").Replace("20000", "5000000"),
-                TestContent.ReadContent("finance.json"), w);
+            return TestContent.Game((f, j) => f == "start.json" ? j.Replace("20000", "5000000") : j, w);
         }
 
         public static Simulation NewFarmWithWeather(params string[] only)
@@ -60,14 +58,45 @@ namespace Sim.Core.Tests
 
             tile.Moisture = Fixed.FromInt(50);
             LandSystem.UpdateMoisture(sim, tile, LandTest.Weather(sim, "rain"));
-            Assert.That(tile.Moisture, Is.EqualTo(LandTest.F("51.2")));
+            Assert.That(tile.Moisture, Is.EqualTo(LandTest.F("53.0")));
 
             tile.Moisture = Fixed.FromInt(80);
             LandSystem.UpdateMoisture(sim, tile, LandTest.Weather(sim, "sun"));
-            // 79.14 to content precision; 0.4 and 0.1 aren't exact in binary, so Q31.32 lands 1 ulp below
-            // Fixed.Parse("79.14"). The raw value is pinned for determinism (spec 002 §10, implementation note).
-            Assert.That(Math.Abs(tile.Moisture.Raw - LandTest.F("79.14").Raw), Is.LessThanOrEqualTo(1));
-            Assert.That(tile.Moisture.Raw, Is.EqualTo(339_903_711_804L));
+            // 77.905 to content precision; 0.7 and 0.15 aren't exact in binary, so Q31.32 lands within an ulp of
+            // Fixed.Parse("77.905"). The raw value is pinned for determinism (spec 002 §10, implementation note).
+            Assert.That(Math.Abs(tile.Moisture.Raw - LandTest.F("77.905").Raw), Is.LessThanOrEqualTo(8));
+            Assert.That(tile.Moisture.Raw, Is.EqualTo(334_599_427_199L));
+        }
+
+        // Spec 002 §9 moisture hook (US-014.T6): an unwatered loam acre's mean moisture by season, over 100 years after
+        // a warm-up year, is inside the realistic Indian ranges. Deterministic (fixed seed), so the check isn't flaky.
+        [Test]
+        public void SeasonalMeans_Realistic()
+        {
+            Simulation sim = NewFarm(seed: 1);
+            var sum = new double[4];
+            var n = new long[4];
+            long year = sim.Clock.SecondsPerYear;
+            for (long t = Hour; t <= 101 * year; t += Hour)
+            {
+                sim.AdvanceTo(t);
+                if (t <= year) continue;
+                int season = (int)Time.Calendar.SeasonAt(t - 1, sim.Clock);
+                foreach (Tile tile in sim.State.Land.Tiles)
+                {
+                    if (tile.Terrain != Terrain.Farm || sim.State.Land.Parcels[tile.ParcelId].Owned) continue;
+                    if (sim.Config.Game.Soils[tile.Soil].Id != "loam") continue;
+                    sum[season] += tile.Moisture.Raw / 4294967296.0;
+                    n[season]++;
+                }
+            }
+            double[] mean = sum.Select((x, i) => x / n[i]).ToArray();
+            TestContext.Out.WriteLine("Loam means (Spring, Summer, Monsoon, Winter): " + string.Join(", ", mean.Select(m => m.ToString("0.0"))));
+            Assert.That(mean[0], Is.InRange(30, 50), "Spring");
+            Assert.That(mean[1], Is.InRange(15, 35), "Summer");
+            Assert.That(mean[2], Is.InRange(65, 85), "Monsoon");
+            Assert.That(mean[3], Is.InRange(40, 60), "Winter");
+            Assert.That(mean[2] > mean[3] && mean[3] > mean[0] && mean[0] > mean[1], Is.True, "Monsoon > Winter > Spring > Summer");
         }
 
         // Spec 002 AC-4.
@@ -105,26 +134,45 @@ namespace Sim.Core.Tests
             }
         }
 
-        // Spec 002 AC-6.
+        // Spec 002 AC-6 (the well acres only, ADR 0032).
         [Test]
-        public void WellFloor_InheritedOnly()
+        public void WellFloor_WellAcresOnly()
         {
             Simulation sim = LandTest.NewFarmWithWeather("sun", "heatwave");
             Assert.That(sim.Execute(new Commands.BuyParcel(sim.State.Clock.SimTime, "w1")).Accepted, Is.True);
-            Tile[] inherited = sim.State.Land.Tiles.Where(t => sim.State.Land.Parcels[t.ParcelId].Protected && t.Terrain == Terrain.Farm).ToArray();
+            Tile[] well = sim.Config.Game.Land.WellTiles.Select(t => sim.State.Land.Tiles[t]).ToArray();
+            Assert.That(well.Select(t => t.Id), Is.EqualTo(new[] { 20, 28 }));
+            Tile rainFed = sim.State.Land.Tiles[19]; // inherited, loam, not a well acre
             Tile bought = sim.State.Land.Tiles.First(t => sim.Config.Game.Map.Parcels[t.ParcelId].Id == "w1");
             Assert.That(sim.Config.Game.Soils[bought.Soil].Id, Is.EqualTo("loam"));
+            Assert.That(sim.Config.Game.Soils[rainFed.Soil].Id, Is.EqualTo("loam"));
 
             Fixed floor = sim.Config.Game.Land.WellMoistureFloor;
-            Fixed lowestBought = bought.Moisture;
+            Fixed lowestBought = bought.Moisture, lowestRainFed = rainFed.Moisture;
+            bool lifted = false;
             long end = sim.State.Clock.SimTime + sim.Clock.SecondsPerSeason;
             for (long t = Hour; t <= end; t += Hour)
             {
                 sim.AdvanceTo(t);
-                foreach (Tile tile in inherited) Assert.That(tile.Moisture, Is.GreaterThanOrEqualTo(floor));
+                foreach (Tile tile in well)
+                {
+                    Assert.That(tile.Moisture, Is.GreaterThanOrEqualTo(floor));
+                    lifted |= tile.WellLift > Fixed.Zero;
+                }
+                Assert.That(rainFed.WellLift, Is.EqualTo(Fixed.Zero));
                 if (bought.Moisture < lowestBought) lowestBought = bought.Moisture;
+                if (rainFed.Moisture < lowestRainFed) lowestRainFed = rainFed.Moisture;
             }
             Assert.That(lowestBought, Is.LessThan(floor));
+            Assert.That(lowestRainFed, Is.LessThan(floor));
+            Assert.That(lifted, Is.True, "the well lifted moisture (bucket labour, spec 003)");
+
+            var e = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) =>
+                f == "land.json" ? j.Replace("\"irrigatedTiles\": [20, 28]", "\"irrigatedTiles\": [20, 29]") : j));
+            Assert.That(e.FieldPath, Is.EqualTo("land.well.irrigatedTiles[1]"));
+            e = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) =>
+                f == "land.json" ? j.Replace("\"irrigatedTiles\": [20, 28]", "\"irrigatedTiles\": [21]") : j));
+            Assert.That(e.Message, Does.Contain("not an inherited farm tile")); // the yard
         }
     }
 

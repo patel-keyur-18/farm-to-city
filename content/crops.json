@@ -1,0 +1,24 @@
+{
+  "crops": [
+    { "id": "radish",  "nameKey": "crop.radish",  "outputGood": "radish",  "seedGood": "seed_radish",  "sowSeasons": ["spring", "summer", "monsoon", "winter"],
+      "growthMinutes": 120,  "seasonYieldPerAcre": 4000, "seedPerAcrePerSeason": 8,   "moistureMin": 40, "moistureMax": 75,
+      "labourPerAcrePerDay": 3.0, "fertilityPerSeason": 2,  "canSaveSeed": false },
+    { "id": "wheat",   "nameKey": "crop.wheat",   "outputGood": "wheat",   "seedGood": "seed_wheat",   "sowSeasons": ["winter"],
+      "growthMinutes": 360,  "seasonYieldPerAcre": 1200, "seedPerAcrePerSeason": 27,  "moistureMin": 35, "moistureMax": 65,
+      "labourPerAcrePerDay": 3.0, "fertilityPerSeason": 4,  "canSaveSeed": true, "savedSeedLossPerSeason": 0.02, "savedSeedFloor": 0.90 },
+    { "id": "rice",    "nameKey": "crop.rice",    "outputGood": "rice",    "seedGood": "seed_rice",    "sowSeasons": ["summer", "monsoon"],
+      "growthMinutes": 1440, "seasonYieldPerAcre": 1500, "seedPerAcrePerSeason": 10,  "moistureMin": 60, "moistureMax": 95,
+      "labourPerAcrePerDay": 4.0, "fertilityPerSeason": 4,  "canSaveSeed": true, "savedSeedLossPerSeason": 0.02, "savedSeedFloor": 0.90 },
+    { "id": "potato",  "nameKey": "crop.potato",  "outputGood": "potato",  "seedGood": "seed_potato",  "sowSeasons": ["spring", "winter"],
+      "growthMinutes": 1440, "seasonYieldPerAcre": 7000, "seedPerAcrePerSeason": 700, "moistureMin": 40, "moistureMax": 70,
+      "labourPerAcrePerDay": 3.5, "fertilityPerSeason": 5,  "canSaveSeed": true, "savedSeedLossPerSeason": 0.05, "savedSeedFloor": 0.80 },
+    { "id": "lentils", "nameKey": "crop.lentils", "outputGood": "lentils", "seedGood": "seed_lentils", "sowSeasons": ["summer", "winter"],
+      "growthMinutes": 480,  "seasonYieldPerAcre": 350,  "seedPerAcrePerSeason": 6,   "moistureMin": 30, "moistureMax": 60,
+      "labourPerAcrePerDay": 2.0, "fertilityPerSeason": -4, "canSaveSeed": true, "savedSeedLossPerSeason": 0.02, "savedSeedFloor": 0.90 }
+  ],
+  "gardenCrops": [
+    { "id": "garden_radish",    "nameKey": "garden.radish",    "good": "radish",    "seedGood": "seed_radish",    "growthMinutes": 10, "harvestKg": 5,   "seedGramsPerSowing": 20 },
+    { "id": "garden_spinach",   "nameKey": "garden.spinach",   "good": "spinach",   "seedGood": "seed_spinach",   "growthMinutes": 15, "harvestKg": 4,   "seedGramsPerSowing": 15 },
+    { "id": "garden_coriander", "nameKey": "garden.coriander", "good": "coriander", "seedGood": "seed_coriander", "growthMinutes": 5,  "harvestKg": 1.5, "seedGramsPerSowing": 10 }
+  ]
+}

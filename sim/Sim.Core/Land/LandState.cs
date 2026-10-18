@@ -37,6 +37,9 @@ namespace Sim.Core.Land
         public Fixed Fertility { get; internal set; }
         public Fixed Moisture { get; internal set; }
 
+        /// <summary>The moisture the well's floor added at the last hourly pass (spec 003 §3.6 bucket labour); 0 off the well acres.</summary>
+        public Fixed WellLift { get; internal set; }
+
         /// <summary>Index into <see cref="MapDef.Parcels"/>.</summary>
         public int ParcelId { get; internal set; }
 
@@ -55,7 +58,7 @@ namespace Sim.Core.Land
             var c = new Tile
             {
                 Id = Id, Terrain = Terrain, Soil = Soil, Drainage = Drainage, Fertility = Fertility,
-                Moisture = Moisture, ParcelId = ParcelId, VacantSince = VacantSince,
+                Moisture = Moisture, WellLift = WellLift, ParcelId = ParcelId, VacantSince = VacantSince,
             };
             System.Array.Copy(Changes, c.Changes, ReasonCount);
             return c;
@@ -69,6 +72,7 @@ namespace Sim.Core.Land
             h.WriteInt(Drainage);
             h.WriteFixed(Fertility);
             h.WriteFixed(Moisture);
+            h.WriteFixed(WellLift);
             h.WriteInt(ParcelId);
             h.WriteLong(VacantSince);
             foreach (Fixed f in Changes) h.WriteFixed(f);
@@ -111,13 +115,28 @@ namespace Sim.Core.Land
         public int Def { get; internal set; }
         public int TileId { get; internal set; }
 
-        internal Building Clone() { return new Building { Id = Id, Def = Def, TileId = TileId }; }
+        /// <summary>Money: the book cost (the opening value for inherited buildings, spec 005 §3.1).</summary>
+        public long Cost { get; internal set; }
+
+        /// <summary>Money depreciated so far, and over how many season closes (spec 005 §3.3).</summary>
+        public long Depreciated { get; internal set; }
+        public int SeasonsDepreciated { get; internal set; }
+
+        public long BookValue { get { return Cost - Depreciated; } }
+
+        internal Building Clone()
+        {
+            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated };
+        }
 
         internal void WriteTo(StateHasher h)
         {
             h.WriteLong(Id);
             h.WriteInt(Def);
             h.WriteInt(TileId);
+            h.WriteLong(Cost);
+            h.WriteLong(Depreciated);
+            h.WriteInt(SeasonsDepreciated);
         }
     }
 

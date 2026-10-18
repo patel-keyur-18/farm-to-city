@@ -1,0 +1,35 @@
+{
+  "roadTier": "track",
+  "transportCostPerKg": { "track": 1.50, "road": 1.00, "highway": 0.50 },
+  "seasonalFactor": {
+    "radish":    [1.00, 1.15, 1.10, 0.85],
+    "wheat":     [0.95, 1.00, 1.05, 1.10],
+    "rice":      [1.05, 1.05, 0.95, 0.95],
+    "potato":    [0.85, 1.00, 1.15, 1.10],
+    "lentils":   [1.00, 0.95, 1.05, 1.00],
+    "banana":    [1.00, 1.00, 1.00, 1.00],
+    "papaya":    [1.00, 1.00, 1.00, 1.00],
+    "guava":     [1.10, 1.10, 0.95, 0.95],
+    "mango":     [1.20, 0.90, 1.20, 1.20],
+    "spinach":   [1.10, 1.15, 1.05, 0.85],
+    "coriander": [1.05, 1.15, 1.10, 0.90],
+    "seed_radish":    [1.00, 1.00, 1.00, 1.00],
+    "seed_wheat":     [0.95, 0.95, 0.95, 1.10],
+    "seed_rice":      [0.95, 1.10, 1.10, 0.95],
+    "seed_potato":    [1.10, 0.95, 0.95, 1.10],
+    "seed_lentils":   [0.95, 1.10, 0.95, 1.10],
+    "seed_spinach":   [1.00, 1.00, 1.00, 1.00],
+    "seed_coriander": [1.00, 1.00, 1.00, 1.00],
+    "compost":             [1.05, 1.00, 1.05, 1.00],
+    "fertiliser_chemical": [1.05, 1.00, 1.05, 1.00],
+    "spray":               [1.05, 1.00, 1.05, 1.00],
+    "sapling_banana": [1.00, 1.00, 1.00, 1.00],
+    "sapling_papaya": [1.00, 1.00, 1.00, 1.00],
+    "sapling_guava":  [1.00, 1.00, 1.00, 1.00],
+    "sapling_mango":  [1.00, 1.00, 1.00, 1.00]
+  },
+  "traderBuyPerDay": {
+    "radish": 300, "wheat": 2000, "rice": 2000, "potato": 3000, "lentils": 500, "banana": 150,
+    "papaya": 100, "guava": 150, "mango": 400, "spinach": 100, "coriander": 30
+  }
+}

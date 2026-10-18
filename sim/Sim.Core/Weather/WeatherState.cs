@@ -44,6 +44,9 @@ namespace Sim.Core.Weather
 
         internal void Append(int weather) { _generated.Add(weather); }
 
+        /// <summary>Tests only: replaces an already generated spell's weather (for exact time-weighting checks).</summary>
+        internal void SetSpell(long spell, int weather) { _generated[(int)(spell - FirstSpell)] = weather; }
+
         /// <summary>Drops spells before <paramref name="spell"/>.</summary>
         internal void DropBefore(long spell)
         {

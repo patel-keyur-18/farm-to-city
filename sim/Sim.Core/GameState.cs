@@ -1,6 +1,8 @@
 using Sim.Core.Commands;
+using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
+using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
@@ -33,6 +35,15 @@ namespace Sim.Core
         /// <summary>The founder's ledger (spec 005); null in a time-and-weather-only sim.</summary>
         public Ledger Ledger { get; internal set; }
 
+        /// <summary>Prepayments and season reports (spec 005); null in a time-and-weather-only sim.</summary>
+        public FinanceState Finance { get; internal set; }
+
+        /// <summary>Prices, the trader and the store (spec 004); null in a time-and-weather-only sim.</summary>
+        public MarketState Market { get; internal set; }
+
+        /// <summary>Crops, the garden, trees and the founder (spec 003); null in a time-and-weather-only sim.</summary>
+        public FarmState Farm { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -52,6 +63,9 @@ namespace Sim.Core
             // time-and-weather-only state (golden 001) hashes as before.
             if (Land != null) Land.WriteTo(h);
             if (Ledger != null) Ledger.WriteTo(h);
+            if (Finance != null) Finance.WriteTo(h);
+            if (Market != null) Market.WriteTo(h);
+            if (Farm != null) Farm.WriteTo(h);
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>
@@ -74,6 +88,9 @@ namespace Sim.Core
                 Weather = Weather.Clone(),
                 Land = Land?.Clone(),
                 Ledger = Ledger?.Clone(),
+                Finance = Finance?.Clone(),
+                Market = Market?.Clone(),
+                Farm = Farm?.Clone(),
                 CommandLog = CommandLog.Clone(),
             };
         }

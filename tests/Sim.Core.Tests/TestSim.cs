@@ -28,6 +28,31 @@ namespace Sim.Core.Tests
             return Simulation.NewGame(Config(options, game: game ?? TestContent.Game()), new NewGame(seed, Wall0, localSeconds));
         }
 
+        /// <summary>The default content with 20,00,000 coins of starting cash, for tests that spend freely.</summary>
+        public static GameDefs RichGame(System.Func<string, string, string> edit = null)
+        {
+            return TestContent.Game((f, j) =>
+            {
+                if (f == "start.json") j = j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000");
+                return edit == null ? j : edit(f, j);
+            });
+        }
+
+        /// <summary>
+        /// Rich content without the household's money flows: the founder starts on subsistence (no living costs) and
+        /// doesn't eat from the store. For ledger and store tests that count every coin.
+        /// </summary>
+        public static GameDefs Quiet(System.Func<string, string, string> edit = null)
+        {
+            return RichGame((f, j) =>
+            {
+                if (f == "founder.json")
+                    j = j.Replace("\"startDietPlan\": \"basic\"", "\"startDietPlan\": \"subsistence\"")
+                        .Replace("\"startEatFromStore\": true", "\"startEatFromStore\": false");
+                return edit == null ? j : edit(f, j);
+            });
+        }
+
         public static Simulation New(ulong seed = 42, long localSeconds = 0, SimOptions options = null,
             IEnumerable<ISimSystem> systems = null, IEnumerable<IJobHandler> handlers = null)
         {

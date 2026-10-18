@@ -1,6 +1,6 @@
 # 0030. Inherit a 6-acre farm, start with 20,000 coins, and gate the Hamlet on labour
 
-- Status: Accepted
+- Status: Accepted. Point 4 superseded and point 5 clarified by ADR 0032 (the well waters two well acres; "profitable" means farm profit above 0)
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Supersedes: ADR 0008's starting package (2 acres; savings for 2 seasons); ADR 0028's Hamlet reasoning (the Hamlet no longer depends on buying land); spec 002's single inherited parcel

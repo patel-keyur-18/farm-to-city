@@ -86,6 +86,7 @@ namespace Sim.Core.Tests
 
 namespace Sim.Core.Tests
 {
+    using System.Linq;
     using NUnit.Framework;
     using Sim.Core.Finance;
     using Sim.Core.Land;
@@ -100,7 +101,13 @@ namespace Sim.Core.Tests
             Ledger ledger = sim.State.Ledger;
             long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]) + LandRules.ParcelPrice(sim, sim.State.Land.Parcels[1]);
 
-            Assert.That(ledger.Cash, Is.EqualTo(20_000_00));
+            // The opening entry holds the 20,000 inherited coins; the first season's basic living costs are then
+            // prepaid from them (spec 003 AC-21: 18,000 for the whole of season 0 at t = 0).
+            JournalEntry opening = ledger.Entries.First();
+            Assert.That(opening.DescriptionKey, Is.EqualTo("ledger.opening"));
+            Assert.That(opening.Postings.Single(p => p.Account == Account.Cash).Amount, Is.EqualTo(20_000_00));
+            Assert.That(ledger.Cash + ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(20_000_00));
+            Assert.That(ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(18_000_00));
             Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
             Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00)); // 6 farm acres and the yard, loam at fertility 45 (price factor 0.98)
             Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));
@@ -123,8 +130,8 @@ namespace Sim.Core.Tests
 
     public partial class LedgerTests
     {
-        // Spec 005 AC-4. Activity available so far: land purchases and quick sales (US-040). Prepayments,
-        // loans, repayments and missed payments join this test with US-060 and F05.2.
+        // Spec 005 AC-4. Activity so far: land purchases and quick sales (US-040) and prepayments (US-060).
+        // Loans, repayments and missed payments join this test with F05.2.
         [Test]
         public void Reconciles_EverySeason()
         {
@@ -142,7 +149,19 @@ namespace Sim.Core.Tests
                     long at = sim.State.Clock.SimTime + 1 + (long)Rng.Below(r, 20 * 3600);
                     if (at > end) break;
                     string id = parcels[(int)Rng.Below(Rng.Next(seed, (RngStream)903, i, 1), (ulong)parcels.Length)];
-                    Command c = Rng.Below(Rng.Next(seed, (RngStream)903, i, 2), 3) == 0 ? new SellParcel(at, id) : (Command)new BuyParcel(at, id);
+                    ulong kind = Rng.Below(Rng.Next(seed, (RngStream)903, i, 2), 5);
+                    if (kind >= 3)
+                    {
+                        // Prepayments (US-060): open one for up to a season and a half, or close the oldest early.
+                        sim.AdvanceTo(at);
+                        if (kind == 3 && sim.State.Ledger.CanAfford(9_000_01))
+                            Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, 9_000_01, at, at + 1 + (long)Rng.Below(r, 6 * Day), "test:p" + i);
+                        else if (kind == 4 && sim.State.Finance.Prepayments.Count > 0)
+                            Accrual.Close(sim, sim.State.Finance.Prepayments[0].Id);
+                        accepted++;
+                        continue;
+                    }
+                    Command c = kind == 0 ? new SellParcel(at, id) : (Command)new BuyParcel(at, id);
                     if (sim.Execute(c).Accepted) accepted++;
                 }
                 sim.AdvanceTo(end); // every season close reconciles (strict: a failure throws)

@@ -126,7 +126,7 @@ unmet     = max(0, D − S)
 | Adding | `StoreAdd(good, q)` for harvests and fruit (spec 003). The caller chooses the overflow rule: **StoreOnly**: rejected with `StoreFull` if q doesn't fit, nothing changes; **SellRestToTrader**: what fits is stored and the rest is sold to the trader at the floor now; rejected with `TraderFull` if the trader can't take the rest |
 | Taking | `StoreTake(good, q)` for saved seed, inputs and the household's food (spec 003). Takes stock that isn't on offer first, then reduces the offer |
 | Spoilage | At each daily pass, for each good in id order: `lost = round(q × GoodDef.spoilagePerDay)` grams (Fixed, rounded once), taken from stock not on offer first, then from the offer. Emits `GoodsSpoiled(good, lost)` when lost > 0 (for *While you were away*) |
-| Valuation | The store's value for net worth (spec 005 §3.5) is `Σ Value(q, Floor)`: what the trader would pay now |
+| Valuation | The store's value for net worth (spec 005 §3.5) is `Σ Value(q, Floor)` over produce (what the trader would pay now) plus `Σ Value(q, InputPrice)` over inputs (replacement cost: the trader doesn't buy inputs, so buying ahead is an asset swap; Sprint 2 planning review) |
 
 Examples: 100 kg of radish (0.25 a day) is 75 kg after one day and 31.64 kg after four. 1,000 kg of wheat (0.005) loses 5 kg a day, about 2% a season.
 
@@ -191,7 +191,7 @@ The market needs `x^y` for non-integer y. `Sim.Core.Maths.Fixed` gains:
 | seed_radish, seed_wheat, seed_rice, seed_potato, seed_lentils, seed_spinach, seed_coriander | input | kg | 300, 45, 60, 20, 110, 200, 150 | — | 0.001 | — |
 | compost, fertiliser_chemical | input | kg | 2, 30 (`priceControlled`) | — | 0.001 | — |
 | spray | input | litre | 500 | — | 0.001 | — |
-| sapling_banana, sapling_papaya, sapling_guava, sapling_mango | input | each | 150, 120, 250, 400 | — | — | — |
+| sapling_banana, sapling_papaya, sapling_guava, sapling_mango | input | each | 60, 60, 180, 350 (with planting, ADR 0033) | — | — | — |
 
 Other `GoodDef` fields: `id`, `nameKey`, `edible` (produce: true), `weightKg` per unit (default 1; saplings 2), `tradeable` (all true), `priceControlled` (default false). Bounds: basePrice > 0; elasticity 0.1–3 (produce); spoilagePerDay 0–1; weightKg 0–100.
 
@@ -322,7 +322,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-11 | A sapling bought at planting costs exactly `Value(1, P_regional)` and is capitalised (spec 003); `Buy` rejects saplings and produce with `NotAnInput` | `MarketTests.Saplings_AtPlantingOnly` |
 | AC-12 | `StoreAdd` with StoreOnly rejects a harvest that doesn't fit and changes nothing; with SellRestToTrader it stores what fits and sells exactly the rest at the floor, or rejects with `TraderFull` | `StoreTests.Capacity_AndOverflow` |
 | AC-13 | Daily spoilage takes exactly `round(q × rate)` per good (100 kg radish → 75 kg → … 31.640625 kg after 4 days within gram rounding), from stock not on offer first, and emits `GoodsSpoiled` | `StoreTests.Spoilage_Daily` |
-| AC-14 | `StoreValue()` equals Σ `Value(q, Floor)` and is the stored-goods term of spec 005's net worth | `StoreTests.Valuation_AtTraderPrice` |
+| AC-14 | `StoreValue()` equals Σ `Value(q, Floor)` over produce plus Σ `Value(q, InputPrice)` over inputs, and is the stored-goods term of spec 005's net worth | `StoreTests.Valuation_AtTraderPrice` |
 | AC-15 | Unmet demand is recorded per good per hour and only the last 96 hours are kept | `MarketTests.UnmetDemand_Window` |
 | AC-16 | The chunking-invariance check holds over one game year with offers, trader sales and spoilage, and the golden replay `golden/004-market.json` reproduces its stored hash | `MarketTests.ChunkingInvariance`, `ReplayTests.Golden_004_Market` |
 | AC-17 | Performance (CI, Release): advancing 72 h with the market (11 produce goods), the store and the default farm takes under 20 ms | `PerfTests.Advance72h_WithMarket` (category `Perf`) |
@@ -354,6 +354,8 @@ All four were answered in the Sprint 1 review (2026-10-17):
 2. **Input prices.** The village dealer's price is the regional price, delivery included. Inputs can be bought ahead, with seasonal prices; chemical fertiliser has a controlled price that ignores inflation, with a peak-season premium (§3.1, §3.4, ADR 0031).
 3. **Pro rata** among sellers when supply exceeds demand. ADR 0013's seeded order is for scarce supply among many buyers, which arrives with households and businesses (Phase 2).
 4. **Minimum prices** on offers are added now (§3.2); spec 006's standing orders reuse the rule.
+
+**Sprint split (Sprint 2 planning review, 2026-10-18; no rule change):** crops need goods, prices and the store, so a core of this spec is built in Sprint 2: `GoodDef`, the price part of `RegionDef`, P_regional, Floor and input prices (the price index stays at `startIndex` until the inflation step), the store with capacity, both overflow rules and the inheritance, the trader's daily capacity, `StoreValue` and `UseInput`. Its ACs (AC-1's goods checks, AC-2, AC-12, AC-14, AC-23) pass in Sprint 2. Inflation, spoilage, the hourly market, `Offer`, `SellToTrader`, `Buy`, minimum prices and the mandi trip stay in Sprint 3. **Price precision (implementation note):** prices are `Fixed` products of decimal factors that aren't exact in binary (0.85, 1.10), so they match the decimal examples to within a few units in the last place (2⁻³²); `Value` then rounds once to 1/100 coin, so no amount differs. The AC-2 test allows 16 units in the last place. Home use (spec 003, ADR 0032) values eaten food at the Floor and credits the sales account. **Stored inputs** count in net worth at today's input price (owner decision, 2026-10-18).
 
 ## 11. Cut first
 
