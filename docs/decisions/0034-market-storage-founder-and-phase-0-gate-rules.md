@@ -1,6 +1,6 @@
 # 0034. Market, storage, founder and Phase 0 gate rules (Sprint 3 planning review)
 
-- Status: Accepted
+- Status: Accepted; §8's pass rule clarified by ADR 0035 (dropped frames over 25 ms; the render thread for diagnosis only)
 - Date: 2026-10-18
 - Deciders: Keyur Patel
 - Amends: ADR 0002 (ready to harvest waits for a grace period, then spoils), ADR 0010 (subsistence is automatic only), ADR 0012 (the price index applies to every coin amount in content), ADR 0021 (ripe fruit waits for the same grace), ADR 0031 (the mandi trip's labour cost), spec 002 §3.5, spec 003 §3.3, §3.8, §3.11, §3.12, spec 004 §3.1–§3.6, spec 005 §3.1, §3.5, spec 006 §3.6

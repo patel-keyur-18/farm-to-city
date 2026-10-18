@@ -151,7 +151,7 @@
 
 ## Sprint 3 · 9–15 Nov 2026 · Phase 0
 
-- **Status:** In progress
+- **Status:** Done (2026-10-18). **Phase 0 gate passed** (ADR 0035)
 - **Branch:** `sprint/03-market-spike-gate` (or the branch the session assigns)
 - **Goal:** Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review.
 - **Points:** 47 (52 planned; −5 to Sprint 2, ADR 0032)
@@ -165,9 +165,9 @@
 | US-012 | Spec 009: onboarding | [F00.2](features/F00.2-phase-1-feature-specs.md) | 3 | Must | Done |
 | US-015 | Money-loop checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
 | US-016 | Viability checks | [F00.3](features/F00.3-economy-model.md) | 3 | Must | Done |
-| US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | Built; device run (owner) |
-| US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | Waiting on device results |
-| US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | Done (all goldens pass on the iPhone) |
+| US-021 | 2,000-agent spike | [F00.5](features/F00.5-performance-spike.md) | 5 | Must | Done |
+| US-022 | Record the result | [F00.5](features/F00.5-performance-spike.md) | 1 | Must | Done |
+| US-023 | On-device determinism | [F00.5](features/F00.5-performance-spike.md) | 3 | Must | Done |
 | US-024 | CC0 style check | [F00.6](features/F00.6-art-style-check.md) | 2 | Should | Done |
 | US-046 | Pests and spraying | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Should | Done |
 | US-049 | Tree value and payback | [F02.3](features/F02.3-fruit-trees.md) | 2 | Should | Done |
@@ -182,7 +182,7 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025): code stories done; specs 008 and 009 and the device stories (US-021 to US-024) wait on the owner
+- [x] All Must stories meet the Definition of Done (ADR 0025): 47 of 47 points
 - [x] Test checklist written in `docs/test-checklists/` (`s03-spike-determinism.md`)
 - [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened; owner merges to `main`
@@ -194,9 +194,12 @@
 **Review (owner's device results):**
 - *Round 1 (2026-10-18, iPhone 13):* the spike runs smoothly with all 2,000 agents on the whole map; GPU 2.7 ms (whole map) and 3.4 ms (during the heat run), well inside 8.3 ms. The CPU figure was negative (a measurement bug: the present wait was subtracted from a time that already excludes it), and the buttons didn't stop a running check, so the style check drew over the heat run. The style check itself renders as designed. Golden replays and the result panels weren't captured. Both bugs fixed (4d9199a).
 - *Round 2 (2026-10-18):* **golden replays 001, 003 and 004 all PASS on the iPhone 13 with the exact `dotnet test` hashes** (IL2CPP determinism proven); 72 h catch-up 1.8 ms (budget 2,000). Spike: main thread p95 7.45 ms (whole map), 3.5 ms (play zoom); GPU p95 2.8 ms; render thread p95 14.5–15.2 ms; "frames over 16.7 ms" 36% (the threshold counted normal 60 Hz vsync jitter). Heat run (5 min): the same numbers, the phone stayed cool. Style check approved (the low-poly look). Citizen stub avg 2.1–2.6 ms, max 11.6 ms.
-- *Round 3:* — (Spike only: the baseline and agents-only views, dropped frames over 25 ms)
+- *Round 3 (2026-10-18):* every view about 60 fps with under 1% of frames over 25 ms; main thread p95 at most 7.59 ms, GPU p95 at most 2.81 ms. The map with **no agents** shows the same render-thread time (10.2 ms avg), so that figure is the wait for the 60 Hz screen, not work. **The spike passes; the Phase 0 gate passes** (owner, ADR 0035).
 
-**Retro:** —
+**Retro:**
+- *Went well:* closing the 9 planning gaps before code meant no rework on the market; the gate checks and the stress bots found real design issues (subsistence dominance, free field storage, a dead mandi, edge-tree dominance) before any player could; determinism held on IL2CPP first time.
+- *To improve:* my device measurements needed three rounds (a wrong CPU field, overlapping checks, a bad dropped-frame threshold). Next time: validate a measurement's semantics in the Editor against a known baseline before it goes to the phone, and design each check to stop the previous one.
+- *Carry over:* remove or hide the Phase 0 bar (Sprint 4, F08.4); instancing for agents later (ADR 0035).
 
 ## Sprint 4 · 16–22 Nov 2026 · Phase 1
 
