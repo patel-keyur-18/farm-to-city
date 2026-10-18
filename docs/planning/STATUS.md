@@ -49,6 +49,7 @@
   - **Planning review with the owner (2026-10-18), before coding.** Six gaps closed, recorded in **ADR 0032** and in §10 of specs 002–005: the well waters 2 well acres (tiles 20, 28), the rest rain-fed; the household eats from the store daily, credited to sales as home use; founder nutrition and day labour are time-weighted (closes a money loop); the P&L grouping (farm profit, net result) with plain-language labels, and the Hamlet gate on farm profit > 0; inherited seed age 2.0 for wheat and lentils.
   - **US-181 goods, prices and `UseInput`: done** (spec 004 AC-2, AC-1's goods checks). `goods.json`, `region.json`, `market.json`; P_regional, Floor, Ceiling, input prices (index fixed at 1.00); the trader's daily capacity. `LoadGame` now takes a file reader. **US-057 store: done** (spec 004 AC-12, AC-14, AC-23): capacity by weight, both overflow rules, the inherited store, `StoreValue` (inputs at replacement cost), `UseInput`. 105 tests.
   - **US-060 to US-062 accrual, season close, net worth: done** (spec 005 AC-6 to AC-12, AC-14, AC-15; AC-4 gains prepayments). Prepayments expensed daily, the season close (depreciation, the report with ADR 0032's lines and plain-language keys, close to retained earnings, reconciliation), net worth with inputs at replacement cost. Accounts 5250 and 5700 added. 114 tests.
+  - **Well acres (ADR 0032) and spec 003 content: done.** **US-042 to US-045 and US-177 crops and the garden: done** (spec 003 AC-1 to AC-7, AC-9, AC-11 to AC-13, AC-17, AC-31 to AC-33): `Sow`, `Harvest`, `ClearField`, `SowGarden`, `PickGarden`; growth jobs; one accrual engine for crops and the founder (§3.7); the yield formula with the cap and breakdown; seeds (stock first, saved-seed age) and fertiliser; fertility effects; bucket labour on the well acres. CropHealth is 1.00 until US-046. 130 tests.
   - **Scope moved to Sprint 2:** the spec 004 core (new US-181: goods, regional prices with a fixed index, trader capacity, `UseInput`) and US-057 (the store), because crops need them; the health formula moves from US-052 into US-051. Pests, golden 003 and tree payback stay in Sprint 3. Sprint 2 is 58 points, Sprint 3 47.
 
 ## In progress
@@ -57,7 +58,7 @@ Sprint 2. Order: US-181 and US-057 (spec 004 core), US-060 to US-062 (accrual, s
 
 ## Next up
 
-1. **Claude:** US-042 to US-045 and US-177 (crops, yield, seeds and fertiliser, kitchen garden), then the order under In progress.
+1. **Claude:** US-047 and US-048 (fruit trees), then US-050, US-051, US-053 (founder), then AC-10, AC-28 and AC-29 of spec 003, then the order under In progress.
 2. Spec 006 must price the hand's hut (about 15,000 for the ADR 0030 pacing) and reuse spec 004's minimum price in standing orders. Spec 007 must compact the per-second `Sync` entries in the command log.
 
 ## Owner action checklist (Phases 0–1)

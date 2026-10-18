@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.Core.Market;
@@ -39,11 +40,15 @@ namespace Sim.Core
             if (config.Game != null)
             {
                 AddSystem(new LandSystem());
+                AddSystem(new FarmSystem());
                 AddSystem(new MarketSystem());
                 AddSystem(new FinanceSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
-            foreach (IJobHandler h in config.JobHandlers)
+            var handlers = new List<IJobHandler>();
+            if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth() });
+            handlers.AddRange(config.JobHandlers);
+            foreach (IJobHandler h in handlers)
             {
                 if (_handlers.ContainsKey(h.JobType)) throw new ArgumentException("Duplicate job handler for '" + h.JobType + "'.");
                 _handlers.Add(h.JobType, h); // lookup only; never iterated
@@ -69,6 +74,7 @@ namespace Sim.Core
                 state.Finance = new FinanceState();
                 LandSystem.Initialise(sim);
                 MarketSystem.Initialise(sim);
+                FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
             }
 

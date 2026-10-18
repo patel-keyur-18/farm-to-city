@@ -24,6 +24,21 @@ namespace Sim.Core.Commands
         // Spec 004 (goods and store)
         StoreFull,
         TraderFull,
+
+        // Spec 003 (crops, garden, trees, founder)
+        UnknownTile,
+        NotFarmTile,
+        TileOccupied,
+        UnknownCrop,
+        OutOfSeason,
+        UnknownFertiliser,
+        SeedCannotBeSaved,
+        NoSavedSeed,
+        NoCrop,
+        NotReady,
+        UnknownBed,
+        BedBusy,
+        BedRested,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
