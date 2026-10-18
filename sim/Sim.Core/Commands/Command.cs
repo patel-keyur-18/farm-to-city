@@ -39,6 +39,12 @@ namespace Sim.Core.Commands
         UnknownBed,
         BedBusy,
         BedRested,
+        UnknownSlot,
+        SlotOccupied,
+        UnknownTree,
+        TerrainNotAllowed,
+        NoTree,
+        NoRipeFruit,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

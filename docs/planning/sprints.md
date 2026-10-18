@@ -122,8 +122,8 @@
 | US-043 | Growth and ready to harvest | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | Done |
 | US-044 | Yield formula | [F02.2](features/F02.2-crops-and-yield.md) | 5 | Must | Done |
 | US-045 | Seeds and fertiliser | [F02.2](features/F02.2-crops-and-yield.md) | 3 | Must | Done |
-| US-047 | Plant a sapling | [F02.3](features/F02.3-fruit-trees.md) | 2 | Must | To do |
-| US-048 | Maturity and fruiting | [F02.3](features/F02.3-fruit-trees.md) | 3 | Must | To do |
+| US-047 | Plant a sapling | [F02.3](features/F02.3-fruit-trees.md) | 2 | Must | Done |
+| US-048 | Maturity and fruiting | [F02.3](features/F02.3-fruit-trees.md) | 3 | Must | Done |
 | US-050 | Labour capacity | [F03.1](features/F03.1-founder-labour-and-routine.md) | 3 | Must | To do |
 | US-051 | Household plan | [F03.1](features/F03.1-founder-labour-and-routine.md) | 4 | Must | To do |
 | US-053 | Day labour and subsistence | [F03.1](features/F03.1-founder-labour-and-routine.md) | 2 | Must | To do |

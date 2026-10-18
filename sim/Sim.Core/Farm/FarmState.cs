@@ -134,6 +134,53 @@ namespace Sim.Core.Farm
         }
     }
 
+    public enum TreeState
+    {
+        Growing = 0,
+        Mature = 1,
+    }
+
+    /// <summary>A fruit tree in a yard or field-edge slot (spec 003 §3.12).</summary>
+    public sealed class Tree
+    {
+        public long Id { get; internal set; }
+        public long SlotId { get; internal set; }
+
+        /// <summary>Index into <see cref="Definitions.FarmDefs.Trees"/>.</summary>
+        public int Def { get; internal set; }
+        public long PlantedAt { get; internal set; }
+        public TreeState State { get; internal set; }
+
+        /// <summary>Grams of ripe fruit waiting on the tree (0 = none).</summary>
+        public long RipeGrams { get; internal set; }
+
+        /// <summary>Batches picked so far.</summary>
+        public int Batches { get; internal set; }
+
+        /// <summary>Money: Σ picked batches at the trader's buying price when picked.</summary>
+        public long Returns { get; internal set; }
+
+        /// <summary>Money: the sapling's cost, its book value (not depreciated in Phase 1).</summary>
+        public long Cost { get; internal set; }
+        public long JobId { get; internal set; }
+
+        internal Tree Clone() { return (Tree)MemberwiseClone(); }
+
+        internal void WriteTo(StateHasher h)
+        {
+            h.WriteLong(Id);
+            h.WriteLong(SlotId);
+            h.WriteInt(Def);
+            h.WriteLong(PlantedAt);
+            h.WriteInt((int)State);
+            h.WriteLong(RipeGrams);
+            h.WriteInt(Batches);
+            h.WriteLong(Returns);
+            h.WriteLong(Cost);
+            h.WriteLong(JobId);
+        }
+    }
+
     /// <summary>Crops, garden beds, trees and the founder's household (spec 003 §4). Lists are in id order.</summary>
     public sealed class FarmState
     {
@@ -152,6 +199,11 @@ namespace Sim.Core.Farm
 
         public List<GardenBed> Beds { get; } = new List<GardenBed>();
 
+        public List<Tree> Trees { get; } = new List<Tree>();
+        public long NextTreeId { get; internal set; } = 1;
+
+        public Tree TreeIn(long slotId) { return Trees.Find(t => t.SlotId == slotId); }
+
         public FounderState Founder { get; internal set; }
 
         public Crop CropOn(int tileId) { return Crops.Find(c => c.TileId == tileId); }
@@ -162,12 +214,13 @@ namespace Sim.Core.Farm
         {
             var c = new FarmState
             {
-                NextCropId = NextCropId, CareRatio = CareRatio, LastAccrual = LastAccrual,
+                NextCropId = NextCropId, NextTreeId = NextTreeId, CareRatio = CareRatio, LastAccrual = LastAccrual,
                 SavedSeedAge = (Fixed[])SavedSeedAge.Clone(), HasSavedSeed = (bool[])HasSavedSeed.Clone(),
                 Founder = Founder.Clone(),
             };
             foreach (Crop x in Crops) c.Crops.Add(x.Clone());
             foreach (GardenBed b in Beds) c.Beds.Add(b.Clone());
+            foreach (Tree t in Trees) c.Trees.Add(t.Clone());
             return c;
         }
 
@@ -185,6 +238,9 @@ namespace Sim.Core.Farm
             foreach (Crop x in Crops) x.WriteTo(h);
             h.WriteInt(Beds.Count);
             foreach (GardenBed b in Beds) b.WriteTo(h);
+            h.WriteLong(NextTreeId);
+            h.WriteInt(Trees.Count);
+            foreach (Tree t in Trees) t.WriteTo(h);
             Founder.WriteTo(h);
         }
     }

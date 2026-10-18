@@ -91,3 +91,61 @@ namespace Sim.Core.Events
         protected override string Describe() { return "GardenPicked(bed=" + BedId + ", good=" + GoodId + ", g=" + Grams + ", left=" + RemainingGrams + ")"; }
     }
 }
+
+namespace Sim.Core.Events
+{
+    /// <summary>Base for the tree events of spec 003 §5: a slot, a tree kind and an amount (grams or money).</summary>
+    public abstract class TreeEvent : SimEvent
+    {
+        public long SlotId { get; }
+        public string TreeId { get; }
+
+        protected TreeEvent(long simTime, long slotId, string treeId) : base(simTime)
+        {
+            SlotId = slotId;
+            TreeId = treeId;
+        }
+    }
+
+    public sealed class TreePlanted : TreeEvent
+    {
+        public long Cost { get; }
+        public TreePlanted(long t, long slotId, string treeId, long cost) : base(t, slotId, treeId) { Cost = cost; }
+        protected override string Describe() { return "TreePlanted(slot=" + SlotId + ", tree=" + TreeId + ", cost=" + Cost + ")"; }
+    }
+
+    public sealed class TreeMatured : TreeEvent
+    {
+        public TreeMatured(long t, long slotId, string treeId) : base(t, slotId, treeId) { }
+        protected override string Describe() { return "TreeMatured(slot=" + SlotId + ", tree=" + TreeId + ")"; }
+    }
+
+    public sealed class FruitRipe : TreeEvent
+    {
+        public long Grams { get; }
+        public FruitRipe(long t, long slotId, string treeId, long grams) : base(t, slotId, treeId) { Grams = grams; }
+        protected override string Describe() { return "FruitRipe(slot=" + SlotId + ", tree=" + TreeId + ", g=" + Grams + ")"; }
+    }
+
+    public sealed class FruitPicked : TreeEvent
+    {
+        public long Grams { get; }
+        public long Value { get; }
+        public FruitPicked(long t, long slotId, string treeId, long grams, long value) : base(t, slotId, treeId) { Grams = grams; Value = value; }
+        protected override string Describe() { return "FruitPicked(slot=" + SlotId + ", tree=" + TreeId + ", g=" + Grams + ", value=" + Value + ")"; }
+    }
+
+    public sealed class TreeSpent : TreeEvent
+    {
+        public long BookValue { get; }
+        public TreeSpent(long t, long slotId, string treeId, long bookValue) : base(t, slotId, treeId) { BookValue = bookValue; }
+        protected override string Describe() { return "TreeSpent(slot=" + SlotId + ", tree=" + TreeId + ", bookValue=" + BookValue + ")"; }
+    }
+
+    public sealed class TreeRemoved : TreeEvent
+    {
+        public long BookValue { get; }
+        public TreeRemoved(long t, long slotId, string treeId, long bookValue) : base(t, slotId, treeId) { BookValue = bookValue; }
+        protected override string Describe() { return "TreeRemoved(slot=" + SlotId + ", tree=" + TreeId + ", bookValue=" + BookValue + ")"; }
+    }
+}

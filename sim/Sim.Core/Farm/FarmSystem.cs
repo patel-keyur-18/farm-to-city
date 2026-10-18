@@ -16,6 +16,7 @@ namespace Sim.Core.Farm
     {
         public const string CropJob = "crop.grow";
         public const string GardenJob = "garden.grow";
+        public const string TreeJob = "tree.mature";
 
         public SystemOrder Order { get { return SystemOrder.Agriculture; } }
 
@@ -56,6 +57,7 @@ namespace Sim.Core.Farm
                     break;
                 case ItemClass.Seasonal:
                     foreach (GardenBed b in sim.State.Farm.Beds) b.RemainingGrams = sim.Config.Game.Farm.Farm.GardenSeasonOutputGrams;
+                    foreach (Tree t in sim.State.Farm.Trees) Ripen(sim, t);
                     break;
             }
         }
@@ -114,6 +116,29 @@ namespace Sim.Core.Farm
             return demand;
         }
 
+        // ---- trees (§3.12) ----
+
+        /// <summary>A mature tree with no fruit waiting gets one batch if the current season is one of its fruiting seasons.</summary>
+        internal static void Ripen(Simulation sim, Tree t)
+        {
+            TreeDef def = sim.Config.Game.Farm.Trees[t.Def];
+            if (t.State != TreeState.Mature || t.RipeGrams > 0) return;
+            if (!def.FruitingSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return;
+            t.RipeGrams = def.BatchGrams;
+            sim.Emit(new FruitRipe(sim.State.Clock.SimTime, t.SlotId, def.Id, t.RipeGrams));
+        }
+
+        /// <summary>Removes a tree: its book value goes to 5600 Loss (spec 005 §3.3) and the slot is emptied.</summary>
+        internal static void Dispose(Simulation sim, Tree t)
+        {
+            if (t.JobId != 0) sim.CompleteJob(sim.State.Jobs.Find(t.JobId));
+            if (t.Cost > 0)
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.treeRemoved", "tree:" + t.Id,
+                    new Finance.Posting(Finance.Account.LossOnAssetSales, t.Cost), new Finance.Posting(Finance.Account.Trees, -t.Cost));
+            LandSystem.SetTree(sim, t.SlotId, 0);
+            sim.State.Farm.Trees.Remove(t);
+        }
+
         // ---- jobs ----
 
         /// <summary>A crop's growth ends: the factors close, the yield is frozen, fertility changes, and it waits Ready (§3.3).</summary>
@@ -150,6 +175,24 @@ namespace Sim.Core.Farm
                 c.JobId = 0;
                 Refresh(sim);
                 sim.Emit(new CropReady(sim.State.Clock.SimTime, c.TileId, def.Id, c.Breakdown.Grams));
+            }
+        }
+
+        /// <summary>A sapling matures: it shades its field-edge tile from now, and fruits if this is a fruiting season (§3.12).</summary>
+        internal sealed class TreeMaturity : IJobHandler
+        {
+            public string JobType { get { return TreeJob; } }
+            public SystemOrder System { get { return SystemOrder.Agriculture; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                Tree t = sim.State.Farm.Trees.Find(x => x.Id == job.TargetId);
+                t.State = TreeState.Mature;
+                t.JobId = 0;
+                sim.CompleteJob(job);
+                LandSystem.SetTreeMature(sim, t.SlotId);
+                sim.Emit(new TreeMatured(sim.State.Clock.SimTime, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Id));
+                Ripen(sim, t);
             }
         }
 
