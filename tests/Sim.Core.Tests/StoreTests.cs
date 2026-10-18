@@ -8,7 +8,7 @@ using Sim.Core.Market;
 
 namespace Sim.Core.Tests
 {
-    public class StoreTests
+    public partial class StoreTests
     {
         private static int Good(Simulation sim, string id) { return sim.Config.Game.Market.IndexOf(id); }
 
@@ -36,7 +36,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Capacity_AndOverflow()
         {
-            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet(TestSim.NoSpoilage));
             int potato = Good(sim, "potato");
             long free = 2_000_000 - 750_300;
             ulong before = sim.State.ComputeHash();

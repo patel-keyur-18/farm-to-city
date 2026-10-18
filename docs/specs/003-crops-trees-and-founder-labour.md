@@ -630,6 +630,14 @@ Rule changes approved by the owner before coding:
 8. **Inputs from stock** are expensed at average cost at sowing, in the garden and when spraying (spec 004 §3.4).
 9. Golden 003 runs on a frozen content snapshot committed next to it.
 
+### Implementation notes (Sprint 3, 2026-10-18)
+
+None of these changes a lesson; owner to confirm at the sprint review.
+
+1. **The grace is inclusive:** a daily pass exactly 72 h after readiness loses nothing; loss starts at the first pass after that. An away advance (at most 72 h) never spoils a crop that ripened during it.
+2. **Rotted away:** when under 1 kg would remain of a waiting crop or batch, the rest is lost too. A batch still waiting past its grace when the tree's next fruiting season starts is lost (`GoodsSpoiled`) and the new batch ripens, so a forgotten batch can't block a tree forever (AC-25: "none while the previous batch waits within its grace").
+3. **Spoilage before eating:** at the daily pass the store spoils (Market, order 4) before the household eats (Labour, order 5), so greens picked that day lose a day's spoilage (spinach 35%) before they're eaten. The garden's groceries saved fall by about a third; US-016's report shows the season value.
+
 ## 11. Cut first
 
 1. Tree payback *Why?* (keep cost and returns).

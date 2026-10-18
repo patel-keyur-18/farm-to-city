@@ -99,7 +99,8 @@ namespace Sim.Core.Commands
             if (c == null) return CommandResult.Reject(RejectReason.NoCrop);
             if (c.State != CropState.Ready) return CommandResult.Reject(RejectReason.NotReady);
             CropDef def = sim.Config.Game.Farm.Crops[c.Def];
-            RejectReason r = Store.Add(sim, def.OutputGood, c.Breakdown.Grams, Overflow, "crop:" + c.Id);
+            long grams = c.HarvestGrams;
+            RejectReason r = Store.Add(sim, def.OutputGood, grams, Overflow, "crop:" + c.Id);
             if (r != RejectReason.None) return CommandResult.Reject(r);
 
             // The harvest's saved seed is one cycle older than the seed it grew from (§3.9).
@@ -108,7 +109,7 @@ namespace Sim.Core.Commands
             farm.HasSavedSeed[c.Def] = def.CanSaveSeed;
             farm.Crops.Remove(c);
             LandSystem.SetOccupied(sim, TileId, false);
-            sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, c.Breakdown.Grams, c.Breakdown));
+            sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, grams, c.Breakdown));
             return CommandResult.Ok;
         }
     }

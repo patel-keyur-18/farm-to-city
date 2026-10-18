@@ -38,6 +38,15 @@ namespace Sim.Core.Tests
             });
         }
 
+        /// <summary>
+        /// A content edit that turns spoilage off (every spoilagePerDay 0), for tests that count exact grams of
+        /// something else; spoilage has its own tests.
+        /// </summary>
+        public static string NoSpoilage(string file, string json)
+        {
+            return file == "goods.json" ? System.Text.RegularExpressions.Regex.Replace(json, "\"spoilagePerDay\": [0-9.]+", "\"spoilagePerDay\": 0") : json;
+        }
+
         /// <summary>Content with no inflation (the price index stays at its start), for tests of year-0 examples.</summary>
         public static GameDefs NoInflation(System.Func<string, string, string> edit = null)
         {

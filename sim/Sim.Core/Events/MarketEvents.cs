@@ -28,6 +28,35 @@ namespace Sim.Core.Events
         }
     }
 
+    /// <summary>Where goods spoiled: in the store, waiting ready in a field, or ripe on a tree (ADR 0034).</summary>
+    public enum SpoilSource
+    {
+        Store = 0,
+        Field = 1,
+        Tree = 2,
+    }
+
+    /// <summary>Goods spoiled at the daily pass (spec 004 §5), for the report and While you were away.</summary>
+    public sealed class GoodsSpoiled : SimEvent
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+        public SpoilSource Source { get; }
+
+        /// <summary>The tile (field) or slot (tree); 0 for the store.</summary>
+        public long Where { get; }
+
+        public GoodsSpoiled(long simTime, string goodId, long quantity, SpoilSource source, long where) : base(simTime)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+            Source = source;
+            Where = where;
+        }
+
+        protected override string Describe() { return "GoodsSpoiled(good=" + GoodId + ", q=" + Quantity + ", " + Source + " " + Where + ")"; }
+    }
+
     /// <summary>The seasonal inflation step moved the price index (spec 004 §5).</summary>
     public sealed class PriceIndexChanged : SimEvent
     {

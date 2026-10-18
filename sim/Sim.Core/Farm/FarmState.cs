@@ -71,6 +71,12 @@ namespace Sim.Core.Farm
         /// <summary>Set when the crop becomes ready.</summary>
         public YieldBreakdown Breakdown { get; internal set; }
 
+        /// <summary>Grams lost while waiting ready after the grace (ADR 0034).</summary>
+        public long SpoiledGrams { get; internal set; }
+
+        /// <summary>What a harvest would move into the store now.</summary>
+        public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams; } }
+
         internal Crop Clone()
         {
             var c = (Crop)MemberwiseClone();
@@ -97,6 +103,7 @@ namespace Sim.Core.Farm
             h.WriteLong(JobId);
             h.WriteBool(Breakdown != null);
             if (Breakdown != null) Breakdown.WriteTo(h);
+            h.WriteLong(SpoiledGrams);
         }
     }
 
@@ -151,8 +158,9 @@ namespace Sim.Core.Farm
         public long PlantedAt { get; internal set; }
         public TreeState State { get; internal set; }
 
-        /// <summary>Grams of ripe fruit waiting on the tree (0 = none).</summary>
+        /// <summary>Grams of ripe fruit waiting on the tree (0 = none), and when the batch ripened.</summary>
         public long RipeGrams { get; internal set; }
+        public long RipeAt { get; internal set; }
 
         /// <summary>Batches picked so far.</summary>
         public int Batches { get; internal set; }
@@ -174,6 +182,7 @@ namespace Sim.Core.Farm
             h.WriteLong(PlantedAt);
             h.WriteInt((int)State);
             h.WriteLong(RipeGrams);
+            h.WriteLong(RipeAt);
             h.WriteInt(Batches);
             h.WriteLong(Returns);
             h.WriteLong(Cost);

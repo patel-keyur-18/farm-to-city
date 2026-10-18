@@ -66,6 +66,7 @@ Sprint 3 (branch `sprint/03-market-spike-gate`):
 - **US-054 done:** `Fixed.Log2/Exp2/Pow`, the seasonal price index, `Indexed` coin amounts (land, buildings, living costs, day labour). 150 tests.
 - **US-055 done:** the hourly market (`MarketClearing`, pure): demand curve, supply with valley and imports, the damped step, the rail, pro-rata sales, the trader's hourly share of a glut, the minimum lot (0.1 kg: 1 kg glutted wheat's thin market), unmet demand, the price following the region. 72 h with the market: 4.0 ms. 156 tests.
 - **US-056 done:** `Offer` (optional minimum price), `Withdraw`, `SellToTrader`, `Buy`; account 1200 Inputs in store at average cost, the inherited inputs on the opening balance sheet (13,265), stock expensed at use. 160 tests.
+- **US-058 done:** daily spoilage in the store (stock not on offer first; inputs at average cost), ready crops and ripe fruit after the 72 h grace, `GoodsSpoiled`. Implementation notes for the owner in spec 003 §10 (inclusive grace, rotted away under 1 kg, spoilage before eating). 162 tests.
 
 ## Next up
 

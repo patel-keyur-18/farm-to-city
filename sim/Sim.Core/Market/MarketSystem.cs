@@ -23,8 +23,33 @@ namespace Sim.Core.Market
         public void OnPass(Simulation sim, ItemClass pass)
         {
             if (pass == ItemClass.Hourly) ClearHour(sim);
+            if (pass == ItemClass.Daily) Spoil(sim);
             if (pass == ItemClass.Daily) System.Array.Clear(sim.State.Market.TraderBoughtToday, 0, sim.State.Market.TraderBoughtToday.Length);
             if (pass == ItemClass.Seasonal) StepIndex(sim);
+        }
+
+        /// <summary>
+        /// Daily spoilage in the store (spec 004 §3.5): round(q × spoilagePerDay) per good in id order, stock not on offer
+        /// first. Spoiled inputs are expensed at average cost to their use account (5000 seed, 5010 the rest; ADR 0034).
+        /// </summary>
+        private static void Spoil(Simulation sim)
+        {
+            Definitions.MarketDefs defs = sim.Config.Game.Market;
+            MarketState m = sim.State.Market;
+            for (int g = 0; g < defs.Goods.Count; g++)
+            {
+                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g], 1).RoundToLong();
+                if (lost <= 0) continue;
+                if (defs.Goods[g].Kind == Definitions.GoodKind.Produce) Store.Take(sim, g, lost);
+                else
+                {
+                    long book = Store.RemoveStock(sim, g, lost);
+                    if (book > 0)
+                        sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.AccrualPeriod, "ledger.inputsSpoiled", "store:" + defs.Goods[g].Id,
+                            new Finance.Posting(Store.UseAccount(sim, g), book), new Finance.Posting(Finance.Account.InputsInStore, -book));
+                }
+                sim.Emit(new Events.GoodsSpoiled(sim.State.Clock.SimTime, defs.Goods[g].Id, lost, Events.SpoilSource.Store, 0));
+            }
         }
 
         /// <summary>The hourly local market (spec 004 §3.2): each produce good in id order.</summary>

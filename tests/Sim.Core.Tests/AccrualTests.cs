@@ -104,7 +104,7 @@ namespace Sim.Core.Tests
         [Test]
         public void PnL_ClosesToRetainedEarnings()
         {
-            Simulation sim = NewFarm(game: Quiet());
+            Simulation sim = NewFarm(game: Quiet(NoSpoilage));
             Ledger l = sim.State.Ledger;
             l.Post(10, 0, "test.sale", null, new Posting(Account.Cash, 18_400_00), new Posting(Account.CropSales, -18_400_00));
             l.Post(11, 0, "test.seed", null, new Posting(Account.SeedsAndPlanting, 3_200_00), new Posting(Account.Cash, -3_200_00));

@@ -54,6 +54,7 @@ namespace Sim.Core.Farm
                     // follows in the Labour system, which refreshes the rates again.
                     Accrue(sim);
                     Refresh(sim);
+                    if (pass == ItemClass.Daily) SpoilWaiting(sim);
                     break;
                 case ItemClass.Seasonal:
                     foreach (GardenBed b in sim.State.Farm.Beds) b.RemainingGrams = sim.Config.Game.Farm.Farm.GardenSeasonOutputGrams;
@@ -116,15 +117,59 @@ namespace Sim.Core.Farm
             return demand;
         }
 
+        /// <summary>
+        /// Ready crops and ripe batches wait without loss for the grace, then lose their good's spoilage at each daily
+        /// pass, like the store (ADR 0034), crops then trees in id order.
+        /// </summary>
+        private static void SpoilWaiting(Simulation sim)
+        {
+            GameDefs defs = sim.Config.Game;
+            long t = sim.State.Clock.SimTime, grace = defs.Farm.Farm.ReadyGraceSeconds;
+            foreach (Crop c in sim.State.Farm.Crops)
+            {
+                if (c.State != CropState.Ready || t - c.ReadyAt <= grace) continue;
+                int good = defs.Farm.Crops[c.Def].OutputGood;
+                long lost = Rot(defs.Market.Goods[good].SpoilagePerDay, c.HarvestGrams);
+                if (lost <= 0) continue;
+                c.SpoiledGrams += lost;
+                sim.Emit(new GoodsSpoiled(t, defs.Market.Goods[good].Id, lost, SpoilSource.Field, c.TileId));
+            }
+            foreach (Tree tree in sim.State.Farm.Trees)
+            {
+                if (tree.RipeGrams == 0 || t - tree.RipeAt <= grace) continue;
+                int good = defs.Farm.Trees[tree.Def].FruitGood;
+                long lost = Rot(defs.Market.Goods[good].SpoilagePerDay, tree.RipeGrams);
+                if (lost <= 0) continue;
+                tree.RipeGrams -= lost;
+                sim.Emit(new GoodsSpoiled(t, defs.Market.Goods[good].Id, lost, SpoilSource.Tree, tree.SlotId));
+            }
+        }
+
+        /// <summary>round(grams × rate); when under 1 kg would remain, the rest is lost too (nothing worth picking).</summary>
+        private static long Rot(Fixed rate, long grams)
+        {
+            long lost = rate.MulRatio(grams, 1).RoundToLong();
+            return lost > 0 && grams - lost < 1000 ? grams : lost;
+        }
+
         // ---- trees (§3.12) ----
 
         /// <summary>A mature tree with no fruit waiting gets one batch if the current season is one of its fruiting seasons.</summary>
         internal static void Ripen(Simulation sim, Tree t)
         {
             TreeDef def = sim.Config.Game.Farm.Trees[t.Def];
-            if (t.State != TreeState.Mature || t.RipeGrams > 0) return;
-            if (!def.FruitingSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return;
+            long now = sim.State.Clock.SimTime;
+            if (t.State != TreeState.Mature) return;
+            if (!def.FruitingSeasons[(int)Calendar.SeasonAt(now, sim.Clock)]) return;
+            if (t.RipeGrams > 0)
+            {
+                // A batch still waiting within its grace blocks the next; one past it has been spoiling and is lost (ADR 0034).
+                if (now - t.RipeAt <= sim.Config.Game.Farm.Farm.ReadyGraceSeconds) return;
+                sim.Emit(new GoodsSpoiled(now, sim.Config.Game.Market.Goods[def.FruitGood].Id, t.RipeGrams, SpoilSource.Tree, t.SlotId));
+                t.RipeGrams = 0;
+            }
             t.RipeGrams = def.BatchGrams;
+            t.RipeAt = sim.State.Clock.SimTime;
             sim.Emit(new FruitRipe(sim.State.Clock.SimTime, t.SlotId, def.Id, t.RipeGrams));
         }
 

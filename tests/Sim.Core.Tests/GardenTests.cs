@@ -116,13 +116,14 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new SowGarden(0, 1, "garden_spinach")).Accepted, Is.True);
             Assert.That(sim.Execute(new PickGarden(15 * 60, 1)).Accepted, Is.True);
             sim.AdvanceTo(Day);
-            // Spinach spoils fastest, so it's eaten first: 4 kg at the Spring floor 20 × 1.10 − 1.50 = 20.50.
+            // The daily pass spoils 35% of the 4 kg first (spec 004 §3.8: spoilage, then eating); spinach spoils fastest, so
+            // the 2.6 kg left is eaten first, at the Spring floor 20 × 1.10 − 1.50 = 20.50.
             Assert.That(sim.State.Market.InStore(FarmTest.Good(sim, "spinach")), Is.EqualTo(0));
-            Assert.That(sim.State.Farm.Founder.GardenHomeUseSeason, Is.EqualTo(82_00));
-            Assert.That(sim.State.Farm.Founder.HomeUseSeason, Is.GreaterThan(82_00));
+            Assert.That(sim.State.Farm.Founder.GardenHomeUseSeason, Is.EqualTo(53_30));
+            Assert.That(sim.State.Farm.Founder.HomeUseSeason, Is.GreaterThan(53_30));
             sim.AdvanceTo(FarmTest.S);
             Assert.That(sim.State.Farm.Founder.GardenHomeUseSeason, Is.EqualTo(0), "reset for the new season");
-            Assert.That(sim.State.Finance.Reports.Single().GardenHomeUse, Is.EqualTo(82_00));
+            Assert.That(sim.State.Finance.Reports.Single().GardenHomeUse, Is.EqualTo(53_30));
         }
 
         // Spec 003 AC-33.

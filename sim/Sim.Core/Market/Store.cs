@@ -98,6 +98,14 @@ namespace Sim.Core.Market
             return amount;
         }
 
+        /// <summary>An input's expense account when used or spoiled: 5000 for seed, 5010 for fertiliser, compost and spray.</summary>
+        internal static Account UseAccount(Simulation sim, int good)
+        {
+            foreach (CropDef c in sim.Config.Game.Farm.Crops) if (c.SeedGood == good) return Account.SeedsAndPlanting;
+            foreach (GardenCropDef c in sim.Config.Game.Farm.GardenCrops) if (c.SeedGood == good) return Account.SeedsAndPlanting;
+            return Account.FertiliserAndSpraying;
+        }
+
         /// <summary>4000 Crop sales or 4010 Fruit sales.</summary>
         internal static Account SalesAccount(Simulation sim, int good)
         {

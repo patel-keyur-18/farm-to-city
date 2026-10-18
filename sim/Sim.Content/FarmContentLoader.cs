@@ -91,7 +91,7 @@ namespace Sim.Content
             string fp = root + ".farm";
             JObject f = Object(Required(o, root, "farm"), fp);
             OnlyFields(f, fp, "yieldCap", "careCap", "toolsFactor", "weatherYieldFactor", "waterDryFloor", "waterWetFloor",
-                "bucketHoursPerMoisturePoint", "gardenSeasonOutputKg");
+                "bucketHoursPerMoisturePoint", "gardenSeasonOutputKg", "readyGraceHours");
 
             // Stored in the declared order of the weather types, never in JSON object order.
             string wp = fp + ".weatherYieldFactor";
@@ -110,12 +110,14 @@ namespace Sim.Content
                 if (factors[k] == null) throw new ContentException(wp, "missing weather id '" + weather.Types[k].Id + "'");
                 list.Add(factors[k].Value);
             }
+            int grace = Int(Required(f, fp, "readyGraceHours"), fp + ".readyGraceHours");
+            Range(grace, 0, 720, fp + ".readyGraceHours");
             Fixed gardenKg = Number(Required(f, fp, "gardenSeasonOutputKg"), fp + ".gardenSeasonOutputKg");
             if (gardenKg <= Fixed.Zero) throw new ContentException(fp + ".gardenSeasonOutputKg", "must be more than 0");
             var farm = new FarmDef(Bounded(f, fp, "yieldCap", "1", "3"), Bounded(f, fp, "careCap", "1", "1.5"),
                 Bounded(f, fp, "toolsFactor", "0.5", "2"), list, Bounded(f, fp, "waterDryFloor", "0", "1"),
                 Bounded(f, fp, "waterWetFloor", "0", "1"), Bounded(f, fp, "bucketHoursPerMoisturePoint", "0", "2"),
-                gardenKg.MulRatio(1000, 1).RoundToLong());
+                gardenKg.MulRatio(1000, 1).RoundToLong(), grace * 3600L);
 
             fertilisers = new List<FertiliserDef>();
             List<JToken> tokens = NonEmptyArray(o, root, "fertilisers");

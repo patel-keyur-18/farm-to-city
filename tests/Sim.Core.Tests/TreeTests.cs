@@ -61,7 +61,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Fruiting_OnePerSeason()
         {
-            Simulation sim = FarmTest.Farm();
+            Simulation sim = FarmTest.Farm(FarmTest.AnySeason(TestSim.NoSpoilage)); // waiting fruit spoils after the grace: AC-38
             long yard = YardSlot(sim);
             Assert.That(sim.Execute(new PlantTree(0, yard, "mango")).Accepted, Is.True);
             Tree mango = sim.State.Farm.TreeIn(yard);

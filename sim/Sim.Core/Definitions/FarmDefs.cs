@@ -94,9 +94,13 @@ namespace Sim.Core.Definitions
         /// <summary>Grams per bed per season.</summary>
         public long GardenSeasonOutputGrams { get; }
 
+        /// <summary>How long a ready crop or ripe batch waits without loss before it spoils (ADR 0034), seconds.</summary>
+        public long ReadyGraceSeconds { get; }
+
         public FarmDef(Fixed yieldCap, Fixed careCap, Fixed toolsFactor, IReadOnlyList<Fixed> weatherYieldFactor, Fixed waterDryFloor,
-            Fixed waterWetFloor, Fixed bucketHoursPerMoisturePoint, long gardenSeasonOutputGrams)
+            Fixed waterWetFloor, Fixed bucketHoursPerMoisturePoint, long gardenSeasonOutputGrams, long readyGraceSeconds)
         {
+            ReadyGraceSeconds = readyGraceSeconds;
             YieldCap = yieldCap;
             CareCap = careCap;
             ToolsFactor = toolsFactor;

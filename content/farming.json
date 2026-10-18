@@ -7,7 +7,8 @@
     "waterDryFloor": 0.40,
     "waterWetFloor": 0.60,
     "bucketHoursPerMoisturePoint": 0.1,
-    "gardenSeasonOutputKg": 100
+    "gardenSeasonOutputKg": 100,
+    "readyGraceHours": 72
   },
   "fertilisers": [
     { "id": "none",     "kgPerAcrePerSeason": 0,    "yieldFactor": 1.00, "fertilityPerSeason": 0 },

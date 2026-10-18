@@ -55,7 +55,7 @@ namespace Sim.Core.Tests
         public static Crop Crop(Simulation sim, int tile) { return sim.State.Farm.CropOn(tile); }
     }
 
-    public class CropTests
+    public partial class CropTests
     {
         private const long S = FarmTest.S;
 
@@ -161,11 +161,11 @@ namespace Sim.Core.Tests
             long grams = c.Breakdown.Grams;
             Assert.That(grams, Is.InRange(50_000, 100_000)); // about 83 kg × the factors
 
-            sim.AdvanceTo(3 * S); // waits through two season closes
-            Assert.That(FarmTest.Crop(sim, 19).Breakdown.Grams, Is.EqualTo(grams));
+            sim.AdvanceTo(2 * Hour + 72 * Hour); // waits the whole grace (ADR 0034) without loss
+            Assert.That(FarmTest.Crop(sim, 19).HarvestGrams, Is.EqualTo(grams));
             int radish = FarmTest.Good(sim, "radish");
             long before = sim.State.Market.InStore(radish);
-            Assert.That(sim.Execute(new Harvest(3 * S, 19)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 19)).Accepted, Is.True);
             Assert.That(sim.State.Market.InStore(radish) - before, Is.EqualTo(grams));
             Assert.That(sim.State.Land.Tiles[19].Occupied, Is.False);
             Assert.That(FarmTest.Crop(sim, 19), Is.Null);
