@@ -5,6 +5,8 @@
 - **Tested by / date:** ____
 - **How to install:** see `how-to-build-ios.md`, with the two settings below
 
+**Round 2 (after the first run, 2026-10-18):** the CPU figure was wrong (it went negative) and the buttons didn't stop a running check, so the style check drew on top of the heat run. Both are fixed. **Rebuild from the branch head**, and tap one button at a time: each now stops the one before.
+
 **What this build is:** the hello card from Sprint 1 plus a **Phase 0 checks** bar with three buttons. They answer the two device questions of the Phase 0 gate (ADR 0027, ADR 0034 §8):
 
 - **Spike:** a throwaway scene with a 64 × 64 isometric map and 2,000 walking figures, plus a stand-in for the later city simulation, timed frame by frame. On the iPhone 13, the work in a frame must fit in half the frame budget: **8.3 ms** (ADR 0026).
@@ -29,10 +31,19 @@ Before you start: charge the phone above 50%, **unplug it** (on battery), close 
 | 2 | US-023 | Tap **Golden replays** and wait (a few seconds; the screen may freeze briefly while it runs) | A panel lists `001-basic.json`, `003-farm.json` and `004-market.json`, each **PASS** with a hash, then **ALL PASS**. Expected hashes: 001 `0xAA0C65B7299B2C52`, 003 `0x3298BCB6B36F689D`, 004 `0x42A935851A1C8BB2` | | **Screenshot the panel** |
 | 3 | US-023 | Read the last line of the same panel | `72 h away advance: N ms (budget 2,000)`, with N well under 2,000 | | Note N |
 | 4 | US-021 | Tap **Spike**. Don't touch the phone for about 75 seconds | The card disappears; a large diamond map fills with small red figures walking about. A line at the top counts down: about 10 s warm-up, 30 s **Whole map**, then the camera zooms in, 30 s **Play zoom**. The figures should move smoothly | | Note any stutter |
-| 5 | US-021 | When the countdown ends, read the result panel | Two blocks, **Whole map** and **Play zoom**, each with **PASS** or **OVER BUDGET**, CPU and GPU times (avg, p95, max) and "Frames over 16.7 ms", then a line for the citizen stub. **Pass rule:** p95 CPU ≤ 8.3 ms and p95 GPU ≤ 8.3 ms, and under 1% of frames over 16.7 ms, in both blocks | | **Screenshot the panel** |
+| 5 | US-021 | When the countdown ends, read the result panel | Two blocks, **Whole map** and **Play zoom**, each with **PASS** or **OVER BUDGET**, the CPU main-thread, render-thread and GPU times (avg, p95, max) and "Frames over 16.7 ms", then a line for the citizen stub. **Pass rule:** p95 main thread, p95 render thread and p95 GPU each ≤ 8.3 ms, and under 1% of frames over 16.7 ms, in both blocks | | **Screenshot the panel** |
 | 6 | US-021 | Swipe the app away, wait a minute, open it, tap **Heat run (5 min)**, and leave the phone on a table for 5 minutes | Same as check 4, with two 2½-minute blocks. Then a result panel as in check 5 | | **Screenshot**; note whether the phone feels warm |
-| 7 | US-021 | In check 5 or 6, if the panel shows "(no frame timing)" next to the times | It shouldn't: the build turns on frame timing. If it does, the CPU number is the whole frame time instead of the work time | | |
+| 7 | US-021 | While a run counts down, read the live line | `main N ms · render N ms · GPU N ms`, all positive (round 1 showed a negative CPU: a bug, fixed). Never "(no frame timing)" | | |
 | 8 | US-024 | Swipe the app away, open it, tap **Style check**, watch for 20 seconds | A small farm: grass yard, two soil acres with crops, a fence, hay and a sack, a sandy bank and a river. The season name (top left) changes every 4 s and the ground's colour with it. Every 4 s: a crop bounces, a sack arcs from the field to the store, the coins (top right) count up, and a panel slides up and back down | | **Your view:** does the look suit the valley? The grass, soil and water tiles (one style) against the crops, hay and sacks (another, more realistic style): which do you prefer? Is the motion Hay Day-like enough? |
+
+### Left over from Sprint 1 (never reported; quick)
+
+| # | Story | What to try | Expected result | Pass / Fail | Notes |
+| --- | --- | --- | --- | --- | --- |
+| 9 | US-019 | On the date card, leave the app open for 2 minutes | The minute changes in step with the phone's clock | | |
+| 10 | US-019 | Turn the phone through both landscape directions and to portrait | It stays landscape (flips between the two sides); never portrait | | |
+| 11 | US-019 | Press Home, wait 5 minutes, open the app again | The time catches up at once; no crash | | |
+| 12 | US-019 | Swipe the app away and open it again | It starts again at Year 1 · Spring · Day 1 (expected: no saves until Sprint 6) | | |
 
 ## What to report
 

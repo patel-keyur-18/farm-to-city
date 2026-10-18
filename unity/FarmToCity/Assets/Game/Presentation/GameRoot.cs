@@ -24,6 +24,10 @@ namespace Game.Presentation
         private Label _date, _time, _weather, _checks;
         private VisualElement _card;
         private Phase0.Spike _spike;
+        private GameObject _check;            // the Phase 0 check running now (spike or style check), one at a time
+        private Vector3 _cameraPosition;
+        private float _cameraSize;
+        private Color _cameraBackground;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
@@ -99,7 +103,7 @@ namespace Game.Presentation
             AddButton(bar, "Spike", () => StartSpike(false));
             AddButton(bar, "Heat run (5 min)", () => StartSpike(true));
             AddButton(bar, "Golden replays", RunGoldens);
-            AddButton(bar, "Style check", () => { _card.style.display = DisplayStyle.None; Phase0.StyleCheck.Start(); });
+            AddButton(bar, "Style check", () => { StopCheck(); _card.style.display = DisplayStyle.None; _check = Phase0.StyleCheck.Start().gameObject; _checks.text = ""; });
             _checks = AddLabel(root, 30);
             _checks.style.whiteSpace = WhiteSpace.Normal;
             _checks.style.backgroundColor = new Color(0.98f, 0.95f, 0.88f, 0.92f);
@@ -118,13 +122,32 @@ namespace Game.Presentation
 
         private void StartSpike(bool heat)
         {
-            if (_spike != null) Destroy(_spike.gameObject);
+            StopCheck();
             _card.style.display = DisplayStyle.None;
             _spike = Phase0.Spike.Start(heat);
+            _check = _spike.gameObject;
+        }
+
+        /// <summary>Stops whichever Phase 0 check is running and puts the camera back, so checks never overlap.</summary>
+        private void StopCheck()
+        {
+            Camera cam = Camera.main;
+            if (_check == null) { _cameraPosition = cam.transform.position; _cameraSize = cam.orthographicSize; _cameraBackground = cam.backgroundColor; }
+            else
+            {
+                Destroy(_check);
+                cam.transform.position = _cameraPosition;
+                cam.orthographicSize = _cameraSize;
+                cam.backgroundColor = _cameraBackground;
+            }
+            _check = null;
+            _spike = null;
         }
 
         private void RunGoldens()
         {
+            StopCheck();
+            _card.style.display = DisplayStyle.Flex;
             var sb = new System.Text.StringBuilder("Golden replays (on frozen content)\n");
             bool all = true;
             foreach (Phase0.GoldenCheck.Row r in Phase0.GoldenCheck.RunAll())

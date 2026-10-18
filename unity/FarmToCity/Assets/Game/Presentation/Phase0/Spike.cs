@@ -33,7 +33,8 @@ namespace Game.Presentation.Phase0
         private float _start, _lastStub;
         private bool _heat;
         private readonly FrameTiming[] _timing = new FrameTiming[1];
-        private readonly List<float> _cpu = new List<float>(), _gpu = new List<float>(), _stubMs = new List<float>();
+        // Per frame: main-thread work, render-thread work, GPU, and the whole frame interval (FrameTimingManager).
+        private readonly List<float> _cpu = new List<float>(), _render = new List<float>(), _gpu = new List<float>(), _frame = new List<float>(), _stubMs = new List<float>();
         private readonly StringBuilder _report = new StringBuilder();
         private int _phase; // 0 warm-up, 1 whole map, 2 play zoom, 3 done
         private float _phaseStart;
@@ -157,8 +158,11 @@ namespace Game.Presentation.Phase0
 
             FrameTimingManager.CaptureFrameTimings();
             bool timed = FrameTimingManager.GetLatestTimings(1, _timing) > 0;
-            float cpu = timed ? (float)(_timing[0].cpuMainThreadFrameTime - _timing[0].cpuMainThreadPresentWaitTime) : dt * 1000f;
+            // cpuMainThreadFrameTime already ends when the main thread's work is done (it excludes waiting for the screen).
+            float cpu = timed ? (float)_timing[0].cpuMainThreadFrameTime : dt * 1000f;
+            float render = timed ? (float)_timing[0].cpuRenderThreadFrameTime : 0f;
             float gpu = timed ? (float)_timing[0].gpuFrameTime : 0f;
+            float frame = timed ? (float)_timing[0].cpuFrameTime : dt * 1000f;
 
             float inPhase = now - _phaseStart;
             float viewLength = _heat ? 150f : ViewSeconds; // heat run: 2 × 2.5 min
@@ -170,10 +174,10 @@ namespace Game.Presentation.Phase0
                     break;
                 case 1:
                 case 2:
-                    _cpu.Add(cpu); _gpu.Add(gpu);
+                    _cpu.Add(cpu); _render.Add(render); _gpu.Add(gpu); _frame.Add(frame);
                     if (stubMs > 0) _stubMs.Add(stubMs);
-                    Status = (_phase == 1 ? "Whole map" : "Play zoom") + " " + (int)(viewLength - inPhase) + " s · CPU " + cpu.ToString("0.0")
-                        + " ms · GPU " + gpu.ToString("0.0") + " ms" + (timed ? "" : " (no frame timing)");
+                    Status = (_phase == 1 ? "Whole map" : "Play zoom") + " " + (int)(viewLength - inPhase) + " s · main " + cpu.ToString("0.0")
+                        + " ms · render " + render.ToString("0.0") + " ms · GPU " + gpu.ToString("0.0") + " ms" + (timed ? "" : " (no frame timing)");
                     if (inPhase >= viewLength)
                     {
                         Summarise(_phase == 1 ? "Whole map (all 2,000 agents visible)" : "Play zoom");
@@ -187,16 +191,17 @@ namespace Game.Presentation.Phase0
 
         private void Summarise(string view)
         {
-            float[] cpu = _cpu.ToArray(), gpu = _gpu.ToArray();
-            Array.Sort(cpu); Array.Sort(gpu);
+            float[] cpu = _cpu.ToArray(), render = _render.ToArray(), gpu = _gpu.ToArray();
+            Array.Sort(cpu); Array.Sort(render); Array.Sort(gpu);
             int over = 0;
-            foreach (float v in _cpu) if (v > 16.7f) over++;
-            bool pass = P95(cpu) <= 8.3f && P95(gpu) <= 8.3f && over * 100 < _cpu.Count;
+            foreach (float v in _frame) if (v > 16.7f) over++;
+            bool pass = P95(cpu) <= 8.3f && P95(render) <= 8.3f && P95(gpu) <= 8.3f && over * 100 < _frame.Count;
             _report.AppendLine(view + ": " + (pass ? "PASS" : "OVER BUDGET"));
             _report.AppendLine("  CPU main thread ms: avg " + Avg(cpu).ToString("0.00") + ", p95 " + P95(cpu).ToString("0.00") + ", max " + Max(cpu).ToString("0.00"));
+            _report.AppendLine("  Render thread ms:   avg " + Avg(render).ToString("0.00") + ", p95 " + P95(render).ToString("0.00") + ", max " + Max(render).ToString("0.00"));
             _report.AppendLine("  GPU ms:             avg " + Avg(gpu).ToString("0.00") + ", p95 " + P95(gpu).ToString("0.00") + ", max " + Max(gpu).ToString("0.00"));
-            _report.AppendLine("  Frames over 16.7 ms: " + over + " of " + cpu.Length);
-            _cpu.Clear(); _gpu.Clear();
+            _report.AppendLine("  Frames over 16.7 ms: " + over + " of " + _frame.Count);
+            _cpu.Clear(); _render.Clear(); _gpu.Clear(); _frame.Clear();
         }
 
         private void Finish()
