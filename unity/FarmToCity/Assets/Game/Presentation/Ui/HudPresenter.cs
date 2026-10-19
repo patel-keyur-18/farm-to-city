@@ -32,6 +32,7 @@ namespace Game.Presentation.Ui
 
         public Action OnStore { get; set; }
         public Action OnPeople { get; set; }
+        public Action OnSettings { get; set; }
         public Action OnCollect { get; set; }
 
         /// <summary>The developer panel's gesture: the time strip held for three seconds (development builds only).</summary>
@@ -107,6 +108,13 @@ namespace Game.Presentation.Ui
             _storePill.Add(col);
             _storePill.RegisterCallback<ClickEvent>(_ => { if (OnStore != null) OnStore(); });
             right.Add(_storePill);
+
+            // Under the store: Settings (ADR 0041 §4), a round button with a gear until the Menu arrives in Sprint 7.
+            VisualElement gear = RoundButton(110, IconBank.Gear, 70);
+            gear.name = "Settings";
+            gear.style.marginTop = 14;
+            gear.RegisterCallback<ClickEvent>(_ => { if (OnSettings != null) OnSettings(); });
+            right.Add(gear);
             _layer.Add(right);
 
             // Bottom-left: Collect all.
@@ -163,6 +171,25 @@ namespace Game.Presentation.Ui
                 l.style.whiteSpace = WhiteSpace.NoWrap;
                 l.style.flexShrink = 0;
             }
+        }
+
+        private static VisualElement RoundButton(float size, Sprite icon, float iconSize)
+        {
+            var b = new VisualElement();
+            b.style.width = size; b.style.height = size;
+            b.style.backgroundColor = UiKit.Sand;
+            UiKit.Radius(b, size / 2);
+            UiKit.Border(b, 5, UiKit.SandDark);
+            b.style.borderBottomWidth = 9;
+            b.style.alignItems = Align.Center;
+            b.style.justifyContent = Justify.Center;
+            VisualElement pic = UiKit.Icon(icon, iconSize);
+            pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            b.Add(pic);
+            b.RegisterCallback<PointerDownEvent>(_ => b.style.scale = new Scale(new Vector3(0.92f, 0.92f, 1f)));
+            b.RegisterCallback<PointerUpEvent>(_ => b.style.scale = new Scale(Vector3.one));
+            b.RegisterCallback<PointerLeaveEvent>(_ => b.style.scale = new Scale(Vector3.one));
+            return b;
         }
 
         /// <summary>The element's centre in screen pixels (y up), for flying icons to land on it.</summary>

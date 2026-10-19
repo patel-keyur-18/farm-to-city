@@ -90,6 +90,7 @@ namespace Game.Presentation.Ui
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
                 case "store": return IconBank.Sack;
+                case "gear": return IconBank.Gear;
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
                 case "field": return SpriteBank.SoilTile;
@@ -157,6 +158,45 @@ namespace Game.Presentation.Ui
             buttons.style.marginTop = 14;
             buttons.Add(UiKit.MakeButton(vm.YesLabel, vm.YesIsDanger ? ActionLook.Danger : ActionLook.Primary, () => { _holder.parent.Remove(veil); yes(); }));
             buttons.Add(UiKit.MakeButton(vm.NoLabel, ActionLook.Secondary, () => { _holder.parent.Remove(veil); no(); }));
+            card.Add(buttons);
+            veil.Add(card);
+            _holder.parent.Add(veil);
+            card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
+            _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
+        /// <summary>A card over everything (spec 007 §7, ADR 0041): a title, a sentence and its buttons; any button closes it.</summary>
+        public void Card(CardVm vm, Action<string> onButton)
+        {
+            var veil = new VisualElement();
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(32);
+            UiKit.Padding(card, 26, 40);
+            card.style.maxWidth = 1150;
+            Label title = UiKit.Heading1(vm.Title, 50);
+            title.style.unityTextAlign = TextAnchor.MiddleCenter;
+            card.Add(title);
+            Label text = UiKit.Text(vm.Text, 34, UiKit.Ink, UiKit.Body);
+            text.style.whiteSpace = WhiteSpace.Normal;
+            text.style.unityTextAlign = TextAnchor.MiddleCenter;
+            text.style.marginTop = 10;
+            card.Add(text);
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.justifyContent = Justify.Center;
+            buttons.style.marginTop = 18;
+            foreach (CardButton b in vm.Buttons)
+            {
+                ActionLook look = b.Kind == ActionKind.Danger ? ActionLook.Danger : b.Kind == ActionKind.Primary ? ActionLook.Primary : ActionLook.Secondary;
+                string id = b.Id;
+                Button button = UiKit.MakeButton(b.Label, look, () => { veil.RemoveFromHierarchy(); onButton(id); });
+                button.name = "card:" + id;
+                buttons.Add(button);
+            }
             card.Add(buttons);
             veil.Add(card);
             _holder.parent.Add(veil);

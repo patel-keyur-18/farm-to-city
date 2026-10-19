@@ -90,10 +90,10 @@ namespace Sim.View.Views
                 new ActionVm(SettingsIds.PlayLog, s.Get(info.PlayLogOn ? "settings.turnOff" : "settings.turnOn"), null, ActionKind.Secondary, true, null, null)));
             vm.Lines.Add(Row(s.Get("settings.exportTown"), s.Get("settings.toFiles"),
                 new ActionVm(SettingsIds.Export, s.Get("settings.export"), null, ActionKind.Secondary, true, null, null)));
-            vm.Lines.Add(Row(s.Get("settings.importTown"), s.Get("settings.importFiles", "count", ctx.Fmt.Integer(info.ImportFiles)),
+            vm.Lines.Add(Row(s.Get("settings.importTown"), s.Plural("settings.importFiles", info.ImportFiles, "count", ctx.Fmt.Integer(info.ImportFiles)),
                 ActionVm.Open("openImport", s.Get("settings.choose"), new SheetRequest("Import", 0))));
             bool hasLog = info.PlayLogLines > 0;
-            vm.Lines.Add(Row(s.Get("settings.exportLog"), s.Get("settings.logLines", "count", ctx.Fmt.Integer(info.PlayLogLines)),
+            vm.Lines.Add(Row(s.Get("settings.exportLog"), s.Plural("settings.logLines", info.PlayLogLines, "count", ctx.Fmt.Integer(info.PlayLogLines)),
                 new ActionVm(SettingsIds.ExportLog, s.Get("settings.export"), null, ActionKind.Secondary, hasLog, hasLog ? null : s.Get("settings.logEmpty"), null)));
             vm.Lines.Add(Row(s.Get("settings.newGame"), s.Get("settings.newGameNote"),
                 new ActionVm(SettingsIds.NewGame, s.Get("settings.newGameButton"), null, ActionKind.Danger, true, null, null)));

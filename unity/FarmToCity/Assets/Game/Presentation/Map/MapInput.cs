@@ -51,6 +51,13 @@ namespace Game.Presentation.Map
             return i;
         }
 
+        /// <summary>Puts the camera where it was (the settings file keeps it, ADR 0041 §1).</summary>
+        public void SetView(float centreX, float centreY, float halfHeight)
+        {
+            _view.FocusWorld(centreX, centreY, halfHeight);
+            Apply();
+        }
+
         /// <summary>Starts on the inherited land: the middle of its 4 × 2 acres.</summary>
         public void Focus(float tileX, float tileY)
         {

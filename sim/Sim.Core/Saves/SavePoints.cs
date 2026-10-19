@@ -102,9 +102,10 @@ namespace Sim.Core.Saves
         /// <summary>
         /// Loads the latest save, or the newest valid backup when it is damaged (spec 007 §3.3). A town this build can't read
         /// (too old, newer, or naming content it lacks) is kept as <c>town.unreadable-&lt;date&gt;.ftc</c> with its backups deleted, and
-        /// a new town starts (ADR 0041). Null state and no error: there was no town yet.
+        /// a new town starts (ADR 0041). Null state and no error: there was no town yet. <paramref name="localNow"/> (the device's
+        /// local time as Unix seconds) names the kept file, like an export.
         /// </summary>
-        public LoadOutcome LoadNewestValid(SimConfig config, long nowWallUtc = 0)
+        public LoadOutcome LoadNewestValid(SimConfig config, long localNow = 0)
         {
             var candidates = new List<KeyValuePair<long, string>>();
             for (int i = 1; i <= _def.HourlyBackups; i++) AddBackup(candidates, Hourly(i));
@@ -124,7 +125,7 @@ namespace Sim.Core.Saves
             if (failed == null) return new LoadOutcome();
 
             // Keep the unreadable town under a name of its own; its backups are older copies of the same town.
-            string kept = "town.unreadable-" + DateTimeOffset.FromUnixTimeSeconds(nowWallUtc).UtcDateTime.ToString("yyyyMMdd-HHmm", System.Globalization.CultureInfo.InvariantCulture) + ".ftc";
+            string kept = "town.unreadable-" + DateTimeOffset.FromUnixTimeSeconds(localNow).UtcDateTime.ToString("yyyyMMdd-HHmm", System.Globalization.CultureInfo.InvariantCulture) + ".ftc";
             _store.Rename(failed.File, kept);
             DeleteTown();
             failed.KeptAs = kept;

@@ -139,6 +139,28 @@ namespace Game.Presentation.Art
             }
         }
     
+        /// <summary>The Settings gear (ADR 0041 §4). ponytail: painted until US-171's Blender icons replace every icon.</summary>
+        public static Sprite Gear
+        {
+            get
+            {
+                return Get("gear", () =>
+                {
+                    var p = new Painter(64, 64);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float a = i * Mathf.PI / 4f;
+                        var d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                        p.Line(new Vector2(32, 32) + d * 12f, new Vector2(32, 32) + d * 25f, 11f, Outline);
+                        p.Line(new Vector2(32, 32) + d * 12f, new Vector2(32, 32) + d * 23.5f, 7f, Painter.Hex(0xC9C2B4));
+                    }
+                    p.Blob(32, 32, 17, 17, Painter.Hex(0xC9C2B4), Outline, 2.6f);
+                    p.Blob(32, 32, 7, 7, Painter.Hex(0x6B5A45), Outline, 2f);
+                    return p.ToSprite(64f, new Vector2(0.5f, 0.5f));
+                });
+            }
+        }
+
         /// <summary>A skill star (ADR 0039 §7): 0 empty, 1 faded (possible), 2 solid (sure).</summary>
         public static Sprite Star(int kind)
         {
