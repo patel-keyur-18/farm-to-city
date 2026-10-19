@@ -109,6 +109,19 @@ namespace Sim.View.Views
                 };
                 row.Sow = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sowCrop", "crop", name), row.CostText, ActionKind.Primary,
                     at => new Sow(at, tileId, c.Id, seed, fertiliserId), "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons));
+                // An ordered field sown with another crop: the player wins, and may change the order too (ADR 0039 §6).
+                Sim.Core.People.StandingOrder order = sim.State.People?.OrderFor(Sim.Core.People.OrderTargetKind.Field, tileId);
+                if (order != null && order.Crop != defs.Farm.IndexOfCrop(c.Id))
+                {
+                    Sim.Core.People.StandingOrder o = order;
+                    string hand = PeopleWords.Name(ctx, sim.State.People.Hand(o.HandId).Name);
+                    row.Sow.Confirm = new ConfirmVm(ctx.Strings.Get("order.changeQ", "name", hand, "crop", name), ctx.Strings.Get("order.changeYes"), ctx.Strings.Get("order.changeNo"),
+                        at => new Command[]
+                        {
+                            new SetStandingOrder(at, o.HandId, OrderSpec.KeepCrop(tileId, c.Id, c.CanSaveSeed ? o.Seed : SeedSource.Certified, defs.Farm.Fertilisers[o.Fertiliser].Id, o.Sell, o.MinPrice)),
+                            new Sow(at, tileId, c.Id, seed, fertiliserId),
+                        });
+                }
                 vm.Rows.Add(row);
             }
             return vm;

@@ -67,10 +67,22 @@ namespace Sim.View.Content
         public int RatingGoodPercent { get; }
         public int RatingFairPercent { get; }
 
+        /// <summary>Skill where Capable, Skilled and Expert begin (below the first: Beginner), ADR 0039 §7.</summary>
+        public IReadOnlyList<int> SkillBands { get; }
+
+        /// <summary>Skill points per star (5 stars at 100).</summary>
+        public int SkillStarPoints { get; }
+
+        /// <summary>Hours a day one reference acre needs (wheat): "tends about N acres" = hours ÷ this.</summary>
+        public int ReferenceAcreHours { get; }
+
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
-            int ratingGoodPercent = 95, int ratingFairPercent = 80)
+            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3)
         {
+            SkillBands = new List<int>(skillBands ?? new[] { 35, 55, 75 }).AsReadOnly();
+            SkillStarPoints = skillStarPoints;
+            ReferenceAcreHours = referenceAcreHours;
             DayTint = new List<Rgb>(dayTint).AsReadOnly();
             SeasonTint = new List<Rgb>(seasonTint).AsReadOnly();
             ValleyTint = valleyTint;

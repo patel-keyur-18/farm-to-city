@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -57,7 +57,20 @@ namespace Sim.View.Content
             Range(good, 1, 200, root + ".ratingGoodPercent");
             int fair = Int(Required(o, root, "ratingFairPercent"), root + ".ratingFairPercent");
             Range(fair, 1, good - 1, root + ".ratingFairPercent");
-            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair);
+            var bands = new List<int>();
+            List<JToken> bt = Array(Required(o, root, "skillBands"), root + ".skillBands");
+            if (bt.Count != 3) throw new ContentException(root + ".skillBands", "expected 3 skill thresholds");
+            for (int i = 0; i < 3; i++)
+            {
+                int b = Int(bt[i], Index(root + ".skillBands", i));
+                Range(b, i == 0 ? 1 : bands[i - 1] + 1, 100, Index(root + ".skillBands", i));
+                bands.Add(b);
+            }
+            int star = Int(Required(o, root, "skillStarPoints"), root + ".skillStarPoints");
+            Range(star, 10, 50, root + ".skillStarPoints");
+            int acre = Int(Required(o, root, "referenceAcreHours"), root + ".referenceAcreHours");
+            Range(acre, 1, 12, root + ".referenceAcreHours");
+            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre);
         }
 
         private static List<JToken> NonEmptyArray(JObject o, string path, string name)

@@ -32,6 +32,10 @@ namespace Sim.View.Views
         /// <summary>Ready crops, ready garden beds and ripe fruit trees.</summary>
         public int ReadyCount { get; internal set; }
         public string CollectText { get; internal set; }
+
+        /// <summary>Applicants waiting for an answer: the People button's badge (0 hides it).</summary>
+        public int PeopleBadge { get; internal set; }
+        public bool HasPeople { get; internal set; }
     }
 
     public static class HudView
@@ -60,6 +64,8 @@ namespace Sim.View.Views
                 StoreNearlyFull = pct >= ctx.Ui.StoreNearlyFullPercent,
                 ReadyCount = ready,
                 CollectText = ctx.Strings.Plural("hud.collect", ready),
+                HasPeople = sim.State.People != null,
+                PeopleBadge = sim.State.People == null ? 0 : sim.State.People.Applicants.Count,
             };
         }
     }
