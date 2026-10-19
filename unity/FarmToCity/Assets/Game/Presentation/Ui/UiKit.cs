@@ -132,6 +132,7 @@ namespace Game.Presentation.Ui
             b.Add(Text(label, 38, text, Heading, outline: enabled && look != ActionLook.Secondary));
             if (!string.IsNullOrEmpty(detail)) b.Add(Text(detail, 26, enabled && look != ActionLook.Secondary ? new Color(1f, 1f, 1f, 0.92f) : text, Body));
             ((Label)b[1]).style.unityTextAlign = TextAnchor.MiddleCenter;
+            ((Label)b[1]).style.whiteSpace = WhiteSpace.NoWrap; // a title never splits on a phone's fractional UI scale
             if (b.childCount > 2) ((Label)b[2]).style.unityTextAlign = TextAnchor.MiddleCenter;
 
             if (enabled)

@@ -21,7 +21,7 @@ namespace Game.Presentation.Map
         private UIDocument _document;
         private Action<Vector2> _onTap;
 
-        private bool _down, _dragging;
+        private bool _down, _dragging, _wasPressed;
         private Vector2 _downAt, _last;
         private float _downTime;
         private float _lastPinch;
@@ -108,19 +108,19 @@ namespace Game.Presentation.Map
                         touches++;
                     }
 
-            if (touches >= 2) { Pinch(a, b); return; }
+            if (touches >= 2) { Pinch(a, b); _wasPressed = true; return; }
             _pinching = false;
 
-            Vector2 pos;
-            bool pressed, released = false, pressedNow = false;
-            if (touches == 1) { pos = a; pressed = true; pressedNow = !_down; }
-            else
+            // A phone has no mouse: with no finger down the pointer is simply up. (Returning early here lost every release on
+            // iOS, so taps never fired and the next drag jumped from the last finger position.)
+            Vector2 pos = _last;
+            bool pressed = false;
+            Mouse m = Mouse.current;
+            if (touches == 1) { pos = a; pressed = true; }
+            else if (m != null)
             {
-                Mouse m = Mouse.current;
-                if (m == null) return;
                 pos = m.position.ReadValue();
                 pressed = m.leftButton.isPressed;
-                pressedNow = m.leftButton.wasPressedThisFrame;
                 float scroll = m.scroll.ReadValue().y;
                 if (Mathf.Abs(scroll) > 0.01f && !OverUi(pos))
                 {
@@ -128,7 +128,8 @@ namespace Game.Presentation.Map
                     Apply();
                 }
             }
-            if (_down && !pressed) released = true;
+            bool pressedNow = pressed && !_wasPressed, released = _down && !pressed;
+            _wasPressed = pressed;
 
             if (pressedNow && !OverUi(pos))
             {

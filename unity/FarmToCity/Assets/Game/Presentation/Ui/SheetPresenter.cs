@@ -19,6 +19,7 @@ namespace Game.Presentation.Ui
         private readonly VisualElement _holder;
         private VisualElement _sheet;
         private bool _closing;
+        private string _key;
 
         /// <summary>A button was pressed: the action (the host makes the command with the current sim time, or opens another sheet).</summary>
         public Action<ActionVm> OnAction { get; set; }
@@ -96,10 +97,30 @@ namespace Game.Presentation.Ui
             }
         }
 
-        private void Show(VisualElement sheet)
+        /// <summary>
+        /// The host redraws the open sheet after every Sync (once a second). Rebuilding unchanged content would throw away the scroll
+        /// position and any press in progress, so a refresh with the same text is skipped and a changed one keeps the scroll.
+        /// </summary>
+        private bool Unchanged(string key, bool refresh)
+        {
+            if (refresh && IsOpen && key == _key) return true;
+            _key = key;
+            return false;
+        }
+
+        private void Show(VisualElement sheet, bool refresh)
         {
             bool had = _sheet != null;
-            if (had) _holder.Remove(_sheet);
+            if (had)
+            {
+                ScrollView oldScroll = _sheet.Q<ScrollView>(), newScroll = sheet.Q<ScrollView>();
+                if (refresh && oldScroll != null && newScroll != null)
+                {
+                    Vector2 offset = oldScroll.scrollOffset;
+                    newScroll.schedule.Execute(() => newScroll.scrollOffset = offset); // after layout, so the offset isn't clamped to 0
+                }
+                _holder.Remove(_sheet);
+            }
             _sheet = sheet;
             _closing = false;
             _holder.Add(sheet);
@@ -165,8 +186,12 @@ namespace Game.Presentation.Ui
             return col;
         }
 
-        public void Show(SheetVm vm)
+        public void Show(SheetVm vm, bool refresh = false)
         {
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
+            foreach (LineVm l in vm.Lines) key.Append('|').Append(l.Label).Append('=').Append(l.Value);
+            foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
+            if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
             var scroll = NewScroll();
             scroll.style.marginTop = 8;
@@ -184,11 +209,17 @@ namespace Game.Presentation.Ui
                 foreach (ActionVm a in vm.Actions) actions.Add(ActionColumn(a));
                 sheet.Add(actions);
             }
-            Show(sheet);
+            Show(sheet, refresh);
         }
 
-        public void Show(SowSheetVm vm)
+        public void Show(SowSheetVm vm, bool refresh = false)
         {
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.FreeHoursText);
+            foreach (FertiliserVm f in vm.Fertilisers) key.Append('|').Append(f.Id).Append(f.Selected);
+            foreach (CropRowVm r in vm.Rows)
+                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.EarnsText)
+                   .Append(r.LabourText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
+            if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
             var scroll = NewScroll();
             scroll.style.marginTop = 8;
@@ -247,7 +278,7 @@ namespace Game.Presentation.Ui
                 scroll.Add(card);
             }
             sheet.Add(scroll);
-            Show(sheet);
+            Show(sheet, refresh);
         }
     }
 }

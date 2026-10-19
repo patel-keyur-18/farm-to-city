@@ -109,6 +109,14 @@ namespace Game.Presentation.Ui
             _collectHolder.style.position = Position.Absolute;
             _collectHolder.style.left = 28; _collectHolder.style.bottom = 28;
             _layer.Add(_collectHolder);
+
+            // HUD figures never wrap: on a phone's fractional UI scale the measured width can round a hair short, and the last
+            // digit then dropped onto a hidden second line ("12:4", "4,38").
+            foreach (Label l in new[] { _date, _clock, _weather, _cash, _store })
+            {
+                l.style.whiteSpace = WhiteSpace.NoWrap;
+                l.style.flexShrink = 0;
+            }
         }
 
         /// <summary>The element's centre in screen pixels (y up), for flying icons to land on it.</summary>

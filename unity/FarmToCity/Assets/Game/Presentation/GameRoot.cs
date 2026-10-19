@@ -132,7 +132,7 @@ namespace Game.Presentation
 
             _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
             _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll };
-            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id); }, OnClosed = OnSheetClosed };
+            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
             BuildToast();
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -157,7 +157,7 @@ namespace Game.Presentation
             _safeRoot.Clear();
             _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
             var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll };
-            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id); }, OnClosed = OnSheetClosed };
+            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
             BuildToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
@@ -329,18 +329,18 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id)); break;
-                case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id)); break;
-                case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id)); break;
-                case "Store": _sheet.Show(StoreSheet.Build(_ctx)); break;
-                case "Sow": ShowSow((int)r.Id); break;
+                case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
+                case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
+                case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
+                case "Store": _sheet.Show(StoreSheet.Build(_ctx), refreshOnly); break;
+                case "Sow": ShowSow((int)r.Id, refreshOnly); break;
             }
         }
 
-        private void ShowSow(int tile)
+        private void ShowSow(int tile, bool refresh = false)
         {
             _open = new SheetRequest("Sow", tile);
-            _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser));
+            _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser), refresh);
         }
 
         private void OnSheetClosed()
