@@ -1,0 +1,75 @@
+{
+ "pixelsPerUnit": 528,
+ "sprites": [
+  {
+   "w": 328,
+   "h": 332,
+   "pivotX": 0.5,
+   "pivotY": 0.24643,
+   "name": "hand_hut"
+  },
+  {
+   "w": 286,
+   "h": 308,
+   "pivotX": 0.55554,
+   "pivotY": 0.32397,
+   "name": "hand_hut_building"
+  },
+  {
+   "w": 530,
+   "h": 382,
+   "pivotX": 0.5,
+   "pivotY": 0.30531,
+   "name": "hut"
+  },
+  {
+   "w": 134,
+   "h": 206,
+   "pivotX": 0.48726,
+   "pivotY": 0.21248,
+   "name": "person_founder_back"
+  },
+  {
+   "w": 140,
+   "h": 208,
+   "pivotX": 0.515,
+   "pivotY": 0.20649,
+   "name": "person_founder_front"
+  },
+  {
+   "w": 134,
+   "h": 216,
+   "pivotX": 0.48846,
+   "pivotY": 0.20078,
+   "name": "person_hand_back"
+  },
+  {
+   "w": 134,
+   "h": 218,
+   "pivotX": 0.48846,
+   "pivotY": 0.19795,
+   "name": "person_hand_front"
+  },
+  {
+   "w": 140,
+   "h": 214,
+   "pivotX": 0.48945,
+   "pivotY": 0.23326,
+   "name": "person_labourer_back"
+  },
+  {
+   "w": 140,
+   "h": 220,
+   "pivotX": 0.48945,
+   "pivotY": 0.23087,
+   "name": "person_labourer_front"
+  },
+  {
+   "w": 228,
+   "h": 268,
+   "pivotX": 0.5,
+   "pivotY": 0.21671,
+   "name": "well"
+  }
+ ]
+}

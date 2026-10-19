@@ -151,8 +151,14 @@ namespace Game.Presentation.Map
                 bool hut = b.DefId == "hut";
                 Vector2 off = hut ? HutSpot : WellSpot;
                 Vector3 pos = TileCentre(b.TileId) + (Vector3)off;
-                SpriteRenderer r = NewRenderer(b.DefId, hut ? SpriteBank.Hut : SpriteBank.Well, pos, Order(b.TileId, _width, 45, off.y));
-                r.transform.localScale = Vector3.one * (hut ? 0.62f : 0.5f);
+                Sprite rendered = SpriteBank.Rendered(b.DefId);
+                SpriteRenderer r = NewRenderer(b.DefId, rendered != null ? rendered : hut ? SpriteBank.Hut : SpriteBank.Well, pos, Order(b.TileId, _width, 45, off.y));
+                r.transform.localScale = Vector3.one * (rendered != null ? 1f : hut ? 0.62f : 0.5f);
+                if (rendered != null)
+                {
+                    SpriteRenderer shadow = NewRenderer(b.DefId + "Shadow", SpriteBank.ContactShadow, pos, Order(b.TileId, _width, 44, off.y));
+                    shadow.transform.localScale = new Vector3(hut ? 0.62f : 0.26f, hut ? 0.62f : 0.26f, 1f);
+                }
                 _buildings.Add(r);
                 if (hut) _hutWorld = pos; else _wellWorld = pos;
             }

@@ -26,6 +26,50 @@ namespace Game.Presentation.Art
             return s;
         }
 
+        // ---- Blender renders (tools/blender/render.py, ADR 0039) ----
+
+        [System.Serializable] private class RenderedInfo { public string name; public int w, h; public float pivotX, pivotY; }
+        [System.Serializable] private class RenderedManifest { public float pixelsPerUnit; public RenderedInfo[] sprites; }
+
+        private static Dictionary<string, RenderedInfo> _rendered;
+        private static float _renderedPpu;
+
+        /// <summary>A sprite rendered by the Blender rig at its true map scale, or null if it isn't rendered yet.</summary>
+        public static Sprite Rendered(string name)
+        {
+            if (_rendered == null)
+            {
+                _rendered = new Dictionary<string, RenderedInfo>();
+                var json = Resources.Load<TextAsset>("Art/Blender/sprites");
+                if (json != null)
+                {
+                    var m = JsonUtility.FromJson<RenderedManifest>(json.text);
+                    _renderedPpu = m.pixelsPerUnit;
+                    foreach (RenderedInfo i in m.sprites) _rendered[i.name] = i;
+                }
+            }
+            if (!_rendered.TryGetValue(name, out RenderedInfo info)) return null;
+            return Get("blender:" + name, () =>
+            {
+                var tex = Resources.Load<Texture2D>("Art/Blender/" + name);
+                return tex == null ? null : Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(info.pivotX, info.pivotY), _renderedPpu);
+            });
+        }
+
+        /// <summary>A soft oval contact shadow for a rendered sprite: rx, ry in tile widths.</summary>
+        public static Sprite ContactShadow
+        {
+            get
+            {
+                return Get("contactShadow", () =>
+                {
+                    var p = new Painter(132, 66);
+                    p.Shadow(66, 33, 60, 30, 0.30f);
+                    return p.ToSprite(Ppu, new Vector2(0.5f, 0.5f));
+                });
+            }
+        }
+
         // ---- ground (Kenney, CC0) ----
 
         private static Sprite Kenney(string number, float centreFromBottom, float height)
