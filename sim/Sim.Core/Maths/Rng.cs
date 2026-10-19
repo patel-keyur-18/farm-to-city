@@ -13,6 +13,9 @@ namespace Sim.Core.Maths
         Inflation = 3,
         Pest = 4,
         FounderSick = 5,
+        People = 6,
+        DayLabourPool = 7,
+        Applicants = 8,
     }
 
     /// <summary>

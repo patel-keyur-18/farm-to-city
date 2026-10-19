@@ -4,6 +4,7 @@ using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.Core.Market;
 using Sim.Core.Maths;
+using Sim.Core.People;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
 using Sim.Core.Weather;
@@ -47,6 +48,9 @@ namespace Sim.Core
         /// <summary>The credit score and loans (spec 005); null when the content has no lenders (ADR 0038).</summary>
         public CreditState Credit { get; internal set; }
 
+        /// <summary>Day labourers, hands, huts and orders (spec 006); null when the content has no people.</summary>
+        public PeopleState People { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -70,6 +74,7 @@ namespace Sim.Core
             if (Market != null) Market.WriteTo(h);
             if (Farm != null) Farm.WriteTo(h);
             if (Credit != null) Credit.WriteTo(h);
+            if (People != null) People.WriteTo(h);
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>
@@ -96,6 +101,7 @@ namespace Sim.Core
                 Market = Market?.Clone(),
                 Farm = Farm?.Clone(),
                 Credit = Credit?.Clone(),
+                People = People?.Clone(),
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };
         }

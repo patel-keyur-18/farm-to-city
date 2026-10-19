@@ -107,7 +107,7 @@ namespace Sim.Core.Farm
             }
             Fixed cap = defs.Farm.Farm.CareCap;
             if (demand == Fixed.Zero) { farm.CareRatio = cap; return; }
-            Fixed ratio = FounderRules.FieldHours(sim) / demand;
+            Fixed ratio = People.PeopleRules.CareSupply(sim) / demand;
             farm.CareRatio = ratio > cap ? cap : ratio;
         }
 

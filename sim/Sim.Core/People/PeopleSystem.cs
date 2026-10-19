@@ -1,0 +1,317 @@
+using System.Collections.Generic;
+using Sim.Core.Commands;
+using Sim.Core.Definitions;
+using Sim.Core.Events;
+using Sim.Core.Farm;
+using Sim.Core.Finance;
+using Sim.Core.Land;
+using Sim.Core.Market;
+using Sim.Core.Maths;
+using Sim.Core.Scheduling;
+using Sim.Core.Time;
+
+namespace Sim.Core.People
+{
+    /// <summary>
+    /// People (spec 006 §3.9, ADR 0039). Daily: day labourers go home, the new day's pool is drawn. Hourly: a job post
+    /// expires; live only, lapsed hands and waiting applicants count their grace and new applicants arrive; then, live or
+    /// away, the hands carry out their standing orders. Renewals run inside the season close (step 6).
+    /// </summary>
+    internal sealed class PeopleSystem : ISimSystem
+    {
+        public const string HutJob = "hut.build";
+        private const long Day = ClockDef.SecondsPerDay;
+
+        public SystemOrder Order { get { return SystemOrder.Labour; } }
+
+        /// <summary>The roster of neighbours (seeded names and traits, stream People) and the first day's pool.</summary>
+        public static void Initialise(Simulation sim)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            var s = new PeopleState();
+            sim.State.People = s;
+            var used = new bool[p.Names.Count];
+            for (int i = 0; i < p.Pool.RosterSize; i++)
+            {
+                // A distinct name: draw among the names not used yet.
+                int left = p.Names.Count - i;
+                int k = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.People, (ulong)i, 0), (ulong)left);
+                int name = -1;
+                for (int n = 0; n < used.Length; n++)
+                {
+                    if (used[n]) continue;
+                    if (k-- == 0) { name = n; break; }
+                }
+                used[name] = true;
+                int trait = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.People, (ulong)i, 1), (ulong)p.Traits.Count);
+                s.Roster.Add(new Neighbour { Id = i + 1, Name = name, Trait = trait });
+            }
+            DrawPool(sim);
+        }
+
+        public void OnPass(Simulation sim, ItemClass pass)
+        {
+            if (pass == ItemClass.Daily) NewDay(sim);
+            if (pass != ItemClass.Hourly) return;
+            PeopleState s = sim.State.People;
+            long t = sim.State.Clock.SimTime;
+            if (s.Post != null && t >= s.Post.ExpiresAt)
+            {
+                s.Post = null;
+                sim.Emit(new JobPostExpired(t));
+            }
+            if (!sim.State.Clock.IsAway)
+            {
+                Grace(sim);
+                WaitingApplicants(sim);
+                Arrivals(sim);
+            }
+            Orders.Run(sim);
+        }
+
+        // ---- day labourers (§3.2) ----
+
+        private static void NewDay(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            int gone = 0;
+            FarmSystem.Accrue(sim);
+            foreach (Neighbour n in s.Roster)
+            {
+                if (n.HiredToday) gone++;
+                n.HiredToday = false;
+            }
+            DrawPool(sim);
+            FarmSystem.Refresh(sim);
+            if (gone > 0) sim.Emit(new DayLabourersLeft(sim.State.Clock.SimTime, gone));
+        }
+
+        /// <summary>A seeded shuffle of the roster (stream DayLabourPool, counter = day); the first availablePerDay are free.</summary>
+        private static void DrawPool(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            long t = sim.State.Clock.SimTime;
+            ulong day = (ulong)(t / Day);
+            int free = sim.Config.Game.People.Pool.AvailablePerDay[(int)Calendar.SeasonAt(t, sim.Clock)];
+            int n = s.Roster.Count;
+            var order = new int[n];
+            for (int i = 0; i < n; i++) order[i] = i;
+            for (int i = n - 1; i > 0; i--)
+            {
+                int j = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.DayLabourPool, (ulong)i, day), (ulong)(i + 1));
+                int tmp = order[i];
+                order[i] = order[j];
+                order[j] = tmp;
+            }
+            foreach (Neighbour x in s.Roster) x.FreeToday = false;
+            for (int i = 0; i < free && i < n; i++) s.Roster[order[i]].FreeToday = true;
+        }
+
+        // ---- the hand's hut (§3.4) ----
+
+        internal sealed class HutBuild : IJobHandler
+        {
+            public string JobType { get { return HutJob; } }
+            public SystemOrder System { get { return SystemOrder.Labour; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                PeopleState s = sim.State.People;
+                Construction c = s.Constructions.Find(x => x.Id == job.TargetId);
+                LandState land = sim.State.Land;
+                var b = new Building { Id = land.NextBuildingId++, Def = sim.Config.Game.People.HandHut, TileId = c.TileId, Cost = c.Cost };
+                land.Buildings.Add(b);
+                s.Constructions.Remove(c);
+                sim.CompleteJob(job);
+                sim.Emit(new HandHutBuilt(sim.State.Clock.SimTime, b.Id, c.TileId));
+                ScheduleApplicant(sim);
+            }
+        }
+
+        // ---- applicants (§3.5) ----
+
+        /// <summary>
+        /// Starts the wait for the next applicant when a hut stands empty and the queue has room (never cuts a wait short, but a new
+        /// job post can bring it forward). Clears it otherwise.
+        /// </summary>
+        internal static void ScheduleApplicant(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            if (PeopleRules.EmptyHut(sim) == null || s.Applicants.Count >= sim.Config.Game.People.Hand.MaxApplicants)
+            {
+                s.NextApplicantAt = 0;
+                return;
+            }
+            long at = sim.State.Clock.SimTime + PeopleRules.ApplicantInterval(sim, s.NextApplicantId, s.Post != null);
+            if (s.NextApplicantAt == 0 || at < s.NextApplicantAt) s.NextApplicantAt = at;
+        }
+
+        private static void Arrivals(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            long t = sim.State.Clock.SimTime;
+            if (s.NextApplicantAt == 0 || t < s.NextApplicantAt)
+            {
+                if (s.NextApplicantAt == 0) ScheduleApplicant(sim);
+                return;
+            }
+            if (PeopleRules.EmptyHut(sim) == null || s.Applicants.Count >= sim.Config.Game.People.Hand.MaxApplicants)
+            {
+                s.NextApplicantAt = 0;
+                return;
+            }
+            Arrive(sim);
+            s.NextApplicantAt = 0;
+            ScheduleApplicant(sim);
+        }
+
+        /// <summary>A seeded profile (stream Applicants, key = applicant id): skill, two distinct traits, a name.</summary>
+        private static void Arrive(Simulation sim)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            PeopleState s = sim.State.People;
+            long id = s.NextApplicantId++;
+            bool above = s.Post != null && s.Post.AboveMarket;
+            int bonus = above ? p.JobPost.AboveMarketSkillBonus : 0;
+            ulong seed = sim.State.Seed;
+            int skill = p.Hand.SkillMin + bonus + (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 1), (ulong)(p.Hand.SkillMax - p.Hand.SkillMin + 1));
+            int t1 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 2), (ulong)p.Traits.Count);
+            int t2 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 3), (ulong)(p.Traits.Count - 1));
+            if (t2 >= t1) t2++;
+            int name = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 4), (ulong)p.Names.Count);
+            s.Applicants.Add(new Applicant
+            {
+                Id = id, Name = name, Skill = System.Math.Min(100, skill), Trait1 = t1, Trait2 = t2, AboveMarket = above, ArrivedAt = sim.State.Clock.SimTime,
+            });
+            sim.Emit(new ApplicantArrived(sim.State.Clock.SimTime, id));
+        }
+
+        /// <summary>Applicants not hired within applicantWaitDays of live time leave.</summary>
+        private static void WaitingApplicants(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            long wait = sim.Config.Game.People.Hand.ApplicantWaitDays * Day;
+            bool left = false;
+            for (int i = 0; i < s.Applicants.Count; i++)
+            {
+                Applicant a = s.Applicants[i];
+                a.WaitedLiveSeconds += 3600;
+                if (a.WaitedLiveSeconds < wait) continue;
+                s.Applicants.RemoveAt(i--);
+                sim.Emit(new ApplicantLeft(sim.State.Clock.SimTime, a.Id));
+                left = true;
+            }
+            if (left && s.NextApplicantAt == 0) ScheduleApplicant(sim);
+        }
+
+        /// <summary>Takes the applicant on: into the first empty hut, the rest of the season prepaid (spec 006 §3.6).</summary>
+        internal static Hand Hire(Simulation sim, Applicant a, long wage, long prepay)
+        {
+            PeopleState s = sim.State.People;
+            long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
+            FarmSystem.Accrue(sim);
+            var h = new Hand
+            {
+                Id = s.NextHandId++, Name = a.Name, Skill = Fixed.FromInt(a.Skill), Trait1 = a.Trait1, Trait2 = a.Trait2,
+                HutId = PeopleRules.EmptyHut(sim).Id, HiredAt = t, Wage = wage, Contract = ContractState.Active,
+            };
+            h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, prepay, t, (t / S + 1) * S, "hand:" + h.Id).Id;
+            s.Hands.Add(h);
+            s.Applicants.Remove(a);
+            s.Post = null; // a post lasts until a hand is hired
+            FarmSystem.Refresh(sim);
+            sim.Emit(new HandHired(t, a.Id, h.Id, wage, prepay));
+            s.NextApplicantAt = 0;
+            ScheduleApplicant(sim);
+            return h;
+        }
+
+        // ---- contracts (§3.6, §3.7) ----
+
+        /// <summary>
+        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; an active one is
+        /// renewed at the re-asked wage (a loyal hand keeps theirs; an ambitious one asks 10% more) if cash allows, else it lapses.
+        /// Then skill grows for every hand under an active contract.
+        /// </summary>
+        internal static void SettleContracts(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            PeopleDefs p = sim.Config.Game.People;
+            long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
+            FarmSystem.Accrue(sim);
+            foreach (Hand h in new List<Hand>(s.Hands))
+            {
+                if (h.Contract == ContractState.Lapsed)
+                {
+                    Leave(sim, h);
+                    sim.Emit(new HandLeft(t, h.Id));
+                    continue;
+                }
+                long wage = RenewalWage(sim, h);
+                if (sim.State.Ledger.CanAfford(wage))
+                {
+                    h.Wage = wage;
+                    h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, wage, t, t + S, "hand:" + h.Id).Id;
+                    sim.Emit(new ObligationPaid(t, "Wages", "hand:" + h.Id, wage));
+                    sim.Emit(new ContractRenewed(t, h.Id, wage, wage));
+                }
+                else
+                {
+                    h.Wage = wage;
+                    h.Contract = ContractState.Lapsed;
+                    h.PrepaymentId = 0;
+                    h.LapsedAt = t;
+                    h.LapsedLiveSeconds = 0;
+                    sim.Emit(new ObligationUnpaid(t, "Wages", "hand:" + h.Id, wage));
+                    sim.Emit(new ContractLapsed(t, h.Id, wage, sim.State.Ledger.Cash));
+                }
+            }
+            foreach (Hand h in s.Hands)
+            {
+                if (h.Contract != ContractState.Active) continue;
+                h.SeasonsWorked++;
+                Fixed gain = p.Hand.SkillGainPerSeason * p.Traits[h.Trait1].SkillGainFactor * p.Traits[h.Trait2].SkillGainFactor;
+                Fixed skill = h.Skill + gain;
+                h.Skill = skill > Fixed.FromInt(100) ? Fixed.FromInt(100) : skill;
+                sim.Emit(new HandSkillGrew(t, h.Id, h.Skill));
+            }
+            FarmSystem.Refresh(sim);
+        }
+
+        /// <summary>The wage for the coming season: the asked wage for today's skill and price index, kept by a loyal hand.</summary>
+        internal static long RenewalWage(Simulation sim, Hand h)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            if (PeopleRules.HasTrait(sim, h, x => x.KeepsWage)) return h.Wage;
+            long wage = PeopleRules.AskedWage(sim, h.Skill, false);
+            Fixed factor = p.Traits[h.Trait1].RenewalWageFactor * p.Traits[h.Trait2].RenewalWageFactor;
+            return factor == Fixed.One ? wage : Money.RoundToCoin(Money.MulRate(wage, factor));
+        }
+
+        /// <summary>Lapsed hands wait lapseGraceDays of live time, then leave (never while the player is away).</summary>
+        private static void Grace(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            long grace = sim.Config.Game.People.Hand.LapseGraceDays * Day;
+            foreach (Hand h in new List<Hand>(s.Hands))
+            {
+                if (h.Contract != ContractState.Lapsed) continue;
+                h.LapsedLiveSeconds += 3600;
+                if (h.LapsedLiveSeconds < grace) continue;
+                Leave(sim, h);
+                sim.Emit(new HandLeft(sim.State.Clock.SimTime, h.Id));
+            }
+        }
+
+        /// <summary>The hand moves out: their orders go, the hut empties, the next applicant can come.</summary>
+        internal static void Leave(Simulation sim, Hand h)
+        {
+            PeopleState s = sim.State.People;
+            FarmSystem.Accrue(sim);
+            s.Hands.Remove(h);
+            s.Orders.RemoveAll(o => o.HandId == h.Id);
+            FarmSystem.Refresh(sim);
+            ScheduleApplicant(sim);
+        }
+    }
+}

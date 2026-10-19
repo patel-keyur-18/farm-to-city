@@ -202,5 +202,24 @@ namespace Sim.Core.Tests
             Assert.That(TestContent.Game().Credit.Lenders.Select(l => l.Id), Is.EqualTo(new[] { "moneylender", "coop_bank" }));
         }
     }
+    public partial class ContentTests
+    {
+        // Spec 006 AC-1.
+        [Test]
+        public void People_Validation()
+        {
+            ContentException e = Error("people.json", j => j.Replace("\"spring\": 2", "\"spring\": 9"));
+            Assert.That(e.FieldPath, Is.EqualTo("people.labourPool.availablePerDay.spring"));
+            e = Error("people.json", j => j.Replace("\"skillMin\": 20", "\"skillMin\": 80"));
+            Assert.That(e.FieldPath, Is.EqualTo("people.hand.skillMin"));
+            e = Error("people.json", j => j.Replace("\"id\": \"steady\"", "\"id\": \"steady\", \"creative\": 1.2"));
+            Assert.That(e.FieldPath, Is.EqualTo("people.traits[5].creative"));
+            e = Error("buildings.json", j => j.Replace("\"housesHands\": 1", "\"housesHands\": 0"));
+            Assert.That(e.FieldPath, Is.EqualTo("buildings.hand_hut.housesHands"));
+            // Without a hand's hut there are no people: the frozen golden content loads as before.
+            GameDefs none = TestContent.Game((f, j) => f == "buildings.json" ? System.Text.RegularExpressions.Regex.Replace(j, ",\\s*\\{ \"id\": \"hand_hut\"[^}]*\\}", "") : j);
+            Assert.That(none.People, Is.Null);
+        }
+    }
 }
 

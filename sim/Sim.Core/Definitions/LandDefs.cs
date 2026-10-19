@@ -186,9 +186,17 @@ namespace Sim.Core.Definitions
         /// <summary>Kitchen-garden beds by the home (spec 003 §3.13; hut 2).</summary>
         public int GardenBeds { get; }
 
+        /// <summary>Hours to build (spec 006 §3.4; hand's hut 24, inherited buildings 0).</summary>
+        public int BuildHours { get; }
+
+        /// <summary>Resident hands it houses (hand's hut 1).</summary>
+        public int HousesHands { get; }
+
         public BuildingDef(string id, string nameKey, int yardTreeSlots, long value, int usefulLifeSeasons, long storeCapacityKg,
-            Fixed restRecovery, int gardenBeds)
+            Fixed restRecovery, int gardenBeds, int buildHours = 0, int housesHands = 0)
         {
+            BuildHours = buildHours;
+            HousesHands = housesHands;
             RestRecovery = restRecovery;
             GardenBeds = gardenBeds;
             StoreCapacityKg = storeCapacityKg;
@@ -284,9 +292,14 @@ namespace Sim.Core.Definitions
         /// <summary>Lenders and the credit score rules, or null when the content has none (a game without credit, ADR 0038).</summary>
         public CreditDefs Credit { get; }
 
+        /// <summary>Day labourers, hands and orders (spec 006), or null when the buildings have no hand's hut.</summary>
+        public PeopleDefs People { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
-            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null)
+            IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
+            PeopleDefs people = null)
         {
+            People = people;
             Credit = credit;
             Farm = farm ?? throw new ArgumentNullException(nameof(farm));
             Market = market ?? throw new ArgumentNullException(nameof(market));
