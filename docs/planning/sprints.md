@@ -203,7 +203,7 @@
 
 ## Sprint 4 · 16–22 Nov 2026 · Phase 1
 
-- **Status:** Built (24 of 24 points, 2026-10-19); the owner's device run is pending. Planning review (2026-10-18): 12 gaps closed with the owner, ADR 0038
+- **Status:** Done (24 of 24 points; device runs 2 and 3 passed on the iPhone 13, 2026-10-19). Planning review (2026-10-18): 12 gaps closed with the owner, ADR 0038
 - **Branch:** `sprint/04-credit-first-playable` (or the branch the session assigns)
 - **Goal:** Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel.
 - **Points:** 24 (23 planned; US-078 +1 minimal HUD with Collect all, US-079 +1 Store sheet −1 ghost preview moved to US-068, ADR 0038)
@@ -215,11 +215,11 @@
 | US-063 | Borrow | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
 | US-064 | Repayments and penalties | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
 | US-065 | Foreclosure | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
-| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | Built, device run pending |
-| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | Built, device run pending |
+| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | Done |
+| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | Done |
 | US-085 | String tables | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | Done |
 | US-086 | Number formatting | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | Done |
-| US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | Built, device run pending |
+| US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | Done |
 
 **Sprint end checklist**
 
@@ -228,7 +228,7 @@
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** — (pending: `s04-first-playable.md`)
+**Review (owner's device results):** run 1 found three touch and layout bugs (fixed the same day); run 2 passed all checks but 11 (empty tree places not tappable; fixed, with the owner's sheet changes); run 3 passed all checks, with golden replays 001, 003, 004 and 005 PASS on the device. The owner rates the art as placeholder and wants it improved by all means (free only, ADR 0007).
 
 **Retro (Claude):**
 - *Went well:* the gap review found real loopholes before code: collateral could be sold while the loan stayed, and the protected plot made unsecured default nearly free. The stress bots then measured the default loophole at about +4% (not +20%), so ADR 0038's rules are a safety margin. `Simulation.Preview` made every greyed button show the sim's own reason with no duplicated rules. The painter gave a cohesive look with no art assets; the Editor loop (taps and captures through the `unity` CLI) caught layout problems before any phone build.

@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 4 built (24 of 24 points, 2026-10-19); the owner's device run of the first playable is pending |
-| Branch with latest work | `sprint/04-credit-first-playable` (from `main`, which has Sprint 3 / PR #8) |
+| Sprint | Sprint 5 (people) started 2026-10-19: the gap review with the owner. Sprint 4 done (PR #9 merged; device runs 2 and 3 passed) |
+| Branch with latest work | `sprint/05-people` (from `main`, which has Sprint 4 / PR #9) |
 | Last updated | 2026-10-19 |
 
 ## Done so far
@@ -79,9 +79,7 @@
   - **The device run (three rounds, 2026-10-18):** golden replays 001, 003, 004 PASS on the iPhone 13 with the `dotnet test` hashes; 72 h catch-up 1.8 ms; the spike at about 60 fps with under 1% dropped frames, main thread p95 at most 7.59 ms, GPU at most 2.81 ms; the render thread's time is the screen wait (the no-agents baseline shows the same); the heat run showed no throttling; the low-poly look approved. **ADR 0035** records it and clarifies the pass rule (dropped frames over 25 ms).
   - **The review:** specs 008 and 009 approved (ADR 0036); the findings closed (ADR 0037: the tractor-trolley mandi, shade per tree, first-season pacing).
 
-## In progress
-
-**Sprint 4 is built; the pull request is open and waits for the owner's device run (`docs/test-checklists/s04-first-playable.md`).** Everything below was done on branch `sprint/04-credit-first-playable`:
+- **Sprint 4 (branch `sprint/04-credit-first-playable`, PR #9 merged): 24 of 24 points, done.** Device runs 2 and 3 on the iPhone 13 passed every check (golden replays 001, 003, 004, 005 PASS on the device). Details:
 
 - **Planning review (2026-10-18):** 12 gaps closed one by one with the owner, **ADR 0038**, spec 005 (§3.4–3.9, §5, §8 AC-31 to AC-36, §10), specs 002 and 008, the GDD, CLAUDE.md and the planning files.
 - **Credit and foreclosure (US-063 to US-065, 207 tests in `Sim.Core.Tests`):** lenders and limits, `TakeLoan`, `RepayLoan`, `RestructureLoan`, land-purchase financing, schedules, arrears and penalty interest, the score, defaults, the 24-live-hour final notice, foreclosure (parcels, then produce), selling collateral repays the bank. `ReplayJson` has the credit commands; golden 005 `0x4D9D7611B2753AC9` (frozen content plus `golden/content-005/`); the leverage and strategic-defaulter stress bots are in the gate checks (0.999 and 1.024 × competent; the defaulter is foreclosed in every run, 1.039 without seizing produce). Notes in spec 005 §10.
@@ -89,19 +87,23 @@
 - **The first playable on Unity (US-078, US-079, US-088):** `Game.Presentation` rebuilt code-first: a software painter and `SpriteBank` (outlined, shaded placeholder sprites over the Kenney ground tiles), the isometric map with crop, tree and bed stages, ready, spoiling and pest bubbles, the day and season tint, pinch, drag and tap picking, the minimal HUD (time, cash count-up, store, Collect all), bottom sheets, flying produce and coins, the developer panel (time travel, snapshot and restore, number format, reduced motion, the golden replays, development builds and the Editor only). Baloo 2 and Noto Sans (OFL) bundled. The Phase 0 spike, citizen stub, style check and the Kenney farm sprites are deleted (git `3b1c81c`). **Verified in the Editor** through the `unity` CLI (taps, captures, the goldens PASS under Mono); screenshots `docs/art/s04-*.png`.
 - **Builds:** Unity batch build (`Game.Editor.BuildCli.IosDevelopment`, Development build) succeeded; the unsigned Xcode Release build is recorded in the pull request. On macOS 27, Unity's post-build step crashes the Editor when `Builds/iOS` already holds an Xcode project: delete `Builds/iOS` first (build guide).
 - **Device run 1 (2026-10-19), fixed the same day:** on the iPhone every map tap failed and each drag jumped, because `MapInput` fell back to the mouse when no finger was down and returned early when `Mouse.current` was null (always on a phone), so a release was never seen; the store list jumped to the top because the open sheet was rebuilt on every 1-second Sync; HUD figures wrapped a digit onto a hidden line ("12:4") on the phone's fractional UI scale. Fixes: pointer up with no finger and no mouse; a sheet refresh with unchanged text is skipped and a changed one keeps its scroll; HUD figures and button titles don't wrap. Verified in the Editor by removing the mouse device and playing touch events through the Input System (tap a field, Sow, scroll, Sow Potato inside the scrolled list, two drags without a jump). 
-- **Device run 2 (2026-10-19):** all checks passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS on device; 72 h in 1.4 ms) except check 11 (an empty tree place couldn't be tapped: it had no sprite, so the tap fell through to the land under it). Owner changes, done the same day: full-height sheets; one row per choice with its own button (store, trees, garden); Care, Water and Weather as Good, Fair or Poor (`ui.json` thresholds); empty tree places drawn as stone-ringed pits and tappable. Spec 008 §3.2 and §10 note 8. Verified in the Editor (captures of each sheet; planting from the tree sheet). Device run 3 (checks 10, 11, 13 and a look at the sheets) pending.
+- **Device run 2 (2026-10-19):** all checks passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS on device; 72 h in 1.4 ms) except check 11 (an empty tree place couldn't be tapped: it had no sprite, so the tap fell through to the land under it). Owner changes, done the same day: full-height sheets; one row per choice with its own button (store, trees, garden); Care, Water and Weather as Good, Fair or Poor (`ui.json` thresholds); empty tree places drawn as stone-ringed pits and tappable. Spec 008 §3.2 and §10 note 8. Verified in the Editor (captures of each sheet; planting from the tree sheet). Device run 3 passed (2026-10-19).
 - **Not done (by decision, ADR 0038):** loan screens (Sprint 7), the ghost preview (moved to US-068, Sprint 5), saves (Sprint 6; each launch is a new game), the Blender pipeline (US-171, Sprint 6: the owner installs Blender first).
+
+## In progress
+
+**Sprint 5 (people), branch `sprint/05-people`:** the gap review with the owner (US-066 to US-072, plus whether the Blender pipeline US-171 starts now). No code until every gap is closed and recorded in an ADR and spec 006 §10.
 
 ## Next up
 
-1. **Owner:** device run 3 on the rebuilt project: checks 10, 11 and 13 of the checklist, and a look at the full-height sheets; then merge. Build the first playable as a **Development build** (`how-to-build-ios.md`), install it on the iPhone 13 and work through `docs/test-checklists/s04-first-playable.md`; report what looks broken or plain, missed taps and the golden-replay result. Then merge the Sprint 4 pull request. Install **Blender** before Sprint 6.
-2. **Next session (Claude):** Sprint 5 (`sprints.md`): people (day labourers, the resident hand, standing orders, with their UI) plus the placement ghost of US-068; start with the gap review as usual, and fold in the owner's first-playable feedback (the look, tap feel, any layout fixes).
+1. **Claude:** finish the Sprint 5 gap review one gap at a time; record the answers (ADR 0039, spec 006 §10, the GDD if it changes); then the stories test-first (sim, `Sim.View`, Unity UI), the device build and `docs/test-checklists/s05-people.md`.
+2. **Owner:** answer the gaps; Blender 5.2.2 LTS is installed (2026-10-19).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Run the first playable on the iPhone 13 (Development build) with `s04-first-playable.md`; merge the Sprint 4 pull request |
+| Now | Answer the Sprint 5 gap review |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
