@@ -285,6 +285,7 @@ namespace Sim.Core.Farm
                 bed.State = BedState.Ready;
                 bed.JobId = 0;
                 sim.CompleteJob(job);
+                sim.Emit(new BedReady(sim.State.Clock.SimTime, bed.Id, sim.Config.Game.Farm.GardenCrops[bed.Crop].Id));
             }
         }
     }

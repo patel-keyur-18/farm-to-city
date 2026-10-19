@@ -236,6 +236,7 @@
   "event.FounderSick": "You are unwell today.",
   "event.PestWarning": "Pests on a field.",
   "event.FieldCleared": "Field cleared.",
+  "event.BedReady": "A garden bed is ready.",
   "event.GardenPicked": "Picked from the garden.",
   "event.TreePlanted": "Tree planted.",
   "event.TreeMatured": "A tree has grown up.",

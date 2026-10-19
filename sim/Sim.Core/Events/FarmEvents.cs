@@ -99,6 +99,21 @@ namespace Sim.Core.Events
         protected override string Describe() { return "FieldCleared(tile=" + TileId + ", crop=" + CropId + ")"; }
     }
 
+    /// <summary>A garden bed's crop is ready to pick (spec 003 §3.13); notifications read it (spec 007 §3.5).</summary>
+    public sealed class BedReady : SimEvent
+    {
+        public long BedId { get; }
+        public string GardenCropId { get; }
+
+        public BedReady(long simTime, long bedId, string gardenCropId) : base(simTime)
+        {
+            BedId = bedId;
+            GardenCropId = gardenCropId;
+        }
+
+        protected override string Describe() { return "BedReady(bed=" + BedId + ", crop=" + GardenCropId + ")"; }
+    }
+
     /// <summary>A garden bed was picked (spec 003 §5).</summary>
     public sealed class GardenPicked : SimEvent
     {
