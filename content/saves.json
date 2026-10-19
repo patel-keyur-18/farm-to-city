@@ -1,0 +1,20 @@
+{
+  "save": {
+    "minSchema": 1,
+    "hourlyBackups": 3,
+    "dailyBackups": 3,
+    "autosaveMinutes": 60,
+    "commandDebounceSeconds": 5,
+    "maxLogEntries": 100000
+  },
+  "notify": {
+    "maxPending": 64,
+    "groupWindowMinutes": 30,
+    "infoGroupMinutes": 240,
+    "quietFrom": "22:00",
+    "quietTo": "07:00"
+  },
+  "playLog": {
+    "maxBytes": 1048576
+  }
+}
