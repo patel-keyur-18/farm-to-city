@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 4 in progress (24 points): planning review done, coding not started |
+| Sprint | Sprint 4 built (24 of 24 points, 2026-10-19); the owner's device run of the first playable is pending |
 | Branch with latest work | `sprint/04-credit-first-playable` (from `main`, which has Sprint 3 / PR #8) |
-| Last updated | 2026-10-18 |
+| Last updated | 2026-10-19 |
 
 ## Done so far
 
@@ -81,23 +81,25 @@
 
 ## In progress
 
-**Sprint 4, planning review done (2026-10-18), no code yet.** 12 gaps closed one by one with the owner, recorded in **ADR 0038**, spec 005 (§3.4–3.9, §5, §8 AC-31 to AC-36, §10), specs 002 and 008, the GDD, CLAUDE.md and the planning files:
-- Credit: foreclosure also seizes stored produce (at the Floor, only until the debt is covered); selling collateral repays the bank first; moneylender 6% a season (+3% penalty), bank max term 16; every default gets a 24-live-hour final notice; score rules tightened and minimum loans (1,000 / 10,000); financing `amount` at most the price.
-- First playable: minimal HUD with Collect all and a minimal Store sheet (Sell to trader) in Sprint 4; the placement ghost moves to US-068 (Sprint 5); painted placeholder sprites and a motion-led feel, Baloo 2 headings; US-171 (Blender pipeline) pulled to Sprint 6 (**owner installs Blender before then**); the dev panel is Development-build only (time travel, snapshot, goldens), and the Phase 0 spike, style check and Kenney farm sprites are deleted (git `3b1c81c`); no saves until Sprint 6.
-- **Credit and foreclosure are done (US-063 to US-065, spec 005 AC-16 to AC-36, 205 tests):** lenders and limits, `TakeLoan`, `RepayLoan`, `RestructureLoan`, land-purchase financing, schedules, arrears and penalty interest, the score, defaults, the 24-live-hour final notice, foreclosure (parcels, then produce), selling collateral repays the bank. `ReplayJson` has the credit commands; golden 005 `0x4D9D7611B2753AC9` (frozen content plus `golden/content-005/`); the leverage and strategic-defaulter stress bots are in the gate checks (0.999 and 1.024 × competent; the defaulter is foreclosed in every run). Notes in spec 005 §10.
-- **`Sim.View` is built (US-085, US-086, and the view models for US-078/079):** string tables (`content/strings/en.json`, 349 keys), the en-IN / Western formatter, `UiDef` (`content/ui.json`: day and season tints, the motion catalogue), the HUD, Collect all, the crop-calendar sow sheet, the map view model, isometric geometry and camera limits, the field, garden, tree and store sheets with disabled reasons from `Simulation.Preview`. `tests/Sim.View.Tests` (33 tests). Spec 008 §10 lists what waits for Sprint 7.
-- Order of work (remaining): ~~`Sim.View`~~ (strings, formatter, HUD and Store view models), then the Unity map and tap-to-act, then the dev panel, then the build and checklist.
+**Sprint 4 is built; the pull request is open and waits for the owner's device run (`docs/test-checklists/s04-first-playable.md`).** Everything below was done on branch `sprint/04-credit-first-playable`:
+
+- **Planning review (2026-10-18):** 12 gaps closed one by one with the owner, **ADR 0038**, spec 005 (§3.4–3.9, §5, §8 AC-31 to AC-36, §10), specs 002 and 008, the GDD, CLAUDE.md and the planning files.
+- **Credit and foreclosure (US-063 to US-065, 207 tests in `Sim.Core.Tests`):** lenders and limits, `TakeLoan`, `RepayLoan`, `RestructureLoan`, land-purchase financing, schedules, arrears and penalty interest, the score, defaults, the 24-live-hour final notice, foreclosure (parcels, then produce), selling collateral repays the bank. `ReplayJson` has the credit commands; golden 005 `0x4D9D7611B2753AC9` (frozen content plus `golden/content-005/`); the leverage and strategic-defaulter stress bots are in the gate checks (0.999 and 1.024 × competent; the defaulter is foreclosed in every run, 1.039 without seizing produce). Notes in spec 005 §10.
+- **`Sim.View` (US-085, US-086, the view models of US-078/079; `tests/Sim.View.Tests`, 33 tests):** string tables (`content/strings/en.json`, 349 keys), the en-IN / Western formatter, `UiDef` (`content/ui.json`), the HUD, Collect all, the crop-calendar sow sheet, the map view model, isometric geometry and camera limits, the field, garden, tree and store sheets. Disabled actions show the sim's own reason through `Simulation.Preview` (a copy of the state). Spec 008 §10 lists what waits for Sprint 7.
+- **The first playable on Unity (US-078, US-079, US-088):** `Game.Presentation` rebuilt code-first: a software painter and `SpriteBank` (outlined, shaded placeholder sprites over the Kenney ground tiles), the isometric map with crop, tree and bed stages, ready, spoiling and pest bubbles, the day and season tint, pinch, drag and tap picking, the minimal HUD (time, cash count-up, store, Collect all), bottom sheets, flying produce and coins, the developer panel (time travel, snapshot and restore, number format, reduced motion, the golden replays, development builds and the Editor only). Baloo 2 and Noto Sans (OFL) bundled. The Phase 0 spike, citizen stub, style check and the Kenney farm sprites are deleted (git `3b1c81c`). **Verified in the Editor** through the `unity` CLI (taps, captures, the goldens PASS under Mono); screenshots `docs/art/s04-*.png`.
+- **Builds:** Unity batch build (`Game.Editor.BuildCli.IosDevelopment`, Development build) succeeded; the unsigned Xcode Release build is recorded in the pull request. On macOS 27, Unity's post-build step crashes the Editor when `Builds/iOS` already holds an Xcode project: delete `Builds/iOS` first (build guide).
+- **Not done (by decision, ADR 0038):** loan screens (Sprint 7), the ghost preview (moved to US-068, Sprint 5), saves (Sprint 6; each launch is a new game), the Blender pipeline (US-171, Sprint 6: the owner installs Blender first).
 
 ## Next up
 
-1. **Claude:** credit and foreclosure (US-063 to US-065), then `Sim.View` (US-085, US-086), the map and tap-to-act (US-078, US-079), the dev panel (US-088), the first playable build and its checklist.
-2. **Owner:** run the first playable on the iPhone 13 (Development build) when it is handed over; install Blender before Sprint 6.
+1. **Owner:** build the first playable as a **Development build** (`how-to-build-ios.md`), install it on the iPhone 13 and work through `docs/test-checklists/s04-first-playable.md`; report what looks broken or plain, missed taps and the golden-replay result. Then merge the Sprint 4 pull request. Install **Blender** before Sprint 6.
+2. **Next session (Claude):** Sprint 5 (`sprints.md`): people (day labourers, the resident hand, standing orders, with their UI) plus the placement ghost of US-068; start with the gap review as usual, and fold in the owner's first-playable feedback (the look, tap feel, any layout fixes).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Merge pull request #8 (Sprint 3; the Phase 0 gate is passed) |
+| Now | Run the first playable on the iPhone 13 (Development build) with `s04-first-playable.md`; merge the Sprint 4 pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
@@ -107,9 +109,7 @@ None. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 find
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
-- Golden 005 (Sprint 4) adds the credit commands to `ReplayJson`.
-- Spec 005 AC-4 covers land, prepayments and inputs in store; F05.2 adds loans and missed payments.
-- The Phase 0 bar and its code (`Phase0/`) are throwaway: removed or moved behind the dev panel in Sprint 4 (F08.4).
+- **Unity Editor quirks:** the Editor pauses the game when it loses focus (set `Application.runInBackground = true` through `unity command eval` to drive and capture play mode); editing sim sources while playing reloads the domain and nulls `GameRoot`'s fields (stop and play again).
 - `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID, and now `enableFrameTimingStats: 1`, set by the build step each build). Leave it uncommitted.
 
 ## Half-done work

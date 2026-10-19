@@ -203,7 +203,7 @@
 
 ## Sprint 4 · 16–22 Nov 2026 · Phase 1
 
-- **Status:** In progress. Planning review done (2026-10-18): 12 gaps closed with the owner, ADR 0038
+- **Status:** Built (24 of 24 points, 2026-10-19); the owner's device run is pending. Planning review (2026-10-18): 12 gaps closed with the owner, ADR 0038
 - **Branch:** `sprint/04-credit-first-playable` (or the branch the session assigns)
 - **Goal:** Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel.
 - **Points:** 24 (23 planned; US-078 +1 minimal HUD with Collect all, US-079 +1 Store sheet −1 ghost preview moved to US-068, ADR 0038)
@@ -223,14 +223,17 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI stories are verified in the Editor, the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s04-first-playable.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results):** — (pending: `s04-first-playable.md`)
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* the gap review found real loopholes before code: collateral could be sold while the loan stayed, and the protected plot made unsecured default nearly free. The stress bots then measured the default loophole at about +4% (not +20%), so ADR 0038's rules are a safety margin. `Simulation.Preview` made every greyed button show the sim's own reason with no duplicated rules. The painter gave a cohesive look with no art assets; the Editor loop (taps and captures through the `unity` CLI) caught layout problems before any phone build.
+- *To improve:* the Editor stops the game when unfocused and reloads the domain when sim sources change, so each check cost restarts; Unity's post-build step crashes on macOS 27 over an existing Xcode project (a batch build with `Builds/iOS` deleted works). The look is a stand-in: judge it on the device, then decide how much waits for the Blender sprites. Sprint 4 was far larger than its 23 planned points of work: plan sheets and art as their own stories.
+- *Carry over:* the placement ghost (US-068, Sprint 5); Blender pipeline (US-171, Sprint 6; owner installs Blender); the loan, *Why?* and season-report screens (Sprint 7).
 
 ## Sprint 5 · 23–29 Nov 2026 · Phase 1
 
