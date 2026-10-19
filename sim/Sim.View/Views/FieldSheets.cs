@@ -27,7 +27,7 @@ namespace Sim.View.Views
             if (!parcel.Owned) return Unowned(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
 
-            var vm = new SheetVm { Icon = "land" };
+            var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
             vm.Title = ctx.Strings.Get("field.title", "soil", soil);
             vm.Subtitle = ctx.Strings.Get(parcel.Protected ? "field.inherited" : "field.bought");

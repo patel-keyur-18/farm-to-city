@@ -48,6 +48,12 @@ namespace Sim.View.Views
         /// <summary>The well acres show a bucket marker (ADR 0032).</summary>
         public bool WellAcre { get; internal set; }
 
+        /// <summary>An outbreak was found on the growing crop and it isn't sprayed yet: the field shows a pest marker.</summary>
+        public bool PestWarning { get; internal set; }
+
+        /// <summary>The first tile of an unowned parcel next to the founder's land: it shows a "for sale" sign.</summary>
+        public bool ForSaleSign { get; internal set; }
+
         /// <summary>Fertility 0..1, for the soil's shade of brown.</summary>
         public float Fertility { get; internal set; }
     }
@@ -130,9 +136,11 @@ namespace Sim.View.Views
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
                     WellAcre = LandSystem.IsWellTile(defs, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
+                if (!parcel.Owned && defs.Map.Parcels[t.ParcelId].Tiles[0] == t.Id && LandSystem.IsAdjacentToOwned(sim, t.ParcelId)) vm.ForSaleSign = true;
                 Crop crop = sim.State.Farm.CropOn(t.Id);
                 if (crop != null)
                 {
+                    vm.PestWarning = crop.State == CropState.Growing && crop.Outbreak != Outbreak.None && crop.Spray == SprayState.None;
                     vm.CropId = defs.Farm.Crops[crop.Def].Id;
                     long span = crop.ReadyAt - crop.SownAt;
                     vm.Progress = crop.State == CropState.Ready || span <= 0 ? 1f : Clamp01((now - crop.SownAt) / (float)span);

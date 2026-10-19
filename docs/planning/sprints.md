@@ -215,11 +215,11 @@
 | US-063 | Borrow | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
 | US-064 | Repayments and penalties | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
 | US-065 | Foreclosure | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
-| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | To do |
-| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | To do |
+| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | Built, device run pending |
+| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | Built, device run pending |
 | US-085 | String tables | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | Done |
 | US-086 | Number formatting | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | Done |
-| US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | To do |
+| US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | Built, device run pending |
 
 **Sprint end checklist**
 

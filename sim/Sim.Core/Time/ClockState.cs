@@ -11,6 +11,9 @@ namespace Sim.Core.Time
         /// <summary>The wall clock (Unix seconds, UTC) at the last <c>Sync</c>.</summary>
         public long LastWallUtc { get; internal set; }
 
+        /// <summary>Re-anchors the wall clock without advancing time: for a restored state, so the gap isn't an away advance (developer panel).</summary>
+        public void Reanchor(long nowWallUtc) { LastWallUtc = nowWallUtc; }
+
         /// <summary>True only while an away advance is being processed.</summary>
         public bool IsAway { get; internal set; }
 

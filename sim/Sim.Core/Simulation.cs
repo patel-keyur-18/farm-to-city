@@ -92,6 +92,16 @@ namespace Sim.Core
         }
 
         /// <summary>
+        /// A simulation continuing from a saved state (the developer panel's snapshot and restore, and the save system of spec 007).
+        /// The state is used as given: pass a clone to keep the original.
+        /// </summary>
+        public static Simulation FromState(SimConfig config, GameState state)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            return new Simulation(config, state);
+        }
+
+        /// <summary>
         /// Rebuilds a simulation from a command log: the first command must be <see cref="Commands.NewGame"/>.
         /// Every command must be accepted again, or the replay has diverged and this throws.
         /// </summary>

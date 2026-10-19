@@ -7,5 +7,6 @@ Add a row in the same commit that adds the asset.
 | Asset (path) | Source (URL or "Original") | Author | Licence | Notes |
 | --- | --- | --- | --- | --- |
 | `unity/FarmToCity/Assets/Resources/Art/Kenney/IsometricLandscape/landscapeTiles_059.png`, `_066`, `_067`, `_083` | https://kenney.nl/assets/isometric-tiles-landscape | Kenney (www.kenney.nl) | CC0 1.0 | Sand, water, grass and soil tiles; US-024 style check. `License.txt` alongside |
-| `unity/FarmToCity/Assets/Resources/Art/Kenney/IsometricFarm/cornYoung_N.png`, `corn_N`, `dirtFarmland_N`, `fenceLow_N`, `hayBales_N`, `sack_N` | https://kenney.nl/assets/isometric-miniature-farm | Kenney (www.kenney.nl) | CC0 1.0 | Crops, fence, hay and sacks; US-024 style check. `License.txt` alongside |
+| `unity/FarmToCity/Assets/Resources/Fonts/Baloo2-Bold.ttf` | https://github.com/google/fonts/tree/main/ofl/baloo2 (variable font `Baloo2[wght].ttf`, the Bold instance made with fontTools `varLib.instancer wght=700`) | The Baloo 2 Project Authors (Ekta Type) | SIL OFL 1.1 | Headings, buttons, numbers (ADR 0036, 0038). `Baloo2-OFL.txt` alongside. Bundled in the app, not sold separately |
+| `unity/FarmToCity/Assets/Resources/Fonts/NotoSans-Regular.ttf`, `NotoSans-Bold.ttf` | https://github.com/googlefonts/noto-fonts (hinted/ttf/NotoSans) | The Noto Project Authors | SIL OFL 1.1 | Body text (ADR 0036). `NotoSans-OFL.txt` alongside |
 | `docs/art/s03-style-spring.png`, `docs/art/s03-style-monsoon.png` | Original (screenshots of the style check) | Claude | Project | Built from the Kenney CC0 tiles above |

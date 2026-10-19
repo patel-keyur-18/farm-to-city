@@ -158,7 +158,14 @@ namespace Sim.View.Tests
             Assert.That(cam.CentreY + cam.HalfHeight, Is.LessThanOrEqualTo(b.top + 1e-3f));
             cam.Pan(-5000, -5000);
             Assert.That(cam.CentreX - halfW, Is.GreaterThanOrEqualTo(b.left - 1e-3f));
-            Assert.That(cam.CentreY - cam.HalfHeight, Is.GreaterThanOrEqualTo(b.bottom - 1e-3f));
+            Assert.That(cam.CentreY - cam.HalfHeight, Is.GreaterThanOrEqualTo(b.bottom - cam.HalfHeight * 1.3f - 1e-3f), "only the south edge has room for a sheet");
+
+            // A tapped point can be lifted into the top of the screen, above a bottom sheet.
+            var lift = new MapCamera(g, 16f / 9f);
+            lift.FocusWorld(0f, -1.5f, lift.MinHalfHeight * 2f);
+            (float tx, float ty) = lift.CentreFor(0f, -1.5f, 0.2f);
+            Assert.That(tx, Is.EqualTo(0f));
+            Assert.That(ty, Is.EqualTo(-1.5f - lift.HalfHeight * 0.6f).Within(1e-4f), "the point ends 20% from the top");
 
             // Zooming keeps the point under the fingers where it was.
             var cam2 = new MapCamera(g, 16f / 9f);

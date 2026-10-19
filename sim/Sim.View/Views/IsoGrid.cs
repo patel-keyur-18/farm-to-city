@@ -101,6 +101,24 @@ namespace Sim.View.Views
             Clamp();
         }
 
+        /// <summary>Centres the camera on a world point at a given zoom (clamped).</summary>
+        public void FocusWorld(float x, float y, float halfHeight)
+        {
+            HalfHeight = Math.Max(MinHalfHeight, Math.Min(MaxHalfHeight, halfHeight));
+            CentreX = x;
+            CentreY = y;
+            Clamp();
+        }
+
+        /// <summary>
+        /// Where the camera should centre so a world point sits <paramref name="fromTop"/> of the way down the screen (0 = the top
+        /// edge), so a bottom sheet doesn't cover what was tapped.
+        /// </summary>
+        public (float x, float y) CentreFor(float worldX, float worldY, float fromTop)
+        {
+            return (worldX, worldY - HalfHeight * (1f - 2f * fromTop));
+        }
+
         /// <summary>Pinch: multiplies the visible size by <paramref name="factor"/> (below 1 zooms in), keeping the point under the fingers fixed.</summary>
         public void Zoom(float factor, float pivotWorldX, float pivotWorldY)
         {
@@ -125,7 +143,8 @@ namespace Sim.View.Views
             var b = _grid.Bounds();
             float halfW = HalfHeight * _aspect;
             CentreX = ClampAxis(CentreX, b.left, b.right, halfW);
-            CentreY = ClampAxis(CentreY, b.bottom, b.top, HalfHeight);
+            // The bottom has extra room so a tap near the south edge can be lifted above a bottom sheet.
+            CentreY = ClampAxis(CentreY, b.bottom - HalfHeight * 1.3f, b.top, HalfHeight);
         }
 
         // The view stays inside the map; when the view is larger than the map on this axis, the map is centred.

@@ -4,7 +4,9 @@
     "references": [
         "Sim.Core",
         "Sim.Content",
-        "Game.Services"
+        "Sim.View",
+        "Game.Services",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
