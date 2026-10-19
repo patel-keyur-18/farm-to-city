@@ -124,7 +124,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 
 | Rule | Behaviour |
 | --- | --- |
-| Set | `SetStandingOrder(handId, order)` replaces the hand's order for that target; `ClearStandingOrder(handId, target)`. A hand holds up to `HandDef.maxOrders` (6) orders. Rejected with `NoHand`, `NotUnderContract`, `UnknownTarget`, `TooManyOrders`, or spec 003's crop checks (`UnknownCrop`, `SeedCannotBeSaved`, `UnknownFertiliser`) |
+| Set | `SetStandingOrder(handId, order)` replaces the hand's order for that target. An order is **every season** (repeats, the default) or **this season only** (`OrderSpec.ThisSeasonOnly()`: after its harvest or pick is in and sold or stored it clears, emitting `OrderCompleted`; ADR 0040); `ClearStandingOrder(handId, target)`. A hand holds up to `HandDef.maxOrders` (6) orders. Rejected with `NoHand`, `NotUnderContract`, `UnknownTarget`, `TooManyOrders`, or spec 003's crop checks (`UnknownCrop`, `SeedCannotBeSaved`, `UnknownFertiliser`) |
 | When | At every hourly pass (system Labour, after Agriculture and Market), live or away, for each hand under contract in id order, each order in target order; and **at once when an order is set** if the hand still has this hour's action (ADR 0040). Each hand does at most `HandDef.orderActionsPerHour` (1) action (a harvest, a sowing or a pick) per sim hour, counted per hand (`actionHour`, `actionsInHour`) |
 | The player wins | An order acts only on a field that is ready or empty (or a tree that is ripe) and never undoes the player's crop: a field the player sowed with another crop is harvested by the order when ready and then re-sown with the order's crop. Changing the order when sowing by hand is the UI's choice (spec 008) |
 | Harvest | A ready crop on the tile is harvested (spec 003 `Harvest`), with `Overflow.SellRestToTrader` so a full store never blocks it. A ripe tree is picked the same way |
@@ -321,7 +321,7 @@ Ten gaps decided with the owner, one by one:
 
 ### Device review (2026-10-19, ADR 0040)
 
-The owner's device run: the yard becomes 2 acres (tile 29); hands' huts move to the labour quarters (tile 37, two places), superseding ADR 0039 §2; an order starts at once (a per-hand action counter); people work their fields and go home when there's nothing to do (presentation). AC-5 and AC-13 are amended; `OrderTests.StartsAtOnce_OneActionAnHour_PlayerWins` covers the immediate start.
+The owner's device run: the yard becomes 2 acres (tile 29); hands' huts move to the labour quarters (tile 37, two places), superseding ADR 0039 §2; an order starts at once (a per-hand action counter); people work their fields and go home when there's nothing to do (presentation). AC-5 and AC-13 are amended; `OrderTests.StartsAtOnce_OneActionAnHour_PlayerWins` covers the immediate start. After device run 2: orders are this season only or every season (`OrderTests.ThisSeasonOnly_ClearsAfterHarvest`), and the founder keeps off fields a hand looks after (`PeopleViewTests.Map_Patrols_And_Homes`).
 
 ### Implementation notes (Sprint 5, Claude; no rule change)
 

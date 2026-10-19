@@ -26,6 +26,9 @@ The owner ran the Sprint 5 build on the iPhone 13 (2026-10-19). Every check pass
 4. **People work, and move between their fields** (presentation only, never state). The founder and day labourers go round the growing fields; a hand goes round their ordered fields that need work (a crop on it, or due a sowing, or a tree with fruit), starting with the one they just acted on. On each field they hoe at two spots for a few seconds each (stand and work frames from the Blender rig alternate), then move on. With nothing to do they go home: the founder to the house door, a hand to their hut, day labourers to the yard; day labourers still walk in from the valley's edge and leave at midnight.
 5. **Art:** the rig renders a work pose for every person (bent over a hoe, two facings) and the yard props (fence segments, haystack, tulsi planter, woodpile). Frame-by-frame walk cycles stay a later story.
 
+6. **Orders are this season only or every season,** chosen per order (owner, after device run 2): the order sheet asks crop, then "This season only" (sow, tend, harvest and sell or store once, then the order clears with `OrderCompleted` and the field shows *Give order* again) or "Every season" (the standing order of spec 006, which keeps the farm running while away). The sow sheet's "change the order too?" keeps the order's kind.
+7. **Work given to a hand is theirs:** the founder never walks to a field a hand has an order for, and day labourers go to unassigned growing fields first (to any growing field only when every one is assigned). This is who walks where; the sim's Care pool is still shared.
+
 ## Consequences
 
 - **Content:** `map.json` (tile 29 yard, tile 37 quarters, parcel `home_c`), `start.json` (three inherited parcels), `people.json` (2 hut places). Golden replays run on the frozen content and keep their hashes.
