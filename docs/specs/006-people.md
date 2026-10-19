@@ -57,7 +57,7 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | Who is free today | At each daily pass, a seeded shuffle of the roster (stream DayLabourPool, counter = day index); the first `LabourPoolDef.availablePerDay[season]` are free today. Defaults Spring 2, Summer 4, Monsoon 3, Winter 2: scarce in the rabi and kharif harvests (Spring and Winter) |
 | Hire | `HireDayLabourers(count)` hires the first `count` free labourers who aren't already hired today, for the rest of the day. Rejected with `NoneAvailable` if fewer are free |
 | Pay | Upfront, pro rata for the rest of the day: `LabourPoolDef.dailyWage × (nextDailyPass − t) ÷ 86,400`, Dr 5100 Hired labour, Cr Cash. No prepayment: it is the day's cost. `InsufficientFunds` if cash is short |
-| Wage | `dailyWage` 11,250 coins a game day: a hand's season wage ÷ 4 days (9,000) with a 25% premium (ADR 0022). A game day stands for about 22 real days, so this is about ₹500 a real day (ADR 0008) |
+| Wage | `dailyWage` 9,375 coins a game day: a hand's season wage ÷ 4 days (7,500) with a 25% premium (ADR 0022, ADR 0039 §11). A game day stands for about 22 real days, so this is about ₹420 a real day (ADR 0008) |
 | Work | Each adds `hoursPerDay` (8) to the Care pool until the next daily pass, live or away: their assigned task is "tend the fields" (ADR 0039). They need no housing and aren't counted in the population |
 | Economics | A day labourer costs more than an acre of potato or wheat earns from their hours (ADR 0033): hiring by the day is for rescuing a busy harvest's Care, not for routine work |
 
@@ -87,7 +87,7 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | When | While at least one finished hand's hut is empty and fewer than `HandDef.maxApplicants` (3) are waiting, a new applicant arrives `HandDef.applicantEveryHours` (12) ± a seeded 0–6 hours after the last (stream Applicants, counter = applicant id). The first arrives that long after the hut is finished. Emits `ApplicantArrived` |
 | Profile | A seeded name, a true farming skill in `[skillMin, skillMax]` (20–70), and two traits from `TraitDef` (distinct). Shown: the skill as a range `[skill − skillRangeHalfWidth, skill + skillRangeHalfWidth]` clamped to 0–100 (±15) and the first trait |
 | Interview | `Interview(applicantId)` reveals the second trait. Free; once per applicant (`AlreadyInterviewed`) |
-| Asked wage | `HandDef.marketWage × (wageBase + wagePerSkill × skill ÷ 100) × PriceIndex`, rounded to whole coins. Defaults 36,000 × (0.80 + 0.40 × skill ÷ 100): skill 50 asks 36,000 a season (ADR 0008), skill 30 asks 33,120, skill 70 asks 38,880 |
+| Asked wage | `HandDef.marketWage × (wageBase + wagePerSkill × skill ÷ 100) × PriceIndex`, rounded to whole coins. Defaults 30,000 × (0.80 + 0.40 × skill ÷ 100): skill 50 asks 30,000 a season (about ₹10,000 a month with the hut, ADR 0039 §11), skill 30 asks 27,600, skill 70 asks 32,400 |
 | Offer | `OfferContract(applicantId)` at the asked wage. Seeded acceptance (stream Applicants, counter = applicant id, draw 2) with probability `HandDef.acceptChance` (0.85): accepted → §3.6; declined → the applicant leaves (`OfferDeclined`) |
 | Leaving | An applicant not hired within `HandDef.applicantWaitDays` (2) leaves (`ApplicantLeft`). Applicants never arrive or leave while away: the queue waits (ADR 0002: events needing a decision wait for the player) |
 | Post a job | `PostJob(wageOffer)` sends word through the village and the trader (owner decision, 2026-10-18). Needs an empty hut **or one being built**. Costs `JobPostDef.cost` (200 coins, Dr 5700, Cr Cash) and lasts until a hand is hired or `JobPostDef.days` (4) pass (`JobPostExpired`). While it lasts applicants come twice as often (`applicantEveryHours` × `JobPostDef.rateFactor` 0.5, jitter halved). `wageOffer`: **market** (as walk-ins) or **aboveMarket**: the wage is `JobPostDef.aboveMarketFactor` (1.10) × the asked wage, applicants' skill is drawn from `[skillMin + 10, skillMax + 10]` (30–80) and they accept with `JobPostDef.aboveMarketAccept` (0.95). One post at a time (`AlreadyPosted`). Paying above market brings better workers sooner (GDD Wages) |
@@ -148,12 +148,12 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | --- | --- | --- | --- | --- |
 | `LabourPoolDef` | `rosterSize` | int | 8 | 0–30 |
 | | `availablePerDay` (Spring, Summer, Monsoon, Winter) | int ×4 | 2, 4, 3, 2 | 0–rosterSize |
-| | `dailyWage` | money | 11,250 | > 0 |
+| | `dailyWage` | money | 9,375 | > 0 |
 | | `hoursPerDay` | Fixed | 8 | 0–14 |
 | | `regularThresholdDays` (full day-equivalents) | int | 6 | 1–100 |
 | `HandDef` | `hoursPerDay` | Fixed | 8 | 0–14 |
 | | `productivityBase`, `productivityPerSkill` | Fixed | 0.70, 0.50 | 0–2 |
-| | `marketWage` | money | 36,000 | > 0 |
+| | `marketWage` | money | 30,000 | > 0 |
 | | `wageBase`, `wagePerSkill` | Fixed | 0.80, 0.40 | 0–2 |
 | | `skillMin`, `skillMax`, `skillRangeHalfWidth` | int | 20, 70, 15 | 0–100, min ≤ max |
 | | `skillGainPerSeason` | int | 3 | 0–20 |
@@ -216,7 +216,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 
 | Decision | Immediate cost | Delayed effect | Side effects on other systems | Reversibility |
 | --- | --- | --- | --- | --- |
-| Hire day labourers | 11,250 a day each, pro rata | 8 hours of Care today | A regular may ask to move in | Each day is separate |
+| Hire day labourers | 9,375 a day each, pro rata | 8 hours of Care today | A regular may ask to move in | Each day is separate |
 | Build a hand's hut | 15,000 | A hand can move in; the Hamlet gate's house | Depreciation 250 a season; a yard building place | Permanent (Phase 1) |
 | Post a job | 200 coins | Applicants twice as often; above market: better and surer applicants, a 10% dearer wage | — | Expires after 4 days |
 | Interview | None | Know the second trait | — | — |
@@ -232,9 +232,9 @@ Layouts are spec 008's. Content:
 Hiring panel                                        Hand panel
 +---------------------------------------------+     +---------------------------------------------+
 | Day labourers today: 3 free (Monsoon)       |     | Ramesh, farm hand, skill 54  [Why?]         |
-| 11,250 a day each; rest of today: 6,094     |     |  hours 8 x (0.70 + 0.50 x 0.54) = 7.8 h/day |
+| 9,375 a day each; rest of today: 5,078      |     |  hours 8 x (0.70 + 0.50 x 0.54) = 7.8 h/day |
 | [Hire 1] [Hire 2] [Hire 3]                  |     |  hardworking x1.10 -> 8.5 h/day             |
-| Regulars: Sunita 5 of 6 days                |     | Contract: 36,000 a season, paid to Winter   |
+| Regulars: Sunita 5 of 6 days                |     | Contract: 30,000 a season, paid to Winter   |
 |---------------------------------------------|     |  prepaid 27,000 left (expensed 9,000 a day) |
 | Applicants (hut empty)                      |     | Orders:                                     |
 |  Ramesh  skill 39-69  hardworking  ?        |     |  North acre: keep wheat, offer above 26     |
@@ -244,7 +244,7 @@ Hiring panel                                        Hand panel
 +---------------------------------------------+
 ```
 
-*Why?* lines: a hand's hours (skill, traits); the asked wage (market wage × skill × price index); a renewal's new wage; a lapse ("Renewal needed 36,000; you had 22,400"); each order's last action.
+*Why?* lines: a hand's hours (skill, traits); the asked wage (market wage × skill × price index); a renewal's new wage; a lapse ("Renewal needed 30,000; you had 22,400"); each order's last action.
 
 ## 8. Acceptance criteria
 
@@ -254,7 +254,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | --- | --- | --- |
 | AC-1 | Loading `people.json` with `availablePerDay` above `rosterSize`, `skillMin > skillMax`, an unknown trait, or a `hand_hut` without `housesHands` fails validation naming the field | `ContentTests.People_Validation` |
 | AC-2 | The roster and each day's free labourers are the same for the same seed and differ by day; the free count equals `availablePerDay` for the season | `DayLabourTests.Pool_Seeded` |
-| AC-3 | Hiring 2 labourers at 18:00 costs exactly `2 × 11,250 × 21,600 ÷ 86,400` = 5,625, posted to 5100; adds 16 hours a day to the Care pool until the daily pass, time-weighted; hiring more than are free is rejected with `NoneAvailable` and changes nothing | `DayLabourTests.Hire_CostAndCare` |
+| AC-3 | Hiring 2 labourers at 18:00 costs exactly `2 × 9,375 × 21,600 ÷ 86,400` = 4,687.50, posted to 5100; adds 16 hours a day to the Care pool until the daily pass, time-weighted; hiring more than are free is rejected with `NoneAvailable` and changes nothing | `DayLabourTests.Hire_CostAndCare` |
 | AC-4 | A labourer hired for 6 full day-equivalents in total asks to move in once a hand's hut is empty, as an applicant with skill and both traits known; not before the hut exists; 6 hires of an hour each are not enough (ADR 0039) | `DayLabourTests.Regular_AsksToMoveIn` |
 | AC-5 | `BuildHandHut` costs 15,000 (Dr 1600), finishes exactly 24 hours later, depreciates 250 a season from the next close, and is rejected on an acre that has a hut (`NoRoom`), bought or unowned land and the yard (`NotInherited`), and a third hut (`TooManyHuts`) | `HutTests.Build_CostTimeDepreciation` |
 | AC-6 | With an empty hut, applicants arrive at the seeded times, at most 3 wait, each leaves after 2 days if not hired; none arrive or leave during an away advance | `ApplicantTests.Arrival_Queue_Away` |
@@ -294,7 +294,7 @@ All seven were answered in the review with the owner (2026-10-18):
 1. **Lapse:** a lapsed hand stops working and stays for 2 days of grace (`lapseGraceDays`); `RenewContract` resumes work; after that the hand leaves; never while away (§3.6).
 2. **The hut on the yard:** a yard tile holds up to 4 buildings (the hut, the well, two hands' huts), so Phase 1 has at most 2 hands; data, for Phase 2 to raise (§3.4).
 3. **The hut's price:** 15,000, materials with the family's own labour on the build; the *Why?* says so (§3.4).
-4. **The day-labourer wage:** 11,250 a game day, 25% above a hand's day; a rescue, not routine (§3.2).
+4. **The day-labourer wage:** 25% above a hand's day; a rescue, not routine (§3.2). 11,250 at approval; 9,375 since ADR 0039 §11.
 5. **Applicants:** both walk-ins while a hut stands empty and a posted job (`PostJob`, market or above market) that brings applicants twice as often, better ones above market, and can be posted while the hut is being built (§3.5, AC-18, AC-19). The Phase 2 hiring board builds on it.
 6. **Standing orders from Homestead** for any hand under contract (ADR 0022); the GDD line was updated (§3.8).
 7. **Traits:** the six of §3.7 in Phase 1; creative, frugal, sociable and perfectionist join in Phase 2 with their systems (F11.4).
@@ -317,6 +317,7 @@ Ten gaps decided with the owner, one by one:
 8. **A People button** on the HUD; orders given from the map; people visible on the map (presentation only).
 9. **A people-only *While you were away* card** now and each order's last action in state (AC-20, AC-21).
 10. **Gate checks for people:** the competent bot hires; four stress bots (AC-23).
+11. **The hand's wage 30,000 a season** (was 36,000), the day wage 9,375 (was 11,250), found by the gate checks: at 36,000 a founder who never hired ended about 8% richer after 11 years. At 30,000 hiring pays modestly (+7% by year 11). 15,000–20,000 was rejected: below rural minimum wages, and hiring would win by 34–47%, so the decision would vanish. Hiring is made more rewarding later through land, Phase 2's processing and markets, and skill growth, never by underpaying.
 
 ## 11. Cut first
 

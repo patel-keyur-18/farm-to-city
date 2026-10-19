@@ -46,8 +46,8 @@ namespace Sim.Core.Tests
             Fixed before = PeopleRules.CareSupply(sim);
             long cash = sim.State.Ledger.Cash, labour = sim.State.Ledger.Balance(Account.HiredLabour);
             Ok(sim, new HireDayLabourers(18 * Hour, 2));
-            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(5_625 * Coin));
-            Assert.That(sim.State.Ledger.Balance(Account.HiredLabour) - labour, Is.EqualTo(5_625 * Coin));
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(4_687_50));
+            Assert.That(sim.State.Ledger.Balance(Account.HiredLabour) - labour, Is.EqualTo(4_687_50));
             Assert.That(PeopleRules.CareSupply(sim) - before, Is.EqualTo(Fixed.FromInt(16)));
             Assert.That(P(sim).Roster.Where(n => n.HiredToday).All(n => n.SecondsWorked == 6 * Hour), Is.True);
 

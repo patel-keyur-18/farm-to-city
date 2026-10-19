@@ -77,9 +77,9 @@ namespace Sim.Core.Tests
                 Assert.That(sim.Execute(new Interview(sim.State.Clock.SimTime, a.Id)).Reason, Is.EqualTo(RejectReason.AlreadyInterviewed));
             }
             Simulation s = Start();
-            Assert.That(PeopleRules.AskedWage(s, Fixed.FromInt(50), false), Is.EqualTo(36_000 * Coin));
-            Assert.That(PeopleRules.AskedWage(s, Fixed.FromInt(30), false), Is.EqualTo(33_120 * Coin));
-            Assert.That(PeopleRules.AskedWage(s, Fixed.FromInt(70), false), Is.EqualTo(38_880 * Coin));
+            Assert.That(PeopleRules.AskedWage(s, Fixed.FromInt(50), false), Is.EqualTo(30_000 * Coin));
+            Assert.That(PeopleRules.AskedWage(s, Fixed.FromInt(30), false), Is.EqualTo(27_600 * Coin));
+            Assert.That(PeopleRules.AskedWage(s, Fixed.FromInt(70), false), Is.EqualTo(32_400 * Coin));
         }
     }
 

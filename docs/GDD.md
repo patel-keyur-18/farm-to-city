@@ -943,7 +943,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 **Coin scale (ADR 0008).**
 
-- The currency is "coins", with a coin icon and no ₹ symbol. Prices roughly match real rupee magnitudes: wheat is about 25 a kg, and a farm hand is about 36,000 a season.
+- The currency is "coins", with a coin icon and no ₹ symbol. Prices roughly match real rupee magnitudes: wheat is about 25 a kg, and a farm hand is about 30,000 a season (ADR 0039).
 - The smallest unit is 1/100 coin.
 - One season equals one real-world quarter for every money flow (wages, rent, interest, upkeep, yield per acre). A crop cycle shorter than a season yields its share of the season's realistic output.
 - Number formatting follows the locale: Indian grouping and L/Cr short forms for en-IN and hi-IN, Western grouping and K/M elsewhere.

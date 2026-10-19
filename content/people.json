@@ -2,7 +2,7 @@
   "labourPool": {
     "rosterSize": 8,
     "availablePerDay": { "spring": 2, "summer": 4, "monsoon": 3, "winter": 2 },
-    "dailyWage": 11250,
+    "dailyWage": 9375,
     "hoursPerDay": 8,
     "regularThresholdDays": 6
   },
@@ -10,7 +10,7 @@
     "hoursPerDay": 8,
     "productivityBase": 0.70,
     "productivityPerSkill": 0.50,
-    "marketWage": 36000,
+    "marketWage": 30000,
     "wageBase": 0.80,
     "wagePerSkill": 0.40,
     "skillMin": 20,
