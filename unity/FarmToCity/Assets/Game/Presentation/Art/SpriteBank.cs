@@ -83,20 +83,22 @@ namespace Game.Presentation.Art
             });
         }
 
-        public static Sprite Grass { get { return Kenney("067", 66f, 99f); } }
-        public static Sprite SoilTile { get { return Kenney("083", 66f, 99f); } }
-        public static Sprite Sand { get { return Kenney("059", 66f, 99f); } }
-        public static Sprite Water { get { return Kenney("066", 50f, 83f); } }
+        // The Blender ground (ADR 0041 §8) when rendered, else Kenney's.
+        public static Sprite Grass { get { return Rendered("ground_grass") ?? Kenney("067", 66f, 99f); } }
+        public static Sprite SoilTile { get { return Rendered("ground_soil") ?? Kenney("083", 66f, 99f); } }
+        public static Sprite Sand { get { return Rendered("ground_earth") ?? Kenney("059", 66f, 99f); } }
+        public static Sprite Water { get { return Rendered("ground_water") ?? Kenney("066", 50f, 83f); } }
 
         // ---- tile-space helper: a, b in -0.5..0.5 inside a 132 x 66 diamond centred at (cx, cy) ----
 
         private static Vector2 P(float cx, float cy, float a, float b) { return new Vector2(cx + (a - b) * 66f, cy - (a + b) * 33f); }
 
-        /// <summary>Parallel furrows across a field: a soft overlay on the soil tile.</summary>
+        /// <summary>Parallel furrows across a field: a soft overlay on the soil tile (none on the Blender soil, whose ridges are modelled).</summary>
         public static Sprite Furrows
         {
             get
             {
+                if (Rendered("ground_soil") != null) return null;
                 return Get("furrows", () =>
                 {
                     var p = new Painter(132, 66);
@@ -115,6 +117,8 @@ namespace Game.Presentation.Art
         public static Sprite GrassDetail(int variant)
         {
             variant = ((variant % 3) + 3) % 3;
+            Sprite rendered = Rendered("grass_detail_" + variant);
+            if (rendered != null) return rendered;
             return Get("grassDetail" + variant, () =>
             {
                 var p = new Painter(132, 66);
@@ -207,6 +211,18 @@ namespace Game.Presentation.Art
             }
         }
 
+        /// <summary>The render's name for a stage: g1, g2, g3, ready (tools/blender/render.py STAGES).</summary>
+        private static string StageName(CropStage stage)
+        {
+            switch (stage)
+            {
+                case CropStage.Growing1: return "g1";
+                case CropStage.Growing2: return "g2";
+                case CropStage.Growing3: return "g3";
+                default: return "ready";
+            }
+        }
+
         private static float StageSize(CropStage stage)
         {
             switch (stage)
@@ -222,6 +238,8 @@ namespace Game.Presentation.Art
         public static Sprite Crop(string cropId, CropStage stage)
         {
             if (stage == CropStage.Spoiling) stage = CropStage.Ready;
+            Sprite rendered = Rendered("crop_" + cropId + "_" + StageName(stage));
+            if (rendered != null) return rendered;
             return Get("crop:" + cropId + ":" + stage, () =>
             {
                 var p = new Painter(132, 118);
@@ -281,6 +299,8 @@ namespace Game.Presentation.Art
 
         public static Sprite Tree(string treeId, TreeStage stage)
         {
+            Sprite rendered = Rendered("tree_" + treeId + "_" + (stage == TreeStage.Spoiling ? "ripe" : stage.ToString().ToLowerInvariant()));
+            if (rendered != null) return rendered;
             return Get("tree:" + treeId + ":" + stage, () =>
             {
                 var p = new Painter(128, 176);

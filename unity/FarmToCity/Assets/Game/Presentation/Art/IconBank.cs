@@ -85,7 +85,7 @@ namespace Game.Presentation.Art
             });
         }
 
-        public static Sprite Coin { get { return Get("coin", () => { var p = new Painter(64, 64); p.Blob(32, 32, 24, 24, Painter.Hex(0xFFC93C), Outline, 3f); p.Ellipse(32, 32, 15, 15, Painter.Hex(0xE8A81E)); p.Ellipse(31, 33, 13.5f, 13.5f, Painter.Hex(0xFFD968)); p.Line(new Vector2(32, 24), new Vector2(32, 41), 4f, Painter.Hex(0xC98A10)); return p.ToSprite(64f, new Vector2(0.5f, 0.5f)); }); } }
+        public static Sprite Coin { get { return SpriteBank.Rendered("icon_coin") ?? Get("coin", () => { var p = new Painter(64, 64); p.Blob(32, 32, 24, 24, Painter.Hex(0xFFC93C), Outline, 3f); p.Ellipse(32, 32, 15, 15, Painter.Hex(0xE8A81E)); p.Ellipse(31, 33, 13.5f, 13.5f, Painter.Hex(0xFFD968)); p.Line(new Vector2(32, 24), new Vector2(32, 41), 4f, Painter.Hex(0xC98A10)); return p.ToSprite(64f, new Vector2(0.5f, 0.5f)); }); } }
 
         public static Sprite Sack
         {
@@ -144,7 +144,7 @@ namespace Game.Presentation.Art
         {
             get
             {
-                return Get("gear", () =>
+                return SpriteBank.Rendered("icon_gear") ?? Get("gear", () =>
                 {
                     var p = new Painter(64, 64);
                     for (int i = 0; i < 8; i++)

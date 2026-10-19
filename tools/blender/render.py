@@ -586,6 +586,292 @@ SPRITES.update({
 })
 
 
+# ---------------------------------------------------------------- batches (many small parts, one object per material)
+
+class Batch:
+    """Collects many small parts into one mesh per material: a field of 300 wheat stalks renders as a handful of objects."""
+
+    def __init__(self, name):
+        self.name = name
+        self.parts = {}   # material -> bmesh
+
+    def _bm(self, mat):
+        if mat not in self.parts:
+            self.parts[mat] = bmesh.new()
+        return self.parts[mat]
+
+    def cone(self, mat, r1, r2, depth, m, segs=5):
+        bm = self._bm(mat)
+        geom = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=segs, radius1=r1, radius2=r2, depth=depth)
+        bmesh.ops.transform(bm, matrix=m @ Matrix.Translation((0, 0, depth / 2)), verts=geom["verts"])
+
+    def sphere(self, mat, r, m, scale=(1, 1, 1), segs=8, rings=5):
+        bm = self._bm(mat)
+        geom = bmesh.ops.create_uvsphere(bm, u_segments=segs, v_segments=rings, radius=r)
+        bmesh.ops.transform(bm, matrix=m @ Matrix.Diagonal((scale[0], scale[1], scale[2], 1.0)), verts=geom["verts"])
+
+    def box(self, mat, size, m):
+        bm = self._bm(mat)
+        geom = bmesh.ops.create_cube(bm, size=1.0)
+        bmesh.ops.transform(bm, matrix=m @ Matrix.Diagonal((size[0], size[1], size[2], 1.0)), verts=geom["verts"])
+
+    def objects(self, outline_for=(), smooth=False, thickness=OUTLINE):
+        objs = []
+        for i, (mat, bm) in enumerate(self.parts.items()):
+            objs.append(obj_from_bm("%s%d" % (self.name, i), bm, mat, smooth=smooth, outline=mat in outline_for, thickness=thickness))
+        self.parts = {}
+        return objs
+
+
+def at(x, y, z, rot_z=0.0, tilt=0.0, tilt_dir=0.0):
+    """A placement matrix: at (x, y, z), turned rot_z, leaning `tilt` radians toward the heading tilt_dir."""
+    lean = Matrix.Rotation(tilt_dir, 4, "Z") @ Matrix.Rotation(tilt, 4, "X") @ Matrix.Rotation(-tilt_dir, 4, "Z")
+    return Matrix.Translation((x, y, z)) @ lean @ Matrix.Rotation(rot_z, 4, "Z")
+
+
+# ---------------------------------------------------------------- ground (ADR 0041 §8): blocks like Kenney's, which the approved look is based on
+
+TILE_DEPTH = 0.41                        # Kenney's 33 px side at 1x
+SEAM = 0.6 / (PX_PER_UNIT / SCALE)       # tops overlap their neighbours by about half a pixel: no seams
+SIDE = 0xA77D53
+GRASS, GRASS_EDGE = 0x8AB549, 0x7FA843
+SOIL, SOIL_RIDGE, SOIL_GROOVE = 0xB0825A, 0xC29470, 0x8F6542
+EARTH, EARTH_EDGE = 0xD6BC90, 0xC7AA7C
+WATER_TOP = 0x8FCBDD
+
+
+def ground_block(name, top_hex, edge_hex, depth=TILE_DEPTH, top_z=0.0):
+    """A 1 x 1 acre block, its top at top_z, sides down to the tile's depth, a slightly darker lip round the top."""
+    s = 1.0 + SEAM
+    o = [box(name + "body", (s, s, depth - 0.01), (0, 0, top_z - 0.01 - (depth - 0.01) / 2), toon("side", SIDE), outline=False),
+         box(name + "lip", (s, s, 0.01), (0, 0, top_z - 0.005), toon(name + "edge", edge_hex), outline=False),
+         box(name + "top", (s - 0.035, s - 0.035, 0.002), (0, 0, top_z + 0.001), toon(name + "top", top_hex), outline=False)]
+    return o
+
+
+RIDGES = 7                               # furrow ridges across a tilled acre
+RIDGE_X = [-0.39 + i * 0.13 for i in range(RIDGES)]
+
+
+def soil_ridges(b, top_z=0.003):
+    """Raised ridges between darker furrows, along y."""
+    for x in RIDGE_X:
+        b.box(toon("ridge", SOIL_RIDGE), (0.075, 0.94, 0.018), Matrix.Translation((x, 0, top_z + 0.009)))
+
+
+def model_ground(kind):
+    if kind == "grass":
+        return ground_block("grass", GRASS, GRASS_EDGE)
+    if kind == "earth":
+        return ground_block("earth", EARTH, EARTH_EDGE)
+    if kind == "water":
+        return ground_block("water", WATER_TOP, 0x7FBCD0, depth=TILE_DEPTH - 0.2, top_z=-0.2)
+    o = ground_block("soil", SOIL_GROOVE, SOIL_GROOVE)
+    b = Batch("ridges")
+    soil_ridges(b)
+    return o + b.objects()
+
+
+def model_grass_detail(variant):
+    """Tufts and a few flowers on a grass acre: three variants so the lawn isn't one colour."""
+    import random
+    rnd = random.Random(70 + variant)
+    b = Batch("tufts")
+    greens = [toon("tuftA", 0x6FA03A), toon("tuftB", 0x8CC152), toon("tuftC", 0x5E9233)]
+    for _ in range(16):
+        x, y = rnd.uniform(-0.42, 0.42), rnd.uniform(-0.42, 0.42)
+        g = rnd.choice(greens)
+        for k in range(5):
+            a = k * math.tau / 5 + rnd.uniform(-0.4, 0.4)
+            b.cone(g, 0.011, 0.0, rnd.uniform(0.05, 0.075), at(x + math.cos(a) * 0.006, y + math.sin(a) * 0.006, 0.0, tilt=0.5, tilt_dir=a), segs=3)
+    for _ in range(4):
+        x, y = rnd.uniform(-0.36, 0.36), rnd.uniform(-0.36, 0.36)
+        petal = toon("flower%d" % (_ % 2), (0xFFF6D0, 0xF4D35E)[_ % 2])
+        b.cone(toon("stem", 0x5E9233), 0.003, 0.003, 0.035, Matrix.Translation((x, y, 0.0)), segs=3)
+        for k in range(5):
+            a = k * math.tau / 5
+            b.sphere(petal, 0.011, Matrix.Translation((x + math.cos(a) * 0.012, y + math.sin(a) * 0.012, 0.038)), scale=(1, 1, 0.5), segs=6, rings=3)
+        b.sphere(toon("flowerCentre", 0xE8A33A), 0.008, Matrix.Translation((x, y, 0.041)), segs=6, rings=3)
+    return b.objects()
+
+
+# ---------------------------------------------------------------- field crops (ADR 0041 §8): a whole acre per stage
+
+STAGES = ("g1", "g2", "g3", "ready")
+
+
+def crop_wheat(b, rnd, x, y, stage):
+    """A clump of wheat: blades while young, then stalks with ears, green to gold."""
+    green, deep = toon("wheatGreen", 0x7CBF45), toon("wheatDeep", 0x5FA238)
+    ear_green, gold, ear_gold = toon("wheatEarGreen", 0xA8CF5A), toon("wheatGold", 0xE6C266), toon("wheatEar", 0xD9A53A)
+    if stage in ("g1", "g2"):
+        h = 0.045 if stage == "g1" else 0.085
+        n = 4 if stage == "g1" else 7
+        for k in range(n):
+            a = k * math.tau / n + rnd.uniform(-0.3, 0.3)
+            b.cone(green if k % 2 else deep, 0.009, 0.0, h * rnd.uniform(0.8, 1.15), at(x, y, 0.02, tilt=0.38, tilt_dir=a), segs=3)
+        return
+    ripe = stage == "ready"
+    stalk, ear = (gold, ear_gold) if ripe else (green, ear_green)
+    for k in range(7):
+        a = k * math.tau / 7 + rnd.uniform(-0.4, 0.4)
+        h = rnd.uniform(0.11, 0.14)
+        tilt = rnd.uniform(0.10, 0.25) + (0.08 if ripe else 0.0)
+        m = at(x + math.cos(a) * 0.01, y + math.sin(a) * 0.01, 0.02, tilt=tilt, tilt_dir=a)
+        b.cone(stalk, 0.0042, 0.0032, h, m, segs=4)
+        b.sphere(ear, 0.012, m @ Matrix.Translation((0, 0, h + 0.018)), scale=(0.85, 0.85, 2.3), segs=7, rings=5)
+    for k in range(4):  # leaves at the foot
+        a = k * math.tau / 4 + rnd.uniform(-0.3, 0.3)
+        b.cone(deep if not ripe else toon("wheatLeafDry", 0xCDB25E), 0.009, 0.0, 0.06, at(x, y, 0.02, tilt=0.65, tilt_dir=a), segs=3)
+
+
+def crop_mat(b, stage, young, ripe):
+    """A low, leafy band along each ridge so a grown field reads as a carpet rather than stalks on bare soil."""
+    if stage == "g1":
+        return
+    h = {"g2": 0.024, "g3": 0.038, "ready": 0.038}[stage]
+    mat = ripe if stage == "ready" else young
+    for x in RIDGE_X:
+        # A half-buried rounded band along the ridge: an ellipse 0.045 wide and h tall, 0.9 long.
+        m = Matrix.Translation((x, -0.45, 0.012)) @ Matrix.Rotation(math.radians(-90), 4, "X") @ Matrix.Diagonal((0.045, h, 1.0, 1.0))
+        b.cone(mat, 1.0, 1.0, 0.9, m, segs=12)
+
+
+CROPS = {"wheat": crop_wheat}
+MATS = {"wheat": (0x5FA238, 0xC9A34E)}   # the leafy band under the plants: growing, ready
+
+
+def model_crop(crop, stage):
+    """A crop across a whole acre: plants on the ridges of the tilled soil, a little jitter so it reads as grown, not stamped."""
+    import random
+    rnd = random.Random(hash((crop, stage)) & 0xFFFF)
+    b = Batch(crop)
+    per_row = 10
+    young, ripe = MATS[crop]
+    crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe))
+    for x in RIDGE_X:
+        for j in range(per_row):
+            y = -0.42 + j * (0.84 / (per_row - 1)) + rnd.uniform(-0.012, 0.012)
+            CROPS[crop](b, rnd, x + rnd.uniform(-0.01, 0.01), y, stage)
+    return b.objects(outline_for=(), smooth=False)
+
+
+# ---------------------------------------------------------------- trees (ADR 0041 §8)
+
+def model_mango(stage):
+    """A mango tree: a stout trunk with three limbs and a dense dome of dark leaves; in fruit, mangoes hang under the canopy."""
+    import random
+    rnd = random.Random(7)
+    k = {"sapling": 0.30, "young": 0.62, "mature": 1.0, "ripe": 1.0}[stage]
+    bark, dark, mid, light = toon("bark", 0x7A4E2E), toon("mangoDark", 0x2F7A35), toon("mangoMid", 0x3F9440), toon("mangoLight", 0x63AE4A)
+    o = []
+    if stage == "sapling":
+        o.append(cylinder("stem", 0.010, 0.006, 0.16, (0, 0, 0.08), bark, segs=6))
+        for i in range(5):
+            a = i * math.tau / 5
+            o.append(sphere("leaf%d" % i, 0.03, (math.cos(a) * 0.03, math.sin(a) * 0.03, 0.15 + (i % 2) * 0.02), mid, scale=(1.4, 0.6, 0.35), segs=8, rings=5))
+        o.append(cylinder("stake", 0.004, 0.004, 0.18, (0.03, 0.02, 0.09), toon("bamboo", BAMBOO), segs=5))
+        return group(o, scale=BUILDING_SCALE)
+    h = 0.30 * k
+    o.append(cylinder("trunk", 0.045 * k, 0.03 * k, h, (0, 0, h / 2), bark, segs=10, smooth=True))
+    for i in range(3):
+        a = i * math.tau / 3 + 0.4
+        base, tip = Vector((0, 0, h * 0.9)), Vector((math.cos(a) * 0.10 * k, math.sin(a) * 0.10 * k, h + 0.10 * k))
+        mid_, d = (base + tip) / 2, tip - base
+        o.append(cylinder("limb%d" % i, 0.022 * k, 0.012 * k, d.length, tuple(mid_), bark, segs=8, rot=d.to_track_quat("Z", "Y").to_matrix(), smooth=True))
+    cz = h + 0.17 * k
+    blobs = [(0, 0, 0.05, 0.20), (0.13, 0.03, -0.02, 0.15), (-0.12, 0.06, -0.01, 0.15), (0.03, -0.13, -0.02, 0.15),
+             (-0.06, 0.13, 0.0, 0.14), (0.09, 0.11, 0.04, 0.13), (-0.09, -0.09, 0.03, 0.13), (0.0, 0.0, 0.14, 0.13)]
+    for i, (x, y, z, r) in enumerate(blobs):
+        mat = light if z > 0.1 else (dark if z < 0 else mid)
+        o.append(sphere("canopy%d" % i, r * k, (x * k, y * k, cz + z * k), mat, scale=(1, 1, 0.82), segs=14, rings=9))
+    if stage == "ripe":
+        fruit, blush = toon("mango", 0xF4B33C), toon("mangoBlush", 0xE8723A)
+        # The camera looks from +x, -y: hang the fruit round the front of the canopy, under its lower edge and on its face.
+        for i in range(18):
+            a = math.radians(-45) + math.radians(rnd.uniform(-85, 85))
+            r = rnd.uniform(0.20, 0.27)
+            x, y = math.cos(a) * r, math.sin(a) * r
+            z = cz + rnd.uniform(-0.12, 0.02)
+            o.append(sphere("mango%d" % i, 0.03, (x, y, z), fruit if i % 3 else blush, scale=(0.85, 0.75, 1.25), segs=10, rings=6))
+            o.append(cylinder("stalk%d" % i, 0.0025, 0.0025, 0.03, (x, y, z + 0.045), bark, segs=4, outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+# ---------------------------------------------------------------- icons (ADR 0041 §8): rendered on the same rig, framed square
+
+ICON_PX = 256
+TO_CAMERA = Vector((0.612, -0.612, 0.5)).normalized()   # from the model towards the rig's camera
+
+
+def facing_camera(tilt=0.35):
+    """A rotation that turns a model's +z (a coin's face) towards the camera, then tips it back a little to show its edge."""
+    q = Vector((0, 0, 1)).rotation_difference(TO_CAMERA)
+    side = TO_CAMERA.cross(Vector((0, 0, 1))).normalized()
+    return Matrix.Rotation(-tilt, 4, side) @ q.to_matrix().to_4x4()
+
+
+def turn(objs, m):
+    for o in objs:
+        o.matrix_world = m @ o.matrix_world
+    return objs
+
+
+def icon_coin():
+    gold, dark, light = toon("coin", 0xFFC93C), toon("coinDark", 0xE0A21C), toon("coinLight", 0xFFE07A)
+    o = [cylinder("coin", 0.10, 0.10, 0.024, (0, 0, 0), gold, segs=32),
+         cylinder("rim", 0.084, 0.084, 0.026, (0, 0, 0.0), dark, segs=32, outline=False),
+         cylinder("face", 0.076, 0.076, 0.028, (0, 0, 0.0), light, segs=32, outline=False)]
+    # A wheat ear embossed on the face.
+    for i in range(5):
+        for s in (-1, 1) if i < 4 else (0,):
+            o.append(sphere("grain%d%d" % (i, s), 0.010, (s * 0.009, -0.032 + i * 0.016, 0.015), dark, scale=(0.75, 1.3, 0.4), segs=8, rings=5, outline=False))
+    o.append(box("stem", (0.005, 0.05, 0.004), (0, -0.05, 0.015), dark, outline=False))
+    return turn(o, facing_camera())
+
+
+def icon_wheat():
+    gold, ear, tie = toon("wheatGold", 0xE6C266), toon("wheatEar", 0xD9A53A), toon("tie", 0xB4572E)
+    o = []
+    for i in range(7):
+        a = (i - 3) * 0.17
+        m = Matrix.Rotation(a, 3, "Y")
+        top = m @ Vector((0, 0, 0.20))
+        o.append(cylinder("stalk%d" % i, 0.006, 0.006, 0.20, tuple(m @ Vector((0, 0, 0.10))), gold, segs=6, rot=m))
+        o.append(sphere("ear%d" % i, 0.022, tuple(top + m @ Vector((0, 0, 0.035))), ear, scale=(0.7, 0.7, 2.2), segs=10, rings=7))
+    o.append(cylinder("tie", 0.03, 0.03, 0.026, (0, 0, 0.085), tie, segs=12))
+    # The sheaf stands in the x-z plane: turn that plane to face the camera.
+    return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+
+
+def icon_gear():
+    steel, dark = toon("steel", 0xC9C2B4), toon("steelDark", 0x8C8478)
+    o = [cylinder("disc", 0.085, 0.085, 0.04, (0, 0, 0), steel, segs=32),
+         cylinder("hub", 0.034, 0.034, 0.046, (0, 0, 0), dark, segs=20, outline=False),
+         cylinder("hole", 0.016, 0.016, 0.05, (0, 0, 0), toon("steelHole", 0x5E574E), segs=16, outline=False)]
+    for i in range(8):
+        a = i * math.tau / 8
+        o.append(box("tooth%d" % i, (0.04, 0.034, 0.04), (math.cos(a) * 0.095, math.sin(a) * 0.095, 0), steel, rot_z=a, bevel=0.004))
+    return turn(o, facing_camera(0.3))
+
+
+SPRITES.update({
+    "ground_grass": lambda: model_ground("grass"),
+    "ground_soil": lambda: model_ground("soil"),
+    "ground_earth": lambda: model_ground("earth"),
+    "ground_water": lambda: model_ground("water"),
+    "grass_detail_0": lambda: model_grass_detail(0),
+    "grass_detail_1": lambda: model_grass_detail(1),
+    "grass_detail_2": lambda: model_grass_detail(2),
+})
+for _st in STAGES:
+    SPRITES["crop_wheat_%s" % _st] = (lambda st=_st: (lambda: model_crop("wheat", st)))()
+for _st in ("sapling", "young", "mature", "ripe"):
+    SPRITES["tree_mango_%s" % _st] = (lambda st=_st: (lambda: model_mango(st)))()
+ICONS = {"icon_coin": icon_coin, "icon_wheat": icon_wheat, "icon_gear": icon_gear}
+SPRITES.update(ICONS)
+
+
 # ---------------------------------------------------------------- framing and render
 
 def frame_and_render(sc, cam, name, objs):
@@ -622,6 +908,36 @@ def frame_and_render(sc, cam, name, objs):
     return {"w": w, "h": h, "pivotX": round(px, 5), "pivotY": round(py, 5)}
 
 
+def frame_icon(sc, cam, name, objs):
+    """Icons: the model's bounds fitted into a square of ICON_PX with a margin, centred."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    inv = cam.matrix_world.inverted()
+    xs, ys = [], []
+    for o in objs:
+        ev = o.evaluated_get(dg)
+        for v in ev.data.vertices:
+            c = inv @ (ev.matrix_world @ v.co)
+            xs.append(c.x)
+            ys.append(c.y)
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    span = max(x1 - x0, y1 - y0) * 1.12
+    sc.render.resolution_x = sc.render.resolution_y = ICON_PX
+    cam.data.ortho_scale = span
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    cam.location = (0, 0, 0)
+    back = cam.matrix_world.to_3x3() @ Vector((0, 0, 10))
+    cam.location = cam.matrix_world.to_3x3() @ Vector((cx, cy, 0)) + back
+    # Outlines keep their on-screen width whatever the icon's size.
+    for o in objs:
+        for mod in o.modifiers:
+            if mod.type == "SOLIDIFY":
+                mod.thickness = mod.thickness * span / 0.45
+    bpy.context.view_layer.update()
+    sc.render.filepath = os.path.join(OUT_DIR, name + ".png")
+    bpy.ops.render.render(write_still=True)
+    return {"w": ICON_PX, "h": ICON_PX, "pivotX": 0.5, "pivotY": 0.5}
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     names = argv or list(SPRITES)
@@ -635,7 +951,7 @@ def main():
         sc, cam = reset()
         _materials.clear()
         objs = SPRITES[name]()
-        info = frame_and_render(sc, cam, name, objs)
+        info = frame_icon(sc, cam, name, objs) if name in ICONS else frame_and_render(sc, cam, name, objs)
         info["name"] = name
         manifest[name] = info
         print("rendered", name, info)

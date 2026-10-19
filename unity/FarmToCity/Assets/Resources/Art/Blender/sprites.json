@@ -2,6 +2,34 @@
  "pixelsPerUnit": 528,
  "sprites": [
   {
+   "w": 506,
+   "h": 296,
+   "pivotX": 0.49866,
+   "pivotY": 0.45845,
+   "name": "crop_wheat_g1"
+  },
+  {
+   "w": 532,
+   "h": 322,
+   "pivotX": 0.5,
+   "pivotY": 0.46328,
+   "name": "crop_wheat_g2"
+  },
+  {
+   "w": 532,
+   "h": 358,
+   "pivotX": 0.5,
+   "pivotY": 0.42659,
+   "name": "crop_wheat_g3"
+  },
+  {
+   "w": 532,
+   "h": 358,
+   "pivotX": 0.5,
+   "pivotY": 0.42901,
+   "name": "crop_wheat_ready"
+  },
+  {
    "w": 340,
    "h": 230,
    "pivotX": 0.5,
@@ -14,6 +42,55 @@
    "pivotX": 0.5,
    "pivotY": 0.44774,
    "name": "fence_y"
+  },
+  {
+   "w": 466,
+   "h": 240,
+   "pivotX": 0.48362,
+   "pivotY": 0.46794,
+   "name": "grass_detail_0"
+  },
+  {
+   "w": 398,
+   "h": 244,
+   "pivotX": 0.53146,
+   "pivotY": 0.45874,
+   "name": "grass_detail_1"
+  },
+  {
+   "w": 452,
+   "h": 250,
+   "pivotX": 0.51602,
+   "pivotY": 0.46686,
+   "name": "grass_detail_2"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_earth"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_grass"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_soil"
+  },
+  {
+   "w": 596,
+   "h": 398,
+   "pivotX": 0.5,
+   "pivotY": 0.74778,
+   "name": "ground_water"
   },
   {
    "w": 328,
@@ -42,6 +119,27 @@
    "pivotX": 0.5,
    "pivotY": 0.30531,
    "name": "hut"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_coin"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_gear"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_wheat"
   },
   {
    "w": 106,
@@ -182,6 +280,34 @@
    "pivotX": 0.50573,
    "pivotY": 0.34439,
    "name": "person_labourer_m_front_work"
+  },
+  {
+   "w": 354,
+   "h": 430,
+   "pivotX": 0.48919,
+   "pivotY": 0.11168,
+   "name": "tree_mango_mature"
+  },
+  {
+   "w": 366,
+   "h": 430,
+   "pivotX": 0.50623,
+   "pivotY": 0.11168,
+   "name": "tree_mango_ripe"
+  },
+  {
+   "w": 132,
+   "h": 166,
+   "pivotX": 0.50595,
+   "pivotY": 0.23284,
+   "name": "tree_mango_sapling"
+  },
+  {
+   "w": 246,
+   "h": 294,
+   "pivotX": 0.49035,
+   "pivotY": 0.14837,
+   "name": "tree_mango_young"
   },
   {
    "w": 144,
