@@ -209,6 +209,34 @@ namespace Tools.Balancer
 
         // ---- ADR 0038: the debt bots must actually borrow, miss, default and be foreclosed (every mechanic is used) ----
 
+        /// <summary>When the Hamlet's conditions are first met (ADR 0030, spec 009 §3.6), in days from the new game, per seed.</summary>
+        public static List<double> HamletDays(SimConfig config, int seeds, int seasons = 6)
+        {
+            var days = new double[seeds];
+            Parallel.For(0, seeds, i =>
+            {
+                double day = double.NaN;
+                var harvested = new Dictionary<int, Fixed>();
+                long season = -1;
+                Economy.RunBot(config, new FarmerBot(), seasons, (ulong)(i + 1), sim =>
+                {
+                    if (!double.IsNaN(day)) return;
+                    long now = sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason;
+                    if (now != season) { season = now; harvested.Clear(); }
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                        if (e is Sim.Core.Events.CropHarvested h && e.SimTime / sim.Clock.SecondsPerSeason == season) harvested[h.TileId] = h.Breakdown.Care;
+                    bool hut = sim.State.Land.Buildings.Exists(b => b.Def == sim.Config.Game.People.HandHut);
+                    bool profit = sim.State.Finance.Reports.Exists(r => r.FarmProfit > 0);
+                    Fixed sum = Fixed.Zero;
+                    foreach (Fixed c in harvested.Values) sum += c;
+                    if (hut && profit && harvested.Count >= 6 && sum >= Fixed.Parse("0.9").MulRatio(harvested.Count, 1))
+                        day = sim.State.Clock.SimTime / 86400.0;
+                });
+                days[i] = day;
+            });
+            return days.ToList();
+        }
+
         public sealed class DebtActivity
         {
             public string Bot;
@@ -281,6 +309,15 @@ namespace Tools.Balancer
                 Console.WriteLine("  " + d.Bot + " used credit: " + d.LoansTaken + " loans (" + d.BankLoans + " from the bank), " + d.Foreclosures
                     + " foreclosures in " + d.SeedsForeclosed + " of " + d.Seeds + " runs, median score " + d.MedianScoreAtEnd.ToString("0", CultureInfo.InvariantCulture));
             }
+            Console.WriteLine("  People (spec 006, ADR 0039): stress bots at most 1.20 × competent, the absentee at least 0.80 ×; solo is the founder never hiring:");
+            foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 8, new Func<Bot>[] { () => new SoloBot(), () => new DayLabourSpammerBot(),
+                () => new HandChurnerBot(), () => new LapseGamerBot(), () => new AbsenteeBot() }))
+                Console.WriteLine("    " + s.Bot.PadRight(20) + C(s.MedianNetWorth).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));
+            List<double> hamlet = HamletDays(config, Math.Min(seeds, 100)).Where(d => !double.IsNaN(d)).OrderBy(d => d).ToList();
+            Console.WriteLine("  Hamlet conditions met (6 acres at Care ≥ 0.9 in a season, a hand's hut, a profitable season): " + hamlet.Count + " of "
+                + Math.Min(seeds, 100) + " seeds; day " + (hamlet.Count == 0 ? "-" : hamlet[hamlet.Count / 10].ToString("0.0", CultureInfo.InvariantCulture) + " / "
+                + hamlet[hamlet.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " / " + hamlet[hamlet.Count * 9 / 10].ToString("0.0", CultureInfo.InvariantCulture))
+                + " (10th / median / 90th percentile; target 7 ± 2)");
             Console.WriteLine("  Land-flipper over 4 years (it can first afford a parcel in year 3):");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 16, new Func<Bot>[] { () => new LandFlipperBot() }))
                 Console.WriteLine("    " + s.Bot.PadRight(20) + C(s.MedianNetWorth).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));

@@ -72,6 +72,20 @@ namespace Sim.Core.Tests
                 Assert.That(s.Ratio, Is.LessThanOrEqualTo(1.2), s.Bot);
         }
 
+        // Spec 006 AC-23, ADR 0039 §10: people stress bots stay within 1.20 × competent; the absentee (orders) at least 0.80 ×.
+        [Test]
+        public void PeopleStress()
+        {
+            var people = new System.Func<Bot>[] { () => new DayLabourSpammerBot(), () => new HandChurnerBot(), () => new LapseGamerBot(), () => new AbsenteeBot() };
+            var results = Gate.Stress(Live(), 100, 8, people);
+            foreach (Gate.StressResult s in results.Skip(1))
+            {
+                TestContext.Out.WriteLine(s.Bot + " " + s.Ratio.ToString("0.000"));
+                if (s.Bot == "absentee") Assert.That(s.Ratio, Is.GreaterThanOrEqualTo(0.8), s.Bot);
+                else Assert.That(s.Ratio, Is.LessThanOrEqualTo(1.2), s.Bot);
+            }
+        }
+
         // ADR 0034 §7: every mechanic is used by at least one bot. The debt bots really borrow, and the defaulter really defaults.
         [Test]
         public void DebtBots_UseCredit()
