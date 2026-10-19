@@ -32,6 +32,12 @@ namespace Game.Presentation.Map
 
         public MapCamera View { get { return _view; } }
 
+        /// <summary>
+        /// Placement mode (the hand's hut ghost, ADR 0039 §2): while set, a finger on the map moves the ghost to the world point under
+        /// it instead of panning, and a tap places it there. Pinch still zooms.
+        /// </summary>
+        public Action<Vector2> Placing { get; set; }
+
         public static MapInput Create(GameObject host, Camera camera, MapPresenter map, UIDocument document, Action<Vector2> onTap)
         {
             MapInput i = host.AddComponent<MapInput>();
@@ -135,6 +141,11 @@ namespace Game.Presentation.Map
             {
                 _down = true; _dragging = false; _revealing = false; _downAt = _last = pos; _downTime = Time.unscaledTime;
             }
+            else if (_down && pressed && Placing != null)
+            {
+                Placing(WorldPoint(pos));
+                _last = pos;
+            }
             else if (_down && pressed)
             {
                 if (!_dragging && Vector2.Distance(pos, _downAt) > DragStartPixels) _dragging = true;
@@ -150,7 +161,8 @@ namespace Game.Presentation.Map
             {
                 bool tap = !_dragging && Time.unscaledTime - _downTime < TapSeconds && !_pinching;
                 _down = false;
-                if (tap && _onTap != null) _onTap(_downAt);
+                if (Placing != null) Placing(WorldPoint(_last));
+                else if (tap && _onTap != null) _onTap(_downAt);
             }
         }
 

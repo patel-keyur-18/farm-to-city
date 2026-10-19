@@ -203,7 +203,7 @@
 
 ## Sprint 4 · 16–22 Nov 2026 · Phase 1
 
-- **Status:** Built (24 of 24 points, 2026-10-19); the owner's device run is pending. Planning review (2026-10-18): 12 gaps closed with the owner, ADR 0038
+- **Status:** Done (24 of 24 points; device runs 2 and 3 passed on the iPhone 13, 2026-10-19). Planning review (2026-10-18): 12 gaps closed with the owner, ADR 0038
 - **Branch:** `sprint/04-credit-first-playable` (or the branch the session assigns)
 - **Goal:** Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel.
 - **Points:** 24 (23 planned; US-078 +1 minimal HUD with Collect all, US-079 +1 Store sheet −1 ghost preview moved to US-068, ADR 0038)
@@ -215,11 +215,11 @@
 | US-063 | Borrow | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
 | US-064 | Repayments and penalties | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
 | US-065 | Foreclosure | [F05.2](features/F05.2-credit-and-foreclosure.md) | 3 | Must | Done |
-| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | Built, device run pending |
-| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | Built, device run pending |
+| US-078 | Homestead map and minimal HUD | [F08.1](features/F08.1-map-and-field-interaction.md) | 6 | Must | Done |
+| US-079 | Tap to act and Store sheet | [F08.1](features/F08.1-map-and-field-interaction.md) | 3 | Must | Done |
 | US-085 | String tables | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | Done |
 | US-086 | Number formatting | [F08.3](features/F08.3-localisation-and-formatting.md) | 2 | Must | Done |
-| US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | Built, device run pending |
+| US-088 | Dev panel | [F08.4](features/F08.4-developer-panel-unity.md) | 2 | Must | Done |
 
 **Sprint end checklist**
 
@@ -228,7 +228,7 @@
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** — (pending: `s04-first-playable.md`)
+**Review (owner's device results):** run 1 found three touch and layout bugs (fixed the same day); run 2 passed all checks but 11 (empty tree places not tappable; fixed, with the owner's sheet changes); run 3 passed all checks, with golden replays 001, 003, 004 and 005 PASS on the device. The owner rates the art as placeholder and wants it improved by all means (free only, ADR 0007).
 
 **Retro (Claude):**
 - *Went well:* the gap review found real loopholes before code: collateral could be sold while the loan stayed, and the protected plot made unsecured default nearly free. The stress bots then measured the default loophole at about +4% (not +20%), so ADR 0038's rules are a safety margin. `Simulation.Preview` made every greyed button show the sim's own reason with no duplicated rules. The painter gave a cohesive look with no art assets; the Editor loop (taps and captures through the `unity` CLI) caught layout problems before any phone build.
@@ -237,40 +237,44 @@
 
 ## Sprint 5 · 23–29 Nov 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/05-people` (or the branch the session assigns)
-- **Goal:** People: day labourers, the resident hand and standing orders, with their UI.
-- **Points:** 21 (US-069 +1 for `PostJob`, spec 006 review; US-068 +1 for the placement ghost, ADR 0038)
+- **Status:** Built (25 of 25 points, 2026-10-19); the owner's device run is pending. Planning review 2026-10-19: 11 decisions with the owner (ADR 0039)
+- **Branch:** `sprint/05-people`
+- **Goal:** People: day labourers, the resident hand and standing orders, with their UI; the first Blender renders.
+- **Points:** 25 (US-069 +1 for `PostJob`; US-068 +1 for the placement ghost, ADR 0038; ADR 0039: US-183 +5, US-182 +1, US-067 −2 to Sprint 6)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | To do |
-| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
-| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
-| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | To do |
-| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
-| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
-| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
+| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Built, device run pending |
+| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
+| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | Built, device run pending |
+| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
+| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
+| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
+| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | Built, device run pending |
+| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | Built, device run pending |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s05-people.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results):** the owner approved the Blender style checkpoint and the redone people (2026-10-19). Device run 1: all checks passed (golden replays 001, 003, 004, 005 PASS on the iPhone 13; 72 h in 2.9 ms); the owner asked for a roomier yard, hands' huts off the fields, orders that start at once and people who work: built the same day as ADR 0040 (2-acre yard, labour quarters, immediate orders, work poses and patrols). Device run 2 pending.
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* the gap review caught two money loopholes (part-day regulars, lapse-and-renew) before any code, and the lapse-gamer stress bot then proved the fix (0.997 × competent). The gate checks found a real balance problem (a hand didn't pay over 11 years) and the owner settled it with numbers in hand (30,000 a season, ADR 0039 §11). The Blender rig renders in seconds, so the owner's feedback on people (size, clothes, men and women) was turned around in one round.
+- *To improve:* three Editor-only traps cost time: fast enter-play-mode keeps static caches whose runtime textures are gone (fixed in the sprite banks), the Game view's toolbar skews `Screen.height` for touch aiming (fixed in `TouchDriver`), and a UI bar built inside a click handler never got touch clicks (placement now starts on the next UI tick). `DebugAdvance` only takes fixed steps: scripts must check its result.
+- *Carry over:* regulars (US-067) and the full Blender re-render with icons (US-171) to Sprint 6; walk and hoe animation frames later; the loan screen (Sprint 7) replaces the dev panel's loan button.
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 
 - **Status:** Planned
 - **Branch:** `sprint/06-saves-notifications` (or the branch the session assigns)
-- **Goal:** Saves, notifications and the play log; the Blender sprite pipeline (US-171, pulled forward by ADR 0038; the owner installs Blender first).
-- **Points:** 24 (16 + US-171 8: the owner decides at Sprint 6 planning what slips)
+- **Goal:** Saves, notifications and the play log; regulars; every map sprite and icon rendered in Blender (ADR 0039).
+- **Points:** 22 (16 + US-067 2 + US-171 4, ADR 0039)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -281,7 +285,8 @@
 | US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
 | US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | To do |
 | US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | To do |
-| US-171 | Blender pipeline | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | To do |
+| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
+| US-171 | Blender pipeline: the full re-render and icons | [F19.3](features/F19.3-art-pipeline.md) | 4 | Should | To do |
 
 **Sprint end checklist**
 
@@ -299,7 +304,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 17 (US-082 −1: the Store sheet is built in Sprint 4)
+- **Points:** 16 (US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -308,7 +313,7 @@
 | US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
-| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
+| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
 | US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
 

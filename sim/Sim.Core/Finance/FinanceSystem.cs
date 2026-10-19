@@ -71,8 +71,8 @@ namespace Sim.Core.Finance
 
             // Settle and pay upfront (these entries belong to the new season).
             SettlementStats loans = sim.State.Credit == null ? null : CreditSystem.Settle(sim); // step 4: loan payments come first
-            // ponytail: one obligation kind so far, living costs (step 5); contracts (spec 006) and rent register later.
-            Farm.FounderSystem.SettleLiving(sim);
+            Farm.FounderSystem.SettleLiving(sim); // step 5
+            if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));

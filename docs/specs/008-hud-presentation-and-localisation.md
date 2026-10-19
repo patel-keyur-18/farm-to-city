@@ -428,6 +428,15 @@ None of these changes a rule or a lesson.
 7. **Short money** has no unit word (the HUD adds the coin); `Formatter.Coins` takes the singular for one coin.
 8. **Device runs (2026-10-19).** Run 1 found touch broken (the input code waited for a mouse; fixed). Run 2's owner feedback: sheets are **full height** (§3.2 table above); the Store, tree and garden sheets list **one row per choice with its own button** (`LineVm.Action`); a growing crop's **Care, Water and Weather read Good, Fair or Poor** (`ViewContext.Rating`: good from `ratingGoodPercent` 95, fair from `ratingFairPercent` 80, in `content/ui.json`; the *Why?* sheet in Sprint 7 shows the numbers); empty tree places on the player's land are drawn as **stone-ringed pits** and can be tapped (they had no sprite, so a tap fell through to the land under them).
 
+
+**Sprint 5 planning review (2026-10-19, ADR 0039):**
+- **People button:** a round button bottom-right on the HUD with a badge counting waiting applicants; it becomes a Menu entry in Sprint 7 and stays as a shortcut. The People and hand sheets follow §3.2's one row per choice (content in spec 006 §7 and ADR 0039 §8). Orders are given from the field and tree sheets.
+- **Placement (§3.4):** the hand's hut ghost drags over the map and snaps to the labour quarters' next free place (ADR 0040), green there and red with the reason elsewhere; a bar shows the cost.
+- **Skill as stars and band words** (`ui.json`: Beginner < 35, Capable 35–54, Skilled 55–74, Expert ≥ 75; one star per 20 points), hours as "tends about N acres" (reference acre: wheat, 3 h a day), the day's Care in Good, Fair or Poor.
+- **A people-only *While you were away* card** (§3.9's people rows: hands' actions, day labour, contracts) is built in Sprint 5 (US-182) on the away view model US-083 completes in Sprint 7.
+- **People on the map** (presentation only): the founder and hands stand on tended fields, a hand walks to the field an order acts on, day labourers walk in from the map edge and leave at the daily pass.
+- **Device review (ADR 0040):** the yard is drawn over two acres (house and well behind, garden, tulsi, haystack and woodpile in front) with a bamboo fence where it meets other land; hands' huts stand in the fenced labour quarters; people go round the fields with work, hoe at two spots on each (stand and work frames alternate), and go home when idle.
+
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

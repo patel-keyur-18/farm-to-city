@@ -28,7 +28,10 @@ namespace Sim.Content
             LedgerDef ledger = LoadFinance(read("finance.json"), out CreditScoreDef scoreDef);
             // Credit is optional content (ADR 0038): a finance.json without a "credit" block means no lenders.json is read.
             CreditDefs credit = scoreDef == null ? null : new CreditDefs(scoreDef, LoadLenders(read("lenders.json"), scoreDef));
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit);
+            // People are optional content too (spec 006): only buildings with a hand's hut bring people.json.
+            int handHut = buildings.FindIndex(b => b.Id == PeopleDefs.HandHutId);
+            PeopleDefs people = handHut < 0 ? null : LoadPeople(read("people.json"), handHut, buildings[handHut]);
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)
@@ -148,8 +151,8 @@ namespace Sim.Content
                 JObject t = Object(tileTokens[i], p);
                 OnlyFields(t, p, "terrain", "soil", "drainage", "fertility", "moisture");
                 string terrain = String(Required(t, p, "terrain"), p + ".terrain");
-                if (terrain != "farm" && terrain != "yard") throw new ContentException(p + ".terrain", "expected farm or yard");
-                tiles.Add(new TileDef(terrain == "farm" ? Terrain.Farm : Terrain.Yard,
+                if (terrain != "farm" && terrain != "yard" && terrain != "quarters") throw new ContentException(p + ".terrain", "expected farm, yard or quarters");
+                tiles.Add(new TileDef(terrain == "farm" ? Terrain.Farm : terrain == "yard" ? Terrain.Yard : Terrain.Quarters,
                     Ref(t, p, "soil", soils.ConvertAll(x => x.Id)), Ref(t, p, "drainage", drainages.ConvertAll(x => x.Id)),
                     Bounded(t, p, "fertility", "0", "100"), Bounded(t, p, "moisture", "0", "100")));
             }
@@ -195,7 +198,8 @@ namespace Sim.Content
             {
                 string p = Index(root + ".buildings", i);
                 JObject b = Object(tokens[i], p);
-                OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons", "storeCapacityKg", "restRecovery", "gardenBeds");
+                OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons", "storeCapacityKg", "restRecovery", "gardenBeds",
+                    "buildHours", "housesHands");
                 string id = UniqueId(b, p, list.ConvertAll(x => x.Id));
                 int slots = Int(Required(b, p, "yardTreeSlots"), p + ".yardTreeSlots");
                 Range(slots, 0, 12, p + ".yardTreeSlots");
@@ -205,7 +209,9 @@ namespace Sim.Content
                 Range(store, 0, 1_000_000, p + ".storeCapacityKg");
                 list.Add(new BuildingDef(id, String(Required(b, p, "nameKey"), p + ".nameKey"), slots,
                     Money(Required(b, p, "value"), p + ".value"), life, store, Bounded(b, p, "restRecovery", "0", "1"),
-                    BoundedInt(b, p, "gardenBeds", 0, 12)));
+                    BoundedInt(b, p, "gardenBeds", 0, 12),
+                    b["buildHours"] == null ? 0 : BoundedInt(b, p, "buildHours", 0, 24 * 30),
+                    b["housesHands"] == null ? 0 : BoundedInt(b, p, "housesHands", 0, 20)));
             }
             return list;
         }

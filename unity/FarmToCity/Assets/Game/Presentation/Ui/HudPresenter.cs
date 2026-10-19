@@ -22,12 +22,16 @@ namespace Game.Presentation.Ui
         private readonly Label _date, _clock, _weather, _cash, _store;
         private readonly VisualElement _weatherIcon, _storeFill, _timeCard, _cashPill, _storePill, _collectHolder;
         private Button _collect;
+        private readonly VisualElement _people, _badge;
+        private readonly Label _badgeText;
+        private int _badgeShown = -1;
         private string _weatherId;
         private long _shownCash = long.MinValue, _targetCash;
         private int _readyShown = -1;
         private bool _collectEnabled;
 
         public Action OnStore { get; set; }
+        public Action OnPeople { get; set; }
         public Action OnCollect { get; set; }
 
         /// <summary>The developer panel's gesture: the time strip held for three seconds (development builds only).</summary>
@@ -35,6 +39,7 @@ namespace Game.Presentation.Ui
 
         public VisualElement CashTarget { get { return _cashPill; } }
         public VisualElement StoreTarget { get { return _storePill; } }
+        public VisualElement PeopleTarget { get { return _people; } }
 
         public HudPresenter(VisualElement root, Tweens tweens, StringTable strings, Formatter fmt)
         {
@@ -110,6 +115,47 @@ namespace Game.Presentation.Ui
             _collectHolder.style.left = 28; _collectHolder.style.bottom = 28;
             _layer.Add(_collectHolder);
 
+            // Bottom-right: People (ADR 0039 §8), a round wood button with a villager and a badge for waiting applicants.
+            _people = new VisualElement();
+            _people.style.position = Position.Absolute;
+            _people.style.right = 28; _people.style.bottom = 28;
+            _people.style.width = 150; _people.style.height = 150;
+            _people.style.backgroundColor = UiKit.Sand;
+            UiKit.Radius(_people, 75);
+            UiKit.Border(_people, 5, UiKit.SandDark);
+            _people.style.borderBottomWidth = 10;
+            _people.style.alignItems = Align.Center;
+            _people.style.justifyContent = Justify.Center;
+            Sprite face = SpriteBank.Rendered("person_hand_m_front");
+            if (face != null)
+            {
+                VisualElement pic = UiKit.Icon(face, 104);
+                pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                _people.Add(pic);
+            }
+            Label word = UiKit.Text(strings.Get("hud.people"), 26, UiKit.Ink, UiKit.Heading);
+            word.style.position = Position.Absolute;
+            word.style.bottom = -6;
+            _people.Add(word);
+            _badge = new VisualElement { pickingMode = PickingMode.Ignore };
+            _badge.style.position = Position.Absolute;
+            _badge.style.right = -6; _badge.style.top = -6;
+            _badge.style.width = 54; _badge.style.height = 54;
+            _badge.style.backgroundColor = UiKit.Red;
+            UiKit.Radius(_badge, 27);
+            UiKit.Border(_badge, 4, UiKit.RedDark);
+            _badge.style.alignItems = Align.Center;
+            _badge.style.justifyContent = Justify.Center;
+            _badgeText = UiKit.Text("", 32, Color.white, UiKit.Heading);
+            _badge.Add(_badgeText);
+            _badge.style.display = DisplayStyle.None;
+            _people.Add(_badge);
+            _people.RegisterCallback<PointerDownEvent>(_ => _people.style.scale = new Scale(new Vector3(0.92f, 0.92f, 1f)));
+            _people.RegisterCallback<PointerUpEvent>(_ => _people.style.scale = new Scale(Vector3.one));
+            _people.RegisterCallback<PointerLeaveEvent>(_ => _people.style.scale = new Scale(Vector3.one));
+            _people.RegisterCallback<ClickEvent>(_ => { if (OnPeople != null) OnPeople(); });
+            _layer.Add(_people);
+
             // HUD figures never wrap: on a phone's fractional UI scale the measured width can round a hair short, and the last
             // digit then dropped onto a hidden second line ("12:4", "4,38").
             foreach (Label l in new[] { _date, _clock, _weather, _cash, _store })
@@ -152,6 +198,16 @@ namespace Game.Presentation.Ui
                     _shownCash = from + (long)((to - from) * (double)k);
                     _cash.text = _fmt.ShortCoins(_shownCash);
                 }, () => { _shownCash = to; _cash.text = _fmt.ShortCoins(to); });
+            }
+
+            _people.style.display = hud.HasPeople ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_badgeShown != hud.PeopleBadge)
+            {
+                bool popped = hud.PeopleBadge > _badgeShown && _badgeShown >= 0 && animate;
+                _badgeShown = hud.PeopleBadge;
+                _badgeText.text = hud.PeopleBadge.ToString();
+                _badge.style.display = hud.PeopleBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                if (popped) Bounce(_people);
             }
 
             bool enabled = hud.ReadyCount > 0;

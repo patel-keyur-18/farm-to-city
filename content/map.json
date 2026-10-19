@@ -34,7 +34,7 @@
     { "terrain": "farm", "soil": "loam",  "drainage": "moderate", "fertility": 45, "moisture": 50 },
     { "terrain": "farm", "soil": "loam",  "drainage": "moderate", "fertility": 45, "moisture": 50 },
     { "terrain": "farm", "soil": "loam",  "drainage": "moderate", "fertility": 45, "moisture": 50 },
-    { "terrain": "farm", "soil": "loam",  "drainage": "moderate", "fertility": 53, "moisture": 50 },
+    { "terrain": "yard", "soil": "loam",  "drainage": "moderate", "fertility": 53, "moisture": 50 },
     { "terrain": "farm", "soil": "sandy", "drainage": "good",     "fertility": 41, "moisture": 45 },
     { "terrain": "farm", "soil": "clay",  "drainage": "moderate", "fertility": 58, "moisture": 55 },
 
@@ -43,7 +43,7 @@
     { "terrain": "farm", "soil": "clay",  "drainage": "poor",     "fertility": 65, "moisture": 60 },
     { "terrain": "farm", "soil": "loam",  "drainage": "moderate", "fertility": 55, "moisture": 50 },
     { "terrain": "farm", "soil": "loam",  "drainage": "good",     "fertility": 57, "moisture": 50 },
-    { "terrain": "farm", "soil": "clay",  "drainage": "moderate", "fertility": 57, "moisture": 55 },
+    { "terrain": "quarters", "soil": "clay",  "drainage": "moderate", "fertility": 57, "moisture": 55 },
     { "terrain": "farm", "soil": "sandy", "drainage": "good",     "fertility": 40, "moisture": 45 },
     { "terrain": "farm", "soil": "sandy", "drainage": "good",     "fertility": 38, "moisture": 45 },
 
@@ -59,6 +59,7 @@
   "parcels": [
     { "id": "home_a", "tiles": [18, 19, 20, 21],  "locationFactor": 1.0 },
     { "id": "home_b", "tiles": [26, 27, 28],      "locationFactor": 1.0 },
+    { "id": "home_c", "tiles": [29, 37],          "locationFactor": 1.0 },
     { "id": "nw1",    "tiles": [0, 1, 8, 9],      "locationFactor": 1.0 },
     { "id": "n1",     "tiles": [2, 3],            "locationFactor": 1.1 },
     { "id": "n2",     "tiles": [4, 5],            "locationFactor": 1.1 },
@@ -68,7 +69,6 @@
     { "id": "w1",     "tiles": [16, 17],          "locationFactor": 1.0 },
     { "id": "e1",     "tiles": [22, 23, 30, 31],  "locationFactor": 1.0 },
     { "id": "w2",     "tiles": [24, 25],          "locationFactor": 1.0 },
-    { "id": "e2",     "tiles": [29, 37],          "locationFactor": 1.0 },
     { "id": "sw",     "tiles": [32, 33],          "locationFactor": 0.95 },
     { "id": "s1",     "tiles": [34, 35],          "locationFactor": 0.95 },
     { "id": "s2",     "tiles": [36, 44],          "locationFactor": 0.95 },

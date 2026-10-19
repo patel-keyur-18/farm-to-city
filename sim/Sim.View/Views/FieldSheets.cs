@@ -26,6 +26,7 @@ namespace Sim.View.Views
             string soil = ctx.Strings.Get(defs.Soils[tile.Soil].NameKey);
             if (!parcel.Owned) return Unowned(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
+            if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
@@ -38,6 +39,7 @@ namespace Sim.View.Views
 
             if (crop == null)
             {
+                AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
                 if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
                 return vm;
@@ -73,6 +75,7 @@ namespace Sim.View.Views
                     vm.Actions.Add(ActionVm.Checked(ctx, "harvestSell", ctx.Strings.Get("action.harvestSell"), null, ActionKind.Secondary,
                         at => new Harvest(at, tileId, Overflow.SellRestToTrader)));
             }
+            AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
             vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get("action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
             return vm;
         }
@@ -183,6 +186,7 @@ namespace Sim.View.Views
                 vm.Subtitle = ctx.Strings.Get(tree.RipeGrams > 0 ? "tree.ripe" : "tree.mature");
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.fruits"), SeasonsText(ctx, treeDef.FruitingSeasons)));
             }
+            AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Tree, slotId);
             vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.cost"), ctx.Fmt.Coins(tree.Cost)));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.returns"), ctx.Fmt.Coins(tree.Returns), "payback"));
             TreePayback pay = TreeRules.Payback(sim, tree);
@@ -194,6 +198,49 @@ namespace Sim.View.Views
                     at => new PickFruit(at, slotId, Overflow.StoreOnly)));
             vm.Actions.Add(ActionVm.Checked(ctx, "removeTree", ctx.Strings.Get("action.removeTree"), null, ActionKind.Danger, at => new RemoveTree(at, slotId)));
             return vm;
+        }
+
+        /// <summary>The labour quarters (ADR 0040): its hut places, who lives in each, and the button to build one.</summary>
+        private static SheetVm Quarters(ViewContext ctx, Tile tile)
+        {
+            Simulation sim = ctx.Sim;
+            Sim.Core.People.PeopleState p = sim.State.People;
+            int places = sim.Config.Game.People == null ? 0 : sim.Config.Game.People.HutPlacesPerAcre;
+            var vm = new SheetVm { Icon = "hand_hut", Title = ctx.Strings.Get("quarters.title"), Subtitle = ctx.Strings.Get("quarters.subtitle", "n", ctx.Fmt.Integer(places)) };
+            if (p == null) return vm;
+            int n = 0;
+            foreach (Building b in sim.State.Land.Buildings)
+            {
+                if (!Sim.Core.People.PeopleRules.IsHandHut(sim, b) || b.TileId != tile.Id) continue;
+                Sim.Core.People.Hand who = p.Hands.Find(h => h.HutId == b.Id);
+                var line = new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)),
+                    who == null ? ctx.Strings.Get("people.hutEmpty") : ctx.Strings.Get("people.hutLives", "name", PeopleWords.Name(ctx, who.Name)));
+                if (who != null) line.Action = ActionVm.Open("hand:" + who.Id, ctx.Strings.Get("action.see"), new SheetRequest("Hand", who.Id));
+                vm.Lines.Add(line);
+            }
+            foreach (Sim.Core.People.Construction c in p.Constructions)
+                if (c.TileId == tile.Id)
+                    vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))));
+            while (n < places) vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("quarters.free")));
+            vm.Actions.Add(ActionVm.Open("buildHut", ctx.Strings.Get("people.buildHut"), new SheetRequest("HutPlacement", 0)));
+            return vm;
+        }
+
+        /// <summary>On a field or tree: "Ramesh's orders" with the order or a button to give one (ADR 0039 §8).</summary>
+        private static void AddPeopleRows(ViewContext ctx, SheetVm vm, Sim.Core.People.OrderTargetKind kind, long target)
+        {
+            Simulation sim = ctx.Sim;
+            Sim.Core.People.PeopleState p = sim.State.People;
+            if (p == null) return;
+            Sim.Core.People.Hand hand = PeopleWords.OrderHand(sim, kind, target);
+            if (hand == null) return;
+            Sim.Core.People.StandingOrder o = p.OrderFor(kind, target);
+            string name = PeopleWords.Name(ctx, hand.Name);
+            var line = new LineVm(ctx.Strings.Get("field.handLooksAfter", "name", name),
+                o == null ? ctx.Strings.Get("field.noOrder") : PeopleWords.Order(ctx, o) + (PeopleWords.Last(ctx, o) is string last ? "\n" + last : ""));
+            line.Action = ActionVm.Open("order", ctx.Strings.Get(o == null ? "action.giveOrder" : "action.changeOrder"),
+                new SheetRequest("Order", target, kind == Sim.Core.People.OrderTargetKind.Tree ? "tree" : null));
+            vm.Lines.Add(line);
         }
 
         internal static string SeasonName(ViewContext ctx, long period)

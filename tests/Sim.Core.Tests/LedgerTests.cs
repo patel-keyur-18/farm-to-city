@@ -99,7 +99,7 @@ namespace Sim.Core.Tests
         {
             Simulation sim = TestSim.NewFarm();
             Ledger ledger = sim.State.Ledger;
-            long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]) + LandRules.ParcelPrice(sim, sim.State.Land.Parcels[1]);
+            long homeValue = LandRules.ParcelPrice(sim, sim.State.Land.Parcels[0]) + LandRules.ParcelPrice(sim, sim.State.Land.Parcels[1]) + LandRules.ParcelPrice(sim, sim.State.Land.Parcels[2]);
 
             // The opening entry holds the 20,000 inherited coins; the first season's basic living costs are then
             // prepaid from them (spec 003 AC-21: 18,000 for the whole of season 0 at t = 0).
@@ -109,7 +109,7 @@ namespace Sim.Core.Tests
             Assert.That(ledger.Cash + ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(20_000_00));
             Assert.That(ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(18_000_00));
             Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
-            Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00)); // 6 farm acres and the yard, loam at fertility 45 (price factor 0.98)
+            Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00 + 2_32_464_00)); // 6 farm acres and the yard's first acre (loam at fertility 45, price factor 0.98), plus home_c: the second yard acre and the labour quarters (ADR 0040)
             Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));
             // The inherited inputs at their Spring input price (ADR 0034): 600 kg seed potato × 22 + 0.1 kg each of radish
             // (300), spinach (200) and coriander (150) seed.
@@ -117,7 +117,7 @@ namespace Sim.Core.Tests
             Assert.That(opening.Postings.Single(p => p.Account == Account.InputsInStore).Amount, Is.EqualTo(13_265_00));
             Assert.That(ledger.Balance(Account.OpeningEquity), Is.EqualTo(-(20_000_00 + 13_265_00 + homeValue + 55_000_00)));
             Assert.That(ledger.Reconcile(), Is.Null);
-            Assert.That(sim.State.Land.Parcels[0].CostBasis + sim.State.Land.Parcels[1].CostBasis, Is.EqualTo(homeValue));
+            Assert.That(sim.State.Land.Parcels[0].CostBasis + sim.State.Land.Parcels[1].CostBasis + sim.State.Land.Parcels[2].CostBasis, Is.EqualTo(homeValue));
         }
     }
 }

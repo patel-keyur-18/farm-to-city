@@ -78,6 +78,22 @@ namespace Sim.Core.Commands
         AlreadyRestructured,
         LenderDoesNotRestructure,
         LoanSecured,
+
+        // Spec 006 (people, ADR 0039)
+        NoneAvailable,
+        NotQuarters,
+        NoRoom,
+        TooManyHuts,
+        NoHut,
+        AlreadyPosted,
+        UnknownApplicant,
+        AlreadyInterviewed,
+        NoEmptyHut,
+        NoHand,
+        NotLapsed,
+        UnknownTarget,
+        TooManyOrders,
+        NoOrder,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
@@ -124,6 +140,12 @@ namespace Sim.Core.Commands
             sim.AdvanceLive(At);
             return ApplyAt(sim);
         }
+
+        /// <summary>
+        /// Applies the effect at the current sim time from inside a pass, without advancing time or logging: a hand's
+        /// standing orders reuse the player's commands this way (spec 006 §3.8). Deterministic from the state.
+        /// </summary>
+        internal CommandResult ApplyNow(Simulation sim) { return ApplyAt(sim); }
     }
 
     /// <summary>One accepted command and the sim time it was executed at.</summary>

@@ -103,7 +103,7 @@ namespace Sim.View.Tests
             Assert.That(adjacent.Lines.Select(l => l.Label), Is.EqualTo(new[] { "Price", "Your cash", "Quick resale" }));
             Assert.That(Action(adjacent, "buy").Enabled, Is.False);
             Assert.That(Action(adjacent, "buy").DisabledReason, Is.EqualTo("You don't have enough coins for that."));
-            SheetVm far = FieldSheets.ForTile(ctx, 47);
+            SheetVm far = FieldSheets.ForTile(ctx, 0);
             Assert.That(Action(far, "buy").DisabledReason, Is.EqualTo("You can only buy land next to your own."));
 
             Simulation rich = Rich();

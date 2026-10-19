@@ -10,6 +10,7 @@ using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.People;
 using Sim.View.Content;
 using Sim.View.Text;
 using Sim.View.Views;
@@ -54,6 +55,10 @@ namespace Game.Presentation
         private Hit _selected = Hit.None;
         private SheetRequest? _open;
         private string _fertiliser = "none";
+
+        // Placing a hand's hut (ADR 0039 §2): the ghost's acre and the bar with Build here / Cancel.
+        private int _ghostTile = -1;
+        private VisualElement _placeBar;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         private DevTools.DevPanel _dev;
@@ -131,7 +136,7 @@ namespace Game.Presentation
             _input.Focus(3.5f, 2.5f); // the inherited parcels
 
             _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
-            _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll };
+            _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)) };
             _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
             BuildToast();
 
@@ -146,6 +151,7 @@ namespace Game.Presentation
                 ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
                 Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
                 Visibility = v => _hud.SetVisible(v),
+                Borrow = () => { CommandResult r = Sim.Execute(new TakeLoan(Sim.State.Clock.SimTime, "moneylender", 20_000 * 100, 4)); AfterCommands(); return "Loan: " + (r.Accepted ? "taken" : _ctx.Reject(r.Reason)); },
             });
             _hud.OnTimeHeld = () => _dev.Open();
 #endif
@@ -156,7 +162,7 @@ namespace Game.Presentation
             // The formatter changed: a new HUD (the old layer is dropped with the safe root's children it owned).
             _safeRoot.Clear();
             _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
-            var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll };
+            var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)) };
             _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
             BuildToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -168,6 +174,7 @@ namespace Game.Presentation
                 ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
                 Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
                 Visibility = v => _hud.SetVisible(v),
+                Borrow = () => { CommandResult r = Sim.Execute(new TakeLoan(Sim.State.Clock.SimTime, "moneylender", 20_000 * 100, 4)); AfterCommands(); return "Loan: " + (r.Accepted ? "taken" : _ctx.Reject(r.Reason)); },
             });
             hud.OnTimeHeld = () => _dev.Open();
 #endif
@@ -257,7 +264,7 @@ namespace Game.Presentation
 
         private void HandleEvents(List<SimEvent> events)
         {
-            bool coins = false, produce = false;
+            bool coins = false, produce = false, away = false;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -282,8 +289,15 @@ namespace Game.Presentation
                         _map.Shake(p.TileId);
                         break;
                     case FounderSick _: Toast(_strings.Get("toast.sick")); break;
+                    case ApplicantArrived _: Toast(_strings.Get("toast.applicant")); break;
+                    case HandHutBuilt _: Toast(_strings.Get("toast.hutBuilt")); break;
+                    case HandHired _: Toast(_strings.Get("toast.handHired")); break;
+                    case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
+                    case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
+                    case AwayAdvanceCompleted _: away = true; break;
                 }
             }
+            if (away) ShowAway();
             if (coins)
             {
                 Vector2 from = new Vector2(Screen.width * 0.5f, Screen.height * 0.45f);
@@ -311,6 +325,12 @@ namespace Game.Presentation
             switch (hit.Kind)
             {
                 case HitKind.Hut: OpenSheet(new SheetRequest("Store", 0)); break;
+                case HitKind.HandHut:
+                {
+                    Hand who = hit.Id > 0 ? Sim.State.People.Hands.Find(h => h.HutId == hit.Id) : null;
+                    OpenSheet(who != null ? new SheetRequest("Hand", who.Id) : new SheetRequest("People", 0));
+                    break;
+                }
                 case HitKind.Slot: OpenSheet(new SheetRequest("Slot", hit.Id)); break;
                 case HitKind.Bed: OpenSheet(new SheetRequest("Bed", hit.Id)); break;
                 default: OpenSheet(new SheetRequest("Tile", hit.Id)); break;
@@ -329,6 +349,16 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
+                case "People": _sheet.Show(PeopleSheet.Build(_ctx), refreshOnly); break;
+                case "Hand":
+                    if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left
+                    _sheet.Show(HandSheet.Build(_ctx, r.Id), refreshOnly);
+                    break;
+                case "Order":
+                    bool tree = r.Arg != null && r.Arg.StartsWith("tree", StringComparison.Ordinal);
+                    _sheet.Show(OrderSheet.Build(_ctx, tree ? OrderTargetKind.Tree : OrderTargetKind.Field, r.Id, r.Arg), refreshOnly);
+                    break;
+                case "HutPlacement": if (!refreshOnly) StartPlacing(); break;
                 case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
                 case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
                 case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
@@ -353,18 +383,137 @@ namespace Game.Presentation
 
         private void OnSheetAction(ActionVm action)
         {
-            if (action.Opens.HasValue) { OpenSheet(action.Opens.Value); return; }
-            Command command = action.Create(Sim.State.Clock.SimTime);
-            CommandResult result = Sim.Execute(command);
-            if (!result.Accepted)
+            if (action.Opens.HasValue)
             {
-                Toast(_ctx.Reject(result.Reason));
+                if (action.Opens.Value.Kind == "HutPlacement")
+                {
+                    // Start on the next UI tick, outside this click: a bar built inside the handler never got its own clicks on touch.
+                    _sheet.Close();
+                    _safeRoot.schedule.Execute(StartPlacing);
+                    return;
+                }
+                OpenSheet(action.Opens.Value);
                 return;
             }
+            if (action.Confirm != null)
+            {
+                // ADR 0039 §6: an ordered field sown with another crop asks whether the order changes too.
+                _sheet.Confirm(action.Confirm, () => Run(action.Confirm.Yes(Sim.State.Clock.SimTime)), () => { if (action.Confirm.NoSends) Run(new[] { action.Create(Sim.State.Clock.SimTime) }); });
+                return;
+            }
+            Run(new[] { action.Create(Sim.State.Clock.SimTime) });
+        }
+
+        private void Run(Command[] commands)
+        {
+            foreach (Command command in commands)
+            {
+                CommandResult result = Sim.Execute(command);
+                if (!result.Accepted)
+                {
+                    Toast(_ctx.Reject(result.Reason));
+                    AfterCommands();
+                    return;
+                }
+            }
             AfterCommands();
-            // After the work is done the sheet closes (Hay Day style); the store stays open for selling several goods, and a spray
-            // or a loan screen keeps its sheet.
-            if (_open.HasValue && _open.Value.Kind != "Store" && !(command is Spray)) _sheet.Close();
+            // After the work is done the sheet closes (Hay Day style). The store, People and a hand's sheet stay open for the next
+            // choice (sell another good, interview then offer), and a spray keeps its sheet.
+            string kind = _open.HasValue ? _open.Value.Kind : null;
+            if (kind != null && kind != "Store" && kind != "People" && kind != "Hand" && !(commands[commands.Length - 1] is Spray)) _sheet.Close();
+        }
+
+        // ---- placing a hand's hut (ADR 0039 §2) ----
+
+        private void StartPlacing()
+        {
+            _open = null;
+            _map.ClearSelection();
+            List<HutPlaceVm> places = HutPlacement.Places(_ctx);
+            HutPlaceVm first = places.Find(p => p.Allowed) ?? (places.Count > 0 ? places[0] : null);
+            if (first == null) return;
+            _input.Placing = w => { int tile = _map.Grid.Pick(w.x, w.y); if (tile >= 0) MoveGhost(tile); };
+            MoveGhost(first.TileId);
+            _input.Reveal(_map.WorldOf(new Hit(HitKind.Tile, first.TileId)));
+        }
+
+        private void MoveGhost(int tile)
+        {
+            string reason = HutPlacement.ReasonFor(_ctx, tile);
+            if (tile == _ghostTile && _placeBar != null) return;
+            _ghostTile = tile;
+            _map.ShowGhost(tile, reason == null);
+            if (_placeBar != null) _safeRoot.Remove(_placeBar);
+            _placeBar = UiKit.Panel(30);
+            _placeBar.style.position = Position.Absolute;
+            _placeBar.style.bottom = 24;
+            _placeBar.style.left = Length.Percent(18); _placeBar.style.right = Length.Percent(18);
+            _placeBar.style.flexDirection = FlexDirection.Row;
+            _placeBar.style.alignItems = Align.Center;
+            UiKit.Padding(_placeBar, 10, 24);
+            var text = new VisualElement { pickingMode = PickingMode.Ignore };
+            text.style.flexGrow = 1;
+            text.style.flexShrink = 1;
+            text.Add(UiKit.Heading1(_strings.Get("place.title"), 40));
+            text.Add(UiKit.Text(reason ?? _strings.Get("place.hint"), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
+            _placeBar.Add(text);
+            ActionVm build = HutPlacement.Confirm(_ctx, tile);
+            _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
+            {
+                CommandResult r = Sim.Execute(build.Create(Sim.State.Clock.SimTime));
+                if (!r.Accepted) { Toast(_ctx.Reject(r.Reason)); return; }
+                StopPlacing();
+                AfterCommands();
+            }, build.Detail, build.Enabled));
+            _placeBar.Add(UiKit.MakeButton(_strings.Get("action.cancel"), ActionLook.Secondary, StopPlacing));
+            _safeRoot.Add(_placeBar);
+        }
+
+        private void StopPlacing()
+        {
+            _input.Placing = null;
+            _ghostTile = -1;
+            _map.HideGhost();
+            if (_placeBar != null) { _safeRoot.Remove(_placeBar); _placeBar = null; }
+        }
+
+        // ---- While you were away, the people part (US-182) ----
+
+        private void ShowAway()
+        {
+            AwayVm vm = AwayView.People(_ctx, Sim.LastAwayReport);
+            if (vm == null) return;
+            var veil = new VisualElement();
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.4f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(36);
+            UiKit.Padding(card, 22, 36);
+            card.style.width = Length.Percent(60);
+            card.Add(UiKit.Heading1(vm.Title, 54));
+            card.Add(UiKit.Text(vm.Subtitle, 30, UiKit.Wood, UiKit.Body));
+            foreach (LineVm l in vm.Lines)
+            {
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.justifyContent = Justify.SpaceBetween;
+                row.style.paddingTop = row.style.paddingBottom = 6;
+                row.style.borderBottomWidth = 2;
+                row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
+                row.Add(UiKit.Text(l.Label, 31, UiKit.Ink, UiKit.Heading));
+                Label v = UiKit.Text(l.Value, 31, UiKit.Ink, UiKit.Body);
+                v.style.unityTextAlign = TextAnchor.MiddleRight;
+                v.style.flexShrink = 1;
+                row.Add(v);
+                card.Add(row);
+            }
+            card.Add(UiKit.MakeButton(_strings.Get("action.close"), ActionLook.Primary, () => _safeRoot.Remove(veil)));
+            veil.Add(card);
+            _safeRoot.Add(veil);
+            card.style.translate = new Translate(0, -120);
+            _tweens.Run(card, 0.35f, Ease.OutBack, k => card.style.translate = new Translate(0, -120 * (1f - k)));
         }
 
         private void CollectAll()

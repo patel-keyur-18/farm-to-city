@@ -152,7 +152,7 @@ namespace Sim.Core.Tests
         {
             // Tile 19 (inherited) also in w1.
             ContentException e = Error("map.json", j => j.Replace("\"tiles\": [16, 17]", "\"tiles\": [16, 17, 19]"));
-            Assert.That(e.FieldPath, Is.EqualTo("map.parcels[8].tiles[2]"));
+            Assert.That(e.FieldPath, Is.EqualTo("map.parcels[9].tiles[2]"));
             Assert.That(e.Message, Does.Contain("tile 19").And.Contain("two parcels"));
 
             // Tile 17 in no parcel.
@@ -172,9 +172,9 @@ namespace Sim.Core.Tests
             // Bounds and cross-file checks.
             Assert.That(Error("land.json", j => j.Replace("\"quickSaleFactor\": 0.80", "\"quickSaleFactor\": 1.5")).FieldPath,
                 Is.EqualTo("land.land.quickSaleFactor"));
-            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\"]", "[\"w1\"]")).FieldPath,
+            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\"]", "[\"w1\"]")).FieldPath,
                 Is.EqualTo("start.inheritedParcels"));
-            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\"]", "[\"home_a\", \"home_a\"]")).FieldPath,
+            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\"]", "[\"home_a\", \"home_a\"]")).FieldPath,
                 Is.EqualTo("start.inheritedParcels[1]"));
             Assert.That(Error("start.json", j => j.Replace("\"tile\": 21 },\n    { \"building\": \"well\"", "\"tile\": 20 },\n    { \"building\": \"well\"")).FieldPath,
                 Is.EqualTo("start.buildings[0].tile"));
@@ -200,6 +200,25 @@ namespace Sim.Core.Tests
             GameDefs none = TestContent.Game((f, j) => f == "finance.json" ? "{ \"ledger\": { \"retainSeasons\": 4 } }" : f == "lenders.json" ? "not json" : j);
             Assert.That(none.Credit, Is.Null);
             Assert.That(TestContent.Game().Credit.Lenders.Select(l => l.Id), Is.EqualTo(new[] { "moneylender", "coop_bank" }));
+        }
+    }
+    public partial class ContentTests
+    {
+        // Spec 006 AC-1.
+        [Test]
+        public void People_Validation()
+        {
+            ContentException e = Error("people.json", j => j.Replace("\"spring\": 2", "\"spring\": 9"));
+            Assert.That(e.FieldPath, Is.EqualTo("people.labourPool.availablePerDay.spring"));
+            e = Error("people.json", j => j.Replace("\"skillMin\": 20", "\"skillMin\": 80"));
+            Assert.That(e.FieldPath, Is.EqualTo("people.hand.skillMin"));
+            e = Error("people.json", j => j.Replace("\"id\": \"steady\"", "\"id\": \"steady\", \"creative\": 1.2"));
+            Assert.That(e.FieldPath, Is.EqualTo("people.traits[5].creative"));
+            e = Error("buildings.json", j => j.Replace("\"housesHands\": 1", "\"housesHands\": 0"));
+            Assert.That(e.FieldPath, Is.EqualTo("buildings.hand_hut.housesHands"));
+            // Without a hand's hut there are no people: the frozen golden content loads as before.
+            GameDefs none = TestContent.Game((f, j) => f == "buildings.json" ? System.Text.RegularExpressions.Regex.Replace(j, ",\\s*\\{ \"id\": \"hand_hut\"[^}]*\\}", "") : j);
+            Assert.That(none.People, Is.Null);
         }
     }
 }

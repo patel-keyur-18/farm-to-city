@@ -49,16 +49,63 @@ namespace Sim.View.Views
         Open = 3,
     }
 
-    /// <summary>A sheet to open: Sow (tile), Store, Garden (bed), Tree (slot), Land (tile).</summary>
+    /// <summary>
+    /// A sheet to open: Sow (tile), Store, Garden (bed), Tree (slot), Land (tile), People, Hand (hand id), Order (tile, or a tree
+    /// slot with Arg "tree"; Arg carries the step chosen so far), HutPlacement.
+    /// </summary>
     public readonly struct SheetRequest
     {
         public string Kind { get; }
         public long Id { get; }
+        public string Arg { get; }
 
-        public SheetRequest(string kind, long id)
+        public SheetRequest(string kind, long id, string arg = null)
         {
             Kind = kind;
             Id = id;
+            Arg = arg;
+        }
+    }
+
+    /// <summary>
+    /// A question before an action (ADR 0039 §6): "Change Ramesh's order to potato?". Yes sends <see cref="Yes"/>'s commands;
+    /// No sends the action's own command.
+    /// </summary>
+    public sealed class ConfirmVm
+    {
+        public string Question { get; }
+        public string YesLabel { get; }
+        public string NoLabel { get; }
+
+        /// <summary>True: No still sends the action's own command ("Just this once"). False: No only cancels ("Keep them").</summary>
+        public bool NoSends { get; }
+
+        /// <summary>Yes is the destructive choice (red), as in "Let go".</summary>
+        public bool YesIsDanger { get; internal set; }
+        private readonly Func<long, Command[]> _yes;
+
+        internal ConfirmVm(string question, string yesLabel, string noLabel, Func<long, Command[]> yes, bool noSends = true)
+        {
+            Question = question;
+            YesLabel = yesLabel;
+            NoLabel = noLabel;
+            _yes = yes;
+            NoSends = noSends;
+        }
+
+        public Command[] Yes(long at) { return _yes(at); }
+    }
+
+    /// <summary>Skill as stars (ADR 0039 §7): solid up to the sure part, faded up to the possible part, out of 5.</summary>
+    public readonly struct StarsVm
+    {
+        public int Solid { get; }
+        public int Faded { get; }
+
+        public StarsVm(int solid, int faded)
+        {
+            Solid = solid;
+            Faded = faded;
         }
     }
 
@@ -77,6 +124,9 @@ namespace Sim.View.Views
         public bool Enabled { get; }
         public string DisabledReason { get; }
         public SheetRequest? Opens { get; }
+
+        /// <summary>Asked before the command is sent, or null.</summary>
+        public ConfirmVm Confirm { get; internal set; }
         private readonly Func<long, Command> _make;
 
         internal ActionVm(string id, string label, string detail, ActionKind kind, bool enabled, string disabledReason, Func<long, Command> make, SheetRequest? opens = null)
@@ -121,6 +171,14 @@ namespace Sim.View.Views
 
         /// <summary>A button on the row itself (the store's Sell per good), or null.</summary>
         public ActionVm Action { get; internal set; }
+
+        /// <summary>Skill stars shown before the value, or null.</summary>
+        public StarsVm? Stars { get; internal set; }
+
+        /// <summary>A section heading ("Day labourers"): drawn as a title row, no value or button.</summary>
+        public bool IsHeader { get; internal set; }
+
+        internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
         public LineVm(string label, string value, string whyKey = null)
         {

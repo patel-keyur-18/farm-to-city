@@ -118,7 +118,7 @@ Farming is the first business the player runs, so it introduces every core idea:
 - soil type (loam, clay, sandy)
 - drainage
 
-The founder inherits 6 farm acres and a yard (hut and well), protected forever (ADR 0030). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
+The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitchen garden) and the labour quarters for hands' huts, protected forever (ADR 0030, ADR 0040). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
 
 - **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
@@ -171,7 +171,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Ready to harvest.** A ripe crop (or a ripe fruit batch) waits without spoiling or losing quality for 72 hours, the away cap, so nothing is ever lost only by being away. After that it starts to spoil like produce in the store (ADR 0034). While it waits, the field cannot be resown, so waiting also costs a crop cycle.
 
-**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
+**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed, one task an hour per hand; they never undo a crop the player sowed. Fields with no assigned worker wait in *ready to harvest*. A lapsed contract renewed within its grace pays the whole season, waiting days included (ADR 0039).
 
 **Inputs and trade-offs**
 
@@ -340,12 +340,12 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | Source | Neighbouring villages, commuting | A migrant who moves onto your land |
 | Contract | One day, paid upfront | One season, paid upfront |
 | Cost per day | Higher (about 25% premium) | Lower, and grows in skill |
-| Housing | None | Needs a hand's hut on your land |
+| Housing | None | Needs a hand's hut in the labour quarters beside the yard (ADR 0040) |
 | Availability | Limited daily pool, scarce at harvest | Applicants arrive over a few days |
 | Standing orders | No | Yes |
 | Population | Not counted | Counted: the town's first citizens |
 
-Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
+Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often (six full days' work in total, ADR 0039) becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
 
 **Hiring flow (full version, from Phase 2)**
 
@@ -943,7 +943,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 **Coin scale (ADR 0008).**
 
-- The currency is "coins", with a coin icon and no ₹ symbol. Prices roughly match real rupee magnitudes: wheat is about 25 a kg, and a farm hand is about 36,000 a season.
+- The currency is "coins", with a coin icon and no ₹ symbol. Prices roughly match real rupee magnitudes: wheat is about 25 a kg, and a farm hand is about 30,000 a season (ADR 0039).
 - The smallest unit is 1/100 coin.
 - One season equals one real-world quarter for every money flow (wages, rent, interest, upkeep, yield per acre). A crop cycle shorter than a season yields its share of the season's realistic output.
 - Number formatting follows the locale: Indian grouping and L/Cr short forms for en-IN and hi-IN, Western grouping and K/M elsewhere.

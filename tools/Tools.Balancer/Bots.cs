@@ -7,6 +7,7 @@ using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Market;
 using Sim.Core.Maths;
+using Sim.Core.People;
 
 namespace Tools.Balancer
 {
@@ -34,14 +35,18 @@ namespace Tools.Balancer
     }
 
     /// <summary>
-    /// The competent founder farming alone (US-013, F00.3): the best crop in season on as many acres as Care ≥ 1.0
-    /// allows (the well acres first), the kitchen garden, fruit trees in the yard, spare hours sold as day labour.
+    /// The competent founder (US-013, F00.3): the best crop in season on as many acres as Care ≥ 1.0 allows (the well acres
+    /// first, compost on tired soil), the kitchen garden, fruit trees in the yard, spare hours sold as day labour, and from the
+    /// end of the first Spring a resident hand with standing orders (ADR 0039 §10).
     /// Selling: a cart to the mandi when it beats the trader after its labour, a small minimum-price offer on the local
     /// market, the rest to the trader.
     /// </summary>
     public class FarmerBot : Bot
     {
-        private static readonly string[] BestCrop = { "potato", "lentils", "rice", "potato" }; // Spring, Summer, Monsoon, Winter
+        protected static readonly string[] BestCrop = { "potato", "lentils", "rice", "potato" }; // Spring, Summer, Monsoon, Winter
+
+        /// <summary>The hand's extra acres: wheat in Winter, so a bigger farm doesn't glut the valley with potato.</summary>
+        protected static readonly string[] HandCrop = { "potato", "lentils", "rice", "wheat" };
 
         public override string Name { get { return "competent"; } }
 
@@ -68,6 +73,7 @@ namespace Tools.Balancer
             if (sim.State.Farm.Founder.Health < Fixed.Parse("0.9")) Ok(sim, new BuyMedicine(t));
             Harvest(sim, t);
             if (!HoldsProduce(sim)) Sell(sim, t);
+            Employ(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
             Garden(sim, t);
             SplitLabour(sim, t);
@@ -97,13 +103,106 @@ namespace Tools.Balancer
             if (sim.State.Farm.Founder.AutoSubsistence) return; // feed the household first: day labour until the plan is back
             FarmDefs farm = sim.Config.Game.Farm;
             CropDef crop = farm.Crops[farm.IndexOfCrop(cropId)];
-            Fixed supply = FounderRules.LabourRate(sim) + FounderRules.MandiCut(sim);
+            Fixed supply = FounderRules.LabourRate(sim) + FounderRules.MandiCut(sim) + PeopleRules.HiredHours(sim);
             foreach (int tile in Acres)
             {
                 if (sim.State.Farm.CropOn(tile) != null) continue;
                 if (FarmRules.LabourDemand(sim) + crop.LabourPerAcrePerDay > supply) break;
-                if (!Ok(sim, new Sow(t, tile, crop.Id, SeedSource.Certified, "none"))) break;
+                if (!Ok(sim, new Sow(t, tile, crop.Id, SeedSource.Certified, Fertiliser(sim, tile)))) break;
             }
+        }
+
+        /// <summary>Compost on tired soil (fertility below 55): it keeps a fully cropped farm from running down.</summary>
+        protected static string Fertiliser(Simulation sim, int tile)
+        {
+            return sim.State.Land.Tiles[tile].Fertility < Fixed.FromInt(55) ? "compost" : "none";
+        }
+
+        /// <summary>The sell rule the bot's hands follow (the competent bot sells by itself, so its hands store).</summary>
+        protected virtual SellRule OrderSell { get { return SellRule.Store; } }
+
+        /// <summary>The applicant's expected hours a day: the middle of the shown skill range and the traits known so far.</summary>
+        protected static Fixed Expected(Simulation sim, Applicant a)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            PeopleRules.SkillRange(sim, a, out int lo, out int hi);
+            Fixed hours = p.Hand.HoursPerDay * (p.Hand.ProductivityBase + p.Hand.ProductivityPerSkill.MulRatio(lo + hi, 200));
+            hours = hours * p.Traits[a.Trait1].HoursFactor;
+            return a.SecondTraitKnown ? hours * p.Traits[a.Trait2].HoursFactor : hours;
+        }
+
+        /// <summary>
+        /// Hiring like a good player (ADR 0039 §10): a hand's hut at the end of the first Spring (a small moneylender loan if
+        /// cash is short), a market-wage post, interviews, an offer to the best applicant once two wait or one has waited a
+        /// day, renewal within the grace, and orders on the inherited acres each season.
+        /// </summary>
+        protected virtual void Employ(Simulation sim, long t)
+        {
+            PeopleState p = sim.State.People;
+            if (p == null) return;
+            long S = sim.Clock.SecondsPerSeason;
+            if (PeopleRules.HutCount(sim) == 0 && t >= S - ClockDef.SecondsPerDay / 2)
+            {
+                long cost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.People.HandHut].Value);
+                Borrow(sim, t, cost + 40_000 * Money.Coin);
+                Ok(sim, new BuildHandHut(t, 37)); // the labour quarters (ADR 0040)
+            }
+            if (p.Post == null && p.Hands.Count == 0 && PeopleRules.HutCount(sim) > 0 && !_posted) _posted = Ok(sim, new PostJob(t, PostAboveMarket));
+            if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0)
+            {
+                foreach (Applicant a in p.Applicants.ToArray()) if (!a.SecondTraitKnown) Ok(sim, new Interview(t, a.Id));
+                Applicant best = null;
+                foreach (Applicant a in p.Applicants) if (Acceptable(sim, a) && (best == null || Expected(sim, a) > Expected(sim, best))) best = a;
+                if (best != null && (p.Applicants.Count >= 2 || t - best.ArrivedAt >= ClockDef.SecondsPerDay))
+                {
+                    Borrow(sim, t, PeopleRules.RestOfSeason(sim, PeopleRules.AskedWage(sim, Fixed.FromInt(best.Skill), best.AboveMarket)) + 20_000 * Money.Coin);
+                    Ok(sim, new OfferContract(t, best.Id));
+                }
+            }
+            foreach (Hand h in p.Hands.ToArray())
+                if (h.Contract == ContractState.Lapsed && sim.State.Ledger.CanAfford(h.Wage)) Ok(sim, new RenewContract(t, h.Id));
+            int season = Season(sim, t);
+            if (p.Hands.Count > 0 && season != _orderSeason)
+            {
+                _orderSeason = season;
+                // Only as many acres as the hours tend at Care ≥ 1 (about an hour of carrying a day on a well acre).
+                FarmDefs farm = sim.Config.Game.Farm;
+                Fixed labour = farm.Crops[farm.IndexOfCrop(BestCrop[season])].LabourPerAcrePerDay;
+                Fixed left = FounderRules.LabourRate(sim) + PeopleRules.HiredHours(sim);
+                foreach (int tile in Acres)
+                {
+                    Hand h = p.Hands[0];
+                    Fixed need = System.Linq.Enumerable.Contains(sim.Config.Game.Land.WellTiles, tile) ? labour + Fixed.One : labour;
+                    if (need > left)
+                    {
+                        if (p.OrderFor(OrderTargetKind.Field, tile) != null) Ok(sim, new ClearStandingOrder(t, h.Id, OrderTargetKind.Field, tile));
+                        continue;
+                    }
+                    left -= need;
+                    bool extra = System.Array.IndexOf(Acres, tile) >= 2;
+                    Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(tile, extra ? HandCrop[season] : BestCrop[season], SeedSource.Certified, Fertiliser(sim, tile), OrderSell, OrderMinPrice(sim))));
+                }
+            }
+        }
+
+        private bool _posted;
+        private int _orderSeason = -1;
+
+        protected virtual bool PostAboveMarket { get { return false; } }
+
+        protected virtual bool Acceptable(Simulation sim, Applicant a) { return true; }
+
+        protected virtual Fixed OrderMinPrice(Simulation sim) { return Fixed.Zero; }
+
+        /// <summary>Borrows from the moneylender whatever cash falls short of <paramref name="need"/> (minimum 1,000 coins).</summary>
+        protected static void Borrow(Simulation sim, long t, long need)
+        {
+            long gap = need - sim.State.Ledger.Cash;
+            if (gap <= 0 || sim.State.Credit == null) return;
+            long amount = Math.Max(gap + Money.Coin * 100 - gap % (Money.Coin * 100), 1_000 * Money.Coin);
+            long room = CreditRules.Limit(sim, 0).Limit;
+            amount = Math.Min(amount, room - room % Money.Coin);
+            if (amount >= 1_000 * Money.Coin) Ok(sim, new TakeLoan(t, "moneylender", amount, 4));
         }
 
         protected static void Garden(Simulation sim, long t)
@@ -118,7 +217,7 @@ namespace Tools.Balancer
         /// <summary>Spare hours go to day labour, in steps of 25%.</summary>
         protected static void SplitLabour(Simulation sim, long t)
         {
-            Fixed rate = FounderRules.LabourRate(sim), need = FarmRules.LabourDemand(sim);
+            Fixed rate = FounderRules.LabourRate(sim), need = FarmRules.LabourDemand(sim) - PeopleRules.HiredHours(sim);
             int share = 0;
             while (share < 100 && rate.MulRatio(100 - share - 25, 100) >= need) share += 25;
             if (share != sim.State.Farm.Founder.DayLabourShare) Ok(sim, new SetLabourSplit(t, share));
@@ -356,6 +455,103 @@ namespace Tools.Balancer
             long grams = (Fixed.FromInt(sim.State.Ledger.Cash / 100) / price).MulRatio(1000, 1).RoundToLong() - 1000;
             grams = Math.Min(grams, Store.Fits(sim, seed));
             if (grams > 0) Ok(sim, new Buy(t, "seed_lentils", grams));
+        }
+    }
+}
+
+namespace Tools.Balancer
+{
+    using Sim.Core.People;
+
+    /// <summary>The founder farming alone, never hiring: the reference the economy model compares hiring against.</summary>
+    public sealed class SoloBot : FarmerBot
+    {
+        public override string Name { get { return "solo"; } }
+
+        protected override void Employ(Simulation sim, long t) { }
+    }
+
+    /// <summary>Stress bot (ADR 0039 §10): hires every free day labourer every day and sows to match. Day labour costs more than it earns.</summary>
+    public sealed class DayLabourSpammerBot : FarmerBot
+    {
+        public override string Name { get { return "day-labour-spammer"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            int free = sim.State.People == null ? 0 : PeopleRules.FreeNow(sim);
+            if (free > 0) Ok(sim, new HireDayLabourers(t, free));
+            base.Play(sim, t);
+        }
+    }
+
+    /// <summary>
+    /// Stress bot: churns hands to fish for skill. Posts above market, takes only applicants whose range starts at 55, and lets each
+    /// hand go late in the probation season (no severance) unless they turned out excellent.
+    /// </summary>
+    public sealed class HandChurnerBot : FarmerBot
+    {
+        public override string Name { get { return "hand-churner"; } }
+
+        protected override bool PostAboveMarket { get { return true; } }
+
+        protected override bool Acceptable(Simulation sim, Applicant a)
+        {
+            PeopleRules.SkillRange(sim, a, out int lo, out _);
+            return lo >= 55;
+        }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            PeopleState p = sim.State.People;
+            long S = sim.Clock.SecondsPerSeason;
+            if (p == null || t % S < S - 2 * 3600) return;
+            foreach (Hand h in p.Hands.ToArray())
+                if (h.SeasonsWorked == 0 && h.Skill < Fixed.FromInt(75)) Ok(sim, new DismissHand(t, h.Id));
+            if (p.Post == null && p.Hands.Count == 0) Ok(sim, new PostJob(t, true));
+        }
+    }
+
+    /// <summary>
+    /// Stress bot: games the lapse. Just before each close it turns cash into seed bought ahead so the renewal lapses, then renews
+    /// within the grace. Back pay on renewal (ADR 0039 §4) makes this save nothing.
+    /// </summary>
+    public sealed class LapseGamerBot : FarmerBot
+    {
+        public override string Name { get { return "lapse-gamer"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            PeopleState p = sim.State.People;
+            long S = sim.Clock.SecondsPerSeason;
+            if (p != null && p.Hands.Count > 0 && t % S >= S - 2 * 3600)
+            {
+                long keep = p.Hands[0].Wage / 2;
+                int g = sim.Config.Game.Market.IndexOf("compost");
+                Fixed price = MarketRules.InputPrice(sim, g);
+                long spend = sim.State.Ledger.Cash - keep;
+                long grams = spend <= 0 || price <= Fixed.Zero ? 0 : (Fixed.FromInt(spend * 10) / price).RoundToLong();
+                grams = Math.Min(grams, Store.Fits(sim, g));
+                if (grams > 0) Ok(sim, new Buy(t, "compost", grams));
+                return;
+            }
+            base.Play(sim, t);
+        }
+    }
+
+    /// <summary>
+    /// Floor check: the absentee player. Plays only in the first two hours of every three days and lets the hand's orders do the
+    /// rest, selling to the trader. Delegation must be viable (at least 0.80 × competent).
+    /// </summary>
+    public sealed class AbsenteeBot : FarmerBot
+    {
+        public override string Name { get { return "absentee"; } }
+
+        protected override SellRule OrderSell { get { return SellRule.Trader; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            if (t % (3 * ClockDef.SecondsPerDay) < 2 * 3600 || t < sim.Clock.SecondsPerSeason + 2 * ClockDef.SecondsPerDay) base.Play(sim, t);
         }
     }
 }

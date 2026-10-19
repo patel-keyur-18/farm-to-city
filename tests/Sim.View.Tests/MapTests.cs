@@ -23,8 +23,8 @@ namespace Sim.View.Tests
             Assert.That(map.Height, Is.EqualTo(6));
             Assert.That(map.Tiles.Count, Is.EqualTo(48));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Farm), Is.EqualTo(6));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(1));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(41));
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(2));
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(39));
             Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 20, 28 }));
             Assert.That(map.Tiles[21].Kind, Is.EqualTo(TileKind.Yard));
             Assert.That(map.Tiles[20].X, Is.EqualTo(4));
