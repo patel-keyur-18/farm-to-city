@@ -147,7 +147,7 @@ namespace Sim.Core.Tests
         {
             for (ulong seed = 1; seed <= 4; seed++)
             {
-                Simulation sim = NewFarm(seed: seed, game: TestContent.Game((f, j) => f == "finance.json" ? j.Replace("4", "16") : j));
+                Simulation sim = NewFarm(seed: seed, game: TestContent.Game((f, j) => f == "finance.json" ? j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 16") : j));
                 long end = 2 * sim.Clock.SecondsPerYear;
                 ulong k = 0;
                 foreach (long t in FarmBot.Rounds(0, end)) FarmBot.Play(sim, t, seed, k++);

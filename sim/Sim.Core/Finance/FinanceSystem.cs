@@ -49,6 +49,7 @@ namespace Sim.Core.Finance
         public void OnPass(Simulation sim, ItemClass pass)
         {
             if (pass == ItemClass.Daily) Accrual.ExpenseAll(sim, sim.AccrualPeriod);
+            if (pass == ItemClass.Hourly) CreditSystem.Hourly(sim);
             if (pass != ItemClass.Seasonal) return;
 
             Ledger ledger = sim.State.Ledger;
@@ -56,6 +57,7 @@ namespace Sim.Core.Finance
 
             // Close the season (accruals; no cash moves).
             Depreciate(sim, closing);
+            if (sim.State.Credit != null) CreditSystem.AccrueAll(sim, closing); // step 2: interest to the boundary, in the closing season
             SeasonReport report = Reporting.Build(sim, closing);
             CloseToRetainedEarnings(sim, closing);
             string failure = ledger.Reconcile();
@@ -68,8 +70,10 @@ namespace Sim.Core.Finance
             sim.State.Finance.SeasonOpeningCash = ledger.Cash;
 
             // Settle and pay upfront (these entries belong to the new season).
+            SettlementStats loans = sim.State.Credit == null ? null : CreditSystem.Settle(sim); // step 4: loan payments come first
             // ponytail: one obligation kind so far, living costs (step 5); contracts (spec 006) and rent register later.
             Farm.FounderSystem.SettleLiving(sim);
+            if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));
             ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);

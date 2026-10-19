@@ -58,6 +58,19 @@ namespace Sim.Core.Finance
         }
     }
 
+    /// <summary>The season's credit outcome (spec 005 §3.4 step 8): the score and what the loans paid.</summary>
+    public sealed class CreditSummary
+    {
+        public int Score { get; internal set; }
+        public int ScoreChange { get; internal set; }
+        public long PrincipalOutstanding { get; internal set; }
+        public long InterestPaid { get; internal set; }
+        public long PrincipalPaid { get; internal set; }
+
+        /// <summary>The part of payments due at this close that could not be paid.</summary>
+        public long Missed { get; internal set; }
+    }
+
     /// <summary>A closed season's P&amp;L, cash flow and net worth (spec 005 §3.4). Immutable.</summary>
     public sealed class SeasonReport
     {
@@ -75,6 +88,9 @@ namespace Sim.Core.Finance
         /// <summary>Home-grown food the household ate this season, and the garden's part (the household line's Why?, ADR 0032).</summary>
         public long HomeUse { get; internal set; }
         public long GardenHomeUse { get; internal set; }
+
+        /// <summary>Null when the game has no credit content.</summary>
+        public CreditSummary Credit { get; internal set; }
 
         public ReportLine Line(string key)
         {
@@ -103,6 +119,15 @@ namespace Sim.Core.Finance
             h.WriteLong(GardenHomeUse);
             h.WriteLong(NetWorth.Total);
             h.WriteLong(NetWorth.BookEquity);
+            if (Credit != null)
+            {
+                h.WriteInt(Credit.Score);
+                h.WriteInt(Credit.ScoreChange);
+                h.WriteLong(Credit.PrincipalOutstanding);
+                h.WriteLong(Credit.InterestPaid);
+                h.WriteLong(Credit.PrincipalPaid);
+                h.WriteLong(Credit.Missed);
+            }
         }
     }
 }

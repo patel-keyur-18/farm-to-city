@@ -47,6 +47,9 @@ namespace Tools.Balancer
 
         public int MandiTrips { get; private set; }
 
+        /// <summary>True when the bot keeps its produce in the store instead of selling it (a stress bot's shelter attempt).</summary>
+        protected virtual bool HoldsProduce(Simulation sim) { return false; }
+
         public override void Start(Simulation sim)
         {
             // Two mangoes and two guavas in the yard: cheap, long-lived, and in slots that shade no field.
@@ -64,7 +67,7 @@ namespace Tools.Balancer
             SprayOutbreaks(sim, t);
             if (sim.State.Farm.Founder.Health < Fixed.Parse("0.9")) Ok(sim, new BuyMedicine(t));
             Harvest(sim, t);
-            Sell(sim, t);
+            if (!HoldsProduce(sim)) Sell(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
             Garden(sim, t);
             SplitLabour(sim, t);
@@ -284,6 +287,75 @@ namespace Tools.Balancer
             }
             if (loads.Count > 0) Ok(sim, new GoToMandi(t, loads));
             base.Play(sim, t);
+        }
+    }
+}
+
+namespace Tools.Balancer
+{
+    using Sim.Core.Land;
+
+    /// <summary>
+    /// Stress bot (ADR 0016, 0038): leverage. Borrows the bank's whole limit against every parcel it buys, as soon as it can,
+    /// and the moneylender's limit when cash is short; repays on schedule. It tries to turn debt into growth.
+    /// </summary>
+    public sealed class LeverageBot : FarmerBot
+    {
+        public override string Name { get { return "leverage"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            if (sim.State.Credit == null) return;
+            foreach (Parcel p in sim.State.Land.Parcels)
+            {
+                if (p.Owned) continue;
+                string id = sim.Config.Game.Map.Parcels[p.Id].Id;
+                long price = LandRules.ParcelPrice(sim, p);
+                long limit = CreditRules.Limit(sim, 1, price).Limit;
+                long loan = Math.Min(price, limit);
+                loan -= loan % Money.Coin;
+                if (loan < 1_000_000 || !sim.State.Ledger.CanAfford(price - loan)) continue;
+                if (Ok(sim, new BuyParcel(t, id, new Financing("coop_bank", loan, 16)))) break;
+            }
+            if (sim.State.Ledger.Cash < 500_000)
+            {
+                long room = CreditRules.Limit(sim, 0).Limit;
+                if (room >= 100_000) Ok(sim, new TakeLoan(t, "moneylender", room, 4));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Stress bot (ADR 0016, 0038): strategic default. Borrows the moneylender's limit whenever it can and never repays by choice:
+    /// it holds its produce unsold and turns cash into seed before each close, so a default leaves the lender nothing. It tries to
+    /// live on debt that foreclosure writes off.
+    /// </summary>
+    public sealed class StrategicDefaulterBot : FarmerBot
+    {
+        public override string Name { get { return "strategic-defaulter"; } }
+
+        protected override bool HoldsProduce(Simulation sim)
+        {
+            return sim.State.Credit != null && sim.State.Credit.Loans.Exists(l => l.IsOpen);
+        }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            if (sim.State.Credit == null) return;
+            if (!sim.State.Credit.Loans.Exists(l => l.IsOpen))
+            {
+                long room = CreditRules.Limit(sim, 0).Limit;
+                if (room >= 100_000) Ok(sim, new TakeLoan(t, "moneylender", room, 1));
+            }
+            long toClose = sim.Clock.SecondsPerSeason - t % sim.Clock.SecondsPerSeason;
+            if (toClose > 3600 || !sim.State.Credit.Loans.Exists(l => l.IsOpen)) return;
+            int seed = sim.Config.Game.Market.IndexOf("seed_lentils");
+            Fixed price = MarketRules.InputPrice(sim, seed);
+            long grams = (Fixed.FromInt(sim.State.Ledger.Cash / 100) / price).MulRatio(1000, 1).RoundToLong() - 1000;
+            grams = Math.Min(grams, Store.Fits(sim, seed));
+            if (grams > 0) Ok(sim, new Buy(t, "seed_lentils", grams));
         }
     }
 }

@@ -25,8 +25,10 @@ namespace Sim.Content
             MarketDefs market = LoadMarketDefs(read("goods.json"), read("region.json"), read("market.json"));
             FarmDefs farm = LoadFarmDefs(read("crops.json"), read("farming.json"), read("trees.json"), read("founder.json"), market, weather);
             StartDef start = LoadStart(read("start.json"), map, buildings, market, farm, land);
-            LedgerDef ledger = LoadFinance(read("finance.json"));
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm);
+            LedgerDef ledger = LoadFinance(read("finance.json"), out CreditScoreDef scoreDef);
+            // Credit is optional content (ADR 0038): a finance.json without a "credit" block means no lenders.json is read.
+            CreditDefs credit = scoreDef == null ? null : new CreditDefs(scoreDef, LoadLenders(read("lenders.json"), scoreDef));
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)
@@ -298,17 +300,91 @@ namespace Sim.Content
             return new StartDef(inherited, placed, Money(Required(o, root, "startingCash"), root + ".startingCash"), store, ages);
         }
 
-        private static LedgerDef LoadFinance(string json)
+        private static LedgerDef LoadFinance(string json, out CreditScoreDef score)
         {
             const string root = "finance";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "ledger");
+            OnlyFields(o, root, "ledger", "credit");
             string lp = root + ".ledger";
             JObject l = Object(Required(o, root, "ledger"), lp);
             OnlyFields(l, lp, "retainSeasons");
             int retain = Int(Required(l, lp, "retainSeasons"), lp + ".retainSeasons");
             Range(retain, 1, 16, lp + ".retainSeasons");
+
+            score = null;
+            if (o["credit"] != null)
+            {
+                string cp = root + ".credit";
+                JObject c = Object(o["credit"], cp);
+                OnlyFields(c, cp, "min", "max", "startScore", "fullScore", "onTimeGain", "cleanSeasonGain", "missedPenalty",
+                    "defaultPenalty", "restructurePenalty", "foreclosureScore", "finalNoticeLiveHours");
+                int I(string f) { return Int(Required(c, cp, f), Join(cp, f)); }
+                int min = I("min"), max = I("max");
+                if (min >= max) throw new ContentException(Join(cp, "min"), "must be below max");
+                int InScore(string f) { int v = I(f); Range(v, min, max, Join(cp, f)); return v; }
+                int Gain(string f, int hi) { int v = I(f); Range(v, 0, hi, Join(cp, f)); return v; }
+                int start = InScore("startScore"), full = InScore("fullScore"), foreclosure = InScore("foreclosureScore");
+                int onTime = Gain("onTimeGain", 100), clean = Gain("cleanSeasonGain", 100);
+                int missed = Gain("missedPenalty", 600), dflt = Gain("defaultPenalty", 600), restructure = Gain("restructurePenalty", 600);
+                int notice = I("finalNoticeLiveHours");
+                Range(notice, 1, 168, Join(cp, "finalNoticeLiveHours"));
+                score = new CreditScoreDef(min, max, start, full, onTime, clean, missed, dflt, restructure, foreclosure, notice);
+            }
             return new LedgerDef(retain);
+        }
+
+        private static List<LenderDef> LoadLenders(string json, CreditScoreDef score)
+        {
+            const string root = "lenders";
+            JObject o = Object(Parse(json, root), root);
+            OnlyFields(o, root, "lenders");
+            List<JToken> tokens = NonEmptyArray(o, root, "lenders");
+            var lenders = new List<LenderDef>();
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                string p = Index(root + ".lenders", i);
+                JObject d = Object(tokens[i], p);
+                OnlyFields(d, p, "id", "nameKey", "baseRate", "rateSlopePer100", "refScore", "penaltyRate", "schedule", "minTerm", "maxTerm",
+                    "minAmount", "secured", "baseLimit", "collateralLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
+                    "restructureExtraSeasons", "eraCaps");
+                string id = UniqueId(d, p, lenders.ConvertAll(x => x.Id));
+                if (id != LenderDef.MoneylenderId && id != LenderDef.BankId)
+                    throw new ContentException(Join(p, "id"), "must be '" + LenderDef.MoneylenderId + "' or '" + LenderDef.BankId + "'");
+
+                string sched = String(Required(d, p, "schedule"), Join(p, "schedule"));
+                LoanSchedule schedule = sched == "bullet" ? LoanSchedule.Bullet : sched == "equalPrincipal" ? LoanSchedule.EqualPrincipal
+                    : throw new ContentException(Join(p, "schedule"), "expected bullet or equalPrincipal");
+                int minTerm = Int(Required(d, p, "minTerm"), Join(p, "minTerm")), maxTerm = Int(Required(d, p, "maxTerm"), Join(p, "maxTerm"));
+                Range(minTerm, 1, 40, Join(p, "minTerm"));
+                Range(maxTerm, 1, 40, Join(p, "maxTerm"));
+                if (minTerm > maxTerm) throw new ContentException(Join(p, "minTerm"), "must not be above maxTerm");
+                int refScore = Int(Required(d, p, "refScore"), Join(p, "refScore"));
+                Range(refScore, score.Min, score.Max, Join(p, "refScore"));
+                int minScore = Int(Required(d, p, "minScore"), Join(p, "minScore"));
+                Range(minScore, score.Min, score.Max, Join(p, "minScore"));
+                int grace = Int(Required(d, p, "graceCloses"), Join(p, "graceCloses"));
+                Range(grace, 1, 8, Join(p, "graceCloses"));
+                int extra = Int(Required(d, p, "restructureExtraSeasons"), Join(p, "restructureExtraSeasons"));
+                Range(extra, 0, 12, Join(p, "restructureExtraSeasons"));
+                long minAmount = Money(Required(d, p, "minAmount"), Join(p, "minAmount"));
+                if (minAmount < Sim.Core.Finance.Money.Coin) throw new ContentException(Join(p, "minAmount"), "must be at least 1 coin");
+
+                string ep = Join(p, "eraCaps");
+                JObject caps = Object(Required(d, p, "eraCaps"), ep);
+                var eraCaps = new Dictionary<string, long>();
+                foreach (JProperty prop in caps.Properties()) eraCaps[prop.Name] = Money(prop.Value, Join(ep, prop.Name));
+                if (!eraCaps.ContainsKey(LenderDef.HomesteadEra)) throw new ContentException(ep, "missing the '" + LenderDef.HomesteadEra + "' era cap");
+
+                lenders.Add(new LenderDef(id, String(Required(d, p, "nameKey"), Join(p, "nameKey")),
+                    Bounded(d, p, "baseRate", "0", "0.25"), Bounded(d, p, "rateSlopePer100", "0", "0.05"), refScore,
+                    Bounded(d, p, "penaltyRate", "0", "0.25"), schedule, minTerm, maxTerm, minAmount,
+                    Bool(Required(d, p, "secured"), Join(p, "secured")), Money(Required(d, p, "baseLimit"), Join(p, "baseLimit")),
+                    Bounded(d, p, "collateralLtv", "0", "1"), Bounded(d, p, "incomeMultiple", "0", "4"), minScore,
+                    Bool(Required(d, p, "scoreScaledLimit"), Join(p, "scoreScaledLimit")), grace, extra, eraCaps));
+            }
+            if (lenders.Count != 2 || lenders[0].Id != LenderDef.MoneylenderId || lenders[1].Id != LenderDef.BankId)
+                throw new ContentException(root + ".lenders", "expected the moneylender, then the cooperative bank");
+            return lenders;
         }
 
         // ---- helpers ----

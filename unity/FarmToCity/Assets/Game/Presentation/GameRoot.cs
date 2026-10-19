@@ -1,33 +1,64 @@
 using System;
+using System.Collections.Generic;
+using Game.Presentation.Art;
+using Game.Presentation.Map;
+using Game.Presentation.Motion;
+using Game.Presentation.Ui;
 using Game.Services;
 using Sim.Content;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
-using Sim.Core.Time;
+using Sim.Core.Events;
+using Sim.View.Content;
+using Sim.View.Text;
+using Sim.View.Views;
 using UnityEngine;
 using UnityEngine.UIElements;
+using ViewCollect = Sim.View.Views.CollectAll;
 
 namespace Game.Presentation
 {
     /// <summary>
-    /// The composition root (ADR 0017), like a Spring Boot application class: it loads content, builds the
-    /// simulation and the services, and wires the UI. Nothing is placed in the scene by hand: Unity calls
-    /// <see cref="Boot"/> after the bootstrap scene loads, and everything else is created here in code.
+    /// The composition root (ADR 0017), like a Spring Boot application class: it loads content, builds the simulation and the
+    /// view layer, and wires the map, the HUD and the sheets. Nothing is placed in the scene by hand: Unity calls
+    /// <see cref="Boot"/> after the bootstrap scene loads, and everything else is created here in code. The presentation only
+    /// reads view models and sends ordinary commands (spec 008 §3.1).
     /// </summary>
     public sealed class GameRoot : MonoBehaviour
     {
         public Simulation Sim { get; private set; }
         public IEntitlementService Entitlements { get; } = new AlwaysUnlockedEntitlementService();
 
+        private SimConfig _config;
+        private StringTable _strings;
+        private UiDef _ui;
+        private Formatter _fmt;
+        private NumberFormat _format;
+        private ViewContext _ctx;
+
+        private Camera _camera;
+        private Tweens _tweens;
+        private MapPresenter _map;
+        private MapInput _input;
+        private HudPresenter _hud;
+        private SheetPresenter _sheet;
+        private Fx _fx;
+        private UIDocument _document;
+        private VisualElement _safeRoot, _toast;
+        private Rect _lastSafe;
+        private Label _toastText;
+
         private long _lastSyncWall;
-        private Label _date, _time, _weather, _checks;
-        private VisualElement _card;
-        private Phase0.Spike _spike;
-        private GameObject _check;            // the Phase 0 check running now (spike or style check), one at a time
-        private Vector3 _cameraPosition;
-        private float _cameraSize;
-        private Color _cameraBackground;
+        private MapVm _mapVm;
+        private Hit _selected = Hit.None;
+        private SheetRequest? _open;
+        private string _fertiliser = "none";
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        private DevTools.DevPanel _dev;
+        private GameState _snapshot;
+#endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
@@ -41,148 +72,309 @@ namespace Game.Presentation
 
         private void Awake()
         {
+            Application.targetFrameRate = 60;
             WeatherSet weather = ContentLoader.LoadWeather(ContentSource.Read("weather.json"));
             GameDefs game = ContentLoader.LoadGame(ContentSource.Read, weather);
-            var config = new SimConfig(ContentLoader.LoadClock(ContentSource.Read("clock.json")), weather, game: game);
+            bool dev = Debug.isDebugBuild || Application.isEditor; // development builds and the Editor only (ADR 0038)
+            _config = new SimConfig(ContentLoader.LoadClock(ContentSource.Read("clock.json")), weather, new SimOptions { DevCommandsEnabled = dev }, game: game);
+            _strings = StringTable.Load(ContentSource.Read("strings/en.json"));
+            _strings.ThrowOnMissing = false; // a gap shows as ⟦key⟧ instead of crashing the player
+            _ui = UiLoader.Load(ContentSource.Read("ui.json"));
+            _format = Formatter.FormatForRegion(RegionCode());
+            _fmt = new Formatter(_strings, _format);
 
             // ponytail: no saves yet (spec 007, Sprint 6), so every launch is a new game seeded from the clock.
             _lastSyncWall = WallNow();
-            Sim = Simulation.NewGame(config, new NewGame((ulong)DateTime.UtcNow.Ticks, _lastSyncWall,
-                (long)DateTime.Now.TimeOfDay.TotalSeconds));
-            BuildHud();
-            Refresh();
+            Sim = Simulation.NewGame(_config, new NewGame((ulong)DateTime.UtcNow.Ticks, _lastSyncWall, (long)DateTime.Now.TimeOfDay.TotalSeconds));
+            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            BuildScene();
+            Refresh(false);
         }
 
-        private void Update()
+        private static string RegionCode()
         {
-            // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
-            long now = WallNow();
-            if (now == _lastSyncWall) return;
-            _lastSyncWall = now;
-            Sim.Execute(new Sync(now));
-            Sim.DrainEvents(); // the hello build shows state only; later HUDs react to the events
-            Refresh();
-            if (_spike != null) _checks.text = _spike.Done ? _spike.Report : _spike.Status;
+            try { return System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName; }
+            catch (Exception) { return ""; }
         }
 
-        private void BuildHud()
+        // ---- building the scene (all code, ADR 0017) ----
+
+        private void BuildScene()
         {
+            _camera = Camera.main;
+            _camera.orthographic = true;
+            _camera.backgroundColor = Art.Painter.Hex(0x86CDD8);
+
+            _tweens = Tweens.Create(transform);
+
             var settings = ScriptableObject.CreateInstance<PanelSettings>();
             settings.themeStyleSheet = Resources.Load<ThemeStyleSheet>("UI/DefaultTheme");
             settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             settings.referenceResolution = new Vector2Int(1920, 1080);
             settings.match = 0.5f;
+            _document = gameObject.AddComponent<UIDocument>();
+            _document.panelSettings = settings;
+            VisualElement root = _document.rootVisualElement;
+            root.pickingMode = PickingMode.Ignore;
+            UiKit.SetFont(root, UiKit.Body);
 
-            var document = gameObject.AddComponent<UIDocument>();
-            document.panelSettings = settings;
-            VisualElement root = document.rootVisualElement;
-            root.style.alignItems = Align.Center;
-            // An explicit built-in font, inherited by every label, so text never depends on the theme's default.
-            root.style.unityFontDefinition = FontDefinition.FromFont(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+            // Everything sits inside the device's safe area (notch, home indicator).
+            _safeRoot = new VisualElement { pickingMode = PickingMode.Ignore };
+            _safeRoot.style.position = Position.Absolute;
+            _safeRoot.style.left = 0; _safeRoot.style.right = 0; _safeRoot.style.top = 0; _safeRoot.style.bottom = 0;
+            root.Add(_safeRoot);
 
-            var card = new VisualElement();
-            card.style.marginTop = 48;
-            card.style.paddingLeft = card.style.paddingRight = 48;
-            card.style.paddingTop = card.style.paddingBottom = 24;
-            card.style.backgroundColor = new Color(0.98f, 0.95f, 0.88f, 0.92f);
-            card.style.borderTopLeftRadius = card.style.borderTopRightRadius =
-                card.style.borderBottomLeftRadius = card.style.borderBottomRightRadius = 24;
-            card.style.alignItems = Align.Center;
-            root.Add(card);
+            _mapVm = MapView.Build(_ctx);
+            _map = MapPresenter.Create(transform, _tweens, _ui);
+            _map.Refresh(_mapVm, false);
+            _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
+            _input.Focus(3.5f, 2.5f); // the inherited parcels
 
-            _date = AddLabel(card, 44);
-            _time = AddLabel(card, 96);
-            _weather = AddLabel(card, 44);
-            _card = card;
+            _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
+            _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll };
+            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
+            BuildToast();
 
-            // Phase 0 checks (US-021, US-023, ADR 0034 §8): throwaway, removed after the gate.
-            var bar = new VisualElement();
-            bar.style.flexDirection = FlexDirection.Row;
-            bar.style.marginTop = 24;
-            root.Add(bar);
-            AddButton(bar, "Spike", () => StartSpike(false));
-            AddButton(bar, "Heat run (5 min)", () => StartSpike(true));
-            AddButton(bar, "Golden replays", RunGoldens);
-            AddButton(bar, "Style check", () => { StopCheck(); _card.style.display = DisplayStyle.None; _check = Phase0.StyleCheck.Start().gameObject; _checks.text = ""; });
-            _checks = AddLabel(root, 30);
-            _checks.style.whiteSpace = WhiteSpace.Normal;
-            _checks.style.backgroundColor = new Color(0.98f, 0.95f, 0.88f, 0.92f);
-            _checks.style.paddingLeft = _checks.style.paddingRight = 24;
-            _checks.style.marginTop = 16;
-        }
-
-        private static void AddButton(VisualElement parent, string text, System.Action onClick)
-        {
-            var b = new Button(onClick) { text = text };
-            b.style.fontSize = 36;
-            b.style.marginLeft = b.style.marginRight = 12;
-            b.style.paddingLeft = b.style.paddingRight = 24;
-            parent.Add(b);
-        }
-
-        private void StartSpike(bool heat)
-        {
-            StopCheck();
-            _card.style.display = DisplayStyle.None;
-            _spike = Phase0.Spike.Start(heat);
-            _check = _spike.gameObject;
-        }
-
-        /// <summary>Stops whichever Phase 0 check is running and puts the camera back, so checks never overlap.</summary>
-        private void StopCheck()
-        {
-            Camera cam = Camera.main;
-            if (_check == null) { _cameraPosition = cam.transform.position; _cameraSize = cam.orthographicSize; _cameraBackground = cam.backgroundColor; }
-            else
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
             {
-                Destroy(_check);
-                cam.transform.position = _cameraPosition;
-                cam.orthographicSize = _cameraSize;
-                cam.backgroundColor = _cameraBackground;
-            }
-            _check = null;
-            _spike = null;
+                Sim = () => Sim,
+                Advance = (s, mode) => { Sim.Execute(new DebugAdvance(s, mode)); AfterCommands(); },
+                Snapshot = () => _snapshot = Sim.State.Clone(),
+                Restore = RestoreSnapshot,
+                ToggleFormat = () => { _format = _format == NumberFormat.Indian ? NumberFormat.Western : NumberFormat.Indian; _fmt = new Formatter(_strings, _format); _ctx = new ViewContext(Sim, _strings, _fmt, _ui); _hud = RebuildHud(); Refresh(false); },
+                ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
+                Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
+                Visibility = v => _hud.SetVisible(v),
+            });
+            _hud.OnTimeHeld = () => _dev.Open();
+#endif
         }
 
-        private void RunGoldens()
+        private HudPresenter RebuildHud()
         {
-            StopCheck();
-            _card.style.display = DisplayStyle.Flex;
-            var sb = new System.Text.StringBuilder("Golden replays (on frozen content)\n");
-            bool all = true;
-            foreach (Phase0.GoldenCheck.Row r in Phase0.GoldenCheck.RunAll())
+            // The formatter changed: a new HUD (the old layer is dropped with the safe root's children it owned).
+            _safeRoot.Clear();
+            _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
+            var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll };
+            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
+            BuildToast();
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
             {
-                all &= r.Pass;
-                sb.Append(r.Name).Append(": ").Append(r.Pass ? "PASS" : "FAIL").Append("  ").Append(r.Actual)
-                  .Append(r.Pass ? "" : " (expected " + r.Expected + ")").Append("  ").Append(r.Milliseconds.ToString("0")).Append(" ms\n");
+                Sim = () => Sim, Advance = (s, mode) => { Sim.Execute(new DebugAdvance(s, mode)); AfterCommands(); }, Snapshot = () => _snapshot = Sim.State.Clone(),
+                Restore = RestoreSnapshot,
+                ToggleFormat = () => { _format = _format == NumberFormat.Indian ? NumberFormat.Western : NumberFormat.Indian; _fmt = new Formatter(_strings, _format); _ctx = new ViewContext(Sim, _strings, _fmt, _ui); _hud = RebuildHud(); Refresh(false); },
+                ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
+                Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
+                Visibility = v => _hud.SetVisible(v),
+            });
+            hud.OnTimeHeld = () => _dev.Open();
+#endif
+            return hud;
+        }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        private void RestoreSnapshot()
+        {
+            if (_snapshot == null) return;
+            Sim = Simulation.FromState(_config, _snapshot.Clone());
+            _lastSyncWall = WallNow(); // the time between is not an away advance: the clock re-anchors
+            Sim.State.Clock.Reanchor(_lastSyncWall);
+            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            _sheet.Close();
+            Refresh(false);
+        }
+#endif
+
+        private void BuildToast()
+        {
+            _toast = UiKit.Panel(26);
+            _toast.pickingMode = PickingMode.Ignore;
+            _toast.style.position = Position.Absolute;
+            _toast.style.top = 150;
+            _toast.style.alignSelf = Align.Center;
+            _toast.style.left = Length.Percent(25); _toast.style.right = Length.Percent(25);
+            UiKit.Padding(_toast, 14, 26);
+            _toastText = UiKit.Text("", 36, UiKit.Ink, UiKit.Heading);
+            _toastText.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _toast.Add(_toastText);
+            _toast.style.display = DisplayStyle.None;
+            _safeRoot.Add(_toast);
+        }
+
+        private void Toast(string text)
+        {
+            _toastText.text = text;
+            _toast.style.display = DisplayStyle.Flex;
+            _tweens.Run(_toast, 2.2f, Ease.Linear, k => _toast.style.opacity = k < 0.8f ? 1f : 1f - (k - 0.8f) / 0.2f, () => _toast.style.display = DisplayStyle.None);
+        }
+
+        // ---- the loop ----
+
+        private void Update()
+        {
+            ApplySafeArea();
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (_dev != null && _dev.IsOpen) { return; }
+#endif
+            // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
+            long now = WallNow();
+            if (now == _lastSyncWall) return;
+            _lastSyncWall = now;
+            Sim.Execute(new Sync(now));
+            AfterCommands();
+        }
+
+        private void ApplySafeArea()
+        {
+            Rect safe = Screen.safeArea;
+            if (safe == _lastSafe || _safeRoot.panel == null) return;
+            _lastSafe = safe;
+            float k = _safeRoot.panel.scaledPixelsPerPoint;
+            _safeRoot.style.left = safe.xMin / k;
+            _safeRoot.style.right = (Screen.width - safe.xMax) / k;
+            _safeRoot.style.top = (Screen.height - safe.yMax) / k;
+            _safeRoot.style.bottom = safe.yMin / k;
+        }
+
+        /// <summary>After any command or Sync: play the events' motion, then redraw from fresh view models.</summary>
+        private void AfterCommands()
+        {
+            HandleEvents(Sim.DrainEvents());
+            Refresh(true);
+        }
+
+        private void Refresh(bool animate)
+        {
+            _mapVm = MapView.Build(_ctx);
+            _map.Refresh(_mapVm, animate);
+            _hud.Refresh(HudView.Build(_ctx), animate);
+            if (_open.HasValue && _sheet.IsOpen) ShowCurrentSheet(refreshOnly: true);
+        }
+
+        // ---- events drive motion (spec 008 §3.12) ----
+
+        private void HandleEvents(List<SimEvent> events)
+        {
+            bool coins = false, produce = false;
+            foreach (SimEvent e in events)
+            {
+                switch (e)
+                {
+                    case CropHarvested h:
+                        produce |= FlyProduce(SpriteBank.ProduceColour(h.CropId), _map.WorldOf(new Hit(HitKind.Tile, h.TileId)), 5);
+                        break;
+                    case GardenPicked g:
+                        produce |= FlyProduce(SpriteBank.ProduceColour(g.GoodId), _map.WorldOf(new Hit(HitKind.Bed, g.BedId)), 4);
+                        break;
+                    case FruitPicked f:
+                        produce |= FlyProduce(SpriteBank.ProduceColour(f.TreeId), _map.WorldOf(new Hit(HitKind.Slot, f.SlotId)), 4);
+                        break;
+                    case SoldToTrader _:
+                    case MarketSales _:
+                    case MandiTripReturned _:
+                    case DayLabourPaid _:
+                        coins = true;
+                        break;
+                    case PestWarning p:
+                        Toast(_strings.Get("toast.pests"));
+                        _map.Shake(p.TileId);
+                        break;
+                    case FounderSick _: Toast(_strings.Get("toast.sick")); break;
+                }
             }
-            sb.Append(all ? "ALL PASS" : "SOME FAILED").Append("\n72 h away advance: ").Append(Phase0.GoldenCheck.Advance72hMilliseconds().ToString("0.0")).Append(" ms (budget 2,000)");
-            _checks.text = sb.ToString();
-            Debug.Log(_checks.text);
+            if (coins)
+            {
+                Vector2 from = new Vector2(Screen.width * 0.5f, Screen.height * 0.45f);
+                _fx.Fly(SpriteBank.Coin, from, _hud.ScreenCentre(_hud.CashTarget), 4, _hud.BounceCash);
+            }
         }
 
-        private static Label AddLabel(VisualElement parent, int size)
+        private bool FlyProduce(Color colour, Vector2 world, int count)
         {
-            var label = new Label();
-            label.style.fontSize = size;
-            label.style.color = new Color(0.27f, 0.2f, 0.12f);
-            parent.Add(label);
-            return label;
+            Vector2 from = _input.WorldToScreen(world);
+            _fx.Fly(SpriteBank.Produce(colour), from, _hud.ScreenCentre(_hud.StoreTarget), count, _hud.BounceStore);
+            return true;
         }
 
-        private void Refresh()
+        // ---- taps, sheets and commands ----
+
+        private void OnTap(Vector2 screen)
         {
-            CalendarDate d = Calendar.From(Sim.State.Clock.SimTime, Sim.Clock);
-            // ponytail: plain English until the string tables and the locale formatter arrive (spec 008).
-            _date.text = "Year " + d.Year + " · " + d.Season + " · Day " + d.DayOfSeason;
-            _time.text = d.Hour.ToString("00") + ":" + d.Minute.ToString("00");
-            _weather.text = Pretty(Sim.CurrentWeather.Id);
+            if (_sheet.IsOpen) { _sheet.Close(); return; }
+            Hit hit = _map.Pick(_input.ScreenToWorld(screen));
+            if (hit.Kind == HitKind.None) return;
+            _selected = hit;
+            _map.Select(hit, _mapVm);
+            _map.Bounce(hit);
+            switch (hit.Kind)
+            {
+                case HitKind.Hut: OpenSheet(new SheetRequest("Store", 0)); break;
+                case HitKind.Slot: OpenSheet(new SheetRequest("Slot", hit.Id)); break;
+                case HitKind.Bed: OpenSheet(new SheetRequest("Bed", hit.Id)); break;
+                default: OpenSheet(new SheetRequest("Tile", hit.Id)); break;
+            }
         }
 
-        private static string Pretty(string id)
+        private void OpenSheet(SheetRequest request)
         {
-            string s = id.Replace('_', ' ');
-            return char.ToUpperInvariant(s[0]) + s.Substring(1);
+            _open = request;
+            ShowCurrentSheet(refreshOnly: false);
+            if (_selected.Kind != HitKind.None) _input.Reveal(_map.WorldOf(_selected));
         }
+
+        private void ShowCurrentSheet(bool refreshOnly)
+        {
+            SheetRequest r = _open.Value;
+            switch (r.Kind)
+            {
+                case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
+                case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
+                case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
+                case "Store": _sheet.Show(StoreSheet.Build(_ctx), refreshOnly); break;
+                case "Sow": ShowSow((int)r.Id, refreshOnly); break;
+            }
+        }
+
+        private void ShowSow(int tile, bool refresh = false)
+        {
+            _open = new SheetRequest("Sow", tile);
+            _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser), refresh);
+        }
+
+        private void OnSheetClosed()
+        {
+            _open = null;
+            _selected = Hit.None;
+            _map.ClearSelection();
+            _fertiliser = "none";
+        }
+
+        private void OnSheetAction(ActionVm action)
+        {
+            if (action.Opens.HasValue) { OpenSheet(action.Opens.Value); return; }
+            Command command = action.Create(Sim.State.Clock.SimTime);
+            CommandResult result = Sim.Execute(command);
+            if (!result.Accepted)
+            {
+                Toast(_ctx.Reject(result.Reason));
+                return;
+            }
+            AfterCommands();
+            // After the work is done the sheet closes (Hay Day style); the store stays open for selling several goods, and a spray
+            // or a loan screen keeps its sheet.
+            if (_open.HasValue && _open.Value.Kind != "Store" && !(command is Spray)) _sheet.Close();
+        }
+
+        private void CollectAll()
+        {
+            int done = 0;
+            foreach (Command c in CollectAllCommands()) if (Sim.Execute(c).Accepted) done++;
+            if (done == 0) Toast(_ctx.Reject(RejectReason.StoreFull));
+            AfterCommands();
+        }
+
+        private List<Command> CollectAllCommands() { return ViewCollect.Commands(Sim, Sim.State.Clock.SimTime); }
     }
 }

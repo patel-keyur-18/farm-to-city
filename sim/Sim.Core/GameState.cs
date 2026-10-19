@@ -44,6 +44,9 @@ namespace Sim.Core
         /// <summary>Crops, the garden, trees and the founder (spec 003); null in a time-and-weather-only sim.</summary>
         public FarmState Farm { get; internal set; }
 
+        /// <summary>The credit score and loans (spec 005); null when the content has no lenders (ADR 0038).</summary>
+        public CreditState Credit { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -66,6 +69,7 @@ namespace Sim.Core
             if (Finance != null) Finance.WriteTo(h);
             if (Market != null) Market.WriteTo(h);
             if (Farm != null) Farm.WriteTo(h);
+            if (Credit != null) Credit.WriteTo(h);
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>
@@ -77,7 +81,7 @@ namespace Sim.Core
         }
 
         /// <summary>A deep copy (in-memory round-trip; saving to disk is spec 007).</summary>
-        public GameState Clone()
+        public GameState Clone(bool withCommandLog = true)
         {
             return new GameState
             {
@@ -91,7 +95,8 @@ namespace Sim.Core
                 Finance = Finance?.Clone(),
                 Market = Market?.Clone(),
                 Farm = Farm?.Clone(),
-                CommandLog = CommandLog.Clone(),
+                Credit = Credit?.Clone(),
+                CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };
         }
     }

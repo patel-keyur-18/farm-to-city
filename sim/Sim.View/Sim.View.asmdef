@@ -1,0 +1,19 @@
+{
+    "name": "Sim.View",
+    "rootNamespace": "Sim.View",
+    "references": [
+        "Sim.Core",
+        "Sim.Content"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

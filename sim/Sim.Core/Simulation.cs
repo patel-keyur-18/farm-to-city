@@ -77,6 +77,7 @@ namespace Sim.Core
                 LandSystem.Initialise(sim);
                 FarmSystem.Initialise(sim);
                 FinanceSystem.Initialise(sim);
+                if (config.Game.Credit != null) state.Credit = new CreditState { Score = config.Game.Credit.Score.StartScore, NoticeAnnounced = true };
                 FounderRules.PayFirstSeason(sim);
             }
 
@@ -88,6 +89,16 @@ namespace Sim.Core
                 sim.SchedulePass(pass, (t / period + 1) * period);
             }
             return sim;
+        }
+
+        /// <summary>
+        /// A simulation continuing from a saved state (the developer panel's snapshot and restore, and the save system of spec 007).
+        /// The state is used as given: pass a clone to keep the original.
+        /// </summary>
+        public static Simulation FromState(SimConfig config, GameState state)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            return new Simulation(config, state);
         }
 
         /// <summary>
@@ -116,6 +127,17 @@ namespace Sim.Core
             CommandResult result = command.Apply(this);
             if (result.Accepted) State.CommandLog.Add(at, command);
             return result;
+        }
+
+        /// <summary>
+        /// What <see cref="Execute"/> would say about a command right now, without changing anything: it runs on a copy of the
+        /// state. The view layer uses it to grey out an action and show why (spec 008 §3.6, "a rejected action"). Never logged.
+        /// </summary>
+        public CommandResult Preview(Command command)
+        {
+            if (command == null) throw new ArgumentNullException(nameof(command));
+            var fork = new Simulation(Config, State.Clone(withCommandLog: false));
+            return command.Apply(fork);
         }
 
         /// <summary>Shorthand for <c>Execute(new AdvanceTo(target, mode))</c>.</summary>
@@ -231,6 +253,7 @@ namespace Sim.Core
             {
                 State.Clock.IsAway = false;
             }
+            CreditSystem.AnnounceAfterAway(this); // a default reached while away is shown again on return (ADR 0038)
             Emit(new AwayAdvanceCompleted(State.Clock.SimTime, from, State.Clock.SimTime, requested, applied, capped));
             _awayReport.Clear();
             for (int i = firstEvent; i < _events.Count; i++) _awayReport.Add(_events[i]);

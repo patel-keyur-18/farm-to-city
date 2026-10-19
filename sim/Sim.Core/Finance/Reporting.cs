@@ -33,7 +33,7 @@ namespace Sim.Core.Finance
                 TreesAtBook = l.Balance(Account.Trees),
                 StoredGoods = Market.Store.Value(sim),
                 LoanPrincipal = -(l.Balance(Account.MoneylenderLoans) + l.Balance(Account.BankLoans)),
-                InterestPayable = -l.Balance(Account.InterestPayable),
+                InterestPayable = -l.Balance(Account.InterestPayable) + CreditRules.AccruedUnposted(sim),
                 BookEquity = l.TotalOf(AccountGroup.Assets) - l.TotalOf(AccountGroup.Liabilities),
             };
         }

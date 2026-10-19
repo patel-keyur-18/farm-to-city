@@ -1,10 +1,10 @@
 # 005. Ledger and credit
 
-- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18); inputs in store added by ADR 0034 (2026-10-18)
+- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18); inputs in store added by ADR 0034 (2026-10-18); credit rules amended by ADR 0038 (2026-10-18, Sprint 4 planning review)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, credit, personal bankruptcy, never stuck, liquidity); Time and world simulation (settlement cadence); Businesses (books); Learning layer (cash ledger, balance sheet); Balancing and testing (exact ledgers, never stuck, recoverable bankruptcy); Data model (`LedgerEntry`, `Loan`, `LenderDef`, `StartDef`)
-- Related ADRs: 0034 (1200 Inputs in store, indexed coin amounts), 0032 (report lines, farm profit), 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
+- Related ADRs: 0038 (credit loopholes closed, lender numbers), 0034 (1200 Inputs in store, indexed coin amounts), 0032 (report lines, farm profit), 0030 (inherited farm, starting cash 20,000), 0031 (new expense accounts), 0028 (land-purchase loans, Hamlet pace), 0008 (coin scale, payment timing, accrual), 0009 (credit from day one, foreclosure, never stuck), 0002 (away rules), 0017 (Phase 1 scope)
 - Depends on specs: 001 (scheduler, passes). Uses 002 (land prices, protected parcel, seizure). Spec 003 (living costs, inputs, trees, day labour), 004 (sales, stored goods value) and 006 (wages) post through this ledger.
 
 ## 1. Goal
@@ -96,7 +96,7 @@ At each season boundary, the seasonal pass of the finance system (system order B
 5. **Living costs** for the new season (spec 003). If they can't be paid in full, the household drops to subsistence (ADR 0009); no debt is created.
 6. **Contract renewals** (spec 006), in contract id order. A renewal that can't be paid lapses.
 7. **Rent** (later specs).
-8. **Credit outcomes:** score changes (§3.7), default detection (§3.8) and, if needed, foreclosure (§3.9).
+8. **Credit outcomes:** score changes (§3.7) and default detection (§3.8), which raises a `FinalNotice` (§3.9). Foreclosure itself runs later, at an hourly pass (ADR 0038).
 9. Emit `SeasonClosed` with the report and the settlement results.
 
 **Report lines** (ADR 0032). The P&L groups the accounts like this; each line carries a plain-language label key and a *Why?* explanation key (text in spec 008), plus its accounts for drill-down:
@@ -133,14 +133,15 @@ NetWorth = Cash + Prepaid (1100–1120)
 
 ### 3.6 Loans
 
-**Lenders** (`content/lenders.json`, defaults are placeholders until loans are built and modelled in Sprint 4; ADR 0009 bands):
+**Lenders** (`content/lenders.json`, defaults set by ADR 0038, tunable by the economy model without re-approval; ADR 0009 bands):
 
 | Field | Moneylender | Cooperative bank |
 | --- | --- | --- |
-| Rate per season | 4% (fixed) | 2.5% at score 750, plus 0.5 points per 100 score points below 750 |
-| Penalty rate per season (extra, on arrears) | 2% | 1.5% |
+| Rate per season | 6% (fixed; about 24% a year, ADR 0038) | 2.5% at score 750, plus 0.5 points per 100 score points below 750 |
+| Penalty rate per season (extra, on arrears) | 3% | 1.5% |
 | Schedule | Interest-only, principal due at the end (bullet) | Equal principal instalments |
-| Term | 1–4 seasons | 2–12 seasons |
+| Term | 1–4 seasons | 2–16 seasons |
+| Minimum loan | 1,000 coins | 10,000 coins |
 | Secured | No | Yes: non-protected land and buildings |
 | Base limit | 25,000 coins | 0 |
 | Collateral loan-to-value | 0 | 0.60 |
@@ -173,11 +174,13 @@ limit        = max(0, min(eraCap, rawLimit × scoreFactor) − owedToThisLender)
 - **Equal principal (bank):** each instalment is `principal ÷ term` (rounded down), the last one takes the remainder, plus that season's interest.
   - Example: 1,00,000 at 2.5% over 4 seasons, taken at a season start: 27,500 · 26,875 · 26,250 · 25,625 (interest 6,250 in total).
 - **Bullet (moneylender):** interest each season, all principal at the last instalment.
-  - Example: 20,000 at 4% over 2 seasons, taken at a season start: 800, then 20,800.
+  - Example: 20,000 at 6% over 2 seasons, taken at a season start: 1,200, then 21,200.
 
-**Early repayment:** `RepayLoan(loanId, amount)` at any time pays accrued interest to date first, then arrears, then principal. There is no early-repayment penalty. Repaying principal early shortens the schedule from the end (later instalments shrink).
+**Early repayment:** `RepayLoan(loanId, amount)` at any time pays accrued interest to date first (posted then: Dr Interest, Cr Interest payable, then paid), then arrears, then principal. There is no early-repayment penalty. Repaying principal early shortens the schedule from the end (later instalments shrink).
 
-**Restructuring:** `RestructureLoan(loanId)`, once per loan, only while it has arrears and hasn't defaulted. The arrears are added to principal, the remaining term grows by up to `LenderDef.restructureExtraSeasons` (default 4), the grace counter resets, and the score drops by `restructurePenalty` (default 20). The moneylender doesn't restructure.
+**Selling collateral (ADR 0038).** `SellParcel` of a bought parcel while a bank loan is outstanding first computes `required = max(0, bankOwed − collateralLtv × remaining non-protected collateral at market value)`, with `bankOwed` the principal, arrears and interest accrued to now. The quick-sale proceeds pay `required` (interest, then arrears, then principal; loans in id order) and the surplus goes to Cash. If the proceeds are less than `required` the sale is rejected with `LoanSecured`. Moneylender loans are unsecured and unaffected.
+
+**Restructuring:** `RestructureLoan(loanId)`, once per loan, only while it has arrears and hasn't defaulted. The arrears are added to principal, the remaining term grows by up to `LenderDef.restructureExtraSeasons` (default 4), the grace counter resets, and the score drops by `restructurePenalty` (default 20). The moneylender doesn't restructure. The remaining term becomes `min(remaining + restructureExtraSeasons, maxTerm)`.
 
 ### 3.7 Credit score
 
@@ -185,13 +188,14 @@ A single founder credit score, 300–900, like India's CIBIL score.
 
 | Event (at a season close, once per season, not per loan) | Change | Default value |
 | --- | --- | --- |
-| All payments due this season paid in full | `+onTimeGain` | +10 |
+| At least one scheduled payment fell due at this close and all were paid in full | `+onTimeGain` | +10 |
 | Any payment missed (partly or fully) | `−missedPenalty` | −40 |
-| No loans and no arrears all season | `+cleanSeasonGain` | +5 |
+| No loan outstanding at any moment of the season and no arrears | `+cleanSeasonGain` | +5 |
 | A loan defaults | `−defaultPenalty` | −150 |
 | Restructuring | `−restructurePenalty` | −20 |
 | Foreclosure | Set to `foreclosureScore` | 350 |
 
+- A loan taken and repaid inside one season earns nothing (no payment fell due, and a loan was outstanding). Minimum loan sizes (`minAmount`) keep tiny loans from farming the score (ADR 0038).
 - The starting score is `startScore` (650, "no history").
 - The score is clamped to [300, 900] after each change.
 - Each change is recorded with its reason for *Why?*.
@@ -203,24 +207,26 @@ A single founder credit score, 300–900, like India's CIBIL score.
 | Missed payment | The unpaid part of a due payment becomes arrears on that loan (principal arrears stay in the loan account; interest arrears stay in Interest payable). `LoanPaymentMissed` is emitted |
 | Arrears count | `arrearsCloses` counts consecutive season closes at which the loan still has arrears after step 4. It resets to 0 when the arrears are cleared |
 | Curing | Paying the arrears (`RepayLoan`), selling land (spec 002 quick sale) or restructuring before the next close stops the count |
-| Default | When `arrearsCloses > LenderDef.graceCloses`, the loan defaults: `LoanDefaulted`, score −150, and foreclosure starts (§3.9) |
+| Default | When `arrearsCloses > LenderDef.graceCloses`, the loan defaults: `LoanDefaulted`, score −150, and a `FinalNotice` starts the foreclosure clock (§3.9) |
 
 ### 3.9 Foreclosure (personal bankruptcy, ADR 0009)
 
-Foreclosure runs when any loan defaults. All the founder's lenders take part.
+Foreclosure runs when any loan has defaulted and its final notice has run out. All the founder's lenders take part.
 
-1. **Seize** every non-protected asset, in this order (each group in id order):
-   - bought parcels, with everything on them (buildings, trees, and any crop, which is lost)
+0. **Final notice (ADR 0038).** A default, live or while away, emits `FinalNotice(loanIds, deadline)` and starts `noticeLiveSeconds` at 0. The counter grows only in hourly passes that run live (time away doesn't count). Foreclosure runs at the hourly pass where it reaches `CreditScoreDef.finalNoticeLiveHours` (default 24), unless every defaulted loan's arrears have been cured by then (paying, selling land, restructuring); a cured notice is cancelled.
+1. **Seize,** in this order, each group in id order, stopping once the debt is covered:
+   - bought parcels, with everything on them (buildings, trees, and any crop, which is lost); each raises its quick-sale value (spec 002: 80% of market value)
    - non-protected buildings elsewhere (none in Phase 1)
+   - **produce in the store,** highest value first, then good id, at the trader's Floor; the trader's daily capacity is ignored (a forced sale)
 
-   Equipment, livestock and businesses join this list in later phases. Each item raises its quick-sale value (spec 002: 80% of market value).
-2. **Protect** the inherited parcel and everything on it: the hut, the well, its trees and its crops. Stored goods and cash are not seized, but cash was already applied to the payments at step 4.
-3. **Repay:** proceeds pay the secured lender (the bank) first, then unsecured lenders in proportion to what each is owed (rounded down, the remainder to the lowest loan id). Any surplus goes to the founder's cash.
+   Equipment, livestock and businesses join this list in later phases.
+2. **Protect** the inherited parcel and everything on it: the hut, the well, its trees and its crops. Also protected: inputs in the store, and cash (already applied to the payments at step 4).
+3. **Repay:** proceeds pay the secured lender (the bank) first, then unsecured lenders in proportion to what each is owed (rounded down, the remainder to the lowest loan id). Any surplus goes to the founder's cash, and produce is only taken until the debt is covered.
 4. **Write off** what's still owed: Dr loans and Interest payable, Cr 4900 Debt written off. Every loan is closed.
 5. **Credit damage:** the score is set to `foreclosureScore` (350). That is below the bank's minimum, so only the moneylender lends until the score recovers. At +10 a season of on-time payments, recovery takes about 5 game years.
-6. **Carries on:** the town and every other system. The founder's holdings are back at Homestead level. Emit `ForeclosureCompleted` with the seized items, proceeds and amount written off.
+6. **Carries on:** the town and every other system. The founder's holdings are back at Homestead level (the household may drop to subsistence with an empty store). Emit `ForeclosureCompleted` with the seized items, proceeds and amount written off.
 
-**Not while away (ADR 0002: no disasters while away).** If a default is reached during an away advance, foreclosure is deferred. On the first live `Sync` after the away advance, a `FinalNotice` event is emitted, and foreclosure runs at the next daily pass that runs live, unless the arrears have been cured by then.
+**Why produce is seized (ADR 0038).** Without it a founder with no bought land could borrow from the moneylender, hold the harvest across two closes, default, and have the debt written off. Inputs and field crops on the inherited acres remain a small shelter, watched by the field-holder stress bot.
 
 ### 3.10 Never stuck
 
@@ -243,6 +249,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 | | `onTimeGain`, `cleanSeasonGain` | int | 10, 5 | 0–100 |
 | | `missedPenalty`, `defaultPenalty`, `restructurePenalty` | int | 40, 150, 20 | 0–600 |
 | | `foreclosureScore` | int | 350 | min–max |
+| | `finalNoticeLiveHours` | int | 24 | 1–168 (ADR 0038) |
 
 `content/lenders.json` (`LenderDef`, one per lender; defaults in §3.6):
 
@@ -254,10 +261,12 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 | `penaltyRate` | Fixed | 0–0.25 |
 | `schedule` | enum | `bullet`, `equalPrincipal` |
 | `minTerm`, `maxTerm` | int | 1 ≤ min ≤ max ≤ 40 |
+| `minAmount` | money | ≥ 1 coin; 1,000 / 10,000 |
 | `secured` | bool | |
 | `baseLimit` | money | ≥ 0 |
 | `collateralLtv`, `incomeMultiple` | Fixed | 0–1, 0–4 |
 | `minScore` | int | in score range |
+| `scoreScaledLimit` | bool | false for the moneylender (its limit ignores the score above `minScore`), true for the bank |
 | `graceCloses` | int | 1–8 |
 | `restructureExtraSeasons` | int | 0–12 (0 = doesn't restructure) |
 | `eraCaps` | map era → money | Homestead required |
@@ -275,7 +284,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 | `Prepayment` | `id`, `expenseAccount`, `prepaidAccount`, `total`, `start`, `end`, `expensed`, `ownerRef` | | |
 | `Obligation` | `id`, `kind` (Living, Contract, Rent), `ownerRef`, `amount`, `periodStart`, `periodEnd` | | Registered by 003 and 006 |
 | `Loan` | `id`, `lenderId`, `originalPrincipal`, `principal`, `rate`, `penaltyRate`, `schedule`, `term`, `takenAt`, `instalmentsPaid`, `arrearsPrincipal`, `arrearsInterest`, `arrearsCloses`, `segmentStart`, `restructured`, `state` (Active, Repaid, Defaulted, WrittenOff) | | |
-| `Credit` | `score`, `scoreHistory` (time, change, reason), `pendingForeclosure` (bool), `foreclosures` (count) | | |
+| `Credit` | `score`, `scoreHistory` (time, change, reason), `pendingForeclosure` (bool), `noticeLiveSeconds` (long), `foreclosures` (count) | | |
 
 ## 5. Commands and events
 
@@ -283,8 +292,8 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 
 | Command | Parameters | Validation and rejection reasons | Effect |
 | --- | --- | --- | --- |
-| `TakeLoan` | `lenderId`, `amount`, `termSeasons` | `UnknownLender`; `InvalidAmount` (≤ 0 or not whole coins); `InvalidTerm`; `ScoreTooLow`; `OverLimit` | Cash in (Dr Cash, Cr loans), schedule fixed. Emits `LoanTaken` |
-| `BuyParcel` with `financing` | spec 002 parameters plus `lenderId`, `amount`, `termSeasons` | As `TakeLoan`, with the parcel counted as collateral; plus spec 002's checks. Both succeed or neither | The loan and the purchase in one step |
+| `TakeLoan` | `lenderId`, `amount`, `termSeasons` | `UnknownLender`; `InvalidAmount` (≤ 0 or not whole coins); `BelowMinimum`; `InvalidTerm`; `ScoreTooLow`; `OverLimit` | Cash in (Dr Cash, Cr loans), schedule fixed. Emits `LoanTaken` |
+| `BuyParcel` with `financing` | spec 002 parameters plus `lenderId`, `amount`, `termSeasons` | As `TakeLoan`, with the parcel counted as collateral (secured lenders only); `amount` at most the parcel price (else `InvalidAmount`); cash needed is `price − amount`; plus spec 002's checks. Any lender may finance. Both succeed or neither | The loan and the purchase in one step |
 | `RepayLoan` | `loanId`, `amount` | `UnknownLoan`; `LoanClosed`; `InvalidAmount`; `InsufficientFunds`. Amounts above what's owed are capped | §3.6 early repayment. Emits `LoanRepayment` |
 | `RestructureLoan` | `loanId` | `UnknownLoan`; `NoArrears`; `AlreadyRestructured`; `LenderDoesNotRestructure`; `LoanClosed` | §3.6. Emits `LoanRestructured` |
 
@@ -301,7 +310,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 | `LoanPaymentMissed` | `loanId`, `unpaid`, `arrearsCloses` | Settlement step 4 leaves a shortfall | HUD (urgent), notifications |
 | `LoanRestructured` | `loanId`, `newTerm`, `newPrincipal` | Restructuring | HUD |
 | `LoanDefaulted` | `loanId` | §3.8 | HUD, Chronicle (later) |
-| `FinalNotice` | `loanIds`, `deadline` | A default reached while away, on return | HUD (urgent) |
+| `FinalNotice` | `loanIds`, `liveHoursLeft` | Every default (ADR 0038); repeated on the first live `Sync` after an away advance | HUD (urgent, countdown), notifications |
 | `ForeclosureCompleted` | seized items, `proceeds`, `writtenOff`, `newScore` | §3.9 | HUD, Chronicle (later), play log |
 | `CreditScoreChanged` | `old`, `new`, `reason` | Any score change | Finance hub |
 
@@ -309,7 +318,7 @@ Foreclosure runs when any loan defaults. All the founder's lenders take part.
 
 | Decision | Immediate cost | Delayed effect | Side effects on other systems | Reversibility |
 | --- | --- | --- | --- | --- |
-| Borrow from the moneylender | None now; easy to get | 4% a season, and all the principal due at once at the end | Score rises if paid on time | Repay early at any time, no penalty |
+| Borrow from the moneylender | None now; easy to get | 6% a season, and all the principal due at once at the end | Score rises if paid on time | Repay early at any time, no penalty |
 | Borrow from the bank | Needs collateral and a score | Cheaper (2.5–3%), but principal is due every season | The land becomes collateral; default means losing all bought land | Repay early at any time |
 | Buy land with a loan | A smaller down payment | More acres sooner; interest every season | Labour and care (ADR 0010); foreclosure risk | Quick sale at 80% |
 | Hire or prepay for the season | Cash leaves now | The cost appears in the P&L day by day | The P&L shows profit while cash is low | Early termination refunds the unearned part |
@@ -345,7 +354,7 @@ Loan sheet
 |   [Why?] base 25,000         | land 2,40,000 x 0.60    |
 |                              | + income 20,000         |
 |                              | x score 650 -> 0.75     |
-| Rate per season               4.0%       | 3.0%        |
+| Rate per season               6.0%       | 3.0%        |
 | Repay                         at the end | every season|
 | Amount [ 50,000 ]  Term [ 4 seasons ]   Lender [Bank]  |
 | Bank payments: 14,000 · 13,625 · 13,250 · 12,875 [Borrow]|
@@ -376,18 +385,24 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-16 | The §3.6 limit example gives exactly 1,23,000 for the bank; the moneylender's limit at a new game is 25,000; borrowing 1 coin over the limit is rejected with `OverLimit` | `CreditTests.Limit_Formula` |
 | AC-17 | At a new game the bank's limit is 0 (the inherited plot is never collateral) | `CreditTests.InheritedPlot_NotCollateral` |
 | AC-18 | `TakeLoan` within the limit adds the amount to cash and to the lender's loan account, fixes the rate (bank at score 650: 3.0%), and emits `LoanTaken`; terms outside the lender's bounds are rejected with `InvalidTerm` | `CreditTests.TakeLoan` |
-| AC-19 | The §3.6 schedule examples are paid exactly (27,500 · 26,875 · 26,250 · 25,625 and 800 · 20,800); a loan taken half-way through a season pays exactly half a season's interest at the first close, and its first instalment at the next | `CreditTests.Schedules_Exact` |
-| AC-20 | Early repayment pays accrued interest first, then principal; later instalments shrink; the total interest paid is less than on schedule | `CreditTests.RepayEarly` |
+| AC-19 | The §3.6 schedule examples are paid exactly (27,500 · 26,875 · 26,250 · 25,625 and 1,200 · 21,200); a loan taken half-way through a season pays exactly half a season's interest at the first close, and its first instalment at the next | `CreditTests.Schedules_Exact` |
+| AC-20 | Early repayment pays accrued interest first, then arrears, then principal; later instalments shrink; the total interest paid is less than on schedule | `CreditTests.RepayEarly` |
 | AC-21 | With cash short at a close, the payment takes all available cash (interest first), the rest becomes arrears, penalty interest accrues on the arrears at `rate + penaltyRate` the next season, and `LoanPaymentMissed` is emitted | `CreditTests.MissedPayment_ArrearsAndPenalty` |
 | AC-22 | The score changes by +10 for a season paid on time, −40 for a missed season, +5 for a clean season with no loans, never once per loan, and stays within [300, 900] | `CreditTests.Score_Changes` |
 | AC-23 | A bank loan with arrears at 3 consecutive closes (grace 2) defaults at the third; clearing the arrears after the second close resets the count | `CreditTests.Default_AfterGrace` |
 | AC-24 | Restructuring adds arrears to principal, extends the term by up to 4 seasons, resets the count and costs 20 points; a second restructure, or one on a moneylender loan, is rejected | `CreditTests.Restructure` |
-| AC-25 | Foreclosure seizes every bought parcel (with its trees and crops) at quick-sale value, leaves the inherited parcel, hut, well and their trees untouched, repays the bank first and then the moneylender pro rata, writes off the rest, closes every loan, sets the score to 350, and the ledger reconciles | `ForeclosureTests.SeizeRepayWriteOff` |
+| AC-25 | Foreclosure seizes every bought parcel (with its trees and crops) at quick-sale value, then stored produce at the Floor (highest value first) only until the debt is covered, leaves the inherited parcel, hut, well, their trees, inputs in store and cash untouched, repays the bank first and then the moneylender pro rata, writes off the rest, closes every loan, sets the score to 350, and the ledger reconciles | `ForeclosureTests.SeizeRepayWriteOff` |
 | AC-26 | If proceeds exceed all debts, the surplus is paid into the founder's cash | `ForeclosureTests.Surplus_ReturnsToFounder` |
-| AC-27 | A default reached during an away advance doesn't foreclose during it; `FinalNotice` is emitted on the first live `Sync`; foreclosure runs at the next live daily pass unless the arrears are paid first | `ForeclosureTests.NotWhileAway` |
+| AC-27 | Every default emits `FinalNotice`; time away does not count towards the 24 live hours; foreclosure runs at the hourly pass where the live counter reaches 24, unless the arrears are cured first (then the notice is cancelled) | `ForeclosureTests.FinalNotice_LiveHours` |
 | AC-28 | An unpaid living-cost obligation creates no liability and reports `ObligationUnpaid` | `NeverStuckTests.UnpaidLivingCosts_CreateNoDebt` |
 | AC-29 | Loading `lenders.json` with a rate above 0.25, `minTerm > maxTerm`, a missing Homestead era cap or a grace of 0 fails validation naming the field | `ContentTests.Lender_Validation` |
 | AC-30 | The spec 001 chunking-invariance check holds with the ledger, two loans, a missed payment and a foreclosure over 2 game years; and the golden replay `golden/005-credit.json` reproduces its stored hash | `LedgerTests.ChunkingInvariance`, `ReplayTests.Golden_005_Credit` |
+| AC-31 | `SellParcel` of bought land under a bank loan pays `required` (interest, arrears, principal) first and the surplus to cash; an underwater sale (proceeds below `required`) is rejected with `LoanSecured` and changes nothing; with no bank loan it is unchanged | `CreditTests.SellCollateral_RepaysBankFirst` |
+| AC-32 | A loan taken and repaid inside one season earns no score; a season with a scheduled payment, all paid, earns +10; a season with no loan outstanding at any moment earns +5; `TakeLoan` below `minAmount` is rejected with `BelowMinimum` | `CreditTests.Score_OnTimeAndClean_Rules` |
+| AC-33 | `BuyParcel` with financing: an `amount` above the price is `InvalidAmount`; a valid one leaves cash down by `price − amount`, creates the loan and the purchase together; any rejection changes nothing | `CreditTests.BuyParcel_Financing` |
+| AC-34 | A founder with no bought land who defaults: the final notice runs, foreclosure takes stored produce at the Floor (not inputs, not field crops) up to the debt, writes off the rest and sets the score to 350 | `ForeclosureTests.SeizesProduce_NoShelterInStore` |
+| AC-35 | Over 3 game years of seeded random valid activity including loans, repayments, missed payments and foreclosure, the ledger reconciles at every close (extends AC-4) | `LedgerTests.Reconciles_WithCredit` |
+| AC-36 | A debt-fuelled bot and a strategic defaulter each end at no more than 1.20 × the competent bot's median net worth after 2 game years over 100 seeds (ADR 0016) | `GateTests.Stress_Debt` |
 
 ## 9. Balancing hooks
 
@@ -427,6 +442,17 @@ All seven were resolved at approval (2026-10-17), following the recommendations:
 - **1200 Inputs in store** (an asset, at average cost per good): bought inputs are an asset until used, then expensed to 5000 or 5010; spoiled inputs too. The inherited inputs are on the opening balance sheet (AC-3), and reconciliation covers them (AC-4). Net worth still values inputs at today's input price; the difference from book is a revaluation, like land (§3.5).
 - **Indexed coin amounts** (spec 004 §3.1): living costs and wages are charged at the price index when paid; loans stay nominal, and book values stay at cost.
 
+### Changes after approval (Sprint 4 planning review, 2026-10-18, ADR 0038)
+
+Rule changes approved by the owner before coding:
+
+1. **Foreclosure also seizes stored produce** at the Floor, after bought parcels, only until the debt is covered (§3.9). Closes the strategic-default loop on unsecured moneylender debt.
+2. **Selling collateral repays the bank first** (§3.6, AC-31).
+3. **Lender numbers:** moneylender 6% a season, penalty +3%; bank maximum term 16 seasons; minimum loans 1,000 and 10,000 (§3.6).
+4. **Every default raises a `FinalNotice`;** foreclosure after 24 live hours, away time not counted (§3.9, AC-27).
+5. **Score rules:** +10 needs a payment due; +5 needs no loan all season; a same-season loan earns nothing (§3.7, AC-32).
+6. **Financing:** `amount` at most the price, any lender, the parcel is collateral for secured lenders only (§5, AC-33).
+
 ### Implementation notes (Sprint 2, 2026-10-18)
 
 None of these changes a formula or a rule.
@@ -437,10 +463,23 @@ None of these changes a formula or a rule.
 4. **Depreciation** counts season closes per building, so a building's first close depreciates a full season even if the game started mid-season (§3.3 has no pro rata).
 5. **Report lines** are `ReportLine`s with `report.<key>` label and `report.<key>.why` explanation keys and the accounts behind each, for spec 008's *Why?*.
 
+### Implementation notes (Sprint 4, 2026-10-18)
+
+None of these changes a rule or a lesson.
+
+1. **Payment order at a close.** The instalment due is added to the arrears and paid together: interest first (older arrears, then this season's), then principal arrears (including the instalment), so a short close takes all the cash, interest first (AC-21). Loans are paid in id order; a loan on the foreclosure clock (`Defaulted`) takes no new instalments.
+2. **Penalty interest.** Scheduled principal accrues at the rate; arrears (unpaid principal and unpaid interest) accrue at rate + penalty rate, the penalty part posted to 5410. A segment's three products are each rounded once.
+3. **Early repayment and sales** accrue the loan to now (posting the interest) before paying; `SellParcel` computes what it must repay without changing anything, so a refused sale changes nothing.
+4. **Restructuring a defaulted loan** is rejected with `LoanDefaulted` (a defaulted loan is on the foreclosure clock: pay, or sell land).
+5. **Net worth** counts interest accrued but not yet posted (`CreditRules.AccruedUnposted`).
+6. **The notice** is re-announced (before `AwayAdvanceCompleted`) when it was raised while away, so *While you were away* shows it; the clock counts only hourly passes that run live.
+7. **Golden 005** runs on the frozen content plus `golden/content-005/` (`finance.json` and `lenders.json` with credit, and a richer `start.json` of 4,00,000 coins so the session can finance land). Goldens 001, 003 and 004 have no credit block and keep their pins.
+8. **Measured (Sprint 4, 100 seeds, 2 game years):** the leverage bot ends at 0.999 × the competent bot's median net worth; the strategic defaulter at 1.024 (1.039 without seizing produce) and is foreclosed in every run (median score 340). Both are far inside ADR 0016's 1.20, so ADR 0038's rules are a safety margin rather than a repair of a large loop.
+
 ## 11. Cut first
 
 1. `RestructureLoan`.
 2. Pro-rata interest for the first partial season (charge from the next season start instead).
-3. `FinalNotice` (keep "not while away": foreclose at the first live season close instead).
+3. `FinalNotice` (keep "not while away": foreclose at the first live hourly pass after a day of play instead).
 4. Per-reason credit-score history (keep the score).
 5. Net worth snapshot per season (compute on demand only).

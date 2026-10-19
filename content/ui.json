@@ -1,0 +1,220 @@
+{
+  "dayTint": [
+    [0.55, 0.6, 0.8],
+    [0.55, 0.6, 0.8],
+    [0.55, 0.6, 0.8],
+    [0.55, 0.6, 0.8],
+    [0.55, 0.6, 0.8],
+    [0.78, 0.7, 0.8],
+    [1.0, 0.9, 0.8],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1.0, 0.9, 0.76],
+    [0.95, 0.76, 0.66],
+    [0.72, 0.66, 0.78],
+    [0.55, 0.6, 0.8],
+    [0.55, 0.6, 0.8],
+    [0.55, 0.6, 0.8]
+  ],
+  "seasonTint": [
+    [1, 1, 1],
+    [1.06, 0.94, 0.72],
+    [0.82, 1, 0.84],
+    [0.93, 0.95, 1]
+  ],
+  "valleyTint": [1, 0.97, 0.88],
+  "motions": [
+    {
+      "trigger": "TapTile",
+      "kind": "Squash",
+      "durationMs": 350,
+      "easing": "OutBack",
+      "reducedKind": "Flash",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "ButtonPress",
+      "kind": "Press",
+      "durationMs": 80,
+      "easing": "OutCubic",
+      "reducedKind": "None",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "CropSown",
+      "kind": "Pop",
+      "durationMs": 250,
+      "easing": "OutBack",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "CropReady",
+      "kind": "Bob",
+      "durationMs": 1200,
+      "easing": "InOutCubic",
+      "reducedKind": "Static",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "FruitRipe",
+      "kind": "Bob",
+      "durationMs": 1200,
+      "easing": "InOutCubic",
+      "reducedKind": "Static",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "CropHarvested",
+      "kind": "FlyToStore",
+      "durationMs": 600,
+      "easing": "InOutCubic",
+      "reducedKind": "Flash",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "GardenPicked",
+      "kind": "FlyToStore",
+      "durationMs": 600,
+      "easing": "InOutCubic",
+      "reducedKind": "Flash",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "FruitPicked",
+      "kind": "FlyToStore",
+      "durationMs": 600,
+      "easing": "InOutCubic",
+      "reducedKind": "Flash",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "SoldToTrader",
+      "kind": "FlyCoins",
+      "durationMs": 800,
+      "easing": "InOutCubic",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "MarketSales",
+      "kind": "FlyCoins",
+      "durationMs": 800,
+      "easing": "InOutCubic",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "MandiTripReturned",
+      "kind": "FlyCoins",
+      "durationMs": 800,
+      "easing": "InOutCubic",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "DayLabourPaid",
+      "kind": "FlyCoins",
+      "durationMs": 800,
+      "easing": "InOutCubic",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "CashSpent",
+      "kind": "CountDown",
+      "durationMs": 500,
+      "easing": "OutCubic",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "PestWarning",
+      "kind": "Shake",
+      "durationMs": 300,
+      "easing": "Linear",
+      "reducedKind": "BadgeOnly",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "GoodsSpoiled",
+      "kind": "Droop",
+      "durationMs": 400,
+      "easing": "InCubic",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "MandiTripStarted",
+      "kind": "Roll",
+      "durationMs": 1000,
+      "easing": "InOutCubic",
+      "reducedKind": "Hidden",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "TreeMatured",
+      "kind": "Grow",
+      "durationMs": 500,
+      "easing": "OutBack",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "SheetOpen",
+      "kind": "SlideUp",
+      "durationMs": 250,
+      "easing": "OutCubic",
+      "reducedKind": "Fade",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "SheetClose",
+      "kind": "SlideDown",
+      "durationMs": 180,
+      "easing": "InCubic",
+      "reducedKind": "Fade",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "WhySheet",
+      "kind": "Scale",
+      "durationMs": 200,
+      "easing": "OutBack",
+      "reducedKind": "Fade",
+      "reducedMs": 100
+    },
+    {
+      "trigger": "SeasonClosed",
+      "kind": "CardIn",
+      "durationMs": 350,
+      "easing": "OutBack",
+      "reducedKind": "Instant",
+      "reducedMs": 0
+    },
+    {
+      "trigger": "AwayAdvanceCompleted",
+      "kind": "CardIn",
+      "durationMs": 350,
+      "easing": "OutBack",
+      "reducedKind": "Fade",
+      "reducedMs": 100
+    }
+  ],
+  "maxFlyingPerEvent": 5,
+  "maxFlyingTotal": 20,
+  "spoilWarningHours": 12,
+  "storeNearlyFullPercent": 90,
+  "awayRowsMax": 8,
+  "ratingGoodPercent": 95,
+  "ratingFairPercent": 80
+}

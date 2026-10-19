@@ -63,6 +63,21 @@ namespace Sim.Core.Commands
         NoPestThreat,
         NotSelectable,
         AlreadyTreatedToday,
+
+        // Spec 005 (credit, ADR 0038)
+        UnknownLender,
+        InvalidAmount,
+        BelowMinimum,
+        InvalidTerm,
+        ScoreTooLow,
+        OverLimit,
+        UnknownLoan,
+        LoanClosed,
+        LoanDefaulted,
+        NoArrears,
+        AlreadyRestructured,
+        LenderDoesNotRestructure,
+        LoanSecured,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

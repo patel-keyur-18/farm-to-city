@@ -178,7 +178,29 @@ namespace Sim.Core.Tests
                 Is.EqualTo("start.inheritedParcels[1]"));
             Assert.That(Error("start.json", j => j.Replace("\"tile\": 21 },\n    { \"building\": \"well\"", "\"tile\": 20 },\n    { \"building\": \"well\"")).FieldPath,
                 Is.EqualTo("start.buildings[0].tile"));
-            Assert.That(Error("finance.json", j => j.Replace("4", "0")).FieldPath, Is.EqualTo("finance.ledger.retainSeasons"));
+            Assert.That(Error("finance.json", j => j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 0")).FieldPath, Is.EqualTo("finance.ledger.retainSeasons"));
+        }
+
+        // Spec 005 AC-29: lenders.json and the credit block of finance.json fail validation naming the field.
+        [Test]
+        public void Lender_Validation()
+        {
+            System.Func<string, string, System.Func<string, string>, ContentException> err = (file, _, edit) =>
+                Assert.Throws<ContentException>(() => TestContent.Game((f, j) => f == file ? edit(j) : j));
+
+            Assert.That(err("lenders.json", "", j => j.Replace("\"baseRate\": 0.06", "\"baseRate\": 0.3")).FieldPath, Is.EqualTo("lenders.lenders[0].baseRate"));
+            Assert.That(err("lenders.json", "", j => j.Replace("\"minTerm\": 2, \"maxTerm\": 16", "\"minTerm\": 9, \"maxTerm\": 3")).FieldPath, Is.EqualTo("lenders.lenders[1].minTerm"));
+            Assert.That(err("lenders.json", "", j => j.Replace("\"eraCaps\": { \"homestead\": 50000 }", "\"eraCaps\": { \"village\": 50000 }")).FieldPath, Is.EqualTo("lenders.lenders[0].eraCaps"));
+            Assert.That(err("lenders.json", "", j => j.Replace("\"graceCloses\": 1", "\"graceCloses\": 0")).FieldPath, Is.EqualTo("lenders.lenders[0].graceCloses"));
+            Assert.That(err("lenders.json", "", j => j.Replace("\"schedule\": \"bullet\"", "\"schedule\": \"annuity\"")).FieldPath, Is.EqualTo("lenders.lenders[0].schedule"));
+            Assert.That(err("finance.json", "", j => j.Replace("\"foreclosureScore\": 350", "\"foreclosureScore\": 100")).FieldPath, Is.EqualTo("finance.credit.foreclosureScore"));
+            Assert.That(err("finance.json", "", j => j.Replace("\"finalNoticeLiveHours\": 24", "\"finalNoticeLiveHours\": 0")).FieldPath, Is.EqualTo("finance.credit.finalNoticeLiveHours"));
+
+            // Credit is optional: a finance.json without it needs no lenders.json (ADR 0038).
+            GameDefs none = TestContent.Game((f, j) => f == "finance.json" ? "{ \"ledger\": { \"retainSeasons\": 4 } }" : f == "lenders.json" ? "not json" : j);
+            Assert.That(none.Credit, Is.Null);
+            Assert.That(TestContent.Game().Credit.Lenders.Select(l => l.Id), Is.EqualTo(new[] { "moneylender", "coop_bank" }));
         }
     }
 }
+

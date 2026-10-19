@@ -189,7 +189,8 @@ namespace Tools.Balancer
         {
             var makers = new List<Func<Bot>> { () => new FarmerBot() };
             makers.AddRange(stress ?? new Func<Bot>[] { () => new FieldHolderBot(), () => new SubsistenceDodgerBot(),
-                () => new LandFlipperBot(), () => new OfferChurnerBot(), () => new MandiEveryDayBot() });
+                () => new LandFlipperBot(), () => new OfferChurnerBot(), () => new MandiEveryDayBot(),
+                () => new LeverageBot(), () => new StrategicDefaulterBot() });
             var medians = new double[makers.Count];
             var names = new string[makers.Count];
             for (int b = 0; b < makers.Count; b++)
@@ -204,6 +205,33 @@ namespace Tools.Balancer
             for (int b = 0; b < makers.Count; b++)
                 list.Add(new StressResult { Bot = names[b], MedianNetWorth = medians[b], Ratio = medians[b] / medians[0] });
             return list;
+        }
+
+        // ---- ADR 0038: the debt bots must actually borrow, miss, default and be foreclosed (every mechanic is used) ----
+
+        public sealed class DebtActivity
+        {
+            public string Bot;
+            public int Seeds, LoansTaken, BankLoans, Foreclosures, SeedsForeclosed;
+            public double MedianScoreAtEnd;
+        }
+
+        /// <summary>What a debt stress bot did over <paramref name="seasons"/> seasons on each seed.</summary>
+        public static DebtActivity DebtBotActivity(SimConfig config, Func<Bot> make, int seeds, int seasons = 8)
+        {
+            var runs = new Economy.Run[seeds];
+            Parallel.For(0, seeds, i => runs[i] = Economy.RunBot(config, make(), seasons, (ulong)(i + 1), null));
+            var a = new DebtActivity { Bot = make().Name, Seeds = seeds };
+            foreach (Economy.Run run in runs)
+            {
+                CreditState c = run.Sim.State.Credit;
+                a.LoansTaken += c.Loans.Count;
+                a.BankLoans += c.Loans.Count(l => l.Lender == 1);
+                a.Foreclosures += c.Foreclosures;
+                if (c.Foreclosures > 0) a.SeedsForeclosed++;
+            }
+            a.MedianScoreAtEnd = Median(runs.Select(r => (double)r.Sim.State.Credit.Score));
+            return a;
         }
 
         private static double Median(IEnumerable<double> values)
@@ -247,6 +275,12 @@ namespace Tools.Balancer
             Console.WriteLine("  Stress bots, 2 years, " + Math.Min(seeds, 100) + " seeds (median net worth at year-0 prices; at most 1.20 × competent):");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100)))
                 Console.WriteLine("    " + s.Bot.PadRight(20) + C(s.MedianNetWorth).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new LeverageBot(), () => new StrategicDefaulterBot() })
+            {
+                DebtActivity d = DebtBotActivity(config, make, Math.Min(seeds, 100));
+                Console.WriteLine("  " + d.Bot + " used credit: " + d.LoansTaken + " loans (" + d.BankLoans + " from the bank), " + d.Foreclosures
+                    + " foreclosures in " + d.SeedsForeclosed + " of " + d.Seeds + " runs, median score " + d.MedianScoreAtEnd.ToString("0", CultureInfo.InvariantCulture));
+            }
             Console.WriteLine("  Land-flipper over 4 years (it can first afford a parcel in year 3):");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 16, new Func<Bot>[] { () => new LandFlipperBot() }))
                 Console.WriteLine("    " + s.Bot.PadRight(20) + C(s.MedianNetWorth).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));

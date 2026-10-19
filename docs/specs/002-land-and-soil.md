@@ -226,7 +226,7 @@ The exact parcel layout, drainage and starting values are content, tuned with th
 | Command | Parameters | Validation and rejection reasons | Effect |
 | --- | --- | --- | --- |
 | `BuyParcel` | `parcelId`, optional `financing` (spec 005) | `UnknownParcel`; `AlreadyOwned`; `NotAdjacent`; `InsufficientFunds` (cash plus any approved financing is less than the price) | Pays the price upfront (spec 005), marks the parcel owned, creates field-edge slots. Emits `ParcelBought` |
-| `SellParcel` | `parcelId` | `UnknownParcel`; `NotOwned`; `Protected`; `ParcelInUse` (crop, tree or building); `WouldStrandLand` | Pays the quick-sale price into cash (spec 005), removes ownership and slots. Emits `ParcelSold` |
+| `SellParcel` | `parcelId` | `UnknownParcel`; `NotOwned`; `Protected`; `ParcelInUse` (crop, tree or building); `WouldStrandLand`; `LoanSecured` (spec 005 §3.6, ADR 0038) | Pays the quick-sale price into cash (spec 005), removes ownership and slots. Emits `ParcelSold` |
 
 **Internal operations** (called by other systems, never by the UI):
 - `AdjustFertility(tileId, delta, reason)` (spec 003)
@@ -345,6 +345,10 @@ None of these changes a formula or a rule.
 ### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
 
 - **Land prices follow the price index** (§3.5): `TilePrice` uses `Indexed(acreBasePrice)`, for buying, quick sale and net worth. Cost basis stays at cost, so a sale after inflation shows a gain (4800).
+
+### Changes after approval (Sprint 4 planning review, 2026-10-18, ADR 0038)
+
+- **`SellParcel` under a bank loan** repays the bank first from the proceeds, or is rejected with `LoanSecured` (spec 005 §3.6).
 
 ### Changes after approval (Sprint 3 findings, 2026-10-18, ADR 0037)
 

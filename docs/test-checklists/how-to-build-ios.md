@@ -35,7 +35,7 @@ git lfs pull
 3. File → **Build Profiles**. The active platform must be **iOS**. Under *Scene List*, only `Assets/Scenes/Bootstrap.unity` is ticked.
    - A *build profile* is like a Maven profile: the target platform plus its settings.
    - The bootstrap scene is nearly empty on purpose. All game objects and UI are created by code at start-up (ADR 0017).
-4. Click **Build**. Choose the folder `unity/FarmToCity/Builds/iOS` (create it the first time; git ignores it). If Unity asks *Append* or *Replace*, choose **Replace**.
+4. **Tick *Development Build*** (from Sprint 4 on, ADR 0038): the developer panel and the golden-replay check only exist in development builds. (A release build, for performance numbers, is the same with it off.) Click **Build**. Choose the folder `unity/FarmToCity/Builds/iOS` (create it the first time; git ignores it). If Unity asks *Append* or *Replace*, choose **Replace**.
    - The build copies the repository's `content/*.json` into the app (you'll see `ContentBuildStep: copied … content files` in the Console).
    - The first build takes several minutes; later builds are faster.
 
@@ -51,6 +51,10 @@ git lfs pull
 5. **The first time only**, the phone may refuse to open the app (*Untrusted Developer*): Settings → General → **VPN & Device Management** → your Apple ID → **Trust**. Then tap the app icon.
 
 **Make signing stick (optional, recommended after the first success):** in Xcode, the Signing section shows your Team ID (10 characters). In Unity: Edit → Project Settings → Player → iOS tab → Other Settings → **Signing Team ID** = that ID, and tick **Automatically Sign**. From then on the Xcode project Unity generates is already signed, so step 3.2 is no longer needed.
+
+## Command-line build (what Claude does)
+
+`Game.Editor.BuildCli.IosDevelopment` makes the Xcode project without the Editor window: `Unity -batchmode -nographics -quit -projectPath unity/FarmToCity -buildTarget iOS -executeMethod Game.Editor.BuildCli.IosDevelopment`. **Delete `Builds/iOS` first**: on macOS 27, Unity's post-build step crashes the Editor when it finds an Xcode project already in the folder (it asks Xcode through the scripting bridge, `IsXcodeProjectOpen`). This also affects the Editor's **Build** button: if Unity quits while building over an old project, delete `Builds/iOS` and build again. A compile check without signing: `xcodebuild -project Builds/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO build`.
 
 ## Free-account limits
 

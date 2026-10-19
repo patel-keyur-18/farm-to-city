@@ -22,6 +22,9 @@ namespace Sim.Content
 
         /// <summary>Replays with the game content (land, farm, market, ledger), not time and weather only.</summary>
         public bool Game { get; set; }
+
+        /// <summary>Replays with the credit content (lenders and the score rules, ADR 0038); golden 005.</summary>
+        public bool Credit { get; set; }
         public List<Command> Commands { get; } = new List<Command>();
 
         /// <summary>The expected <c>GameState.ComputeHash()</c> after replaying, or null.</summary>
@@ -40,7 +43,7 @@ namespace Sim.Content
         {
             const string root = "replay";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "format", "description", "devCommandsEnabled", "game", "commands", "expectedHash");
+            OnlyFields(o, root, "format", "description", "devCommandsEnabled", "game", "credit", "commands", "expectedHash");
             int format = Int(Required(o, root, "format"), root + ".format");
             if (format != Format) throw new ContentException(root + ".format", "unsupported format " + format);
 
@@ -48,6 +51,7 @@ namespace Sim.Content
             if (o["description"] != null) file.Description = String(o["description"], root + ".description");
             if (o["devCommandsEnabled"] != null) file.DevCommandsEnabled = Bool(o["devCommandsEnabled"], root + ".devCommandsEnabled");
             if (o["game"] != null) file.Game = Bool(o["game"], root + ".game");
+            if (o["credit"] != null) file.Credit = Bool(o["credit"], root + ".credit");
             if (o["expectedHash"] != null)
             {
                 string hex = String(o["expectedHash"], root + ".expectedHash");
@@ -73,6 +77,7 @@ namespace Sim.Content
                 w.WritePropertyName("description"); w.WriteValue(file.Description ?? "");
                 w.WritePropertyName("devCommandsEnabled"); w.WriteValue(file.DevCommandsEnabled);
                 if (file.Game) { w.WritePropertyName("game"); w.WriteValue(true); }
+                if (file.Credit) { w.WritePropertyName("credit"); w.WriteValue(true); }
                 w.WritePropertyName("commands");
                 w.WriteStartArray();
                 foreach (Command c in file.Commands) WriteCommand(w, c);
@@ -125,7 +130,24 @@ namespace Sim.Content
             Overflow O() { return c["overflow"] == null ? Overflow.StoreOnly : S("overflow") == "sellRest" ? Overflow.SellRestToTrader : Overflow.StoreOnly; }
             switch (type)
             {
-                case "BuyParcel": Only("parcel"); return new BuyParcel(At(), S("parcel"));
+                case "BuyParcel":
+                {
+                    // The financing block is a land-purchase loan: amount in money (1/100 coin), exactly (ADR 0038).
+                    Only("parcel", "financing");
+                    Financing financing = null;
+                    if (c["financing"] != null)
+                    {
+                        string fp = path + ".financing";
+                        JObject f = Object(c["financing"], fp);
+                        OnlyFields(f, fp, "lender", "amount", "term");
+                        financing = new Financing(String(Required(f, fp, "lender"), fp + ".lender"), Long(Required(f, fp, "amount"), fp + ".amount"),
+                            (int)Long(Required(f, fp, "term"), fp + ".term"));
+                    }
+                    return new BuyParcel(At(), S("parcel"), financing);
+                }
+                case "TakeLoan": Only("lender", "amount", "term"); return new TakeLoan(At(), S("lender"), L("amount"), (int)L("term"));
+                case "RepayLoan": Only("loan", "amount"); return new RepayLoan(At(), L("loan"), L("amount"));
+                case "RestructureLoan": Only("loan"); return new RestructureLoan(At(), L("loan"));
                 case "SellParcel": Only("parcel"); return new SellParcel(At(), S("parcel"));
                 case "Sow":
                     Only("tile", "crop", "seed", "fertiliser");
@@ -176,7 +198,19 @@ namespace Sim.Content
             void Ov(Overflow o) { if (o == Overflow.SellRestToTrader) Prop(w, "overflow", "sellRest"); }
             switch (command)
             {
-                case BuyParcel x: T("BuyParcel", x.At); Prop(w, "parcel", x.ParcelId); break;
+                case BuyParcel x:
+                    T("BuyParcel", x.At); Prop(w, "parcel", x.ParcelId);
+                    if (x.Financing != null)
+                    {
+                        w.WritePropertyName("financing");
+                        w.WriteStartObject();
+                        Prop(w, "lender", x.Financing.LenderId); N("amount", x.Financing.Amount); N("term", x.Financing.TermSeasons);
+                        w.WriteEndObject();
+                    }
+                    break;
+                case TakeLoan x: T("TakeLoan", x.At); Prop(w, "lender", x.LenderId); N("amount", x.Amount); N("term", x.TermSeasons); break;
+                case RepayLoan x: T("RepayLoan", x.At); N("loan", x.LoanId); N("amount", x.Amount); break;
+                case RestructureLoan x: T("RestructureLoan", x.At); N("loan", x.LoanId); break;
                 case SellParcel x: T("SellParcel", x.At); Prop(w, "parcel", x.ParcelId); break;
                 case Sow x:
                     T("Sow", x.At); N("tile", x.TileId); Prop(w, "crop", x.CropId);

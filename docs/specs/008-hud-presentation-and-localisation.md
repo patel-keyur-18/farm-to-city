@@ -60,7 +60,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Safe area | Every edge-anchored element sits inside the device's safe area (notch, home indicator), both landscape directions |
 | Touch targets | At least 44 pt; spacing at least 8 pt |
 | Thumb zones | Main actions in the bottom corners: **Collect all** bottom-left, **Menu** (store, finance, people, settings) bottom-right |
-| Sheets | Every panel is a bottom sheet: up to 60% of the screen height, the map stays visible above it; swipe down or tap the map to close. At most one sheet open; a *Why?* sheet stacks on top of it |
+| Sheets | Every panel is a bottom sheet the full height of the screen with the same margin top and bottom (owner, device run 2, 2026-10-19: half height was cramped), 78% of the width so the map shows at the sides; swipe down or tap the map to close. A list of choices is one row per choice with its button on the row (the store's goods, the trees, the garden crops). At most one sheet open; a *Why?* sheet stacks on top of it |
 | Three taps | Any Phase 1 lever: tap a field (1), an action (2), confirm (3); or Menu (1), a section (2), an action (3) |
 
 ### 3.3 The HUD
@@ -249,7 +249,7 @@ Alerts are derived from state each refresh (not stored), except dismissals, whic
 
 **Locale choice:** the device's region: India → en-IN, elsewhere Western; a settings switch overrides it.
 
-**Font:** Noto Sans (SIL OFL, ADR 0036), bundled; Noto Sans Devanagari joins with Hindi (F19.1). Layouts leave about 30% room for longer translations.
+**Fonts:** Baloo 2 (SIL OFL, rounded; headings, buttons and numbers on the HUD) and Noto Sans (body text), both bundled (ADR 0036, amended by ADR 0038); Noto Sans Devanagari joins with Hindi (F19.1). Layouts leave about 30% room for longer translations.
 
 ### 3.12 The motion catalogue
 
@@ -289,7 +289,7 @@ Settings live in the settings file beside the save (spec 007), never in the town
 
 ### 3.14 The developer panel (ADR 0017, spec 001 §7)
 
-Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`.
+Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035), and a number-format switch (en-IN / Western). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end.
 
 ## 4. Data
 
@@ -408,6 +408,25 @@ All eight were answered in the review with the owner (2026-10-18), each as recom
 6. **Art style:** Kenney's low-poly *Isometric Landscape* is the base; setting-specific assets are made in Blender to match it (F19.3), with flat placeholders until then (ADR 0036).
 7. **Fonts:** SIL OFL is allowed for fonts only (ADR 0036): **Noto Sans**, and Noto Sans Devanagari when Hindi arrives. The game is mostly English; Hindi is supported (F19.1), so every string stays in the tables and every layout leaves room for longer text.
 8. **Phase 1 accessibility and sound:** reduced motion and text size in Phase 1; feedback sounds and haptics as Could; the rest in F19.2 (§3.13).
+
+### Changes after approval (Sprint 4 planning review, 2026-10-18, ADR 0038)
+
+- **First playable scope:** a minimal HUD (time strip, cash, store %, **Collect all** with StoreOnly) and a minimal **Store sheet** (goods in store, trader price and capacity, Sell to trader) are built in Sprint 4; the rest of §3.3 and §3.5 stays in Sprint 7. The ghost preview for placement (§3.4) is built with the hand's hut in Sprint 5.
+- **Look:** flat painted placeholder sprites (supersampled, outlined, two-tone, soft shadows) over Kenney ground tiles until the Blender pipeline (US-171, Sprint 6) replaces them; the motion catalogue (§3.12) carries the feel.
+- **Dev panel and Phase 0 code:** see §3.14. Fonts: see §3.11.
+
+### Implementation notes (Sprint 4, 2026-10-18)
+
+None of these changes a rule or a lesson.
+
+1. **`Sim.View`** (`sim/Sim.View/`, netstandard2.1, C# 9) depends on `Sim.Core` and `Sim.Content` (whose JSON helpers it reuses); `tests/Sim.View.Tests` holds its tests. `UiDef` and its loader live in `Sim.View` (view data, not rules).
+2. **Disabled actions use the sim's own answer.** `Simulation.Preview(command)` runs a command on a copy of the state (no log, no events out) and returns the result, so a greyed button shows the sim's rejection as a sentence and can never disagree with it. `GameState.Clone(withCommandLog: false)` backs it.
+3. **Built in Sprint 4:** string tables and the formatter (AC-2, AC-3, AC-4, AC-13), the HUD (AC-14), Collect all with StoreOnly (AC-11 without the trader prompt), the crop-calendar card (AC-6), the map view model, isometric geometry, the camera limits, tints, the field/garden/tree/store sheets, read-only checks (AC-1) and reduced motion (AC-10). **Left for Sprint 7:** the *Why?* sheets (AC-5; the sheets carry `WhyKey` ids), the season-report view (AC-7), *While you were away* (AC-8), the event map (AC-9), alerts (AC-12) and the "sell the rest" prompt of Collect all.
+4. **Coverage:** `StringTests.Coverage` finds ledger and score keys by scanning the sim sources, events and rejections by reflection and names from the content; `SheetTests.ViewKeys_AreAllInTheTable` scans `Sim.View`'s sources. Rejection sentences take optional `{crop}` and `{seasons}` arguments.
+5. **The Unity layer** (`Game.Presentation`): `Art/` (the sprite painter, `SpriteBank`, `IconBank`), `Map/` (`MapPresenter`, `MapInput`), `Ui/` (`UiKit`, `HudPresenter`, `SheetPresenter`), `Motion/` (`Tweens`, `Fx`), `DevTools/` (the panel and the golden check, development builds and the Editor only). Fonts: Baloo 2 Bold and Noto Sans in `Resources/Fonts`. Taps pick trees, beds, the hut, then the tile; a tap on the map while a sheet is open only closes it; the view lifts the selection above the sheet.
+6. **Verified in the Editor (Sprint 4):** play mode through the `unity` CLI (taps through `GameRoot.OnTap`, captures of the Game view): the map, the stages, ready bubbles, the sow, garden, store and land sheets, flying produce, the developer panel, and the golden replays (all four PASS with the `dotnet test` hashes under Mono). The device build is made with the Editor's Build button or the batch method `Game.Editor.BuildCli.IosDevelopment` (see the build guide). Screenshots: `docs/art/s04-*.png`.
+7. **Short money** has no unit word (the HUD adds the coin); `Formatter.Coins` takes the singular for one coin.
+8. **Device runs (2026-10-19).** Run 1 found touch broken (the input code waited for a mouse; fixed). Run 2's owner feedback: sheets are **full height** (§3.2 table above); the Store, tree and garden sheets list **one row per choice with its own button** (`LineVm.Action`); a growing crop's **Care, Water and Weather read Good, Fair or Poor** (`ViewContext.Rating`: good from `ratingGoodPercent` 95, fair from `ratingFairPercent` 80, in `content/ui.json`; the *Why?* sheet in Sprint 7 shows the numbers); empty tree places on the player's land are drawn as **stone-ringed pits** and can be tapped (they had no sprite, so a tap fell through to the land under them).
 
 ## 11. Cut first
 

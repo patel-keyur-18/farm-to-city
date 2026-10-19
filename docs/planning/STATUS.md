@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | 0 · Pre-production: **complete, gate passed 2026-10-18** (ADR 0035). Phase 1 · Homestead slice is next |
-| Sprint | Sprint 3 done (47 of 47 points, 2026-10-18). Sprint 4 is next |
-| Branch with latest work | `sprint/03-market-spike-gate` (pull request #8 to `main`; must be merged before the next session) |
-| Last updated | 2026-10-18 |
+| Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
+| Sprint | Sprint 4 built (24 of 24 points, 2026-10-19); the owner's device run of the first playable is pending |
+| Branch with latest work | `sprint/04-credit-first-playable` (from `main`, which has Sprint 3 / PR #8) |
+| Last updated | 2026-10-19 |
 
 ## Done so far
 
@@ -81,18 +81,27 @@
 
 ## In progress
 
-None. Sprint 3 is closed and Phase 0 is complete.
+**Sprint 4 is built; the pull request is open and waits for the owner's device run (`docs/test-checklists/s04-first-playable.md`).** Everything below was done on branch `sprint/04-credit-first-playable`:
+
+- **Planning review (2026-10-18):** 12 gaps closed one by one with the owner, **ADR 0038**, spec 005 (§3.4–3.9, §5, §8 AC-31 to AC-36, §10), specs 002 and 008, the GDD, CLAUDE.md and the planning files.
+- **Credit and foreclosure (US-063 to US-065, 207 tests in `Sim.Core.Tests`):** lenders and limits, `TakeLoan`, `RepayLoan`, `RestructureLoan`, land-purchase financing, schedules, arrears and penalty interest, the score, defaults, the 24-live-hour final notice, foreclosure (parcels, then produce), selling collateral repays the bank. `ReplayJson` has the credit commands; golden 005 `0x4D9D7611B2753AC9` (frozen content plus `golden/content-005/`); the leverage and strategic-defaulter stress bots are in the gate checks (0.999 and 1.024 × competent; the defaulter is foreclosed in every run, 1.039 without seizing produce). Notes in spec 005 §10.
+- **`Sim.View` (US-085, US-086, the view models of US-078/079; `tests/Sim.View.Tests`, 33 tests):** string tables (`content/strings/en.json`, 349 keys), the en-IN / Western formatter, `UiDef` (`content/ui.json`), the HUD, Collect all, the crop-calendar sow sheet, the map view model, isometric geometry and camera limits, the field, garden, tree and store sheets. Disabled actions show the sim's own reason through `Simulation.Preview` (a copy of the state). Spec 008 §10 lists what waits for Sprint 7.
+- **The first playable on Unity (US-078, US-079, US-088):** `Game.Presentation` rebuilt code-first: a software painter and `SpriteBank` (outlined, shaded placeholder sprites over the Kenney ground tiles), the isometric map with crop, tree and bed stages, ready, spoiling and pest bubbles, the day and season tint, pinch, drag and tap picking, the minimal HUD (time, cash count-up, store, Collect all), bottom sheets, flying produce and coins, the developer panel (time travel, snapshot and restore, number format, reduced motion, the golden replays, development builds and the Editor only). Baloo 2 and Noto Sans (OFL) bundled. The Phase 0 spike, citizen stub, style check and the Kenney farm sprites are deleted (git `3b1c81c`). **Verified in the Editor** through the `unity` CLI (taps, captures, the goldens PASS under Mono); screenshots `docs/art/s04-*.png`.
+- **Builds:** Unity batch build (`Game.Editor.BuildCli.IosDevelopment`, Development build) succeeded; the unsigned Xcode Release build is recorded in the pull request. On macOS 27, Unity's post-build step crashes the Editor when `Builds/iOS` already holds an Xcode project: delete `Builds/iOS` first (build guide).
+- **Device run 1 (2026-10-19), fixed the same day:** on the iPhone every map tap failed and each drag jumped, because `MapInput` fell back to the mouse when no finger was down and returned early when `Mouse.current` was null (always on a phone), so a release was never seen; the store list jumped to the top because the open sheet was rebuilt on every 1-second Sync; HUD figures wrapped a digit onto a hidden line ("12:4") on the phone's fractional UI scale. Fixes: pointer up with no finger and no mouse; a sheet refresh with unchanged text is skipped and a changed one keeps its scroll; HUD figures and button titles don't wrap. Verified in the Editor by removing the mouse device and playing touch events through the Input System (tap a field, Sow, scroll, Sow Potato inside the scrolled list, two drags without a jump). 
+- **Device run 2 (2026-10-19):** all checks passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS on device; 72 h in 1.4 ms) except check 11 (an empty tree place couldn't be tapped: it had no sprite, so the tap fell through to the land under it). Owner changes, done the same day: full-height sheets; one row per choice with its own button (store, trees, garden); Care, Water and Weather as Good, Fair or Poor (`ui.json` thresholds); empty tree places drawn as stone-ringed pits and tappable. Spec 008 §3.2 and §10 note 8. Verified in the Editor (captures of each sheet; planting from the tree sheet). Device run 3 (checks 10, 11, 13 and a look at the sheets) pending.
+- **Not done (by decision, ADR 0038):** loan screens (Sprint 7), the ghost preview (moved to US-068, Sprint 5), saves (Sprint 6; each launch is a new game), the Blender pipeline (US-171, Sprint 6: the owner installs Blender first).
 
 ## Next up
 
-1. **Owner:** merge pull request #8 (Sprint 3 and the Phase 0 gate).
-2. **Next session (Claude):** branch `sprint/04-credit-first-playable` from `main` and start **Phase 1** with Sprint 4 (`sprints.md`): credit and foreclosure (spec 005 §3.6–3.9), golden 005, the homestead map with sow and harvest (spec 008 §3.4), string tables and the formatter (`Sim.View`, spec 008 §3.11), the developer panel, and the first playable build with its checklist. Start with the gap review as usual (memory: gaps one by one). Remove or hide the Phase 0 bar (ADR 0035).
+1. **Owner:** device run 3 on the rebuilt project: checks 10, 11 and 13 of the checklist, and a look at the full-height sheets; then merge. Build the first playable as a **Development build** (`how-to-build-ios.md`), install it on the iPhone 13 and work through `docs/test-checklists/s04-first-playable.md`; report what looks broken or plain, missed taps and the golden-replay result. Then merge the Sprint 4 pull request. Install **Blender** before Sprint 6.
+2. **Next session (Claude):** Sprint 5 (`sprints.md`): people (day labourers, the resident hand, standing orders, with their UI) plus the placement ghost of US-068; start with the gap review as usual, and fold in the owner's first-playable feedback (the look, tap feel, any layout fixes).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Merge pull request #8 (Sprint 3; the Phase 0 gate is passed) |
+| Now | Run the first playable on the iPhone 13 (Development build) with `s04-first-playable.md`; merge the Sprint 4 pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
@@ -102,9 +111,7 @@ None. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 find
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
-- Golden 005 (Sprint 4) adds the credit commands to `ReplayJson`.
-- Spec 005 AC-4 covers land, prepayments and inputs in store; F05.2 adds loans and missed payments.
-- The Phase 0 bar and its code (`Phase0/`) are throwaway: removed or moved behind the dev panel in Sprint 4 (F08.4).
+- **Unity Editor quirks:** to test touch in the Editor, remove the mouse device, add a `Touchscreen`, set `InputSystem.settings.editorInputBehaviorInPlayMode = AllDeviceInputAlwaysGoesToGameView`, and queue `TouchState` events from `InputSystem.onBeforeUpdate` (dynamic updates only); the Game view maps touch y to the UI with an offset, so aim UI taps by the event's logged panel position. Removing the mouse lasts until the Editor restarts. The Editor pauses the game when it loses focus (set `Application.runInBackground = true` through `unity command eval` to drive and capture play mode); editing sim sources while playing reloads the domain and nulls `GameRoot`'s fields (stop and play again).
 - `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID, and now `enableFrameTimingStats: 1`, set by the build step each build). Leave it uncommitted.
 
 ## Half-done work
