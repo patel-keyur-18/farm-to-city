@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 5 (people) started 2026-10-19: the gap review with the owner. Sprint 4 done (PR #9 merged; device runs 2 and 3 passed) |
+| Sprint | Sprint 5 (people) built (25 of 25 points, 2026-10-19); the owner's device run is pending |
 | Branch with latest work | `sprint/05-people` (from `main`, which has Sprint 4 / PR #9) |
 | Last updated | 2026-10-19 |
 
@@ -90,20 +90,29 @@
 - **Device run 2 (2026-10-19):** all checks passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS on device; 72 h in 1.4 ms) except check 11 (an empty tree place couldn't be tapped: it had no sprite, so the tap fell through to the land under it). Owner changes, done the same day: full-height sheets; one row per choice with its own button (store, trees, garden); Care, Water and Weather as Good, Fair or Poor (`ui.json` thresholds); empty tree places drawn as stone-ringed pits and tappable. Spec 008 §3.2 and §10 note 8. Verified in the Editor (captures of each sheet; planting from the tree sheet). Device run 3 passed (2026-10-19).
 - **Not done (by decision, ADR 0038):** loan screens (Sprint 7), the ghost preview (moved to US-068, Sprint 5), saves (Sprint 6; each launch is a new game), the Blender pipeline (US-171, Sprint 6: the owner installs Blender first).
 
+- **Sprint 5 (branch `sprint/05-people`): 25 of 25 points built (2026-10-19); the pull request waits for the owner's device run.**
+  - **Planning review (2026-10-19):** 10 gaps and one balance finding decided with the owner, **ADR 0039** (spec 006 §3–§10, spec 008 §10, the GDD, CLAUDE.md, the planning files): hands' huts on the edge of an inherited acre (at most 2); regulars counted by seconds hired; back pay on renewal after a lapse; day labourers tend the fields (the Care pool); orders never undo the player's crop and do one action per hand per hour; stars and words for skill; a People button and orders from the map; a people-only away card; four people stress bots; a Blender slice now; **the hand's wage 30,000 a season and the day wage 9,375** (§11: at 36,000 a founder who never hired ended richer; 15,000–20,000 rejected as below rural minimum wages).
+  - **US-183 Blender slice (approved style):** `tools/blender/render.py` builds low-poly models in Python and renders them headless (one 2:1 dimetric camera and sun, toon bands with soft contact occlusion, an inverted-hull outline, 4× with a pivot manifest), about 0.3 s a sprite. Renders: the hut, the well, the hand's hut (built and building), the founder, the hand and the day labourer as men and women, in two facings. The owner asked for smaller people, men and women, and different clothes (women in cotton sarees with the head uncovered); redone and approved. `SpriteBank.Rendered` loads them at true scale. Screenshots `docs/art/s05-*.png`.
+  - **Sim (spec 006, 31 new tests, 230 in `Sim.Core.Tests`):** `people.json` (optional content: only with a `hand_hut` building, so the goldens keep their hashes), the roster and the seeded daily pool, `HireDayLabourers`, `BuildHandHut` (a 24 h job), applicants (live only), `PostJob`, `Interview`, `OfferContract`, renewal at the close (step 6) with lapse, live-time grace and back pay, `DismissHand` with severance, skill growth, standing orders (`SetStandingOrder`, `ClearStandingOrder`, run hourly live and away), each order's last action. AC-1 to AC-23 have their tests (AC-21, AC-22 in `Sim.View.Tests`); 72 h with 2 hands and 12 orders in about 4.4 ms. Implementation notes: spec 006 §10.
+  - **Balance (AC-23):** the competent bot hires (hut at the end of the first Spring, orders on the acres it can tend, compost on tired soil, wheat on the hand's extra acres in Winter); stress bots: day-labour spammer 0.87, hand churner 0.99, lapse gamer 1.00, absentee 0.89 (floor 0.80); solo 0.99; the Hamlet's conditions met on day 5.3 / 5.4 / 5.7 (target 7 ± 2). `dotnet run --project tools/Tools.Balancer -- gate` prints it.
+  - **`Sim.View` (39 tests):** the People sheet, the hand sheet, the order sheet, hut placement, the people-only away card, map people and building sites, order rows on field and tree sheets, the sow sheet's "change the order too?" question, a confirm before letting a hand go; skill as stars and band words, hours as "tends about N acres" (`ui.json`); no raw factors on the people sheets.
+  - **Unity:** the People button with an applicants badge; section headers and stars on sheets; the confirm card; hands' huts at the head of their field with a building stage; people on the map (walk, bob, stoop); the placement ghost (drag over the acres, green or red with the reason, Build here); the away card; the yard re-laid out for the Blender hut; toasts for applicants, the hut and the hire; a dev-panel **Moneylender loan 20,000** until the loan screen (Sprint 7). Fixes: short sheet values no longer wrap; sprite caches survive fast enter-play-mode; placement starts outside its click; two missing toast strings from Sprint 4.
+  - **Verified in the Editor with touch** (mouse removed, `Game.Editor.TouchDriver` plays taps and drags through the Input System): People button, Hire, scrolling the sheet, Talk, Offer, See, Let go with Keep them and with Let go, Place it, the ghost drag, Build here, tapping a hut. Development build: Unity build succeeded; the unsigned Xcode Release compile is recorded in the pull request.
+
 ## In progress
 
-**Sprint 5 (people), branch `sprint/05-people`:** the gap review with the owner (US-066 to US-072, plus whether the Blender pipeline US-171 starts now). No code until every gap is closed and recorded in an ADR and spec 006 §10.
+**Sprint 5 is built; the pull request waits for the owner's device run (`docs/test-checklists/s05-people.md`).**
 
 ## Next up
 
-1. **Claude:** finish the Sprint 5 gap review one gap at a time; record the answers (ADR 0039, spec 006 §10, the GDD if it changes); then the stories test-first (sim, `Sim.View`, Unity UI), the device build and `docs/test-checklists/s05-people.md`.
-2. **Owner:** answer the gaps; Blender 5.2.2 LTS is installed (2026-10-19).
+1. **Owner:** build the Development build (delete `Builds/iOS` first), install it on the iPhone 13 and work through `s05-people.md`; report how people and huts look, hiring clarity, the ghost drag, and the golden replays; then merge the pull request.
+2. **Next session (Claude):** Sprint 6: saves, notifications and the play log; regulars (US-067); every remaining sprite and the icons rendered in Blender (US-171, 4 points). Start with the gap review as usual and fold in the Sprint 5 device feedback.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Answer the Sprint 5 gap review |
+| Now | Run the Sprint 5 build with `s05-people.md`; merge the Sprint 5 pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
@@ -113,7 +122,7 @@ None. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 find
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
-- **Unity Editor quirks:** to test touch in the Editor, remove the mouse device, add a `Touchscreen`, set `InputSystem.settings.editorInputBehaviorInPlayMode = AllDeviceInputAlwaysGoesToGameView`, and queue `TouchState` events from `InputSystem.onBeforeUpdate` (dynamic updates only); the Game view maps touch y to the UI with an offset, so aim UI taps by the event's logged panel position. Removing the mouse lasts until the Editor restarts. The Editor pauses the game when it loses focus (set `Application.runInBackground = true` through `unity command eval` to drive and capture play mode); editing sim sources while playing reloads the domain and nulls `GameRoot`'s fields (stop and play again).
+- **Unity Editor quirks:** to test touch in the Editor, remove the mouse device, add a `Touchscreen`, set `InputSystem.settings.editorInputBehaviorInPlayMode = AllDeviceInputAlwaysGoesToGameView`, and queue `TouchState` events from `InputSystem.onBeforeUpdate` (dynamic updates only); the Game view maps touch y to the UI with an offset, so aim UI taps by the event's logged panel position. Removing the mouse lasts until the Editor restarts. The Editor pauses the game when it loses focus (set `Application.runInBackground = true` through `unity command eval` to drive and capture play mode); editing sim sources while playing reloads the domain and nulls `GameRoot`'s fields (stop and play again). **Touch in the Editor is scripted** (Sprint 5): `unity command eval --code 'return Game.Editor.TouchDriver.Setup();'`, then `TouchDriver.TapElement("People")` (scrolls the element into view, then taps), `TouchDriver.Tap(x, y)` and `TouchDriver.Drag(...)` in camera pixels (the Game view's toolbar makes `Screen.height` taller than the panel; `ScreenOf` aims by the panel's height). **Fast enter-play-mode is on** (no domain reload): static caches survive between play sessions, so anything holding runtime-made Unity objects must check `== null` (the sprite banks do). `DebugAdvance` only takes 1 h, 1 day, a season or the away cap; check its result in scripts. A UI element built inside a click handler may not get touch clicks: open it on the next UI tick (`schedule.Execute`).
 - `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID, and now `enableFrameTimingStats: 1`, set by the build step each build). Leave it uncommitted.
 
 ## Half-done work

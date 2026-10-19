@@ -151,6 +151,7 @@ namespace Game.Presentation
                 ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
                 Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
                 Visibility = v => _hud.SetVisible(v),
+                Borrow = () => { CommandResult r = Sim.Execute(new TakeLoan(Sim.State.Clock.SimTime, "moneylender", 20_000 * 100, 4)); AfterCommands(); return "Loan: " + (r.Accepted ? "taken" : _ctx.Reject(r.Reason)); },
             });
             _hud.OnTimeHeld = () => _dev.Open();
 #endif
@@ -173,6 +174,7 @@ namespace Game.Presentation
                 ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
                 Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
                 Visibility = v => _hud.SetVisible(v),
+                Borrow = () => { CommandResult r = Sim.Execute(new TakeLoan(Sim.State.Clock.SimTime, "moneylender", 20_000 * 100, 4)); AfterCommands(); return "Loan: " + (r.Accepted ? "taken" : _ctx.Reject(r.Reason)); },
             });
             hud.OnTimeHeld = () => _dev.Open();
 #endif

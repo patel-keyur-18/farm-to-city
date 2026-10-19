@@ -237,7 +237,7 @@
 
 ## Sprint 5 · 23–29 Nov 2026 · Phase 1
 
-- **Status:** In progress (planning review 2026-10-19: 10 gaps closed with the owner, ADR 0039)
+- **Status:** Built (25 of 25 points, 2026-10-19); the owner's device run is pending. Planning review 2026-10-19: 11 decisions with the owner (ADR 0039)
 - **Branch:** `sprint/05-people`
 - **Goal:** People: day labourers, the resident hand and standing orders, with their UI; the first Blender renders.
 - **Points:** 25 (US-069 +1 for `PostJob`; US-068 +1 for the placement ghost, ADR 0038; ADR 0039: US-183 +5, US-182 +1, US-067 −2 to Sprint 6)
@@ -246,25 +246,28 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | To do |
-| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
-| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | To do |
-| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
-| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
-| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
-| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
-| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | To do |
+| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Built, device run pending |
+| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
+| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | Built, device run pending |
+| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
+| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
+| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
+| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | Built, device run pending |
+| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | Built, device run pending |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s05-people.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Review (owner's device results):** — (pending: `s05-people.md`). The owner approved the Blender style checkpoint and the redone people (2026-10-19).
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* the gap review caught two money loopholes (part-day regulars, lapse-and-renew) before any code, and the lapse-gamer stress bot then proved the fix (0.997 × competent). The gate checks found a real balance problem (a hand didn't pay over 11 years) and the owner settled it with numbers in hand (30,000 a season, ADR 0039 §11). The Blender rig renders in seconds, so the owner's feedback on people (size, clothes, men and women) was turned around in one round.
+- *To improve:* three Editor-only traps cost time: fast enter-play-mode keeps static caches whose runtime textures are gone (fixed in the sprite banks), the Game view's toolbar skews `Screen.height` for touch aiming (fixed in `TouchDriver`), and a UI bar built inside a click handler never got touch clicks (placement now starts on the next UI tick). `DebugAdvance` only takes fixed steps: scripts must check its result.
+- *Carry over:* regulars (US-067) and the full Blender re-render with icons (US-171) to Sprint 6; walk and hoe animation frames later; the loan screen (Sprint 7) replaces the dev panel's loan button.
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 

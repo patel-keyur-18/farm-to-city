@@ -319,6 +319,18 @@ Ten gaps decided with the owner, one by one:
 10. **Gate checks for people:** the competent bot hires; four stress bots (AC-23).
 11. **The hand's wage 30,000 a season** (was 36,000), the day wage 9,375 (was 11,250), found by the gate checks: at 36,000 a founder who never hired ended about 8% richer after 11 years. At 30,000 hiring pays modestly (+7% by year 11). 15,000–20,000 was rejected: below rural minimum wages, and hiring would win by 34–47%, so the decision would vanish. Hiring is made more rewarding later through land, Phase 2's processing and markets, and skill growth, never by underpaying.
 
+### Implementation notes (Sprint 5, Claude; no rule change)
+
+1. **People are optional content,** like credit (ADR 0038): `people.json` is read only when `buildings.json` has a `hand_hut`. The frozen golden content has none, so goldens 001 and 003 to 005 keep their hashes. People state is hashed after the credit section (appended last), not right after spec 003's.
+2. **`hutPlacesPerAcre` lives in `people.json`** (`huts.placesPerAcre`) rather than `land.json`, so the land file and the frozen content stay unchanged. `maxHandHuts` and `orderActionsPerHour` are in `HandDef` as §4 says.
+3. **Applicant timing:** the next applicant is due `applicantEveryHours` ± up to `applicantJitterHours` (uniform, in seconds) after the last arrival or after a hut empties, × `rateFactor` while a job is posted; arrivals are checked at hourly passes. Draws use stream Applicants with key = applicant id (draw 0 interval, 1 skill, 2 and 3 traits, 4 name, 5 acceptance).
+4. **Live-time waits:** an applicant's 2-day wait and a lapsed hand's 2-day grace count only hours that pass live (like the credit final notice), so nothing leaves while the player is away.
+5. **Careless** means the hand sells an order's harvest to the trader (up to capacity) whatever the sell rule says; orders always harvest with `SellRestToTrader`, so a full store never blocks them (§3.8).
+6. **The asked wage is computed when an offer is made** (at the current price index), not stored on the applicant. An above-market hire's premium is kept for that season only; renewals re-ask the usual wage.
+7. **Orders from the map** use certified seed and no fertiliser (the UI's default); the command accepts any seed and fertiliser. A player-sown field with another crop is harvested by the order when ready, then re-sown with the order's crop (§3.8).
+8. **Regulars** (US-067) are counted from Sprint 5 (`secondsWorked`) but ask to move in only from Sprint 6.
+9. **The competent bot** (gate checks) builds its hut on field 18, orders only the acres its hours tend at Care ≥ 1, uses compost below fertility 55, and grows wheat on the hand's extra acres in Winter.
+
 ## 11. Cut first
 
 1. Regulars (keep the day-labour pool).

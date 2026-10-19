@@ -24,6 +24,9 @@ namespace Game.Presentation.DevTools
             public Func<Simulation> Sim;
             public Action<long, AdvanceMode> Advance;
             public Action Snapshot, Restore, ToggleFormat, ToggleReducedMotion;
+
+            /// <summary>Takes a real moneylender loan (TakeLoan) until the loan screen exists (Sprint 7); returns the sim's answer.</summary>
+            public Func<string> Borrow;
             public Func<string> Status;
             public Action<bool> Visibility;
         }
@@ -74,6 +77,7 @@ namespace Game.Presentation.DevTools
             scroll.Add(ButtonRow(Btn("Switch number format", () => host.ToggleFormat()), Btn("Reduced motion on/off", () => host.ToggleReducedMotion())));
             scroll.Add(Section("Determinism (ADR 0035)"));
             scroll.Add(ButtonRow(Btn("Golden replays", RunGoldens)));
+            scroll.Add(ButtonRow(Btn("Moneylender loan 20,000", () => _result.text = host.Borrow())));
             _result = UiKit.Text("", 28, UiKit.Ink, UiKit.Body);
             scroll.Add(_result);
 
