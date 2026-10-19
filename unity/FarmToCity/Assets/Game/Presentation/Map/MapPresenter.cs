@@ -294,7 +294,7 @@ namespace Game.Presentation.Map
             if (!_built) return Hit.None;
             // A tree is hit on its canopy; an empty planting spot (only drawn on the player's land) on the ground ring and its peg.
             foreach (KeyValuePair<long, Spot> kv in _slots)
-                if (kv.Value.Renderer.enabled && Vector2.Distance(w, _slotWorld[kv.Key] + new Vector2(0, kv.Value.Empty ? 0.04f : 0.17f)) < (kv.Value.Empty ? 0.13f : 0.16f))
+                if (kv.Value.Renderer.enabled && Vector2.Distance(w, _slotWorld[kv.Key] + new Vector2(0, kv.Value.Empty ? 0.02f : 0.17f)) < (kv.Value.Empty ? 0.11f : 0.16f))
                     return new Hit(HitKind.Slot, kv.Key);
             foreach (KeyValuePair<long, Spot> kv in _beds)
                 if (Mathf.Abs(w.x - _bedWorld[kv.Key].x) / 0.17f + Mathf.Abs(w.y - _bedWorld[kv.Key].y) / 0.085f < 1f) return new Hit(HitKind.Bed, kv.Key);

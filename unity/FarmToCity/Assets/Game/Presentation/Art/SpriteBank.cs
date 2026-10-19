@@ -317,14 +317,15 @@ namespace Game.Presentation.Art
                 {
                     var p = new Painter(128, 176);
                     const float cx = 64f, baseY = 14f;
-                    p.Ellipse(cx, baseY, 19f, 8.6f, Outline);
-                    p.Ellipse(cx, baseY, 17.4f, 7.2f, SoilDark);
-                    p.Ellipse(cx, baseY + 1f, 13f, 5f, Soil);
+                    // Small (owner, 2026-10-19): a hint on the ground, not a feature of the field.
+                    p.Ellipse(cx, baseY, 11f, 5f, Outline);
+                    p.Ellipse(cx, baseY, 9.8f, 4.1f, SoilDark);
+                    p.Ellipse(cx, baseY + 0.6f, 7f, 2.8f, Soil);
                     // A ring of pale stones round the pit: a tree place, never mistaken for a sown crop.
-                    for (int i = 0; i < 9; i++)
+                    for (int i = 0; i < 7; i++)
                     {
-                        float a = i / 9f * Mathf.PI * 2f;
-                        p.Blob(cx + Mathf.Cos(a) * 19f, baseY + Mathf.Sin(a) * 8.6f, 4.2f, 3.2f, i % 2 == 0 ? Painter.Hex(0xD8D0BE) : Painter.Hex(0xBDB4A0), Outline, 1.0f, false);
+                        float a = i / 7f * Mathf.PI * 2f;
+                        p.Blob(cx + Mathf.Cos(a) * 11f, baseY + Mathf.Sin(a) * 5f, 2.6f, 2.0f, i % 2 == 0 ? Painter.Hex(0xD8D0BE) : Painter.Hex(0xBDB4A0), Outline, 0.8f, false);
                     }
                     return p.ToSprite(Ppu, new Vector2(0.5f, baseY / 176f));
                 });
