@@ -437,6 +437,11 @@ None of these changes a rule or a lesson.
 - **People on the map** (presentation only): the founder and hands stand on tended fields, a hand walks to the field an order acts on, day labourers walk in from the map edge and leave at the daily pass.
 - **Device review (ADR 0040):** the yard is drawn over two acres (house and well behind, garden, tulsi, haystack and woodpile in front) with a bamboo fence where it meets other land; hands' huts stand in the fenced labour quarters; people go round the fields with work, hoe at two spots on each (stand and work frames alternate), and go home when idle.
 
+
+### Sprint 6 planning review (2026-10-19, ADR 0041)
+
+- **Settings before the Menu:** a round gear button under the Store chip opens a full-height Settings sheet (one row per choice with its button: last saved and *Save now*, Notifications, Play log, *Export town*, *Import a town*, *Export play log*, *New game…* with *Export first*, *Replace*, *Cancel*). Sprint 7 adds the Menu entry and the rest of §3.13.
+- **Art:** every map sprite, the ground, every icon and the people's walk cycles are Blender renders by the end of Sprint 6; the seasonal tint stays in code.
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

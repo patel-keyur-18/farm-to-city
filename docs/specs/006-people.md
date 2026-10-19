@@ -68,6 +68,7 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | Time worked | Each roster member adds the seconds they were hired (`secondsWorked`), pro rata like their pay (ADR 0039) |
 | Asks to move in | When a roster member's `secondsWorked` reaches `LabourPoolDef.regularThresholdDays` (default 6) × 86,400 (six full day-equivalents) and the founder has an empty hand's hut, they ask to move in: they join the applicants (§3.5) with their **skill and both traits known exactly**, at the asked wage for their skill. Emits `RegularAsksToMoveIn`. Once per person; they leave the roster when hired |
 | No hut | The request waits until a hut stands empty (the count is kept) |
+| Details (ADR 0041) | A regular joins the applicants even when `maxApplicants` are waiting; always accepts an offer (they asked to come); has a skill drawn when they ask (stream Applicants, key = their applicant id; the usual `[skillMin, skillMax]`), shown exactly, and two traits, the first their day-labour trait, both shown; asks only during live play (days hired while away still count); if not hired within `applicantWaitDays` goes back to day labour and never asks again. When hired they leave the roster and a new seeded neighbour takes their place (stream People, counter = the new roster id), so the pool stays at `rosterSize` |
 
 ### 3.4 The hand's hut
 
@@ -255,7 +256,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-1 | Loading `people.json` with `availablePerDay` above `rosterSize`, `skillMin > skillMax`, an unknown trait, or a `hand_hut` without `housesHands` fails validation naming the field | `ContentTests.People_Validation` |
 | AC-2 | The roster and each day's free labourers are the same for the same seed and differ by day; the free count equals `availablePerDay` for the season | `DayLabourTests.Pool_Seeded` |
 | AC-3 | Hiring 2 labourers at 18:00 costs exactly `2 × 9,375 × 21,600 ÷ 86,400` = 4,687.50, posted to 5100; adds 16 hours a day to the Care pool until the daily pass, time-weighted; hiring more than are free is rejected with `NoneAvailable` and changes nothing | `DayLabourTests.Hire_CostAndCare` |
-| AC-4 | A labourer hired for 6 full day-equivalents in total asks to move in once a hand's hut is empty, as an applicant with skill and both traits known; not before the hut exists; 6 hires of an hour each are not enough (ADR 0039) | `DayLabourTests.Regular_AsksToMoveIn` |
+| AC-4 | A labourer hired for 6 full day-equivalents in total asks to move in once a hand's hut is empty, as an applicant with skill and both traits known; not before the hut exists; 6 hires of an hour each are not enough (ADR 0039); the regular joins even with 3 waiting, always accepts, asks only live and once, and a new neighbour keeps the roster at 8 (ADR 0041) | `DayLabourTests.Regular_AsksToMoveIn` |
 | AC-5 | `BuildHandHut` costs 15,000 (Dr 1600), finishes exactly 24 hours later, depreciates 250 a season from the next close, and is rejected on a farm acre, the yard and unowned land (`NotQuarters`) and when the quarters are full (`NoRoom`) (ADR 0040) | `HutTests.Build_CostTimeDepreciation` |
 | AC-6 | With an empty hut, applicants arrive at the seeded times, at most 3 wait, each leaves after 2 days if not hired; none arrive or leave during an away advance | `ApplicantTests.Arrival_Queue_Away` |
 | AC-7 | An applicant's shown range contains the true skill and is 30 wide (clamped at 0 and 100); the interview reveals exactly the second trait; the asked wage follows §3.5 (skill 50: 36,000) | `ApplicantTests.Profile_Interview_Wage` |
@@ -334,6 +335,10 @@ The owner's device run: the yard becomes 2 acres (tile 29); hands' huts move to 
 7. **Orders from the map** use certified seed and no fertiliser (the UI's default); the command accepts any seed and fertiliser. A player-sown field with another crop is harvested by the order when ready, then re-sown with the order's crop (§3.8).
 8. **Regulars** (US-067) are counted from Sprint 5 (`secondsWorked`) but ask to move in only from Sprint 6.
 9. **The competent bot** (gate checks) builds its hut in the labour quarters (tile 37), orders only the acres its hours tend at Care ≥ 1, uses compost below fertility 55, and grows wheat on the hand's extra acres in Winter.
+
+### Sprint 6 planning review (2026-10-19, ADR 0041)
+
+Regulars (US-067): they join even with a full queue, always accept, have a seeded skill drawn when they ask and both traits shown, ask only live and once, and a new neighbour refills the roster (§3.3, AC-4).
 
 ## 11. Cut first
 

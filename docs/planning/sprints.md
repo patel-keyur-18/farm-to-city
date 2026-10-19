@@ -14,8 +14,8 @@
 | S3 | 9–15 Nov 2026 | 0 | Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review. | 52 | 008, 009 | Yes: spike and determinism build |
 | S4 | 16–22 Nov 2026 | 1 | Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel. | 24 | — | Yes: first playable |
 | S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 21 | — | Yes |
-| S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; the Blender sprite pipeline (US-171, ADR 0038). | 24 | — | Yes |
-| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings. | 17 | — | Yes |
+| S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; regulars; every sprite, the ground, icons and walk cycles rendered in Blender (ADR 0041). | 26 | — | Yes |
+| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings. | 15 | — | Yes |
 | S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | — | Yes: release candidate |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
@@ -271,10 +271,10 @@
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/06-saves-notifications` (or the branch the session assigns)
-- **Goal:** Saves, notifications and the play log; regulars; every map sprite and icon rendered in Blender (ADR 0039).
-- **Points:** 22 (16 + US-067 2 + US-171 4, ADR 0039)
+- **Status:** In progress. Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
+- **Branch:** `sprint/06-saves-notifications`
+- **Goal:** Saves, notifications and the play log; regulars; every map sprite, the ground, every icon and the walk cycles rendered in Blender (ADR 0039, ADR 0041).
+- **Points:** 26 (16 + US-067 2 + US-171 8; ADR 0041: US-171 4 → 8 for the ground and walk cycles)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -286,7 +286,7 @@
 | US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | To do |
 | US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | To do |
 | US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
-| US-171 | Blender pipeline: the full re-render and icons | [F19.3](features/F19.3-art-pipeline.md) | 4 | Should | To do |
+| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | To do |
 
 **Sprint end checklist**
 
@@ -304,7 +304,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 16 (US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039)
+- **Points:** 15 (US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039; US-084 −1: the Settings sheet is built in Sprint 6, ADR 0041)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -314,7 +314,7 @@
 | US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
 | US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
 
 **Sprint end checklist**

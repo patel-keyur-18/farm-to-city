@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 5 (people) built (25 of 25 points, 2026-10-19); the owner's device run is pending |
-| Branch with latest work | `sprint/05-people` (from `main`, which has Sprint 4 / PR #9) |
+| Sprint | Sprint 6 (saves, notifications, play log, regulars, the full Blender render) in progress: planning review done (ADR 0041) |
+| Branch with latest work | `sprint/06-saves-notifications` (from `main`, which has Sprint 5 / PR #10) |
 | Last updated | 2026-10-19 |
 
 ## Done so far
@@ -90,7 +90,7 @@
 - **Device run 2 (2026-10-19):** all checks passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS on device; 72 h in 1.4 ms) except check 11 (an empty tree place couldn't be tapped: it had no sprite, so the tap fell through to the land under it). Owner changes, done the same day: full-height sheets; one row per choice with its own button (store, trees, garden); Care, Water and Weather as Good, Fair or Poor (`ui.json` thresholds); empty tree places drawn as stone-ringed pits and tappable. Spec 008 §3.2 and §10 note 8. Verified in the Editor (captures of each sheet; planting from the tree sheet). Device run 3 passed (2026-10-19).
 - **Not done (by decision, ADR 0038):** loan screens (Sprint 7), the ghost preview (moved to US-068, Sprint 5), saves (Sprint 6; each launch is a new game), the Blender pipeline (US-171, Sprint 6: the owner installs Blender first).
 
-- **Sprint 5 (branch `sprint/05-people`): 25 of 25 points built (2026-10-19); the pull request waits for the owner's device run.**
+- **Sprint 5 (branch `sprint/05-people`, PR #10 merged): 25 of 25 points, done.** Device runs 1 and 2 passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS on the device); the ADR 0040 changes approved.
   - **Planning review (2026-10-19):** 10 gaps and one balance finding decided with the owner, **ADR 0039** (spec 006 §3–§10, spec 008 §10, the GDD, CLAUDE.md, the planning files): hands' huts on the edge of an inherited acre (at most 2); regulars counted by seconds hired; back pay on renewal after a lapse; day labourers tend the fields (the Care pool); orders never undo the player's crop and do one action per hand per hour; stars and words for skill; a People button and orders from the map; a people-only away card; four people stress bots; a Blender slice now; **the hand's wage 30,000 a season and the day wage 9,375** (§11: at 36,000 a founder who never hired ended richer; 15,000–20,000 rejected as below rural minimum wages).
   - **US-183 Blender slice (approved style):** `tools/blender/render.py` builds low-poly models in Python and renders them headless (one 2:1 dimetric camera and sun, toon bands with soft contact occlusion, an inverted-hull outline, 4× with a pivot manifest), about 0.3 s a sprite. Renders: the hut, the well, the hand's hut (built and building), the founder, the hand and the day labourer as men and women, in two facings. The owner asked for smaller people, men and women, and different clothes (women in cotton sarees with the head uncovered); redone and approved. `SpriteBank.Rendered` loads them at true scale. Screenshots `docs/art/s05-*.png`.
   - **Sim (spec 006, 31 new tests, 230 in `Sim.Core.Tests`):** `people.json` (optional content: only with a `hand_hut` building, so the goldens keep their hashes), the roster and the seeded daily pool, `HireDayLabourers`, `BuildHandHut` (a 24 h job), applicants (live only), `PostJob`, `Interview`, `OfferContract`, renewal at the close (step 6) with lapse, live-time grace and back pay, `DismissHand` with severance, skill growth, standing orders (`SetStandingOrder`, `ClearStandingOrder`, run hourly live and away), each order's last action. AC-1 to AC-23 have their tests (AC-21, AC-22 in `Sim.View.Tests`); 72 h with 2 hands and 12 orders in about 4.4 ms. Implementation notes: spec 006 §10.
@@ -102,18 +102,17 @@
 
 ## In progress
 
-**Sprint 5 is built with the owner's device-review changes (ADR 0040); the pull request waits for device run 2 (`docs/test-checklists/s05-people.md`), then the merge.**
+**Sprint 6** (`sprint/06-saves-notifications`, 26 points). **Planning review done (2026-10-19):** 8 gaps decided with the owner, **ADR 0041** (spec 007 §3.1, §3.4, §3.5, §4, §8, §10; spec 006 §3.3, AC-4, §10; spec 008 §10; the GDD; CLAUDE.md; the planning files): a save holds everything hashed (one write path, content by id); old saves refused and kept until the Sprint 9 playtest build; notifications from a simulated absence, ranked, **no daily cap**, quiet hours, hands' work per 4 hours, the 64-pending limit; a gear button and Settings sheet; import from a list in Settings; the first ask as a plain card until the letter; regulars' details; **every sprite, the ground, icons and walk cycles rendered now** (US-171 4 → 8; US-084 2 → 1).
 
 ## Next up
 
-1. **Owner:** device run 2 of the Development build (delete `Builds/iOS` first) with `s05-people.md` (the yard, the quarters, orders that start at once, people working); then merge the pull request.
-2. **Next session (Claude):** Sprint 6: saves, notifications and the play log; regulars (US-067); every remaining sprite and the icons rendered in Blender (US-171, 4 points). Start with the gap review as usual and fold in the Sprint 5 device feedback.
+1. **Claude:** US-073 (the save codec, test-first), then US-074, US-075, US-076, US-077, US-067; US-171 with the style checkpoint shown to the owner before the batch.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Now | Run the Sprint 5 build with `s05-people.md`; merge the Sprint 5 pull request |
+| Sprint 6 | Approve the US-171 style checkpoint; run the Sprint 6 build with its checklist; merge the pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
