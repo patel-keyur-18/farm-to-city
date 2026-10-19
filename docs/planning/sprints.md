@@ -237,7 +237,7 @@
 
 ## Sprint 5 · 23–29 Nov 2026 · Phase 1
 
-- **Status:** Built (25 of 25 points, 2026-10-19); the owner's device run is pending. Planning review 2026-10-19: 11 decisions with the owner (ADR 0039)
+- **Status:** Done (25 of 25 points; device runs 1 and 2 passed on the iPhone 13, PR #10 merged). Planning review 2026-10-19: 11 decisions with the owner (ADR 0039)
 - **Branch:** `sprint/05-people`
 - **Goal:** People: day labourers, the resident hand and standing orders, with their UI; the first Blender renders.
 - **Points:** 25 (US-069 +1 for `PostJob`; US-068 +1 for the placement ghost, ADR 0038; ADR 0039: US-183 +5, US-182 +1, US-067 −2 to Sprint 6)
@@ -246,14 +246,14 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Built, device run pending |
-| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
-| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | Built, device run pending |
-| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
-| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
-| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
-| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | Built, device run pending |
-| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | Built, device run pending |
+| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Done |
+| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Done |
+| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | Done |
+| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Done |
+| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
+| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
+| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | Done |
+| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | Done |
 
 **Sprint end checklist**
 
@@ -262,7 +262,7 @@
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** the owner approved the Blender style checkpoint and the redone people (2026-10-19). Device run 1: all checks passed (golden replays 001, 003, 004, 005 PASS on the iPhone 13; 72 h in 2.9 ms); the owner asked for a roomier yard, hands' huts off the fields, orders that start at once and people who work: built the same day as ADR 0040 (2-acre yard, labour quarters, immediate orders, work poses and patrols). Device run 2 pending.
+**Review (owner's device results):** the owner approved the Blender style checkpoint and the redone people (2026-10-19). Device run 1: all checks passed (golden replays 001, 003, 004, 005 PASS on the iPhone 13; 72 h in 2.9 ms); the owner asked for a roomier yard, hands' huts off the fields, orders that start at once and people who work: built the same day as ADR 0040 (2-acre yard, labour quarters, immediate orders, work poses and patrols). Device run 2 passed (golden replays 001, 003, 004, 005 PASS on the device); the ADR 0040 changes approved (2026-10-19).
 
 **Retro (Claude):**
 - *Went well:* the gap review caught two money loopholes (part-day regulars, lapse-and-renew) before any code, and the lapse-gamer stress bot then proved the fix (0.997 × competent). The gate checks found a real balance problem (a hand didn't pay over 11 years) and the owner settled it with numbers in hand (30,000 a season, ADR 0039 §11). The Blender rig renders in seconds, so the owner's feedback on people (size, clothes, men and women) was turned around in one round.
