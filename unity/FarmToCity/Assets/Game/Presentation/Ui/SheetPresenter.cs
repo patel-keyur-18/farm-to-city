@@ -9,14 +9,16 @@ using UnityEngine.UIElements;
 namespace Game.Presentation.Ui
 {
     /// <summary>
-    /// The bottom sheet (spec 008 §3.2): at most one open, up to 60% of the height so the map stays visible above, sliding up and
-    /// down. It draws <see cref="SheetVm"/> and <see cref="SowSheetVm"/> and hands a pressed button's command to the host; a greyed
+    /// The bottom sheet (spec 008 §3.2): at most one open, full height with the same margin top and bottom (owner feedback, device
+    /// run 2: half height was cramped), sliding up and down. It draws <see cref="SheetVm"/> and <see cref="SowSheetVm"/> and hands a pressed button's command to the host; a greyed
     /// button shows the sim's reason under it.
     /// </summary>
     public sealed class SheetPresenter
     {
         private readonly Tweens _tweens;
         private readonly VisualElement _holder;
+        private const float Margin = 14f;
+
         private VisualElement _sheet;
         private bool _closing;
         private string _key;
@@ -39,6 +41,7 @@ namespace Game.Presentation.Ui
             _holder.style.left = 0; _holder.style.right = 0; _holder.style.bottom = 0; _holder.style.top = 0;
             _holder.style.justifyContent = Justify.FlexEnd;
             _holder.style.alignItems = Align.Center;
+            _holder.style.paddingTop = _holder.style.paddingBottom = Margin;
             root.Add(_holder);
         }
 
@@ -47,9 +50,7 @@ namespace Game.Presentation.Ui
             VisualElement panel = UiKit.Panel(36);
             panel.style.width = Length.Percent(78);
             panel.style.maxWidth = 1500;
-            panel.style.maxHeight = Length.Percent(60);
-            panel.style.marginBottom = 14;
-            panel.style.flexShrink = 0;
+            panel.style.flexGrow = 1; // the whole height between the margins
             UiKit.Padding(panel, 16, 30);
             panel.pickingMode = PickingMode.Position;
 
@@ -152,19 +153,34 @@ namespace Game.Presentation.Ui
             return scroll;
         }
 
-        private static VisualElement Row(string label, string value)
+        private VisualElement Row(LineVm line)
         {
             var row = new VisualElement { pickingMode = PickingMode.Ignore };
             row.style.flexDirection = FlexDirection.Row;
             row.style.justifyContent = Justify.SpaceBetween;
+            row.style.alignItems = Align.Center;
             row.style.paddingTop = row.style.paddingBottom = 6;
             row.style.borderBottomWidth = 2;
             row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
-            row.Add(UiKit.Text(label, 31, UiKit.Ink, UiKit.Body));
-            Label v = UiKit.Text(value, 33, UiKit.Ink, UiKit.Heading);
-            v.style.unityTextAlign = TextAnchor.MiddleRight;
-            v.style.flexShrink = 1;
-            row.Add(v);
+            if (line.Action == null)
+            {
+                row.Add(UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body));
+                Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
+                v.style.unityTextAlign = TextAnchor.MiddleRight;
+                v.style.flexShrink = 1;
+                row.Add(v);
+                return row;
+            }
+            // A row with its own button (the store's Sell): name and details on the left, the button on the right.
+            var text = new VisualElement { pickingMode = PickingMode.Ignore };
+            text.style.flexShrink = 1;
+            text.Add(UiKit.Heading1(line.Label, 40));
+            text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
+            row.Add(text);
+            VisualElement button = ActionColumn(line.Action);
+            button.style.alignItems = Align.FlexEnd;
+            button.style.flexShrink = 0;
+            row.Add(button);
             return row;
         }
 
@@ -189,14 +205,19 @@ namespace Game.Presentation.Ui
         public void Show(SheetVm vm, bool refresh = false)
         {
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
-            foreach (LineVm l in vm.Lines) key.Append('|').Append(l.Label).Append('=').Append(l.Value);
+            foreach (LineVm l in vm.Lines)
+            {
+                key.Append('|').Append(l.Label).Append('=').Append(l.Value);
+                if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
+            }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
             var scroll = NewScroll();
             scroll.style.marginTop = 8;
             scroll.style.flexShrink = 1;
-            foreach (LineVm l in vm.Lines) scroll.Add(Row(l.Label, l.Value));
+            foreach (LineVm l in vm.Lines) scroll.Add(Row(l));
+            scroll.style.flexGrow = 1; // the buttons stay at the bottom of the full-height sheet
             sheet.Add(scroll);
             if (vm.Actions.Count > 0)
             {
@@ -223,6 +244,8 @@ namespace Game.Presentation.Ui
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
             var scroll = NewScroll();
             scroll.style.marginTop = 8;
+            scroll.style.flexGrow = 1;
+            scroll.style.flexShrink = 1;
             scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
 
             var chips = new VisualElement { pickingMode = PickingMode.Ignore };

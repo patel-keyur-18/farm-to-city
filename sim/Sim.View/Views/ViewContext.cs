@@ -1,6 +1,7 @@
 using System;
 using Sim.Core;
 using Sim.Core.Commands;
+using Sim.Core.Maths;
 using Sim.View.Content;
 using Sim.View.Text;
 
@@ -29,6 +30,13 @@ namespace Sim.View.Views
 
         /// <summary>The text of a rejection as a sentence (spec 008 AC-13).</summary>
         public string Reject(RejectReason r, params string[] args) { return Strings.Get("reject." + r, args); }
+
+        /// <summary>A yield factor (Care, Water, Weather) as a word a player reads at a glance: good, fair or poor (thresholds in ui.json).</summary>
+        public string Rating(Fixed factor)
+        {
+            if (factor >= Fixed.FromRatio(Ui.RatingGoodPercent, 100)) return Strings.Get("rating.good");
+            return Strings.Get(factor >= Fixed.FromRatio(Ui.RatingFairPercent, 100) ? "rating.fair" : "rating.poor");
+        }
     }
 
     public enum ActionKind
@@ -110,6 +118,9 @@ namespace Sim.View.Views
 
         /// <summary>A string key for a Why? sheet behind the value, or null.</summary>
         public string WhyKey { get; }
+
+        /// <summary>A button on the row itself (the store's Sell per good), or null.</summary>
+        public ActionVm Action { get; internal set; }
 
         public LineVm(string label, string value, string whyKey = null)
         {

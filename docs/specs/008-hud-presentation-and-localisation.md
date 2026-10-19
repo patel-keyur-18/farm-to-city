@@ -60,7 +60,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Safe area | Every edge-anchored element sits inside the device's safe area (notch, home indicator), both landscape directions |
 | Touch targets | At least 44 pt; spacing at least 8 pt |
 | Thumb zones | Main actions in the bottom corners: **Collect all** bottom-left, **Menu** (store, finance, people, settings) bottom-right |
-| Sheets | Every panel is a bottom sheet: up to 60% of the screen height, the map stays visible above it; swipe down or tap the map to close. At most one sheet open; a *Why?* sheet stacks on top of it |
+| Sheets | Every panel is a bottom sheet the full height of the screen with the same margin top and bottom (owner, device run 2, 2026-10-19: half height was cramped), 78% of the width so the map shows at the sides; swipe down or tap the map to close. A list of choices is one row per choice with its button on the row (the store's goods, the trees, the garden crops). At most one sheet open; a *Why?* sheet stacks on top of it |
 | Three taps | Any Phase 1 lever: tap a field (1), an action (2), confirm (3); or Menu (1), a section (2), an action (3) |
 
 ### 3.3 The HUD
@@ -426,6 +426,7 @@ None of these changes a rule or a lesson.
 5. **The Unity layer** (`Game.Presentation`): `Art/` (the sprite painter, `SpriteBank`, `IconBank`), `Map/` (`MapPresenter`, `MapInput`), `Ui/` (`UiKit`, `HudPresenter`, `SheetPresenter`), `Motion/` (`Tweens`, `Fx`), `DevTools/` (the panel and the golden check, development builds and the Editor only). Fonts: Baloo 2 Bold and Noto Sans in `Resources/Fonts`. Taps pick trees, beds, the hut, then the tile; a tap on the map while a sheet is open only closes it; the view lifts the selection above the sheet.
 6. **Verified in the Editor (Sprint 4):** play mode through the `unity` CLI (taps through `GameRoot.OnTap`, captures of the Game view): the map, the stages, ready bubbles, the sow, garden, store and land sheets, flying produce, the developer panel, and the golden replays (all four PASS with the `dotnet test` hashes under Mono). The device build is made with the Editor's Build button or the batch method `Game.Editor.BuildCli.IosDevelopment` (see the build guide). Screenshots: `docs/art/s04-*.png`.
 7. **Short money** has no unit word (the HUD adds the coin); `Formatter.Coins` takes the singular for one coin.
+8. **Device runs (2026-10-19).** Run 1 found touch broken (the input code waited for a mouse; fixed). Run 2's owner feedback: sheets are **full height** (§3.2 table above); the Store, tree and garden sheets list **one row per choice with its own button** (`LineVm.Action`); a growing crop's **Care, Water and Weather read Good, Fair or Poor** (`ViewContext.Rating`: good from `ratingGoodPercent` 95, fair from `ratingFairPercent` 80, in `content/ui.json`; the *Why?* sheet in Sprint 7 shows the numbers); empty tree places on the player's land are drawn as **stone-ringed pits** and can be tapped (they had no sprite, so a tap fell through to the land under them).
 
 ## 11. Cut first
 

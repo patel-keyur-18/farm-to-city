@@ -37,15 +37,15 @@ namespace Sim.View.Views
                 long free = m.InStore(g) - m.OnOffer(g);
                 long room = MarketRules.TraderCapacityLeft(sim, g);
                 long sell = System.Math.Min(free, room);
-                vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.produce", "qty", ctx.Fmt.Kg(m.Stock[g]), "price", ctx.Fmt.PricePerKg(floor)), "price"));
+                var line = new LineVm(name, ctx.Strings.Get("store.produce", "qty", ctx.Fmt.Kg(m.Stock[g]), "price", ctx.Fmt.PricePerKg(floor)), "price");
                 string id = good.Id;
                 long amount = MarketRules.Value(sim, g, sell, floor);
-                if (sell > 0)
-                    vm.Actions.Add(ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sell", "good", name), ctx.Strings.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(amount)),
-                        ActionKind.Primary, at => new SellToTrader(at, id, sell)));
-                else
-                    vm.Actions.Add(ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sell", "good", name), null, ActionKind.Primary,
-                        at => new SellToTrader(at, id, room == 0 ? free : 1)));
+                // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
+                line.Action = sell > 0
+                    ? ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sellRow"), ctx.Strings.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(amount)),
+                        ActionKind.Primary, at => new SellToTrader(at, id, sell))
+                    : ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sellRow"), null, ActionKind.Primary, at => new SellToTrader(at, id, room == 0 ? free : 1));
+                vm.Lines.Add(line);
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("store.empty");
             return vm;

@@ -42,7 +42,7 @@ namespace Game.Presentation.Map
         private const float HalfWidth = 0.5f;
 
         // Where things sit inside a tile, in world units from the tile centre (y up).
-        private static readonly Vector2[] EdgeSlots = { new Vector2(-0.27f, -0.09f), new Vector2(0.27f, -0.09f) };
+        private static readonly Vector2[] EdgeSlots = { new Vector2(-0.36f, -0.02f), new Vector2(0.36f, -0.02f) }; // the acre's left and right corners
         private static readonly Vector2[] YardSlots = { new Vector2(-0.40f, 0.05f), new Vector2(0.14f, 0.19f), new Vector2(0.40f, -0.06f), new Vector2(0.10f, -0.17f) };
         private static readonly Vector2[] BedSpots = { new Vector2(-0.30f, -0.10f), new Vector2(-0.06f, -0.19f) };
         private static readonly Vector2 HutSpot = new Vector2(-0.10f, 0.10f), WellSpot = new Vector2(0.30f, 0.04f);
@@ -54,6 +54,7 @@ namespace Game.Presentation.Map
             public Vector3 Home;
             public Sprite Last;
             public string LastKey;
+            public bool Empty; // a tree place with no tree (drawn as a planting spot when on the player's land)
         }
 
         private Tweens _tweens;
@@ -206,8 +207,12 @@ namespace Game.Presentation.Map
             foreach (SlotVm s in map.Slots)
             {
                 Spot spot = _slots[s.Id];
-                Sprite ts = s.Stage == TreeStage.Empty ? null : SpriteBank.Tree(s.TreeId, s.Stage);
+                bool empty = s.Stage == TreeStage.Empty;
+                Sprite ts = empty ? (s.Owned ? SpriteBank.PlantingSpot : null) : SpriteBank.Tree(s.TreeId, s.Stage);
+                bool planted = spot.Empty && !empty && spot.Renderer.sprite != null;
                 Apply(spot.Renderer, spot, ts, s.TreeId + ":" + s.Stage, animate);
+                if (animate && planted) Pop(spot.Renderer.transform, spot.Renderer.transform.localScale.x); // the sapling pops in over the spot
+                spot.Empty = empty;
                 spot.Renderer.color = _tint;
                 Sprite ms = s.Stage == TreeStage.Ripe ? SpriteBank.MarkerReady : s.Stage == TreeStage.Spoiling ? SpriteBank.MarkerSpoiling : null;
                 Apply(spot.Marker, spot, ms, "m:" + ms?.name, animate, markerOnly: true);
@@ -287,8 +292,10 @@ namespace Game.Presentation.Map
         public Hit Pick(Vector2 w)
         {
             if (!_built) return Hit.None;
+            // A tree is hit on its canopy; an empty planting spot (only drawn on the player's land) on the ground ring and its peg.
             foreach (KeyValuePair<long, Spot> kv in _slots)
-                if (kv.Value.Renderer.enabled && Vector2.Distance(w, _slotWorld[kv.Key] + new Vector2(0, 0.17f)) < 0.16f) return new Hit(HitKind.Slot, kv.Key);
+                if (kv.Value.Renderer.enabled && Vector2.Distance(w, _slotWorld[kv.Key] + new Vector2(0, kv.Value.Empty ? 0.04f : 0.17f)) < (kv.Value.Empty ? 0.13f : 0.16f))
+                    return new Hit(HitKind.Slot, kv.Key);
             foreach (KeyValuePair<long, Spot> kv in _beds)
                 if (Mathf.Abs(w.x - _bedWorld[kv.Key].x) / 0.17f + Mathf.Abs(w.y - _bedWorld[kv.Key].y) / 0.085f < 1f) return new Hit(HitKind.Bed, kv.Key);
             if (Vector2.Distance(w, _hutWorld + new Vector2(0, 0.12f)) < 0.24f || Vector2.Distance(w, _wellWorld + new Vector2(0, 0.08f)) < 0.13f) return new Hit(HitKind.Hut, 0);

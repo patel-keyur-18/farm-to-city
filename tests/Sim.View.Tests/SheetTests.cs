@@ -6,6 +6,7 @@ using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Farm;
 using Sim.Core.Land;
+using Sim.Core.Maths;
 using Sim.View.Views;
 
 namespace Sim.View.Tests
@@ -21,6 +22,8 @@ namespace Sim.View.Tests
         }
 
         private static ActionVm Action(SheetVm sheet, string id) { return sheet.Actions.Single(a => a.Id == id); }
+
+        private static ActionVm RowAction(SheetVm sheet, string id) { return sheet.Lines.Single(l => l.Action != null && l.Action.Id == id).Action; }
 
         [Test]
         public void VacantField_OffersSow_AndShowsTheSoil()
@@ -48,6 +51,9 @@ namespace Sim.View.Tests
             Assert.That(sheet.Title, Is.EqualTo("Potato, growing"));
             Assert.That(sheet.Lines.Single(l => l.Label == "Time left").Value, Is.EqualTo("21 h"));
             Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Care").And.Contain("Water").And.Contain("Weather"));
+            // Words, not factors (owner feedback, device run 2).
+            foreach (string label in new[] { "Care", "Water", "Weather" })
+                Assert.That(sheet.Lines.Single(l => l.Label == label).Value, Is.AnyOf("Good", "Fair", "Poor"), label);
             Assert.That(Action(sheet, "spray").Kind, Is.EqualTo(ActionKind.Primary));
             Assert.That(Action(sheet, "clear").Kind, Is.EqualTo(ActionKind.Danger));
             Assert.That(Action(sheet, "clear").Enabled, Is.True);
@@ -119,16 +125,17 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             SheetVm empty = FieldSheets.ForBed(ctx, 1);
             Assert.That(empty.Title, Is.EqualTo("Garden bed 1"));
-            Assert.That(empty.Actions.Select(a => a.Id), Is.EqualTo(new[] { "sow:garden_radish", "sow:garden_spinach", "sow:garden_coriander" }));
-            Assert.That(empty.Actions.All(a => a.Enabled), Is.True);
-            Assert.That(sim.Execute(Action(empty, "sow:garden_radish").Create(sim.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(empty.Lines.Where(l => l.Action != null).Select(l => l.Action.Id), Is.EqualTo(new[] { "sow:garden_radish", "sow:garden_spinach", "sow:garden_coriander" }));
+            Assert.That(empty.Lines.Where(l => l.Action != null).All(l => l.Action.Enabled), Is.True);
+            Assert.That(empty.Lines.Single(l => l.Label == "Radish").Value, Does.StartWith("ready in"));
+            Assert.That(sim.Execute(RowAction(empty, "sow:garden_radish").Create(sim.State.Clock.SimTime)).Accepted, Is.True);
             Assert.That(FieldSheets.ForBed(ctx, 1).Subtitle, Is.EqualTo("Radish, growing"));
             sim.AdvanceTo(sim.State.Clock.SimTime + 11 * 60);
             SheetVm ready = FieldSheets.ForBed(ctx, 1);
             Assert.That(Action(ready, "pick").Enabled, Is.True);
             Assert.That(Action(ready, "pick").Detail, Is.EqualTo("5.0 kg"));
             Assert.That(sim.Execute(Action(ready, "pick").Create(sim.State.Clock.SimTime)).Accepted, Is.True);
-            Assert.That(FieldSheets.ForBed(ctx, 1).Lines.Single().Value, Is.EqualTo("5.0 kg of 100 kg picked"));
+            Assert.That(FieldSheets.ForBed(ctx, 1).Lines.Single(l => l.Label == "This season").Value, Is.EqualTo("5.0 kg of 100 kg picked"));
         }
 
         [Test]
@@ -139,10 +146,11 @@ namespace Sim.View.Tests
             long yard = sim.State.Land.Slots.First(s => s.Kind == SlotKind.Yard).Id;
             SheetVm empty = FieldSheets.ForSlot(ctx, yard);
             Assert.That(empty.Title, Is.EqualTo("Yard tree"));
-            Assert.That(empty.Actions.Count, Is.EqualTo(4));
-            Assert.That(Action(empty, "plant:mango").Label, Is.EqualTo("Plant Mango"));
-            Assert.That(Action(empty, "plant:mango").Detail, Is.EqualTo("350 coins"));
-            Assert.That(sim.Execute(Action(empty, "plant:banana").Create(sim.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(empty.Lines.Count(l => l.Action != null), Is.EqualTo(4), "one row per tree");
+            Assert.That(RowAction(empty, "plant:mango").Label, Is.EqualTo("Plant"));
+            Assert.That(RowAction(empty, "plant:mango").Detail, Is.EqualTo("350 coins"));
+            Assert.That(empty.Lines.Single(l => l.Label == "Mango").Value, Does.StartWith("fruits in").And.Contain("grows in"));
+            Assert.That(sim.Execute(RowAction(empty, "plant:banana").Create(sim.State.Clock.SimTime)).Accepted, Is.True);
 
             SheetVm young = FieldSheets.ForSlot(ctx, yard);
             Assert.That(young.Title, Is.EqualTo("Banana"));
@@ -166,21 +174,36 @@ namespace Sim.View.Tests
             Assert.That(store.Title, Is.EqualTo("Store"));
             Assert.That(store.Lines.Select(l => l.Label), Does.Contain("Wheat").And.Contain("Lentils").And.Contain("Seed potato"));
             Assert.That(store.Subtitle, Does.StartWith("675").Or.Contain("of 2,000 kg"));
-            ActionVm sellWheat = Action(store, "sell:wheat");
+            Assert.That(store.Actions, Is.Empty, "each Sell sits on its good's row");
+            ActionVm sellWheat = store.Lines.Single(l => l.Label == "Wheat").Action;
+            Assert.That(sellWheat.Id, Is.EqualTo("sell:wheat"));
             Assert.That(sellWheat.Enabled, Is.True);
-            Assert.That(sellWheat.Label, Is.EqualTo("Sell Wheat to the trader"));
+            Assert.That(sellWheat.Label, Is.EqualTo("Sell"));
+            Assert.That(store.Lines.Single(l => l.Label == "Seed potato").Action, Is.Null, "inputs aren't sold to the trader here");
             long cash = sim.State.Ledger.Cash;
             Assert.That(sim.Execute(sellWheat.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
             Assert.That(sim.State.Ledger.Cash, Is.GreaterThan(cash));
             Assert.That(StoreSheet.Build(ctx).Lines.Any(l => l.Label == "Wheat"), Is.False, "sold out");
-            Assert.That(StoreSheet.Build(ctx).Actions.Any(a => a.Id == "sell:wheat"), Is.False);
+
 
             // A good on offer can't be sold again.
             Simulation m = ViewKit.NewGame();
             m.Execute(new Offer(m.State.Clock.SimTime, "lentils", 75_000));
-            ActionVm lentils = StoreSheet.Build(ViewKit2.Context(m)).Actions.Single(a => a.Id == "sell:lentils");
+            ActionVm lentils = StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils").Action;
             Assert.That(lentils.Enabled, Is.False);
             Assert.That(lentils.DisabledReason, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Rating_WordsForAYieldFactor()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame()); // ui.json: good from 95%, fair from 80%
+            Assert.That(ctx.Rating(Fixed.FromRatio(110, 100)), Is.EqualTo("Good"));
+            Assert.That(ctx.Rating(Fixed.FromRatio(95, 100)), Is.EqualTo("Good"));
+            Assert.That(ctx.Rating(Fixed.FromRatio(94, 100)), Is.EqualTo("Fair"));
+            Assert.That(ctx.Rating(Fixed.FromRatio(80, 100)), Is.EqualTo("Fair"));
+            Assert.That(ctx.Rating(Fixed.FromRatio(79, 100)), Is.EqualTo("Poor"));
+            Assert.That(ctx.Rating(Fixed.Zero), Is.EqualTo("Poor"));
         }
 
         // AC-3 (views): every string key written in Sim.View's code exists in en.json (plurals by their forms).

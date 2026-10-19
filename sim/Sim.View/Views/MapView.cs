@@ -74,6 +74,9 @@ namespace Sim.View.Views
         public int TileId { get; internal set; }
         public bool Yard { get; internal set; }
 
+        /// <summary>On the player's land: an empty slot there is drawn as a planting spot and can be tapped.</summary>
+        public bool Owned { get; internal set; }
+
         /// <summary>Which of the tile's slots this is (0, 1, ...), so the sprites sit at different corners.</summary>
         public int Index { get; internal set; }
         public string TreeId { get; internal set; }
@@ -154,7 +157,8 @@ namespace Sim.View.Views
             {
                 perTile.TryGetValue(s.TileId, out int index);
                 perTile[s.TileId] = index + 1;
-                var vm = new SlotVm { Id = s.Id, TileId = s.TileId, Yard = s.Kind == SlotKind.Yard, Index = index, Stage = TreeStage.Empty };
+                var vm = new SlotVm { Id = s.Id, TileId = s.TileId, Yard = s.Kind == SlotKind.Yard, Index = index, Stage = TreeStage.Empty,
+                    Owned = land.Parcels[land.Tiles[s.TileId].ParcelId].Owned };
                 Tree tree = sim.State.Farm.TreeIn(s.Id);
                 if (tree != null)
                 {

@@ -34,6 +34,7 @@ namespace Sim.View.Tests
             Assert.That(map.Slots.Count(s => s.Yard), Is.EqualTo(4));
             Assert.That(map.Slots.Count(s => !s.Yard), Is.EqualTo(12));
             Assert.That(map.Slots.All(s => s.Stage == TreeStage.Empty), Is.True);
+            Assert.That(map.Slots.All(s => s.Owned), Is.True, "the inherited land's slots: drawn as planting spots and tappable");
             Assert.That(map.Beds.Count, Is.EqualTo(2));
             Assert.That(map.Slots.Where(s => s.TileId == 20).Select(s => s.Index), Is.EqualTo(new[] { 0, 1 }));
         }

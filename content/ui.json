@@ -214,5 +214,7 @@
   "maxFlyingTotal": 20,
   "spoilWarningHours": 12,
   "storeNearlyFullPercent": 90,
-  "awayRowsMax": 8
+  "awayRowsMax": 8,
+  "ratingGoodPercent": 95,
+  "ratingFairPercent": 80
 }

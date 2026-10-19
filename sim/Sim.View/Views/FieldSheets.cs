@@ -51,9 +51,9 @@ namespace Sim.View.Views
             {
                 vm.Title = ctx.Strings.Get("field.growing", "crop", cropName);
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("field.timeLeft"), ctx.Fmt.Duration(System.Math.Max(0, crop.ReadyAt - ctx.Now))));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.care"), ctx.Fmt.Factor(sim.State.Farm.CareRatio), "care"));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.water"), ctx.Fmt.Factor(crop.WaterRate), "water"));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.weather"), ctx.Fmt.Factor(crop.WeatherRate), "weather"));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.care"), ctx.Rating(sim.State.Farm.CareRatio), "care"));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.water"), ctx.Rating(crop.WaterRate), "water"));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.weather"), ctx.Rating(crop.WeatherRate), "weather"));
                 if (crop.Outbreak != Outbreak.None)
                     vm.Lines.Add(new LineVm(ctx.Strings.Get("field.pests"), ctx.Strings.Get(crop.Spray == SprayState.None ? "field.pestsFound" : "field.pestsSprayed")));
                 else if (crop.Spray != SprayState.None) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.pests"), ctx.Strings.Get("field.pestsSprayed")));
@@ -119,12 +119,13 @@ namespace Sim.View.Views
             if (bed.State == BedState.Empty)
             {
                 vm.Subtitle = ctx.Strings.Get(bed.RemainingGrams <= 0 ? "garden.rested" : "garden.empty");
+                // One row per crop with its own Sow button (owner feedback, device run 2: the full-height sheet reads as a list).
                 foreach (GardenCropDef crop in defs.Farm.GardenCrops)
                 {
                     GardenCropDef c = crop;
-                    string name = ctx.Strings.Get(c.NameKey);
-                    vm.Actions.Add(ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sowCrop", "crop", name),
-                        ctx.Fmt.Duration(c.GrowthMinutes * 60L), ActionKind.Primary, at => new SowGarden(at, bedId, c.Id)));
+                    var line = new LineVm(ctx.Strings.Get(c.NameKey), ctx.Strings.Get("garden.readyIn", "time", ctx.Fmt.Duration(c.GrowthMinutes * 60L)));
+                    line.Action = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sow"), null, ActionKind.Primary, at => new SowGarden(at, bedId, c.Id));
+                    vm.Lines.Add(line);
                 }
                 return vm;
             }
@@ -155,12 +156,16 @@ namespace Sim.View.Views
             {
                 vm.Subtitle = ctx.Strings.Get("slot.empty");
                 if (slot.Kind == SlotKind.FieldEdge) vm.Lines.Add(new LineVm(ctx.Strings.Get("slot.shade"), ctx.Strings.Get("slot.shadeNote")));
+                // One row per tree: when it fruits and how long it grows, with its own Plant button and price.
                 foreach (TreeDef def in defs.Farm.Trees)
                 {
                     TreeDef d = def;
                     long cost = MarketRules.Value(sim, d.SaplingGood, 1, MarketRules.InputPrice(sim, d.SaplingGood));
-                    vm.Actions.Add(ActionVm.Checked(ctx, "plant:" + d.Id, ctx.Strings.Get("action.plant", "tree", ctx.Strings.Get(d.NameKey)),
-                        ctx.Fmt.Coins(cost), ActionKind.Primary, at => new PlantTree(at, slotId, d.Id)));
+                    var line = new LineVm(ctx.Strings.Get(d.NameKey),
+                        ctx.Strings.Get("slot.treeInfo", "seasons", SeasonsText(ctx, d.FruitingSeasons), "time", ctx.Fmt.Duration(d.GrowthSeconds)));
+                    line.Action = ActionVm.Checked(ctx, "plant:" + d.Id, ctx.Strings.Get("action.plant"), ctx.Fmt.Coins(cost), ActionKind.Primary,
+                        at => new PlantTree(at, slotId, d.Id));
+                    vm.Lines.Add(line);
                 }
                 return vm;
             }

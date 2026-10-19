@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -53,7 +53,11 @@ namespace Sim.View.Content
             Range(full, 50, 100, root + ".storeNearlyFullPercent");
             int away = Int(Required(o, root, "awayRowsMax"), root + ".awayRowsMax");
             Range(away, 3, 20, root + ".awayRowsMax");
-            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away);
+            int good = Int(Required(o, root, "ratingGoodPercent"), root + ".ratingGoodPercent");
+            Range(good, 1, 200, root + ".ratingGoodPercent");
+            int fair = Int(Required(o, root, "ratingFairPercent"), root + ".ratingFairPercent");
+            Range(fair, 1, good - 1, root + ".ratingFairPercent");
+            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair);
         }
 
         private static List<JToken> NonEmptyArray(JObject o, string path, string name)

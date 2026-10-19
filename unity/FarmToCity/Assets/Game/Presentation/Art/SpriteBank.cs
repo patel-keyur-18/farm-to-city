@@ -305,6 +305,32 @@ namespace Game.Presentation.Art
             });
         }
 
+        /// <summary>
+        /// An empty tree place on the player's land: a dug pit ringed with stones, so the player can see where a tree goes and tap
+        /// it. Same canvas and pivot as <see cref="Tree"/>, so a sapling replaces it in place.
+        /// </summary>
+        public static Sprite PlantingSpot
+        {
+            get
+            {
+                return Get("plantingSpot", () =>
+                {
+                    var p = new Painter(128, 176);
+                    const float cx = 64f, baseY = 14f;
+                    p.Ellipse(cx, baseY, 19f, 8.6f, Outline);
+                    p.Ellipse(cx, baseY, 17.4f, 7.2f, SoilDark);
+                    p.Ellipse(cx, baseY + 1f, 13f, 5f, Soil);
+                    // A ring of pale stones round the pit: a tree place, never mistaken for a sown crop.
+                    for (int i = 0; i < 9; i++)
+                    {
+                        float a = i / 9f * Mathf.PI * 2f;
+                        p.Blob(cx + Mathf.Cos(a) * 19f, baseY + Mathf.Sin(a) * 8.6f, 4.2f, 3.2f, i % 2 == 0 ? Painter.Hex(0xD8D0BE) : Painter.Hex(0xBDB4A0), Outline, 1.0f, false);
+                    }
+                    return p.ToSprite(Ppu, new Vector2(0.5f, baseY / 176f));
+                });
+            }
+        }
+
         // ---- buildings ----
 
         public static Sprite Hut

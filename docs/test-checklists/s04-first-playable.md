@@ -26,10 +26,10 @@ Time passes in real time (a potato takes 24 hours). Use the developer panel to j
 | 7 | US-079 | Tap a ready field or bed, then **Harvest** / **Pick** | The picture flies to the store button, the store bar grows and the button bounces | | |
 | 8 | US-078 | Use the panel's **+1 day** until the potato or radish is ready; watch the stages | Sprouts, bigger plants, then full plants with a bubble; the colour of the map warms at dusk and goes blue at night, and changes with the season | | |
 | 9 | US-079 | Tap **Collect all · N** | Everything ready is picked in turn, nearest to spoiling first; the icons fly to the store. If the store is nearly full, what doesn't fit stays and a note says so | | |
-| 10 | US-079 | Tap the store bar (or the hut) | The **Store** sheet: what you hold, the trader's price, and **Sell … to the trader** for each produce. Tap one | Coins fly to the cash and it counts up | | |
-| 11 | US-079 | Tap an empty tree place (yard: next to the hut; field edge: the corners of an acre) and plant a banana or mango | The sheet lists 4 trees with prices; planting closes the sheet and a small sapling appears. A grown tree shows fruit and a bubble when ripe | | |
+| 10 | US-079 | Tap the store bar (or the hut) | The **Store** sheet (full height): one row per good with what you hold and the trader's price, and a **Sell** button on each produce row. Tap one | Coins fly to the cash and it counts up | | |
+| 11 | US-079 | Tap an empty tree place (a pit ringed with stones: in the yard next to the hut, and at the left and right corners of each acre) and plant a banana or mango | The sheet lists 4 trees, one row each with when it fruits, how long it grows and a **Plant** button with the price; planting closes the sheet and a small sapling appears. A grown tree shows fruit and a bubble when ripe | | |
 | 12 | US-079 | Tap land you don't own, next to yours | **Land for sale**: price, your cash, quick resale, a **Buy this land** button greyed with the reason ("You don't have enough coins for that.") | | |
-| 13 | US-079 | Tap a growing crop | Time left, Care, Water, Weather, pests; **Spray** and **Clear field** buttons | | |
+| 13 | US-079 | Tap a growing crop | Time left; Care, Water and Weather as **Good**, **Fair** or **Poor**; pests; **Spray** and **Clear field** buttons | | |
 | 14 | US-079 | Tap the map while a sheet is open | The sheet closes (a second tap selects) | | |
 | 15 | US-086 | Read every number on screen | Indian grouping (1,20,000), coins, kg, hours and minutes read naturally; the developer panel's **Switch number format** changes it to 120,000 | | |
 | 16 | US-088 | Hold the time card for 3 seconds | The developer panel opens: time travel, snapshot and restore, number format, reduced motion, **Golden replays** | | |

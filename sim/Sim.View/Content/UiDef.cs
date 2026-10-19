@@ -63,8 +63,13 @@ namespace Sim.View.Content
         public int StoreNearlyFullPercent { get; }
         public int AwayRowsMax { get; }
 
+        /// <summary>A yield factor at or above this percentage reads "good", at or above the fair one "fair", else "poor".</summary>
+        public int RatingGoodPercent { get; }
+        public int RatingFairPercent { get; }
+
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
-            int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax)
+            int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
+            int ratingGoodPercent = 95, int ratingFairPercent = 80)
         {
             DayTint = new List<Rgb>(dayTint).AsReadOnly();
             SeasonTint = new List<Rgb>(seasonTint).AsReadOnly();
@@ -75,6 +80,8 @@ namespace Sim.View.Content
             SpoilWarningHours = spoilWarningHours;
             StoreNearlyFullPercent = storeNearlyFullPercent;
             AwayRowsMax = awayRowsMax;
+            RatingGoodPercent = ratingGoodPercent;
+            RatingFairPercent = ratingFairPercent;
         }
 
         public MotionDef Motion(string trigger)
