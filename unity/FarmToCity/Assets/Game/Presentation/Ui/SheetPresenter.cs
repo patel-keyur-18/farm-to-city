@@ -86,7 +86,9 @@ namespace Game.Presentation.Ui
             switch (icon)
             {
                 case null: return null;
-                case "hut": return SpriteBank.Hut;
+                case "hut": return SpriteBank.Rendered("hut") ?? SpriteBank.Hut;
+                case "people": return SpriteBank.Rendered("person_founder_front");
+                case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
                 case "store": return IconBank.Sack;
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
@@ -132,6 +134,36 @@ namespace Game.Presentation.Ui
             }
         }
 
+        /// <summary>
+        /// A small question card over the sheet (ADR 0039 §6): "Change Ramesh's order to potato too?" with two buttons.
+        /// </summary>
+        public void Confirm(ConfirmVm vm, Action yes, Action no)
+        {
+            var veil = new VisualElement();
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(32);
+            UiKit.Padding(card, 26, 36);
+            card.style.maxWidth = 1100;
+            Label q = UiKit.Heading1(vm.Question, 46);
+            q.style.unityTextAlign = TextAnchor.MiddleCenter;
+            card.Add(q);
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.justifyContent = Justify.Center;
+            buttons.style.marginTop = 14;
+            buttons.Add(UiKit.MakeButton(vm.YesLabel, vm.YesIsDanger ? ActionLook.Danger : ActionLook.Primary, () => { _holder.parent.Remove(veil); yes(); }));
+            buttons.Add(UiKit.MakeButton(vm.NoLabel, ActionLook.Secondary, () => { _holder.parent.Remove(veil); no(); }));
+            card.Add(buttons);
+            veil.Add(card);
+            _holder.parent.Add(veil);
+            card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
+            _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
         public void Close()
         {
             if (_sheet == null || _closing) return;
@@ -153,8 +185,32 @@ namespace Game.Presentation.Ui
             return scroll;
         }
 
+        /// <summary>Five stars in a row: solid, then faded, then empty.</summary>
+        private static VisualElement Stars(StarsVm s)
+        {
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.marginRight = 12;
+            for (int i = 0; i < 5; i++)
+            {
+                VisualElement star = UiKit.Icon(IconBank.Star(i < s.Solid ? 2 : i < s.Solid + s.Faded ? 1 : 0), 34);
+                star.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                row.Add(star);
+            }
+            return row;
+        }
+
         private VisualElement Row(LineVm line)
         {
+            if (line.IsHeader)
+            {
+                // A section heading: a wood title with a rule under it, a little air above.
+                Label h = UiKit.Heading1(line.Label, 40, UiKit.Wood);
+                h.style.marginTop = 18;
+                h.style.borderBottomWidth = 3;
+                h.style.borderBottomColor = UiKit.Wood;
+                return h;
+            }
             var row = new VisualElement { pickingMode = PickingMode.Ignore };
             row.style.flexDirection = FlexDirection.Row;
             row.style.justifyContent = Justify.SpaceBetween;
@@ -168,14 +224,36 @@ namespace Game.Presentation.Ui
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
                 v.style.unityTextAlign = TextAnchor.MiddleRight;
                 v.style.flexShrink = 1;
-                row.Add(v);
+                // A short value never splits ("Goo / d"): on a phone's fractional UI scale the measured width can round a hair short.
+                if (line.Value != null && line.Value.Length <= 24 && line.Value.IndexOf('\n') < 0) { v.style.whiteSpace = WhiteSpace.NoWrap; v.style.flexShrink = 0; }
+                if (line.Stars.HasValue)
+                {
+                    var right = new VisualElement { pickingMode = PickingMode.Ignore };
+                    right.style.flexDirection = FlexDirection.Row;
+                    right.style.alignItems = Align.Center;
+                    right.Add(Stars(line.Stars.Value));
+                    right.Add(v);
+                    row.Add(right);
+                }
+                else row.Add(v);
                 return row;
             }
             // A row with its own button (the store's Sell): name and details on the left, the button on the right.
             var text = new VisualElement { pickingMode = PickingMode.Ignore };
             text.style.flexShrink = 1;
             text.Add(UiKit.Heading1(line.Label, 40));
-            text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
+            if (line.Stars.HasValue)
+            {
+                var starLine = new VisualElement { pickingMode = PickingMode.Ignore };
+                starLine.style.flexDirection = FlexDirection.Row;
+                starLine.style.alignItems = Align.Center;
+                starLine.Add(Stars(line.Stars.Value));
+                Label value = UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body);
+                value.style.flexShrink = 1;
+                starLine.Add(value);
+                text.Add(starLine);
+            }
+            else text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
             row.Add(text);
             VisualElement button = ActionColumn(line.Action);
             button.style.alignItems = Align.FlexEnd;
@@ -207,7 +285,7 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
             foreach (LineVm l in vm.Lines)
             {
-                key.Append('|').Append(l.Label).Append('=').Append(l.Value);
+                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);

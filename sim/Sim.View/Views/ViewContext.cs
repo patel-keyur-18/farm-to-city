@@ -76,14 +76,21 @@ namespace Sim.View.Views
         public string Question { get; }
         public string YesLabel { get; }
         public string NoLabel { get; }
+
+        /// <summary>True: No still sends the action's own command ("Just this once"). False: No only cancels ("Keep them").</summary>
+        public bool NoSends { get; }
+
+        /// <summary>Yes is the destructive choice (red), as in "Let go".</summary>
+        public bool YesIsDanger { get; internal set; }
         private readonly Func<long, Command[]> _yes;
 
-        internal ConfirmVm(string question, string yesLabel, string noLabel, Func<long, Command[]> yes)
+        internal ConfirmVm(string question, string yesLabel, string noLabel, Func<long, Command[]> yes, bool noSends = true)
         {
             Question = question;
             YesLabel = yesLabel;
             NoLabel = noLabel;
             _yes = yes;
+            NoSends = noSends;
         }
 
         public Command[] Yes(long at) { return _yes(at); }

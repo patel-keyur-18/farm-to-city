@@ -22,7 +22,9 @@ namespace Game.Presentation.Art
 
         private static Sprite Get(string key, System.Func<Sprite> make)
         {
-            if (!Cache.TryGetValue(key, out Sprite s)) Cache[key] = s = make();
+            // "s == null" is Unity's check for a destroyed object: with fast enter-play-mode (no domain reload) the cache outlives the
+            // textures painted in the last play session, so re-create them.
+            if (!Cache.TryGetValue(key, out Sprite s) || s == null) Cache[key] = s = make();
             return s;
         }
 

@@ -14,6 +14,9 @@ namespace Game.Presentation.Map
         Slot = 2,
         Bed = 3,
         Hut = 4,
+
+        /// <summary>A hand's hut (Id = building id) or one being built (Id = −construction id).</summary>
+        HandHut = 5,
     }
 
     /// <summary>What a tap landed on: a tile, a tree slot, a garden bed or the hut (the store).</summary>
@@ -43,9 +46,32 @@ namespace Game.Presentation.Map
 
         // Where things sit inside a tile, in world units from the tile centre (y up).
         private static readonly Vector2[] EdgeSlots = { new Vector2(-0.36f, -0.02f), new Vector2(0.36f, -0.02f) }; // the acre's left and right corners
-        private static readonly Vector2[] YardSlots = { new Vector2(-0.40f, 0.05f), new Vector2(0.14f, 0.19f), new Vector2(0.40f, -0.06f), new Vector2(0.10f, -0.17f) };
-        private static readonly Vector2[] BedSpots = { new Vector2(-0.30f, -0.10f), new Vector2(-0.06f, -0.19f) };
-        private static readonly Vector2 HutSpot = new Vector2(-0.10f, 0.10f), WellSpot = new Vector2(0.30f, 0.04f);
+        // The yard (Blender hut, ADR 0039): the house at the back, the well behind its right shoulder, the beds in front, and the four
+        // yard trees on the corners and the front-right edge, clear of the house.
+        private static readonly Vector2[] YardSlots = { new Vector2(-0.49f, 0.0f), new Vector2(0.49f, 0.0f), new Vector2(0.25f, -0.13f), new Vector2(0.02f, -0.24f) };
+        private static readonly Vector2[] BedSpots = { new Vector2(-0.33f, -0.07f), new Vector2(-0.14f, -0.16f) };
+        private static readonly Vector2 HutSpot = new Vector2(-0.08f, 0.10f), WellSpot = new Vector2(0.30f, 0.07f);
+
+        /// <summary>A hand's hut stands at the head of its field (the acre's top corner, ADR 0039 §2).</summary>
+        private static readonly Vector2 HandHutSpot = new Vector2(0.0f, 0.13f);
+
+        /// <summary>Where people stand on a tile, by arrival order, so a crowd doesn't stack.</summary>
+        private static readonly Vector2[] PersonSpots = { new Vector2(-0.12f, -0.06f), new Vector2(0.14f, -0.03f), new Vector2(0.0f, -0.13f), new Vector2(-0.22f, 0.04f), new Vector2(0.24f, 0.05f) };
+
+        private sealed class PersonView
+        {
+            public SpriteRenderer Body, Shadow;
+            public string Sprite; // person_<kind>
+            public Vector3 Pos, Target;
+            public int Tile;
+            public bool Working, Leaving;
+            public float Phase;
+        }
+
+        private readonly Dictionary<long, SpriteRenderer> _handHuts = new Dictionary<long, SpriteRenderer>();
+        private readonly Dictionary<long, SpriteRenderer> _sites = new Dictionary<long, SpriteRenderer>();
+        private readonly Dictionary<string, PersonView> _people = new Dictionary<string, PersonView>();
+        private SpriteRenderer _ghost, _ghostRing;
 
         private sealed class Spot
         {
@@ -240,6 +266,152 @@ namespace Game.Presentation.Map
                 Apply(spot.Marker, spot, ms, "m:" + ms?.name, animate, markerOnly: true);
             }
             foreach (SpriteRenderer r in _buildings) r.color = _tint;
+            RefreshHandHuts(map, animate);
+            RefreshPeople(map, animate);
+        }
+
+        // ---- hands' huts, building sites and people (ADR 0039 §2, §8) ----
+
+        private Vector3 HandHutWorld(int tile) { return TileCentre(tile) + (Vector3)HandHutSpot; }
+
+        private SpriteRenderer NewHutRenderer(string name, string sprite, int tile)
+        {
+            Vector3 pos = HandHutWorld(tile);
+            SpriteRenderer r = NewRenderer(name, SpriteBank.Rendered(sprite) ?? SpriteBank.Hut, pos, Order(tile, _width, 12, HandHutSpot.y));
+            SpriteRenderer shadow = NewRenderer(name + "Shadow", SpriteBank.ContactShadow, pos, Order(tile, _width, 11, HandHutSpot.y), r.transform);
+            shadow.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
+            return r;
+        }
+
+        private void RefreshHandHuts(MapVm map, bool animate)
+        {
+            var seen = new HashSet<long>();
+            foreach (BuildingVm b in map.Buildings)
+            {
+                if (b.DefId != "hand_hut") continue;
+                seen.Add(b.Id);
+                if (!_handHuts.TryGetValue(b.Id, out SpriteRenderer r))
+                {
+                    _handHuts[b.Id] = r = NewHutRenderer("handHut" + b.Id, "hand_hut", b.TileId);
+                    if (animate) Pop(r.transform, 1f);
+                }
+                r.color = _tint;
+            }
+            foreach (long id in new List<long>(_handHuts.Keys)) if (!seen.Contains(id)) { Destroy(_handHuts[id].gameObject); _handHuts.Remove(id); }
+
+            var sites = new HashSet<long>();
+            foreach (ConstructionVm c in map.Constructions)
+            {
+                sites.Add(c.Id);
+                if (!_sites.TryGetValue(c.Id, out SpriteRenderer r))
+                {
+                    _sites[c.Id] = r = NewHutRenderer("site" + c.Id, "hand_hut_building", c.TileId);
+                    if (animate) Pop(r.transform, 1f);
+                }
+                r.color = _tint;
+            }
+            foreach (long id in new List<long>(_sites.Keys)) if (!sites.Contains(id)) { Destroy(_sites[id].gameObject); _sites.Remove(id); }
+        }
+
+        private static string PersonSprite(PersonVm p)
+        {
+            switch (p.Kind)
+            {
+                case PersonKind.Founder: return "person_founder";
+                case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
+                default: return p.Female ? "person_labourer_f" : "person_labourer_m";
+            }
+        }
+
+        private void RefreshPeople(MapVm map, bool animate)
+        {
+            var seen = new HashSet<string>();
+            var perTile = new Dictionary<int, int>();
+            foreach (PersonVm p in map.People)
+            {
+                if (p.TileId < 0) continue;
+                seen.Add(p.Key);
+                perTile.TryGetValue(p.TileId, out int n);
+                perTile[p.TileId] = n + 1;
+                Vector3 spot = TileCentre(p.TileId) + (Vector3)PersonSpots[n % PersonSpots.Length];
+                if (!_people.TryGetValue(p.Key, out PersonView v))
+                {
+                    v = new PersonView { Sprite = PersonSprite(p), Phase = Random.value * 6f, Tile = p.TileId };
+                    v.Body = NewRenderer("person:" + p.Key, SpriteBank.Rendered(v.Sprite + "_front"), spot, 0);
+                    v.Shadow = NewRenderer("personShadow:" + p.Key, SpriteBank.ContactShadow, spot, 0);
+                    v.Shadow.transform.localScale = new Vector3(0.11f, 0.11f, 1f);
+                    // A day labourer walks in from the west edge of the valley; everyone else is simply there.
+                    v.Pos = animate && p.Kind == PersonKind.Labourer ? TileCentre(_width * (p.TileId / _width)) + new Vector3(-1.2f, -0.6f, 0) : spot;
+                    _people[p.Key] = v;
+                }
+                v.Target = spot;
+                v.Tile = p.TileId;
+                v.Working = p.Working || p.Kind != PersonKind.Founder;
+                v.Leaving = false;
+            }
+            foreach (KeyValuePair<string, PersonView> kv in _people)
+                if (!seen.Contains(kv.Key) && !kv.Value.Leaving)
+                {
+                    kv.Value.Leaving = true;
+                    kv.Value.Target = kv.Value.Pos + new Vector3(-2.5f, -1.25f, 0); // off to the west, then gone
+                }
+        }
+
+        /// <summary>People walk to their target (0.55 world units a second), bob while idle and stoop while working.</summary>
+        private void AnimatePeople()
+        {
+            float t = Time.unscaledTime;
+            var gone = new List<string>();
+            foreach (KeyValuePair<string, PersonView> kv in _people)
+            {
+                PersonView v = kv.Value;
+                Vector3 d = v.Target - v.Pos;
+                bool walking = d.magnitude > 0.01f;
+                if (walking)
+                {
+                    float step = Mathf.Min(d.magnitude, 0.55f * Time.unscaledDeltaTime);
+                    v.Pos += d.normalized * step;
+                    // Two facings rendered, mirrored for the other two: down-left (front), up-left (back).
+                    v.Body.sprite = SpriteBank.Rendered(v.Sprite + (d.y > 0 ? "_back" : "_front"));
+                    v.Body.flipX = d.x > 0; // mirrored: down-right from the front render, up-right from the back one
+                }
+                else if (v.Leaving) { gone.Add(kv.Key); continue; }
+                else { v.Body.sprite = SpriteBank.Rendered(v.Sprite + "_front"); v.Body.flipX = false; }
+                float bob = walking ? Mathf.Abs(Mathf.Sin((t + v.Phase) * 9f)) * 0.012f : Mathf.Sin((t + v.Phase) * 2.2f) * 0.003f;
+                float stoop = !walking && v.Working ? 1f - 0.05f * (0.5f + 0.5f * Mathf.Sin((t + v.Phase) * 5f)) : 1f;
+                v.Body.transform.position = v.Pos + new Vector3(0, bob, 0);
+                v.Body.transform.localScale = new Vector3(1f, stoop, 1f);
+                v.Shadow.transform.position = v.Pos;
+                int order = Mathf.RoundToInt(-v.Pos.y / _grid.HalfHeight * 100f) + 60;
+                v.Body.sortingOrder = order;
+                v.Shadow.sortingOrder = order - 1;
+                v.Body.color = _tint;
+            }
+            foreach (string k in gone) { Destroy(_people[k].Body.gameObject); Destroy(_people[k].Shadow.gameObject); _people.Remove(k); }
+        }
+
+        /// <summary>The placement ghost (ADR 0039 §2): the hut, see-through, green where it can go and red where it can't.</summary>
+        public void ShowGhost(int tile, bool allowed)
+        {
+            if (_ghost == null)
+            {
+                _ghost = NewRenderer("ghost", SpriteBank.Rendered("hand_hut") ?? SpriteBank.Hut, Vector3.zero, 9100);
+                _ghostRing = NewRenderer("ghostRing", SpriteBank.SelectionRing, Vector3.zero, 9099);
+            }
+            _ghost.gameObject.SetActive(true);
+            _ghostRing.gameObject.SetActive(true);
+            _ghost.transform.position = HandHutWorld(tile);
+            _ghostRing.transform.position = TileCentre(tile);
+            Color c = allowed ? new Color(0.55f, 1f, 0.55f, 0.75f) : new Color(1f, 0.45f, 0.4f, 0.7f);
+            _ghost.color = c;
+            _ghostRing.color = c;
+        }
+
+        public void HideGhost()
+        {
+            if (_ghost == null) return;
+            _ghost.gameObject.SetActive(false);
+            _ghostRing.gameObject.SetActive(false);
         }
 
         private static Color SoilColour(TileVm t)
@@ -279,6 +451,9 @@ namespace Game.Presentation.Map
             foreach (KeyValuePair<long, Spot> kv in _slots) if (kv.Value.Marker.enabled) kv.Value.Marker.transform.position = kv.Value.Home + new Vector3(0, 0.45f + bob, 0);
             foreach (KeyValuePair<long, Spot> kv in _beds) if (kv.Value.Marker.enabled) kv.Value.Marker.transform.position = kv.Value.Home + new Vector3(0, 0.3f + bob, 0);
             if (_ring.gameObject.activeSelf) _ring.color = new Color(1f, 1f, 1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f));
+            AnimatePeople();
+            if (_ghost != null && _ghost.gameObject.activeSelf)
+                _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }
 
         // ---- picking and selection ----
@@ -290,6 +465,7 @@ namespace Game.Presentation.Map
                 case HitKind.Slot: return _slotWorld[hit.Id];
                 case HitKind.Bed: return _bedWorld[hit.Id];
                 case HitKind.Hut: return _hutWorld;
+                case HitKind.HandHut: return hit.Id > 0 ? (Vector2)_handHuts[hit.Id].transform.position : (Vector2)_sites[-hit.Id].transform.position;
                 default: return TileCentre((int)hit.Id);
             }
         }
@@ -305,6 +481,10 @@ namespace Game.Presentation.Map
             foreach (KeyValuePair<long, Spot> kv in _beds)
                 if (Mathf.Abs(w.x - _bedWorld[kv.Key].x) / 0.17f + Mathf.Abs(w.y - _bedWorld[kv.Key].y) / 0.085f < 1f) return new Hit(HitKind.Bed, kv.Key);
             if (Vector2.Distance(w, _hutWorld + new Vector2(0, 0.12f)) < 0.24f || Vector2.Distance(w, _wellWorld + new Vector2(0, 0.08f)) < 0.13f) return new Hit(HitKind.Hut, 0);
+            foreach (KeyValuePair<long, SpriteRenderer> kv in _handHuts)
+                if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f)) < 0.16f) return new Hit(HitKind.HandHut, kv.Key);
+            foreach (KeyValuePair<long, SpriteRenderer> kv in _sites)
+                if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f)) < 0.16f) return new Hit(HitKind.HandHut, -kv.Key);
             int tile = _grid.Pick(w.x, w.y);
             return tile < 0 ? Hit.None : new Hit(HitKind.Tile, tile);
         }
@@ -319,6 +499,7 @@ namespace Game.Presentation.Map
                 case HitKind.Slot: tile = map.Slots.Find(s => s.Id == hit.Id).TileId; break;
                 case HitKind.Bed:
                 case HitKind.Hut: tile = map.Tiles.Find(t => t.Kind == TileKind.Yard).Id; break;
+                case HitKind.HandHut: tile = _grid.Pick(WorldOf(hit).x, WorldOf(hit).y - HandHutSpot.y); break;
             }
             _ringTile = tile;
             _ring.gameObject.SetActive(tile >= 0);
@@ -348,6 +529,7 @@ namespace Game.Presentation.Map
                 case HitKind.Slot: return _slots[hit.Id].Renderer.transform;
                 case HitKind.Bed: return _beds[hit.Id].Renderer.transform;
                 case HitKind.Hut: return _buildings.Count > 0 ? _buildings[0].transform : null;
+                case HitKind.HandHut: return hit.Id > 0 ? _handHuts[hit.Id].transform : _sites[-hit.Id].transform;
                 case HitKind.Tile:
                 {
                     Spot crop = _crops[(int)hit.Id];

@@ -155,7 +155,7 @@ namespace Sim.View.Views
 
             // Hands.
             vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.hands")));
-            if (p.Hands.Count == 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.noHands"), ctx.Strings.Get(PeopleRules.HutCount(sim) == 0 ? "people.noHandsHut" : "people.noHandsWait")));
+            if (p.Hands.Count == 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.noHands"), ctx.Strings.Get(PeopleRules.HutCount(sim) == 0 ? "people.noHandsHut" : p.Applicants.Count > 0 ? "people.noHandsChoose" : "people.noHandsWait")));
             foreach (Hand h in p.Hands)
             {
                 Hand hand = h;
@@ -283,8 +283,11 @@ namespace Sim.View.Views
                 vm.Actions.Add(ActionVm.Checked(ctx, "renew", ctx.Strings.Get("action.renew"), ctx.Fmt.Coins(h.Wage), ActionKind.Primary, at => new RenewContract(at, handId)));
             long refund = h.PrepaymentId == 0 ? 0 : Sim.Core.Finance.Accrual.RefundIfClosed(sim, h.PrepaymentId);
             long severance = h.SeasonsWorked == 0 ? 0 : System.Math.Min(refund, Sim.Core.Finance.Money.MulRate(h.Wage, sim.Config.Game.People.Hand.SeveranceShare));
-            vm.Actions.Add(ActionVm.Checked(ctx, "letGo", ctx.Strings.Get("action.letGo"),
-                ctx.Strings.Get("hand.letGoDetail", "refund", ctx.Fmt.Coins(refund - severance)), ActionKind.Danger, at => new DismissHand(at, handId)));
+            ActionVm letGo = ActionVm.Checked(ctx, "letGo", ctx.Strings.Get("action.letGo"),
+                ctx.Strings.Get("hand.letGoDetail", "refund", ctx.Fmt.Coins(refund - severance)), ActionKind.Danger, at => new DismissHand(at, handId));
+            letGo.Confirm = new ConfirmVm(ctx.Strings.Get("hand.letGoQ", "name", PeopleWords.Name(ctx, h.Name)), ctx.Strings.Get("action.letGo"),
+                ctx.Strings.Get("hand.keep"), at => new Command[] { new DismissHand(at, handId) }, noSends: false) { YesIsDanger = true };
+            vm.Actions.Add(letGo);
             return vm;
         }
     }

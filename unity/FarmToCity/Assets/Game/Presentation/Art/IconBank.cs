@@ -11,7 +11,9 @@ namespace Game.Presentation.Art
 
         private static Sprite Get(string key, System.Func<Sprite> make)
         {
-            if (!Cache.TryGetValue(key, out Sprite s)) Cache[key] = s = make();
+            // "s == null" is Unity's check for a destroyed object: with fast enter-play-mode (no domain reload) the cache outlives the
+            // textures painted in the last play session, so re-create them.
+            if (!Cache.TryGetValue(key, out Sprite s) || s == null) Cache[key] = s = make();
             return s;
         }
 
@@ -135,6 +137,24 @@ namespace Game.Presentation.Art
                     return p.ToSprite(48f, new Vector2(0.5f, 0.5f));
                 });
             }
+        }
+    
+        /// <summary>A skill star (ADR 0039 §7): 0 empty, 1 faded (possible), 2 solid (sure).</summary>
+        public static Sprite Star(int kind)
+        {
+            return Get("star:" + kind, () =>
+            {
+                var p = new Painter(48, 48);
+                var pts = new Vector2[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    float a = Mathf.PI / 2f + i * Mathf.PI / 5f, r = i % 2 == 0 ? 21f : 9f;
+                    pts[i] = new Vector2(24 + Mathf.Cos(a) * r, 23 + Mathf.Sin(a) * r);
+                }
+                Color fill = kind == 2 ? Painter.Hex(0xFFC93C) : kind == 1 ? new Color(1f, 0.86f, 0.45f, 0.55f) : new Color(0.85f, 0.80f, 0.70f, 0.6f);
+                p.OutlinedPolygon(pts, fill, kind == 0 ? new Color(0.55f, 0.48f, 0.38f, 0.7f) : Outline, 2.2f);
+                return p.ToSprite(100, new Vector2(0.5f, 0.5f));
+            });
         }
     }
 }

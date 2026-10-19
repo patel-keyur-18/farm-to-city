@@ -36,9 +36,9 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Fmt.Factor(LandRules.SoilFactor(sim, tile)), "soil"));
             if (LandSystem.IsWellTile(defs, tileId)) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.well"), ctx.Strings.Get("field.wellNote")));
 
-            AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
             if (crop == null)
             {
+                AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
                 if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
                 return vm;
@@ -74,6 +74,7 @@ namespace Sim.View.Views
                     vm.Actions.Add(ActionVm.Checked(ctx, "harvestSell", ctx.Strings.Get("action.harvestSell"), null, ActionKind.Secondary,
                         at => new Harvest(at, tileId, Overflow.SellRestToTrader)));
             }
+            AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
             vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get("action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
             return vm;
         }

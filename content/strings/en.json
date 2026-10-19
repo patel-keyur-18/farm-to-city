@@ -559,5 +559,17 @@
   "hud.people": "People",
   "hand.hours": "Hours a day = 8 × (0.70 + 0.50 × skill) × their traits. Skill grows each season they stay.",
   "hand.wage": "The usual wage for their skill at today's prices, paid upfront each season. A loyal hand keeps their wage.",
-  "hand.lapse": "The new season's wage couldn't be paid. They wait two days; renewing pays the whole season, the waiting days included."
+  "hand.lapse": "The new season's wage couldn't be paid. They wait two days; renewing pays the whole season, the waiting days included.",
+  "toast.pests": "Pests in a field! Spray it soon.",
+  "toast.sick": "You're unwell today, so you rest.",
+  "toast.applicant": "Someone came asking for work.",
+  "toast.hutBuilt": "The hand's hut is ready.",
+  "toast.handHired": "Your farm hand moved in!",
+  "toast.lapsed": "A hand's season couldn't be paid.",
+  "action.cancel": "Cancel",
+  "place.title": "Place the hand's hut",
+  "place.hint": "Drag it to the head of one of your fields.",
+  "people.noHandsChoose": "Choose someone below",
+  "hand.letGoQ": "Let {name} go? Their hut stands empty until someone new moves in.",
+  "hand.keep": "Keep them"
 }
