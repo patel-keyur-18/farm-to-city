@@ -27,7 +27,7 @@ namespace Sim.View.Tests
         /// <summary>A hut on field 18, then a hand (the first applicant who accepts).</summary>
         private static Hand Hire(Simulation sim)
         {
-            Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 18));
+            Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 37));
             for (int i = 0; i < 24 * 10; i++)
             {
                 sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
@@ -95,16 +95,17 @@ namespace Sim.View.Tests
 
             // Hut placement: the six inherited acres, the yard is not among them.
             List<HutPlaceVm> places = HutPlacement.Places(ViewKit2.Context(sim));
-            Assert.That(places.Select(p => p.TileId), Is.EquivalentTo(new[] { 18, 19, 20, 26, 27, 28 }));
+            Assert.That(places.Select(p => p.TileId), Is.EquivalentTo(new[] { 37 }), "the labour quarters (ADR 0040)");
             Assert.That(places.All(p => p.Allowed), Is.True);
-            Assert.That(HutPlacement.ReasonFor(ViewKit2.Context(sim), 21), Is.EqualTo("A hand's hut goes on the edge of your inherited fields."));
+            Assert.That(HutPlacement.ReasonFor(ViewKit2.Context(sim), 21), Is.EqualTo("A hand's hut goes in the labour quarters beside your yard."));
+            Assert.That(HutPlacement.ReasonFor(ViewKit2.Context(sim), 18), Is.EqualTo("A hand's hut goes in the labour quarters beside your yard."));
 
             Hand h = Hire(sim);
             ViewContext ctx = ViewKit2.Context(sim);
-            Assert.That(HutPlacement.Places(ctx).Single(p => p.TileId == 18).Reason, Is.EqualTo("This field already has a hut."));
+            Assert.That(HutPlacement.Places(ctx).Single(p => p.TileId == 37).Allowed, Is.True, "room for a second hut");
             s = PeopleSheet.Build(ctx);
             Assert.That(s.Lines.Any(l => l.Action?.Id == "hand:" + h.Id), Is.True);
-            Assert.That(FieldSheets.ForTile(ctx, 18).Lines.Any(l => l.Label == "Hand's hut"), Is.True);
+            Assert.That(FieldSheets.ForTile(ctx, 37).Lines.Any(l => l.Label.StartsWith("Hut place")), Is.True);
 
             // A field sheet offers the order; the order sheet steps crop, then sell rule.
             LineVm give = FieldSheets.ForTile(ctx, 19).Lines.Single(l => l.Action?.Id == "order");
@@ -127,7 +128,10 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             Hand h = Hire(sim);
+            // The hand's action this hour goes on field 20, so field 19 stays empty with its order (ADR 0040: orders start at once).
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, "radish", SeedSource.Certified, "none", SellRule.Store)));
             Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, "radish", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.State.Farm.CropOn(19), Is.Null);
             SowSheetVm sow = SowSheet.Build(ViewKit2.Context(sim), 19);
             Assert.That(sow.Rows.Single(r => r.CropId == "radish").Sow.Confirm, Is.Null, "same crop: no question");
             CropRowVm potato = sow.Rows.Single(r => r.CropId == "potato");
@@ -165,7 +169,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             Ok(sim, new HireDayLabourers(sim.State.Clock.SimTime, 2));
-            Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 26));
+            Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 37));
             sim.AdvanceTo(sim.State.Clock.SimTime + 12 * Hour);
             MapVm map = MapView.Build(ViewKit2.Context(sim));
             Assert.That(map.People.Count(p => p.Kind == PersonKind.Founder), Is.EqualTo(1));

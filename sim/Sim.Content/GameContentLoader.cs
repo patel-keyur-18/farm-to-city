@@ -151,8 +151,8 @@ namespace Sim.Content
                 JObject t = Object(tileTokens[i], p);
                 OnlyFields(t, p, "terrain", "soil", "drainage", "fertility", "moisture");
                 string terrain = String(Required(t, p, "terrain"), p + ".terrain");
-                if (terrain != "farm" && terrain != "yard") throw new ContentException(p + ".terrain", "expected farm or yard");
-                tiles.Add(new TileDef(terrain == "farm" ? Terrain.Farm : Terrain.Yard,
+                if (terrain != "farm" && terrain != "yard" && terrain != "quarters") throw new ContentException(p + ".terrain", "expected farm, yard or quarters");
+                tiles.Add(new TileDef(terrain == "farm" ? Terrain.Farm : terrain == "yard" ? Terrain.Yard : Terrain.Quarters,
                     Ref(t, p, "soil", soils.ConvertAll(x => x.Id)), Ref(t, p, "drainage", drainages.ConvertAll(x => x.Id)),
                     Bounded(t, p, "fertility", "0", "100"), Bounded(t, p, "moisture", "0", "100")));
             }

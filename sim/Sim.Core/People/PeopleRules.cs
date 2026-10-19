@@ -126,14 +126,14 @@ namespace Sim.Core.People
         }
 
         /// <summary>
-        /// Why a hut can't go on this tile now (ADR 0039), or None: an inherited farm acre with a free hut place, under the cap.
+        /// Why a hut can't go on this tile now (ADR 0040), or None: the inherited labour quarters with a free hut place, under the cap.
         /// Cash isn't checked here (the command does it).
         /// </summary>
         public static Commands.RejectReason HutPlace(Simulation sim, int tileId)
         {
             if (tileId < 0 || tileId >= sim.State.Land.Tiles.Count) return Commands.RejectReason.UnknownTile;
             Tile tile = sim.State.Land.Tiles[tileId];
-            if (tile.Terrain != Terrain.Farm || !sim.State.Land.Parcels[tile.ParcelId].Protected) return Commands.RejectReason.NotInherited;
+            if (tile.Terrain != Terrain.Quarters || !sim.State.Land.Parcels[tile.ParcelId].Protected) return Commands.RejectReason.NotQuarters;
             if (HutsOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre) return Commands.RejectReason.NoRoom;
             if (HutCount(sim) >= sim.Config.Game.People.Hand.MaxHandHuts) return Commands.RejectReason.TooManyHuts;
             return Commands.RejectReason.None;

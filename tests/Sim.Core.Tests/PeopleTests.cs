@@ -24,7 +24,7 @@ namespace Sim.Core.Tests
             PeopleState p = sim.State.People;
             long season = t / S;
             if (p.Constructions.Count == 0 && PeopleRules.HutCount(sim) < 2)
-                sim.Execute(new BuildHandHut(t, PeopleRules.HutCount(sim) == 0 ? 18 : 26));
+                sim.Execute(new BuildHandHut(t, 37));
             if (t % Day < 4 * Hour && PeopleRules.FreeNow(sim) > 0) sim.Execute(new HireDayLabourers(t, 1));
             if (p.Applicants.Count > 0 && PeopleRules.EmptyHut(sim) != null)
             {
@@ -108,8 +108,8 @@ namespace Sim.Core.Tests
         public void Advance72h_WithPeople()
         {
             Simulation setup = Start(seed: 3);
-            Hand a = HireHand(setup, HomeTile);
-            Hand b = HireHand(setup, OtherHomeTile);
+            Hand a = HireHand(setup);
+            Hand b = HireHand(setup);
             long t = setup.State.Clock.SimTime;
             foreach (int tile in new[] { 18, 19, 20, 26, 27, 28 })
                 Ok(setup, new SetStandingOrder(t, a.Id, OrderSpec.KeepCrop(tile, "wheat", SeedSource.Certified, "none", SellRule.Offer, Fixed.FromInt(20))));

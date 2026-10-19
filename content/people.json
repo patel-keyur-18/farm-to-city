@@ -36,7 +36,7 @@
     "aboveMarketSkillBonus": 10,
     "aboveMarketAccept": 0.95
   },
-  "huts": { "placesPerAcre": 1 },
+  "huts": { "placesPerAcre": 2 },
   "traits": [
     { "id": "hardworking", "nameKey": "trait.hardworking", "hoursFactor": 1.10 },
     { "id": "lazy",        "nameKey": "trait.lazy",        "hoursFactor": 0.85 },

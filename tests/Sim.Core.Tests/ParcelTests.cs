@@ -63,7 +63,7 @@ namespace Sim.Core.Tests
 
             Assert.That(Buy(sim, "w1").Accepted, Is.True);
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - price));
-            Assert.That(sim.State.Ledger.Balance(Account.Land), Is.EqualTo(P(sim, "home_a").CostBasis + P(sim, "home_b").CostBasis + price));
+            Assert.That(sim.State.Ledger.Balance(Account.Land), Is.EqualTo(P(sim, "home_a").CostBasis + P(sim, "home_b").CostBasis + P(sim, "home_c").CostBasis + price));
             Parcel w1 = P(sim, "w1");
             Assert.That((w1.Owned, w1.Protected, w1.CostBasis, w1.AcquiredAt), Is.EqualTo((true, false, price, 5 * Hour)));
             Assert.That(sim.State.Land.Slots.Count, Is.EqualTo(slots + 4));

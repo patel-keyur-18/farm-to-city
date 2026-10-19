@@ -12,6 +12,9 @@ namespace Sim.View.Views
         Unowned = 0,
         Farm = 1,
         Yard = 2,
+
+        /// <summary>The labour quarters: hands' huts (ADR 0040).</summary>
+        Quarters = 3,
     }
 
     /// <summary>What stands on a field (spec 008 §3.4): vacant, growing in three stages, ready, or waiting past its grace.</summary>
@@ -169,7 +172,7 @@ namespace Sim.View.Views
                 var vm = new TileVm
                 {
                     Id = t.Id, X = t.Id % defs.Map.Width, Y = t.Id / defs.Map.Width,
-                    Kind = !parcel.Owned ? TileKind.Unowned : t.Terrain == Terrain.Yard ? TileKind.Yard : TileKind.Farm,
+                    Kind = !parcel.Owned ? TileKind.Unowned : t.Terrain == Terrain.Yard ? TileKind.Yard : t.Terrain == Terrain.Quarters ? TileKind.Quarters : TileKind.Farm,
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
                     WellAcre = LandSystem.IsWellTile(defs, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };

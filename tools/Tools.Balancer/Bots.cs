@@ -145,7 +145,7 @@ namespace Tools.Balancer
             {
                 long cost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.People.HandHut].Value);
                 Borrow(sim, t, cost + 40_000 * Money.Coin);
-                Ok(sim, new BuildHandHut(t, 18));
+                Ok(sim, new BuildHandHut(t, 37)); // the labour quarters (ADR 0040)
             }
             if (p.Post == null && p.Hands.Count == 0 && PeopleRules.HutCount(sim) > 0 && !_posted) _posted = Ok(sim, new PostJob(t, PostAboveMarket));
             if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0)

@@ -18,7 +18,7 @@ namespace Sim.Core.Tests
             long t = 2 * Hour;
             sim.AdvanceTo(t);
             long cash = sim.State.Ledger.Cash, buildings = sim.State.Ledger.Balance(Account.Buildings);
-            Ok(sim, new BuildHandHut(t, HomeTile));
+            Ok(sim, new BuildHandHut(t, QuartersTile));
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(15_000 * Coin));
             Assert.That(sim.State.Ledger.Balance(Account.Buildings) - buildings, Is.EqualTo(15_000 * Coin));
             Assert.That(PeopleRules.EmptyHut(sim), Is.Null, "not finished yet");
@@ -36,20 +36,21 @@ namespace Sim.Core.Tests
             long hutDep = -(sim.State.Ledger.Balance(Account.AccumulatedDepreciation) - dep) - (40_000 * Coin / 80 + 15_000 * Coin / 120);
             Assert.That(hutDep, Is.EqualTo(250 * Coin));
 
-            // Rejections: the same acre (NoRoom), the yard and unowned land (NotInherited), a third hut (TooManyHuts).
+            // Rejections (ADR 0040): a farm acre, the yard and unowned land (NotQuarters); two places on the quarters, so a third hut
+            // is NoRoom there and TooManyHuts in Phase 1 either way.
             long now = sim.State.Clock.SimTime;
-            Assert.That(sim.Execute(new BuildHandHut(now, HomeTile)).Reason, Is.EqualTo(RejectReason.NoRoom));
-            Assert.That(sim.Execute(new BuildHandHut(now, YardTile)).Reason, Is.EqualTo(RejectReason.NotInherited));
-            Assert.That(sim.Execute(new BuildHandHut(now, 0)).Reason, Is.EqualTo(RejectReason.NotInherited));
-            Ok(sim, new BuildHandHut(now, OtherHomeTile));
-            Assert.That(sim.Execute(new BuildHandHut(now, 19)).Reason, Is.EqualTo(RejectReason.TooManyHuts));
+            Assert.That(sim.Execute(new BuildHandHut(now, HomeTile)).Reason, Is.EqualTo(RejectReason.NotQuarters));
+            Assert.That(sim.Execute(new BuildHandHut(now, YardTile)).Reason, Is.EqualTo(RejectReason.NotQuarters));
+            Assert.That(sim.Execute(new BuildHandHut(now, 0)).Reason, Is.EqualTo(RejectReason.NotQuarters));
+            Ok(sim, new BuildHandHut(now, QuartersTile));
+            Assert.That(sim.Execute(new BuildHandHut(now, QuartersTile)).Reason, Is.EqualTo(RejectReason.NoRoom));
         }
 
         [Test]
-        public void Build_BoughtLand_NotInherited_AndCash()
+        public void Build_ShortOfCash()
         {
             Simulation sim = Start(game: Game((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 2000000", "\"startingCash\": 10000") : j));
-            Assert.That(sim.Execute(new BuildHandHut(0, HomeTile)).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
+            Assert.That(sim.Execute(new BuildHandHut(0, QuartersTile)).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Sim.Core.Tests
     {
         public const long S = FarmTest.S;
         public const int HomeTile = 18; // an inherited farm acre (parcel home_a)
-        public const int OtherHomeTile = 26; // home_b
+        public const int QuartersTile = 37; // the labour quarters beside the yard: hands' huts go here (ADR 0040)
         public const int YardTile = 21;
         public const long Coin = 100;
 
@@ -44,7 +44,7 @@ namespace Sim.Core.Tests
         }
 
         /// <summary>Builds a hand's hut on the tile and waits until it's finished.</summary>
-        public static void BuildHut(Simulation sim, int tile = HomeTile)
+        public static void BuildHut(Simulation sim, int tile = QuartersTile)
         {
             long t = sim.State.Clock.SimTime;
             Ok(sim, new BuildHandHut(t, tile));
@@ -62,7 +62,7 @@ namespace Sim.Core.Tests
         /// <summary>
         /// A hand under contract: builds a hut, then offers to applicants until one accepts (a seeded game, so the same every run).
         /// </summary>
-        public static Hand HireHand(Simulation sim, int tile = HomeTile)
+        public static Hand HireHand(Simulation sim, int tile = QuartersTile)
         {
             if (PeopleRules.EmptyHut(sim) == null) BuildHut(sim, tile);
             for (int tries = 0; tries < 20; tries++)

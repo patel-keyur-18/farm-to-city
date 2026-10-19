@@ -394,7 +394,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             foreach (Tile t in sim.State.Land.Tiles)
             {
-                if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Protected) continue;
+                if (t.Terrain != Terrain.Quarters || !sim.State.Land.Parcels[t.ParcelId].Protected) continue;
                 CommandResult r = sim.Preview(new BuildHandHut(ctx.Now, t.Id));
                 list.Add(new HutPlaceVm { TileId = t.Id, Allowed = r.Accepted, Reason = r.Accepted ? null : ctx.Reject(r.Reason) });
             }

@@ -75,35 +75,37 @@ namespace Sim.Core.Tests
             // Out of season (the real calendar: wheat is Winter only), the tile waits and says so once.
             Simulation real = Start(NoInflation((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j));
             Hand rh = QuietHand(real);
-            Ok(real, new SetStandingOrder(real.State.Clock.SimTime, rh.Id, KeepWheat()));
             real.DrainEvents();
+            Ok(real, new SetStandingOrder(real.State.Clock.SimTime, rh.Id, KeepWheat()));
             real.AdvanceTo(real.State.Clock.SimTime + 2 * Day);
             var waits = real.DrainEvents().OfType<OrderWaiting>().ToList();
             Assert.That(waits.Select(w => w.Reason), Is.EqualTo(new[] { OrderWait.OutOfSeason }));
             Assert.That(real.State.Farm.CropOn(HomeTile), Is.Null);
         }
 
+        // ADR 0040: a new order starts at once; one action per hand per sim hour.
         [Test]
-        public void OneActionAnHour_PlayerWins()
+        public void StartsAtOnce_OneActionAnHour_PlayerWins()
         {
             Simulation sim = Start(NoPests());
             Hand h = SteadyHand(sim);
             long t = sim.State.Clock.SimTime / Hour * Hour + Hour;
-            sim.AdvanceTo(t - 1);
-            Ok(sim, new SetStandingOrder(t - 1, h.Id, KeepWheat()));
-            Ok(sim, new SetStandingOrder(t - 1, h.Id, OrderSpec.KeepCrop(19, "wheat", SeedSource.Certified, "none", SellRule.Store)));
+            sim.AdvanceTo(t - 10);
             sim.DrainEvents();
+            Ok(sim, new SetStandingOrder(t - 10, h.Id, KeepWheat()));
+            Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Single().Target, Is.EqualTo(HomeTile), "sown at once");
+            Assert.That(sim.State.Farm.CropOn(HomeTile), Is.Not.Null);
+            Ok(sim, new SetStandingOrder(t - 10, h.Id, OrderSpec.KeepCrop(19, "wheat", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.DrainEvents().OfType<OrderExecuted>(), Is.Empty, "this hour's action is used");
             sim.AdvanceTo(t);
-            Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Count(), Is.EqualTo(1), "one action in the hour");
-            sim.AdvanceTo(t + Hour);
-            Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Single().Target, Is.EqualTo(19));
+            Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Single().Target, Is.EqualTo(19), "the next hour's one action");
 
             // The player sows potato on an ordered, empty field: the order never undoes it.
             Simulation p = Start(NoPests());
             Hand ph = SteadyHand(p);
             long now = p.State.Clock.SimTime;
-            Ok(p, new SetStandingOrder(now, ph.Id, KeepWheat()));
             Ok(p, new Sow(now, HomeTile, "potato", SeedSource.Certified, "none"));
+            Ok(p, new SetStandingOrder(now, ph.Id, KeepWheat()));
             p.AdvanceTo(now + 3 * Hour);
             Assert.That(p.Config.Game.Farm.Crops[p.State.Farm.CropOn(HomeTile).Def].Id, Is.EqualTo("potato"));
         }
@@ -158,10 +160,10 @@ namespace Sim.Core.Tests
             Hand h = SteadyHand(sim);
             CashTo(sim, 0);
             long liabilities = sim.State.Ledger.Balance(Account.MoneylenderLoans) + sim.State.Ledger.Balance(Account.BankLoans);
-            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));
             sim.DrainEvents();
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));
             sim.AdvanceTo(sim.State.Clock.SimTime + 2 * Hour);
-            Assert.That(sim.DrainEvents().OfType<OrderWaiting>().Single().Reason, Is.EqualTo(OrderWait.InsufficientFunds));
+            Assert.That(sim.DrainEvents().OfType<OrderWaiting>().Single().Reason, Is.EqualTo(OrderWait.InsufficientFunds), "said once, when set");
             Assert.That(sim.State.Farm.CropOn(HomeTile), Is.Null);
             Assert.That(sim.State.Ledger.Balance(Account.MoneylenderLoans) + sim.State.Ledger.Balance(Account.BankLoans), Is.EqualTo(liabilities));
 

@@ -108,6 +108,10 @@ namespace Sim.Core.People
         /// <summary>Live seconds since the lapse: the grace never runs out while the player is away.</summary>
         public long LapsedLiveSeconds { get; internal set; }
 
+        /// <summary>The sim hour (t ÷ 3600) of the hand's order actions so far and how many (ADR 0040: an order starts at once).</summary>
+        public long ActionHour { get; internal set; }
+        public int ActionsInHour { get; internal set; }
+
         internal Hand Clone() { return (Hand)MemberwiseClone(); }
 
         internal void WriteTo(StateHasher h)
@@ -125,6 +129,8 @@ namespace Sim.Core.People
             h.WriteLong(PrepaymentId);
             h.WriteLong(LapsedAt);
             h.WriteLong(LapsedLiveSeconds);
+            h.WriteLong(ActionHour);
+            h.WriteInt(ActionsInHour);
         }
     }
 

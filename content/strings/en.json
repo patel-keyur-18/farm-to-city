@@ -359,8 +359,8 @@
   "ledger.jobPost": "Word sent for a farm hand",
   "ledger.severance": "Severance for a hand let go",
   "reject.NoneAvailable": "Not that many labourers are free today.",
-  "reject.NotInherited": "A hand's hut goes on the edge of your inherited fields.",
-  "reject.NoRoom": "This field already has a hut.",
+  "reject.NotQuarters": "A hand's hut goes in the labour quarters beside your yard.",
+  "reject.NoRoom": "There's no room left here.",
   "reject.TooManyHuts": "You have as many hands' huts as you can use for now.",
   "reject.NoHut": "Build a hand's hut first: a hand needs somewhere to live.",
   "reject.AlreadyPosted": "Word is already out for a hand.",
@@ -571,5 +571,9 @@
   "place.hint": "Drag it to the head of one of your fields.",
   "people.noHandsChoose": "Choose someone below",
   "hand.letGoQ": "Let {name} go? Their hut stands empty until someone new moves in.",
-  "hand.keep": "Keep them"
+  "hand.keep": "Keep them",
+  "quarters.title": "Labour quarters",
+  "quarters.subtitle": "Room for {n} hands' huts",
+  "quarters.place": "Hut place {n}",
+  "quarters.free": "Free"
 }

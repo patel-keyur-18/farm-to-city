@@ -81,7 +81,7 @@ namespace Sim.Core.Commands
 
         // Spec 006 (people, ADR 0039)
         NoneAvailable,
-        NotInherited,
+        NotQuarters,
         NoRoom,
         TooManyHuts,
         NoHut,

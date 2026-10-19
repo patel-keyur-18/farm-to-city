@@ -116,7 +116,7 @@ namespace Sim.Core.Definitions
         public IReadOnlyList<TraitDef> Traits { get; }
         public IReadOnlyList<NameDef> Names { get; }
 
-        /// <summary>Hut places on the edge of each inherited farm acre (ADR 0039).</summary>
+        /// <summary>Hut places on each acre of the labour quarters (ADR 0040).</summary>
         public int HutPlacesPerAcre { get; }
 
         /// <summary>Index of the hand's hut in <see cref="GameDefs.Buildings"/>.</summary>

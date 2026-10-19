@@ -16,18 +16,40 @@ namespace Sim.Core.People
         public static void Run(Simulation sim)
         {
             PeopleState s = sim.State.People;
-            int perHour = sim.Config.Game.People.Hand.OrderActionsPerHour;
             foreach (Hand h in s.Hands)
             {
                 if (h.Contract != ContractState.Active) continue;
-                int actions = 0;
                 foreach (StandingOrder o in s.Orders.ToArray())
                 {
-                    if (actions >= perHour) break;
-                    if (o.HandId != h.Id) continue;
-                    if (o.Kind == OrderTargetKind.Field ? Field(sim, h, o) : Tree(sim, h, o)) actions++;
+                    if (!HasActionLeft(sim, h)) break;
+                    if (o.HandId == h.Id) Act(sim, h, o);
                 }
             }
+        }
+
+        /// <summary>
+        /// A new order starts at once (ADR 0040): the hand works its target now if they haven't used this hour's action. The same
+        /// counter limits the hourly pass, so a hand never does more than orderActionsPerHour in one sim hour.
+        /// </summary>
+        public static void ActNow(Simulation sim, Hand h, StandingOrder o)
+        {
+            if (h.Contract == ContractState.Active && HasActionLeft(sim, h)) Act(sim, h, o);
+        }
+
+        private static bool HasActionLeft(Simulation sim, Hand h)
+        {
+            long hour = sim.State.Clock.SimTime / 3600;
+            if (h.ActionHour != hour)
+            {
+                h.ActionHour = hour;
+                h.ActionsInHour = 0;
+            }
+            return h.ActionsInHour < sim.Config.Game.People.Hand.OrderActionsPerHour;
+        }
+
+        private static void Act(Simulation sim, Hand h, StandingOrder o)
+        {
+            if (o.Kind == OrderTargetKind.Field ? Field(sim, h, o) : Tree(sim, h, o)) h.ActionsInHour++;
         }
 
         private static bool Field(Simulation sim, Hand h, StandingOrder o)

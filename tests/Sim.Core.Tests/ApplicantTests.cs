@@ -145,8 +145,8 @@ namespace Sim.Core.Tests
             Assert.That(none.State.ComputeHash(), Is.EqualTo(hash));
 
             Simulation posted = Start(), walk = Start();
-            Ok(posted, new BuildHandHut(0, HomeTile));
-            Ok(walk, new BuildHandHut(0, HomeTile));
+            Ok(posted, new BuildHandHut(0, QuartersTile));
+            Ok(walk, new BuildHandHut(0, QuartersTile));
             Ok(posted, new PostJob(0, false));
             posted.AdvanceTo(24 * Hour - 1);
             Assert.That(P(posted).Applicants, Is.Empty, "no applicant before the hut is finished");

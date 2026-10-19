@@ -297,6 +297,7 @@ namespace Sim.Core.Commands
             while (i < s.Orders.Count && s.Orders[i].CompareKey(order) < 0) i++;
             s.Orders.Insert(i, order);
             sim.Emit(new StandingOrderSet(sim.State.Clock.SimTime, h.Id, Order.Kind, Order.Target));
+            Orders.ActNow(sim, h, order); // the hand starts at once (ADR 0040)
             return CommandResult.Ok;
         }
     }

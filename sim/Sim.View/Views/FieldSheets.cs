@@ -26,6 +26,7 @@ namespace Sim.View.Views
             string soil = ctx.Strings.Get(defs.Soils[tile.Soil].NameKey);
             if (!parcel.Owned) return Unowned(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
+            if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
@@ -199,27 +200,38 @@ namespace Sim.View.Views
             return vm;
         }
 
-        /// <summary>
-        /// On a field or tree: the hand's hut on this acre, and "Ramesh looks after this field" with the order or a button to give one
-        /// (ADR 0039 §8).
-        /// </summary>
+        /// <summary>The labour quarters (ADR 0040): its hut places, who lives in each, and the button to build one.</summary>
+        private static SheetVm Quarters(ViewContext ctx, Tile tile)
+        {
+            Simulation sim = ctx.Sim;
+            Sim.Core.People.PeopleState p = sim.State.People;
+            int places = sim.Config.Game.People == null ? 0 : sim.Config.Game.People.HutPlacesPerAcre;
+            var vm = new SheetVm { Icon = "hand_hut", Title = ctx.Strings.Get("quarters.title"), Subtitle = ctx.Strings.Get("quarters.subtitle", "n", ctx.Fmt.Integer(places)) };
+            if (p == null) return vm;
+            int n = 0;
+            foreach (Building b in sim.State.Land.Buildings)
+            {
+                if (!Sim.Core.People.PeopleRules.IsHandHut(sim, b) || b.TileId != tile.Id) continue;
+                Sim.Core.People.Hand who = p.Hands.Find(h => h.HutId == b.Id);
+                var line = new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)),
+                    who == null ? ctx.Strings.Get("people.hutEmpty") : ctx.Strings.Get("people.hutLives", "name", PeopleWords.Name(ctx, who.Name)));
+                if (who != null) line.Action = ActionVm.Open("hand:" + who.Id, ctx.Strings.Get("action.see"), new SheetRequest("Hand", who.Id));
+                vm.Lines.Add(line);
+            }
+            foreach (Sim.Core.People.Construction c in p.Constructions)
+                if (c.TileId == tile.Id)
+                    vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))));
+            while (n < places) vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("quarters.free")));
+            vm.Actions.Add(ActionVm.Open("buildHut", ctx.Strings.Get("people.buildHut"), new SheetRequest("HutPlacement", 0)));
+            return vm;
+        }
+
+        /// <summary>On a field or tree: "Ramesh's orders" with the order or a button to give one (ADR 0039 §8).</summary>
         private static void AddPeopleRows(ViewContext ctx, SheetVm vm, Sim.Core.People.OrderTargetKind kind, long target)
         {
             Simulation sim = ctx.Sim;
             Sim.Core.People.PeopleState p = sim.State.People;
             if (p == null) return;
-            if (kind == Sim.Core.People.OrderTargetKind.Field)
-            {
-                foreach (Building b in sim.State.Land.Buildings)
-                {
-                    if (!Sim.Core.People.PeopleRules.IsHandHut(sim, b) || b.TileId != target) continue;
-                    Sim.Core.People.Hand who = p.Hands.Find(h => h.HutId == b.Id);
-                    vm.Lines.Add(new LineVm(ctx.Strings.Get("field.hut"),
-                        who == null ? ctx.Strings.Get("people.hutEmpty") : ctx.Strings.Get("people.hutLives", "name", PeopleWords.Name(ctx, who.Name))));
-                }
-                foreach (Sim.Core.People.Construction c in p.Constructions)
-                    if (c.TileId == target) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.hut"), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))));
-            }
             Sim.Core.People.Hand hand = PeopleWords.OrderHand(sim, kind, target);
             if (hand == null) return;
             Sim.Core.People.StandingOrder o = p.OrderFor(kind, target);

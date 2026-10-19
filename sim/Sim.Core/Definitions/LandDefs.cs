@@ -8,6 +8,9 @@ namespace Sim.Core.Definitions
     {
         Farm = 0,
         Yard = 1,
+
+        /// <summary>The labour quarters beside the yard: hands' huts only (ADR 0040).</summary>
+        Quarters = 2,
     }
 
     /// <summary>A soil type from <c>content/land.json</c> (spec 002 §4).</summary>
