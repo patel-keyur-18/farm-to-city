@@ -69,7 +69,7 @@
 | [F07.2](features/F07.2-local-notifications.md) | Local notifications | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Ready | US-076–US-076 | 3 |
 | [F07.3](features/F07.3-local-play-log.md) | Local play log | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Ready | US-077–US-077 | 2 |
 | [F08.1](features/F08.1-map-and-field-interaction.md) | Map and field interaction | E08 | 1 | Spec 008 (to write) | Backlog | US-078–US-079 | 8 |
-| [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (to write) | Backlog | US-080–US-084 | 16 |
+| [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (approved) | Ready | US-080–US-084, US-182 | 16 |
 | [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (to write) | Backlog | US-085–US-086 | 4 |
 | [F08.5](features/F08.5-basic-feedback-sounds.md) | Basic feedback sounds | E08 | 1 | Spec 008 (to write), ADR 0007 | Backlog | US-087–US-087 | 2 |
 | [F08.4](features/F08.4-developer-panel-unity.md) | Developer panel (Unity) | E08 | 1 | Spec 001 §3.8, ADR 0023 | Backlog | US-088–US-088 | 2 |
@@ -118,7 +118,7 @@
 | [F18.5](features/F18.5-trade-with-other-cities.md) | Trade with other cities | E18 | 4 | To write at the start of Phase 4 | Backlog | US-168–US-168 | 5 |
 | [F19.1](features/F19.1-hindi-localisation.md) | Hindi localisation | E19 | 5 | To write at the start of Phase 5 | Backlog | US-169–US-169 | 5 |
 | [F19.2](features/F19.2-accessibility.md) | Accessibility | E19 | 5 | To write at the start of Phase 5 | Backlog | US-170–US-170 | 5 |
-| [F19.3](features/F19.3-art-pipeline.md) | Art pipeline | E19 | 5 | To write at the start of Phase 5 | Backlog | US-171–US-172 | 13 |
+| [F19.3](features/F19.3-art-pipeline.md) | Art pipeline | E19 | 5 | ADR 0039 (Phase 1 sprites); the rest at the start of Phase 5 | In progress | US-171–US-172, US-183 | 14 |
 | [F19.6](features/F19.6-audio-and-music.md) | Audio and music | E19 | 5 | To write at the start of Phase 5 | Backlog | US-173–US-173 | 5 |
 | [F19.4](features/F19.4-scenarios-and-difficulty.md) | Scenarios and difficulty | E19 | 5 | To write at the start of Phase 5 | Backlog | US-174–US-175 | 8 |
 | [F19.5](features/F19.5-store-readiness-deferred.md) | Store readiness (deferred) | E19 | 5 | To write at the start of Phase 5 | Backlog | US-176–US-176 | 8 |

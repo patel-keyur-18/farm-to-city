@@ -237,22 +237,23 @@
 
 ## Sprint 5 · 23–29 Nov 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/05-people` (or the branch the session assigns)
-- **Goal:** People: day labourers, the resident hand and standing orders, with their UI.
-- **Points:** 21 (US-069 +1 for `PostJob`, spec 006 review; US-068 +1 for the placement ghost, ADR 0038)
+- **Status:** In progress (planning review 2026-10-19: 10 gaps closed with the owner, ADR 0039)
+- **Branch:** `sprint/05-people`
+- **Goal:** People: day labourers, the resident hand and standing orders, with their UI; the first Blender renders.
+- **Points:** 25 (US-069 +1 for `PostJob`; US-068 +1 for the placement ghost, ADR 0038; ADR 0039: US-183 +5, US-182 +1, US-067 −2 to Sprint 6)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | To do |
-| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
 | US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
 | US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | To do |
 | US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | To do |
 | US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
 | US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
+| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
+| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | To do |
 
 **Sprint end checklist**
 
@@ -269,8 +270,8 @@
 
 - **Status:** Planned
 - **Branch:** `sprint/06-saves-notifications` (or the branch the session assigns)
-- **Goal:** Saves, notifications and the play log; the Blender sprite pipeline (US-171, pulled forward by ADR 0038; the owner installs Blender first).
-- **Points:** 24 (16 + US-171 8: the owner decides at Sprint 6 planning what slips)
+- **Goal:** Saves, notifications and the play log; regulars; every map sprite and icon rendered in Blender (ADR 0039).
+- **Points:** 22 (16 + US-067 2 + US-171 4, ADR 0039)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -281,7 +282,8 @@
 | US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
 | US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | To do |
 | US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | To do |
-| US-171 | Blender pipeline | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | To do |
+| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
+| US-171 | Blender pipeline: the full re-render and icons | [F19.3](features/F19.3-art-pipeline.md) | 4 | Should | To do |
 
 **Sprint end checklist**
 
@@ -299,7 +301,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 17 (US-082 −1: the Store sheet is built in Sprint 4)
+- **Points:** 16 (US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -308,7 +310,7 @@
 | US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
-| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
+| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
 | US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
 

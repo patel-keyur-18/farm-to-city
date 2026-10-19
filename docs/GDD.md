@@ -171,7 +171,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Ready to harvest.** A ripe crop (or a ripe fruit batch) waits without spoiling or losing quality for 72 hours, the away cap, so nothing is ever lost only by being away. After that it starts to spoil like produce in the store (ADR 0034). While it waits, the field cannot be resown, so waiting also costs a crop cycle.
 
-**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed. Fields with no assigned worker wait in *ready to harvest*.
+**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed, one task an hour per hand; they never undo a crop the player sowed. Fields with no assigned worker wait in *ready to harvest*. A lapsed contract renewed within its grace pays the whole season, waiting days included (ADR 0039).
 
 **Inputs and trade-offs**
 
@@ -340,12 +340,12 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | Source | Neighbouring villages, commuting | A migrant who moves onto your land |
 | Contract | One day, paid upfront | One season, paid upfront |
 | Cost per day | Higher (about 25% premium) | Lower, and grows in skill |
-| Housing | None | Needs a hand's hut on your land |
+| Housing | None | Needs a hand's hut on the edge of an inherited acre (ADR 0039) |
 | Availability | Limited daily pool, scarce at harvest | Applicants arrive over a few days |
 | Standing orders | No | Yes |
 | Population | Not counted | Counted: the town's first citizens |
 
-Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
+Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often (six full days' work in total, ADR 0039) becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
 
 **Hiring flow (full version, from Phase 2)**
 

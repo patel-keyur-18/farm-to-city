@@ -1,6 +1,6 @@
 # 006. People: day labourers, the resident hand and standing orders
 
-- Status: Approved (2026-10-18), with the review answers in §10
+- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring starts in Homestead, Wages); Land, farming and livestock (Standing orders); Player journey and eras (Homestead, the Hamlet gate); Data model
@@ -18,7 +18,7 @@ The founder runs out of hours at about 2 acres; hiring help is the first step in
 **In:**
 - **Day labourers** (ADR 0022): a roster of neighbours from nearby villages; a seasonal pool of who is free each day; hiring for the rest of the day, paid upfront; their hours join the Care pool.
 - **Regulars:** a labourer hired often asks to move to the village, as a resident-hand applicant whose skill and traits are known.
-- **The hand's hut:** a building on the yard, built in a day for about 15,000 coins, capitalised and depreciated.
+- **The hand's hut:** a building on the edge of an inherited farm acre (ADR 0039), built in a day for about 15,000 coins, capitalised and depreciated.
 - **The resident hand:** applicants walk in while a hut stands empty, or come faster after a job is posted (at the market wage or above it); skill shown as a range and one trait; an interview reveals another; an offer at the wage, accepted or declined.
 - **The season contract:** prepaid wages, renewal at each season close (spec 005 step 6), lapse when it can't be paid, letting a hand go with a refund.
 - **The hand's work:** hours a day by skill and traits, into the Care pool; skill grows with experience.
@@ -58,22 +58,22 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | Hire | `HireDayLabourers(count)` hires the first `count` free labourers who aren't already hired today, for the rest of the day. Rejected with `NoneAvailable` if fewer are free |
 | Pay | Upfront, pro rata for the rest of the day: `LabourPoolDef.dailyWage × (nextDailyPass − t) ÷ 86,400`, Dr 5100 Hired labour, Cr Cash. No prepayment: it is the day's cost. `InsufficientFunds` if cash is short |
 | Wage | `dailyWage` 11,250 coins a game day: a hand's season wage ÷ 4 days (9,000) with a 25% premium (ADR 0022). A game day stands for about 22 real days, so this is about ₹500 a real day (ADR 0008) |
-| Work | Each adds `hoursPerDay` (8) to the Care pool until the next daily pass, live or away. They need no housing and aren't counted in the population |
+| Work | Each adds `hoursPerDay` (8) to the Care pool until the next daily pass, live or away: their assigned task is "tend the fields" (ADR 0039). They need no housing and aren't counted in the population |
 | Economics | A day labourer costs more than an acre of potato or wheat earns from their hours (ADR 0033): hiring by the day is for rescuing a busy harvest's Care, not for routine work |
 
 ### 3.3 Regulars
 
 | Rule | Behaviour |
 | --- | --- |
-| Days worked | Each roster member counts the game days they were hired (a part day counts as one) |
-| Asks to move in | When a roster member reaches `LabourPoolDef.regularThresholdDays` (default 6) and the founder has an empty hand's hut, they ask to move in: they join the applicants (§3.5) with their **skill and both traits known exactly**, at the asked wage for their skill. Emits `RegularAsksToMoveIn`. Once per person; they leave the roster when hired |
+| Time worked | Each roster member adds the seconds they were hired (`secondsWorked`), pro rata like their pay (ADR 0039) |
+| Asks to move in | When a roster member's `secondsWorked` reaches `LabourPoolDef.regularThresholdDays` (default 6) × 86,400 (six full day-equivalents) and the founder has an empty hand's hut, they ask to move in: they join the applicants (§3.5) with their **skill and both traits known exactly**, at the asked wage for their skill. Emits `RegularAsksToMoveIn`. Once per person; they leave the roster when hired |
 | No hut | The request waits until a hut stands empty (the count is kept) |
 
 ### 3.4 The hand's hut
 
 | Rule | Behaviour |
 | --- | --- |
-| Where | On a yard tile of owned land with room: a yard tile holds up to `LandDef.yardBuildings` buildings (default 4: the hut, the well and two hands' huts). Rejected with `NoRoom`, `NotOwned` or `NotYard` |
+| Where | On the edge of an **inherited farm acre** (ADR 0039): each has `LandDef.hutPlacesPerAcre` (1) hut place, away from its tree places; at most `HandDef.maxHandHuts` (2) huts in Phase 1. The yard holds no hands' huts. Inherited acres can't be sold or foreclosed, so a hut is never lost with its land. A hut doesn't change the acre's yield. Rejected with `NotInherited`, `NoRoom` (the acre has a hut) or `TooManyHuts` |
 | Build | `BuildHandHut(tileId)`: `BuildingDef(hand_hut).value` (15,000 coins: materials and the builders' wages, upfront, ADR 0008), capitalised to 1600 Buildings (spec 005 §3.3). A construction job of `BuildingDef.buildHours` (24: about 3 real weeks) |
 | Ready | When the job ends the hut houses `BuildingDef.housesHands` (1) hand. Emits `HandHutBuilt`. Depreciated straight-line over `usefulLifeSeasons` (60) from the next season close |
 | *Why?* | "Materials 15,000; your family builds it" |
@@ -98,7 +98,7 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | --- | --- |
 | Start | On acceptance the hand moves into an empty hut, becomes a citizen (population + 1), and the rest of the season is prepaid: `wage × (seasonEnd − t) ÷ S` (Dr 1110 Prepaid wages, Cr Cash; expensed daily to 5100, spec 005 §3.2). `InsufficientFunds` at the offer if cash is short; the applicant waits |
 | Renewal | At each season close (spec 005 §3.4 step 6, in contract id order, after loans and living costs) the next season's wage is paid upfront. The wage is renegotiated: `asked wage` for the hand's skill now, at today's price index; a **loyal** hand keeps their old wage. Emits `ContractRenewed` |
-| Lapse | If the renewal can't be paid, the contract lapses (`ContractLapsed`): the hand stops working (their hours leave the Care pool) but stays in the hut for up to `HandDef.lapseGraceDays` (2). `RenewContract(handId)` pays the rest of the season pro rata and resumes work. If not renewed in time the hand leaves (`HandLeft`, population − 1, the hut empties). No debt is ever created (ADR 0009) |
+| Lapse | If the renewal can't be paid, the contract lapses (`ContractLapsed`): the hand stops working (their hours leave the Care pool) but stays in the hut for up to `HandDef.lapseGraceDays` (2). `RenewContract(handId)` pays the **whole** season's wage, the waiting days included (back pay, ADR 0039: the days already passed are expensed to 5100 at once, the rest prepaid), and resumes work. A contract still lapsed at the next season close ends. If not renewed in time the hand leaves (`HandLeft`, population − 1, the hut empties). No debt is ever created (ADR 0009) |
 | Letting go | `DismissHand(handId)` at any time: the prepayment is closed (spec 005 `ClosePrepayment`: the unearned part refunded), less severance: none in the hand's first season (probation), afterwards `HandDef.severanceShare` (0.10) × the season wage, Dr 5100, Cr Cash out of the refund (never more than the refund). The hand leaves. Emits `HandDismissed` |
 | Away | A paid contract keeps working while away; renewal at a close that falls while away is paid if cash allows, otherwise it lapses and the grace waits for the player's return (the hand doesn't leave while away) |
 
@@ -125,12 +125,13 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | Rule | Behaviour |
 | --- | --- |
 | Set | `SetStandingOrder(handId, order)` replaces the hand's order for that target; `ClearStandingOrder(handId, target)`. A hand holds up to `HandDef.maxOrders` (6) orders. Rejected with `NoHand`, `NotUnderContract`, `UnknownTarget`, `TooManyOrders`, or spec 003's crop checks (`UnknownCrop`, `SeedCannotBeSaved`, `UnknownFertiliser`) |
-| When | At every hourly pass (system Labour, after Agriculture and Market), live or away, for each hand under contract in id order, each order in target order |
+| When | At every hourly pass (system Labour, after Agriculture and Market), live or away, for each hand under contract in id order, each order in target order. Each hand does at most `HandDef.orderActionsPerHour` (1) action (a harvest, a sowing or a pick) per pass (ADR 0039) |
+| The player wins | An order acts only on a field that is ready or empty (or a tree that is ripe) and never undoes the player's crop: a field the player sowed with another crop is harvested by the order when ready and then re-sown with the order's crop. Changing the order when sowing by hand is the UI's choice (spec 008) |
 | Harvest | A ready crop on the tile is harvested (spec 003 `Harvest`), with `Overflow.SellRestToTrader` so a full store never blocks it. A ripe tree is picked the same way |
 | Re-sow | An empty tile is sown with the order's crop if it is in season (spec 003 §3.2: stock first, the rest bought). If it's out of season, the tile waits (`OrderWaiting(OutOfSeason)` once per season). If cash is short, nothing is sown (`OrderWaiting(InsufficientFunds)`): orders never borrow (ADR 0009) |
 | Sell rule | STORE: the harvest stays in the store. OFFER AT p: the harvested quantity is added to the good's market offer with minimum price p (spec 004 §3.2 and §3.3, ADR 0031): it sells only while the price is at or above p, and the trader takes it only if p ≤ Floor. SELL TO TRADER: sold at the floor now, up to the trader's capacity; the rest is stored |
 | Not underway | Orders pause while the contract has lapsed; they resume on renewal |
-| Report | Each action emits `OrderExecuted(handId, target, action, quantity, amount)`, so *While you were away* lists what the hand did |
+| Report | Each action emits `OrderExecuted(handId, target, action, quantity, amount)`, so *While you were away* lists what the hand did, and the order keeps it as its last action (`lastAction`, `lastAt`, `lastQuantity`, `lastAmount`) for the hand sheet's "Last done" |
 
 ### 3.9 Processing order and determinism
 
@@ -149,7 +150,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | | `availablePerDay` (Spring, Summer, Monsoon, Winter) | int ×4 | 2, 4, 3, 2 | 0–rosterSize |
 | | `dailyWage` | money | 11,250 | > 0 |
 | | `hoursPerDay` | Fixed | 8 | 0–14 |
-| | `regularThresholdDays` | int | 6 | 1–100 |
+| | `regularThresholdDays` (full day-equivalents) | int | 6 | 1–100 |
 | `HandDef` | `hoursPerDay` | Fixed | 8 | 0–14 |
 | | `productivityBase`, `productivityPerSkill` | Fixed | 0.70, 0.50 | 0–2 |
 | | `marketWage` | money | 36,000 | > 0 |
@@ -161,24 +162,25 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | | `severanceShare` | Fixed | 0.10 | 0–1 |
 | | `lapseGraceDays` | int | 2 | 0–8 |
 | | `maxOrders` | int | 6 | 1–20 |
+| | `maxHandHuts`, `orderActionsPerHour` | int | 2, 1 | 0–4, 1–6 |
 | `JobPostDef` | `cost`, `days`, `rateFactor` | money, int, Fixed | 200, 4, 0.5 | > 0, 1–14, 0.1–1 |
 | | `aboveMarketFactor`, `aboveMarketSkillBonus`, `aboveMarketAccept` | Fixed, int, Fixed | 1.10, 10, 0.95 | 1–2, 0–50, 0–1 |
 | `TraitDef` (list) | `id`, `nameKey`, `hoursFactor`, `keepsWage`, `skillGainFactor`, `renewalWageFactor`, `careless` | | hardworking 1.10; lazy 0.85; loyal keepsWage; ambitious 1.5 and 1.10; careless; steady | factors 0.5–2 |
 | `NameDef` (list) | `id`, `nameKey` | | 40 Indian given names in the string table | unique |
 
-`content/buildings.json` gains `hand_hut`: `value` 15,000, `usefulLifeSeasons` 60, `buildHours` 24, `housesHands` 1, `yardTreeSlots` 0, `storeCapacityKg` 0, `restRecovery` 0, `gardenBeds` 0. Existing buildings get `buildHours` 0 and `housesHands` 0. `content/land.json` gains `yardBuildings` (4).
+`content/buildings.json` gains `hand_hut`: `value` 15,000, `usefulLifeSeasons` 60, `buildHours` 24, `housesHands` 1, `yardTreeSlots` 0, `storeCapacityKg` 0, `restRecovery` 0, `gardenBeds` 0. Existing buildings get `buildHours` 0 and `housesHands` 0. `content/land.json` gains `hutPlacesPerAcre` (1) (ADR 0039; `yardBuildings` dropped).
 
 **State** (part of `GameState`):
 
 | Entity | Field | Type | Notes |
 | --- | --- | --- | --- |
-| `Neighbour` (roster) | `id`, `nameId`, `trait`, `daysWorked`, `askedToMoveIn`, `hiredToday` | | In id order |
+| `Neighbour` (roster) | `id`, `nameId`, `trait`, `secondsWorked`, `askedToMoveIn`, `hiredToday` | | In id order |
 | `People` | `freeToday` (roster ids), `nextApplicantAt`, `nextApplicantId`, `nextHandId`, `nextContractId`, `population` | | |
 | `JobPost` | `wageOffer`, `postedAt`, `expiresAt` | | At most one |
 | `Applicant` | `id`, `nameId`, `skill`, `traits[2]`, `secondTraitKnown`, `skillKnown`, `askedWage`, `arrivedAt`, `fromRosterId` | | Waiting applicants in id order |
 | `Hand` | `id`, `nameId`, `skill`, `traits[2]`, `hutBuildingId`, `hiredAt`, `seasonsWorked` | | |
 | `Contract` | `id`, `handId`, `wage`, `state` (Active, Lapsed), `prepaymentId`, `lapsedAt` | | |
-| `StandingOrder` | `handId`, `target` (tile or slot), `crop`, `seed`, `fertiliser`, `sellRule`, `minPrice` | | In (hand, target) order |
+| `StandingOrder` | `handId`, `target` (tile or slot), `crop`, `seed`, `fertiliser`, `sellRule`, `minPrice`, `lastAction`, `lastAt`, `lastQuantity`, `lastAmount` | | In (hand, target) order |
 | `Construction` | `buildingDef`, `tileId`, `jobId`, `cost` | | |
 
 ## 5. Commands and events
@@ -188,7 +190,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | Command | Parameters | Validation and rejection reasons | Effect |
 | --- | --- | --- | --- |
 | `HireDayLabourers` | `count` | `InvalidArgument` (≤ 0); `NoneAvailable`; `InsufficientFunds` | §3.2. Emits `DayLabourersHired` |
-| `BuildHandHut` | `tileId` | `UnknownTile`; `NotOwned`; `NotYard`; `NoRoom`; `InsufficientFunds` | §3.4. Emits `ConstructionStarted` |
+| `BuildHandHut` | `tileId` | `UnknownTile`; `NotInherited`; `NoRoom`; `TooManyHuts`; `InsufficientFunds` | §3.4. Emits `ConstructionStarted` |
 | `PostJob` | `wageOffer` (market, aboveMarket) | `NoHut` (no empty or building hut); `AlreadyPosted`; `InsufficientFunds` | §3.5. Emits `JobPosted` |
 | `Interview` | `applicantId` | `UnknownApplicant`; `AlreadyInterviewed` | §3.5. Emits `ApplicantInterviewed` |
 | `OfferContract` | `applicantId` | `UnknownApplicant`; `NoEmptyHut`; `InsufficientFunds` | §3.5–3.6. Emits `OfferAccepted` and `HandHired`, or `OfferDeclined` |
@@ -253,22 +255,26 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-1 | Loading `people.json` with `availablePerDay` above `rosterSize`, `skillMin > skillMax`, an unknown trait, or a `hand_hut` without `housesHands` fails validation naming the field | `ContentTests.People_Validation` |
 | AC-2 | The roster and each day's free labourers are the same for the same seed and differ by day; the free count equals `availablePerDay` for the season | `DayLabourTests.Pool_Seeded` |
 | AC-3 | Hiring 2 labourers at 18:00 costs exactly `2 × 11,250 × 21,600 ÷ 86,400` = 5,625, posted to 5100; adds 16 hours a day to the Care pool until the daily pass, time-weighted; hiring more than are free is rejected with `NoneAvailable` and changes nothing | `DayLabourTests.Hire_CostAndCare` |
-| AC-4 | A labourer hired on 6 different days asks to move in once a hand's hut is empty, as an applicant with skill and both traits known; not before the hut exists | `DayLabourTests.Regular_AsksToMoveIn` |
-| AC-5 | `BuildHandHut` costs 15,000 (Dr 1600), finishes exactly 24 hours later, depreciates 250 a season from the next close, and is rejected on a full yard (`NoRoom`), unowned land and a farm tile | `HutTests.Build_CostTimeDepreciation` |
+| AC-4 | A labourer hired for 6 full day-equivalents in total asks to move in once a hand's hut is empty, as an applicant with skill and both traits known; not before the hut exists; 6 hires of an hour each are not enough (ADR 0039) | `DayLabourTests.Regular_AsksToMoveIn` |
+| AC-5 | `BuildHandHut` costs 15,000 (Dr 1600), finishes exactly 24 hours later, depreciates 250 a season from the next close, and is rejected on an acre that has a hut (`NoRoom`), bought or unowned land and the yard (`NotInherited`), and a third hut (`TooManyHuts`) | `HutTests.Build_CostTimeDepreciation` |
 | AC-6 | With an empty hut, applicants arrive at the seeded times, at most 3 wait, each leaves after 2 days if not hired; none arrive or leave during an away advance | `ApplicantTests.Arrival_Queue_Away` |
 | AC-7 | An applicant's shown range contains the true skill and is 30 wide (clamped at 0 and 100); the interview reveals exactly the second trait; the asked wage follows §3.5 (skill 50: 36,000) | `ApplicantTests.Profile_Interview_Wage` |
 | AC-8 | Over 10,000 seeded offers the acceptance rate is within 1 point of 85%; an accepted offer starting at mid-season prepays exactly half the wage (Dr 1110) and population rises by 1 | `ContractTests.Offer_Accept_Prepay` |
 | AC-9 | A skill-50 steady hand adds exactly 7.6 hours a day to the Care pool; hardworking 8.36; lazy 6.46 | `ContractTests.HandHours` |
-| AC-10 | At a season close renewal is paid after loans and living costs (spec 005 AC-13 order), at the re-asked wage (a loyal hand keeps theirs); when cash is short the contract lapses, the hand's hours leave the pool, and after 2 days the hand leaves; `RenewContract` within the grace resumes work | `ContractTests.Renewal_Lapse_Grace` |
+| AC-10 | At a season close renewal is paid after loans and living costs (spec 005 AC-13 order), at the re-asked wage (a loyal hand keeps theirs); when cash is short the contract lapses, the hand's hours leave the pool, and after 2 days the hand leaves; `RenewContract` within the grace pays the whole season (the waiting days expensed at once) and resumes work; a contract still lapsed at the next close ends | `ContractTests.Renewal_Lapse_Grace` |
 | AC-11 | `DismissHand` refunds the unearned wage less severance (none in the first season; 10% of the wage after), and severance never exceeds the refund | `ContractTests.Dismiss_RefundAndSeverance` |
 | AC-12 | Skill grows by 3 a season (4.5 ambitious, capped at 100) and the next renewal asks the wage for the new skill at the current price index | `ContractTests.SkillGrowth_AndWage` |
-| AC-13 | A "keep wheat on tile 18" order harvests the ready crop and re-sows it in season, live and during a 72-hour away advance, with the same final state hash either way; out of season the tile waits and emits `OrderWaiting(OutOfSeason)` once | `OrderTests.KeepCrop_LiveAndAway` |
+| AC-13 | A "keep wheat on tile 18" order harvests the ready crop and re-sows it in season, live and during a 72-hour away advance, with the same final state hash either way; out of season the tile waits and emits `OrderWaiting(OutOfSeason)` once; a hand does at most one action an hour; a field the player sowed with another crop is not undone | `OrderTests.KeepCrop_LiveAndAway` |
 | AC-14 | An OFFER AT p order adds the harvest to the market offer with minimum price p (spec 004 AC-18 rules); SELL TO TRADER sells at the floor up to capacity and stores the rest; STORE keeps it; a careless hand's harvest overflows to the trader | `OrderTests.SellRules` |
 | AC-15 | With too little cash an order sows nothing, emits `OrderWaiting(InsufficientFunds)` and never creates a liability; orders pause while the contract has lapsed | `OrderTests.NeverBorrows_PausesOnLapse` |
 | AC-16 | Over 2 game years of seeded play with day labourers, a hand, renewals, a lapse, a dismissal and orders, the ledger reconciles at every close and the chunking-invariance check holds | `PeopleTests.Ledger_And_Chunking` |
 | AC-17 | Performance (CI, Release): advancing 72 h with 2 hands, 12 orders and the default farm takes under 20 ms | `PerfTests.Advance72h_WithPeople` (category `Perf`) |
 | AC-18 | A posted job halves the time between applicants, costs 200 (Dr 5700) and expires after 4 days or at a hire; above market, applicants' skill lies in 30–80, they accept at 95% over 10,000 seeded offers, and the hired wage is 1.10 × the asked wage | `HiringTests.PostJob_RateAndQuality` |
 | AC-19 | A job posted while the hut is being built brings the first applicant only once the hut is finished, sooner than a walk-in would come; posting with no hut, or twice, is rejected and changes nothing | `HiringTests.PostJob_WhileBuilding` |
+| AC-20 | A standing order's last action (action, time, quantity, amount) equals its last `OrderExecuted` | `OrderTests.LastAction` |
+| AC-21 | A people-only *While you were away* view built from the events of a 30-hour away advance lists each hand's harvests, sales, sowings and waiting reasons, day labour paid and contracts renewed or lapsed, with totals equal to the events' sums | `Sim.View.Tests` `AwayViewTests.People` |
+| AC-22 | The view shows skill as stars and a band word from `ui.json` (an applicant's range as solid and faded stars), hours as "tends about N acres" rounded to a half, and never a raw factor | `Sim.View.Tests` `PeopleViewTests.Words` |
+| AC-23 | Gate checks (category Balance): the competent bot hires a hand and meets §9's hooks; the day-labour spammer, hand churner and lapse gamer stay at most 1.20 × the competent median net worth over 2 years; the absentee stays at least 0.80 × | `GateTests.PeopleStress` |
 
 ## 9. Balancing hooks
 
@@ -296,6 +302,21 @@ All seven were answered in the review with the owner (2026-10-18):
 ### Changes after approval (Sprint 3 planning review, 2026-10-18, ADR 0034)
 
 - **Coin amounts follow the price index** (spec 004 §3.1): wages are fixed at `Indexed(wage)` when a contract is signed or renewed (the GDD's lag), the day-labourer wage at each hire, and the hand's hut at `Indexed(value)` when built. Its book value then stays at cost.
+
+### Sprint 5 planning review (2026-10-19, ADR 0039)
+
+Ten gaps decided with the owner, one by one:
+
+1. **Blender slice now** (US-183, 5 points): the rig and the sprites this sprint needs (hand's hut, hut, well, three people), after a style checkpoint; the rest of US-171 in Sprint 6.
+2. **Hands' huts on the edge of an inherited farm acre** (one place per acre, at most 2 huts); not in the yard; `NotInherited`, `NoRoom`, `TooManyHuts` (§3.4, AC-5).
+3. **Regulars counted by seconds hired:** 6 full day-equivalents, not 6 hires (§3.3, AC-4).
+4. **Back pay on renewal after a lapse:** the whole season, waiting days included; still lapsed at the next close ends the contract (§3.6, AC-10).
+5. **A day labourer's task is tending the fields** (the Care pool); the hire row previews Care in words.
+6. **Orders follow the player** (never undo the player's crop; the UI offers to change the order) **and take time** (one action per hand per hour) (§3.8, AC-13).
+7. **Stars and band words for skill, "tends about N acres" for hours,** numbers in *Why?* (AC-22).
+8. **A People button** on the HUD; orders given from the map; people visible on the map (presentation only).
+9. **A people-only *While you were away* card** now and each order's last action in state (AC-20, AC-21).
+10. **Gate checks for people:** the competent bot hires; four stress bots (AC-23).
 
 ## 11. Cut first
 
