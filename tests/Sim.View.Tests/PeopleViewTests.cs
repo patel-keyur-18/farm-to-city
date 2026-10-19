@@ -112,13 +112,15 @@ namespace Sim.View.Tests
             Assert.That(give.Action.Opens.Value.Kind, Is.EqualTo("Order"));
             SheetVm crops = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, null);
             Assert.That(crops.Lines.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count));
-            SheetVm sell = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, "radish");
+            SheetVm how = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, "radish");
+            Assert.That(how.Lines.Select(l => l.Action?.Opens?.Arg), Is.EqualTo(new[] { "radish|once", "radish|every" }), "this season only, or every season");
+            SheetVm sell = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, "radish|every");
             ActionVm offer = sell.Lines.Single(l => l.Action?.Id == "set:offer").Action;
             Assert.That(offer.Enabled, Is.True);
             Assert.That(sim.Execute(offer.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
-            Assert.That(PeopleWords.Order(ViewKit2.Context(sim), sim.State.People.OrderFor(OrderTargetKind.Field, 19)), Does.StartWith("Keep Radish · Sell at the market, not below"));
-            SheetVm up = OrderSheet.Build(ViewKit2.Context(sim), OrderTargetKind.Field, 19, "radish|30");
-            Assert.That(up.Lines.Single(l => l.Action?.Id == "min:up").Action.Opens.Value.Arg, Is.EqualTo("radish|31"));
+            Assert.That(PeopleWords.Order(ViewKit2.Context(sim), sim.State.People.OrderFor(OrderTargetKind.Field, 19)), Does.StartWith("Keep Radish · Sell at the market, not below").And.EndWith("Every season"));
+            SheetVm up = OrderSheet.Build(ViewKit2.Context(sim), OrderTargetKind.Field, 19, "radish|once|30");
+            Assert.That(up.Lines.Single(l => l.Action?.Id == "min:up").Action.Opens.Value.Arg, Is.EqualTo("radish|once|31"));
             AssertWords(HandSheet.Build(ViewKit2.Context(sim), h.Id));
         }
 
@@ -181,7 +183,10 @@ namespace Sim.View.Tests
             Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(20, "radish", SeedSource.Certified, "none", SellRule.Store)));
             MapVm map = MapView.Build(ViewKit2.Context(sim));
             Assert.That(map.People.Single(p => p.Kind == PersonKind.Hand).Patrol, Is.EquivalentTo(new[] { 19, 20 }));
-            Assert.That(map.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Is.EquivalentTo(new[] { 19, 20 }));
+            Assert.That(map.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Is.Empty, "the founder keeps off the hand's fields (owner, 2026-10-19)");
+            Ok(sim, new Sow(t, 26, "radish", SeedSource.Certified, "none"));
+            map = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(map.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Is.EqualTo(new[] { 26 }), "and works the field nobody else has");
         }
 
         [Test]

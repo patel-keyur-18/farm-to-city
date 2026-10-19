@@ -298,4 +298,21 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "OrderWaiting(hand=" + HandId + ", " + Kind + "=" + Target + ", reason=" + Reason + ")"; }
     }
+
+    /// <summary>A this-season-only order finished: its harvest or pick is in, and the order is gone.</summary>
+    public sealed class OrderCompleted : SimEvent
+    {
+        public long HandId { get; }
+        public OrderTargetKind Kind { get; }
+        public long Target { get; }
+
+        public OrderCompleted(long simTime, long handId, OrderTargetKind kind, long target) : base(simTime)
+        {
+            HandId = handId;
+            Kind = kind;
+            Target = target;
+        }
+
+        protected override string Describe() { return "OrderCompleted(hand=" + HandId + ", " + Kind + "=" + Target + ")"; }
+    }
 }

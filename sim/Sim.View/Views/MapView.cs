@@ -257,9 +257,14 @@ namespace Sim.View.Views
                 if (t.Kind == TileKind.Yard) { if (yard < 0) yard = t.Id; else frontYard = t.Id; }
             if (frontYard < 0) frontYard = yard;
 
-            // The founder tends every growing field; home is the house door.
-            var founder = new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = growing.Count > 0 ? growing[0] : yard, HomeTile = yard };
-            founder.Patrol.AddRange(growing);
+            // Work given to a hand is theirs: the founder (and day labourers, when there's other work) keep off those fields (owner,
+            // 2026-10-19). In the sim the Care pool is still shared; this is who walks where.
+            var free = new List<int>(growing);
+            if (p != null) foreach (Sim.Core.People.StandingOrder o in p.Orders) if (o.Kind == Sim.Core.People.OrderTargetKind.Field) free.Remove((int)o.Target);
+
+            // The founder tends the growing fields nobody else looks after; home is the house door.
+            var founder = new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = free.Count > 0 ? free[0] : yard, HomeTile = yard };
+            founder.Patrol.AddRange(free);
             map.People.Add(founder);
             if (p == null) return;
             foreach (Sim.Core.People.Construction c in p.Constructions)
@@ -317,7 +322,8 @@ namespace Sim.View.Views
                 if (!n.HiredToday) continue;
                 var vm = new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, HomeTile = frontYard };
                 // Day labourers tend the growing fields too, each starting at a different one.
-                for (int i = 0; i < growing.Count; i++) vm.Patrol.Add(growing[(i + k) % growing.Count]);
+                List<int> theirs = free.Count > 0 ? free : growing;
+                for (int i = 0; i < theirs.Count; i++) vm.Patrol.Add(theirs[(i + k) % theirs.Count]);
                 vm.TileId = vm.Patrol.Count > 0 ? vm.Patrol[0] : frontYard;
                 map.People.Add(vm);
                 k++;

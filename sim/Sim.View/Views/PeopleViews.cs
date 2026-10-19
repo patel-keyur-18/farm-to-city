@@ -83,7 +83,7 @@ namespace Sim.View.Views
             string what = o.Kind == OrderTargetKind.Field
                 ? ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[o.Crop].NameKey))
                 : ctx.Strings.Get("order.pick");
-            return what + " · " + sell;
+            return what + " · " + sell + " · " + ctx.Strings.Get(o.Once ? "order.once" : "order.every");
         }
 
         /// <summary>"Last: harvested 1,200 kg, 3 h ago", or the waiting reason, or null before the first action.</summary>
@@ -314,39 +314,51 @@ namespace Sim.View.Views
             StandingOrder existing = sim.State.People.OrderFor(kind, target);
             if (existing != null) vm.Subtitle = PeopleWords.Order(ctx, existing);
 
-            string crop = null;
-            Fixed? min = null;
-            if (kind == OrderTargetKind.Field)
+            // Arg: the steps chosen so far, "crop|once|26" (a tree: "tree|every|40"). Crop, then how long, then how to sell.
+            string[] parts = string.IsNullOrEmpty(arg) ? new string[0] : arg.Split('|');
+            string crop = kind == OrderTargetKind.Field && parts.Length > 0 ? parts[0] : null;
+            string head = kind == OrderTargetKind.Field ? crop : "tree";
+            if (kind == OrderTargetKind.Field && crop == null)
             {
-                if (string.IsNullOrEmpty(arg))
+                Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
+                foreach (CropDef c in defs.Farm.Crops)
                 {
-                    Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
-                    foreach (CropDef c in defs.Farm.Crops)
-                    {
-                        bool now = c.SowSeasons[(int)season];
-                        string cname = ctx.Strings.Get(c.NameKey);
-                        var line = new LineVm(cname, now ? ctx.Strings.Get("order.sowsNow")
-                            : ctx.Strings.Get("order.waitsFor", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons)));
-                        line.Action = ActionVm.Open("crop:" + c.Id, ctx.Strings.Get("action.choose"), new SheetRequest("Order", target, c.Id));
-                        vm.Lines.Add(line);
-                    }
-                    AddClear(ctx, vm, h, existing, kind, target);
-                    return vm;
+                    bool now = c.SowSeasons[(int)season];
+                    string cname = ctx.Strings.Get(c.NameKey);
+                    var line = new LineVm(cname, now ? ctx.Strings.Get("order.sowsNow")
+                        : ctx.Strings.Get("order.waitsFor", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons)));
+                    line.Action = ActionVm.Open("crop:" + c.Id, ctx.Strings.Get("action.choose"), new SheetRequest("Order", target, c.Id));
+                    vm.Lines.Add(line);
                 }
-                string[] parts = arg.Split('|');
-                crop = parts[0];
-                if (parts.Length > 1) min = Fixed.FromInt(int.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture));
+                AddClear(ctx, vm, h, existing, kind, target);
+                return vm;
             }
-            else if (arg != null && arg.StartsWith("tree|", System.StringComparison.Ordinal))
-                min = Fixed.FromInt(int.Parse(arg.Substring(5), System.Globalization.CultureInfo.InvariantCulture));
+            if (crop != null) vm.Subtitle = ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].NameKey));
+            if (parts.Length < 2)
+            {
+                // How long: this season only (the order clears after its harvest) or every season (a standing order).
+                foreach (string how in new[] { "once", "every" })
+                {
+                    var line = new LineVm(ctx.Strings.Get("order." + how), ctx.Strings.Get("order." + how + "Why"));
+                    line.Action = ActionVm.Open("how:" + how, ctx.Strings.Get("action.choose"), new SheetRequest("Order", target, head + "|" + how));
+                    vm.Lines.Add(line);
+                }
+                AddClear(ctx, vm, h, existing, kind, target);
+                return vm;
+            }
+            bool once = parts[1] == "once";
+            Fixed? min = parts.Length > 2 ? Fixed.FromInt(int.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture)) : (Fixed?)null;
+            vm.Subtitle = (vm.Subtitle == null ? "" : vm.Subtitle + " · ") + ctx.Strings.Get(once ? "order.once" : "order.every");
 
             int good = kind == OrderTargetKind.Field ? defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].OutputGood
                 : sim.State.Farm.TreeIn(target) == null ? -1 : defs.Farm.Trees[sim.State.Farm.TreeIn(target).Def].FruitGood;
             long today = good < 0 ? 1 : System.Math.Max(1, sim.State.Market.MarketPrice(good).RoundToLong());
             long minimum = min.HasValue ? min.Value.RoundToLong() : today;
-            if (crop != null) vm.Subtitle = ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].NameKey));
-
-            OrderSpec Spec(SellRule rule, long m) { return crop != null ? OrderSpec.KeepCrop((int)target, crop, SeedSource.Certified, "none", rule, Fixed.FromInt((int)m)) : OrderSpec.PickTree(target, rule, Fixed.FromInt((int)m)); }
+            OrderSpec Spec(SellRule rule, long m)
+            {
+                OrderSpec spec = crop != null ? OrderSpec.KeepCrop((int)target, crop, SeedSource.Certified, "none", rule, Fixed.FromInt((int)m)) : OrderSpec.PickTree(target, rule, Fixed.FromInt((int)m));
+                return once ? spec.ThisSeasonOnly() : spec;
+            }
 
             var store = new LineVm(ctx.Strings.Get("order.sellStore"), ctx.Strings.Get("order.sellStoreWhy"));
             store.Action = ActionVm.Checked(ctx, "set:store", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Store, 0)));
@@ -355,7 +367,7 @@ namespace Sim.View.Views
                 ctx.Strings.Get("order.sellOfferWhy", "today", ctx.Fmt.Integer(today)), "minPrice");
             offer.Action = ActionVm.Checked(ctx, "set:offer", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Offer, minimum)));
             vm.Lines.Add(offer);
-            string prefix = crop != null ? crop + "|" : "tree|";
+            string prefix = head + "|" + parts[1] + "|";
             var lower = new LineVm(ctx.Strings.Get("order.lower"), ctx.Strings.Get("order.minNow", "min", ctx.Fmt.Integer(minimum)));
             lower.Action = new ActionVm("min:down", "−", null, ActionKind.Open, minimum > 1, minimum > 1 ? null : ctx.Reject(RejectReason.InvalidArgument), null,
                 new SheetRequest("Order", target, prefix + (minimum - 1)));

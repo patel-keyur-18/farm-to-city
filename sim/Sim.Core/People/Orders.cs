@@ -123,6 +123,12 @@ namespace Sim.Core.People
                 }
             }
             Done(sim, h, o, action, goodId, quantity, sim.State.Ledger.Cash - cash);
+            if (o.Once)
+            {
+                // A this-season-only order is finished once its crop is in: the field is the player's again.
+                sim.State.People.Orders.Remove(o);
+                sim.Emit(new OrderCompleted(sim.State.Clock.SimTime, h.Id, o.Kind, o.Target));
+            }
             return true;
         }
 

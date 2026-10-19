@@ -181,6 +181,9 @@ namespace Sim.Core.People
         public SellRule Sell { get; internal set; }
         public Fixed MinPrice { get; internal set; }
 
+        /// <summary>This season only: cleared after its harvest or pick; otherwise it repeats every season (a standing order).</summary>
+        public bool Once { get; internal set; }
+
         // The last action, for the hand sheet's "Last done" (ADR 0039).
         public OrderAction LastAction { get; internal set; }
         public long LastAt { get; internal set; }
@@ -200,6 +203,7 @@ namespace Sim.Core.People
             h.WriteInt(Fertiliser);
             h.WriteInt((int)Sell);
             h.WriteFixed(MinPrice);
+            h.WriteBool(Once);
             h.WriteInt((int)LastAction);
             h.WriteLong(LastAt);
             h.WriteLong(LastQuantity);

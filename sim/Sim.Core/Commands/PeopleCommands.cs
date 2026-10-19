@@ -229,6 +229,17 @@ namespace Sim.Core.Commands
         public SellRule Sell { get; }
         public Fixed MinPrice { get; }
 
+        /// <summary>This season only: the order clears once its harvest (or pick) is in and sold or stored (owner, 2026-10-19).</summary>
+        public bool Once { get; private set; }
+
+        /// <summary>The same order, done once instead of every season.</summary>
+        public OrderSpec ThisSeasonOnly()
+        {
+            var o = (OrderSpec)MemberwiseClone();
+            o.Once = true;
+            return o;
+        }
+
         private OrderSpec(OrderTargetKind kind, long target, string cropId, SeedSource seed, string fertiliserId, SellRule sell, Fixed minPrice)
         {
             Kind = kind;
@@ -291,7 +302,7 @@ namespace Sim.Core.Commands
             var order = new StandingOrder
             {
                 HandId = h.Id, Kind = Order.Kind, Target = Order.Target, Crop = crop, Seed = Order.Seed, Fertiliser = fert,
-                Sell = Order.Sell, MinPrice = Order.MinPrice,
+                Sell = Order.Sell, MinPrice = Order.MinPrice, Once = Order.Once,
             };
             int i = 0;
             while (i < s.Orders.Count && s.Orders[i].CompareKey(order) < 0) i++;

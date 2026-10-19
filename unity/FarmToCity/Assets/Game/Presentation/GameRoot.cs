@@ -292,6 +292,7 @@ namespace Game.Presentation
                     case ApplicantArrived _: Toast(_strings.Get("toast.applicant")); break;
                     case HandHutBuilt _: Toast(_strings.Get("toast.hutBuilt")); break;
                     case HandHired _: Toast(_strings.Get("toast.handHired")); break;
+                    case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                     case AwayAdvanceCompleted _: away = true; break;
                 }
@@ -355,7 +356,7 @@ namespace Game.Presentation
                     break;
                 case "Order":
                     bool tree = r.Arg != null && r.Arg.StartsWith("tree", StringComparison.Ordinal);
-                    _sheet.Show(OrderSheet.Build(_ctx, tree ? OrderTargetKind.Tree : OrderTargetKind.Field, r.Id, r.Arg == "tree" ? null : r.Arg), refreshOnly);
+                    _sheet.Show(OrderSheet.Build(_ctx, tree ? OrderTargetKind.Tree : OrderTargetKind.Field, r.Id, r.Arg), refreshOnly);
                     break;
                 case "HutPlacement": if (!refreshOnly) StartPlacing(); break;
                 case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;

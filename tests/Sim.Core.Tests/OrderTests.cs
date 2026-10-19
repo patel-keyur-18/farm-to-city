@@ -152,6 +152,32 @@ namespace Sim.Core.Tests
             Assert.That(careless.State.Market.TraderBoughtToday[wheat], Is.GreaterThan(0), "a careless hand sells to the trader");
         }
 
+        // Owner, 2026-10-19: a this-season-only order clears once its crop is in and sold; an every-season order stays.
+        [Test]
+        public void ThisSeasonOnly_ClearsAfterHarvest()
+        {
+            Simulation sim = Start(NoPests());
+            Hand h = SteadyHand(sim);
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new SetStandingOrder(t, h.Id, KeepWheat(SellRule.Trader).ThisSeasonOnly()));
+            Assert.That(P(sim).OrderFor(OrderTargetKind.Field, HomeTile).Once, Is.True);
+            long ready = sim.State.Farm.CropOn(HomeTile).ReadyAt;
+            sim.DrainEvents();
+            sim.AdvanceTo(ready / Hour * Hour + 3 * Hour);
+            var events = sim.DrainEvents();
+            Assert.That(events.OfType<OrderExecuted>().Single().Action, Is.EqualTo(OrderAction.Harvested), "harvested, not sown again");
+            Assert.That(events.OfType<OrderCompleted>().Count(), Is.EqualTo(1));
+            Assert.That(P(sim).OrderFor(OrderTargetKind.Field, HomeTile), Is.Null, "the field is the player's again");
+            Assert.That(sim.State.Farm.CropOn(HomeTile), Is.Null);
+
+            Simulation every = Start(NoPests());
+            Hand e = SteadyHand(every);
+            Ok(every, new SetStandingOrder(every.State.Clock.SimTime, e.Id, KeepWheat(SellRule.Trader)));
+            every.AdvanceTo(every.State.Farm.CropOn(HomeTile).ReadyAt / Hour * Hour + 3 * Hour);
+            Assert.That(P(every).OrderFor(OrderTargetKind.Field, HomeTile), Is.Not.Null, "every season: it stays");
+            Assert.That(every.State.Farm.CropOn(HomeTile), Is.Not.Null, "and sows again");
+        }
+
         // Spec 006 AC-15.
         [Test]
         public void NeverBorrows_PausesOnLapse()

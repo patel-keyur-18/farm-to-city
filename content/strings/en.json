@@ -575,5 +575,11 @@
   "quarters.title": "Labour quarters",
   "quarters.subtitle": "Room for {n} hands' huts",
   "quarters.place": "Hut place {n}",
-  "quarters.free": "Free"
+  "quarters.free": "Free",
+  "order.once": "This season only",
+  "order.every": "Every season",
+  "order.onceWhy": "Sow, tend, harvest and sell once; then the field is yours again",
+  "order.everyWhy": "Keep this field going season after season, even while you are away",
+  "event.OrderCompleted": "A hand finished an order.",
+  "toast.orderDone": "An order is done: the field is free again."
 }
