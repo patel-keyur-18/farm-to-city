@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.People
 {
@@ -22,15 +23,24 @@ namespace Sim.Core.People
 
         internal Neighbour Clone() { return (Neighbour)MemberwiseClone(); }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
-            h.WriteInt(Name);
-            h.WriteInt(Trait);
+            h.WriteRef(ContentTable.Name, Name);
+            h.WriteRef(ContentTable.Trait, Trait);
             h.WriteLong(SecondsWorked);
             h.WriteBool(AskedToMoveIn);
             h.WriteBool(FreeToday);
             h.WriteBool(HiredToday);
+        }
+
+        internal static Neighbour ReadFrom(SaveReader r)
+        {
+            return new Neighbour
+            {
+                Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Trait = r.ReadRef(ContentTable.Trait), SecondsWorked = r.ReadLong(),
+                AskedToMoveIn = r.ReadBool(), FreeToday = r.ReadBool(), HiredToday = r.ReadBool(),
+            };
         }
     }
 
@@ -59,19 +69,29 @@ namespace Sim.Core.People
 
         internal Applicant Clone() { return (Applicant)MemberwiseClone(); }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
-            h.WriteInt(Name);
+            h.WriteRef(ContentTable.Name, Name);
             h.WriteInt(Skill);
-            h.WriteInt(Trait1);
-            h.WriteInt(Trait2);
+            h.WriteRef(ContentTable.Trait, Trait1);
+            h.WriteRef(ContentTable.Trait, Trait2);
             h.WriteBool(SecondTraitKnown);
             h.WriteBool(SkillKnown);
             h.WriteBool(AboveMarket);
             h.WriteLong(ArrivedAt);
             h.WriteLong(WaitedLiveSeconds);
             h.WriteLong(FromRosterId);
+        }
+
+        internal static Applicant ReadFrom(SaveReader r)
+        {
+            return new Applicant
+            {
+                Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadInt(), Trait1 = r.ReadRef(ContentTable.Trait),
+                Trait2 = r.ReadRef(ContentTable.Trait), SecondTraitKnown = r.ReadBool(), SkillKnown = r.ReadBool(), AboveMarket = r.ReadBool(),
+                ArrivedAt = r.ReadLong(), WaitedLiveSeconds = r.ReadLong(), FromRosterId = r.ReadLong(),
+            };
         }
     }
 
@@ -114,13 +134,13 @@ namespace Sim.Core.People
 
         internal Hand Clone() { return (Hand)MemberwiseClone(); }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
-            h.WriteInt(Name);
+            h.WriteRef(ContentTable.Name, Name);
             h.WriteFixed(Skill);
-            h.WriteInt(Trait1);
-            h.WriteInt(Trait2);
+            h.WriteRef(ContentTable.Trait, Trait1);
+            h.WriteRef(ContentTable.Trait, Trait2);
             h.WriteLong(HutId);
             h.WriteLong(HiredAt);
             h.WriteInt(SeasonsWorked);
@@ -131,6 +151,17 @@ namespace Sim.Core.People
             h.WriteLong(LapsedLiveSeconds);
             h.WriteLong(ActionHour);
             h.WriteInt(ActionsInHour);
+        }
+
+        internal static Hand ReadFrom(SaveReader r)
+        {
+            return new Hand
+            {
+                Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadFixed(), Trait1 = r.ReadRef(ContentTable.Trait),
+                Trait2 = r.ReadRef(ContentTable.Trait), HutId = r.ReadLong(), HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(), Wage = r.ReadLong(),
+                Contract = (ContractState)r.ReadInt(), PrepaymentId = r.ReadLong(), LapsedAt = r.ReadLong(), LapsedLiveSeconds = r.ReadLong(),
+                ActionHour = r.ReadLong(), ActionsInHour = r.ReadInt(),
+            };
         }
     }
 
@@ -193,14 +224,14 @@ namespace Sim.Core.People
 
         internal StandingOrder Clone() { return (StandingOrder)MemberwiseClone(); }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(HandId);
             h.WriteInt((int)Kind);
             h.WriteLong(Target);
-            h.WriteInt(Crop);
+            h.WriteRef(ContentTable.Crop, Crop);
             h.WriteInt((int)Seed);
-            h.WriteInt(Fertiliser);
+            h.WriteRef(ContentTable.Fertiliser, Fertiliser);
             h.WriteInt((int)Sell);
             h.WriteFixed(MinPrice);
             h.WriteBool(Once);
@@ -209,6 +240,17 @@ namespace Sim.Core.People
             h.WriteLong(LastQuantity);
             h.WriteLong(LastAmount);
             h.WriteInt((int)Waiting);
+        }
+
+        internal static StandingOrder ReadFrom(SaveReader r)
+        {
+            return new StandingOrder
+            {
+                HandId = r.ReadLong(), Kind = (OrderTargetKind)r.ReadInt(), Target = r.ReadLong(), Crop = r.ReadRef(ContentTable.Crop),
+                Seed = (Farm.SeedSource)r.ReadInt(), Fertiliser = r.ReadRef(ContentTable.Fertiliser), Sell = (SellRule)r.ReadInt(), MinPrice = r.ReadFixed(),
+                Once = r.ReadBool(), LastAction = (OrderAction)r.ReadInt(), LastAt = r.ReadLong(), LastQuantity = r.ReadLong(), LastAmount = r.ReadLong(),
+                Waiting = (OrderWait)r.ReadInt(),
+            };
         }
 
         /// <summary>Orders are kept sorted by (hand, kind, target).</summary>
@@ -232,13 +274,18 @@ namespace Sim.Core.People
 
         internal Construction Clone() { return (Construction)MemberwiseClone(); }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
             h.WriteInt(TileId);
             h.WriteLong(Cost);
             h.WriteLong(JobId);
             h.WriteLong(ReadyAt);
+        }
+
+        internal static Construction ReadFrom(SaveReader r)
+        {
+            return new Construction { Id = r.ReadLong(), TileId = r.ReadInt(), Cost = r.ReadLong(), JobId = r.ReadLong(), ReadyAt = r.ReadLong() };
         }
     }
 
@@ -292,7 +339,7 @@ namespace Sim.Core.People
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Roster.Count);
             foreach (Neighbour n in Roster) n.WriteTo(h);
@@ -315,6 +362,27 @@ namespace Sim.Core.People
             h.WriteLong(NextApplicantId);
             h.WriteLong(NextHandId);
             h.WriteLong(NextConstructionId);
+        }
+
+        internal static PeopleState ReadFrom(SaveReader r)
+        {
+            var s = new PeopleState();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Roster.Add(Neighbour.ReadFrom(r));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Applicants.Add(People.Applicant.ReadFrom(r));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Hands.Add(People.Hand.ReadFrom(r));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Orders.Add(StandingOrder.ReadFrom(r));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Constructions.Add(Construction.ReadFrom(r));
+            if (r.ReadBool()) s.Post = new JobPost { AboveMarket = r.ReadBool(), PostedAt = r.ReadLong(), ExpiresAt = r.ReadLong() };
+            s.NextApplicantAt = r.ReadLong();
+            s.NextApplicantId = r.ReadLong();
+            s.NextHandId = r.ReadLong();
+            s.NextConstructionId = r.ReadLong();
+            return s;
         }
     }
 }

@@ -110,6 +110,11 @@ namespace Sim.Content
                 case "Sync":
                     OnlyFields(c, path, "type", "nowWallUtc");
                     return new Sync(Long(Required(c, path, "nowWallUtc"), path + ".nowWallUtc"));
+                case "LiveRun":
+                    // A run of live Syncs compacted in the command log (spec 007 §3.2).
+                    OnlyFields(c, path, "type", "fromWallUtc", "toWallUtc", "simSeconds");
+                    return new LiveRun(Long(Required(c, path, "fromWallUtc"), path + ".fromWallUtc"),
+                        Long(Required(c, path, "toWallUtc"), path + ".toWallUtc"), Long(Required(c, path, "simSeconds"), path + ".simSeconds"));
                 case "DebugAdvance":
                     OnlyFields(c, path, "type", "seconds", "mode");
                     return new DebugAdvance(Long(Required(c, path, "seconds"), path + ".seconds"),
@@ -267,6 +272,12 @@ namespace Sim.Content
                 case Sync sync:
                     Prop(w, "type", "Sync");
                     w.WritePropertyName("nowWallUtc"); w.WriteValue(sync.NowWallUtc);
+                    break;
+                case LiveRun run:
+                    Prop(w, "type", "LiveRun");
+                    w.WritePropertyName("fromWallUtc"); w.WriteValue(run.FromWallUtc);
+                    w.WritePropertyName("toWallUtc"); w.WriteValue(run.ToWallUtc);
+                    w.WritePropertyName("simSeconds"); w.WriteValue(run.SimSeconds);
                     break;
                 case DebugAdvance d:
                     Prop(w, "type", "DebugAdvance");

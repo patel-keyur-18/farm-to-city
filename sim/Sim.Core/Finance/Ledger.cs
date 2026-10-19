@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Finance
 {
@@ -139,9 +140,10 @@ namespace Sim.Core.Finance
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(NextEntryId);
+            if (!h.Hashing) h.WriteInt(_balances.Length); // the chart of accounts is code: checked on load
             foreach (long b in _balances) h.WriteLong(b);
             h.WriteInt(_entries.Count);
             foreach (JournalEntry e in _entries)
@@ -158,6 +160,28 @@ namespace Sim.Core.Finance
                     h.WriteLong(p.Amount);
                 }
             }
+        }
+
+        internal static Ledger ReadFrom(SaveReader r)
+        {
+            var l = new Ledger { NextEntryId = r.ReadLong() };
+            int n = r.ReadInt();
+            if (n != l._balances.Length) throw new SaveFormatException(n + " accounts, this build has " + l._balances.Length);
+            for (int i = 0; i < n; i++) l._balances[i] = r.ReadLong();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                long id = r.ReadLong(), t = r.ReadLong(), period = r.ReadLong();
+                string key = r.ReadString(), reference = r.ReadString();
+                var postings = new Posting[r.ReadCount()];
+                for (int k = 0; k < postings.Length; k++)
+                {
+                    var a = (Account)r.ReadInt();
+                    postings[k] = new Posting(a, r.ReadLong());
+                }
+                l._entries.Add(new JournalEntry(id, t, period, key, reference, postings));
+            }
+            return l;
         }
     }
 }

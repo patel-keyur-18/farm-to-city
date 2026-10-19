@@ -1,4 +1,5 @@
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Time
 {
@@ -22,11 +23,16 @@ namespace Sim.Core.Time
             return new ClockState { SimTime = SimTime, LastWallUtc = LastWallUtc, IsAway = IsAway };
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(SimTime);
             h.WriteLong(LastWallUtc);
             h.WriteBool(IsAway);
+        }
+
+        internal static ClockState ReadFrom(SaveReader r)
+        {
+            return new ClockState { SimTime = r.ReadLong(), LastWallUtc = r.ReadLong(), IsAway = r.ReadBool() };
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Sim.Core.Definitions;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Land
 {
@@ -64,18 +65,30 @@ namespace Sim.Core.Land
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Id);
             h.WriteInt((int)Terrain);
-            h.WriteInt(Soil);
-            h.WriteInt(Drainage);
+            h.WriteRef(ContentTable.Soil, Soil);
+            h.WriteRef(ContentTable.Drainage, Drainage);
             h.WriteFixed(Fertility);
             h.WriteFixed(Moisture);
             h.WriteFixed(WellLift);
-            h.WriteInt(ParcelId);
+            h.WriteRef(ContentTable.Parcel, ParcelId);
             h.WriteLong(VacantSince);
             foreach (Fixed f in Changes) h.WriteFixed(f);
+        }
+
+        internal static Tile ReadFrom(SaveReader r)
+        {
+            var t = new Tile
+            {
+                Id = r.ReadInt(), Terrain = (Terrain)r.ReadInt(), Soil = r.ReadRef(ContentTable.Soil), Drainage = r.ReadRef(ContentTable.Drainage),
+                Fertility = r.ReadFixed(), Moisture = r.ReadFixed(), WellLift = r.ReadFixed(), ParcelId = r.ReadRef(ContentTable.Parcel),
+                VacantSince = r.ReadLong(),
+            };
+            for (int i = 0; i < ReasonCount; i++) t.Changes[i] = r.ReadFixed();
+            return t;
         }
     }
 
@@ -97,13 +110,18 @@ namespace Sim.Core.Land
             return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt };
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
-            h.WriteInt(Id);
+            h.WriteRef(ContentTable.Parcel, Id);
             h.WriteBool(Owned);
             h.WriteBool(Protected);
             h.WriteLong(CostBasis);
             h.WriteLong(AcquiredAt);
+        }
+
+        internal static Parcel ReadFrom(SaveReader r)
+        {
+            return new Parcel { Id = r.ReadRef(ContentTable.Parcel), Owned = r.ReadBool(), Protected = r.ReadBool(), CostBasis = r.ReadLong(), AcquiredAt = r.ReadLong() };
         }
     }
 
@@ -129,14 +147,23 @@ namespace Sim.Core.Land
             return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated };
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
-            h.WriteInt(Def);
+            h.WriteRef(ContentTable.Building, Def);
             h.WriteInt(TileId);
             h.WriteLong(Cost);
             h.WriteLong(Depreciated);
             h.WriteInt(SeasonsDepreciated);
+        }
+
+        internal static Building ReadFrom(SaveReader r)
+        {
+            return new Building
+            {
+                Id = r.ReadLong(), Def = r.ReadRef(ContentTable.Building), TileId = r.ReadInt(), Cost = r.ReadLong(), Depreciated = r.ReadLong(),
+                SeasonsDepreciated = r.ReadInt(),
+            };
         }
     }
 
@@ -159,7 +186,7 @@ namespace Sim.Core.Land
             return new TreeSlot { Id = Id, Kind = Kind, TileId = TileId, TreeId = TreeId, TreeMature = TreeMature, Shade = Shade };
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
             h.WriteInt((int)Kind);
@@ -167,6 +194,11 @@ namespace Sim.Core.Land
             h.WriteLong(TreeId);
             h.WriteBool(TreeMature);
             h.WriteFixed(Shade);
+        }
+
+        internal static TreeSlot ReadFrom(SaveReader r)
+        {
+            return new TreeSlot { Id = r.ReadLong(), Kind = (SlotKind)r.ReadInt(), TileId = r.ReadInt(), TreeId = r.ReadLong(), TreeMature = r.ReadBool(), Shade = r.ReadFixed() };
         }
     }
 
@@ -197,9 +229,9 @@ namespace Sim.Core.Land
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
-            h.WriteInt(HourWeather);
+            h.WriteRef(ContentTable.Weather, HourWeather);
             h.WriteInt(Tiles.Count);
             foreach (Tile t in Tiles) t.WriteTo(h);
             h.WriteInt(Parcels.Count);
@@ -210,6 +242,31 @@ namespace Sim.Core.Land
             h.WriteLong(NextSlotId);
             h.WriteInt(Slots.Count);
             foreach (TreeSlot s in Slots) s.WriteTo(h);
+        }
+
+        /// <summary>Tiles and parcels are indexed by their place on the map, so the map must have the same tiles and parcels.</summary>
+        internal static LandState ReadFrom(SaveReader r, MapDef map)
+        {
+            var s = new LandState { HourWeather = r.ReadRef(ContentTable.Weather) };
+            int n = r.ReadCount();
+            if (n != map.Tiles.Count) throw new SaveContentException("the map has " + map.Tiles.Count + " tiles, the save " + n);
+            for (int i = 0; i < n; i++) s.Tiles.Add(Tile.ReadFrom(r));
+            n = r.ReadCount();
+            if (n != map.Parcels.Count) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
+            var parcels = new Parcel[n];
+            for (int i = 0; i < n; i++)
+            {
+                Parcel p = Parcel.ReadFrom(r);
+                parcels[p.Id] = p;
+            }
+            s.Parcels.AddRange(parcels);
+            s.NextBuildingId = r.ReadLong();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Buildings.Add(Building.ReadFrom(r));
+            s.NextSlotId = r.ReadLong();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Slots.Add(TreeSlot.ReadFrom(r));
+            return s;
         }
     }
 }

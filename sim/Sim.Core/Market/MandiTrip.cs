@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Market
 {
@@ -35,14 +36,30 @@ namespace Sim.Core.Market
             return copy;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Loads.Count);
-            foreach (KeyValuePair<int, long> l in Loads) { h.WriteInt(l.Key); h.WriteLong(l.Value); }
+            foreach (KeyValuePair<int, long> l in Loads) { h.WriteRef(ContentTable.Good, l.Key); h.WriteLong(l.Value); }
             h.WriteLong(DepartedAt);
             h.WriteLong(ReturnAt);
             h.WriteLong(JobId);
             h.WriteLong(CartHire);
+        }
+
+        internal static MandiTrip ReadFrom(SaveReader r)
+        {
+            var t = new MandiTrip();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                int good = r.ReadRef(ContentTable.Good);
+                t.Loads.Add(new KeyValuePair<int, long>(good, r.ReadLong()));
+            }
+            t.DepartedAt = r.ReadLong();
+            t.ReturnAt = r.ReadLong();
+            t.JobId = r.ReadLong();
+            t.CartHire = r.ReadLong();
+            return t;
         }
     }
 }

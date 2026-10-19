@@ -50,15 +50,6 @@ namespace Sim.Core.Finance
                     byAccount.Add(new KeyValuePair<Account, long>(a, -l.Balance(a)));
             }
 
-            ReportLine farmIncome = Line(l, "farmIncome", FarmIncome);
-            ReportLine farmCosts = Line(l, "farmCosts", FarmCosts);
-            var farmProfit = new ReportLine("farmProfit", farmIncome.Amount + farmCosts.Amount, Concat(FarmIncome, FarmCosts));
-            ReportLine other = Line(l, "otherIncome", OtherIncome);
-            ReportLine household = Line(l, "household", Household);
-            ReportLine finance = Line(l, "finance", FinanceCosts);
-            ReportLine losses = Line(l, "other", Other);
-            var net = new ReportLine("netResult", farmProfit.Amount + other.Amount + household.Amount + finance.Amount + losses.Amount,
-                new Account[0]);
 
             var cash = new CashFlowSummary { Opening = sim.State.Finance.SeasonOpeningCash, Closing = l.Cash };
             foreach (JournalEntry e in l.Entries)
@@ -79,7 +70,7 @@ namespace Sim.Core.Finance
             {
                 Period = period,
                 ByAccount = byAccount.AsReadOnly(),
-                Lines = new List<ReportLine> { farmIncome, farmCosts, farmProfit, other, household, finance, losses, net }.AsReadOnly(),
+                Lines = LinesFrom(byAccount),
                 CashFlow = cash,
                 NetWorth = NetWorth(sim),
                 HomeUse = sim.State.Farm == null ? 0 : sim.State.Farm.Founder.HomeUseSeason,
@@ -87,11 +78,27 @@ namespace Sim.Core.Finance
             };
         }
 
-        private static ReportLine Line(Ledger l, string key, Account[] accounts)
+        /// <summary>The report's lines (ADR 0032 grouping) from its per-account amounts: built at the close and again when a save loads.</summary>
+        internal static IReadOnlyList<ReportLine> LinesFrom(IReadOnlyList<KeyValuePair<Account, long>> byAccount)
         {
-            long sum = 0;
-            foreach (Account a in accounts) sum -= l.Balance(a);
-            return new ReportLine(key, sum, accounts);
+            ReportLine Line(string key, Account[] accounts)
+            {
+                long sum = 0;
+                foreach (Account a in accounts)
+                    foreach (KeyValuePair<Account, long> kv in byAccount)
+                        if (kv.Key == a) sum += kv.Value;
+                return new ReportLine(key, sum, accounts);
+            }
+            ReportLine farmIncome = Line("farmIncome", FarmIncome);
+            ReportLine farmCosts = Line("farmCosts", FarmCosts);
+            var farmProfit = new ReportLine("farmProfit", farmIncome.Amount + farmCosts.Amount, Concat(FarmIncome, FarmCosts));
+            ReportLine other = Line("otherIncome", OtherIncome);
+            ReportLine household = Line("household", Household);
+            ReportLine finance = Line("finance", FinanceCosts);
+            ReportLine losses = Line("other", Other);
+            var net = new ReportLine("netResult", farmProfit.Amount + other.Amount + household.Amount + finance.Amount + losses.Amount,
+                new Account[0]);
+            return new List<ReportLine> { farmIncome, farmCosts, farmProfit, other, household, finance, losses, net }.AsReadOnly();
         }
 
         private static Account[] Concat(Account[] a, Account[] b)
