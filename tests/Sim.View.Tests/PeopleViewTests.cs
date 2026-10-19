@@ -164,6 +164,26 @@ namespace Sim.View.Tests
             Assert.That(card.Subtitle, Is.EqualTo("30 h away").Or.EqualTo("1 d 6 h away"));
         }
 
+        // ADR 0040: people move between the fields with work for them, and go home when there's none.
+        [Test]
+        public void Map_Patrols_And_Homes()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new Sow(t, 19, "radish", SeedSource.Certified, "none"));
+            Ok(sim, new Sow(t, 20, "radish", SeedSource.Certified, "none"));
+            PersonVm idle = MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Hand);
+            Assert.That(idle.Patrol, Is.Empty, "no orders: home");
+            Assert.That(idle.HomeTile, Is.EqualTo(37));
+            Assert.That(idle.HomeHut, Is.EqualTo(h.HutId));
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(19, "radish", SeedSource.Certified, "none", SellRule.Store)));
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(20, "radish", SeedSource.Certified, "none", SellRule.Store)));
+            MapVm map = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(map.People.Single(p => p.Kind == PersonKind.Hand).Patrol, Is.EquivalentTo(new[] { 19, 20 }));
+            Assert.That(map.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Is.EquivalentTo(new[] { 19, 20 }));
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {

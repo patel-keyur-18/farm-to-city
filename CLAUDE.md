@@ -148,6 +148,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0037 | Mandi cart is a tractor-trolley (2,000 kg, 1,000 hire); shade per tree (mango, guava 0.08; banana, papaya 0.03; floor 0.80); first-season pacing accepted (the first loan before hiring) |
 | 0038 | Credit loopholes closed: foreclosure also seizes stored produce, selling collateral repays the bank first, a 24-live-hour final notice for every default; moneylender 6% a season; minimum loans; first playable scope (minimal HUD and Store sheet, painted placeholder sprites, Baloo 2 headings, dev builds, Phase 0 spike deleted, Blender pipeline in Sprint 6) |
 | 0039 | Sprint 5 review: hands' huts on the edge of an inherited acre (at most 2); regulars counted by time hired; back pay when renewing after a lapse; orders never undo the player's crop, one action per hand per hour; stars and words for skill; a People button and a people-only away card; four people stress bots; a Blender slice in Sprint 5, every sprite rendered by the end of Sprint 6; the hand's wage 30,000 a season (day 9,375) |
+| 0040 | Device review: a 2-acre yard (tile 29) and the labour quarters (tile 37) for hands' huts (supersedes 0039 §2); an order starts at once (one action per hand per hour); people go round their fields, hoe, and go home when idle; yard props and fence |
 
 ## Current status
 

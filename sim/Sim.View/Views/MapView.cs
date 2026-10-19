@@ -133,6 +133,16 @@ namespace Sim.View.Views
 
         /// <summary>A hand who carried out an order this hour: walks to the tile rather than appearing there.</summary>
         public bool Working { get; internal set; }
+
+        /// <summary>
+        /// The fields (or tree tiles) with work for them now, in the order to visit them (ADR 0040): the presenter walks them round,
+        /// working a while on each. Empty: nothing to do, so they go home.
+        /// </summary>
+        public List<int> Patrol { get; } = new List<int>();
+
+        /// <summary>Where home is: a tile, and for a hand the building id of their hut (else 0).</summary>
+        public int HomeTile { get; internal set; }
+        public long HomeHut { get; internal set; }
     }
 
     /// <summary>Everything the map draws, built from the state: tiles, tree slots, garden beds and buildings (spec 008 §3.4).</summary>
@@ -242,34 +252,76 @@ namespace Sim.View.Views
             var growing = new List<int>();
             foreach (Crop c in sim.State.Farm.Crops) if (c.State == CropState.Growing) growing.Add(c.TileId);
             growing.Sort();
-            int yard = -1;
-            foreach (TileVm t in map.Tiles) if (t.Kind == TileKind.Yard) yard = t.Id;
-            int Field(int k) { return growing.Count == 0 ? yard : growing[k % growing.Count]; }
+            int yard = -1, frontYard = -1;
+            foreach (TileVm t in map.Tiles)
+                if (t.Kind == TileKind.Yard) { if (yard < 0) yard = t.Id; else frontYard = t.Id; }
+            if (frontYard < 0) frontYard = yard;
 
-            map.People.Add(new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = Field(0) });
+            // The founder tends every growing field; home is the house door.
+            var founder = new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = growing.Count > 0 ? growing[0] : yard, HomeTile = yard };
+            founder.Patrol.AddRange(growing);
+            map.People.Add(founder);
             if (p == null) return;
             foreach (Sim.Core.People.Construction c in p.Constructions)
             {
-                long total = System.Math.Max(1, c.ReadyAt - (c.ReadyAt - sim.Config.Game.Buildings[sim.Config.Game.People.HandHut].BuildHours * 3600L));
+                long total = System.Math.Max(1, sim.Config.Game.Buildings[sim.Config.Game.People.HandHut].BuildHours * 3600L);
                 float progress = 1f - (c.ReadyAt - ctx.Now) / (float)total;
                 map.Constructions.Add(new ConstructionVm { Id = c.Id, TileId = c.TileId, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
             }
             int k = 1;
             foreach (Sim.Core.People.Hand h in p.Hands)
             {
+                // A hand works their own orders: fields with a crop or due a sowing, trees with fruit; nothing to do means home.
                 Sim.Core.People.StandingOrder last = null;
+                var patrol = new List<int>();
                 foreach (Sim.Core.People.StandingOrder o in p.Orders)
-                    if (o.HandId == h.Id && o.LastAction != Sim.Core.People.OrderAction.None && (last == null || o.LastAt > last.LastAt)) last = o;
+                {
+                    if (o.HandId != h.Id) continue;
+                    if (o.LastAction != Sim.Core.People.OrderAction.None && (last == null || o.LastAt > last.LastAt)) last = o;
+                    int tile;
+                    if (o.Kind == Sim.Core.People.OrderTargetKind.Field)
+                    {
+                        tile = (int)o.Target;
+                        bool work = sim.State.Farm.CropOn(tile) != null || o.Waiting == Sim.Core.People.OrderWait.None;
+                        if (!work) continue;
+                    }
+                    else
+                    {
+                        Tree tree = sim.State.Farm.TreeIn(o.Target);
+                        if (tree == null) continue;
+                        tile = sim.State.Land.Slots.Find(x => x.Id == o.Target).TileId;
+                    }
+                    if (!patrol.Contains(tile)) patrol.Add(tile);
+                }
                 bool working = last != null && ctx.Now - last.LastAt < 3600 && h.Contract == Sim.Core.People.ContractState.Active;
-                int tile = Field(k++);
-                if (working)
-                    tile = last.Kind == Sim.Core.People.OrderTargetKind.Field ? (int)last.Target
-                        : sim.State.Land.Slots.Find(s => s.Id == last.Target)?.TileId ?? tile;
-                map.People.Add(new PersonVm { Key = "hand:" + h.Id, Kind = PersonKind.Hand, Female = sim.Config.Game.People.Names[h.Name].Female, TileId = tile, Working = working });
+                if (h.Contract != Sim.Core.People.ContractState.Active) patrol.Clear();
+                if (working && last.Kind == Sim.Core.People.OrderTargetKind.Field)
+                {
+                    // The field they just worked comes first, so they walk straight there.
+                    patrol.Remove((int)last.Target);
+                    patrol.Insert(0, (int)last.Target);
+                }
+                Building hut = sim.State.Land.Buildings.Find(b => b.Id == h.HutId);
+                var vm = new PersonVm
+                {
+                    Key = "hand:" + h.Id, Kind = PersonKind.Hand, Female = sim.Config.Game.People.Names[h.Name].Female, Working = working,
+                    HomeTile = hut != null ? hut.TileId : frontYard, HomeHut = h.HutId,
+                };
+                vm.Patrol.AddRange(patrol);
+                vm.TileId = patrol.Count > 0 ? patrol[0] : vm.HomeTile;
+                map.People.Add(vm);
+                k++;
             }
             foreach (Sim.Core.People.Neighbour n in p.Roster)
-                if (n.HiredToday)
-                    map.People.Add(new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, TileId = Field(k++) });
+            {
+                if (!n.HiredToday) continue;
+                var vm = new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, HomeTile = frontYard };
+                // Day labourers tend the growing fields too, each starting at a different one.
+                for (int i = 0; i < growing.Count; i++) vm.Patrol.Add(growing[(i + k) % growing.Count]);
+                vm.TileId = vm.Patrol.Count > 0 ? vm.Patrol[0] : frontYard;
+                map.People.Add(vm);
+                k++;
+            }
         }
 
         private static float Clamp01(float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }

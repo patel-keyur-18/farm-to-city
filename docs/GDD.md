@@ -118,7 +118,7 @@ Farming is the first business the player runs, so it introduces every core idea:
 - soil type (loam, clay, sandy)
 - drainage
 
-The founder inherits 6 farm acres and a yard (hut and well), protected forever (ADR 0030). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
+The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitchen garden) and the labour quarters for hands' huts, protected forever (ADR 0030, ADR 0040). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
 
 - **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
@@ -340,7 +340,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | Source | Neighbouring villages, commuting | A migrant who moves onto your land |
 | Contract | One day, paid upfront | One season, paid upfront |
 | Cost per day | Higher (about 25% premium) | Lower, and grows in skill |
-| Housing | None | Needs a hand's hut on the edge of an inherited acre (ADR 0039) |
+| Housing | None | Needs a hand's hut in the labour quarters beside the yard (ADR 0040) |
 | Availability | Limited daily pool, scarce at harvest | Applicants arrive over a few days |
 | Standing orders | No | Yes |
 | Population | Not counted | Counted: the town's first citizens |

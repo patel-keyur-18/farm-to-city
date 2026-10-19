@@ -97,15 +97,16 @@
   - **Balance (AC-23):** the competent bot hires (hut at the end of the first Spring, orders on the acres it can tend, compost on tired soil, wheat on the hand's extra acres in Winter); stress bots: day-labour spammer 0.87, hand churner 0.99, lapse gamer 1.00, absentee 0.89 (floor 0.80); solo 0.99; the Hamlet's conditions met on day 5.3 / 5.4 / 5.7 (target 7 ± 2). `dotnet run --project tools/Tools.Balancer -- gate` prints it.
   - **`Sim.View` (39 tests):** the People sheet, the hand sheet, the order sheet, hut placement, the people-only away card, map people and building sites, order rows on field and tree sheets, the sow sheet's "change the order too?" question, a confirm before letting a hand go; skill as stars and band words, hours as "tends about N acres" (`ui.json`); no raw factors on the people sheets.
   - **Unity:** the People button with an applicants badge; section headers and stars on sheets; the confirm card; hands' huts at the head of their field with a building stage; people on the map (walk, bob, stoop); the placement ghost (drag over the acres, green or red with the reason, Build here); the away card; the yard re-laid out for the Blender hut; toasts for applicants, the hut and the hire; a dev-panel **Moneylender loan 20,000** until the loan screen (Sprint 7). Fixes: short sheet values no longer wrap; sprite caches survive fast enter-play-mode; placement starts outside its click; two missing toast strings from Sprint 4.
+  - **Device run 1 (2026-10-19):** every check passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS; 72 h in 2.9 ms). The owner's changes, built the same day as **ADR 0040**: a 2-acre yard (tile 29) with a fence, a tulsi planter, a haystack and a woodpile; hands' huts in a fenced labour quarters (tile 37, parcel `home_c`, two places) instead of on a field (supersedes ADR 0039 §2); an order starts at once (a per-hand action counter); people go round the fields with work, hoe (Blender work pose: stand and work frames alternate) and go home when idle. Gate unchanged in shape; 230 + 40 tests pass. Device run 2 (`s05-people.md`, 20 checks) pending.
   - **Verified in the Editor with touch** (mouse removed, `Game.Editor.TouchDriver` plays taps and drags through the Input System): People button, Hire, scrolling the sheet, Talk, Offer, See, Let go with Keep them and with Let go, Place it, the ghost drag, Build here, tapping a hut. Development build: Unity build succeeded; the unsigned Xcode Release compile is recorded in the pull request.
 
 ## In progress
 
-**Sprint 5 is built; the pull request waits for the owner's device run (`docs/test-checklists/s05-people.md`).**
+**Sprint 5 is built with the owner's device-review changes (ADR 0040); the pull request waits for device run 2 (`docs/test-checklists/s05-people.md`), then the merge.**
 
 ## Next up
 
-1. **Owner:** build the Development build (delete `Builds/iOS` first), install it on the iPhone 13 and work through `s05-people.md`; report how people and huts look, hiring clarity, the ghost drag, and the golden replays; then merge the pull request.
+1. **Owner:** device run 2 of the Development build (delete `Builds/iOS` first) with `s05-people.md` (the yard, the quarters, orders that start at once, people working); then merge the pull request.
 2. **Next session (Claude):** Sprint 6: saves, notifications and the play log; regulars (US-067); every remaining sprite and the icons rendered in Blender (US-171, 4 points). Start with the gap review as usual and fold in the Sprint 5 device feedback.
 
 ## Owner action checklist (Phases 0–1)

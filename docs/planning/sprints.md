@@ -262,7 +262,7 @@
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** — (pending: `s05-people.md`). The owner approved the Blender style checkpoint and the redone people (2026-10-19).
+**Review (owner's device results):** the owner approved the Blender style checkpoint and the redone people (2026-10-19). Device run 1: all checks passed (golden replays 001, 003, 004, 005 PASS on the iPhone 13; 72 h in 2.9 ms); the owner asked for a roomier yard, hands' huts off the fields, orders that start at once and people who work: built the same day as ADR 0040 (2-acre yard, labour quarters, immediate orders, work poses and patrols). Device run 2 pending.
 
 **Retro (Claude):**
 - *Went well:* the gap review caught two money loopholes (part-day regulars, lapse-and-renew) before any code, and the lapse-gamer stress bot then proved the fix (0.997 × competent). The gate checks found a real balance problem (a hand didn't pay over 11 years) and the owner settled it with numbers in hand (30,000 a season, ADR 0039 §11). The Blender rig renders in seconds, so the owner's feedback on people (size, clothes, men and women) was turned around in one round.

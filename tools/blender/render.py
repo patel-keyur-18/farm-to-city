@@ -387,7 +387,7 @@ PEOPLE = {
 }
 
 
-def model_person(kind, facing):
+def model_person(kind, facing, pose="stand"):
     """A small villager with a big head, built facing -y (the viewer's lower left); facing 'front' or 'back' (walking away, to the upper left)."""
     p = PEOPLE[kind]
     soft = True
@@ -414,6 +414,7 @@ def model_person(kind, facing):
         else:
             o.append(cylinder("dhoti", 0.025, 0.021, 0.026, (0, 0, 0.055), bottom, segs=16, smooth=True))
             o.append(box("fold", (0.008, 0.004, 0.024), (0.004, -0.023, 0.052), bottom, outline=False))
+    upper = len(o)  # everything from here up bends in the work pose
     # Torso and rounded shoulders.
     body = m("blouse", p["blouse"]) if female else top
     o.append(cylinder("torso", 0.019, 0.022, 0.036, (0, 0, 0.083), body, segs=16, smooth=True))
@@ -471,6 +472,27 @@ def model_person(kind, facing):
         o.append(cylinder("pagdi", 0.0335, 0.031, 0.020, (0, 0.003, hz + 0.019), accent, segs=18, smooth=True))
         o.append(sphere("pagdicrown", 0.027, (0, 0.004, hz + 0.028), accent, scale=(1, 1, 0.5), segs=16, rings=8))
         o.append(box("pagditail", (0.010, 0.004, 0.026), (0.010, 0.030, hz + 0.004), accent))
+    if pose == "work":
+        # Bent over a hoe: the upper body leans 30° forward about the hips, the arms reach further, and the hoe's blade bites the
+        # ground in front. Two frames (stand, work) alternate on the map as a hoeing motion.
+        hip = Vector((0, 0, 0.062))
+        bend = Matrix.Translation(hip) @ Matrix.Rotation(math.radians(40), 4, "X") @ Matrix.Translation(-hip)
+        for part in o[upper:]:
+            if any(part.name.startswith(n) for n in ("arm", "sleeve", "forearm", "palm", "bangle", "shoulderball")):
+                sh = Vector((0, 0, 0.097))
+                part.matrix_world = Matrix.Translation(sh) @ Matrix.Rotation(math.radians(25), 4, "X") @ Matrix.Translation(-sh) @ part.matrix_world
+            part.matrix_world = bend @ part.matrix_world
+        wood, iron = m("wood", WOOD), m("iron", 0x7C8288)
+        # The handle starts between the hands, wherever the bend put them, and its blade bites the ground ahead.
+        palms = [part for part in o if part.name.startswith("palm")]
+        centres = [part.matrix_world @ (sum((v.co for v in part.data.vertices), Vector()) / len(part.data.vertices)) for part in palms]
+        top = sum(centres, Vector()) / len(centres)
+        foot = Vector((0.0, top.y - 0.06, 0.006))
+        mid, d = (top + foot) / 2, foot - top
+        o.append(cylinder("hoehandle", 0.0028, 0.0028, d.length, tuple(mid), wood, segs=8, rot=d.to_track_quat("Z", "Y").to_matrix()))
+        o.append(box("hoeblade", (0.034, 0.02, 0.006), (0.0, foot.y - 0.004, 0.005), iron))
+        rot = math.radians(30) if facing == "front" else math.radians(-115)
+        return group(o, rot_z=rot, scale=PERSON_SCALE, outline_factor=0.7)
     # Tools.
     if p.get("tool") == "hoe":
         handle = cylinder("handle", 0.0028, 0.0028, 0.10, (0.020, 0.012, 0.105), m("wood", WOOD), segs=8,
@@ -495,6 +517,73 @@ SPRITES = {
 for _k in PEOPLE:
     for _f in ("front", "back"):
         SPRITES["person_%s_%s" % (_k, _f)] = (lambda k=_k, f=_f: (lambda: model_person(k, f)))()
+        SPRITES["person_%s_%s_work" % (_k, _f)] = (lambda k=_k, f=_f: (lambda: model_person(k, f, "work")))()
+
+
+# ---------------------------------------------------------------- yard props (ADR 0040)
+
+BAMBOO = 0xC9A060
+
+
+def model_fence(axis):
+    """A low bamboo fence one tile edge long (1.0), along x or y, centred on the origin: posts and two rails."""
+    o = []
+    bamboo, dark = toon("bamboo", BAMBOO), toon("bamboo_dark", 0x9C7A3E)
+    n = 7
+    for i in range(n):
+        u = -0.5 + i / (n - 1)
+        x, y = (u, 0) if axis == "x" else (0, u)
+        o.append(cylinder("post%d" % i, 0.008, 0.007, 0.075, (x, y, 0.0375), dark, segs=8))
+    for z in (0.028, 0.058):
+        rot = Matrix.Rotation(math.radians(90), 3, "Y") if axis == "x" else Matrix.Rotation(math.radians(90), 3, "X")
+        o.append(cylinder("rail%.2f" % z, 0.0045, 0.0045, 1.0, (0, 0, z), bamboo, segs=8, rot=rot))
+    return group(o, scale=1.0)
+
+
+def model_haystack():
+    """A rounded haystack on a low base with a binding rope and a pole through the top."""
+    hay, dark = toon("hay", 0xE7C25A), toon("hay_dark", 0xC79A3A)
+    o = [cylinder("base", 0.10, 0.11, 0.05, (0, 0, 0.025), dark, segs=16, smooth=True),
+         sphere("stack", 0.105, (0, 0, 0.10), hay, scale=(1, 1, 1.05), segs=18, rings=12),
+         cylinder("cap", 0.06, 0.012, 0.07, (0, 0, 0.215), dark, segs=14, smooth=True),
+         cylinder("rope", 0.104, 0.104, 0.008, (0, 0, 0.09), toon("rope", 0xB08A50), segs=18, outline=False),
+         cylinder("pole", 0.004, 0.004, 0.08, (0, 0, 0.26), toon("wood", WOOD), segs=6)]
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_tulsi():
+    """A tulsi chaura: a whitewashed stepped planter with an ochre band and a holy basil bush."""
+    white, ochre, leaf = toon("lime", 0xF2EBDD), toon("ochre", 0xD08A3A), toon("tulsi", 0x4F8F3A)
+    o = [box("step", (0.10, 0.10, 0.02), (0, 0, 0.01), white, bevel=0.004),
+         box("pot", (0.07, 0.07, 0.07), (0, 0, 0.055), white, bevel=0.004),
+         box("band", (0.072, 0.072, 0.012), (0, 0, 0.07), ochre, outline=False),
+         sphere("bush", 0.04, (0, 0, 0.115), leaf, scale=(1, 1, 0.9), segs=12, rings=8),
+         sphere("bush2", 0.026, (0.015, -0.01, 0.145), toon("tulsi_light", 0x6FAE4E), segs=10, rings=6)]
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_woodpile():
+    """Split firewood stacked against a post, with an axe in the chopping block."""
+    log, end = toon("log", 0x8A5A34), toon("logend", 0xD9B07A)
+    o = []
+    for row in range(3):
+        for i in range(4 - row):
+            x = (i - (3 - row) / 2) * 0.034
+            o.append(cylinder("log%d%d" % (row, i), 0.016, 0.016, 0.13, (x, 0, 0.016 + row * 0.029), log, segs=8,
+                              rot=Matrix.Rotation(math.radians(90), 3, "X")))
+    o.append(cylinder("block", 0.03, 0.032, 0.04, (0.11, -0.03, 0.02), end, segs=12))
+    o.append(box("axehandle", (0.006, 0.006, 0.07), (0.11, -0.03, 0.07), toon("wood", WOOD), rot=Matrix.Rotation(math.radians(20), 3, "Y")))
+    o.append(box("axehead", (0.024, 0.006, 0.014), (0.098, -0.03, 0.045), toon("iron", 0x7C8288)))
+    return group(o, scale=BUILDING_SCALE)
+
+
+SPRITES.update({
+    "fence_x": lambda: model_fence("x"),
+    "fence_y": lambda: model_fence("y"),
+    "haystack": model_haystack,
+    "tulsi": model_tulsi,
+    "woodpile": model_woodpile,
+})
 
 
 # ---------------------------------------------------------------- framing and render
