@@ -83,9 +83,9 @@ def reset():
 _materials = {}
 
 
-def toon(name, hexv, rim=0.0):
+def toon(name, hexv, soft=False):
     """Toon material: three light bands (warm shadow tint) times the base colour, emitted so no other light leaks in."""
-    key = (name, hexv)
+    key = (name, hexv, soft)
     if key in _materials:
         return _materials[key]
     m = bpy.data.materials.new(name)
@@ -100,9 +100,9 @@ def toon(name, hexv, rim=0.0):
     ramp.color_ramp.interpolation = "CONSTANT"
     els = ramp.color_ramp.elements
     els[0].position = 0.0
-    els[0].color = (0.50, 0.44, 0.52, 1)       # core shadow, cool-violet
+    els[0].color = (0.64, 0.57, 0.64, 1) if soft else (0.50, 0.44, 0.52, 1)   # core shadow, cool-violet
     els[1].position = 0.16
-    els[1].color = (0.76, 0.71, 0.72, 1)       # half shadow
+    els[1].color = (0.84, 0.79, 0.79, 1) if soft else (0.76, 0.71, 0.72, 1)   # half shadow
     e = els.new(0.42)
     e.color = (1.0, 0.98, 0.94, 1)             # lit
     e = els.new(0.80)
@@ -175,13 +175,13 @@ def obj_from_bm(name, bm, mat, smooth=False, outline=True, thickness=OUTLINE):
     return o
 
 
-def box(name, size, loc, mat, rot_z=0.0, bevel=0.0, **kw):
+def box(name, size, loc, mat, rot_z=0.0, bevel=0.0, rot=None, **kw):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=Vector(size), verts=bm.verts)
     if bevel > 0:
         bmesh.ops.bevel(bm, geom=bm.edges[:] + bm.verts[:], offset=bevel, segments=1, affect="EDGES")
-    bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=Matrix.Rotation(rot_z, 3, "Z"), verts=bm.verts)
+    bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=Matrix.Rotation(rot_z, 3, "Z") @ (rot if rot is not None else Matrix.Identity(3)), verts=bm.verts)
     bmesh.ops.translate(bm, vec=Vector(loc), verts=bm.verts)
     return obj_from_bm(name, bm, mat, **kw)
 
@@ -229,19 +229,19 @@ def gable_roof(name, w, d, h, z, mat, overhang=0.0, **kw):
     return poly_mesh(name, verts, faces, mat, **kw)
 
 
-def group(objs, rot_z=0.0, scale=1.0):
+def group(objs, rot_z=0.0, scale=1.0, outline_factor=1.0):
     """Turns and scales a set of parts as one model about the origin; outlines stay the same width on screen."""
     m = Matrix.Diagonal((scale, scale, scale, 1.0)) @ Matrix.Rotation(rot_z, 4, "Z")
     for o in objs:
         o.matrix_world = m @ o.matrix_world
         for mod in o.modifiers:
             if mod.type == "SOLIDIFY":
-                mod.thickness = OUTLINE / scale
+                mod.thickness = OUTLINE * outline_factor / scale
     return objs
 
 
 BUILDING_SCALE = 1.45   # buildings are drawn larger than life: a tile is an acre
-PERSON_SCALE = 2.3
+PERSON_SCALE = 1.35     # about the height of the hut's door
 
 
 # ---------------------------------------------------------------- palette (warm, sun-baked, Indian village)
@@ -374,56 +374,116 @@ def model_hand_hut(stage):
 
 
 PEOPLE = {
-    # Founder: off-white kurta, indigo trousers, a red-checked gamchha over the shoulder.
-    "founder": dict(top=0xF1E6CF, bottom=0x3F4E7A, accent=0xC8423A, head="hair", skin=SKIN),
-    # Hand: a saffron turban (pagdi), a green vest over a white shirt, a white dhoti.
-    "hand": dict(top=0xF3EEE2, bottom=0xF3EEE2, accent=0xE58A1F, head="turban", skin=0xA86E4A),
-    # Day labourer: a green saree with its pallu over the head.
-    "labourer": dict(top=0x2F9C7A, bottom=0x2F9C7A, accent=0xE7C24A, head="pallu", skin=0xB07650),
+    # Founder: off-white kurta, indigo pyjama, a red gamchha over the shoulder.
+    "founder": dict(sex="m", skin=0xB57A55, top=0xF1E6CF, bottom=0x3F4E7A, accent=0xC8423A, wear="kurta"),
+    # Farm hand (man): saffron pagdi, white shirt under a green vest, white dhoti.
+    "hand_m": dict(sex="m", skin=0xA86E4A, top=0xF3EEE2, bottom=0xF3EEE2, accent=0xE58A1F, vest=0x6E8C3A, wear="dhoti", head="pagdi"),
+    # Farm hand (woman): a maroon cotton saree with a gold border, a mustard blouse, hair in a bun.
+    "hand_f": dict(sex="f", skin=0xA9714F, top=0x8E2A3F, bottom=0x8E2A3F, accent=0xE3B23C, blouse=0xD99A2B, wear="saree"),
+    # Day labourer (man): a white banyan, a rolled-up dhoti, a blue gamchha, a hoe on the shoulder.
+    "labourer_m": dict(sex="m", skin=0x9C6444, top=0xF5F1E6, bottom=0xE9DFC8, accent=0x2E7DBF, wear="banyan", tool="hoe"),
+    # Day labourer (woman): an orange-red saree with a yellow border, a blue blouse, a basket at the hip.
+    "labourer_f": dict(sex="f", skin=0xB07650, top=0xE2582C, bottom=0xE2582C, accent=0xF2C94C, blouse=0x2E6FBA, wear="saree", tool="basket"),
 }
 
 
 def model_person(kind, facing):
-    """A chibi villager (big head, short body). facing 'front' (three-quarter toward the viewer, to the left) or 'back' (walking away, to the left)."""
+    """A small villager with a big head, built facing -y (the viewer's lower left); facing 'front' or 'back' (walking away, to the upper left)."""
     p = PEOPLE[kind]
+    soft = True
+    def m(name, hexv):
+        return toon(kind + "_" + name, hexv, soft=soft)
+    skin, top, bottom, accent = m("skin", p["skin"]), m("top", p["top"]), m("bottom", p["bottom"]), m("accent", p["accent"])
+    dark, hair = m("dark", 0x1E1410), m("hair", HAIR)
     o = []
-    top, bottom, accent, skin = toon(kind + "_top", p["top"]), toon(kind + "_bottom", p["bottom"]), toon(kind + "_acc", p["accent"]), toon(kind + "_skin", p["skin"])
-    if kind == "labourer":
-        o.append(cylinder("skirt", 0.034, 0.026, 0.06, (0, 0, 0.03), bottom, segs=14, smooth=True))
-        o.append(box("hem", (0.06, 0.06, 0.008), (0, 0, 0.006), accent, outline=False))
-    else:
-        for s in (-1, 1):
-            o.append(cylinder("leg%d" % s, 0.0095, 0.0105, 0.04, (s * 0.012, 0, 0.02), bottom if kind != "hand" else skin, segs=8, smooth=True))
-        if kind == "hand":
-            o.append(cylinder("dhoti", 0.028, 0.024, 0.03, (0, 0, 0.04), bottom, segs=14, smooth=True))
-    o.append(cylinder("torso", 0.022, 0.029, 0.05, (0, 0, 0.078), top, segs=14, smooth=True))
-    if kind == "hand":
-        o.append(cylinder("vest", 0.0235, 0.0295, 0.04, (0, 0, 0.081), toon("vest", 0x6E8C3A), segs=14, smooth=True))
+    female = p["sex"] == "f"
+    # Chappals.
     for s in (-1, 1):
-        o.append(cylinder("arm%d" % s, 0.0075, 0.0068, 0.042, (s * 0.031, 0.0, 0.077), top, segs=8, smooth=True,
-                          rot=Matrix.Rotation(math.radians(s * 14), 3, "Y")))
-        o.append(sphere("palm%d" % s, 0.0085, (s * 0.037, 0.0, 0.053), skin, segs=8, rings=6))
-    head_z = 0.13
-    o.append(sphere("head", 0.034, (0, 0, head_z), skin, scale=(1, 0.95, 1.0), segs=16, rings=10))
-    if facing == "front":
-        for s in (-1, 1):
-            o.append(sphere("eye%d" % s, 0.0048, (s * 0.012, -0.031, head_z + 0.0), toon("eye", 0x1E1410), scale=(0.8, 0.5, 1.2), segs=8, rings=6, outline=False))
-            o.append(sphere("blush%d" % s, 0.005, (s * 0.019, -0.027, head_z - 0.011), toon("cheek", 0xD07A66), scale=(1, 0.4, 0.7), segs=8, rings=6, outline=False))
-        if kind != "labourer":
-            o.append(box("moustache", (0.016, 0.006, 0.004), (0, -0.0335, head_z - 0.011), toon("hair", HAIR), outline=False))
-    if p["head"] == "hair":
-        o.append(sphere("hair", 0.0355, (0, 0.006, head_z + 0.009), toon("hair", HAIR), scale=(1, 0.95, 0.78), segs=16, rings=10))
-        o.append(box("gamchha", (0.02, 0.012, 0.05), (-0.02, -0.024, 0.085), accent, rot_z=math.radians(10)))
-    elif p["head"] == "turban":
-        o.append(sphere("hair", 0.0345, (0, 0.006, head_z + 0.004), toon("hair", HAIR), scale=(1, 0.95, 0.8), segs=16, rings=10))
-        o.append(cylinder("turban", 0.036, 0.033, 0.022, (0, 0.003, head_z + 0.024), accent, segs=16, smooth=True))
-        o.append(sphere("turbantop", 0.030, (0, 0.004, head_z + 0.034), accent, scale=(1, 1, 0.5), segs=16, rings=8))
+        o.append(sphere("chappal%d" % s, 0.0085, (s * 0.010, -0.004, 0.003), m("chappal", 0x5A3A22), scale=(0.8, 1.45, 0.38), segs=10, rings=6))
+    if p["wear"] == "saree":
+        o.append(cylinder("skirt", 0.031, 0.020, 0.064, (0, 0, 0.034), bottom, segs=18, smooth=True))
+        o.append(cylinder("hem", 0.0315, 0.030, 0.008, (0, 0, 0.006), accent, segs=18, smooth=True, outline=False))
+        for i in (-1, 0, 1):
+            o.append(box("pleat%d" % i, (0.004, 0.004, 0.05), (i * 0.006, -0.026, 0.032), m("pleat", p["top"] - 0x101010 if p["top"] > 0x101010 else p["top"]), outline=False))
     else:
-        o.append(sphere("pallu", 0.038, (0, 0.007, head_z + 0.004), top, scale=(1, 1.0, 0.98), segs=16, rings=10))
-        o.append(box("border", (0.004, 0.05, 0.05), (-0.030, 0.0, 0.11), accent, outline=False))
-        o.append(sphere("bindi", 0.0028, (0, -0.033, head_z + 0.014), toon("bindi", 0xC0262D), segs=6, rings=4, outline=False))
-    rot = 0.0 if facing == "front" else math.radians(-90)
-    return group(o, rot_z=rot, scale=PERSON_SCALE)
+        leg = skin if p["wear"] in ("dhoti", "banyan") else bottom
+        for s in (-1, 1):
+            o.append(cylinder("leg%d" % s, 0.0080, 0.0088, 0.042, (s * 0.010, 0, 0.024), leg, segs=10, smooth=True))
+        if p["wear"] == "kurta":
+            o.append(cylinder("kurtahem", 0.026, 0.022, 0.034, (0, 0, 0.060), top, segs=16, smooth=True))
+        else:
+            o.append(cylinder("dhoti", 0.025, 0.021, 0.026, (0, 0, 0.055), bottom, segs=16, smooth=True))
+            o.append(box("fold", (0.008, 0.004, 0.024), (0.004, -0.023, 0.052), bottom, outline=False))
+    # Torso and rounded shoulders.
+    body = m("blouse", p["blouse"]) if female else top
+    o.append(cylinder("torso", 0.019, 0.022, 0.036, (0, 0, 0.083), body, segs=16, smooth=True))
+    o.append(sphere("shoulders", 0.022, (0, 0, 0.099), body, scale=(1.18, 0.82, 0.55), segs=16, rings=8))
+    if p.get("vest"):
+        o.append(cylinder("vest", 0.0205, 0.0228, 0.034, (0, 0.0005, 0.084), m("vest", p["vest"]), segs=16, smooth=True, outline=False))
+    if female:
+        # The pallu: from the right hip across the chest to the left shoulder, falling behind.
+        o.append(box("pallu", (0.018, 0.006, 0.058), (0.004, -0.019, 0.082), top, rot=Matrix.Rotation(math.radians(-38), 3, "Y")))
+        o.append(box("pallufall", (0.016, 0.006, 0.05), (-0.016, 0.018, 0.075), top))
+        o.append(box("palluedge", (0.004, 0.0065, 0.058), (0.012, -0.021, 0.082), accent, outline=False, rot=Matrix.Rotation(math.radians(-38), 3, "Y")))
+    if p.get("wear") == "kurta" or p.get("tool") == "hoe":
+        o.append(box("gamchha", (0.014, 0.008, 0.04), (-0.016, -0.019, 0.086), accent, rot_z=math.radians(8)))
+    # Arms: sleeve, forearm, hand.
+    for s in (-1, 1):
+        sleeve = body if p["wear"] != "banyan" else skin
+        o.append(sphere("shoulderball%d" % s, 0.0085, (s * 0.025, 0, 0.097), sleeve, segs=10, rings=6))
+        if female or p["wear"] == "banyan":
+            o.append(cylinder("sleeve%d" % s, 0.0080, 0.0075, 0.014, (s * 0.027, 0, 0.088), sleeve, segs=10, smooth=True,
+                              rot=Matrix.Rotation(math.radians(s * 10), 3, "Y")))
+            o.append(cylinder("forearm%d" % s, 0.0066, 0.0058, 0.028, (s * 0.030, 0, 0.068), skin, segs=10, smooth=True,
+                              rot=Matrix.Rotation(math.radians(s * 8), 3, "Y")))
+        else:
+            o.append(cylinder("arm%d" % s, 0.0076, 0.0068, 0.040, (s * 0.029, 0, 0.077), sleeve, segs=10, smooth=True,
+                              rot=Matrix.Rotation(math.radians(s * 10), 3, "Y")))
+        o.append(sphere("palm%d" % s, 0.0072, (s * 0.032, -0.001, 0.053), skin, segs=10, rings=6))
+        if female:
+            o.append(cylinder("bangle%d" % s, 0.0068, 0.0068, 0.003, (s * 0.0315, 0, 0.058), m("gold", 0xE8B83A), segs=10, outline=False))
+    # Neck and head.
+    o.append(cylinder("neck", 0.0075, 0.0075, 0.01, (0, 0, 0.108), skin, segs=10, smooth=True, outline=False))
+    hz = 0.137
+    o.append(sphere("head", 0.031, (0, 0, hz), skin, scale=(1, 0.96, 0.98), segs=20, rings=12))
+    for s in (-1, 1):
+        o.append(sphere("ear%d" % s, 0.0058, (s * 0.030, 0.002, hz - 0.002), skin, scale=(0.5, 1, 1.2), segs=8, rings=6, outline=False))
+    if facing == "front":
+        o.append(sphere("nose", 0.0042, (0.0, -0.0305, hz - 0.004), skin, segs=8, rings=6, outline=False))
+        for s in (-1, 1):
+            o.append(sphere("eye%d" % s, 0.0042, (s * 0.0115, -0.0275, hz + 0.003), dark, scale=(0.85, 0.5, 1.25), segs=10, rings=6, outline=False))
+            o.append(sphere("glint%d" % s, 0.0012, (s * 0.0115 + 0.0012, -0.0293, hz + 0.0055), m("white", 0xFFFFFF), segs=6, rings=4, outline=False))
+            o.append(box("brow%d" % s, (0.009, 0.002, 0.0022), (s * 0.0118, -0.0285, hz + 0.0115), hair, outline=False))
+            o.append(sphere("blush%d" % s, 0.0048, (s * 0.018, -0.0245, hz - 0.009), m("blush", 0xD9826E), scale=(1, 0.4, 0.65), segs=8, rings=6, outline=False))
+        o.append(sphere("mouth", 0.003, (0, -0.0292, hz - 0.0135), m("mouth", 0x7A2E26), scale=(1.4, 0.5, 0.6), segs=8, rings=4, outline=False))
+        if not female:
+            o.append(sphere("moustache", 0.0045, (0, -0.0300, hz - 0.0095), hair, scale=(2.0, 0.55, 0.65), segs=8, rings=6, outline=False))
+        else:
+            o.append(sphere("bindi", 0.0022, (0, -0.0300, hz + 0.0135), m("bindi", 0xC0262D), segs=6, rings=4, outline=False))
+    # Hair and headwear.
+    o.append(sphere("hair", 0.0328, (0, 0.0045, hz + 0.0065), hair, scale=(1.0, 0.96, 0.82), segs=20, rings=12))
+    if female:
+        o.append(sphere("bun", 0.0125, (0, 0.031, hz - 0.002), hair, segs=12, rings=8))
+        for i, a in enumerate((-50, -15, 20, 55)):
+            x, z = math.sin(math.radians(a)) * 0.0125, math.cos(math.radians(a)) * 0.0125
+            o.append(sphere("gajra%d" % i, 0.0032, (x, 0.033, hz - 0.002 + z * 0.6), m("jasmine", 0xFFF8E8), segs=6, rings=4, outline=False))
+    elif p.get("head") == "pagdi":
+        o.append(cylinder("pagdi", 0.0335, 0.031, 0.020, (0, 0.003, hz + 0.019), accent, segs=18, smooth=True))
+        o.append(sphere("pagdicrown", 0.027, (0, 0.004, hz + 0.028), accent, scale=(1, 1, 0.5), segs=16, rings=8))
+        o.append(box("pagditail", (0.010, 0.004, 0.026), (0.010, 0.030, hz + 0.004), accent))
+    # Tools.
+    if p.get("tool") == "hoe":
+        handle = cylinder("handle", 0.0028, 0.0028, 0.10, (0.020, 0.012, 0.105), m("wood", WOOD), segs=8,
+                          rot=Matrix.Rotation(math.radians(58), 3, "X"))
+        o.append(handle)
+        o.append(box("blade", (0.022, 0.004, 0.018), (0.020, 0.054, 0.137), m("iron", 0x7C8288), rot=Matrix.Rotation(math.radians(58), 3, "X")))
+    elif p.get("tool") == "basket":
+        o.append(cylinder("basket", 0.018, 0.014, 0.014, (-0.035, -0.004, 0.058), m("cane", 0xB8873E), segs=14))
+        o.append(cylinder("basketrim", 0.0185, 0.0185, 0.004, (-0.035, -0.004, 0.065), m("caneDark", 0x8C6228), segs=14, outline=False))
+        for i in range(3):
+            o.append(sphere("veg%d" % i, 0.0062, (-0.035 + (i - 1) * 0.008, -0.004, 0.068), m("veg", (0xD94A3A, 0x4FB544, 0xE8C14A)[i]), segs=8, rings=6, outline=False))
+    rot = math.radians(30) if facing == "front" else math.radians(-115)
+    return group(o, rot_z=rot, scale=PERSON_SCALE, outline_factor=0.7)
 
 
 SPRITES = {

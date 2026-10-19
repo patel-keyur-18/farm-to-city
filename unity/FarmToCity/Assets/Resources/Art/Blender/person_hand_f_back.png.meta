@@ -1,10 +1,7 @@
 fileFormatVersion: 2
-guid: f8a02b4f089b04c15a7fac319d92d184
+guid: 471edb8186c8743d7846bd46866006a3
 TextureImporter:
-  internalIDToNameTable:
-  - first:
-      213: 6073364857679946619
-    second: person_labourer_front_0
+  internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -111,29 +108,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites:
-    - serializedVersion: 2
-      name: person_labourer_front_0
-      rect:
-        serializedVersion: 2
-        x: 30
-        y: 31
-        width: 80
-        height: 158
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: b73aa55f82de84450800000000000000
-      internalID: 6073364857679946619
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
+    sprites: []
     outline: []
     customData: 
     physicsShape: []
@@ -147,8 +122,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      person_labourer_front_0: 6073364857679946619
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
