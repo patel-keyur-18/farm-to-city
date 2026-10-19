@@ -31,22 +31,26 @@ namespace Sim.Core.People
             var s = new PeopleState();
             sim.State.People = s;
             var used = new bool[p.Names.Count];
-            for (int i = 0; i < p.Pool.RosterSize; i++)
-            {
-                // A distinct name: draw among the names not used yet.
-                int left = p.Names.Count - i;
-                int k = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.People, (ulong)i, 0), (ulong)left);
-                int name = -1;
-                for (int n = 0; n < used.Length; n++)
-                {
-                    if (used[n]) continue;
-                    if (k-- == 0) { name = n; break; }
-                }
-                used[name] = true;
-                int trait = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.People, (ulong)i, 1), (ulong)p.Traits.Count);
-                s.Roster.Add(new Neighbour { Id = i + 1, Name = name, Trait = trait });
-            }
+            for (int i = 0; i < p.Pool.RosterSize; i++) s.Roster.Add(NewNeighbour(sim, i + 1, used));
             DrawPool(sim);
+        }
+
+        /// <summary>A neighbour with a seeded name none of <paramref name="used"/> has (stream People, counter = id − 1) and one trait.</summary>
+        private static Neighbour NewNeighbour(Simulation sim, long id, bool[] used)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            int left = 0;
+            foreach (bool u in used) if (!u) left++;
+            int k = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.People, (ulong)(id - 1), 0), (ulong)left);
+            int name = -1;
+            for (int n = 0; n < used.Length; n++)
+            {
+                if (used[n]) continue;
+                if (k-- == 0) { name = n; break; }
+            }
+            used[name] = true;
+            int trait = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.People, (ulong)(id - 1), 1), (ulong)p.Traits.Count);
+            return new Neighbour { Id = id, Name = name, Trait = trait };
         }
 
         public void OnPass(Simulation sim, ItemClass pass)
@@ -64,6 +68,7 @@ namespace Sim.Core.People
             {
                 Grace(sim);
                 WaitingApplicants(sim);
+                Regulars(sim);
                 Arrivals(sim);
             }
             Orders.Run(sim);
@@ -187,6 +192,51 @@ namespace Sim.Core.People
         }
 
         /// <summary>Applicants not hired within applicantWaitDays of live time leave.</summary>
+        // ---- regulars (§3.3, ADR 0041) ----
+
+        /// <summary>
+        /// A neighbour hired for six full days asks to move in once a hut stands empty: they join the applicants (even a full
+        /// queue) with their skill and both traits known, the first their day-labour trait. Once per person; live play only.
+        /// </summary>
+        private static void Regulars(Simulation sim)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            PeopleState s = sim.State.People;
+            if (PeopleRules.EmptyHut(sim) == null) return;
+            long threshold = p.Pool.RegularThresholdDays * Day;
+            ulong seed = sim.State.Seed;
+            foreach (Neighbour n in s.Roster)
+            {
+                if (n.AskedToMoveIn || n.SecondsWorked < threshold) continue;
+                n.AskedToMoveIn = true;
+                long id = s.NextApplicantId++;
+                int skill = p.Hand.SkillMin + (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 1), (ulong)(p.Hand.SkillMax - p.Hand.SkillMin + 1));
+                int t2 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 3), (ulong)(p.Traits.Count - 1));
+                if (t2 >= n.Trait) t2++;
+                s.Applicants.Add(new Applicant
+                {
+                    Id = id, Name = n.Name, Skill = skill, Trait1 = n.Trait, Trait2 = t2, SecondTraitKnown = true, SkillKnown = true,
+                    ArrivedAt = sim.State.Clock.SimTime, FromRosterId = n.Id,
+                });
+                sim.Emit(new RegularAsksToMoveIn(sim.State.Clock.SimTime, id, n.Id));
+            }
+        }
+
+        /// <summary>A regular hired as the hand leaves the roster; a new neighbour takes their place, so the pool keeps its size.</summary>
+        private static void ReplaceNeighbour(Simulation sim, long rosterId)
+        {
+            PeopleState s = sim.State.People;
+            int at = s.Roster.FindIndex(n => n.Id == rosterId);
+            if (at < 0) return;
+            long id = 0;
+            foreach (Neighbour n in s.Roster) id = System.Math.Max(id, n.Id);
+            s.Roster.RemoveAt(at);
+            var used = new bool[sim.Config.Game.People.Names.Count];
+            foreach (Neighbour n in s.Roster) used[n.Name] = true;
+            foreach (Hand h in s.Hands) used[h.Name] = true;
+            s.Roster.Add(NewNeighbour(sim, id + 1, used));
+        }
+
         private static void WaitingApplicants(Simulation sim)
         {
             PeopleState s = sim.State.People;
@@ -218,6 +268,7 @@ namespace Sim.Core.People
             h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, prepay, t, (t / S + 1) * S, "hand:" + h.Id).Id;
             s.Hands.Add(h);
             s.Applicants.Remove(a);
+            if (a.FromRosterId != 0) ReplaceNeighbour(sim, a.FromRosterId);
             s.Post = null; // a post lasts until a hand is hired
             FarmSystem.Refresh(sim);
             sim.Emit(new HandHired(t, a.Id, h.Id, wage, prepay));

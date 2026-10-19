@@ -380,6 +380,7 @@
   "event.JobPosted": "Word went out for a farm hand.",
   "event.JobPostExpired": "Word for a farm hand has gone quiet.",
   "event.ApplicantArrived": "Someone came asking for work.",
+  "event.RegularAsksToMoveIn": "A day labourer asks to move in.",
   "event.ApplicantLeft": "Someone who asked for work went elsewhere.",
   "event.ApplicantInterviewed": "You talked with someone looking for work.",
   "event.OfferDeclined": "They turned the offer down.",
