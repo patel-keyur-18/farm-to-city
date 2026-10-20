@@ -38,6 +38,9 @@ namespace Sim.Core.Weather
         /// <summary>The forecast as last shown, for the next forecastSpells spells; used to detect ForecastRevised.</summary>
         public IReadOnlyList<ForecastEntry> ForecastShown { get { return _forecastShown; } }
 
+        /// <summary>The first hour of the actual run the current spell belongs to (spec 001 §3.6): the forecast's roll key.</summary>
+        public long CurrentRunStart { get; internal set; }
+
         public long LastGeneratedSpell { get { return FirstSpell + _generated.Count - 1; } }
 
         /// <summary>The actual weather of a spell still in the buffer.</summary>
@@ -65,7 +68,7 @@ namespace Sim.Core.Weather
 
         internal WeatherState Clone()
         {
-            var c = new WeatherState { FirstSpell = FirstSpell };
+            var c = new WeatherState { FirstSpell = FirstSpell, CurrentRunStart = CurrentRunStart };
             c._generated.AddRange(_generated);
             c._forecastShown.AddRange(_forecastShown);
             return c;
@@ -74,6 +77,7 @@ namespace Sim.Core.Weather
         internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(FirstSpell);
+            h.WriteLong(CurrentRunStart);
             h.WriteInt(_generated.Count);
             foreach (int w in _generated) h.WriteRef(ContentTable.Weather, w);
             h.WriteInt(_forecastShown.Count);
@@ -87,7 +91,7 @@ namespace Sim.Core.Weather
 
         internal static WeatherState ReadFrom(SaveReader r)
         {
-            var s = new WeatherState { FirstSpell = r.ReadLong() };
+            var s = new WeatherState { FirstSpell = r.ReadLong(), CurrentRunStart = r.ReadLong() };
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) s._generated.Add(r.ReadRef(ContentTable.Weather));
             n = r.ReadCount();

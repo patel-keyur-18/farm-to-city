@@ -1,6 +1,6 @@
 {
   "save": {
-    "minSchema": 1,
+    "minSchema": 2,
     "hourlyBackups": 3,
     "dailyBackups": 3,
     "autosaveMinutes": 60,

@@ -27,23 +27,33 @@ namespace Sim.Core.Definitions
     {
         public Season Season { get; }
 
-        /// <summary>Weights indexed like <see cref="WeatherSet.Types"/>: the declared order of the weather types.</summary>
+        /// <summary>The long-run shares, indexed like <see cref="WeatherSet.Types"/>: the declared order of the weather types.</summary>
         public IReadOnlyList<int> Weights { get { return _weights; } }
 
-        /// <summary>Chance a spell keeps the previous spell's weather (0–0.95).</summary>
-        public Fixed Persistence { get; }
+        /// <summary>Per weather: the chance the next hour keeps this hour's weather (0–0.98; ADR 0042).</summary>
+        public IReadOnlyList<Fixed> Persistence { get { return _persistence; } }
+
+        /// <summary>The weights a fresh draw uses: shareᵢ × round(1000 × (1 − pᵢ)), so the long-run share of each weather equals its share.</summary>
+        public IReadOnlyList<int> DrawWeights { get { return _draw; } }
 
         private readonly int[] _weights;
+        private readonly Fixed[] _persistence;
+        private readonly int[] _draw;
 
-        public ClimateDef(Season season, int[] weights, Fixed persistence)
+        public ClimateDef(Season season, int[] weights, Fixed[] persistence)
         {
             Season = season;
             _weights = (int[])(weights ?? throw new ArgumentNullException(nameof(weights))).Clone();
-            Persistence = persistence;
+            _persistence = (Fixed[])(persistence ?? throw new ArgumentNullException(nameof(persistence))).Clone();
+            if (_persistence.Length != _weights.Length) throw new ArgumentException("One persistence per weather is required.", nameof(persistence));
+            _draw = new int[_weights.Length];
+            for (int i = 0; i < _weights.Length; i++)
+                _draw[i] = checked(_weights[i] * (int)(Fixed.One - _persistence[i]).MulRatio(1000, 1).RoundToLong());
         }
 
-        /// <summary>A copy of the weights for weighted picks.</summary>
         internal int[] WeightsArray { get { return _weights; } }
+
+        internal int[] DrawWeightsArray { get { return _draw; } }
     }
 
     /// <summary>All weather types and the four climate tables.</summary>

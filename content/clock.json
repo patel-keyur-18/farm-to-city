@@ -1,6 +1,6 @@
 {
   "daysPerSeason": 4,
-  "weatherSpellHours": 6,
+  "weatherSpellHours": 1,
   "lifeYearsPerSeason": 1.0,
   "awayCapHours": 72,
   "awayThresholdSeconds": 60,

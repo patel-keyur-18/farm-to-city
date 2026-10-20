@@ -38,7 +38,7 @@ namespace Sim.Core.Definitions
         /// <summary>The spec 001 defaults, matching <c>content/clock.json</c>.</summary>
         public static ClockDef Default()
         {
-            return new ClockDef(4, 6, Fixed.One, 72, 60, 3,
+            return new ClockDef(4, 1, Fixed.One, 72, 60, 3,
                 new[] { Fixed.One, Fixed.FromRatio(80, 100), Fixed.FromRatio(65, 100) });
         }
 

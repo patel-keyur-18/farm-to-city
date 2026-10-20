@@ -15,8 +15,8 @@ namespace Sim.Core.Weather
         /// <summary>
         /// The weather of spell <paramref name="spell"/> (spec 001 §3.5):
         /// <list type="number">
-        /// <item>No previous spell, or the previous weather has weight 0 in this climate: weighted pick.</item>
-        /// <item>Otherwise keep the previous weather with probability <c>persistence</c>, else a weighted pick.</item>
+        /// <item>No previous spell, or the previous weather has share 0 in this climate: a pick by the draw weights.</item>
+        /// <item>Otherwise keep the previous weather with its own persistence in this climate, else a pick by the draw weights.</item>
         /// </list>
         /// Stream Weather, key = spell; counter 0 is the persistence roll, counter 1 the weighted pick.
         /// </summary>
@@ -25,9 +25,9 @@ namespace Sim.Core.Weather
         {
             ulong key = (ulong)spell;
             if (previous >= 0 && climate.Weights[previous] > 0 &&
-                Rng.Chance(Rng.Next(seed, RngStream.Weather, key, 0), climate.Persistence))
+                Rng.Chance(Rng.Next(seed, RngStream.Weather, key, 0), climate.Persistence[previous]))
                 return previous;
-            return Rng.WeightedPick(Rng.Next(seed, RngStream.Weather, key, 1), climate.WeightsArray);
+            return Rng.WeightedPick(Rng.Next(seed, RngStream.Weather, key, 1), climate.DrawWeightsArray);
         }
 
         /// <summary>The bucket of a spell <paramref name="spellsAhead"/> (≥ 1) spells ahead: (k − 1) / spellsPerDay.</summary>
@@ -37,15 +37,16 @@ namespace Sim.Core.Weather
         }
 
         /// <summary>
-        /// What the forecast shows for <paramref name="spell"/> in <paramref name="bucket"/> (spec 001 §3.6):
-        /// the actual weather with probability <c>forecastAccuracy[bucket]</c>, otherwise an alternative
-        /// picked from the season's weights with the actual weather removed (the actual one if nothing is left).
-        /// Stream Forecast, key = spell; counter = bucket for the accuracy roll,
-        /// <see cref="AlternativeCounterOffset"/> + bucket for the alternative.
+        /// What the forecast shows in <paramref name="bucket"/> for an hour of the actual run that starts at
+        /// <paramref name="runStart"/> (spec 001 §3.6, ADR 0043): the actual weather with probability
+        /// <c>forecastAccuracy[bucket]</c>, otherwise an alternative picked from the season's shares with the actual weather
+        /// removed (the actual one if nothing is left). Stream Forecast, key = the run's first hour; counter = bucket for the
+        /// accuracy roll, <see cref="AlternativeCounterOffset"/> + bucket for the alternative. Rolling per run means every hour
+        /// of a run in one bucket shows the same weather.
         /// </summary>
-        public static int ForecastWeather(ulong seed, long spell, int bucket, int actual, ClimateDef climate, ClockDef clock)
+        public static int ForecastWeather(ulong seed, long runStart, int bucket, int actual, ClimateDef climate, ClockDef clock)
         {
-            ulong key = (ulong)spell;
+            ulong key = (ulong)runStart;
             if (Rng.Chance(Rng.Next(seed, RngStream.Forecast, key, (ulong)bucket), clock.ForecastAccuracy[bucket]))
                 return actual;
 

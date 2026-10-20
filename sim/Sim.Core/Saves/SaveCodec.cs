@@ -68,7 +68,7 @@ namespace Sim.Core.Saves
         public const int FormatVersion = 1;
 
         /// <summary>Raised whenever the state's fields change (spec 007 §3.1); until Sprint 9 <c>minSchema</c> rises with it (ADR 0041).</summary>
-        public const int SchemaVersion = 1;
+        public const int SchemaVersion = 2; // 2: the weather state holds the current run's start (ADR 0043); older saves are refused and kept (ADR 0041 §2)
 
         public const int DefaultMaxLogEntries = 100_000;
 

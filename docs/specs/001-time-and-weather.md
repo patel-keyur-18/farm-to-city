@@ -1,6 +1,6 @@
 # 001. Time and weather
 
-- Status: Approved (2026-10-17); §3.5, §3.6, §4, §8 (AC-14, AC-16, AC-17, AC-19, AC-20) and §9 amended by ADR 0042 and ADR 0043 (2026-10-20), **re-approval pending**
+- Status: Approved (2026-10-17); §3.5, §3.6, §4, §8 (AC-14, AC-16, AC-17, AC-19, AC-20) and §9 amended by ADR 0042 and ADR 0043, re-approved (2026-10-20)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Time and world simulation; Offline play and saves (time while closed, clock safety); Technical architecture (simulation core, determinism rules)
@@ -303,7 +303,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-16 | Over 200 000 spells per season, each weather type's frequency is within ±2 percentage points of its normalised share; the derived draw weights equal §4's | `WeatherTests.Frequencies_MatchShares` |
 | AC-17 | Over 200 000 spells per season, each weather's mean run length is within ±10% of `1 / ((1 − pᵢ)(1 − w̄ᵢ))` and of §4's table | `WeatherTests.RunLengths_MatchFormula` |
 | AC-18 | Given Spring's last spell is Frost, then Summer's first spell is drawn from Summer weights and is never Frost | `WeatherTests.SeasonChange_DropsInvalidCarryOver` |
-| AC-19 | The forecast for hours 1–24 ahead always equals the actual weather. Over 2 000 seeds, hours 25–48 match 77–83% of the time, and hours 49–72 match 62–68%. Every hour of one actual run in one bucket shows the same weather | `ForecastTests.AccuracyByBucket_RolledPerRun` |
+| AC-19 | The forecast for hours 1–24 ahead always equals the actual weather. Over 2 000 seeds, hours 25–48 match 77–83% of the time, and hours 49–72 match 62–68%. Every hour of one actual run in one bucket (and one season) shows the same weather | `ForecastTests.AccuracyByBucket_RolledPerRun` |
 | AC-20 | Asking for the forecast twice at the same sim time gives identical results. A spell's forecast changes only on a bucket change, and when it changes, `ForecastRevised` is emitted | `ForecastTests.Stable_RevisedOnlyOnBucketChange` |
 | AC-21 | Given `lastWallUtc` = W, when `Sync(W + 30)`, then sim time advances 30 s in Live mode, and no `AwayAdvanceCompleted` is emitted | `AwayTests.SmallDelta_IsLive` |
 | AC-22 | When `Sync(W + 5 h)`, then sim time advances exactly 5 h in Away mode, and `AwayAdvanceCompleted` reports applied = 5 h and capped = false | `AwayTests.Away_UnderCap` |

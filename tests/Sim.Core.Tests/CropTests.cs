@@ -285,7 +285,7 @@ namespace Sim.Core.Tests
         {
             Simulation sim = FarmTest.Farm();
             FarmTest.SetWeather(sim, 0, "sun");
-            FarmTest.SetWeather(sim, 1, "heatwave"); // spell 1 starts at 06:00
+            FarmTest.SetWeather(sim, 6, "heatwave"); // hourly spells: heatwave from 06:00
             sim.AdvanceTo(4 * Hour);
             Assert.That(sim.Execute(new Sow(4 * Hour, 18, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
             sim.AdvanceTo(10 * Hour);
