@@ -133,6 +133,8 @@ namespace Game.Presentation.Map
             return new Vector3(x, y, 0);
         }
 
+        private const int GroundBase = -20000;
+
         private static int Order(int tile, int width, int offset = 0, float offY = 0f) { return (tile % width + tile / width) * 100 + offset - Mathf.RoundToInt(offY * 100f); }
 
         private SpriteRenderer NewRenderer(string name, Sprite sprite, Vector3 position, int order, Transform parent = null)
@@ -155,8 +157,10 @@ namespace Game.Presentation.Map
             foreach (TileVm t in map.Tiles)
             {
                 Vector3 c = TileCentre(t.Id);
-                _ground.Add(NewRenderer("ground" + t.Id, SpriteBank.Grass, c, Order(t.Id, _width)));
-                _detail.Add(NewRenderer("detail" + t.Id, null, c, Order(t.Id, _width, 1)));
+                // The land is drawn below everything that stands on it (owner, device run): a person on a tile's back half, or at
+                // the map's edge, sorts above the row behind but would otherwise go under the land of their own tile.
+                _ground.Add(NewRenderer("ground" + t.Id, SpriteBank.Grass, c, GroundBase + Order(t.Id, _width)));
+                _detail.Add(NewRenderer("detail" + t.Id, null, c, GroundBase + Order(t.Id, _width, 1)));
                 _signs.Add(NewRenderer("sign" + t.Id, SpriteBank.Sign, c + new Vector3(0.0f, 0.06f, 0), Order(t.Id, _width, 30)));
                 _signs[_signs.Count - 1].transform.localScale = Vector3.one * 0.5f;
                 _signs[_signs.Count - 1].gameObject.SetActive(false);

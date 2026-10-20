@@ -161,7 +161,7 @@ On the sow sheet for a farm tile, for the current season, one row per crop:
 | Crop and time | Name and growth time ("Potato · 24 h") |
 | Sow now? | Sowable this season, or greyed with its seasons ("Wheat: Winter only") |
 | Suits now | Good when the tile's moisture now is inside the crop's band (water factor 1.00), fair when the factor is at least 0.85, poor below; with the weather's yield factor for the coming spells |
-| Earns per acre a season | `seasonYieldPerAcre × SoilFactor(tile) × WaterFactor(moisture now) × Floor(good, now) − certified seed per season at today's input price`, rounded to 10 coins; labelled "about", with a *Why?*. The trader's floor is used because it is what a whole harvest reliably fetches (ADR 0012) |
+| This sowing (owner, Sprint 6) | **Harvest** `Yield(seasonYieldPerAcre × cycleShare, Soil, Water now, Care 1, Seed 1, Weather 1, Fertiliser chosen, Health 1)`; **Spend** its seed and fertiliser at today's input prices (from the store or bought); **Sells for** the harvest × Floor(good, now), and **Profit** = Sells for − Spend, both rounded to 10 coins and labelled "about". The trader's floor is used because it is what a whole harvest reliably fetches (ADR 0012). The Sow button says what is paid now. *Replaces "earns per acre a season", which read as one sowing's money for a 2-hour crop.* |
 | Labour | `labourPerAcrePerDay` plus bucket hours on a well acre, against the founder's free hours today |
 
 ```
@@ -378,7 +378,7 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 | AC-3 | Every key the sim and `Sim.View` use (ledger descriptions, report lines and *Why?*, rejection reasons, event kinds, goods, crops, trees, plans, hours options, alerts, motions) exists in `en.json`; a missing key throws in tests | `StringTests.Coverage` |
 | AC-4 | The formatter gives exactly §3.11's examples: 1234567 → "12,34,567" (en-IN) and "1,234,567" (Western); 1,20,000.40 coins → "1,20,000 coins"; 12,345,678 coins short → "1.23 Cr" and "12.34M"; −3,200; 70.74 kg → "70.7 kg"; 5.3 → "5.30 /kg"; 0.0625 → "6.3%"; 11,520 s → "3 h 12 min" | `FormatTests.Examples` |
 | AC-5 | Each *Why?* source of §3.6 lists exactly the terms of its spec's formula for a known state (the yield example of spec 003 §3.4, labour 7.2 h, potato's price band in Spring, a mandi trip of 1,000 kg, the land example of spec 002 §3.5, net worth, a tree's payback) | `WhyTests.Sources` |
-| AC-6 | The crop-calendar card for tile 20 in Spring gives the §3.7 rows: potato "about 17,060", radish "about 16,850", wheat greyed "Winter only"; at moisture 38 both rate "fair" | `CalendarTests.CropCalendarCard` |
+| AC-6 | The crop-calendar card for tile 20 in Spring gives the §3.7 rows: potato "Harvest about 1,531 kg · Spend 3,850 coins · Sells for about 8,120 coins · Profit about 4,270 coins" (a quarter of the season's 17,060), radish "Profit about 350 coins", wheat greyed "Winter only"; at moisture 38 both rate "fair"; the fertilisers show their effect | `CalendarTests.CropCalendarCard` |
 | AC-7 | The season report view shows every ADR 0032 line with its label and *Why?* key in §3.8's order, its amounts equal the report's, and the home-use and cash-flow notes appear when non-zero | `ReportViewTests.Labels_AndWhy` |
 | AC-8 | *While you were away* built from the events of a 30-hour away advance groups ready things, sales by way, day labour, home use, spoilage, pests, sick days and season closes, with totals equal to the events' sums, and caps rows at 8 | `AwayViewTests.Summary` |
 | AC-9 | Every domain event type in `Sim.Core` is mapped by `Sim.View`'s event map to a motion, an away row, an alert, or "state only"; a new event type without a mapping fails | `MotionTests.EveryEventMapped` |
@@ -451,6 +451,8 @@ None of these changes a rule or a lesson.
 4. **Yard tree places:** two on the house acre (its left corner, and in front of the house beside the well) and two on the front acre (its left corner, and its bottom corner clear of the beds and the woodpile), so no grown tree hides behind the roof.
 5. **Row buttons** have one minimum width, so a column of *Sell* or *Plant* buttons lines up.
 6. **Switches show their state** (owner, Sprint 6 device run): Notifications and Play log are a green **On** or a red **Off** button, and tapping flips it; the line under says what it means. Every other Settings action is green (*New game…* stays red).
+8. **The sow sheet shows one sowing's money** (owner, Sprint 6 device run): *Spend* (red), *Sells for* (green), *Profit*, with the seed and fertiliser behind the spend and the hours; a line explains them (§3.7, AC-6). The fertiliser choice is three cards, **Normal**, **Compost**, **Chemical**, each with its effect from the data ("+25% harvest · wears out the soil").
+9. **People are always on the land:** the ground is drawn below every object, so a person on a tile's back half or at the map's edge no longer goes under the land.
 7. **Short texts never wrap:** any label of up to 28 characters on one line is laid out without wrapping (`UiKit.Text`), because on the phone's fractional UI scale a measured width can round a hair short and the second line then drew over the text below ("Export play / log", "about / 16,850"). Labels made empty and filled later (toasts) still wrap.
 ## 11. Cut first
 

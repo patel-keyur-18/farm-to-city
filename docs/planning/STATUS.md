@@ -109,11 +109,11 @@
 
 ## In progress
 
-**Sprint 6 device run 2.** Device run 1 (2026-10-20) passed (golden replays PASS on the iPhone 13; saves, export and import, renders, Settings); the owner's changes are built (spec 006 and 008 §10, Sprint 6 device-run notes): smaller, spaced hands' huts and no doubled hut after a reload; a Store row and **Take off market** for goods a hand put at the market, the order's default minimum rounded down; Settings switches as green **On** / red **Off**; short texts no longer wrap over the line below. Notifications are still to be confirmed by the owner (not a blocker).
+**Sprint 6 device run 2.** Device run 1 (2026-10-20) passed (golden replays PASS on the iPhone 13; saves, export and import, renders, Settings); the owner's changes are built (spec 006 and 008 §10, Sprint 6 device-run notes): smaller, spaced hands' huts and no doubled hut after a reload; a Store row and **Take off market** for goods a hand put at the market, the order's default minimum rounded down; Settings switches as green **On** / red **Off**; short texts no longer wrap over the line below. Then: the sow sheet's one-sowing Spend / Sells for / Profit and fertiliser cards (spec 008 §3.7, AC-6 updated); people always drawn on top of the land. Notifications are still to be confirmed by the owner (not a blocker).
 
 ## Next up
 
-1. **Owner:** a new Development build (delete `unity/FarmToCity/Builds/iOS` first), checks 6, 18b, 18c of `docs/test-checklists/s06-saves-notifications.md`; the notification checks when convenient; merge pull request #11.
+1. **Owner:** a new Development build (delete `unity/FarmToCity/Builds/iOS` first), checks 6, 18b–18e of `docs/test-checklists/s06-saves-notifications.md`; the notification checks when convenient; merge pull request #11.
 2. **Claude:** fix anything run 2 finds; then Sprint 7 planning (full HUD, *Why?*, panels, the full *While you were away* card, Settings in the Menu).
 
 ## Owner action checklist (Phases 0–1)

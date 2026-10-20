@@ -28,8 +28,20 @@ namespace Sim.View.Tests
             CropRowVm potato = sheet.Rows.Single(r => r.CropId == "potato"), radish = sheet.Rows.Single(r => r.CropId == "radish"), wheat = sheet.Rows.Single(r => r.CropId == "wheat");
 
             Assert.That(potato.SowableNow, Is.True);
-            Assert.That(potato.EarnsText, Is.EqualTo("about 17,060"));
-            Assert.That(radish.EarnsText, Is.EqualTo("about 16,850"));
+            // One sowing (owner, Sprint 6): spend, sells for, profit. One potato sowing is a quarter of the season's 17,060; a
+            // 2-hour radish is 2/96 of 16,850.
+            Assert.That(potato.HarvestText + " | " + potato.SpendText + " | " + potato.GetText + " | " + potato.ProfitText,
+                Is.EqualTo("Harvest about 1,531 kg | Spend 3,850 coins | Sells for about 8,120 coins | Profit about 4,270 coins"));
+            Assert.That(radish.ProfitText, Is.EqualTo("Profit about 350 coins"));
+            Assert.That(potato.Profit, Is.EqualTo(SowSheet.Round10Coins(potato.Get - potato.Spend)));
+            Assert.That(radish.InputsText, Is.EqualTo("seed 50"));
+            Assert.That(radish.CostText, Is.EqualTo("pay 20 coins now"), "part of the radish seed is in the store");
+            Assert.That(sheet.Fertilisers.Select(f => f.Name + ": " + f.EffectText), Is.EqualTo(new[]
+            {
+                "Normal: No fertiliser · the harvest the soil gives",
+                "Compost: +5% harvest · builds up the soil",
+                "Chemical: +25% harvest · wears out the soil",
+            }));
             Assert.That(potato.Suits, Is.EqualTo(Suits.Good));
             Assert.That(radish.Suits, Is.EqualTo(Suits.Good));
             Assert.That(potato.TimeText, Is.EqualTo("1 d"));
@@ -46,7 +58,7 @@ namespace Sim.View.Tests
             SowSheetVm drySheet = SowSheet.Build(ViewKit2.Context(dry), 20);
             Assert.That(drySheet.Rows.Single(r => r.CropId == "potato").Suits, Is.EqualTo(Suits.Fair));
             Assert.That(drySheet.Rows.Single(r => r.CropId == "radish").Suits, Is.EqualTo(Suits.Fair));
-            Assert.That(drySheet.Rows.Single(r => r.CropId == "potato").Earns, Is.LessThan(potato.Earns));
+            Assert.That(drySheet.Rows.Single(r => r.CropId == "potato").Get, Is.LessThan(potato.Get));
         }
 
         private static void Tile20(Simulation sim)
@@ -64,7 +76,11 @@ namespace Sim.View.Tests
             CropRowVm potato = sheet.Rows.Single(r => r.CropId == "potato");
             Assert.That(potato.Sow.Enabled, Is.True);
             Assert.That(sheet.Fertilisers.Single(f => f.Selected).Id, Is.EqualTo("compost"));
-            Assert.That(potato.CostText, Does.StartWith("buys").Or.EqualTo("from your store"));
+            Assert.That(potato.CostText, Does.StartWith("pay").Or.EqualTo("from your store"));
+            CropRowVm plain = SowSheet.Build(ViewKit2.Context(sim), 20).Rows.Single(r => r.CropId == "potato");
+            Assert.That(potato.HarvestGrams, Is.GreaterThan(plain.HarvestGrams), "compost adds 5% to the harvest");
+            Assert.That(potato.Spend, Is.GreaterThan(plain.Spend), "and costs its compost");
+            Assert.That(potato.InputsText, Does.Contain("Compost"));
             Command c = potato.Sow.Create(sim.State.Clock.SimTime);
             Assert.That(c, Is.TypeOf<Sow>());
             Assert.That(((Sow)c).FertiliserId, Is.EqualTo("compost"));

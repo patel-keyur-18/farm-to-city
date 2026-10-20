@@ -300,6 +300,14 @@ namespace Game.Presentation.Ui
             return row;
         }
 
+        /// <summary>One money figure on a sow row: bold, in its colour, with room after it.</summary>
+        private static Label Figure(string text, Color colour)
+        {
+            Label l = UiKit.Text(text, 30, colour, UiKit.Heading);
+            l.style.marginRight = 26;
+            return l;
+        }
+
         /// <summary>A good's rendered picture before a row's label, when the row has one (the store).</summary>
         private static VisualElement WithIcon(string goodId, float size, VisualElement label)
         {
@@ -373,7 +381,8 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.FreeHoursText);
             foreach (FertiliserVm f in vm.Fertilisers) key.Append('|').Append(f.Id).Append(f.Selected);
             foreach (CropRowVm r in vm.Rows)
-                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.EarnsText)
+                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
+                   .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
                    .Append(r.LabourText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
@@ -383,17 +392,25 @@ namespace Game.Presentation.Ui
             scroll.style.flexShrink = 1;
             scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
 
+            // The fertiliser choice (owner, Sprint 6): three equal cards, each with what it does; the chosen one is green, and every
+            // crop row below shows its effect on the harvest and its cost.
+            Label fertHead = UiKit.Heading1(vm.FertiliserHeading, 36, UiKit.Wood);
+            fertHead.style.marginTop = 14;
+            scroll.Add(fertHead);
             var chips = new VisualElement { pickingMode = PickingMode.Ignore };
             chips.style.flexDirection = FlexDirection.Row;
-            chips.style.marginTop = 10; chips.style.marginBottom = 6;
+            chips.style.marginTop = 6; chips.style.marginBottom = 6;
             foreach (FertiliserVm f in vm.Fertilisers)
             {
                 FertiliserVm fert = f;
-                Button chip = UiKit.MakeButton(f.Name, f.Selected ? ActionLook.Primary : ActionLook.Secondary, () => { if (OnFertiliser != null) OnFertiliser(fert.Id); });
-                chip.style.minHeight = 64; chip.style.minWidth = 160; chip.style.marginTop = 0;
+                Button chip = UiKit.MakeButton(f.Name, f.Selected ? ActionLook.Primary : ActionLook.Secondary, () => { if (OnFertiliser != null) OnFertiliser(fert.Id); }, f.EffectText);
+                chip.style.flexGrow = 1; chip.style.flexBasis = 0; chip.style.marginTop = 0; chip.style.marginRight = 14;
                 chips.Add(chip);
             }
             scroll.Add(chips);
+            Label note = UiKit.Text(vm.NoteText, 27, UiKit.Wood, UiKit.Body);
+            note.style.marginTop = 6; note.style.marginBottom = 4;
+            scroll.Add(note);
 
             foreach (CropRowVm r in vm.Rows)
             {
@@ -406,13 +423,17 @@ namespace Game.Presentation.Ui
                 card.style.opacity = r.SowableNow ? 1f : 0.62f;
 
                 var name = new VisualElement { pickingMode = PickingMode.Ignore };
-                name.style.width = 330;
+                name.style.width = 230;
+                name.style.flexShrink = 0;
                 name.Add(UiKit.Heading1(r.Name, 46));
                 name.Add(UiKit.Text(r.TimeText, 30, UiKit.Wood, UiKit.Body));
                 card.Add(name);
 
                 var info = new VisualElement { pickingMode = PickingMode.Ignore };
                 info.style.flexGrow = 1;
+                info.style.flexShrink = 1;
+                info.style.flexBasis = 0;   // the figures wrap inside; the Sow button keeps its width on the right
+                info.style.minWidth = 0;
                 if (r.SowableNow)
                 {
                     var chipRow = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -423,16 +444,31 @@ namespace Game.Presentation.Ui
                     UiKit.Radius(tag, 18);
                     UiKit.Padding(tag, 2, 16);
                     chipRow.Add(tag);
-                    Label earns = UiKit.Text(r.EarnsText, 36, UiKit.Ink, UiKit.Heading);
-                    earns.style.marginLeft = 16;
-                    chipRow.Add(earns);
+                    Label harvest = UiKit.Text(r.HarvestText, 34, UiKit.Ink, UiKit.Heading);
+                    harvest.style.marginLeft = 16;
+                    chipRow.Add(harvest);
                     info.Add(chipRow);
-                    info.Add(UiKit.Text(r.LabourText + " · " + r.CostText, 28, UiKit.Wood, UiKit.Body));
+                    // Money in, money out, what's left (owner, Sprint 6): three figures side by side, each in its own colour.
+                    var money = new VisualElement { pickingMode = PickingMode.Ignore };
+                    money.style.flexDirection = FlexDirection.Row;
+                    money.style.flexWrap = Wrap.Wrap;
+                    money.style.marginTop = 4;
+                    money.Add(Figure(r.SpendText, UiKit.RedDark));
+                    money.Add(Figure(r.GetText, UiKit.GreenDark));
+                    money.Add(Figure(r.ProfitText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn));
+                    info.Add(money);
+                    info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                 }
                 else info.Add(UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body));
                 card.Add(info);
 
-                if (r.SowableNow) card.Add(ActionColumn(r.Sow));
+                if (r.SowableNow)
+                {
+                    VisualElement sow = ActionColumn(r.Sow);
+                    sow.style.flexShrink = 0;
+                    sow.style.marginLeft = 12;
+                    card.Add(sow);
+                }
                 scroll.Add(card);
             }
             sheet.Add(scroll);
