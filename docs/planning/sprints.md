@@ -306,7 +306,7 @@
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
-- **Status:** Built (25 of 25 points); device run 1 passed with seven changes, built the same day (ADR 0044); the owner merges after those. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
+- **Status:** Done (25 of 25 points; PR #12 merged). Device run 1 passed with seven changes, built the same day (ADR 0044); device run 2 (checks 29–34) passed 2026-10-20. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
 - **Branch:** `sprint/07-hud-panels`
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
 - **Points:** 25 (19, then ADR 0043: US-081 3 → 5 for *Why?* on every number, US-082 4 → 6 for the founder, money-and-loans, market and mandi panels, US-084 1 → 3 for text size and the iOS plugin). Order: US-184, US-081, US-082, US-080, US-083, US-084, US-087; US-087 is cut first if time runs short
@@ -315,13 +315,13 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
-| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | Built, device run pending |
-| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | Built, device run pending |
-| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | Built, device run pending |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
-| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | Built, device run pending |
-| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | Built, device run pending |
+| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
+| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | Done |
+| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | Done |
+| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | Done |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
+| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | Done |
+| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | Done |
 
 **Sprint end checklist**
 
@@ -344,6 +344,8 @@
 4. Repaying all of a loan left it open with 0 coins owing: the amount was fixed when the sheet was drawn while interest accrued each second. It is now worked out at the press.
 5. Net worth checked: no error. 9 acres at today's price are 10,55,664 of a new town's 11,50,735. Money and loans now shows "Of that, your land" under it.
 6. Text size Small 80% / Normal / Large 125% (150% removed).
+
+**Device run 2 (2026-10-20): checks 29–34 (the ADR 0044 changes) all pass.** Back button, borrow return, repay all, *Why?* only from its ?, net worth's land row, silent taps.
 
 **Retro (Claude):**
 - *Went well:* a coverage test over every row made "every number has a *Why?*" checkable instead of a promise; it found the job-post and garden rows nobody had listed. Pricing Collect all's leftovers on a copy of the town made the prompt exact with no new rules.
