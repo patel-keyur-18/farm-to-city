@@ -293,7 +293,7 @@
 - [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
 - [x] Test checklist written in `docs/test-checklists/` (`s06-saves-notifications.md`)
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (#11); owner merges to `main`
 
 **Done this sprint (Claude):** the save codec (one write path with the hash, content by id, gzip and checksum; a 10-year save is 116 KB, written in 12 ms and read in 3 ms), live-`Sync` compaction and the log checkpoint, atomic save points with hourly and daily backups and recovery, autosave, export, import from a list, new game, notifications planned from a simulated absence (ranked, grouped, quiet hours, no daily cap), the first-ask card, the play log, regulars, a gear button and Settings sheet; every sprite, the ground, the icons and 4-frame walk cycles rendered in Blender (the style checkpoint approved). 249 `Sim.Core` and 46 `Sim.View` tests pass; golden hashes unchanged. Verified in the Editor with touch: save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. **Not verified in the Editor:** the regular's card (covered by the sim tests; check 19 on the device).
 
