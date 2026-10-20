@@ -33,6 +33,13 @@ namespace Sim.View.Views
         public int ReadyCount { get; internal set; }
         public string CollectText { get; internal set; }
 
+        /// <summary>The current weather run and the next: "Sun until 14:00 · then heavy rain about 1 h" (ADR 0043 §2).</summary>
+        public string ForecastText { get; internal set; }
+
+        /// <summary>Open alerts (spec 008 §3.10): the ! button's count (0 hides it), red when one is urgent.</summary>
+        public int AlertCount { get; internal set; }
+        public bool AlertUrgent { get; internal set; }
+
         /// <summary>Applicants waiting for an answer: the People button's badge (0 hides it).</summary>
         public int PeopleBadge { get; internal set; }
         public bool HasPeople { get; internal set; }
@@ -48,8 +55,12 @@ namespace Sim.View.Views
             long used = Store.UsedGrams(sim), capacity = Store.CapacityGrams(sim);
             int pct = capacity <= 0 ? 0 : (int)System.Math.Min(100, used * 100 / capacity);
             int ready = CollectAll.ReadyCount(sim);
+            List<AlertVm> alerts = Alerts.Build(ctx);
             return new HudVm
             {
+                ForecastText = ForecastView.HudLine(ctx),
+                AlertCount = alerts.Count,
+                AlertUrgent = alerts.Count > 0 && alerts[0].Level == AlertLevel.Urgent,
                 DateText = ctx.Fmt.Date(d, sim.Clock.DaysPerSeason),
                 ClockText = Text.Formatter.Clock(d),
                 WeatherId = sim.CurrentWeather.Id,
