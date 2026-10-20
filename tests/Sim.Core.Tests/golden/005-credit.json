@@ -274,7 +274,7 @@
       "loads": [
         {
           "good": "radish",
-          "quantity": 197502
+          "quantity": 193953
         }
       ]
     },
@@ -785,7 +785,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 446719
+          "quantity": 470799
         }
       ]
     },
@@ -1149,7 +1149,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 699620
+          "quantity": 506171
         }
       ]
     },
@@ -1302,7 +1302,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 931084
+          "quantity": 284825
         }
       ]
     },
@@ -1770,7 +1770,7 @@
       "type": "Offer",
       "at": 454323,
       "good": "lentils",
-      "quantity": 36426,
+      "quantity": 41706,
       "minPriceRaw": 288961625785
     },
     {
@@ -2189,7 +2189,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 110383
+          "quantity": 354262
         }
       ]
     },
@@ -2392,8 +2392,8 @@
       "at": 605761,
       "loads": [
         {
-          "good": "rice",
-          "quantity": 21037
+          "good": "lentils",
+          "quantity": 34754
         }
       ]
     },
@@ -2635,7 +2635,7 @@
       "loads": [
         {
           "good": "lentils",
-          "quantity": 12556
+          "quantity": 31912
         }
       ]
     },
@@ -3031,7 +3031,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 94207
+          "quantity": 241718
         }
       ]
     },
@@ -3405,7 +3405,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 150728
+          "quantity": 315497
         }
       ]
     },
@@ -3752,7 +3752,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 399644
+          "quantity": 419851
         }
       ]
     },
@@ -4031,7 +4031,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 364306
+          "quantity": 370525
         }
       ]
     },
@@ -4198,7 +4198,7 @@
       "type": "SellToTrader",
       "at": 1092526,
       "good": "wheat",
-      "quantity": 13447
+      "quantity": 17043
     },
     {
       "type": "SetWorkHours",
@@ -4684,7 +4684,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 504369
+          "quantity": 478372
         }
       ]
     },
@@ -5006,7 +5006,7 @@
       "loads": [
         {
           "good": "wheat",
-          "quantity": 284059
+          "quantity": 315365
         }
       ]
     },
@@ -5551,7 +5551,7 @@
       "type": "Offer",
       "at": 1330500,
       "good": "lentils",
-      "quantity": 32140,
+      "quantity": 33234,
       "minPriceRaw": 312365640860
     },
     {
@@ -5607,7 +5607,7 @@
       "loads": [
         {
           "good": "lentils",
-          "quantity": 32138
+          "quantity": 33232
         }
       ]
     },
@@ -6025,7 +6025,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 925466
+          "quantity": 997955
         }
       ]
     },
@@ -6389,6 +6389,11 @@
       "at": 1579181,
       "bed": 2,
       "crop": "garden_radish"
+    },
+    {
+      "type": "Spray",
+      "at": 1579181,
+      "tile": 27
     },
     {
       "type": "GoToMandi",
@@ -6778,7 +6783,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 847140
+          "quantity": 617455
         }
       ]
     },
@@ -7088,7 +7093,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 622419
+          "quantity": 500191
         }
       ]
     },
@@ -7522,7 +7527,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 366355
+          "quantity": 93376
         }
       ]
     },
@@ -7739,11 +7744,6 @@
       "at": 1903691,
       "bed": 2,
       "crop": "garden_radish"
-    },
-    {
-      "type": "Spray",
-      "at": 1903691,
-      "tile": 28
     },
     {
       "type": "SetWorkHours",
@@ -8105,7 +8105,7 @@
       "loads": [
         {
           "good": "rice",
-          "quantity": 37967
+          "quantity": 28237
         }
       ]
     },
@@ -8251,11 +8251,6 @@
       "at": 2076763,
       "slot": 1,
       "overflow": "sellRest"
-    },
-    {
-      "type": "Spray",
-      "at": 2076763,
-      "tile": 28
     },
     {
       "type": "GoToMandi",
@@ -8915,6 +8910,11 @@
       "crop": "garden_radish"
     },
     {
+      "type": "Spray",
+      "at": 2228201,
+      "tile": 27
+    },
+    {
       "type": "AdvanceTo",
       "target": 2239018,
       "mode": "live"
@@ -9071,10 +9071,26 @@
       "overflow": "sellRest"
     },
     {
+      "type": "Sow",
+      "at": 2271469,
+      "tile": 18,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
       "type": "Harvest",
       "at": 2271469,
       "tile": 27,
       "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 2271469,
+      "tile": 27,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "chemical"
     },
     {
       "type": "PickGarden",
@@ -9106,26 +9122,10 @@
       "mode": "live"
     },
     {
-      "type": "Sow",
-      "at": 2282286,
-      "tile": 18,
-      "crop": "radish",
-      "seed": "certified",
-      "fertiliser": "chemical"
-    },
-    {
       "type": "Harvest",
       "at": 2282286,
       "tile": 26,
       "overflow": "sellRest"
-    },
-    {
-      "type": "Sow",
-      "at": 2282286,
-      "tile": 27,
-      "crop": "radish",
-      "seed": "certified",
-      "fertiliser": "none"
     },
     {
       "type": "PickGarden",
@@ -9157,20 +9157,6 @@
       "mode": "live"
     },
     {
-      "type": "Harvest",
-      "at": 2293103,
-      "tile": 18,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "Sow",
-      "at": 2293103,
-      "tile": 18,
-      "crop": "rice",
-      "seed": "certified",
-      "fertiliser": "none"
-    },
-    {
       "type": "Sow",
       "at": 2293103,
       "tile": 26,
@@ -9179,12 +9165,6 @@
       "fertiliser": "none"
     },
     {
-      "type": "Harvest",
-      "at": 2293103,
-      "tile": 27,
-      "overflow": "sellRest"
-    },
-    {
       "type": "PickGarden",
       "at": 2293103,
       "bed": 1,
@@ -9201,12 +9181,6 @@
       "at": 2293103,
       "bed": 2,
       "overflow": "sellRest"
-    },
-    {
-      "type": "SowGarden",
-      "at": 2293103,
-      "bed": 2,
-      "crop": "garden_radish"
     },
     {
       "type": "Spray",
@@ -9236,36 +9210,10 @@
       "overflow": "sellRest"
     },
     {
-      "type": "Sow",
-      "at": 2303920,
-      "tile": 27,
-      "crop": "radish",
-      "seed": "certified",
-      "fertiliser": "chemical"
-    },
-    {
       "type": "PickGarden",
       "at": 2303920,
       "bed": 1,
       "overflow": "sellRest"
-    },
-    {
-      "type": "SowGarden",
-      "at": 2303920,
-      "bed": 1,
-      "crop": "garden_spinach"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2303920,
-      "bed": 2,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "SowGarden",
-      "at": 2303920,
-      "bed": 2,
-      "crop": "garden_spinach"
     },
     {
       "type": "AdvanceTo",
@@ -9273,41 +9221,9 @@
       "mode": "live"
     },
     {
-      "type": "Sow",
-      "at": 2314737,
-      "tile": 26,
-      "crop": "radish",
-      "seed": "certified",
-      "fertiliser": "chemical"
-    },
-    {
-      "type": "Harvest",
-      "at": 2314737,
-      "tile": 27,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2314737,
-      "bed": 1,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2314737,
-      "bed": 2,
-      "overflow": "sellRest"
-    },
-    {
       "type": "AdvanceTo",
       "target": 2325554,
       "mode": "live"
-    },
-    {
-      "type": "Harvest",
-      "at": 2325554,
-      "tile": 26,
-      "overflow": "sellRest"
     },
     {
       "type": "Harvest",
@@ -9337,6 +9253,18 @@
       "mode": "live"
     },
     {
+      "type": "Harvest",
+      "at": 2358005,
+      "tile": 18,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Harvest",
+      "at": 2358005,
+      "tile": 27,
+      "overflow": "sellRest"
+    },
+    {
       "type": "AdvanceTo",
       "target": 2368822,
       "mode": "live"
@@ -9345,12 +9273,6 @@
       "type": "AdvanceTo",
       "target": 2379639,
       "mode": "live"
-    },
-    {
-      "type": "Harvest",
-      "at": 2379639,
-      "tile": 18,
-      "overflow": "sellRest"
     },
     {
       "type": "SetLabourSplit",
@@ -9519,7 +9441,7 @@
       "loads": [
         {
           "good": "radish",
-          "quantity": 32500
+          "quantity": 29687
         }
       ]
     },
@@ -9642,11 +9564,6 @@
       "at": 2466175,
       "bed": 2,
       "crop": "garden_spinach"
-    },
-    {
-      "type": "Spray",
-      "at": 2466175,
-      "tile": 19
     },
     {
       "type": "SetWorkHours",
@@ -9785,22 +9702,10 @@
       "overflow": "sellRest"
     },
     {
-      "type": "SowGarden",
-      "at": 2498626,
-      "bed": 1,
-      "crop": "garden_spinach"
-    },
-    {
       "type": "PickGarden",
       "at": 2498626,
       "bed": 2,
       "overflow": "sellRest"
-    },
-    {
-      "type": "SowGarden",
-      "at": 2498626,
-      "bed": 2,
-      "crop": "garden_spinach"
     },
     {
       "type": "AdvanceTo",
@@ -9862,22 +9767,10 @@
       "fertiliser": "compost"
     },
     {
-      "type": "PickGarden",
-      "at": 2509443,
-      "bed": 1,
-      "overflow": "sellRest"
-    },
-    {
       "type": "SowGarden",
       "at": 2509443,
       "bed": 1,
       "crop": "garden_radish"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2509443,
-      "bed": 2,
-      "overflow": "sellRest"
     },
     {
       "type": "SowGarden",
@@ -9926,7 +9819,7 @@
       "loads": [
         {
           "good": "spinach",
-          "quantity": 29533
+          "quantity": 20435
         }
       ]
     },
@@ -10363,6 +10256,11 @@
       "crop": "garden_spinach"
     },
     {
+      "type": "Spray",
+      "at": 2595979,
+      "tile": 26
+    },
+    {
       "type": "AdvanceTo",
       "target": 2606796,
       "mode": "live"
@@ -10394,14 +10292,6 @@
       "crop": "wheat",
       "seed": "certified",
       "fertiliser": "chemical"
-    },
-    {
-      "type": "Sow",
-      "at": 2606796,
-      "tile": 27,
-      "crop": "lentils",
-      "seed": "certified",
-      "fertiliser": "none"
     },
     {
       "type": "PickGarden",
@@ -10439,14 +10329,6 @@
       "overflow": "sellRest"
     },
     {
-      "type": "Sow",
-      "at": 2617613,
-      "tile": 18,
-      "crop": "wheat",
-      "seed": "certified",
-      "fertiliser": "none"
-    },
-    {
       "type": "Harvest",
       "at": 2617613,
       "tile": 20,
@@ -10475,11 +10357,6 @@
       "at": 2617613,
       "bed": 2,
       "crop": "garden_radish"
-    },
-    {
-      "type": "Spray",
-      "at": 2617613,
-      "tile": 19
     },
     {
       "type": "SetLabourSplit",
@@ -10547,18 +10424,6 @@
       "mode": "live"
     },
     {
-      "type": "Harvest",
-      "at": 2639247,
-      "tile": 18,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "Harvest",
-      "at": 2639247,
-      "tile": 27,
-      "overflow": "sellRest"
-    },
-    {
       "type": "Sow",
       "at": 2639247,
       "tile": 27,
@@ -10583,12 +10448,6 @@
       "at": 2639247,
       "bed": 2,
       "overflow": "sellRest"
-    },
-    {
-      "type": "SowGarden",
-      "at": 2639247,
-      "bed": 2,
-      "crop": "garden_radish"
     },
     {
       "type": "SetEatFromStore",
@@ -10613,24 +10472,6 @@
       "overflow": "sellRest"
     },
     {
-      "type": "SowGarden",
-      "at": 2650064,
-      "bed": 1,
-      "crop": "garden_radish"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2650064,
-      "bed": 2,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "SowGarden",
-      "at": 2650064,
-      "bed": 2,
-      "crop": "garden_radish"
-    },
-    {
       "type": "SetWorkHours",
       "at": 2650064,
       "option": "long"
@@ -10652,18 +10493,6 @@
       "type": "Harvest",
       "at": 2660881,
       "tile": 27,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2660881,
-      "bed": 1,
-      "overflow": "sellRest"
-    },
-    {
-      "type": "PickGarden",
-      "at": 2660881,
-      "bed": 2,
       "overflow": "sellRest"
     },
     {
@@ -10705,6 +10534,18 @@
       "crop": "lentils",
       "seed": "certified",
       "fertiliser": "none"
+    },
+    {
+      "type": "SowGarden",
+      "at": 2682515,
+      "bed": 1,
+      "crop": "garden_radish"
+    },
+    {
+      "type": "SowGarden",
+      "at": 2682515,
+      "bed": 2,
+      "crop": "garden_radish"
     },
     {
       "type": "BuyMedicine",
@@ -10754,6 +10595,30 @@
       "fertiliser": "none"
     },
     {
+      "type": "PickGarden",
+      "at": 2693332,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 2693332,
+      "bed": 1,
+      "crop": "garden_spinach"
+    },
+    {
+      "type": "PickGarden",
+      "at": 2693332,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 2693332,
+      "bed": 2,
+      "crop": "garden_spinach"
+    },
+    {
       "type": "AdvanceTo",
       "target": 2704149,
       "mode": "live"
@@ -10771,6 +10636,24 @@
       "crop": "wheat",
       "seed": "saved",
       "fertiliser": "compost"
+    },
+    {
+      "type": "PickGarden",
+      "at": 2704149,
+      "bed": 1,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "PickGarden",
+      "at": 2704149,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "SowGarden",
+      "at": 2704149,
+      "bed": 2,
+      "crop": "garden_radish"
     },
     {
       "type": "AdvanceTo",
@@ -10820,6 +10703,12 @@
       "fertiliser": "chemical"
     },
     {
+      "type": "PickGarden",
+      "at": 2714966,
+      "bed": 2,
+      "overflow": "sellRest"
+    },
+    {
       "type": "SetEatFromStore",
       "at": 2714966,
       "on": false
@@ -10840,14 +10729,6 @@
       "at": 2725783,
       "tile": 20,
       "overflow": "sellRest"
-    },
-    {
-      "type": "Sow",
-      "at": 2725783,
-      "tile": 20,
-      "crop": "wheat",
-      "seed": "certified",
-      "fertiliser": "none"
     },
     {
       "type": "Harvest",
@@ -10884,16 +10765,10 @@
       "mode": "live"
     },
     {
-      "type": "Harvest",
-      "at": 2747417,
-      "tile": 20,
-      "overflow": "sellRest"
-    },
-    {
       "type": "Offer",
       "at": 2747417,
       "good": "wheat",
-      "quantity": 245314
+      "quantity": 218450
     },
     {
       "type": "AdvanceTo",
@@ -10946,6 +10821,11 @@
       "at": 2769051,
       "slot": 1,
       "overflow": "sellRest"
+    },
+    {
+      "type": "Spray",
+      "at": 2769051,
+      "tile": 19
     },
     {
       "type": "AdvanceTo",
@@ -11022,7 +10902,7 @@
       "type": "SellToTrader",
       "at": 2779868,
       "good": "lentils",
-      "quantity": 41766
+      "quantity": 35534
     },
     {
       "type": "AdvanceTo",
@@ -11101,7 +10981,7 @@
       "type": "TakeLoan",
       "at": 3110400,
       "lender": "moneylender",
-      "amount": 390000,
+      "amount": 280000,
       "term": 1
     },
     {
@@ -11120,5 +11000,5 @@
       "mode": "live"
     }
   ],
-  "expectedHash": "0x4D9D7611B2753AC9"
+  "expectedHash": "0x3FEB89B591B5F831"
 }
