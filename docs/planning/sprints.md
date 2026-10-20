@@ -306,7 +306,7 @@
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
-- **Status:** Planning review done (2026-10-20, ADR 0043: 11 gaps); spec 001's weather sections await re-approval
+- **Status:** Built (25 of 25 points), device run pending. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
 - **Branch:** `sprint/07-hud-panels`
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
 - **Points:** 25 (19, then ADR 0043: US-081 3 → 5 for *Why?* on every number, US-082 4 → 6 for the founder, money-and-loans, market and mandi panels, US-084 1 → 3 for text size and the iOS plugin). Order: US-184, US-081, US-082, US-080, US-083, US-084, US-087; US-087 is cut first if time runs short
@@ -315,24 +315,34 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | To do |
-| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | To do |
-| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
-| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | To do |
+| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
+| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | Built, device run pending |
+| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | Built, device run pending |
+| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | Built, device run pending |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
+| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | Built, device run pending |
+| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | Built, device run pending |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s07-hud-panels.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
+
+**Done this sprint (Claude):**
+- **US-184:** 1-hour weather spells with persistence per weather and season, draw weights derived from the unchanged shares, the forecast rolled per run (spec 001 amended, re-approved); save schema 2; goldens re-pinned in their own commit; the balance gate re-run on 1,000 seeds (every check passes; loam moisture in band in every season; rainy Monsoon hours 51.1%, as before the change).
+- **US-081:** `WhyView`, a *Why?* in words for every number (causes with "N% more / less / no change", never a factor), swept over four seeded situations by `WhyTests.EveryNumberHasWhy`.
+- **US-082:** the Menu, Buy land with Show, Money and loans (borrow by amount then term with payments and total interest, repay, the report, buy with a bank loan), You and your family, a good's sheet with offers and minimums, Buy inputs in acres, the mandi with load rows.
+- **US-080:** the HUD's weather run and forecast sheet, cash and store tap / hold, the Menu, alerts (the ! button and list). **US-083:** the full away card (only when something new happened), the report at a live season close, Collect all's sell-the-rest card, the event map. **US-084:** numbers, text size, reduced motion (iOS default), sound, haptics (an iOS plugin). **US-087:** seven Kenney CC0 sounds.
+- 249 `Sim.Core` and 57 `Sim.View` tests pass. **Verified in the Editor with touch:** every new sheet and card (captures `docs/art/s07-*.png`), text at 125% and 150%, the old save refused and kept. Development build: Unity build succeeded (the developer panel, golden files and the plugin are in it).
 
 **Review (owner's device results):** —
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* a coverage test over every row made "every number has a *Why?*" checkable instead of a promise; it found the job-post and garden rows nobody had listed. Pricing Collect all's leftovers on a copy of the town made the prompt exact with no new rules.
+- *To improve:* editing any script while the Editor is playing reloads the domain and breaks the session: batch the fixes, stop, recompile, play. Captures can be a frame stale: capture twice. A card built inside a click handler misses its first touch: open it on the next UI tick (now done for *Why?*).
+- *Carry over:* alert dismissals if playtesters ask (spec 008 §10 note 8); Blender icons for the Menu, alerts and the trolley (the sheets use the basket for now).
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 

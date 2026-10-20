@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 7 (HUD, Why?, panels, While you were away, Settings, sounds, hourly weather): planning review |
+| Sprint | Sprint 7 (HUD, Why?, panels, While you were away, Settings, sounds, hourly weather): built, 25 of 25 points; the device run is pending |
 | Branch with latest work | `sprint/07-hud-panels` (from `main`, which has Sprint 6 / PR #11) |
 | Last updated | 2026-10-20 |
 
@@ -107,21 +107,28 @@
   - **Unity:** `Game.Services.SaveService` (saves in iOS `Library/Saves`, exports and imports in Documents, which the Files app shows), `INotificationService` on Mobile Notifications 2.5.0 (iOS), `IosBuildStep` (Files app sharing keys), `GameRoot.Saves` (load at launch, autosave, the background save and notification plan, cancel on return, Settings actions, the play log), a gear button. Art: `tools/blender/render.py` renders every sprite, the ground, the icons and the walk cycles (`person_<kind>_<front|back>_walk0..3`); `SpriteBank` and `IconBank` load them; the Kenney tiles are deleted. Screenshots `docs/art/s06-*.png`.
   - **Verified in the Editor with touch:** save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. The regular's card is covered by the sim tests only (device check 19). **Editor art review (2026-10-20):** every render and sheet checked in play; fixed the saplings, the banana crown, fruit visibility, five icons, marker heights and stacking, the yard tree places, row pictures on the Store, tree and garden sheets, aligned row buttons, and the soil row as a word (spec 008 §10, Sprint 6 notes).
 
+- **Sprint 7 (branch `sprint/07-hud-panels`): 25 of 25 points built; the device run is pending.**
+  - **Planning review (2026-10-20):** 11 gaps decided with the owner, **ADR 0043** (spec 001 §3.5, §3.6, §4, §8, §9 amended and re-approved; spec 008 §3 and §10; the GDD; CLAUDE.md; the planning files): weather runs by season, the forecast rolled per run, *Why?* in words on every number, the Menu (gear gone), the money, founder, market and mandi panels, the full away card, Settings with text size now, seven CC0 sounds; 25 points.
+  - **Sim (US-184):** hourly spells, persistence per weather and season (`weather.json` `persistence` map; draw weights = share × round(1000 × (1 − p))), `WeatherState.CurrentRunStart`, the forecast's accuracy rolled per run and day bucket. Save schema 2 (Sprint 6 saves refused and kept). **Goldens re-pinned** (frozen `clock.json` and `weather.json` refreshed): 001 `0x9803A63478EDC81C`, 003 `0xCA6205EDED737A6C`, 004 `0x98D9EE70B32631A0`, 005 `0x3FEB89B591B5F831`. **Balance gate** (1,000 seeds): every check passes; loam moisture in band (Spring 39.0, Summer 30.8, Monsoon 72.4, Winter 56.7); rainy Monsoon hours 51.1% (50.8% before: the carry-over at season changes); median season farm profit 21,907 → 26,111 (wetter Spring soil), competent net worth +3%, the Hamlet day unchanged (5.3 / 5.4 / 5.7). 249 tests.
+  - **`Sim.View` (57 tests):** `WhyView` (a source per key, `WhyView.Effect` in words; `WhyTests.EveryNumberHasWhy` sweeps four seeded situations), `ForecastView` (runs, today / tomorrow / weekday), `MenuSheet`, `LandsSheet`, `MoneySheet`, `ReportSheet`, `BorrowSheet` (amounts, terms, `Plan`), `Repay`, `LandLoanSheet`, `FounderSheet`, `GoodSheet` (offers), `BuyInputsSheet`, `MandiSheet`, `Alerts`, `AwayCard`, `CollectAllRest`, `EventMap`, the Settings rows, `Cards.SellRest`.
+  - **Unity:** the HUD (weather run, tap / hold on time, cash and store, Menu, People, the ! alerts), the **?** chips and row taps, the *Why?* card, every panel's route, the away card, the report at a live close, the sell-the-rest card, Settings (`PanelSettings.scale` for text, PlayerPrefs), `Motion/Sounds.cs`, `Plugins/iOS/FarmToCityNative.mm` with `Game.Services.NativeFeel`; the developer panel lost its format, motion and loan buttons. Captures `docs/art/s07-*.png`.
+  - **Verified in the Editor with touch:** every new sheet and card, text at 125% and 150%, the Sprint 6 save refused and kept, a plain tap on the time card (no developer panel), the sell-the-rest card (+608 coins exactly). Fixed during the tour: the hold timer of the time card, the *Why?* card's first tap, the next loan payment (projected to the close), subsistence explained not offered, the bank loan only for buyable land, an away card with nothing new, row alignment. **Development build:** Unity build succeeded; Xcode unsigned compile in the pull request.
+
 ## In progress
 
-**Sprint 7 planning review: done** (2026-10-20, **ADR 0043**, 11 gaps, each as recommended; the owner moved text size into this sprint). Spec 001 §3.5, §3.6, §4, §8 and §9 are amended for US-184 and **await the owner's re-approval** (a rule change, ADR 0027). Spec 008 §3 and §10, the GDD, CLAUDE.md and the planning files follow ADR 0043. Sprint 7 is 25 points.
+None: Sprint 7 is built and waiting for the owner's device run.
 
 ## Next up
 
-1. **Owner:** re-approve spec 001's weather sections (§3.5, §3.6, §4, AC-14 to AC-20, AC-29, §9).
-2. **Claude:** then, in order: US-184 (sim and content test-first; goldens re-pinned in their own commit; the balance gate re-run), US-081, US-082, US-080, US-083, US-084, US-087; then the Development build and `docs/test-checklists/s07-hud-panels.md`.
+1. **Owner:** a Development build (delete `unity/FarmToCity/Builds/iOS` first; `--options '["Development"]'`), run `docs/test-checklists/s07-hud-panels.md`, merge the pull request.
+2. **Claude:** fix anything the device run finds; then Sprint 8 (onboarding, the letter, the Hamlet unlock, the Phase 1 balancer bots): its planning review first. Look again at the median farm profit's rise with the hourly weather (the gate passes; the Sprint 8 balancer bots are the place to tune it).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
 | Sprint 6 | Done (device runs passed, PR #11 merged) |
-| Sprint 7 | Answer the planning review; re-approve spec 001's weather sections; run the device checklist; merge the pull request |
+| Sprint 7 | ~~Answer the planning review; re-approve spec 001's weather sections~~ (done); run the device checklist; merge the pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
