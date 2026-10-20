@@ -1,6 +1,6 @@
 # 008. HUD, presentation and localisation
 
-- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043)
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation
@@ -18,7 +18,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 **In:**
 - **The view layer** (`Sim.View`, §3.1): pure C#, tested by `dotnet test`. It builds what each screen shows from the state and the events, and the commands each button sends.
 - **Screens for Phase 1:** the map, the HUD, the bottom sheets (field and sow, the crop-calendar card, the garden, trees, the founder, the store and market, the mandi, hiring and the hand, finance: the season report and loans, buying land), the *While you were away* report, alerts, settings, and the letter sheet (content in spec 009).
-- **The *Why?* system:** one sheet format, opened by tapping *Why?* or long-pressing any number, and every source in Phase 1.
+- **The *Why?* system:** one sheet format, opened by tapping the **?** beside a number (ADR 0044), and every source in Phase 1.
 - **The crop-calendar card** on the sow sheet (owner request, 2026-10-17).
 - **The season report's labels and *Why?* text** for every line (ADR 0032).
 - **Localisation groundwork** (ADR 0024): string tables, plurals, the locale formatter (Indian grouping with lakh and crore short forms, Western grouping elsewhere).
@@ -60,7 +60,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Safe area | Every edge-anchored element sits inside the device's safe area (notch, home indicator), both landscape directions |
 | Touch targets | At least 44 pt; spacing at least 8 pt |
 | Thumb zones | Main actions in the bottom corners: **Collect all** bottom-left (the **!** alerts button above it), **Menu** (store, money and loans, people, buy land, settings) bottom-right with the **People** shortcut beside it (ADR 0043) |
-| Sheets | Every panel is a bottom sheet the full height of the screen with the same margin top and bottom (owner, device run 2, 2026-10-19: half height was cramped), 78% of the width so the map shows at the sides; swipe down or tap the map to close. A list of choices is one row per choice with its button on the row (the store's goods, the trees, the garden crops). At most one sheet open; a *Why?* sheet stacks on top of it |
+| Sheets | Every panel is a bottom sheet the full height of the screen with the same margin top and bottom (owner, device run 2, 2026-10-19: half height was cramped), 78% of the width so the map shows at the sides; swipe down or tap the map to close. A sheet opened from another has a **←** back button that returns the way it came; one opened from the map, the HUD or a card has none (ADR 0044 §1). A list of choices is one row per choice with its button on the row (the store's goods, the trees, the garden crops). At most one sheet open; a *Why?* sheet stacks on top of it |
 | Three taps | Any Phase 1 lever: tap a field (1), an action (2), confirm (3); or Menu (1), a section (2), an action (3) |
 
 ### 3.3 The HUD
@@ -80,8 +80,8 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Element | Shows | Tap |
 | --- | --- | --- |
 | Time strip (spec 001 §7) | Season, day of season, year, sim time, the current weather run and the next ("Sun until 14:00 · then heavy rain about 1 h", ADR 0043) | The forecast sheet: one row per run over 3 days, days 2–3 "likely"; hold 3 s: the developer panel (development builds) |
-| Cash | Cash (whole coins) | Money and loans; long-press: *Why?* of today's cash movements |
-| Store | Store fill (% of capacity by weight) | The store and market sheet; long-press: its *Why?* |
+| Cash | Cash (whole coins) | Money and loans (its *Why?* is the **?** on the Cash row, ADR 0044 §3) |
+| Store | Store fill (% of capacity by weight) | The store and market sheet (its *Why?* is the **?** on the "In the store" row) |
 | Alerts | A round **!** button with the count of open alerts (§3.10), shown only when there are any; red and popping once for an urgent one | The alert list, one row per alert with its action |
 | Collect all | The count of ready things: ready crops, ready garden beds, ripe fruit | Collects them (§3.9) |
 | Menu | — | Store, Money and loans, People, Buy land (each parcel for sale with its price and **Show**), Settings; the letter in Sprint 8. The gear button is gone (ADR 0043) |
@@ -137,7 +137,7 @@ Why? Harvest of North acre: about 71 kg
   "The weakest cause hurts most: compost lifts every harvest on this acre."
 ```
 
-**Opening it:** a row with a *Why?* carries a small round **?** at its end; tapping the row opens it, and a long-press on any number also does. **Every number has one:** every row on every sheet and the HUD whose value contains a digit has a *Why?* source (AC-15), including those not listed below (time left, fertility, moisture, kg in store, a price, a wage, a loan's payments).
+**Opening it:** a row with a *Why?* carries a small round **?** at its end, and only the **?** opens it (ADR 0044 §3: a tap or a held finger on the row, as when scrolling, never does). **Every number has one:** every row on every sheet and the HUD whose value contains a digit has a *Why?* source (AC-15), including those not listed below (time left, fertility, moisture, kg in store, a price, a wage, a loan's payments).
 
 **Sources in Phase 1** (each is a `Sim.View` builder with a test, AC-5):
 
@@ -289,12 +289,12 @@ All motion is code-driven tweens on transforms and UI Toolkit styles (ADR 0017);
 | Setting | Values | Default |
 | --- | --- | --- |
 | Number format | Indian (lakh, crore) · Western | By the device's region |
-| Text size | 100% · 125% · 150% | 100% (Sprint 7, ADR 0043 §9: every sheet and the HUD hold at each size) |
+| Text size | 80% · 100% · 125% (Small, Normal, Large; 150% removed, ADR 0044 §4) | 100% (Sprint 7, ADR 0043 §9: every sheet and the HUD hold at each size) |
 | Reduced motion | on · off | iOS's *Reduce Motion* |
 | Sound | on · off | on |
 | Haptics | on · off | on (a light tap on harvest and sale) |
 
-Settings live in the settings file beside the save (spec 007), never in the town. iOS's *Reduce Motion* and the light haptic tap come from one small iOS plugin (`Assets/Plugins/iOS`). Feedback sounds (Could, F08.5; ADR 0043 §10), from Kenney's CC0 packs, logged in `ASSETS_LICENSES.md`, one per event and never stacking: harvest (a pop and rustle), coins in (a jingle, pitch rising in three steps with the amount), coins out (a clink), button tap (a wooden click), sheet open and close (a swish), something ready (a chime), an urgent alert (a two-note bell).
+Settings live in the settings file beside the save (spec 007), never in the town. iOS's *Reduce Motion* and the light haptic tap come from one small iOS plugin (`Assets/Plugins/iOS`). Feedback sounds (Could, F08.5; ADR 0043 §10), from Kenney's CC0 packs, logged in `ASSETS_LICENSES.md`, one per event and never stacking, only for what happens in the town (ADR 0044 §2: no sound for a button tap or a sheet): sowing and planting (the rustle, lower), harvest (a pop and rustle), coins in (a jingle, pitch rising in three steps with the amount), coins out (a clink), something ready (a chime), an urgent alert (a two-note bell).
 
 ### 3.14 The developer panel (ADR 0017, spec 001 §7)
 
@@ -483,7 +483,7 @@ Eleven gaps decided with the owner, each as recommended (text size moved into th
 None of these changes a rule or a lesson.
 
 1. **`WhyView`** (`sim/Sim.View/Views/WhyView*.cs`): one source per *Why?* key, chosen by a row's `WhyKey` and `WhyId` (a tile, slot, bed, good, lender, loan, hand or period). `WhyView.Effect` turns a factor into "N% more / less" or "no change"; sums show coins. The coverage sweep (`WhyTests.EveryNumberHasWhy`, AC-15) builds every sheet in four seeded situations (a new game; a growing farm with a hand, day labourers, a garden bed and a mango; the same farm ready with goods on offer; a later game with a moneylender loan and a closed season) and fails on any row whose value has a digit and no source, or on a factor in a *Why?* (a decimal with no unit after it). **Out of the sweep:** a button's detail ("Sell 770 kg: 4,081 coins") repeats a number its row explains; the Import list's file rows are file facts, not game numbers.
-2. **A row that opens a sheet** (`LineVm.Opens`, a good in the Store) opens it on a tap; its **?** opens the *Why?*. Every other row with a *Why?* opens it on a tap anywhere on the row. A long-press always opens the *Why?*.
+2. **A row that opens a sheet** (`LineVm.Opens`, a good in the Store) opens it on a tap; its **?** opens the *Why?*. ~~Every other row with a *Why?* opens it on a tap anywhere on the row. A long-press always opens the *Why?*.~~ Only the **?** opens a *Why?* (ADR 0044 §3, device review).
 3. **The forecast sheet** starts with Today's date (its *Why?* is the calendar), so the HUD's date and clock have a *Why?* one tap away; the time card's tap opens the sheet and its 3-second hold the developer panel.
 4. **Panels** (`MoneyViews.cs`, `FounderMarketViews.cs`, `AlertsAwayViews.cs`): navigation through `SheetRequest` kinds (Menu, Lands, ShowTile, Money, Report, Borrow, Repay, LandLoan, Founder, Good, Offer, BuyInputs, BuyInput, Mandi, MandiLoad, Forecast, Alerts) with the step so far in `Arg` (the amount to borrow, the quantity to offer, the mandi loads). A loan's term rows are projected by `BorrowSheet.Plan` with the sim's own interest rounding (interest only at a part-season close); their payments repay the principal exactly (AC-17).
 5. **Buy inputs:** field seed as "To sow N acres" (one sowing's seed), garden seed as bed sowings, fertiliser and spray as "A season on N acres"; each row says which season the input is cheapest in. Saplings are bought by planting (spec 003), medicine on the founder's sheet.
@@ -493,6 +493,16 @@ None of these changes a rule or a lesson.
 9. **Sounds** (`Motion/Sounds.cs`): four voices, the same clip skipped within 0.09 s; the button tap through `UiKit.OnPress`. **Haptics and Reduce Motion** through `Plugins/iOS/FarmToCityNative.mm` and `Game.Services.NativeFeel` (no effect in the Editor).
 10. **Text size** scales the UI panel (`PanelSettings.scale` 1.0 / 1.25 / 1.5); the HUD and sheets are rebuilt when it or the number format changes.
 11. **Save schema 2:** the weather state gained the current run's start (spec 001 §3.6); Sprint 6 saves are refused and kept (ADR 0041 §2).
+
+### Sprint 7 device review (2026-10-20, ADR 0044)
+
+The owner's device run passed apart from seven points, all settled in ADR 0044:
+1. **Back.** A sheet opened from another shows a **←** that returns the way it came (`GameRoot.Push`, `Back`, `Return`). A sheet opened from the map, the HUD or a card starts fresh.
+2. **Sounds.** Only for town events: sowing and planting, harvest, coins, ready, urgent. Note 9's button tap through `UiKit.OnPress` and the sheet swish are removed, with their clips.
+3. ***Why?*** opens only from its **?**: no row tap, no long-press, no HUD hold. The store's *Why?* moves to an "In the store" row at the top of the Store sheet.
+4. **Text size** is 80% / 100% / 125% (`PanelSettings.scale` 0.8 / 1.0 / 1.25; replaces note 10's sizes).
+5. **Repaying** works out the amount at the press, so "All of it" closes the loan (`PanelTests.Choices`).
+6. **Net worth** is unchanged (it is mostly land at today's price). Money and loans shows "Of that, your land" under it.
 
 ## 11. Cut first
 

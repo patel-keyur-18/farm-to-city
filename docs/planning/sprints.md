@@ -306,7 +306,7 @@
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
-- **Status:** Built (25 of 25 points), device run pending. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
+- **Status:** Built (25 of 25 points); device run 1 passed with seven changes, built the same day (ADR 0044); the owner merges after those. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
 - **Branch:** `sprint/07-hud-panels`
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
 - **Points:** 25 (19, then ADR 0043: US-081 3 → 5 for *Why?* on every number, US-082 4 → 6 for the founder, money-and-loans, market and mandi panels, US-084 1 → 3 for text size and the iOS plugin). Order: US-184, US-081, US-082, US-080, US-083, US-084, US-087; US-087 is cut first if time runs short
@@ -337,12 +337,19 @@
 - **US-080:** the HUD's weather run and forecast sheet, cash and store tap / hold, the Menu, alerts (the ! button and list). **US-083:** the full away card (only when something new happened), the report at a live season close, Collect all's sell-the-rest card, the event map. **US-084:** numbers, text size, reduced motion (iOS default), sound, haptics (an iOS plugin). **US-087:** seven Kenney CC0 sounds.
 - 249 `Sim.Core` and 57 `Sim.View` tests pass. **Verified in the Editor with touch:** every new sheet and card (captures `docs/art/s07-*.png`), text at 125% and 150%, the old save refused and kept. Development build: Unity build succeeded (the developer panel, golden files and the plugin are in it).
 
-**Review (owner's device results):** —
+**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 with the re-pinned hashes (72 h in 3.1 ms); everything else fine apart from seven points, built the same day as **ADR 0044**:
+1. A **←** back button on every sheet opened from another sheet (the Store from the Menu, the mandi trip from the Store), returning the way it came.
+2. Sounds only for town events (sowing, harvest, coins, ready, urgent): the tap and sheet sounds and their clips are gone.
+3. A *Why?* opens only from its **?**. It had popped up in the Store from a finger resting on a row while scrolling, and from a slow tap on the store pill. The store's *Why?* moved to an "In the store" row.
+4. Repaying all of a loan left it open with 0 coins owing: the amount was fixed when the sheet was drawn while interest accrued each second. It is now worked out at the press.
+5. Net worth checked: no error. 9 acres at today's price are 10,55,664 of a new town's 11,50,735. Money and loans now shows "Of that, your land" under it.
+6. Text size Small 80% / Normal / Large 125% (150% removed).
 
 **Retro (Claude):**
 - *Went well:* a coverage test over every row made "every number has a *Why?*" checkable instead of a promise; it found the job-post and garden rows nobody had listed. Pricing Collect all's leftovers on a copy of the town made the prompt exact with no new rules.
 - *To improve:* editing any script while the Editor is playing reloads the domain and breaks the session: batch the fixes, stop, recompile, play. Captures can be a frame stale: capture twice. A card built inside a click handler misses its first touch: open it on the next UI tick (now done for *Why?*).
 - *Carry over:* alert dismissals if playtesters ask (spec 008 §10 note 8); Blender icons for the Menu, alerts and the trolley (the sheets use the basket for now).
+- *Device review lesson:* a view model that bakes a money amount into a button goes stale while time runs, and an unchanged sheet isn't redrawn. Commands that settle "everything owed" compute it at the press. Sheets reached from another sheet need a way back from the start.
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 

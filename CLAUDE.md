@@ -152,6 +152,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0041 | Sprint 6 review: a save holds everything hashed (content by id, one write path); old saves refused and kept until the Sprint 9 playtest build, migrations after; notifications from a simulated absence, ranked, no daily cap, quiet hours, hands' work per 4 h; a gear and Settings sheet; import from a list; regulars always accept; every sprite, the ground, icons and walk cycles in Blender now |
 | 0042 | Weather in 1-hour spells with per-weather persistence: calm weather lasts (sun 1–2 days), severe passes (heavy rain, storm 1–2 h); seasonal shares unchanged; the forecast as runs (Sprint 7, US-184) |
 | 0043 | Sprint 7 review: run lengths per season (Monsoon sun 6 h breaks, dry-season rain 4–6 h); the forecast rolled per run; *Why?* in words on every number (a ? on rows, a coverage test); the Menu (gear gone, People shortcut, ! alerts); Money and loans, founder, good, Buy inputs, mandi panels; the full away card only when something happened; text size, reduced motion, sound, haptics; 7 Kenney CC0 sounds; 25 points |
+| 0044 | Sprint 7 device review: a back button on sheets opened from another sheet; sounds only for town events (no tap or sheet sounds); a *Why?* opens only from its ?; text size 80/100/125%; loan payments priced at the press; net worth kept, with the land on its own row |
 
 ## Current status
 

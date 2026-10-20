@@ -747,7 +747,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 - The game is landscape only, on phones and tablets, in both landscape directions (ADR 0005). Menus work one-handed from bottom sheets, and the main actions (collect all, harvest, build) sit in thumb reach in the bottom corners.
 - Layouts support phone aspect ratios from 16:9 to 21:9, 4:3 tablets, and notch and home-indicator safe areas.
-- Touch targets are at least 44 pt. Every number has a *Why?* in plain words (causes and their effect, never raw factors): tap the **?** on its row, or long-press the number (ADR 0043).
+- Touch targets are at least 44 pt. Every number has a *Why?* in plain words (causes and their effect, never raw factors): tap the **?** beside it (ADR 0043, ADR 0044). A sheet opened from another has a back button. Text size is 80%, 100% or 125%; sounds play only for what happens in the town, never for a tap.
 - Notifications group by importance: urgent (cash, safety), decisions, then information.
 - No decision is ever timed. Big decisions show their consequences before confirming.
 
