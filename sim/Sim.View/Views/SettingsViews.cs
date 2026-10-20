@@ -20,6 +20,15 @@ namespace Sim.View.Views
         public bool PlayLogOn { get; set; }
         public int PlayLogLines { get; set; }
         public int ImportFiles { get; set; }
+
+        // Look and sound (spec 008 §3.13, ADR 0043 §9): kept in the settings file, never in the town.
+        public Sim.View.Text.NumberFormat Numbers { get; set; }
+
+        /// <summary>100, 125 or 150.</summary>
+        public int TextSize { get; set; } = 100;
+        public bool ReducedMotion { get; set; }
+        public bool Sound { get; set; } = true;
+        public bool Haptics { get; set; } = true;
     }
 
     /// <summary>A town file in the Documents folder (spec 007 §3.4, ADR 0041): its header, or why it can't load.</summary>
@@ -61,6 +70,16 @@ namespace Sim.View.Views
         public const string Export = "export";
         public const string ExportLog = "exportLog";
         public const string NewGame = "newGame";
+        public const string NumbersIndian = "numbers:indian";
+        public const string NumbersWestern = "numbers:western";
+
+        /// <summary>A text-size row's id: this prefix and the size in percent.</summary>
+        public const string TextPrefix = "text:";
+        public const string ReducedMotion = "reducedMotion";
+        public const string Sound = "sound";
+        public const string Haptics = "haptics";
+
+        public static readonly int[] TextSizes = { 100, 125, 150 };
 
         /// <summary>An import row's id: this prefix and the file name.</summary>
         public const string ImportPrefix = "import:";
@@ -83,23 +102,41 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             var vm = new SheetVm { Title = s.Get("settings.title"), Icon = "gear" };
             string saved = info.LastSavedWallUtc == 0 ? s.Get("settings.notSaved") : s.Get("settings.lastSaved", "time", WallTime.When(ctx, info.LastSavedWallUtc, info));
-            vm.Lines.Add(Row(s.Get("settings.saved"), saved, new ActionVm(SettingsIds.SaveNow, s.Get("settings.saveNow"), null, ActionKind.Primary, true, null, null)));
+            vm.Lines.Add(Row(s.Get("settings.saved"), saved, new ActionVm(SettingsIds.SaveNow, s.Get("settings.saveNow"), null, ActionKind.Primary, true, null, null), info.LastSavedWallUtc == 0 ? null : "saved"));
             // A switch shows its state (owner, device run): a green On or a red Off; tapping it flips it.
             vm.Lines.Add(Row(s.Get("settings.notifications"), s.Get(info.NotificationsOn ? "settings.notifyOn" : "settings.notifyOff"), Switch(ctx, SettingsIds.Notifications, info.NotificationsOn)));
             vm.Lines.Add(Row(s.Get("settings.playLog"), s.Get(info.PlayLogOn ? "settings.playLogOn" : "settings.playLogOff"), Switch(ctx, SettingsIds.PlayLog, info.PlayLogOn)));
+
+            // Look and sound: one row per choice (ADR 0043 §9).
+            vm.Lines.Add(LineVm.Header(s.Get("settings.numbers")));
+            vm.Lines.Add(Row(s.Get("settings.indian"), s.Get("settings.indianNote"), Choice(ctx, SettingsIds.NumbersIndian, info.Numbers == Sim.View.Text.NumberFormat.Indian)));
+            vm.Lines.Add(Row(s.Get("settings.western"), s.Get("settings.westernNote"), Choice(ctx, SettingsIds.NumbersWestern, info.Numbers == Sim.View.Text.NumberFormat.Western)));
+            vm.Lines.Add(LineVm.Header(s.Get("settings.textSize")));
+            foreach (int size in SettingsIds.TextSizes)
+                vm.Lines.Add(Row(s.Get("settings.text." + size), size.ToString(CultureInfo.InvariantCulture) + "%", Choice(ctx, SettingsIds.TextPrefix + size, info.TextSize == size), "textSize"));
+            vm.Lines.Add(LineVm.Header(s.Get("settings.motionSound")));
+            vm.Lines.Add(Row(s.Get("settings.reducedMotion"), s.Get(info.ReducedMotion ? "settings.reducedMotionOn" : "settings.reducedMotionOff"), Switch(ctx, SettingsIds.ReducedMotion, info.ReducedMotion)));
+            vm.Lines.Add(Row(s.Get("settings.sound"), s.Get(info.Sound ? "settings.soundOn" : "settings.soundOff"), Switch(ctx, SettingsIds.Sound, info.Sound)));
+            vm.Lines.Add(Row(s.Get("settings.haptics"), s.Get(info.Haptics ? "settings.hapticsOn" : "settings.hapticsOff"), Switch(ctx, SettingsIds.Haptics, info.Haptics)));
+            vm.Lines.Add(LineVm.Header(s.Get("settings.files")));
             vm.Lines.Add(Row(s.Get("settings.exportTown"), s.Get("settings.toFiles"),
                 new ActionVm(SettingsIds.Export, s.Get("settings.export"), null, ActionKind.Primary, true, null, null)));
             vm.Lines.Add(Row(s.Get("settings.importTown"), s.Plural("settings.importFiles", info.ImportFiles, "count", ctx.Fmt.Integer(info.ImportFiles)),
-                ActionVm.Open("openImport", s.Get("settings.choose"), new SheetRequest("Import", 0))));
+                ActionVm.Open("openImport", s.Get("settings.choose"), new SheetRequest("Import", 0)), "importFiles"));
             bool hasLog = info.PlayLogLines > 0;
             vm.Lines.Add(Row(s.Get("settings.exportLog"), s.Plural("settings.logLines", info.PlayLogLines, "count", ctx.Fmt.Integer(info.PlayLogLines)),
-                new ActionVm(SettingsIds.ExportLog, s.Get("settings.export"), null, ActionKind.Primary, hasLog, hasLog ? null : s.Get("settings.logEmpty"), null)));
+                new ActionVm(SettingsIds.ExportLog, s.Get("settings.export"), null, ActionKind.Primary, hasLog, hasLog ? null : s.Get("settings.logEmpty"), null), "playLog"));
             vm.Lines.Add(Row(s.Get("settings.newGame"), s.Get("settings.newGameNote"),
                 new ActionVm(SettingsIds.NewGame, s.Get("settings.newGameButton"), null, ActionKind.Danger, true, null, null)));
             return vm;
         }
 
-        internal static LineVm Row(string label, string value, ActionVm action) { return new LineVm(label, value) { Action = action }; }
+        internal static LineVm Row(string label, string value, ActionVm action, string why = null) { return new LineVm(label, value, why) { Action = action }; }
+
+        private static ActionVm Choice(ViewContext ctx, string id, bool chosen)
+        {
+            return chosen ? FounderSheet.Chosen(ctx, id) : new ActionVm(id, ctx.Strings.Get("action.choose"), null, ActionKind.Primary, true, null, null);
+        }
 
         private static ActionVm Switch(ViewContext ctx, string id, bool on)
         {

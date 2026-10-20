@@ -22,11 +22,23 @@ namespace Sim.View.Tests
         {
             ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
             SheetVm vm = SettingsSheet.Build(ctx, Info());
-            Assert.That(vm.Lines.Select(l => l.Label + " | " + l.Value + " | " + l.Action.Label), Is.EqualTo(new[]
+            Assert.That(vm.Lines.Select(l => l.Label + " | " + l.Value + " | " + (l.Action == null ? "-" : l.Action.Label)), Is.EqualTo(new[]
             {
                 "Saved automatically | Last at 13:20 today | Save now",
                 "Notifications | No nudges · tap Off to turn them on | Off",
                 "Play log | Not kept · helps the developer when on | Off",
+                "Numbers |  | -",
+                "Indian: 1,20,000 | Lakh and crore | Chosen",
+                "Western: 120,000 | Thousands and millions | Choose",
+                "Text size |  | -",
+                "Normal | 100% | Chosen",
+                "Large | 125% | Choose",
+                "Larger | 150% | Choose",
+                "Motion and sound |  | -",
+                "Reduced motion | Full motion: bounces and flying coins | Off",
+                "Sound | Little sounds when you harvest and sell | On",
+                "Haptics | A light tap on harvest and sale | On",
+                "Files |  | -",
                 "Export town | A copy to the Files app | Export",
                 "Import a town | 2 town files in Files | Choose",
                 "Export play log | 3 entries | Export",
@@ -34,14 +46,18 @@ namespace Sim.View.Tests
             }));
             Assert.That(vm.Lines.Last().Action.Kind, Is.EqualTo(ActionKind.Danger));
             Assert.That(vm.Lines[1].Action.Kind, Is.EqualTo(ActionKind.Danger), "a switch that is off is a red Off");
-            Assert.That(vm.Lines[4].Action.Opens.Value.Kind, Is.EqualTo("Import"));
+            LineVm Row(SheetVm v, string label) { return v.Lines.Single(l => l.Label == label); }
+            Assert.That(Row(vm, "Import a town").Action.Opens.Value.Kind, Is.EqualTo("Import"));
+            Assert.That(Row(vm, "Large").Action.Id, Is.EqualTo(SettingsIds.TextPrefix + "125"));
+            foreach (LineVm l in vm.Lines.Where(l => l.Value != null && l.Value.Any(char.IsDigit)))
+                Assert.That(WhyView.Has(l.WhyKey), Is.True, "a Why? for " + l.Label);
 
             SheetVm on = SettingsSheet.Build(ctx, new SettingsInfo { NowWallUtc = Wall0, NotificationsOn = true, PlayLogOn = true });
             Assert.That(on.Lines[0].Value, Is.EqualTo("Not saved yet"));
             Assert.That(on.Lines[1].Value + " / " + on.Lines[1].Action.Label, Is.EqualTo("A nudge when crops are ready · never at night / On"));
             Assert.That(on.Lines[1].Action.Kind, Is.EqualTo(ActionKind.Primary), "a switch that is on is a green On");
             Assert.That(on.Lines[2].Action.Label, Is.EqualTo("On"));
-            Assert.That(on.Lines[5].Action.Enabled, Is.False, "an empty play log can't be exported");
+            Assert.That(on.Lines.Single(l => l.Label == "Export play log").Action.Enabled, Is.False, "an empty play log can't be exported");
         }
 
         [Test]

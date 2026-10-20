@@ -59,6 +59,19 @@ namespace Sim.View.Views
             return vm;
         }
 
+        private static WhyVm SimpleWhy(ViewContext ctx, string key)
+        {
+            WhyVm vm = New(ctx, "why." + key + ".title", null);
+            Text(vm, ctx, "why." + key + ".what");
+            return vm;
+        }
+
+        private static WhyVm ImportFiles(ViewContext ctx, long id) { return SimpleWhy(ctx, "importFiles"); }
+
+        private static WhyVm PlayLogWhy(ViewContext ctx, long id) { return SimpleWhy(ctx, "playLog"); }
+
+        private static WhyVm TextSize(ViewContext ctx, long id) { return SimpleWhy(ctx, "textSize"); }
+
         // ---- The founder ------------------------------------------------------------------------------------------------------
 
         private static WhyVm Labour(ViewContext ctx, long id)

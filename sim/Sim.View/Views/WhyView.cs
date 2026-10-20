@@ -59,7 +59,7 @@ namespace Sim.View.Views
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
             { "seasonSoFar", SeasonSoFar },
             // Time and weather (spec 001).
-            { "calendar", CalendarWhy }, { "forecast", Forecast }, { "saved", Saved },
+            { "calendar", CalendarWhy }, { "forecast", Forecast }, { "saved", Saved }, { "importFiles", ImportFiles }, { "playLog", PlayLogWhy }, { "textSize", TextSize },
             // The founder (spec 003).
             { "labour", Labour }, { "health", Health }, { "fatigue", Fatigue }, { "diet", Diet }, { "hours", WorkHoursWhy },
             { "dayLabour", DayLabour }, { "medicine", Medicine },
