@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 6 (saves, notifications, play log, regulars, the full Blender render): built, 26 of 26 points; the device build and run are pending |
-| Branch with latest work | `sprint/06-saves-notifications` (from `main`, which has Sprint 5 / PR #10) |
+| Sprint | Sprint 7 (HUD, Why?, panels, While you were away, Settings, sounds, hourly weather): planning review |
+| Branch with latest work | `sprint/07-hud-panels` (from `main`, which has Sprint 6 / PR #11) |
 | Last updated | 2026-10-20 |
 
 ## Done so far
@@ -100,7 +100,7 @@
   - **Device run 1 (2026-10-19):** every check passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS; 72 h in 2.9 ms). The owner's changes, built the same day as **ADR 0040**: a 2-acre yard (tile 29) with a fence, a tulsi planter, a haystack and a woodpile; hands' huts in a fenced labour quarters (tile 37, parcel `home_c`, two places) instead of on a field (supersedes ADR 0039 §2); an order starts at once (a per-hand action counter); people go round the fields with work, hoe (Blender work pose: stand and work frames alternate) and go home when idle. Gate unchanged in shape; 230 + 40 tests pass. Device run 2 passed (2026-10-19); the owner's two last changes, built the same day: orders are **this season only** or **every season** (the first clears after its harvest), and the founder keeps off fields a hand looks after. 231 + 40 tests pass.
   - **Verified in the Editor with touch** (mouse removed, `Game.Editor.TouchDriver` plays taps and drags through the Input System): People button, Hire, scrolling the sheet, Talk, Offer, See, Let go with Keep them and with Let go, Place it, the ghost drag, Build here, tapping a hut. Development build: Unity build succeeded; the unsigned Xcode Release compile is recorded in the pull request.
 
-- **Sprint 6 (branch `sprint/06-saves-notifications`): 26 of 26 points built; the device build and run are pending.**
+- **Sprint 6 (branch `sprint/06-saves-notifications`, PR #11 merged): 26 of 26 points, done.** Device runs 1 and 2 passed on the iPhone 13 (2026-10-20), notifications included. Run 2's first build lacked the developer panel because it was a Release build; rebuilt as Development.
   - **Planning review (2026-10-19):** 8 gaps decided with the owner, **ADR 0041** (spec 007 §3.1, §3.4, §3.5, §4, §8, §10; spec 006 §3.3, AC-4, §10; spec 008 §10; the GDD; CLAUDE.md; the planning files): a save holds everything hashed (one write path, content by id); old saves refused and kept until the Sprint 9 playtest build; notifications from a simulated absence, ranked, **no daily cap**, quiet hours, hands' work per 4 hours, the 64-pending limit; a gear button and Settings sheet; import from a list in Settings; the first ask as a plain card until the letter; regulars' details; **every sprite, the ground, icons and walk cycles rendered now** (US-171 4 → 8; US-084 2 → 1).
   - **Sim (`Sim.Core.Saves`, 249 tests):** `IStateWriter` is one write path for the hash (`StateHasher`) and the save (`SaveWriter`); every state class has `WriteTo` and `ReadFrom`; `SaveCodec` (header with schema, build, content fingerprint, saved-at, sim time and cash; gzip payload with the content id tables, the state, the replay base and the command log; FNV-1a checksum; `CorruptSave`, `SaveFromNewerVersion`, `SaveTooOld`, `UnknownContentId`); `LiveRun` compaction and the log checkpoint; `SavePoints` over `IFileStore` (atomic temp write, verify, rename; 3 hourly and 3 daily backups; `LoadNewestValid` with fallback; an unreadable town kept); `AutosavePolicy`; `NotificationPlanner` (a simulated absence on a copy of the town); `PlayLog`; regulars (`RegularAsksToMoveIn`, a new neighbour refills the roster). A 10-year save is 116 KB, writes in 12 ms, reads in 3 ms. Golden hashes unchanged. Implementation notes: spec 007 §10.
   - **`Sim.View` (46 tests):** the Settings and Import sheets, the replace, restored, unreadable, notification-ask and regular cards, notification texts (kind, count, crop; never money).
@@ -109,18 +109,19 @@
 
 ## In progress
 
-**Sprint 6 device run 2.** Device run 1 (2026-10-20) passed (golden replays PASS on the iPhone 13; saves, export and import, renders, Settings); the owner's changes are built (spec 006 and 008 §10, Sprint 6 device-run notes): smaller, spaced hands' huts and no doubled hut after a reload; a Store row and **Take off market** for goods a hand put at the market, the order's default minimum rounded down; Settings switches as green **On** / red **Off**; short texts no longer wrap over the line below. Then: the sow sheet's one-sowing Spend / Sells for / Profit and fertiliser cards (spec 008 §3.7, AC-6 updated); people always drawn on top of the land. Notifications are still to be confirmed by the owner (not a blocker).
+**Sprint 7 planning review** (one gap at a time with the owner; decisions go into a new ADR and the specs' §10, with the spec 001 amendment for US-184 for re-approval). No code until the owner approves.
 
 ## Next up
 
-1. **Owner:** a new Development build (delete `unity/FarmToCity/Builds/iOS` first), checks 6, 18b–18e of `docs/test-checklists/s06-saves-notifications.md`; the notification checks when convenient; merge pull request #11.
-2. **Claude:** fix anything run 2 finds; then Sprint 7 planning, starting with **US-184** (ADR 0042: hourly weather spells, per-weather persistence; spec 001 amendment for re-approval, goldens re-pinned) (full HUD, *Why?*, panels, the full *While you were away* card, Settings in the Menu).
+1. **Claude + owner:** finish the Sprint 7 planning review; owner re-approves spec 001 §3.5–3.6 and §4 (ADR 0042).
+2. **Claude:** US-184 first (sim, goldens re-pinned, the gate re-run), then US-080 to US-084 and US-087 test-first (`Sim.Core`, `Sim.View`, Unity), then the Development build and `docs/test-checklists/s07-hud-panels.md`.
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Sprint 6 | ~~Approve the US-171 style checkpoint~~ (done); make the Development build, run its checklist; merge the pull request |
+| Sprint 6 | Done (device runs passed, PR #11 merged) |
+| Sprint 7 | Answer the planning review; re-approve spec 001's weather sections; run the device checklist; merge the pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 

@@ -271,7 +271,7 @@
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 
-- **Status:** Built (26 of 26 points), device run pending. Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
+- **Status:** Done (26 of 26 points; device runs 1 and 2 passed, 2026-10-20). Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
 - **Branch:** `sprint/06-saves-notifications`
 - **Goal:** Saves, notifications and the play log; regulars; every map sprite, the ground, every icon and the walk cycles rendered in Blender (ADR 0039, ADR 0041).
 - **Points:** 26 (16 + US-067 2 + US-171 8; ADR 0041: US-171 4 → 8 for the ground and walk cycles)
@@ -280,13 +280,13 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | Built, device run pending |
-| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
-| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
-| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | Built, device run pending |
-| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | Built, device run pending |
-| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Built, device run pending |
-| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | Built, device run pending |
+| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | Done |
+| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | Done |
+| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | Done |
+| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | Done |
+| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | Done |
+| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Done |
+| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | Done |
 
 **Sprint end checklist**
 
@@ -297,7 +297,7 @@
 
 **Done this sprint (Claude):** the save codec (one write path with the hash, content by id, gzip and checksum; a 10-year save is 116 KB, written in 12 ms and read in 3 ms), live-`Sync` compaction and the log checkpoint, atomic save points with hourly and daily backups and recovery, autosave, export, import from a list, new game, notifications planned from a simulated absence (ranked, grouped, quiet hours, no daily cap), the first-ask card, the play log, regulars, a gear button and Settings sheet; every sprite, the ground, the icons and 4-frame walk cycles rendered in Blender (the style checkpoint approved). 249 `Sim.Core` and 46 `Sim.View` tests pass; golden hashes unchanged. Verified in the Editor with touch: save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. **Not verified in the Editor:** the regular's card (covered by the sim tests; check 19 on the device).
 
-**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 (72 h in 1.4 ms); saves, relaunch, export and import, the renders and Settings work; notifications to be confirmed later (not a blocker). Owner's changes, built the same day: smaller, spaced hands' huts (and a loaded town no longer drew each hand's hut twice); a Store row for goods at the market with **Take off market** (a hand's market order in a glut had left the player with a greyed *Sell* and a wrong reason) and the order's default minimum rounded down; Settings switches as a green **On** / red **Off**; short texts no longer wrap over the line below (Settings, the sow sheet). Then: the sow sheet shows one sowing's Spend, Sells for and Profit (it showed a season's earnings per acre) with fertiliser cards that say what each does; people no longer go under the land at a tile's back or the map's edge.
+**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 (72 h in 1.4 ms); saves, relaunch, export and import, the renders and Settings work; notifications to be confirmed later (not a blocker). Owner's changes, built the same day: smaller, spaced hands' huts (and a loaded town no longer drew each hand's hut twice); a Store row for goods at the market with **Take off market** (a hand's market order in a glut had left the player with a greyed *Sell* and a wrong reason) and the order's default minimum rounded down; Settings switches as a green **On** / red **Off**; short texts no longer wrap over the line below (Settings, the sow sheet). Then: the sow sheet shows one sowing's Spend, Sells for and Profit (it showed a season's earnings per acre) with fertiliser cards that say what each does; people no longer go under the land at a tile's back or the map's edge. **Device run 2 (2026-10-20): every check passed**, notifications included (checks 12–17). The first build of run 2 had no developer panel: it was made without the Development option (a Release build compiles the panel out); rebuilt with `--options '["Development"]'`.
 
 **Retro (Claude):**
 - *Went well:* one write path for the hash and the save means a field can't be hashed and not saved, and the round-trip property test proved it on 50 towns. Planning notifications on a copy of the town made them exact (AC-13 matches a real absence event for event) with no new rules. The Blender rig took the full re-render in a few rounds after the style checkpoint.
