@@ -260,7 +260,7 @@ namespace Game.Presentation.Ui
             row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
             if (line.Action == null)
             {
-                row.Add(UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body));
+                row.Add(WithIcon(line.Icon, 56, UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body)));
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
                 v.style.unityTextAlign = TextAnchor.MiddleRight;
                 v.style.flexShrink = 1;
@@ -294,12 +294,29 @@ namespace Game.Presentation.Ui
                 text.Add(starLine);
             }
             else text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
-            row.Add(text);
+            row.Add(WithIcon(line.Icon, 84, text));
             VisualElement button = ActionColumn(line.Action);
             button.style.alignItems = Align.FlexEnd;
             button.style.flexShrink = 0;
             row.Add(button);
             return row;
+        }
+
+        /// <summary>A good's rendered picture before a row's label, when the row has one (the store).</summary>
+        private static VisualElement WithIcon(string goodId, float size, VisualElement label)
+        {
+            if (goodId == null) return label;
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.style.flexDirection = FlexDirection.Row;
+            box.style.alignItems = Align.Center;
+            box.style.flexShrink = 1;
+            VisualElement pic = UiKit.Icon(IconBank.Good(goodId), size);
+            pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            pic.style.marginRight = 16;
+            pic.style.flexShrink = 0;
+            box.Add(pic);
+            box.Add(label);
+            return box;
         }
 
         private VisualElement ActionColumn(ActionVm a)
@@ -309,7 +326,9 @@ namespace Game.Presentation.Ui
             col.style.maxWidth = 520;
             ActionLook look = a.Kind == ActionKind.Danger ? ActionLook.Danger : a.Kind == ActionKind.Secondary || a.Kind == ActionKind.Open ? ActionLook.Secondary : ActionLook.Primary;
             if (a.Kind == ActionKind.Open) look = ActionLook.Primary;
-            col.Add(UiKit.MakeButton(a.Label, look, () => { if (OnAction != null) OnAction(a); }, a.Detail, a.Enabled));
+            VisualElement button = UiKit.MakeButton(a.Label, look, () => { if (OnAction != null) OnAction(a); }, a.Detail, a.Enabled);
+            button.style.minWidth = 350; // a column of row buttons lines up instead of ragged widths (panel points)
+            col.Add(button);
             if (!a.Enabled && !string.IsNullOrEmpty(a.DisabledReason))
             {
                 Label why = UiKit.Text(a.DisabledReason, 27, UiKit.Warn, UiKit.Body);

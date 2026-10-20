@@ -19,6 +19,8 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 | --- | --- | --- | --- | --- | --- |
 | 1 | US-171 | Open the app; look around the map, then pinch in on the yard | Rendered ground (grass, tilled acres, paths), the house, well, fence, tulsi planter, haystack and woodpile, all in one low-poly style with outlines. HUD icons (cash, store, gear, People) are rendered icons too | | **Screenshot** |
 | 2 | US-171 | Sow wheat, potato and radish; plant a mango; sow a garden bed; use **+1 hour** and **+1 day** to watch them grow | Each crop, tree and bed shows rendered stages from seed to ready, and the ready bubble appears. Nothing is left as a painted placeholder | | **Screenshot** of a growing farm |
+| 2b | US-171 | Plant all four trees in the yard and on field edges; use **+1 day** until they are grown and fruiting | Saplings stand in a dug watering basin; the banana's leaves fan round it with no blob in the middle; papaya, guava and mango fruit is easy to see. In the yard no tree hides behind the house roof. Ready bubbles sit just on top of the bed, field or tree they mark | | **Screenshot** of the yard |
+| 2c | US-171 | Open **Store**, a tree place and a garden bed | Each good, tree and garden crop row shows its picture (a bowl of rice, a bunch of spinach…); the *Sell* and *Plant* buttons line up in one column. A field's sheet says "Soil for crops: Good" (a word, not a number) | | |
 | 3 | US-171 | Hire a day labourer and watch people move between the fields | The founder, labourers and hands walk with a **4-frame walk cycle** (legs and arms move), facing the way they walk (front or back), and hoe at the fields | | Natural? |
 | 4 | US-073 | Sow two fields and note the cash. Press Home, then swipe the app away in the app switcher. Open it again | The same town: the same fields, crops, cash and people. No new game | | |
 | 5 | US-074 | Tap something (sow a field), then **at once** press Home and swipe the app away | On relaunch the sowing is there (the background save caught it) | | |
@@ -43,7 +45,7 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 
 ## What to report
 
-- Screenshots of checks 1, 2, 6, 13, 19 and 21.
+- Screenshots of checks 1, 2, 2b, 6, 13, 19 and 21.
 - Whether the town ever came back different from how you left it (check 4, 5, 22): what was different.
 - The notifications you got over a day: how many, when, and whether any felt like noise or came at night.
 - How the rendered art looks at game scale: anything that looks off, too small, too busy, or still placeholder.

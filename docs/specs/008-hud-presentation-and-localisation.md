@@ -442,6 +442,14 @@ None of these changes a rule or a lesson.
 
 - **Settings before the Menu:** a round gear button under the Store chip opens a full-height Settings sheet (one row per choice with its button: last saved and *Save now*, Notifications, Play log, *Export town*, *Import a town*, *Export play log*, *New game…* with *Export first*, *Replace*, *Cancel*). Sprint 7 adds the Menu entry and the rest of §3.13.
 - **Art:** every map sprite, the ground, every icon and the people's walk cycles are Blender renders by the end of Sprint 6; the seasonal tint stays in code.
+
+### Implementation notes (Sprint 6 Editor art review, 2026-10-20)
+
+1. **Pictures on rows:** a good's rendered icon before the label on the Store's rows, the tree sheet's planting rows (the fruit) and the garden bed's sowing rows (the produce) (`LineVm.Icon`). The sow sheet's crop cards stay text for now.
+2. **Soil as a word:** the field sheet's soil row reads "Soil for crops: Good / Fair / Poor" (the `ui.json` rating thresholds), no longer the raw soil factor; the *Why?* key stays `soil`.
+3. **Markers stand on what they mark:** a ready, spoiling or pest bubble sits at the top of its sprite (a bed, a field's plants, a tree's crown) whatever the stage, and nearer bubbles draw in front of farther ones.
+4. **Yard tree places:** two on the house acre (its left corner, and in front of the house beside the well) and two on the front acre (its left corner, and its bottom corner clear of the beds and the woodpile), so no grown tree hides behind the roof.
+5. **Row buttons** have one minimum width, so a column of *Sell* or *Plant* buttons lines up.
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

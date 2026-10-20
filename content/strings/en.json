@@ -284,7 +284,7 @@
   "field.bought": "Land you bought",
   "field.fertility": "Fertility",
   "field.moisture": "Moisture",
-  "field.soilFactor": "Soil factor",
+  "field.soilFactor": "Soil for crops",
   "field.well": "Well acre",
   "field.wellNote": "You carry buckets from the well, so it never dries out.",
   "field.growing": "{crop}, growing",

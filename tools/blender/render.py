@@ -869,6 +869,25 @@ def model_crop(crop, stage):
 
 # ---------------------------------------------------------------- trees (ADR 0041 §8)
 
+def model_sapling(bark_hex, leaf_hexes, leaf_len, leaf_w):
+    """A grafted sapling just planted: one slender stem with tiers of leaves, in a watering basin (thala) of dug earth."""
+    import random
+    rnd = random.Random(23)
+    bark = toon("saplingBark", bark_hex)
+    o = [cylinder("basin", 0.085, 0.085, 0.012, (0, 0, 0.006), toon("basinSoil", 0x7A5232), segs=16, outline=False),
+         cylinder("bund", 0.10, 0.092, 0.02, (0, 0, 0.01), toon("basinBund", 0xA77D53), segs=16),
+         cylinder("basinTop", 0.084, 0.084, 0.022, (0, 0, 0.011), toon("basinSoil", 0x7A5232), segs=16, outline=False)]
+    o.append(cylinder("stem", 0.008, 0.005, 0.24, (0, 0, 0.12), bark, segs=6, rot=Matrix.Rotation(math.radians(4), 3, "X")))
+    b = Batch("sapling")
+    mats = [toon("saplingLeaf%d" % i, h) for i, h in enumerate(leaf_hexes)]
+    for t, (z, n) in enumerate(((0.12, 3), (0.17, 4), (0.215, 4), (0.245, 3))):
+        for i in range(n):
+            a = i * math.tau / n + t * 0.7 + rnd.uniform(-0.2, 0.2)
+            leaf(b, mats[(i + t) % 2], math.cos(a) * 0.006, math.sin(a) * 0.006, z, leaf_len * (0.8 if t == 3 else 1.0), leaf_w, a, 0.55 - 0.25 * (t < 2))
+    o += b.objects(outline_for=tuple(b.parts), thickness=OUTLINE * 0.7)
+    return group(o, scale=BUILDING_SCALE)
+
+
 def model_mango(stage):
     """A mango tree: a stout trunk with three limbs and a dense dome of dark leaves; in fruit, mangoes hang under the canopy."""
     import random
@@ -877,12 +896,7 @@ def model_mango(stage):
     bark, dark, mid, light = toon("bark", 0x7A4E2E), toon("mangoDark", 0x2F7A35), toon("mangoMid", 0x3F9440), toon("mangoLight", 0x63AE4A)
     o = []
     if stage == "sapling":
-        o.append(cylinder("stem", 0.010, 0.006, 0.16, (0, 0, 0.08), bark, segs=6))
-        for i in range(5):
-            a = i * math.tau / 5
-            o.append(sphere("leaf%d" % i, 0.03, (math.cos(a) * 0.03, math.sin(a) * 0.03, 0.15 + (i % 2) * 0.02), mid, scale=(1.4, 0.6, 0.35), segs=8, rings=5))
-        o.append(cylinder("stake", 0.004, 0.004, 0.18, (0.03, 0.02, 0.09), toon("bamboo", BAMBOO), segs=5))
-        return group(o, scale=BUILDING_SCALE)
+        return model_sapling(0x7A4E2E, (0x3F9440, 0x2F7A35), 0.075, 0.022)
     h = 0.30 * k
     o.append(cylinder("trunk", 0.045 * k, 0.03 * k, h, (0, 0, h / 2), bark, segs=10, smooth=True))
     for i in range(3):
@@ -978,9 +992,11 @@ def model_banana(stage):
     b = Batch("banana")
     n = 7 if k > 0.5 else 4
     top = 0.30 * k
+    # No leaf points at the camera (from +x, -y): seen end-on a paddle leaf is a shapeless blob. They fan round the sides and back.
+    cam = math.radians(-45)
     for i in range(n):
-        a = i * math.tau / n + rnd.uniform(-0.2, 0.2)
-        mat = dry if (i == n - 1 and k == 1.0) else (leaf_mat if i % 2 else leaf_dark)
+        a = cam + math.radians(40) + i * math.radians(280) / (n - 1) + rnd.uniform(-0.12, 0.12)
+        mat = leaf_mat if i % 2 else leaf_dark
         # A long paddle in two parts: the inner half rises steeply, the outer half arches over and droops.
         rise = rnd.uniform(0.75, 1.05)
         L = 0.17 * k
@@ -988,6 +1004,8 @@ def model_banana(stage):
         ex, ey, ez = math.cos(a) * L * math.cos(rise), math.sin(a) * L * math.cos(rise), top + L * math.sin(rise)
         leaf(b, mat, ex, ey, ez, L * 1.1, 0.10 * k, a, -rnd.uniform(0.35, 0.7))
         b.cone(stem, 0.006 * k, 0.004 * k, L, Matrix.Translation((0, 0, top)) @ Vector((math.cos(a) * math.cos(rise), math.sin(a) * math.cos(rise), math.sin(rise))).to_track_quat("Z", "Y").to_matrix().to_4x4(), segs=4)
+    if k == 1.0:  # an old leaf, dried, hangs down the stem at the side
+        leaf(b, dry, 0, 0, top - 0.01, 0.2, 0.08, cam + math.radians(95), -1.25)
     o += b.objects(outline_for=tuple(m for m in b.parts if m is not stem), thickness=OUTLINE * 0.7)
     if stage == "ripe":
         # The bunch hangs from the crown on a curved stalk, at the front where the camera sees it, tiers of fingers pointing up.
@@ -1026,8 +1044,8 @@ def model_papaya(stage):
     if stage == "ripe":
         # Fruit hugs the trunk just under the crown, mostly on the side the camera sees.
         for i in range(9):
-            a = math.radians(-45) + (i % 5 - 2) * 0.6
-            o.append(sphere("papaya%d" % i, 0.03, (math.cos(a) * 0.045, math.sin(a) * 0.045, h - 0.035 - (i // 5) * 0.06),
+            a = math.radians(-45) + (i % 5 - 2) * 0.55
+            o.append(sphere("papaya%d" % i, 0.036, (math.cos(a) * 0.05, math.sin(a) * 0.05, h - 0.06 - (i // 5) * 0.07),
                             toon("papayaFruit%d" % (i % 3 == 0), (0xF2A23A, 0x9CC24A)[i % 3 == 0]), scale=(0.8, 0.8, 1.3), segs=10, rings=6))
     return group(o, scale=BUILDING_SCALE)
 
@@ -1037,12 +1055,7 @@ def model_guava(stage):
     import random
     rnd = random.Random(17)
     if stage == "sapling":
-        o = [cylinder("stem", 0.009, 0.006, 0.14, (0, 0, 0.07), toon("guavaBark", 0xA9805A), segs=6)]
-        for i in range(5):
-            a = i * math.tau / 5
-            o.append(sphere("leaf%d" % i, 0.028, (math.cos(a) * 0.03, math.sin(a) * 0.03, 0.13 + (i % 2) * 0.02), toon("guavaLeaf", 0x6BB04A), scale=(1.4, 0.6, 0.35), segs=8, rings=5))
-        o.append(cylinder("stake", 0.004, 0.004, 0.16, (0.03, 0.02, 0.08), toon("bamboo", BAMBOO), segs=5))
-        return group(o, scale=BUILDING_SCALE)
+        return model_sapling(0xA9805A, (0x86C25A, 0x67AA45), 0.058, 0.032)
     k = 0.6 if stage == "young" else 0.85
     bark, light, mid = toon("guavaBark", 0xA9805A), toon("guavaLight", 0x86C25A), toon("guavaMid", 0x67AA45)
     o = []
@@ -1054,8 +1067,8 @@ def model_guava(stage):
     if stage == "ripe":
         for i in range(12):
             a = math.radians(-45) + math.radians(rnd.uniform(-85, 85))
-            r = rnd.uniform(0.15, 0.2) * k
-            o.append(sphere("guava%d" % i, 0.022, (math.cos(a) * r, math.sin(a) * r, cz + rnd.uniform(-0.1, 0.0) * k), toon("guavaFruit%d" % (i % 2), (0xD8E07A, 0xC7D45E)[i % 2]), segs=10, rings=6))
+            r = rnd.uniform(0.19, 0.23) * k
+            o.append(sphere("guava%d" % i, 0.026, (math.cos(a) * r, math.sin(a) * r, cz + rnd.uniform(-0.12, 0.01) * k), toon("guavaFruit%d" % (i % 2), (0xF0E27A, 0xE2D45A)[i % 2]), segs=10, rings=6))
     return group(o, scale=BUILDING_SCALE)
 
 
@@ -1191,18 +1204,27 @@ def star_mesh(name, r_out, r_in, depth, mat, loc=(0, 0, 0), points=5, **kw):
     return poly_mesh(name, v3, faces, mat, **kw)
 
 
-def bowl(o, contents_hex, grain=0.009, n=34, seed=3):
-    """A brass katori heaped with grain or dal."""
+def bowl(o, contents_hex, grain=0.009, n=70, seed=3):
+    """A deep brass katori heaped above its rim with grain or dal: deep enough to read as a bowl, not a pie."""
     import random
     rnd = random.Random(seed)
-    o.append(cylinder("bowl", 0.10, 0.07, 0.05, (0, 0, 0.025), toon("brass", 0xD9A93C), segs=24, smooth=True))
-    o.append(cylinder("bowlRim", 0.102, 0.102, 0.008, (0, 0, 0.05), toon("brassDark", 0xB8862A), segs=24, outline=False))
-    o.append(sphere("heap", 0.09, (0, 0, 0.045), toon("heap", contents_hex), scale=(1, 1, 0.45), segs=18, rings=8))
+    brass, brass_dark = toon("brass", 0xD9A93C), toon("brassDark", 0xB8862A)
+    o.append(cylinder("bowl", 0.062, 0.10, 0.075, (0, 0, 0.0525), brass, segs=24, smooth=True))   # narrow at the foot, wide at the rim
+    o.append(sphere("belly", 0.064, (0, 0, 0.022), brass, scale=(1, 1, 0.45), segs=20, rings=8))
+    o.append(cylinder("foot", 0.042, 0.046, 0.014, (0, 0, 0.004), brass_dark, segs=20))
+    o.append(cylinder("rim", 0.098, 0.098, 0.008, (0, 0, 0.09), brass_dark, segs=24, outline=False))
+    o.append(sphere("heap", 0.094, (0, 0, 0.088), toon("heap", contents_hex), scale=(1, 1, 0.62), segs=20, rings=10))
     for i in range(n):
-        a, r = rnd.uniform(0, math.tau), rnd.uniform(0, 0.075)
-        o.append(sphere("grain%d" % i, grain, (math.cos(a) * r, math.sin(a) * r, 0.045 + 0.04 * (1 - (r / 0.09) ** 2)), toon("grain", contents_hex),
-                        scale=(1.3, 0.9, 0.7), segs=6, rings=4, outline=False))
+        a, r = rnd.uniform(0, math.tau), 0.088 * math.sqrt(rnd.uniform(0, 1))
+        z = 0.088 + 0.058 * math.sqrt(max(0.0, 1 - (r / 0.094) ** 2))
+        o.append(sphere("grain%d" % i, grain, (math.cos(a) * r, math.sin(a) * r, z), toon("grain%d" % (i % 2), (contents_hex, shade(contents_hex, 0.86))[i % 2]),
+                        scale=(1.35, 0.9, 0.7), segs=6, rings=4, outline=False))
     return o
+
+
+def shade(hexv, f):
+    """A colour darkened by the factor f."""
+    return (int(((hexv >> 16) & 255) * f) << 16) | (int(((hexv >> 8) & 255) * f) << 8) | int((hexv & 255) * f)
 
 
 def leaf_obj(name, loc, length, width, direction, tilt, mat):
@@ -1230,19 +1252,36 @@ def icon_good(good):
             o.append(sphere("potato%d" % i, 0.06, (x, y, z), toon("potato", 0xC59A5A), scale=(1.25, 1, 0.85), segs=14, rings=9))
             o.append(sphere("eye%d" % i, 0.006, (x + 0.02, y - 0.05, z + 0.01), toon("potatoEye", 0x8C6A3A), segs=6, rings=4, outline=False))
     elif good in ("spinach", "coriander"):
-        mat_a, mat_b = (toon("spinach", 0x2E8E45), toon("spinach2", 0x3FA455)) if good == "spinach" else (toon("dhania", 0x86D45E), toon("dhaniaMid", 0x68B848))
-        for i in range(7):
-            a = (i - 3) * 0.28
-            m = Matrix.Rotation(a, 3, "Y")
-            o.append(cylinder("stem%d" % i, 0.004, 0.004, 0.16, tuple(m @ Vector((0, 0, 0.08))), toon("stem", 0x6FA03A), segs=5, rot=m))
-            top = m @ Vector((0, 0, 0.17))
-            if good == "spinach":
-                o.append(sphere("blade%d" % i, 0.05, tuple(top), mat_a if i % 2 else mat_b, scale=(0.7, 0.25, 1.1), segs=10, rings=6))
-            else:
-                for q in range(3):
-                    o.append(sphere("lacy%d%d" % (i, q), 0.022, tuple(top + m @ Vector(((q - 1) * 0.02, 0, 0.0))), mat_a if (i + q) % 2 else mat_b, scale=(1, 0.4, 0.8), segs=8, rings=5))
-        o.append(cylinder("tie", 0.022, 0.022, 0.02, (0, 0, 0.05), toon("tie", 0xB4572E), segs=12))
-        return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+        # A market bunch (gaddi): stems gathered and tied, leaves opening upward all round, not a flat fan.
+        import random
+        rnd = random.Random(31)
+        stem_mat = toon("stem", 0x6FA03A)
+        if good == "spinach":
+            mats, n, L, W = (toon("spinach", 0x2E8E45), toon("spinach2", 0x3FA455)), 11, 0.15, 0.085
+        else:
+            mats, n, L, W = (toon("dhania", 0x86D45E), toon("dhaniaMid", 0x68B848)), 13, 0.0, 0.0
+            for i in range(5):  # coriander comes to market with its roots on
+                ra = i * math.tau / 5
+                o.append(cylinder("root%d" % i, 0.004, 0.002, 0.05, (math.cos(ra) * 0.006, math.sin(ra) * 0.006, -0.02), toon("root", 0xD9C7A0),
+                                  segs=4, rot=Matrix.Rotation(0.4, 3, Vector((-math.sin(ra), math.cos(ra), 0)))))
+        b = Batch("bunch")
+        for i in range(n):
+            ga = i * 2.39996 + rnd.uniform(-0.2, 0.2)          # golden-angle spread round the bunch
+            tilt = rnd.uniform(1.0, 1.35)                       # steeply up, a little open
+            d = Vector((math.cos(ga) * math.cos(tilt), math.sin(ga) * math.cos(tilt), math.sin(tilt)))
+            stem_len = rnd.uniform(0.07, 0.10)
+            b.cone(stem_mat, 0.0045, 0.003, stem_len, d.to_track_quat("Z", "Y").to_matrix().to_4x4(), segs=4)
+            tip = d * stem_len
+            if good == "spinach":   # broad, spoon-shaped blades
+                leaf(b, mats[i % 2], tip.x, tip.y, tip.z, L * rnd.uniform(0.85, 1.1), W, ga, tilt - 0.15, rot=rnd.uniform(-0.3, 0.3))
+            else:                   # lacy sprigs: clusters of small round leaflets
+                for q in range(8):
+                    t = tip + d * (q * 0.008) + Vector((math.cos(ga + q * 1.3), math.sin(ga + q * 1.3), 0)) * rnd.uniform(0.008, 0.02)
+                    b.sphere(mats[(i + q) % 2], 0.0105, Matrix.Translation(t) @ Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 1)).to_track_quat("Z", "Y").to_matrix().to_4x4(),
+                             scale=(1.15, 0.9, 0.35), segs=9, rings=4)
+        o += b.objects(outline_for=tuple(m for m in b.parts if m is not stem_mat), thickness=OUTLINE * 0.8)
+        o.append(cylinder("tie", 0.017, 0.017, 0.016, (0, 0, 0.022), toon("tie", 0xB4572E), segs=12))
+        return o
     elif good == "banana":
         for i in range(4):
             a = (i - 1.5) * 0.35
@@ -1280,10 +1319,25 @@ def icon_input(kind):
         for i in range(5):
             o += leaf_obj("l%d" % i, (0, 0, 0.13 + i * 0.022), 0.07, 0.035, i * 2.4, 0.35, toon("leafG", 0x5DAA45) if i % 2 else toon("leafD", 0x3F8E3A))
     elif kind == "compost":
-        o.append(cylinder("basket", 0.10, 0.075, 0.07, (0, 0, 0.035), toon("cane", 0xB8873E), segs=18, smooth=True))
-        o.append(sphere("heap", 0.095, (0, 0, 0.07), toon("compost", 0x4E3422), scale=(1, 1, 0.5), segs=16, rings=8))
-        for i in range(4):
-            o += leaf_obj("dry%d" % i, (0.02 * i - 0.03, -0.02, 0.1), 0.05, 0.025, i * 1.7, 0.2, toon("dryLeaf", 0xA8874A))
+        # A cane basket (tokri) heaped high with crumbly dark compost, a few bits of straw in it: a mound, not a flat disc.
+        import random
+        rnd = random.Random(41)
+        cane, cane_dark = toon("cane", 0xC08F48), toon("caneDark", 0x9A6E32)
+        o.append(cylinder("basket", 0.07, 0.10, 0.08, (0, 0, 0.04), cane, segs=20, smooth=True))
+        for i in range(3):   # woven bands
+            r = 0.073 + 0.0095 * (2 * i + 1)
+            o.append(cylinder("band%d" % i, r, r + 0.003, 0.008, (0, 0, 0.012 + i * 0.026), cane_dark, segs=20, outline=False))
+        o.append(cylinder("rim", 0.103, 0.103, 0.012, (0, 0, 0.08), cane_dark, segs=20))
+        o.append(sphere("heap", 0.095, (0, 0, 0.08), toon("compost", 0x4E3422), scale=(1, 1, 0.75), segs=18, rings=9))
+        clods = (toon("compost1", 0x3E2818), toon("compost2", 0x6A4A30))
+        for i in range(26):
+            a, r = rnd.uniform(0, math.tau), 0.085 * math.sqrt(rnd.uniform(0, 1))
+            z = 0.08 + 0.071 * math.sqrt(max(0.0, 1 - (r / 0.095) ** 2))
+            o.append(sphere("clod%d" % i, rnd.uniform(0.010, 0.017), (math.cos(a) * r, math.sin(a) * r, z), clods[i % 2], scale=(1.2, 1, 0.7), segs=6, rings=4, outline=False))
+        for i in range(6):
+            a = rnd.uniform(0, math.tau)
+            o.append(cylinder("straw%d" % i, 0.003, 0.003, 0.07, (math.cos(a) * 0.04, math.sin(a) * 0.04, 0.13), toon("straw", 0xE2C26A), segs=4, outline=False,
+                              rot=Matrix.Rotation(1.25, 3, Vector((-math.sin(a), math.cos(a), 0)))))
     elif kind == "fertiliser":
         o.append(box("bag", (0.15, 0.08, 0.20), (0, 0, 0.10), toon("sackWhite", 0xF0EEE6), bevel=0.02))
         o.append(box("band", (0.152, 0.082, 0.04), (0, 0, 0.13), toon("sackBand", 0x3F8E3A), outline=False))

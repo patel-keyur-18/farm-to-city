@@ -989,31 +989,31 @@
    "name": "sign_sale"
   },
   {
-   "w": 336,
-   "h": 318,
-   "pivotX": 0.46232,
-   "pivotY": 0.14442,
+   "w": 342,
+   "h": 322,
+   "pivotX": 0.47231,
+   "pivotY": 0.14259,
    "name": "tree_banana_mature"
   },
   {
-   "w": 336,
-   "h": 318,
-   "pivotX": 0.46232,
-   "pivotY": 0.14442,
+   "w": 342,
+   "h": 322,
+   "pivotX": 0.47231,
+   "pivotY": 0.14259,
    "name": "tree_banana_ripe"
   },
   {
    "w": 148,
    "h": 156,
-   "pivotX": 0.49687,
-   "pivotY": 0.25148,
+   "pivotX": 0.49174,
+   "pivotY": 0.25341,
    "name": "tree_banana_sapling"
   },
   {
-   "w": 244,
-   "h": 232,
-   "pivotX": 0.46573,
-   "pivotY": 0.18376,
+   "w": 248,
+   "h": 234,
+   "pivotX": 0.47483,
+   "pivotY": 0.1809,
    "name": "tree_banana_young"
   },
   {
@@ -1024,17 +1024,17 @@
    "name": "tree_guava_mature"
   },
   {
-   "w": 268,
+   "w": 288,
    "h": 288,
-   "pivotX": 0.49636,
+   "pivotX": 0.51249,
    "pivotY": 0.14966,
    "name": "tree_guava_ripe"
   },
   {
-   "w": 130,
-   "h": 156,
-   "pivotX": 0.50604,
-   "pivotY": 0.24772,
+   "w": 180,
+   "h": 238,
+   "pivotX": 0.5,
+   "pivotY": 0.26494,
    "name": "tree_guava_sapling"
   },
   {
@@ -1059,10 +1059,10 @@
    "name": "tree_mango_ripe"
   },
   {
-   "w": 132,
-   "h": 166,
-   "pivotX": 0.50595,
-   "pivotY": 0.23284,
+   "w": 180,
+   "h": 248,
+   "pivotX": 0.5,
+   "pivotY": 0.25501,
    "name": "tree_mango_sapling"
   },
   {

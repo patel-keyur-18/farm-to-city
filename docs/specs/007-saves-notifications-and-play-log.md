@@ -238,7 +238,7 @@ All six were answered in the review with the owner (2026-10-18):
 ### Sprint 6 implementation notes (2026-10-20)
 
 1. **Migration tests wait for Sprint 9.** Until the playtest build, `schemaVersion` and `minSchema` rise together, so AC-3 tests the refusals (`SaveTooOld`, `SaveFromNewerVersion`) and the kept `town.unreadable-<local date>.ftc`. The "schema 1 loads at schema 2" part gets its test with the first real migration.
-2. **The settings file is `PlayerPrefs`** (iOS's own preferences file): `notify.on`, `notify.asked` (0–2) and `playlog.on`. None of it is in the town or its hash.
+2. **The settings file is `PlayerPrefs`** (iOS's own preferences file): `notify.on`, `notify.asked` (0–2), `playlog.on` and the camera (`camera.x`, `camera.y`, `camera.h`). None of it is in the town or its hash.
 3. **Saves live in iOS `Library/Saves`.** On iOS, `Application.persistentDataPath` is Documents, which the Files app shows, so the town is kept elsewhere: the player can't move or delete `town.ftc`, its backups or `playlog.jsonl` by accident. Documents holds only exports and files to import.
 4. **The unreadable copy is also copied to Documents,** so the player can export it from Files and the developer can read it. The original stays in `Library/Saves`.
 5. **AC-6 uses one-minute live Syncs,** not one-second ones, to keep the 10-year test under a few seconds. Live runs compact them the same way, and AC-5 covers the one-second case. Measured: a 10-year save is 116 KB, writes in 12 ms and reads in 3 ms.

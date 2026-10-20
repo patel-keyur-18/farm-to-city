@@ -34,7 +34,7 @@ namespace Sim.View.Views
             vm.Subtitle = ctx.Strings.Get(parcel.Protected ? "field.inherited" : "field.bought");
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Integer(tile.Fertility.RoundToLong()) + " / 100", "fertility"));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100"));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Fmt.Factor(LandRules.SoilFactor(sim, tile)), "soil"));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil")); // a word, not a factor (spec 008 §10)
             if (LandSystem.IsWellTile(defs, tileId)) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.well"), ctx.Strings.Get("field.wellNote")));
 
             if (crop == null)
@@ -126,7 +126,8 @@ namespace Sim.View.Views
                 foreach (GardenCropDef crop in defs.Farm.GardenCrops)
                 {
                     GardenCropDef c = crop;
-                    var line = new LineVm(ctx.Strings.Get(c.NameKey), ctx.Strings.Get("garden.readyIn", "time", ctx.Fmt.Duration(c.GrowthMinutes * 60L)));
+                    var line = new LineVm(ctx.Strings.Get(c.NameKey), ctx.Strings.Get("garden.readyIn", "time", ctx.Fmt.Duration(c.GrowthMinutes * 60L)))
+                    { Icon = ctx.Sim.Config.Game.Market.Goods[c.Good].Id };
                     line.Action = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sow"), null, ActionKind.Primary, at => new SowGarden(at, bedId, c.Id));
                     vm.Lines.Add(line);
                 }
@@ -165,7 +166,8 @@ namespace Sim.View.Views
                     TreeDef d = def;
                     long cost = MarketRules.Value(sim, d.SaplingGood, 1, MarketRules.InputPrice(sim, d.SaplingGood));
                     var line = new LineVm(ctx.Strings.Get(d.NameKey),
-                        ctx.Strings.Get("slot.treeInfo", "seasons", SeasonsText(ctx, d.FruitingSeasons), "time", ctx.Fmt.Duration(d.GrowthSeconds)));
+                        ctx.Strings.Get("slot.treeInfo", "seasons", SeasonsText(ctx, d.FruitingSeasons), "time", ctx.Fmt.Duration(d.GrowthSeconds)))
+                    { Icon = defs.Market.Goods[d.FruitGood].Id };
                     line.Action = ActionVm.Checked(ctx, "plant:" + d.Id, ctx.Strings.Get("action.plant"), ctx.Fmt.Coins(cost), ActionKind.Primary,
                         at => new PlantTree(at, slotId, d.Id));
                     vm.Lines.Add(line);
