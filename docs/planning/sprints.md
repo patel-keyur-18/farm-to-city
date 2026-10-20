@@ -271,7 +271,7 @@
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 
-- **Status:** In progress. Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
+- **Status:** Built (26 of 26 points), device run pending. Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
 - **Branch:** `sprint/06-saves-notifications`
 - **Goal:** Saves, notifications and the play log; regulars; every map sprite, the ground, every icon and the walk cycles rendered in Blender (ADR 0039, ADR 0041).
 - **Points:** 26 (16 + US-067 2 + US-171 8; ADR 0041: US-171 4 → 8 for the ground and walk cycles)
@@ -280,24 +280,29 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | To do |
-| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
-| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
-| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | To do |
-| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | To do |
-| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
-| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | To do |
+| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | Built, device run pending |
+| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
+| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
+| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | Built, device run pending |
+| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | Built, device run pending |
+| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Built, device run pending |
+| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | Built, device run pending |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s06-saves-notifications.md`)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened; owner merges to `main`
+
+**Done this sprint (Claude):** the save codec (one write path with the hash, content by id, gzip and checksum; a 10-year save is 116 KB, written in 12 ms and read in 3 ms), live-`Sync` compaction and the log checkpoint, atomic save points with hourly and daily backups and recovery, autosave, export, import from a list, new game, notifications planned from a simulated absence (ranked, grouped, quiet hours, no daily cap), the first-ask card, the play log, regulars, a gear button and Settings sheet; every sprite, the ground, the icons and 4-frame walk cycles rendered in Blender (the style checkpoint approved). 249 `Sim.Core` and 46 `Sim.View` tests pass; golden hashes unchanged. Verified in the Editor with touch: save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. **Not verified in the Editor:** the regular's card (covered by the sim tests; check 19 on the device).
 
 **Review (owner's device results):** —
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* one write path for the hash and the save means a field can't be hashed and not saved, and the round-trip property test proved it on 50 towns. Planning notifications on a copy of the town made them exact (AC-13 matches a real absence event for event) with no new rules. The Blender rig took the full re-render in a few rounds after the style checkpoint.
+- *To improve:* the device build's Development flag: `unity command build --options` needs a JSON array (`'["Development"]'`). A plain string is rejected, and `build_status` then still shows the previous build's success. Check a build's options and time before handing it over.
+- *Carry over:* migrations with tests from the Sprint 9 playtest build (ADR 0041 §2); the letter takes over the notification ask (Sprint 8); the Menu entry for Settings (Sprint 7).
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 

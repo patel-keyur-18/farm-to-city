@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 6 (saves, notifications, play log, regulars, the full Blender render) in progress: planning review done (ADR 0041) |
+| Sprint | Sprint 6 (saves, notifications, play log, regulars, the full Blender render): built, 26 of 26 points; the device build and run are pending |
 | Branch with latest work | `sprint/06-saves-notifications` (from `main`, which has Sprint 5 / PR #10) |
-| Last updated | 2026-10-19 |
+| Last updated | 2026-10-20 |
 
 ## Done so far
 
@@ -100,19 +100,27 @@
   - **Device run 1 (2026-10-19):** every check passed on the iPhone 13 (golden replays 001, 003, 004, 005 PASS; 72 h in 2.9 ms). The owner's changes, built the same day as **ADR 0040**: a 2-acre yard (tile 29) with a fence, a tulsi planter, a haystack and a woodpile; hands' huts in a fenced labour quarters (tile 37, parcel `home_c`, two places) instead of on a field (supersedes ADR 0039 §2); an order starts at once (a per-hand action counter); people go round the fields with work, hoe (Blender work pose: stand and work frames alternate) and go home when idle. Gate unchanged in shape; 230 + 40 tests pass. Device run 2 passed (2026-10-19); the owner's two last changes, built the same day: orders are **this season only** or **every season** (the first clears after its harvest), and the founder keeps off fields a hand looks after. 231 + 40 tests pass.
   - **Verified in the Editor with touch** (mouse removed, `Game.Editor.TouchDriver` plays taps and drags through the Input System): People button, Hire, scrolling the sheet, Talk, Offer, See, Let go with Keep them and with Let go, Place it, the ghost drag, Build here, tapping a hut. Development build: Unity build succeeded; the unsigned Xcode Release compile is recorded in the pull request.
 
+- **Sprint 6 (branch `sprint/06-saves-notifications`): 26 of 26 points built; the device build and run are pending.**
+  - **Planning review (2026-10-19):** 8 gaps decided with the owner, **ADR 0041** (spec 007 §3.1, §3.4, §3.5, §4, §8, §10; spec 006 §3.3, AC-4, §10; spec 008 §10; the GDD; CLAUDE.md; the planning files): a save holds everything hashed (one write path, content by id); old saves refused and kept until the Sprint 9 playtest build; notifications from a simulated absence, ranked, **no daily cap**, quiet hours, hands' work per 4 hours, the 64-pending limit; a gear button and Settings sheet; import from a list in Settings; the first ask as a plain card until the letter; regulars' details; **every sprite, the ground, icons and walk cycles rendered now** (US-171 4 → 8; US-084 2 → 1).
+  - **Sim (`Sim.Core.Saves`, 249 tests):** `IStateWriter` is one write path for the hash (`StateHasher`) and the save (`SaveWriter`); every state class has `WriteTo` and `ReadFrom`; `SaveCodec` (header with schema, build, content fingerprint, saved-at, sim time and cash; gzip payload with the content id tables, the state, the replay base and the command log; FNV-1a checksum; `CorruptSave`, `SaveFromNewerVersion`, `SaveTooOld`, `UnknownContentId`); `LiveRun` compaction and the log checkpoint; `SavePoints` over `IFileStore` (atomic temp write, verify, rename; 3 hourly and 3 daily backups; `LoadNewestValid` with fallback; an unreadable town kept); `AutosavePolicy`; `NotificationPlanner` (a simulated absence on a copy of the town); `PlayLog`; regulars (`RegularAsksToMoveIn`, a new neighbour refills the roster). A 10-year save is 116 KB, writes in 12 ms, reads in 3 ms. Golden hashes unchanged. Implementation notes: spec 007 §10.
+  - **`Sim.View` (46 tests):** the Settings and Import sheets, the replace, restored, unreadable, notification-ask and regular cards, notification texts (kind, count, crop; never money).
+  - **Unity:** `Game.Services.SaveService` (saves in iOS `Library/Saves`, exports and imports in Documents, which the Files app shows), `INotificationService` on Mobile Notifications 2.5.0 (iOS), `IosBuildStep` (Files app sharing keys), `GameRoot.Saves` (load at launch, autosave, the background save and notification plan, cancel on return, Settings actions, the play log), a gear button. Art: `tools/blender/render.py` renders every sprite, the ground, the icons and the walk cycles (`person_<kind>_<front|back>_walk0..3`); `SpriteBank` and `IconBank` load them; the Kenney tiles are deleted. Screenshots `docs/art/s06-*.png`.
+  - **Verified in the Editor with touch:** save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. The regular's card is covered by the sim tests only (device check 19).
+
 ## In progress
 
-**Sprint 6** (`sprint/06-saves-notifications`, 26 points). **Planning review done (2026-10-19):** 8 gaps decided with the owner, **ADR 0041** (spec 007 §3.1, §3.4, §3.5, §4, §8, §10; spec 006 §3.3, AC-4, §10; spec 008 §10; the GDD; CLAUDE.md; the planning files): a save holds everything hashed (one write path, content by id); old saves refused and kept until the Sprint 9 playtest build; notifications from a simulated absence, ranked, **no daily cap**, quiet hours, hands' work per 4 hours, the 64-pending limit; a gear button and Settings sheet; import from a list in Settings; the first ask as a plain card until the letter; regulars' details; **every sprite, the ground, icons and walk cycles rendered now** (US-171 4 → 8; US-084 2 → 1).
+**Sprint 6 device build.** The Development build was not made in this session: the build tool call was declined (2026-10-20). Checklist: `docs/test-checklists/s06-saves-notifications.md`.
 
 ## Next up
 
-1. **Claude:** US-073 (the save codec, test-first), then US-074, US-075, US-076, US-077, US-067; US-171 with the style checkpoint shown to the owner before the batch.
+1. **Owner:** make the Development build (delete `unity/FarmToCity/Builds/iOS` first; with the `unity` CLI the option is `--options '["Development"]'`), run the Sprint 6 checklist on the iPhone 13 and report; merge the Sprint 6 pull request.
+2. **Claude:** fix anything the device run finds; then Sprint 7 planning (full HUD, *Why?*, panels, the full *While you were away* card, Settings in the Menu).
 
 ## Owner action checklist (Phases 0–1)
 
 | When | Owner action |
 | --- | --- |
-| Sprint 6 | Approve the US-171 style checkpoint; run the Sprint 6 build with its checklist; merge the pull request |
+| Sprint 6 | ~~Approve the US-171 style checkpoint~~ (done); make the Development build, run its checklist; merge the pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
