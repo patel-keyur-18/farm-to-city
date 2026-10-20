@@ -264,8 +264,6 @@ namespace Game.Presentation.Ui
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
                 v.style.unityTextAlign = TextAnchor.MiddleRight;
                 v.style.flexShrink = 1;
-                // A short value never splits ("Goo / d"): on a phone's fractional UI scale the measured width can round a hair short.
-                if (line.Value != null && line.Value.Length <= 24 && line.Value.IndexOf('\n') < 0) { v.style.whiteSpace = WhiteSpace.NoWrap; v.style.flexShrink = 0; }
                 if (line.Stars.HasValue)
                 {
                     var right = new VisualElement { pickingMode = PickingMode.Ignore };

@@ -57,7 +57,10 @@ namespace Game.Presentation.Map
         private static readonly Vector2 TulsiSpot = new Vector2(0.10f, 0.15f), HaystackSpot = new Vector2(0.31f, -0.02f), WoodpileSpot = new Vector2(0.20f, -0.14f);
 
         /// <summary>The two hut places of the labour quarters (ADR 0040).</summary>
-        private static readonly Vector2[] QuartersPlaces = { new Vector2(-0.17f, 0.05f), new Vector2(0.17f, -0.05f) };
+        // A hand's hut is a one-room hut: drawn at 75% so it reads smaller than the founder's house, and the two places sit apart along
+        // the quarters' long axis so two huts never crowd each other (owner, device run 1).
+        private const float HandHutScale = 0.75f;
+        private static readonly Vector2[] QuartersPlaces = { new Vector2(-0.25f, 0.03f), new Vector2(0.25f, -0.03f) };
 
         // Edge midpoints from a tile's centre: NE and SW edges run along the tile's x axis (fence_x), SE and NW along y (fence_y).
         private static readonly Vector2 EdgeNE = new Vector2(0.25f, 0.125f), EdgeSE = new Vector2(0.25f, -0.125f), EdgeSW = new Vector2(-0.25f, -0.125f), EdgeNW = new Vector2(-0.25f, 0.125f);
@@ -188,6 +191,9 @@ namespace Game.Presentation.Map
             }
             foreach (BuildingVm b in map.Buildings)
             {
+                // Only the house and the well are fixed here; hands' huts (already built in a loaded town) are RefreshHandHuts' job,
+                // or each would be drawn twice, full size, at the well's spot.
+                if (b.DefId != "hut" && b.DefId != "well") continue;
                 bool hut = b.DefId == "hut";
                 Vector2 off = hut ? HutSpot : WellSpot;
                 Vector3 pos = TileCentre(b.TileId) + (Vector3)off;
@@ -336,6 +342,7 @@ namespace Game.Presentation.Map
         private SpriteRenderer NewHutRenderer(string name, string sprite, int tile)
         {
             SpriteRenderer r = NewRenderer(name, SpriteBank.Rendered(sprite) ?? SpriteBank.Hut, TileCentre(tile), 0);
+            r.transform.localScale = Vector3.one * HandHutScale;
             SpriteRenderer shadow = NewRenderer(name + "Shadow", SpriteBank.ContactShadow, TileCentre(tile), 0, r.transform);
             shadow.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
             return r;
@@ -361,7 +368,7 @@ namespace Game.Presentation.Map
         /// <summary>Where a hand lives: just in front of their hut's door (the quarters' middle if the hut is gone).</summary>
         private Vector3 HutDoor(long hutId, int tile)
         {
-            return _handHuts.TryGetValue(hutId, out SpriteRenderer r) ? r.transform.position + new Vector3(-0.04f, -0.09f, 0) : TileCentre(tile);
+            return _handHuts.TryGetValue(hutId, out SpriteRenderer r) ? r.transform.position + new Vector3(-0.04f, -0.09f, 0) * HandHutScale : TileCentre(tile);
         }
 
         private void RefreshHandHuts(MapVm map, bool animate)
@@ -375,7 +382,7 @@ namespace Game.Presentation.Map
                 if (!_handHuts.TryGetValue(b.Id, out SpriteRenderer r))
                 {
                     _handHuts[b.Id] = r = NewHutRenderer("handHut" + b.Id, "hand_hut", b.TileId);
-                    if (animate) Pop(r.transform, 1f);
+                    if (animate) Pop(r.transform, HandHutScale);
                 }
                 used.TryGetValue(b.TileId, out int place);
                 used[b.TileId] = place + 1;
@@ -392,7 +399,7 @@ namespace Game.Presentation.Map
                 if (!_sites.TryGetValue(c.Id, out SpriteRenderer r))
                 {
                     _sites[c.Id] = r = NewHutRenderer("site" + c.Id, "hand_hut_building", c.TileId);
-                    if (animate) Pop(r.transform, 1f);
+                    if (animate) Pop(r.transform, HandHutScale);
                 }
                 used.TryGetValue(c.TileId, out int place);
                 used[c.TileId] = place + 1;
@@ -548,6 +555,7 @@ namespace Game.Presentation.Map
             if (_ghost == null)
             {
                 _ghost = NewRenderer("ghost", SpriteBank.Rendered("hand_hut") ?? SpriteBank.Hut, Vector3.zero, 9100);
+                _ghost.transform.localScale = Vector3.one * HandHutScale;
                 _ghostRing = NewRenderer("ghostRing", SpriteBank.SelectionRing, Vector3.zero, 9099);
             }
             _ghost.gameObject.SetActive(true);
@@ -645,9 +653,9 @@ namespace Game.Presentation.Map
                 if (Mathf.Abs(w.x - _bedWorld[kv.Key].x) / 0.17f + Mathf.Abs(w.y - _bedWorld[kv.Key].y) / 0.085f < 1f) return new Hit(HitKind.Bed, kv.Key);
             if (Vector2.Distance(w, _hutWorld + new Vector2(0, 0.12f)) < 0.24f || Vector2.Distance(w, _wellWorld + new Vector2(0, 0.08f)) < 0.13f) return new Hit(HitKind.Hut, 0);
             foreach (KeyValuePair<long, SpriteRenderer> kv in _handHuts)
-                if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f)) < 0.16f) return new Hit(HitKind.HandHut, kv.Key);
+                if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f * HandHutScale)) < 0.16f * HandHutScale) return new Hit(HitKind.HandHut, kv.Key);
             foreach (KeyValuePair<long, SpriteRenderer> kv in _sites)
-                if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f)) < 0.16f) return new Hit(HitKind.HandHut, -kv.Key);
+                if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f * HandHutScale)) < 0.16f * HandHutScale) return new Hit(HitKind.HandHut, -kv.Key);
             int tile = _grid.Pick(w.x, w.y);
             return tile < 0 ? Hit.None : new Hit(HitKind.Tile, tile);
         }

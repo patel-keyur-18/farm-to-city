@@ -450,6 +450,8 @@ None of these changes a rule or a lesson.
 3. **Markers stand on what they mark:** a ready, spoiling or pest bubble sits at the top of its sprite (a bed, a field's plants, a tree's crown) whatever the stage, and nearer bubbles draw in front of farther ones.
 4. **Yard tree places:** two on the house acre (its left corner, and in front of the house beside the well) and two on the front acre (its left corner, and its bottom corner clear of the beds and the woodpile), so no grown tree hides behind the roof.
 5. **Row buttons** have one minimum width, so a column of *Sell* or *Plant* buttons lines up.
+6. **Switches show their state** (owner, Sprint 6 device run): Notifications and Play log are a green **On** or a red **Off** button, and tapping flips it; the line under says what it means. Every other Settings action is green (*New game…* stays red).
+7. **Short texts never wrap:** any label of up to 28 characters on one line is laid out without wrapping (`UiKit.Text`), because on the phone's fractional UI scale a measured width can round a hair short and the second line then drew over the text below ("Export play / log", "about / 16,850"). Labels made empty and filled later (toasts) still wrap.
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

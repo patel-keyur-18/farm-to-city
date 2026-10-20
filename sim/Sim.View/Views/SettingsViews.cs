@@ -84,23 +84,27 @@ namespace Sim.View.Views
             var vm = new SheetVm { Title = s.Get("settings.title"), Icon = "gear" };
             string saved = info.LastSavedWallUtc == 0 ? s.Get("settings.notSaved") : s.Get("settings.lastSaved", "time", WallTime.When(ctx, info.LastSavedWallUtc, info));
             vm.Lines.Add(Row(s.Get("settings.saved"), saved, new ActionVm(SettingsIds.SaveNow, s.Get("settings.saveNow"), null, ActionKind.Primary, true, null, null)));
-            vm.Lines.Add(Row(s.Get("settings.notifications"), s.Get(info.NotificationsOn ? "settings.notifyOn" : "settings.notifyOff"),
-                new ActionVm(SettingsIds.Notifications, s.Get(info.NotificationsOn ? "settings.turnOff" : "settings.turnOn"), null, ActionKind.Secondary, true, null, null)));
-            vm.Lines.Add(Row(s.Get("settings.playLog"), s.Get(info.PlayLogOn ? "settings.playLogOn" : "settings.playLogOff"),
-                new ActionVm(SettingsIds.PlayLog, s.Get(info.PlayLogOn ? "settings.turnOff" : "settings.turnOn"), null, ActionKind.Secondary, true, null, null)));
+            // A switch shows its state (owner, device run): a green On or a red Off; tapping it flips it.
+            vm.Lines.Add(Row(s.Get("settings.notifications"), s.Get(info.NotificationsOn ? "settings.notifyOn" : "settings.notifyOff"), Switch(ctx, SettingsIds.Notifications, info.NotificationsOn)));
+            vm.Lines.Add(Row(s.Get("settings.playLog"), s.Get(info.PlayLogOn ? "settings.playLogOn" : "settings.playLogOff"), Switch(ctx, SettingsIds.PlayLog, info.PlayLogOn)));
             vm.Lines.Add(Row(s.Get("settings.exportTown"), s.Get("settings.toFiles"),
-                new ActionVm(SettingsIds.Export, s.Get("settings.export"), null, ActionKind.Secondary, true, null, null)));
+                new ActionVm(SettingsIds.Export, s.Get("settings.export"), null, ActionKind.Primary, true, null, null)));
             vm.Lines.Add(Row(s.Get("settings.importTown"), s.Plural("settings.importFiles", info.ImportFiles, "count", ctx.Fmt.Integer(info.ImportFiles)),
                 ActionVm.Open("openImport", s.Get("settings.choose"), new SheetRequest("Import", 0))));
             bool hasLog = info.PlayLogLines > 0;
             vm.Lines.Add(Row(s.Get("settings.exportLog"), s.Plural("settings.logLines", info.PlayLogLines, "count", ctx.Fmt.Integer(info.PlayLogLines)),
-                new ActionVm(SettingsIds.ExportLog, s.Get("settings.export"), null, ActionKind.Secondary, hasLog, hasLog ? null : s.Get("settings.logEmpty"), null)));
+                new ActionVm(SettingsIds.ExportLog, s.Get("settings.export"), null, ActionKind.Primary, hasLog, hasLog ? null : s.Get("settings.logEmpty"), null)));
             vm.Lines.Add(Row(s.Get("settings.newGame"), s.Get("settings.newGameNote"),
                 new ActionVm(SettingsIds.NewGame, s.Get("settings.newGameButton"), null, ActionKind.Danger, true, null, null)));
             return vm;
         }
 
         internal static LineVm Row(string label, string value, ActionVm action) { return new LineVm(label, value) { Action = action }; }
+
+        private static ActionVm Switch(ViewContext ctx, string id, bool on)
+        {
+            return new ActionVm(id, ctx.Strings.Get(on ? "settings.on" : "settings.off"), null, on ? ActionKind.Primary : ActionKind.Danger, true, null, null);
+        }
     }
 
     /// <summary>Import a town (ADR 0041 §5): every town file in the Documents folder, newest first, one row each.</summary>

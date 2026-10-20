@@ -50,6 +50,10 @@ namespace Game.Presentation.Ui
             l.style.fontSize = size;
             l.style.color = colour;
             l.style.whiteSpace = WhiteSpace.Normal;
+            // A short one-line text never splits ("Export play / log", "about / 16,850"): on a phone's fractional UI scale the
+            // measured width can round a hair short, and the wrapped line then draws over the text below it. Labels made empty and
+            // filled later (toasts, the dev panel) keep wrapping.
+            if (!string.IsNullOrEmpty(text) && text.Length <= 28 && text.IndexOf('\n') < 0) { l.style.whiteSpace = WhiteSpace.NoWrap; l.style.flexShrink = 0; }
             if (outline) { l.style.unityTextOutlineWidth = Mathf.Max(2f, size / 14f); l.style.unityTextOutlineColor = WoodDark; }
             return l;
         }

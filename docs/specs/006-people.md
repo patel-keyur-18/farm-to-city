@@ -340,6 +340,11 @@ The owner's device run: the yard becomes 2 acres (tile 29); hands' huts move to 
 
 Regulars (US-067): they join even with a full queue, always accept, have a seeded skill drawn when they ask and both traits shown, ask only live and once, and a new neighbour refills the roster (§3.3, AC-4).
 
+### Sprint 6 device run 1 (2026-10-20)
+
+1. **A hand's market order and a glut:** "Sell at the market, not below N" puts each harvest on offer at N, so in a glut (the price below N) it waits, and the trader (who pays the floor) doesn't take it. That is the rule; what was wrong was the presentation. The Store row now says how much is at the market and the minimum, and offers **Take off market** (`Withdraw`) when all of it is on offer, instead of a greyed *Sell* saying "You don't have that much in store". The order sheet's default N is today's price rounded **down** (it was rounded to the nearest coin, so 6.8 became 7 and the offer started above the market).
+2. **Hands' huts** are drawn at 75% (a one-room hut, smaller than the founder's house), with the two places along the quarters' long axis, so two huts don't crowd each other. A loaded town no longer draws each hand's hut a second time at the well's spot.
+
 ## 11. Cut first
 
 1. Regulars (keep the day-labour pool).

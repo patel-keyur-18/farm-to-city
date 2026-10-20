@@ -191,12 +191,18 @@ namespace Sim.View.Tests
             Assert.That(StoreSheet.Build(ctx).Lines.Any(l => l.Label == "Wheat"), Is.False, "sold out");
 
 
-            // A good on offer can't be sold again.
+            // A good all on offer (a hand's order puts a harvest there) says so and can be taken off the market, then sold.
             Simulation m = ViewKit.NewGame();
-            m.Execute(new Offer(m.State.Clock.SimTime, "lentils", 75_000));
-            ActionVm lentils = StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils").Action;
-            Assert.That(lentils.Enabled, Is.False);
-            Assert.That(lentils.DisabledReason, Is.Not.Empty);
+            int g = m.Config.Game.Market.IndexOf("lentils");
+            long all = m.State.Market.InStore(g);
+            Assert.That(m.Execute(new Offer(m.State.Clock.SimTime, "lentils", all, Sim.Core.Maths.Fixed.FromInt(500))).Accepted, Is.True);
+            LineVm row = StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils");
+            Assert.That(row.Value, Does.Contain("at the market, not below 500"));
+            Assert.That(row.Action.Id, Is.EqualTo("withdraw:lentils"));
+            Assert.That(row.Action.Label, Is.EqualTo("Take off market"));
+            Assert.That(m.Execute(row.Action.Create(m.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(m.State.Market.OnOffer(g), Is.Zero);
+            Assert.That(StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils").Action.Id, Is.EqualTo("sell:lentils"));
         }
 
         [Test]
