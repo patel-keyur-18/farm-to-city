@@ -472,6 +472,24 @@ def model_person(kind, facing, pose="stand"):
         o.append(cylinder("pagdi", 0.0335, 0.031, 0.020, (0, 0.003, hz + 0.019), accent, segs=18, smooth=True))
         o.append(sphere("pagdicrown", 0.027, (0, 0.004, hz + 0.028), accent, scale=(1, 1, 0.5), segs=16, rings=8))
         o.append(box("pagditail", (0.010, 0.004, 0.026), (0.010, 0.030, hz + 0.004), accent))
+    if pose.startswith("walk"):
+        # Four frames: contact, passing, contact (other foot), passing. Legs swing about the hip, arms against them,
+        # a saree sways; the body rises a little when passing.
+        phase = int(pose[4:])
+        swing = (1.0, 0.0, -1.0, 0.0)[phase]
+        hip, shoulder = Vector((0, 0, 0.046)), Vector((0, 0, 0.097))
+        for part in o:
+            n = part.name
+            side = -1 if "-1" in n else (1 if n.endswith("1") else 0)
+            if side and (n.startswith("leg") or n.startswith("chappal")):
+                part.matrix_world = Matrix.Translation(hip) @ Matrix.Rotation(math.radians(24 * swing * side), 4, "X") @ Matrix.Translation(-hip) @ part.matrix_world
+            elif side and any(n.startswith(a) for a in ("arm", "sleeve", "forearm", "palm", "bangle", "shoulderball")):
+                part.matrix_world = Matrix.Translation(shoulder) @ Matrix.Rotation(math.radians(-20 * swing * side), 4, "X") @ Matrix.Translation(-shoulder) @ part.matrix_world
+            elif n in ("skirt", "hem") or n.startswith("pleat"):
+                part.matrix_world = Matrix.Translation(hip) @ Matrix.Rotation(math.radians(4 * swing), 4, "Y") @ Matrix.Translation(-hip) @ part.matrix_world
+        if phase % 2 == 1:
+            for part in o:
+                part.matrix_world = Matrix.Translation((0, 0, 0.003)) @ part.matrix_world
     if pose == "work":
         # Bent over a hoe: the upper body leans 30° forward about the hips, the arms reach further, and the hoe's blade bites the
         # ground in front. Two frames (stand, work) alternate on the map as a hoeing motion.
@@ -518,6 +536,8 @@ for _k in PEOPLE:
     for _f in ("front", "back"):
         SPRITES["person_%s_%s" % (_k, _f)] = (lambda k=_k, f=_f: (lambda: model_person(k, f)))()
         SPRITES["person_%s_%s_work" % (_k, _f)] = (lambda k=_k, f=_f: (lambda: model_person(k, f, "work")))()
+        for _p in range(4):
+            SPRITES["person_%s_%s_walk%d" % (_k, _f, _p)] = (lambda k=_k, f=_f, p=_p: (lambda: model_person(k, f, "walk%d" % p)))()
 
 
 # ---------------------------------------------------------------- yard props (ADR 0040)
@@ -725,11 +745,11 @@ def crop_wheat(b, rnd, x, y, stage):
         b.cone(deep if not ripe else toon("wheatLeafDry", 0xCDB25E), 0.009, 0.0, 0.06, at(x, y, 0.02, tilt=0.65, tilt_dir=a), segs=3)
 
 
-def crop_mat(b, stage, young, ripe):
+def crop_mat(b, stage, young, ripe, low=False):
     """A low, leafy band along each ridge so a grown field reads as a carpet rather than stalks on bare soil."""
     if stage == "g1":
         return
-    h = {"g2": 0.024, "g3": 0.038, "ready": 0.038}[stage]
+    h = {"g2": 0.024, "g3": 0.038, "ready": 0.038}[stage] * (0.6 if low else 1.0)
     mat = ripe if stage == "ready" else young
     for x in RIDGE_X:
         # A half-buried rounded band along the ridge: an ellipse 0.045 wide and h tall, 0.9 long.
@@ -737,18 +757,109 @@ def crop_mat(b, stage, young, ripe):
         b.cone(mat, 1.0, 1.0, 0.9, m, segs=12)
 
 
-CROPS = {"wheat": crop_wheat}
-MATS = {"wheat": (0x5FA238, 0xC9A34E)}   # the leafy band under the plants: growing, ready
+def leaf(b, mat, x, y, z, length, width, direction, tilt, rot=0.0):
+    """A flat leaf: an ellipsoid lying out from (x, y, z) towards `direction`, raised `tilt` radians from the ground."""
+    m = Matrix.Translation((x, y, z)) @ Matrix.Rotation(direction, 4, "Z") @ Matrix.Rotation(-tilt, 4, "Y") @ Matrix.Rotation(rot, 4, "X") \
+        @ Matrix.Translation((length / 2, 0, 0))
+    b.sphere(mat, 1.0, m, scale=(length / 2, width / 2, width / 6), segs=8, rings=4)
+
+
+def crop_radish(b, rnd, x, y, stage):
+    """Mooli: a rosette of long leaves; ready, the white root's green shoulder shows above the soil."""
+    green, deep = toon("radishLeaf", 0x6DBE45), toon("radishDeep", 0x4E9A36)
+    n, length = {"g1": (3, 0.035), "g2": (5, 0.06), "g3": (7, 0.08), "ready": (8, 0.09)}[stage]
+    if stage == "ready":
+        # The white root's shoulder stands proud of the soil, its top green where the sun reaches it.
+        b.cone(toon("mooli", 0xF4F1E6), 0.019, 0.016, 0.04, Matrix.Translation((x, y, 0.0)), segs=12)
+        b.cone(toon("mooliTop", 0xA8CF6A), 0.016, 0.006, 0.01, Matrix.Translation((x, y, 0.04)), segs=12)
+    base = 0.045 if stage == "ready" else 0.02
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.3, 0.3)
+        leaf(b, green if k % 2 else deep, x, y, base, length * rnd.uniform(0.85, 1.1), length * 0.42, a, rnd.uniform(0.5, 0.9))
+
+
+def crop_rice(b, rnd, x, y, stage):
+    """Paddy in standing water: clumps of blades, then panicles that droop gold."""
+    green, deep, dry = toon("riceGreen", 0x74C04A), toon("riceDeep", 0x58A43A), toon("riceDry", 0xC9C06A)
+    grain = toon("riceGrain", 0xDDB64A) if stage == "ready" else toon("riceGrainGreen", 0xA9CC5C)
+    n, h = {"g1": (6, 0.045), "g2": (10, 0.08), "g3": (12, 0.115), "ready": (12, 0.115)}[stage]
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.3, 0.3)
+        blade = (dry if k % 3 else deep) if stage == "ready" else (green if k % 2 else deep)
+        b.cone(blade, 0.009, 0.0, h * rnd.uniform(0.85, 1.15), at(x, y, 0.02, tilt=0.32, tilt_dir=a), segs=3)
+    if stage in ("g3", "ready"):
+        for k in range(4):
+            a = k * math.tau / 3 + rnd.uniform(-0.5, 0.5)
+            droop = 0.9 if stage == "ready" else 0.5
+            for j in range(4):  # a chain of grains bending outward from the top
+                t = j / 3.0
+                gx = x + math.cos(a) * (0.012 + 0.03 * t)
+                gy = y + math.sin(a) * (0.012 + 0.03 * t)
+                gz = 0.02 + h * 0.95 - droop * 0.035 * t * t
+                b.sphere(grain, 0.009, Matrix.Translation((gx, gy, gz)), scale=(1, 1, 1.3), segs=6, rings=4)
+
+
+def crop_potato(b, rnd, x, y, stage):
+    """Leafy bushes on earthed-up ridges; flowers before harvest, then the haulm yellows and a few tubers show."""
+    leafy, deep = toon("potatoLeaf", 0x5BAA3E), toon("potatoDeep", 0x3F8A32)
+    yellow = toon("potatoHaulm", 0xB9A84E)
+    n, r = {"g1": (3, 0.012), "g2": (6, 0.02), "g3": (8, 0.026), "ready": (6, 0.022)}[stage]
+    top = 0.045
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.3, 0.3)
+        d = r * rnd.uniform(0.4, 1.0)
+        mat = yellow if stage == "ready" else (leafy if k % 2 else deep)
+        b.sphere(mat, r, Matrix.Translation((x + math.cos(a) * d, y + math.sin(a) * d, top + r * 0.5 + rnd.uniform(0, 0.01))), scale=(1, 1, 0.75), segs=8, rings=5)
+    if stage == "g3":
+        for k in range(3):
+            a = rnd.uniform(0, math.tau)
+            b.sphere(toon("potatoFlower", (0xF6F2FA, 0xC9B4E6)[k % 2]), 0.0065, Matrix.Translation((x + math.cos(a) * r, y + math.sin(a) * r, top + r * 1.6)), segs=6, rings=4)
+    if stage == "ready":
+        for k in range(2):
+            a = rnd.uniform(0, math.tau)
+            b.sphere(toon("potatoTuber", 0xC9A06A), 0.011, Matrix.Translation((x + math.cos(a) * 0.03, y + math.sin(a) * 0.03, 0.03)), scale=(1.2, 1, 0.85), segs=8, rings=5)
+
+
+def crop_lentils(b, rnd, x, y, stage):
+    """Masoor: small feathery bushes, pale flowers, then tan, dry plants full of flat pods."""
+    green, deep = toon("lentilLeaf", 0x8CC75C), toon("lentilDeep", 0x6AAE47)
+    dry, pod = toon("lentilDry", 0xC2A464), toon("lentilPod", 0xA8874A)
+    n, h = {"g1": (4, 0.035), "g2": (7, 0.06), "g3": (9, 0.08), "ready": (9, 0.075)}[stage]
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.4, 0.4)
+        stem = at(x, y, 0.02, tilt=rnd.uniform(0.25, 0.5), tilt_dir=a)
+        b.cone(dry if stage == "ready" else deep, 0.0035, 0.0025, h, stem, segs=3)
+        for j in range(3):  # leaflets along the stem
+            mat = dry if stage == "ready" else (green if j % 2 else deep)
+            b.sphere(mat, 0.011, stem @ Matrix.Translation((0.006 * (1 if j % 2 else -1), 0, h * (0.45 + 0.25 * j))), scale=(1.4, 0.7, 0.5), segs=6, rings=4)
+        if stage == "g3" and k % 2 == 0:
+            b.sphere(toon("lentilFlower", 0xE8ECF8), 0.0075, stem @ Matrix.Translation((0, 0, h + 0.006)), segs=6, rings=4)
+        if stage == "ready":
+            b.sphere(pod, 0.009, stem @ Matrix.Translation((0.008, 0, h * 0.7)), scale=(1.5, 0.6, 0.9), segs=6, rings=4)
+
+
+CROPS = {"wheat": crop_wheat, "radish": crop_radish, "rice": crop_rice, "potato": crop_potato, "lentils": crop_lentils}
+# The band under the plants along each ridge (growing, ready); potato's is the earthed-up ridge itself; rice stands in water.
+MATS = {"wheat": (0x5FA238, 0xC9A34E), "radish": None, "potato": (0x9A6B45, 0x9A6B45), "lentils": (0x6FA845, 0xB59A55), "rice": None}
 
 
 def model_crop(crop, stage):
     """A crop across a whole acre: plants on the ridges of the tilled soil, a little jitter so it reads as grown, not stamped."""
     import random
-    rnd = random.Random(hash((crop, stage)) & 0xFFFF)
+    rnd = random.Random(sum(ord(ch) for ch in crop + stage))
     b = Batch(crop)
     per_row = 10
-    young, ripe = MATS[crop]
-    crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe))
+    if crop == "rice":
+        # Standing water over the whole field, between the ridges, a little lighter at the rim.
+        b.box(toon("paddyWater", 0x86BAC6), (0.95, 0.95, 0.004), Matrix.Translation((0, 0, 0.016)))
+        b.box(toon("paddyBund", 0x9A6B45), (0.97, 0.97, 0.012), Matrix.Translation((0, 0, 0.008)))
+    elif crop == "potato":
+        for x in RIDGE_X:  # earthed-up ridges from the first sowing
+            m = Matrix.Translation((x, -0.45, 0.012)) @ Matrix.Rotation(math.radians(-90), 4, "X") @ Matrix.Diagonal((0.05, 0.03, 1.0, 1.0))
+            b.cone(toon("potatoRidge", 0x9A6B45), 1.0, 1.0, 0.9, m, segs=12)
+    elif MATS[crop] is not None:
+        young, ripe = MATS[crop]
+        crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=crop == "lentils")
     for x in RIDGE_X:
         for j in range(per_row):
             y = -0.42 + j * (0.84 / (per_row - 1)) + rnd.uniform(-0.012, 0.012)
@@ -796,6 +907,202 @@ def model_mango(stage):
             o.append(sphere("mango%d" % i, 0.03, (x, y, z), fruit if i % 3 else blush, scale=(0.85, 0.75, 1.25), segs=10, rings=6))
             o.append(cylinder("stalk%d" % i, 0.0025, 0.0025, 0.03, (x, y, z + 0.045), bark, segs=4, outline=False))
     return group(o, scale=BUILDING_SCALE)
+
+
+# ---------------------------------------------------------------- the kitchen garden's beds (ADR 0041 §8)
+
+def model_bed(crop, stage):
+    """A raised bed with a plank border and dark soil; garden crops in a 3 x 3 grid."""
+    import random
+    rnd = random.Random(sum(ord(ch) for ch in (crop or "") + (stage or "")))
+    w = 0.46
+    plank, plank_dark, soil = toon("plank", 0xB07A44), toon("plankDark", 0x8E5E32), toon("bedSoil", 0x6E4528)
+    o = [box("soil", (w - 0.04, w - 0.04, 0.05), (0, 0, 0.025), soil, outline=False)]
+    for i, (sx, sy, rx) in enumerate(((0, -w / 2, 0), (0, w / 2, 0), (-w / 2, 0, 1), (w / 2, 0, 1))):
+        size = (0.026, w + 0.026, 0.06) if rx else (w + 0.026, 0.026, 0.06)
+        o.append(box("plank%d" % i, size, (sx, sy, 0.03), plank if i % 2 == 0 else plank_dark, bevel=0.004))
+    if crop is None:
+        b = Batch("clods")
+        for i in range(10):
+            b.sphere(toon("clod", 0x5C3A22), 0.01, Matrix.Translation((rnd.uniform(-0.17, 0.17), rnd.uniform(-0.17, 0.17), 0.05)), scale=(1.3, 1, 0.5), segs=6, rings=4)
+        return group(o + b.objects(), scale=1.0)
+    b = Batch(crop)
+    k = {"g1": 0.45, "g2": 0.7, "g3": 0.9, "ready": 1.0}[stage]
+    for ix in (-1, 0, 1):
+        for iy in (-1, 0, 1):
+            x, y = ix * 0.13 + rnd.uniform(-0.01, 0.01), iy * 0.13 + rnd.uniform(-0.01, 0.01)
+            GARDEN[crop](b, rnd, x, y, 0.05, k, stage == "ready")
+    return group(o + b.objects(), scale=1.0)
+
+
+def garden_radish(b, rnd, x, y, z, k, ready):
+    for j in range(6):
+        a = j * math.tau / 6 + rnd.uniform(-0.3, 0.3)
+        leaf(b, toon("gRadish%d" % (j % 2), (0x6DBE45, 0x4E9A36)[j % 2]), x, y, z, 0.075 * k, 0.03 * k, a, 0.7)
+    if ready:
+        b.sphere(toon("redRadish", 0xD8344E), 0.02, Matrix.Translation((x, y, z + 0.006)), scale=(1, 1, 0.9), segs=10, rings=6)
+
+
+def garden_spinach(b, rnd, x, y, z, k, ready):
+    for j in range(7):
+        a = j * math.tau / 7 + rnd.uniform(-0.3, 0.3)
+        leaf(b, toon("spinach%d" % (j % 2), (0x2E8E45, 0x3FA455)[j % 2]), x, y, z, 0.07 * k, 0.05 * k, a, 0.55 + 0.25 * (j % 2))
+
+
+def garden_coriander(b, rnd, x, y, z, k, ready):
+    light, mid = toon("dhania", 0x86D45E), toon("dhaniaMid", 0x68B848)
+    for j in range(7):
+        a = j * math.tau / 7 + rnd.uniform(-0.3, 0.3)
+        stem = at(x, y, z, tilt=0.5, tilt_dir=a)
+        b.cone(mid, 0.0025, 0.002, 0.06 * k, stem, segs=3)
+        for q in range(3):  # lacy leaflets
+            b.sphere(light if q % 2 else mid, 0.011 * k, stem @ Matrix.Translation(((q - 1) * 0.008, 0, 0.06 * k)), scale=(1, 1, 0.45), segs=6, rings=4)
+    if ready:
+        for q in range(3):
+            a = rnd.uniform(0, math.tau)
+            b.sphere(toon("dhaniaFlower", 0xFFFFFF), 0.006, Matrix.Translation((x + math.cos(a) * 0.02, y + math.sin(a) * 0.02, z + 0.07)), segs=6, rings=4)
+
+
+GARDEN = {"garden_radish": garden_radish, "garden_spinach": garden_spinach, "garden_coriander": garden_coriander}
+
+
+# ---------------------------------------------------------------- more trees, the planting pit and the sale sign
+
+def model_banana(stage):
+    """A banana plant: a green pseudostem and big arching paddle leaves; in fruit, a hanging bunch and the purple bud."""
+    import random
+    rnd = random.Random(11)
+    k = {"sapling": 0.35, "young": 0.65, "mature": 1.0, "ripe": 1.0}[stage]
+    stem, leaf_mat, leaf_dark, dry = toon("bananaStem", 0x9DBB57), toon("bananaLeaf", 0x6CC24A), toon("bananaLeafDark", 0x4FA03C), toon("bananaDry", 0xB7A257)
+    o = [cylinder("stem", 0.04 * k, 0.03 * k, 0.32 * k, (0, 0, 0.16 * k), stem, segs=10, smooth=True)]
+    b = Batch("banana")
+    n = 7 if k > 0.5 else 4
+    top = 0.30 * k
+    for i in range(n):
+        a = i * math.tau / n + rnd.uniform(-0.2, 0.2)
+        mat = dry if (i == n - 1 and k == 1.0) else (leaf_mat if i % 2 else leaf_dark)
+        # A long paddle in two parts: the inner half rises steeply, the outer half arches over and droops.
+        rise = rnd.uniform(0.75, 1.05)
+        L = 0.17 * k
+        leaf(b, mat, 0, 0, top, L, 0.10 * k, a, rise)
+        ex, ey, ez = math.cos(a) * L * math.cos(rise), math.sin(a) * L * math.cos(rise), top + L * math.sin(rise)
+        leaf(b, mat, ex, ey, ez, L * 1.1, 0.10 * k, a, -rnd.uniform(0.35, 0.7))
+        b.cone(stem, 0.006 * k, 0.004 * k, L, Matrix.Translation((0, 0, top)) @ Vector((math.cos(a) * math.cos(rise), math.sin(a) * math.cos(rise), math.sin(rise))).to_track_quat("Z", "Y").to_matrix().to_4x4(), segs=4)
+    o += b.objects(outline_for=tuple(m for m in b.parts if m is not stem), thickness=OUTLINE * 0.7)
+    if stage == "ripe":
+        # The bunch hangs from the crown on a curved stalk, at the front where the camera sees it, tiers of fingers pointing up.
+        fruit, bud, stalk = toon("banana", 0xE8D45A), toon("bananaBud", 0x7A2E4A), toon("bananaStalk", 0x8FA84A)
+        bx, by = 0.075, -0.075
+        o.append(cylinder("stalk", 0.006, 0.006, 0.20, (bx * 0.8, by * 0.8, top - 0.04), stalk, segs=6, rot=Matrix.Rotation(math.radians(20), 3, "X")))
+        for r in range(4):
+            for j in range(7):
+                a = j * math.tau / 7 + r * 0.45
+                o.append(sphere("finger%d%d" % (r, j), 0.017, (bx + math.cos(a) * 0.03, by + math.sin(a) * 0.03, top - 0.03 - r * 0.04), fruit,
+                                scale=(0.65, 0.65, 1.7), segs=8, rings=5))
+        o.append(sphere("bud", 0.026, (bx, by, top - 0.21), bud, scale=(0.8, 0.8, 1.5), segs=10, rings=6))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_papaya(stage):
+    """A papaya: one slender grey-green trunk with leaf scars, a crown of lobed leaves on long stalks, fruit hugging the trunk."""
+    import random
+    rnd = random.Random(13)
+    k = {"sapling": 0.35, "young": 0.65, "mature": 1.0, "ripe": 1.0}[stage]
+    trunk, leaf_mat, leaf_dark, stalk = toon("papayaTrunk", 0x9C9A7A), toon("papayaLeaf", 0x5DB04A), toon("papayaLeafDark", 0x46923A), toon("papayaStalk", 0xB8C46A)
+    h = 0.45 * k
+    o = [cylinder("trunk", 0.028 * k, 0.02 * k, h, (0, 0, h / 2), trunk, segs=10, smooth=True)]
+    for i in range(int(6 * k)):
+        o.append(cylinder("scar%d" % i, 0.029 * k, 0.029 * k, 0.004, (0, 0, h * (0.2 + 0.12 * i)), toon("papayaScar", 0x7E7C60), segs=10, outline=False))
+    b = Batch("papaya")
+    for i in range(9):
+        a = i * math.tau / 9 + rnd.uniform(-0.25, 0.25)
+        tilt = (0.95, 0.45, -0.1)[i % 3] + rnd.uniform(-0.15, 0.15)   # young leaves up, old ones level or hanging
+        d = Vector((math.cos(a) * math.cos(tilt), math.sin(a) * math.cos(tilt), math.sin(tilt)))
+        tip = Vector((0, 0, h)) + d * 0.12 * k
+        b.cone(stalk, 0.0045 * k, 0.003 * k, 0.12 * k, Matrix.Translation((0, 0, h)) @ d.to_track_quat("Z", "Y").to_matrix().to_4x4(), segs=4)
+        for q in range(5):  # the five lobes of a big palmate leaf, following its stalk and drooping at the edges
+            leaf(b, leaf_mat if (i + q) % 2 else leaf_dark, tip.x, tip.y, tip.z, 0.085 * k, 0.05 * k, a + (q - 2) * 0.45, tilt * 0.5 - 0.15 - 0.12 * abs(q - 2))
+    o += b.objects(outline_for=tuple(m for m in b.parts if m is not stalk), thickness=OUTLINE * 0.7)
+    if stage == "ripe":
+        # Fruit hugs the trunk just under the crown, mostly on the side the camera sees.
+        for i in range(9):
+            a = math.radians(-45) + (i % 5 - 2) * 0.6
+            o.append(sphere("papaya%d" % i, 0.03, (math.cos(a) * 0.045, math.sin(a) * 0.045, h - 0.035 - (i // 5) * 0.06),
+                            toon("papayaFruit%d" % (i % 3 == 0), (0xF2A23A, 0x9CC24A)[i % 3 == 0]), scale=(0.8, 0.8, 1.3), segs=10, rings=6))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_guava(stage):
+    """A guava: a low tree with smooth, mottled bark, two stems, an open round canopy of lighter leaves; pale fruit when ripe."""
+    import random
+    rnd = random.Random(17)
+    if stage == "sapling":
+        o = [cylinder("stem", 0.009, 0.006, 0.14, (0, 0, 0.07), toon("guavaBark", 0xA9805A), segs=6)]
+        for i in range(5):
+            a = i * math.tau / 5
+            o.append(sphere("leaf%d" % i, 0.028, (math.cos(a) * 0.03, math.sin(a) * 0.03, 0.13 + (i % 2) * 0.02), toon("guavaLeaf", 0x6BB04A), scale=(1.4, 0.6, 0.35), segs=8, rings=5))
+        o.append(cylinder("stake", 0.004, 0.004, 0.16, (0.03, 0.02, 0.08), toon("bamboo", BAMBOO), segs=5))
+        return group(o, scale=BUILDING_SCALE)
+    k = 0.6 if stage == "young" else 0.85
+    bark, light, mid = toon("guavaBark", 0xA9805A), toon("guavaLight", 0x86C25A), toon("guavaMid", 0x67AA45)
+    o = []
+    for s_ in (-1, 1):
+        o.append(cylinder("stem%d" % s_, 0.025 * k, 0.016 * k, 0.26 * k, (s_ * 0.025 * k, 0, 0.13 * k), bark, segs=8, rot=Matrix.Rotation(math.radians(s_ * 8), 3, "Y"), smooth=True))
+    cz = 0.33 * k
+    for i, (x, y, z, r) in enumerate([(0, 0, 0.04, 0.16), (0.12, 0.02, -0.02, 0.12), (-0.11, 0.05, -0.01, 0.12), (0.02, -0.11, -0.02, 0.12), (0.05, 0.1, 0.02, 0.11)]):
+        o.append(sphere("canopy%d" % i, r * k, (x * k, y * k, cz + z * k), light if z > 0.02 else mid, scale=(1, 1, 0.8), segs=14, rings=9))
+    if stage == "ripe":
+        for i in range(12):
+            a = math.radians(-45) + math.radians(rnd.uniform(-85, 85))
+            r = rnd.uniform(0.15, 0.2) * k
+            o.append(sphere("guava%d" % i, 0.022, (math.cos(a) * r, math.sin(a) * r, cz + rnd.uniform(-0.1, 0.0) * k), toon("guavaFruit%d" % (i % 2), (0xD8E07A, 0xC7D45E)[i % 2]), segs=10, rings=6))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_pit():
+    """An empty planting place: a ring of stones round a dark, dug circle."""
+    o = [cylinder("hole", 0.075, 0.075, 0.006, (0, 0, 0.003), toon("dug", 0x5C3A22), segs=16, outline=False)]
+    b = Batch("stones")
+    for i in range(11):
+        a = i * math.tau / 11
+        b.sphere(toon("stone%d" % (i % 2), (0xC9C2B4, 0xA8A194)[i % 2]), 0.017, Matrix.Translation((math.cos(a) * 0.09, math.sin(a) * 0.09, 0.008)), scale=(1.2, 1, 0.7), segs=8, rings=5)
+    return o + b.objects(outline_for=tuple(b.parts), thickness=OUTLINE * 0.6)
+
+
+def model_sign():
+    """Land for sale: a wooden post with a plank board and a coin painted on it."""
+    wood, board = toon("wood", WOOD), toon("signBoard", 0xF2DFB0)
+    o = [box("post", (0.016, 0.016, 0.22), (0, 0, 0.11), wood),
+         box("board", (0.13, 0.012, 0.09), (0, -0.012, 0.17), board, bevel=0.004),
+         cylinder("coin", 0.026, 0.026, 0.004, (0, -0.02, 0.17), toon("coin", 0xFFC93C), segs=20, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False),
+         cylinder("coinRing", 0.018, 0.018, 0.005, (0, -0.0205, 0.17), toon("coinDark", 0xE0A21C), segs=20, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False)]
+    return group(o, rot_z=math.radians(45), scale=BUILDING_SCALE)
+
+
+MARKER_SCALE = 2.2      # map bubbles read at a glance: about the painted bubbles' size
+
+
+def model_marker(kind):
+    """A map bubble: a white (or tinted) rounded bubble on a short tail, its symbol modelled on the face."""
+    fill = {"ready": 0xFFFFFF, "spoil": 0xFFD27A, "pest": 0xFF8A80}[kind]
+    m = Matrix.Rotation(math.radians(90), 3, "X")
+    o = [cylinder("bubble", 0.07, 0.07, 0.03, (0, 0, 0.12), toon("bubble" + kind, fill), segs=28, rot=m),
+         cylinder("tail", 0.03, 0.0, 0.05, (0, 0, 0.04), toon("bubble" + kind, fill), segs=10)]
+    if kind == "ready":
+        g = toon("tick", 0x4CC24A)
+        o.append(box("tick1", (0.05, 0.022, 0.016), (-0.017, -0.02, 0.112), g, rot=Matrix.Rotation(math.radians(90), 3, "X") @ Matrix.Rotation(math.radians(-45), 3, "Z")))
+        o.append(box("tick2", (0.09, 0.022, 0.016), (0.02, -0.02, 0.128), g, rot=Matrix.Rotation(math.radians(90), 3, "X") @ Matrix.Rotation(math.radians(48), 3, "Z")))
+    elif kind == "spoil":
+        c = toon("drop", 0xC2410C)
+        o.append(box("bar", (0.02, 0.016, 0.06), (0, -0.02, 0.135), c))
+        o.append(sphere("dot", 0.013, (0, -0.02, 0.087), c, segs=10, rings=6))
+    else:
+        c = toon("bug", 0x7A1F1F)
+        o.append(sphere("bug", 0.03, (0, -0.02, 0.12), c, scale=(1.2, 0.5, 0.9), segs=12, rings=8))
+        for s_ in (-1, 1):
+            for z in (0.105, 0.135):
+                o.append(box("leg", (0.035, 0.008, 0.006), (s_ * 0.045, -0.02, z), c, rot=Matrix.Rotation(math.radians(s_ * 20), 3, "Y")))
+    return group(turn(o, Matrix.Rotation(math.radians(45), 4, "Z")), scale=MARKER_SCALE)
 
 
 # ---------------------------------------------------------------- icons (ADR 0041 §8): rendered on the same rig, framed square
@@ -864,11 +1171,224 @@ SPRITES.update({
     "grass_detail_1": lambda: model_grass_detail(1),
     "grass_detail_2": lambda: model_grass_detail(2),
 })
-for _st in STAGES:
-    SPRITES["crop_wheat_%s" % _st] = (lambda st=_st: (lambda: model_crop("wheat", st)))()
+for _c in ("wheat", "radish", "rice", "potato", "lentils"):
+    for _st in STAGES:
+        SPRITES["crop_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_crop(c, st)))()
 for _st in ("sapling", "young", "mature", "ripe"):
     SPRITES["tree_mango_%s" % _st] = (lambda st=_st: (lambda: model_mango(st)))()
-ICONS = {"icon_coin": icon_coin, "icon_wheat": icon_wheat, "icon_gear": icon_gear}
+# ---------------------------------------------------------------- the rest of the icons (ADR 0041 §8)
+
+def star_mesh(name, r_out, r_in, depth, mat, loc=(0, 0, 0), points=5, **kw):
+    """An extruded star in the x-y plane."""
+    verts = []
+    for i in range(points * 2):
+        a = math.pi / 2 + i * math.pi / points
+        r = r_out if i % 2 == 0 else r_in
+        verts.append((math.cos(a) * r, math.sin(a) * r))
+    n = len(verts)
+    v3 = [(x + loc[0], y + loc[1], loc[2] - depth / 2) for x, y in verts] + [(x + loc[0], y + loc[1], loc[2] + depth / 2) for x, y in verts]
+    faces = [tuple(range(n - 1, -1, -1)), tuple(range(n, 2 * n))] + [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)]
+    return poly_mesh(name, v3, faces, mat, **kw)
+
+
+def bowl(o, contents_hex, grain=0.009, n=34, seed=3):
+    """A brass katori heaped with grain or dal."""
+    import random
+    rnd = random.Random(seed)
+    o.append(cylinder("bowl", 0.10, 0.07, 0.05, (0, 0, 0.025), toon("brass", 0xD9A93C), segs=24, smooth=True))
+    o.append(cylinder("bowlRim", 0.102, 0.102, 0.008, (0, 0, 0.05), toon("brassDark", 0xB8862A), segs=24, outline=False))
+    o.append(sphere("heap", 0.09, (0, 0, 0.045), toon("heap", contents_hex), scale=(1, 1, 0.45), segs=18, rings=8))
+    for i in range(n):
+        a, r = rnd.uniform(0, math.tau), rnd.uniform(0, 0.075)
+        o.append(sphere("grain%d" % i, grain, (math.cos(a) * r, math.sin(a) * r, 0.045 + 0.04 * (1 - (r / 0.09) ** 2)), toon("grain", contents_hex),
+                        scale=(1.3, 0.9, 0.7), segs=6, rings=4, outline=False))
+    return o
+
+
+def leaf_obj(name, loc, length, width, direction, tilt, mat):
+    b = Batch(name)
+    leaf(b, mat, loc[0], loc[1], loc[2], length, width, direction, tilt)
+    return b.objects(outline_for=(mat,))
+
+
+def icon_good(good):
+    o = []
+    green, deep = toon("leafG", 0x5DAA45), toon("leafD", 0x3F8E3A)
+    if good == "radish":
+        o.append(cylinder("root", 0.03, 0.006, 0.20, (0, 0, -0.06), toon("mooli", 0xF4F1E6), segs=14, smooth=True, rot=Matrix.Rotation(math.radians(180), 3, "X")))
+        o.append(cylinder("shoulder", 0.031, 0.03, 0.03, (0, 0, 0.035), toon("mooliTop", 0xA8CF6A), segs=14, smooth=True))
+        for i in range(5):
+            o += leaf_obj("l%d" % i, (0, 0, 0.05), 0.12, 0.05, i * math.tau / 5, 1.1, green if i % 2 else deep)
+    elif good == "wheat":
+        return icon_wheat()
+    elif good == "rice":
+        bowl(o, 0xF4F0E2, grain=0.008)
+    elif good == "lentils":
+        bowl(o, 0xE07A3A, grain=0.009, seed=5)
+    elif good == "potato":
+        for i, (x, y, z) in enumerate(((-0.05, 0.0, 0.04), (0.05, 0.01, 0.04), (0.0, -0.02, 0.10))):
+            o.append(sphere("potato%d" % i, 0.06, (x, y, z), toon("potato", 0xC59A5A), scale=(1.25, 1, 0.85), segs=14, rings=9))
+            o.append(sphere("eye%d" % i, 0.006, (x + 0.02, y - 0.05, z + 0.01), toon("potatoEye", 0x8C6A3A), segs=6, rings=4, outline=False))
+    elif good in ("spinach", "coriander"):
+        mat_a, mat_b = (toon("spinach", 0x2E8E45), toon("spinach2", 0x3FA455)) if good == "spinach" else (toon("dhania", 0x86D45E), toon("dhaniaMid", 0x68B848))
+        for i in range(7):
+            a = (i - 3) * 0.28
+            m = Matrix.Rotation(a, 3, "Y")
+            o.append(cylinder("stem%d" % i, 0.004, 0.004, 0.16, tuple(m @ Vector((0, 0, 0.08))), toon("stem", 0x6FA03A), segs=5, rot=m))
+            top = m @ Vector((0, 0, 0.17))
+            if good == "spinach":
+                o.append(sphere("blade%d" % i, 0.05, tuple(top), mat_a if i % 2 else mat_b, scale=(0.7, 0.25, 1.1), segs=10, rings=6))
+            else:
+                for q in range(3):
+                    o.append(sphere("lacy%d%d" % (i, q), 0.022, tuple(top + m @ Vector(((q - 1) * 0.02, 0, 0.0))), mat_a if (i + q) % 2 else mat_b, scale=(1, 0.4, 0.8), segs=8, rings=5))
+        o.append(cylinder("tie", 0.022, 0.022, 0.02, (0, 0, 0.05), toon("tie", 0xB4572E), segs=12))
+        return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+    elif good == "banana":
+        for i in range(4):
+            a = (i - 1.5) * 0.35
+            m = Matrix.Rotation(a, 3, "Y") @ Matrix.Rotation(math.radians(-25), 3, "X")
+            o.append(sphere("banana%d" % i, 0.03, tuple(m @ Vector((0, 0, 0.09))), toon("banana", 0xF2D84A), scale=(0.75, 0.75, 3.2), segs=10, rings=8))
+        o.append(cylinder("crown", 0.02, 0.016, 0.04, (0, 0, 0.0), toon("bananaStalk", 0x8FA84A), segs=8))
+        return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+    elif good in ("papaya", "guava", "mango"):
+        hexes = {"papaya": (0xF2A23A, (0.9, 0.9, 1.35), 0.07), "guava": (0xD8E07A, (1, 1, 1.05), 0.06), "mango": (0xF4B33C, (0.8, 0.95, 1.2), 0.065)}
+        col, sc, r = hexes[good]
+        o.append(sphere("fruit", r, (0, 0, r), toon(good, col), scale=sc, segs=18, rings=12))
+        if good == "mango":
+            o.append(sphere("blush", r * 0.6, (0.02, -0.035, r * 1.25), toon("mangoBlush", 0xE8723A), scale=(0.6, 0.4, 0.5), segs=10, rings=6, outline=False))
+        if good == "papaya":
+            o.append(sphere("green", r * 0.5, (0, -0.02, r * 1.9), toon("papayaGreen", 0x9CC24A), scale=(0.9, 0.9, 0.5), segs=10, rings=6, outline=False))
+        o.append(cylinder("stalk", 0.005, 0.004, 0.04, (0, 0, r * 2.3), toon("stalk", 0x7A4E2E), segs=6))
+        o += leaf_obj("leaf", (0, 0, r * 2.35), 0.10, 0.045, math.radians(-30), 0.25, green)
+    return o
+
+
+def icon_input(kind):
+    o = []
+    if kind == "seed":
+        o.append(sphere("bag", 0.085, (0, 0, 0.08), toon("cloth", 0xE8D9B0), scale=(1, 1, 1.05), segs=16, rings=10))
+        o.append(cylinder("neck", 0.03, 0.045, 0.05, (0, 0, 0.17), toon("cloth", 0xE8D9B0), segs=14, smooth=True))
+        o.append(cylinder("tie", 0.034, 0.034, 0.014, (0, 0, 0.16), toon("tie", 0xB4572E), segs=14))
+        import random
+        rnd = random.Random(2)
+        for i in range(9):
+            o.append(sphere("seed%d" % i, 0.009, (rnd.uniform(-0.09, 0.09), rnd.uniform(-0.12, -0.06), 0.008), toon("seed", 0xC58A3C), scale=(1.3, 0.9, 0.7), segs=6, rings=4, outline=False))
+    elif kind == "sapling":
+        o.append(cylinder("pot", 0.06, 0.045, 0.08, (0, 0, 0.04), toon("clay", 0xB4572E), segs=16, smooth=True))
+        o.append(cylinder("potRim", 0.066, 0.066, 0.014, (0, 0, 0.08), toon("clayDark", 0x934424), segs=16))
+        o.append(cylinder("stem", 0.006, 0.005, 0.14, (0, 0, 0.15), toon("bark", 0x7A4E2E), segs=6))
+        for i in range(5):
+            o += leaf_obj("l%d" % i, (0, 0, 0.13 + i * 0.022), 0.07, 0.035, i * 2.4, 0.35, toon("leafG", 0x5DAA45) if i % 2 else toon("leafD", 0x3F8E3A))
+    elif kind == "compost":
+        o.append(cylinder("basket", 0.10, 0.075, 0.07, (0, 0, 0.035), toon("cane", 0xB8873E), segs=18, smooth=True))
+        o.append(sphere("heap", 0.095, (0, 0, 0.07), toon("compost", 0x4E3422), scale=(1, 1, 0.5), segs=16, rings=8))
+        for i in range(4):
+            o += leaf_obj("dry%d" % i, (0.02 * i - 0.03, -0.02, 0.1), 0.05, 0.025, i * 1.7, 0.2, toon("dryLeaf", 0xA8874A))
+    elif kind == "fertiliser":
+        o.append(box("bag", (0.15, 0.08, 0.20), (0, 0, 0.10), toon("sackWhite", 0xF0EEE6), bevel=0.02))
+        o.append(box("band", (0.152, 0.082, 0.04), (0, 0, 0.13), toon("sackBand", 0x3F8E3A), outline=False))
+        o.append(box("fold", (0.13, 0.07, 0.02), (0, 0, 0.205), toon("sackWhite", 0xF0EEE6), bevel=0.006))
+    elif kind == "spray":
+        o.append(cylinder("tank", 0.06, 0.06, 0.16, (0, 0, 0.08), toon("tank", 0x3F7FA6), segs=18, smooth=True))
+        o.append(cylinder("cap", 0.03, 0.03, 0.02, (0, 0, 0.17), toon("cap", 0xE0E0E0), segs=12))
+        o.append(cylinder("pump", 0.006, 0.006, 0.07, (0, 0, 0.21), toon("steel", 0xC9C2B4), segs=6))
+        o.append(box("handle", (0.06, 0.012, 0.012), (0, 0, 0.245), toon("steel", 0xC9C2B4)))
+        o.append(cylinder("lance", 0.005, 0.005, 0.18, (0.09, 0, 0.12), toon("steel", 0xC9C2B4), segs=6, rot=Matrix.Rotation(math.radians(35), 3, "Y")))
+        return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+    return o
+
+
+def cloud(o, name, mat, dz=0.0, scale=1.0):
+    for i, (x, z, r) in enumerate(((-0.07, 0.0, 0.055), (0.0, 0.03, 0.075), (0.075, 0.005, 0.055), (0.0, -0.02, 0.06))):
+        o.append(sphere("%s%d" % (name, i), r * scale, (x * scale, 0, (z + dz) * scale), mat, scale=(1, 0.75, 0.9), segs=16, rings=10))
+
+
+def icon_weather(kind):
+    o = []
+    sun, rays = toon("sun", 0xFFC93C), toon("ray", 0xFFB020)
+    if kind in ("sun", "heatwave"):
+        core = sun if kind == "sun" else toon("hot", 0xFF8A3A)
+        o.append(sphere("sun", 0.07, (0, 0, 0), core, segs=20, rings=12))
+        for i in range(8):
+            a = i * math.tau / 8
+            o.append(cylinder("ray%d" % i, 0.016, 0.0, 0.05, (math.cos(a) * 0.11, 0, math.sin(a) * 0.11), rays if kind == "sun" else toon("hotRay", 0xE8562E), segs=8,
+                              rot=Vector((math.cos(a), 0, math.sin(a))).to_track_quat("Z", "Y").to_matrix()))
+        if kind == "heatwave":
+            for i in range(3):
+                for j in range(4):
+                    o.append(sphere("haze%d%d" % (i, j), 0.012, (-0.06 + j * 0.04, -0.03, -0.14 - i * 0.03 + (0.008 if j % 2 else -0.008)), toon("haze", 0xE8562E), scale=(1.8, 0.6, 0.6), segs=8, rings=4, outline=False))
+    elif kind == "cloudy":
+        o.append(sphere("sunBehind", 0.055, (0.06, 0.04, 0.07), sun, segs=16, rings=10))
+        cloud(o, "c", toon("cloud", 0xF4F6F8))
+    else:
+        dark = kind in ("heavy_rain", "storm")
+        if kind != "frost":
+            cloud(o, "c", toon("cloudDark" if dark else "cloud", 0x8E99A8 if dark else 0xE6EAEE))
+        if kind == "frost":
+            ice = toon("ice", 0xBFE6F5)
+            for i in range(6):
+                a = i * math.pi / 3
+                m = Matrix.Rotation(a, 3, "Y")
+                o.append(box("arm%d" % i, (0.018, 0.018, 0.16), tuple(m @ Vector((0, 0, 0.08))), ice, rot=m))
+                for sgn in (-1, 1):
+                    mm = m @ Matrix.Rotation(sgn * math.radians(40), 3, "Y")
+                    o.append(box("twig%d%d" % (i, sgn), (0.012, 0.012, 0.05), tuple(m @ Vector((0, 0, 0.11)) + mm @ Vector((0, 0, 0.02))), ice, rot=mm))
+        elif kind == "storm":
+            bolt = toon("bolt", 0xFFD43A)
+            verts = [(-0.01, 0, -0.04), (0.035, 0, -0.04), (0.005, 0, -0.10), (0.03, 0, -0.10), (-0.03, 0, -0.19), (-0.005, 0, -0.12), (-0.03, 0, -0.12)]
+            v3 = [(x, -0.012, z) for x, _, z in verts] + [(x, 0.012, z) for x, _, z in verts]
+            n = len(verts)
+            faces = [tuple(range(n)), tuple(range(2 * n - 1, n - 1, -1))] + [(i, n + i, n + (i + 1) % n, (i + 1) % n) for i in range(n)]
+            o.append(poly_mesh("bolt", v3, faces, bolt))
+        else:
+            drop = toon("drop", 0x4FA3D9)
+            for i in range(5 if kind == "heavy_rain" else 3):
+                x = -0.07 + i * (0.14 / (4 if kind == "heavy_rain" else 2))
+                o.append(sphere("drop%d" % i, 0.013, (x, -0.02, -0.11 - (i % 2) * 0.03), drop, scale=(0.8, 0.8, 1.5), segs=10, rings=6))
+    return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+
+
+def icon_ui(kind):
+    o = []
+    if kind == "sack":
+        o.append(sphere("sack", 0.09, (0, 0, 0.085), toon("jute", 0xC9A46A), scale=(1, 0.9, 1.1), segs=16, rings=10))
+        o.append(cylinder("neck", 0.03, 0.05, 0.06, (0, 0, 0.19), toon("jute", 0xC9A46A), segs=14, smooth=True))
+        o.append(cylinder("tie", 0.034, 0.034, 0.014, (0, 0, 0.18), toon("tie", 0xB4572E), segs=14))
+    elif kind == "basket":
+        o.append(cylinder("basket", 0.11, 0.08, 0.08, (0, 0, 0.04), toon("cane", 0xB8873E), segs=20, smooth=True))
+        o.append(cylinder("rim", 0.112, 0.112, 0.012, (0, 0, 0.08), toon("caneDark", 0x8C6228), segs=20, outline=False))
+        for i, (x, y, col) in enumerate(((-0.04, 0.0, 0xE9506A), (0.04, 0.01, 0xFFB627), (0.0, -0.03, 0x58BF4A))):
+            o.append(sphere("veg%d" % i, 0.04, (x, y, 0.1), toon("veg%d" % i, col), segs=12, rings=8))
+    elif kind.startswith("star"):
+        fill = {"star_2": 0xFFC93C, "star_1": 0xFFE7A0, "star_0": 0xD9D2C4}[kind]
+        o.append(star_mesh("star", 0.11, 0.048, 0.03, toon(kind, fill)))
+        return turn(o, facing_camera(0.15))
+    elif kind == "close":
+        white = toon("x", 0xFFF3D1)
+        for a in (45, -45):
+            o.append(box("bar%d" % a, (0.03, 0.03, 0.2), (0, 0, 0), white, rot=Matrix.Rotation(math.radians(a), 3, "Y"), bevel=0.008))
+        return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+    return o
+
+
+SPRITES["bed_empty"] = lambda: model_bed(None, None)
+for _c in GARDEN:
+    for _st in STAGES:
+        SPRITES["bed_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_bed(c, st)))()
+for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", model_guava)):
+    for _st in ("sapling", "young", "mature", "ripe"):
+        SPRITES["tree_%s_%s" % (_t, _st)] = (lambda f=_f, st=_st: (lambda: f(st)))()
+SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
+                "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
+ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango"):
+    ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
+for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
+    ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
+for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
+    ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close"):
+    ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 
 

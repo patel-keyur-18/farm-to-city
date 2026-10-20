@@ -272,13 +272,13 @@ namespace Game.Presentation
                 switch (e)
                 {
                     case CropHarvested h:
-                        produce |= FlyProduce(SpriteBank.ProduceColour(h.CropId), _map.WorldOf(new Hit(HitKind.Tile, h.TileId)), 5);
+                        produce |= FlyProduce(IconBank.Good(h.CropId), _map.WorldOf(new Hit(HitKind.Tile, h.TileId)), 5);
                         break;
                     case GardenPicked g:
-                        produce |= FlyProduce(SpriteBank.ProduceColour(g.GoodId), _map.WorldOf(new Hit(HitKind.Bed, g.BedId)), 4);
+                        produce |= FlyProduce(IconBank.Good(g.GoodId), _map.WorldOf(new Hit(HitKind.Bed, g.BedId)), 4);
                         break;
                     case FruitPicked f:
-                        produce |= FlyProduce(SpriteBank.ProduceColour(f.TreeId), _map.WorldOf(new Hit(HitKind.Slot, f.SlotId)), 4);
+                        produce |= FlyProduce(IconBank.Good(f.TreeId), _map.WorldOf(new Hit(HitKind.Slot, f.SlotId)), 4);
                         break;
                     case SoldToTrader _:
                     case MarketSales _:
@@ -303,14 +303,14 @@ namespace Game.Presentation
             if (coins)
             {
                 Vector2 from = new Vector2(Screen.width * 0.5f, Screen.height * 0.45f);
-                _fx.Fly(SpriteBank.Coin, from, _hud.ScreenCentre(_hud.CashTarget), 4, _hud.BounceCash);
+                _fx.Fly(IconBank.Coin, from, _hud.ScreenCentre(_hud.CashTarget), 4, _hud.BounceCash);
             }
         }
 
-        private bool FlyProduce(Color colour, Vector2 world, int count)
+        private bool FlyProduce(Sprite icon, Vector2 world, int count)
         {
             Vector2 from = _input.WorldToScreen(world);
-            _fx.Fly(SpriteBank.Produce(colour), from, _hud.ScreenCentre(_hud.StoreTarget), count, _hud.BounceStore);
+            _fx.Fly(icon, from, _hud.ScreenCentre(_hud.StoreTarget), count, _hud.BounceStore);
             return true;
         }
 

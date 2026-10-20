@@ -238,7 +238,7 @@ namespace Game.Presentation.Map
                     default:
                         ground.sprite = SpriteBank.SoilTile;
                         ground.color = _tint * SoilColour(tv);
-                        detail.sprite = SpriteBank.Furrows;
+                        detail.sprite = null; // the furrows are modelled on the Blender soil
                         detail.color = _tint;
                         break;
                 }
@@ -525,10 +525,11 @@ namespace Game.Presentation.Map
                 }
                 else { v.Facing = "_front"; v.Body.flipX = false; }
 
-                // Hoeing: the stand and work frames alternate, a stroke every 0.7 s.
+                // Walking: four frames at 8 a second (ADR 0041 §8). Hoeing: the stand and work frames alternate, a stroke every 0.7 s.
                 bool down = hoeing && Mathf.Repeat(t + v.Phase, 0.7f) < 0.35f;
-                v.Body.sprite = SpriteBank.Rendered(v.Sprite + v.Facing + (down ? "_work" : "")) ?? SpriteBank.Rendered(v.Sprite + v.Facing);
-                float bob = walking ? Mathf.Abs(Mathf.Sin((t + v.Phase) * 9f)) * 0.012f : hoeing ? 0f : Mathf.Sin((t + v.Phase) * 2.2f) * 0.003f;
+                string frame = walking ? "_walk" + (int)Mathf.Repeat((t + v.Phase) * 8f, 4f) : down ? "_work" : "";
+                v.Body.sprite = SpriteBank.Rendered(v.Sprite + v.Facing + frame) ?? SpriteBank.Rendered(v.Sprite + v.Facing);
+                float bob = walking ? Mathf.Abs(Mathf.Sin((t + v.Phase) * 12.6f)) * 0.004f : hoeing ? 0f : Mathf.Sin((t + v.Phase) * 2.2f) * 0.003f;
                 v.Body.transform.position = v.Pos + new Vector3(0, bob, 0);
                 v.Shadow.transform.position = v.Pos;
                 int order = Mathf.RoundToInt(-v.Pos.y / _grid.HalfHeight * 100f) + 60;
