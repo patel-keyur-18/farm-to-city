@@ -86,6 +86,18 @@ namespace Sim.Core.Tests
             }
         }
 
+        // Spec 009 AC-15 (ADR 0045): the competent bot unlocks the Hamlet at a median of day 7 ± 2, on the sim's own rule.
+        [Test]
+        public void HamletPace()
+        {
+            var days = Gate.HamletDays(Live(), 100);
+            var met = days.Where(d => !double.IsNaN(d)).OrderBy(d => d).ToList();
+            TestContext.Out.WriteLine("unlocked in " + met.Count + " of 100; median day " + (met.Count == 0 ? "-" : met[met.Count / 2].ToString("0.0")));
+            Assert.That(met.Count, Is.GreaterThanOrEqualTo(50), "unlocked in most seeds");
+            double median = days.Select(d => double.IsNaN(d) ? double.MaxValue : d).OrderBy(d => d).ElementAt(50);
+            Assert.That(median, Is.InRange(5.0, 9.0));
+        }
+
         // ADR 0034 §7: every mechanic is used by at least one bot. The debt bots really borrow, and the defaulter really defaults.
         [Test]
         public void DebtBots_UseCredit()

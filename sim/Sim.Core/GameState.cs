@@ -5,6 +5,7 @@ using Sim.Core.Land;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.People;
+using Sim.Core.Progress;
 using Sim.Core.Saves;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
@@ -52,6 +53,12 @@ namespace Sim.Core
         /// <summary>Day labourers, hands, huts and orders (spec 006); null when the content has no people.</summary>
         public PeopleState People { get; internal set; }
 
+        /// <summary>The first session and the letter (spec 009); null when the content has no onboarding.</summary>
+        public GuidanceState Guidance { get; internal set; }
+
+        /// <summary>The era and the next era's progress (spec 009); null when the content has no onboarding.</summary>
+        public EraState Era { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -77,12 +84,20 @@ namespace Sim.Core
             if (Farm != null) Farm.WriteTo(h);
             if (Credit != null) Credit.WriteTo(h);
             if (People != null) People.WriteTo(h);
+            if (Guidance != null)
+            {
+                Guidance.WriteTo(h, _stepCount);
+                Era.WriteTo(h);
+            }
         }
+
+        /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
+        internal int _stepCount;
 
         private byte Sections()
         {
             return (byte)((Land != null ? 1 : 0) | (Ledger != null ? 2 : 0) | (Finance != null ? 4 : 0) | (Market != null ? 8 : 0)
-                | (Farm != null ? 16 : 0) | (Credit != null ? 32 : 0) | (People != null ? 64 : 0));
+                | (Farm != null ? 16 : 0) | (Credit != null ? 32 : 0) | (People != null ? 64 : 0) | (Guidance != null ? 128 : 0));
         }
 
         /// <summary>
@@ -94,7 +109,7 @@ namespace Sim.Core
             if (r.ReadInt() != HashFormatVersion) throw new SaveFormatException("state format");
             var s = new GameState { Seed = r.ReadULong() };
             Definitions.GameDefs g = config.Game;
-            int expected = g == null ? 0 : 31 | (g.Credit != null ? 32 : 0) | (g.People != null ? 64 : 0);
+            int expected = g == null ? 0 : 31 | (g.Credit != null ? 32 : 0) | (g.People != null ? 64 : 0) | (g.Onboarding != null ? 128 : 0);
             int sections = r.ReadByte();
             if (sections != expected) throw new SaveContentException("the save's sections (" + sections + ") don't match the content's (" + expected + ")");
             s.Clock = ClockState.ReadFrom(r);
@@ -109,6 +124,12 @@ namespace Sim.Core
             s.Farm = FarmState.ReadFrom(r, s.Land.Tiles.Count);
             if (g.Credit != null) s.Credit = CreditState.ReadFrom(r);
             if (g.People != null) s.People = PeopleState.ReadFrom(r);
+            if (g.Onboarding != null)
+            {
+                s._stepCount = g.Onboarding.Steps.Count;
+                s.Guidance = GuidanceState.ReadFrom(r, s._stepCount);
+                s.Era = EraState.ReadFrom(r);
+            }
             return s;
         }
 
@@ -137,6 +158,9 @@ namespace Sim.Core
                 Farm = Farm?.Clone(),
                 Credit = Credit?.Clone(),
                 People = People?.Clone(),
+                Guidance = Guidance?.Clone(),
+                Era = Era?.Clone(),
+                _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };
         }

@@ -31,7 +31,9 @@ namespace Sim.Content
             // People are optional content too (spec 006): only buildings with a hand's hut bring people.json.
             int handHut = buildings.FindIndex(b => b.Id == PeopleDefs.HandHutId);
             PeopleDefs people = handHut < 0 ? null : LoadPeople(read("people.json"), handHut, buildings[handHut]);
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people);
+            // The letter and the eras come with people (the Hamlet needs a hand's hut, spec 009 §4).
+            OnboardingDefs onboarding = people == null ? null : LoadOnboarding(read("onboarding.json"), read("eras.json"));
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)

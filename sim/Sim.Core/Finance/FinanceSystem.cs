@@ -76,6 +76,7 @@ namespace Sim.Core.Finance
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));
+            Progress.EraRules.OnSeasonClosed(sim, report.FarmProfit, closing); // after the books (spec 009 §3.6)
             ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);
         }
 
