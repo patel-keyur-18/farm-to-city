@@ -75,6 +75,7 @@ namespace Game.Presentation
             {
                 NowWallUtc = WallNow(), UtcOffsetMinutes = UtcOffsetMinutes(), LastSavedWallUtc = _saves.LastSavedWallUtc,
                 NotificationsOn = NotificationsOn, PlayLogOn = PlayLogOn, PlayLogLines = _playLog.Lines.Count, ImportFiles = _townFiles,
+                Numbers = _format, TextSize = TextSize, ReducedMotion = ReducedMotion, Sound = SoundOn, Haptics = HapticsOn,
             };
         }
 
@@ -214,12 +215,6 @@ namespace Game.Presentation
 
         // ---- Settings ----
 
-        private void OpenSettings()
-        {
-            _townFiles = _saves.TownFiles().Count;
-            OpenSheet(new SheetRequest("Settings", 0));
-        }
-
         private void ScanImports()
         {
             _importFiles = new List<ImportFile>();
@@ -270,7 +265,8 @@ namespace Game.Presentation
                     ShowCard(Cards.Replace(_ctx), b => Replace(b, NewTown, () => SettingsAction(action)));
                     break;
                 default:
-                    return false;
+                    if (!LookAction(id)) return false;
+                    break;
             }
             if (_open.HasValue && _sheet.IsOpen) ShowCurrentSheet(refreshOnly: true);
             return true;

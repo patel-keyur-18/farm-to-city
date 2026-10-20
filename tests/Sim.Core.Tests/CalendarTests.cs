@@ -78,9 +78,9 @@ namespace Sim.Core.Tests
         public void SpellIndex()
         {
             Assert.That(Calendar.SpellAt(0, Clock), Is.EqualTo(0));
-            Assert.That(Calendar.SpellAt(6 * 3600 - 1, Clock), Is.EqualTo(0));
-            Assert.That(Calendar.SpellAt(6 * 3600, Clock), Is.EqualTo(1));
-            Assert.That(Calendar.SpellAt(Day, Clock), Is.EqualTo(4));
+            Assert.That(Calendar.SpellAt(3600 - 1, Clock), Is.EqualTo(0));
+            Assert.That(Calendar.SpellAt(3600, Clock), Is.EqualTo(1));
+            Assert.That(Calendar.SpellAt(Day, Clock), Is.EqualTo(24));
         }
     }
 }

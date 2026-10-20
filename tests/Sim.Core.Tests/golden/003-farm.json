@@ -255,7 +255,7 @@
       "loads": [
         {
           "good": "radish",
-          "quantity": 165385
+          "quantity": 143577
         }
       ]
     },
@@ -632,6 +632,14 @@
       "mode": "live"
     },
     {
+      "type": "Sow",
+      "at": 162264,
+      "tile": 19,
+      "crop": "radish",
+      "seed": "certified",
+      "fertiliser": "chemical"
+    },
+    {
       "type": "PickGarden",
       "at": 162264,
       "bed": 1,
@@ -672,6 +680,12 @@
       "crop": "radish",
       "seed": "certified",
       "fertiliser": "chemical"
+    },
+    {
+      "type": "Harvest",
+      "at": 173081,
+      "tile": 19,
+      "overflow": "sellRest"
     },
     {
       "type": "Sow",
@@ -1109,17 +1123,12 @@
       "crop": "garden_radish"
     },
     {
-      "type": "Spray",
-      "at": 346043,
-      "tile": 27
-    },
-    {
       "type": "GoToMandi",
       "at": 346043,
       "loads": [
         {
           "good": "potato",
-          "quantity": 85100
+          "quantity": 179981
         }
       ]
     },
@@ -1198,6 +1207,11 @@
       "at": 367677,
       "bed": 2,
       "crop": "garden_radish"
+    },
+    {
+      "type": "Spray",
+      "at": 367677,
+      "tile": 18
     },
     {
       "type": "AdvanceTo",
@@ -1488,7 +1502,7 @@
       "loads": [
         {
           "good": "potato",
-          "quantity": 514778
+          "quantity": 417768
         }
       ]
     },
@@ -1948,6 +1962,14 @@
     {
       "type": "Sow",
       "at": 562383,
+      "tile": 18,
+      "crop": "lentils",
+      "seed": "saved",
+      "fertiliser": "chemical"
+    },
+    {
+      "type": "Sow",
+      "at": 562383,
       "tile": 27,
       "crop": "lentils",
       "seed": "saved",
@@ -2032,16 +2054,14 @@
     {
       "type": "Harvest",
       "at": 594834,
-      "tile": 27,
+      "tile": 18,
       "overflow": "sellRest"
     },
     {
-      "type": "Sow",
+      "type": "Harvest",
       "at": 594834,
       "tile": 27,
-      "crop": "rice",
-      "seed": "certified",
-      "fertiliser": "none"
+      "overflow": "sellRest"
     },
     {
       "type": "SetLabourSplit",
@@ -2072,6 +2092,14 @@
       "at": 605651,
       "tile": 26,
       "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 605651,
+      "tile": 27,
+      "crop": "lentils",
+      "seed": "saved",
+      "fertiliser": "compost"
     },
     {
       "type": "Sow",
@@ -2151,6 +2179,20 @@
       "fertiliser": "none"
     },
     {
+      "type": "Harvest",
+      "at": 638102,
+      "tile": 27,
+      "overflow": "sellRest"
+    },
+    {
+      "type": "Sow",
+      "at": 638102,
+      "tile": 27,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "compost"
+    },
+    {
       "type": "PickFruit",
       "at": 638102,
       "slot": 14,
@@ -2174,14 +2216,6 @@
       "overflow": "sellRest"
     },
     {
-      "type": "Sow",
-      "at": 648919,
-      "tile": 19,
-      "crop": "rice",
-      "seed": "certified",
-      "fertiliser": "chemical"
-    },
-    {
       "type": "Harvest",
       "at": 648919,
       "tile": 26,
@@ -2198,19 +2232,17 @@
       "mode": "live"
     },
     {
-      "type": "GoToMandi",
-      "at": 659736,
-      "loads": [
-        {
-          "good": "rice",
-          "quantity": 448270
-        }
-      ]
-    },
-    {
       "type": "AdvanceTo",
       "target": 670553,
       "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 670553,
+      "tile": 26,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "none"
     },
     {
       "type": "AdvanceTo",
@@ -2218,19 +2250,13 @@
       "mode": "live"
     },
     {
-      "type": "Harvest",
-      "at": 681370,
-      "tile": 27,
-      "overflow": "sellRest"
-    },
-    {
       "type": "Sow",
       "at": 681370,
-      "tile": 27,
-      "crop": "rice",
-      "seed": "certified",
+      "tile": 19,
+      "crop": "lentils",
+      "seed": "saved",
       "fertiliser": "chemical"
     }
   ],
-  "expectedHash": "0x3298BCB6B36F689D"
+  "expectedHash": "0xCA6205EDED737A6C"
 }

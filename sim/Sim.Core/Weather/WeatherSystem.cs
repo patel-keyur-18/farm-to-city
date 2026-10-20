@@ -7,8 +7,8 @@ using Sim.Core.Time;
 namespace Sim.Core.Weather
 {
     /// <summary>
-    /// Generates 6-hour spells and keeps the forecast (spec 001 §3.5–3.6). Runs in the hourly pass;
-    /// spells start at sim hours 00, 06, 12 and 18 by default.
+    /// Generates the weather spells and keeps the forecast (spec 001 §3.5–3.6). Runs in the hourly pass;
+    /// a spell is 1 hour by default (ADR 0042).
     /// </summary>
     internal sealed class WeatherSystem : ISimSystem
     {
@@ -21,6 +21,8 @@ namespace Sim.Core.Weather
             long current = Calendar.SpellAt(sim.State.Clock.SimTime, sim.Clock);
             w.FirstSpell = 0;
             Generate(sim, current + sim.Clock.ForecastSpells);
+            w.CurrentRunStart = 0;
+            TrackRunStart(w, current);
             w.DropBefore(current);
             w.SetForecast(ComputeForecast(sim, current));
         }
@@ -34,6 +36,7 @@ namespace Sim.Core.Weather
             WeatherState w = sim.State.Weather;
             long spell = Calendar.SpellAt(t, sim.Clock);
             Generate(sim, spell + sim.Clock.ForecastSpells);
+            TrackRunStart(w, spell);
             w.DropBefore(spell);
             sim.Emit(new WeatherSpellStarted(t, spell, sim.Weather.Types[w.WeatherOf(spell)].Id));
 
@@ -51,18 +54,30 @@ namespace Sim.Core.Weather
             w.SetForecast(next);
         }
 
-        /// <summary>The forecast for the spells after <paramref name="current"/>; stable for a given state.</summary>
+        /// <summary>Moves <see cref="WeatherState.CurrentRunStart"/> along the buffer up to <paramref name="spell"/>.</summary>
+        private static void TrackRunStart(WeatherState w, long spell)
+        {
+            for (long n = System.Math.Max(w.FirstSpell + 1, w.CurrentRunStart + 1); n <= spell; n++)
+                if (w.WeatherOf(n) != w.WeatherOf(n - 1)) w.CurrentRunStart = n;
+        }
+
+        /// <summary>The forecast for the spells after <paramref name="current"/>, rolled per actual run (ADR 0043); stable for a given state.</summary>
         public static List<ForecastEntry> ComputeForecast(Simulation sim, long current)
         {
             ClockDef clock = sim.Clock;
             WeatherState w = sim.State.Weather;
             var list = new List<ForecastEntry>(clock.ForecastSpells);
+            long runStart = w.CurrentRunStart;
+            int previous = w.WeatherOf(current);
             for (long k = 1; k <= clock.ForecastSpells; k++)
             {
                 long spell = current + k;
+                int actual = w.WeatherOf(spell);
+                if (actual != previous) runStart = spell;
+                previous = actual;
                 int bucket = WeatherRules.Bucket(k, clock);
                 ClimateDef climate = sim.Weather.ClimateFor(SeasonOfSpell(spell, clock));
-                int shown = WeatherRules.ForecastWeather(sim.State.Seed, spell, bucket, w.WeatherOf(spell), climate, clock);
+                int shown = WeatherRules.ForecastWeather(sim.State.Seed, runStart, bucket, actual, climate, clock);
                 list.Add(new ForecastEntry(spell, bucket, shown));
             }
             return list;

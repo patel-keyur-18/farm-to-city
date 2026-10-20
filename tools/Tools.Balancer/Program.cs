@@ -49,6 +49,12 @@ namespace Tools.Balancer
             var spellsPerSeason = new long[4];
             // spell → the weather each bucket first showed for it (−1 = not shown yet); keyed lookups only.
             var firstShown = new Dictionary<long, int[]>();
+            var runs = new long[4, types]; // runs started per season and weather (ADR 0043's mean runs)
+            int previousWeather = -1;
+            var wetShares = new List<double>[4]; // each season's wet share (rain, heavy rain, storm): the spread across seasons
+            for (int s = 0; s < 4; s++) wetShares[s] = new List<double>();
+            long seasonWet = 0, seasonHours = 0;
+            int lastSeason = -1;
             var hits = new long[clock.ForecastDays];
             var samples = new long[clock.ForecastDays];
 
@@ -71,8 +77,15 @@ namespace Tools.Balancer
                 {
                     if (!(e is WeatherSpellStarted spell)) continue;
                     int season = (int)Calendar.SeasonAt(spell.SimTime, clock);
-                    counts[season, weather.IndexOf(spell.WeatherId)]++;
+                    int w = weather.IndexOf(spell.WeatherId);
+                    counts[season, w]++;
                     spellsPerSeason[season]++;
+                    if (w != previousWeather) runs[season, w]++;
+                    previousWeather = w;
+                    if (season != lastSeason && lastSeason >= 0 && seasonHours > 0) { wetShares[lastSeason].Add(seasonWet / (double)seasonHours); seasonWet = seasonHours = 0; }
+                    lastSeason = season;
+                    seasonHours++;
+                    if (spell.WeatherId == "rain" || spell.WeatherId == "heavy_rain" || spell.WeatherId == "storm") seasonWet++;
                 }
 
                 // Score every forecast made for the spell that has just started.
@@ -92,7 +105,7 @@ namespace Tools.Balancer
 
             Console.WriteLine("Farm to City balancer, sim " + SimInfo.Version + ". " + years + " game years, seed " + seed + ".");
             Console.WriteLine();
-            Console.WriteLine("Weather frequency per season, % of spells (target in brackets):");
+            Console.WriteLine("Weather frequency per season, % of hours (target in brackets):");
             Console.Write("  " + "Season".PadRight(9));
             foreach (WeatherTypeDef t in weather.Types) Console.Write(t.Id.PadLeft(16));
             Console.WriteLine();
@@ -110,10 +123,28 @@ namespace Tools.Balancer
                 Console.WriteLine();
             }
 
+            Console.WriteLine();
+            Console.WriteLine("Mean run per season, hours (spec 001 §4):");
+            for (int s = 0; s < 4; s++)
+            {
+                Console.Write("  " + ((Season)s).ToString().PadRight(9));
+                for (int i = 0; i < types; i++)
+                    Console.Write((runs[s, i] == 0 ? "-" : (counts[s, i] / (double)runs[s, i]).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)).PadLeft(16));
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+            Console.WriteLine("Wet share (rain, heavy rain, storm) across seasons, mean / standard deviation:");
+            for (int s = 0; s < 4; s++)
+            {
+                List<double> v = wetShares[s];
+                double mean = v.Count == 0 ? 0 : v.Average(), sd = v.Count == 0 ? 0 : Math.Sqrt(v.Average(x => (x - mean) * (x - mean)));
+                Console.WriteLine("  " + ((Season)s).ToString().PadRight(9) + mean.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " / " + sd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+            }
+
             int m = (int)Season.Monsoon;
             long rainy = counts[m, weather.IndexOf("rain")] + counts[m, weather.IndexOf("heavy_rain")];
             Console.WriteLine();
-            Console.WriteLine("Rainy Monsoon spells (rain + heavy rain): " + Pct(rainy, spellsPerSeason[m]) + "% (target about 55%, ±5)");
+            Console.WriteLine("Rainy Monsoon hours (rain + heavy rain): " + Pct(rainy, spellsPerSeason[m]) + "% (target about 55%, ±5)");
             Console.WriteLine();
             Console.WriteLine("Measured forecast accuracy (target in brackets):");
             for (int b = 0; b < clock.ForecastDays; b++)

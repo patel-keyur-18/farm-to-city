@@ -1,15 +1,15 @@
 # 001. Time and weather
 
-- Status: Approved (2026-10-17)
+- Status: Approved (2026-10-17); §3.5, §3.6, §4, §8 (AC-14, AC-16, AC-17, AC-19, AC-20) and §9 amended by ADR 0042 and ADR 0043, re-approved (2026-10-20)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Time and world simulation; Offline play and saves (time while closed, clock safety); Technical architecture (simulation core, determinism rules)
-- Related ADRs: 0002 (real-time clock model), 0017 (time-travel panel), 0018 (dotnet library, determinism rules)
+- Related ADRs: 0002 (real-time clock model), 0017 (time-travel panel), 0018 (dotnet library, determinism rules), 0042 (1-hour spells, per-weather persistence), 0043 (run lengths per season, the forecast as runs)
 - Depends on specs: none (this is the first spec)
 
 ## 1. Goal
 
-The town lives on a real clock. The player plants, closes the app, and comes back to find that time has really passed, with seasons turning and the weather changing in 6-hour spells they can plan around using a forecast.
+The town lives on a real clock. The player plants, closes the app, and comes back to find that time has really passed, with seasons turning and the weather changing hour by hour in runs they can plan around using a forecast (calm weather lasts, severe weather passes; ADR 0042).
 
 **Lesson:** time is a resource, and preparing for the weather you can see coming beats reacting to the weather that arrives.
 
@@ -26,7 +26,7 @@ The town lives on a real clock. The player plants, closes the app, and comes bac
   - one `AdvanceTo` path for live play and for returning to the app
   - **away mode**, the **72-hour away cap**, and **clock-anomaly** handling
 - **Weather:**
-  - 6-hour spells drawn from per-season climate tables, with persistence
+  - 1-hour spells drawn from per-season climate tables, with persistence per weather (ADR 0042)
   - a **3-day forecast** that is less certain further ahead
 - **Queries the platform layer needs** to schedule local notifications: upcoming jobs, and mapping sim time to wall time.
 - **Developer time travel:** the commands and their rules. The panel itself is built when the Unity project exists.
@@ -110,26 +110,29 @@ The platform layer calls **`Sync(nowWallUtc)`** every frame (or at least once a 
 ### 3.5 Weather
 
 - **Weather types (7):** Sun, Cloudy, Rain, Heavy rain, Heatwave, Frost, Storm.
-- **Spells** start at sim hours 00, 06, 12 and 18. The weather for spell `n` is generated once, in spell order, and doesn't change afterwards:
+- **Spells are 1 hour** (ADR 0042): spell `n` covers sim hour `n`. 1 sim hour is about 1 world day (a season is 4 real days for about 3 months), so there is no hour-of-day rule: a frost at 14:00 is a frosty day. The weather for spell `n` is generated once, in spell order, and doesn't change afterwards:
   1. Let `c` be the climate table for the season that contains the start of spell n.
-  2. If n = 0, or the previous spell's weather has weight 0 in `c`: draw from `c.weights` (weighted pick).
-  3. Otherwise, with probability `c.persistence`, keep the previous spell's weather. Else draw from `c.weights`.
+  2. If n = 0, or the previous spell's weather has share 0 in `c`: draw from `c`'s **draw weights** (weighted pick).
+  3. Otherwise, with probability `c.persistence[prev]` (the previous weather's persistence in this season), keep the previous spell's weather. Else draw from the draw weights (the previous weather can be drawn again).
   - Draws use the RNG with stream `Weather`, key `n`, counters 0 and 1.
-- **Long-run behaviour:** the stationary distribution of this process equals `c.weights` (normalised), so weights are the long-run frequencies. The chance that two consecutive spells match is `p + (1 − p) × Σ wᵢ²`.
-- **Generation buffer:** the sim keeps actual weather generated for at least the next `forecastDays × 24 / weatherSpellHours` spells (12 by default).
+- **Shares and draw weights** (ADR 0042 §3). `c.shares` are the long-run frequencies (the tuned climate). For this chain the long-run share of weather i is proportional to `wᵢ / (1 − pᵢ)`, so the draw weights are derived from the shares: **`wᵢ = shareᵢ × round(1000 × (1 − pᵢ))`**, an exact integer (persistence has at most 3 decimals). The long-run share of every weather then equals its share exactly.
+- **Run lengths.** The mean run of weather i is `1 / ((1 − pᵢ) × (1 − w̄ᵢ))` hours, where `w̄ᵢ` is its normalised draw weight. The persistence values in §4 give ADR 0043's runs (sun 29–37 h outside the Monsoon, about 6 h breaks in it; Monsoon rain about 18 h; heavy rain and storms 1.5–2.2 h).
+- **Generation buffer:** the sim keeps actual weather generated for at least the next `forecastDays × 24 / weatherSpellHours` spells (72 by default), and the first hour of the run the current spell belongs to (`currentRunStart`, for the forecast).
 
 ### 3.6 Forecast
 
-The forecast covers the next 3 days, which is 12 spells by default. Each future spell `s` is in an accuracy **bucket** by how far ahead it is:
+The forecast covers the next 3 days, which is 72 spells by default. Each future spell `s` is in an accuracy **bucket** by how far ahead it is (k = s − current):
 
-| Bucket | Spells ahead | What the forecast shows |
+| Bucket | Hours ahead | What the forecast shows |
 | --- | --- | --- |
-| Day 1 | 1–4 | The actual weather, always |
-| Day 2 | 5–8 | The actual weather with probability `forecastAccuracy[1]` (default 0.80). Otherwise an *alternative* |
-| Day 3 | 9–12 | The actual weather with probability `forecastAccuracy[2]` (default 0.65). Otherwise an alternative |
+| Day 1 | 1–24 | The actual weather, always |
+| Day 2 | 25–48 | The actual weather with probability `forecastAccuracy[1]` (default 0.80). Otherwise an *alternative* |
+| Day 3 | 49–72 | The actual weather with probability `forecastAccuracy[2]` (default 0.65). Otherwise an alternative |
 
-- **The alternative** is a weighted pick from the season's weights with the actual weather removed. If nothing is left, the actual weather is shown.
-- **The forecast is deterministic and stable.** It uses the RNG with stream `Forecast`, key `s`, and the bucket number as the counter. Asking twice gives the same answer. The forecast for a spell can change only when that spell moves into a nearer bucket. When it does, the sim emits `ForecastRevised`.
+- **Rolled per run, not per hour** (ADR 0043). Let `r(s)` be the first hour of the actual run that contains `s` (the latest hour ≤ s whose weather differs from the hour before it, or `currentRunStart`). The accuracy roll for spell s uses stream `Forecast`, key `r(s)`, counter = bucket; the alternative pick uses key `r(s)`, counter = 16 + bucket. Every hour of a run in the same bucket therefore shows the same thing, so days 2 and 3 never flicker hour by hour, and the accuracy per hour stays 100% / 80% / 65%.
+- **The alternative** is a weighted pick from the shares of the season containing s, with the actual weather removed. If nothing is left, the actual weather is shown.
+- **The forecast is deterministic and stable.** Asking twice gives the same answer. The forecast for a spell can change only when that spell moves into a nearer bucket. When it does, the sim emits `ForecastRevised`.
+- **Shown as runs** (`Sim.View`): consecutive hours that show the same weather are one run with a start and an end. The HUD shows the current run and the next ("Sun until 14:00 · then heavy rain about 1 h"; "Sun all day" when the run passes 24 hours); the forecast sheet lists every run over 72 hours, days 2 and 3 marked "likely". Times read today, tomorrow, then the weekday, as the phone's now plus the hours ahead.
 
 ### 3.7 Upcoming jobs and wall-time mapping (for notifications)
 
@@ -155,7 +158,7 @@ The forecast covers the next 3 days, which is 12 spells by default. Each future 
 | Definition | Field | Type | Default | Bounds | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `ClockDef` | `daysPerSeason` | int | 4 | 1–15 | ADR 0002 |
-| | `weatherSpellHours` | int | 6 | divides 24 | |
+| | `weatherSpellHours` | int | 1 | divides 24 | ADR 0042 |
 | | `lifeYearsPerSeason` | Fixed | 1.0 | 0.25–4 | Life clock |
 | | `awayCapHours` | int | 72 | 24–168 | |
 | | `awayThresholdSeconds` | int | 60 | 5–600 | Live vs away |
@@ -165,26 +168,37 @@ The forecast covers the next 3 days, which is 12 spells by default. Each future 
 | | `nameKey` | string | | | String-table key |
 | | `isSevere` | bool | | | Read by later specs (crop health, away rules) |
 | `ClimateDef` | `season` | enum | | | One per season |
-| | `weights` | map of weather id to int | see below | ≥ 0, sum > 0 | |
-| | `persistence` | Fixed | see below | 0–0.95 | |
+| | `weights` | map of weather id to int | see below | ≥ 0, sum > 0 | The long-run **shares** (same numbers and meaning as before ADR 0042) |
+| | `persistence` | map of weather id to Fixed | see below | 0–0.98, at most 3 decimals; a weather with share 0 needs none | Per weather (ADR 0042); the draw weights are derived (§3.5) |
 
-**Starting climate tables** (weights; tuned later in the economy model and playtests):
+**Climate tables** (shares; tuned later in the economy model and playtests):
 
-| Season | Sun | Cloudy | Rain | Heavy rain | Heatwave | Frost | Storm | Persistence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Spring | 47 | 28 | 15 | 2 | 5 | 3 | 0 | 0.50 |
-| Summer | 53 | 10 | 5 | 0 | 25 | 0 | 7 | 0.55 |
-| Monsoon | 10 | 25 | 35 | 20 | 0 | 0 | 10 | 0.60 |
-| Winter | 58 | 24 | 4 | 0 | 0 | 14 | 0 | 0.50 |
+| Season | Sun | Cloudy | Rain | Heavy rain | Heatwave | Frost | Storm |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Spring | 47 | 28 | 15 | 2 | 5 | 3 | 0 |
+| Summer | 53 | 10 | 5 | 0 | 25 | 0 | 7 |
+| Monsoon | 10 | 25 | 35 | 20 | 0 | 0 | 10 |
+| Winter | 58 | 24 | 4 | 0 | 0 | 14 | 0 |
 
-Tuned in Sprint 2 (US-014.T6, ADR 0027: data, no re-approval) so the land's seasonal moisture meets spec 002's realistic hook: a drier Spring (late rabi: rain in 15% of spells, the first heat), pre-monsoon thunderstorms in Summer, and a sunnier, drying Winter. The Monsoon is unchanged (55% rainy spells). The golden replay `001-basic.json` was re-pinned for it.
+Tuned in Sprint 2 (US-014.T6, ADR 0027: data, no re-approval) so the land's seasonal moisture meets spec 002's realistic hook: a drier Spring (late rabi: rain in 15% of hours, the first heat), pre-monsoon thunderstorms in Summer, and a sunnier, drying Winter. The Monsoon is unchanged (55% rainy hours). Unchanged by ADR 0042.
+
+**Persistence** (ADR 0043), with the mean run it gives in hours:
+
+| Season | Sun | Cloudy | Rain | Heavy rain | Heatwave | Frost | Storm |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Spring | 0.96 (29 h) | 0.85 (10 h) | 0.77 (6 h) | 0.24 (1.5 h) | 0.82 (6 h) | 0.64 (3 h) | — |
+| Summer | 0.97 (37 h) | 0.81 (6 h) | 0.73 (4 h) | — | 0.83 (8 h) | — | 0 (1.8 h) |
+| Monsoon | 0.82 (6 h) | 0.86 (8 h) | 0.94 (18 h) | 0 (2.2 h) | — | — | 0.12 (1.5 h) |
+| Winter | 0.97 (37 h) | 0.90 (12 h) | 0.83 (6 h) | — | — | 0 (4 h) | — |
+
+Derived draw weights (§3.5): Spring 1,880 · 4,200 · 3,450 · 1,520 · 900 · 1,080 · 0; Summer 1,590 · 1,900 · 1,350 · 0 · 4,250 · 0 · 7,000; Monsoon 1,800 · 3,500 · 2,100 · 20,000 · 0 · 0 · 8,800; Winter 1,740 · 2,400 · 680 · 0 · 0 · 14,000 · 0.
 
 **Example `content/clock.json`:**
 
 ```json
 {
   "daysPerSeason": 4,
-  "weatherSpellHours": 6,
+  "weatherSpellHours": 1,
   "lifeYearsPerSeason": 1.0,
   "awayCapHours": 72,
   "awayThresholdSeconds": 60,
@@ -201,7 +215,8 @@ Tuned in Sprint 2 (US-014.T6, ADR 0027: data, no re-approval) so the land's seas
 | | `lastWallUtc` | long | Unix seconds, UTC |
 | | `isAway` | bool | True only during an away advance |
 | `World` | `seed` | ulong | Set at new game |
-| `WeatherState` | `generated` | list of (spellIndex, weatherId) | From the current spell to at least current + 12 |
+| `WeatherState` | `generated` | list of (spellIndex, weatherId) | From the current spell to at least current + 72 |
+| | `currentRunStart` | long | The first hour of the current spell's run (§3.6) |
 | | `forecastShown` | list of (spellIndex, bucket, weatherId) | Used to detect `ForecastRevised` |
 | `Scheduler` | `items` | priority queue of (dueTime, class, systemOrder, entityId, sequence, payload) | Jobs and passes |
 | | `nextSequence` | long | |
@@ -249,11 +264,11 @@ The HUD itself is spec 008. This spec only defines what the HUD's time-and-weath
 HUD top strip (landscape, top-left)
 +------------------------------------------------------------------+
 | Spring · Day 2 of 4 · Year 1   14:05   [sun] Sun                 |
-| Next:  [rain] 18:00   [cloudy] 00:00   [sun] 06:00   [sun] 12:00 |  <- Day 1: certain
-| Day 2: [rain] likely     Day 3: [cloudy] likely                  |  <- uncertain, per bucket
+| [sun] Sun until 14:00 · then [heavy_rain] heavy rain about 1 h   |  <- the current run and the next (ADR 0043)
 +------------------------------------------------------------------+
   Tap the strip to open the 3-day forecast sheet.
-  Why? on a forecast: "Day 2 forecasts are right about 80% of the time."
+  The sheet lists one row per run over 3 days; days 2-3 marked "likely".
+  Why? on a forecast: "Forecasts for tomorrow are right about 8 times in 10."
 
 Developer panel (development builds only; opened by a hidden gesture)
 +-------------------------------+
@@ -283,12 +298,12 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-11 | Given seed 7 and a world with weather and three dummy jobs, when advancing to 1 game year in one call, versus 500 random seeded chunks, then the `StateHash` and the ordered event list are identical | `SchedulerTests.ChunkingInvariance` |
 | AC-12 | Given a command stamped at t and an item due at t, then the item is processed first. A command stamped earlier than `simTime` is rejected with `TimeInPast` | `SchedulerTests.Commands_ApplyAfterDueItems_RejectPast` |
 | AC-13 | Given a fixed seed and the stored command log `golden/001-basic.json`, when replayed, then the final `StateHash` equals the stored golden hash | `ReplayTests.Golden_001_Basic` |
-| AC-14 | Given a day advanced from 00:00, then `WeatherSpellStarted` is emitted exactly 4 times, at 00, 06, 12 and 18 | `WeatherTests.SpellBoundaries` |
-| AC-15 | Over 10 000 Summer spells, Frost never occurs (weight 0). Over 10 000 Monsoon spells, Heatwave never occurs | `WeatherTests.ZeroWeight_NeverDrawn` |
-| AC-16 | Over 10 000 spells per season, each weather type's frequency is within ±3 percentage points of its normalised weight | `WeatherTests.Frequencies_MatchWeights` |
-| AC-17 | Over 10 000 spells per season, the share of consecutive identical spells is within ±3 points of `p + (1 − p)Σwᵢ²` | `WeatherTests.Persistence_MatchesFormula` |
+| AC-14 | Given a day advanced from 00:00, then `WeatherSpellStarted` is emitted exactly 24 times, once at each hour | `WeatherTests.SpellBoundaries` |
+| AC-15 | Over 10 000 Summer spells, Frost never occurs (share 0). Over 10 000 Monsoon spells, Heatwave never occurs | `WeatherTests.ZeroWeight_NeverDrawn` |
+| AC-16 | Over 200 000 spells per season, each weather type's frequency is within ±2 percentage points of its normalised share; the derived draw weights equal §4's | `WeatherTests.Frequencies_MatchShares` |
+| AC-17 | Over 200 000 spells per season, each weather's mean run length is within ±10% of `1 / ((1 − pᵢ)(1 − w̄ᵢ))` and of §4's table | `WeatherTests.RunLengths_MatchFormula` |
 | AC-18 | Given Spring's last spell is Frost, then Summer's first spell is drawn from Summer weights and is never Frost | `WeatherTests.SeasonChange_DropsInvalidCarryOver` |
-| AC-19 | The forecast for spells 1–4 ahead always equals the actual weather. Over 10 000 samples, spells 5–8 match 77–83% of the time, and spells 9–12 match 62–68% | `ForecastTests.AccuracyByBucket` |
+| AC-19 | The forecast for hours 1–24 ahead always equals the actual weather. Over 2 000 seeds, hours 25–48 match 77–83% of the time, and hours 49–72 match 62–68%. Every hour of one actual run in one bucket (and one season) shows the same weather | `ForecastTests.AccuracyByBucket_RolledPerRun` |
 | AC-20 | Asking for the forecast twice at the same sim time gives identical results. A spell's forecast changes only on a bucket change, and when it changes, `ForecastRevised` is emitted | `ForecastTests.Stable_RevisedOnlyOnBucketChange` |
 | AC-21 | Given `lastWallUtc` = W, when `Sync(W + 30)`, then sim time advances 30 s in Live mode, and no `AwayAdvanceCompleted` is emitted | `AwayTests.SmallDelta_IsLive` |
 | AC-22 | When `Sync(W + 5 h)`, then sim time advances exactly 5 h in Away mode, and `AwayAdvanceCompleted` reports applied = 5 h and capped = false | `AwayTests.Away_UnderCap` |
@@ -298,14 +313,16 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-26 | `UpcomingJobs(simTime + cap)` returns only jobs due within the cap, in processing order, and their wall times equal `lastWallUtc + (due − simTime)` | `SchedulerTests.UpcomingJobs_ForNotifications` |
 | AC-27 | With dev commands disabled, `DebugAdvance` is rejected with `DevCommandsDisabled`. With them enabled, +1 day advances exactly 86 400 s in Live mode, and "jump to away cap" behaves like AC-22 and AC-23. Both are recorded in the command log | `DebugTests.TimeTravel_GatedAndExact` |
 | AC-28 | Performance (CI, Release build): advancing 72 h with clock and weather only takes under 20 ms, and 1 game year under 100 ms | `PerfTests.Advance72h_And1Year` (category `Perf`) |
-| AC-29 | Loading `content/clock.json` with `weatherSpellHours = 5` (doesn't divide 24), or with forecast accuracies that increase, fails validation with a message naming the field | `ContentTests.ClockDef_Validation` |
+| AC-29 | Loading `content/clock.json` with `weatherSpellHours = 5` (doesn't divide 24), or with forecast accuracies that increase, fails validation with a message naming the field; so does a persistence above 0.98, with more than 3 decimals, or missing for a weather with a share | `ContentTests.ClockDef_Validation`, `ContentTests.Climate_Validation` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
-| Weather frequency per season | Equals the normalised climate weights | ±3 points over 10 000 spells |
-| Rainy spells per Monsoon (Rain + Heavy rain) | About 55% of spells (8–9 of 16) | ±5 points |
+| Weather frequency per season | Equals the normalised climate shares | ±2 points over 200 000 spells |
+| Mean run length per weather and season | §4's persistence table | ±10% |
+| Rainy hours per Monsoon (Rain + Heavy rain) | About 55% of hours | ±5 points |
+| Season-to-season spread of the wet share | No wider than with 6-hour spells (Spring sd ≈ 0.14, Monsoon ≈ 0.18) | Balancer |
 | Measured forecast accuracy, days 2 and 3 | 0.80 and 0.65 | ±0.03 |
 | Away advance cost | Well under the GDD's 2 s budget on device. CI guard in AC-28 | — |
 
@@ -321,7 +338,7 @@ All three were resolved at approval (2026-10-17), following the recommendations:
 
 The spec left these open. The owner decided 1–4; 5 and 6 are implementation choices with the same observable behaviour. None changes a formula.
 
-1. **Forecast RNG counters (§3.6).** The accuracy roll uses counter = bucket; the alternative pick uses counter = 16 + bucket (`WeatherRules.AlternativeCounterOffset`).
+1. **Forecast RNG counters (§3.6).** The accuracy roll uses counter = bucket; the alternative pick uses counter = 16 + bucket (`WeatherRules.AlternativeCounterOffset`). From ADR 0043 the key is the run's first hour, not the spell.
 2. **`DebugAdvance` steps (§3.8, AC-27).** +1 h, +1 day, +1 season and the away cap are allowed in both modes. In Away mode the cap applies: +1 day gives 24 h uncapped (like AC-22); +1 season (96 h) gives 72 h, capped, at the same time of day (like AC-23).
 3. **Command log and hash.** Every accepted command is logged (`NewGame`, `Sync`, `AdvanceTo`, `DebugAdvance`, later game commands); rejected commands are not. `StateHash` covers the world state only, never the command log.
 4. **`Fixed` overflow (§3.1).** Add, subtract, multiply and divide throw `OverflowException` in every build configuration, not only in debug builds, so behaviour never depends on the build.
@@ -329,6 +346,14 @@ The spec left these open. The owner decided 1–4; 5 and 6 are implementation ch
 6. **Passes as scheduler items.** Each pass is one scheduler item (systemOrder = Time) that calls every system in system order, then reschedules itself. This gives the same order as one item per system.
 
 Also fixed in content: `isSevere` is true for Heavy rain, Heatwave, Frost and Storm (`content/weather.json`; tunable data).
+
+### Amendment for US-184 (Sprint 7 planning review, 2026-10-20, ADR 0042 and ADR 0043)
+
+A rule change, so re-approval is needed (ADR 0027):
+1. **Spells are 1 hour;** persistence is **per weather and season** (§3.5, §4), and the draw weights are derived from the unchanged shares so each season's long-run mix stays as tuned (moisture, the Monsoon's wet share and pests keep their levels; the balance gate re-runs to prove it).
+2. **Run lengths per season** (§4's table; ADR 0043 §1): Monsoon sun is a short break (about 6 h), dry-season rain a 4–6 h run, Monsoon rain about 18 h.
+3. **The forecast is rolled per run and day bucket** (§3.6), with buckets of 24 hours, and shown as runs.
+4. **Tests:** AC-14, AC-16, AC-17, AC-19, AC-20 and AC-29 reworded; the golden replays 001 to 005 and their frozen content are re-pinned in a commit that says so; the on-device determinism check is repeated in the Sprint 7 build.
 
 ## 11. Cut first
 

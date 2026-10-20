@@ -75,6 +75,24 @@ namespace Game.Editor
             return "tap '" + text + "' (" + hit.GetType().Name + ")";
         }
 
+        /// <summary>Taps the button on the sheet row whose label is <paramref name="label"/> (rows have one button each).</summary>
+        public static string TapInRow(string label)
+        {
+            UIDocument doc = Object.FindFirstObjectByType<UIDocument>();
+            if (doc == null) return "no UIDocument";
+            Label l = doc.rootVisualElement.Query<Label>().Where(x => x.text == label).First();
+            if (l == null) return "no row '" + label + "'";
+            VisualElement row = l.parent;
+            Button b = null;
+            while (row != null && (b = row.Query<Button>().Where(x => !x.name.StartsWith("why:")).First()) == null) row = row.parent;
+            if (b == null) return "no button in row '" + label + "'";
+            ScrollView scroll = b.GetFirstAncestorOfType<ScrollView>();
+            if (scroll != null) scroll.ScrollTo(b);
+            Button target = b;
+            target.schedule.Execute(() => Tap(ScreenOf(target).x, ScreenOf(target).y)).ExecuteLater(120);
+            return "tap the button on '" + label + "'";
+        }
+
         /// <summary>Taps the UI element with this name (for buttons with an icon and no text, such as the Settings gear).</summary>
         public static string TapNamed(string name)
         {

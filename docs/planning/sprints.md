@@ -271,7 +271,7 @@
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 
-- **Status:** Built (26 of 26 points), device run pending. Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
+- **Status:** Done (26 of 26 points; device runs 1 and 2 passed, 2026-10-20). Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
 - **Branch:** `sprint/06-saves-notifications`
 - **Goal:** Saves, notifications and the play log; regulars; every map sprite, the ground, every icon and the walk cycles rendered in Blender (ADR 0039, ADR 0041).
 - **Points:** 26 (16 + US-067 2 + US-171 8; ADR 0041: US-171 4 → 8 for the ground and walk cycles)
@@ -280,13 +280,13 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | Built, device run pending |
-| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
-| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
-| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | Built, device run pending |
-| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | Built, device run pending |
-| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Built, device run pending |
-| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | Built, device run pending |
+| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | Done |
+| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | Done |
+| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | Done |
+| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | Done |
+| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | Done |
+| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Done |
+| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | Done |
 
 **Sprint end checklist**
 
@@ -297,7 +297,7 @@
 
 **Done this sprint (Claude):** the save codec (one write path with the hash, content by id, gzip and checksum; a 10-year save is 116 KB, written in 12 ms and read in 3 ms), live-`Sync` compaction and the log checkpoint, atomic save points with hourly and daily backups and recovery, autosave, export, import from a list, new game, notifications planned from a simulated absence (ranked, grouped, quiet hours, no daily cap), the first-ask card, the play log, regulars, a gear button and Settings sheet; every sprite, the ground, the icons and 4-frame walk cycles rendered in Blender (the style checkpoint approved). 249 `Sim.Core` and 46 `Sim.View` tests pass; golden hashes unchanged. Verified in the Editor with touch: save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. **Not verified in the Editor:** the regular's card (covered by the sim tests; check 19 on the device).
 
-**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 (72 h in 1.4 ms); saves, relaunch, export and import, the renders and Settings work; notifications to be confirmed later (not a blocker). Owner's changes, built the same day: smaller, spaced hands' huts (and a loaded town no longer drew each hand's hut twice); a Store row for goods at the market with **Take off market** (a hand's market order in a glut had left the player with a greyed *Sell* and a wrong reason) and the order's default minimum rounded down; Settings switches as a green **On** / red **Off**; short texts no longer wrap over the line below (Settings, the sow sheet). Then: the sow sheet shows one sowing's Spend, Sells for and Profit (it showed a season's earnings per acre) with fertiliser cards that say what each does; people no longer go under the land at a tile's back or the map's edge.
+**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 (72 h in 1.4 ms); saves, relaunch, export and import, the renders and Settings work; notifications to be confirmed later (not a blocker). Owner's changes, built the same day: smaller, spaced hands' huts (and a loaded town no longer drew each hand's hut twice); a Store row for goods at the market with **Take off market** (a hand's market order in a glut had left the player with a greyed *Sell* and a wrong reason) and the order's default minimum rounded down; Settings switches as a green **On** / red **Off**; short texts no longer wrap over the line below (Settings, the sow sheet). Then: the sow sheet shows one sowing's Spend, Sells for and Profit (it showed a season's earnings per acre) with fertiliser cards that say what each does; people no longer go under the land at a tile's back or the map's edge. **Device run 2 (2026-10-20): every check passed**, notifications included (checks 12–17). The first build of run 2 had no developer panel: it was made without the Development option (a Release build compiles the panel out); rebuilt with `--options '["Development"]'`.
 
 **Retro (Claude):**
 - *Went well:* one write path for the hash and the save means a field can't be hashed and not saved, and the round-trip property test proved it on 50 towns. Planning notifications on a copy of the town made them exact (AC-13 matches a real absence event for event) with no new rules. The Blender rig took the full re-render in a few rounds after the style checkpoint.
@@ -306,33 +306,50 @@
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
+- **Status:** Built (25 of 25 points); device run 1 passed with seven changes, built the same day (ADR 0044); the owner merges after those. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
+- **Branch:** `sprint/07-hud-panels`
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 19 (US-184 +4, ADR 0042; US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039; US-084 −1: the Settings sheet is built in Sprint 6, ADR 0041)
-- **Specs for the owner to review:** —
+- **Points:** 25 (19, then ADR 0043: US-081 3 → 5 for *Why?* on every number, US-082 4 → 6 for the founder, money-and-loans, market and mandi panels, US-084 1 → 3 for text size and the iOS plugin). Order: US-184, US-081, US-082, US-080, US-083, US-084, US-087; US-087 is cut first if time runs short
+- **Specs for the owner to review:** spec 001 §3.5–3.6, §4, §8, §9 (the US-184 amendment, ADR 0042 and ADR 0043)
 - **Device build:** Yes
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
-| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
-| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
-| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | To do |
+| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
+| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | Built, device run pending |
+| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | Built, device run pending |
+| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | Built, device run pending |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
+| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | Built, device run pending |
+| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | Built, device run pending |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s07-hud-panels.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Done this sprint (Claude):**
+- **US-184:** 1-hour weather spells with persistence per weather and season, draw weights derived from the unchanged shares, the forecast rolled per run (spec 001 amended, re-approved); save schema 2; goldens re-pinned in their own commit; the balance gate re-run on 1,000 seeds (every check passes; loam moisture in band in every season; rainy Monsoon hours 51.1%, as before the change).
+- **US-081:** `WhyView`, a *Why?* in words for every number (causes with "N% more / less / no change", never a factor), swept over four seeded situations by `WhyTests.EveryNumberHasWhy`.
+- **US-082:** the Menu, Buy land with Show, Money and loans (borrow by amount then term with payments and total interest, repay, the report, buy with a bank loan), You and your family, a good's sheet with offers and minimums, Buy inputs in acres, the mandi with load rows.
+- **US-080:** the HUD's weather run and forecast sheet, cash and store tap / hold, the Menu, alerts (the ! button and list). **US-083:** the full away card (only when something new happened), the report at a live season close, Collect all's sell-the-rest card, the event map. **US-084:** numbers, text size, reduced motion (iOS default), sound, haptics (an iOS plugin). **US-087:** seven Kenney CC0 sounds.
+- 249 `Sim.Core` and 57 `Sim.View` tests pass. **Verified in the Editor with touch:** every new sheet and card (captures `docs/art/s07-*.png`), text at 125% and 150%, the old save refused and kept. Development build: Unity build succeeded (the developer panel, golden files and the plugin are in it).
 
-**Retro:** —
+**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 with the re-pinned hashes (72 h in 3.1 ms); everything else fine apart from seven points, built the same day as **ADR 0044**:
+1. A **←** back button on every sheet opened from another sheet (the Store from the Menu, the mandi trip from the Store), returning the way it came.
+2. Sounds only for town events (sowing, harvest, coins, ready, urgent): the tap and sheet sounds and their clips are gone.
+3. A *Why?* opens only from its **?**. It had popped up in the Store from a finger resting on a row while scrolling, and from a slow tap on the store pill. The store's *Why?* moved to an "In the store" row.
+4. Repaying all of a loan left it open with 0 coins owing: the amount was fixed when the sheet was drawn while interest accrued each second. It is now worked out at the press.
+5. Net worth checked: no error. 9 acres at today's price are 10,55,664 of a new town's 11,50,735. Money and loans now shows "Of that, your land" under it.
+6. Text size Small 80% / Normal / Large 125% (150% removed).
+
+**Retro (Claude):**
+- *Went well:* a coverage test over every row made "every number has a *Why?*" checkable instead of a promise; it found the job-post and garden rows nobody had listed. Pricing Collect all's leftovers on a copy of the town made the prompt exact with no new rules.
+- *To improve:* editing any script while the Editor is playing reloads the domain and breaks the session: batch the fixes, stop, recompile, play. Captures can be a frame stale: capture twice. A card built inside a click handler misses its first touch: open it on the next UI tick (now done for *Why?*).
+- *Carry over:* alert dismissals if playtesters ask (spec 008 §10 note 8); Blender icons for the Menu, alerts and the trolley (the sheets use the basket for now).
+- *Device review lesson:* a view model that bakes a money amount into a button goes stale while time runs, and an unchanged sheet isn't redrawn. Commands that settle "everything owed" compute it at the press. Sheets reached from another sheet need a way back from the start.
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 

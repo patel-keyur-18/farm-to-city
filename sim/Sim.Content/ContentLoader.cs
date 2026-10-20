@@ -95,9 +95,6 @@ namespace Sim.Content
                 if (climates[(int)season] != null)
                     throw new ContentException(p + ".season", "duplicate climate for " + season);
 
-                Fixed persistence = Number(Required(c, p, "persistence"), p + ".persistence");
-                Range(persistence, Fixed.Zero, Fixed.FromRatio(95, 100), p + ".persistence");
-
                 // Weights are stored in the declared order of weatherTypes, never in JSON object order.
                 string wPath = p + ".weights";
                 JObject w = Object(Required(c, p, "weights"), wPath);
@@ -113,6 +110,25 @@ namespace Sim.Content
                     total += weight;
                 }
                 if (total <= 0) throw new ContentException(wPath, "the weights must add up to more than 0");
+
+                // Persistence per weather (ADR 0042): 0–0.98, at most 3 decimals, required for every weather with a share.
+                string pPath = p + ".persistence";
+                JObject po = Object(Required(c, p, "persistence"), pPath);
+                var persistence = new Fixed[types.Count];
+                var given = new bool[types.Count];
+                foreach (JProperty prop in po.Properties())
+                {
+                    string at = Join(pPath, prop.Name);
+                    int index = ids.IndexOf(prop.Name);
+                    if (index < 0) throw new ContentException(at, "unknown weather id");
+                    if (prop.Value is JValue v && v.Value is decimal d && ((decimal.GetBits(d)[3] >> 16) & 0xFF) > 3)
+                        throw new ContentException(at, "more than 3 decimal places");
+                    persistence[index] = Number(prop.Value, at);
+                    Range(persistence[index], Fixed.Zero, Fixed.FromRatio(98, 100), at);
+                    given[index] = true;
+                }
+                for (int k = 0; k < types.Count; k++)
+                    if (weights[k] > 0 && !given[k]) throw new ContentException(Join(pPath, ids[k]), "missing for a weather with a share");
 
                 climates[(int)season] = new ClimateDef(season, weights, persistence);
             }

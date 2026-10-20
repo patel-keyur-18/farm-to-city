@@ -133,7 +133,7 @@ namespace Sim.Core.Tests
             Assert.That(report.Last(), Is.InstanceOf<AwayAdvanceCompleted>());
             Assert.That(report.OfType<HourStarted>().Count(), Is.EqualTo(30));
             Assert.That(report.OfType<DayStarted>().Count(), Is.EqualTo(1));
-            Assert.That(report.OfType<WeatherSpellStarted>().Count(), Is.EqualTo(5));
+            Assert.That(report.OfType<WeatherSpellStarted>().Count(), Is.EqualTo(30));
         }
     }
 }

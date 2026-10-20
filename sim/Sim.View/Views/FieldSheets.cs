@@ -32,9 +32,9 @@ namespace Sim.View.Views
             Crop crop = sim.State.Farm.CropOn(tileId);
             vm.Title = ctx.Strings.Get("field.title", "soil", soil);
             vm.Subtitle = ctx.Strings.Get(parcel.Protected ? "field.inherited" : "field.bought");
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Integer(tile.Fertility.RoundToLong()) + " / 100", "fertility"));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100"));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil")); // a word, not a factor (spec 008 §10)
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Integer(tile.Fertility.RoundToLong()) + " / 100", "fertility", tileId));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100", "moisture", tileId));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
             if (LandSystem.IsWellTile(defs, tileId)) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.well"), ctx.Strings.Get("field.wellNote")));
 
             if (crop == null)
@@ -52,10 +52,10 @@ namespace Sim.View.Views
             if (crop.State == CropState.Growing)
             {
                 vm.Title = ctx.Strings.Get("field.growing", "crop", cropName);
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.timeLeft"), ctx.Fmt.Duration(System.Math.Max(0, crop.ReadyAt - ctx.Now))));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.care"), ctx.Rating(sim.State.Farm.CareRatio), "care"));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.water"), ctx.Rating(crop.WaterRate), "water"));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.weather"), ctx.Rating(crop.WeatherRate), "weather"));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.timeLeft"), ctx.Fmt.Duration(System.Math.Max(0, crop.ReadyAt - ctx.Now)), "timeLeft", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.care"), ctx.Rating(sim.State.Farm.CareRatio), "care", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.water"), ctx.Rating(crop.WaterRate), "water", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.weather"), ctx.Rating(crop.WeatherRate), "weather", tileId));
                 if (crop.Outbreak != Outbreak.None)
                     vm.Lines.Add(new LineVm(ctx.Strings.Get("field.pests"), ctx.Strings.Get(crop.Spray == SprayState.None ? "field.pestsFound" : "field.pestsSprayed")));
                 else if (crop.Spray != SprayState.None) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.pests"), ctx.Strings.Get("field.pestsSprayed")));
@@ -65,9 +65,9 @@ namespace Sim.View.Views
             {
                 long left = crop.ReadyAt + grace - ctx.Now;
                 vm.Title = ctx.Strings.Get("field.ready", "crop", cropName);
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.yield"), ctx.Fmt.Kg(crop.HarvestGrams), "yield"));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.yield"), ctx.Fmt.Kg(crop.HarvestGrams), "yield", tileId));
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("field.waits"),
-                    left > 0 ? ctx.Strings.Get("field.spoilsIn", "time", ctx.Fmt.Duration(left)) : ctx.Strings.Get("field.spoiling")));
+                    left > 0 ? ctx.Strings.Get("field.spoilsIn", "time", ctx.Fmt.Duration(left)) : ctx.Strings.Get("field.spoiling"), "spoils", tileId));
                 ActionVm store = ActionVm.Checked(ctx, "harvest", ctx.Strings.Get("action.harvest"), ctx.Fmt.Kg(crop.HarvestGrams), ActionKind.Primary,
                     at => new Harvest(at, tileId, Overflow.StoreOnly));
                 vm.Actions.Add(store);
@@ -95,10 +95,23 @@ namespace Sim.View.Views
             long price = LandRules.ParcelPrice(sim, parcel);
             long resale = Money.RoundToCoin(Money.MulRate(price, defs.Land.QuickSaleFactor));
             var vm = new SheetVm { Icon = "land", Title = ctx.Strings.Get("land.title"), Subtitle = ctx.Strings.Plural("land.acres", def.Tiles.Count) };
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.price"), ctx.Fmt.Coins(price), "landPrice"));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash)));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.resale"), ctx.Fmt.Coins(resale)));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.price"), ctx.Fmt.Coins(price), "landPrice", tile.Id));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.resale"), ctx.Fmt.Coins(resale), "resale", tile.Id));
             vm.Actions.Add(ActionVm.Checked(ctx, "buy", ctx.Strings.Get("action.buy"), ctx.Fmt.Coins(price), ActionKind.Primary, at => new BuyParcel(at, def.Id)));
+            // With a bank loan secured by the land it buys (ADR 0028, ADR 0043 §5).
+            int bank = sim.State.Credit == null ? -1 : LandLoanSheet.Bank(sim);
+            if (bank >= 0)
+            {
+                long loan = LandLoanSheet.Loan(sim, bank, price);
+                // The land itself must be buyable (next to yours, …); only the cash is what the loan solves.
+                RejectReason why = sim.Preview(new BuyParcel(ctx.Now, def.Id)).Reason;
+                bool landOk = why == RejectReason.None || why == RejectReason.InsufficientFunds;
+                bool can = landOk && loan >= defs.Credit.Lenders[bank].MinAmount;
+                string reason = !landOk ? ctx.Reject(why) : can ? null : ctx.Strings.Get("land.noBankLoan");
+                vm.Actions.Add(new ActionVm("buyLoan", ctx.Strings.Get("land.buyLoan"), can ? ctx.Strings.Get("land.buyLoanDetail", "down", ctx.Fmt.Coins(price - loan)) : null,
+                    ActionKind.Open, can, reason, null, new SheetRequest("LandLoan", tile.Id)));
+            }
             return vm;
         }
 
@@ -118,7 +131,7 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "garden", Title = ctx.Strings.Get("garden.title", "n", bedId.ToString()) };
             long season = defs.Farm.Farm.GardenSeasonOutputGrams;
             vm.Lines.Add(new LineVm(ctx.Strings.Get("garden.season"),
-                ctx.Strings.Get("garden.seasonValue", "picked", ctx.Fmt.Kg(season - bed.RemainingGrams), "total", ctx.Fmt.Kg(season))));
+                ctx.Strings.Get("garden.seasonValue", "picked", ctx.Fmt.Kg(season - bed.RemainingGrams), "total", ctx.Fmt.Kg(season)), "gardenSeason", bedId));
             if (bed.State == BedState.Empty)
             {
                 vm.Subtitle = ctx.Strings.Get(bed.RemainingGrams <= 0 ? "garden.rested" : "garden.empty");
@@ -126,7 +139,7 @@ namespace Sim.View.Views
                 foreach (GardenCropDef crop in defs.Farm.GardenCrops)
                 {
                     GardenCropDef c = crop;
-                    var line = new LineVm(ctx.Strings.Get(c.NameKey), ctx.Strings.Get("garden.readyIn", "time", ctx.Fmt.Duration(c.GrowthMinutes * 60L)))
+                    var line = new LineVm(ctx.Strings.Get(c.NameKey), ctx.Strings.Get("garden.readyIn", "time", ctx.Fmt.Duration(c.GrowthMinutes * 60L)), "gardenCrop", IndexOf(defs.Farm.GardenCrops, c))
                     { Icon = ctx.Sim.Config.Game.Market.Goods[c.Good].Id };
                     line.Action = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sow"), null, ActionKind.Primary, at => new SowGarden(at, bedId, c.Id));
                     vm.Lines.Add(line);
@@ -139,7 +152,7 @@ namespace Sim.View.Views
             if (bed.State == BedState.Growing)
             {
                 vm.Subtitle = ctx.Strings.Get("garden.growing", "crop", cropName);
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.timeLeft"), ctx.Fmt.Duration(System.Math.Max(0, bed.ReadyAt - ctx.Now))));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.timeLeft"), ctx.Fmt.Duration(System.Math.Max(0, bed.ReadyAt - ctx.Now)), "bedTime", bedId));
                 return vm;
             }
             vm.Subtitle = ctx.Strings.Get("garden.ready", "crop", cropName);
@@ -166,7 +179,7 @@ namespace Sim.View.Views
                     TreeDef d = def;
                     long cost = MarketRules.Value(sim, d.SaplingGood, 1, MarketRules.InputPrice(sim, d.SaplingGood));
                     var line = new LineVm(ctx.Strings.Get(d.NameKey),
-                        ctx.Strings.Get("slot.treeInfo", "seasons", SeasonsText(ctx, d.FruitingSeasons), "time", ctx.Fmt.Duration(d.GrowthSeconds)))
+                        ctx.Strings.Get("slot.treeInfo", "seasons", SeasonsText(ctx, d.FruitingSeasons), "time", ctx.Fmt.Duration(d.GrowthSeconds)), "sapling", IndexOf(defs.Farm.Trees, d))
                     { Icon = defs.Market.Goods[d.FruitGood].Id };
                     line.Action = ActionVm.Checked(ctx, "plant:" + d.Id, ctx.Strings.Get("action.plant"), ctx.Fmt.Coins(cost), ActionKind.Primary,
                         at => new PlantTree(at, slotId, d.Id));
@@ -181,7 +194,7 @@ namespace Sim.View.Views
             if (tree.State == TreeState.Growing)
             {
                 vm.Subtitle = ctx.Strings.Get("tree.growing");
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.matures"), ctx.Fmt.Duration(System.Math.Max(0, tree.PlantedAt + treeDef.GrowthSeconds - ctx.Now))));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.matures"), ctx.Fmt.Duration(System.Math.Max(0, tree.PlantedAt + treeDef.GrowthSeconds - ctx.Now)), "treeMatures", slotId));
             }
             else
             {
@@ -189,12 +202,12 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.fruits"), SeasonsText(ctx, treeDef.FruitingSeasons)));
             }
             AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Tree, slotId);
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.cost"), ctx.Fmt.Coins(tree.Cost)));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.returns"), ctx.Fmt.Coins(tree.Returns), "payback"));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.cost"), ctx.Fmt.Coins(tree.Cost), "payback", slotId));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.returns"), ctx.Fmt.Coins(tree.Returns), "payback", slotId));
             TreePayback pay = TreeRules.Payback(sim, tree);
             string payback = pay.PaidBack ? ctx.Strings.Get("tree.paidBack", "season", SeasonName(ctx, pay.Season.Value))
                 : pay.Season.HasValue ? ctx.Strings.Get("tree.paysBack", "season", SeasonName(ctx, pay.Season.Value)) : ctx.Strings.Get("tree.neverPaysBack");
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.payback"), payback, "payback"));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("tree.payback"), payback, "payback", slotId));
             if (tree.RipeGrams > 0)
                 vm.Actions.Add(ActionVm.Checked(ctx, "pickFruit", ctx.Strings.Get("action.pick"), ctx.Fmt.Kg(tree.RipeGrams), ActionKind.Primary,
                     at => new PickFruit(at, slotId, Overflow.StoreOnly)));
@@ -222,7 +235,7 @@ namespace Sim.View.Views
             }
             foreach (Sim.Core.People.Construction c in p.Constructions)
                 if (c.TileId == tile.Id)
-                    vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))));
+                    vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now)), "hut"));
             while (n < places) vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("quarters.free")));
             vm.Actions.Add(ActionVm.Open("buildHut", ctx.Strings.Get("people.buildHut"), new SheetRequest("HutPlacement", 0)));
             return vm;
@@ -239,10 +252,16 @@ namespace Sim.View.Views
             Sim.Core.People.StandingOrder o = p.OrderFor(kind, target);
             string name = PeopleWords.Name(ctx, hand.Name);
             var line = new LineVm(ctx.Strings.Get("field.handLooksAfter", "name", name),
-                o == null ? ctx.Strings.Get("field.noOrder") : PeopleWords.Order(ctx, o) + (PeopleWords.Last(ctx, o) is string last ? "\n" + last : ""));
+                o == null ? ctx.Strings.Get("field.noOrder") : PeopleWords.Order(ctx, o) + (PeopleWords.Last(ctx, o) is string last ? "\n" + last : ""), "order", hand.Id);
             line.Action = ActionVm.Open("order", ctx.Strings.Get(o == null ? "action.giveOrder" : "action.changeOrder"),
                 new SheetRequest("Order", target, kind == Sim.Core.People.OrderTargetKind.Tree ? "tree" : null));
             vm.Lines.Add(line);
+        }
+
+        internal static int IndexOf<T>(IReadOnlyList<T> list, T item) where T : class
+        {
+            for (int i = 0; i < list.Count; i++) if (ReferenceEquals(list[i], item)) return i;
+            return -1;
         }
 
         internal static string SeasonName(ViewContext ctx, long period)

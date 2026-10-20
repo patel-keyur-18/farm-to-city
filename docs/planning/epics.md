@@ -25,7 +25,7 @@
 | E05 | Money and credit | 1 | The ledger with accrual accounting, seasonal P&L, net worth, lenders, credit score and foreclosure. | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md), [F05.2](features/F05.2-credit-and-foreclosure.md) | 23 |
 | E06 | People | 1 | Day labourers from neighbouring villages, the first resident hand, season contracts and standing orders (ADR 0022). | [F06.1](features/F06.1-day-labourers.md), [F06.2](features/F06.2-resident-farm-hand.md), [F06.3](features/F06.3-standing-orders.md) | 20 |
 | E07 | Saves and platform services | 1 | Safety save points, export and import, local notifications and the local play log. | [F07.1](features/F07.1-save-system.md), [F07.2](features/F07.2-local-notifications.md), [F07.3](features/F07.3-local-play-log.md) | 16 |
-| E08 | Presentation | 1 | The code-first Unity layer: map, field interaction, HUD, panels with Why?, localisation groundwork and the developer panel. | [F08.1](features/F08.1-map-and-field-interaction.md), [F08.2](features/F08.2-hud-and-panels.md), [F08.3](features/F08.3-localisation-and-formatting.md), [F08.5](features/F08.5-basic-feedback-sounds.md), [F08.4](features/F08.4-developer-panel-unity.md) | 31 |
+| E08 | Presentation | 1 | The code-first Unity layer: map, field interaction, HUD, panels with Why?, localisation groundwork and the developer panel. | [F08.1](features/F08.1-map-and-field-interaction.md), [F08.2](features/F08.2-hud-and-panels.md), [F08.3](features/F08.3-localisation-and-formatting.md), [F08.5](features/F08.5-basic-feedback-sounds.md), [F08.4](features/F08.4-developer-panel-unity.md) | 37 |
 | E09 | Onboarding and progression | 1 | The first session, the grandparent's letter chapters across the first week (ADR 0015), and the Hamlet unlock that ends Phase 1. | [F09.1](features/F09.1-first-session.md), [F09.2](features/F09.2-letter-chapters.md), [F09.3](features/F09.3-hamlet-unlock.md), [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 25 |
 | E10 | Phase 1 playtest and tuning | 1 | Release candidate, testers, play logs, tuning, and the Phase 1 exit gate. | [F10.1](features/F10.1-playtest-and-tuning.md) | 8 |
 | E11 | Citizens and households | 2 | Citizens with skills, traits and life stages; households, needs and happiness; births, migration and family trees; full hiring. | [F11.1](features/F11.1-citizens-and-life-clock.md), [F11.2](features/F11.2-households-needs-and-happiness.md), [F11.3](features/F11.3-population-flows-and-family-trees.md), [F11.4](features/F11.4-full-hiring-and-hr.md) | 38 |
@@ -62,14 +62,14 @@
 | [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-057–US-058 | 4 |
 | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Ready | US-059–US-062 | 14 |
 | [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Backlog | US-063–US-065 | 9 |
-| [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Ready | US-066–US-067 | 5 |
+| [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Done | US-066–US-067 | 5 |
 | [F06.2](features/F06.2-resident-farm-hand.md) | Resident farm hand | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Ready | US-068–US-070 | 9 |
 | [F06.3](features/F06.3-standing-orders.md) | Standing orders | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Ready | US-071–US-072 | 6 |
-| [F07.1](features/F07.1-save-system.md) | Save system | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Ready | US-073–US-075 | 11 |
-| [F07.2](features/F07.2-local-notifications.md) | Local notifications | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Ready | US-076–US-076 | 3 |
-| [F07.3](features/F07.3-local-play-log.md) | Local play log | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Ready | US-077–US-077 | 2 |
+| [F07.1](features/F07.1-save-system.md) | Save system | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-073–US-075 | 11 |
+| [F07.2](features/F07.2-local-notifications.md) | Local notifications | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-076–US-076 | 3 |
+| [F07.3](features/F07.3-local-play-log.md) | Local play log | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-077–US-077 | 2 |
 | [F08.1](features/F08.1-map-and-field-interaction.md) | Map and field interaction | E08 | 1 | Spec 008 (to write) | Backlog | US-078–US-079 | 8 |
-| [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (approved) | Ready | US-080–US-084, US-182 | 15 |
+| [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (approved) | In progress | US-080–US-084, US-182 | 21 |
 | [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (to write) | Backlog | US-085–US-086 | 4 |
 | [F08.5](features/F08.5-basic-feedback-sounds.md) | Basic feedback sounds | E08 | 1 | Spec 008 (to write), ADR 0007 | Backlog | US-087–US-087 | 2 |
 | [F08.4](features/F08.4-developer-panel-unity.md) | Developer panel (Unity) | E08 | 1 | Spec 001 §3.8, ADR 0023 | Backlog | US-088–US-088 | 2 |

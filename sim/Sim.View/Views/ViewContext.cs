@@ -28,6 +28,18 @@ namespace Sim.View.Views
 
         public long Now { get { return Sim.State.Clock.SimTime; } }
 
+        private DateTime? _localNow;
+
+        /// <summary>
+        /// The phone's local time now, for day names ("tomorrow", "Sat"; ADR 0043 §2). The presentation sets it; without it a fixed
+        /// date at the game's time of day is used, so views stay deterministic in tests.
+        /// </summary>
+        public DateTime LocalNow
+        {
+            get { return _localNow ?? new DateTime(2026, 1, 1).AddSeconds(Now % 86400); }
+            set { _localNow = value; }
+        }
+
         /// <summary>The text of a rejection as a sentence (spec 008 AC-13).</summary>
         public string Reject(RejectReason r, params string[] args) { return Strings.Get("reject." + r, args); }
 
@@ -169,8 +181,14 @@ namespace Sim.View.Views
         /// <summary>A string key for a Why? sheet behind the value, or null.</summary>
         public string WhyKey { get; }
 
+        /// <summary>What the Why? is about (a tile, slot, good, loan or hour id), with <see cref="WhyKey"/>.</summary>
+        public long WhyId { get; internal set; }
+
         /// <summary>A button on the row itself (the store's Sell per good), or null.</summary>
         public ActionVm Action { get; internal set; }
+
+        /// <summary>A sheet a tap on the row opens (a good's row opens the good), or null: then the row's tap opens its Why?.</summary>
+        public SheetRequest? Opens { get; internal set; }
 
         /// <summary>Skill stars shown before the value, or null.</summary>
         public StarsVm? Stars { get; internal set; }
@@ -183,11 +201,12 @@ namespace Sim.View.Views
 
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
-        public LineVm(string label, string value, string whyKey = null)
+        public LineVm(string label, string value, string whyKey = null, long whyId = 0)
         {
             Label = label;
             Value = value;
             WhyKey = whyKey;
+            WhyId = whyId;
         }
     }
 

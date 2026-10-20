@@ -1244,26 +1244,10 @@
     {
       "type": "Sow",
       "at": 335336,
-      "tile": 18,
-      "crop": "potato",
-      "seed": "saved",
-      "fertiliser": "chemical"
-    },
-    {
-      "type": "Sow",
-      "at": 335336,
       "tile": 19,
       "crop": "radish",
       "seed": "certified",
       "fertiliser": "none"
-    },
-    {
-      "type": "Sow",
-      "at": 335336,
-      "tile": 26,
-      "crop": "radish",
-      "seed": "certified",
-      "fertiliser": "chemical"
     },
     {
       "type": "SetDietPlan",
@@ -1274,6 +1258,14 @@
       "type": "AdvanceTo",
       "target": 346153,
       "mode": "live"
+    },
+    {
+      "type": "Sow",
+      "at": 346153,
+      "tile": 18,
+      "crop": "rice",
+      "seed": "certified",
+      "fertiliser": "none"
     },
     {
       "type": "Harvest",
@@ -1288,12 +1280,6 @@
       "crop": "lentils",
       "seed": "certified",
       "fertiliser": "compost"
-    },
-    {
-      "type": "Harvest",
-      "at": 346153,
-      "tile": 26,
-      "overflow": "sellRest"
     },
     {
       "type": "Sow",
@@ -1404,20 +1390,20 @@
       "type": "Offer",
       "at": 367787,
       "good": "potato",
-      "quantity": 452263,
+      "quantity": 464256,
       "minPriceRaw": 21474836480
     },
     {
       "type": "Withdraw",
       "at": 367787,
       "good": "potato",
-      "quantity": 226131
+      "quantity": 232128
     },
     {
       "type": "SellToTrader",
       "at": 367787,
       "good": "potato",
-      "quantity": 452263
+      "quantity": 464256
     },
     {
       "type": "Buy",
@@ -1446,5 +1432,5 @@
       "mode": "live"
     }
   ],
-  "expectedHash": "0x42A935851A1C8BB2"
+  "expectedHash": "0x98D9EE70B32631A0"
 }

@@ -65,13 +65,13 @@ namespace Sim.Core.Tests
             ClockDef c = TestContent.Clock();
             ClockDef d = ClockDef.Default();
             Assert.That(c.DaysPerSeason, Is.EqualTo(4).And.EqualTo(d.DaysPerSeason));
-            Assert.That(c.WeatherSpellHours, Is.EqualTo(6));
+            Assert.That(c.WeatherSpellHours, Is.EqualTo(1));
             Assert.That(c.LifeYearsPerSeason, Is.EqualTo(Fixed.One));
             Assert.That(c.AwayCapHours, Is.EqualTo(72));
             Assert.That(c.AwayThresholdSeconds, Is.EqualTo(60));
             Assert.That(c.ForecastDays, Is.EqualTo(3));
             Assert.That(c.ForecastAccuracy, Is.EqualTo(d.ForecastAccuracy));
-            Assert.That(c.ForecastSpells, Is.EqualTo(12));
+            Assert.That(c.ForecastSpells, Is.EqualTo(72));
         }
 
         // Spec 001 AC-2, loader path: JSON 0.65 → decimal → Fixed, never double.
@@ -95,19 +95,28 @@ namespace Sim.Core.Tests
             Assert.That(w.ClimateFor(Season.Summer).Weights, Is.EqualTo(new[] { 53, 10, 5, 0, 25, 0, 7 }));
             Assert.That(w.ClimateFor(Season.Monsoon).Weights, Is.EqualTo(new[] { 10, 25, 35, 20, 0, 0, 10 }));
             Assert.That(w.ClimateFor(Season.Winter).Weights, Is.EqualTo(new[] { 58, 24, 4, 0, 0, 14, 0 }));
-            Assert.That(w.ClimateFor(Season.Spring).Persistence, Is.EqualTo(Fixed.Parse("0.50")));
-            Assert.That(w.ClimateFor(Season.Summer).Persistence, Is.EqualTo(Fixed.Parse("0.55")));
-            Assert.That(w.ClimateFor(Season.Monsoon).Persistence, Is.EqualTo(Fixed.Parse("0.60")));
-            Assert.That(w.ClimateFor(Season.Winter).Persistence, Is.EqualTo(Fixed.Parse("0.50")));
+
+            // Spec 001 §4, persistence per weather (ADR 0043); a weather with share 0 has none (0).
+            Fixed[] P(params string[] v) { return v.Select(Fixed.Parse).ToArray(); }
+            Assert.That(w.ClimateFor(Season.Spring).Persistence, Is.EqualTo(P("0.96", "0.85", "0.77", "0.24", "0.82", "0.64", "0")));
+            Assert.That(w.ClimateFor(Season.Summer).Persistence, Is.EqualTo(P("0.97", "0.81", "0.73", "0", "0.83", "0", "0")));
+            Assert.That(w.ClimateFor(Season.Monsoon).Persistence, Is.EqualTo(P("0.82", "0.86", "0.94", "0", "0", "0", "0.12")));
+            Assert.That(w.ClimateFor(Season.Winter).Persistence, Is.EqualTo(P("0.97", "0.90", "0.83", "0", "0", "0", "0")));
+
+            // Spec 001 AC-16: the derived draw weights, shareᵢ × round(1000 × (1 − pᵢ)).
+            Assert.That(w.ClimateFor(Season.Spring).DrawWeights, Is.EqualTo(new[] { 1880, 4200, 3450, 1520, 900, 1080, 0 }));
+            Assert.That(w.ClimateFor(Season.Summer).DrawWeights, Is.EqualTo(new[] { 1590, 1900, 1350, 0, 4250, 0, 7000 }));
+            Assert.That(w.ClimateFor(Season.Monsoon).DrawWeights, Is.EqualTo(new[] { 1800, 3500, 2100, 20000, 0, 0, 8800 }));
+            Assert.That(w.ClimateFor(Season.Winter).DrawWeights, Is.EqualTo(new[] { 1740, 2400, 680, 0, 0, 14000, 0 }));
         }
 
         [Test]
         public void WeatherJson_Validation()
         {
             string types = "\"weatherTypes\": [{\"id\":\"sun\",\"nameKey\":\"k\",\"isSevere\":false},{\"id\":\"rain\",\"nameKey\":\"k\",\"isSevere\":false}]";
-            string Climate(string season, string weights, string p = "0.5")
+            string Climate(string season, string weights, string p = "\"sun\":0.5")
             {
-                return "{\"season\":\"" + season + "\",\"persistence\":" + p + ",\"weights\":{" + weights + "}}";
+                return "{\"season\":\"" + season + "\",\"persistence\":{" + p + "},\"weights\":{" + weights + "}}";
             }
             string Json(params string[] climates) { return "{" + types + ",\"climates\":[" + string.Join(",", climates) + "]}"; }
             string ok = "\"sun\":1";
@@ -123,8 +132,13 @@ namespace Sim.Core.Tests
                 Is.EqualTo("weather.climates[0].weights"));
             Assert.That(Err(Json(Climate("spring", "\"sun\":-1,\"rain\":2"), Climate("summer", ok), Climate("monsoon", ok), Climate("winter", ok))).FieldPath,
                 Is.EqualTo("weather.climates[0].weights.sun"));
-            Assert.That(Err(Json(Climate("spring", ok, "0.96"), Climate("summer", ok), Climate("monsoon", ok), Climate("winter", ok))).FieldPath,
-                Is.EqualTo("weather.climates[0].persistence"));
+            // Spec 001 AC-29: persistence per weather, 0–0.98, at most 3 decimals, required for a weather with a share.
+            string Spring(string p) { return Json(Climate("spring", ok, p), Climate("summer", ok), Climate("monsoon", ok), Climate("winter", ok)); }
+            Assert.That(Err(Spring("\"sun\":0.99")).FieldPath, Is.EqualTo("weather.climates[0].persistence.sun"));
+            Assert.That(Err(Spring("\"sun\":0.9512")).FieldPath, Is.EqualTo("weather.climates[0].persistence.sun"));
+            Assert.That(Err(Spring("\"snow\":0.5")).FieldPath, Is.EqualTo("weather.climates[0].persistence.snow"));
+            Assert.That(Err(Spring("")).FieldPath, Is.EqualTo("weather.climates[0].persistence.sun"));
+            Assert.That(ContentLoader.LoadWeather(Spring("\"sun\":0.98")).ClimateFor(Season.Spring).DrawWeights, Is.EqualTo(new[] { 20, 0 }));
             Assert.That(Err(Json(Climate("spring", ok), Climate("spring", ok), Climate("monsoon", ok), Climate("winter", ok))).FieldPath,
                 Is.EqualTo("weather.climates[1].season"));
             Assert.That(Err("{\"weatherTypes\": [{\"id\":\"sun\",\"nameKey\":\"k\",\"isSevere\":false},{\"id\":\"sun\",\"nameKey\":\"k\",\"isSevere\":false}], \"climates\": []}").FieldPath,

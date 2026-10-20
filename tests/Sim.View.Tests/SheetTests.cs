@@ -176,7 +176,7 @@ namespace Sim.View.Tests
             SheetVm store = StoreSheet.Build(ctx);
             Assert.That(store.Title, Is.EqualTo("Store"));
             Assert.That(store.Lines.Select(l => l.Label), Does.Contain("Wheat").And.Contain("Lentils").And.Contain("Seed potato"));
-            Assert.That(store.Subtitle, Does.StartWith("675").Or.Contain("of 2,000 kg"));
+            Assert.That(store.Lines[0].Label + " | " + store.Lines[0].Value + " | " + store.Lines[0].WhyKey, Does.StartWith("In the store | ").And.EndWith("of 2,000 kg | store"));
             Assert.That(store.Actions, Is.Empty, "each Sell sits on its good's row");
             Assert.That(store.Lines.Single(l => l.Label == "Wheat").Icon, Is.EqualTo("wheat"), "each row shows its good's picture");
             Assert.That(store.Lines.Single(l => l.Label == "Seed potato").Icon, Is.EqualTo("seed_potato"));

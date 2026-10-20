@@ -16,16 +16,40 @@ namespace Sim.Core.Tests
 
         // Spec 001 AC-19.
         [Test]
-        public void AccuracyByBucket()
+        public void AccuracyByBucket_RolledPerRun()
         {
-            // In the running sim, spells 1–4 ahead always show the actual weather.
+            // In the running sim, hours 1–24 ahead always show the actual weather, and every hour of one actual run in one
+            // bucket shows the same weather (rolled per run, ADR 0043).
             Simulation sim = New(seed: 5);
             for (int step = 0; step < 200; step++)
             {
-                foreach (ForecastEntry f in sim.Forecast().Where(f => f.Bucket == 0))
-                    Assert.That(f.Weather, Is.EqualTo(sim.State.Weather.WeatherOf(f.SpellIndex)));
-                sim.AdvanceTo(sim.State.Clock.SimTime + 6 * Hour);
+                IReadOnlyList<ForecastEntry> f = sim.Forecast();
+                Assert.That(f.Count, Is.EqualTo(72));
+                for (int k = 0; k < f.Count; k++)
+                {
+                    if (f[k].Bucket == 0) Assert.That(f[k].Weather, Is.EqualTo(sim.State.Weather.WeatherOf(f[k].SpellIndex)));
+                    if (k > 0 && f[k].Bucket == f[k - 1].Bucket && sim.State.Weather.WeatherOf(f[k].SpellIndex) == sim.State.Weather.WeatherOf(f[k - 1].SpellIndex)
+                        && Calendar.SeasonAt(f[k].SpellIndex * Hour, sim.Clock) == Calendar.SeasonAt(f[k - 1].SpellIndex * Hour, sim.Clock))
+                        Assert.That(f[k].Weather, Is.EqualTo(f[k - 1].Weather), "one run, one bucket, one forecast");
+                }
+                sim.AdvanceTo(sim.State.Clock.SimTime + 7 * Hour);
             }
+
+            // Per hour over 2 000 seeds: hours 25–48 match 77–83% of the time, hours 49–72 match 62–68%.
+            var hits = new int[3];
+            var hours = new int[3];
+            for (ulong seed = 1; seed <= 2000; seed++)
+            {
+                Simulation s = New(seed: seed, localSeconds: (long)(seed % 24) * Hour);
+                foreach (ForecastEntry e in s.Forecast())
+                {
+                    hours[e.Bucket]++;
+                    if (e.Weather == s.State.Weather.WeatherOf(e.SpellIndex)) hits[e.Bucket]++;
+                }
+            }
+            Assert.That(hits[0], Is.EqualTo(hours[0]));
+            Assert.That(hits[1] / (double)hours[1], Is.InRange(0.77, 0.83));
+            Assert.That(hits[2] / (double)hours[2], Is.InRange(0.62, 0.68));
 
             // 10 000 samples per bucket: spells with every season's climate and every actual weather it allows.
             var matches = new int[3];
@@ -36,7 +60,7 @@ namespace Sim.Core.Tests
                 {
                     Season season = (Season)(s % 4);
                     ClimateDef c = Set.ClimateFor(season);
-                    int actual = WeatherRules.SpellWeather(77, s, -1, c);
+                    int actual = WeatherRules.SpellWeather(77, s, -1, c); // s is the run's first hour here
                     if (WeatherRules.ForecastWeather(77, s, bucket, actual, c, Clock) == actual) matches[bucket]++;
                 }
             }
@@ -57,7 +81,7 @@ namespace Sim.Core.Tests
             }
 
             // A climate with a single possible weather: the alternative falls back to the actual weather.
-            var only = new ClimateDef(Season.Spring, new[] { 1, 0, 0, 0, 0, 0, 0 }, Sim.Core.Maths.Fixed.Zero);
+            var only = new ClimateDef(Season.Spring, new[] { 1, 0, 0, 0, 0, 0, 0 }, new Sim.Core.Maths.Fixed[7]);
             for (long s = 0; s < 200; s++)
                 Assert.That(WeatherRules.ForecastWeather(3, s, 2, 0, only, Clock), Is.EqualTo(0));
         }
@@ -73,12 +97,12 @@ namespace Sim.Core.Tests
             var shown = new Dictionary<long, ForecastEntry>(); // looked up by key only, never iterated
             foreach (ForecastEntry f in sim.Forecast()) shown[f.SpellIndex] = f;
             int revisions = 0, changes = 0;
-            for (int step = 0; step < 3 * 64; step++)
+            for (int step = 0; step < 3 * 384; step++) // three game years of hourly spells
             {
-                long mid = sim.State.Clock.SimTime + 2 * Hour;
+                long mid = sim.State.Clock.SimTime + Hour / 2;
                 sim.AdvanceTo(mid);
                 Assert.That(sim.Forecast(), Is.EqualTo(sim.Forecast()));
-                sim.AdvanceTo((mid / (6 * Hour) + 1) * 6 * Hour); // the next spell boundary
+                sim.AdvanceTo((mid / Hour + 1) * Hour); // the next spell boundary
 
                 List<ForecastRevised> revised = sim.DrainEvents().OfType<ForecastRevised>().ToList();
                 var expectedRevised = new List<string>();

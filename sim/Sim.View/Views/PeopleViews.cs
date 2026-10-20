@@ -137,8 +137,8 @@ namespace Sim.View.Views
             foreach (Neighbour n in p.Roster) if (n.HiredToday) working++;
             Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
             vm.Lines.Add(new LineVm(ctx.Strings.Get("people.freeToday"),
-                ctx.Strings.Get("people.freeTodayValue", "n", ctx.Fmt.Integer(free), "season", ctx.Strings.Get("season." + season.ToString().ToLowerInvariant()))));
-            if (working > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.workingToday"), ctx.Strings.Get("people.workingTodayValue", "n", ctx.Fmt.Integer(working))));
+                ctx.Strings.Get("people.freeTodayValue", "n", ctx.Fmt.Integer(free), "season", ctx.Strings.Get("season." + season.ToString().ToLowerInvariant())), "free"));
+            if (working > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.workingToday"), ctx.Strings.Get("people.workingTodayValue", "n", ctx.Fmt.Integer(working)), "free"));
             bool growing = FarmSystem.LabourDemand(sim) > Fixed.Zero;
             string now = PeopleWords.CareWith(ctx, Fixed.Zero);
             for (int k = 1; k <= free; k++)
@@ -147,7 +147,7 @@ namespace Sim.View.Views
                 string care = growing
                     ? ctx.Strings.Get("people.carePreview", "from", now, "to", PeopleWords.CareWith(ctx, defs.Pool.HoursPerDay.MulRatio(count, 1)))
                     : ctx.Strings.Get("people.noCrops");
-                var line = new LineVm(ctx.Strings.Plural("people.hireN", count), care, "care");
+                var line = new LineVm(ctx.Strings.Plural("people.hireN", count), care, "hire", count);
                 line.Action = ActionVm.Checked(ctx, "hire:" + count, ctx.Strings.Get("action.hire"), ctx.Fmt.Coins(PeopleRules.DayLabourCost(sim, count)), ActionKind.Primary,
                     at => new HireDayLabourers(at, count));
                 vm.Lines.Add(line);
@@ -162,7 +162,7 @@ namespace Sim.View.Views
                 int skill = (int)h.Skill.RoundToLong();
                 string value = h.Contract == ContractState.Lapsed ? ctx.Strings.Get("people.unpaid")
                     : PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h));
-                var line = new LineVm(PeopleWords.Name(ctx, h.Name), value) { Stars = PeopleWords.Stars(ctx, skill, skill) };
+                var line = new LineVm(PeopleWords.Name(ctx, h.Name), value, h.Contract == ContractState.Lapsed ? "hand.lapse" : "hand.hours", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill) };
                 line.Action = h.Contract == ContractState.Lapsed
                     ? ActionVm.Checked(ctx, "renew:" + h.Id, ctx.Strings.Get("action.renew"), ctx.Fmt.Coins(h.Wage), ActionKind.Primary, at => new RenewContract(at, hand.Id))
                     : ActionVm.Open("hand:" + h.Id, ctx.Strings.Get("action.see"), new SheetRequest("Hand", h.Id));
@@ -183,7 +183,7 @@ namespace Sim.View.Views
                     PeopleRules.SkillRange(sim, a, out int lo, out int hi);
                     string traits = PeopleWords.Trait(ctx, a.Trait1) + " · " + (a.SecondTraitKnown ? PeopleWords.Trait(ctx, a.Trait2) : "?");
                     long wage = PeopleRules.AskedWage(sim, Fixed.FromInt(a.Skill), a.AboveMarket);
-                    var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits) { Stars = PeopleWords.Stars(ctx, lo, hi) };
+                    var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits, "applicant", a.Id) { Stars = PeopleWords.Stars(ctx, lo, hi) };
                     line.Action = ActionVm.Checked(ctx, "offer:" + a.Id, ctx.Strings.Get("action.offer"),
                         ctx.Strings.Get("people.offerDetail", "wage", ctx.Fmt.Coins(wage), "now", ctx.Fmt.Coins(PeopleRules.RestOfSeason(sim, wage))), ActionKind.Primary,
                         at => new OfferContract(at, ap.Id));
@@ -220,12 +220,12 @@ namespace Sim.View.Views
             vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.word")));
             if (p.Post != null)
                 vm.Lines.Add(new LineVm(ctx.Strings.Get(p.Post.AboveMarket ? "people.postAbove" : "people.postMarket"),
-                    ctx.Strings.Get("people.postActive", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now))));
+                    ctx.Strings.Get("people.postActive", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now)), "post"));
             else
                 foreach (bool above in new[] { false, true })
                 {
                     bool am = above;
-                    var line = new LineVm(ctx.Strings.Get(am ? "people.postAbove" : "people.postMarket"), ctx.Strings.Get(am ? "people.postAboveWhy" : "people.postMarketWhy"));
+                    var line = new LineVm(ctx.Strings.Get(am ? "people.postAbove" : "people.postMarket"), ctx.Strings.Get(am ? "people.postAboveWhy" : "people.postMarketWhy"), "post");
                     line.Action = ActionVm.Checked(ctx, am ? "postAbove" : "postMarket", ctx.Strings.Get("action.post"),
                         ctx.Fmt.Coins(MarketRules.Indexed(sim, defs.JobPost.Cost)), ActionKind.Secondary, at => new PostJob(at, am));
                     vm.Lines.Add(line);
@@ -248,20 +248,20 @@ namespace Sim.View.Views
                 Icon = PeopleWords.Female(ctx, h.Name) ? "person_hand_f" : "person_hand_m", Title = PeopleWords.Name(ctx, h.Name),
                 Subtitle = ctx.Strings.Get("hand.subtitle", "time", ctx.Fmt.Duration(ctx.Now - h.HiredAt)),
             };
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.skill"), PeopleWords.Band(ctx, skill), "hand.skill") { Stars = PeopleWords.Stars(ctx, skill, skill) });
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h)), "hand.hours"));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.skill"), PeopleWords.Band(ctx, skill), "hand.skill", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill) });
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h)), "hand.hours", h.Id));
             foreach (int t in new[] { h.Trait1, h.Trait2 })
                 vm.Lines.Add(new LineVm(PeopleWords.Trait(ctx, t), ctx.Strings.Get(sim.Config.Game.People.Traits[t].NameKey + ".why")));
             if (h.Contract == ContractState.Active)
             {
                 long left = Sim.Core.Finance.Accrual.RefundIfClosed(sim, h.PrepaymentId);
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractPaid", "wage", ctx.Fmt.Coins(h.Wage)), "hand.wage"));
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.prepaid"), ctx.Fmt.Coins(left)));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractPaid", "wage", ctx.Fmt.Coins(h.Wage)), "hand.wage", h.Id));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.prepaid"), ctx.Fmt.Coins(left), "hand.prepaid", h.Id));
             }
             else
             {
                 long grace = sim.Config.Game.People.Hand.LapseGraceDays * ClockDef.SecondsPerDay - h.LapsedLiveSeconds;
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractUnpaid", "time", ctx.Fmt.Duration(grace), "wage", ctx.Fmt.Coins(h.Wage)), "hand.lapse"));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractUnpaid", "time", ctx.Fmt.Duration(grace), "wage", ctx.Fmt.Coins(h.Wage)), "hand.lapse", h.Id));
             }
 
             vm.Lines.Add(LineVm.Header(ctx.Strings.Get("hand.orders")));
@@ -272,7 +272,7 @@ namespace Sim.View.Views
                 any = true;
                 StandingOrder order = o;
                 string last = PeopleWords.Last(ctx, o);
-                var line = new LineVm(PeopleWords.Target(ctx, o.Kind, o.Target), PeopleWords.Order(ctx, o) + (last == null ? "" : "\n" + last));
+                var line = new LineVm(PeopleWords.Target(ctx, o.Kind, o.Target), PeopleWords.Order(ctx, o) + (last == null ? "" : "\n" + last), "order", h.Id);
                 line.Action = ActionVm.Checked(ctx, "clear:" + o.Kind + ":" + o.Target, ctx.Strings.Get("action.remove"), null, ActionKind.Secondary,
                     at => new ClearStandingOrder(at, h.Id, order.Kind, order.Target));
                 vm.Lines.Add(line);

@@ -29,11 +29,11 @@ namespace Sim.Core.Tests
         public static GameDefs GameWithWeather(out WeatherSet weather, params string[] only)
         {
             string json = TestContent.ReadContent("weather.json");
-            foreach (string id in new[] { "sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm" })
-            {
-                string weight = Array.IndexOf(only, id) >= 0 ? "10" : "0";
-                json = System.Text.RegularExpressions.Regex.Replace(json, "\"" + id + "\": \\d+", "\"" + id + "\": " + weight);
-            }
+            string[] ids = { "sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm" };
+            string weights = string.Join(", ", ids.Select(id => "\"" + id + "\": " + (Array.IndexOf(only, id) >= 0 ? "10" : "0")));
+            string persistence = string.Join(", ", ids.Select(id => "\"" + id + "\": 0.5"));
+            json = System.Text.RegularExpressions.Regex.Replace(json, "\"weights\": \\{[^}]*\\}", "\"weights\": { " + weights + " }");
+            json = System.Text.RegularExpressions.Regex.Replace(json, "\"persistence\": \\{[^}]*\\}", "\"persistence\": { " + persistence + " }");
             weather = Sim.Content.ContentLoader.LoadWeather(json);
             WeatherSet w = weather;
             return TestContent.Game((f, j) => f == "start.json" ? j.Replace("20000", "5000000") : j, w);

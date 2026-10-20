@@ -107,3 +107,6 @@ crashlytics-build.properties
 *.DotSettings.user
 *.booproj
 *.svd
+
+# Editor captures for reviewing screens (capture_game_view saves inside Assets only)
+/unity/FarmToCity/[Aa]ssets/_Captures*
