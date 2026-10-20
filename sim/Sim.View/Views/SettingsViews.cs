@@ -264,14 +264,16 @@ namespace Sim.View.Views
     {
         /// <summary>
         /// The moment to ask in these events, or null. <paramref name="asked"/> counts asks so far (at most 2); the second only
-        /// after a "not now" (ADR 0036, spec 007 §3.5). A field crop of at least a day is "the long crop" (ADR 0041 §6).
+        /// after a "not now" (ADR 0036, spec 007 §3.5). A field crop of at least a day is "the long crop" (ADR 0041 §6). While
+        /// <paramref name="letterWillAsk"/> (the first session runs, so its <c>comeBack</c> page asks first), the card stays quiet:
+        /// it is the fallback after a skip (ADR 0045 §2).
         /// </summary>
-        public static NotifyAskMoment? Moment(IEnumerable<SimEvent> events, int asked, bool on, long lastWallUtc, long simTime)
+        public static NotifyAskMoment? Moment(IEnumerable<SimEvent> events, int asked, bool on, long lastWallUtc, long simTime, bool letterWillAsk = false)
         {
             if (on || asked >= 2) return null;
             foreach (SimEvent e in events)
             {
-                if (asked == 0 && e is CropSown c && c.ReadyAt - c.SimTime >= 86400)
+                if (asked == 0 && !letterWillAsk && e is CropSown c && c.ReadyAt - c.SimTime >= 86400)
                     return new NotifyAskMoment(c.CropId, lastWallUtc + (c.ReadyAt - simTime));
                 if (asked == 1 && e is SeasonClosed) return new NotifyAskMoment(null, 0);
             }

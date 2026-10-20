@@ -56,7 +56,7 @@ namespace Sim.Content
             {
                 string p = Index(root + ".steps", i);
                 JObject s = Object(stepTokens[i], p);
-                OnlyFields(s, p, "id", "goal", "highlight", "chapter");
+                OnlyFields(s, p, "id", "goal", "highlight", "chapter", "tour");
                 string id = UniqueId(s, p, stepIds);
                 stepIds.Add(id);
                 string chapterId = String(Required(s, p, "chapter"), Join(p, "chapter"));
@@ -65,7 +65,13 @@ namespace Sim.Content
                 if (chapters[chapter].Triggers[0].Trigger != TriggerKind.Step)
                     throw new ContentException(Join(p, "chapter"), "a step's chapter must have the trigger 'step'");
                 ConditionDef goal = Condition(Object(Required(s, p, "goal"), Join(p, "goal")), Join(p, "goal"), GoalKinds, ids);
-                steps.Add(new StepDef(id, goal, OptionalString(s, p, "highlight"), chapter));
+                var tour = new List<string>();
+                if (s["tour"] != null)
+                {
+                    List<JToken> tt = Array(s["tour"], Join(p, "tour"));
+                    for (int k = 0; k < tt.Count; k++) tour.Add(String(tt[k], Index(Join(p, "tour"), k)));
+                }
+                steps.Add(new StepDef(id, goal, OptionalString(s, p, "highlight"), chapter, tour.AsReadOnly()));
             }
 
             const string er = "eras";

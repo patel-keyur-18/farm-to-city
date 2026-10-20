@@ -2,8 +2,9 @@
   "steps": [
     { "id": "welcome",   "goal": { "kind": "chapterClosed" },                                             "chapter": "welcome" },
     { "id": "garden",    "goal": { "kind": "bedGrowing" },                          "highlight": "bed:1",   "chapter": "garden" },
-    { "id": "household", "goal": { "kind": "sheetVisited", "sheet": "founder" },    "highlight": "hut",     "chapter": "household" },
-    { "id": "firstPick", "goal": { "kind": "event", "events": ["GardenPicked"] },   "highlight": "readyBed", "chapter": "firstPick" },
+    { "id": "household", "goal": { "kind": "sheetVisited", "sheet": "Founder" },    "highlight": "hut",     "chapter": "household" },
+    { "id": "firstPick", "goal": { "kind": "event", "events": ["GardenPicked"] },   "highlight": "readyBed", "chapter": "firstPick",
+      "tour": ["store", "field:28", "founder"] },
     { "id": "firstSale", "goal": { "kind": "event", "events": ["SoldToTrader", "MarketSales", "MandiTripReturned"] }, "highlight": "store", "chapter": "firstSale" },
     { "id": "longCrop",  "goal": { "kind": "cropSown", "minGrowthHours": 12 },      "highlight": "tile:20", "chapter": "longCrop" },
     { "id": "comeBack",  "goal": { "kind": "chapterClosed" },                                             "chapter": "comeBack" }

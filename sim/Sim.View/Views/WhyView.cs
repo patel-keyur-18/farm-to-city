@@ -69,6 +69,8 @@ namespace Sim.View.Views
             { "orderMin", OrderMin }, { "order", Order }, { "post", Post }, { "free", FreeLabourers },
             // The away card (spec 008 §3.9).
             { "away", Away },
+            // The Hamlet (spec 009 §3.6).
+            { "era", EraWhy },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

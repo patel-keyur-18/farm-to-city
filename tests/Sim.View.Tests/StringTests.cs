@@ -106,6 +106,7 @@ namespace Sim.View.Tests
                 Need("report." + line + ".why");
             }
             foreach (string s in new[] { "spring", "summer", "monsoon", "winter" }) Need("season." + s);
+            missing.AddRange(Sim.View.Views.Letter.MissingStrings(sim.Config.Game.Onboarding, t)); // spec 009 AC-10
             NeedPlural("unit.coins");
 
             Assert.That(missing, Is.Empty, "missing from content/strings/en.json");

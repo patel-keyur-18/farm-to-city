@@ -32,6 +32,7 @@ namespace Sim.View.Views
             if (ctx.Sim.State.People != null) Add("people", new SheetRequest("People", 0), "person_hand_f");
             Add("land", new SheetRequest("Lands", 0), "sign");
             Add("you", new SheetRequest("Founder", 0), "person_founder");
+            if (ctx.Sim.State.Guidance != null) Add("letter", new SheetRequest("Letter", 0), "letter");
             Add("settings", new SheetRequest("Settings", 0), "gear");
             return vm;
         }

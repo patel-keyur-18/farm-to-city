@@ -69,12 +69,19 @@ namespace Sim.Core.Definitions
         /// <summary>Index into <see cref="OnboardingDefs.Chapters"/>.</summary>
         public int Chapter { get; }
 
-        public StepDef(string id, ConditionDef goal, string highlight, int chapter)
+        /// <summary>
+        /// The farm tour while this step waits on the garden (ADR 0045 §1): sheets the nudge pill rotates through, each with the
+        /// line <c>tour.&lt;sheet&gt;</c> (the part before any ':'). Empty for no tour.
+        /// </summary>
+        public IReadOnlyList<string> Tour { get; }
+
+        public StepDef(string id, ConditionDef goal, string highlight, int chapter, IReadOnlyList<string> tour)
         {
             Id = id;
             Goal = goal;
             Highlight = highlight;
             Chapter = chapter;
+            Tour = tour;
         }
     }
 

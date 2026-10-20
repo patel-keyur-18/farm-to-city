@@ -40,6 +40,11 @@ namespace Sim.View.Tests
             Assert.That(e.FieldPath, Is.EqualTo("eras.eras[0].conditions"));
             e = Error(Onboarding, Eras.Replace("\"meanCareAtLeast\": 0.9", "\"meanCareAtLeast\": 3"));
             Assert.That(e.FieldPath, Is.EqualTo("eras.eras[1].conditions.meanCareAtLeast"));
+
+            // A chapter without its string, or a step without its nudge, names the field (checked against en.json).
+            Sim.View.Text.StringTable t = Sim.View.Text.StringTable.Load(ViewKit.ReadContent("strings/en.json").Replace("\"letterTitle.pest\"", "\"letterTitle.pests\"").Replace("\"nudge.firstSale\"", "\"nudge.sale\""));
+            Assert.That(Sim.View.Views.Letter.MissingStrings(d, t), Is.EqualTo(new[] { "onboarding.chapters[9]: letterTitle.pest", "onboarding.steps[4]: nudge.firstSale" }));
+            Assert.That(Sim.View.Views.Letter.MissingStrings(d, ViewKit.Strings()), Is.Empty);
         }
     }
 }

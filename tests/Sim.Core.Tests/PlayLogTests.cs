@@ -35,9 +35,11 @@ namespace Sim.Core.Tests
                 Assert.That(sim.Execute(new SellToTrader(sim.State.Clock.SimTime, "radish", 1000)).Accepted, Is.True);
                 log.OnEvents(sim.DrainEvents(), Wall0 + 100 * (i + 1));
             }
+            // The Hamlet unlock (spec 009 §3.6) comes from the sim's EraUnlocked, once.
+            log.OnEvents(new Events.SimEvent[] { new Events.EraUnlocked(sim.State.Clock.SimTime, "hamlet"), new Events.EraUnlocked(sim.State.Clock.SimTime, "hamlet") }, Wall0 + 400);
             log.Away(Wall0 + 500, sim.State.Clock.SimTime, 7200, 7200, false);
             log.SessionEnd(Wall0 + 600, sim.State.Clock.SimTime, 600);
-            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "away", "sessionEnd" }));
+            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "hamletUnlocked", "away", "sessionEnd" }));
             Assert.That(log.Lines[1], Is.EqualTo("{\"t\":" + Wall0 + ",\"sim\":0,\"type\":\"sessionStart\",\"build\":\"0.1.0\",\"device\":\"iPhone14,5\"}"));
 
             // Milestones are once per town, also after the log is read back from its file; a new town starts again.
