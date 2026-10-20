@@ -15,7 +15,7 @@
 | S4 | 16–22 Nov 2026 | 1 | Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel. | 24 | — | Yes: first playable |
 | S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 21 | — | Yes |
 | S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; regulars; every sprite, the ground, icons and walk cycles rendered in Blender (ADR 0041). | 26 | — | Yes |
-| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings. | 15 | — | Yes |
+| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings; hourly weather spells (ADR 0042). | 19 | — | Yes |
 | S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | — | Yes: release candidate |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
@@ -309,7 +309,7 @@
 - **Status:** Planned
 - **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 15 (US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039; US-084 −1: the Settings sheet is built in Sprint 6, ADR 0041)
+- **Points:** 19 (US-184 +4, ADR 0042; US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039; US-084 −1: the Settings sheet is built in Sprint 6, ADR 0041)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -321,6 +321,7 @@
 | US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
 | US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
+| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | To do |
 
 **Sprint end checklist**
 

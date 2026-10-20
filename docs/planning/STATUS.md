@@ -114,7 +114,7 @@
 ## Next up
 
 1. **Owner:** a new Development build (delete `unity/FarmToCity/Builds/iOS` first), checks 6, 18b–18e of `docs/test-checklists/s06-saves-notifications.md`; the notification checks when convenient; merge pull request #11.
-2. **Claude:** fix anything run 2 finds; then Sprint 7 planning (full HUD, *Why?*, panels, the full *While you were away* card, Settings in the Menu).
+2. **Claude:** fix anything run 2 finds; then Sprint 7 planning, starting with **US-184** (ADR 0042: hourly weather spells, per-weather persistence; spec 001 amendment for re-approval, goldens re-pinned) (full HUD, *Why?*, panels, the full *While you were away* card, Settings in the Menu).
 
 ## Owner action checklist (Phases 0–1)
 
