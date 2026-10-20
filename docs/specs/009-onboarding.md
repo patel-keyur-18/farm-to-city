@@ -1,10 +1,10 @@
 # 009. Onboarding: the letter, the first session, the guided first week and the Hamlet unlock
 
-- Status: Approved (2026-10-18), all six open questions answered as recommended (§10)
+- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens (Onboarding); Player journey and eras (Homestead, Hamlet); Learning layer
-- Related ADRs: 0036 (the notification ask in the first session), 0015 (first session and guided first week), 0030 (the inherited farm, the Hamlet gate), 0031 (the kitchen garden, the mandi), 0032 (farm profit, the seed-keeping hint), 0021 (crop calendar), 0034 (ready grace, subsistence automatic), 0022 (hiring from Homestead), 0009 (loans only when needed), 0024 (the play log), 0001 (inclusive invented names)
+- Related ADRs: 0045 (Sprint 8 review: nudges, the ask, new ACs), 0041 (no daily cap, the ask's fallback card), 0036 (the notification ask in the first session), 0015 (first session and guided first week), 0030 (the inherited farm, the Hamlet gate), 0031 (the kitchen garden, the mandi), 0032 (farm profit, the seed-keeping hint), 0021 (crop calendar), 0034 (ready grace, subsistence automatic), 0022 (hiring from Homestead), 0009 (loans only when needed), 0024 (the play log), 0001 (inclusive invented names)
 - Depends on specs: 001–007 (every trigger reads their state and events); 008 (the letter sheet, highlights, strings, *While you were away*)
 
 ## 1. Goal
@@ -54,10 +54,14 @@ Steps run in order. Each has a goal (a condition on the state), a highlight (wha
 | 3 | The household | The founder sheet was opened and closed | The hut | `household` (with the seed-keeping hint, §3.5) |
 | 4 | First pick | A `GardenPicked` event | The ready bed (radish 10 min, spinach 15, coriander 5) | `firstPick` |
 | 5 | First sale | Any sale event (`SoldToTrader`, `MarketSales`) | The store button, then "Sell to trader" | `firstSale` |
-| 6 | A long crop | A `CropSown` of a crop with growth ≥ 12 h on a well acre | Well acre 20 | `longCrop` (potato: free from the inherited seed) |
-| 7 | Come back | The chapter is closed | — | `comeBack`: when the potato is ready, and the first notification prompt ("Your potato will be ready at 14:05 tomorrow. Want a nudge when it is?"; ADR 0036). Declined: spec 007's second ask after the first season close |
+| 6 | A long crop | A `CropSown` of a field crop with growth ≥ 12 h on any owned acre (ADR 0045) | Well acre 20 | `longCrop` (potato: free from the inherited seed) |
+| 7 | Come back | The chapter is closed | — | `comeBack`: when the potato is ready, and the first notification prompt ("Your potato will be ready at 14:05 tomorrow. Want a nudge when it's ready? Never at night."; ADR 0036, 0045) with **Yes, nudge me** / **Not now** (iOS's dialog only after a Yes); with notifications already on, no question and **Continue**. Declined: spec 007's second ask after the first season close |
 
 While the garden grows (steps 2–4, 5–15 minutes) the `household` chapter and a short farm tour fill the wait: the store (the inherited seed and grain), the well acres versus the rain-fed acres, the founder's labour.
+
+**Nudges and the tour (ADR 0045).** While a step is current and its chapter is closed, a one-line nudge (`nudge.<step>`) shows as a pill at the top of the map ("Tap a garden bed and sow radish"); tapping it replays the step's highlight; it goes when the step is done or the session is skipped. The tour is three lines (`tour.1`–`tour.3`: the store, the well and rain-fed acres, the founder's hours) that the pill rotates through while the first bed grows, each opening its sheet; no extra chapters.
+
+**The ask's fallback (ADR 0045).** If `comeBack` hasn't asked (the session was skipped, or passed another way), spec 007's plain card asks at the first field crop of at least a day. Either counts as the first ask; the second comes after the first season close; then never.
 
 **Timing target:** steps 1–7 in 15–20 minutes of play (ADR 0015), measured by a bot that follows the highlights (AC-2).
 
@@ -189,7 +193,7 @@ The highlight: the target bounces once (spec 008 §3.12) and keeps a soft glow u
 - `firstPick`: "There: your first basket. Everything you pick goes to the store, where it waits for you. Greens don't keep long, so eat them or sell them soon."
 - `firstSale`: "The trader comes to the gate every day and buys at a fair, low price. That's money today. Later you'll learn when it pays to wait, or to take a cart to the *mandi* in town."
 - `longCrop`: "Now something that takes longer. Potato does well in Spring on the well acres, and the seed is already in the store. It will be ready this time tomorrow. Crops wait in the field when they're ready, but not forever: after three days they start to spoil."
-- `comeBack`: "That's a good first day. The farm keeps going while you're away: the crops grow, the house eats, the trader buys. Your potato will be ready at {readyTime} tomorrow. Want a nudge when it is? At most twice a day, never at night."
+- `comeBack`: "That's a good first day. The farm keeps going while you're away: the crops grow, the house eats, the trader buys. Your potato will be ready at {readyTime} tomorrow. Want a nudge when it's ready? Never at night." (buttons **Yes, nudge me** / **Not now**; without the question and with **Continue** when notifications are on)
 - Signature (every chapter): "Your Dadi, Kamla"
 - `firstReturn`: "Welcome back. Here's what happened while you were away. Tap Collect all to bring in what's ready."
 - `firstFieldHarvest`: "Your first field harvest. Tap *Why?* to see what made it: the soil, the water, your care, the weather, the seed. The weakest of them holds the rest back."
@@ -218,6 +222,12 @@ Tests in `tests/Sim.View.Tests` (triggers, steps, hints) and `tests/Sim.Core.Tes
 | AC-8 | The Hamlet unlocks exactly when, in one season, 6 different acres were harvested with mean Care ≥ 0.9, a hand's hut is complete, and a season had farm profit > 0; 6 harvests of fewer acres, a hut under construction, or no profitable season keep it locked; it emits `EraUnlocked` once | `EraTests.HamletGate` |
 | AC-9 | The progress view shows this season's acres and mean Care, the hut's state and the profitable seasons, equal to the state | `EraTests.Progress` |
 | AC-10 | Every chapter, step and hint text key exists in `en.json` (spec 008 AC-3) | `StringTests.Coverage` |
+| AC-11 | The letter sheet shows the chapter's text, the signature "Your Dadi, Kamla" and "n of m seen", and **Show me** only when the chapter has an action; Continue sends `SeeChapter` (ADR 0045) | `LetterTests.Sheet` |
+| AC-12 | Menu → Letter lists exactly the seen chapters in the order seen, then "Becoming a Hamlet"; an unseen chapter never appears; reopening one sends no command | `ChapterTests.ReopenList` |
+| AC-13 | While a step is current and its chapter is closed its nudge shows; the tour lines rotate only during the garden wait; nothing shows once the step is done or the session skipped | `FirstSessionTests.Nudges` |
+| AC-14 | `comeBack` asks with Yes / Not now, and shows only Continue when notifications are on; after a skip the card asks at the first field crop of at least a day; at most 2 asks in all | `FirstSessionTests.ComeBackAsks` |
+| AC-15 | Over 100 seeds the competent bot's `EraUnlocked(hamlet)` comes at a median of day 7 ± 2, from the sim's own rule | `GateTests.HamletPace` |
+| AC-16 | In AC-2's run, the first sale comes within 15 minutes of sim time | `FirstSessionTests.HighlightsComplete` |
 
 ## 9. Balancing hooks
 
@@ -238,6 +248,14 @@ All six were answered in the review with the owner (2026-10-18), each as recomme
 4. **The profitable season:** any closed season so far with farm profit above 0, not necessarily the season of the six acres (§3.6).
 5. **Skipping:** "I'll find my own way" ends the first session's steps and highlights; the week's chapters still appear once each (§3.2).
 6. **Seen flags:** in the sim state (`Guidance`), set by the `SeeChapter` command, so they save, export and replay with the town (§3.7).
+
+**Sprint 8 planning review (2026-10-20, ADR 0045),** each answered as recommended:
+
+7. **Nudges:** a one-line pill per current step, tapping replays the highlight; the tour is three rotating lines during the garden wait (§3.2, AC-13).
+8. **Step 6** accepts a long crop on any owned acre (rule change, re-approved); `comeBack` reads "Never at night." with Yes / Not now; the plain card is the fallback when `comeBack` hasn't asked (§3.2, §7, AC-14).
+9. **Six new ACs** (AC-11 to AC-16). The Hamlet vignette stays on the device checklist.
+10. **The Phase 1 health checks** (F20.1, not this spec): cautious saver and random bots, never stuck with credit refused, recovery after foreclosure, exact ledgers, bounded prices; thresholds measured first and set realistically.
+11. **Sprint 8's build** is a feature-complete Development build; the release candidate is Sprint 9's (US-095).
 
 ## 11. Cut first
 

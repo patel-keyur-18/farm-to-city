@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 8 (onboarding, the letter, the Hamlet unlock, Phase 1 bots): planning review. Sprint 7 done (PR #12 merged; device runs 1 and 2 passed) |
+| Sprint | Sprint 8 (onboarding, the letter, the Hamlet unlock, Phase 1 bots): planning review done (ADR 0045), coding next after the owner's go. Sprint 7 done (PR #12 merged; device runs 1 and 2 passed) |
 | Branch with latest work | `sprint/08-onboarding-hamlet` (from `main`, which has Sprint 7 / PR #12) |
 | Last updated | 2026-10-20 |
 
@@ -117,12 +117,12 @@
 
 ## In progress
 
-Sprint 8 planning review (with the owner).
+Sprint 8: planning review done (ADR 0045, 5 gaps; spec 009 amended and re-approved). Coding waits for the owner's go.
 
 ## Next up
 
-1. **Claude:** Sprint 8 planning review: the feature-file table, the carry-overs, then one gap per message; the answers go into a new ADR and spec 009 §10. Then test-first: Sim.Core, Sim.View, Unity.
-2. **Owner:** answer the planning gaps; approve before coding starts.
+1. **Claude:** Sprint 8 test-first, in order: US-093 (the era check, `Sim.Core`), US-091 and US-090's state (`Guidance`, `SeeChapter`, `CompleteStep`, `SkipFirstSession`; save schema 3; goldens re-pinned), US-098 (bots and checks, thresholds measured first), then `Sim.View` (triggers, steps, nudges, hints, the letter sheet, progress) and Unity (letter sheet, highlights, nudge pill, celebration). Carry-overs: the letter's ask (US-090.T3); farm profit reported against spec 003 §9; Blender icons for the Menu, alerts and trolley if time allows; alert dismissals deferred to Sprint 9.
+2. **Owner:** give the go for coding.
 
 ## Owner action checklist (Phases 0–1)
 

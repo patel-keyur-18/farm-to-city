@@ -355,12 +355,12 @@
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/08-onboarding-hamlet` (or the branch the session assigns)
+- **Status:** In progress. Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
+- **Branch:** `sprint/08-onboarding-hamlet`
 - **Goal:** Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks.
 - **Points:** 21
-- **Specs for the owner to review:** —
-- **Device build:** Yes: release candidate
+- **Specs for the owner to review:** spec 009 §3.2, §7, §8, §10 (the ADR 0045 amendment; re-approved)
+- **Device build:** Yes: a feature-complete Development build (ADR 0045 §5; the release candidate is Sprint 9's US-095)
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |

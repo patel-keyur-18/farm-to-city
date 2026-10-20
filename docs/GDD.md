@@ -732,7 +732,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 | Chronicle | Remember | Timeline, Almanacs, citizen stories |
 | Settings and saves | Control | Save now, export and import town, new game, difficulty, accessibility, language |
 
-**Onboarding (ADR 0015).** A short first session, then a guided first week. The letter from the founder's grandmother (Kamla, "your Dadi") and the advisors guide each lesson, never a pop-up wall (spec 009).
+**Onboarding (ADR 0015).** A short first session, then a guided first week. The letter from the founder's grandmother (Kamla, "your Dadi") guides each lesson, with a one-line nudge for the current step of the first session; never a pop-up wall (spec 009, ADR 0045).
 
 - **First session (15–20 minutes):** inherit the neglected 6-acre farm, its store and the letter. Sow a quick crop in the kitchen garden, set the household plan, harvest and make the first sale to the travelling trader. Then sow a long crop, turn on notifications, and leave with a reason to come back.
 - **Guided first week:** each "first" is guided once, when it naturally happens, by a new letter page:
@@ -1022,6 +1022,8 @@ The Village and Township targets are provisional, and the reachable-eras check c
   - Random finishes below every archetype.
 - **Reachable eras.** Every era gate is reachable within the calendar targets for each town archetype (ADR 0011).
 - **Exact ledgers.** The ledger reconciles to the coin after every season.
+
+**Phase 1 health checks (ADR 0045).** With only the Homestead and the Hamlet, the checks above take a Phase 1 form: the stress bots are debt-fuelled expansion, cautious saver and random; *never stuck* refuses all credit and asks for a profitable farm season within a set number of seasons; *recoverable bankruptcy* asks a foreclosed bot for a profitable season again and the Hamlet's conditions within 3 game years; bounded prices and exact ledgers as above. Each threshold is measured on the real simulation and set at what competent play reaches, with a margin.
 
 **Tests**
 

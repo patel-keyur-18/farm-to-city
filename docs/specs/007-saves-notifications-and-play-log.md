@@ -232,7 +232,7 @@ All six were answered in the review with the owner (2026-10-18):
 3. **Notifications from a simulated absence,** ranked urgent, needs you, information; **no daily cap** (owner); quiet hours; information grouped per 4 hours; the iOS 64-pending limit; the crop named in the text (§3.5, AC-10, AC-13).
 4. **Settings in Sprint 6:** a gear button under the Store chip and a full-height Settings sheet; the Menu entry comes in Sprint 7 (spec 008 §10).
 5. **Import** from a list in Settings, no launch pop-up; exports named by date (§3.4).
-6. **The first ask** is a plain card the first time a field crop of at least a day is sown, until the letter (Sprint 8) takes it over; the second ask after the first season close (§3.5).
+6. **The first ask** is a plain card the first time a field crop of at least a day is sown, until the letter (Sprint 8) takes it over; the second ask after the first season close (§3.5). From Sprint 8 the letter's `comeBack` chapter asks first; the card stays as the fallback when `comeBack` hasn't asked (ADR 0045).
 7. The notifications package is `com.unity.mobile.notifications` 2.5.0 (bundled with Unity 6000.3.26f1).
 
 ### Sprint 6 implementation notes (2026-10-20)
