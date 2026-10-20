@@ -306,20 +306,20 @@
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
+- **Status:** Planning review done (2026-10-20, ADR 0043: 11 gaps); spec 001's weather sections await re-approval
+- **Branch:** `sprint/07-hud-panels`
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 19 (US-184 +4, ADR 0042; US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039; US-084 −1: the Settings sheet is built in Sprint 6, ADR 0041)
-- **Specs for the owner to review:** —
+- **Points:** 25 (19, then ADR 0043: US-081 3 → 5 for *Why?* on every number, US-082 4 → 6 for the founder, money-and-loans, market and mandi panels, US-084 1 → 3 for text size and the iOS plugin). Order: US-184, US-081, US-082, US-080, US-083, US-084, US-087; US-087 is cut first if time runs short
+- **Specs for the owner to review:** spec 001 §3.5–3.6, §4, §8, §9 (the US-184 amendment, ADR 0042 and ADR 0043)
 - **Device build:** Yes
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
-| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
+| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | To do |
+| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | To do |
 | US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
 | US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | To do |
 

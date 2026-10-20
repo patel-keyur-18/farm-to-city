@@ -103,7 +103,7 @@ Sowing windows follow India's cropping seasons, so every season has something to
 
 Radish can be sown all year. A sowing window only limits *sowing*: a crop keeps growing into the next season. Outside its window, a crop can't be sown, and the *Why?* breakdown explains which season it belongs to.
 
-**Weather.** Weather is drawn hour by hour from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Calm weather lasts (sun about 1–2 days, rain about a day) and severe weather passes (heavy rain and storms 1–2 hours, a heatwave about 6 hours), with each season's overall mix unchanged (ADR 0042, from Sprint 7; until then 6-hour spells). Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65% (spec 001). Big events like droughts are signalled days ahead.
+**Weather.** Weather is drawn hour by hour from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Calm weather lasts and severe weather passes, with each season's overall mix unchanged (ADR 0042): sun runs about 30–37 hours outside the Monsoon and comes in breaks of about 6 hours in it, Monsoon rain runs about 18 hours, dry-season rain 4–6 hours, a heatwave 6–8 hours, frost 3–4 hours, heavy rain and storms 1.5–2 hours (ADR 0043; 1 game hour is about 1 world day). Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast, shown as runs ("Sun until 14:00, then heavy rain about 1 hour"), lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65%, rolled once per run so a forecast never flickers hour by hour (spec 001, ADR 0043). Big events like droughts are signalled days ahead.
 
 **Determinism.** Each save has a random seed. Sim time is a 64-bit count of seconds, kept separate from wall-clock time, and every command carries the sim time it applies at. The simulation is deterministic for a given seed and timestamped command history. That makes offline catch-up reproducible, makes bugs replayable, and allows automated balancing runs on a fake clock.
 
@@ -747,7 +747,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 - The game is landscape only, on phones and tablets, in both landscape directions (ADR 0005). Menus work one-handed from bottom sheets, and the main actions (collect all, harvest, build) sit in thumb reach in the bottom corners.
 - Layouts support phone aspect ratios from 16:9 to 21:9, 4:3 tablets, and notch and home-indicator safe areas.
-- Touch targets are at least 44 pt. Long-press shows the *Why?* breakdown on any number.
+- Touch targets are at least 44 pt. Every number has a *Why?* in plain words (causes and their effect, never raw factors): tap the **?** on its row, or long-press the number (ADR 0043).
 - Notifications group by importance: urgent (cash, safety), decisions, then information.
 - No decision is ever timed. Big decisions show their consequences before confirming.
 
@@ -1115,7 +1115,7 @@ flowchart TB
 | Money | Cash ledger, seasonal P&L, prepaid accounting, moneylender and bank loans, foreclosure |
 | Saves | Atomic saves, autosave, export and import |
 | Storage | Hut store with limited capacity; spoilage per good per day (ADR 0024) |
-| UI | Homestead HUD, *While you were away* report, field and founder panels with *Why?*; string tables (English) and locale number formatting with Indian grouping; opt-in local play log with export (ADR 0024); (Could) basic feedback sounds (ADR 0027) |
+| UI | Homestead HUD with the Menu, alerts and the forecast as runs, *While you were away* report, field, founder, market, mandi and money-and-loans panels with *Why?* on every number; settings for number format, text size, reduced motion, sound and haptics (ADR 0043); string tables (English) and locale number formatting with Indian grouping; opt-in local play log with export (ADR 0024); (Could) basic feedback sounds (ADR 0027) |
 | Onboarding | First session plus the letter chapters up to the Hamlet unlock |
 
 **Not in Phase 1:**

@@ -1,6 +1,6 @@
 # 008. HUD, presentation and localisation
 
-- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10)
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation
@@ -59,7 +59,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Reference | UI Toolkit scales from 1920 × 1080 (match 0.5); layouts hold from 16:9 to 21:9 phones and 4:3 tablets |
 | Safe area | Every edge-anchored element sits inside the device's safe area (notch, home indicator), both landscape directions |
 | Touch targets | At least 44 pt; spacing at least 8 pt |
-| Thumb zones | Main actions in the bottom corners: **Collect all** bottom-left, **Menu** (store, finance, people, settings) bottom-right |
+| Thumb zones | Main actions in the bottom corners: **Collect all** bottom-left (the **!** alerts button above it), **Menu** (store, money and loans, people, buy land, settings) bottom-right with the **People** shortcut beside it (ADR 0043) |
 | Sheets | Every panel is a bottom sheet the full height of the screen with the same margin top and bottom (owner, device run 2, 2026-10-19: half height was cramped), 78% of the width so the map shows at the sides; swipe down or tap the map to close. A list of choices is one row per choice with its button on the row (the store's goods, the trees, the garden crops). At most one sheet open; a *Why?* sheet stacks on top of it |
 | Three taps | Any Phase 1 lever: tap a field (1), an action (2), confirm (3); or Menu (1), a section (2), an action (3) |
 
@@ -79,12 +79,13 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 
 | Element | Shows | Tap |
 | --- | --- | --- |
-| Time strip (spec 001 §7) | Season, day of season, year, sim time, weather of the spell | The 3-day forecast sheet |
-| Cash | Cash (whole coins) | The finance sheet; long-press: *Why?* of today's cash movements |
-| Store | Store fill (% of capacity by weight) | The store and market sheet |
-| Alerts | The count of open alerts (§3.10), urgent first | The alert list |
+| Time strip (spec 001 §7) | Season, day of season, year, sim time, the current weather run and the next ("Sun until 14:00 · then heavy rain about 1 h", ADR 0043) | The forecast sheet: one row per run over 3 days, days 2–3 "likely"; hold 3 s: the developer panel (development builds) |
+| Cash | Cash (whole coins) | Money and loans; long-press: *Why?* of today's cash movements |
+| Store | Store fill (% of capacity by weight) | The store and market sheet; long-press: its *Why?* |
+| Alerts | A round **!** button with the count of open alerts (§3.10), shown only when there are any; red and popping once for an urgent one | The alert list, one row per alert with its action |
 | Collect all | The count of ready things: ready crops, ready garden beds, ripe fruit | Collects them (§3.9) |
-| Menu | — | Store, finance, people, buy land, the letter, settings |
+| Menu | — | Store, Money and loans, People, Buy land (each parcel for sale with its price and **Show**), Settings; the letter in Sprint 8. The gear button is gone (ADR 0043) |
+| People | The applicants badge | The People sheet (a shortcut beside Menu) |
 
 ### 3.4 The map
 
@@ -103,33 +104,40 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 
 | Sheet | Opens from | Content (spec) | Actions |
 | --- | --- | --- | --- |
+| Menu | The Menu button | One row per section with its button (§3.3) |
+| Forecast | The time strip | One row per shown weather run over 72 h (spec 001 §3.6) |
+| Alerts | The **!** button | One row per alert with its action (§3.10) |
 | Field | A farm tile | Spec 002 §7 field panel; a growing or ready crop's panel (spec 003 §7) with Care, Water, Weather, pest risk, time left or "ready · spoils in N h" | Sow, Spray, Harvest, Clear, Sell parcel |
 | Sow | Field → Sow | The crop-calendar card (§3.7), seed (certified with stock, or saved with age), fertiliser (none, compost, chemical with stock), the expected yield and the cost, what is bought | Sow |
 | Garden | A bed | Spec 003 §7 | Sow (radish, spinach, coriander), Pick |
 | Tree | A slot | Spec 003 §7 plus payback (US-049) | Plant (a sapling list with costs), Pick, Remove |
-| Founder | The hut | Spec 003 §7: labour today, the diet plan, hours, the day-labour split, fatigue, health, eating from the store | Change plan, hours, split, eat-from-store, Buy medicine |
-| Store and market | HUD store, or the hut | Spec 004 §7: each good in store, on offer, the market price, the floor, the trader's capacity, spoilage tomorrow | Offer (with a minimum), Withdraw, Sell to trader, Buy inputs |
-| Mandi | Store → Mandi | Up to 1,000 kg of loads, the regional price at return, commission, cart hire, the founder's 0.5 h, the comparison with the trader | Go to the mandi |
+| You and your family (founder) | The house, or the founder on the map | Today's work, health and tiredness as words; four food plans (cost, effect, **Choose**); four work-hour options; the day-labour share in quarters (none to three quarters, "about N coins a day"); **Eat from the store** On / Off; **Buy medicine**; **Open the store** (ADR 0043 §6) | SetDietPlan, SetWorkHours, SetLabourSplit, SetEatFromStore, BuyMedicine |
+| Store and market | HUD store | One row per good (tap: the good's sheet), **Buy inputs**, **Mandi trip** | Sell to trader, Take off market |
+| A good | A good's row in the Store | In store, on offer, spoilage tomorrow, the market price, the trader's price and room (each with *Why?*) | **Offer at the market** (all, a half or a quarter of what's free; then any price, at least the trader's, at least today's), Take off market, Sell to the trader |
+| Buy inputs | Store → Buy inputs | One row per input: this season's price and how it compares with sowing time (ADR 0031); seed and fertiliser as "enough for 1 / 2 / 6 acres", the rest by count | Buy |
+| Mandi | Store → Mandi trip | Load rows per good (none, 500, 1,000, 2,000 kg; the 2,000 kg trolley and the stock cap them), the sum written out (at the mandi, commission, trolley hire, the founder's 0.5 h) against the trader's price now | Go to the mandi |
 | Hiring and hand | Menu → People, or a hut | Spec 006 §7 | Hire, Interview, Offer, Renew, Let go, Orders, Build the hand's hut |
-| Finance | Cash, or Menu → Finance | The latest season report (§3.8), net worth, loans (spec 005 §7), the ledger for the current season | Borrow, Repay |
-| Buy land | An unowned parcel | Spec 002 §7 buy sheet | Buy, Buy with a loan |
-| Settings | Menu → Settings | Spec 007 §7 plus number format, text size, reduced motion, sound (§3.13) | As spec 007 |
+| Money and loans | Cash, or Menu | Cash, net worth and this season so far; the last season's report (**See report**); one row per loan (owed, next payment, warnings) with **Repay…** (the next payment, all of it, **Ask for more time**); one row per lender (limit, rate) with **Borrow…**: amounts (a quarter, a half, three quarters or all of the limit, rounded down to 1,000, at least the minimum loan), then terms with their payments and total interest (ADR 0043 §5) | TakeLoan, RepayLoan, RestructureLoan |
+| Season report | Each live season close, Money and loans, the away card | §3.8 | — |
+| Buy land | An unowned parcel, or Menu → Buy land → Show | Spec 002 §7 buy sheet | Buy, **Buy with a bank loan** (ADR 0028) |
+| Settings | Menu → Settings | Spec 007 §7 plus number format, text size, reduced motion, sound, haptics (§3.13) | As spec 007 |
 
 ### 3.6 The *Why?* system
 
-**One format.** A *Why?* sheet has a title, the value, an optional formula line, one row per term (label, value, and an optional note), and an optional footnote with the lesson. Every label and note is a string key with arguments; every value goes through the formatter.
+**One format, in words** (ADR 0043 §3). A *Why?* sheet has a title with the value, one row per cause, and an optional footnote with the lesson. A row is a cause in a plain sentence with its effect as "N% more", "N% less" or "no change"; for a sum (cash, a price, a report line) a row is a plain label and its coins. **No formula line and no factor** (0.875, 1.10) is ever shown. Every label and note is a string key with arguments; every value goes through the formatter.
 
 ```
-Why? Yield of North acre: 70.7 kg
-  = base x soil x water x care x seed x weather x tools x fertiliser x health
-  base         75.0 kg      1,200 kg a season x 1/16 (6 h of a 4-day season)
-  soil         0.875        loam 1.00 x fertility 0.875 x shade 1.00
-  water        1.00         moisture stayed in wheat's band (35-65)
-  care         1.10         you supplied more hours than the crop needed (cap 1.10)
-  ...
-  cap 120.0 kg (1.6 x base) not reached
-  "The weakest factor hurts most: raise soil fertility to lift every harvest."
+Why? Harvest of North acre: about 71 kg
+  A full harvest here would be        75 kg   (wheat, 1,200 kg an acre a season, this sowing's share)
+  Soil is tired (fertility 45/100)    12% less
+  Water stayed right for wheat        no change
+  You gave more care than needed      10% more
+  Certified seed                      no change
+  Weather during growth was fair      3% less
+  "The weakest cause hurts most: compost lifts every harvest on this acre."
 ```
+
+**Opening it:** a row with a *Why?* carries a small round **?** at its end; tapping the row opens it, and a long-press on any number also does. **Every number has one:** every row on every sheet and the HUD whose value contains a digit has a *Why?* source (AC-15), including those not listed below (time left, fertility, moisture, kg in store, a price, a wage, a loan's payments).
 
 **Sources in Phase 1** (each is a `Sim.View` builder with a test, AC-5):
 
@@ -202,8 +210,9 @@ The report opens as a sheet at each `SeasonClosed` (and from Finance). Each line
 | Rule | Behaviour |
 | --- | --- |
 | When | On the first live `Sync` after an away advance (`AwayAdvanceCompleted`), as a card over the map |
-| Content | Time away (and "the world paused after 72 hours" when capped); what became ready; sales by way (market, trader, mandi) with totals; day labour paid; home use; spoilage (store, field, tree) in kg; pest warnings; sick days; season closes (with a link to each report); the price index change |
-| Rows | Grouped by kind, most valuable first; at most 8 rows, then "and N more" |
+| Content | Time away as the title (and "The farm paused after 72 hours" when capped); what became ready; sales by way (market, trader, mandi) with totals; day labour paid; home use; spoilage (store, field, tree) in kg; pest warnings; sick days; hands' work and contracts; season closes (**See the report**); the price index change |
+| Rows | One card with the farm and people rows, grouped by kind, most valuable first, each with a picture, money rows counting up; at most 8 rows, then "and N more" (tap: all) |
+| Shown | Only when something happened (at least one row); a short switch away with nothing to report shows no card (ADR 0043 §8) |
 | Collect all | Sends `Harvest`, `PickGarden` and `PickFruit` for every ready thing, nearest to spoiling first, with **StoreOnly**. Whatever doesn't fit stays where it is, and one prompt offers "Sell the rest to the trader: N coins" (the same commands with SellRestToTrader) |
 
 ### 3.10 Alerts
@@ -280,16 +289,16 @@ All motion is code-driven tweens on transforms and UI Toolkit styles (ADR 0017);
 | Setting | Values | Default |
 | --- | --- | --- |
 | Number format | Indian (lakh, crore) · Western | By the device's region |
-| Text size | 100% · 125% · 150% | 100% |
-| Reduced motion | on · off | The device's setting |
+| Text size | 100% · 125% · 150% | 100% (Sprint 7, ADR 0043 §9: every sheet and the HUD hold at each size) |
+| Reduced motion | on · off | iOS's *Reduce Motion* |
 | Sound | on · off | on |
 | Haptics | on · off | on (a light tap on harvest and sale) |
 
-Settings live in the settings file beside the save (spec 007), never in the town. Feedback sounds (Could, F08.5): harvest, coins, notification; CC0 sources logged in `ASSETS_LICENSES.md`.
+Settings live in the settings file beside the save (spec 007), never in the town. iOS's *Reduce Motion* and the light haptic tap come from one small iOS plugin (`Assets/Plugins/iOS`). Feedback sounds (Could, F08.5; ADR 0043 §10), from Kenney's CC0 packs, logged in `ASSETS_LICENSES.md`, one per event and never stacking: harvest (a pop and rustle), coins in (a jingle, pitch rising in three steps with the amount), coins out (a clink), button tap (a wooden click), sheet open and close (a swish), something ready (a chime), an urgent alert (a two-note bell).
 
 ### 3.14 The developer panel (ADR 0017, spec 001 §7)
 
-Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035), and a number-format switch (en-IN / Western). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end.
+Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035). The number-format and motion switches and the loan button left the panel in Sprint 7: Settings and Money and loans have them (ADR 0043). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end.
 
 ## 4. Data
 
@@ -377,7 +386,7 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 | AC-2 | The string table loads; a duplicate key, a key with an unknown argument, or a plural without `.other` fails validation naming the key | `StringTests.Load_Validation` |
 | AC-3 | Every key the sim and `Sim.View` use (ledger descriptions, report lines and *Why?*, rejection reasons, event kinds, goods, crops, trees, plans, hours options, alerts, motions) exists in `en.json`; a missing key throws in tests | `StringTests.Coverage` |
 | AC-4 | The formatter gives exactly §3.11's examples: 1234567 → "12,34,567" (en-IN) and "1,234,567" (Western); 1,20,000.40 coins → "1,20,000 coins"; 12,345,678 coins short → "1.23 Cr" and "12.34M"; −3,200; 70.74 kg → "70.7 kg"; 5.3 → "5.30 /kg"; 0.0625 → "6.3%"; 11,520 s → "3 h 12 min" | `FormatTests.Examples` |
-| AC-5 | Each *Why?* source of §3.6 lists exactly the terms of its spec's formula for a known state (the yield example of spec 003 §3.4, labour 7.2 h, potato's price band in Spring, a mandi trip of 1,000 kg, the land example of spec 002 §3.5, net worth, a tree's payback) | `WhyTests.Sources` |
+| AC-5 | Each *Why?* source of §3.6 lists exactly the causes of its spec's formula, in words with their effect and no factor, for a known state (the yield example of spec 003 §3.4, labour 7.2 h, potato's price band in Spring, a mandi trip of 1,000 kg, the land example of spec 002 §3.5, net worth, a tree's payback) | `WhyTests.Sources` |
 | AC-6 | The crop-calendar card for tile 20 in Spring gives the §3.7 rows: potato "Harvest about 1,531 kg · Spend 3,850 coins · Sells for about 8,120 coins · Profit about 4,270 coins" (a quarter of the season's 17,060), radish "Profit about 350 coins", wheat greyed "Winter only"; at moisture 38 both rate "fair"; the fertilisers show their effect | `CalendarTests.CropCalendarCard` |
 | AC-7 | The season report view shows every ADR 0032 line with its label and *Why?* key in §3.8's order, its amounts equal the report's, and the home-use and cash-flow notes appear when non-zero | `ReportViewTests.Labels_AndWhy` |
 | AC-8 | *While you were away* built from the events of a 30-hour away advance groups ready things, sales by way, day labour, home use, spoilage, pests, sick days and season closes, with totals equal to the events' sums, and caps rows at 8 | `AwayViewTests.Summary` |
@@ -387,6 +396,9 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 | AC-12 | The alerts of §3.10 appear exactly when their conditions hold and clear when they don't (spoiling within 12 h, store over 90%, a pest warning until sprayed, cash short on the last day) | `AlertTests.Conditions` |
 | AC-13 | A disabled action's reason renders as a sentence for every `RejectReason` the Phase 1 commands can return | `StringTests.RejectionSentences` |
 | AC-14 | The HUD view's cash, store %, ready count and alert count equal the state's values in a seeded game at 10 sample times | `ViewTests.Hud` |
+| AC-15 | Building every sheet, the HUD and the away card in a set of seeded Phase 1 situations, every row whose value contains a digit has a *Why?* source that builds, and no *Why?* row shows a factor (a number with three decimals or a bare multiplier) | `WhyTests.EveryNumberHasWhy` |
+| AC-16 | The forecast view merges hours into runs: the HUD line is the current run and the next with their end times; the sheet's runs cover exactly 72 hours, days 2–3 marked likely; times read today, tomorrow or the weekday from a given local now | `ForecastViewTests.Runs` |
+| AC-17 | The Money and loans, founder, good, Buy inputs and mandi sheets list one row per choice with the command it sends; a borrow amount is never below the minimum loan or above the limit; each term row's total interest equals the sum of its schedule's interest | `PanelTests.Choices` |
 
 ## 9. Balancing hooks
 
@@ -454,6 +466,18 @@ None of these changes a rule or a lesson.
 8. **The sow sheet shows one sowing's money** (owner, Sprint 6 device run): *Spend* (red), *Sells for* (green), *Profit*, with the seed and fertiliser behind the spend and the hours; a line explains them (§3.7, AC-6). The fertiliser choice is three cards, **Normal**, **Compost**, **Chemical**, each with its effect from the data ("+25% harvest · wears out the soil").
 9. **People are always on the land:** the ground is drawn below every object, so a person on a tile's back half or at the map's edge no longer goes under the land.
 7. **Short texts never wrap:** any label of up to 28 characters on one line is laid out without wrapping (`UiKit.Text`), because on the phone's fractional UI scale a measured width can round a hair short and the second line then drew over the text below ("Export play / log", "about / 16,850"). Labels made empty and filled later (toasts) still wrap.
+### Sprint 7 planning review (2026-10-20, ADR 0043)
+
+Eleven gaps decided with the owner, each as recommended (text size moved into this sprint by the owner):
+1. **Weather runs and the forecast** (spec 001 §3.5–3.6 amended): the HUD shows the current run and the next; the forecast sheet lists runs; times as today, tomorrow, the weekday.
+2. ***Why?* in words** (§3.6): causes with "N% more / less / no change", no factors, a **?** on every row that has one, and every number covered (AC-15). US-081 3 → 5 points.
+3. **The Menu** bottom-right with the People shortcut beside it; the gear button goes; the **!** alerts button above Collect all (§3.2, §3.3).
+4. **Panels** (§3.5): Money and loans (preset borrow amounts, terms with total interest, the report at a live season close), You and your family, a good's sheet with offers, Buy inputs by acres, the mandi with load rows, Buy with a bank loan. US-082 4 → 6 points.
+5. **The full away card** (§3.9), shown only when something happened, with the sell-the-rest prompt after Collect all.
+6. **Settings** (§3.13): numbers, **text size now**, reduced motion from iOS, sound, haptics; one small iOS plugin. US-084 1 → 3 points.
+7. **Sounds:** seven Kenney CC0 sounds (§3.13).
+8. **Sprint 7 is 25 points;** US-087 is cut first if time runs short.
+
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

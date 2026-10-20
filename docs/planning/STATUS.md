@@ -109,12 +109,12 @@
 
 ## In progress
 
-**Sprint 7 planning review** (one gap at a time with the owner; decisions go into a new ADR and the specs' §10, with the spec 001 amendment for US-184 for re-approval). No code until the owner approves.
+**Sprint 7 planning review: done** (2026-10-20, **ADR 0043**, 11 gaps, each as recommended; the owner moved text size into this sprint). Spec 001 §3.5, §3.6, §4, §8 and §9 are amended for US-184 and **await the owner's re-approval** (a rule change, ADR 0027). Spec 008 §3 and §10, the GDD, CLAUDE.md and the planning files follow ADR 0043. Sprint 7 is 25 points.
 
 ## Next up
 
-1. **Claude + owner:** finish the Sprint 7 planning review; owner re-approves spec 001 §3.5–3.6 and §4 (ADR 0042).
-2. **Claude:** US-184 first (sim, goldens re-pinned, the gate re-run), then US-080 to US-084 and US-087 test-first (`Sim.Core`, `Sim.View`, Unity), then the Development build and `docs/test-checklists/s07-hud-panels.md`.
+1. **Owner:** re-approve spec 001's weather sections (§3.5, §3.6, §4, AC-14 to AC-20, AC-29, §9).
+2. **Claude:** then, in order: US-184 (sim and content test-first; goldens re-pinned in their own commit; the balance gate re-run), US-081, US-082, US-080, US-083, US-084, US-087; then the Development build and `docs/test-checklists/s07-hud-panels.md`.
 
 ## Owner action checklist (Phases 0–1)
 
