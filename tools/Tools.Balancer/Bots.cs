@@ -141,14 +141,14 @@ namespace Tools.Balancer
             PeopleState p = sim.State.People;
             if (p == null) return;
             long S = sim.Clock.SecondsPerSeason;
-            if (PeopleRules.HutCount(sim) == 0 && t >= S - ClockDef.SecondsPerDay / 2)
+            if (PeopleRules.HutCount(sim) == 0 && t >= S - ClockDef.SecondsPerDay / 2 && ReadyToHire(sim))
             {
                 long cost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.People.HandHut].Value);
                 Borrow(sim, t, cost + 40_000 * Money.Coin);
                 Ok(sim, new BuildHandHut(t, 37)); // the labour quarters (ADR 0040)
             }
             if (p.Post == null && p.Hands.Count == 0 && PeopleRules.HutCount(sim) > 0 && !_posted) _posted = Ok(sim, new PostJob(t, PostAboveMarket));
-            if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0)
+            if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0 && ReadyToHire(sim))
             {
                 foreach (Applicant a in p.Applicants.ToArray()) if (!a.SecondTraitKnown) Ok(sim, new Interview(t, a.Id));
                 Applicant best = null;
@@ -190,15 +190,21 @@ namespace Tools.Balancer
 
         protected virtual bool PostAboveMarket { get { return false; } }
 
+        /// <summary>False for a bot that never borrows (the cautious saver, the never-stuck check).</summary>
+        protected virtual bool MayBorrow { get { return true; } }
+
+        /// <summary>Whether to build the hand's hut and hire now (the competent bot: as soon as it plans to).</summary>
+        protected virtual bool ReadyToHire(Simulation sim) { return true; }
+
         protected virtual bool Acceptable(Simulation sim, Applicant a) { return true; }
 
         protected virtual Fixed OrderMinPrice(Simulation sim) { return Fixed.Zero; }
 
         /// <summary>Borrows from the moneylender whatever cash falls short of <paramref name="need"/> (minimum 1,000 coins).</summary>
-        protected static void Borrow(Simulation sim, long t, long need)
+        protected void Borrow(Simulation sim, long t, long need)
         {
             long gap = need - sim.State.Ledger.Cash;
-            if (gap <= 0 || sim.State.Credit == null) return;
+            if (gap <= 0 || sim.State.Credit == null || !MayBorrow) return;
             long amount = Math.Max(gap + Money.Coin * 100 - gap % (Money.Coin * 100), 1_000 * Money.Coin);
             long room = CreditRules.Limit(sim, 0).Limit;
             amount = Math.Min(amount, room - room % Money.Coin);
@@ -462,6 +468,73 @@ namespace Tools.Balancer
 namespace Tools.Balancer
 {
     using Sim.Core.People;
+
+    /// <summary>
+    /// Stress bot (ADR 0016, 0045): the cautious saver. Never borrows; builds the hand's hut and hires only once cash covers
+    /// the hut, a season of the hand's market wage and a season of the household's basic living costs.
+    /// </summary>
+    public sealed class CautiousSaverBot : FarmerBot
+    {
+        public override string Name { get { return "cautious-saver"; } }
+
+        protected override bool MayBorrow { get { return false; } }
+
+        protected override bool ReadyToHire(Simulation sim)
+        {
+            GameDefs g = sim.Config.Game;
+            long hut = PeopleRules.HutCount(sim) > 0 ? 0 : g.Buildings[g.People.HandHut].Value;
+            long living = g.Farm.DietPlans[g.Farm.IndexOfDietPlan("basic")].CostPerSeason;
+            return sim.State.Ledger.Cash >= MarketRules.Indexed(sim, hut + g.People.Hand.MarketWage + living);
+        }
+    }
+
+    /// <summary>
+    /// Stress bot (ADR 0016, 0045): random. Each hour a seeded random player command (the zero-time check's picker), plus
+    /// harvesting what's ready so the farm isn't left to rot by chance alone. It must finish below the competent bot.
+    /// </summary>
+    public sealed class RandomBot : Bot
+    {
+        private ulong _n;
+
+        public override string Name { get { return "random"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            for (int i = 0; i < 3; i++) sim.Execute(Gate.RandomCommand(sim, t, Rng.Next(sim.State.Seed, (RngStream)960, _n++, 0)));
+            HarvestReady(sim, t);
+        }
+
+        private static void HarvestReady(Simulation sim, long t)
+        {
+            foreach (int tile in Acres)
+            {
+                Crop c = sim.State.Farm.CropOn(tile);
+                if (c != null && c.State == CropState.Ready) Ok(sim, new Harvest(t, tile, Overflow.SellRestToTrader));
+            }
+        }
+    }
+
+    /// <summary>
+    /// The recoverable-bankruptcy check (ADR 0045 §4): plays the strategic defaulter until it's foreclosed, then the competent
+    /// bot. <see cref="ForeclosedAt"/> is when the foreclosure completed (−1 if never).
+    /// </summary>
+    public sealed class RecoveringBot : FarmerBot
+    {
+        private readonly StrategicDefaulterBot _defaulter = new StrategicDefaulterBot();
+
+        public long ForeclosedAt { get; private set; } = -1;
+
+        public override string Name { get { return "recovering"; } }
+
+        public override void Start(Simulation sim) { _defaulter.Start(sim); }
+
+        public override void Play(Simulation sim, long t)
+        {
+            if (ForeclosedAt < 0 && sim.State.Credit.Foreclosures > 0) ForeclosedAt = t;
+            if (ForeclosedAt < 0) _defaulter.Play(sim, t);
+            else base.Play(sim, t);
+        }
+    }
 
     /// <summary>The founder farming alone, never hiring: the reference the economy model compares hiring against.</summary>
     public sealed class SoloBot : FarmerBot

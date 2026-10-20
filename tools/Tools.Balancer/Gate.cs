@@ -57,7 +57,7 @@ namespace Tools.Balancer
             public int Seeds, BasicWithinOneSeason, SeasonOfCostsWithinTwo;
         }
 
-        /// <summary>No cash, an empty store, no credit (loans arrive in Sprint 4): day labour first, then farming.</summary>
+        /// <summary>No cash and an empty store: day labour first, then farming (the competent bot may borrow; <see cref="NeverStuck"/> refuses credit).</summary>
         public static BrokeResult Broke(ConfigFor configFor, int seeds)
         {
             SimConfig config = configFor((f, j) =>
@@ -142,7 +142,8 @@ namespace Tools.Balancer
             return failures;
         }
 
-        private static Command RandomCommand(Simulation sim, long t, ulong r)
+        /// <summary>A seeded random player command (the zero-time check and the random bot).</summary>
+        public static Command RandomCommand(Simulation sim, long t, ulong r)
         {
             GameDefs defs = sim.Config.Game;
             var goods = defs.Market.Goods;
@@ -227,6 +228,121 @@ namespace Tools.Balancer
             return days.ToList();
         }
 
+        // ---- US-098 (ADR 0045 §4): the Phase 1 health checks ----
+
+        /// <summary>No cash, an empty store and no credit: the cautious saver (it never borrows) plays on; per seed, the first
+        /// season (1-based) whose farm profit is above 0, or 0 if none within <paramref name="seasons"/>.</summary>
+        public static List<int> NeverStuck(ConfigFor configFor, int seeds, int seasons = 4)
+        {
+            SimConfig config = configFor((f, j) =>
+                f == "start.json" ? System.Text.RegularExpressions.Regex.Replace(
+                    j.Replace("\"startingCash\": 20000", "\"startingCash\": 0"), "\"store\": \\[[^\\]]*\\]", "\"store\": []") : j);
+            var first = new int[seeds];
+            Parallel.For(0, seeds, i =>
+            {
+                Economy.Run run = Economy.RunBot(config, new CautiousSaverBot(), seasons, (ulong)(i + 1), null);
+                if (run.Sim.State.Credit.Loans.Count > 0) throw new InvalidOperationException("the never-stuck bot borrowed");
+                int k = run.Sim.State.Finance.Reports.FindIndex(r => r.FarmProfit > 0);
+                first[i] = k < 0 ? 0 : k + 1;
+            });
+            return first.ToList();
+        }
+
+        public sealed class RecoveryResult
+        {
+            public int Seeds, Foreclosed;
+            /// <summary>Per foreclosed seed: seasons from the foreclosure to the first close with farm profit above 0 (−1 never).</summary>
+            public List<int> SeasonsToProfit = new List<int>();
+            /// <summary>Per foreclosed seed: game days from the foreclosure until the Hamlet's conditions all hold again (NaN never).</summary>
+            public List<double> DaysToHamlet = new List<double>();
+        }
+
+        /// <summary>The recovering bot: defaults until foreclosed, then plays competently (ADR 0045 §4).</summary>
+        public static RecoveryResult Recovery(SimConfig config, int seeds, int seasons = 20)
+        {
+            var profit = new int[seeds];
+            var hamlet = new double[seeds];
+            var foreclosed = new bool[seeds];
+            Parallel.For(0, seeds, i =>
+            {
+                var bot = new RecoveringBot();
+                double met = double.NaN;
+                int reportsAtForeclosure = -1;
+                Economy.Run run = Economy.RunBot(config, bot, seasons, (ulong)(i + 1), sim =>
+                {
+                    if (bot.ForeclosedAt < 0 || !double.IsNaN(met)) return;
+                    if (reportsAtForeclosure < 0) reportsAtForeclosure = sim.State.Finance.Reports.Count;
+                    // Every condition again, from the foreclosure on: one season's acres and Care, a hut, a profitable season.
+                    long foreclosedPeriod = bot.ForeclosedAt / sim.Clock.SecondsPerSeason;
+                    bool profitable = sim.State.Finance.Reports.Skip(reportsAtForeclosure).Any(r => r.FarmProfit > 0);
+                    Sim.Core.Definitions.EraDef h = sim.Config.Game.Onboarding.Eras[1];
+                    foreach (long p in new[] { sim.Period, sim.Period - 1 })
+                    {
+                        if (p <= foreclosedPeriod) continue;
+                        if (profitable && Sim.Core.Progress.EraRules.Acres(sim, p) >= h.AcresHarvestedInSeason
+                            && Sim.Core.Progress.EraRules.MeanCare(sim, p) >= h.MeanCareAtLeast && Sim.Core.Progress.EraRules.Huts(sim) >= h.HandHutsAtLeast)
+                            met = (sim.State.Clock.SimTime - bot.ForeclosedAt) / 86400.0;
+                    }
+                });
+                if (bot.ForeclosedAt < 0) return;
+                foreclosed[i] = true;
+                int k = run.Sim.State.Finance.Reports.FindIndex(Math.Max(0, reportsAtForeclosure), r => r.FarmProfit > 0);
+                profit[i] = k < 0 ? -1 : k - reportsAtForeclosure + 1;
+                hamlet[i] = met;
+            });
+            var result = new RecoveryResult { Seeds = seeds };
+            for (int i = 0; i < seeds; i++)
+            {
+                if (!foreclosed[i]) continue;
+                result.Foreclosed++;
+                result.SeasonsToProfit.Add(profit[i]);
+                result.DaysToHamlet.Add(hamlet[i]);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Every Phase 1 bot closes every season with a reconciled ledger (strict checks throw on a failure, spec 005 §3.1).
+        /// Returns the failures: a run that threw or closed fewer seasons than it played.
+        /// </summary>
+        public static List<string> ExactLedger(SimConfig config, int seeds, int seasons = 8)
+        {
+            if (!config.Options.StrictChecks) throw new ArgumentException("the ledger check needs strict checks");
+            var makers = new Func<Bot>[] { () => new FarmerBot(), () => new CautiousSaverBot(), () => new LeverageBot(), () => new RandomBot(), () => new RecoveringBot() };
+            var failures = new System.Collections.Concurrent.ConcurrentBag<string>();
+            foreach (Func<Bot> make in makers)
+                Parallel.For(0, seeds, i =>
+                {
+                    Bot bot = make();
+                    try
+                    {
+                        Economy.Run run = Economy.RunBot(config, bot, seasons, (ulong)(i + 1), null);
+                        if (run.Sim.State.Finance.Reports.Count < seasons - 1) failures.Add(bot.Name + " seed " + (i + 1) + ": " + run.Sim.State.Finance.Reports.Count + " closes");
+                    }
+                    catch (InvalidOperationException e) { failures.Add(bot.Name + " seed " + (i + 1) + ": " + e.Message); }
+                });
+            return failures.OrderBy(f => f, StringComparer.Ordinal).ToList();
+        }
+
+        /// <summary>The share of produce good-hours where the 0.5–2× rail clamped the price, over the competent runs.</summary>
+        public static double RailShare(SimConfig config, int seeds, int seasons = 8)
+        {
+            var hits = new long[seeds];
+            var hours = new long[seeds];
+            Parallel.For(0, seeds, i =>
+            {
+                Simulation sim = Economy.RunBot(config, new FarmerBot(), seasons, (ulong)(i + 1), null).Sim;
+                var goods = sim.Config.Game.Market.Goods;
+                for (int g = 0; g < goods.Count; g++)
+                {
+                    if (goods[g].Kind != GoodKind.Produce) continue;
+                    hits[i] += sim.State.Market.RailHitsOf(g);
+                    hours[i] += sim.State.Market.MarketHours;
+                }
+            });
+            return (double)hits.Sum() / Math.Max(1, hours.Sum());
+        }
+
         public sealed class DebtActivity
         {
             public string Bot;
@@ -308,6 +424,21 @@ namespace Tools.Balancer
                 + Math.Min(seeds, 100) + " seeds; day " + (hamlet.Count == 0 ? "-" : hamlet[hamlet.Count / 10].ToString("0.0", CultureInfo.InvariantCulture) + " / "
                 + hamlet[hamlet.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " / " + hamlet[hamlet.Count * 9 / 10].ToString("0.0", CultureInfo.InvariantCulture))
                 + " (10th / median / 90th percentile; target 7 ± 2)");
+            int n = Math.Min(seeds, 100);
+            Console.WriteLine("  Phase 1 stress bots (ADR 0045 §4), 2 years, " + n + " seeds (cautious at most 1.20 ×; random below competent):");
+            foreach (StressResult s in Stress(config, n, 8, new Func<Bot>[] { () => new CautiousSaverBot(), () => new LeverageBot(), () => new RandomBot() }))
+                Console.WriteLine("    " + s.Bot.PadRight(20) + C(s.MedianNetWorth).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));
+            List<int> stuck = NeverStuck(configFor, seeds);
+            Console.WriteLine("  Never stuck (no cash, empty store, no credit): first profitable season 1 / 2 / 3 / 4 / never: "
+                + string.Join(" / ", new[] { 1, 2, 3, 4, 0 }.Select(k => stuck.Count(x => x == k))));
+            RecoveryResult rec = Recovery(config, n);
+            List<double> ham = rec.DaysToHamlet.Where(d => !double.IsNaN(d)).OrderBy(d => d).ToList();
+            Console.WriteLine("  Recovery after foreclosure: " + rec.Foreclosed + " of " + n + " foreclosed; profitable season after 1 / 2 / 3 / later / never: "
+                + rec.SeasonsToProfit.Count(x => x == 1) + " / " + rec.SeasonsToProfit.Count(x => x == 2) + " / " + rec.SeasonsToProfit.Count(x => x == 3) + " / "
+                + rec.SeasonsToProfit.Count(x => x > 3) + " / " + rec.SeasonsToProfit.Count(x => x < 0) + "; the Hamlet's conditions again in " + ham.Count
+                + (ham.Count == 0 ? "" : ", days median " + ham[ham.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + ", max " + ham.Last().ToString("0.0", CultureInfo.InvariantCulture)));
+            Console.WriteLine("  Exact ledger (5 bots × " + n + " seeds × 8 seasons): " + (ExactLedger(config, n) is var led && led.Count == 0 ? "pass" : "FAIL " + string.Join("; ", led.Take(5))));
+            Console.WriteLine("  Bounded prices: the rail in " + (100 * RailShare(config, n)).ToString("0.000", CultureInfo.InvariantCulture) + "% of good-hours (under 0.1%)");
             Console.WriteLine("  Land-flipper over 4 years (it can first afford a parcel in year 3):");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 16, new Func<Bot>[] { () => new LandFlipperBot() }))
                 Console.WriteLine("    " + s.Bot.PadRight(20) + C(s.MedianNetWorth).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));
