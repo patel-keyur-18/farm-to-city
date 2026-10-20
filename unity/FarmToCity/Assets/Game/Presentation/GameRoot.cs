@@ -26,7 +26,7 @@ namespace Game.Presentation
     /// <see cref="Boot"/> after the bootstrap scene loads, and everything else is created here in code. The presentation only
     /// reads view models and sends ordinary commands (spec 008 §3.1).
     /// </summary>
-    public sealed class GameRoot : MonoBehaviour
+    public sealed partial class GameRoot : MonoBehaviour
     {
         public Simulation Sim { get; private set; }
         public IEntitlementService Entitlements { get; } = new AlwaysUnlockedEntitlementService();
@@ -88,12 +88,11 @@ namespace Game.Presentation
             _format = Formatter.FormatForRegion(RegionCode());
             _fmt = new Formatter(_strings, _format);
 
-            // ponytail: no saves yet (spec 007, Sprint 6), so every launch is a new game seeded from the clock.
-            _lastSyncWall = WallNow();
-            Sim = Simulation.NewGame(_config, new NewGame((ulong)DateTime.UtcNow.Ticks, _lastSyncWall, (long)DateTime.Now.TimeOfDay.TotalSeconds));
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            CardVm first = LoadTown(); // the saved town, a backup after a crash, or a new town (spec 007 §3.3)
             BuildScene();
+            RestoreCamera();
             Refresh(false);
+            if (first != null) ShowCard(first, _ => { });
         }
 
         private static string RegionCode()
@@ -136,7 +135,7 @@ namespace Game.Presentation
             _input.Focus(3.5f, 2.5f); // the inherited parcels
 
             _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
-            _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)) };
+            _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)), OnSettings = OpenSettings };
             _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
             BuildToast();
 
@@ -162,7 +161,7 @@ namespace Game.Presentation
             // The formatter changed: a new HUD (the old layer is dropped with the safe root's children it owned).
             _safeRoot.Clear();
             _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
-            var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)) };
+            var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)), OnSettings = OpenSettings };
             _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
             BuildToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -231,6 +230,7 @@ namespace Game.Presentation
             _lastSyncWall = now;
             Sim.Execute(new Sync(now));
             AfterCommands();
+            AutosaveIfDue(now);
         }
 
         private void ApplySafeArea()
@@ -248,7 +248,9 @@ namespace Game.Presentation
         /// <summary>After any command or Sync: play the events' motion, then redraw from fresh view models.</summary>
         private void AfterCommands()
         {
-            HandleEvents(Sim.DrainEvents());
+            List<SimEvent> events = Sim.DrainEvents();
+            HandleEvents(events);
+            OnTownEvents(events);
             Refresh(true);
         }
 
@@ -270,13 +272,13 @@ namespace Game.Presentation
                 switch (e)
                 {
                     case CropHarvested h:
-                        produce |= FlyProduce(SpriteBank.ProduceColour(h.CropId), _map.WorldOf(new Hit(HitKind.Tile, h.TileId)), 5);
+                        produce |= FlyProduce(IconBank.Good(h.CropId), _map.WorldOf(new Hit(HitKind.Tile, h.TileId)), 5);
                         break;
                     case GardenPicked g:
-                        produce |= FlyProduce(SpriteBank.ProduceColour(g.GoodId), _map.WorldOf(new Hit(HitKind.Bed, g.BedId)), 4);
+                        produce |= FlyProduce(IconBank.Good(g.GoodId), _map.WorldOf(new Hit(HitKind.Bed, g.BedId)), 4);
                         break;
                     case FruitPicked f:
-                        produce |= FlyProduce(SpriteBank.ProduceColour(f.TreeId), _map.WorldOf(new Hit(HitKind.Slot, f.SlotId)), 4);
+                        produce |= FlyProduce(IconBank.Good(f.TreeId), _map.WorldOf(new Hit(HitKind.Slot, f.SlotId)), 4);
                         break;
                     case SoldToTrader _:
                     case MarketSales _:
@@ -301,14 +303,14 @@ namespace Game.Presentation
             if (coins)
             {
                 Vector2 from = new Vector2(Screen.width * 0.5f, Screen.height * 0.45f);
-                _fx.Fly(SpriteBank.Coin, from, _hud.ScreenCentre(_hud.CashTarget), 4, _hud.BounceCash);
+                _fx.Fly(IconBank.Coin, from, _hud.ScreenCentre(_hud.CashTarget), 4, _hud.BounceCash);
             }
         }
 
-        private bool FlyProduce(Color colour, Vector2 world, int count)
+        private bool FlyProduce(Sprite icon, Vector2 world, int count)
         {
             Vector2 from = _input.WorldToScreen(world);
-            _fx.Fly(SpriteBank.Produce(colour), from, _hud.ScreenCentre(_hud.StoreTarget), count, _hud.BounceStore);
+            _fx.Fly(icon, from, _hud.ScreenCentre(_hud.StoreTarget), count, _hud.BounceStore);
             return true;
         }
 
@@ -363,6 +365,11 @@ namespace Game.Presentation
                 case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
                 case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
                 case "Store": _sheet.Show(StoreSheet.Build(_ctx), refreshOnly); break;
+                case "Settings": _sheet.Show(SettingsSheet.Build(_ctx, Info()), refreshOnly); break;
+                case "Import":
+                    if (!refreshOnly) ScanImports();
+                    _sheet.Show(ImportSheet.Build(_ctx, _importFiles, Info()), refreshOnly);
+                    break;
                 case "Sow": ShowSow((int)r.Id, refreshOnly); break;
             }
         }
@@ -383,6 +390,7 @@ namespace Game.Presentation
 
         private void OnSheetAction(ActionVm action)
         {
+            if (!action.Opens.HasValue && action.Confirm == null && SettingsAction(action)) return;
             if (action.Opens.HasValue)
             {
                 if (action.Opens.Value.Kind == "HutPlacement")

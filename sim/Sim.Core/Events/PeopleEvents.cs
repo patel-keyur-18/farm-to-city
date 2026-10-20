@@ -94,6 +94,21 @@ namespace Sim.Core.Events
         protected override string Describe() { return "ApplicantArrived(id=" + ApplicantId + ")"; }
     }
 
+    /// <summary>A day labourer hired for six full days asks to move in as the resident hand (spec 006 §3.3, ADR 0041).</summary>
+    public sealed class RegularAsksToMoveIn : SimEvent
+    {
+        public long ApplicantId { get; }
+        public long NeighbourId { get; }
+
+        public RegularAsksToMoveIn(long simTime, long applicantId, long neighbourId) : base(simTime)
+        {
+            ApplicantId = applicantId;
+            NeighbourId = neighbourId;
+        }
+
+        protected override string Describe() { return "RegularAsksToMoveIn(applicant=" + ApplicantId + ", neighbour=" + NeighbourId + ")"; }
+    }
+
     public sealed class ApplicantLeft : SimEvent
     {
         public long ApplicantId { get; }

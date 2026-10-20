@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Sim.Core.Definitions;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Finance
 {
@@ -57,10 +58,10 @@ namespace Sim.Core.Finance
 
         internal Loan Clone() { return (Loan)MemberwiseClone(); }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
-            h.WriteInt(Lender);
+            h.WriteRef(ContentTable.Lender, Lender);
             h.WriteLong(OriginalPrincipal);
             h.WriteLong(Principal);
             h.WriteFixed(Rate);
@@ -78,6 +79,18 @@ namespace Sim.Core.Finance
             h.WriteLong(SegmentStart);
             h.WriteBool(Restructured);
             h.WriteInt((int)State);
+        }
+
+        internal static Loan ReadFrom(SaveReader r)
+        {
+            return new Loan
+            {
+                Id = r.ReadLong(), Lender = r.ReadRef(ContentTable.Lender), OriginalPrincipal = r.ReadLong(), Principal = r.ReadLong(),
+                Rate = r.ReadFixed(), PenaltyRate = r.ReadFixed(), Schedule = (LoanSchedule)r.ReadInt(), Term = r.ReadInt(), TakenAt = r.ReadLong(),
+                Remaining = r.ReadInt(), InstalmentBase = r.ReadLong(), FirstClosePartial = r.ReadBool(), ArrearsPrincipal = r.ReadLong(),
+                ArrearsInterest = r.ReadLong(), InterestAccrued = r.ReadLong(), ArrearsCloses = r.ReadInt(), SegmentStart = r.ReadLong(),
+                Restructured = r.ReadBool(), State = (LoanState)r.ReadInt(),
+            };
         }
     }
 
@@ -135,7 +148,7 @@ namespace Sim.Core.Finance
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Score);
             h.WriteLong(NextLoanId);
@@ -154,6 +167,25 @@ namespace Sim.Core.Finance
             }
             h.WriteInt(Loans.Count);
             foreach (Loan l in Loans) l.WriteTo(h);
+        }
+
+        internal static CreditState ReadFrom(SaveReader r)
+        {
+            var s = new CreditState
+            {
+                Score = r.ReadInt(), NextLoanId = r.ReadLong(), PendingForeclosure = r.ReadBool(), NoticeLiveSeconds = r.ReadLong(),
+                NoticeAnnounced = r.ReadBool(), Foreclosures = r.ReadInt(), LoanSeenThisSeason = r.ReadBool(),
+            };
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                long t = r.ReadLong();
+                int change = r.ReadInt(), score = r.ReadInt();
+                s.History.Add(new ScoreChange(t, change, score, r.ReadString()));
+            }
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Loans.Add(Loan.ReadFrom(r));
+            return s;
         }
     }
 }

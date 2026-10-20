@@ -352,7 +352,7 @@ namespace Sim.View.Views
 
             int good = kind == OrderTargetKind.Field ? defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].OutputGood
                 : sim.State.Farm.TreeIn(target) == null ? -1 : defs.Farm.Trees[sim.State.Farm.TreeIn(target).Def].FruitGood;
-            long today = good < 0 ? 1 : System.Math.Max(1, sim.State.Market.MarketPrice(good).RoundToLong());
+            long today = good < 0 ? 1 : System.Math.Max(1, sim.State.Market.MarketPrice(good).FloorToLong()); // never above today's price, so the offer can sell
             long minimum = min.HasValue ? min.Value.RoundToLong() : today;
             OrderSpec Spec(SellRule rule, long m)
             {

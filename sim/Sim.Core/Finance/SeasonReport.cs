@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Finance
 {
@@ -102,7 +103,7 @@ namespace Sim.Core.Finance
         public long FarmProfit { get { return Line("farmProfit").Amount; } }
         public long NetResult { get { return Line("netResult").Amount; } }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Period);
             h.WriteInt(ByAccount.Count);
@@ -119,6 +120,15 @@ namespace Sim.Core.Finance
             h.WriteLong(GardenHomeUse);
             h.WriteLong(NetWorth.Total);
             h.WriteLong(NetWorth.BookEquity);
+            if (!h.Hashing)
+            {
+                // Save-only: the parts of net worth and the closing cash, which the hash leaves out. The lines are rebuilt.
+                NetWorthSnapshot n = NetWorth;
+                foreach (long v in new[] { n.Cash, n.Prepaid, n.LandAtMarket, n.BuildingsAtBook, n.TreesAtBook, n.StoredGoods, n.LoanPrincipal, n.InterestPayable })
+                    h.WriteLong(v);
+                h.WriteLong(CashFlow.Closing);
+                h.WriteBool(Credit != null);
+            }
             if (Credit != null)
             {
                 h.WriteInt(Credit.Score);
@@ -128,6 +138,39 @@ namespace Sim.Core.Finance
                 h.WriteLong(Credit.PrincipalPaid);
                 h.WriteLong(Credit.Missed);
             }
+        }
+
+        internal static SeasonReport ReadFrom(SaveReader r)
+        {
+            long period = r.ReadLong();
+            var byAccount = new List<KeyValuePair<Account, long>>();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                var a = (Account)r.ReadInt();
+                byAccount.Add(new KeyValuePair<Account, long>(a, r.ReadLong()));
+            }
+            var cash = new CashFlowSummary { Opening = r.ReadLong(), Inflows = r.ReadLong(), Outflows = r.ReadLong(), PaidUpfront = r.ReadLong() };
+            long homeUse = r.ReadLong(), gardenHomeUse = r.ReadLong(), total = r.ReadLong(), equity = r.ReadLong();
+            var worth = new NetWorthSnapshot
+            {
+                Cash = r.ReadLong(), Prepaid = r.ReadLong(), LandAtMarket = r.ReadLong(), BuildingsAtBook = r.ReadLong(), TreesAtBook = r.ReadLong(),
+                StoredGoods = r.ReadLong(), LoanPrincipal = r.ReadLong(), InterestPayable = r.ReadLong(), BookEquity = equity,
+            };
+            if (worth.Total != total) throw new SaveFormatException("a season report's net worth doesn't add up");
+            cash.Closing = r.ReadLong();
+            CreditSummary credit = null;
+            if (r.ReadBool())
+                credit = new CreditSummary
+                {
+                    Score = r.ReadInt(), ScoreChange = r.ReadInt(), PrincipalOutstanding = r.ReadLong(), InterestPaid = r.ReadLong(),
+                    PrincipalPaid = r.ReadLong(), Missed = r.ReadLong(),
+                };
+            return new SeasonReport
+            {
+                Period = period, ByAccount = byAccount.AsReadOnly(), Lines = Reporting.LinesFrom(byAccount), CashFlow = cash, NetWorth = worth,
+                HomeUse = homeUse, GardenHomeUse = gardenHomeUse, Credit = credit,
+            };
         }
     }
 }

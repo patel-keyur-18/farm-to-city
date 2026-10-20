@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Scheduling
 {
@@ -18,7 +19,7 @@ namespace Sim.Core.Scheduling
             return new Job { Id = Id, Type = Type, TargetId = TargetId, StartTime = StartTime, DueTime = DueTime, State = State };
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
             h.WriteString(Type);
@@ -26,6 +27,11 @@ namespace Sim.Core.Scheduling
             h.WriteLong(StartTime);
             h.WriteLong(DueTime);
             h.WriteInt((int)State);
+        }
+
+        internal static Job ReadFrom(SaveReader r)
+        {
+            return new Job { Id = r.ReadLong(), Type = r.ReadString(), TargetId = r.ReadLong(), StartTime = r.ReadLong(), DueTime = r.ReadLong(), State = (JobState)r.ReadInt() };
         }
     }
 
@@ -83,11 +89,19 @@ namespace Sim.Core.Scheduling
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(NextId);
             h.WriteInt(_jobs.Count);
             foreach (Job j in _jobs) j.WriteTo(h);
+        }
+
+        internal static JobTable ReadFrom(SaveReader r)
+        {
+            var t = new JobTable { NextId = r.ReadLong() };
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) t._jobs.Add(Job.ReadFrom(r));
+            return t;
         }
 
         private int IndexOf(long id)

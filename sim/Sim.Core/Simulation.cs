@@ -128,8 +128,13 @@ namespace Sim.Core
         {
             if (command == null) throw new ArgumentNullException(nameof(command));
             long at = State.Clock.SimTime;
+            long fromWall = State.Clock.LastWallUtc;
             CommandResult result = command.Apply(this);
-            if (result.Accepted) State.CommandLog.Add(at, command);
+            if (!result.Accepted) return result;
+            // A live Sync joins the run of live Syncs before it (spec 007 §3.2); away and backwards Syncs stay as they are.
+            if (command is Sync sync && sync.NowWallUtc >= fromWall && sync.NowWallUtc - fromWall <= Clock.AwayThresholdSeconds)
+                State.CommandLog.AddLive(at, fromWall, sync.NowWallUtc);
+            else State.CommandLog.Add(at, command);
             return result;
         }
 

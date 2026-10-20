@@ -168,11 +168,37 @@ namespace Sim.Core.Commands
 
         public IReadOnlyList<CommandLogEntry> Entries { get { return _entries; } }
 
+        /// <summary>
+        /// The state at the last checkpoint, as a save file without a log (spec 007 §3.2): replay starts here, or from the new
+        /// game while this is null. Not hashed: like the log, it's history, not state.
+        /// </summary>
+        public byte[] Base { get; internal set; }
+
         internal void Add(long simTime, Command command) { _entries.Add(new CommandLogEntry(simTime, command)); }
+
+        /// <summary>A live Sync from <paramref name="fromWallUtc"/>: extends the last entry when it is the run just before it (spec 007 §3.2).</summary>
+        internal void AddLive(long simTime, long fromWallUtc, long toWallUtc)
+        {
+            int last = _entries.Count - 1;
+            if (last >= 0 && _entries[last].Command is LiveRun run && run.ToWallUtc == fromWallUtc)
+            {
+                // Entries are shared between clones: replace the run, never change it.
+                _entries[last] = new CommandLogEntry(_entries[last].SimTime, new LiveRun(run.FromWallUtc, toWallUtc, run.SimSeconds + (toWallUtc - fromWallUtc)));
+                return;
+            }
+            _entries.Add(new CommandLogEntry(simTime, new LiveRun(fromWallUtc, toWallUtc, toWallUtc - fromWallUtc)));
+        }
+
+        /// <summary>The checkpoint: the base becomes <paramref name="baseSave"/> and the log restarts empty.</summary>
+        internal void Checkpoint(byte[] baseSave)
+        {
+            Base = baseSave;
+            _entries.Clear();
+        }
 
         internal CommandLog Clone()
         {
-            var c = new CommandLog();
+            var c = new CommandLog { Base = Base };
             c._entries.AddRange(_entries);
             return c;
         }

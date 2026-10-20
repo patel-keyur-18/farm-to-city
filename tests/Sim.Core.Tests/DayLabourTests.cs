@@ -68,5 +68,79 @@ namespace Sim.Core.Tests
             Assert.That(PeopleRules.DayLabourHours(sim), Is.EqualTo(Fixed.Zero));
             Assert.That(PeopleRules.CareSupply(sim), Is.EqualTo(Farm.FounderRules.FieldHours(sim)));
         }
+
+        // Spec 006 AC-4 (ADR 0039 §3, ADR 0041 §7).
+        [Test]
+        public void Regular_AsksToMoveIn()
+        {
+            // Six 1-hour hires at 23:00 are six part days, not six days: nobody asks, even with a hut standing empty.
+            Simulation part = Start(seed: 5);
+            BuildHut(part);
+            for (int d = 1; d <= 6; d++)
+            {
+                part.AdvanceTo(d * Day - Hour);
+                Ok(part, new HireDayLabourers(part.State.Clock.SimTime, 1));
+            }
+            part.AdvanceTo(part.State.Clock.SimTime + 2 * Day);
+            Assert.That(P(part).Applicants.Where(a => a.FromRosterId != 0), Is.Empty);
+            Assert.That(P(part).Roster.Max(n => n.SecondsWorked), Is.LessThan(6 * Day));
+
+            // Hire every free labourer at the start of each day: someone reaches six full days. No hut, no ask.
+            Simulation sim = Start(seed: 5, game: Game((f, j) => f == "people.json" ? j.Replace("\"acceptChance\": 0.85", "\"acceptChance\": 0.0") : j));
+            for (int d = 0; P(sim).Roster.Max(n => n.SecondsWorked) < 6 * Day; d++)
+            {
+                sim.AdvanceTo(d * Day + 1);
+                int free = P(sim).Roster.Count(n => n.FreeToday);
+                Ok(sim, new HireDayLabourers(sim.State.Clock.SimTime, free));
+            }
+            sim.AdvanceTo(sim.State.Clock.SimTime + Day);
+            Assert.That(P(sim).Applicants, Is.Empty);
+            Neighbour regular = P(sim).Roster.Where(n => n.SecondsWorked >= 6 * Day).OrderBy(n => n.Id).First();
+
+            // Not while away: the ask waits for the player (ADR 0002).
+            Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, QuartersTile));
+            sim.DrainEvents();
+            Ok(sim, new AdvanceTo(sim.State.Clock.SimTime + 2 * Day, AdvanceMode.Away));
+            Assert.That(sim.DrainEvents().OfType<Events.RegularAsksToMoveIn>(), Is.Empty);
+
+            // Live again: they ask within the hour, with skill and both traits known, the first their day-labour trait.
+            sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
+            Events.RegularAsksToMoveIn ask = sim.PendingEvents.OfType<Events.RegularAsksToMoveIn>().Single();
+            Applicant a = P(sim).Applicant(ask.ApplicantId);
+            Assert.That((ask.NeighbourId, a.FromRosterId, a.Name, a.Trait1), Is.EqualTo((regular.Id, regular.Id, regular.Name, regular.Trait)));
+            Assert.That((a.SkillKnown, a.SecondTraitKnown), Is.EqualTo((true, true)));
+            Assert.That(a.Trait2, Is.Not.EqualTo(a.Trait1));
+            Assert.That(a.Skill, Is.InRange(sim.Config.Game.People.Hand.SkillMin, sim.Config.Game.People.Hand.SkillMax));
+
+            // They always accept (walk-ins here never do: acceptChance 0); a new neighbour keeps the roster at 8.
+            Ok(sim, new OfferContract(sim.State.Clock.SimTime, a.Id));
+            Assert.That(P(sim).Hands.Single().Name, Is.EqualTo(regular.Name));
+            Assert.That(P(sim).Roster.Count, Is.EqualTo(8));
+            Assert.That(P(sim).Roster.Select(n => n.Id), Does.Not.Contain(regular.Id));
+            Assert.That(P(sim).Roster.Select(n => n.Name).Append(regular.Name).Distinct().Count(), Is.EqualTo(9), "the newcomer has a name of their own");
+            Assert.That(P(sim).Roster.Last().SecondsWorked, Is.EqualTo(0));
+        }
+
+        // ADR 0041 §7: a regular joins a full queue, and one not hired goes back to day labour and never asks again.
+        [Test]
+        public void Regular_FullQueue_AsksOnce()
+        {
+            // One full day makes a regular here, and applicants wait 5 days, so the walk-in queue stays full.
+            Simulation sim = Start(seed: 9, game: Game((f, j) => f != "people.json" ? j
+                : j.Replace("\"regularThresholdDays\": 6", "\"regularThresholdDays\": 1").Replace("\"applicantWaitDays\": 2", "\"applicantWaitDays\": 5")));
+            BuildHut(sim);
+            for (int i = 0; i < 24 * 8 && P(sim).Applicants.Count < sim.Config.Game.People.Hand.MaxApplicants; i++)
+                sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
+            Assert.That(P(sim).Applicants.Count, Is.EqualTo(3));
+            sim.AdvanceTo((sim.State.Clock.SimTime / Day + 1) * Day); // a hire at the daily pass is a full day
+            Ok(sim, new HireDayLabourers(sim.State.Clock.SimTime, 1));
+            sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
+            Assert.That(P(sim).Applicants.Count(a => a.FromRosterId != 0), Is.EqualTo(1), "joins a full queue");
+            Assert.That(P(sim).Applicants.Count, Is.EqualTo(4));
+
+            sim.AdvanceTo(sim.State.Clock.SimTime + 6 * Day);
+            Assert.That(P(sim).Applicants.Where(a => a.FromRosterId != 0), Is.Empty, "left after the wait");
+            Assert.That(P(sim).Roster.Count(n => n.AskedToMoveIn), Is.EqualTo(1), "back to day labour, asked once");
+        }
     }
 }

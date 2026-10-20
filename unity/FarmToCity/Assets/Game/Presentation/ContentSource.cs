@@ -24,5 +24,22 @@ namespace Game.Presentation
         }
 
         public static string Read(string file) { return File.ReadAllText(Path.Combine(Folder, file)); }
+
+        /// <summary>
+        /// FNV-1a over the content files (names and text, in name order), recorded in each save: a save's command log replays
+        /// only on the content it was written with (spec 007 §3.1).
+        /// </summary>
+        public static ulong Fingerprint()
+        {
+            var files = new System.Collections.Generic.List<string>(Directory.GetFiles(Folder, "*.json", SearchOption.AllDirectories));
+            files.Sort(System.StringComparer.Ordinal);
+            var h = new Sim.Core.Maths.StateHasher();
+            foreach (string f in files)
+            {
+                h.WriteString(Path.GetRelativePath(Folder, f).Replace('\\', '/'));
+                h.WriteString(File.ReadAllText(f));
+            }
+            return h.Value;
+        }
     }
 }

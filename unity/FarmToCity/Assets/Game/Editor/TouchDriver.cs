@@ -75,6 +75,16 @@ namespace Game.Editor
             return "tap '" + text + "' (" + hit.GetType().Name + ")";
         }
 
+        /// <summary>Taps the UI element with this name (for buttons with an icon and no text, such as the Settings gear).</summary>
+        public static string TapNamed(string name)
+        {
+            UIDocument doc = Object.FindFirstObjectByType<UIDocument>();
+            VisualElement hit = doc == null ? null : doc.rootVisualElement.Q(name);
+            if (hit == null) return "no element named '" + name + "'";
+            hit.schedule.Execute(() => Tap(ScreenOf(hit).x, ScreenOf(hit).y)).ExecuteLater(120);
+            return "tap #" + name;
+        }
+
         /// <summary>
         /// An element's centre in screen pixels (y up). In the Editor, Screen.height includes the Game view's toolbar, so it aims by
         /// the panel's own height (STATUS.md quirk).

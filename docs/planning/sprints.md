@@ -14,8 +14,8 @@
 | S3 | 9–15 Nov 2026 | 0 | Market, the mandi trip and storage implemented; performance spike, on-device determinism and art check on the iPhone 13; specs 008 and 009 written; Phase 0 gate review. | 52 | 008, 009 | Yes: spike and determinism build |
 | S4 | 16–22 Nov 2026 | 1 | Credit and foreclosure; first playable build: the homestead map with sow and harvest, a minimal HUD and Store sheet, string tables and number formatting, and the dev panel. | 24 | — | Yes: first playable |
 | S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 21 | — | Yes |
-| S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; the Blender sprite pipeline (US-171, ADR 0038). | 24 | — | Yes |
-| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings. | 17 | — | Yes |
+| S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; regulars; every sprite, the ground, icons and walk cycles rendered in Blender (ADR 0041). | 26 | — | Yes |
+| S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings; hourly weather spells (ADR 0042). | 19 | — | Yes |
 | S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | — | Yes: release candidate |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
@@ -237,7 +237,7 @@
 
 ## Sprint 5 · 23–29 Nov 2026 · Phase 1
 
-- **Status:** Built (25 of 25 points, 2026-10-19); the owner's device run is pending. Planning review 2026-10-19: 11 decisions with the owner (ADR 0039)
+- **Status:** Done (25 of 25 points; device runs 1 and 2 passed on the iPhone 13, PR #10 merged). Planning review 2026-10-19: 11 decisions with the owner (ADR 0039)
 - **Branch:** `sprint/05-people`
 - **Goal:** People: day labourers, the resident hand and standing orders, with their UI; the first Blender renders.
 - **Points:** 25 (US-069 +1 for `PostJob`; US-068 +1 for the placement ghost, ADR 0038; ADR 0039: US-183 +5, US-182 +1, US-067 −2 to Sprint 6)
@@ -246,14 +246,14 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Built, device run pending |
-| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
-| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | Built, device run pending |
-| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Built, device run pending |
-| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
-| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Built, device run pending |
-| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | Built, device run pending |
-| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | Built, device run pending |
+| US-066 | Hire a day labourer | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Done |
+| US-068 | Build a hand's hut | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Done |
+| US-069 | Hire a resident hand | [F06.2](features/F06.2-resident-farm-hand.md) | 4 | Must | Done |
+| US-070 | Season contract | [F06.2](features/F06.2-resident-farm-hand.md) | 3 | Must | Done |
+| US-071 | Define standing orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
+| US-072 | Execute orders | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
+| US-182 | People-only While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | Done |
+| US-183 | Blender pipeline slice | [F19.3](features/F19.3-art-pipeline.md) | 5 | Must | Done |
 
 **Sprint end checklist**
 
@@ -262,7 +262,7 @@
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** the owner approved the Blender style checkpoint and the redone people (2026-10-19). Device run 1: all checks passed (golden replays 001, 003, 004, 005 PASS on the iPhone 13; 72 h in 2.9 ms); the owner asked for a roomier yard, hands' huts off the fields, orders that start at once and people who work: built the same day as ADR 0040 (2-acre yard, labour quarters, immediate orders, work poses and patrols). Device run 2 pending.
+**Review (owner's device results):** the owner approved the Blender style checkpoint and the redone people (2026-10-19). Device run 1: all checks passed (golden replays 001, 003, 004, 005 PASS on the iPhone 13; 72 h in 2.9 ms); the owner asked for a roomier yard, hands' huts off the fields, orders that start at once and people who work: built the same day as ADR 0040 (2-acre yard, labour quarters, immediate orders, work poses and patrols). Device run 2 passed (golden replays 001, 003, 004, 005 PASS on the device); the ADR 0040 changes approved (2026-10-19).
 
 **Retro (Claude):**
 - *Went well:* the gap review caught two money loopholes (part-day regulars, lapse-and-renew) before any code, and the lapse-gamer stress bot then proved the fix (0.997 × competent). The gate checks found a real balance problem (a hand didn't pay over 11 years) and the owner settled it with numbers in hand (30,000 a season, ADR 0039 §11). The Blender rig renders in seconds, so the owner's feedback on people (size, clothes, men and women) was turned around in one round.
@@ -271,40 +271,45 @@
 
 ## Sprint 6 · 30 Nov – 6 Dec 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/06-saves-notifications` (or the branch the session assigns)
-- **Goal:** Saves, notifications and the play log; regulars; every map sprite and icon rendered in Blender (ADR 0039).
-- **Points:** 22 (16 + US-067 2 + US-171 4, ADR 0039)
+- **Status:** Built (26 of 26 points), device run pending. Planning review 2026-10-19: 8 gaps decided with the owner (ADR 0041)
+- **Branch:** `sprint/06-saves-notifications`
+- **Goal:** Saves, notifications and the play log; regulars; every map sprite, the ground, every icon and the walk cycles rendered in Blender (ADR 0039, ADR 0041).
+- **Points:** 26 (16 + US-067 2 + US-171 8; ADR 0041: US-171 4 → 8 for the ground and walk cycles)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | To do |
-| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
-| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | To do |
-| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | To do |
-| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | To do |
-| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
-| US-171 | Blender pipeline: the full re-render and icons | [F19.3](features/F19.3-art-pipeline.md) | 4 | Should | To do |
+| US-073 | Serialise the game | [F07.1](features/F07.1-save-system.md) | 5 | Must | Built, device run pending |
+| US-074 | Safety save points | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
+| US-075 | Save now, export, import, new game | [F07.1](features/F07.1-save-system.md) | 3 | Must | Built, device run pending |
+| US-076 | Ready notifications | [F07.2](features/F07.2-local-notifications.md) | 3 | Must | Built, device run pending |
+| US-077 | Record and export | [F07.3](features/F07.3-local-play-log.md) | 2 | Must | Built, device run pending |
+| US-067 | Regulars | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Built, device run pending |
+| US-171 | Blender pipeline: the full re-render, ground, icons and walk cycles | [F19.3](features/F19.3-art-pipeline.md) | 8 | Should | Built, device run pending |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s06-saves-notifications.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened (#11); owner merges to `main`
 
-**Review (owner's device results):** —
+**Done this sprint (Claude):** the save codec (one write path with the hash, content by id, gzip and checksum; a 10-year save is 116 KB, written in 12 ms and read in 3 ms), live-`Sync` compaction and the log checkpoint, atomic save points with hourly and daily backups and recovery, autosave, export, import from a list, new game, notifications planned from a simulated absence (ranked, grouped, quiet hours, no daily cap), the first-ask card, the play log, regulars, a gear button and Settings sheet; every sprite, the ground, the icons and 4-frame walk cycles rendered in Blender (the style checkpoint approved). 249 `Sim.Core` and 46 `Sim.View` tests pass; golden hashes unchanged. Verified in the Editor with touch: save and relaunch, Settings, export, import and replace, new game, the notification ask and scheduling (moved out of quiet hours), the restored and unreadable cards, the play log, the art and walk cycles. **Not verified in the Editor:** the regular's card (covered by the sim tests; check 19 on the device).
 
-**Retro:** —
+**Review (owner's device results):** device run 1 (2026-10-20): golden replays 001, 003, 004, 005 PASS on the iPhone 13 (72 h in 1.4 ms); saves, relaunch, export and import, the renders and Settings work; notifications to be confirmed later (not a blocker). Owner's changes, built the same day: smaller, spaced hands' huts (and a loaded town no longer drew each hand's hut twice); a Store row for goods at the market with **Take off market** (a hand's market order in a glut had left the player with a greyed *Sell* and a wrong reason) and the order's default minimum rounded down; Settings switches as a green **On** / red **Off**; short texts no longer wrap over the line below (Settings, the sow sheet). Then: the sow sheet shows one sowing's Spend, Sells for and Profit (it showed a season's earnings per acre) with fertiliser cards that say what each does; people no longer go under the land at a tile's back or the map's edge.
+
+**Retro (Claude):**
+- *Went well:* one write path for the hash and the save means a field can't be hashed and not saved, and the round-trip property test proved it on 50 towns. Planning notifications on a copy of the town made them exact (AC-13 matches a real absence event for event) with no new rules. The Blender rig took the full re-render in a few rounds after the style checkpoint.
+- *To improve:* the device build's Development flag: `unity command build --options` needs a JSON array (`'["Development"]'`). A plain string is rejected, and `build_status` then still shows the previous build's success. Check a build's options and time before handing it over.
+- *Carry over:* migrations with tests from the Sprint 9 playtest build (ADR 0041 §2); the letter takes over the notification ask (Sprint 8); the Menu entry for Settings (Sprint 7).
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
 - **Status:** Planned
 - **Branch:** `sprint/07-hud-panels` (or the branch the session assigns)
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
-- **Points:** 16 (US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039)
+- **Points:** 19 (US-184 +4, ADR 0042; US-082 −1: the Store sheet is built in Sprint 4; US-083 −1: the people-only card in Sprint 5, ADR 0039; US-084 −1: the Settings sheet is built in Sprint 6, ADR 0041)
 - **Specs for the owner to review:** —
 - **Device build:** Yes
 
@@ -314,8 +319,9 @@
 | US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
 | US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 4 | Must | To do |
 | US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | To do |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 1 | Must | To do |
 | US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | To do |
+| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | To do |
 
 **Sprint end checklist**
 

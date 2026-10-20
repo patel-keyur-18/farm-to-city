@@ -140,7 +140,8 @@ namespace Sim.Core.Commands
 
             JobPostDef post = sim.Config.Game.People.JobPost;
             Fixed chance = a.AboveMarket ? post.AboveMarketAccept : sim.Config.Game.People.Hand.AcceptChance;
-            if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Applicants, (ulong)a.Id, 5), chance))
+            // A regular asked to come, so they always accept (ADR 0041).
+            if (a.FromRosterId == 0 && !Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Applicants, (ulong)a.Id, 5), chance))
             {
                 s.Applicants.Remove(a);
                 sim.Emit(new OfferDeclined(sim.State.Clock.SimTime, a.Id));

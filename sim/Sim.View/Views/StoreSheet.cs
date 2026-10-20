@@ -30,17 +30,32 @@ namespace Sim.View.Views
                 string name = ctx.Strings.Get(good.NameKey);
                 if (good.Kind != GoodKind.Produce)
                 {
-                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", Quantity(ctx, good, m.Stock[g]))));
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", Quantity(ctx, good, m.Stock[g]))) { Icon = good.Id });
                     continue;
                 }
                 Fixed floor = MarketRules.Floor(sim, g);
                 long free = m.InStore(g) - m.OnOffer(g);
                 long room = MarketRules.TraderCapacityLeft(sim, g);
                 long sell = System.Math.Min(free, room);
-                var line = new LineVm(name, ctx.Strings.Get("store.produce", "qty", ctx.Fmt.Kg(m.Stock[g]), "price", ctx.Fmt.PricePerKg(floor)), "price");
+                long offered = m.OnOffer(g);
+                Fixed? min = m.OfferMinPrice(g);
+                string value = offered == 0
+                    ? ctx.Strings.Get("store.produce", "qty", ctx.Fmt.Kg(m.Stock[g]), "price", ctx.Fmt.PricePerKg(floor))
+                    : min.HasValue
+                        ? ctx.Strings.Get("store.produceOffered", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered), "min", ctx.Fmt.PricePerKg(min.Value))
+                        : ctx.Strings.Get("store.produceOfferedAny", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered));
+                var line = new LineVm(name, value, "price") { Icon = good.Id };
                 string id = good.Id;
                 long amount = MarketRules.Value(sim, g, sell, floor);
                 // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
+                // Everything on offer at the market (a hand's order puts a harvest there): the way out is to take it back.
+                if (sell == 0 && free == 0 && offered > 0)
+                {
+                    line.Action = ActionVm.Checked(ctx, "withdraw:" + id, ctx.Strings.Get("action.withdrawRow"), ctx.Strings.Get("store.withdrawDetail", "qty", ctx.Fmt.Kg(offered)),
+                        ActionKind.Secondary, at => new Withdraw(at, id, offered));
+                    vm.Lines.Add(line);
+                    continue;
+                }
                 line.Action = sell > 0
                     ? ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sellRow"), ctx.Strings.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(amount)),
                         ActionKind.Primary, at => new SellToTrader(at, id, sell))

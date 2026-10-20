@@ -90,6 +90,7 @@ namespace Game.Presentation.Ui
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
                 case "store": return IconBank.Sack;
+                case "gear": return IconBank.Gear;
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
                 case "field": return SpriteBank.SoilTile;
@@ -164,6 +165,45 @@ namespace Game.Presentation.Ui
             _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
         }
 
+        /// <summary>A card over everything (spec 007 §7, ADR 0041): a title, a sentence and its buttons; any button closes it.</summary>
+        public void Card(CardVm vm, Action<string> onButton)
+        {
+            var veil = new VisualElement();
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(32);
+            UiKit.Padding(card, 26, 40);
+            card.style.maxWidth = 1150;
+            Label title = UiKit.Heading1(vm.Title, 50);
+            title.style.unityTextAlign = TextAnchor.MiddleCenter;
+            card.Add(title);
+            Label text = UiKit.Text(vm.Text, 34, UiKit.Ink, UiKit.Body);
+            text.style.whiteSpace = WhiteSpace.Normal;
+            text.style.unityTextAlign = TextAnchor.MiddleCenter;
+            text.style.marginTop = 10;
+            card.Add(text);
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.justifyContent = Justify.Center;
+            buttons.style.marginTop = 18;
+            foreach (CardButton b in vm.Buttons)
+            {
+                ActionLook look = b.Kind == ActionKind.Danger ? ActionLook.Danger : b.Kind == ActionKind.Primary ? ActionLook.Primary : ActionLook.Secondary;
+                string id = b.Id;
+                Button button = UiKit.MakeButton(b.Label, look, () => { veil.RemoveFromHierarchy(); onButton(id); });
+                button.name = "card:" + id;
+                buttons.Add(button);
+            }
+            card.Add(buttons);
+            veil.Add(card);
+            _holder.parent.Add(veil);
+            card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
+            _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
         public void Close()
         {
             if (_sheet == null || _closing) return;
@@ -220,12 +260,10 @@ namespace Game.Presentation.Ui
             row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
             if (line.Action == null)
             {
-                row.Add(UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body));
+                row.Add(WithIcon(line.Icon, 56, UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body)));
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
                 v.style.unityTextAlign = TextAnchor.MiddleRight;
                 v.style.flexShrink = 1;
-                // A short value never splits ("Goo / d"): on a phone's fractional UI scale the measured width can round a hair short.
-                if (line.Value != null && line.Value.Length <= 24 && line.Value.IndexOf('\n') < 0) { v.style.whiteSpace = WhiteSpace.NoWrap; v.style.flexShrink = 0; }
                 if (line.Stars.HasValue)
                 {
                     var right = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -254,12 +292,37 @@ namespace Game.Presentation.Ui
                 text.Add(starLine);
             }
             else text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
-            row.Add(text);
+            row.Add(WithIcon(line.Icon, 84, text));
             VisualElement button = ActionColumn(line.Action);
             button.style.alignItems = Align.FlexEnd;
             button.style.flexShrink = 0;
             row.Add(button);
             return row;
+        }
+
+        /// <summary>One money figure on a sow row: bold, in its colour, with room after it.</summary>
+        private static Label Figure(string text, Color colour)
+        {
+            Label l = UiKit.Text(text, 30, colour, UiKit.Heading);
+            l.style.marginRight = 26;
+            return l;
+        }
+
+        /// <summary>A good's rendered picture before a row's label, when the row has one (the store).</summary>
+        private static VisualElement WithIcon(string goodId, float size, VisualElement label)
+        {
+            if (goodId == null) return label;
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.style.flexDirection = FlexDirection.Row;
+            box.style.alignItems = Align.Center;
+            box.style.flexShrink = 1;
+            VisualElement pic = UiKit.Icon(IconBank.Good(goodId), size);
+            pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            pic.style.marginRight = 16;
+            pic.style.flexShrink = 0;
+            box.Add(pic);
+            box.Add(label);
+            return box;
         }
 
         private VisualElement ActionColumn(ActionVm a)
@@ -269,7 +332,9 @@ namespace Game.Presentation.Ui
             col.style.maxWidth = 520;
             ActionLook look = a.Kind == ActionKind.Danger ? ActionLook.Danger : a.Kind == ActionKind.Secondary || a.Kind == ActionKind.Open ? ActionLook.Secondary : ActionLook.Primary;
             if (a.Kind == ActionKind.Open) look = ActionLook.Primary;
-            col.Add(UiKit.MakeButton(a.Label, look, () => { if (OnAction != null) OnAction(a); }, a.Detail, a.Enabled));
+            VisualElement button = UiKit.MakeButton(a.Label, look, () => { if (OnAction != null) OnAction(a); }, a.Detail, a.Enabled);
+            button.style.minWidth = 350; // a column of row buttons lines up instead of ragged widths (panel points)
+            col.Add(button);
             if (!a.Enabled && !string.IsNullOrEmpty(a.DisabledReason))
             {
                 Label why = UiKit.Text(a.DisabledReason, 27, UiKit.Warn, UiKit.Body);
@@ -316,7 +381,8 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.FreeHoursText);
             foreach (FertiliserVm f in vm.Fertilisers) key.Append('|').Append(f.Id).Append(f.Selected);
             foreach (CropRowVm r in vm.Rows)
-                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.EarnsText)
+                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
+                   .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
                    .Append(r.LabourText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
@@ -326,17 +392,25 @@ namespace Game.Presentation.Ui
             scroll.style.flexShrink = 1;
             scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
 
+            // The fertiliser choice (owner, Sprint 6): three equal cards, each with what it does; the chosen one is green, and every
+            // crop row below shows its effect on the harvest and its cost.
+            Label fertHead = UiKit.Heading1(vm.FertiliserHeading, 36, UiKit.Wood);
+            fertHead.style.marginTop = 14;
+            scroll.Add(fertHead);
             var chips = new VisualElement { pickingMode = PickingMode.Ignore };
             chips.style.flexDirection = FlexDirection.Row;
-            chips.style.marginTop = 10; chips.style.marginBottom = 6;
+            chips.style.marginTop = 6; chips.style.marginBottom = 6;
             foreach (FertiliserVm f in vm.Fertilisers)
             {
                 FertiliserVm fert = f;
-                Button chip = UiKit.MakeButton(f.Name, f.Selected ? ActionLook.Primary : ActionLook.Secondary, () => { if (OnFertiliser != null) OnFertiliser(fert.Id); });
-                chip.style.minHeight = 64; chip.style.minWidth = 160; chip.style.marginTop = 0;
+                Button chip = UiKit.MakeButton(f.Name, f.Selected ? ActionLook.Primary : ActionLook.Secondary, () => { if (OnFertiliser != null) OnFertiliser(fert.Id); }, f.EffectText);
+                chip.style.flexGrow = 1; chip.style.flexBasis = 0; chip.style.marginTop = 0; chip.style.marginRight = 14;
                 chips.Add(chip);
             }
             scroll.Add(chips);
+            Label note = UiKit.Text(vm.NoteText, 27, UiKit.Wood, UiKit.Body);
+            note.style.marginTop = 6; note.style.marginBottom = 4;
+            scroll.Add(note);
 
             foreach (CropRowVm r in vm.Rows)
             {
@@ -349,13 +423,17 @@ namespace Game.Presentation.Ui
                 card.style.opacity = r.SowableNow ? 1f : 0.62f;
 
                 var name = new VisualElement { pickingMode = PickingMode.Ignore };
-                name.style.width = 330;
+                name.style.width = 230;
+                name.style.flexShrink = 0;
                 name.Add(UiKit.Heading1(r.Name, 46));
                 name.Add(UiKit.Text(r.TimeText, 30, UiKit.Wood, UiKit.Body));
                 card.Add(name);
 
                 var info = new VisualElement { pickingMode = PickingMode.Ignore };
                 info.style.flexGrow = 1;
+                info.style.flexShrink = 1;
+                info.style.flexBasis = 0;   // the figures wrap inside; the Sow button keeps its width on the right
+                info.style.minWidth = 0;
                 if (r.SowableNow)
                 {
                     var chipRow = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -366,16 +444,31 @@ namespace Game.Presentation.Ui
                     UiKit.Radius(tag, 18);
                     UiKit.Padding(tag, 2, 16);
                     chipRow.Add(tag);
-                    Label earns = UiKit.Text(r.EarnsText, 36, UiKit.Ink, UiKit.Heading);
-                    earns.style.marginLeft = 16;
-                    chipRow.Add(earns);
+                    Label harvest = UiKit.Text(r.HarvestText, 34, UiKit.Ink, UiKit.Heading);
+                    harvest.style.marginLeft = 16;
+                    chipRow.Add(harvest);
                     info.Add(chipRow);
-                    info.Add(UiKit.Text(r.LabourText + " · " + r.CostText, 28, UiKit.Wood, UiKit.Body));
+                    // Money in, money out, what's left (owner, Sprint 6): three figures side by side, each in its own colour.
+                    var money = new VisualElement { pickingMode = PickingMode.Ignore };
+                    money.style.flexDirection = FlexDirection.Row;
+                    money.style.flexWrap = Wrap.Wrap;
+                    money.style.marginTop = 4;
+                    money.Add(Figure(r.SpendText, UiKit.RedDark));
+                    money.Add(Figure(r.GetText, UiKit.GreenDark));
+                    money.Add(Figure(r.ProfitText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn));
+                    info.Add(money);
+                    info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                 }
                 else info.Add(UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body));
                 card.Add(info);
 
-                if (r.SowableNow) card.Add(ActionColumn(r.Sow));
+                if (r.SowableNow)
+                {
+                    VisualElement sow = ActionColumn(r.Sow);
+                    sow.style.flexShrink = 0;
+                    sow.style.marginLeft = 12;
+                    card.Add(sow);
+                }
                 scroll.Add(card);
             }
             sheet.Add(scroll);

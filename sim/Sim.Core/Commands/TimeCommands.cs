@@ -92,6 +92,35 @@ namespace Sim.Core.Commands
         }
     }
 
+    /// <summary>
+    /// A run of consecutive live <see cref="Sync"/>s, compacted into one command-log entry (spec 007 §3.2): advances live by
+    /// <see cref="SimSeconds"/> and re-anchors the wall clock to <see cref="ToWallUtc"/>. Live advances are chunking-invariant,
+    /// so a run replays exactly like the Syncs it stands for.
+    /// </summary>
+    public sealed class LiveRun : Command
+    {
+        public long FromWallUtc { get; }
+        public long ToWallUtc { get; }
+        public long SimSeconds { get; }
+
+        public LiveRun(long fromWallUtc, long toWallUtc, long simSeconds)
+        {
+            FromWallUtc = fromWallUtc;
+            ToWallUtc = toWallUtc;
+            SimSeconds = simSeconds;
+        }
+
+        internal override CommandResult Apply(Simulation sim)
+        {
+            Time.ClockState clock = sim.State.Clock;
+            if (clock.LastWallUtc != FromWallUtc || SimSeconds != ToWallUtc - FromWallUtc || SimSeconds < 0)
+                return CommandResult.Reject(RejectReason.InvalidArgument);
+            sim.AdvanceLive(clock.SimTime + SimSeconds);
+            clock.LastWallUtc = ToWallUtc;
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>The away cap (spec 001 §3.4).</summary>
     public static class AwayCap
     {

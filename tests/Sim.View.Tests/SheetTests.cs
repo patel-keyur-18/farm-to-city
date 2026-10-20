@@ -32,7 +32,8 @@ namespace Sim.View.Tests
             SheetVm sheet = FieldSheets.ForTile(ViewKit2.Context(sim), 20);
             Assert.That(sheet.Title, Is.EqualTo("Loam field"));
             Assert.That(sheet.Subtitle, Is.EqualTo("Your family's land"));
-            Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Fertility").And.Contain("Moisture").And.Contain("Soil factor").And.Contain("Well acre"));
+            Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Fertility").And.Contain("Moisture").And.Contain("Soil for crops").And.Contain("Well acre"));
+            Assert.That(sheet.Lines.Single(l => l.Label == "Soil for crops").Value, Is.AnyOf("Good", "Fair", "Poor"), "a word, not a factor");
             Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45 / 100"));
             Assert.That(Action(sheet, "sow").Opens.Value.Kind, Is.EqualTo("Sow"));
             Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(20));
@@ -128,6 +129,7 @@ namespace Sim.View.Tests
             Assert.That(empty.Lines.Where(l => l.Action != null).Select(l => l.Action.Id), Is.EqualTo(new[] { "sow:garden_radish", "sow:garden_spinach", "sow:garden_coriander" }));
             Assert.That(empty.Lines.Where(l => l.Action != null).All(l => l.Action.Enabled), Is.True);
             Assert.That(empty.Lines.Single(l => l.Label == "Radish").Value, Does.StartWith("ready in"));
+            Assert.That(empty.Lines.Where(l => l.Action != null).Select(l => l.Icon), Is.EqualTo(new[] { "radish", "spinach", "coriander" }), "each choice shows its produce");
             Assert.That(sim.Execute(RowAction(empty, "sow:garden_radish").Create(sim.State.Clock.SimTime)).Accepted, Is.True);
             Assert.That(FieldSheets.ForBed(ctx, 1).Subtitle, Is.EqualTo("Radish, growing"));
             sim.AdvanceTo(sim.State.Clock.SimTime + 11 * 60);
@@ -147,6 +149,7 @@ namespace Sim.View.Tests
             SheetVm empty = FieldSheets.ForSlot(ctx, yard);
             Assert.That(empty.Title, Is.EqualTo("Yard tree"));
             Assert.That(empty.Lines.Count(l => l.Action != null), Is.EqualTo(4), "one row per tree");
+            Assert.That(empty.Lines.Where(l => l.Action != null).Select(l => l.Icon), Is.EqualTo(new[] { "banana", "papaya", "guava", "mango" }), "each tree shows its fruit");
             Assert.That(RowAction(empty, "plant:mango").Label, Is.EqualTo("Plant"));
             Assert.That(RowAction(empty, "plant:mango").Detail, Is.EqualTo("350 coins"));
             Assert.That(empty.Lines.Single(l => l.Label == "Mango").Value, Does.StartWith("fruits in").And.Contain("grows in"));
@@ -175,6 +178,8 @@ namespace Sim.View.Tests
             Assert.That(store.Lines.Select(l => l.Label), Does.Contain("Wheat").And.Contain("Lentils").And.Contain("Seed potato"));
             Assert.That(store.Subtitle, Does.StartWith("675").Or.Contain("of 2,000 kg"));
             Assert.That(store.Actions, Is.Empty, "each Sell sits on its good's row");
+            Assert.That(store.Lines.Single(l => l.Label == "Wheat").Icon, Is.EqualTo("wheat"), "each row shows its good's picture");
+            Assert.That(store.Lines.Single(l => l.Label == "Seed potato").Icon, Is.EqualTo("seed_potato"));
             ActionVm sellWheat = store.Lines.Single(l => l.Label == "Wheat").Action;
             Assert.That(sellWheat.Id, Is.EqualTo("sell:wheat"));
             Assert.That(sellWheat.Enabled, Is.True);
@@ -186,12 +191,18 @@ namespace Sim.View.Tests
             Assert.That(StoreSheet.Build(ctx).Lines.Any(l => l.Label == "Wheat"), Is.False, "sold out");
 
 
-            // A good on offer can't be sold again.
+            // A good all on offer (a hand's order puts a harvest there) says so and can be taken off the market, then sold.
             Simulation m = ViewKit.NewGame();
-            m.Execute(new Offer(m.State.Clock.SimTime, "lentils", 75_000));
-            ActionVm lentils = StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils").Action;
-            Assert.That(lentils.Enabled, Is.False);
-            Assert.That(lentils.DisabledReason, Is.Not.Empty);
+            int g = m.Config.Game.Market.IndexOf("lentils");
+            long all = m.State.Market.InStore(g);
+            Assert.That(m.Execute(new Offer(m.State.Clock.SimTime, "lentils", all, Sim.Core.Maths.Fixed.FromInt(500))).Accepted, Is.True);
+            LineVm row = StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils");
+            Assert.That(row.Value, Does.Contain("at the market, not below 500"));
+            Assert.That(row.Action.Id, Is.EqualTo("withdraw:lentils"));
+            Assert.That(row.Action.Label, Is.EqualTo("Take off market"));
+            Assert.That(m.Execute(row.Action.Create(m.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(m.State.Market.OnOffer(g), Is.Zero);
+            Assert.That(StoreSheet.Build(ViewKit2.Context(m)).Lines.Single(l => l.Label == "Lentils").Action.Id, Is.EqualTo("sell:lentils"));
         }
 
         [Test]

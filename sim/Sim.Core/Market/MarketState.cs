@@ -1,4 +1,5 @@
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Market
 {
@@ -101,13 +102,14 @@ namespace Sim.Core.Market
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteFixed(PriceIndex);
             h.WriteInt(TraderBoughtToday.Length);
             foreach (long q in TraderBoughtToday) h.WriteLong(q);
             foreach (long q in Stock) h.WriteLong(q);
             foreach (long c in StockCost) h.WriteLong(c);
+            if (!h.Hashing) h.WriteInt(Unmet.Length == 0 ? 0 : Unmet[0].Length); // the content's window, checked on load
             for (int g = 0; g < Stock.Length; g++)
             {
                 h.WriteFixed(Price[g]);
@@ -122,6 +124,35 @@ namespace Sim.Core.Market
             h.WriteBool(Trip != null);
             if (Trip != null) Trip.WriteTo(h);
             h.WriteLong(LastTripDay);
+        }
+
+        /// <summary>Per-good arrays are written in the save's good order and put back in the running content's.</summary>
+        internal static MarketState ReadFrom(SaveReader r, int unmetWindow)
+        {
+            Fixed index = r.ReadFixed();
+            int goods = r.ReadCount();
+            if (goods != r.SavedCount(ContentTable.Good) || goods != r.Count(ContentTable.Good))
+                throw new SaveContentException("the content has " + r.Count(ContentTable.Good) + " goods, the save " + goods);
+            var s = new MarketState(goods, unmetWindow) { PriceIndex = index };
+            foreach (long[] a in new[] { s.TraderBoughtToday, s.Stock, s.StockCost })
+                for (int g = 0; g < goods; g++) a[r.Slot(ContentTable.Good, g)] = r.ReadLong();
+            int window = r.ReadInt();
+            if (window != unmetWindow) throw new SaveContentException("the unmet-demand window is " + unmetWindow + " hours, the save's " + window);
+            for (int g = 0; g < goods; g++)
+            {
+                int at = r.Slot(ContentTable.Good, g);
+                s.Price[at] = r.ReadFixed();
+                s.LastRegional[at] = r.ReadFixed();
+                s.Offered[at] = r.ReadLong();
+                s.MinPrice[at] = r.ReadFixed();
+                for (int i = 0; i < window; i++) s.Unmet[at][i] = r.ReadFixed();
+                s.RailHits[at] = r.ReadLong();
+            }
+            s.UnmetHead = r.ReadInt();
+            s.Hours = r.ReadLong();
+            s.Trip = r.ReadBool() ? MandiTrip.ReadFrom(r) : null;
+            s.LastTripDay = r.ReadLong();
+            return s;
         }
     }
 }

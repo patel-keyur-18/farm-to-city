@@ -178,6 +178,9 @@ namespace Sim.View.Views
         /// <summary>A section heading ("Day labourers"): drawn as a title row, no value or button.</summary>
         public bool IsHeader { get; internal set; }
 
+        /// <summary>A good's id for a small picture before the label (the store's rows), or null.</summary>
+        public string Icon { get; internal set; }
+
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
         public LineVm(string label, string value, string whyKey = null)

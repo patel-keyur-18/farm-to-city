@@ -32,12 +32,27 @@ namespace Sim.View.Views
         public Suits Suits { get; internal set; }
         public string SuitsText { get; internal set; }
 
-        /// <summary>Money per acre per season at the trader's floor, minus certified seed, rounded to 10 coins.</summary>
-        public long Earns { get; internal set; }
-        public string EarnsText { get; internal set; }
+        /// <summary>This one sowing (owner, Sprint 6 device run): the expected harvest in grams, with the chosen fertiliser.</summary>
+        public long HarvestGrams { get; internal set; }
+        public string HarvestText { get; internal set; }
+
+        /// <summary>What this sowing uses: its seed and fertiliser at today's input prices (from the store or bought), in money.</summary>
+        public long Spend { get; internal set; }
+        public string SpendText { get; internal set; }
+
+        /// <summary>The whole harvest at the trader's price today (the floor, what a harvest reliably fetches), rounded to 10 coins.</summary>
+        public long Get { get; internal set; }
+        public string GetText { get; internal set; }
+
+        /// <summary>Sells for − spend, rounded to 10 coins ("Profit about …", or "Loss about …").</summary>
+        public long Profit { get; internal set; }
+        public string ProfitText { get; internal set; }
+
+        /// <summary>What the spend is made of, and the work: "seed 20 + compost 300 · 3.0 h a day".</summary>
+        public string InputsText { get; internal set; }
         public string LabourText { get; internal set; }
 
-        /// <summary>What sowing would buy now (seed and fertiliser not in the store).</summary>
+        /// <summary>What sowing would buy now (seed and fertiliser not in the store): "pay 20 coins now" or "from your store".</summary>
         public string CostText { get; internal set; }
         public ActionVm Sow { get; internal set; }
     }
@@ -46,6 +61,9 @@ namespace Sim.View.Views
     {
         public string Id { get; internal set; }
         public string Name { get; internal set; }
+
+        /// <summary>What it does, from its data: "+25% harvest · wears out the soil".</summary>
+        public string EffectText { get; internal set; }
         public bool Selected { get; internal set; }
     }
 
@@ -55,6 +73,10 @@ namespace Sim.View.Views
         public string Title { get; internal set; }
         public string Subtitle { get; internal set; }
         public string FreeHoursText { get; internal set; }
+
+        /// <summary>One line on what the numbers mean: this one sowing, sold to the trader at today's price.</summary>
+        public string NoteText { get; internal set; }
+        public string FertiliserHeading { get; internal set; }
         public List<FertiliserVm> Fertilisers { get; } = new List<FertiliserVm>();
         public List<CropRowVm> Rows { get; } = new List<CropRowVm>();
     }
@@ -78,8 +100,10 @@ namespace Sim.View.Views
             Fixed rate = FounderRules.LabourRate(sim);
             Fixed free = rate - FarmRules.LabourDemand(sim);
             vm.FreeHoursText = ctx.Strings.Get("sow.freeHours", "free", Hours(free < Fixed.Zero ? Fixed.Zero : free), "total", Hours(rate));
+            vm.NoteText = ctx.Strings.Get("sow.note");
+            vm.FertiliserHeading = ctx.Strings.Get("sow.fertiliserHeading");
             foreach (FertiliserDef f in defs.Farm.Fertilisers)
-                vm.Fertilisers.Add(new FertiliserVm { Id = f.Id, Name = ctx.Strings.Get("fertiliser." + f.Id), Selected = f.Id == fertiliserId });
+                vm.Fertilisers.Add(new FertiliserVm { Id = f.Id, Name = ctx.Strings.Get("fertiliser." + f.Id), EffectText = Effect(ctx, f), Selected = f.Id == fertiliserId });
 
             Fixed soilFactor = LandRules.SoilFactor(sim, tile);
             FertiliserDef fert = defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fertiliserId)];
@@ -91,19 +115,32 @@ namespace Sim.View.Views
                 Fixed water = FarmRules.WaterFactor(defs.Farm.Farm, c, tile.Moisture);
                 Suits suits = water >= Fixed.One ? Suits.Good : water >= Fixed.Parse("0.85") ? Suits.Fair : Suits.Poor;
                 Fixed floor = MarketRules.Floor(sim, c.OutputGood);
-                long gross = MarketRules.Value(sim, c.OutputGood, (c.SeasonYieldPerAcre * soilFactor * water).MulRatio(1000, 1).RoundToLong(), floor);
-                long seedCost = MarketRules.Value(sim, c.SeedGood, c.SeedPerAcrePerSeason.MulRatio(1000, 1).RoundToLong(), MarketRules.InputPrice(sim, c.SeedGood));
-                long earns = Round10Coins(gross - seedCost);
+                // This one sowing: the yield formula with what is known now (soil, water, fertiliser; care, seed, weather and
+                // health at 1), its seed and fertiliser at today's input prices, and the harvest at the trader's price today.
+                long harvest = FarmRules.Yield(defs.Farm.Farm, c.SeasonYieldPerAcre * FarmRules.CycleShare(sim.Clock, c), soilFactor, water,
+                    Fixed.One, Fixed.One, Fixed.One, fert.YieldFactor, Fixed.One).Grams;
+                long get = Round10Coins(MarketRules.Value(sim, c.OutputGood, harvest, floor));
                 long seedGrams = FarmRules.CycleGrams(sim.Clock, c, c.SeedPerAcrePerSeason);
                 long fertGrams = fert.Good < 0 ? 0 : FarmRules.CycleGrams(sim.Clock, c, fert.KgPerAcrePerSeason);
+                long seedValue = MarketRules.Value(sim, c.SeedGood, seedGrams, MarketRules.InputPrice(sim, c.SeedGood));
+                long fertValue = fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good));
+                long spend = seedValue + fertValue;
+                long profit = Round10Coins(get - spend);
                 long buy = (seed == SeedSource.Certified ? Store.ShortfallCost(sim, c.SeedGood, seedGrams) : 0)
                     + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, fertGrams));
+                string inputs = fert.Good < 0
+                    ? ctx.Strings.Get("sow.inputsSeed", "seed", ctx.Fmt.Amount(seedValue))
+                    : ctx.Strings.Get("sow.inputsBoth", "seed", ctx.Fmt.Amount(seedValue), "fertiliser", ctx.Strings.Get("fertiliser." + fert.Id), "kg", ctx.Fmt.Kg(fertGrams), "cost", ctx.Fmt.Amount(fertValue));
                 var row = new CropRowVm
                 {
                     CropId = c.Id, Name = name, TimeText = ctx.Fmt.Duration(c.GrowthSeconds), SowableNow = sowable,
                     SeasonNote = sowable ? null : ctx.Strings.Get("sow.seasonsOnly", "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons)),
                     Suits = suits, SuitsText = ctx.Strings.Get("suits." + suits.ToString().ToLowerInvariant()),
-                    Earns = earns, EarnsText = ctx.Strings.Get("sow.earns", "amount", ctx.Fmt.Amount(earns)),
+                    HarvestGrams = harvest, HarvestText = ctx.Strings.Get("sow.harvest", "kg", ctx.Fmt.Kg(harvest)),
+                    Spend = spend, SpendText = ctx.Strings.Get("sow.spend", "amount", ctx.Fmt.Coins(spend)),
+                    Get = get, GetText = ctx.Strings.Get("sow.get", "amount", ctx.Fmt.Coins(get)),
+                    Profit = profit, ProfitText = ctx.Strings.Get(profit >= 0 ? "sow.profit" : "sow.loss", "amount", ctx.Fmt.Coins(System.Math.Abs(profit))),
+                    InputsText = inputs,
                     LabourText = ctx.Strings.Get("sow.labour", "hours", Hours(c.LabourPerAcrePerDay + BucketHours(ctx, tile))),
                     CostText = buy == 0 ? ctx.Strings.Get("sow.fromStore") : ctx.Strings.Get("sow.buys", "cost", ctx.Fmt.Coins(buy)),
                 };
@@ -126,6 +163,14 @@ namespace Sim.View.Views
                 vm.Rows.Add(row);
             }
             return vm;
+        }
+
+        /// <summary>A fertiliser's effect from its data: how much more harvest, and what it does to the soil.</summary>
+        private static string Effect(ViewContext ctx, FertiliserDef f)
+        {
+            if (f.Good < 0) return ctx.Strings.Get("fert.effectNone");
+            string pct = ctx.Fmt.Integer(((f.YieldFactor - Fixed.One) * Fixed.FromInt(100)).RoundToLong());
+            return ctx.Strings.Get(f.FertilityPerSeason >= Fixed.Zero ? "fert.effectBuilds" : "fert.effectWears", "pct", pct);
         }
 
         /// <summary>Bucket-carrying hours on a well acre on a dry day (spec 003 §3.6): 24 × the well's lift × bucketHoursPerMoisturePoint.</summary>

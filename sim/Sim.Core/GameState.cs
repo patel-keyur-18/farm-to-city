@@ -5,6 +5,7 @@ using Sim.Core.Land;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.People;
+using Sim.Core.Saves;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
 using Sim.Core.Weather;
@@ -58,10 +59,11 @@ namespace Sim.Core
         /// Writes the canonical byte stream: a fixed field order, entities in id order.
         /// Each later spec appends its own section at the end. The command log is never hashed.
         /// </summary>
-        public void WriteTo(StateHasher h)
+        public void WriteTo(IStateWriter h)
         {
             h.WriteInt(HashFormatVersion);
             h.WriteULong(Seed);
+            if (!h.Hashing) h.WriteByte(Sections()); // a save says which optional sections follow
             Clock.WriteTo(h);
             Scheduler.WriteTo(h);
             Jobs.WriteTo(h);
@@ -75,6 +77,39 @@ namespace Sim.Core
             if (Farm != null) Farm.WriteTo(h);
             if (Credit != null) Credit.WriteTo(h);
             if (People != null) People.WriteTo(h);
+        }
+
+        private byte Sections()
+        {
+            return (byte)((Land != null ? 1 : 0) | (Ledger != null ? 2 : 0) | (Finance != null ? 4 : 0) | (Market != null ? 8 : 0)
+                | (Farm != null ? 16 : 0) | (Credit != null ? 32 : 0) | (People != null ? 64 : 0));
+        }
+
+        /// <summary>
+        /// Reads what <see cref="WriteTo"/> wrote to a save (spec 007 §3.1). The optional sections must be the ones the content
+        /// asks for: a save with people can't load into a build without them, nor the other way round.
+        /// </summary>
+        internal static GameState ReadFrom(SaveReader r, SimConfig config)
+        {
+            if (r.ReadInt() != HashFormatVersion) throw new SaveFormatException("state format");
+            var s = new GameState { Seed = r.ReadULong() };
+            Definitions.GameDefs g = config.Game;
+            int expected = g == null ? 0 : 31 | (g.Credit != null ? 32 : 0) | (g.People != null ? 64 : 0);
+            int sections = r.ReadByte();
+            if (sections != expected) throw new SaveContentException("the save's sections (" + sections + ") don't match the content's (" + expected + ")");
+            s.Clock = ClockState.ReadFrom(r);
+            s.Scheduler = Scheduler.ReadFrom(r);
+            s.Jobs = JobTable.ReadFrom(r);
+            s.Weather = WeatherState.ReadFrom(r);
+            if (g == null) return s;
+            s.Land = LandState.ReadFrom(r, g.Map);
+            s.Ledger = Ledger.ReadFrom(r);
+            s.Finance = FinanceState.ReadFrom(r);
+            s.Market = MarketState.ReadFrom(r, g.Market.Market.UnmetWindowHours);
+            s.Farm = FarmState.ReadFrom(r, s.Land.Tiles.Count);
+            if (g.Credit != null) s.Credit = CreditState.ReadFrom(r);
+            if (g.People != null) s.People = PeopleState.ReadFrom(r);
+            return s;
         }
 
         /// <summary>The 64-bit FNV-1a hash of the canonical state.</summary>

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Weather
 {
@@ -70,18 +71,33 @@ namespace Sim.Core.Weather
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(FirstSpell);
             h.WriteInt(_generated.Count);
-            foreach (int w in _generated) h.WriteInt(w);
+            foreach (int w in _generated) h.WriteRef(ContentTable.Weather, w);
             h.WriteInt(_forecastShown.Count);
             foreach (ForecastEntry e in _forecastShown)
             {
                 h.WriteLong(e.SpellIndex);
                 h.WriteInt(e.Bucket);
-                h.WriteInt(e.Weather);
+                h.WriteRef(ContentTable.Weather, e.Weather);
             }
+        }
+
+        internal static WeatherState ReadFrom(SaveReader r)
+        {
+            var s = new WeatherState { FirstSpell = r.ReadLong() };
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) s._generated.Add(r.ReadRef(ContentTable.Weather));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                long spell = r.ReadLong();
+                int bucket = r.ReadInt();
+                s._forecastShown.Add(new ForecastEntry(spell, bucket, r.ReadRef(ContentTable.Weather)));
+            }
+            return s;
         }
     }
 }

@@ -2,7 +2,8 @@
     "name": "Game.Services",
     "rootNamespace": "Game.Services",
     "references": [
-        "Sim.Core"
+        "Sim.Core",
+        "Unity.Notifications.iOS"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

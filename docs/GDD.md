@@ -103,7 +103,7 @@ Sowing windows follow India's cropping seasons, so every season has something to
 
 Radish can be sown all year. A sowing window only limits *sowing*: a crop keeps growing into the next season. Outside its window, a crop can't be sown, and the *Why?* breakdown explains which season it belongs to.
 
-**Weather.** Weather changes in 6-hour spells, each drawn from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65% (spec 001). Big events like droughts are signalled days ahead.
+**Weather.** Weather is drawn hour by hour from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Calm weather lasts (sun about 1–2 days, rain about a day) and severe weather passes (heavy rain and storms 1–2 hours, a heatwave about 6 hours), with each season's overall mix unchanged (ADR 0042, from Sprint 7; until then 6-hour spells). Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65% (spec 001). Big events like droughts are signalled days ahead.
 
 **Determinism.** Each save has a random seed. Sim time is a 64-bit count of seconds, kept separate from wall-clock time, and every command carries the sim time it applies at. The simulation is deterministic for a given seed and timestamped command history. That makes offline catch-up reproducible, makes bugs replayable, and allows automated balancing runs on a fake clock.
 
@@ -345,7 +345,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | Standing orders | No | Yes |
 | Population | Not counted | Counted: the town's first citizens |
 
-Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often (six full days' work in total, ADR 0039) becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known traits. Migrants settle, form households and grow family trees in the town.
+Applicants walk in while a hand's hut stands empty, or come faster after the founder posts a job (at the market wage or above it, for better applicants; spec 006). A day labourer hired often (six full days' work in total, ADR 0039) becomes a *regular* and may ask to move to the village. They arrive as a resident-hand applicant with known skill and traits, and always accept (ADR 0041). Migrants settle, form households and grow family trees in the town.
 
 **Hiring flow (full version, from Phase 2)**
 
@@ -782,7 +782,7 @@ The game needs no account and no server. All content ships in the build, and the
 - **Backup:** manual export and import of a save file. iCloud on iOS and Google Play Games Saved Games on Android come later, only if the game is published to the stores (ADR 0007).
 - **Distribution, for now:** personal builds only. iOS uses a free developer account, with the build re-signed every 7 days. The bundle ID and signing team stay fixed, so the save data survives reinstalls. Android uses sideloaded APKs signed with the owner's key. These builds contain no purchases: the full game is unlocked.
 
-**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are opt-in (asked after the first field harvest), grouped, capped at 2 a day, and never sent between 22:00 and 07:00 (spec 007).
+**Local notifications** work without a network, for example "Wheat in the north field is ready" or "Loan payment due tomorrow". They are scheduled from known finish times when the app goes to the background. They are planned by simulating the absence on a copy of the town, so they cover what hired hands do and what happens at a season close (ADR 0041). They are opt-in (asked in the first session, after the long crop is sown), ranked by importance, grouped (hands' routine work at most once every 4 hours), never sent between 22:00 and 07:00, and have no daily cap (spec 007).
 
 **Performance budget**
 
@@ -951,7 +951,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 
 ## Art, audio and feel
 
-The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs give the base style: Kenney's flat, low-poly *Isometric Landscape* set (ADR 0036). Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs.
+The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs give the base style: Kenney's flat, low-poly *Isometric Landscape* set (ADR 0036). Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs. By the end of Sprint 6 every map sprite (crops, trees, the garden, buildings, props and the ground), every icon and the people's walk cycles are Blender renders on that rig (ADR 0041).
 
 - **Lighting and seasons.** A day-night cycle with 2D lights, and seasonal palette shifts: spring greens, golden harvest, monsoon greys, winter haze.
 - **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.

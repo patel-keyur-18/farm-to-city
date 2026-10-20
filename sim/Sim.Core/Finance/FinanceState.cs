@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Finance
 {
@@ -26,7 +27,7 @@ namespace Sim.Core.Finance
             };
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(Id);
             h.WriteInt((int)ExpenseAccount);
@@ -36,6 +37,15 @@ namespace Sim.Core.Finance
             h.WriteLong(End);
             h.WriteLong(Expensed);
             h.WriteString(OwnerRef);
+        }
+
+        internal static Prepayment ReadFrom(SaveReader r)
+        {
+            return new Prepayment
+            {
+                Id = r.ReadLong(), ExpenseAccount = (Account)r.ReadInt(), PrepaidAccount = (Account)r.ReadInt(), Total = r.ReadLong(),
+                Start = r.ReadLong(), End = r.ReadLong(), Expensed = r.ReadLong(), OwnerRef = r.ReadString(),
+            };
         }
     }
 
@@ -63,7 +73,7 @@ namespace Sim.Core.Finance
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(NextPrepaymentId);
             h.WriteLong(SeasonOpeningCash);
@@ -71,6 +81,16 @@ namespace Sim.Core.Finance
             foreach (Prepayment p in Prepayments) p.WriteTo(h);
             h.WriteInt(Reports.Count);
             foreach (SeasonReport r in Reports) r.WriteTo(h);
+        }
+
+        internal static FinanceState ReadFrom(SaveReader r)
+        {
+            var s = new FinanceState { NextPrepaymentId = r.ReadLong(), SeasonOpeningCash = r.ReadLong() };
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Prepayments.Add(Prepayment.ReadFrom(r));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Reports.Add(SeasonReport.ReadFrom(r));
+            return s;
         }
     }
 }

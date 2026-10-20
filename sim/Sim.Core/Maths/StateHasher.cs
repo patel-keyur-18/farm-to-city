@@ -4,7 +4,7 @@ namespace Sim.Core.Maths
     /// 64-bit FNV-1a over a canonical byte stream (spec 001 §3.1). Values are written little-endian,
     /// so the hash is the same on every platform. Determinism tests compare whole states with it.
     /// </summary>
-    public sealed class StateHasher
+    public sealed class StateHasher : IStateWriter
     {
         private const ulong OffsetBasis = 0xCBF29CE484222325UL;
         private const ulong Prime = 0x100000001B3UL;
@@ -12,6 +12,10 @@ namespace Sim.Core.Maths
         private ulong _hash = OffsetBasis;
 
         public ulong Value { get { return _hash; } }
+
+        public bool Hashing { get { return true; } }
+
+        public void WriteRef(ContentTable table, int index) { WriteInt(index); }
 
         public void WriteByte(byte b)
         {

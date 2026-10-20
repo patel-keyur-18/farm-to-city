@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.Saves;
 
 namespace Sim.Core.Scheduling
 {
@@ -56,7 +57,7 @@ namespace Sim.Core.Scheduling
             return c;
         }
 
-        internal void WriteTo(StateHasher h)
+        internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(NextSequence);
             List<ScheduledItem> items = InOrder();
@@ -70,6 +71,25 @@ namespace Sim.Core.Scheduling
                 h.WriteLong(i.Sequence);
                 h.WriteLong(i.JobId);
             }
+        }
+
+        internal static Scheduler ReadFrom(SaveReader r)
+        {
+            var s = new Scheduler { NextSequence = r.ReadLong() };
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                long due = r.ReadLong();
+                var cls = (ItemClass)r.ReadInt();
+                var system = (SystemOrder)r.ReadInt();
+                long entity = r.ReadLong();
+                long seq = r.ReadLong();
+                s._heap.Add(new ScheduledItem(due, cls, system, entity, seq, r.ReadLong()));
+            }
+            // Written in processing order, and a sorted list is already a valid min-heap.
+            for (int i = 1; i < s._heap.Count; i++)
+                if (s._heap[i].CompareTo(s._heap[i - 1]) <= 0) throw new SaveFormatException("scheduler items out of order");
+            return s;
         }
 
         private void SiftUp(int i)
