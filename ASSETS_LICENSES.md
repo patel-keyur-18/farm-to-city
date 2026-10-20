@@ -6,7 +6,7 @@ Add a row in the same commit that adds the asset.
 
 | Asset (path) | Source (URL or "Original") | Author | Licence | Notes |
 | --- | --- | --- | --- | --- |
-| `unity/FarmToCity/Assets/Resources/Sounds/harvest_pop.ogg`, `tap.ogg`, `sheet_open.ogg`, `sheet_close.ogg`, `ready.ogg`, `urgent.ogg` | https://kenney.nl/assets/interface-sounds (`drop_002`, `click_003`, `maximize_002`, `minimize_002`, `confirmation_001`, `bong_001`) | Kenney (www.kenney.nl) | CC0 1.0 | Feedback sounds, US-087 (ADR 0043 §10) |
+| `unity/FarmToCity/Assets/Resources/Sounds/harvest_pop.ogg`, `ready.ogg`, `urgent.ogg` | https://kenney.nl/assets/interface-sounds (`drop_002`, `confirmation_001`, `bong_001`) | Kenney (www.kenney.nl) | CC0 1.0 | Feedback sounds, US-087 (ADR 0043 §10) |
 | `unity/FarmToCity/Assets/Resources/Sounds/harvest_rustle.ogg`, `coins_in.ogg` | https://kenney.nl/assets/rpg-audio (`cloth2`, `handleCoins`) | Kenney (www.kenney.nl) | CC0 1.0 | Feedback sounds, US-087 |
 | `unity/FarmToCity/Assets/Resources/Sounds/coins_out.ogg` | https://kenney.nl/assets/casino-audio (`chip-lay-1`) | Kenney (www.kenney.nl) | CC0 1.0 | Feedback sounds, US-087 |
 | `unity/FarmToCity/Assets/Resources/Art/Kenney/IsometricLandscape/landscapeTiles_059.png`, `_066`, `_067`, `_083` | https://kenney.nl/assets/isometric-tiles-landscape | Kenney (www.kenney.nl) | CC0 1.0 | Sand, water, grass and soil tiles; US-024 style check. Removed from the game in Sprint 6 (the ground is a Blender render, ADR 0041); the screenshots below still show them |

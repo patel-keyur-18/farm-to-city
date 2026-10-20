@@ -4,7 +4,8 @@ using UnityEngine;
 namespace Game.Presentation.Motion
 {
     /// <summary>
-    /// The feedback sounds (F08.5, ADR 0043 §10): seven Kenney CC0 clips in <c>Resources/Sounds</c>, at most one per event and never
+    /// The feedback sounds (F08.5, ADR 0043 §10, ADR 0044 §2): Kenney CC0 clips for what happens in the town (sowing, harvest,
+    /// coins, something ready, an urgent alert), never for a button tap or a sheet, in <c>Resources/Sounds</c>, at most one per event and never
     /// stacking (the same clip again within a short gap is skipped). The Sound switch in Settings mutes them all.
     /// </summary>
     public sealed class Sounds
@@ -43,6 +44,9 @@ namespace Game.Presentation.Motion
 
         /// <summary>Coins in: the jingle's pitch rises in three steps with the amount (whole coins).</summary>
         public void CoinsIn(long coins) { Play("coins_in", coins < 1_000 ? 1f : coins < 10_000 ? 1.12f : 1.25f); }
+
+        /// <summary>Seed going in: the rustle, lower.</summary>
+        public void Sow() { Play("harvest_rustle", 0.8f); }
 
         public void Harvest()
         {

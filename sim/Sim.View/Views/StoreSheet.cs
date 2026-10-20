@@ -18,11 +18,9 @@ namespace Sim.View.Views
             GameDefs defs = sim.Config.Game;
             MarketState m = sim.State.Market;
             long used = Store.UsedGrams(sim), capacity = Store.CapacityGrams(sim);
-            var vm = new SheetVm
-            {
-                Icon = "store", Title = ctx.Strings.Get("store.title"),
-                Subtitle = ctx.Strings.Get("store.fill", "used", ctx.Fmt.Kg(used), "capacity", ctx.Fmt.Kg(capacity)),
-            };
+            var vm = new SheetVm { Icon = "store", Title = ctx.Strings.Get("store.title") };
+            // How full it is, with its Why? (the HUD's store pill is a plain tap since the Sprint 7 device run, ADR 0044 §3).
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("store.filled"), ctx.Strings.Get("store.fill", "used", ctx.Fmt.Kg(used), "capacity", ctx.Fmt.Kg(capacity)), "store"));
             // The hub (ADR 0043 §7): buying inputs ahead and the mandi trip, then one row per good (a tap opens the good's sheet).
             vm.Lines.Add(new LineVm(ctx.Strings.Get("store.buyInputs"), ctx.Strings.Get("store.buyInputsNote"))
             { Action = ActionVm.Open("buyInputs", ctx.Strings.Get("action.open"), new SheetRequest("BuyInputs", 0)) });

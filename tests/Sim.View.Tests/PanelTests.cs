@@ -53,6 +53,21 @@ namespace Sim.View.Tests
             Assert.That(Repay.NextPayment(sim, loan), Is.EqualTo(BorrowSheet.Plan(sim, 0, 20_000 * Money.Coin, 2).Payments[0]).Within(1));
             Assert.That(Repay.NextPayment(sim, loan), Is.GreaterThan(0));
 
+            // Repay all of it from a sheet built a while ago (the screen keeps an unchanged sheet): the payment is what's owed when
+            // pressed, so the loan closes and Money and loans says nothing is owed (owner, Sprint 7 device run).
+            SheetVm repay = Repay.Build(ctx, loan.Id);
+            sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
+            Assert.That(sim.Execute(Cmd<RepayLoan>(repay.Lines[1].Action, sim)).Accepted, Is.True);
+            Assert.That(loan.IsOpen, Is.False, "repaid in full");
+            SheetVm money = MoneySheet.Build(ctx);
+            Assert.That(money.Lines.Any(l => l.Action != null && l.Action.Id == "repay:" + loan.Id), Is.False);
+            Assert.That(money.Lines.Select(l => l.Label), Does.Contain("No loans"));
+
+            // Net worth is mostly land at today's price: the land shows on its own row under it, so the big number explains itself.
+            int worth = money.Lines.FindIndex(l => l.WhyKey == "netWorth");
+            Assert.That(money.Lines[worth + 1].Label, Is.EqualTo("Of that, your land"));
+            Assert.That(money.Lines[worth + 1].Value, Is.EqualTo(ctx.Fmt.Coins(Reporting.NetWorth(sim).LandAtMarket)));
+
             // A longer term costs more interest in all (the lesson).
             long amount = 20_000 * Money.Coin;
             Assert.That(BorrowSheet.Plan(sim, 0, amount, 4).TotalInterest, Is.GreaterThan(BorrowSheet.Plan(sim, 0, amount, 1).TotalInterest));

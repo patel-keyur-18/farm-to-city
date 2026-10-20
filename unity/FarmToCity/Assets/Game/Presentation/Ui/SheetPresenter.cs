@@ -31,14 +31,16 @@ namespace Game.Presentation.Ui
 
         public Action OnClosed { get; set; }
 
-        /// <summary>A row's Why? was asked for (its ? chip, a tap on a row that opens nothing, or a long-press): key and id.</summary>
+        /// <summary>A row's ? chip was tapped (the only way a Why? opens, ADR 0044 §3): key and id.</summary>
         public Action<string, long> OnWhy { get; set; }
 
         /// <summary>A row that opens a sheet was tapped (a good in the Store).</summary>
         public Action<SheetRequest> OnOpenRow { get; set; }
 
-        /// <summary>A sheet slid in (true) or out (false): the swish (F08.5).</summary>
-        public Action<bool> OnSlide { get; set; }
+        /// <summary>The sheet before this one, if any: the header shows a back button (ADR 0044 §1).</summary>
+        public Func<bool> CanGoBack { get; set; }
+
+        public Action OnBack { get; set; }
 
         public bool IsOpen { get { return _sheet != null && !_closing; } }
 
@@ -66,6 +68,21 @@ namespace Game.Presentation.Ui
             var header = new VisualElement { pickingMode = PickingMode.Ignore };
             header.style.flexDirection = FlexDirection.Row;
             header.style.alignItems = Align.Center;
+            if (CanGoBack != null && CanGoBack())
+            {
+                var back = new Button(() => { if (OnBack != null) OnBack(); }) { text = "", name = "Back" };
+                back.style.width = 76; back.style.height = 76; back.style.backgroundColor = UiKit.Sand;
+                back.style.marginRight = 20;
+                UiKit.Radius(back, 38);
+                UiKit.Border(back, 4, UiKit.SandDark);
+                back.style.alignItems = Align.Center;
+                back.style.justifyContent = Justify.Center;
+                UiKit.Padding(back, 0, 0);
+                Label arrow = UiKit.Text("←", 46, UiKit.Ink, UiKit.Body);
+                arrow.style.marginTop = -6;
+                back.Add(arrow);
+                header.Add(back);
+            }
             Sprite thumb = Thumbnail(icon);
             if (thumb != null)
             {
@@ -147,7 +164,6 @@ namespace Game.Presentation.Ui
             _holder.Add(sheet);
             if (!had)
             {
-                if (OnSlide != null) OnSlide(true);
                 sheet.style.translate = new Translate(0, Length.Percent(110));
                 _tweens.Run(sheet, 0.25f, Ease.OutCubic, k => sheet.style.translate = new Translate(0, Length.Percent((1f - k) * 110f)));
             }
@@ -226,7 +242,6 @@ namespace Game.Presentation.Ui
         {
             if (_sheet == null || _closing) return;
             _closing = true;
-            if (OnSlide != null) OnSlide(false);
             VisualElement s = _sheet;
             _tweens.Run(s, 0.18f, Ease.InCubic, k => s.style.translate = new Translate(0, Length.Percent(k * 110f)), () =>
             {
@@ -329,29 +344,14 @@ namespace Game.Presentation.Ui
         private static bool HasWhy(LineVm line) { return line.WhyKey != null && WhyView.Has(line.WhyKey); }
 
         /// <summary>
-        /// A row answers a tap (ADR 0043 §3): one that opens a sheet opens it, otherwise its Why?; a long-press always asks Why?. A tap
-        /// on the row's own button stays the button's.
+        /// A row that opens a sheet (a good in the Store) opens it on a tap; a tap on the row's own button or ? stays theirs. Rows never
+        /// open a Why? themselves: a held finger while scrolling did (owner, Sprint 7 device run; ADR 0044 §3).
         /// </summary>
         private void Tappable(VisualElement row, LineVm line)
         {
-            if (!HasWhy(line) && !line.Opens.HasValue) return;
+            if (!line.Opens.HasValue) return;
             row.pickingMode = PickingMode.Position;
-            bool held = false;
-            IVisualElementScheduledItem timer = null;
-            row.RegisterCallback<PointerDownEvent>(e =>
-            {
-                held = false;
-                if (OnButton(e.target)) return;
-                if (HasWhy(line)) timer = row.schedule.Execute(() => { held = true; if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId); }).StartingIn(600);
-            });
-            row.RegisterCallback<PointerUpEvent>(_ => { if (timer != null) timer.Pause(); });
-            row.RegisterCallback<PointerLeaveEvent>(_ => { if (timer != null) timer.Pause(); });
-            row.RegisterCallback<ClickEvent>(e =>
-            {
-                if (held || OnButton(e.target)) return;
-                if (line.Opens.HasValue) { if (OnOpenRow != null) OnOpenRow(line.Opens.Value); }
-                else if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId);
-            });
+            row.RegisterCallback<ClickEvent>(e => { if (!OnButton(e.target) && OnOpenRow != null) OnOpenRow(line.Opens.Value); });
         }
 
         private static bool OnButton(IEventHandler target)

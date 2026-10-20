@@ -41,9 +41,6 @@ namespace Game.Presentation.Ui
         public Action OnMenu { get; set; }
         public Action OnAlerts { get; set; }
 
-        /// <summary>A long-press on a HUD number: its Why? key ("cash", "store").</summary>
-        public Action<string> OnWhy { get; set; }
-
         /// <summary>An urgent alert has just appeared (the bell, F08.5).</summary>
         public Action OnUrgent { get; set; }
 
@@ -118,8 +115,9 @@ namespace Game.Presentation.Ui
             bar.Add(_storeFill);
             col.Add(bar);
             _storePill.Add(col);
-            TapAndHold(_storePill, () => { if (OnStore != null) OnStore(); }, () => { if (OnWhy != null) OnWhy("store"); }, 600);
-            TapAndHold(_cashPill, () => { if (OnMoney != null) OnMoney(); }, () => { if (OnWhy != null) OnWhy("cash"); }, 600);
+            // Plain taps: a Why? opens only from its ? (ADR 0044 §3); the store's and the cash's are on their sheets.
+            _storePill.RegisterCallback<ClickEvent>(_ => { if (OnStore != null) OnStore(); });
+            _cashPill.RegisterCallback<ClickEvent>(_ => { if (OnMoney != null) OnMoney(); });
             right.Add(_storePill);
             _layer.Add(right);
 
@@ -261,7 +259,6 @@ namespace Game.Presentation.Ui
             {
                 release();
                 if (_held) { _held = false; return; }
-                if (UiKit.OnPress != null) UiKit.OnPress();
                 tap();
             });
         }

@@ -54,6 +54,7 @@ namespace Game.Presentation
         private MapVm _mapVm;
         private Hit _selected = Hit.None;
         private SheetRequest? _open;
+        private readonly List<SheetRequest> _back = new List<SheetRequest>(); // the sheets behind the open one (ADR 0044 §1)
         private string _fertiliser = "none";
 
         // Placing a hand's hut (ADR 0039 §2): the ghost's acre and the bar with Build here / Cancel.
@@ -226,7 +227,7 @@ namespace Game.Presentation
 
         private void HandleEvents(List<SimEvent> events)
         {
-            bool coins = false, produce = false, away = false, ready = false;
+            bool coins = false, produce = false, away = false, ready = false, sown = false;
             long earned = 0, closed = -1;
             foreach (SimEvent e in events) if (e is AwayAdvanceCompleted) away = true;
             foreach (SimEvent e in events)
@@ -238,6 +239,7 @@ namespace Game.Presentation
                     case MandiTripReturned r: earned += r.Net; break;
                     case DayLabourPaid d: earned += d.Amount; break;
                     case CropReady _: case BedReady _: case FruitRipe _: ready |= !away; break;
+                    case CropSown _: case TreePlanted _: sown |= !away; break;
                     case SeasonClosed c: if (!away) closed = c.Period; break;
                 }
                 switch (e)
@@ -272,6 +274,7 @@ namespace Game.Presentation
             if (away) ShowAway();
             if (produce) { _sounds.Harvest(); Haptic(); }
             if (ready) _sounds.Play("ready");
+            if (sown) _sounds.Sow();
             if (closed >= 0) _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
             if (coins)
             {
@@ -314,7 +317,38 @@ namespace Game.Presentation
             }
         }
 
+        /// <summary>A sheet on its own (from the map, the HUD, a card): nothing to go back to.</summary>
         private void OpenSheet(SheetRequest request)
+        {
+            _back.Clear();
+            Display(request);
+        }
+
+        /// <summary>A sheet opened from the open one: the back button returns to it.</summary>
+        private void Push(SheetRequest request)
+        {
+            if (_open.HasValue && _sheet.IsOpen) _back.Add(_open.Value);
+            Display(request);
+        }
+
+        private void Back()
+        {
+            if (_back.Count == 0) return;
+            SheetRequest r = _back[_back.Count - 1];
+            _back.RemoveAt(_back.Count - 1);
+            Display(r);
+        }
+
+        /// <summary>After a step, back to its hub: the way it came if the hub is behind, otherwise straight to it.</summary>
+        private void Return(SheetRequest hub)
+        {
+            int at = _back.FindLastIndex(r => r.Kind == hub.Kind && r.Id == hub.Id);
+            if (at < 0) { OpenSheet(hub); return; }
+            _back.RemoveRange(at, _back.Count - at);
+            Display(hub);
+        }
+
+        private void Display(SheetRequest request)
         {
             if (request.Kind == "ShowTile")
             {
@@ -368,6 +402,7 @@ namespace Game.Presentation
         private void OnSheetClosed()
         {
             _open = null;
+            _back.Clear();
             _selected = Hit.None;
             _map.ClearSelection();
             _fertiliser = "none";
@@ -386,7 +421,7 @@ namespace Game.Presentation
                     _safeRoot.schedule.Execute(StartPlacing);
                     return;
                 }
-                OpenSheet(action.Opens.Value);
+                Push(action.Opens.Value);
                 return;
             }
             if (action.Confirm != null)

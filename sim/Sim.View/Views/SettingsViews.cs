@@ -79,7 +79,7 @@ namespace Sim.View.Views
         public const string Sound = "sound";
         public const string Haptics = "haptics";
 
-        public static readonly int[] TextSizes = { 100, 125, 150 };
+        public static readonly int[] TextSizes = { 80, 100, 125 };
 
         /// <summary>An import row's id: this prefix and the file name.</summary>
         public const string ImportPrefix = "import:";

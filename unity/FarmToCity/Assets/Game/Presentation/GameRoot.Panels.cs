@@ -20,7 +20,8 @@ namespace Game.Presentation
 
         // ---- the settings file (spec 008 §3.13): PlayerPrefs, never in the town ----
 
-        private static int TextSize { get { return PlayerPrefs.GetInt("look.text", 100); } set { PlayerPrefs.SetInt("look.text", value); PlayerPrefs.Save(); } }
+        /// <summary>The text size in percent: 80, 100 or 125 (ADR 0044 §4); a size no longer offered (150) reads as 100.</summary>
+        private static int TextSize { get { int t = PlayerPrefs.GetInt("look.text", 100); return Array.IndexOf(SettingsIds.TextSizes, t) >= 0 ? t : 100; } set { PlayerPrefs.SetInt("look.text", value); PlayerPrefs.Save(); } }
         private static bool SoundOn { get { return PlayerPrefs.GetInt("look.sound", 1) == 1; } set { PlayerPrefs.SetInt("look.sound", value ? 1 : 0); PlayerPrefs.Save(); } }
         private static bool HapticsOn { get { return PlayerPrefs.GetInt("look.haptics", 1) == 1; } set { PlayerPrefs.SetInt("look.haptics", value ? 1 : 0); PlayerPrefs.Save(); } }
 
@@ -68,10 +69,10 @@ namespace Game.Presentation
             ApplyLookAndSound();
             if (_format != before || TextSize != size)
             {
-                // The formatter or the scale changed: a fresh HUD and Settings sheet in the new look.
+                // The formatter or the scale changed: a fresh HUD and Settings sheet in the new look, its way back kept.
                 BuildUi();
                 Refresh(false);
-                OpenSheet(new SheetRequest("Settings", 0));
+                Display(new SheetRequest("Settings", 0));
             }
             return true;
         }
@@ -92,7 +93,6 @@ namespace Game.Presentation
                 OnMoney = () => OpenSheet(new SheetRequest("Money", 0)),
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
                 OnAlerts = () => OpenSheet(new SheetRequest("Alerts", 0)),
-                OnWhy = key => ShowWhy(key, 0),
                 OnUrgent = () => _sounds.Play("urgent"),
             };
             _sheet = new SheetPresenter(_safeRoot, _tweens)
@@ -101,12 +101,12 @@ namespace Game.Presentation
                 OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); },
                 OnClosed = OnSheetClosed,
                 OnWhy = ShowWhy,
-                OnOpenRow = OpenSheet,
-                OnSlide = opening => _sounds.Play(opening ? "sheet_open" : "sheet_close"),
+                OnOpenRow = Push,
+                CanGoBack = () => _back.Count > 0,
+                OnBack = Back,
                 OkLabel = _strings.Get("action.ok"),
                 WhyLabel = _strings.Get("why.label"),
             };
-            UiKit.OnPress = () => _sounds.Play("tap");
             BuildToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
@@ -142,7 +142,7 @@ namespace Game.Presentation
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Repay":
                     Loan loan = Sim.State.Credit.Loans.Find(l => l.Id == r.Id);
-                    if (loan == null || !loan.IsOpen) { OpenSheet(new SheetRequest("Money", 0)); break; } // repaid in full
+                    if (loan == null || !loan.IsOpen) { Return(new SheetRequest("Money", 0)); break; } // repaid in full
                     _sheet.Show(Repay.Build(_ctx, r.Id), refreshOnly);
                     break;
                 case "LandLoan": _sheet.Show(LandLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
@@ -170,9 +170,9 @@ namespace Game.Presentation
             switch (r.Kind)
             {
                 case "Store": case "People": case "Hand": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": return;
-                case "Offer": OpenSheet(new SheetRequest("Good", r.Id)); return;
-                case "Borrow": case "Repay": OpenSheet(new SheetRequest("Money", 0)); return;
-                case "BuyInput": OpenSheet(new SheetRequest("BuyInputs", 0)); return;
+                case "Offer": Return(new SheetRequest("Good", r.Id)); return;
+                case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
+                case "BuyInput": Return(new SheetRequest("BuyInputs", 0)); return;
             }
             if (commands[commands.Length - 1] is Spray) return;
             _sheet.Close();

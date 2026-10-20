@@ -71,7 +71,9 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "coin", Title = s.Get("money.title") };
             vm.Lines.Add(LineVm.Header(s.Get("money.glance")));
             vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
-            vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(Reporting.NetWorth(sim).Total), "netWorth"));
+            NetWorthSnapshot worth = Reporting.NetWorth(sim);
+            vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth"));
+            vm.Lines.Add(new LineVm(s.Get("money.landPart"), ctx.Fmt.Coins(worth.LandAtMarket), "netWorth"));
             vm.Lines.Add(new LineVm(s.Get("money.soFar"), ctx.Fmt.Coins(SeasonSoFar(sim)), "seasonSoFar"));
 
             vm.Lines.Add(LineVm.Header(s.Get("money.report")));
@@ -260,6 +262,8 @@ namespace Sim.View.Views
             return loan.ArrearsInterest + loan.InterestAccrued + interest + penalty + principal;
         }
 
+        private static long NextNow(Simulation sim, Loan loan) { return System.Math.Min(NextPayment(sim, loan), CreditRules.OwedNow(sim, loan)); }
+
         public static SheetVm Build(ViewContext ctx, long loanId)
         {
             Simulation sim = ctx.Sim;
@@ -267,11 +271,12 @@ namespace Sim.View.Views
             Loan loan = sim.State.Credit.Loans.Find(x => x.Id == loanId);
             LenderDef l = sim.Config.Game.Credit.Lenders[loan.Lender];
             var vm = new SheetVm { Icon = "coin", Title = s.Get("repay.title", "lender", s.Get(l.NameKey)) };
-            long next = System.Math.Min(NextPayment(sim, loan), CreditRules.OwedNow(sim, loan)), all = CreditRules.OwedNow(sim, loan);
+            long next = NextNow(sim, loan), all = CreditRules.OwedNow(sim, loan);
             vm.Lines.Add(new LineVm(s.Get("repay.next"), ctx.Fmt.Coins(next), "loan", loanId)
-            { Action = ActionVm.Checked(ctx, "repayNext", s.Get("repay.pay"), ctx.Fmt.Coins(next), ActionKind.Primary, at => new RepayLoan(at, loanId, next)) });
+            { Action = ActionVm.Checked(ctx, "repayNext", s.Get("repay.pay"), ctx.Fmt.Coins(next), ActionKind.Primary, at => new RepayLoan(at, loanId, NextNow(sim, loan))) });
+            // Both amounts are worked out when pressed: interest accrues every second, and a sheet built earlier would leave a few paise owing.
             vm.Lines.Add(new LineVm(s.Get("repay.all"), ctx.Fmt.Coins(all), "loan", loanId)
-            { Action = ActionVm.Checked(ctx, "repayAll", s.Get("repay.pay"), ctx.Fmt.Coins(all), ActionKind.Primary, at => new RepayLoan(at, loanId, all)) });
+            { Action = ActionVm.Checked(ctx, "repayAll", s.Get("repay.pay"), ctx.Fmt.Coins(all), ActionKind.Primary, at => new RepayLoan(at, loanId, CreditRules.OwedNow(sim, loan))) });
             vm.Lines.Add(new LineVm(s.Get("repay.time"), s.Get("repay.timeNote"))
             { Action = ActionVm.Checked(ctx, "restructure", s.Get("repay.ask"), null, ActionKind.Secondary, at => new RestructureLoan(at, loanId)) });
             return vm;
