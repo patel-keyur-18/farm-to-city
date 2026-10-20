@@ -187,6 +187,9 @@ namespace Sim.View.Views
         /// <summary>A button on the row itself (the store's Sell per good), or null.</summary>
         public ActionVm Action { get; internal set; }
 
+        /// <summary>A sheet a tap on the row opens (a good's row opens the good), or null: then the row's tap opens its Why?.</summary>
+        public SheetRequest? Opens { get; internal set; }
+
         /// <summary>Skill stars shown before the value, or null.</summary>
         public StarsVm? Stars { get; internal set; }
 

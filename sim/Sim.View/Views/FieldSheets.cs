@@ -99,6 +99,15 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.resale"), ctx.Fmt.Coins(resale), "resale", tile.Id));
             vm.Actions.Add(ActionVm.Checked(ctx, "buy", ctx.Strings.Get("action.buy"), ctx.Fmt.Coins(price), ActionKind.Primary, at => new BuyParcel(at, def.Id)));
+            // With a bank loan secured by the land it buys (ADR 0028, ADR 0043 §5).
+            int bank = sim.State.Credit == null ? -1 : LandLoanSheet.Bank(sim);
+            if (bank >= 0)
+            {
+                long loan = LandLoanSheet.Loan(sim, bank, price);
+                bool can = loan >= defs.Credit.Lenders[bank].MinAmount;
+                vm.Actions.Add(new ActionVm("buyLoan", ctx.Strings.Get("land.buyLoan"), can ? ctx.Strings.Get("land.buyLoanDetail", "down", ctx.Fmt.Coins(price - loan)) : null,
+                    ActionKind.Open, can, can ? null : ctx.Strings.Get("land.noBankLoan"), null, new SheetRequest("LandLoan", tile.Id)));
+            }
             return vm;
         }
 

@@ -130,7 +130,19 @@ namespace Sim.View.Text
         // ---- quantities ----
 
         /// <summary>1,850 kg, 70.7 kg, 0.4 kg: whole kg from 100 kg, one decimal below (grams in).</summary>
-        public string Kg(long grams)
+        public string Kg(long grams) { return Mass(grams, "unit.kg"); }
+
+        /// <summary>A litre good in millilitres: 1.5 L.</summary>
+        public string Litres(long ml) { return Mass(ml, "unit.litre"); }
+
+        /// <summary>A good's quantity in its own unit: kg, litres or a count.</summary>
+        public string Quantity(Sim.Core.Definitions.GoodDef good, long q)
+        {
+            if (good.Unit == Sim.Core.Definitions.GoodUnit.Each) return Integer(q);
+            return good.Unit == Sim.Core.Definitions.GoodUnit.Litre ? Litres(q) : Kg(q);
+        }
+
+        private string Mass(long grams, string key)
         {
             BigInteger abs = grams < 0 ? -(BigInteger)grams : grams;
             string sign = grams < 0 ? Minus.ToString() : "";
@@ -141,7 +153,7 @@ namespace Sim.View.Text
                 BigInteger tenths = (abs + 50) / 100;
                 amount = (tenths / 10).ToString(CultureInfo.InvariantCulture) + "." + (tenths % 10).ToString(CultureInfo.InvariantCulture);
             }
-            return _strings.Get("unit.kg", "amount", sign + amount);
+            return _strings.Get(key, "amount", sign + amount);
         }
 
         /// <summary>5.30 /kg: two decimals.</summary>

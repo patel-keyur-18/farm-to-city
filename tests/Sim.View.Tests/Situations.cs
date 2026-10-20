@@ -88,12 +88,54 @@ namespace Sim.View.Tests
 
 namespace Sim.View.Tests
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using Sim.Core;
+    using Sim.Core.Definitions;
+    using Sim.Core.Land;
+    using Sim.View.Views;
+
     /// <summary>The Sprint 7 panels (ADR 0043) for the sweeping tests; each new sheet joins here.</summary>
     public static class Panels
     {
-        public static System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, Sim.View.Views.SheetVm>> All(Sim.View.Views.ViewContext ctx)
+        private static KeyValuePair<string, SheetVm> N(string name, SheetVm s) { return new KeyValuePair<string, SheetVm>(name, s); }
+
+        public static IEnumerable<KeyValuePair<string, SheetVm>> All(ViewContext ctx)
         {
-            yield break;
+            Simulation sim = ctx.Sim;
+            yield return N("menu", MenuSheet.Build(ctx));
+            yield return N("lands", LandsSheet.Build(ctx));
+            yield return N("money", MoneySheet.Build(ctx));
+            foreach (var r in sim.State.Finance.Reports) yield return N("report " + r.Period, ReportSheet.Build(ctx, r.Period));
+            for (int i = 0; i < sim.Config.Game.Credit.Lenders.Count; i++)
+            {
+                SheetVm amounts = BorrowSheet.Build(ctx, i, null);
+                yield return N("borrow " + i, amounts);
+                foreach (LineVm l in amounts.Lines) yield return N("borrow " + i + " " + l.Label, BorrowSheet.Build(ctx, i, l.Action.Opens.Value.Arg));
+            }
+            foreach (var loan in sim.State.Credit.Loans) if (loan.IsOpen) yield return N("repay " + loan.Id, Repay.Build(ctx, loan.Id));
+            Tile unowned = sim.State.Land.Tiles.First(t => t.Terrain == Terrain.Farm && !sim.State.Land.Parcels[t.ParcelId].Owned);
+            yield return N("land loan", LandLoanSheet.Build(ctx, unowned.Id));
+            yield return N("founder", FounderSheet.Build(ctx));
+            for (int g = 0; g < sim.Config.Game.Market.Goods.Count; g++)
+            {
+                if (sim.State.Market.InStore(g) == 0) continue;
+                yield return N("good " + g, GoodSheet.Build(ctx, g));
+                SheetVm offer = GoodSheet.Offer(ctx, g, null);
+                yield return N("offer " + g, offer);
+                foreach (LineVm l in offer.Lines) yield return N("offer " + g + " " + l.Label, GoodSheet.Offer(ctx, g, l.Action.Opens.Value.Arg));
+            }
+            SheetVm inputs = BuyInputsSheet.Build(ctx);
+            yield return N("inputs", inputs);
+            foreach (LineVm l in inputs.Lines) yield return N("input " + l.Label, BuyInputsSheet.One(ctx, (int)l.Action.Opens.Value.Id));
+            SheetVm mandi = MandiSheet.Build(ctx, null);
+            yield return N("mandi", mandi);
+            foreach (LineVm l in mandi.Lines.Where(x => x.Action != null))
+            {
+                SheetVm load = MandiSheet.Load(ctx, (int)l.Action.Opens.Value.Id, null);
+                yield return N("mandi load " + l.Label, load);
+                foreach (LineVm c in load.Lines) yield return N("mandi with " + l.Label + " " + c.Label, MandiSheet.Build(ctx, c.Action.Opens.Value.Arg));
+            }
         }
     }
 }

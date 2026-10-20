@@ -179,9 +179,11 @@ namespace Sim.View.Views
             if (l.Secured)
             {
                 Row(vm, ctx, "why.credit.land", Money(ctx, Sim.Core.Finance.Money.MulRate(c.Collateral, l.CollateralLtv)), "pct", Pct(ctx, l.CollateralLtv));
-                Row(vm, ctx, "why.credit.income", Money(ctx, Sim.Core.Finance.Money.MulRate(System.Math.Max(0, c.AverageFarmProfit), l.IncomeMultiple)));
                 Text(vm, ctx, "why.credit.inherited");
             }
+            if (l.IncomeMultiple > Fixed.Zero)
+                Row(vm, ctx, "why.credit.income", Money(ctx, Sim.Core.Finance.Money.MulRate(System.Math.Max(0, c.AverageFarmProfit), l.IncomeMultiple)));
+            if (c.EraCap > 0 && c.RawLimit > c.EraCap) Row(vm, ctx, "why.credit.cap", Money(ctx, c.EraCap));
             Row(vm, ctx, "why.credit.score", Effect(ctx, c.ScoreFactor), "score", ctx.Fmt.Integer(sim.State.Credit.Score));
             if (c.ScoreTooLow) Text(vm, ctx, "why.credit.tooLow");
             if (c.Owed > 0) Row(vm, ctx, "why.credit.owed", "−" + Money(ctx, c.Owed));
@@ -238,6 +240,20 @@ namespace Sim.View.Views
         {
             SeasonReport r = ctx.Sim.State.Finance.Reports.Find(x => x.Period == period) ?? ctx.Sim.State.Finance.Reports[ctx.Sim.State.Finance.Reports.Count - 1];
             WhyVm vm = new WhyVm { Title = ctx.Strings.Get("report." + line) };
+            if (line == "netWorth")
+            {
+                NetWorthSnapshot n = r.NetWorth;
+                vm.Value = Money(ctx, n.Total);
+                Row(vm, ctx, "why.netWorth.cash", Money(ctx, n.Cash));
+                if (n.Prepaid != 0) Row(vm, ctx, "why.netWorth.prepaid", Money(ctx, n.Prepaid));
+                Row(vm, ctx, "why.netWorth.land", Money(ctx, n.LandAtMarket));
+                Row(vm, ctx, "why.netWorth.buildings", Money(ctx, n.BuildingsAtBook));
+                if (n.TreesAtBook != 0) Row(vm, ctx, "why.netWorth.trees", Money(ctx, n.TreesAtBook));
+                Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
+                if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
+                vm.Footnote = ctx.Strings.Get("why.netWorth.lesson");
+                return vm;
+            }
             if (line == "cashFlow")
             {
                 vm.Value = Money(ctx, r.CashFlow.Closing);
@@ -255,6 +271,7 @@ namespace Sim.View.Views
                 foreach (Account a in l.Accounts) if (a == kv.Key) mine = true;
                 if (mine && kv.Value != 0) vm.Rows.Add(new WhyRowVm(ctx.Strings.Get("account." + kv.Key), Money(ctx, kv.Value)));
             }
+            if (vm.Rows.Count == 0) Text(vm, ctx, "why.report.none");
             if (line == "farmIncome" && r.HomeUse > 0)
                 Text(vm, ctx, "report.homeUse.why", "homeUse", Money(ctx, r.HomeUse), "garden", Money(ctx, r.GardenHomeUse));
             vm.Footnote = ctx.Strings.Get("why.report." + line);

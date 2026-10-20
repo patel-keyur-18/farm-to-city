@@ -23,6 +23,12 @@ namespace Sim.View.Views
                 Icon = "store", Title = ctx.Strings.Get("store.title"),
                 Subtitle = ctx.Strings.Get("store.fill", "used", ctx.Fmt.Kg(used), "capacity", ctx.Fmt.Kg(capacity)),
             };
+            // The hub (ADR 0043 §7): buying inputs ahead and the mandi trip, then one row per good (a tap opens the good's sheet).
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("store.buyInputs"), ctx.Strings.Get("store.buyInputsNote"))
+            { Action = ActionVm.Open("buyInputs", ctx.Strings.Get("action.open"), new SheetRequest("BuyInputs", 0)) });
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("store.mandi"), ctx.Strings.Get("store.mandiNote"))
+            { Action = ActionVm.Open("mandi", ctx.Strings.Get("action.open"), new SheetRequest("Mandi", 0)) });
+            int before = vm.Lines.Count;
             for (int g = 0; g < defs.Market.Goods.Count; g++)
             {
                 GoodDef good = defs.Market.Goods[g];
@@ -30,7 +36,7 @@ namespace Sim.View.Views
                 string name = ctx.Strings.Get(good.NameKey);
                 if (good.Kind != GoodKind.Produce)
                 {
-                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", Quantity(ctx, good, m.Stock[g])), "input", g) { Icon = good.Id });
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", ctx.Fmt.Quantity(good, m.Stock[g])), "input", g) { Icon = good.Id });
                     continue;
                 }
                 Fixed floor = MarketRules.Floor(sim, g);
@@ -44,7 +50,7 @@ namespace Sim.View.Views
                     : min.HasValue
                         ? ctx.Strings.Get("store.produceOffered", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered), "min", ctx.Fmt.PricePerKg(min.Value))
                         : ctx.Strings.Get("store.produceOfferedAny", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered));
-                var line = new LineVm(name, value, "price", g) { Icon = good.Id };
+                var line = new LineVm(name, value, "price", g) { Icon = good.Id, Opens = new SheetRequest("Good", g) };
                 string id = good.Id;
                 long amount = MarketRules.Value(sim, g, sell, floor);
                 // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
@@ -62,15 +68,8 @@ namespace Sim.View.Views
                     : ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sellRow"), null, ActionKind.Primary, at => new SellToTrader(at, id, room == 0 ? free : 1));
                 vm.Lines.Add(line);
             }
-            if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("store.empty");
+            if (vm.Lines.Count == before) vm.Subtitle = ctx.Strings.Get("store.empty");
             return vm;
-        }
-
-        private static string Quantity(ViewContext ctx, GoodDef good, long q)
-        {
-            // Inputs are in grams, millilitres or units; show kg, litres or a count.
-            if (good.Unit == GoodUnit.Each) return ctx.Fmt.Integer(q);
-            return ctx.Fmt.Kg(q);
         }
     }
 }
