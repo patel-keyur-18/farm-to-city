@@ -161,10 +161,12 @@ namespace Sim.View.Views
             bool capped = false;
             Fixed indexFrom = Fixed.Zero, indexTo = Fixed.Zero;
             var pests = new List<string>();
+            int becameReady = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
                 {
+                    case CropReady _: case BedReady _: case FruitRipe _: becameReady++; break;
                     case AwayAdvanceCompleted a: applied = a.AppliedSeconds; capped = a.Capped; break;
                     case MarketSales m:
                         long local = MarketRules.Value(sim, sim.Config.Game.Market.IndexOf(m.GoodId), m.LocalQuantity, m.Price);
@@ -200,7 +202,8 @@ namespace Sim.View.Views
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
             var rows = new List<LineVm>();
             vm.ReadyCount = CollectAll.ReadyCount(sim);
-            if (vm.ReadyCount > 0) rows.Add(new LineVm(s.Get("away.ready"), s.Plural("away.readyValue", vm.ReadyCount), "away", (long)AwayRow.Ready) { Icon = "basket" });
+            // Only what ripened while away is news; things already waiting before don't bring the card back (ADR 0043 §8).
+            if (becameReady > 0 && vm.ReadyCount > 0) rows.Add(new LineVm(s.Get("away.ready"), s.Plural("away.readyValue", vm.ReadyCount), "away", (long)AwayRow.Ready) { Icon = "basket" });
             foreach (KeyValuePair<long, LineVm> m in money) rows.Add(m.Value);
 
             // The people rows (US-182) after the money.

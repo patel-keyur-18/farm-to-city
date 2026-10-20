@@ -99,8 +99,13 @@ namespace Game.Presentation.Ui
             return e;
         }
 
+        /// <summary>Called on every enabled button press (the tap sound, F08.5).</summary>
+        public static Action OnPress { get; set; }
+
         public static Button MakeButton(string label, ActionLook look, Action onClick, string detail = null, bool enabled = true)
         {
+            Action click = onClick;
+            if (enabled && onClick != null) onClick = () => { if (OnPress != null) OnPress(); click(); };
             Color fill, edge, text = Color.white;
             switch (look)
             {

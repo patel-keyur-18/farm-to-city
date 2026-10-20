@@ -9,9 +9,9 @@ using UnityEngine.UIElements;
 namespace Game.Presentation.Ui
 {
     /// <summary>
-    /// The minimal HUD of the first playable (spec 008 §3.3, ADR 0038): the time strip (hold it for the developer panel), cash with
-    /// a count-up, the store fill (tap for the Store sheet) and Collect all in the bottom-left thumb corner. It draws a
-    /// <see cref="HudVm"/>; it knows no game rules.
+    /// The HUD (spec 008 §3.3, ADR 0043 §4): the time strip with the weather run (tap: the forecast; hold 3 s: the developer panel),
+    /// cash (tap: Money and loans; hold: its Why?), the store fill (tap: the Store; hold: its Why?), Collect all and the alerts
+    /// button in the bottom-left thumb corner, Menu and People bottom-right. It draws a <see cref="HudVm"/>; it knows no game rules.
     /// </summary>
     public sealed class HudPresenter
     {
@@ -19,7 +19,10 @@ namespace Game.Presentation.Ui
         private readonly StringTable _strings;
         private readonly Formatter _fmt;
         private readonly VisualElement _layer;
-        private readonly Label _date, _clock, _weather, _cash, _store;
+        private readonly Label _date, _clock, _weather, _cash, _store, _forecast, _alertCount;
+        private readonly VisualElement _alerts;
+        private int _alertsShown = -1;
+        private bool _urgentShown, _held;
         private readonly VisualElement _weatherIcon, _storeFill, _timeCard, _cashPill, _storePill, _collectHolder;
         private Button _collect;
         private readonly VisualElement _people, _badge;
@@ -32,8 +35,17 @@ namespace Game.Presentation.Ui
 
         public Action OnStore { get; set; }
         public Action OnPeople { get; set; }
-        public Action OnSettings { get; set; }
         public Action OnCollect { get; set; }
+        public Action OnForecast { get; set; }
+        public Action OnMoney { get; set; }
+        public Action OnMenu { get; set; }
+        public Action OnAlerts { get; set; }
+
+        /// <summary>A long-press on a HUD number: its Why? key ("cash", "store").</summary>
+        public Action<string> OnWhy { get; set; }
+
+        /// <summary>An urgent alert has just appeared (the bell, F08.5).</summary>
+        public Action OnUrgent { get; set; }
 
         /// <summary>The developer panel's gesture: the time strip held for three seconds (development builds only).</summary>
         public Action OnTimeHeld { get; set; }
@@ -71,11 +83,11 @@ namespace Game.Presentation.Ui
             row.Add(_clock);
             row.Add(_weather);
             _timeCard.Add(row);
+            _forecast = UiKit.Text("", 28, UiKit.Cream, UiKit.Body);
+            _timeCard.Add(_forecast);
             _layer.Add(_timeCard);
-            IVisualElementScheduledItem hold = null;
-            _timeCard.RegisterCallback<PointerDownEvent>(_ => hold = _timeCard.schedule.Execute(() => { if (OnTimeHeld != null) OnTimeHeld(); }).StartingIn(3000));
-            _timeCard.RegisterCallback<PointerUpEvent>(_ => { if (hold != null) hold.Pause(); });
-            _timeCard.RegisterCallback<PointerLeaveEvent>(_ => { if (hold != null) hold.Pause(); });
+            // A tap opens the forecast; holding for 3 seconds opens the developer panel (development builds), and then the tap is not a tap.
+            TapAndHold(_timeCard, () => { if (OnForecast != null) OnForecast(); }, () => { if (OnTimeHeld != null) OnTimeHeld(); }, 3000);
 
             // Top-right: cash, and the store under it.
             var right = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -106,16 +118,48 @@ namespace Game.Presentation.Ui
             bar.Add(_storeFill);
             col.Add(bar);
             _storePill.Add(col);
-            _storePill.RegisterCallback<ClickEvent>(_ => { if (OnStore != null) OnStore(); });
+            TapAndHold(_storePill, () => { if (OnStore != null) OnStore(); }, () => { if (OnWhy != null) OnWhy("store"); }, 600);
+            TapAndHold(_cashPill, () => { if (OnMoney != null) OnMoney(); }, () => { if (OnWhy != null) OnWhy("cash"); }, 600);
             right.Add(_storePill);
-
-            // Under the store: Settings (ADR 0041 §4), a round button with a gear until the Menu arrives in Sprint 7.
-            VisualElement gear = RoundButton(110, IconBank.Gear, 70);
-            gear.name = "Settings";
-            gear.style.marginTop = 14;
-            gear.RegisterCallback<ClickEvent>(_ => { if (OnSettings != null) OnSettings(); });
-            right.Add(gear);
             _layer.Add(right);
+
+            // Above Collect all: the alerts button, shown only when something needs the player (ADR 0043 §4).
+            _alerts = RoundButton(116, null, 0);
+            _alerts.name = "Alerts";
+            _alerts.style.position = Position.Absolute;
+            _alerts.style.left = 28; _alerts.style.bottom = 150;
+            Label bang = UiKit.Text("!", 70, UiKit.Ink, UiKit.Heading);
+            _alerts.Add(bang);
+            var alertBadge = new VisualElement { pickingMode = PickingMode.Ignore };
+            alertBadge.style.position = Position.Absolute;
+            alertBadge.style.right = -8; alertBadge.style.top = -8;
+            alertBadge.style.width = 50; alertBadge.style.height = 50;
+            alertBadge.style.backgroundColor = UiKit.WoodBar;
+            UiKit.Radius(alertBadge, 25);
+            UiKit.Border(alertBadge, 3, UiKit.WoodDark);
+            alertBadge.style.alignItems = Align.Center;
+            alertBadge.style.justifyContent = Justify.Center;
+            _alertCount = UiKit.Text("", 30, Color.white, UiKit.Heading);
+            alertBadge.Add(_alertCount);
+            _alerts.Add(alertBadge);
+            _alerts.RegisterCallback<ClickEvent>(_ => { if (OnAlerts != null) OnAlerts(); });
+            _alerts.style.display = DisplayStyle.None;
+            _layer.Add(_alerts);
+
+            // Bottom-right: the Menu (ADR 0043 §4).
+            VisualElement menu = RoundButton(150, null, 0);
+            menu.name = "Menu";
+            menu.style.position = Position.Absolute;
+            menu.style.right = 28; menu.style.bottom = 28;
+            Label bars = UiKit.Text("≡", 96, UiKit.Ink, UiKit.Heading);
+            bars.style.marginTop = -18;
+            menu.Add(bars);
+            Label menuWord = UiKit.Text(strings.Get("hud.menu"), 26, UiKit.Ink, UiKit.Heading);
+            menuWord.style.position = Position.Absolute;
+            menuWord.style.bottom = -6;
+            menu.Add(menuWord);
+            menu.RegisterCallback<ClickEvent>(_ => { if (OnMenu != null) OnMenu(); });
+            _layer.Add(menu);
 
             // Bottom-left: Collect all.
             _collectHolder = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -123,10 +167,11 @@ namespace Game.Presentation.Ui
             _collectHolder.style.left = 28; _collectHolder.style.bottom = 28;
             _layer.Add(_collectHolder);
 
-            // Bottom-right: People (ADR 0039 §8), a round wood button with a villager and a badge for waiting applicants.
+            // Beside the Menu: People (ADR 0039 §8), a shortcut with a villager and a badge for waiting applicants.
             _people = new VisualElement();
+            _people.name = "People";
             _people.style.position = Position.Absolute;
-            _people.style.right = 28; _people.style.bottom = 28;
+            _people.style.right = 198; _people.style.bottom = 28;
             _people.style.width = 150; _people.style.height = 150;
             _people.style.backgroundColor = UiKit.Sand;
             UiKit.Radius(_people, 75);
@@ -166,7 +211,7 @@ namespace Game.Presentation.Ui
 
             // HUD figures never wrap: on a phone's fractional UI scale the measured width can round a hair short, and the last
             // digit then dropped onto a hidden second line ("12:4", "4,38").
-            foreach (Label l in new[] { _date, _clock, _weather, _cash, _store })
+            foreach (Label l in new[] { _date, _clock, _weather, _cash, _store, _forecast })
             {
                 l.style.whiteSpace = WhiteSpace.NoWrap;
                 l.style.flexShrink = 0;
@@ -183,13 +228,42 @@ namespace Game.Presentation.Ui
             b.style.borderBottomWidth = 9;
             b.style.alignItems = Align.Center;
             b.style.justifyContent = Justify.Center;
-            VisualElement pic = UiKit.Icon(icon, iconSize);
-            pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
-            b.Add(pic);
+            if (icon != null)
+            {
+                VisualElement pic = UiKit.Icon(icon, iconSize);
+                pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                b.Add(pic);
+            }
             b.RegisterCallback<PointerDownEvent>(_ => b.style.scale = new Scale(new Vector3(0.92f, 0.92f, 1f)));
             b.RegisterCallback<PointerUpEvent>(_ => b.style.scale = new Scale(Vector3.one));
             b.RegisterCallback<PointerLeaveEvent>(_ => b.style.scale = new Scale(Vector3.one));
             return b;
+        }
+
+        /// <summary>A tap runs <paramref name="tap"/>; holding for <paramref name="ms"/> runs <paramref name="hold"/> instead.</summary>
+        private void TapAndHold(VisualElement e, Action tap, Action hold, long ms)
+        {
+            // The hold fires only while the finger is still down on this element: any up, cancel, leave or click ends the press.
+            bool down = false;
+            IVisualElementScheduledItem timer = null;
+            Action release = () => { down = false; if (timer != null) timer.Pause(); };
+            e.RegisterCallback<PointerDownEvent>(_ =>
+            {
+                down = true;
+                _held = false;
+                if (timer != null) timer.Pause();
+                timer = e.schedule.Execute(() => { if (!down) return; down = false; _held = true; hold(); }).StartingIn(ms);
+            });
+            e.RegisterCallback<PointerUpEvent>(_ => release());
+            e.RegisterCallback<PointerCancelEvent>(_ => release());
+            e.RegisterCallback<PointerLeaveEvent>(_ => release());
+            e.RegisterCallback<ClickEvent>(_ =>
+            {
+                release();
+                if (_held) { _held = false; return; }
+                if (UiKit.OnPress != null) UiKit.OnPress();
+                tap();
+            });
         }
 
         /// <summary>The element's centre in screen pixels (y up), for flying icons to land on it.</summary>
@@ -211,7 +285,20 @@ namespace Game.Presentation.Ui
                 _weatherId = hud.WeatherId;
                 _weatherIcon.style.backgroundImage = new StyleBackground(IconBank.Weather(hud.WeatherId));
             }
+            _forecast.text = hud.ForecastText;
             _store.text = _strings.Get("hud.store") + " " + hud.StoreText;
+            if (_alertsShown != hud.AlertCount || _urgentShown != hud.AlertUrgent)
+            {
+                bool newUrgent = hud.AlertUrgent && !_urgentShown && _alertsShown >= 0;
+                _alertsShown = hud.AlertCount;
+                _urgentShown = hud.AlertUrgent;
+                _alertCount.text = hud.AlertCount.ToString();
+                _alerts.style.display = hud.AlertCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                _alerts.style.backgroundColor = hud.AlertUrgent ? UiKit.Red : UiKit.Sand;
+                UiKit.Border(_alerts, 5, hud.AlertUrgent ? UiKit.RedDark : UiKit.SandDark);
+                _alerts.style.borderBottomWidth = 9;
+                if (newUrgent) { Bounce(_alerts); if (OnUrgent != null) OnUrgent(); }
+            }
             _storeFill.style.width = Length.Percent(hud.StorePercent);
             _storeFill.style.backgroundColor = hud.StorePercent >= 90 ? UiKit.Red : hud.StorePercent >= 70 ? UiKit.Sand : UiKit.Green;
 

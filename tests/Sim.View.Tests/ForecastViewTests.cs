@@ -77,9 +77,11 @@ namespace Sim.View.Tests
             ViewContext ctx = Ctx(sim);
             SheetVm sheet = ForecastView.Sheet(ctx);
             var runs = ForecastView.Runs(ctx);
-            Assert.That(sheet.Lines.Count(l => !l.IsHeader), Is.EqualTo(runs.Count));
-            Assert.That(sheet.Lines.Where(l => !l.IsHeader).All(l => l.Icon.StartsWith("weather_")), Is.True);
-            Assert.That(sheet.Lines.Where(l => !l.IsHeader).Select(l => l.Value).Where(v => v.Contains("likely")).Count(), Is.EqualTo(runs.Count(r => r.Likely)));
+            Assert.That(sheet.Lines[0].WhyKey, Is.EqualTo("calendar"), "the date first, with its Why?");
+            var rows = sheet.Lines.Skip(2).ToList();
+            Assert.That(rows.Count, Is.EqualTo(runs.Count));
+            Assert.That(rows.All(l => l.Icon.StartsWith("weather_")), Is.True);
+            Assert.That(rows.Select(l => l.Value).Where(v => v.Contains("likely")).Count(), Is.EqualTo(runs.Count(r => r.Likely)));
             Assert.That(sheet.Lines.Where(l => l.Value != null && l.Value.Contains("likely")).All(l => l.WhyKey == "forecast"), Is.True);
         }
     }

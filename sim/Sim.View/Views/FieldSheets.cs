@@ -104,9 +104,13 @@ namespace Sim.View.Views
             if (bank >= 0)
             {
                 long loan = LandLoanSheet.Loan(sim, bank, price);
-                bool can = loan >= defs.Credit.Lenders[bank].MinAmount;
+                // The land itself must be buyable (next to yours, …); only the cash is what the loan solves.
+                RejectReason why = sim.Preview(new BuyParcel(ctx.Now, def.Id)).Reason;
+                bool landOk = why == RejectReason.None || why == RejectReason.InsufficientFunds;
+                bool can = landOk && loan >= defs.Credit.Lenders[bank].MinAmount;
+                string reason = !landOk ? ctx.Reject(why) : can ? null : ctx.Strings.Get("land.noBankLoan");
                 vm.Actions.Add(new ActionVm("buyLoan", ctx.Strings.Get("land.buyLoan"), can ? ctx.Strings.Get("land.buyLoanDetail", "down", ctx.Fmt.Coins(price - loan)) : null,
-                    ActionKind.Open, can, can ? null : ctx.Strings.Get("land.noBankLoan"), null, new SheetRequest("LandLoan", tile.Id)));
+                    ActionKind.Open, can, reason, null, new SheetRequest("LandLoan", tile.Id)));
             }
             return vm;
         }

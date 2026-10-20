@@ -478,6 +478,22 @@ Eleven gaps decided with the owner, each as recommended (text size moved into th
 7. **Sounds:** seven Kenney CC0 sounds (§3.13).
 8. **Sprint 7 is 25 points;** US-087 is cut first if time runs short.
 
+### Implementation notes (Sprint 7, 2026-10-20)
+
+None of these changes a rule or a lesson.
+
+1. **`WhyView`** (`sim/Sim.View/Views/WhyView*.cs`): one source per *Why?* key, chosen by a row's `WhyKey` and `WhyId` (a tile, slot, bed, good, lender, loan, hand or period). `WhyView.Effect` turns a factor into "N% more / less" or "no change"; sums show coins. The coverage sweep (`WhyTests.EveryNumberHasWhy`, AC-15) builds every sheet in four seeded situations (a new game; a growing farm with a hand, day labourers, a garden bed and a mango; the same farm ready with goods on offer; a later game with a moneylender loan and a closed season) and fails on any row whose value has a digit and no source, or on a factor in a *Why?* (a decimal with no unit after it). **Out of the sweep:** a button's detail ("Sell 770 kg: 4,081 coins") repeats a number its row explains; the Import list's file rows are file facts, not game numbers.
+2. **A row that opens a sheet** (`LineVm.Opens`, a good in the Store) opens it on a tap; its **?** opens the *Why?*. Every other row with a *Why?* opens it on a tap anywhere on the row. A long-press always opens the *Why?*.
+3. **The forecast sheet** starts with Today's date (its *Why?* is the calendar), so the HUD's date and clock have a *Why?* one tap away; the time card's tap opens the sheet and its 3-second hold the developer panel.
+4. **Panels** (`MoneyViews.cs`, `FounderMarketViews.cs`, `AlertsAwayViews.cs`): navigation through `SheetRequest` kinds (Menu, Lands, ShowTile, Money, Report, Borrow, Repay, LandLoan, Founder, Good, Offer, BuyInputs, BuyInput, Mandi, MandiLoad, Forecast, Alerts) with the step so far in `Arg` (the amount to borrow, the quantity to offer, the mandi loads). A loan's term rows are projected by `BorrowSheet.Plan` with the sim's own interest rounding (interest only at a part-season close); their payments repay the principal exactly (AC-17).
+5. **Buy inputs:** field seed as "To sow N acres" (one sowing's seed), garden seed as bed sowings, fertiliser and spray as "A season on N acres"; each row says which season the input is cheapest in. Saplings are bought by planting (spec 003), medicine on the founder's sheet.
+6. **After a command** a sheet closes when the work is done; the Store, People, a hand, the founder, Money, a good, Alerts and Settings stay open; an offer returns to its good, a loan or repayment to Money and loans, a purchase to Buy inputs.
+7. **Collect all into a full store** prices the leftovers on a copy of the town (`CollectAllRest`), so the prompt's coins are exactly what the trader pays (AC-11); the commands are rebuilt at the moment the player taps Sell.
+8. **Alerts** have no dismissals in Phase 1: an alert lasts while its condition holds (each has an action that clears it). Dismissals join if playtesters ask.
+9. **Sounds** (`Motion/Sounds.cs`): four voices, the same clip skipped within 0.09 s; the button tap through `UiKit.OnPress`. **Haptics and Reduce Motion** through `Plugins/iOS/FarmToCityNative.mm` and `Game.Services.NativeFeel` (no effect in the Editor).
+10. **Text size** scales the UI panel (`PanelSettings.scale` 1.0 / 1.25 / 1.5); the HUD and sheets are rebuilt when it or the number format changes.
+11. **Save schema 2:** the weather state gained the current run's start (spec 001 §3.6); Sprint 6 saves are refused and kept (ADR 0041 §2).
+
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

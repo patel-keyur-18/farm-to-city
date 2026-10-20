@@ -47,13 +47,35 @@ namespace Sim.View.Tests
             TakeLoan take = Cmd<TakeLoan>(terms.Lines[1].Action, sim);
             Assert.That((take.LenderId, take.Amount, take.TermSeasons), Is.EqualTo(("moneylender", 20_000 * Money.Coin, 2)));
 
+            // Just after borrowing, the next payment is the first close's interest (a part season: interest only), as the plan said.
+            Assert.That(sim.Execute(take).Accepted, Is.True);
+            Loan loan = sim.State.Credit.Loans.Last();
+            Assert.That(Repay.NextPayment(sim, loan), Is.EqualTo(BorrowSheet.Plan(sim, 0, 20_000 * Money.Coin, 2).Payments[0]).Within(1));
+            Assert.That(Repay.NextPayment(sim, loan), Is.GreaterThan(0));
+
             // A longer term costs more interest in all (the lesson).
             long amount = 20_000 * Money.Coin;
             Assert.That(BorrowSheet.Plan(sim, 0, amount, 4).TotalInterest, Is.GreaterThan(BorrowSheet.Plan(sim, 0, amount, 1).TotalInterest));
 
+            // Buying with a bank loan needs land you could buy: it shares Buy's reason unless only cash is short.
+            int checkedLand = 0;
+            foreach (var tile in sim.State.Land.Tiles.Where(t => !sim.State.Land.Parcels[t.ParcelId].Owned))
+            {
+                SheetVm land = FieldSheets.ForTile(ctx, tile.Id);
+                ActionVm buy = land.Actions.Single(x => x.Id == "buy"), viaLoan = land.Actions.Single(x => x.Id == "buyLoan");
+                if (!buy.Enabled && buy.DisabledReason != ctx.Reject(RejectReason.InsufficientFunds))
+                {
+                    Assert.That(viaLoan.Enabled, Is.False);
+                    Assert.That(viaLoan.DisabledReason, Is.EqualTo(buy.DisabledReason));
+                    checkedLand++;
+                }
+            }
+            Assert.That(checkedLand, Is.GreaterThan(0), "some land is not next to the farm");
+
             // The founder: four plans, four hour options, four day-labour shares, the switch and medicine.
             SheetVm f = FounderSheet.Build(ctx);
-            Assert.That(f.Lines.Where(l => l.Action != null && l.Action.Id.StartsWith("plan:")).Count(), Is.EqualTo(4));
+            Assert.That(f.Lines.Where(l => l.Action != null && l.Action.Id.StartsWith("plan:")).Count(), Is.EqualTo(3), "three plans to choose");
+            Assert.That(f.Lines.Single(l => l.Label == "Bare minimum").Action, Is.Null, "subsistence is never chosen (ADR 0034), only explained");
             Assert.That(f.Lines.Where(l => l.Action != null && l.Action.Id.StartsWith("hours:")).Count(), Is.EqualTo(4));
             Assert.That(f.Lines.Where(l => l.Action != null && l.Action.Id.StartsWith("share:")).Count(), Is.EqualTo(4));
             ActionVm chosen = f.Lines.Single(l => l.Action != null && l.Action.Id == "share:25").Action;

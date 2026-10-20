@@ -91,6 +91,10 @@ namespace Sim.View.Tests
             var money = vm.Lines.Where(l => l.Icon == "coin").Select(l => long.Parse(new string(l.Value.Where(char.IsDigit).ToArray()))).ToList();
             Assert.That(money, Is.Ordered.Descending);
 
+            // Ready things that were already waiting are not news: an absence with nothing new brings no card.
+            Assert.That(CollectAll.ReadyCount(sim), Is.GreaterThan(0));
+            Assert.That(AwayCard.Build(ctx, new SimEvent[] { new AwayAdvanceCompleted(sim.State.Clock.SimTime, sim.State.Clock.SimTime - 600, sim.State.Clock.SimTime, 600, 600, false) }), Is.Null);
+
             // Nothing happened: no card.
             Assert.That(AwayCard.Build(ViewKit2.Context(ViewKit.NewGame()), new SimEvent[] { new AwayAdvanceCompleted(70, 10, 70, 60, 60, false) }), Is.Null);
         }
@@ -112,6 +116,8 @@ namespace Sim.View.Tests
             foreach (Command c in rest.Commands) Assert.That(full.Execute(c).Accepted, Is.True);
             Assert.That(full.State.Ledger.Cash - cash, Is.EqualTo(rest.Coins), "exactly the floor value");
             Assert.That(CollectAll.ReadyCount(full), Is.EqualTo(0));
+            CardVm card = Cards.SellRest(ViewKit2.Context(full), rest);
+            Assert.That(card.Text, Does.Contain(ViewKit2.Context(full).Fmt.Coins(rest.Coins)));
             Assert.That(CollectAllRest.Build(full), Is.Null);
         }
     }

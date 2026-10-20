@@ -134,50 +134,9 @@ namespace Game.Presentation
             _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
             _input.Focus(3.5f, 2.5f); // the inherited parcels
 
-            _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
-            _hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)), OnSettings = OpenSettings };
-            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
-            BuildToast();
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
-            {
-                Sim = () => Sim,
-                Advance = (s, mode) => { Sim.Execute(new DebugAdvance(s, mode)); AfterCommands(); },
-                Snapshot = () => _snapshot = Sim.State.Clone(),
-                Restore = RestoreSnapshot,
-                ToggleFormat = () => { _format = _format == NumberFormat.Indian ? NumberFormat.Western : NumberFormat.Indian; _fmt = new Formatter(_strings, _format); _ctx = new ViewContext(Sim, _strings, _fmt, _ui); _hud = RebuildHud(); Refresh(false); },
-                ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
-                Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
-                Visibility = v => _hud.SetVisible(v),
-                Borrow = () => { CommandResult r = Sim.Execute(new TakeLoan(Sim.State.Clock.SimTime, "moneylender", 20_000 * 100, 4)); AfterCommands(); return "Loan: " + (r.Accepted ? "taken" : _ctx.Reject(r.Reason)); },
-            });
-            _hud.OnTimeHeld = () => _dev.Open();
-#endif
-        }
-
-        private HudPresenter RebuildHud()
-        {
-            // The formatter changed: a new HUD (the old layer is dropped with the safe root's children it owned).
-            _safeRoot.Clear();
-            _fx = new Fx(_safeRoot, _tweens, _ui.MaxFlyingPerEvent, _ui.MaxFlyingTotal);
-            var hud = new HudPresenter(_safeRoot, _tweens, _strings, _fmt) { OnStore = () => OpenSheet(new SheetRequest("Store", 0)), OnCollect = CollectAll, OnPeople = () => OpenSheet(new SheetRequest("People", 0)), OnSettings = OpenSettings };
-            _sheet = new SheetPresenter(_safeRoot, _tweens) { OnAction = OnSheetAction, OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); }, OnClosed = OnSheetClosed };
-            BuildToast();
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
-            {
-                Sim = () => Sim, Advance = (s, mode) => { Sim.Execute(new DebugAdvance(s, mode)); AfterCommands(); }, Snapshot = () => _snapshot = Sim.State.Clone(),
-                Restore = RestoreSnapshot,
-                ToggleFormat = () => { _format = _format == NumberFormat.Indian ? NumberFormat.Western : NumberFormat.Indian; _fmt = new Formatter(_strings, _format); _ctx = new ViewContext(Sim, _strings, _fmt, _ui); _hud = RebuildHud(); Refresh(false); },
-                ToggleReducedMotion = () => _tweens.ReducedMotion = !_tweens.ReducedMotion,
-                Status = () => "number format " + _format + " · reduced motion " + _tweens.ReducedMotion + " · snapshot " + (_snapshot == null ? "none" : "saved"),
-                Visibility = v => _hud.SetVisible(v),
-                Borrow = () => { CommandResult r = Sim.Execute(new TakeLoan(Sim.State.Clock.SimTime, "moneylender", 20_000 * 100, 4)); AfterCommands(); return "Loan: " + (r.Accepted ? "taken" : _ctx.Reject(r.Reason)); },
-            });
-            hud.OnTimeHeld = () => _dev.Open();
-#endif
-            return hud;
+            _sounds = new Sounds(gameObject);
+            ApplyLookAndSound();
+            BuildUi();
         }
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -256,6 +215,7 @@ namespace Game.Presentation
 
         private void Refresh(bool animate)
         {
+            _ctx.LocalNow = DateTime.Now;
             _mapVm = MapView.Build(_ctx);
             _map.Refresh(_mapVm, animate);
             _hud.Refresh(HudView.Build(_ctx), animate);
@@ -266,9 +226,20 @@ namespace Game.Presentation
 
         private void HandleEvents(List<SimEvent> events)
         {
-            bool coins = false, produce = false, away = false;
+            bool coins = false, produce = false, away = false, ready = false;
+            long earned = 0, closed = -1;
+            foreach (SimEvent e in events) if (e is AwayAdvanceCompleted) away = true;
             foreach (SimEvent e in events)
             {
+                switch (e)
+                {
+                    case SoldToTrader t: earned += t.Amount; break;
+                    case MarketSales m: earned += m.Amount; break;
+                    case MandiTripReturned r: earned += r.Net; break;
+                    case DayLabourPaid d: earned += d.Amount; break;
+                    case CropReady _: case BedReady _: case FruitRipe _: ready |= !away; break;
+                    case SeasonClosed c: if (!away) closed = c.Period; break;
+                }
                 switch (e)
                 {
                     case CropHarvested h:
@@ -296,12 +267,16 @@ namespace Game.Presentation
                     case HandHired _: Toast(_strings.Get("toast.handHired")); break;
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
-                    case AwayAdvanceCompleted _: away = true; break;
                 }
             }
             if (away) ShowAway();
+            if (produce) { _sounds.Harvest(); Haptic(); }
+            if (ready) _sounds.Play("ready");
+            if (closed >= 0) _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
             if (coins)
             {
+                _sounds.CoinsIn(earned / 100);
+                Haptic();
                 Vector2 from = new Vector2(Screen.width * 0.5f, Screen.height * 0.45f);
                 _fx.Fly(IconBank.Coin, from, _hud.ScreenCentre(_hud.CashTarget), 4, _hud.BounceCash);
             }
@@ -326,7 +301,7 @@ namespace Game.Presentation
             _map.Bounce(hit);
             switch (hit.Kind)
             {
-                case HitKind.Hut: OpenSheet(new SheetRequest("Store", 0)); break;
+                case HitKind.Hut: OpenSheet(new SheetRequest("Founder", 0)); break; // You and your family (ADR 0043 §6)
                 case HitKind.HandHut:
                 {
                     Hand who = hit.Id > 0 ? Sim.State.People.Hands.Find(h => h.HutId == hit.Id) : null;
@@ -341,6 +316,15 @@ namespace Game.Presentation
 
         private void OpenSheet(SheetRequest request)
         {
+            if (request.Kind == "ShowTile")
+            {
+                // From the Menu's land list: pan to the parcel and open its sheet.
+                _selected = new Hit(HitKind.Tile, request.Id);
+                _map.Select(_selected, _mapVm);
+                request = new SheetRequest("Tile", request.Id);
+            }
+            if (request.Kind == "Settings") _townFiles = _saves.TownFiles().Count;
+            _ctx.LocalNow = DateTime.Now;
             _open = request;
             ShowCurrentSheet(refreshOnly: false);
             if (_selected.Kind != HitKind.None) _input.Reveal(_map.WorldOf(_selected));
@@ -371,6 +355,7 @@ namespace Game.Presentation
                     _sheet.Show(ImportSheet.Build(_ctx, _importFiles, Info()), refreshOnly);
                     break;
                 case "Sow": ShowSow((int)r.Id, refreshOnly); break;
+                default: ShowPanel(r, refreshOnly); break;
             }
         }
 
@@ -390,6 +375,7 @@ namespace Game.Presentation
 
         private void OnSheetAction(ActionVm action)
         {
+            if (action.Id == Alerts.CollectId) { _sheet.Close(); CollectAll(); return; }
             if (!action.Opens.HasValue && action.Confirm == null && SettingsAction(action)) return;
             if (action.Opens.HasValue)
             {
@@ -414,6 +400,7 @@ namespace Game.Presentation
 
         private void Run(Command[] commands)
         {
+            long cashBefore = Sim.State.Ledger.Cash;
             foreach (Command command in commands)
             {
                 CommandResult result = Sim.Execute(command);
@@ -424,11 +411,9 @@ namespace Game.Presentation
                     return;
                 }
             }
+            if (Sim.State.Ledger.Cash < cashBefore) _sounds.Play("coins_out");
             AfterCommands();
-            // After the work is done the sheet closes (Hay Day style). The store, People and a hand's sheet stay open for the next
-            // choice (sell another good, interview then offer), and a spray keeps its sheet.
-            string kind = _open.HasValue ? _open.Value.Kind : null;
-            if (kind != null && kind != "Store" && kind != "People" && kind != "Hand" && !(commands[commands.Length - 1] is Spray)) _sheet.Close();
+            AfterRun(commands);
         }
 
         // ---- placing a hand's hut (ADR 0039 §2) ----
@@ -489,47 +474,27 @@ namespace Game.Presentation
 
         private void ShowAway()
         {
-            AwayVm vm = AwayView.People(_ctx, Sim.LastAwayReport);
-            if (vm == null) return;
-            var veil = new VisualElement();
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
-            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.4f);
-            veil.style.justifyContent = Justify.Center;
-            veil.style.alignItems = Align.Center;
-            VisualElement card = UiKit.Panel(36);
-            UiKit.Padding(card, 22, 36);
-            card.style.width = Length.Percent(60);
-            card.Add(UiKit.Heading1(vm.Title, 54));
-            card.Add(UiKit.Text(vm.Subtitle, 30, UiKit.Wood, UiKit.Body));
-            foreach (LineVm l in vm.Lines)
-            {
-                var row = new VisualElement { pickingMode = PickingMode.Ignore };
-                row.style.flexDirection = FlexDirection.Row;
-                row.style.justifyContent = Justify.SpaceBetween;
-                row.style.paddingTop = row.style.paddingBottom = 6;
-                row.style.borderBottomWidth = 2;
-                row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
-                row.Add(UiKit.Text(l.Label, 31, UiKit.Ink, UiKit.Heading));
-                Label v = UiKit.Text(l.Value, 31, UiKit.Ink, UiKit.Body);
-                v.style.unityTextAlign = TextAnchor.MiddleRight;
-                v.style.flexShrink = 1;
-                row.Add(v);
-                card.Add(row);
-            }
-            card.Add(UiKit.MakeButton(_strings.Get("action.close"), ActionLook.Primary, () => _safeRoot.Remove(veil)));
-            veil.Add(card);
-            _safeRoot.Add(veil);
-            card.style.translate = new Translate(0, -120);
-            _tweens.Run(card, 0.35f, Ease.OutBack, k => card.style.translate = new Translate(0, -120 * (1f - k)));
+            AwayCard.Vm vm = AwayCard.Build(_ctx, Sim.LastAwayReport);
+            if (vm == null) return; // nothing happened: no card (ADR 0043 §8)
+            _sheet.Away(vm, _strings.Plural("hud.collect", vm.ReadyCount), _strings.Get("away.seeReport"), _strings.Get("action.close"),
+                _strings.Plural("away.more", vm.More.Count), CollectAll, () => OpenSheet(new SheetRequest("Report", vm.ReportPeriod)));
         }
 
         private void CollectAll()
         {
-            int done = 0;
-            foreach (Command c in CollectAllCommands()) if (Sim.Execute(c).Accepted) done++;
-            if (done == 0) Toast(_ctx.Reject(RejectReason.StoreFull));
+            foreach (Command c in CollectAllCommands()) Sim.Execute(c);
             AfterCommands();
+            // What didn't fit: one prompt to sell the rest to the trader, never without asking (spec 008 §3.9).
+            CollectRestVm rest = CollectAllRest.Build(Sim);
+            if (rest == null) return;
+            ShowCard(Cards.SellRest(_ctx, rest), id =>
+            {
+                if (id != SettingsIds.Yes) return;
+                CollectRestVm now = CollectAllRest.Build(Sim); // stamped now: a second may have passed since the card opened
+                if (now == null) return;
+                foreach (Command c in now.Commands) Sim.Execute(c);
+                AfterCommands();
+            });
         }
 
         private List<Command> CollectAllCommands() { return ViewCollect.Commands(Sim, Sim.State.Clock.SimTime); }

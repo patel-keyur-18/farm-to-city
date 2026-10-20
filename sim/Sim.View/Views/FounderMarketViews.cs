@@ -24,7 +24,7 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "person_founder", Title = s.Get("founder.title"), Subtitle = s.Get("founder.subtitle") };
 
             vm.Lines.Add(LineVm.Header(s.Get("founder.today")));
-            vm.Lines.Add(new LineVm(s.Get("founder.work"), f.SickToday ? s.Get("founder.sick") : s.Get("why.hoursADay", "n", ctx.Fmt.Decimal1(FounderRules.LabourRate(sim))), "labour"));
+            vm.Lines.Add(new LineVm(s.Get("founder.work"), f.SickToday ? s.Get("founder.sick") : s.Get("founder.workValue", "n", ctx.Fmt.Decimal1(FounderRules.LabourRate(sim))), "labour"));
             vm.Lines.Add(new LineVm(s.Get("founder.health"), ctx.Rating(f.Health), "health"));
             vm.Lines.Add(new LineVm(s.Get("founder.tiredness"), ctx.Rating(Fixed.One - f.Fatigue), "fatigue"));
 
@@ -33,10 +33,19 @@ namespace Sim.View.Views
             for (int i = 0; i < farm.DietPlans.Count; i++)
             {
                 DietPlanDef p = farm.DietPlans[i];
-                string value = s.Get("founder.planValue", "cost", ctx.Fmt.Coins(MarketRules.Indexed(sim, p.CostPerSeason)), "work", WhyView.Effect(ctx, p.Nutrition));
-                if (winter && p.Id == "subsistence") value += "\n" + s.Get("founder.noWarmClothes");
+                Fixed n = p.Nutrition;
+                string work = n == Fixed.One ? s.Get("founder.fullWork") : s.Get("founder.work.effect", "effect", WhyView.Effect(ctx, n));
                 string id = p.Id;
                 bool current = f.DietPlan == i;
+                if (p.Id == DietPlanDef.SubsistenceId)
+                {
+                    // Never chosen by the player (ADR 0034): the household falls back to it when the season's food can't be paid.
+                    string note = s.Get(current ? "founder.subsistenceNow" : "founder.subsistence", "work", work);
+                    if (winter) note += "\n" + s.Get("founder.noWarmClothes");
+                    vm.Lines.Add(new LineVm(s.Get(p.NameKey), note, "diet", i));
+                    continue;
+                }
+                string value = s.Get("founder.planValue", "cost", ctx.Fmt.Coins(MarketRules.Indexed(sim, p.CostPerSeason)), "work", work);
                 vm.Lines.Add(new LineVm(s.Get(p.NameKey), value, "diet", i)
                 {
                     Action = current ? Chosen(ctx, "plan:" + id) : ActionVm.Checked(ctx, "plan:" + id, s.Get("action.choose"), null, ActionKind.Primary, at => new SetDietPlan(at, id)),
@@ -298,7 +307,7 @@ namespace Sim.View.Views
             long net = gross - commission - hire;
             vm.Lines.Add(LineVm.Header(s.Get("mandi.sum")));
             vm.Lines.Add(new LineVm(s.Get("mandi.atMandi"), ctx.Fmt.Coins(gross), "mandi", 0));
-            vm.Lines.Add(new LineVm(s.Get("mandi.commission"), "−" + ctx.Fmt.Coins(commission), "mandi", 1));
+            vm.Lines.Add(new LineVm(s.Get("mandi.commission"), (commission > 0 ? "−" : "") + ctx.Fmt.Coins(commission), "mandi", 1));
             vm.Lines.Add(new LineVm(s.Get("mandi.hire"), "−" + ctx.Fmt.Coins(hire), "mandi", 2));
             vm.Lines.Add(new LineVm(s.Get("mandi.time"), s.Get("mandi.timeValue"), "mandi", 3));
             vm.Lines.Add(new LineVm(s.Get("mandi.youGet"), ctx.Fmt.Coins(net), "mandi", 0));
@@ -318,7 +327,7 @@ namespace Sim.View.Views
             GoodDef good = sim.Config.Game.Market.Goods[g];
             long free = sim.State.Market.InStore(g) - sim.State.Market.OnOffer(g);
             Dictionary<int, long> loads = Parse(arg);
-            var vm = new SheetVm { Icon = good.Id, Title = s.Get("mandi.loadTitle", "good", s.Get(good.NameKey)) };
+            var vm = new SheetVm { Icon = good.Id, Title = s.Get("mandi.loadTitle", "good", s.Get(good.NameKey).ToLowerInvariant()) };
             var seen = new List<long>();
             foreach (long l in Loads)
             {

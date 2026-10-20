@@ -175,6 +175,16 @@ namespace Sim.View.Views
     /// <summary>The cards of spec 007 §7 and ADR 0041.</summary>
     public static class Cards
     {
+        /// <summary>Collect all into a full store (spec 008 §3.9): what didn't fit, offered to the trader for exactly what it fetches.</summary>
+        public static CardVm SellRest(ViewContext ctx, CollectRestVm rest)
+        {
+            var s = ctx.Strings;
+            var c = new CardVm { Title = s.Get("card.sellRestTitle"), Text = s.Get("card.sellRestText", "qty", ctx.Fmt.Kg(rest.Grams), "amount", ctx.Fmt.Coins(rest.Coins)) };
+            c.Buttons.Add(new CardButton(SettingsIds.Yes, s.Get("card.sellRest"), ActionKind.Primary));
+            c.Buttons.Add(new CardButton(SettingsIds.Cancel, s.Get("card.leaveIt"), ActionKind.Secondary));
+            return c;
+        }
+
         /// <summary>A new game or an import replaces the town for good (ADR 0023): export it first, replace, or cancel.</summary>
         public static CardVm Replace(ViewContext ctx, string importName = null)
         {

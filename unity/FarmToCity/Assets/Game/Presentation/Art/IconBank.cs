@@ -18,6 +18,13 @@ namespace Game.Presentation.Art
         /// <summary>A good's icon: produce by its id, seeds and saplings by kind, the inputs by name.</summary>
         public static Sprite Good(string goodId)
         {
+            if (goodId.StartsWith("weather_", System.StringComparison.Ordinal)) return Weather(goodId.Substring(8));
+            if (goodId == "coin") return Coin;
+            if (goodId == "basket") return Basket;
+            if (goodId == "sack") return Sack;
+            if (goodId == "gear") return Gear;
+            if (goodId == "sign") return SpriteBank.Sign;
+            if (goodId.StartsWith("person_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId + "_front") ?? Basket;
             if (goodId.StartsWith("seed_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_seed");
             if (goodId.StartsWith("sapling_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_sapling");
             if (goodId == "fertiliser_chemical") return SpriteBank.Rendered("icon_fertiliser");

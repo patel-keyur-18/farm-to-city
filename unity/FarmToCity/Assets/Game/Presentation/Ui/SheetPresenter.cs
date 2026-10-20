@@ -31,6 +31,15 @@ namespace Game.Presentation.Ui
 
         public Action OnClosed { get; set; }
 
+        /// <summary>A row's Why? was asked for (its ? chip, a tap on a row that opens nothing, or a long-press): key and id.</summary>
+        public Action<string, long> OnWhy { get; set; }
+
+        /// <summary>A row that opens a sheet was tapped (a good in the Store).</summary>
+        public Action<SheetRequest> OnOpenRow { get; set; }
+
+        /// <summary>A sheet slid in (true) or out (false): the swish (F08.5).</summary>
+        public Action<bool> OnSlide { get; set; }
+
         public bool IsOpen { get { return _sheet != null && !_closing; } }
 
         public SheetPresenter(VisualElement root, Tweens tweens)
@@ -89,15 +98,23 @@ namespace Game.Presentation.Ui
                 case "hut": return SpriteBank.Rendered("hut") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
-                case "store": return IconBank.Sack;
+                case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
+                case "coin": return IconBank.Coin;
+                case "menu": case "alert": case "cart": return IconBank.Basket;
+                case "person_founder": return SpriteBank.Rendered("person_founder_front");
+                case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
+                case "compost": case "fertiliser_chemical": case "spray": case "spinach": case "coriander":
+                    return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
                 case "potato": case "radish": case "wheat": case "rice": case "lentils": return SpriteBank.Crop(icon, CropStage.Growing3);
-                default: return SpriteBank.Bed(icon, CropStage.Growing3);
+                default:
+                    if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
+                    return SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }
 
@@ -130,6 +147,7 @@ namespace Game.Presentation.Ui
             _holder.Add(sheet);
             if (!had)
             {
+                if (OnSlide != null) OnSlide(true);
                 sheet.style.translate = new Translate(0, Length.Percent(110));
                 _tweens.Run(sheet, 0.25f, Ease.OutCubic, k => sheet.style.translate = new Translate(0, Length.Percent((1f - k) * 110f)));
             }
@@ -208,6 +226,7 @@ namespace Game.Presentation.Ui
         {
             if (_sheet == null || _closing) return;
             _closing = true;
+            if (OnSlide != null) OnSlide(false);
             VisualElement s = _sheet;
             _tweens.Run(s, 0.18f, Ease.InCubic, k => s.style.translate = new Translate(0, Length.Percent(k * 110f)), () =>
             {
@@ -258,12 +277,15 @@ namespace Game.Presentation.Ui
             row.style.paddingTop = row.style.paddingBottom = 6;
             row.style.borderBottomWidth = 2;
             row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
+            Tappable(row, line);
             if (line.Action == null)
             {
                 row.Add(WithIcon(line.Icon, 56, UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body)));
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
                 v.style.unityTextAlign = TextAnchor.MiddleRight;
                 v.style.flexShrink = 1;
+                v.style.flexGrow = 1; // right-aligned against the ? chip, not floating mid-row
+                v.style.marginLeft = 24;
                 if (line.Stars.HasValue)
                 {
                     var right = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -274,6 +296,7 @@ namespace Game.Presentation.Ui
                     row.Add(right);
                 }
                 else row.Add(v);
+                AddWhyChip(row, line);
                 return row;
             }
             // A row with its own button (the store's Sell): name and details on the left, the button on the right.
@@ -292,12 +315,205 @@ namespace Game.Presentation.Ui
                 text.Add(starLine);
             }
             else text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
-            row.Add(WithIcon(line.Icon, 84, text));
+            VisualElement left = WithIcon(line.Icon, 84, text);
+            left.style.flexGrow = 1; // the ? chip and the button sit together on the right
+            row.Add(left);
+            AddWhyChip(row, line);
             VisualElement button = ActionColumn(line.Action);
             button.style.alignItems = Align.FlexEnd;
             button.style.flexShrink = 0;
             row.Add(button);
             return row;
+        }
+
+        private static bool HasWhy(LineVm line) { return line.WhyKey != null && WhyView.Has(line.WhyKey); }
+
+        /// <summary>
+        /// A row answers a tap (ADR 0043 §3): one that opens a sheet opens it, otherwise its Why?; a long-press always asks Why?. A tap
+        /// on the row's own button stays the button's.
+        /// </summary>
+        private void Tappable(VisualElement row, LineVm line)
+        {
+            if (!HasWhy(line) && !line.Opens.HasValue) return;
+            row.pickingMode = PickingMode.Position;
+            bool held = false;
+            IVisualElementScheduledItem timer = null;
+            row.RegisterCallback<PointerDownEvent>(e =>
+            {
+                held = false;
+                if (OnButton(e.target)) return;
+                if (HasWhy(line)) timer = row.schedule.Execute(() => { held = true; if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId); }).StartingIn(600);
+            });
+            row.RegisterCallback<PointerUpEvent>(_ => { if (timer != null) timer.Pause(); });
+            row.RegisterCallback<PointerLeaveEvent>(_ => { if (timer != null) timer.Pause(); });
+            row.RegisterCallback<ClickEvent>(e =>
+            {
+                if (held || OnButton(e.target)) return;
+                if (line.Opens.HasValue) { if (OnOpenRow != null) OnOpenRow(line.Opens.Value); }
+                else if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId);
+            });
+        }
+
+        private static bool OnButton(IEventHandler target)
+        {
+            for (var e = target as VisualElement; e != null; e = e.parent) if (e is Button) return true;
+            return false;
+        }
+
+        /// <summary>The small round ? at the end of a row that has a Why? (ADR 0043 §3).</summary>
+        private void AddWhyChip(VisualElement row, LineVm line)
+        {
+            if (!HasWhy(line)) return;
+            var chip = new Button(() => { if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId); }) { text = "" };
+            chip.name = "why:" + line.WhyKey;
+            chip.style.width = 56; chip.style.height = 56;
+            chip.style.marginLeft = 14; chip.style.marginRight = 6;
+            chip.style.flexShrink = 0;
+            chip.style.backgroundColor = UiKit.CreamDark;
+            UiKit.Radius(chip, 28);
+            UiKit.Border(chip, 3, UiKit.Wood);
+            chip.style.alignItems = Align.Center;
+            chip.style.justifyContent = Justify.Center;
+            UiKit.Padding(chip, 0, 0);
+            Label q = UiKit.Text("?", 36, UiKit.Wood, UiKit.Heading);
+            q.style.marginTop = -4;
+            chip.Add(q);
+            row.Add(chip);
+        }
+
+        /// <summary>
+        /// A Why? card stacked over the sheet (spec 008 §3.6, §3.12): the number, one row per cause in words with its effect, and the
+        /// lesson. A tap anywhere closes it.
+        /// </summary>
+        public void ShowWhy(WhyVm vm)
+        {
+            var veil = new VisualElement();
+            veil.name = "WhyVeil";
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(32);
+            UiKit.Padding(card, 22, 36);
+            card.style.width = Length.Percent(66);
+            card.style.maxWidth = 1300;
+            card.style.maxHeight = Length.Percent(88);
+            var head = new VisualElement { pickingMode = PickingMode.Ignore };
+            head.style.flexDirection = FlexDirection.Row;
+            head.style.justifyContent = Justify.SpaceBetween;
+            head.style.alignItems = Align.Center;
+            var titles = new VisualElement { pickingMode = PickingMode.Ignore };
+            titles.style.flexShrink = 1;
+            Label why = UiKit.Text(WhyLabel, 30, UiKit.Wood, UiKit.Heading);
+            titles.Add(why);
+            titles.Add(UiKit.Heading1(vm.Title, 48));
+            head.Add(titles);
+            if (!string.IsNullOrEmpty(vm.Value))
+            {
+                Label value = UiKit.Text(vm.Value, 52, UiKit.Ink, UiKit.Heading);
+                value.style.marginLeft = 20;
+                head.Add(value);
+            }
+            card.Add(head);
+            var scroll = NewScroll();
+            scroll.style.flexShrink = 1;
+            scroll.style.marginTop = 8;
+            foreach (WhyRowVm r in vm.Rows)
+            {
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.justifyContent = Justify.SpaceBetween;
+                row.style.alignItems = Align.Center;
+                row.style.paddingTop = row.style.paddingBottom = 8;
+                row.style.borderBottomWidth = 2;
+                row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
+                Label label = UiKit.Text(r.Label, 32, UiKit.Ink, UiKit.Body);
+                label.style.flexShrink = 1;
+                label.style.whiteSpace = WhiteSpace.Normal;
+                row.Add(label);
+                if (!string.IsNullOrEmpty(r.Value))
+                {
+                    bool less = r.Value.EndsWith("less") || r.Value.StartsWith("−");
+                    bool more = r.Value.EndsWith("more") || r.Value.StartsWith("+");
+                    Label v = UiKit.Text(r.Value, 34, less ? UiKit.Warn : more ? UiKit.GreenDark : UiKit.Ink, UiKit.Heading);
+                    v.style.marginLeft = 20;
+                    row.Add(v);
+                }
+                scroll.Add(row);
+            }
+            if (!string.IsNullOrEmpty(vm.Footnote))
+            {
+                Label foot = UiKit.Text(vm.Footnote, 30, UiKit.Wood, UiKit.Body);
+                foot.style.whiteSpace = WhiteSpace.Normal;
+                foot.style.unityFontStyleAndWeight = FontStyle.Italic;
+                foot.style.marginTop = 12;
+                scroll.Add(foot);
+            }
+            card.Add(scroll);
+            Button ok = UiKit.MakeButton(OkLabel, ActionLook.Primary, () => veil.RemoveFromHierarchy());
+            ok.style.alignSelf = Align.Center;
+            card.Add(ok);
+            veil.Add(card);
+            veil.RegisterCallback<ClickEvent>(e => { if (e.target == veil) veil.RemoveFromHierarchy(); });
+            _holder.parent.Add(veil);
+            card.style.opacity = 0;
+            card.style.scale = new Scale(new Vector3(0.92f, 0.92f, 1f));
+            _tweens.Run(card, 0.2f, Ease.OutBack, k => { card.style.opacity = Mathf.Clamp01(k * 2f); card.style.scale = new Scale(new Vector3(0.92f + 0.08f * k, 0.92f + 0.08f * k, 1f)); });
+        }
+
+        /// <summary>The Why? card's button label (from the string table, set by the host).</summary>
+        public string OkLabel { get; set; } = "OK";
+
+        public string WhyLabel { get; set; } = "Why?";
+
+        /// <summary>
+        /// The While you were away card (spec 008 §3.9, ADR 0043 §8): the rows, "and N more" to see the rest, Collect all, See the
+        /// report when a season closed, and Close.
+        /// </summary>
+        public void Away(AwayCard.Vm vm, string collectLabel, string reportLabel, string closeLabel, string moreLabel, Action collect, Action report)
+        {
+            var veil = new VisualElement();
+            veil.name = "AwayVeil";
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.4f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(36);
+            UiKit.Padding(card, 22, 36);
+            card.style.width = Length.Percent(64);
+            card.style.maxHeight = Length.Percent(90);
+            card.Add(UiKit.Heading1(vm.Title, 54));
+            if (!string.IsNullOrEmpty(vm.Subtitle)) card.Add(UiKit.Text(vm.Subtitle, 30, UiKit.Warn, UiKit.Body));
+            var scroll = NewScroll();
+            scroll.style.flexShrink = 1;
+            foreach (LineVm l in vm.Lines) scroll.Add(Row(l));
+            if (vm.More.Count > 0)
+            {
+                Button more = null;
+                more = UiKit.MakeButton(moreLabel, ActionLook.Secondary, () =>
+                {
+                    int at = scroll.IndexOf(more);
+                    scroll.Remove(more);
+                    foreach (LineVm l in vm.More) scroll.Insert(at++, Row(l));
+                });
+                more.style.alignSelf = Align.FlexStart;
+                scroll.Add(more);
+            }
+            card.Add(scroll);
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.flexWrap = Wrap.Wrap;
+            buttons.style.marginTop = 8;
+            if (vm.ReadyCount > 0) buttons.Add(UiKit.MakeButton(collectLabel, ActionLook.Primary, () => { veil.RemoveFromHierarchy(); collect(); }));
+            if (vm.ReportPeriod >= 0) buttons.Add(UiKit.MakeButton(reportLabel, ActionLook.Secondary, () => { veil.RemoveFromHierarchy(); report(); }));
+            buttons.Add(UiKit.MakeButton(closeLabel, vm.ReadyCount > 0 ? ActionLook.Secondary : ActionLook.Primary, () => veil.RemoveFromHierarchy()));
+            card.Add(buttons);
+            veil.Add(card);
+            _holder.parent.Add(veil);
+            card.style.translate = new Translate(0, -120);
+            _tweens.Run(card, 0.35f, Ease.OutBack, k => card.style.translate = new Translate(0, -120 * (1f - k)));
         }
 
         /// <summary>One money figure on a sow row: bold, in its colour, with room after it.</summary>
@@ -350,7 +566,7 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
             foreach (LineVm l in vm.Lines)
             {
-                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);

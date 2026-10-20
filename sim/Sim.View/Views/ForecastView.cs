@@ -78,6 +78,9 @@ namespace Sim.View.Views
         public static SheetVm Sheet(ViewContext ctx)
         {
             var vm = new SheetVm { Icon = "weather_" + ctx.Sim.CurrentWeather.Id, Title = ctx.Strings.Get("forecast.title"), Subtitle = ctx.Strings.Get("forecast.subtitle") };
+            Sim.Core.Time.CalendarDate d = Sim.Core.Time.Calendar.From(ctx.Now, ctx.Sim.Clock);
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("forecast.today"), ctx.Fmt.Date(d, ctx.Sim.Clock.DaysPerSeason), "calendar"));
+            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("forecast.runs")));
             List<ForecastRunVm> runs = Runs(ctx);
             for (int i = 0; i < runs.Count; i++)
             {

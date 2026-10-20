@@ -22,17 +22,17 @@ namespace Sim.View.Views
         public static SheetVm Build(ViewContext ctx)
         {
             var s = ctx.Strings;
-            var vm = new SheetVm { Icon = "menu", Title = s.Get("menu.title") };
-            void Add(string key, SheetRequest r)
+            var vm = new SheetVm { Title = s.Get("menu.title") };
+            void Add(string key, SheetRequest r, string icon)
             {
-                vm.Lines.Add(new LineVm(s.Get("menu." + key), s.Get("menu." + key + ".note")) { Action = ActionVm.Open("menu:" + key, s.Get("action.open"), r) });
+                vm.Lines.Add(new LineVm(s.Get("menu." + key), s.Get("menu." + key + ".note")) { Icon = icon, Action = ActionVm.Open("menu:" + key, s.Get("action.open"), r) });
             }
-            Add("store", new SheetRequest("Store", 0));
-            Add("money", new SheetRequest("Money", 0));
-            if (ctx.Sim.State.People != null) Add("people", new SheetRequest("People", 0));
-            Add("land", new SheetRequest("Lands", 0));
-            Add("you", new SheetRequest("Founder", 0));
-            Add("settings", new SheetRequest("Settings", 0));
+            Add("store", new SheetRequest("Store", 0), "sack");
+            Add("money", new SheetRequest("Money", 0), "coin");
+            if (ctx.Sim.State.People != null) Add("people", new SheetRequest("People", 0), "person_hand_f");
+            Add("land", new SheetRequest("Lands", 0), "sign");
+            Add("you", new SheetRequest("Founder", 0), "person_founder");
+            Add("settings", new SheetRequest("Settings", 0), "gear");
             return vm;
         }
     }
@@ -245,12 +245,19 @@ namespace Sim.View.Views
     /// <summary>Repaying a loan (ADR 0043 §5): the next payment, all of it, or more time.</summary>
     public static class Repay
     {
-        /// <summary>What the next season close will ask: interest to date and the scheduled principal (spec 005 §3.6).</summary>
+        /// <summary>
+        /// What the next season close will ask (spec 005 §3.6): the interest owed and accruing up to the close, any arrears, and the
+        /// principal due then (none at a part-season first close; all of it at the last; a bank's part of it in between).
+        /// </summary>
         public static long NextPayment(Simulation sim, Loan loan)
         {
-            long scheduled = loan.Remaining <= 1 ? loan.Principal
-                : loan.Schedule == LoanSchedule.Bullet || loan.FirstClosePartial ? 0 : System.Math.Min(loan.InstalmentBase, loan.Principal);
-            return CreditRules.OwedNow(sim, loan) - loan.Principal + scheduled + loan.ArrearsPrincipal;
+            if (!loan.IsOpen) return 0;
+            long S = sim.Clock.SecondsPerSeason, close = (sim.State.Clock.SimTime / S + 1) * S;
+            CreditRules.AccruedSince(sim, loan, close, out long interest, out long penalty);
+            long principal = loan.FirstClosePartial ? loan.ArrearsPrincipal
+                : loan.Remaining <= 1 ? loan.Principal
+                : loan.ArrearsPrincipal + (loan.Schedule == LoanSchedule.Bullet ? 0 : System.Math.Min(loan.InstalmentBase, loan.Principal - loan.ArrearsPrincipal));
+            return loan.ArrearsInterest + loan.InterestAccrued + interest + penalty + principal;
         }
 
         public static SheetVm Build(ViewContext ctx, long loanId)

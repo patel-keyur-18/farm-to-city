@@ -12,9 +12,9 @@ namespace Game.Presentation.DevTools
 {
     /// <summary>
     /// The developer panel (spec 008 §3.14, ADR 0017, 0038): hold the time strip for three seconds. Time travel through
-    /// <c>DebugAdvance</c> (+1 hour, +1 day, +1 season, the away cap), an in-memory snapshot and restore, the number-format and
-    /// reduced-motion switches, and the golden-replay check of ADR 0035. Compiled out of release builds: it exists only in
-    /// development builds and the Editor.
+    /// <c>DebugAdvance</c> (+1 hour, +1 day, +1 season, the away cap), an in-memory snapshot and restore, and the golden-replay
+    /// check of ADR 0035. Number format and reduced motion are in Settings, loans in Money and loans (ADR 0043). Compiled out of
+    /// release builds: it exists only in development builds and the Editor.
     /// </summary>
     public sealed class DevPanel
     {
@@ -23,10 +23,7 @@ namespace Game.Presentation.DevTools
         {
             public Func<Simulation> Sim;
             public Action<long, AdvanceMode> Advance;
-            public Action Snapshot, Restore, ToggleFormat, ToggleReducedMotion;
-
-            /// <summary>Takes a real moneylender loan (TakeLoan) until the loan screen exists (Sprint 7); returns the sim's answer.</summary>
-            public Func<string> Borrow;
+            public Action Snapshot, Restore;
             public Func<string> Status;
             public Action<bool> Visibility;
         }
@@ -73,11 +70,8 @@ namespace Game.Presentation.DevTools
                 Btn("Away cap (72 h)", () => host.Advance(host.Sim().Clock.AwayCapSeconds, AdvanceMode.Away))));
             scroll.Add(Section("Snapshot (in memory)"));
             scroll.Add(ButtonRow(Btn("Snapshot", () => host.Snapshot()), Btn("Restore", () => host.Restore())));
-            scroll.Add(Section("Display"));
-            scroll.Add(ButtonRow(Btn("Switch number format", () => host.ToggleFormat()), Btn("Reduced motion on/off", () => host.ToggleReducedMotion())));
             scroll.Add(Section("Determinism (ADR 0035)"));
             scroll.Add(ButtonRow(Btn("Golden replays", RunGoldens)));
-            scroll.Add(ButtonRow(Btn("Moneylender loan 20,000", () => _result.text = host.Borrow())));
             _result = UiKit.Text("", 28, UiKit.Ink, UiKit.Body);
             scroll.Add(_result);
 
