@@ -30,7 +30,7 @@ namespace Sim.View.Views
                 string name = ctx.Strings.Get(good.NameKey);
                 if (good.Kind != GoodKind.Produce)
                 {
-                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", Quantity(ctx, good, m.Stock[g]))) { Icon = good.Id });
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("store.input", "qty", Quantity(ctx, good, m.Stock[g])), "input", g) { Icon = good.Id });
                     continue;
                 }
                 Fixed floor = MarketRules.Floor(sim, g);
@@ -44,7 +44,7 @@ namespace Sim.View.Views
                     : min.HasValue
                         ? ctx.Strings.Get("store.produceOffered", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered), "min", ctx.Fmt.PricePerKg(min.Value))
                         : ctx.Strings.Get("store.produceOfferedAny", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered));
-                var line = new LineVm(name, value, "price") { Icon = good.Id };
+                var line = new LineVm(name, value, "price", g) { Icon = good.Id };
                 string id = good.Id;
                 long amount = MarketRules.Value(sim, g, sell, floor);
                 // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).

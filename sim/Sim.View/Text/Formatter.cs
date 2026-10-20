@@ -148,6 +148,9 @@ namespace Sim.View.Text
         public string PricePerKg(Fixed price) { return _strings.Get("unit.perKg", "amount", Decimals(price, 2, false)); }
 
         /// <summary>62%, 3.5%: whole from 10%, one decimal below (a fraction in, 0.0625 → 6.3%).</summary>
+        /// <summary>One decimal, for hours a day ("3.4").</summary>
+        public string Decimal1(Fixed v) { return Decimals(v, 1, false); }
+
         public string Percent(Fixed fraction)
         {
             Fixed pct = fraction * Fixed.FromInt(100);
