@@ -346,7 +346,7 @@ namespace Tools.Balancer
         public sealed class DebtActivity
         {
             public string Bot;
-            public int Seeds, LoansTaken, BankLoans, Foreclosures, SeedsForeclosed;
+            public int Seeds, LoansTaken, BankLoans, Foreclosures, SeedsForeclosed, SeedsDefaulted, DefaultedNotForeclosed;
             public double MedianScoreAtEnd;
         }
 
@@ -363,6 +363,9 @@ namespace Tools.Balancer
                 a.BankLoans += c.Loans.Count(l => l.Lender == 1);
                 a.Foreclosures += c.Foreclosures;
                 if (c.Foreclosures > 0) a.SeedsForeclosed++;
+                bool defaulted = c.History.Exists(h => h.Reason == "score.default");
+                if (defaulted) a.SeedsDefaulted++;
+                if (defaulted && c.Foreclosures == 0) a.DefaultedNotForeclosed++;
             }
             a.MedianScoreAtEnd = Median(runs.Select(r => (double)r.Sim.State.Credit.Score));
             return a;
@@ -413,7 +416,7 @@ namespace Tools.Balancer
             {
                 DebtActivity d = DebtBotActivity(config, make, Math.Min(seeds, 100));
                 Console.WriteLine("  " + d.Bot + " used credit: " + d.LoansTaken + " loans (" + d.BankLoans + " from the bank), " + d.Foreclosures
-                    + " foreclosures in " + d.SeedsForeclosed + " of " + d.Seeds + " runs, median score " + d.MedianScoreAtEnd.ToString("0", CultureInfo.InvariantCulture));
+                    + " foreclosures in " + d.SeedsForeclosed + " of " + d.Seeds + " runs (" + d.SeedsDefaulted + " defaulted), median score " + d.MedianScoreAtEnd.ToString("0", CultureInfo.InvariantCulture));
             }
             Console.WriteLine("  People (spec 006, ADR 0039): stress bots at most 1.20 × competent, the absentee at least 0.80 ×; solo is the founder never hiring:");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 8, new Func<Bot>[] { () => new SoloBot(), () => new DayLabourSpammerBot(),

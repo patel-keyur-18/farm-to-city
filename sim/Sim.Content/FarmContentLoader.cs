@@ -127,11 +127,12 @@ namespace Sim.Content
             {
                 string p = Index(root + ".fertilisers", i);
                 JObject x = Object(tokens[i], p);
-                OnlyFields(x, p, "id", "good", "kgPerAcrePerSeason", "yieldFactor", "fertilityPerSeason");
+                OnlyFields(x, p, "id", "good", "kgPerAcrePerSeason", "yieldFactor", "fertilityPerSeason", "dryingFactor");
                 string id = UniqueId(x, p, fertilisers.ConvertAll(y => y.Id));
                 int good = x["good"] == null ? -1 : GoodRef(x, p, "good", market, GoodKind.Input);
                 fertilisers.Add(new FertiliserDef(id, good, Bounded(x, p, "kgPerAcrePerSeason", "0", "100000"),
-                    Bounded(x, p, "yieldFactor", "0.5", "2"), Bounded(x, p, "fertilityPerSeason", "-20", "20")));
+                    Bounded(x, p, "yieldFactor", "0.5", "2"), Bounded(x, p, "fertilityPerSeason", "-20", "20"),
+                    x["dryingFactor"] == null ? Fixed.One : Bounded(x, p, "dryingFactor", "0.5", "1")));
             }
             if (fertilisers.Find(x => x.Id == "none" && x.Good < 0) == null)
                 throw new ContentException(root + ".fertilisers", "needs 'none' (no good)");

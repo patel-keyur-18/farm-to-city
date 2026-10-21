@@ -52,6 +52,10 @@ namespace Sim.View.Views
         public string InputsText { get; internal set; }
         public string LabourText { get; internal set; }
 
+        /// <summary>The field's fertility before and after this crop with the chosen fertiliser (ADR 0051): "Soil 45.0 → 45.1".</summary>
+        public string SoilText { get; internal set; }
+        public bool SoilFalls { get; internal set; }
+
         /// <summary>What sowing would buy now (seed and fertiliser not in the store): "pay 20 coins now" or "from your store".</summary>
         public string CostText { get; internal set; }
         public ActionVm Sow { get; internal set; }
@@ -95,7 +99,7 @@ namespace Sim.View.Views
                 TileId = tileId,
                 Title = ctx.Strings.Get("sow.title", "soil", ctx.Strings.Get(defs.Soils[tile.Soil].NameKey)),
                 Subtitle = ctx.Strings.Get("sow.subtitle", "season", ctx.Strings.Get("season." + season.ToString().ToLowerInvariant()),
-                    "fertility", ctx.Fmt.Integer(tile.Fertility.RoundToLong()), "moisture", ctx.Fmt.Integer(tile.Moisture.RoundToLong())),
+                    "fertility", ctx.Fmt.Decimal1(tile.Fertility), "moisture", ctx.Fmt.Integer(tile.Moisture.RoundToLong())),
             };
             Fixed rate = FounderRules.LabourRate(sim);
             Fixed free = rate - FarmRules.LabourDemand(sim);
@@ -123,6 +127,10 @@ namespace Sim.View.Views
                 long fertValue = e.FertiliserValue;
                 long spend = e.Spend;
                 long profit = Round10Coins(get - spend);
+                // Fertility after the cycle (spec 003 §3.10): the crop's use and the fertiliser's change, each × cycleShare.
+                Fixed share = FarmRules.CycleShare(sim.Clock, c);
+                Fixed after = tile.Fertility + (fert.FertilityPerSeason - c.FertilityPerSeason) * share;
+                after = after < Fixed.Zero ? Fixed.Zero : after > Fixed.FromInt(100) ? Fixed.FromInt(100) : after;
                 long buy = (seed == SeedSource.Certified ? Store.ShortfallCost(sim, c.SeedGood, seedGrams) : 0)
                     + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, fertGrams));
                 string inputs = fert.Good < 0
@@ -139,6 +147,8 @@ namespace Sim.View.Views
                     Profit = profit, ProfitText = ctx.Strings.Get(profit >= 0 ? "sow.profit" : "sow.loss", "amount", ctx.Fmt.Coins(System.Math.Abs(profit))),
                     InputsText = inputs,
                     LabourText = ctx.Strings.Get("sow.labour", "hours", Hours(c.LabourPerAcrePerDay + BucketHours(ctx, tile))),
+                    SoilText = ctx.Strings.Get("sow.soil", "before", ctx.Fmt.Decimal1(tile.Fertility), "after", ctx.Fmt.Decimal1(after)),
+                    SoilFalls = after < tile.Fertility && ctx.Fmt.Decimal1(after) != ctx.Fmt.Decimal1(tile.Fertility), // amber only for a fall the player can see
                     CostText = buy == 0 ? ctx.Strings.Get("sow.fromStore") : ctx.Strings.Get("sow.buys", "cost", ctx.Fmt.Coins(buy)),
                 };
                 row.Sow = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sowCrop", "crop", name), row.CostText, ActionKind.Primary,
@@ -163,12 +173,12 @@ namespace Sim.View.Views
             return vm;
         }
 
-        /// <summary>A fertiliser's effect from its data: how much more harvest, and what it does to the soil.</summary>
+        /// <summary>A fertiliser's effect from its data: how much more harvest, and whether it holds water. Its soil effect is on each crop (ADR 0051).</summary>
         private static string Effect(ViewContext ctx, FertiliserDef f)
         {
             if (f.Good < 0) return ctx.Strings.Get("fert.effectNone");
             string pct = ctx.Fmt.Integer(((f.YieldFactor - Fixed.One) * Fixed.FromInt(100)).RoundToLong());
-            return ctx.Strings.Get(f.FertilityPerSeason >= Fixed.Zero ? "fert.effectBuilds" : "fert.effectWears", "pct", pct);
+            return ctx.Strings.Get(f.DryingFactor < Fixed.One ? "fert.effectHoldsWater" : "fert.effect", "pct", pct);
         }
 
         /// <summary>Bucket-carrying hours on a well acre on a dry day (spec 003 §3.6): 24 × the well's lift × bucketHoursPerMoisturePoint.</summary>

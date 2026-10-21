@@ -13,7 +13,7 @@
   },
   "fertilisers": [
     { "id": "none",     "kgPerAcrePerSeason": 0,    "yieldFactor": 1.00, "fertilityPerSeason": 0 },
-    { "id": "compost",  "good": "compost",             "kgPerAcrePerSeason": 2000, "yieldFactor": 1.05, "fertilityPerSeason": 2 },
+    { "id": "compost",  "good": "compost",             "kgPerAcrePerSeason": 2000, "yieldFactor": 1.05, "fertilityPerSeason": 6, "dryingFactor": 0.8 },
     { "id": "chemical", "good": "fertiliser_chemical", "kgPerAcrePerSeason": 150,  "yieldFactor": 1.25, "fertilityPerSeason": -3 }
   ],
   "pests": {

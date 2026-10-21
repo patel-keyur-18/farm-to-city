@@ -171,7 +171,7 @@ namespace Sim.Core.Land
             Fixed d = defs.Land.MoistureByWeather[weather];
             Fixed m = tile.Moisture;
             if (d > Fixed.Zero) m += d * soil.GainFactor;
-            else if (d < Fixed.Zero) m += d * soil.LossFactor;
+            else if (d < Fixed.Zero) m += d * soil.LossFactor * DryingFactor(sim, tile.Id);
             m = Clamp(m);
             if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
             // The well acres only (ADR 0032); the lift is the founder's bucket-carrying, charged by spec 003.
@@ -182,6 +182,15 @@ namespace Sim.Core.Land
                 m = defs.Land.WellMoistureFloor;
             }
             tile.Moisture = m;
+        }
+
+        /// <summary>The drying factor of the fertiliser under a crop growing on the tile, else 1 (ADR 0051: compost holds water).</summary>
+        public static Fixed DryingFactor(Simulation sim, int tileId)
+        {
+            if (sim.State.Farm == null) return Fixed.One;
+            foreach (Farm.Crop c in sim.State.Farm.Crops)
+                if (c.TileId == tileId && c.State == Farm.CropState.Growing) return sim.Config.Game.Farm.Fertilisers[c.Fertiliser].DryingFactor;
+            return Fixed.One;
         }
 
         /// <summary>
