@@ -73,7 +73,7 @@
 | [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (to write) | Done | US-085–US-086 | 4 |
 | [F08.5](features/F08.5-basic-feedback-sounds.md) | Basic feedback sounds | E08 | 1 | Spec 008 (approved), ADR 0007 | Done | US-087 | 2 |
 | [F08.4](features/F08.4-developer-panel-unity.md) | Developer panel (Unity) | E08 | 1 | Spec 001 §3.8, ADR 0023 | Done | US-088–US-088 | 2 |
-| [F09.1](features/F09.1-first-session.md) | First session | E09 | 1 | Spec 009 (approved) | Device run passed; sale-nudge fix to re-check | US-089–US-090 | 7 |
+| [F09.1](features/F09.1-first-session.md) | First session | E09 | 1 | Spec 009 (approved) | Done | US-089–US-090 | 7 |
 | [F09.2](features/F09.2-letter-chapters.md) | Letter chapters | E09 | 1 | Spec 009 (approved) | Done | US-091–US-092 | 6 |
 | [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (approved), GDD eras | Done | US-093–US-094 | 5 |
 | [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate | Backlog | US-095–US-097 | 8 |

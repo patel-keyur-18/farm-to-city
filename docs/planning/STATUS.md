@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 8 (onboarding, the letter, the Hamlet unlock, Phase 1 bots): 21 of 21 points; device run passed 2026-10-21, three findings fixed (ADR 0046), re-check pending. Sprint 7 done (PR #12 merged) |
-| Branch with latest work | `sprint/08-onboarding-hamlet` (from `main`, which has Sprint 7 / PR #12) |
+| Sprint | Sprint 9 (release candidate, playtest week, tuning, the Phase 1 gate): planning review. Sprint 8 done (PR #13 merged; re-check of checks 33–36 passed 2026-10-21) |
+| Branch with latest work | `sprint/09-playtest` (from `main`, which has Sprint 8 / PR #13) |
 | Last updated | 2026-10-21 |
 
 ## Done so far
@@ -115,7 +115,7 @@
   - **Unity:** the HUD (weather run, tap / hold on time, cash and store, Menu, People, the ! alerts), the **?** chips and row taps, the *Why?* card, every panel's route, the away card, the report at a live close, the sell-the-rest card, Settings (`PanelSettings.scale` for text, PlayerPrefs), `Motion/Sounds.cs`, `Plugins/iOS/FarmToCityNative.mm` with `Game.Services.NativeFeel`; the developer panel lost its format, motion and loan buttons. Captures `docs/art/s07-*.png`.
   - **Verified in the Editor with touch:** every new sheet and card, text at 125% and 150%, the Sprint 6 save refused and kept, a plain tap on the time card (no developer panel), the sell-the-rest card (+608 coins exactly). Fixed during the tour: the hold timer of the time card, the *Why?* card's first tap, the next loan payment (projected to the close), subsistence explained not offered, the bank loan only for buyable land, an away card with nothing new, row alignment. **Development build:** Unity build succeeded; Xcode unsigned compile in the pull request.
 
-- **Sprint 8 (branch `sprint/08-onboarding-hamlet`): 21 of 21 points; device run passed (2026-10-21), three findings fixed (ADR 0046).**
+- **Sprint 8 (branch `sprint/08-onboarding-hamlet`, PR #13 merged): 21 of 21 points, done.** Device run passed (2026-10-21); three findings fixed (ADR 0046) and re-checked the same day (checks 33–36 PASS).
   - **Planning review (2026-10-20):** 5 gaps decided with the owner, **ADR 0045** (spec 009 §3.2, §7, §8, §10 amended and re-approved; spec 007 §10; the GDD; CLAUDE.md): a nudge pill per first-session step and the tour during the garden wait; the long crop on any acre; `comeBack` asks (Yes, nudge me / Not now; never at night) with the plain card as the fallback; AC-11 to AC-16; the Phase 1 health checks with thresholds measured, then set realistically; Sprint 8's build a feature-complete Development build.
   - **Sim (US-093, US-098):** `content/eras.json` and `content/onboarding.json` (loaded with the people content, so the frozen golden content has neither and **the golden hashes are unchanged**); `Sim.Core.Progress`: `GuidanceState`, `EraState`, `EraRules` (after each field harvest and season close), `EraProgress`, `EraUnlocked`; `SeeChapter`, `CompleteStep`, `SkipFirstSession`; save schema 3 (Sprint 7 saves refused and kept). Balancer: `CautiousSaverBot`, `RandomBot`, `RecoveringBot`; `GateTests` `HamletPace` (median day 5.4), `Phase1_StressBots` (cautious 1.002 ×, random 0.908 ×), `NeverStuck` (credit refused: 1,000 of 1,000 by season 2), `RecoverableBankruptcy` (84 of 84; the Hamlet again in a median of 8 days), `ExactLedger`, `BoundedPrices` (rail 0.000%). Median season farm profit 26,048, inside spec 003 §9's band: not tuned. 264 tests.
   - **`Sim.View` (69 tests):** `Guide` (steps, chapters once in priority order, nudges, the tour, the triggers), `Letter.Page`, `Letter.List`, `Letter.MissingStrings`, `Hints.Season`, `ProgressSheet` and its *Why?*, `NotifyAsk.Moment(letterWillAsk)`.
@@ -126,12 +126,11 @@
 
 ## In progress
 
-None: the owner re-checks checks 33–36 of `s08-onboarding-hamlet.md` and merges.
+Sprint 9 planning review (gaps raised one at a time with the owner).
 
 ## Next up
 
-1. **Owner:** a Development build (delete `unity/FarmToCity/Builds/iOS` first; `--options '["Development"]'`), re-check checks 33–36 of `docs/test-checklists/s08-onboarding-hamlet.md`, merge the pull request.
-2. **Claude:** Sprint 9 (US-095 release candidate: full regression, frame time, a Release build; save migrations from that build on, ADR 0041 §2; US-096 playtest week; US-097 tune and decide). Sprint 9's planning review first.
+1. **Claude:** Sprint 9 (US-095 release candidate: full regression, frame time, a Release build; save migrations from that build on, ADR 0041 §2; US-096 playtest week; US-097 tune and decide). Sprint 9's planning review first.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -139,7 +138,7 @@ None: the owner re-checks checks 33–36 of `s08-onboarding-hamlet.md` and merge
 | --- | --- |
 | Sprint 6 | Done (device runs passed, PR #11 merged) |
 | Sprint 7 | Done (device runs 1 and 2 passed, PR #12 merged) |
-| Sprint 8 | ~~Answer the planning review~~ (done); ~~run the device checklist~~ (passed); re-check checks 33–36; merge the pull request |
+| Sprint 8 | Done (device run and re-check passed, PR #13 merged) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 

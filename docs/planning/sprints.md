@@ -355,7 +355,7 @@
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 
-- **Status:** Device run passed 2026-10-21; three findings fixed (ADR 0046), re-check pending (checks 33–36). Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
+- **Status:** Done. Device run passed 2026-10-21; three findings fixed (ADR 0046), re-check passed (checks 33–36, 2026-10-21); PR #13 merged. Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
 - **Branch:** `sprint/08-onboarding-hamlet`
 - **Goal:** Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks.
 - **Points:** 21
@@ -365,7 +365,7 @@
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | Done |
-| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Device run passed; sale-nudge fix to re-check |
+| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Done |
 | US-091 | Guided-once triggers | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
 | US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
 | US-093 | Era unlock check | [F09.3](features/F09.3-hamlet-unlock.md) | 3 | Must | Done |
@@ -392,7 +392,7 @@
 1. A letter page dimmed only the safe area, not the whole screen. Every veil now reaches past the safe area (`UiKit.Veil`): cards, letter pages, *Why?*, the away card, the developer panel.
 2. The away card and "Welcome back" came after an hour away: the house eats every day, so something always "happened". The owner asked for the card only at the 72 h cap; on the recommendation, the card now needs **8 hours away** or the cap (`awayCardMinHours` in `content/ui.json`), so a day or two away still gets its summary.
 3. After **Away cap**, "Open the Store and sell to the trader" stayed with the store bouncing and nothing to sell (the house had eaten the inherited grain). The sale nudge now shows only while the trader would buy something. Also: the developer panel opens above the nudge, and its new **Away +1 hour** tests the threshold.
-- Verified in the Editor with touch: the veil past a simulated inset (`docs/art/s08-letter-veil-full-screen.png`), no card after an hour away, the card after a day. Re-check on the phone: checks 33–36.
+- Verified in the Editor with touch: the veil past a simulated inset (`docs/art/s08-letter-veil-full-screen.png`), no card after an hour away, the card after a day. Re-check on the phone: checks 33–36 **PASS** (2026-10-21).
 
 **Retro (Claude):**
 - *Went well:* gating the onboarding content on the people content kept the goldens untouched with no special case. Measuring each health check before fixing its threshold gave thresholds that are realistic and still fail on a regression. The bot that follows the highlights made the first session testable end to end.

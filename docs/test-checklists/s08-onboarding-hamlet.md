@@ -82,14 +82,14 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 
 ### Device review fixes: re-check (ADR 0046, 2026-10-21)
 
-First run (2026-10-21): every check passed; checks 1 to 12 took 10 minutes. These re-check the three findings. A fresh town (Settings → **New game**) makes 33 and 34 easiest.
+First run (2026-10-21): every check passed; checks 1 to 12 took 10 minutes. These re-check the three findings. **Re-check (2026-10-21): checks 33–36 PASS.** A fresh town (Settings → **New game**) makes 33 and 34 easiest.
 
 | # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
 | --- | --- | --- | --- | --- | --- |
-| 33 | ADR 0046 §1 | Any letter page, a card (New game's question), a **?**, and the developer panel | The dim covers the **whole** screen, edge to edge, including beside the notch and along the bottom; the page stays centred | | **Screenshot** |
-| 34 | ADR 0046 §2, spec 008 AC-8 | Developer panel → **Away +1 hour** (new button), close it | No away card and no "Welcome back" | | |
-| 35 | ADR 0046 §2 | Developer panel → **Away +1 day** | The away card ("Away 1 d"); in a town that hasn't had one, "Welcome back" after it | | |
-| 36 | ADR 0046 §3 | In a town still on "Open the Store and sell to the trader": put everything in the Store on offer at the market (each good → **Offer**), or play until the house eats it | The nudge and the store's bouncing stop; when there's something the trader buys again, they come back. The developer panel opens above the nudge | | |
+| 33 | ADR 0046 §1 | Any letter page, a card (New game's question), a **?**, and the developer panel | The dim covers the **whole** screen, edge to edge, including beside the notch and along the bottom; the page stays centred | PASS | **Screenshot** |
+| 34 | ADR 0046 §2, spec 008 AC-8 | Developer panel → **Away +1 hour** (new button), close it | No away card and no "Welcome back" | PASS | |
+| 35 | ADR 0046 §2 | Developer panel → **Away +1 day** | The away card ("Away 1 d"); in a town that hasn't had one, "Welcome back" after it | PASS | |
+| 36 | ADR 0046 §3 | In a town still on "Open the Store and sell to the trader": put everything in the Store on offer at the market (each good → **Offer**), or play until the house eats it | The nudge and the store's bouncing stop; when there's something the trader buys again, they come back. The developer panel opens above the nudge | PASS | |
 
 ## What to report
 
