@@ -178,8 +178,7 @@ namespace Game.Presentation.Ui
         public void Confirm(ConfirmVm vm, Action yes, Action no)
         {
             var veil = new VisualElement { name = "Veil" };
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -206,8 +205,7 @@ namespace Game.Presentation.Ui
         public void Card(CardVm vm, Action<string> onButton)
         {
             var veil = new VisualElement { name = "Veil" };
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -254,8 +252,7 @@ namespace Game.Presentation.Ui
         public void Letter(LetterVm vm, Action<string> onButton)
         {
             var veil = new VisualElement { name = "Veil" };
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -459,8 +456,7 @@ namespace Game.Presentation.Ui
         {
             var veil = new VisualElement();
             veil.name = "WhyVeil";
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -545,8 +541,7 @@ namespace Game.Presentation.Ui
         {
             var veil = new VisualElement();
             veil.name = "AwayVeil";
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.4f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;

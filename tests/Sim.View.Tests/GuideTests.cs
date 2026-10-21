@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Commands;
+using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Market;
@@ -177,6 +178,19 @@ namespace Sim.View.Tests
             n = guide.Nudge(ctx);
             Assert.That(n.Lines.Count, Is.EqualTo(1), "the bed is ready: no tour");
             Assert.That(n.Highlight, Is.EqualTo("bed:1"));
+            GuideKit.Ok(sim, new PickGarden(sim.State.Clock.SimTime, 1));
+            GuideKit.Settle(sim, guide);
+            Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("firstPick"));
+            n = guide.Nudge(ctx);
+            Assert.That(n.Lines, Is.EqualTo(new[] { "Open the Store and sell to the trader" }));
+            Assert.That(n.Highlight, Is.EqualTo("store"));
+            // Nothing the trader would buy (all of it on offer at the market): no sale nudge, no bouncing store (ADR 0046 §3).
+            var goods = sim.Config.Game.Market.Goods;
+            for (int g = 0; g < goods.Count; g++)
+                if (goods[g].Kind == GoodKind.Produce && sim.State.Market.InStore(g) > 0)
+                    GuideKit.Ok(sim, new Offer(sim.State.Clock.SimTime, goods[g].Id, sim.State.Market.InStore(g)));
+            GuideKit.Settle(sim, guide);
+            Assert.That(guide.Nudge(ctx), Is.Null);
             GuideKit.Ok(sim, new SkipFirstSession(sim.State.Clock.SimTime));
             Assert.That(guide.Nudge(ctx), Is.Null);
         }

@@ -215,6 +215,7 @@
   "spoilWarningHours": 12,
   "storeNearlyFullPercent": 90,
   "awayRowsMax": 8,
+  "awayCardMinHours": 8,
   "ratingGoodPercent": 95,
   "ratingFairPercent": 80,
   "skillBands": [35, 55, 75],

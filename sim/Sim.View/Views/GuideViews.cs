@@ -178,6 +178,8 @@ namespace Sim.View.Views
             if (!FirstSessionActive(sim)) return null;
             StepDef st = Defs(sim).Steps[sim.State.Guidance.Step];
             if (!(st.PageAfter || sim.State.Guidance.HasSeen(st.Chapter)) || st.Goal.Goal == GoalKind.ChapterClosed) return null;
+            // The sale nudge never points at an empty store or a trader who's bought his fill today (ADR 0046 §3).
+            if (st.Highlight == "store" && !TraderWouldBuy(sim)) return null;
             var vm = new NudgeVm { Highlight = Highlight(sim, st.Highlight) };
             vm.Lines.Add(ctx.Strings.Get("nudge." + st.Id));
             vm.Opens.Add(null);
@@ -194,6 +196,15 @@ namespace Sim.View.Views
                     vm.Opens.Add(Letter.Sheet(sim, sheet));
                 }
             return vm;
+        }
+
+        private static bool TraderWouldBuy(Simulation sim)
+        {
+            var goods = sim.Config.Game.Market.Goods;
+            MarketState m = sim.State.Market;
+            for (int g = 0; g < goods.Count; g++)
+                if (goods[g].Kind == GoodKind.Produce && m.InStore(g) > m.OnOffer(g) && MarketRules.TraderCapacityLeft(sim, g) > 0) return true;
+            return false;
         }
 
         private void Enqueue(int chapter)
