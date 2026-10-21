@@ -402,7 +402,7 @@
 
 ## Sprint 9 · 21 Dec 2026 – 3 Jan 2027 · Phase 1 (2 weeks, ADR 0047 §6)
 
-- **Status:** Planning review done 2026-10-21 (ADR 0047: 6 gaps); waiting for the owner's go-ahead to start
+- **Status:** In progress. Planning review done 2026-10-21 (ADR 0047: 6 gaps); the release candidate built (commit `33afedb`, Development and Release); the owner's Parts A and B, then the playtest week
 - **Branch:** `sprint/09-playtest`
 - **Goal:** Release candidate, the owner's solo playtest week, tuning and the Phase 1 gate review (part A).
 - **Points:** 10
@@ -412,8 +412,8 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 4 | Must | To do |
-| US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
+| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 4 | Must | Built; device run pending (T4 waits on it) |
+| US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | Play log and diary ready; the week pending |
 | US-097 | Tune and decide | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
 
 **Sprint end checklist**
@@ -424,6 +424,13 @@
 - [ ] Pull request opened; owner merges to `main`
 
 **Planning review (2026-10-21, ADR 0047):** the owner is the only playtester (free account, iPhone 13); the play log adds `tz`, `fromNote` and the first-session steps, with a daily diary; migrations from the RC (`minSchema` frozen at 3, a fixture per schema); a Development build for regression and frame time, a Release build for the playtest, and the blocker definition; the gate split into part A (this sprint) and part B (US-185); 2 weeks, 10 points.
+
+**Done this sprint (Claude):**
+- **Sprint 8 closed** (checks 33–36 passed). **Planning review** (ADR 0047).
+- **US-095:** `MigrationTests` on the frozen `saves/schema3.ftc` (spec 007 AC-14); the developer panel's **Measure frame time (20 s)** and frame-timing stats in Development builds; `s09-release-candidate.md` (Part A: 57 rows from s04–s08; Part B: the Release smoke list).
+- **US-096:** the play log's `tz`, `fromNote`, `step` and `firstSessionDone` (spec 007 AC-15), a session line for a new town; Part C, the diary.
+- Verified in the Editor with touch: Play log On → New game → Replace → Continue (the log's `newGame`, `step`, `tz`); the frame-time button, countdown and result.
+- 268 `Sim.Core` and 69 `Sim.View` tests pass. Development and Release Unity builds succeeded from `33afedb`.
 
 **Carry over (from Sprint 8):** the first session's 10 minutes (recorded by the play log, not gated: ADR 0047 §5); alert dismissals and the guide's per-launch memory only if the playtest hits them.
 
