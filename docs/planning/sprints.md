@@ -186,7 +186,7 @@
 - [x] All Must stories meet the Definition of Done (ADR 0025): 47 of 47 points
 - [x] Test checklist written in `docs/test-checklists/` (`s03-spike-determinism.md`)
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (PR #15); owner merges to `main`
 
 **Planning review (2026-10-18):** 9 gaps closed with the owner, ADR 0034.
 
@@ -444,7 +444,7 @@
 
 ## Sprint 10 · 4–10 Jan 2027 · Phase 1 (playtest fixes)
 
-- **Status:** Code done 2026-10-21 (ADR 0048); the owner's review changes done the same day (ADR 0049); the device check pending
+- **Status:** Done. The owner's device check passed on 2026-10-21 (ADRs 0048–0051); the owner merges PR #15
 - **Branch:** `sprint/10-people-fixes`
 - **Goal:** The owner's Phase 1 playtest findings: the hand works every season and is seen working; labourers stay till harvest.
 - **Points:** 6
@@ -453,15 +453,15 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-186 | The hand works every season | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done; device check pending |
-| US-187 | Labourers till harvest | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Done; device check pending |
+| US-186 | The hand works every season | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
+| US-187 | Labourers till harvest | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Done |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025); the device check is the owner's
+- [x] All Must stories meet the Definition of Done (ADR 0025); the owner's device check passed
 - [x] Test checklist written in `docs/test-checklists/` (`s10-people-fixes.md`)
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] Pull request opened (PR #15); owner merges to `main`
 
 **Done this sprint (Claude):**
 - **Sprint 9 closed** at the owner's word (Phase 1 complete). **Root cause** of the idle hand: an every-season order sowed only its own crop, so out of season it waited all season (wheat waits through Spring, Summer and the Monsoon); and the map walked a hand only to his own order fields with work, though his hours tended every growing field. Labourers were paid to the daily pass and left there.
@@ -484,3 +484,7 @@
 **The owner's follow-up: "the hand still waits in his hut" (ADR 0050).** Reproduced: the hand's choice ignored cost, so once the inherited seed potato was gone, a Spring order waited for potato seed (about 3,400 coins) that cash couldn't cover, while radish seed costs about 50. The hand now picks the best crop he can pay for, and an order's own crop falls back to that pick. Verified in the Editor with touch at 2,000 coins: an every-season wheat order through the order sheet in the Monsoon was sown with rice at once, and Manoj walked straight to it (`docs/art/s10-hand-works-with-little-cash.png`). 271 `Sim.Core` and 70 `Sim.View` tests pass.
 
 **The owner's follow-up: "compost doesn't improve the field" (ADR 0051).** Checked: the rules ran as specified, but compost's +2 a season was less than wheat, rice or potato take out (4–5), so a composted field still fell, and whole-number fertility hid every change. Approved fix: compost +6 a season; the soil under a growing composted crop dries 20% more slowly; fertility to one decimal; each sow row shows the soil before and after ("Soil 46.5 → 46.6", amber when it falls); the fertiliser chips say "+5% harvest · holds water" and "+25% harvest". Chemical unchanged. The gate's defaulter check now asks that every default is foreclosed (with richer soil the bot repays in some runs). Verified in the Editor: the sow sheet with compost and chemical, the moisture *Why?* ("Compost holds water: dries slower by 20%") and the fertility *Why?* in points. 272 `Sim.Core` and 70 `Sim.View` tests pass.
+
+**Review (owner's device check, 2026-10-21):** passed on the iPhone 13 ("looks good"). Sprint 10 is closed when PR #15 is merged.
+
+**Phase 2 planning started in the same session.** The owner's enhancement requests were decided one at a time and recorded in `STATUS.md` (Next up) for the Phase 2 ADRs and specs: a 16 × 12 map growing by era; the village layout with road acres and neighbours not for sale; the trader's 4 t truck (6:00 to midnight, a daily price, the stall paused at night); daily supermarket orders (fresh today, rice and potato in 15 h, the hand delivering first); and buffalo and cows (cut-and-carry green fodder, a straw stack, a feed room).

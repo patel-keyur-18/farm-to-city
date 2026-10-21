@@ -2,7 +2,7 @@
 
 - **Build:** the head of branch `sprint/10-people-fixes` (the commit is in the pull request)
 - **Device:** iPhone 13, iOS version: ____
-- **Tested by / date:** ____
+- **Tested by / date:** the owner, 2026-10-21. **Result: passed** ("looks good"); no blockers reported
 - **How to install:** see `how-to-build-ios.md`. **A Development build** (`--options '["Development"]'`), so the developer panel exists. Delete `unity/FarmToCity/Builds/iOS` before building (the macOS 27 crash).
 - **Your town:** this build moves saves to schema 4. **Your Sprint 9 town loads** and is migrated, with nothing lost. Labourers you hired for the day stay until midnight, as they were paid. Please keep playing it.
 
