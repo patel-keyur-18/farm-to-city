@@ -1,6 +1,6 @@
 # 010. Map, village and edge
 
-- Status: In review (all gaps closed 2026-10-21)
+- Status: Approved (owner, 2026-10-21). All gaps closed 2026-10-21
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, the village around the farm); Art, audio and feel (the map)
