@@ -335,7 +335,7 @@ namespace Game.Presentation
             _selected = Hit.None;
             if (focus) _input.Focus(3.5f, 2.5f);
             SaveNow();
-            WritePlayLog();
+            StartSession(WallNow()); // the new town's first session starts here in the play log (ADR 0047 §2)
             Refresh(false);
         }
 
