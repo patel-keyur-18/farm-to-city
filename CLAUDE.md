@@ -160,6 +160,12 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0049 | Sprint 10 review: every order acts at once (`orderActionsPerHour` 6; Care limits what a hand manages); labourers hired from People till the crops growing now are in, harvesting ripe fields with no hand's order; crops drawn below people |
 | 0050 | The hand sows the best crop he can pay for: his choice skips crops whose seed cash can't cover, and an order's own crop falls back to his best affordable pick; he waits only when nothing in season is affordable |
 | 0051 | Compost +6 fertility a season (more than any crop takes) and the soil under a composted crop dries 20% more slowly; fertility shown to one decimal; the sow sheet shows the soil before and after each crop; chemical unchanged |
+| 0052 | The map grows by era: 16 × 12 acres in Phase 2 with the 8 × 6 farm unchanged at columns 2–9, rows 3–8 (tile ids remapped by a save migration); about 60–80 acres buyable; natural terrain past the edge; the camera opens on the farm |
+| 0053 | The village layout (north = river): the centre east of the farm, the commons north-west, neighbours for sale or not for sale yet; 27 road acres (district road, village lane, farm lane taking `s5`), never for sale |
+| 0054 | The trader's 4 t truck from 6:00 to midnight (or till full); its price and per-crop limits set at 6:00; a total load; selling refused while away; the stall paused midnight to 6:00 |
+| 0055 | Two supermarket orders at 6:00 (regional + 15–30%, by midnight, no penalty), fresh today only, the hand fills them first and counts their price; rice and potato in 15 h |
+| 0056 | Buffalo and cows in a 4-animal shed: co-op milk by quality; green fodder cut and carried, straw stack, feed room; fed automatically, no deaths from hunger in Phase 2; dung to compost; lactation, vaccination, 1.5 h a day an animal |
+| 0057 | Phase 2 specs (010–019) reviewed two per sprint, each a sprint before its code; the enhancements first (010 and 011 coded in Sprint 11 with a device build, 012 in Sprint 12) |
 
 ## Current status
 
