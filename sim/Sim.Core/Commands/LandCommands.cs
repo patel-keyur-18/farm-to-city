@@ -27,6 +27,7 @@ namespace Sim.Core.Commands
             if (id < 0) return CommandResult.Reject(RejectReason.UnknownParcel);
             Parcel parcel = sim.State.Land.Parcels[id];
             if (parcel.Owned) return CommandResult.Reject(RejectReason.AlreadyOwned);
+            if (!sim.Config.Game.Map.Parcels[id].ForSale) return CommandResult.Reject(RejectReason.NotForSale);
             if (!LandSystem.IsAdjacentToOwned(sim, id)) return CommandResult.Reject(RejectReason.NotAdjacent);
             long price = LandRules.ParcelPrice(sim, parcel);
             int lender = -1;

@@ -12,9 +12,9 @@ namespace Sim.Core.Tests
     public static class PeopleKit
     {
         public const long S = FarmTest.S;
-        public const int HomeTile = 18; // an inherited farm acre (parcel home_a)
-        public const int QuartersTile = 37; // the labour quarters beside the yard: hands' huts go here (ADR 0040)
-        public const int YardTile = 21;
+        public const int HomeTile = 84; // an inherited farm acre (parcel home_a)
+        public const int QuartersTile = 119; // the labour quarters beside the yard: hands' huts go here (ADR 0040)
+        public const int YardTile = 87;
         public const long Coin = 100;
 
         /// <summary>Rich content, no inflation, crops in any season: year-0 prices and exact examples.</summary>

@@ -111,7 +111,7 @@ namespace Sim.Core.Tests
             Assert.That(MarketRules.Indexed(sim, 18_000_00), Is.EqualTo(Money.MulRate(18_000_00, index)));
 
             // Land: acreBasePrice × index × the tile's factors.
-            var tile = sim.State.Land.Tiles[18];
+            var tile = sim.State.Land.Tiles[84];
             GameDefs defs = sim.Config.Game;
             Fixed factor = defs.Soils[tile.Soil].PriceFactor * defs.Drainages[tile.Drainage].PriceFactor
                 * Sim.Core.Land.LandRules.FertilityPriceFactor(defs.Land, tile.Fertility) * defs.Map.Parcels[tile.ParcelId].LocationFactor;

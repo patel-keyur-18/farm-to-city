@@ -141,8 +141,8 @@ namespace Sim.Core.Tests
             Simulation sim = LandTest.NewFarmWithWeather("sun", "heatwave");
             Assert.That(sim.Execute(new Commands.BuyParcel(sim.State.Clock.SimTime, "w1")).Accepted, Is.True);
             Tile[] well = sim.Config.Game.Land.WellTiles.Select(t => sim.State.Land.Tiles[t]).ToArray();
-            Assert.That(well.Select(t => t.Id), Is.EqualTo(new[] { 20, 28 }));
-            Tile rainFed = sim.State.Land.Tiles[19]; // inherited, loam, not a well acre
+            Assert.That(well.Select(t => t.Id), Is.EqualTo(new[] { 86, 102 }));
+            Tile rainFed = sim.State.Land.Tiles[85]; // inherited, loam, not a well acre
             Tile bought = sim.State.Land.Tiles.First(t => sim.Config.Game.Map.Parcels[t.ParcelId].Id == "w1");
             Assert.That(sim.Config.Game.Soils[bought.Soil].Id, Is.EqualTo("loam"));
             Assert.That(sim.Config.Game.Soils[rainFed.Soil].Id, Is.EqualTo("loam"));
@@ -168,10 +168,10 @@ namespace Sim.Core.Tests
             Assert.That(lifted, Is.True, "the well lifted moisture (bucket labour, spec 003)");
 
             var e = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) =>
-                f == "land.json" ? j.Replace("\"irrigatedTiles\": [20, 28]", "\"irrigatedTiles\": [20, 29]") : j));
+                f == "land.json" ? j.Replace("\"irrigatedTiles\": [86, 102]", "\"irrigatedTiles\": [86, 103]") : j));
             Assert.That(e.FieldPath, Is.EqualTo("land.well.irrigatedTiles[1]"));
             e = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) =>
-                f == "land.json" ? j.Replace("\"irrigatedTiles\": [20, 28]", "\"irrigatedTiles\": [21]") : j));
+                f == "land.json" ? j.Replace("\"irrigatedTiles\": [86, 102]", "\"irrigatedTiles\": [87]") : j));
             Assert.That(e.Message, Does.Contain("not an inherited farm tile")); // the yard
         }
     }
@@ -183,7 +183,7 @@ namespace Sim.Core.Tests
         public void Fallow_RecoversProRata()
         {
             Simulation sim = NewFarm();
-            Tile fallow = sim.State.Land.Tiles[19], busy = sim.State.Land.Tiles[20], capped = sim.State.Land.Tiles[26]; // inherited loam
+            Tile fallow = sim.State.Land.Tiles[85], busy = sim.State.Land.Tiles[86], capped = sim.State.Land.Tiles[100]; // inherited loam
             Tile unowned = LandTest.TileOf(sim, "loam", "moderate");
             Fixed unownedStart = unowned.Fertility;
             fallow.Fertility = Fixed.FromInt(45);
@@ -259,9 +259,9 @@ namespace Sim.Core.Tests
         public void Shade_MatureTreesOnly()
         {
             Simulation sim = NewFarm();
-            Tile tile = sim.State.Land.Tiles[18]; // inherited loam acre
+            Tile tile = sim.State.Land.Tiles[84]; // inherited loam acre
             tile.Fertility = Fixed.FromInt(60);   // fertility factor 1.00, so the Soil factor is the shade factor
-            TreeSlot[] slots = sim.State.Land.Slots.Where(x => x.TileId == 18 && x.Kind == SlotKind.FieldEdge).ToArray();
+            TreeSlot[] slots = sim.State.Land.Slots.Where(x => x.TileId == 84 && x.Kind == SlotKind.FieldEdge).ToArray();
             Assert.That(slots.Length, Is.EqualTo(2));
 
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(Fixed.One));
@@ -273,7 +273,7 @@ namespace Sim.Core.Tests
             LandSystem.SetTreeMature(sim, slots[1].Id, LandTest.F("0.08")); // a large tree (mango, guava), ADR 0037
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(LandTest.F("0.89")));
             Assert.That(LandRules.SoilFactor(sim, tile), Is.EqualTo(LandTest.F("0.89")));
-            Assert.That(LandRules.ShadeFactor(sim, sim.State.Land.Tiles[19]), Is.EqualTo(Fixed.One), "shade stays on its own tile");
+            Assert.That(LandRules.ShadeFactor(sim, sim.State.Land.Tiles[85]), Is.EqualTo(Fixed.One), "shade stays on its own tile");
 
             // Removing a tree empties the slot and its shade.
             LandSystem.SetTree(sim, slots[1].Id, 0);
@@ -283,12 +283,12 @@ namespace Sim.Core.Tests
             // The floor: 4 slots per acre and minShadeFactor 0.90 in test content (4 × 0.03 would give 0.88).
             Simulation four = NewFarm(game: TestContent.Game((f, j) => f != "land.json" ? j
                 : j.Replace("\"fieldEdgeSlotsPerAcre\": 2", "\"fieldEdgeSlotsPerAcre\": 4").Replace("\"minShadeFactor\": 0.80", "\"minShadeFactor\": 0.90")));
-            foreach (TreeSlot slot in four.State.Land.Slots.Where(x => x.TileId == 18 && x.Kind == SlotKind.FieldEdge))
+            foreach (TreeSlot slot in four.State.Land.Slots.Where(x => x.TileId == 84 && x.Kind == SlotKind.FieldEdge))
             {
                 LandSystem.SetTree(four, slot.Id, slot.Id);
                 LandSystem.SetTreeMature(four, slot.Id, LandTest.F("0.03"));
             }
-            Assert.That(LandRules.ShadeFactor(four, four.State.Land.Tiles[18]), Is.EqualTo(LandTest.F("0.90")), "the floor, not 0.88");
+            Assert.That(LandRules.ShadeFactor(four, four.State.Land.Tiles[84]), Is.EqualTo(LandTest.F("0.90")), "the floor, not 0.88");
         }
     }
 
@@ -299,10 +299,10 @@ namespace Sim.Core.Tests
         {
             Simulation sim = NewFarm(game: ParcelTests.Rich());
             sim.Execute(new Commands.BuyParcel(0, "w1"));
-            long[] first = sim.State.Land.Slots.Where(x => x.TileId == 16 || x.TileId == 17).Select(x => x.Id).ToArray();
+            long[] first = sim.State.Land.Slots.Where(x => x.TileId == 82 || x.TileId == 83).Select(x => x.Id).ToArray();
             sim.Execute(new Commands.SellParcel(0, "w1"));
             sim.Execute(new Commands.BuyParcel(0, "w1"));
-            long[] second = sim.State.Land.Slots.Where(x => x.TileId == 16 || x.TileId == 17).Select(x => x.Id).ToArray();
+            long[] second = sim.State.Land.Slots.Where(x => x.TileId == 82 || x.TileId == 83).Select(x => x.Id).ToArray();
             Assert.That(second.Length, Is.EqualTo(4));
             Assert.That(second.Min(), Is.GreaterThan(first.Max()));
             Assert.That(sim.State.Land.Slots.Select(x => x.Id), Is.Ordered.And.Unique);
@@ -318,7 +318,7 @@ namespace Sim.Core.Tests
         {
             if (pass != ItemClass.Hourly) return;
             long hour = sim.State.Clock.SimTime / 3600;
-            foreach (int tile in new[] { 18, 19, 26, 28 })
+            foreach (int tile in new[] { 84, 85, 100, 102 })
                 if ((hour + tile) % 37 == 0) LandSystem.SetOccupied(sim, tile, !sim.State.Land.Tiles[tile].Occupied);
         }
     }

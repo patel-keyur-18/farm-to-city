@@ -101,13 +101,13 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             long t = sim.State.Clock.SimTime;
-            sim.Execute(new Sow(t, 20, "radish", SeedSource.Certified, "none")); // two hours: not the long crop
+            sim.Execute(new Sow(t, 86, "radish", SeedSource.Certified, "none")); // two hours: not the long crop
             Assert.That(NotifyAsk.Moment(sim.DrainEvents(), 0, false, sim.State.Clock.LastWallUtc, t), Is.Null);
-            sim.Execute(new Sow(t, 28, "potato", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(t, 102, "potato", SeedSource.Certified, "none"));
             NotifyAskMoment? m = NotifyAsk.Moment(sim.PendingEvents, 0, false, sim.State.Clock.LastWallUtc, t);
             Assert.That(m.HasValue, Is.True);
             Assert.That(m.Value.CropId, Is.EqualTo("potato"));
-            Assert.That(m.Value.ReadyWallUtc, Is.EqualTo(sim.State.Clock.LastWallUtc + sim.State.Farm.CropOn(28).ReadyAt - t));
+            Assert.That(m.Value.ReadyWallUtc, Is.EqualTo(sim.State.Clock.LastWallUtc + sim.State.Farm.CropOn(102).ReadyAt - t));
             Assert.That(NotifyAsk.Moment(sim.PendingEvents, 0, true, Wall0, t), Is.Null, "never when already on");
             Assert.That(NotifyAsk.Moment(sim.PendingEvents, 1, false, Wall0, t), Is.Null, "the second ask waits for the first season close");
             Assert.That(NotifyAsk.Moment(sim.PendingEvents, 2, false, Wall0, t), Is.Null, "never a third");

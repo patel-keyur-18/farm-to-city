@@ -99,6 +99,9 @@ namespace Sim.Core.Commands
         UnknownTarget,
         TooManyOrders,
         NoOrder,
+
+        /// <summary>The village's land, or a neighbour's farm not for sale yet (spec 010 §3.1).</summary>
+        NotForSale,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

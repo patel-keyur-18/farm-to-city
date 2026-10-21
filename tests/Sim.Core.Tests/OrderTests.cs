@@ -104,18 +104,18 @@ namespace Sim.Core.Tests
             Assert.That(farm.Crops[sim.State.Farm.CropOn(HomeTile).Def].Id, Is.EqualTo(expected), "his choice");
             Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, HomeTile).Crop, Is.EqualTo(-1), "and stays his choice");
             Assert.That(sim.Execute(new SetStandingOrder(sim.State.Clock.SimTime, h.Id,
-                OrderSpec.KeepCrop(19, OrderSpec.HandChooses, SeedSource.Saved, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
+                OrderSpec.KeepCrop(85, OrderSpec.HandChooses, SeedSource.Saved, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
 
             // The player's crop, in season, wins even when it isn't the best (radish sows all year).
             string other = farm.Crops.First(c => c.SowSeasons[season] && c.Id != expected).Id;
             sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
-            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, other, SeedSource.Certified, "none", SellRule.Store)));
-            Assert.That(farm.Crops[sim.State.Farm.CropOn(19).Def].Id, Is.EqualTo(other));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(85, other, SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(farm.Crops[sim.State.Farm.CropOn(85).Def].Id, Is.EqualTo(other));
 
             // Out of season with saved seed: his pick is sown from certified seed (the store has no saved seed of it).
             sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
-            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, "wheat", SeedSource.Saved, "none", SellRule.Store)));
-            Crop c20 = sim.State.Farm.CropOn(20);
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(86, "wheat", SeedSource.Saved, "none", SellRule.Store)));
+            Crop c20 = sim.State.Farm.CropOn(86);
             Assert.That((farm.Crops[c20.Def].Id, c20.Seed), Is.EqualTo((expected, SeedSource.Certified)));
         }
 
@@ -135,9 +135,9 @@ namespace Sim.Core.Tests
 
             sim.DrainEvents();
             Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));
-            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, "potato", SeedSource.Certified, "none", SellRule.Store)));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(85, "potato", SeedSource.Certified, "none", SellRule.Store)));
             Assert.That(sim.DrainEvents().OfType<OrderWaiting>(), Is.Empty, "nobody waits");
-            foreach (int tile in new[] { HomeTile, 19 })
+            foreach (int tile in new[] { HomeTile, 85 })
             {
                 Crop c = sim.State.Farm.CropOn(tile);
                 Assert.That(c, Is.Not.Null, "tile " + tile + " sown at once");
@@ -148,8 +148,8 @@ namespace Sim.Core.Tests
             // With no cash at all and no seed in the store, he waits and says why.
             CashTo(sim, 0);
             foreach (var g in sim.Config.Game.Farm.Crops) Market.Store.Take(sim, g.SeedGood, sim.State.Market.InStore(g.SeedGood));
-            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, OrderSpec.HandChooses, SeedSource.Certified, "none", SellRule.Store)));
-            Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, 20).Waiting, Is.EqualTo(OrderWait.InsufficientFunds));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(86, OrderSpec.HandChooses, SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, 86).Waiting, Is.EqualTo(OrderWait.InsufficientFunds));
         }
 
         // ADR 0040: a new order starts at once; one action per hand per sim hour.
@@ -161,8 +161,8 @@ namespace Sim.Core.Tests
             Hand bh = SteadyHand(both);
             both.DrainEvents();
             Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, KeepWheat()));
-            Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, OrderSpec.KeepCrop(19, "wheat", SeedSource.Certified, "none", SellRule.Store)));
-            Assert.That(both.DrainEvents().OfType<OrderExecuted>().Select(e => e.Target), Is.EqualTo(new long[] { HomeTile, 19 }), "both fields at once");
+            Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, OrderSpec.KeepCrop(85, "wheat", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(both.DrainEvents().OfType<OrderExecuted>().Select(e => e.Target), Is.EqualTo(new long[] { HomeTile, 85 }), "both fields at once");
 
             // The cap still holds when content sets it: one action an hour.
             Simulation sim = Start(NoPests((f, j) => f == "people.json" ? j.Replace("\"orderActionsPerHour\": 6", "\"orderActionsPerHour\": 1") : j));
@@ -173,10 +173,10 @@ namespace Sim.Core.Tests
             Ok(sim, new SetStandingOrder(t - 10, h.Id, KeepWheat()));
             Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Single().Target, Is.EqualTo(HomeTile), "sown at once");
             Assert.That(sim.State.Farm.CropOn(HomeTile), Is.Not.Null);
-            Ok(sim, new SetStandingOrder(t - 10, h.Id, OrderSpec.KeepCrop(19, "wheat", SeedSource.Certified, "none", SellRule.Store)));
+            Ok(sim, new SetStandingOrder(t - 10, h.Id, OrderSpec.KeepCrop(85, "wheat", SeedSource.Certified, "none", SellRule.Store)));
             Assert.That(sim.DrainEvents().OfType<OrderExecuted>(), Is.Empty, "this hour's action is used");
             sim.AdvanceTo(t);
-            Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Single().Target, Is.EqualTo(19), "the next hour's one action");
+            Assert.That(sim.DrainEvents().OfType<OrderExecuted>().Single().Target, Is.EqualTo(85), "the next hour's one action");
 
             // The player sows potato on an ordered, empty field: the order never undoes it.
             Simulation p = Start(NoPests());
@@ -307,12 +307,12 @@ namespace Sim.Core.Tests
             Hand h = HireHand(sim);
             long t = sim.State.Clock.SimTime;
             Assert.That(sim.Execute(new SetStandingOrder(t, 99, KeepWheat())).Reason, Is.EqualTo(RejectReason.NoHand));
-            Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(0, "wheat", SeedSource.Certified, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownTarget));
+            Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(50, "wheat", SeedSource.Certified, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownTarget));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "maize", SeedSource.Certified, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownCrop));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "radish", SeedSource.Saved, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "wheat", SeedSource.Certified, "gold", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownFertiliser));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, KeepWheat(SellRule.Offer, "0"))).Reason, Is.EqualTo(RejectReason.InvalidArgument));
-            int[] tiles = { 18, 19, 20, 26, 27, 28 };
+            int[] tiles = { 84, 85, 86, 100, 101, 102 };
             foreach (int tile in tiles) Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(tile, "wheat", SeedSource.Certified, "none", SellRule.Store)));
             long slot = sim.State.Land.Slots[0].Id;
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.PickTree(slot, SellRule.Store))).Reason, Is.EqualTo(RejectReason.TooManyOrders));

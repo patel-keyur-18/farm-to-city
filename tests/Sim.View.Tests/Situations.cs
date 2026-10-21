@@ -32,13 +32,13 @@ namespace Sim.View.Tests
         public static Simulation Growing()
         {
             Simulation sim = Rich();
-            Ok(sim, new Sow(T(sim), 20, "potato", SeedSource.Certified, "compost"));
-            Ok(sim, new Sow(T(sim), 28, "radish", SeedSource.Certified, "none"));
+            Ok(sim, new Sow(T(sim), 86, "potato", SeedSource.Certified, "compost"));
+            Ok(sim, new Sow(T(sim), 102, "radish", SeedSource.Certified, "none"));
             GardenBed bed = sim.State.Farm.Beds[0];
             Ok(sim, new SowGarden(T(sim), bed.Id, "garden_spinach"));
             TreeSlot slot = sim.State.Land.Slots.First(s => s.Kind == SlotKind.Yard && s.TreeId == 0);
             Ok(sim, new PlantTree(T(sim), slot.Id, "mango"));
-            Ok(sim, new BuildHandHut(T(sim), 37));
+            Ok(sim, new BuildHandHut(T(sim), 119));
             for (int i = 0; i < 24 * 10 && sim.State.People.Hands.Count == 0; i++)
             {
                 sim.AdvanceTo(T(sim) + Hour);
@@ -55,7 +55,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Growing();
             sim.AdvanceTo(T(sim) + 30 * Hour);
-            foreach (Crop c in sim.State.Farm.Crops.Where(c => c.State == CropState.Ready && c.TileId == 28).ToList())
+            foreach (Crop c in sim.State.Farm.Crops.Where(c => c.State == CropState.Ready && c.TileId == 102).ToList())
                 Ok(sim, new Harvest(T(sim), c.TileId));
             int radish = sim.Config.Game.Market.Goods.ToList().FindIndex(g => g.Id == "radish");
             if (sim.State.Market.InStore(radish) > 0) Ok(sim, new Offer(T(sim), "radish", sim.State.Market.InStore(radish) / 2));

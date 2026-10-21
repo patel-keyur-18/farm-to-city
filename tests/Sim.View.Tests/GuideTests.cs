@@ -97,7 +97,7 @@ namespace Sim.View.Tests
                     GuideKit.Ok(sim, new SellToTrader(t, "radish", sim.State.Market.InStore(sim.Config.Game.Market.IndexOf("radish"))));
                     if (firstSale < 0) firstSale = t - start;
                 }
-                else if (h == "tile:20") GuideKit.Ok(sim, new Sow(t, 20, "potato", SeedSource.Certified, "none"));
+                else if (h == "tile:86") GuideKit.Ok(sim, new Sow(t, 86, "potato", SeedSource.Certified, "none"));
                 GuideKit.Settle(sim, guide);
                 if (Guide.FirstSessionActive(sim) && guide.Next(sim) == null) GuideKit.Live(sim, guide, 60);
             }
@@ -132,7 +132,7 @@ namespace Sim.View.Tests
             foreach (Simulation s in new[] { sim, other })
             {
                 long at = s.State.Clock.SimTime;
-                GuideKit.Ok(s, new Sow(at, 20, "potato", SeedSource.Certified, "none"));
+                GuideKit.Ok(s, new Sow(at, 86, "potato", SeedSource.Certified, "none"));
                 GuideKit.Ok(s, new SetEatFromStore(at, false));
             }
 
@@ -144,7 +144,7 @@ namespace Sim.View.Tests
             Assert.That(guide.Nudge(ViewKit2.Context(sim)), Is.Null);
             Assert.That(sim.Execute(new CompleteStep(sim.State.Clock.SimTime, "firstPick")).Reason, Is.EqualTo(RejectReason.NotCurrentStep));
             GuideKit.Live(sim, guide, 2 * 86400); // the potato is ready and the hours pass
-            GuideKit.Ok(sim, new Harvest(sim.State.Clock.SimTime, 20, Overflow.SellRestToTrader));
+            GuideKit.Ok(sim, new Harvest(sim.State.Clock.SimTime, 86, Overflow.SellRestToTrader));
             GuideKit.Settle(sim, guide);
             Assert.That(guide.Next(sim), Is.EqualTo("firstFieldHarvest"));
         }
@@ -201,7 +201,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             ViewContext ctx = ViewKit2.Context(sim);
-            GuideKit.Ok(sim, new Sow(sim.State.Clock.SimTime, 20, "potato", SeedSource.Certified, "none"));
+            GuideKit.Ok(sim, new Sow(sim.State.Clock.SimTime, 86, "potato", SeedSource.Certified, "none"));
             LetterVm page = Letter.Page(ctx, "comeBack", false, GuideKit.Info(sim), 0);
             Assert.That(page.Asks, Is.True);
             Assert.That(page.Buttons.Select(b => b.Id), Is.EqualTo(new[] { LetterIds.Yes, LetterIds.NotNow }));
@@ -234,19 +234,19 @@ namespace Sim.View.Tests
             Simulation sim = GuideKit.Skipped(out Guide guide);
             long t = sim.State.Clock.SimTime;
             // Two at once: a field harvest and a pest warning queue in priority order (firstFieldHarvest before pest).
-            GuideKit.Ok(sim, new Sow(t, 18, "radish", SeedSource.Certified, "none"));
+            GuideKit.Ok(sim, new Sow(t, 84, "radish", SeedSource.Certified, "none"));
             GuideKit.Settle(sim, guide);
             Assert.That(guide.Next(sim), Is.Null);
             GuideKit.Live(sim, guide, 3 * 3600);
-            GuideKit.Ok(sim, new Harvest(sim.State.Clock.SimTime, 18));
+            GuideKit.Ok(sim, new Harvest(sim.State.Clock.SimTime, 84));
             guide.Observe(sim, sim.DrainEvents().Concat(new SimEvent[] { new PestWarning(sim.State.Clock.SimTime, 19, Outbreak.Normal, sim.State.Clock.SimTime + 3600) }).ToList());
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("firstFieldHarvest"));
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("pest"));
             Assert.That(guide.Next(sim), Is.Null);
             // A second harvest opens nothing: seen once.
-            GuideKit.Ok(sim, new Sow(sim.State.Clock.SimTime, 18, "radish", SeedSource.Certified, "none"));
+            GuideKit.Ok(sim, new Sow(sim.State.Clock.SimTime, 84, "radish", SeedSource.Certified, "none"));
             GuideKit.Live(sim, guide, 3 * 3600);
-            GuideKit.Ok(sim, new Harvest(sim.State.Clock.SimTime, 18));
+            GuideKit.Ok(sim, new Harvest(sim.State.Clock.SimTime, 84));
             GuideKit.Settle(sim, guide);
             Assert.That(guide.Next(sim), Is.Null);
 
@@ -265,12 +265,12 @@ namespace Sim.View.Tests
             GuideKit.Live(sim, guide, sim.Clock.SecondsPerSeason - sim.State.Clock.SimTime % sim.Clock.SecondsPerSeason + 60);
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("seasonReport"));
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("season.summer"));
-            foreach (int tile in new[] { 18, 19, 20, 26, 27, 28 }) sim.Execute(new Sow(sim.State.Clock.SimTime, tile, "lentils", SeedSource.Certified, "none"));
+            foreach (int tile in new[] { 84, 85, 86, 100, 101, 102 }) sim.Execute(new Sow(sim.State.Clock.SimTime, tile, "lentils", SeedSource.Certified, "none"));
             GuideKit.Settle(sim, guide);
             Assert.That(sim.State.Farm.CareRatio, Is.LessThan(Fixed.One), "six acres are more than the founder tends");
             GuideKit.Live(sim, guide, 3600);
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("labour"));
-            guide.Rejected(sim, new Sow(sim.State.Clock.SimTime, 18, "lentils", SeedSource.Certified, "none"), RejectReason.InsufficientFunds);
+            guide.Rejected(sim, new Sow(sim.State.Clock.SimTime, 84, "lentils", SeedSource.Certified, "none"), RejectReason.InsufficientFunds);
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("borrowing"));
             Assert.That(guide.Next(sim), Is.Null);
         }
@@ -397,15 +397,15 @@ namespace Sim.View.Tests
                 { "This season's harvested acres = 0 of 6", "A house for a hand = Not yet", "A season with farm profit = Not yet" }));
             Assert.That(vm.Lines.All(l => l.WhyKey == "era"), Is.True);
 
-            EraRules.OnHarvest(sim, 18, Fixed.Parse("0.9"));
-            EraRules.OnHarvest(sim, 19, Fixed.Parse("1.1"));
+            EraRules.OnHarvest(sim, 84, Fixed.Parse("0.9"));
+            EraRules.OnHarvest(sim, 85, Fixed.Parse("1.1"));
             EraRules.OnSeasonClosed(sim, 0, sim.Period);
             vm = ProgressSheet.Build(ctx);
             Assert.That(vm.Lines[0].Value, Is.EqualTo("2 of 6"));
             Assert.That(vm.Lines[1].Value, Is.EqualTo("100% (needs 90%)"));
             Assert.That(EraRules.Acres(sim, sim.Period), Is.EqualTo(2));
 
-            GuideKit.Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 37));
+            GuideKit.Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 119));
             Assert.That(ProgressSheet.Build(ctx).Lines[2].Value, Does.StartWith("Building, ready in"));
             GuideKit.Ok(sim, new AdvanceTo(sim.State.Clock.SimTime + 86400));
             Assert.That(ProgressSheet.Build(ctx).Lines.First(l => l.Label == "A house for a hand").Value, Is.EqualTo("Built"));

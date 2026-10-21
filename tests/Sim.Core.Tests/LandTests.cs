@@ -8,7 +8,7 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    public class LandTests
+    public partial class LandTests
     {
         // Spec 002 AC-1.
         [Test]
@@ -64,7 +64,7 @@ namespace Sim.Core.Tests
 
             Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
             Assert.That(one.State.ComputeHash(), Is.Not.EqualTo(Build().State.ComputeHash()), "land state is hashed and changes");
-            Assert.That(one.State.Land.Tiles[27].Fertility, Is.Not.EqualTo(Build().State.Land.Tiles[27].Fertility), "fallow recovered");
+            Assert.That(one.State.Land.Tiles[101].Fertility, Is.Not.EqualTo(Build().State.Land.Tiles[101].Fertility), "fallow recovered");
         }
     }
 }

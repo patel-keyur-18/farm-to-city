@@ -20,5 +20,5 @@
     "fieldEdgeSlotsPerAcre": 2,
     "minShadeFactor": 0.80
   },
-  "well": { "moistureFloor": 30, "irrigatedTiles": [20, 28] }
+  "well": { "moistureFloor": 30, "irrigatedTiles": [86, 102] }
 }

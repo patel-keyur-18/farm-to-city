@@ -15,7 +15,7 @@ namespace Sim.View.Tests
         {
             // No inflation, so the year-0 prices of the spec's example hold at any time in the season.
             Simulation sim = ViewKit.NewGame(edit: (f, j) => f == "market.json" ? j.Replace("\"inflationMinPerYear\": 0.02, \"inflationMaxPerYear\": 0.06", "\"inflationMinPerYear\": 0, \"inflationMaxPerYear\": 0") : j);
-            if (moisture >= 0) sim.State.Land.Tiles[20].Moisture = Fixed.FromInt(moisture);
+            if (moisture >= 0) sim.State.Land.Tiles[86].Moisture = Fixed.FromInt(moisture);
             return sim;
         }
 
@@ -24,7 +24,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Spring(45);
             Tile20(sim);
-            SowSheetVm sheet = SowSheet.Build(ViewKit2.Context(sim), 20);
+            SowSheetVm sheet = SowSheet.Build(ViewKit2.Context(sim), 86);
             CropRowVm potato = sheet.Rows.Single(r => r.CropId == "potato"), radish = sheet.Rows.Single(r => r.CropId == "radish"), wheat = sheet.Rows.Single(r => r.CropId == "wheat");
 
             Assert.That(potato.SowableNow, Is.True);
@@ -46,8 +46,8 @@ namespace Sim.View.Tests
             Assert.That(potato.SoilText, Is.EqualTo("Soil 45.0 → 43.8"));
             Assert.That(potato.SoilFalls, Is.True);
             Assert.That(radish.SoilText + " " + radish.SoilFalls, Is.EqualTo("Soil 45.0 → 45.0 False"), "radish takes 0.04: no fall shown");
-            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 20, "compost").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 45.3"));
-            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 20, "chemical").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 43.0"));
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86, "compost").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 45.3"));
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86, "chemical").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 43.0"));
             Assert.That(potato.Suits, Is.EqualTo(Suits.Good));
             Assert.That(radish.Suits, Is.EqualTo(Suits.Good));
             Assert.That(potato.TimeText, Is.EqualTo("1 d"));
@@ -61,7 +61,7 @@ namespace Sim.View.Tests
 
             // At moisture 38 both are inside neither band and rate "fair" (water 0.97).
             Simulation dry = Spring(38);
-            SowSheetVm drySheet = SowSheet.Build(ViewKit2.Context(dry), 20);
+            SowSheetVm drySheet = SowSheet.Build(ViewKit2.Context(dry), 86);
             Assert.That(drySheet.Rows.Single(r => r.CropId == "potato").Suits, Is.EqualTo(Suits.Fair));
             Assert.That(drySheet.Rows.Single(r => r.CropId == "radish").Suits, Is.EqualTo(Suits.Fair));
             Assert.That(drySheet.Rows.Single(r => r.CropId == "potato").Get, Is.LessThan(potato.Get));
@@ -70,20 +70,20 @@ namespace Sim.View.Tests
         private static void Tile20(Simulation sim)
         {
             // The example of spec 008 §3.7: a loam acre at fertility 45.
-            Assert.That(sim.State.Land.Tiles[20].Fertility, Is.EqualTo(Fixed.FromInt(45)));
-            Assert.That(sim.Config.Game.Soils[sim.State.Land.Tiles[20].Soil].Id, Is.EqualTo("loam"));
+            Assert.That(sim.State.Land.Tiles[86].Fertility, Is.EqualTo(Fixed.FromInt(45)));
+            Assert.That(sim.Config.Game.Soils[sim.State.Land.Tiles[86].Soil].Id, Is.EqualTo("loam"));
         }
 
         [Test]
         public void SowButton_SendsTheSow_AndShowsTheCost()
         {
             Simulation sim = Spring(45);
-            SowSheetVm sheet = SowSheet.Build(ViewKit2.Context(sim), 20, "compost");
+            SowSheetVm sheet = SowSheet.Build(ViewKit2.Context(sim), 86, "compost");
             CropRowVm potato = sheet.Rows.Single(r => r.CropId == "potato");
             Assert.That(potato.Sow.Enabled, Is.True);
             Assert.That(sheet.Fertilisers.Single(f => f.Selected).Id, Is.EqualTo("compost"));
             Assert.That(potato.CostText, Does.StartWith("pay").Or.EqualTo("from your store"));
-            CropRowVm plain = SowSheet.Build(ViewKit2.Context(sim), 20).Rows.Single(r => r.CropId == "potato");
+            CropRowVm plain = SowSheet.Build(ViewKit2.Context(sim), 86).Rows.Single(r => r.CropId == "potato");
             Assert.That(potato.HarvestGrams, Is.GreaterThan(plain.HarvestGrams), "compost adds 5% to the harvest");
             Assert.That(potato.Spend, Is.GreaterThan(plain.Spend), "and costs its compost");
             Assert.That(potato.InputsText, Does.Contain("Compost"));
@@ -91,8 +91,8 @@ namespace Sim.View.Tests
             Assert.That(c, Is.TypeOf<Sow>());
             Assert.That(((Sow)c).FertiliserId, Is.EqualTo("compost"));
             Assert.That(sim.Execute(c).Accepted, Is.True);
-            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 20).Rows.All(r => !r.Sow.Enabled), Is.True, "occupied: every sow is greyed");
-            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 20).Rows[0].Sow.DisabledReason, Is.EqualTo("Something is already growing here."));
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86).Rows.All(r => !r.Sow.Enabled), Is.True, "occupied: every sow is greyed");
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86).Rows[0].Sow.DisabledReason, Is.EqualTo("Something is already growing here."));
         }
 
         [Test]

@@ -49,9 +49,9 @@ namespace Sim.Core.Tests
         public void ReadyGrace_ThenSpoils()
         {
             Simulation sim = FarmTest.Farm();
-            Assert.That(sim.Execute(new Sow(0, 19, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 85, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
             sim.AdvanceTo(2 * Hour);
-            Crop c = FarmTest.Crop(sim, 19);
+            Crop c = FarmTest.Crop(sim, 85);
             long grams = c.HarvestGrams;
             sim.DrainEvents();
 
@@ -63,19 +63,19 @@ namespace Sim.Core.Tests
             long lost = sim.Config.Game.Market.Goods[FarmTest.Good(sim, "radish")].SpoilagePerDay.MulRatio(grams, 1).RoundToLong();
             Assert.That(c.HarvestGrams, Is.EqualTo(grams - lost));
             GoodsSpoiled e = sim.DrainEvents().OfType<GoodsSpoiled>().Single(x => x.Source == SpoilSource.Field);
-            Assert.That((e.GoodId, e.Quantity, e.Where), Is.EqualTo(("radish", lost, 19L)));
+            Assert.That((e.GoodId, e.Quantity, e.Where), Is.EqualTo(("radish", lost, 85L)));
             int radish = FarmTest.Good(sim, "radish");
             long before = sim.State.Market.InStore(radish);
-            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 19)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 85)).Accepted, Is.True);
             Assert.That(sim.State.Market.InStore(radish) - before, Is.EqualTo(grams - lost));
 
             // An away advance of 72 h from readiness loses nothing.
             Simulation away = FarmTest.Farm();
-            Assert.That(away.Execute(new Sow(0, 19, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(away.Execute(new Sow(0, 85, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
             away.AdvanceTo(2 * Hour);
-            long g = FarmTest.Crop(away, 19).HarvestGrams;
+            long g = FarmTest.Crop(away, 85).HarvestGrams;
             away.AdvanceTo(74 * Hour, Time.AdvanceMode.Away);
-            Assert.That(FarmTest.Crop(away, 19).HarvestGrams, Is.EqualTo(g));
+            Assert.That(FarmTest.Crop(away, 85).HarvestGrams, Is.EqualTo(g));
 
             // A ripe mango batch spoils after its grace too, and a batch rotted to under 1 kg is gone (the tree can fruit again).
             Simulation t = FarmTest.Farm();

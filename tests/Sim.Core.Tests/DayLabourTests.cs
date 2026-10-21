@@ -84,8 +84,8 @@ namespace Sim.Core.Tests
             Hand h = HireHand(sim);
             long t = (sim.State.Clock.SimTime / Day + 1) * Day + 18 * Hour + 1800; // 18:30
             sim.AdvanceTo(t);
-            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(20, "radish", Farm.SeedSource.Certified, "none", SellRule.Store)));
-            Ok(sim, new Sow(t, 19, "radish", Farm.SeedSource.Certified, "none"));
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(86, "radish", Farm.SeedSource.Certified, "none", SellRule.Store)));
+            Ok(sim, new Sow(t, 85, "radish", Farm.SeedSource.Certified, "none"));
             Ok(sim, new Sow(t, HomeTile, "potato", Farm.SeedSource.Certified, "none"));
             int free = PeopleRules.FreeNow(sim);
             long cash = sim.State.Ledger.Cash;
@@ -98,7 +98,7 @@ namespace Sim.Core.Tests
             Simulation live = Simulation.FromState(sim.Config, sim.State.Clone());
             Simulation away = Simulation.FromState(sim.Config, sim.State.Clone());
             live.AdvanceTo(t + 3 * Hour);
-            Assert.That(live.PendingEvents.OfType<Events.LabourersHarvested>().Select(e => e.TileId), Is.EqualTo(new[] { 19 }), "the radish as it ripened");
+            Assert.That(live.PendingEvents.OfType<Events.LabourersHarvested>().Select(e => e.TileId), Is.EqualTo(new[] { 85 }), "the radish as it ripened");
             live.AdvanceTo((t / Day + 1) * Day + Hour);
             Assert.That(P(live).Roster.Count(n => n.Hired), Is.EqualTo(2), "still there after the daily pass");
             Assert.That(P(live).Roster.Count(n => n.Hired && n.FreeToday), Is.EqualTo(0), "not drawn for the new day");
@@ -139,7 +139,7 @@ namespace Sim.Core.Tests
             {
                 sim.AdvanceTo(d * Day + 1);
                 int free = PeopleRules.FreeNow(sim);
-                int tile = new[] { 18, 19, 20, 26, 27, 28 }.First(x => sim.State.Farm.CropOn(x) == null);
+                int tile = new[] { 84, 85, 86, 100, 101, 102 }.First(x => sim.State.Farm.CropOn(x) == null);
                 Ok(sim, new Sow(sim.State.Clock.SimTime, tile, "potato", Farm.SeedSource.Certified, "none"));
                 if (free > 0) Ok(sim, new HireLabourers(sim.State.Clock.SimTime, free));
             }

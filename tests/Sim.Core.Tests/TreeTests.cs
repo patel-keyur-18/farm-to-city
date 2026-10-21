@@ -24,8 +24,8 @@ namespace Sim.Core.Tests
         public void Plant_Mature_Shade()
         {
             Simulation sim = FarmTest.Farm();
-            TreeSlot edge = EdgeSlot(sim, 18);
-            Tile tile = sim.State.Land.Tiles[18];
+            TreeSlot edge = EdgeSlot(sim, 84);
+            Tile tile = sim.State.Land.Tiles[84];
             Fixed shade0 = LandRules.ShadeFactor(sim, tile);
             long cash = sim.State.Ledger.Cash;
 

@@ -35,23 +35,23 @@ namespace Sim.Core.Tests
             {
                 SeedSource source = k == 0 ? SeedSource.Certified : SeedSource.Saved;
                 long before = sim.State.Market.InStore(wheatGood);
-                Assert.That(sim.Execute(new Sow(t, 18, "wheat", source, "none")).Accepted, Is.True, "cycle " + k);
+                Assert.That(sim.Execute(new Sow(t, 84, "wheat", source, "none")).Accepted, Is.True, "cycle " + k);
                 if (source == SeedSource.Saved) Assert.That(before - sim.State.Market.InStore(wheatGood), Is.EqualTo(1688)); // 1.6875 kg
                 t += 6 * Hour;
-                Assert.That(sim.Execute(new Harvest(t, 18, Overflow.SellRestToTrader)).Accepted, Is.True);
+                Assert.That(sim.Execute(new Harvest(t, 84, Overflow.SellRestToTrader)).Accepted, Is.True);
             }
             Assert.That(sim.State.Farm.SavedSeedAgeOf(wheat), Is.EqualTo(Fixed.One));
-            Assert.That(sim.Execute(new Sow(t, 18, "wheat", SeedSource.Saved, "none")).Accepted, Is.True);
-            Crop c = FarmTest.Crop(sim, 18);
+            Assert.That(sim.Execute(new Sow(t, 84, "wheat", SeedSource.Saved, "none")).Accepted, Is.True);
+            Crop c = FarmTest.Crop(sim, 84);
             Assert.That(c.SeedAge, Is.EqualTo(Fixed.One));
             FarmTest.AssertNear(FarmRules.SeedFactor(defs.Crops[wheat], c.Seed, c.SeedAge), "0.98", 4);
 
             // Potato: 8 cycles of 0.25 = age 2.0, factor 0.90.
             for (int k = 0; k < 8; k++)
             {
-                Assert.That(sim.Execute(new Sow(t, 19, "potato", k == 0 ? SeedSource.Certified : SeedSource.Saved, "none")).Accepted, Is.True, "potato " + k);
+                Assert.That(sim.Execute(new Sow(t, 85, "potato", k == 0 ? SeedSource.Certified : SeedSource.Saved, "none")).Accepted, Is.True, "potato " + k);
                 t += Day;
-                Assert.That(sim.Execute(new Harvest(t, 19, Overflow.SellRestToTrader)).Accepted, Is.True);
+                Assert.That(sim.Execute(new Harvest(t, 85, Overflow.SellRestToTrader)).Accepted, Is.True);
             }
             Assert.That(sim.State.Farm.SavedSeedAgeOf(potato), Is.EqualTo(Fixed.FromInt(2)));
             FarmTest.AssertNear(FarmRules.SeedFactor(defs.Crops[potato], SeedSource.Saved, Fixed.FromInt(2)), "0.90", 4);
@@ -59,7 +59,7 @@ namespace Sim.Core.Tests
             // The floors.
             Assert.That(FarmRules.SeedFactor(defs.Crops[wheat], SeedSource.Saved, Fixed.FromInt(9)), Is.EqualTo(defs.Crops[wheat].SavedSeedFloor));
             Assert.That(FarmRules.SeedFactor(defs.Crops[potato], SeedSource.Saved, Fixed.FromInt(9)), Is.EqualTo(defs.Crops[potato].SavedSeedFloor));
-            Assert.That(sim.Execute(new Sow(t, 26, "radish", SeedSource.Saved, "none")).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
+            Assert.That(sim.Execute(new Sow(t, 100, "radish", SeedSource.Saved, "none")).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
         }
 
         // ADR 0032: the inherited grain sows as saved seed of age 2.0 (factor 0.96).
@@ -67,8 +67,8 @@ namespace Sim.Core.Tests
         public void InheritedSeed_Age()
         {
             Simulation sim = FarmTest.Farm();
-            Assert.That(sim.Execute(new Sow(0, 18, "lentils", SeedSource.Saved, "none")).Accepted, Is.True);
-            Crop c = FarmTest.Crop(sim, 18);
+            Assert.That(sim.Execute(new Sow(0, 84, "lentils", SeedSource.Saved, "none")).Accepted, Is.True);
+            Crop c = FarmTest.Crop(sim, 84);
             Assert.That(c.SeedAge, Is.EqualTo(Fixed.FromInt(2)));
             FarmTest.AssertNear(FarmRules.SeedFactor(sim.Config.Game.Farm.Crops[c.Def], c.Seed, c.SeedAge), "0.96", 4);
         }
@@ -131,7 +131,7 @@ namespace Sim.Core.Tests
         public void Grow_Pick_NoLabour()
         {
             Simulation sim = FarmTest.Farm();
-            Assert.That(sim.Execute(new Sow(0, 18, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 84, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
             Fixed care = sim.State.Farm.CareRatio;
             long cash = sim.State.Ledger.Cash;
 

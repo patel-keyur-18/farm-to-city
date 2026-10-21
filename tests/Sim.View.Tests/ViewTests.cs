@@ -44,8 +44,8 @@ namespace Sim.View.Tests
             Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "a new game");
 
             long t = sim.State.Clock.SimTime;
-            sim.Execute(new Sow(t, 20, "potato", SeedSource.Certified, "none"));
-            sim.Execute(new Sow(t, 28, "radish", SeedSource.Certified, "compost"));
+            sim.Execute(new Sow(t, 86, "potato", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(t, 102, "radish", SeedSource.Certified, "compost"));
             sim.Execute(new SowGarden(t, 1, "garden_radish"));
             sim.Execute(new PlantTree(t, sim.State.Land.Slots.First(s => s.Kind == SlotKind.Yard).Id, "banana"));
             foreach (long step in new[] { Hour, 2 * Hour, 10 * Hour, Day, 2 * Day, 4 * Day })
@@ -67,8 +67,8 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame(seed: 11);
             ViewContext ctx = ViewKit2.Context(sim);
-            sim.Execute(new Sow(sim.State.Clock.SimTime, 20, "radish", SeedSource.Certified, "none"));
-            sim.Execute(new Sow(sim.State.Clock.SimTime, 28, "potato", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(sim.State.Clock.SimTime, 86, "radish", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(sim.State.Clock.SimTime, 102, "potato", SeedSource.Certified, "none"));
             sim.Execute(new SowGarden(sim.State.Clock.SimTime, 1, "garden_radish"));
             sim.Execute(new SowGarden(sim.State.Clock.SimTime, 2, "garden_spinach"));
             var seen = new HashSet<int>();
@@ -107,24 +107,24 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame(seed: 5);
             long t = sim.State.Clock.SimTime;
-            Assert.That(sim.Execute(new Sow(t, 20, "radish", SeedSource.Certified, "none")).Accepted, Is.True);   // ready at +2 h
+            Assert.That(sim.Execute(new Sow(t, 86, "radish", SeedSource.Certified, "none")).Accepted, Is.True);   // ready at +2 h
             Assert.That(sim.Execute(new SowGarden(t, 1, "garden_radish")).Accepted, Is.True);                    // ready at +10 min
             sim.AdvanceTo(t + Hour);
-            Assert.That(sim.Execute(new Sow(sim.State.Clock.SimTime, 28, "radish", SeedSource.Certified, "none")).Accepted, Is.True); // ready at +3 h
+            Assert.That(sim.Execute(new Sow(sim.State.Clock.SimTime, 102, "radish", SeedSource.Certified, "none")).Accepted, Is.True); // ready at +3 h
             sim.AdvanceTo(t + 30 * Hour);
             Assert.That(CollectAll.ReadyCount(sim), Is.EqualTo(3));
             List<Command> cmds = CollectAll.Commands(sim, sim.State.Clock.SimTime);
             Assert.That(cmds.Select(c => c.GetType().Name), Is.EqualTo(new[] { "PickGarden", "Harvest", "Harvest" }), "the garden was ready first, then the field sown first, then the second");
-            Assert.That(((Harvest)cmds[1]).TileId, Is.EqualTo(20));
-            Assert.That(((Harvest)cmds[2]).TileId, Is.EqualTo(28));
+            Assert.That(((Harvest)cmds[1]).TileId, Is.EqualTo(86));
+            Assert.That(((Harvest)cmds[2]).TileId, Is.EqualTo(102));
             foreach (Command c in cmds) { CommandResult r = sim.Execute(c); Assert.That(r.Accepted, Is.True, c.GetType().Name + " " + r); }
             Assert.That(CollectAll.ReadyCount(sim), Is.EqualTo(0));
 
             // A nearly full store takes what fits and leaves the rest where it is.
             Simulation full = ViewKit.NewGame(seed: 5);
             long t2 = full.State.Clock.SimTime;
-            full.Execute(new Sow(t2, 20, "radish", SeedSource.Certified, "none"));
-            full.Execute(new Sow(t2, 28, "radish", SeedSource.Certified, "none"));
+            full.Execute(new Sow(t2, 86, "radish", SeedSource.Certified, "none"));
+            full.Execute(new Sow(t2, 102, "radish", SeedSource.Certified, "none"));
             full.AdvanceTo(t2 + 30 * Hour);
             full.State.Market.Stock[full.Config.Game.Market.IndexOf("wheat")] += Store.CapacityGrams(full) - Store.UsedGrams(full) - 30_000;
             int accepted = CollectAll.Commands(full, full.State.Clock.SimTime).Count(c => full.Execute(c).Accepted);

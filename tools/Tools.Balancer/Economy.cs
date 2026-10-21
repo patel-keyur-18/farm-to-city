@@ -103,7 +103,7 @@ namespace Tools.Balancer
             const double hand = 36_000; // spec 006 (Sprint 4): a farm hand's season wage, ADR 0008
             double acresPerHand = 2.5;
             double netWithHand = perAcreSeason - hand / acresPerHand;
-            double acrePrice = Real(LandRules.TilePrice(sim, sim.State.Land.Tiles[18]), sim.State.Market.PriceIndex);
+            double acrePrice = Real(LandRules.TilePrice(sim, sim.State.Land.Tiles[Home.FarmTiles(sim.Config.Game)[0]]), sim.State.Market.PriceIndex);
             Console.WriteLine("  Farm profit per busy acre a season (founder's own labour unpaid): " + C(perAcreSeason));
             Console.WriteLine("  With a hired hand (36,000 a season ÷ " + acresPerHand + " acres = 14,400 an acre): about "
                 + C(netWithHand) + " an acre a season (spec 003 §9, ADR 0033: about 2,000–5,000)");

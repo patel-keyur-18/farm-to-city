@@ -29,16 +29,16 @@ namespace Sim.View.Tests
         public void VacantField_OffersSow_AndShowsTheSoil()
         {
             Simulation sim = ViewKit.NewGame();
-            SheetVm sheet = FieldSheets.ForTile(ViewKit2.Context(sim), 20);
+            SheetVm sheet = FieldSheets.ForTile(ViewKit2.Context(sim), 86);
             Assert.That(sheet.Title, Is.EqualTo("Loam field"));
             Assert.That(sheet.Subtitle, Is.EqualTo("Your family's land"));
             Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Fertility").And.Contain("Moisture").And.Contain("Soil for crops").And.Contain("Well acre"));
             Assert.That(sheet.Lines.Single(l => l.Label == "Soil for crops").Value, Is.AnyOf("Good", "Fair", "Poor"), "a word, not a factor");
             Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45.0 / 100"));
             Assert.That(Action(sheet, "sow").Opens.Value.Kind, Is.EqualTo("Sow"));
-            Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(20));
+            Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(86));
             Assert.That(sheet.Actions.Any(a => a.Id == "sellParcel"), Is.False, "the inherited land can never be sold");
-            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 18).Lines.Any(l => l.Label == "Well acre"), Is.False);
+            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 84).Lines.Any(l => l.Label == "Well acre"), Is.False);
         }
 
         [Test]
@@ -46,9 +46,9 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             ViewContext ctx = ViewKit2.Context(sim);
-            sim.Execute(new Sow(sim.State.Clock.SimTime, 20, "potato", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(sim.State.Clock.SimTime, 86, "potato", SeedSource.Certified, "none"));
             sim.AdvanceTo(sim.State.Clock.SimTime + 3 * Hour);
-            SheetVm sheet = FieldSheets.ForTile(ctx, 20);
+            SheetVm sheet = FieldSheets.ForTile(ctx, 86);
             Assert.That(sheet.Title, Is.EqualTo("Potato, growing"));
             Assert.That(sheet.Lines.Single(l => l.Label == "Time left").Value, Is.EqualTo("21 h"));
             Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Care").And.Contain("Water").And.Contain("Weather"));
@@ -68,9 +68,9 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             ViewContext ctx = ViewKit2.Context(sim);
-            sim.Execute(new Sow(sim.State.Clock.SimTime, 20, "radish", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(sim.State.Clock.SimTime, 86, "radish", SeedSource.Certified, "none"));
             sim.AdvanceTo(sim.State.Clock.SimTime + 3 * Hour);
-            SheetVm sheet = FieldSheets.ForTile(ctx, 20);
+            SheetVm sheet = FieldSheets.ForTile(ctx, 86);
             Assert.That(sheet.Title, Is.EqualTo("Radish, ready"));
             Assert.That(sheet.Lines.Single(l => l.Label == "Waiting").Value, Does.StartWith("spoils in"));
             Assert.That(Action(sheet, "harvest").Enabled, Is.True);
@@ -78,7 +78,7 @@ namespace Sim.View.Tests
 
             // A nearly full store: Harvest is greyed with the sim's own reason, and the second button sells the rest.
             sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("wheat")] += Sim.Core.Market.Store.CapacityGrams(sim) - Sim.Core.Market.Store.UsedGrams(sim) - 10_000;
-            sheet = FieldSheets.ForTile(ctx, 20);
+            sheet = FieldSheets.ForTile(ctx, 86);
             Assert.That(Action(sheet, "harvest").Enabled, Is.False);
             Assert.That(Action(sheet, "harvest").DisabledReason, Is.EqualTo("The store is full."));
             Assert.That(Action(sheet, "harvestSell").Enabled, Is.True);
@@ -88,9 +88,9 @@ namespace Sim.View.Tests
 
             // Waiting past the grace.
             Simulation late = ViewKit.NewGame();
-            late.Execute(new Sow(late.State.Clock.SimTime, 20, "radish", SeedSource.Certified, "none"));
+            late.Execute(new Sow(late.State.Clock.SimTime, 86, "radish", SeedSource.Certified, "none"));
             late.AdvanceTo(late.State.Clock.SimTime + 80 * Hour);
-            Assert.That(FieldSheets.ForTile(ViewKit2.Context(late), 20).Lines.Single(l => l.Label == "Waiting").Value, Is.EqualTo("starting to spoil").Or.Contain("spoils in"));
+            Assert.That(FieldSheets.ForTile(ViewKit2.Context(late), 86).Lines.Single(l => l.Label == "Waiting").Value, Is.EqualTo("starting to spoil").Or.Contain("spoils in"));
         }
 
         [Test]
@@ -98,22 +98,22 @@ namespace Sim.View.Tests
         {
             Simulation poor = ViewKit.NewGame();
             ViewContext ctx = ViewKit2.Context(poor);
-            SheetVm adjacent = FieldSheets.ForTile(ctx, 16); // w1, next to the home acres
+            SheetVm adjacent = FieldSheets.ForTile(ctx, 82); // w1, next to the home acres
             Assert.That(adjacent.Title, Is.EqualTo("Land for sale"));
             Assert.That(adjacent.Subtitle, Is.EqualTo("2 acres"));
             Assert.That(adjacent.Lines.Select(l => l.Label), Is.EqualTo(new[] { "Price", "Your cash", "Quick resale" }));
             Assert.That(Action(adjacent, "buy").Enabled, Is.False);
             Assert.That(Action(adjacent, "buy").DisabledReason, Is.EqualTo("You don't have enough coins for that."));
-            SheetVm far = FieldSheets.ForTile(ctx, 0);
+            SheetVm far = FieldSheets.ForTile(ctx, 50);
             Assert.That(Action(far, "buy").DisabledReason, Is.EqualTo("You can only buy land next to your own."));
 
             Simulation rich = Rich();
-            SheetVm ok = FieldSheets.ForTile(ViewKit2.Context(rich), 16);
+            SheetVm ok = FieldSheets.ForTile(ViewKit2.Context(rich), 82);
             Assert.That(Action(ok, "buy").Enabled, Is.True);
             Command buy = Action(ok, "buy").Create(rich.State.Clock.SimTime);
             Assert.That(((BuyParcel)buy).ParcelId, Is.EqualTo("w1"));
             Assert.That(rich.Execute(buy).Accepted, Is.True);
-            SheetVm bought = FieldSheets.ForTile(ViewKit2.Context(rich), 16);
+            SheetVm bought = FieldSheets.ForTile(ViewKit2.Context(rich), 82);
             Assert.That(bought.Subtitle, Is.EqualTo("Land you bought"));
             Assert.That(Action(bought, "sellParcel").Enabled, Is.True);
             Assert.That(Action(bought, "sellParcel").Kind, Is.EqualTo(ActionKind.Danger));

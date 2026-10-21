@@ -45,7 +45,7 @@ The player's farm now sits in a living village: a river to the north, the villag
 | Parcels | Every tile belongs to exactly one parcel (unchanged). A parcel has `forSale` (default true). The village's own land (road, village, commons and bank tiles) is in parcels with `forSale: false`, and those parcels hold no farm tiles | 1–4 tiles a parcel for farmland; the village's parcels any size |
 | Buying | `BuyParcel` adds one rule: a parcel with `forSale: false` is rejected with `NotForSale`. Adjacency is unchanged: one of the parcel's tiles shares an edge with an **owned** tile. Roads are never owned, so they don't connect land | |
 | Not for sale yet | A neighbour's parcel (farm tiles) with `forSale: false`. It is drawn and priced like any farm land but can't be bought in Phase 2. Later eras may change `forSale` | |
-| Sowing and building | Road, Village, Commons and Bank tiles are never owned, so `Sow`, `BuildHandHut` and tree planting already reject them (`NotOwned`) | |
+| Sowing and building | Road, Village, Commons and Bank tiles are never owned, so `Sow` rejects them (`NotOwned`), `BuildHandHut` rejects them (`NotQuarters`, its existing first check), and they have no tree slots | |
 | Soil on new tiles | Every tile keeps the soil properties of spec 002. Moisture runs every hour on every tile (unchanged). Fertility recovers only on owned farm tiles (unchanged); neighbours' land keeps its map fertility (ADR 0030) | |
 | Prices | Unchanged (spec 002 §3.5, ADR 0028, 0033): soil, drainage, fertility, the parcel's `locationFactor`, the price index | |
 
@@ -203,7 +203,7 @@ Place sheet (chemist)            Not-for-sale card
 | AC-3 | Buyable farm tiles (`forSale` parcels, not inherited) number 60–80 | `ContentTests.Map_BuyableAcres` |
 | AC-3b | Every parcel's `locationFactor` matches §3.2's geography rule | `ContentTests.Map_LocationFactors` |
 | AC-4 | `BuyParcel` on a not-for-sale parcel is rejected with `NotForSale` and nothing changes; on the village's land too; a for-sale parcel whose only contact with owned land is across a road acre is rejected with `NotAdjacent` | `LandTests.Buy_NotForSale`, `LandTests.Buy_RoadsDontConnect` |
-| AC-5 | `Sow`, `BuildHandHut` and planting a tree on a road, village, commons or bank tile are rejected with `NotOwned` | `LandTests.VillageLand_NeverWorked` |
+| AC-5 | `Sow` on a road, village, commons or bank tile is rejected with `NotOwned`, `BuildHandHut` with `NotQuarters`; none of them has a tree slot | `LandTests.VillageLand_NeverWorked` |
 | AC-6 | The frozen schema-4 fixture loads at schema 5: every tile's plain values sit at `Remap(i)`; every crop, slot, building, construction, person and order points at the remapped tile; new tiles hold their content values; the town then advances a game day and round-trips byte for byte | `MigrationTests.Schema5_RemapsTiles` (and `MigrationTests.EverySchemaLoads`) |
 | AC-7 | A schema-4 save that owns `s5` with a growing crop, a tree and a land loan secured on it loads with `s5` a road acre; cash rises by 2 × its price plus the crop's expected value and the tree's book value, less the loan repaid; the loan is closed; the ledger balances; `ParcelTakenForRoad` is emitted once | `MigrationTests.Schema5_FarmLaneParcel` |
 | AC-8 | One game year on the new map with the Phase 1 bot gives the same hash run in one chunk or many (chunking invariance), and the golden replays on frozen content are unchanged | `LandTests.ChunkingInvariance_Phase2Map`, `ReplayTests.*` |

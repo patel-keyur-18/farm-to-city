@@ -11,6 +11,18 @@ namespace Sim.Core.Definitions
 
         /// <summary>The labour quarters beside the yard: hands' huts only (ADR 0040).</summary>
         Quarters = 2,
+
+        /// <summary>A road acre: road and verges on half of it; the village's, never for sale (spec 010, ADR 0053).</summary>
+        Road = 3,
+
+        /// <summary>The village centre: houses, shops, the temple, the council hall, the school plot (spec 010).</summary>
+        Village = 4,
+
+        /// <summary>The grazing commons on the river bank (spec 010).</summary>
+        Commons = 5,
+
+        /// <summary>The rest of the river bank (spec 010).</summary>
+        Bank = 6,
     }
 
     /// <summary>A soil type from <c>content/land.json</c> (spec 002 §4).</summary>
@@ -132,11 +144,34 @@ namespace Sim.Core.Definitions
         public IReadOnlyList<int> Tiles { get; }
         public Fixed LocationFactor { get; }
 
-        public ParcelDef(string id, IReadOnlyList<int> tiles, Fixed locationFactor)
+        /// <summary>False for the village's land and neighbours not for sale yet: <c>BuyParcel</c> rejects it (spec 010 §3.1).</summary>
+        public bool ForSale { get; }
+
+        /// <summary>A neighbour's name key for the not-for-sale card, or null (spec 010 §3.7).</summary>
+        public string OwnerKey { get; }
+
+        public ParcelDef(string id, IReadOnlyList<int> tiles, Fixed locationFactor, bool forSale = true, string ownerKey = null)
         {
             Id = id;
             Tiles = new List<int>(tiles).AsReadOnly();
             LocationFactor = locationFactor;
+            ForSale = forSale;
+            OwnerKey = ownerKey;
+        }
+    }
+
+    /// <summary>A place in the village centre (spec 010 §3.3): content only, drawn and tappable, no sim state.</summary>
+    public sealed class PlaceDef
+    {
+        public string Id { get; }
+        public string Kind { get; }
+        public int Tile { get; }
+
+        public PlaceDef(string id, string kind, int tile)
+        {
+            Id = id;
+            Kind = kind;
+            Tile = tile;
         }
     }
 
@@ -150,12 +185,16 @@ namespace Sim.Core.Definitions
         /// <summary>A parcel's index in this list is its id in the state.</summary>
         public IReadOnlyList<ParcelDef> Parcels { get; }
 
-        public MapDef(int width, int height, IReadOnlyList<TileDef> tiles, IReadOnlyList<ParcelDef> parcels)
+        /// <summary>The village centre's places, in file order (spec 010 §3.3).</summary>
+        public IReadOnlyList<PlaceDef> Places { get; }
+
+        public MapDef(int width, int height, IReadOnlyList<TileDef> tiles, IReadOnlyList<ParcelDef> parcels, IReadOnlyList<PlaceDef> places = null)
         {
             Width = width;
             Height = height;
             Tiles = new List<TileDef>(tiles).AsReadOnly();
             Parcels = new List<ParcelDef>(parcels).AsReadOnly();
+            Places = new List<PlaceDef>(places ?? new PlaceDef[0]).AsReadOnly();
         }
 
         public int IndexOfParcel(string id)

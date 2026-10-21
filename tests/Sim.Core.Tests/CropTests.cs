@@ -15,7 +15,7 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    /// <summary>Helpers for spec 003 tests. Inherited farm tiles: 18, 19, 26, 27 rain-fed; 20, 28 the well acres.</summary>
+    /// <summary>Helpers for spec 003 tests. Inherited farm tiles: 84, 85, 100, 101 rain-fed; 86, 102 the well acres.</summary>
     public static class FarmTest
     {
         public const long S = 4 * Day;
@@ -84,40 +84,40 @@ namespace Sim.Core.Tests
             long expected = Store.ShortfallCost(sim, seed, 167) + Store.ShortfallCost(sim, chem, 3125);
             Assert.That(expected, Is.EqualTo(20_10 + 98_44));
 
-            Assert.That(sim.Execute(new Sow(60, 19, "radish", SeedSource.Certified, "chemical")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(60, 85, "radish", SeedSource.Certified, "chemical")).Accepted, Is.True);
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(expected));
             Assert.That(sim.State.Ledger.Balance(Account.SeedsAndPlanting), Is.EqualTo(30_00 + 20_10)); // stock at cost, then the shortfall
             Assert.That(sim.State.Ledger.Balance(Account.FertiliserAndSpraying), Is.EqualTo(98_44));
-            Assert.That(sim.State.Land.Tiles[19].Occupied, Is.True);
+            Assert.That(sim.State.Land.Tiles[85].Occupied, Is.True);
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(0));
-            Crop c = FarmTest.Crop(sim, 19);
+            Crop c = FarmTest.Crop(sim, 85);
             Assert.That(c.ReadyAt, Is.EqualTo(60 + 120 * 60));
             Assert.That(sim.UpcomingJobs(Day).Single(j => j.Type == FarmSystem.CropJob).DueTime, Is.EqualTo(60 + 7200));
 
             // Every rejection leaves the state unchanged.
             Simulation spring = NewFarm(game: RichGame());
-            Assert.That(spring.Execute(new Sow(0, 19, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(spring.Execute(new Sow(0, 85, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
             void Rejects(Command cmd, RejectReason reason)
             {
                 ulong before = spring.State.ComputeHash();
                 Assert.That(spring.Execute(cmd).Reason, Is.EqualTo(reason));
                 Assert.That(spring.State.ComputeHash(), Is.EqualTo(before), reason.ToString());
             }
-            Rejects(new Sow(0, 0, "radish", SeedSource.Certified, "none"), RejectReason.NotOwned);
-            Rejects(new Sow(0, 21, "radish", SeedSource.Certified, "none"), RejectReason.NotFarmTile);
-            Rejects(new Sow(0, 19, "radish", SeedSource.Certified, "none"), RejectReason.TileOccupied);
-            Rejects(new Sow(0, 18, "wheat", SeedSource.Certified, "none"), RejectReason.OutOfSeason);
-            Rejects(new Sow(0, 18, "potato", SeedSource.Saved, "none"), RejectReason.NoSavedSeed);
-            Rejects(new Sow(0, 18, "radish", SeedSource.Saved, "none"), RejectReason.SeedCannotBeSaved);
-            Rejects(new Sow(0, 18, "maize", SeedSource.Certified, "none"), RejectReason.UnknownCrop);
-            Rejects(new Sow(0, 18, "potato", SeedSource.Certified, "manure"), RejectReason.UnknownFertiliser);
-            Rejects(new Sow(0, 99, "potato", SeedSource.Certified, "none"), RejectReason.UnknownTile);
+            Rejects(new Sow(0, 50, "radish", SeedSource.Certified, "none"), RejectReason.NotOwned);
+            Rejects(new Sow(0, 87, "radish", SeedSource.Certified, "none"), RejectReason.NotFarmTile);
+            Rejects(new Sow(0, 85, "radish", SeedSource.Certified, "none"), RejectReason.TileOccupied);
+            Rejects(new Sow(0, 84, "wheat", SeedSource.Certified, "none"), RejectReason.OutOfSeason);
+            Rejects(new Sow(0, 84, "potato", SeedSource.Saved, "none"), RejectReason.NoSavedSeed);
+            Rejects(new Sow(0, 84, "radish", SeedSource.Saved, "none"), RejectReason.SeedCannotBeSaved);
+            Rejects(new Sow(0, 84, "maize", SeedSource.Certified, "none"), RejectReason.UnknownCrop);
+            Rejects(new Sow(0, 84, "potato", SeedSource.Certified, "manure"), RejectReason.UnknownFertiliser);
+            Rejects(new Sow(0, 999, "potato", SeedSource.Certified, "none"), RejectReason.UnknownTile);
 
             Simulation broke = NewFarm(game: TestContent.Game((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 0") : j));
             ulong h = broke.State.ComputeHash();
-            Assert.That(broke.Execute(new Sow(0, 18, "potato", SeedSource.Certified, "compost")).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
+            Assert.That(broke.Execute(new Sow(0, 84, "potato", SeedSource.Certified, "compost")).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
             Assert.That(broke.State.ComputeHash(), Is.EqualTo(h));
-            Assert.That(broke.Execute(new Sow(0, 18, "potato", SeedSource.Certified, "none")).Accepted, Is.True, "stock only: free");
+            Assert.That(broke.Execute(new Sow(0, 84, "potato", SeedSource.Certified, "none")).Accepted, Is.True, "stock only: free");
         }
 
         // Spec 003 AC-31.
@@ -127,19 +127,19 @@ namespace Sim.Core.Tests
             Simulation sim = FarmTest.Farm();
             int seed = FarmTest.Good(sim, "seed_potato");
             long cash = sim.State.Ledger.Cash;
-            Assert.That(sim.Execute(new Sow(0, 18, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 84, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash), "175 kg from the 600 kg inherited");
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(425_000));
 
             // Compost: none in store, so 500 kg is bought at 2 × 1.05 = 2.10: 1,050.
-            Assert.That(sim.Execute(new Sow(0, 19, "potato", SeedSource.Certified, "compost")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 85, "potato", SeedSource.Certified, "compost")).Accepted, Is.True);
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(1_050_00));
             Assert.That(sim.State.Ledger.Balance(Account.FertiliserAndSpraying), Is.EqualTo(1_050_00));
 
             // The third and fourth acres take the last 250 kg of stock, then buy 100 kg at 22.
-            Assert.That(sim.Execute(new Sow(0, 26, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 100, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
             cash = sim.State.Ledger.Cash;
-            Assert.That(sim.Execute(new Sow(0, 27, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 101, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(100 * 22_00));
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(0));
         }
@@ -149,32 +149,32 @@ namespace Sim.Core.Tests
         public void ReadyWaits_HarvestToStore()
         {
             Simulation sim = FarmTest.Farm();
-            Assert.That(sim.Execute(new Sow(0, 19, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 85, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
             sim.AdvanceTo(2 * Hour - 1);
-            Assert.That(FarmTest.Crop(sim, 19).State, Is.EqualTo(CropState.Growing));
+            Assert.That(FarmTest.Crop(sim, 85).State, Is.EqualTo(CropState.Growing));
             sim.DrainEvents();
             sim.AdvanceTo(2 * Hour);
-            Crop c = FarmTest.Crop(sim, 19);
+            Crop c = FarmTest.Crop(sim, 85);
             Assert.That(c.State, Is.EqualTo(CropState.Ready));
             CropReady ready = sim.DrainEvents().OfType<CropReady>().Single();
-            Assert.That((ready.SimTime, ready.TileId, ready.Grams), Is.EqualTo((2 * Hour, 19, c.Breakdown.Grams)));
+            Assert.That((ready.SimTime, ready.TileId, ready.Grams), Is.EqualTo((2 * Hour, 85, c.Breakdown.Grams)));
             long grams = c.Breakdown.Grams;
             Assert.That(grams, Is.InRange(50_000, 100_000)); // about 83 kg × the factors
 
             sim.AdvanceTo(2 * Hour + 72 * Hour); // waits the whole grace (ADR 0034) without loss
-            Assert.That(FarmTest.Crop(sim, 19).HarvestGrams, Is.EqualTo(grams));
+            Assert.That(FarmTest.Crop(sim, 85).HarvestGrams, Is.EqualTo(grams));
             int radish = FarmTest.Good(sim, "radish");
             long before = sim.State.Market.InStore(radish);
-            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 19)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 85)).Accepted, Is.True);
             Assert.That(sim.State.Market.InStore(radish) - before, Is.EqualTo(grams));
-            Assert.That(sim.State.Land.Tiles[19].Occupied, Is.False);
-            Assert.That(FarmTest.Crop(sim, 19), Is.Null);
-            Assert.That(sim.Execute(new Harvest(3 * S, 19)).Reason, Is.EqualTo(RejectReason.NoCrop));
+            Assert.That(sim.State.Land.Tiles[85].Occupied, Is.False);
+            Assert.That(FarmTest.Crop(sim, 85), Is.Null);
+            Assert.That(sim.Execute(new Harvest(3 * S, 85)).Reason, Is.EqualTo(RejectReason.NoCrop));
 
-            Assert.That(sim.Execute(new Sow(3 * S, 19, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
-            Assert.That(sim.Execute(new Harvest(3 * S, 19)).Reason, Is.EqualTo(RejectReason.NotReady));
-            Assert.That(sim.Execute(new ClearField(3 * S + 60, 19)).Accepted, Is.True);
-            Assert.That(sim.State.Land.Tiles[19].Occupied, Is.False);
+            Assert.That(sim.Execute(new Sow(3 * S, 85, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Harvest(3 * S, 85)).Reason, Is.EqualTo(RejectReason.NotReady));
+            Assert.That(sim.Execute(new ClearField(3 * S + 60, 85)).Accepted, Is.True);
+            Assert.That(sim.State.Land.Tiles[85].Occupied, Is.False);
             Assert.That(sim.UpcomingJobs(4 * S).Any(j => j.Type == FarmSystem.CropJob), Is.False);
             sim.AdvanceTo(4 * S); // the cancelled growth job doesn't fire
         }
@@ -185,8 +185,8 @@ namespace Sim.Core.Tests
         {
             Simulation sim = FarmTest.Farm();
             sim.AdvanceTo(1800);
-            Assert.That(sim.Execute(new Sow(1800, 19, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
-            Crop c = FarmTest.Crop(sim, 19);
+            Assert.That(sim.Execute(new Sow(1800, 85, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Crop c = FarmTest.Crop(sim, 85);
             Fixed waterAtSowing = c.WaterRate, weatherAtSowing = c.WeatherRate, care = sim.State.Farm.CareRatio;
             sim.AdvanceTo(Hour);
             Assert.That(c.WaterSum, Is.EqualTo(waterAtSowing.MulRatio(1800, 1)));
@@ -203,11 +203,11 @@ namespace Sim.Core.Tests
         public void Fertility_FromCropsAndInputs()
         {
             Simulation sim = FarmTest.Farm();
-            Tile wheat = sim.State.Land.Tiles[18], lentils = sim.State.Land.Tiles[19], compost = sim.State.Land.Tiles[26];
+            Tile wheat = sim.State.Land.Tiles[84], lentils = sim.State.Land.Tiles[85], compost = sim.State.Land.Tiles[100];
             Fixed w0 = wheat.Fertility, l0 = lentils.Fertility, c0 = compost.Fertility;
-            Assert.That(sim.Execute(new Sow(0, 18, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True);
-            Assert.That(sim.Execute(new Sow(0, 19, "lentils", SeedSource.Certified, "none")).Accepted, Is.True);
-            Assert.That(sim.Execute(new Sow(0, 26, "wheat", SeedSource.Certified, "compost")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 84, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 85, "lentils", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 100, "wheat", SeedSource.Certified, "compost")).Accepted, Is.True);
             sim.AdvanceTo(8 * Hour);
 
             Assert.That(wheat.Fertility - w0, Is.EqualTo(Fixed.Parse("-0.4375")));
@@ -225,7 +225,7 @@ namespace Sim.Core.Tests
         public void Compost_HoldsWater()
         {
             Simulation sim = FarmTest.Farm();
-            Tile compost = sim.State.Land.Tiles[26], chemical = sim.State.Land.Tiles[18];
+            Tile compost = sim.State.Land.Tiles[100], chemical = sim.State.Land.Tiles[84];
             int sun = LandTest.Weather(sim, "sun"), rain = LandTest.Weather(sim, "rain");
             Fixed Change(Tile t, int weather)
             {
@@ -234,14 +234,14 @@ namespace Sim.Core.Tests
                 return t.Moisture - Fixed.FromInt(50);
             }
             Fixed bareSun = Change(compost, sun), bareRain = Change(compost, rain), chemBare = Change(chemical, sun);
-            Assert.That(sim.Execute(new Sow(0, 26, "wheat", SeedSource.Certified, "compost")).Accepted, Is.True);
-            Assert.That(sim.Execute(new Sow(0, 18, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True);
-            Assert.That(LandSystem.DryingFactor(sim, 26), Is.EqualTo(Fixed.Parse("0.8")));
+            Assert.That(sim.Execute(new Sow(0, 100, "wheat", SeedSource.Certified, "compost")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 84, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True);
+            Assert.That(LandSystem.DryingFactor(sim, 100), Is.EqualTo(Fixed.Parse("0.8")));
             Assert.That(Math.Abs((Change(compost, sun) - bareSun * Fixed.Parse("0.8")).Raw), Is.LessThanOrEqualTo(8), "dries 20% more slowly");
             Assert.That(Change(compost, rain), Is.EqualTo(bareRain), "rain soaks in as before");
             Assert.That(Change(chemical, sun), Is.EqualTo(chemBare), "chemical fertiliser holds no water");
             sim.AdvanceTo(6 * Hour);
-            Assert.That(LandSystem.DryingFactor(sim, 26), Is.EqualTo(Fixed.One), "only while the crop grows");
+            Assert.That(LandSystem.DryingFactor(sim, 100), Is.EqualTo(Fixed.One), "only while the crop grows");
         }
 
         // Spec 003 AC-13.
@@ -249,18 +249,18 @@ namespace Sim.Core.Tests
         public void Chemical_FourSeasons()
         {
             Simulation sim = FarmTest.Farm();
-            Tile tile = sim.State.Land.Tiles[18];
+            Tile tile = sim.State.Land.Tiles[84];
             Fixed fromFertiliser = Fixed.Zero;
             long t = Hour; // off the 6-hour grid, so no harvest falls on a season boundary
             for (int k = 0; k < 64; k++)
             {
-                Assert.That(sim.Execute(new Sow(t, 18, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True, "cycle " + k);
+                Assert.That(sim.Execute(new Sow(t, 84, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True, "cycle " + k);
                 t += 6 * Hour;
                 sim.AdvanceTo(t - 1);
                 Fixed before = tile.FertilityChange(FertilityReason.Fertiliser);
                 sim.AdvanceTo(t);
                 fromFertiliser += tile.FertilityChange(FertilityReason.Fertiliser) - before;
-                Assert.That(sim.Execute(new Harvest(t, 18, Overflow.SellRestToTrader)).Accepted, Is.True);
+                Assert.That(sim.Execute(new Harvest(t, 84, Overflow.SellRestToTrader)).Accepted, Is.True);
             }
             Assert.That(fromFertiliser, Is.EqualTo(Fixed.FromInt(-12)));
         }
@@ -311,9 +311,9 @@ namespace Sim.Core.Tests
             FarmTest.SetWeather(sim, 0, "sun");
             FarmTest.SetWeather(sim, 6, "heatwave"); // hourly spells: heatwave from 06:00
             sim.AdvanceTo(4 * Hour);
-            Assert.That(sim.Execute(new Sow(4 * Hour, 18, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(4 * Hour, 84, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
             sim.AdvanceTo(10 * Hour);
-            YieldBreakdown b = FarmTest.Crop(sim, 18).Breakdown;
+            YieldBreakdown b = FarmTest.Crop(sim, 84).Breakdown;
             FarmTest.AssertNear(b.Weather, "0.90", 16); // (2 × 1.00 + 4 × 0.85) ÷ 6
         }
     }
@@ -326,28 +326,28 @@ namespace Sim.Core.Tests
         {
             Simulation sim = FarmTest.Farm();
             FarmTest.AssertNear(FounderRules.FieldHours(sim), "7.2", 8);
-            Assert.That(sim.Execute(new Sow(0, 18, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
-            Assert.That(sim.Execute(new Sow(0, 19, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 84, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 85, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
             Assert.That(sim.State.Farm.CareRatio, Is.EqualTo(Fixed.Parse("1.1")), "7.2 ÷ 6 = 1.2, capped");
-            Assert.That(sim.Execute(new Sow(0, 26, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 100, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
             FarmTest.AssertNear(sim.State.Farm.CareRatio, "0.8", 8); // 7.2 ÷ 9
 
             // Watering demand on a well acre in a heatwave lowers the ratio.
             Simulation hot = FarmTest.Farm();
             FarmTest.SetWeather(hot, 0, "heatwave");
-            hot.State.Land.Tiles[20].Moisture = Fixed.FromInt(30); // at the well floor
-            Assert.That(hot.Execute(new Sow(0, 18, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
-            Assert.That(hot.Execute(new Sow(0, 20, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            hot.State.Land.Tiles[86].Moisture = Fixed.FromInt(30); // at the well floor
+            Assert.That(hot.Execute(new Sow(0, 84, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(hot.Execute(new Sow(0, 86, "wheat", SeedSource.Certified, "none")).Accepted, Is.True);
             Assert.That(hot.State.Farm.CareRatio, Is.EqualTo(Fixed.Parse("1.1")));
             hot.AdvanceTo(Hour);
-            Fixed lift = hot.State.Land.Tiles[20].WellLift;
+            Fixed lift = hot.State.Land.Tiles[86].WellLift;
             Assert.That(lift, Is.EqualTo(Fixed.Parse("1.2"))); // a heatwave dries loam 1.2 an hour
             Fixed demand = Fixed.FromInt(6) + lift.MulRatio(24, 1) * Fixed.Parse("0.1"); // 6 + 2.88
             Assert.That(FarmSystem.LabourDemand(hot), Is.EqualTo(demand));
             FarmTest.AssertNear(hot.State.Farm.CareRatio, "0.810810810", 16); // 7.2 ÷ 8.88
 
             // The crop's Care factor is the time-weighted mean across the changes.
-            Crop c = FarmTest.Crop(hot, 18);
+            Crop c = FarmTest.Crop(hot, 84);
             Fixed watering = hot.State.Farm.CareRatio;
             hot.AdvanceTo(6 * Hour);
             Fixed expected = (Fixed.Parse("1.1").MulRatio(Hour, 1) + watering.MulRatio(5 * Hour, 1)).MulRatio(1, 6 * Hour);

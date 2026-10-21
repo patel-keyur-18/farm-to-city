@@ -16,17 +16,17 @@ namespace Sim.Core.Tests
             ulong hash = sim.State.ComputeHash();
             int logged = sim.State.CommandLog.Entries.Count;
 
-            Command ok = new Sow(t, 20, "potato", SeedSource.Certified, "none");
-            Command wrongSeason = new Sow(t, 20, "wheat", SeedSource.Certified, "none");
-            Command unowned = new Sow(t, 1, "potato", SeedSource.Certified, "none");
+            Command ok = new Sow(t, 86, "potato", SeedSource.Certified, "none");
+            Command wrongSeason = new Sow(t, 86, "wheat", SeedSource.Certified, "none");
+            Command unowned = new Sow(t, 51, "potato", SeedSource.Certified, "none");
             Assert.That(sim.Preview(ok).Accepted, Is.True);
             Assert.That(sim.Preview(wrongSeason).Reason, Is.EqualTo(RejectReason.OutOfSeason));
             Assert.That(sim.Preview(unowned).Reason, Is.EqualTo(RejectReason.NotOwned));
-            Assert.That(sim.Preview(new Sow(t - 1, 20, "potato", SeedSource.Certified, "none")).Reason, Is.EqualTo(RejectReason.TimeInPast));
+            Assert.That(sim.Preview(new Sow(t - 1, 86, "potato", SeedSource.Certified, "none")).Reason, Is.EqualTo(RejectReason.TimeInPast));
 
             Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "a preview changes nothing");
             Assert.That(sim.State.CommandLog.Entries.Count, Is.EqualTo(logged), "and is never logged");
-            Assert.That(sim.State.Farm.CropOn(20), Is.Null);
+            Assert.That(sim.State.Farm.CropOn(86), Is.Null);
 
             Assert.That(sim.Execute(ok).Accepted, Is.True, "the real thing then behaves as previewed");
             Assert.That(sim.Preview(ok).Reason, Is.EqualTo(RejectReason.TileOccupied));

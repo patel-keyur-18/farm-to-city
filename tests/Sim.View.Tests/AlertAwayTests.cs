@@ -26,7 +26,7 @@ namespace Sim.View.Tests
             Assert.That(Alerts.Build(ViewKit2.Context(sim)), Is.Empty, "a new game has nothing to say");
 
             // Ready to collect, then spoiling within 12 h of the 72 h grace.
-            Assert.That(sim.Execute(new Sow(t, 20, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(t, 86, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
             sim.AdvanceTo(t + 3 * Hour);
             Assert.That(Has(sim, "1 ready to collect"), Is.True);
             Assert.That(Has(sim, "Radish on"), Is.False);
@@ -45,13 +45,13 @@ namespace Sim.View.Tests
             for (ulong seed = 1; seed < 400 && pests == null; seed++)
             {
                 Simulation s = ViewKit.NewGame(seed: seed);
-                s.Execute(new Sow(s.State.Clock.SimTime, 20, "potato", SeedSource.Certified, "none"));
+                s.Execute(new Sow(s.State.Clock.SimTime, 86, "potato", SeedSource.Certified, "none"));
                 s.AdvanceTo(s.State.Clock.SimTime + 13 * Hour);
-                if (s.State.Farm.CropOn(20).Outbreak != Outbreak.None) pests = s;
+                if (s.State.Farm.CropOn(86).Outbreak != Outbreak.None) pests = s;
             }
             Assert.That(pests, Is.Not.Null, "no seed with an outbreak");
             Assert.That(Has(pests, "Pests on"), Is.True);
-            Assert.That(pests.Execute(new Spray(pests.State.Clock.SimTime, 20)).Accepted, Is.True);
+            Assert.That(pests.Execute(new Spray(pests.State.Clock.SimTime, 86)).Accepted, Is.True);
             Assert.That(Has(pests, "Pests on"), Is.False, "cleared by spraying");
 
             // Cash short on the season's last day.
@@ -113,8 +113,8 @@ namespace Sim.View.Tests
         {
             Simulation full = ViewKit.NewGame(seed: 5);
             long t = full.State.Clock.SimTime;
-            full.Execute(new Sow(t, 20, "radish", SeedSource.Certified, "none"));
-            full.Execute(new Sow(t, 28, "radish", SeedSource.Certified, "none"));
+            full.Execute(new Sow(t, 86, "radish", SeedSource.Certified, "none"));
+            full.Execute(new Sow(t, 102, "radish", SeedSource.Certified, "none"));
             full.AdvanceTo(t + 30 * Hour);
             full.State.Market.Stock[full.Config.Game.Market.IndexOf("wheat")] += Store.CapacityGrams(full) - Store.UsedGrams(full) - 30_000;
             foreach (Command c in CollectAll.Commands(full, full.State.Clock.SimTime)) full.Execute(c);

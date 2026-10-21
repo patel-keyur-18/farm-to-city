@@ -4,9 +4,9 @@
     { "id": "garden",    "goal": { "kind": "bedGrowing" },                          "highlight": "bed:1",   "chapter": "garden" },
     { "id": "household", "goal": { "kind": "sheetVisited", "sheet": "Founder" },    "highlight": "hut",     "chapter": "household" },
     { "id": "firstPick", "goal": { "kind": "event", "events": ["GardenPicked"] },   "highlight": "readyBed", "chapter": "firstPick", "pageAfter": true,
-      "tour": ["store", "field:28", "founder"] },
+      "tour": ["store", "field:102", "founder"] },
     { "id": "firstSale", "goal": { "kind": "event", "events": ["SoldToTrader", "MarketSales", "MandiTripReturned"] }, "highlight": "store", "chapter": "firstSale", "pageAfter": true },
-    { "id": "longCrop",  "goal": { "kind": "cropSown", "minGrowthHours": 12 },      "highlight": "tile:20", "chapter": "longCrop" },
+    { "id": "longCrop",  "goal": { "kind": "cropSown", "minGrowthHours": 12 },      "highlight": "tile:86", "chapter": "longCrop" },
     { "id": "comeBack",  "goal": { "kind": "chapterClosed" },                                             "chapter": "comeBack" }
   ],
   "chapters": [
@@ -15,7 +15,7 @@
     { "id": "household",         "triggers": [{ "kind": "step" }], "action": "founder" },
     { "id": "firstPick",         "triggers": [{ "kind": "step" }], "action": "store" },
     { "id": "firstSale",         "triggers": [{ "kind": "step" }], "action": "store" },
-    { "id": "longCrop",          "triggers": [{ "kind": "step" }], "action": "field:20" },
+    { "id": "longCrop",          "triggers": [{ "kind": "step" }], "action": "field:86" },
     { "id": "comeBack",          "triggers": [{ "kind": "step" }] },
     { "id": "firstReturn",       "triggers": [{ "kind": "awayCard" }] },
     { "id": "firstFieldHarvest", "triggers": [{ "kind": "event", "events": ["CropHarvested"] }] },

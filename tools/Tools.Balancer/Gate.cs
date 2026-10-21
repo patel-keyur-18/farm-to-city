@@ -154,8 +154,8 @@ namespace Tools.Balancer
             Parcel parcel = sim.State.Land.Parcels[(int)Rng.Below(Rng.Next(r, (RngStream)952, 0, 0), (ulong)sim.State.Land.Parcels.Count)];
             string parcelId = defs.Map.Parcels[parcel.Id].Id;
             TreeSlot slot = sim.State.Land.Slots.Count == 0 ? null : sim.State.Land.Slots[(int)Rng.Below(Rng.Next(r, (RngStream)953, 0, 0), (ulong)sim.State.Land.Slots.Count)];
-            int[] acres = { 18, 19, 20, 26, 27, 28 };
-            int tile = acres[(int)Rng.Below(Rng.Next(r, (RngStream)954, 0, 0), 6)];
+            int[] acres = Home.FarmTiles(defs);
+            int tile = acres[(int)Rng.Below(Rng.Next(r, (RngStream)954, 0, 0), (ulong)acres.Length)];
             switch (Rng.Below(Rng.Next(r, (RngStream)955, 0, 0), 16))
             {
                 case 0: return new Offer(t, good, q, (r & 1) == 0 ? (Fixed?)null : MarketRules.RegionalPrice(sim, g));

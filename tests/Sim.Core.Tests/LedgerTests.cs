@@ -109,7 +109,7 @@ namespace Sim.Core.Tests
             Assert.That(ledger.Cash + ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(20_000_00));
             Assert.That(ledger.Balance(Account.PrepaidLivingCosts), Is.EqualTo(18_000_00));
             Assert.That(ledger.Balance(Account.Land), Is.EqualTo(homeValue));
-            Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00 + 2_32_464_00)); // 6 farm acres and the yard's first acre (loam at fertility 45, price factor 0.98), plus home_c: the second yard acre and the labour quarters (ADR 0040)
+            Assert.That(homeValue, Is.EqualTo(7 * 1_17_600_00 + 2_44_087_00)); // 6 farm acres and the yard's first acre (loam at fertility 45, price factor 0.98), plus home_c: the second yard acre and the labour quarters (ADR 0040), at location 1.05 because it touches the farm lane (spec 010 §3.2)
             Assert.That(ledger.Balance(Account.Buildings), Is.EqualTo(55_000_00));
             // The inherited inputs at their Spring input price (ADR 0034): 600 kg seed potato × 22 + 0.1 kg each of radish
             // (300), spinach (200) and coriander (150) seed.

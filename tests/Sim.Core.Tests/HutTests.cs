@@ -41,7 +41,7 @@ namespace Sim.Core.Tests
             long now = sim.State.Clock.SimTime;
             Assert.That(sim.Execute(new BuildHandHut(now, HomeTile)).Reason, Is.EqualTo(RejectReason.NotQuarters));
             Assert.That(sim.Execute(new BuildHandHut(now, YardTile)).Reason, Is.EqualTo(RejectReason.NotQuarters));
-            Assert.That(sim.Execute(new BuildHandHut(now, 0)).Reason, Is.EqualTo(RejectReason.NotQuarters));
+            Assert.That(sim.Execute(new BuildHandHut(now, 50)).Reason, Is.EqualTo(RejectReason.NotQuarters));
             Ok(sim, new BuildHandHut(now, QuartersTile));
             Assert.That(sim.Execute(new BuildHandHut(now, QuartersTile)).Reason, Is.EqualTo(RejectReason.NoRoom));
         }

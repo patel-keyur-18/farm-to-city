@@ -18,8 +18,8 @@ namespace Tools.Balancer
     /// </summary>
     public abstract class Bot
     {
-        /// <summary>The well acres first, then the rain-fed inherited acres (ADR 0032).</summary>
-        protected static readonly int[] Acres = { 20, 28, 18, 19, 26, 27 };
+        /// <summary>The well acres first, then the rain-fed inherited acres in id order (ADR 0032), from the content's map.</summary>
+        protected static int[] AcresOf(Simulation sim) { return Home.Acres(sim.Config.Game); }
 
         public abstract string Name { get; }
 
@@ -81,7 +81,7 @@ namespace Tools.Balancer
 
         protected static void Harvest(Simulation sim, long t)
         {
-            foreach (int tile in Acres)
+            foreach (int tile in AcresOf(sim))
             {
                 Crop c = sim.State.Farm.CropOn(tile);
                 if (c != null && c.State == CropState.Ready) Ok(sim, new Harvest(t, tile, Overflow.SellRestToTrader));
@@ -104,7 +104,7 @@ namespace Tools.Balancer
             FarmDefs farm = sim.Config.Game.Farm;
             CropDef crop = farm.Crops[farm.IndexOfCrop(cropId)];
             Fixed supply = FounderRules.LabourRate(sim) + FounderRules.MandiCut(sim) + PeopleRules.HiredHours(sim);
-            foreach (int tile in Acres)
+            foreach (int tile in AcresOf(sim))
             {
                 if (sim.State.Farm.CropOn(tile) != null) continue;
                 if (FarmRules.LabourDemand(sim) + crop.LabourPerAcrePerDay > supply) break;
@@ -145,7 +145,7 @@ namespace Tools.Balancer
             {
                 long cost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.People.HandHut].Value);
                 Borrow(sim, t, cost + 40_000 * Money.Coin);
-                Ok(sim, new BuildHandHut(t, 37)); // the labour quarters (ADR 0040)
+                Ok(sim, new BuildHandHut(t, Home.Quarters(sim.Config.Game))); // the labour quarters (ADR 0040)
             }
             if (p.Post == null && p.Hands.Count == 0 && PeopleRules.HutCount(sim) > 0 && !_posted) _posted = Ok(sim, new PostJob(t, PostAboveMarket));
             if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0 && ReadyToHire(sim))
@@ -169,7 +169,7 @@ namespace Tools.Balancer
                 FarmDefs farm = sim.Config.Game.Farm;
                 Fixed labour = farm.Crops[farm.IndexOfCrop(BestCrop[season])].LabourPerAcrePerDay;
                 Fixed left = FounderRules.LabourRate(sim) + PeopleRules.HiredHours(sim);
-                foreach (int tile in Acres)
+                foreach (int tile in AcresOf(sim))
                 {
                     Hand h = p.Hands[0];
                     Fixed need = System.Linq.Enumerable.Contains(sim.Config.Game.Land.WellTiles, tile) ? labour + Fixed.One : labour;
@@ -179,7 +179,7 @@ namespace Tools.Balancer
                         continue;
                     }
                     left -= need;
-                    bool extra = System.Array.IndexOf(Acres, tile) >= 2;
+                    bool extra = System.Array.IndexOf(AcresOf(sim), tile) >= 2;
                     Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(tile, extra ? HandCrop[season] : BestCrop[season], SeedSource.Certified, Fertiliser(sim, tile), OrderSell, OrderMinPrice(sim))));
                 }
             }
@@ -506,7 +506,7 @@ namespace Tools.Balancer
 
         private static void HarvestReady(Simulation sim, long t)
         {
-            foreach (int tile in Acres)
+            foreach (int tile in AcresOf(sim))
             {
                 Crop c = sim.State.Farm.CropOn(tile);
                 if (c != null && c.State == CropState.Ready) Ok(sim, new Harvest(t, tile, Overflow.SellRestToTrader));
@@ -625,6 +625,39 @@ namespace Tools.Balancer
         public override void Play(Simulation sim, long t)
         {
             if (t % (3 * ClockDef.SecondsPerDay) < 2 * 3600 || t < sim.Clock.SecondsPerSeason + 2 * ClockDef.SecondsPerDay) base.Play(sim, t);
+        }
+    }
+
+    /// <summary>The inherited farm from the content's map, so bots work on any map size (spec 010).</summary>
+    public static class Home
+    {
+        public static int[] Acres(GameDefs defs)
+        {
+            var list = new System.Collections.Generic.List<int>(defs.Land.WellTiles);
+            foreach (int t in Tiles(defs)) if (defs.Map.Tiles[t].Terrain == Terrain.Farm && !list.Contains(t)) list.Add(t);
+            return list.ToArray();
+        }
+
+        /// <summary>The inherited farm acres in id order.</summary>
+        public static int[] FarmTiles(GameDefs defs)
+        {
+            var list = new System.Collections.Generic.List<int>();
+            foreach (int t in Tiles(defs)) if (defs.Map.Tiles[t].Terrain == Terrain.Farm) list.Add(t);
+            return list.ToArray();
+        }
+
+        public static int Quarters(GameDefs defs)
+        {
+            foreach (int t in Tiles(defs)) if (defs.Map.Tiles[t].Terrain == Terrain.Quarters) return t;
+            return -1;
+        }
+
+        private static System.Collections.Generic.List<int> Tiles(GameDefs defs)
+        {
+            var list = new System.Collections.Generic.List<int>();
+            foreach (int p in defs.Start.InheritedParcels) list.AddRange(defs.Map.Parcels[p].Tiles);
+            list.Sort();
+            return list;
         }
     }
 }
