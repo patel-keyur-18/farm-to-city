@@ -171,7 +171,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Ready to harvest.** A ripe crop (or a ripe fruit batch) waits without spoiling or losing quality for 72 hours, the away cap, so nothing is ever lost only by being away. After that it starts to spoil like produce in the store (ADR 0034). While it waits, the field cannot be resown, so waiting also costs a crop cycle.
 
-**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed, one task an hour per hand; they never undo a crop the player sowed. When the order's crop is out of season, or the player leaves the choice to the hand, he sows the in-season crop that pays best on that field's soil and moisture, so an every-season order keeps its field producing all year (ADR 0048). Fields with no assigned worker wait in *ready to harvest*. A lapsed contract renewed within its grace pays the whole season, waiting days included (ADR 0039).
+**Standing orders.** From Homestead, hired resident hands follow standing orders (ADR 0022, spec 006), such as "keep wheat on the north field; sell above 20 coins, otherwise store". They work in the background, including while the app is closed, every order acting at once (ADR 0049); they never undo a crop the player sowed. When the order's crop is out of season, or the player leaves the choice to the hand, he sows the in-season crop that pays best on that field's soil and moisture, so an every-season order keeps its field producing all year (ADR 0048). Fields with no assigned worker wait in *ready to harvest*. A lapsed contract renewed within its grace pays the whole season, waiting days included (ADR 0039).
 
 **Inputs and trade-offs**
 
@@ -338,7 +338,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 | | Day labourer | Resident farm hand |
 | --- | --- | --- |
 | Source | Neighbouring villages, commuting | A migrant who moves onto your land |
-| Contract | One crop: hired from a growing field, they stay until it is ready, harvest it and go; paid upfront (ADR 0048) | One season, paid upfront |
+| Contract | Till the crops growing now are in: hired from People, they tend every field, bring in each unordered field as it ripens and go after the last; paid upfront (ADR 0049) | One season, paid upfront |
 | Cost per day | Higher (about 25% premium) | Lower, and grows in skill |
 | Housing | None | Needs a hand's hut in the labour quarters beside the yard (ADR 0040) |
 | Availability | Limited daily pool, scarce at harvest | Applicants arrive over a few days |
