@@ -26,7 +26,7 @@ namespace Sim.Core.Tests
             if (p.Constructions.Count == 0 && PeopleRules.HutCount(sim) < 2)
                 sim.Execute(new BuildHandHut(t, 37));
             Farm.Crop growing = sim.State.Farm.Crops.Find(c => c.State == Farm.CropState.Growing);
-            if (t % Day < 4 * Hour && PeopleRules.FreeNow(sim) > 0 && growing != null) sim.Execute(new HireLabourers(t, growing.TileId, 1));
+            if (t % Day < 4 * Hour && PeopleRules.FreeNow(sim) > 0 && growing != null) sim.Execute(new HireLabourers(t, 1));
             if (p.Applicants.Count > 0 && PeopleRules.EmptyHut(sim) != null)
             {
                 Applicant a = p.Applicants[0];

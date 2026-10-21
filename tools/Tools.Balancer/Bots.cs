@@ -544,10 +544,7 @@ namespace Tools.Balancer
         protected override void Employ(Simulation sim, long t) { }
     }
 
-    /// <summary>
-    /// Stress bot (ADR 0039 §10, ADR 0048 §3): hires every free labourer onto the growing crop that is ready last, and sows to
-    /// match. Hired labour costs more than it earns.
-    /// </summary>
+    /// <summary>Stress bot (ADR 0039 §10, ADR 0049 §3): hires every free labourer till the crops are in, and sows to match. Hired labour costs more than it earns.</summary>
     public sealed class DayLabourSpammerBot : FarmerBot
     {
         public override string Name { get { return "day-labour-spammer"; } }
@@ -555,9 +552,7 @@ namespace Tools.Balancer
         public override void Play(Simulation sim, long t)
         {
             int free = sim.State.People == null ? 0 : PeopleRules.FreeNow(sim);
-            Crop last = null;
-            foreach (Crop c in sim.State.Farm.Crops) if (c.State == CropState.Growing && (last == null || c.ReadyAt > last.ReadyAt)) last = c;
-            if (free > 0 && last != null) Ok(sim, new HireLabourers(t, last.TileId, free));
+            if (free > 0 && PeopleRules.LabourUntil(sim) > 0) Ok(sim, new HireLabourers(t, free));
             base.Play(sim, t);
         }
     }

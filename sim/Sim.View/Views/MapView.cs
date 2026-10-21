@@ -324,11 +324,9 @@ namespace Sim.View.Views
             {
                 if (!n.Hired) continue;
                 var vm = new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, HomeTile = frontYard };
-                // Labourers start on the crop they were hired for (ADR 0048 §3), then tend the other growing fields, each from a
-                // different one.
-                if (n.Tile >= 0 && sim.State.Farm.CropOn(n.Tile) != null) vm.Patrol.Add(n.Tile);
+                // Labourers tend the growing fields too, each starting at a different one.
                 List<int> theirs = free.Count > 0 ? free : growing;
-                for (int i = 0; i < theirs.Count; i++) if (!vm.Patrol.Contains(theirs[(i + k) % theirs.Count])) vm.Patrol.Add(theirs[(i + k) % theirs.Count]);
+                for (int i = 0; i < theirs.Count; i++) vm.Patrol.Add(theirs[(i + k) % theirs.Count]);
                 vm.TileId = vm.Patrol.Count > 0 ? vm.Patrol[0] : frontYard;
                 map.People.Add(vm);
                 k++;

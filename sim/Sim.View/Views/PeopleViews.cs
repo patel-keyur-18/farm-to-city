@@ -142,8 +142,19 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("people.freeToday"),
                 ctx.Strings.Get("people.freeTodayValue", "n", ctx.Fmt.Integer(free), "season", ctx.Strings.Get("season." + season.ToString().ToLowerInvariant())), "free"));
             if (working > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.workingToday"), ctx.Strings.Get("people.workingTodayValue", "n", ctx.Fmt.Integer(working)), "free"));
-            // Labourers are hired for a crop, from its field (ADR 0048 §3).
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("people.hireHint"), ctx.Strings.Get("people.hireHintValue")));
+            // Hired till the crops growing now are in (ADR 0049 §3).
+            long until = PeopleRules.LabourUntil(sim);
+            if (until == 0 && free > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.noCrops"), ctx.Strings.Get("people.noCropsValue")));
+            string now = PeopleWords.CareWith(ctx, Fixed.Zero);
+            for (int k = 1; until > 0 && k <= free; k++)
+            {
+                int count = k;
+                var line = new LineVm(ctx.Strings.Plural("people.hireN", count),
+                    ctx.Strings.Get("people.carePreview", "from", now, "to", PeopleWords.CareWith(ctx, defs.Pool.HoursPerDay.MulRatio(count, 1))), "hire", count);
+                line.Action = ActionVm.Checked(ctx, "hire:" + count, ctx.Strings.Get("action.hire"), ctx.Fmt.Coins(PeopleRules.LabourCost(sim, count, until)), ActionKind.Primary,
+                    at => new HireLabourers(at, count));
+                vm.Lines.Add(line);
+            }
 
             // Hands.
             vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.hands")));

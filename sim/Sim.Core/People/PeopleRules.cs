@@ -72,12 +72,14 @@ namespace Sim.Core.People
         /// <summary>The next daily pass after t.</summary>
         public static long NextDailyPass(long t) { return (t / Day + 1) * Day; }
 
-        /// <summary>When labourers hired for the crop on the tile go home: its readyAt rounded up to the hour (ADR 0048 §3); 0 if none grows.</summary>
-        public static long LabourUntil(Simulation sim, int tileId)
+        /// <summary>
+        /// When labourers hired now go home: the last growing crop's readyAt rounded up to the hour (ADR 0049 §3); 0 if none grows.
+        /// </summary>
+        public static long LabourUntil(Simulation sim)
         {
-            Crop c = sim.State.Farm.CropOn(tileId);
-            if (c == null || c.State != CropState.Growing) return 0;
-            return (c.ReadyAt + 3599) / 3600 * 3600;
+            long last = 0;
+            foreach (Crop c in sim.State.Farm.Crops) if (c.State == CropState.Growing && c.ReadyAt > last) last = c.ReadyAt;
+            return last == 0 ? 0 : (last + 3599) / 3600 * 3600;
         }
 
         /// <summary>Cost of <paramref name="count"/> labourers until <paramref name="until"/>: dailyWage × (until − t) ÷ 86,400 each.</summary>

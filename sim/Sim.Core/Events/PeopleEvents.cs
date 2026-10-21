@@ -3,43 +3,46 @@ using Sim.Core.People;
 
 namespace Sim.Core.Events
 {
-    /// <summary>Labourers hired for the crop on a field, until its harvest (spec 006 §3.2, ADR 0048 §3).</summary>
+    /// <summary>Labourers hired till the crops growing now are in (spec 006 §3.2, ADR 0049 §3).</summary>
     public sealed class LabourersHired : SimEvent
     {
-        public int TileId { get; }
         public IReadOnlyList<long> NeighbourIds { get; }
         public long Cost { get; }
         public long Until { get; }
 
-        public LabourersHired(long simTime, int tileId, IReadOnlyList<long> neighbourIds, long cost, long until) : base(simTime)
+        public LabourersHired(long simTime, IReadOnlyList<long> neighbourIds, long cost, long until) : base(simTime)
         {
-            TileId = tileId;
             NeighbourIds = neighbourIds;
             Cost = cost;
             Until = until;
         }
 
-        protected override string Describe()
-        {
-            return "LabourersHired(tile=" + TileId + ", ids=" + string.Join(",", NeighbourIds) + ", cost=" + Cost + ", until=" + Until + ")";
-        }
+        protected override string Describe() { return "LabourersHired(ids=" + string.Join(",", NeighbourIds) + ", cost=" + Cost + ", until=" + Until + ")"; }
     }
 
-    /// <summary>Labourers went home when their crop was ready, having harvested it (grams; 0 if there was nothing to harvest).</summary>
-    public sealed class LabourersLeft : SimEvent
+    /// <summary>Hired labourers harvested a ripe field that has no hand's order (ADR 0049 §3).</summary>
+    public sealed class LabourersHarvested : SimEvent
     {
         public int TileId { get; }
-        public int Count { get; }
-        public long HarvestedGrams { get; }
+        public long Grams { get; }
 
-        public LabourersLeft(long simTime, int tileId, int count, long harvestedGrams) : base(simTime)
+        public LabourersHarvested(long simTime, int tileId, long grams) : base(simTime)
         {
             TileId = tileId;
-            Count = count;
-            HarvestedGrams = harvestedGrams;
+            Grams = grams;
         }
 
-        protected override string Describe() { return "LabourersLeft(tile=" + TileId + ", count=" + Count + ", harvested=" + HarvestedGrams + ")"; }
+        protected override string Describe() { return "LabourersHarvested(tile=" + TileId + ", grams=" + Grams + ")"; }
+    }
+
+    /// <summary>Labourers went home: the crops they were hired for are in.</summary>
+    public sealed class LabourersLeft : SimEvent
+    {
+        public int Count { get; }
+
+        public LabourersLeft(long simTime, int count) : base(simTime) { Count = count; }
+
+        protected override string Describe() { return "LabourersLeft(count=" + Count + ")"; }
     }
 
     /// <summary>A hand's hut was started (spec 006 §3.4).</summary>

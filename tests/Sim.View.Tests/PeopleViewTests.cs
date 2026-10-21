@@ -89,7 +89,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             SheetVm s = PeopleSheet.Build(ViewKit2.Context(sim));
-            Assert.That(s.Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "labourers are hired from a growing field (ADR 0048)");
+            Assert.That(s.Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "nothing growing to hire for (ADR 0049)");
             Assert.That(s.Lines.Single(l => l.Action?.Id == "buildHut").Action.Opens.Value.Kind, Is.EqualTo("HutPlacement"));
             Assert.That(s.Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
 
@@ -138,9 +138,9 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             Hand h = Hire(sim);
-            // The hand's action this hour goes on field 20, so field 19 stays empty with its order (ADR 0040: orders start at once).
-            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, "radish", SeedSource.Certified, "none", SellRule.Store)));
+            // The order sows at once (ADR 0049); clearing the field leaves it empty with its order until the next hour.
             Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, "radish", SeedSource.Certified, "none", SellRule.Store)));
+            Ok(sim, new ClearField(sim.State.Clock.SimTime, 19));
             Assert.That(sim.State.Farm.CropOn(19), Is.Null);
             SowSheetVm sow = SowSheet.Build(ViewKit2.Context(sim), 19);
             Assert.That(sow.Rows.Single(r => r.CropId == "radish").Sow.Confirm, Is.Null, "same crop: no question");
@@ -203,24 +203,25 @@ namespace Sim.View.Tests
             Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Hand).Patrol, Is.Empty);
         }
 
-        // Spec 006 AC-25 (ADR 0048 §3): labourers are hired from a growing field, till its harvest.
+        // Spec 006 AC-25 (ADR 0049 §3): labourers are hired from People, till the crops growing now are in; never from a field.
         [Test]
-        public void FieldSheet_HiresTillHarvest()
+        public void PeopleSheet_HiresTillCropsIn()
         {
             Simulation sim = Rich();
             long t = sim.State.Clock.SimTime;
-            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 20).Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
+            SheetVm people = PeopleSheet.Build(ViewKit2.Context(sim));
+            Assert.That(people.Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
+            Assert.That(people.Lines.Any(l => l.Value == "Sow something first: they stay till its harvest"), Is.True);
             Ok(sim, new Sow(t, 20, "potato", SeedSource.Certified, "none"));
+            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 20).Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "not on the field");
             int free = PeopleRules.FreeNow(sim);
-            SheetVm field = FieldSheets.ForTile(ViewKit2.Context(sim), 20);
-            List<LineVm> hires = field.Lines.Where(l => l.Action?.Id?.StartsWith("hire:") == true).ToList();
+            people = PeopleSheet.Build(ViewKit2.Context(sim));
+            List<LineVm> hires = people.Lines.Where(l => l.Action?.Id?.StartsWith("hire:") == true).ToList();
             Assert.That(hires.Count, Is.EqualTo(free));
             Assert.That(hires[0].Label, Is.EqualTo("1 labourer till harvest"));
             Assert.That(sim.Execute(hires[0].Action.Create(t)).Accepted, Is.True);
-            field = FieldSheets.ForTile(ViewKit2.Context(sim), 20);
-            Assert.That(field.Lines.Single(l => l.Label == "Labourers on this crop").Value, Does.StartWith("1, harvest in"));
-            MapVm map = MapView.Build(ViewKit2.Context(sim));
-            Assert.That(map.People.Single(p => p.Kind == PersonKind.Labourer).Patrol[0], Is.EqualTo(20), "to their own field first");
+            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
+            Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Labourer).Patrol, Is.EqualTo(new[] { 20 }));
         }
 
         [Test]
@@ -228,7 +229,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             Ok(sim, new Sow(sim.State.Clock.SimTime, 20, "potato", SeedSource.Certified, "none"));
-            Ok(sim, new HireLabourers(sim.State.Clock.SimTime, 20, 2));
+            Ok(sim, new HireLabourers(sim.State.Clock.SimTime, 2));
             Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 37));
             sim.AdvanceTo(sim.State.Clock.SimTime + 12 * Hour);
             MapVm map = MapView.Build(ViewKit2.Context(sim));

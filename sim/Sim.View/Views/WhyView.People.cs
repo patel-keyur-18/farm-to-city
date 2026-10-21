@@ -170,12 +170,12 @@ namespace Sim.View.Views
 
         // ---- People -----------------------------------------------------------------------------------------------------------
 
-        /// <summary>A hire row on a field: id = tile × 100 + how many labourers (ADR 0048 §3).</summary>
+        /// <summary>A hire row: id = how many labourers (ADR 0049 §3).</summary>
         private static WhyVm Hire(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;
-            int tile = (int)(id / 100), count = (int)(id % 100);
-            long until = PeopleRules.LabourUntil(sim, tile);
+            int count = (int)id;
+            long until = PeopleRules.LabourUntil(sim);
             WhyVm vm = New(ctx, "why.hire.title", Money(ctx, PeopleRules.LabourCost(sim, count, until)));
             Row(vm, ctx, "why.hire.wage", Money(ctx, MarketRules.Indexed(sim, sim.Config.Game.People.Pool.DailyWage)));
             Row(vm, ctx, "why.hire.until", ctx.Fmt.Duration(System.Math.Max(0, until - ctx.Now)));

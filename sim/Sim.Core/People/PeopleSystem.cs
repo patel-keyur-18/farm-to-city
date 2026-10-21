@@ -85,35 +85,37 @@ namespace Sim.Core.People
         }
 
         /// <summary>
-        /// Labourers whose time is up (live or away), field by field in neighbour id order: they harvest their crop if it's ready
-        /// (overflow to the trader, so nothing is lost), then go home. Runs before the hands' orders.
+        /// While labourers are hired (live or away): every ripe field without a hand's order is harvested, in crop id order
+        /// (overflow to the trader, so nothing is lost). Then those whose time is up go home. Runs before the hands' orders.
         /// </summary>
         private static void Release(Simulation sim)
         {
             PeopleState s = sim.State.People;
             long t = sim.State.Clock.SimTime;
-            bool any = false;
-            foreach (Neighbour n in s.Roster) any |= n.Hired && t >= n.Until;
-            if (!any) return;
-            FarmSystem.Accrue(sim);
-            var fields = new List<int>();
-            foreach (Neighbour n in s.Roster) if (n.Hired && t >= n.Until && !fields.Contains(n.Tile)) fields.Add(n.Tile);
-            foreach (int tile in fields)
+            bool hired = false, done = false;
+            foreach (Neighbour n in s.Roster)
             {
-                long grams = 0;
-                Crop c = tile < 0 ? null : sim.State.Farm.CropOn(tile);
-                if (c != null && c.State == CropState.Ready && new Harvest(t, tile, Overflow.SellRestToTrader).ApplyNow(sim).Accepted) grams = c.HarvestGrams;
-                int count = 0;
-                foreach (Neighbour n in s.Roster)
-                {
-                    if (!n.Hired || t < n.Until || n.Tile != tile) continue;
-                    n.Tile = -1;
-                    n.Until = 0;
-                    count++;
-                }
-                sim.Emit(new LabourersLeft(t, tile, count, grams));
+                hired |= n.Hired;
+                done |= n.Hired && t >= n.Until;
+            }
+            if (!hired) return;
+            foreach (Crop c in sim.State.Farm.Crops.ToArray())
+            {
+                if (c.State != CropState.Ready || s.OrderFor(OrderTargetKind.Field, c.TileId) != null) continue;
+                if (new Harvest(t, c.TileId, Overflow.SellRestToTrader).ApplyNow(sim).Accepted) sim.Emit(new LabourersHarvested(t, c.TileId, c.HarvestGrams));
+            }
+            if (!done) return;
+            FarmSystem.Accrue(sim);
+            int count = 0;
+            foreach (Neighbour n in s.Roster)
+            {
+                if (!n.Hired || t < n.Until) continue;
+                n.Tile = -1;
+                n.Until = 0;
+                count++;
             }
             FarmSystem.Refresh(sim);
+            sim.Emit(new LabourersLeft(t, count));
         }
 
         /// <summary>

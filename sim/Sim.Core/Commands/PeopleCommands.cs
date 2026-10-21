@@ -11,26 +11,19 @@ using Sim.Core.People;
 namespace Sim.Core.Commands
 {
     /// <summary>
-    /// Hires labourers for the crop growing on a field (spec 006 §3.2, ADR 0048 §3): they stay until its readyAt rounded up to
-    /// the hour, paid upfront pro rata (Dr 5100), then harvest it and go home.
+    /// Hires labourers till the crops growing now are in (spec 006 §3.2, ADR 0049 §3): they stay until the last one's readyAt
+    /// rounded up to the hour, paid upfront pro rata (Dr 5100), harvesting each field without a hand's order as it ripens.
     /// </summary>
     public sealed class HireLabourers : TimedCommand
     {
-        public int TileId { get; }
         public int Count { get; }
 
-        public HireLabourers(long at, int tileId, int count) : base(at)
-        {
-            TileId = tileId;
-            Count = count;
-        }
+        public HireLabourers(long at, int count) : base(at) { Count = count; }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
             if (sim.State.People == null || Count <= 0) return CommandResult.Reject(RejectReason.InvalidArgument);
-            if (TileId < 0 || TileId >= sim.State.Land.Tiles.Count || !sim.State.Land.Parcels[sim.State.Land.Tiles[TileId].ParcelId].Owned)
-                return CommandResult.Reject(RejectReason.NotGrowing);
-            long until = PeopleRules.LabourUntil(sim, TileId);
+            long until = PeopleRules.LabourUntil(sim);
             if (until == 0) return CommandResult.Reject(RejectReason.NotGrowing);
             if (PeopleRules.FreeNow(sim) < Count) return CommandResult.Reject(RejectReason.NoneAvailable);
             long cost = PeopleRules.LabourCost(sim, Count, until);
@@ -43,7 +36,7 @@ namespace Sim.Core.Commands
             {
                 if (ids.Count == Count) break;
                 if (!n.FreeToday || n.Hired) continue;
-                n.Tile = TileId;
+                n.Tile = -1;
                 n.Until = until;
                 n.SecondsWorked += until - t;
                 ids.Add(n.Id);
@@ -52,7 +45,7 @@ namespace Sim.Core.Commands
                 sim.State.Ledger.Post(t, sim.Period, "ledger.dayLabourers", "people",
                     new Posting(Account.HiredLabour, cost), new Posting(Account.Cash, -cost));
             FarmSystem.Refresh(sim);
-            sim.Emit(new LabourersHired(t, TileId, ids.AsReadOnly(), cost, until));
+            sim.Emit(new LabourersHired(t, ids.AsReadOnly(), cost, until));
             return CommandResult.Ok;
         }
     }

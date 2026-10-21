@@ -20,7 +20,7 @@ namespace Sim.Core.People
         public bool AskedToMoveIn { get; internal set; }
         public bool FreeToday { get; internal set; }
 
-        /// <summary>The field whose crop they were hired for (−1: none, or a day hire from before ADR 0048).</summary>
+        /// <summary>Kept for the schema-4 layout: −1 since ADR 0049 (labourers tend every field); a field id only in Sprint 10's first build.</summary>
         public int Tile { get; internal set; } = -1;
 
         /// <summary>When they go home: the crop's readyAt rounded up to the hour (ADR 0048 §3); 0 when not hired.</summary>

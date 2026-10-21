@@ -152,9 +152,10 @@ namespace Sim.View.Views
                     row.Sow.Confirm = new ConfirmVm(ctx.Strings.Get("order.changeQ", "name", hand, "crop", name), ctx.Strings.Get("order.changeYes"), ctx.Strings.Get("order.changeNo"),
                         at => new Command[]
                         {
+                            // The player's sowing first: the new order acts at once (ADR 0049) and would otherwise sow the field itself.
+                            new Sow(at, tileId, c.Id, seed, fertiliserId),
                             new SetStandingOrder(at, o.HandId, o.Once ? OrderSpec.KeepCrop(tileId, c.Id, c.CanSaveSeed ? o.Seed : SeedSource.Certified, defs.Farm.Fertilisers[o.Fertiliser].Id, o.Sell, o.MinPrice).ThisSeasonOnly()
                                 : OrderSpec.KeepCrop(tileId, c.Id, c.CanSaveSeed ? o.Seed : SeedSource.Certified, defs.Farm.Fertilisers[o.Fertiliser].Id, o.Sell, o.MinPrice)),
-                            new Sow(at, tileId, c.Id, seed, fertiliserId),
                         });
                 }
                 vm.Rows.Add(row);

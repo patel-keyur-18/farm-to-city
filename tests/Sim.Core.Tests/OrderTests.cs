@@ -123,7 +123,16 @@ namespace Sim.Core.Tests
         [Test]
         public void StartsAtOnce_OneActionAnHour_PlayerWins()
         {
-            Simulation sim = Start(NoPests());
+            // ADR 0049 §2: by default every order acts at once, so two fields given together are both sown now.
+            Simulation both = Start(NoPests());
+            Hand bh = SteadyHand(both);
+            both.DrainEvents();
+            Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, KeepWheat()));
+            Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, OrderSpec.KeepCrop(19, "wheat", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(both.DrainEvents().OfType<OrderExecuted>().Select(e => e.Target), Is.EqualTo(new long[] { HomeTile, 19 }), "both fields at once");
+
+            // The cap still holds when content sets it: one action an hour.
+            Simulation sim = Start(NoPests((f, j) => f == "people.json" ? j.Replace("\"orderActionsPerHour\": 6", "\"orderActionsPerHour\": 1") : j));
             Hand h = SteadyHand(sim);
             long t = sim.State.Clock.SimTime / Hour * Hour + Hour;
             sim.AdvanceTo(t - 10);
