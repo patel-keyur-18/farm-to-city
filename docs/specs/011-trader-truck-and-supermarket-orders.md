@@ -116,6 +116,7 @@ Example (Spring, potato at 15 h, index 1.00): `BaseSowing` = 7,000 × 15 ÷ 96 =
 | `firstOrders` chapter | Triggered by the first `OrdersPosted`. "A shop in the city buys fresh produce straight from farms. It pays more than the trader, but only for what you harvest today, delivered by midnight, and it pays the next morning." Action: the Orders sheet |
 | `truckAway` chapter | Triggered by the first `TraderAway` rejection. "The trader's truck comes at 6:00 and leaves at midnight, or when it's full. The stall closes at night too. Keep it in the store, or take a cart to the mandi." Action: the Store sheet |
 | `comeBack` text | "{readyWhen}" replaces "at {readyTime} tomorrow": "tonight at 23:40", "tomorrow at 05:10", by the ready date in local time |
+| Strings made stale (stale-text sweep, 2026-10-21) | `letter.longCrop` "It will be ready this time tomorrow" becomes "It takes about 15 hours"; `letter.firstSale` adds "His truck comes every morning at 6:00"; `order.sellTrader` "Sell to the trader at once" becomes "Sell to the trader (held till 6:00 when his truck is away)"; a new wait line `order.wait.TraderAway` "Waiting: the store is full and the truck is back at 6:00"; `reject.TraderAway` "The trader's truck is back at 6:00." |
 
 ### 3.6 Processing order
 
