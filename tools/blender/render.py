@@ -1402,6 +1402,9 @@ def icon_weather(kind):
     return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
 
 
+LEVEL_DEG = 45  # turns a flat icon so it sits level after facing the camera
+
+
 def icon_ui(kind):
     o = []
     if kind == "sack":
@@ -1417,6 +1420,50 @@ def icon_ui(kind):
         fill = {"star_2": 0xFFC93C, "star_1": 0xFFE7A0, "star_0": 0xD9D2C4}[kind]
         o.append(star_mesh("star", 0.11, 0.048, 0.03, toon(kind, fill)))
         return turn(o, facing_camera(0.15))
+    elif kind == "letter":
+        # Dadi's letter: a cream envelope, its flap edges in a darker line, a red wax seal; it faces the camera like the coin.
+        paper, edge, wax = toon("paper", 0xFFF3D1), toon("paperEdge", 0xC9A46A), toon("wax", 0xC0392B)
+        o.append(box("envelope", (0.22, 0.15, 0.014), (0, 0, 0), paper, bevel=0.004))
+        for sgn in (-1, 1):
+            o.append(box("flap%d" % sgn, (0.13, 0.008, 0.004), (sgn * 0.052, 0.034, 0.009), edge,
+                         rot=Matrix.Rotation(sgn * math.radians(33), 3, "Z"), outline=False))
+        o.append(cylinder("seal", 0.026, 0.026, 0.012, (0, 0.0, 0.012), wax, segs=18))
+        o.append(cylinder("sealMark", 0.012, 0.012, 0.014, (0, 0.0, 0.013), toon("waxDark", 0x8F2B1E), segs=12, outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.25))
+    elif kind == "bell":
+        # The alerts: a brass bell with a knob and a clapper.
+        brass, dark = toon("brass", 0xE6B33A), toon("brassDark", 0xA8781E)
+        o.append(cylinder("skirt", 0.11, 0.075, 0.05, (0, 0, 0.03), brass, segs=28, smooth=True))
+        o.append(cylinder("waist", 0.075, 0.05, 0.07, (0, 0, 0.09), brass, segs=28, smooth=True))
+        o.append(sphere("crown", 0.051, (0, 0, 0.125), brass, scale=(1, 1, 0.75), segs=18, rings=10))
+        o.append(cylinder("lip", 0.115, 0.115, 0.014, (0, 0, 0.006), dark, segs=28))
+        o.append(cylinder("loop", 0.02, 0.02, 0.03, (0, 0, 0.17), dark, segs=12))
+        o.append(sphere("clapper", 0.026, (0.02, 0, -0.012), dark, segs=10, rings=6))
+        return turn(o, Matrix.Rotation(math.radians(-14), 4, "X"))
+    elif kind == "cart":
+        # The mandi trip: a tractor-trolley (ADR 0037) loaded with sacks, two wheels and a drawbar.
+        wood, dark, tyre, jute = toon("trolley", 0x3F7FBF), toon("trolleyDark", 0x2B5A8A), toon("tyre", 0x3A3530), toon("jute", 0xC9A46A)
+        o.append(box("bed", (0.26, 0.15, 0.03), (0, 0, 0.07), dark, bevel=0.004))
+        for y in (-0.075, 0.075):
+            o.append(box("side%d" % (y > 0), (0.26, 0.012, 0.06), (0, y, 0.1), wood, bevel=0.003))
+        for x in (-0.13, 0.13):
+            o.append(box("end%d" % (x > 0), (0.012, 0.15, 0.06), (x, 0, 0.1), wood, bevel=0.003))
+        for y in (-0.09, 0.09):
+            o.append(cylinder("wheel%d" % (y > 0), 0.055, 0.055, 0.03, (0, y, 0.055), tyre, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+            o.append(cylinder("hub%d" % (y > 0), 0.02, 0.02, 0.034, (0, y, 0.055), toon("hubMetal", 0xC9C2B4), segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+        o.append(box("drawbar", (0.12, 0.016, 0.016), (0.19, 0, 0.065), dark))
+        for i, (x, y) in enumerate(((-0.06, -0.03), (0.05, 0.03), (-0.01, 0.0))):
+            o.append(sphere("sack%d" % i, 0.05, (x, y, 0.15 + (0.03 if i == 2 else 0)), jute, scale=(1.1, 0.9, 0.8), segs=12, rings=8))
+        return turn(o, Matrix.Rotation(math.radians(20), 4, "Z"))
+    elif kind == "menu":
+        # The Menu: a red bahi-khata (the shopkeeper's account book) tied with a gold cord, lying open a little.
+        red, pages, cord = toon("khata", 0xB8322A), toon("pages", 0xFFF3D1), toon("cord", 0xE6B33A)
+        o.append(box("cover", (0.17, 0.22, 0.018), (0, 0, 0), red, bevel=0.005))
+        o.append(box("pages", (0.155, 0.205, 0.022), (0.006, 0, 0.014), pages, bevel=0.003))
+        o.append(box("top", (0.17, 0.22, 0.012), (0, 0, 0.03), red, bevel=0.005))
+        o.append(box("cord", (0.18, 0.012, 0.046), (0, 0.02, 0.016), cord, outline=False))
+        o.append(box("label", (0.07, 0.045, 0.003), (0, -0.05, 0.037), pages, outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.3))
     elif kind == "close":
         white = toon("x", 0xFFF3D1)
         for a in (45, -45):
@@ -1441,7 +1488,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 

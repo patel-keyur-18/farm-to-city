@@ -118,7 +118,10 @@ namespace Game.Presentation.Ui
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
-                case "menu": case "alert": case "cart": return IconBank.Basket;
+                case "menu": return IconBank.Ledger;
+                case "alert": return IconBank.Bell;
+                case "cart": return IconBank.Cart;
+                case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
                 case "compost": case "fertiliser_chemical": case "spray": case "spinach": case "coriander":

@@ -122,12 +122,10 @@ namespace Game.Presentation.Ui
             _layer.Add(right);
 
             // Above Collect all: the alerts button, shown only when something needs the player (ADR 0043 §4).
-            _alerts = RoundButton(116, null, 0);
+            _alerts = RoundButton(116, IconBank.Bell, 76);
             _alerts.name = "Alerts";
             _alerts.style.position = Position.Absolute;
             _alerts.style.left = 28; _alerts.style.bottom = 150;
-            Label bang = UiKit.Text("!", 70, UiKit.Ink, UiKit.Heading);
-            _alerts.Add(bang);
             var alertBadge = new VisualElement { pickingMode = PickingMode.Ignore };
             alertBadge.style.position = Position.Absolute;
             alertBadge.style.right = -8; alertBadge.style.top = -8;
@@ -145,13 +143,11 @@ namespace Game.Presentation.Ui
             _layer.Add(_alerts);
 
             // Bottom-right: the Menu (ADR 0043 §4).
-            VisualElement menu = RoundButton(150, null, 0);
+            VisualElement menu = RoundButton(150, IconBank.Ledger, 84);
             menu.name = "Menu";
             menu.style.position = Position.Absolute;
             menu.style.right = 28; menu.style.bottom = 28;
-            Label bars = UiKit.Text("≡", 96, UiKit.Ink, UiKit.Heading);
-            bars.style.marginTop = -18;
-            menu.Add(bars);
+            menu[0].style.marginTop = -20; // room for the word under the book
             Label menuWord = UiKit.Text(strings.Get("hud.menu"), 26, UiKit.Ink, UiKit.Heading);
             menuWord.style.position = Position.Absolute;
             menuWord.style.bottom = -6;
