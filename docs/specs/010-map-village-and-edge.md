@@ -1,6 +1,6 @@
 # 010. Map, village and edge
 
-- Status: Draft (gaps open, §10)
+- Status: In review (all gaps closed 2026-10-21)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, the village around the farm); Art, audio and feel (the map)
@@ -76,7 +76,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 | `s` | New neighbours' parcels for sale (§4: `r1`–`r5`, `w3`–`w6`, `s6`–`s9`) | 40 | Yes |
 | `n` | Neighbours' farms **not for sale yet** | 46 | No (Phase 2) |
 | `D`, `L`, `R` | Road acres: district road (row 11), village lane (column A, rows 3–10), farm lane (column 7, rows 8–10, taking `s5`) | 27 | Never |
-| `h g t c m C d S T P` | The village centre (columns B–E, rows 3–6): `h` houses, `g` grocery, `t` temple, `c` tea stall, `m` chemist, `C` council hall, `d` the input dealer (§10 G5), `S` the empty school plot, `T` the banyan and threshing floor, `P` the pond | 16 | Never |
+| `h g t c m C d S T P` | The village centre (columns B–E, rows 3–6): `h` houses, `g` grocery, `t` temple, `c` tea stall, `m` chemist, `C` council hall, `d` the input dealer (seed, fertiliser, spray; §10 G5), `S` the empty school plot, `T` the banyan and threshing floor, `P` the pond | 16 | Never |
 | `G` | The grazing commons: the west half of the river bank (§10 G2) | 8 | Never |
 | `B` | The rest of the river bank: grass, reeds, a bathing ghat and the washing steps (§10 G2) | 8 | Never |
 |  | **Buyable in Phase 2** (`f` + `s`) | **78** | |
@@ -91,7 +91,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 | Rule | Behaviour |
 | --- | --- |
 | Places | `MapDef.places`: a list of (`id`, `kind`, `tile`) on Village tiles. Kinds: `house`, `grocery`, `tea_stall`, `chemist`, `dealer`, `temple`, `council_hall`, `school_plot`, `banyan`, `pond`. Content only: places have no sim state in this spec |
-| Tapping a place | Opens its sheet (§7). The chemist's sheet has **Buy medicine** (spec 003, the founder's), the dealer's has **Buy inputs** (spec 004). The others say what the place is and when it matters (the school plot: "The first school can be built here once the hamlet grows into a village"). Pending §10 G5 |
+| Tapping a place | Opens its sheet (§7). The chemist's sheet has **Buy medicine** (spec 003, the founder's), the dealer's has **Buy inputs** (spec 004). The others say what the place is and when it matters (the school plot: "The first school can be built here once the hamlet grows into a village"; the council hall: "The village council meets here once the hamlet becomes a village"). The existing ways in stay (Store → Buy inputs, the founder's Buy medicine). Buying costs no travel time or labour, as today |
 
 ### 3.4 Save schema 5: the migration
 
@@ -125,9 +125,10 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 
 | Rule | Behaviour |
 | --- | --- |
-| Look | Neighbours' farm tiles show a seasonal crop by their soil (wheat or potato in Winter, rice in the Monsoon, lentils or fallow in Summer, potato or radish in Spring), drawn without growth stages. It has no sim state (§10 G6) |
+| Look | Neighbours' farm tiles show a seasonal crop by their soil (wheat or potato in Winter, rice in the Monsoon, lentils or fallow in Summer, potato or radish in Spring), drawn with the farm's half-grown crop sprite (no growth stages). The view picks each parcel's crop from its id and the season, so it is stable and changes at the season change. It has no sim state (§10 G6) |
 | For sale | A small sign board on one tile of each parcel for sale. Tapping any tile of it opens the buy sheet (spec 002 §7) |
-| Not for sale | Tapping opens a card: "<Name>'s farm · not for sale". Names come from a seeded list in the string tables, one per parcel |
+| Not for sale | Tapping opens a card: "<Name>'s farm · not for sale". Shows the size and soil, no price. Names are fixed per parcel in content (`parcels[].owner`, a string key) |
+| Owned land | Unowned land is no longer desaturated (amends spec 008 §3.4). The player's land is marked by a subtle boundary line; the for-sale signs mark what can be bought |
 
 ### 3.8 Processing order
 
@@ -220,14 +221,14 @@ On the device (test checklist, not automated): frame time on the iPhone 13 with 
 | Hamlet unlock day (median) | Unchanged | Day 5–9 (ADR 0045) |
 | Stress bots against competent | Unchanged | Within 1.20 × (ADR 0016) |
 
-## 10. Open questions (gaps to close with the owner, one at a time)
+## 10. Open questions (closed with the owner, 2026-10-21)
 
 - **G1. Which neighbours sell.** The layout in §3.2 puts the 40 new acres for sale to the west, the south and along row 2 (the farm's natural frontier), and keeps the riverside rows 0–1 and everything east of the lane not for sale. **Closed (owner, 2026-10-21): as drawn** (78 acres buyable, 46 not for sale yet).
 - **G2. The commons and the river bank.** **Closed (owner, 2026-10-21):** row 0 is a full river-bank strip (16 acres, never for sale) with the 8-acre commons in its west half (columns 0–7); row 1 is neighbours' riverside farmland, not for sale yet, with poor drainage; the river lies past the north edge (§3.6).
 - **G3. A save that owns `s5`.** **Closed (owner, 2026-10-21):** the village takes it for the lane and pays 2 × its current price, plus anything on it (§3.4).
 - **G4. The new acres' soils and prices.** **Closed (owner, 2026-10-21):** the soil placeholders of §3.2, and one geography rule for every parcel's location factor (1.05 on a road, the lane, the village or riverside row 2; 0.95 the far west strip; 1.0 otherwise).
-- **G5. The input dealer and place sheets.** Phase 1 names a village dealer but ADR 0053 doesn't list one. Recommended: add the dealer to the centre, and make places tappable as in §3.3.
-- **G6. Neighbours' fields.** Recommended: seasonal crops drawn without growth stages, for-sale signs, and a named not-for-sale card, as in §3.7.
+- **G5. The input dealer and place sheets.** **Closed (owner, 2026-10-21):** the dealer is added to the centre (column D, row 6); every place opens a sheet: the chemist's with Buy medicine, the dealer's with Buy inputs, the rest one line on what it is (§3.3).
+- **G6. Neighbours' fields.** **Closed (owner, 2026-10-21):** seasonal crops on neighbours' land (the half-grown sprite, chosen by parcel and season), for-sale signs, a named not-for-sale card with size and soil, no desaturation of unowned land; the player's land gets a boundary line (§3.7).
 
 ## 11. Cut first
 
