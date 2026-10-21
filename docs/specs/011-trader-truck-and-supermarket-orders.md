@@ -179,7 +179,7 @@ Orders sheet                                      [×]
 |          fresh in store: 900 kg  [Deliver 900]    |
 | Radish    120 kg   at 8.40  (trader 5.50)  [Why?] |
 |          fresh in store: 0 · sow by 22:00         |
-| Spinach    12 kg   at 18.40 (trader 14.50) [Why?] |
+| Spinach    12 kg   at 26.40 (trader 20.50) [Why?] |
 |          fresh in store: 4 kg  [Deliver 4]        |
 +--------------------------------------------------+
 | Only produce harvested today counts               |
