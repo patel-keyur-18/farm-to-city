@@ -1,6 +1,6 @@
 # 007. Saves, notifications and the play log
 
-- Status: Approved (2026-10-18), with the review answers in §10
+- Status: Approved (2026-10-18), with the review answers in §10; amended by spec 011 (ADR 0054, 0055; Phase 2): §3.5 (the `OrdersPosted` notification), schema 5
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Offline play and saves (Save system, Local notifications, Clock safety, Performance budget); Technical architecture; Roadmap (Phase 1 exit gate)

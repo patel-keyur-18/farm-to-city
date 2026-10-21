@@ -1,10 +1,10 @@
 # 011. The trader's truck and supermarket orders
 
-- Status: Draft (gaps open, §10)
+- Status: In review (all gaps closed 2026-10-21)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Storage and selling); Economy (Regional trader); Offline play (notifications)
-- Amends: spec 004 §3.1 (the daily factor), §3.2 (the night pause), §3.3 (capacity resets at 6:00; the truck); spec 006 §3.8 (the hand delivers first, BestCrop); spec 005 §3.2 (account 1300 Owed by buyers); spec 007 §3.5 (a notification kind); spec 003 content (rice and potato times)
+- Amends: spec 004 §3.1 (the daily factor), §3.2 (the night pause), §3.3 (capacity resets at 6:00; the truck); spec 006 §3.8 (the hand delivers first, BestCrop); spec 005 §3.2 (account 1300 Owed by buyers); spec 007 §3.5 (a notification kind); spec 009 (the first sale at any hour, two chapters, the `comeBack` text); spec 003 §3.1 and content (rice and potato times)
 - Related ADRs: 0054 (the trader's truck), 0055 (supermarket orders, rice and potato in 15 h), 0034 (a glut drains hour by hour), 0037 (the mandi trip), 0048 and 0050 (the hand's crop choice), 0053 (the roads)
 - Depends on specs: 004 (market and store: amended here), 003 (crops: rice and potato times), 006 (the hand's orders: amended here), 007 (notifications), 010 (the roads and the truck stop)
 
@@ -43,6 +43,7 @@ Money is `long` in 1/100 coin, quantities in grams, factors `Fixed` (ADR 0018). 
 | Leaving | When `truckLoadToday ≥ TruckDef.loadKg` after any purchase (emits `TruckLeft(Full)`), or at the hourly pass at hour `TruckDef.leaveHour` (0, midnight; emits `TruckLeft(Day)`), whichever is first | |
 | The day's price | The truck buys at the **Floor** (spec 004 §3.1). P_regional changes only at a season start or an index step (both at midnight) and with the daily factor (§3.1b, at 6:00), so the Floor is constant from 6:00 to midnight: the truck's price is set at 6:00 and held all day without extra state | |
 | Capacity | `TraderCapacityLeft(good) = TruckHere ? min(traderBuyPerDay(good) − traderBoughtToday(good), loadKg − truckLoadToday) : 0`. Every trader purchase goes through it: `SellToTrader`, harvest overflow (`SellRestToTrader`), the trader holding the floor on the stall (spec 004 §3.2), the hand's SELL TO TRADER, labourers' harvests. Every purchase adds to both counts | `loadKg` 4,000 kg (tuned so a normal day rarely fills it) |
+| First sale | Until the first session's first-sale step is done (spec 009 step 5), `TraderCapacityLeft` treats the truck as here, so a first session played at night can sell (§10 G6). The load still counts | |
 | Away | While the truck isn't here, `SellToTrader` is rejected with **`TraderAway`** ("Back at 6:00"). A harvest with `SellRestToTrader` whose rest doesn't fit the store is rejected with `TraderAway` and waits in the field, as with `TraderFull` (spec 003). The trader doesn't hold the floor on the stall | |
 | The hand's held sales | When a hand's SELL TO TRADER order stores a harvest because the truck is away or full, the stored amount is added to `heldForTruck[good]`. At the arrival pass, right after the reset, he sells `min(heldForTruck, stock not on offer)` of each good (good id order) to the truck at the new day's price, up to its room, and the count drops by what he sold; what doesn't fit stays held for the next morning. If the player sells, eats or offers that stock first, `heldForTruck` is cut to what's left (`min(heldForTruck, stock not on offer)` after every removal). A night harvest is not fresh for that day's orders (§3.3), so it goes to the truck. Emits `HandSoldHeld(good, q, amount)` (§10 G5) | |
 | Away while you're away | The truck runs the same live and away. The away card says what it bought ("The trader bought 1,200 kg of potato") | |
@@ -76,7 +77,7 @@ P_regional(good, t) = GoodDef.basePrice × PriceIndex × SeasonalFactor(good, se
 
 | Rule | Behaviour | Bounds |
 | --- | --- | --- |
-| Posting | At the hourly pass at `arriveHour` (after the truck arrives), any open orders lapse and `OrderDef.perDay` (2) new orders are drawn. Emits `OrdersPosted` | 0–4 a day |
+| Posting | At the hourly pass at `arriveHour` (after the truck arrives), any open orders lapse and `OrderDef.perDay` (2) new orders are drawn. Emits `OrdersPosted`. Orders start at the first `arriveHour` pass after the first session's last step (`comeBack`, spec 009) is done (§10 G6) | 0–4 a day |
 | Eligible crops | The `perDay` crop orders: field crops (§10 G4) in season now whose `growthSeconds ≤ (24 − arriveHour) × 3 600` (18 h), so one sown at 6:00 can ripen by midnight. Rice and potato (15 h) sown before 9:00 can | |
 | Drawing | Seeded stream `Orders`, counter = day index. Each order draws a crop from the eligible list (crop id order) without repeats while two or more are eligible; with one eligible, both orders may name it; with none, no orders that day | |
 | A greens order | Also at posting, `OrderDef.greensPerDay` (1) small order for a kitchen-garden green (spinach or coriander), drawn the same way among the greens: `amount = round_down_to(greensLotKg, harvestKg × (greenPickingsMin + (greenPickingsMax − greenPickingsMin) × u))`, at least one lot: spinach 8–16 kg, coriander 3–6 kg. Priced like a crop order. Garden pickings count as fresh (a picking is a harvest) | 0–1 a day; 2–4 pickings |
@@ -107,6 +108,14 @@ Example (Spring, potato at 15 h, index 1.00): `BaseSowing` = 7,000 × 15 ÷ 96 =
 | --- | --- |
 | New kind | `OrdersPosted`, importance **Needs you**, at the 6:00 posting. Quiet hours (22:00–07:00) move it to 07:00 as usual. Text: "3 supermarket orders: potato, radish and spinach" (no money amounts, spec 007) |
 | No orders | No notification |
+
+### 3.6b Onboarding (amends spec 009; §10 G6)
+
+| Rule | Behaviour |
+| --- | --- |
+| `firstOrders` chapter | Triggered by the first `OrdersPosted`. "A shop in the city buys fresh produce straight from farms. It pays more than the trader, but only for what you harvest today, delivered by midnight, and it pays the next morning." Action: the Orders sheet |
+| `truckAway` chapter | Triggered by the first `TraderAway` rejection. "The trader's truck comes at 6:00 and leaves at midnight, or when it's full. The stall closes at night too. Keep it in the store, or take a cart to the mandi." Action: the Store sheet |
+| `comeBack` text | "{readyWhen}" replaces "at {readyTime} tomorrow": "tonight at 23:40", "tomorrow at 05:10", by the ready date in local time |
 
 ### 3.6 Processing order
 
@@ -219,6 +228,8 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | AC-12 | Rice and potato take 15 h; their per-sowing harvest and seed scale by `cycleShare`; one acre's season totals equal the 24 h version's; a crop sown before the change keeps its `readyAt` | `CropTests.RiceAndPotato_15h` |
 | AC-13 | The notification planner adds one `OrdersPosted` item at 6:00, moved to 07:00 by quiet hours, with the crops' names and no amount | `NotificationTests.Plan_OrdersPosted` |
 | AC-14 | A schema-4 save loads at schema 5 with `truckHere` by its hour, `truckLoadToday` = the sum of its trader counts, no orders and no fresh stock; it advances a day and round-trips | `MigrationTests.Schema5_TruckAndOrders` |
+| AC-16 | In a new game started at 2:00, selling the first garden basket to the trader succeeds; after the first-sale step the same sale at 2:00 is rejected with `TraderAway` | `TruckTests.FirstSale_AnyHour` |
+| AC-17 | No orders are posted before the first session's last step is done; the first `arriveHour` pass after it posts them and triggers `firstOrders` once; the first `TraderAway` triggers `truckAway` once; `comeBack` reads "tonight" or "tomorrow" by the ready date | `OrderTests.StartAfterFirstSession`, `FirstSessionTests.TruckAndOrdersChapters` |
 | AC-15 | A year with the bot under the new rules gives the same hash in one chunk or many; the golden replays on frozen content are unchanged | `TruckTests.ChunkingInvariance`, `ReplayTests.*` |
 
 ## 9. Balancing hooks
@@ -230,14 +241,14 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | Competent bot's net worth after 2 years | Up a little (orders' premium) | Stress bots within 1.20 × (ADR 0016) |
 | Hamlet unlock day (median) | Unchanged or a little earlier | Day 5–9 |
 
-## 10. Open questions (gaps to close with the owner, one at a time)
+## 10. Open questions (closed with the owner, 2026-10-21)
 
 - **G1. A daily price.** **Closed (owner, 2026-10-21):** prices move daily at 6:00 by a bounded, mean-reverting factor per produce good (§3.1b).
 - **G2. The price overnight.** **Closed (owner, 2026-10-21):** the valley's market keeps clearing while the stall is closed; the player's supply is 0, so a glut recovers by morning (§3.2).
 - **G3. Who carries an order.** **Closed (owner, 2026-10-21):** delivered to the supermarket's collection point at the truck stop (no cost, a van collects), partial deliveries allowed, booked as a sale owed at delivery and paid at 6:00 the next morning; the Store sheet says "Supermarket pays you X at 6:00 tomorrow" (§3.3, §7).
 - **G4. Which goods can be ordered.** **Closed (owner, 2026-10-21):** the two daily orders are field crops only (no fruit); a third, small daily order asks for a garden green (spinach or coriander, 2–4 pickings) (§3.3).
 - **G5. The hand's sales overnight.** **Closed (owner, 2026-10-21):** what his SELL TO TRADER orders store while the truck is away or full is held and sold to the truck at 6:00, never more than is still in store (§3.1).
-- **G6. The first session and the first week.** A first session played between midnight and 6:00 can't make its first sale. When do the truck's hours and the orders start?
+- **G6. The first session and the first week.** **Closed (owner, 2026-10-21):** until the first-sale step is done the trader buys at any hour; orders start at the first 6:00 after the first session's last step; two letter chapters (`firstOrders`, `truckAway`); the `comeBack` text says tonight or tomorrow by the date (§3.7).
 
 ## 11. Cut first
 

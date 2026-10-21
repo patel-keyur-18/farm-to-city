@@ -1,6 +1,6 @@
 # 003. Crops, fruit trees and founder labour
 
-- Status: Approved (2026-10-17), with the Sprint 1 review decisions the Sprint 2 planning review changes (ADR 0032) and the Sprint 3 planning review changes (ADR 0034) in §10
+- Status: Approved (2026-10-17), with the Sprint 1 review decisions the Sprint 2 planning review changes (ADR 0032) and the Sprint 3 planning review changes (ADR 0034) in §10; amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 and content (rice and potato in 15 h)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Crops, Yield formula, Fruit trees, Ready to harvest, Inputs and trade-offs); Player journey and eras (The founder's routine); Data model (`CropDef`, `FounderDef`, `DietPlanDef`)
@@ -46,7 +46,7 @@ Every crop quantity in data is **per acre per season**: what an acre realistical
 cycleShare(crop) = growthSeconds ÷ ClockDef.SecondsPerSeason          (Fixed, rounded)
 ```
 
-With 4-day seasons: radish (2 h) 0.0208333; wheat (6 h) 0.0625; rice and potato (24 h) 0.25; lentils (8 h) 0.0833333. The kitchen garden has its own rule (§3.13).
+With 4-day seasons: radish (2 h) 0.0208333; wheat (6 h) 0.0625; rice and potato (24 h) 0.25 (15 h, 0.15625, from Phase 2: spec 011, ADR 0055); lentils (8 h) 0.0833333. The kitchen garden has its own rule (§3.13).
 
 | Per cycle and acre | Formula |
 | --- | --- |
@@ -303,7 +303,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | `outputGood` | good id (004) | radish | wheat | rice | potato | lentils | an edible produce good |
 | `seedGood` | good id (004) | seed_radish | seed_wheat | seed_rice | seed_potato | seed_lentils | an input good |
 | `sowSeasons` | list of seasons | all | winter | summer, monsoon | spring, winter | summer, winter | non-empty |
-| `growthMinutes` | int | 120 | 360 | 1,440 | 1,440 | 480 | 1–20,160 |
+| `growthMinutes` | int | 120 | 360 | 1,440 (900 from spec 011) | 1,440 (900 from spec 011) | 480 | 1–20,160 |
 | `seasonYieldPerAcre` | kg (Fixed) | 4,000 | 1,200 | 1,500 | 7,000 | 350 | > 0 |
 | `seedPerAcrePerSeason` | kg (Fixed) | 8 | 27 | 10 | 700 | 6 | ≥ 0 |
 | `moistureMin`, `moistureMax` | Fixed | 40, 75 | 35, 65 | 60, 95 | 40, 70 | 30, 60 | 0 < min < max < 100 |

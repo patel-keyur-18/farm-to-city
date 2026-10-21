@@ -1,6 +1,6 @@
 # 006. People: day labourers, the resident hand and standing orders
 
-- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039)
+- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.8 (the hand fills supermarket orders first, sells held produce at 6:00, and his crop choice counts the order price)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring starts in Homestead, Wages); Land, farming and livestock (Standing orders); Player journey and eras (Homestead, the Hamlet gate); Data model

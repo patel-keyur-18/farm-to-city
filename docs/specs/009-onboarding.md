@@ -1,6 +1,6 @@
 # 009. Onboarding: the letter, the first session, the guided first week and the Hamlet unlock
 
-- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16)
+- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 step 5 (the first sale at any hour), §3.3 (chapters `firstOrders` and `truckAway`), §3.6 (`comeBack` says tonight or tomorrow)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens (Onboarding); Player journey and eras (Homestead, Hamlet); Learning layer
