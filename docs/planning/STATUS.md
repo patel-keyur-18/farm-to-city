@@ -4,9 +4,9 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 9 (release candidate, solo playtest week, tuning, the Phase 1 gate; 2 weeks, 10 points): the release candidate is built (commit `33afedb`); the owner runs Parts A and B of `s09-release-candidate.md`, then the playtest week. Sprint 8 done (PR #13 merged) |
-| Branch with latest work | `sprint/09-playtest` (from `main`, which has Sprint 8 / PR #13) |
+| Phase | 1 · Homestead slice, complete (the owner closed Sprint 9 on 2026-10-21); Sprint 10 fixes the playtest's people findings before Phase 2 |
+| Sprint | Sprint 10 (playtest fixes, ADR 0048): code done; the owner's device check (`s10-people-fixes.md`) pending |
+| Branch with latest work | `sprint/10-people-fixes` (from `main`, which has Sprint 9 / PR #14) |
 | Last updated | 2026-10-21 |
 
 ## Done so far
@@ -124,21 +124,35 @@
 
   - **Device review (2026-10-21, ADR 0046):** every check passed; the first session took 10 minutes. Fixed: every veil covers the whole screen past the safe area (`UiKit.Veil`); the *While you were away* card only after 8 hours away or at the cap (`awayCardMinHours`, the owner chose 8 h over the 72 h cap on the recommendation); the sale nudge only while the trader would buy something; the developer panel above the nudge, with **Away +1 hour**. Specs 008 §3.9 / AC-8 and 009 §10, the GDD and CLAUDE.md updated. 264 + 69 tests.
 
-- **Sprint 9 (branch `sprint/09-playtest`): in progress (2 weeks, 10 points, ADR 0047).**
+- **Sprint 9 (branch `sprint/09-playtest`, PR #14 merged): done, closed by the owner on 2026-10-21 (Phase 1 complete from the owner's own play; the log and diary weren't filed). Findings went to Sprint 10.**
   - **Planning review (2026-10-21):** 6 gaps decided with the owner, **ADR 0047** (spec 007 §3.1, §3.6, AC-3, AC-14, AC-15, §10; spec 009 §10; the GDD's Phase 1 gate and Telemetry; epics; F10.1 with US-185; CLAUDE.md): the owner is the only playtester (free account, iPhone 13); the play log adds `tz`, `fromNote` and the first-session steps, with a daily diary; migrations from the release candidate (`minSchema` frozen at 3, a frozen fixture per schema); a Development build for the regression and frame time, a Release build for the playtest, the blocker definition; the gate split (part A on the solo week, A1–A6; part B, fresh players, is US-185 before Launch); Sprint 9 runs 2 weeks.
   - **US-095 (release candidate):** `MigrationTests` (`EverySchemaLoads`, `SchemaHasFixture`, `MinSchemaFrozen`) on the frozen `tests/Sim.Core.Tests/saves/schema3.ftc` (the competent bot after 2 seasons: a hand, 6 orders, 2 loans, 4 trees, the Hamlet unlocked) and its pinned hash and 17 facts; regenerate only the current schema with `FTC_UPDATE_SAVES=1`. The developer panel's **Measure frame time (20 s)** (`DevTools.FrameRecorder`, `FrameTimingManager`; `IosBuildStep` turns on frame-timing stats for Development builds only). `s09-release-candidate.md`: Part A (57 rows merging s04–s08 by area), Part B (Release smoke), Part C (the playtest diary), the gate table. 268 `Sim.Core` and 69 `Sim.View` tests pass; CI green.
   - **US-096 (play log):** `sessionStart` has `tz` and `fromNote` (`INotificationService.OpenedByNote`, `QueryLastRespondedNotification`, each tap counted once by the notification's `Data`); `PlayLog.Guidance` writes each first-session `step` once per town, then `firstSessionDone`; a new town starts a session line. Verified in the Editor with touch: Settings → Play log On → New game → Replace → Continue logs `newGame` and `step welcome`; `tz` 330; the frame-time button, countdown and result (`docs/art/s09-dev-frame-*.png`).
 
+- **Sprint 10 (branch `sprint/10-people-fixes`): code done (6 points, ADR 0048).** The owner's playtest findings:
+  - **Root cause.** An every-season order sowed only its own crop, so outside that crop's seasons the field waited, empty, all season. Wheat, for example, waited through Spring, Summer and the Monsoon. The map walked a hand only to his own order fields with work, although his hours tended every growing field. Labourers were paid to the daily pass and left there.
+  - **US-186:** when the order's crop is out of season, or the order is "Let Manoj choose", the hand sows the in-season crop with the best profit per season on that field. This uses `FarmRules.BestCrop`, built on `FarmRules.Estimate`, which the sow sheet now shares. The map walks a paid hand round every growing field.
+  - **US-187:** `HireLabourers(tile, count)` from the growing field's sheet keeps labourers until the crop's ready hour; they harvest it and go home. The daily draw skips labourers on a crop. Save schema 4, with the schema 3 migration and `saves/schema4.ftc`.
+  - Spec 006 (§3.2, §3.3, §3.8, §3.9, §5, §6, AC-2, AC-3, AC-13, AC-24, AC-25) and the GDD are updated.
+  - 270 `Sim.Core` tests and 70 `Sim.View` tests pass. The balance gate and the goldens are unchanged. Unity compiles.
+  - **Editor tour with touch passed** (`docs/art/s10-*.png`): the hire rows, the hire *Why?*, the order sheet's "Let Manoj choose", the map with the hand and labourers, the labourers' harvest and leaving, the People and hand sheets. No console errors.
+  - Fixed during the tour: the field sheet now stays open after a hire; four labourer strings still described hiring for a day; an order line names the hand's pick ("Keep Lentils (Rice now)").
+  - The Editor's town is now the schema-4 fixture town (imported). The touch driver removed the Editor's mouse until the Editor restarts.
+
 ## In progress
 
-US-095 waits on the owner's device run (Parts A and B); US-096 is the playtest week; US-097 follows it.
+US-186 and US-187 wait on the owner's device check (`docs/test-checklists/s10-people-fixes.md`, Development build).
 
 ## Next up
 
-1. **Owner:** `s09-release-candidate.md` Part A on the Development build (`unity/FarmToCity/Builds/iOS`), including the four frame-time views; report results and any **BLOCKER**.
-2. **Claude:** fix blockers (US-095.T4); if code changes, a new RC commit and both builds again.
-3. **Owner:** Part B on the Release build (`unity/FarmToCity/Builds/iOS-release`), then the 7-day playtest (Part C) with the diary; send the play log and the town file.
-4. **Claude:** US-097: add the town as `schema3-device.ftc`, read the log and diary, tune if needed (balance gate re-run), judge A1–A6, record the decision here, the retro; Sprint 9's closing pull request.
+1. **Owner:** build the Development build from `sprint/10-people-fixes`, run `s10-people-fixes.md` on the iPhone 13 and report. Merge the pull request when it passes.
+2. **Claude:** fix any findings, then close Sprint 10.
+3. **The owner's next requests (after the device check).** These need specs and ADRs first (rolling wave, ADR 0019). Plan them as the next sprint's planning review, one gap at a time:
+   - **The map edge.** Natural terrain past the map (hills, a river, fields) so there is no sky-blue edge. Not playable.
+   - **A village around the farm.** Common land, roads and shops; not every acre is for sale.
+   - **The trader's tempo.** A road past the store. The trader comes daily by tempo or truck, loads up and drives on to the next village when full.
+   - **A larger map** to hold all of this.
+   - **Animals.** A cattle shed for cows or buffalo: daily milk to sell or eat, fed with bought or grown fodder. Claude gave its suggestions in the session of 2026-10-21. The GDD puts livestock in Phase 2.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -148,7 +162,8 @@ US-095 waits on the owner's device run (Parts A and B); US-096 is the playtest w
 | Sprint 7 | Done (device runs 1 and 2 passed, PR #12 merged) |
 | Sprint 8 | Done (device run and re-check passed, PR #13 merged) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
-| Sprint 9 | Run the RC regression and frame time (Development), the smoke list (Release), play 7 days with the log on and the diary, send the log; the gate decision |
+| Sprint 9 | Done (closed by the owner, PR #14 merged) |
+| Sprint 10 | Run `s10-people-fixes.md` on a Development build; merge the PR |
 
 ## Open questions (with the owner)
 

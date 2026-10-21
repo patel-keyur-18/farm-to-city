@@ -18,7 +18,8 @@
 | S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings; hourly weather spells (ADR 0042). | 19 | — | Yes |
 | S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | Spec 009 amendment (ADR 0045) | Yes: feature-complete Development build |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
-| S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
+| S10 | 4–10 Jan 2027 | 1 | Playtest fixes: the hand works every season, labourers till harvest (ADR 0048). | 6 | Spec 006 amendment (ADR 0048) | Yes: Development build |
+| S11+ | From 11 Jan 2027 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -402,7 +403,7 @@
 
 ## Sprint 9 · 21 Dec 2026 – 3 Jan 2027 · Phase 1 (2 weeks, ADR 0047 §6)
 
-- **Status:** In progress. Planning review done 2026-10-21 (ADR 0047: 6 gaps); the release candidate built (commit `33afedb`, Development and Release); the owner's Parts A and B, then the playtest week
+- **Status:** Done. Closed by the owner on 2026-10-21 (PR #14 merged): Phase 1 declared complete from the owner's own play. The play log and diary weren't filed; the playtest's findings came as a bug report, fixed in Sprint 10 (ADR 0048)
 - **Branch:** `sprint/09-playtest`
 - **Goal:** Release candidate, the owner's solo playtest week, tuning and the Phase 1 gate review (part A).
 - **Points:** 10
@@ -412,16 +413,16 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 4 | Must | Built; device run pending (T4 waits on it) |
-| US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | Play log and diary ready; the week pending |
-| US-097 | Tune and decide | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
+| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 4 | Must | Done |
+| US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | Done (owner's play; no log filed) |
+| US-097 | Tune and decide | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | Done (owner: Phase 1 complete) |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025), as closed by the owner
+- [x] Test checklist written in `docs/test-checklists/` (`s09-release-candidate.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merged to `main` (PR #14)
 
 **Planning review (2026-10-21, ADR 0047):** the owner is the only playtester (free account, iPhone 13); the play log adds `tz`, `fromNote` and the first-session steps, with a daily diary; migrations from the RC (`minSchema` frozen at 3, a fixture per schema); a Development build for regression and frame time, a Release build for the playtest, and the blocker definition; the gate split into part A (this sprint) and part B (US-185); 2 weeks, 10 points.
 
@@ -434,6 +435,41 @@
 
 **Carry over (from Sprint 8):** the first session's 10 minutes (recorded by the play log, not gated: ADR 0047 §5); alert dismissals and the guide's per-launch memory only if the playtest hits them.
 
-**Review (owner's device results):** —
+**Review (owner's device results, 2026-10-21):** the owner played the build on the iPhone 13 and declared Phase 1 complete. Gate part A wasn't measured from a log (A1–A3 by the owner's judgement; A4–A6: no blocker reported, the RC built, CI green). Three people findings, fixed in Sprint 10 (ADR 0048): the hand stayed at his hut until the owner sowed by hand; he didn't sow or care in other seasons; day labourers left mid-crop.
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* the migration fixture paid off at once: Sprint 10's schema 4 migration was tested against the frozen RC town on day one.
+- *To improve:* every-season orders were only tested with crops sown in every season (test content), so the real calendar's idle seasons never showed. Test rules on the real content's calendar too. A hand's work that the map didn't show read as no work at all: what the sim does must be visible.
+- *Carry over:* gate part B (US-185) before Launch.
+
+## Sprint 10 · 4–10 Jan 2027 · Phase 1 (playtest fixes)
+
+- **Status:** Code done 2026-10-21 (ADR 0048); the owner's device check pending
+- **Branch:** `sprint/10-people-fixes`
+- **Goal:** The owner's Phase 1 playtest findings: the hand works every season and is seen working; labourers stay till harvest.
+- **Points:** 6
+- **Specs for the owner to review:** spec 006 §3.2, §3.3, §3.8, §3.9, §5, §6, §8 (ADR 0048; decided with the owner in the session)
+- **Device build:** Yes: Development build (`s10-people-fixes.md`)
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-186 | The hand works every season | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done; device check pending |
+| US-187 | Labourers till harvest | [F06.1](features/F06.1-day-labourers.md) | 3 | Must | Done; device check pending |
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025); the device check is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s10-people-fixes.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [ ] Pull request opened; owner merges to `main`
+
+**Done this sprint (Claude):**
+- **Sprint 9 closed** at the owner's word (Phase 1 complete). **Root cause** of the idle hand: an every-season order sowed only its own crop, so out of season it waited all season (wheat waits through Spring, Summer and the Monsoon); and the map walked a hand only to his own order fields with work, though his hours tended every growing field. Labourers were paid to the daily pass and left there.
+- **US-186:** the hand's best in-season pick by profit per season on the field's soil and moisture (`FarmRules.BestCrop` on the sow sheet's `FarmRules.Estimate`), "Let Manoj choose" in the order sheet, the map walking a paid hand round every growing field.
+- **US-187:** `HireLabourers(tile, count)` until the crop's ready hour; they harvest it and go; hired from the growing field's sheet; save schema 4 (schema 3 migrated; `saves/schema4.ftc`).
+- Unity compiles the sim (C# 9). **Editor tour with touch** on the RC town imported 72 hours on: the hand had sowed 14 fields and brought in 14 harvests, because lentils are out of season in the Monsoon. Then: the field sheet's hire rows, cost and *Why?*; two labourers hired; the order sheet's **Let Manoj choose** → Every season → Sell to the trader; the map with Manoj and both labourers working; 4 hours on, the labourers harvested field 19 and left, and Manoj re-sowed it; the People and hand sheets. No console errors. Captures are in `docs/art/s10-*.png`.
+- **Fixed during the tour:**
+  - Hiring closed the field sheet. It now stays open, like Spray, to show "Labourers on this crop".
+  - Dadi's "More hands" page and three labels still described hiring for a day.
+  - An order line now names the hand's pick when it differs from the order's crop ("Keep Lentils (Rice now)").
+- 270 `Sim.Core` (balance gate and goldens unchanged) and 70 `Sim.View` tests pass.
