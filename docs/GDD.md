@@ -759,7 +759,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 
 The game needs no account and no server. All content ships in the build, and the network is used only for optional cloud backup and store purchases.
 
-**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, and workers follow their standing orders. After 72 hours the world freezes, and it resumes from that point when the player returns. When the cap applies, whole days are dropped, so the town lives between 48 and 72 hours and its time of day stays in step with the device. A gap of up to 60 seconds counts as live play, and anything longer is an away advance (spec 001). A *While you were away* report shows harvests, sales, wages paid and events.
+**Time while the app is closed.** The town keeps living in real time for up to **72 real hours** per absence (ADR 0002). Crops grow, and workers follow their standing orders. After 72 hours the world freezes, and it resumes from that point when the player returns. When the cap applies, whole days are dropped, so the town lives between 48 and 72 hours and its time of day stays in step with the device. A gap of up to 60 seconds counts as live play, and anything longer is an away advance (spec 001). A *While you were away* report shows harvests, sales, wages paid and events after an absence of 8 hours or more (ADR 0046); a shorter one shows nothing beyond the HUD, the alerts and the toasts.
 
 **Away rules**
 

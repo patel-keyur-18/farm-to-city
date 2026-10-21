@@ -355,7 +355,7 @@
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 
-- **Status:** Built (21 of 21 points); device run pending. Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
+- **Status:** Device run passed 2026-10-21; three findings fixed (ADR 0046), re-check pending (checks 33–36). Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
 - **Branch:** `sprint/08-onboarding-hamlet`
 - **Goal:** Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks.
 - **Points:** 21
@@ -364,12 +364,12 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | Built, device run pending |
-| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Built, device run pending |
+| US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | Done |
+| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Device run passed; sale-nudge fix to re-check |
 | US-091 | Guided-once triggers | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
-| US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Built, device run pending |
+| US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
 | US-093 | Era unlock check | [F09.3](features/F09.3-hamlet-unlock.md) | 3 | Must | Done |
-| US-094 | Hamlet celebration | [F09.3](features/F09.3-hamlet-unlock.md) | 2 | Must | Built, device run pending |
+| US-094 | Hamlet celebration | [F09.3](features/F09.3-hamlet-unlock.md) | 2 | Must | Done |
 | US-098 | Phase 1 bots and checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Done |
 
 **Sprint end checklist**
@@ -388,10 +388,15 @@
 - **Carry-over:** Blender icons for the letter, the Menu (a *bahi-khata* ledger), the alerts (a bell) and the mandi trolley.
 - 264 `Sim.Core` and 69 `Sim.View` tests pass. Development build: Unity build succeeded (the developer panel, the golden files, the new content).
 
-**Review (owner's device results):** —
+**Review (owner's device results, 2026-10-21):** every check passed; the first session (checks 1 to 12) took 10 minutes (target 15–20 ± 5). Three findings, fixed the same day (**ADR 0046**; spec 008 §3.9 and AC-8, spec 009 §10, the GDD):
+1. A letter page dimmed only the safe area, not the whole screen. Every veil now reaches past the safe area (`UiKit.Veil`): cards, letter pages, *Why?*, the away card, the developer panel.
+2. The away card and "Welcome back" came after an hour away: the house eats every day, so something always "happened". The owner asked for the card only at the 72 h cap; on the recommendation, the card now needs **8 hours away** or the cap (`awayCardMinHours` in `content/ui.json`), so a day or two away still gets its summary.
+3. After **Away cap**, "Open the Store and sell to the trader" stayed with the store bouncing and nothing to sell (the house had eaten the inherited grain). The sale nudge now shows only while the trader would buy something. Also: the developer panel opens above the nudge, and its new **Away +1 hour** tests the threshold.
+- Verified in the Editor with touch: the veil past a simulated inset (`docs/art/s08-letter-veil-full-screen.png`), no card after an hour away, the card after a day. Re-check on the phone: checks 33–36.
 
 **Retro (Claude):**
 - *Went well:* gating the onboarding content on the people content kept the goldens untouched with no special case. Measuring each health check before fixing its threshold gave thresholds that are realistic and still fail on a regression. The bot that follows the highlights made the first session testable end to end.
+- *To improve (device review):* the Editor has no notch, so a veil inside the safe area looked right there; check overlays with a simulated inset. A step goal that the world can make impossible (the store emptied by the house) needs its nudge to check that it's still possible.
 - *To improve:* the spec's step pages mixed "before" and "after" texts; only playing them showed it. Read each page against the moment it opens when a spec gives texts. Editing any file Unity watches during play mode reloads the domain (the sim's sources included): stop first, always.
 - *Carry over:* save migrations from the Sprint 9 playtest build (ADR 0041 §2); alert dismissals if playtesters ask; the guide's memory of events is per launch (spec 009 §10 notes) if playtesters hit it.
 

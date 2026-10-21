@@ -268,6 +268,12 @@ All six were answered in the review with the owner (2026-10-18), each as recomme
 - The `comeBack` page leaves out "I'll find my own way" (nothing is left to skip).
 - The highlight is a gold arrow bobbing over the target (the store pill bounces every 2 s); the nudge pill sits at the bottom centre.
 
+**Device review (2026-10-21, ADR 0046):**
+
+- The `firstSale` nudge, its arrow and the store pill's bounce show only while the store holds produce not on offer that the trader still buys today; otherwise the step waits quietly (`FirstSessionTests.Nudges`). After a long absence the house may have eaten the inherited grain, and "sell to the trader" pointed at nothing.
+- The *While you were away* card now needs 8 hours away (spec 008 §3.9), so `firstReturn` comes after the first return of 8 hours or more.
+- The first session took the owner 10 minutes (checks 1 to 12), at the low edge of §9's 15–20 ± 5. Sprint 9's playtest measures it with new players before anything is tuned.
+
 ## 11. Cut first
 
 1. The Hamlet celebration vignette (keep the chapter).

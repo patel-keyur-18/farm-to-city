@@ -54,7 +54,7 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 | # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
 | --- | --- | --- | --- | --- | --- |
 | 17 | US-091, AC-4 | Sow radish on a field; **+1 hour** ×3; harvest it | "Your first field harvest" (tap the **?** beside a harvest). A second field harvest brings no page | | |
-| 18 | US-091, AC-4 | With nothing growing, close the app for a minute and reopen | No away card and no "Welcome back" page (nothing new happened) | | |
+| 18 | US-091, AC-4 | With nothing growing, close the app for a minute and reopen | No away card and no "Welcome back" page (under 8 hours away, ADR 0046) | | |
 | 19 | US-091, AC-4 | Developer panel → **Away cap (72 h)** | The While-you-were-away card first; after you close it, "Welcome back" | | **Screenshot** |
 | 20 | US-091, US-092, AC-4, AC-6 | **+1 season** | The season report opens; after it, "Your first season", then "Summer": "Zaid season. You can sow radish, rice and lentils now. Radish fetches its best price this season." | | |
 | 21 | US-091, AC-4 | In Summer sow lentils on all 6 acres; **+1 hour** | "More hands" (your care is short of what six acres need) | | |
@@ -80,9 +80,20 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 | 31 | regression | Developer panel → **Golden replays** | 001, 003, 004, 005 PASS (their hashes are unchanged this sprint) | | |
 | 32 | US-098 | — | Nothing to do on the phone: the Phase 1 health checks run in CI (never stuck, recovery after foreclosure, exact ledger, bounded prices, the stress bots, the Hamlet's pace) | n/a | |
 
+### Device review fixes: re-check (ADR 0046, 2026-10-21)
+
+First run (2026-10-21): every check passed; checks 1 to 12 took 10 minutes. These re-check the three findings. A fresh town (Settings → **New game**) makes 33 and 34 easiest.
+
+| # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
+| --- | --- | --- | --- | --- | --- |
+| 33 | ADR 0046 §1 | Any letter page, a card (New game's question), a **?**, and the developer panel | The dim covers the **whole** screen, edge to edge, including beside the notch and along the bottom; the page stays centred | | **Screenshot** |
+| 34 | ADR 0046 §2, spec 008 AC-8 | Developer panel → **Away +1 hour** (new button), close it | No away card and no "Welcome back" | | |
+| 35 | ADR 0046 §2 | Developer panel → **Away +1 day** | The away card ("Away 1 d"); in a town that hasn't had one, "Welcome back" after it | | |
+| 36 | ADR 0046 §3 | In a town still on "Open the Store and sell to the trader": put everything in the Store on offer at the market (each good → **Offer**), or play until the house eats it | The nudge and the store's bouncing stop; when there's something the trader buys again, they come back. The developer panel opens above the nudge | | |
+
 ## What to report
 
-- Screenshots of checks 1, 3, 11, 19, 24, 26 and 27.
+- Screenshots of checks 1, 3, 11, 19, 24, 26, 27 and 33.
 - The first session's length (check 13) and any step where you didn't know what to do.
 - Any page that came at the wrong moment, twice, or with words that read oddly.
 - Any **FAIL** in check 31: the file and the hash it showed.
