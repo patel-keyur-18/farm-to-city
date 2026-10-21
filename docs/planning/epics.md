@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 0 | Pre-production | E00, E20 (start) | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13) |
 | 1 | Vertical slice: Homestead to Hamlet unlock | E01–E10 | Part A (owner's solo week, ADR 0047): a reason to return each day, the Hamlet on day 5–9, no blocker, RC and CI pass. Part B (US-185, before Launch): fresh players back on day 2 and day 3 unprompted |
-| 2 | Hamlet and Village | E11–E14 | A week of play; players can explain profit versus cash |
+| 2 | Hamlet and Village | E11–E14, plus F02.4 and F04.3 (the owner's enhancements, ADR 0052–0057) | A week of play; players can explain profit versus cash |
 | 3 | Township | E15–E16 | 4 weeks of play; the balancer finds no exploits |
 | 4 | Town and City | E17–E18 | 20,000 population at 60 fps on the reference phone |
 | 5 | Polish | E19 | Owner's call |
@@ -19,9 +19,9 @@
 | --- | --- | --- | --- | --- | --- |
 | E00 | Delivery foundations | 0 | Everything needed before Phase 1 coding: build and CI, the Phase 1 specs, the economy model, the Unity project, the performance spike and the art style check. | [F00.1](features/F00.1-repository-build-and-ci.md), [F00.2](features/F00.2-phase-1-feature-specs.md), [F00.3](features/F00.3-economy-model.md), [F00.4](features/F00.4-unity-project-and-bootstrap.md), [F00.5](features/F00.5-performance-spike.md), [F00.6](features/F00.6-art-style-check.md) | 63 |
 | E01 | Time and world | 1 | The real-time clock, calendar, scheduler, weather, forecast, away rules and developer time travel (spec 001). | [F01.1](features/F01.1-sim-foundations.md), [F01.2](features/F01.2-calendar-and-scheduler.md), [F01.3](features/F01.3-weather-and-forecast.md), [F01.4](features/F01.4-live-and-away-time.md), [F01.5](features/F01.5-developer-time-travel-sim.md) | 31 |
-| E02 | Land and farming | 1 | Land and soil, crops with seasonal sowing windows, the yield formula, inputs, pests, the kitchen garden and fruit trees. | [F02.1](features/F02.1-land-and-soil.md), [F02.2](features/F02.2-crops-and-yield.md), [F02.3](features/F02.3-fruit-trees.md) | 37 |
+| E02 | Land and farming | 1 | Land and soil, crops with seasonal sowing windows, the yield formula, inputs, pests, the kitchen garden and fruit trees. | [F02.1](features/F02.1-land-and-soil.md), [F02.2](features/F02.2-crops-and-yield.md), [F02.3](features/F02.3-fruit-trees.md), [F02.4](features/F02.4-village-map.md) (Phase 2) | 55 |
 | E03 | Founder household | 1 | The founder as the first worker: labour, diet, rest, health and day labour (ADR 0010). | [F03.1](features/F03.1-founder-labour-and-routine.md) | 11 |
-| E04 | Market and storage | 1 | Tradeable goods, the hourly market, the regional trader, the mandi trip, buying inputs, the hut store and spoilage. | [F04.1](features/F04.1-goods-market-and-regional-trader.md), [F04.2](features/F04.2-hut-store-and-spoilage.md) | 21 |
+| E04 | Market and storage | 1 | Tradeable goods, the hourly market, the regional trader, the mandi trip, buying inputs, the hut store and spoilage. | [F04.1](features/F04.1-goods-market-and-regional-trader.md), [F04.2](features/F04.2-hut-store-and-spoilage.md), [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) (Phase 2) | 38 |
 | E05 | Money and credit | 1 | The ledger with accrual accounting, seasonal P&L, net worth, lenders, credit score and foreclosure. | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md), [F05.2](features/F05.2-credit-and-foreclosure.md) | 23 |
 | E06 | People | 1 | Day labourers from neighbouring villages, the first resident hand, season contracts and standing orders (ADR 0022). | [F06.1](features/F06.1-day-labourers.md), [F06.2](features/F06.2-resident-farm-hand.md), [F06.3](features/F06.3-standing-orders.md) | 20 |
 | E07 | Saves and platform services | 1 | Safety save points, export and import, local notifications and the local play log. | [F07.1](features/F07.1-save-system.md), [F07.2](features/F07.2-local-notifications.md), [F07.3](features/F07.3-local-play-log.md) | 16 |
@@ -57,9 +57,11 @@
 | [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | [Spec 002](../specs/002-land-and-soil.md) | Done | US-038–US-041 | 10 |
 | [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-042–US-046, US-177 | 20 |
 | [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-047–US-049 | 7 |
+| [F02.4](features/F02.4-village-map.md) | The village map | E02 | 2 | [Spec 010](../specs/010-map-village-and-edge.md) (approved) | Ready | US-188–US-191 | 18 |
 | [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-050–US-053 | 11 |
 | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-054–US-056, US-178–US-181 | 17 |
 | [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-057–US-058 | 4 |
+| [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | The trader's truck and supermarket orders | E04 | 2 | [Spec 011](../specs/011-trader-truck-and-supermarket-orders.md) (approved) | Ready | US-192–US-195 | 17 |
 | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Done | US-059–US-062 | 14 |
 | [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Done | US-063–US-065 | 9 |
 | [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Done | US-066–US-067 | 5 |
@@ -78,24 +80,24 @@
 | [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (approved), GDD eras | Done | US-093–US-094 | 5 |
 | [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate, ADR 0047 | Sprint 9 (planned) | US-095–US-097, US-185 | 12 |
 | [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016, 0045 | In progress (US-098 done) | US-098–US-101 | 13 |
-| [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | To write at the start of Phase 2–4 | Backlog | US-102–US-104 | 7 |
-| [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | To write at the start of Phase 2 | Backlog | US-105–US-106 | 8 |
-| [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | To write at the start of Phase 2 | Backlog | US-107–US-108 | 8 |
-| [F11.3](features/F11.3-population-flows-and-family-trees.md) | Population flows and family trees | E11 | 2 | To write at the start of Phase 2 | Backlog | US-109–US-111 | 9 |
-| [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | To write at the start of Phase 2 | Backlog | US-112–US-114 | 13 |
-| [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | To write at the start of Phase 2 | Backlog | US-115–US-117 | 16 |
-| [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | To write at the start of Phase 2 | Backlog | US-118–US-119 | 8 |
-| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | To write at the start of Phase 2 | Backlog | US-120–US-121 | 8 |
-| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | To write at the start of Phase 2 | Backlog | US-122–US-122 | 5 |
+| [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | Village: spec 018 (to write, ADR 0057); later eras at their phase's start | Backlog | US-102–US-104 | 7 |
+| [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | Spec 014 (to write, ADR 0057) | Backlog | US-105–US-106 | 8 |
+| [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | Spec 014 (to write, ADR 0057) | Backlog | US-107–US-108 | 8 |
+| [F11.3](features/F11.3-population-flows-and-family-trees.md) | Population flows and family trees | E11 | 2 | Spec 014 (to write, ADR 0057) | Backlog | US-109–US-111 | 9 |
+| [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (to write, ADR 0057) | Backlog | US-112–US-114 | 13 |
+| [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | Spec 016 (to write, ADR 0057) | Backlog | US-115–US-117 | 16 |
+| [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | Spec 016 (to write, ADR 0057) | Backlog | US-118–US-119 | 8 |
+| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-120–US-121 | 8 |
+| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-122–US-122 | 5 |
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | To write at the start of Phase 3 | Backlog | US-123–US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | To write at the start of Phase 3 | Backlog | US-124–US-125 | 10 |
-| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | To write at the start of Phase 2 | Backlog | US-126–US-126 | 5 |
-| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | To write at the start of Phase 2 | Backlog | US-127–US-128 | 8 |
-| [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | To write at the start of Phase 2 | Backlog | US-129–US-130 | 5 |
-| [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | To write at the start of Phase 2 | Backlog | US-131–US-132 | 8 |
-| [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | To write at the start of Phase 2 | Backlog | US-133–US-134 | 8 |
-| [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | Personal finance hub and milestones | E14 | 2 | To write at the start of Phase 2 | Backlog | US-135–US-136 | 7 |
-| [F14.3](features/F14.3-financial-statements.md) | Financial statements | E14 | 2 | To write at the start of Phase 2 | Backlog | US-137–US-137 | 5 |
+| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (to write, ADR 0057) | Backlog | US-126–US-126 | 5 |
+| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (to write, ADR 0057) | Backlog | US-127–US-128 | 8 |
+| [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (to write, ADR 0057) | Backlog | US-129–US-130 | 5 |
+| [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (to write, ADR 0057) | Backlog | US-131–US-132 | 8 |
+| [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | Spec 018 (to write, ADR 0057) | Backlog | US-133–US-134 | 8 |
+| [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | Personal finance hub and milestones | E14 | 2 | Spec 019 (to write, ADR 0057) | Backlog | US-135–US-136 | 7 |
+| [F14.3](features/F14.3-financial-statements.md) | Financial statements | E14 | 2 | Spec 019 (to write, ADR 0057) | Backlog | US-137–US-137 | 5 |
 | [F15.1](features/F15.1-treasury-and-budget.md) | Treasury and budget | E15 | 3 | To write at the start of Phase 3 | Backlog | US-138–US-139 | 8 |
 | [F15.2](features/F15.2-taxes-and-policies.md) | Taxes and policies | E15 | 3 | To write at the start of Phase 3 | Backlog | US-140–US-141 | 8 |
 | [F15.3](features/F15.3-zoning-and-land-value.md) | Zoning and land value | E15 | 3 | To write at the start of Phase 3 | Backlog | US-142–US-143 | 8 |
