@@ -44,6 +44,7 @@ Money is `long` in 1/100 coin, quantities in grams, factors `Fixed` (ADR 0018). 
 | The day's price | The truck buys at the **Floor** (spec 004 §3.1). P_regional changes only at a season start or an index step (both at midnight) and with the daily factor (§3.1b, at 6:00), so the Floor is constant from 6:00 to midnight: the truck's price is set at 6:00 and held all day without extra state | |
 | Capacity | `TraderCapacityLeft(good) = TruckHere ? min(traderBuyPerDay(good) − traderBoughtToday(good), loadKg − truckLoadToday) : 0`. Every trader purchase goes through it: `SellToTrader`, harvest overflow (`SellRestToTrader`), the trader holding the floor on the stall (spec 004 §3.2), the hand's SELL TO TRADER, labourers' harvests. Every purchase adds to both counts | `loadKg` 4,000 kg (tuned so a normal day rarely fills it) |
 | Away | While the truck isn't here, `SellToTrader` is rejected with **`TraderAway`** ("Back at 6:00"). A harvest with `SellRestToTrader` whose rest doesn't fit the store is rejected with `TraderAway` and waits in the field, as with `TraderFull` (spec 003). The trader doesn't hold the floor on the stall | |
+| The hand's held sales | When a hand's SELL TO TRADER order stores a harvest because the truck is away or full, the stored amount is added to `heldForTruck[good]`. At the arrival pass, right after the reset, he sells `min(heldForTruck, stock not on offer)` of each good (good id order) to the truck at the new day's price, up to its room, and the count drops by what he sold; what doesn't fit stays held for the next morning. If the player sells, eats or offers that stock first, `heldForTruck` is cut to what's left (`min(heldForTruck, stock not on offer)` after every removal). A night harvest is not fresh for that day's orders (§3.3), so it goes to the truck. Emits `HandSoldHeld(good, q, amount)` (§10 G5) | |
 | Away while you're away | The truck runs the same live and away. The away card says what it bought ("The trader bought 1,200 kg of potato") | |
 
 The trader's per-crop counts used to reset at the midnight daily pass (spec 004 §3.3). They now reset at the truck's arrival.
@@ -109,7 +110,7 @@ Example (Spring, potato at 15 h, index 1.00): `BaseSowing` = 7,000 × 15 ÷ 96 =
 
 ### 3.6 Processing order
 
-At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what it owes, then the daily factors are drawn (§3.1b), (1) the truck arrives (resets), (2) open orders lapse, (3) new orders are drawn, (4) the market clears the hour that just ended (paused, §3.2). At the midnight pass: the truck leaves (if here), delivery closes, then the market clears. Orders are processed in id order.
+At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what it owes, then the daily factors are drawn (§3.1b), (1) the truck arrives (resets), (1b) the hands sell what they held (§3.1), (2) open orders lapse, (3) new orders are drawn, (4) the market clears the hour that just ended (paused, §3.2). At the midnight pass: the truck leaves (if here), delivery closes, then the market clears. Orders are processed in id order.
 
 ## 4. Data
 
@@ -141,6 +142,7 @@ At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what
 | | `truckLoadToday` | long (g) | Migrated as the sum of `traderBoughtToday` |
 | | `freshToday` | long[] per good (g) | Migrated as 0 |
 | | `dailyFactor` | Fixed[] per good | Migrated as 1.0 |
+| | `heldForTruck` | long[] per good (g) | Migrated as 0 |
 | `SupermarketOrder` | `id`, `crop`, `amount`, `delivered`, `price`, `postedAt` | | In id order; `NextOrderId` |
 
 ## 5. Commands and events
@@ -158,6 +160,7 @@ At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what
 | `OrderDelivered` | `orderId`, `q`, `amount`, `byHand` | A delivery | HUD (coins fly), away card, play log |
 | `OrderLapsed` | `orderId`, `left` | The next posting | Away card |
 | `OrderPaid` | `amount` | The 6:00 payment | HUD (coins fly), away card, play log |
+| `HandSoldHeld` | `good`, `q`, `amount` | A hand sells held produce at 6:00 | Away card, hands' notes (spec 007) |
 
 ## 6. Decision card
 
@@ -206,6 +209,7 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | AC-4 | The truck's price is the same at every hour from 6:00 to 23:59 of a day, including a day that starts a new season | `TruckTests.Price_HeldAllDay` |
 | AC-4b | At each 6:00 pass every produce good's daily factor follows §3.1b and stays inside its band; inputs and price-controlled goods don't move; over 1,000 days the mean factor is within 1% of 1; the same seed gives the same factors | `MarketTests.DailyPrice_BoundedAndNeutral` |
 | AC-5 | A harvest that doesn't fit the store while the truck is away is rejected with `TraderAway` and stays ready in the field | `TruckTests.Overflow_WaitsWhileAway` |
+| AC-5b | A hand's SELL TO TRADER harvest at 2:00 is stored and held; at the 6:00 pass he sells it to the truck at the day's price; if the player sold part of that stock first, he sells only what's left; what exceeds the truck's room stays held | `TruckTests.HandSellsHeldAtSix` |
 | AC-6 | From the midnight pass to the 6:00 pass an offer sells nothing and the trader takes none of it; a glutted price moves towards P_regional in those hours; from the 7:00 pass it sells again | `MarketTests.Stall_PausedAtNight` |
 | AC-7 | At 6:00 two orders are posted for distinct eligible crops (in season, growth ≤ 18 h), with amounts of 1–2 sowings in 10 kg lots and prices 15–30% over P_regional, plus one greens order (spinach or coriander, 2–4 pickings in 0.5 kg lots); the draws are the same for the same seed; with no eligible crop no crop orders are posted | `OrderTests.Posting` |
 | AC-8 | Only produce harvested since 6:00 counts as fresh; selling or eating older stock first leaves the fresh amount unchanged; `DeliverOrder` beyond the fresh stock is rejected with `InsufficientStock` | `OrderTests.FreshToday` |
@@ -232,7 +236,7 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 - **G2. The price overnight.** **Closed (owner, 2026-10-21):** the valley's market keeps clearing while the stall is closed; the player's supply is 0, so a glut recovers by morning (§3.2).
 - **G3. Who carries an order.** **Closed (owner, 2026-10-21):** delivered to the supermarket's collection point at the truck stop (no cost, a van collects), partial deliveries allowed, booked as a sale owed at delivery and paid at 6:00 the next morning; the Store sheet says "Supermarket pays you X at 6:00 tomorrow" (§3.3, §7).
 - **G4. Which goods can be ordered.** **Closed (owner, 2026-10-21):** the two daily orders are field crops only (no fruit); a third, small daily order asks for a garden green (spinach or coriander, 2–4 pickings) (§3.3).
-- **G5. The hand's sales overnight.** His SELL TO TRADER harvests while the truck is away go to the store. Recommended: at 6:00 he sells to the truck what his orders stored that way overnight.
+- **G5. The hand's sales overnight.** **Closed (owner, 2026-10-21):** what his SELL TO TRADER orders store while the truck is away or full is held and sold to the truck at 6:00, never more than is still in store (§3.1).
 - **G6. The first session and the first week.** A first session played between midnight and 6:00 can't make its first sale. When do the truck's hours and the orders start?
 
 ## 11. Cut first
