@@ -1,6 +1,6 @@
 # 011. The trader's truck and supermarket orders
 
-- Status: In review (all gaps closed 2026-10-21)
+- Status: Approved (owner, 2026-10-21). All gaps closed 2026-10-21
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Storage and selling); Economy (Regional trader); Offline play (notifications)
