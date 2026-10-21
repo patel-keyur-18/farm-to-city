@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 9 (release candidate, solo playtest week, tuning, the Phase 1 gate; 2 weeks, 10 points): planning review done (ADR 0047), waiting for the owner's go-ahead. Sprint 8 done (PR #13 merged) |
+| Sprint | Sprint 9 (release candidate, solo playtest week, tuning, the Phase 1 gate; 2 weeks, 10 points): the release candidate is built (commit `33afedb`); the owner runs Parts A and B of `s09-release-candidate.md`, then the playtest week. Sprint 8 done (PR #13 merged) |
 | Branch with latest work | `sprint/09-playtest` (from `main`, which has Sprint 8 / PR #13) |
 | Last updated | 2026-10-21 |
 
@@ -124,16 +124,21 @@
 
   - **Device review (2026-10-21, ADR 0046):** every check passed; the first session took 10 minutes. Fixed: every veil covers the whole screen past the safe area (`UiKit.Veil`); the *While you were away* card only after 8 hours away or at the cap (`awayCardMinHours`, the owner chose 8 h over the 72 h cap on the recommendation); the sale nudge only while the trader would buy something; the developer panel above the nudge, with **Away +1 hour**. Specs 008 §3.9 / AC-8 and 009 §10, the GDD and CLAUDE.md updated. 264 + 69 tests.
 
+- **Sprint 9 (branch `sprint/09-playtest`): in progress (2 weeks, 10 points, ADR 0047).**
+  - **Planning review (2026-10-21):** 6 gaps decided with the owner, **ADR 0047** (spec 007 §3.1, §3.6, AC-3, AC-14, AC-15, §10; spec 009 §10; the GDD's Phase 1 gate and Telemetry; epics; F10.1 with US-185; CLAUDE.md): the owner is the only playtester (free account, iPhone 13); the play log adds `tz`, `fromNote` and the first-session steps, with a daily diary; migrations from the release candidate (`minSchema` frozen at 3, a frozen fixture per schema); a Development build for the regression and frame time, a Release build for the playtest, the blocker definition; the gate split (part A on the solo week, A1–A6; part B, fresh players, is US-185 before Launch); Sprint 9 runs 2 weeks.
+  - **US-095 (release candidate):** `MigrationTests` (`EverySchemaLoads`, `SchemaHasFixture`, `MinSchemaFrozen`) on the frozen `tests/Sim.Core.Tests/saves/schema3.ftc` (the competent bot after 2 seasons: a hand, 6 orders, 2 loans, 4 trees, the Hamlet unlocked) and its pinned hash and 17 facts; regenerate only the current schema with `FTC_UPDATE_SAVES=1`. The developer panel's **Measure frame time (20 s)** (`DevTools.FrameRecorder`, `FrameTimingManager`; `IosBuildStep` turns on frame-timing stats for Development builds only). `s09-release-candidate.md`: Part A (57 rows merging s04–s08 by area), Part B (Release smoke), Part C (the playtest diary), the gate table. 268 `Sim.Core` and 69 `Sim.View` tests pass; CI green.
+  - **US-096 (play log):** `sessionStart` has `tz` and `fromNote` (`INotificationService.OpenedByNote`, `QueryLastRespondedNotification`, each tap counted once by the notification's `Data`); `PlayLog.Guidance` writes each first-session `step` once per town, then `firstSessionDone`; a new town starts a session line. Verified in the Editor with touch: Settings → Play log On → New game → Replace → Continue logs `newGame` and `step welcome`; `tz` 330; the frame-time button, countdown and result (`docs/art/s09-dev-frame-*.png`).
+
 ## In progress
 
-None: the owner's go-ahead to start US-095.
+US-095 waits on the owner's device run (Parts A and B); US-096 is the playtest week; US-097 follows it.
 
 ## Next up
 
-1. **Owner:** approve the start of Sprint 9's work.
-2. **Claude:** US-095 test-first: the migration fixtures and `MigrationTests` (Sim.Core), then US-096's play log fields (Sim.Core, then Unity), then the frame-time recorder and the iOS build step, then `s09-release-candidate.md` and the playtest checklist; the RC commit and its two builds (ADR 0047 §3, §4).
-3. **Owner:** the Development build's regression and frame time, then the Release smoke list, then 7 days of play with the log on and the diary.
-4. **Claude:** US-097: read the log and diary, tune, the gate A1–A6, the retro.
+1. **Owner:** `s09-release-candidate.md` Part A on the Development build (`unity/FarmToCity/Builds/iOS`), including the four frame-time views; report results and any **BLOCKER**.
+2. **Claude:** fix blockers (US-095.T4); if code changes, a new RC commit and both builds again.
+3. **Owner:** Part B on the Release build (`unity/FarmToCity/Builds/iOS-release`), then the 7-day playtest (Part C) with the diary; send the play log and the town file.
+4. **Claude:** US-097: add the town as `schema3-device.ftc`, read the log and diary, tune if needed (balance gate re-run), judge A1–A6, record the decision here, the retro; Sprint 9's closing pull request.
 
 ## Owner action checklist (Phases 0–1)
 
