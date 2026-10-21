@@ -144,7 +144,7 @@ Yield = Base × Soil × Water × Care × Seed × Weather × Tools × Fertiliser 
         capped at 1.6 × Base
 ```
 
-- **Fertiliser:** none 1.00; compost 1.05 (raises fertility over the following seasons); chemical 1.25 (−3 fertility per season of use, applied pro rata per crop cycle).
+- **Fertiliser:** none 1.00; compost 1.05 (+6 fertility per season of use, more than any crop takes out, and the soil dries 20% more slowly while the crop grows, ADR 0051); chemical 1.25 (−3 fertility per season of use). Both apply pro rata per crop cycle. The sow sheet shows the soil before and after each crop.
 - **CropHealth** starts at 1.0. An outbreak sets it to 0.4–0.8, and a rare severe outbreak sets it to about 0.
 - **The cap** is in data, and the *Why?* breakdown shows when it applied (ADR 0014).
 

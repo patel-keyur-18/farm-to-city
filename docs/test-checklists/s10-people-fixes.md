@@ -12,8 +12,9 @@
 - **Labourers stay till the crops are in (ADR 0049).** Hire them in **People** → **N labourers till harvest**; each row shows the cost. They are paid upfront until the last crop growing now is ready. They tend every field and bring in each field that has no order from Manoj as it ripens, then go home. Fields no longer offer hiring.
 - **Orders on several fields work at once (ADR 0049).** Give Manoj orders on two fields one after the other: both are sown straight away.
 - **People stand on top of the crops**, even at a field's edges.
+- **Compost builds the soil (ADR 0051).** Compost now adds more fertility than any crop takes out, and the soil under a composted crop dries 20% more slowly. Fertility shows one decimal. Each crop on the sow sheet shows **Soil before → after** for the fertiliser you picked. Chemical is unchanged: more harvest now, soil falls.
 
-**Your questions:** (1) does the hand now run his fields with no help from you? (2) are his crop choices sensible for each season? (3) is hiring from the field clear, and does the cost feel fair?
+**Your questions:** (1) does the hand now run his fields with no help from you? (2) are his crop choices sensible for each season? (3) is hiring from People clear, and does the cost feel fair? (4) does the soil line on the sow sheet make the compost-or-chemical choice clear?
 
 ## Checks
 
@@ -37,6 +38,9 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 | 12c | ADR 0050 | With little cash (under about 3,500) in Spring and no seed potato left, give Manoj an every-season order on an empty field | He sows at once with a crop he can pay for (e.g. radish), never waits in his hut. The order line says "(Radish now)" | | |
 | 12b | ADR 0049 | Watch people near the edges of fields of tall rice | Everyone is drawn on top of the crops, never under them | | **Screenshot** |
 | 13 | Regression | Sow by hand on a field ordered with a crop | You're asked whether to change Manoj's order. On a "Let Manoj choose" field, you aren't asked: his choice stays | | |
+| 14 | ADR 0051 | Open an empty field's sow sheet. Pick **Normal**, then **Compost**, then **Chemical**, and read each crop's **Soil … → …** line | Compost: the soil holds or rises (green). Chemical: it falls (amber), e.g. rice "46.5 → 44.7". The chips read "+5% harvest · holds water" and "+25% harvest" | | **Screenshot** |
+| 15 | ADR 0051 | Sow rice or potato with compost. Tap the field's **Moisture** number | The *Why?* has "Compost holds water: dries slower by 20%" | | |
+| 16 | ADR 0051 | Let that crop ripen, then tap the field's **Fertility** number | Fertility shows one decimal (e.g. "55.3 / 100") and is higher than before sowing. The *Why?* lists "Compost added this season +… points" | | |
 
 ## Report
 

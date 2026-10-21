@@ -57,7 +57,7 @@ Moisture runs from 0 (bone dry) to 100 (saturated). At every hourly pass (system
 
 1. **Weather:** `d = LandDef.moistureByWeather[w]` (points per hour, signed).
    - If `d > 0`: `m ← m + d × SoilDef.gainFactor` (how much rain soaks in).
-   - If `d < 0`: `m ← m + d × SoilDef.lossFactor` (how fast the soil dries).
+   - If `d < 0`: `m ← m + d × SoilDef.lossFactor × dryingFactor` (how fast the soil dries). `dryingFactor` is the fertiliser's under a crop growing on the tile (compost 0.8, spec 003 §3.10, ADR 0051), else 1.
 2. **Clamp** to `[0, 100]`.
 3. **Drainage:** if `m > DrainageDef.drainAbove`, then `m ← m − (m − drainAbove) × DrainageDef.drainRatePerHour`.
 4. **Well:** on the well acres (`WellDef.irrigatedTiles`, ADR 0032), `m ← max(m, WellDef.moistureFloor)`. This models the founder carrying buckets; spec 003 charges the labour hours for it. Every other tile, inherited or bought, is rain-fed.

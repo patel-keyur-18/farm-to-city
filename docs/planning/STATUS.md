@@ -143,7 +143,8 @@
     - Labourers are hired from **People** until the last growing crop is in; they harvest ripe fields that have no hand's order. The field sheet no longer hires.
     - Verified in the Editor with touch; all tests pass.
   - **Owner's follow-up (ADR 0050):** the hand ignored seed cost, so with little cash and no seed potato left he waited for potato seed. He now sows the best crop he can pay for. Reproduced and verified in the Editor at 2,000 coins.
-  - The Editor town now has 1,830 coins, a second hut being built and its loans repaid: these are leftovers from setting up that test.
+  - **Owner's follow-up: compost (ADR 0051).** Compost gave +2 fertility a season, less than any crop but radish takes, so a composted field still ran down, and whole-number fertility hid the changes. Now compost gives +6, the soil under a growing composted crop dries 20% more slowly, fertility shows one decimal, and each sow row shows "Soil 46.5 → 46.6" (amber when it falls). Chemical unchanged. Gate: the bots' soil no longer runs down (median first-year farm profit a season 25,765 → 33,179; competent net worth +5.9%; all stress bots within 1.20 ×; Hamlet day 5.4). The defaulter gate now checks that every default is foreclosed. Verified in the Editor (`docs/art/s10-sow-*-soil.png`, `s10-why-compost-holds-water.png`).
+  - The Editor town now has 1,661 coins, a second hut being built, its loans repaid and rice with compost on field 28: these are leftovers from setting up the tests.
   - The Editor's town is now the schema-4 fixture town (imported). The touch driver removed the Editor's mouse until the Editor restarts.
 
 ## In progress
@@ -154,12 +155,12 @@ US-186 and US-187 wait on the owner's device check (`docs/test-checklists/s10-pe
 
 1. **Owner:** build the Development build from `sprint/10-people-fixes`, run `s10-people-fixes.md` on the iPhone 13 and report. Merge the pull request when it passes.
 2. **Claude:** fix any findings, then close Sprint 10.
-3. **The owner's next requests (after the device check).** These need specs and ADRs first (rolling wave, ADR 0019). Plan them as the next sprint's planning review, one gap at a time:
-   - **The map edge.** Natural terrain past the map (hills, a river, fields) so there is no sky-blue edge. Not playable.
-   - **A village around the farm.** Common land, roads and shops; not every acre is for sale.
-   - **The trader's tempo.** A road past the store. The trader comes daily by tempo or truck, loads up and drives on to the next village when full.
-   - **A larger map** to hold all of this.
-   - **Animals.** A cattle shed for cows or buffalo: daily milk to sell or eat, fed with bought or grown fodder. Claude gave its suggestions in the session of 2026-10-21. The GDD puts livestock in Phase 2.
+3. **The owner's next requests (after the device check).** These need specs and ADRs first (rolling wave, ADR 0019), discussed one gap at a time. **Order agreed with the owner (2026-10-21):** each builds on the one before.
+   1. **A larger map** to hold all of this. Most new tiles are village, road and land not yet owned, not all buyable fields (keeps land valuable). Discuss first.
+   2. **A village around the farm.** Common land, roads and shops; not every acre is for sale. Fits Phase 2 (Hamlet and Village).
+   3. **The trader's tempo.** A road past the store. The trader comes daily by tempo or truck, loads up and drives on to the next village when full.
+   4. **The map edge.** Natural terrain past the map (hills behind, the valley's river along one side, scrub and neighbours' fields), the camera stopping at it, no sky-blue edge. Not playable.
+   5. **Animals.** Buffalo or cows first: daily milk to a co-op or the household, fodder from straw or berseem, dung becomes compost (ADR 0051 makes compost worth it). Goats and poultry later; pigs pushed back. The GDD puts livestock in Phase 2.
 
 ## Owner action checklist (Phases 0–1)
 
