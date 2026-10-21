@@ -156,7 +156,7 @@ US-186 and US-187 wait on the owner's device check (`docs/test-checklists/s10-pe
 1. **Owner:** build the Development build from `sprint/10-people-fixes`, run `s10-people-fixes.md` on the iPhone 13 and report. Merge the pull request when it passes.
 2. **Claude:** fix any findings, then close Sprint 10.
 3. **The owner's next requests (after the device check).** These need specs and ADRs first (rolling wave, ADR 0019), discussed one gap at a time. **Order agreed with the owner (2026-10-21):** each builds on the one before.
-   1. **A larger map** to hold all of this. Most new tiles are village, road and land not yet owned, not all buyable fields (keeps land valuable). Discuss first.
+   1. **A larger map. Decided with the owner (2026-10-21), for an ADR with the Phase 2 specs:** the map grows by era. Phase 2 is 16 × 12 acres (1 tile = 1 acre), with today's 8 × 6 farm inside it unchanged; Township, Town and City each add a ring, designed in their phases. About 60–80 acres are buyable in Phase 2 (adjacency rule kept); the village centre, roads, commons and river bank never are. Accepted costs: a save migration that remaps tile ids (tested on the frozen fixtures), new terrain art, an iPhone 13 frame-time check at 192 tiles, the camera opening on the farm.
    2. **A village around the farm.** Common land, roads and shops; not every acre is for sale. Fits Phase 2 (Hamlet and Village).
    3. **The trader's tempo.** A road past the store. The trader comes daily by tempo or truck, loads up and drives on to the next village when full.
    4. **The map edge.** Natural terrain past the map (hills behind, the valley's river along one side, scrub and neighbours' fields), the camera stopping at it, no sky-blue edge. Not playable.
