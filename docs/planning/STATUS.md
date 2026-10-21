@@ -198,6 +198,15 @@ None.
 
 ## Environment notes
 
+- **Unity Editor testing (owner rule, `CLAUDE.md`; learned 2026-10-21).** Use touch, not the mouse.
+  - Check `unity command editor_status`; stop play before any C# edit (`editor_stop`), then `recompile` and poll `recompile_status` until `completed`. Editing C# during play reloads the domain and nulls `GameRoot`'s fields (a `NullReferenceException` in `GameRoot.Update` every frame).
+  - Play: `editor_play`, then `eval` `UnityEngine.Application.runInBackground = true;`. Read `console` for errors.
+  - Touch: `eval` `return Game.Editor.TouchDriver.Setup();` (removes the mouse, adds a Touchscreen), then `TouchDriver.TapElement("People")` for UI and `TouchDriver.Tap(x, y)` for the map. **Injected touches only arrive while the Unity Editor is the frontmost app** (`Application.isFocused` true): ask the owner to click the Editor's Game view once and leave Unity in front during the test. If it can't be in front, fall back to invoking `GameRoot.OnTap(screenPoint)` by reflection (checks the same sheets, not the touch layer) and say so in the report.
+  - Screen coordinates are the Retina screen (`Screen.width` about 2539 × 1349), twice the 1280 × 720 capture. Aim a map tap with the presenter's private `TileCentre(tile)` and `MapInput.WorldToScreen`.
+  - After a recompile, `eval` can see stale objects: reach the live ones through `GameRoot` (`FindFirstObjectByType<GameRoot>()`, then its private `_input`, `_map`, `_sheet` fields by reflection), not `FindFirstObjectByType<MapInput>()`.
+  - Capture with `capture_game_view --save_path Temp/cap/<name>.png` (lands in `Assets/Temp/cap/`), read each image, copy the keepers to `docs/art/`, and delete `Assets/Temp` and `Assets/Temp.meta` before committing.
+  - Back up `~/Library/Application Support/keyur-patel-18/Farm to City/Saves` before a test that migrates or changes the Editor's town.
+
 - The SessionStart hook installs the .NET 10 SDK in cloud sessions (US-003). It runs synchronously, so the session starts only once the SDK is ready. If it ever fails, install by hand with `apt-get install -y dotnet-sdk-10.0`.
 - **On the owner's Mac** the .NET 10 SDK is installed per user in `~/.dotnet` (not on the default PATH): run `export PATH=$HOME/.dotnet:$PATH` before `dotnet test`.
 - **Unity from the terminal:** while the owner has the Editor open, the `unity` CLI (`~/.unity/bin/unity command …`, the Unity Pipeline package) can recompile (`recompile`, `recompile_status`), read the console (`console`), enter play mode (`editor_play`), capture the Game view (`capture_game_view --save_path` inside the project) and start builds (`build --target iOS --outputPath Builds/iOS`). Batch mode can't run while the Editor has the project open. UI Toolkit text needs an explicit font (`LegacyRuntime.ttf`); without it labels render empty.

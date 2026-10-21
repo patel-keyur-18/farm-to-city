@@ -44,6 +44,7 @@ Every session starts with no memory. The repository is the only memory.
 - **Work on one branch per sprint** (`sprint/NN-short-name`), unless the session assigns a branch. Use small conventional commits (`docs:`, `feat:`, `test:`, `fix:`, `chore:`). One pull request per sprint, merged by the owner.
 - **Stop for the owner's review at the end of each task.** For anything ambiguous, give a recommendation and ask. Push back when something doesn't make sense.
 - **Every build handed to the owner comes with a test checklist** in `docs/test-checklists/`: what to try, what to expect, what to report.
+- **Test in the Unity Editor before calling a story done** (owner rule, 2026-10-21). Any story that changes what the player sees or taps: recompile, play, drive it with **scripted touch** (`Game.Editor.TouchDriver`, never the mouse), capture the Game view, look at every capture, and fix what renders or responds wrongly before reporting. Dotnet tests alone are not enough. How to drive the Editor is in `docs/planning/STATUS.md` (Environment notes).
 - **This file and `docs/` are the project's memory across sessions.** Keep them current.
 
 ## Engineering rules (non-negotiable)
