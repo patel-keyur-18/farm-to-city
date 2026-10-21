@@ -49,8 +49,7 @@ namespace Sim.Core.Commands
                     return CommandResult.Reject(RejectReason.NoSavedSeed);
             }
             long fertGrams = fert.Good < 0 ? 0 : FarmRules.CycleGrams(sim.Clock, crop, fert.KgPerAcrePerSeason);
-            long cost = (Seed == SeedSource.Certified ? Store.ShortfallCost(sim, crop.SeedGood, seedGrams) : 0)
-                + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, fertGrams));
+            long cost = FarmRules.SowingCost(sim, crop, Seed, fert);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             FarmSystem.Accrue(sim);

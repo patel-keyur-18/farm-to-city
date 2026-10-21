@@ -216,8 +216,32 @@ namespace Sim.Core.Tests
             Fixed lentilShare = Fixed.FromRatio(8 * Hour, S);
             Assert.That(lentils.Fertility - l0, Is.EqualTo(Fixed.FromInt(4) * lentilShare));
             Assert.That(lentils.FertilityChange(FertilityReason.Lentils), Is.EqualTo(Fixed.FromInt(4) * lentilShare));
-            Assert.That(compost.FertilityChange(FertilityReason.Compost), Is.EqualTo(Fixed.Parse("0.125")));
-            Assert.That(compost.Fertility - c0, Is.EqualTo(Fixed.Parse("-0.125"))); // −4 × 0.0625 + 2 × 0.0625
+            Assert.That(compost.FertilityChange(FertilityReason.Compost), Is.EqualTo(Fixed.Parse("0.375")));
+            Assert.That(compost.Fertility - c0, Is.EqualTo(Fixed.Parse("0.125"))); // −4 × 0.0625 + 6 × 0.0625: compost builds the soil (ADR 0051)
+        }
+
+        // Spec 003 AC-27 (ADR 0051): soil under a growing composted crop dries 20% more slowly; rain, chemical and bare soil are unchanged.
+        [Test]
+        public void Compost_HoldsWater()
+        {
+            Simulation sim = FarmTest.Farm();
+            Tile compost = sim.State.Land.Tiles[26], chemical = sim.State.Land.Tiles[18];
+            int sun = LandTest.Weather(sim, "sun"), rain = LandTest.Weather(sim, "rain");
+            Fixed Change(Tile t, int weather)
+            {
+                t.Moisture = Fixed.FromInt(50);
+                LandSystem.UpdateMoisture(sim, t, weather);
+                return t.Moisture - Fixed.FromInt(50);
+            }
+            Fixed bareSun = Change(compost, sun), bareRain = Change(compost, rain), chemBare = Change(chemical, sun);
+            Assert.That(sim.Execute(new Sow(0, 26, "wheat", SeedSource.Certified, "compost")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 18, "wheat", SeedSource.Certified, "chemical")).Accepted, Is.True);
+            Assert.That(LandSystem.DryingFactor(sim, 26), Is.EqualTo(Fixed.Parse("0.8")));
+            Assert.That(Math.Abs((Change(compost, sun) - bareSun * Fixed.Parse("0.8")).Raw), Is.LessThanOrEqualTo(8), "dries 20% more slowly");
+            Assert.That(Change(compost, rain), Is.EqualTo(bareRain), "rain soaks in as before");
+            Assert.That(Change(chemical, sun), Is.EqualTo(chemBare), "chemical fertiliser holds no water");
+            sim.AdvanceTo(6 * Hour);
+            Assert.That(LandSystem.DryingFactor(sim, 26), Is.EqualTo(Fixed.One), "only while the crop grows");
         }
 
         // Spec 003 AC-13.

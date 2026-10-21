@@ -157,7 +157,9 @@ namespace Sim.Core.Tests
             Gate.DebtActivity leverage = Gate.DebtBotActivity(Live(), () => new LeverageBot(), 50);
             Assert.That(leverage.BankLoans, Is.GreaterThan(0), "the leverage bot borrows from the bank");
             Gate.DebtActivity defaulter = Gate.DebtBotActivity(Live(), () => new StrategicDefaulterBot(), 50);
-            Assert.That(defaulter.SeedsForeclosed, Is.GreaterThan(40), "the strategic defaulter is foreclosed");
+            // Every default ends in foreclosure. Where the farm earns enough to pay on time, the defaulter repays instead (ADR 0051).
+            Assert.That(defaulter.SeedsDefaulted, Is.GreaterThanOrEqualTo(25), "the strategic defaulter defaults on at least half the seeds");
+            Assert.That(defaulter.DefaultedNotForeclosed, Is.Zero, "and every default is foreclosed");
             Assert.That(defaulter.MedianScoreAtEnd, Is.LessThanOrEqualTo(400));
         }
     }

@@ -299,6 +299,9 @@ namespace Sim.View.Views
                     if (!patrol.Contains(tile)) patrol.Add(tile);
                 }
                 bool working = last != null && ctx.Now - last.LastAt < 3600 && h.Contract == Sim.Core.People.ContractState.Active;
+                // His hours tend every growing field, so after his own he walks round the rest (ADR 0048 §2); home only when nothing
+                // grows or while unpaid.
+                foreach (int tile in growing) if (!patrol.Contains(tile)) patrol.Add(tile);
                 if (h.Contract != Sim.Core.People.ContractState.Active) patrol.Clear();
                 if (working && last.Kind == Sim.Core.People.OrderTargetKind.Field)
                 {
@@ -319,9 +322,9 @@ namespace Sim.View.Views
             }
             foreach (Sim.Core.People.Neighbour n in p.Roster)
             {
-                if (!n.HiredToday) continue;
+                if (!n.Hired) continue;
                 var vm = new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, HomeTile = frontYard };
-                // Day labourers tend the growing fields too, each starting at a different one.
+                // Labourers tend the growing fields too, each starting at a different one.
                 List<int> theirs = free.Count > 0 ? free : growing;
                 for (int i = 0; i < theirs.Count; i++) vm.Patrol.Add(theirs[(i + k) % theirs.Count]);
                 vm.TileId = vm.Patrol.Count > 0 ? vm.Patrol[0] : frontYard;

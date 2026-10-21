@@ -123,13 +123,17 @@ namespace Sim.Core.Definitions
         public Fixed YieldFactor { get; }
         public Fixed FertilityPerSeason { get; }
 
-        public FertiliserDef(string id, int good, Fixed kgPerAcrePerSeason, Fixed yieldFactor, Fixed fertilityPerSeason)
+        /// <summary>Scales the soil's drying while a crop grown with it stands (ADR 0051): compost 0.8 holds water, 1 elsewhere.</summary>
+        public Fixed DryingFactor { get; }
+
+        public FertiliserDef(string id, int good, Fixed kgPerAcrePerSeason, Fixed yieldFactor, Fixed fertilityPerSeason, Fixed dryingFactor)
         {
             Id = id;
             Good = good;
             KgPerAcrePerSeason = kgPerAcrePerSeason;
             YieldFactor = yieldFactor;
             FertilityPerSeason = fertilityPerSeason;
+            DryingFactor = dryingFactor;
         }
     }
 

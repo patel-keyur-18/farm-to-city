@@ -32,7 +32,7 @@ namespace Sim.View.Views
             Crop crop = sim.State.Farm.CropOn(tileId);
             vm.Title = ctx.Strings.Get("field.title", "soil", soil);
             vm.Subtitle = ctx.Strings.Get(parcel.Protected ? "field.inherited" : "field.bought");
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Integer(tile.Fertility.RoundToLong()) + " / 100", "fertility", tileId));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Decimal1(tile.Fertility) + " / 100", "fertility", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100", "moisture", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
             if (LandSystem.IsWellTile(defs, tileId)) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.well"), ctx.Strings.Get("field.wellNote")));

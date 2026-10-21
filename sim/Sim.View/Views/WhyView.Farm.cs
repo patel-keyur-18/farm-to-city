@@ -15,7 +15,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             Tile t = TileOf(ctx, id);
             LandDef land = sim.Config.Game.Land;
-            WhyVm vm = New(ctx, "why.fertility.title", Num(ctx, t.Fertility) + " / 100");
+            WhyVm vm = New(ctx, "why.fertility.title", ctx.Fmt.Decimal1(t.Fertility) + " / 100");
             Row(vm, ctx, "why.fertility.effect", Effect(ctx, LandRules.FertilityFactor(land, t.Fertility)));
             foreach (FertilityReason r in new[] { FertilityReason.CropUse, FertilityReason.Fertiliser, FertilityReason.Compost, FertilityReason.Lentils, FertilityReason.Fallow })
             {
@@ -28,10 +28,11 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>A fertility change to one decimal (ADR 0051): "+0.4", "−1.8".</summary>
         private static string Signed(ViewContext ctx, Fixed v)
         {
-            long n = v.RoundToLong();
-            return n == 0 ? ctx.Strings.Get("why.same") : (n > 0 ? "+" : "−") + ctx.Fmt.Integer(System.Math.Abs(n));
+            string n = ctx.Fmt.Decimal1(v < Fixed.Zero ? -v : v);
+            return n == ctx.Fmt.Decimal1(Fixed.Zero) ? ctx.Strings.Get("why.same") : ctx.Strings.Get("why.fertility.points", "n", (v > Fixed.Zero ? "+" : "−") + n);
         }
 
         private static WhyVm Moisture(ViewContext ctx, long id)
@@ -49,6 +50,9 @@ namespace Sim.View.Views
             {
                 CropDef def = sim.Config.Game.Farm.Crops[c.Def];
                 Row(vm, ctx, "why.moisture.band", Num(ctx, def.MoistureMin) + "–" + Num(ctx, def.MoistureMax), "crop", CropName(ctx, def));
+                Fixed drying = LandSystem.DryingFactor(sim, t.Id);
+                if (drying < Fixed.One)
+                    Row(vm, ctx, "why.moisture.holds", ctx.Fmt.Percent(Fixed.One - drying), "fertiliser", ctx.Strings.Get("fertiliser." + sim.Config.Game.Farm.Fertilisers[c.Fertiliser].Id));
             }
             vm.Footnote = ctx.Strings.Get("why.moisture.lesson");
             return vm;
@@ -61,7 +65,7 @@ namespace Sim.View.Views
             GameDefs defs = sim.Config.Game;
             WhyVm vm = New(ctx, "why.soil.title", ctx.Rating(LandRules.SoilFactor(sim, t)));
             Row(vm, ctx, "why.soil.type", Effect(ctx, defs.Soils[t.Soil].YieldFactor), "soil", ctx.Strings.Get(defs.Soils[t.Soil].NameKey));
-            Row(vm, ctx, "why.soil.fertility", Effect(ctx, LandRules.FertilityFactor(defs.Land, t.Fertility)), "n", Num(ctx, t.Fertility));
+            Row(vm, ctx, "why.soil.fertility", Effect(ctx, LandRules.FertilityFactor(defs.Land, t.Fertility)), "n", ctx.Fmt.Decimal1(t.Fertility));
             Row(vm, ctx, "why.soil.shade", Effect(ctx, LandRules.ShadeFactor(sim, t)));
             Row(vm, ctx, "why.soil.all", Effect(ctx, LandRules.SoilFactor(sim, t)));
             vm.Footnote = ctx.Strings.Get("why.soil.lesson");
@@ -185,7 +189,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.landPrice.acres", ctx.Fmt.Integer(pd.Tiles.Count));
             Row(vm, ctx, "why.landPrice.soil", Effect(ctx, defs.Soils[t.Soil].PriceFactor), "soil", ctx.Strings.Get(defs.Soils[t.Soil].NameKey));
             Row(vm, ctx, "why.landPrice.drainage", Effect(ctx, defs.Drainages[t.Drainage].PriceFactor));
-            Row(vm, ctx, "why.landPrice.fertility", Effect(ctx, LandRules.FertilityPriceFactor(defs.Land, t.Fertility)), "n", Num(ctx, t.Fertility));
+            Row(vm, ctx, "why.landPrice.fertility", Effect(ctx, LandRules.FertilityPriceFactor(defs.Land, t.Fertility)), "n", ctx.Fmt.Decimal1(t.Fertility));
             Row(vm, ctx, "why.landPrice.location", Effect(ctx, pd.LocationFactor));
             vm.Footnote = ctx.Strings.Get("why.landPrice.lesson");
             return vm;

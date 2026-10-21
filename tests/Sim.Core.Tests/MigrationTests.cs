@@ -65,6 +65,12 @@ namespace Sim.Core.Tests
                 // After a migration the hash changes with the new fields; the old facts may not. Each migration step adds its
                 // own asserts here that the new fields hold their documented defaults.
                 Assert.That(Facts(r.State), Is.EqualTo(pin.Facts), name + ": plain facts");
+                if (r.Header.Schema < 4)
+                {
+                    // ADR 0048 §4: a neighbour hired today stays to the daily pass they were paid to, on no field.
+                    long pass = People.PeopleRules.NextDailyPass(r.State.Clock.SimTime);
+                    Assert.That(r.State.People.Roster.All(n => n.Tile == -1 && (n.Until == 0 || n.Until == pass)), Is.True, name + ": labourers migrated");
+                }
 
                 Simulation sim = Simulation.FromState(config, r.State);
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);

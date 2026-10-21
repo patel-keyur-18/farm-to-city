@@ -123,7 +123,7 @@ namespace Sim.Core
             s.Market = MarketState.ReadFrom(r, g.Market.Market.UnmetWindowHours);
             s.Farm = FarmState.ReadFrom(r, s.Land.Tiles.Count);
             if (g.Credit != null) s.Credit = CreditState.ReadFrom(r);
-            if (g.People != null) s.People = PeopleState.ReadFrom(r);
+            if (g.People != null) s.People = PeopleState.ReadFrom(r, s.Clock.SimTime);
             if (g.Onboarding != null)
             {
                 s._stepCount = g.Onboarding.Steps.Count;

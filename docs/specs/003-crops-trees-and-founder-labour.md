@@ -208,9 +208,11 @@ Applied through spec 002's `AdjustFertility` when the crop becomes ready, for th
 | The crop itself | `−CropDef.fertilityPerSeason` (wheat 4, rice 4, potato 5, radish 2) | CropUse |
 | Lentils | `+4` (lentils' `fertilityPerSeason` is −4: they restore) | Lentils |
 | Chemical fertiliser | `FertiliserDef.fertilityPerSeason` = −3 (ADR 0014) | Fertiliser |
-| Compost | `FertiliserDef.fertilityPerSeason` = +2 | Compost |
+| Compost | `FertiliserDef.fertilityPerSeason` = +6 (ADR 0051: it replaces what any crop takes and builds a little) | Compost |
 
-Example: 4 seasons' worth of chemically fertilised cycles lower fertility by exactly 12 points from fertiliser (ADR 0014), on top of the crop's own use. Fallow recovery (6 a season, spec 002) and lentils are the ways back.
+Example: 4 seasons' worth of chemically fertilised cycles lower fertility by exactly 12 points from fertiliser (ADR 0014), on top of the crop's own use. Fallow recovery (6 a season, spec 002), lentils and compost are the ways back.
+
+**Compost holds water (ADR 0051).** While a crop sown with a fertiliser whose `dryingFactor` is below 1 grows, spec 002 §3.2's drying step on its tile is multiplied by that factor: compost 0.8, so the soil dries 20% more slowly. Rain, drainage and the well are unchanged.
 
 ### 3.11 The founder's household (ADR 0010)
 
@@ -337,7 +339,8 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | | `good` | —, compost, fertiliser_chemical | input good or none |
 | | `kgPerAcrePerSeason` | 0, 2,000, 150 | ≥ 0 |
 | | `yieldFactor` | 1.00, 1.05, 1.25 | 0.5–2 |
-| | `fertilityPerSeason` | 0, +2, −3 | −20 to 20 |
+| | `fertilityPerSeason` | 0, +6, −3 (ADR 0051) | −20 to 20 |
+| | `dryingFactor` (optional, default 1.00) | 1.00, 0.80, 1.00 (ADR 0051) | 0.5–1 |
 | `PestRiskDef` | `baseRisk` by crop | radish 0.03, wheat 0.06, rice 0.10, potato 0.10, lentils 0.05 | 0–1 |
 | | `monocultureStep`, `monocultureMaxRepeats` | 0.5, 2 | 0–2, 0–10 |
 | | `wetStep` | 1.0 | 0–5 |
@@ -449,7 +452,7 @@ Defaults: `recoveryPerDay` 0.02, `goodNutrition` 0.95, `nutritionPenalty` 0.20, 
 | Certified or saved seed | Certified costs coins; saved uses stock | Saved seed loses 2% (potato 5%) of yield per season of growth | Store stock | Next cycle |
 | Tend the kitchen garden | Seed (a few coins) | A basket every few minutes until the bed's season output is used | Household food (eat from store) | — |
 | Buy medicine | 500 coins | Health +0.10: fewer sick days | — | — |
-| Fertiliser | Compost or chemical costs coins | Chemical +25% now, −3 fertility a season; compost +5% and +2 fertility | Soil factor and land price (002) later | Fertility recovers slowly (fallow 6 a season) |
+| Fertiliser | Compost or chemical costs coins | Chemical +25% now, −3 fertility a season; compost +5%, +6 fertility and the soil dries 20% more slowly while the crop grows | Soil factor and land price (002) later | Fertility recovers slowly (fallow 6 a season) |
 | Spray | Coins | Halves the risk, or cuts outbreak damage by 70% | — | Once a cycle |
 | Harvest now or let it wait | None | Waiting costs growing time, and after 72 h the crop spoils | Store space (004) | — |
 | Plant a tree | The sapling | Fruit after 1–3.5 weeks, every fruiting season | Edge trees shade the acre 3% each | Remove (book value lost) |
@@ -514,7 +517,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-9 | Care ratio: 2 rain-fed acres of wheat with 7.2 h supply give 1.10 (capped); 3 give 0.80; adding watering demand on the well acres in a heatwave lowers it accordingly; a crop's Care factor is the time-weighted mean across the changes | `CareTests.SharedPool_TimeWeighted` |
 | AC-10 | Care, Water and Weather are identical whether a crop's growth is advanced in one call or in 500 random chunks (the spec 001 chunking check, with crops, trees and the founder over one game year) | `CropTests.ChunkingInvariance` |
 | AC-11 | A crop sown between hourly passes gets factors from the rates in force at sowing until the next accrual point, and becomes ready exactly `growthMinutes × 60` s after sowing | `CropTests.ShortCrop_UsesCurrentRates` |
-| AC-12 | Fertility after a wheat cycle with chemical fertiliser falls by exactly `(4 + 3) × 0.0625` = 0.4375, recorded under CropUse and Fertiliser; lentils raise it by 4 × cycleShare under Lentils; compost raises it by 2 × cycleShare | `CropTests.Fertility_FromCropsAndInputs` |
+| AC-12 | Fertility after a wheat cycle with chemical fertiliser falls by exactly `(4 + 3) × 0.0625` = 0.4375, recorded under CropUse and Fertiliser; lentils raise it by 4 × cycleShare under Lentils; compost raises it by 6 × cycleShare (ADR 0051), so a composted wheat cycle ends +0.125 | `CropTests.Fertility_FromCropsAndInputs` |
 | AC-13 | Chemical fertiliser over cycles totalling 4 seasons of growth lowers fertility by 12 ± 0.5 points from the Fertiliser reason (ADR 0014) | `CropTests.Chemical_FourSeasons` |
 | AC-14 | Pest risk equals the §3.8 product for a repeat count of 0, 1, 2 and 3 (capped at 2) and a wet share; spraying before the check halves it; over 10,000 seeded checks the outbreak rate is within 1 percentage point of the risk | `PestTests.Risk_Formula_AndRate` |
 | AC-15 | An outbreak emits `PestWarning` at the check; spraying after it gives `CropHealth = 1 − (1 − h) × 0.3`; not spraying gives h; a severe outbreak gives 0 | `PestTests.Warning_AndCurativeSpray` |
@@ -541,6 +544,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-36 | A new game starts with 20,000 coins, the basic plan, normal hours, `eatFromStore` on, full health and saved-seed ages wheat 2.0 and lentils 2.0 (ADR 0030, 0032); the first daily passes eat the inherited wheat, then the lentils | `FounderTests.Start_State` |
 | AC-37 | Switching to the rich plan, or to 100% day labour, one minute before a daily pass and back one minute after changes that day's labour and day-labour pay only by those two minutes' worth (time-weighted); the day's health uses the time-weighted mean nutrition | `FounderTests.PlanChanges_TimeWeighted` |
 | AC-38 | A ready crop or ripe batch loses nothing for exactly 72 h; at each later daily pass it loses `round(grams × spoilagePerDay)` and emits `GoodsSpoiled`; an away advance of 72 h from readiness loses nothing | `CropTests.ReadyGrace_ThenSpoils` |
+| AC-39 | Under a growing crop sown with compost, an hour of sun dries the soil by 0.8 × the bare-soil change; rain, chemical fertiliser and an empty or ready field are unchanged (ADR 0051) | `CropTests.Compost_HoldsWater` |
 
 ## 9. Balancing hooks
 

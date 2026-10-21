@@ -176,7 +176,7 @@ namespace Game.Presentation
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
                 case "BuyInput": Return(new SheetRequest("BuyInputs", 0)); return;
             }
-            if (commands[commands.Length - 1] is Spray) return;
+            if (commands[commands.Length - 1] is Spray || commands[commands.Length - 1] is HireLabourers) return; // the field sheet stays: see who's on it
             _sheet.Close();
         }
     }

@@ -34,7 +34,7 @@ namespace Sim.View.Tests
             Assert.That(sheet.Subtitle, Is.EqualTo("Your family's land"));
             Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Fertility").And.Contain("Moisture").And.Contain("Soil for crops").And.Contain("Well acre"));
             Assert.That(sheet.Lines.Single(l => l.Label == "Soil for crops").Value, Is.AnyOf("Good", "Fair", "Poor"), "a word, not a factor");
-            Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45 / 100"));
+            Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45.0 / 100"));
             Assert.That(Action(sheet, "sow").Opens.Value.Kind, Is.EqualTo("Sow"));
             Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(20));
             Assert.That(sheet.Actions.Any(a => a.Id == "sellParcel"), Is.False, "the inherited land can never be sold");

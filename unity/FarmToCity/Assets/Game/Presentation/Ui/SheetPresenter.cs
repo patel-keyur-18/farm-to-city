@@ -664,7 +664,7 @@ namespace Game.Presentation.Ui
             foreach (CropRowVm r in vm.Rows)
                 key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
-                   .Append(r.LabourText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
+                   .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
             var scroll = NewScroll();
@@ -739,6 +739,7 @@ namespace Game.Presentation.Ui
                     money.Add(Figure(r.ProfitText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn));
                     info.Add(money);
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
+                    info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));
                 }
                 else info.Add(UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body));
                 card.Add(info);

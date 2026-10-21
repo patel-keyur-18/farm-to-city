@@ -25,7 +25,8 @@ namespace Sim.Core.Tests
             long season = t / S;
             if (p.Constructions.Count == 0 && PeopleRules.HutCount(sim) < 2)
                 sim.Execute(new BuildHandHut(t, 37));
-            if (t % Day < 4 * Hour && PeopleRules.FreeNow(sim) > 0) sim.Execute(new HireDayLabourers(t, 1));
+            Farm.Crop growing = sim.State.Farm.Crops.Find(c => c.State == Farm.CropState.Growing);
+            if (t % Day < 4 * Hour && PeopleRules.FreeNow(sim) > 0 && growing != null) sim.Execute(new HireLabourers(t, 1));
             if (p.Applicants.Count > 0 && PeopleRules.EmptyHut(sim) != null)
             {
                 Applicant a = p.Applicants[0];
@@ -94,7 +95,7 @@ namespace Sim.Core.Tests
             many.AdvanceTo(end);
 
             var log = one.State.CommandLog.Entries.Select(e => e.Command.GetType().Name).ToList();
-            Assert.That(log, Does.Contain("HireDayLabourers").And.Contain("OfferContract").And.Contain("SetStandingOrder")
+            Assert.That(log, Does.Contain("HireLabourers").And.Contain("OfferContract").And.Contain("SetStandingOrder")
                 .And.Contain("RenewContract").And.Contain("DismissHand"), "the bot used every people command");
             Assert.That(one.State.Finance.Reports.Count, Is.EqualTo(8));
             Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));

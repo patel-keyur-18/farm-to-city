@@ -39,9 +39,15 @@ namespace Sim.View.Tests
             Assert.That(sheet.Fertilisers.Select(f => f.Name + ": " + f.EffectText), Is.EqualTo(new[]
             {
                 "Normal: No fertiliser · the harvest the soil gives",
-                "Compost: +5% harvest · builds up the soil",
-                "Chemical: +25% harvest · wears out the soil",
+                "Compost: +5% harvest · holds water",
+                "Chemical: +25% harvest",
             }));
+            // Fertility after this crop (ADR 0051): a potato takes 5 a season, a quarter season here; compost puts 6 back.
+            Assert.That(potato.SoilText, Is.EqualTo("Soil 45.0 → 43.8"));
+            Assert.That(potato.SoilFalls, Is.True);
+            Assert.That(radish.SoilText + " " + radish.SoilFalls, Is.EqualTo("Soil 45.0 → 45.0 False"), "radish takes 0.04: no fall shown");
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 20, "compost").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 45.3"));
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 20, "chemical").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 43.0"));
             Assert.That(potato.Suits, Is.EqualTo(Suits.Good));
             Assert.That(radish.Suits, Is.EqualTo(Suits.Good));
             Assert.That(potato.TimeText, Is.EqualTo("1 d"));

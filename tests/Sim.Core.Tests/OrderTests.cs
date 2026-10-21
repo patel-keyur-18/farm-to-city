@@ -72,22 +72,100 @@ namespace Sim.Core.Tests
             Assert.That(live.State.Farm.Crops.Count(c => c.State == CropState.Ready && live.State.Clock.SimTime - c.ReadyAt > Hour), Is.EqualTo(0),
                 "no ready harvest left waiting on an ordered field");
 
-            // Out of season (the real calendar: wheat is Winter only), the tile waits and says so once.
+            // Out of season (the real calendar: wheat is Winter only), the field doesn't wait: the hand sows his best pick (ADR 0048).
             Simulation real = Start(NoInflation((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j));
             Hand rh = QuietHand(real);
             real.DrainEvents();
             Ok(real, new SetStandingOrder(real.State.Clock.SimTime, rh.Id, KeepWheat()));
-            real.AdvanceTo(real.State.Clock.SimTime + 2 * Day);
-            var waits = real.DrainEvents().OfType<OrderWaiting>().ToList();
-            Assert.That(waits.Select(w => w.Reason), Is.EqualTo(new[] { OrderWait.OutOfSeason }));
-            Assert.That(real.State.Farm.CropOn(HomeTile), Is.Null);
+            Assert.That(real.DrainEvents().OfType<OrderWaiting>(), Is.Empty);
+            Crop sown = real.State.Farm.CropOn(HomeTile);
+            Assert.That(sown, Is.Not.Null, "sown at once");
+            Assert.That(real.Config.Game.Farm.Crops[sown.Def].Id, Is.Not.EqualTo("wheat"));
+        }
+
+        // Spec 006 AC-24 (ADR 0048 §1): the hand's choice is the in-season crop with the best expected profit per season on the
+        // field; the order's own crop wins in its seasons; his other picks use certified seed.
+        [Test]
+        public void HandChoosesBestCrop()
+        {
+            Simulation sim = Start(NoInflation((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j));
+            Hand h = QuietHand(sim);
+            Definitions.FarmDefs farm = sim.Config.Game.Farm;
+            Land.Tile tile = sim.State.Land.Tiles[HomeTile];
+            Definitions.FertiliserDef none = farm.Fertilisers[farm.IndexOfFertiliser("none")];
+            int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+            // Brute force: profit per hour of growth, in season only.
+            string expected = farm.Crops.Where(c => c.SowSeasons[season])
+                .OrderByDescending(c => (double)FarmRules.Estimate(sim, tile, c, none).Profit / c.GrowthSeconds).First().Id;
+            Assert.That(farm.Crops[FarmRules.BestCrop(sim, tile, none)].Id, Is.EqualTo(expected));
+
+            sim.DrainEvents();
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(HomeTile, OrderSpec.HandChooses, SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(farm.Crops[sim.State.Farm.CropOn(HomeTile).Def].Id, Is.EqualTo(expected), "his choice");
+            Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, HomeTile).Crop, Is.EqualTo(-1), "and stays his choice");
+            Assert.That(sim.Execute(new SetStandingOrder(sim.State.Clock.SimTime, h.Id,
+                OrderSpec.KeepCrop(19, OrderSpec.HandChooses, SeedSource.Saved, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
+
+            // The player's crop, in season, wins even when it isn't the best (radish sows all year).
+            string other = farm.Crops.First(c => c.SowSeasons[season] && c.Id != expected).Id;
+            sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, other, SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(farm.Crops[sim.State.Farm.CropOn(19).Def].Id, Is.EqualTo(other));
+
+            // Out of season with saved seed: his pick is sown from certified seed (the store has no saved seed of it).
+            sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, "wheat", SeedSource.Saved, "none", SellRule.Store)));
+            Crop c20 = sim.State.Farm.CropOn(20);
+            Assert.That((farm.Crops[c20.Def].Id, c20.Seed), Is.EqualTo((expected, SeedSource.Certified)));
+        }
+
+        // Spec 006 AC-26 (ADR 0050): with the inherited seed potato used up and little cash, the hand doesn't sit idle waiting for
+        // potato seed he can't pay for: he sows the best crop he can pay for now, and waits only when nothing is affordable.
+        [Test]
+        public void NeverIdleWhileACropIsAffordable()
+        {
+            Simulation sim = Start(NoInflation((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j));
+            Hand h = QuietHand(sim);
+            Definitions.FarmDefs farm = sim.Config.Game.Farm;
+            int seedPotato = farm.Crops[farm.IndexOfCrop("potato")].SeedGood;
+            Market.Store.Take(sim, seedPotato, sim.State.Market.InStore(seedPotato));
+            CashTo(sim, 3_000 * Coin);
+            Definitions.FertiliserDef none = farm.Fertilisers[farm.IndexOfFertiliser("none")];
+            Assert.That(sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, farm.Crops[farm.IndexOfCrop("potato")], SeedSource.Certified, none)), Is.False, "potato seed is out of reach");
+
+            sim.DrainEvents();
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, "potato", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.DrainEvents().OfType<OrderWaiting>(), Is.Empty, "nobody waits");
+            foreach (int tile in new[] { HomeTile, 19 })
+            {
+                Crop c = sim.State.Farm.CropOn(tile);
+                Assert.That(c, Is.Not.Null, "tile " + tile + " sown at once");
+                Assert.That(sim.State.Ledger.Cash, Is.GreaterThanOrEqualTo(0));
+                Assert.That(farm.Crops[c.Def].Id, Is.Not.EqualTo("potato").And.Not.EqualTo("wheat"));
+            }
+
+            // With no cash at all and no seed in the store, he waits and says why.
+            CashTo(sim, 0);
+            foreach (var g in sim.Config.Game.Farm.Crops) Market.Store.Take(sim, g.SeedGood, sim.State.Market.InStore(g.SeedGood));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, OrderSpec.HandChooses, SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, 20).Waiting, Is.EqualTo(OrderWait.InsufficientFunds));
         }
 
         // ADR 0040: a new order starts at once; one action per hand per sim hour.
         [Test]
         public void StartsAtOnce_OneActionAnHour_PlayerWins()
         {
-            Simulation sim = Start(NoPests());
+            // ADR 0049 §2: by default every order acts at once, so two fields given together are both sown now.
+            Simulation both = Start(NoPests());
+            Hand bh = SteadyHand(both);
+            both.DrainEvents();
+            Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, KeepWheat()));
+            Ok(both, new SetStandingOrder(both.State.Clock.SimTime, bh.Id, OrderSpec.KeepCrop(19, "wheat", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(both.DrainEvents().OfType<OrderExecuted>().Select(e => e.Target), Is.EqualTo(new long[] { HomeTile, 19 }), "both fields at once");
+
+            // The cap still holds when content sets it: one action an hour.
+            Simulation sim = Start(NoPests((f, j) => f == "people.json" ? j.Replace("\"orderActionsPerHour\": 6", "\"orderActionsPerHour\": 1") : j));
             Hand h = SteadyHand(sim);
             long t = sim.State.Clock.SimTime / Hour * Hour + Hour;
             sim.AdvanceTo(t - 10);
@@ -185,6 +263,8 @@ namespace Sim.Core.Tests
             Simulation sim = Start(NoPests());
             Hand h = SteadyHand(sim);
             CashTo(sim, 0);
+            // No seed in the store either: with seed at hand he would sow it (ADR 0050).
+            foreach (Definitions.CropDef c in sim.Config.Game.Farm.Crops) Market.Store.Take(sim, c.SeedGood, sim.State.Market.InStore(c.SeedGood));
             long liabilities = sim.State.Ledger.Balance(Account.MoneylenderLoans) + sim.State.Ledger.Balance(Account.BankLoans);
             sim.DrainEvents();
             Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));

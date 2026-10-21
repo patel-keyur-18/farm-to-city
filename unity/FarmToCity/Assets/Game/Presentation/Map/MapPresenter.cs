@@ -138,6 +138,9 @@ namespace Game.Presentation.Map
 
         private const int GroundBase = -20000;
 
+        /// <summary>Crops grow on the land: above all of it, below everyone and everything that stands on it (owner, Sprint 10 review).</summary>
+        private const int CropBase = -10000;
+
         private static int Order(int tile, int width, int offset = 0, float offY = 0f) { return (tile % width + tile / width) * 100 + offset - Mathf.RoundToInt(offY * 100f); }
 
         private SpriteRenderer NewRenderer(string name, Sprite sprite, Vector3 position, int order, Transform parent = null)
@@ -167,7 +170,7 @@ namespace Game.Presentation.Map
                 _signs.Add(NewRenderer("sign" + t.Id, SpriteBank.Sign, c + new Vector3(0.0f, 0.06f, 0), Order(t.Id, _width, 30)));
                 _signs[_signs.Count - 1].transform.localScale = Vector3.one * 0.5f;
                 _signs[_signs.Count - 1].gameObject.SetActive(false);
-                var crop = new Spot { Home = c, Renderer = NewRenderer("crop" + t.Id, null, c, Order(t.Id, _width, 20)) };
+                var crop = new Spot { Home = c, Renderer = NewRenderer("crop" + t.Id, null, c, CropBase + Order(t.Id, _width, 20)) };
                 crop.Marker = NewRenderer("mark" + t.Id, null, c + new Vector3(0.02f, 0.34f, 0), Order(t.Id, _width, 90));
                 _crops.Add(crop);
             }

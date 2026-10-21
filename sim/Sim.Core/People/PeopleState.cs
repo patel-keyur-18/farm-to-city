@@ -19,7 +19,14 @@ namespace Sim.Core.People
         public long SecondsWorked { get; internal set; }
         public bool AskedToMoveIn { get; internal set; }
         public bool FreeToday { get; internal set; }
-        public bool HiredToday { get; internal set; }
+
+        /// <summary>Kept for the schema-4 layout: −1 since ADR 0049 (labourers tend every field); a field id only in Sprint 10's first build.</summary>
+        public int Tile { get; internal set; } = -1;
+
+        /// <summary>When they go home: the crop's readyAt rounded up to the hour (ADR 0048 §3); 0 when not hired.</summary>
+        public long Until { get; internal set; }
+
+        public bool Hired { get { return Until != 0; } }
 
         internal Neighbour Clone() { return (Neighbour)MemberwiseClone(); }
 
@@ -31,16 +38,24 @@ namespace Sim.Core.People
             h.WriteLong(SecondsWorked);
             h.WriteBool(AskedToMoveIn);
             h.WriteBool(FreeToday);
-            h.WriteBool(HiredToday);
+            h.WriteInt(Tile);
+            h.WriteLong(Until);
         }
 
-        internal static Neighbour ReadFrom(SaveReader r)
+        internal static Neighbour ReadFrom(SaveReader r, long now)
         {
-            return new Neighbour
+            var n = new Neighbour
             {
                 Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Trait = r.ReadRef(ContentTable.Trait), SecondsWorked = r.ReadLong(),
-                AskedToMoveIn = r.ReadBool(), FreeToday = r.ReadBool(), HiredToday = r.ReadBool(),
+                AskedToMoveIn = r.ReadBool(), FreeToday = r.ReadBool(),
             };
+            if (r.Schema >= 4)
+            {
+                n.Tile = r.ReadInt();
+                n.Until = r.ReadLong();
+            }
+            else if (r.ReadBool()) n.Until = PeopleRules.NextDailyPass(now); // schema 3: hired today, paid to the daily pass (ADR 0048 §4)
+            return n;
         }
     }
 
@@ -364,11 +379,11 @@ namespace Sim.Core.People
             h.WriteLong(NextConstructionId);
         }
 
-        internal static PeopleState ReadFrom(SaveReader r)
+        internal static PeopleState ReadFrom(SaveReader r, long now)
         {
             var s = new PeopleState();
             int n = r.ReadCount();
-            for (int i = 0; i < n; i++) s.Roster.Add(Neighbour.ReadFrom(r));
+            for (int i = 0; i < n; i++) s.Roster.Add(Neighbour.ReadFrom(r, now));
             n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Applicants.Add(People.Applicant.ReadFrom(r));
             n = r.ReadCount();
