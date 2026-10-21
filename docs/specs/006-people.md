@@ -55,17 +55,19 @@ HandHours(hand) = HandDef.hoursPerDay × (HandDef.productivityBase + HandDef.pro
 | --- | --- |
 | Roster | `LabourPoolDef.rosterSize` neighbours (default 8), created at a new game with a seeded name and one trait (stream People, counter = roster index). They never move away while they commute |
 | Who is free today | At each daily pass, a seeded shuffle of the roster (stream DayLabourPool, counter = day index); the first `LabourPoolDef.availablePerDay[season]` are free today. Defaults Spring 2, Summer 4, Monsoon 3, Winter 2: scarce in the rabi and kharif harvests (Spring and Winter) |
-| Hire | `HireDayLabourers(count)` hires the first `count` free labourers who aren't already hired today, for the rest of the day. Rejected with `NoneAvailable` if fewer are free |
-| Pay | Upfront, pro rata for the rest of the day: `LabourPoolDef.dailyWage × (nextDailyPass − t) ÷ 86,400`, Dr 5100 Hired labour, Cr Cash. No prepayment: it is the day's cost. `InsufficientFunds` if cash is short |
+| Who is free (ADR 0048) | The daily draw's free labourers come only from neighbours not already on a crop |
+| Hire (ADR 0048) | `HireLabourers(tileId, count)` from a field with a growing crop hires the first `count` free labourers until **`until` = the crop's `readyAt` rounded up to the next hour**. Rejected with `NotGrowing` (no growing crop on an owned field) or `NoneAvailable` if fewer are free. Hiring for the rest of the day (`HireDayLabourers`) is retired; its log tag decodes as a rejected `HireLabourers` |
+| Pay | Upfront, pro rata to `until`: `LabourPoolDef.dailyWage × count × (until − t) ÷ 86,400` at the price index, Dr 5100 Hired labour, Cr Cash. No prepayment: like seed, it is the crop's cost. `InsufficientFunds` if cash is short |
+| Leaving (ADR 0048) | At the first hourly pass at or after `until` (before the hands' orders), live or away: they harvest the crop on their field if it is ready (overflow to the trader), emit `LabourersLeft(tile, count, harvested)` and go home. If the crop was cleared or lost first, they tend the other fields until `until` |
 | Wage | `dailyWage` 9,375 coins a game day: a hand's season wage ÷ 4 days (7,500) with a 25% premium (ADR 0022, ADR 0039 §11). A game day stands for about 22 real days, so this is about ₹420 a real day (ADR 0008) |
-| Work | Each adds `hoursPerDay` (8) to the Care pool until the next daily pass, live or away: their assigned task is "tend the fields" (ADR 0039). They need no housing and aren't counted in the population |
+| Work | Each adds `hoursPerDay` (8) to the Care pool until they go, live or away: they tend their crop first, then the other fields (ADR 0039, ADR 0048). They need no housing and aren't counted in the population |
 | Economics | A day labourer costs more than an acre of potato or wheat earns from their hours (ADR 0033): hiring by the day is for rescuing a busy harvest's Care, not for routine work |
 
 ### 3.3 Regulars
 
 | Rule | Behaviour |
 | --- | --- |
-| Time worked | Each roster member adds the seconds they were hired (`secondsWorked`), pro rata like their pay (ADR 0039) |
+| Time worked | Each roster member adds the seconds they were hired (`secondsWorked` += `until − t`), pro rata like their pay (ADR 0039, ADR 0048) |
 | Asks to move in | When a roster member's `secondsWorked` reaches `LabourPoolDef.regularThresholdDays` (default 6) × 86,400 (six full day-equivalents) and the founder has an empty hand's hut, they ask to move in: they join the applicants (§3.5) with their **skill and both traits known exactly**, at the asked wage for their skill. Emits `RegularAsksToMoveIn`. Once per person; they leave the roster when hired |
 | No hut | The request waits until a hut stands empty (the count is kept) |
 | Details (ADR 0041) | A regular joins the applicants even when `maxApplicants` are waiting; always accepts an offer (they asked to come); has a skill drawn when they ask (stream Applicants, key = their applicant id; the usual `[skillMin, skillMax]`), shown exactly, and two traits, the first their day-labour trait, both shown; asks only during live play (days hired while away still count); if not hired within `applicantWaitDays` goes back to day labour and never asks again. When hired they leave the roster and a new seeded neighbour takes their place (stream People, counter = the new roster id), so the pool stays at `rosterSize` |
@@ -129,15 +131,15 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 | When | At every hourly pass (system Labour, after Agriculture and Market), live or away, for each hand under contract in id order, each order in target order; and **at once when an order is set** if the hand still has this hour's action (ADR 0040). Each hand does at most `HandDef.orderActionsPerHour` (1) action (a harvest, a sowing or a pick) per sim hour, counted per hand (`actionHour`, `actionsInHour`) |
 | The player wins | An order acts only on a field that is ready or empty (or a tree that is ripe) and never undoes the player's crop: a field the player sowed with another crop is harvested by the order when ready and then re-sown with the order's crop. Changing the order when sowing by hand is the UI's choice (spec 008) |
 | Harvest | A ready crop on the tile is harvested (spec 003 `Harvest`), with `Overflow.SellRestToTrader` so a full store never blocks it. A ripe tree is picked the same way |
-| Re-sow | An empty tile is sown with the order's crop if it is in season (spec 003 §3.2: stock first, the rest bought). If it's out of season, the tile waits (`OrderWaiting(OutOfSeason)` once per season). If cash is short, nothing is sown (`OrderWaiting(InsufficientFunds)`): orders never borrow (ADR 0009) |
-| Sell rule | STORE: the harvest stays in the store. OFFER AT p: the harvested quantity is added to the good's market offer with minimum price p (spec 004 §3.2 and §3.3, ADR 0031): it sells only while the price is at or above p, and the trader takes it only if p ≤ Floor. SELL TO TRADER: sold at the floor now, up to the trader's capacity; the rest is stored |
+| Re-sow (ADR 0048) | An empty tile is sown with the order's crop if it is in season (spec 003 §3.2: stock first, the rest bought). Otherwise, or when the order leaves the choice to the hand (`OrderSpec.HandChooses`, crop −1), he sows the in-season crop with the highest expected profit per season on this tile: one sowing's harvest by the yield formula (soil factor, the water factor at today's moisture, the order's fertiliser; care, seed, weather and health at 1) at the trader's floor, less its seed and fertiliser at today's input prices, divided by `cycleShare`; ties to the earlier crop (`FarmRules.BestCrop`, the sow sheet's own numbers). The order's seed source applies to its own crop only; other picks use certified seed. `OrderWaiting(OutOfSeason)` only if no crop is in season. If cash is short, nothing is sown (`OrderWaiting(InsufficientFunds)`): orders never borrow (ADR 0009) |
+| Sell rule | STORE: the harvest stays in the store. OFFER AT p: the harvested quantity is added to the good's market offer with minimum price p (for the order's own crop; the hand's other picks keep the good's current minimum, ADR 0048) (spec 004 §3.2 and §3.3, ADR 0031): it sells only while the price is at or above p, and the trader takes it only if p ≤ Floor. SELL TO TRADER: sold at the floor now, up to the trader's capacity; the rest is stored |
 | Not underway | Orders pause while the contract has lapsed; they resume on renewal |
 | Report | Each action emits `OrderExecuted(handId, target, action, quantity, amount)`, so *While you were away* lists what the hand did, and the order keeps it as its last action (`lastAction`, `lastAt`, `lastQuantity`, `lastAmount`) for the hand sheet's "Last done" |
 
 ### 3.9 Processing order and determinism
 
-- Daily pass, system Labour: day labourers' day ends (accrual), the roster's availability for the new day is drawn, applicants leave if their wait is over (live only).
-- Hourly pass, system Labour: applicants arrive (live only), standing orders run.
+- Daily pass, system Labour: the roster's availability for the new day is drawn (labourers on a crop stay, ADR 0048), applicants leave if their wait is over (live only).
+- Hourly pass, system Labour: applicants arrive (live only), labourers whose time is up harvest and leave, then standing orders run.
 - Seasonal pass: renewals run inside spec 005's settlement (step 6); skill growth runs after.
 - People state is appended to `StateHash` after spec 003's section. Lists are kept in id order; nothing iterates a dictionary.
 
@@ -190,7 +192,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 
 | Command | Parameters | Validation and rejection reasons | Effect |
 | --- | --- | --- | --- |
-| `HireDayLabourers` | `count` | `InvalidArgument` (≤ 0); `NoneAvailable`; `InsufficientFunds` | §3.2. Emits `DayLabourersHired` |
+| `HireLabourers` | `tileId`, `count` | `InvalidArgument` (≤ 0); `NotGrowing`; `NoneAvailable`; `InsufficientFunds` | §3.2 (ADR 0048). Emits `LabourersHired` |
 | `BuildHandHut` | `tileId` | `UnknownTile`; `NotQuarters`; `NoRoom`; `TooManyHuts`; `InsufficientFunds` | §3.4. Emits `ConstructionStarted` |
 | `PostJob` | `wageOffer` (market, aboveMarket) | `NoHut` (no empty or building hut); `AlreadyPosted`; `InsufficientFunds` | §3.5. Emits `JobPosted` |
 | `Interview` | `applicantId` | `UnknownApplicant`; `AlreadyInterviewed` | §3.5. Emits `ApplicantInterviewed` |
@@ -204,7 +206,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 
 | Event | Payload | Emitted when | Consumers |
 | --- | --- | --- | --- |
-| `DayLabourersHired` | ids, `cost` | §3.2 | HUD, report, play log (first hire) |
+| `LabourersHired` / `LabourersLeft` | tile, ids, `cost`, `until` / tile, count, harvested grams | §3.2 | HUD, report, play log (first hire) |
 | `RegularAsksToMoveIn` | neighbour id, name | §3.3 | HUD (letter-style card), notifications |
 | `ConstructionStarted` / `HandHutBuilt` | building, tile, cost | §3.4 | HUD, notifications (built), Hamlet gate (009) |
 | `ApplicantArrived` / `ApplicantLeft` / `ApplicantInterviewed` | applicant | §3.5 | Hiring panel, notifications (arrived) |
@@ -217,7 +219,7 @@ Examples: "keep wheat on the north field with certified seed and compost; offer 
 
 | Decision | Immediate cost | Delayed effect | Side effects on other systems | Reversibility |
 | --- | --- | --- | --- | --- |
-| Hire day labourers | 9,375 a day each, pro rata | 8 hours of Care today | A regular may ask to move in | Each day is separate |
+| Hire labourers for a crop | 9,375 a day each, pro rata to the crop's harvest hour | 8 hours of Care each until the crop is ready; they harvest it | A regular may ask to move in | Committed until the harvest (ADR 0048) |
 | Build a hand's hut | 15,000 | A hand can move in; the Hamlet gate's house | Depreciation 250 a season; a yard building place | Permanent (Phase 1) |
 | Post a job | 200 coins | Applicants twice as often; above market: better and surer applicants, a 10% dearer wage | — | Expires after 4 days |
 | Interview | None | Know the second trait | — | — |
@@ -254,8 +256,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
 | AC-1 | Loading `people.json` with `availablePerDay` above `rosterSize`, `skillMin > skillMax`, an unknown trait, or a `hand_hut` without `housesHands` fails validation naming the field | `ContentTests.People_Validation` |
-| AC-2 | The roster and each day's free labourers are the same for the same seed and differ by day; the free count equals `availablePerDay` for the season | `DayLabourTests.Pool_Seeded` |
-| AC-3 | Hiring 2 labourers at 18:00 costs exactly `2 × 9,375 × 21,600 ÷ 86,400` = 4,687.50, posted to 5100; adds 16 hours a day to the Care pool until the daily pass, time-weighted; hiring more than are free is rejected with `NoneAvailable` and changes nothing | `DayLabourTests.Hire_CostAndCare` |
+| AC-2 | The roster and each day's free labourers are the same for the same seed and differ by day; the free count equals `availablePerDay` for the season (labourers on a crop are not drawn, ADR 0048) | `DayLabourTests.Pool_Seeded` |
+| AC-3 | Hiring 2 labourers at 18:00 for wheat sown at 18:00 (ready at midnight) costs exactly `2 × 9,375 × 21,600 ÷ 86,400` = 4,687.50, posted to 5100; adds 16 hours a day to the Care pool, time-weighted; at midnight they harvest the wheat and go (`LabourersLeft`); hiring on a field with nothing growing is rejected with `NotGrowing`, more than are free with `NoneAvailable`, and changes nothing (ADR 0048) | `DayLabourTests.Hire_CostAndCare` |
 | AC-4 | A labourer hired for 6 full day-equivalents in total asks to move in once a hand's hut is empty, as an applicant with skill and both traits known; not before the hut exists; 6 hires of an hour each are not enough (ADR 0039); the regular joins even with 3 waiting, always accepts, asks only live and once, and a new neighbour keeps the roster at 8 (ADR 0041) | `DayLabourTests.Regular_AsksToMoveIn` |
 | AC-5 | `BuildHandHut` costs 15,000 (Dr 1600), finishes exactly 24 hours later, depreciates 250 a season from the next close, and is rejected on a farm acre, the yard and unowned land (`NotQuarters`) and when the quarters are full (`NoRoom`) (ADR 0040) | `HutTests.Build_CostTimeDepreciation` |
 | AC-6 | With an empty hut, applicants arrive at the seeded times, at most 3 wait, each leaves after 2 days if not hired; none arrive or leave during an away advance | `ApplicantTests.Arrival_Queue_Away` |
@@ -265,7 +267,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-10 | At a season close renewal is paid after loans and living costs (spec 005 AC-13 order), at the re-asked wage (a loyal hand keeps theirs); when cash is short the contract lapses, the hand's hours leave the pool, and after 2 days the hand leaves; `RenewContract` within the grace pays the whole season (the waiting days expensed at once) and resumes work; a contract still lapsed at the next close ends | `ContractTests.Renewal_Lapse_Grace` |
 | AC-11 | `DismissHand` refunds the unearned wage less severance (none in the first season; 10% of the wage after), and severance never exceeds the refund | `ContractTests.Dismiss_RefundAndSeverance` |
 | AC-12 | Skill grows by 3 a season (4.5 ambitious, capped at 100) and the next renewal asks the wage for the new skill at the current price index | `ContractTests.SkillGrowth_AndWage` |
-| AC-13 | A "keep wheat on tile 18" order harvests the ready crop and re-sows it in season, live and during a 72-hour away advance, with the same final state hash either way; out of season the tile waits and emits `OrderWaiting(OutOfSeason)` once; a hand does at most one action an hour; a field the player sowed with another crop is not undone | `OrderTests.KeepCrop_LiveAndAway` |
+| AC-13 | A "keep wheat on tile 18" order harvests the ready crop and re-sows it in season, live and during a 72-hour away advance, with the same final state hash either way; out of season the hand sows his best pick at once, with no `OrderWaiting` (ADR 0048); a hand does at most one action an hour; a field the player sowed with another crop is not undone | `OrderTests.KeepCrop_LiveAndAway` |
 | AC-14 | An OFFER AT p order adds the harvest to the market offer with minimum price p (spec 004 AC-18 rules); SELL TO TRADER sells at the floor up to capacity and stores the rest; STORE keeps it; a careless hand's harvest overflows to the trader | `OrderTests.SellRules` |
 | AC-15 | With too little cash an order sows nothing, emits `OrderWaiting(InsufficientFunds)` and never creates a liability; orders pause while the contract has lapsed | `OrderTests.NeverBorrows_PausesOnLapse` |
 | AC-16 | Over 2 game years of seeded play with day labourers, a hand, renewals, a lapse, a dismissal and orders, the ledger reconciles at every close and the chunking-invariance check holds | `PeopleTests.Ledger_And_Chunking` |
@@ -276,6 +278,8 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-21 | A people-only *While you were away* view built from the events of a 30-hour away advance lists each hand's harvests, sales, sowings and waiting reasons, day labour paid and contracts renewed or lapsed, with totals equal to the events' sums | `Sim.View.Tests` `AwayViewTests.People` |
 | AC-22 | The view shows skill as stars and a band word from `ui.json` (an applicant's range as solid and faded stars), hours as "tends about N acres" rounded to a half, and never a raw factor | `Sim.View.Tests` `PeopleViewTests.Words` |
 | AC-23 | Gate checks (category Balance): the competent bot hires a hand and meets §9's hooks; the day-labour spammer, hand churner and lapse gamer stay at most 1.20 × the competent median net worth over 2 years; the absentee stays at least 0.80 × | `GateTests.PeopleStress` |
+| AC-24 | (ADR 0048) The hand's choice equals the in-season crop with the highest expected profit per hour of growth on the tile (brute force over `FarmRules.Estimate`); an order left to the hand sows it at once and keeps crop −1; the order's own crop in season wins even when not the best; out of season a saved-seed order's pick uses certified seed; saved seed with the hand's choice is rejected (`SeedCannotBeSaved`) | `OrderTests.HandChoosesBestCrop` |
+| AC-25 | (ADR 0048) Labourers hired at 18:30 for a potato ready at 42:30 are paid exactly to 43:00, stay through the daily pass (not drawn as free), harvest at 43:00 and go, with the same state hash live or away; a growing field's sheet lists one hire row per free labourer with its cost, and labourers walk to their own field first | `DayLabourTests.CropContract_StaysToHarvest`, `Sim.View.Tests` `PeopleViewTests.FieldSheet_HiresTillHarvest` |
 
 ## 9. Balancing hooks
 
@@ -339,6 +343,10 @@ The owner's device run: the yard becomes 2 acres (tile 29); hands' huts move to 
 ### Sprint 6 planning review (2026-10-19, ADR 0041)
 
 Regulars (US-067): they join even with a full queue, always accept, have a seeded skill drawn when they ask and both traits shown, ask only live and once, and a new neighbour refills the roster (§3.3, AC-4).
+
+### Phase 1 playtest findings (2026-10-21, ADR 0048)
+
+The owner's play found the hand idle at his hut and labourers leaving mid-crop. Rules changed and re-approved in the session: the hand's choice of the best in-season crop (§3.8, AC-13, AC-24), the map walking a paid hand round every growing field (presentation, ADR 0048 §2), labourers hired for a crop until its harvest (§3.2, §3.3, §3.9, §5, §6, AC-2, AC-3, AC-25), save schema 4.
 
 ### Sprint 6 device run 1 (2026-10-20)
 
