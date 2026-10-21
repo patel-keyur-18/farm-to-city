@@ -10,7 +10,7 @@ using Sim.View.Views;
 namespace Sim.View.Tests
 {
     /// <summary>Spec 008 §3.4: the map view model, the isometric geometry, the camera and the tints.</summary>
-    public class MapTests
+    public partial class MapTests
     {
         private const long Hour = 3600, Day = 86400;
 
@@ -24,12 +24,12 @@ namespace Sim.View.Tests
             Assert.That(map.Tiles.Count, Is.EqualTo(192));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Farm), Is.EqualTo(6));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(2));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(183));
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(124), "neighbours' farms: 78 for sale, 46 not yet");
             Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 86, 102 }));
             Assert.That(map.Tiles[87].Kind, Is.EqualTo(TileKind.Yard));
             Assert.That(map.Tiles[86].X, Is.EqualTo(6));
             Assert.That(map.Tiles[86].Y, Is.EqualTo(5));
-            Assert.That(map.Tiles.Where(t => t.Kind != TileKind.Unowned).All(t => t.Protected), Is.True);
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters).All(t => t.Protected), Is.True);
             Assert.That(map.Buildings.Select(b => b.DefId), Is.EqualTo(new[] { "hut", "well" }));
             Assert.That(map.Slots.Count(s => s.Yard), Is.EqualTo(4));
             Assert.That(map.Slots.Count(s => !s.Yard), Is.EqualTo(12));
