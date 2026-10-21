@@ -8,7 +8,7 @@ namespace Sim.Core.Saves
     /// <summary>The ids of each content list a state can point into, in the running content's order (spec 007 §3.1).</summary>
     public static class ContentTables
     {
-        public const int Count = (int)ContentTable.Name + 1;
+        public const int Count = (int)ContentTable.Era + 1;
 
         public static string[] Ids(SimConfig config, ContentTable table)
         {
@@ -30,6 +30,9 @@ namespace Sim.Core.Saves
                 case ContentTable.Lender: return g?.Credit == null ? None : Of(g.Credit.Lenders, d => d.Id);
                 case ContentTable.Trait: return g?.People == null ? None : Of(g.People.Traits, d => d.Id);
                 case ContentTable.Name: return g?.People == null ? None : Of(g.People.Names, d => d.Id);
+                case ContentTable.Step: return g?.Onboarding == null ? None : Of(g.Onboarding.Steps, d => d.Id);
+                case ContentTable.Chapter: return g?.Onboarding == null ? None : Of(g.Onboarding.Chapters, d => d.Id);
+                case ContentTable.Era: return g?.Onboarding == null ? None : Of(g.Onboarding.Eras, d => d.Id);
                 default: throw new ArgumentOutOfRangeException(nameof(table));
             }
         }

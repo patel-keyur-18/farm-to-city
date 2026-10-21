@@ -211,6 +211,7 @@ namespace Game.Presentation
             List<SimEvent> events = Sim.DrainEvents();
             HandleEvents(events);
             OnTownEvents(events);
+            GuideAfter(events);
             Refresh(true);
         }
 
@@ -358,6 +359,7 @@ namespace Game.Presentation
                 request = new SheetRequest("Tile", request.Id);
             }
             if (request.Kind == "Settings") _townFiles = _saves.TownFiles().Count;
+            _guide.SheetVisited(request.Kind);
             _ctx.LocalNow = DateTime.Now;
             _open = request;
             ShowCurrentSheet(refreshOnly: false);
@@ -406,6 +408,8 @@ namespace Game.Presentation
             _selected = Hit.None;
             _map.ClearSelection();
             _fertiliser = "none";
+            UpdateNudge();
+            _safeRoot.schedule.Execute(MaybeOpenLetter); // a page that came while the sheet was open
         }
 
         private void OnSheetAction(ActionVm action)
@@ -414,6 +418,13 @@ namespace Game.Presentation
             if (!action.Opens.HasValue && action.Confirm == null && SettingsAction(action)) return;
             if (action.Opens.HasValue)
             {
+                if (action.Opens.Value.Kind == "LetterPage")
+                {
+                    // Reading a page again (AC-12): over the letter's list, which stays open; nothing is sent.
+                    string id = Sim.Config.Game.Onboarding.Chapters[(int)action.Opens.Value.Id].Id;
+                    _safeRoot.schedule.Execute(() => ShowLetter(id, reading: true));
+                    return;
+                }
                 if (action.Opens.Value.Kind == "HutPlacement")
                 {
                     // Start on the next UI tick, outside this click: a bar built inside the handler never got its own clicks on touch.
@@ -441,6 +452,7 @@ namespace Game.Presentation
                 CommandResult result = Sim.Execute(command);
                 if (!result.Accepted)
                 {
+                    _guide.Rejected(Sim, command, result.Reason);
                     Toast(_ctx.Reject(result.Reason));
                     AfterCommands();
                     return;
@@ -488,8 +500,9 @@ namespace Game.Presentation
             ActionVm build = HutPlacement.Confirm(_ctx, tile);
             _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
             {
-                CommandResult r = Sim.Execute(build.Create(Sim.State.Clock.SimTime));
-                if (!r.Accepted) { Toast(_ctx.Reject(r.Reason)); return; }
+                Command c = build.Create(Sim.State.Clock.SimTime);
+                CommandResult r = Sim.Execute(c);
+                if (!r.Accepted) { _guide.Rejected(Sim, c, r.Reason); Toast(_ctx.Reject(r.Reason)); return; }
                 StopPlacing();
                 AfterCommands();
             }, build.Detail, build.Enabled));
@@ -511,6 +524,7 @@ namespace Game.Presentation
         {
             AwayCard.Vm vm = AwayCard.Build(_ctx, Sim.LastAwayReport);
             if (vm == null) return; // nothing happened: no card (ADR 0043 §8)
+            _guide.AwayCardShown(Sim); // "Welcome back" follows the card (spec 009 §3.3)
             _sheet.Away(vm, _strings.Plural("hud.collect", vm.ReadyCount), _strings.Get("away.seeReport"), _strings.Get("action.close"),
                 _strings.Plural("away.more", vm.More.Count), CollectAll, () => OpenSheet(new SheetRequest("Report", vm.ReportPeriod)));
         }

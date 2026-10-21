@@ -1,0 +1,6 @@
+{
+  "eras": [
+    { "id": "homestead" },
+    { "id": "hamlet", "conditions": { "acresHarvestedInSeason": 6, "meanCareAtLeast": 0.9, "handHutsAtLeast": 1, "profitableSeasonsAtLeast": 1 } }
+  ]
+}

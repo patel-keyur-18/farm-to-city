@@ -298,10 +298,14 @@ namespace Sim.Core.Definitions
         /// <summary>Day labourers, hands and orders (spec 006), or null when the buildings have no hand's hut.</summary>
         public PeopleDefs People { get; }
 
+        /// <summary>The first session, the letter's chapters and the eras (spec 009), or null without people.</summary>
+        public OnboardingDefs Onboarding { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
-            PeopleDefs people = null)
+            PeopleDefs people = null, OnboardingDefs onboarding = null)
         {
+            Onboarding = onboarding;
             People = people;
             Credit = credit;
             Farm = farm ?? throw new ArgumentNullException(nameof(farm));

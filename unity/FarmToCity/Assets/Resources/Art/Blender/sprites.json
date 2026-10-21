@@ -335,6 +335,20 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_bell"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_cart"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_close"
   },
   {
@@ -441,6 +455,20 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_wheat"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_letter"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_menu"
   },
   {
    "w": 256,

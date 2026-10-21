@@ -153,6 +153,8 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0042 | Weather in 1-hour spells with per-weather persistence: calm weather lasts (sun 1–2 days), severe passes (heavy rain, storm 1–2 h); seasonal shares unchanged; the forecast as runs (Sprint 7, US-184) |
 | 0043 | Sprint 7 review: run lengths per season (Monsoon sun 6 h breaks, dry-season rain 4–6 h); the forecast rolled per run; *Why?* in words on every number (a ? on rows, a coverage test); the Menu (gear gone, People shortcut, ! alerts); Money and loans, founder, good, Buy inputs, mandi panels; the full away card only when something happened; text size, reduced motion, sound, haptics; 7 Kenney CC0 sounds; 25 points |
 | 0044 | Sprint 7 device review: a back button on sheets opened from another sheet; sounds only for town events (no tap or sheet sounds); a *Why?* opens only from its ?; text size 80/100/125%; loan payments priced at the press; net worth kept, with the land on its own row |
+| 0045 | Sprint 8 review: a one-line nudge pill per first-session step, the tour during the garden wait; a long crop on any acre; `comeBack` asks (Yes / Not now, never at night), the card as fallback; AC-11 to AC-16; Phase 1 health checks (cautious saver, random, never stuck with credit refused, recovery after foreclosure, exact ledger, bounded prices) with thresholds measured then set realistically; Sprint 8's build feature-complete Development |
+| 0046 | Sprint 8 device review: veils over the whole screen (past the safe area); the *While you were away* card only after 8 h away or at the cap (`awayCardMinHours`); the sale nudge only with something the trader would buy |
 
 ## Current status
 

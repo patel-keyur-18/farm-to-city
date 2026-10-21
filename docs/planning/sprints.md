@@ -16,7 +16,7 @@
 | S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 21 | — | Yes |
 | S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; regulars; every sprite, the ground, icons and walk cycles rendered in Blender (ADR 0041). | 26 | — | Yes |
 | S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings; hourly weather spells (ADR 0042). | 19 | — | Yes |
-| S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | — | Yes: release candidate |
+| S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | Spec 009 amendment (ADR 0045) | Yes: feature-complete Development build |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
 
@@ -306,7 +306,7 @@
 
 ## Sprint 7 · 7–13 Dec 2026 · Phase 1
 
-- **Status:** Built (25 of 25 points); device run 1 passed with seven changes, built the same day (ADR 0044); the owner merges after those. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
+- **Status:** Done (25 of 25 points; PR #12 merged). Device run 1 passed with seven changes, built the same day (ADR 0044); device run 2 (checks 29–34) passed 2026-10-20. Planning review 2026-10-20 (ADR 0043: 11 gaps); spec 001's weather sections re-approved the same day
 - **Branch:** `sprint/07-hud-panels`
 - **Goal:** Full HUD, panels with Why?, While-you-were-away and settings.
 - **Points:** 25 (19, then ADR 0043: US-081 3 → 5 for *Why?* on every number, US-082 4 → 6 for the founder, money-and-loans, market and mandi panels, US-084 1 → 3 for text size and the iOS plugin). Order: US-184, US-081, US-082, US-080, US-083, US-084, US-087; US-087 is cut first if time runs short
@@ -315,13 +315,13 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
-| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | Built, device run pending |
-| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | Built, device run pending |
-| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | Built, device run pending |
-| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Built, device run pending |
-| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | Built, device run pending |
-| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | Built, device run pending |
+| US-080 | HUD | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
+| US-081 | Why? breakdowns | [F08.2](features/F08.2-hud-and-panels.md) | 5 | Must | Done |
+| US-082 | Panels | [F08.2](features/F08.2-hud-and-panels.md) | 6 | Must | Done |
+| US-083 | While you were away | [F08.2](features/F08.2-hud-and-panels.md) | 2 | Must | Done |
+| US-084 | Settings | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
+| US-087 | Feedback sounds | [F08.5](features/F08.5-basic-feedback-sounds.md) | 2 | Could | Done |
+| US-184 | Hourly weather spells, per-weather persistence (ADR 0042) | [F01.3](features/F01.3-weather-and-forecast.md) | 4 | Should | Done |
 
 **Sprint end checklist**
 
@@ -345,6 +345,8 @@
 5. Net worth checked: no error. 9 acres at today's price are 10,55,664 of a new town's 11,50,735. Money and loans now shows "Of that, your land" under it.
 6. Text size Small 80% / Normal / Large 125% (150% removed).
 
+**Device run 2 (2026-10-20): checks 29–34 (the ADR 0044 changes) all pass.** Back button, borrow return, repay all, *Why?* only from its ?, net worth's land row, silent taps.
+
 **Retro (Claude):**
 - *Went well:* a coverage test over every row made "every number has a *Why?*" checkable instead of a promise; it found the job-post and garden rows nobody had listed. Pricing Collect all's leftovers on a copy of the town made the prompt exact with no new rules.
 - *To improve:* editing any script while the Editor is playing reloads the domain and breaks the session: batch the fixes, stop, recompile, play. Captures can be a frame stale: capture twice. A card built inside a click handler misses its first touch: open it on the next UI tick (now done for *Why?*).
@@ -353,33 +355,50 @@
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 
-- **Status:** Planned
-- **Branch:** `sprint/08-onboarding-hamlet` (or the branch the session assigns)
+- **Status:** Device run passed 2026-10-21; three findings fixed (ADR 0046), re-check pending (checks 33–36). Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
+- **Branch:** `sprint/08-onboarding-hamlet`
 - **Goal:** Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks.
 - **Points:** 21
-- **Specs for the owner to review:** —
-- **Device build:** Yes: release candidate
+- **Specs for the owner to review:** spec 009 §3.2, §7, §8, §10 (the ADR 0045 amendment; re-approved)
+- **Device build:** Yes: a feature-complete Development build (ADR 0045 §5; the release candidate is Sprint 9's US-095)
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | To do |
-| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | To do |
-| US-091 | Guided-once triggers | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | To do |
-| US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | To do |
-| US-093 | Era unlock check | [F09.3](features/F09.3-hamlet-unlock.md) | 3 | Must | To do |
-| US-094 | Hamlet celebration | [F09.3](features/F09.3-hamlet-unlock.md) | 2 | Must | To do |
-| US-098 | Phase 1 bots and checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | To do |
+| US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | Done |
+| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Device run passed; sale-nudge fix to re-check |
+| US-091 | Guided-once triggers | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
+| US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
+| US-093 | Era unlock check | [F09.3](features/F09.3-hamlet-unlock.md) | 3 | Must | Done |
+| US-094 | Hamlet celebration | [F09.3](features/F09.3-hamlet-unlock.md) | 2 | Must | Done |
+| US-098 | Phase 1 bots and checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Done |
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s08-onboarding-hamlet.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
 
-**Review (owner's device results):** —
+**Done this sprint (Claude):**
+- **Sprint 7 closed** (checks 29–34 passed). **Planning review** (ADR 0045, spec 009 re-approved): nudges and the tour, the long crop on any acre, the `comeBack` ask with the card as fallback, AC-11 to AC-16, the Phase 1 health checks with measured thresholds, a feature-complete Development build.
+- **US-093:** `content/eras.json`, `EraState`, `EraRules` (after each field harvest and season close), `EraProgress` and `EraUnlocked`; save schema 3. The onboarding and era content load with the people content, so the frozen golden content has neither and **the golden hashes are unchanged**. `GateTests.HamletPace`: 100 of 100 seeds unlock, median day 5.4 (target 7 ± 2).
+- **US-098:** the cautious saver, random and recovering bots; `NeverStuck` (credit refused: 1,000 of 1,000 profitable by season 2), `RecoverableBankruptcy` (84 of 84 foreclosed towns profitable the next season; the Hamlet's conditions again in a median of 8 days, max 9.6), `ExactLedger`, `BoundedPrices` (rail 0.000%). Median season farm profit 26,048, inside spec 003 §9's band: nothing tuned.
+- **US-089 to US-092, US-094 (`Sim.View`):** `Guide` (steps, chapters once in priority order, nudges, the tour), `Letter.Page` and `Letter.List`, `Hints.Season` from content, `ProgressSheet` with its *Why?*, the notification card as the fallback. **Unity:** the letter page, the nudge pill, the gold arrow, Menu → Dadi's letter, Becoming a Hamlet, the warm light and banner.
+- **Editor tour with touch** (captures `docs/art/s08-*.png`) found and fixed: "Welcome back" over no away card (trigger `awayCard`), the first-basket and trader pages before their moment (`pageAfter`), the footer wrapping beside three buttons, the pill over the arrow (now bottom centre), the arrow over the ready marker, Show me when reading again, "ready at", the season titles, a Sprint 7 "work work".
+- **Carry-over:** Blender icons for the letter, the Menu (a *bahi-khata* ledger), the alerts (a bell) and the mandi trolley.
+- 264 `Sim.Core` and 69 `Sim.View` tests pass. Development build: Unity build succeeded (the developer panel, the golden files, the new content).
 
-**Retro:** —
+**Review (owner's device results, 2026-10-21):** every check passed; the first session (checks 1 to 12) took 10 minutes (target 15–20 ± 5). Three findings, fixed the same day (**ADR 0046**; spec 008 §3.9 and AC-8, spec 009 §10, the GDD):
+1. A letter page dimmed only the safe area, not the whole screen. Every veil now reaches past the safe area (`UiKit.Veil`): cards, letter pages, *Why?*, the away card, the developer panel.
+2. The away card and "Welcome back" came after an hour away: the house eats every day, so something always "happened". The owner asked for the card only at the 72 h cap; on the recommendation, the card now needs **8 hours away** or the cap (`awayCardMinHours` in `content/ui.json`), so a day or two away still gets its summary.
+3. After **Away cap**, "Open the Store and sell to the trader" stayed with the store bouncing and nothing to sell (the house had eaten the inherited grain). The sale nudge now shows only while the trader would buy something. Also: the developer panel opens above the nudge, and its new **Away +1 hour** tests the threshold.
+- Verified in the Editor with touch: the veil past a simulated inset (`docs/art/s08-letter-veil-full-screen.png`), no card after an hour away, the card after a day. Re-check on the phone: checks 33–36.
+
+**Retro (Claude):**
+- *Went well:* gating the onboarding content on the people content kept the goldens untouched with no special case. Measuring each health check before fixing its threshold gave thresholds that are realistic and still fail on a regression. The bot that follows the highlights made the first session testable end to end.
+- *To improve (device review):* the Editor has no notch, so a veil inside the safe area looked right there; check overlays with a simulated inset. A step goal that the world can make impossible (the store emptied by the house) needs its nudge to check that it's still possible.
+- *To improve:* the spec's step pages mixed "before" and "after" texts; only playing them showed it. Read each page against the moment it opens when a spec gives texts. Editing any file Unity watches during play mode reloads the domain (the sim's sources included): stop first, always.
+- *Carry over:* save migrations from the Sprint 9 playtest build (ADR 0041 §2); alert dismissals if playtesters ask; the guide's memory of events is per launch (spec 009 §10 notes) if playtesters hit it.
 
 ## Sprint 9 · 21–27 Dec 2026 · Phase 1
 

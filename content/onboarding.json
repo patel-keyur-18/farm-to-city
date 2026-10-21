@@ -1,0 +1,35 @@
+{
+  "steps": [
+    { "id": "welcome",   "goal": { "kind": "chapterClosed" },                                             "chapter": "welcome" },
+    { "id": "garden",    "goal": { "kind": "bedGrowing" },                          "highlight": "bed:1",   "chapter": "garden" },
+    { "id": "household", "goal": { "kind": "sheetVisited", "sheet": "Founder" },    "highlight": "hut",     "chapter": "household" },
+    { "id": "firstPick", "goal": { "kind": "event", "events": ["GardenPicked"] },   "highlight": "readyBed", "chapter": "firstPick", "pageAfter": true,
+      "tour": ["store", "field:28", "founder"] },
+    { "id": "firstSale", "goal": { "kind": "event", "events": ["SoldToTrader", "MarketSales", "MandiTripReturned"] }, "highlight": "store", "chapter": "firstSale", "pageAfter": true },
+    { "id": "longCrop",  "goal": { "kind": "cropSown", "minGrowthHours": 12 },      "highlight": "tile:20", "chapter": "longCrop" },
+    { "id": "comeBack",  "goal": { "kind": "chapterClosed" },                                             "chapter": "comeBack" }
+  ],
+  "chapters": [
+    { "id": "welcome",           "triggers": [{ "kind": "step" }] },
+    { "id": "garden",            "triggers": [{ "kind": "step" }], "action": "bed:1" },
+    { "id": "household",         "triggers": [{ "kind": "step" }], "action": "founder" },
+    { "id": "firstPick",         "triggers": [{ "kind": "step" }], "action": "store" },
+    { "id": "firstSale",         "triggers": [{ "kind": "step" }], "action": "store" },
+    { "id": "longCrop",          "triggers": [{ "kind": "step" }], "action": "field:20" },
+    { "id": "comeBack",          "triggers": [{ "kind": "step" }] },
+    { "id": "firstReturn",       "triggers": [{ "kind": "awayCard" }] },
+    { "id": "firstFieldHarvest", "triggers": [{ "kind": "event", "events": ["CropHarvested"] }] },
+    { "id": "pest",              "triggers": [{ "kind": "event", "events": ["PestWarning"] }], "action": "alerts" },
+    { "id": "sellOrStore",       "triggers": [{ "kind": "storeAbovePercent", "percent": 90 }, { "kind": "traderFull" }], "action": "store" },
+    { "id": "seasonReport",      "triggers": [{ "kind": "event", "events": ["SeasonClosed"] }], "action": "report" },
+    { "id": "season.summer",     "triggers": [{ "kind": "seasonStart", "season": "summer" }] },
+    { "id": "season.monsoon",    "triggers": [{ "kind": "seasonStart", "season": "monsoon" }] },
+    { "id": "season.winter",     "triggers": [{ "kind": "seasonStart", "season": "winter" }], "action": "founder" },
+    { "id": "season.spring",     "triggers": [{ "kind": "seasonStart", "season": "spring" }] },
+    { "id": "labour",            "triggers": [{ "kind": "careBelowForHours", "hours": 1 }], "action": "people" },
+    { "id": "borrowing",         "triggers": [{ "kind": "rejection", "reason": "InsufficientFunds", "commands": ["Sow", "BuildHandHut", "HireDayLabourers", "OfferContract"] },
+                                              { "kind": "cashBelowHutCost", "after": "labour" }], "action": "money" },
+    { "id": "sick",              "triggers": [{ "kind": "event", "events": ["FounderSick"] }], "action": "founder" },
+    { "id": "hamlet",            "triggers": [{ "kind": "event", "events": ["EraUnlocked"] }], "action": "progress" }
+  ]
+}

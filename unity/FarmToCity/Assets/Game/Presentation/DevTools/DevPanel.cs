@@ -37,8 +37,7 @@ namespace Game.Presentation.DevTools
         {
             _host = host;
             _root = new VisualElement();
-            _root.style.position = Position.Absolute;
-            _root.style.left = 0; _root.style.right = 0; _root.style.top = 0; _root.style.bottom = 0;
+            UiKit.Veil(_root);
             _root.style.backgroundColor = new Color(0.1f, 0.07f, 0.04f, 0.78f);
             _root.style.alignItems = Align.Center;
             _root.style.justifyContent = Justify.Center;
@@ -66,6 +65,7 @@ namespace Game.Presentation.DevTools
                 Btn("+1 day", () => host.Advance(86400, AdvanceMode.Live)),
                 Btn("+1 season", () => host.Advance(host.Sim().Clock.SecondsPerSeason, AdvanceMode.Live))));
             scroll.Add(ButtonRow(
+                Btn("Away +1 hour", () => host.Advance(3600, AdvanceMode.Away)),
                 Btn("Away +1 day", () => host.Advance(86400, AdvanceMode.Away)),
                 Btn("Away cap (72 h)", () => host.Advance(host.Sim().Clock.AwayCapSeconds, AdvanceMode.Away))));
             scroll.Add(Section("Snapshot (in memory)"));
@@ -108,6 +108,7 @@ namespace Game.Presentation.DevTools
         {
             _open = true;
             _root.style.display = DisplayStyle.Flex;
+            _root.BringToFront(); // over the nudge pill and anything added after the panel was built
             if (_host.Visibility != null) _host.Visibility(false);
             Refresh();
         }

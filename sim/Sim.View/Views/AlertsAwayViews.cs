@@ -184,6 +184,8 @@ namespace Sim.View.Views
                     case PriceIndexChanged i: if (indexFrom == Fixed.Zero) indexFrom = i.Old; indexTo = i.New; break;
                 }
             }
+            // A short absence is normal play: no card under the threshold (ADR 0046 §2); the HUD, the bell and the toasts cover it.
+            if (!capped && applied < ctx.Ui.AwayCardMinHours * 3600L) return null;
             vm.Title = s.Get(capped ? "away.titleCapped" : "away.titleTime", "time", ctx.Fmt.Duration(applied));
             if (capped) vm.Subtitle = s.Get("away.capped", "hours", ctx.Fmt.Integer(sim.Clock.AwayCapHours));
 
@@ -258,6 +260,8 @@ namespace Sim.View.Views
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
+            // Spec 009.
+            { "EraProgress", Use.StateOnly }, { "EraUnlocked", Use.Away },
         };
     }
 }

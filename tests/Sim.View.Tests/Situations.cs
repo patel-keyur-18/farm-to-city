@@ -117,6 +117,8 @@ namespace Sim.View.Tests
             Tile unowned = sim.State.Land.Tiles.First(t => t.Terrain == Terrain.Farm && !sim.State.Land.Parcels[t.ParcelId].Owned);
             yield return N("land loan", LandLoanSheet.Build(ctx, unowned.Id));
             yield return N("founder", FounderSheet.Build(ctx));
+            yield return N("progress", ProgressSheet.Build(ctx));
+            yield return N("letter", Letter.List(ctx));
             for (int g = 0; g < sim.Config.Game.Market.Goods.Count; g++)
             {
                 if (sim.State.Market.InStore(g) == 0) continue;

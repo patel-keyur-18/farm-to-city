@@ -23,6 +23,7 @@ namespace Sim.Core.Saves
             Offer, Withdraw, SellToTrader, Buy, GoToMandi,
             HireDayLabourers, BuildHandHut, PostJob, Interview, OfferContract, RenewContract, DismissHand,
             SetStandingOrder, ClearStandingOrder,
+            SeeChapter, CompleteStep, SkipFirstSession,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -58,6 +59,9 @@ namespace Sim.Core.Saves
                 case SetLabourSplit c: At(c, Tag.SetLabourSplit); w.WriteInt(c.SharePercent); break;
                 case BuyMedicine c: At(c, Tag.BuyMedicine); break;
                 case SetEatFromStore c: At(c, Tag.SetEatFromStore); w.WriteBool(c.On); break;
+                case SeeChapter c: At(c, Tag.SeeChapter); w.WriteString(c.ChapterId); break;
+                case CompleteStep c: At(c, Tag.CompleteStep); w.WriteString(c.StepId); break;
+                case SkipFirstSession c: At(c, Tag.SkipFirstSession); break;
                 case Offer c:
                     At(c, Tag.Offer); w.WriteString(c.GoodId); w.WriteLong(c.Quantity); w.WriteBool(c.MinPrice.HasValue);
                     if (c.MinPrice.HasValue) w.WriteFixed(c.MinPrice.Value);
@@ -122,6 +126,9 @@ namespace Sim.Core.Saves
                 case Tag.SetDietPlan: return new SetDietPlan(at, r.ReadString());
                 case Tag.SetWorkHours: return new SetWorkHours(at, r.ReadString());
                 case Tag.SetLabourSplit: return new SetLabourSplit(at, r.ReadInt());
+                case Tag.SeeChapter: return new SeeChapter(at, r.ReadString());
+                case Tag.CompleteStep: return new CompleteStep(at, r.ReadString());
+                case Tag.SkipFirstSession: return new SkipFirstSession(at);
                 case Tag.BuyMedicine: return new BuyMedicine(at);
                 case Tag.SetEatFromStore: return new SetEatFromStore(at, r.ReadBool());
                 case Tag.Offer:

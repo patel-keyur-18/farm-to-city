@@ -169,6 +169,9 @@ namespace Sim.Content
                 case "SetWorkHours": Only("option"); return new SetWorkHours(At(), S("option"));
                 case "SetLabourSplit": Only("share"); return new SetLabourSplit(At(), (int)L("share"));
                 case "BuyMedicine": Only(); return new BuyMedicine(At());
+                case "SeeChapter": Only("chapter"); return new SeeChapter(At(), S("chapter"));
+                case "CompleteStep": Only("step"); return new CompleteStep(At(), S("step"));
+                case "SkipFirstSession": Only(); return new SkipFirstSession(At());
                 case "SetEatFromStore": Only("on"); return new SetEatFromStore(At(), Bool(Required(c, path, "on"), path + ".on"));
                 case "Offer":
                     // A minimum price is written exactly as its raw Q31.32 value (prices are rarely short decimals).
@@ -233,6 +236,9 @@ namespace Sim.Content
                 case SetWorkHours x: T("SetWorkHours", x.At); Prop(w, "option", x.OptionId); break;
                 case SetLabourSplit x: T("SetLabourSplit", x.At); N("share", x.SharePercent); break;
                 case BuyMedicine x: T("BuyMedicine", x.At); break;
+                case SeeChapter x: T("SeeChapter", x.At); Prop(w, "chapter", x.ChapterId); break;
+                case CompleteStep x: T("CompleteStep", x.At); Prop(w, "step", x.StepId); break;
+                case SkipFirstSession x: T("SkipFirstSession", x.At); break;
                 case SetEatFromStore x: T("SetEatFromStore", x.At); w.WritePropertyName("on"); w.WriteValue(x.On); break;
                 case Offer x:
                     T("Offer", x.At); Prop(w, "good", x.GoodId); N("quantity", x.Quantity);

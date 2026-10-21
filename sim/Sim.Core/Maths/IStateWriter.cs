@@ -18,6 +18,9 @@ namespace Sim.Core.Maths
         Lender = 12,
         Trait = 13,
         Name = 14,
+        Step = 15,
+        Chapter = 16,
+        Era = 17,
     }
 
     /// <summary>

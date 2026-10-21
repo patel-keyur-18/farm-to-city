@@ -58,7 +58,7 @@ namespace Sim.Core.Saves
             Write(wallUtc, simTime, "away", ",\"requested\":" + requested + ",\"applied\":" + applied + ",\"capped\":" + (capped ? "true" : "false"));
         }
 
-        /// <summary>A milestone the sim's events don't show (the Hamlet unlock, spec 009), once per town.</summary>
+        /// <summary>A milestone by name, once per town (the events below call it; the host may too).</summary>
         public void Milestone(long wallUtc, long simTime, string type)
         {
             if (!Enabled || _reached.Contains(type)) return;
@@ -83,6 +83,7 @@ namespace Sim.Core.Saves
                         break;
                     case LoanTaken _: Milestone(wallUtc, e.SimTime, "firstLoan"); break;
                     case SeasonClosed _: Milestone(wallUtc, e.SimTime, "firstSeasonClose"); break;
+                    case EraUnlocked u: Milestone(wallUtc, e.SimTime, u.EraId + "Unlocked"); break; // hamletUnlocked (spec 009 §3.6)
                 }
             }
         }

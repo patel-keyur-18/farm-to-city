@@ -21,7 +21,7 @@ namespace Sim.View.Tests
 
             // The Menu: a row per section, each opening its sheet.
             SheetVm menu = MenuSheet.Build(ctx);
-            Assert.That(menu.Lines.Select(l => l.Action.Opens.Value.Kind), Is.EqualTo(new[] { "Store", "Money", "People", "Lands", "Founder", "Settings" }));
+            Assert.That(menu.Lines.Select(l => l.Action.Opens.Value.Kind), Is.EqualTo(new[] { "Store", "Money", "People", "Lands", "Founder", "Letter", "Settings" }));
 
             // Borrowing: amounts between the minimum and the limit, in whole thousands; terms with their total interest.
             for (int i = 0; i < sim.Config.Game.Credit.Lenders.Count; i++)

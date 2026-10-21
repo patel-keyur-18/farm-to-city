@@ -63,6 +63,9 @@ namespace Sim.View.Content
         public int StoreNearlyFullPercent { get; }
         public int AwayRowsMax { get; }
 
+        /// <summary>The While you were away card shows only after at least this long away, or at the cap (ADR 0046 §2).</summary>
+        public int AwayCardMinHours { get; }
+
         /// <summary>A yield factor at or above this percentage reads "good", at or above the fair one "fair", else "poor".</summary>
         public int RatingGoodPercent { get; }
         public int RatingFairPercent { get; }
@@ -78,7 +81,7 @@ namespace Sim.View.Content
 
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
-            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3)
+            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8)
         {
             SkillBands = new List<int>(skillBands ?? new[] { 35, 55, 75 }).AsReadOnly();
             SkillStarPoints = skillStarPoints;
@@ -92,6 +95,7 @@ namespace Sim.View.Content
             SpoilWarningHours = spoilWarningHours;
             StoreNearlyFullPercent = storeNearlyFullPercent;
             AwayRowsMax = awayRowsMax;
+            AwayCardMinHours = awayCardMinHours;
             RatingGoodPercent = ratingGoodPercent;
             RatingFairPercent = ratingFairPercent;
         }

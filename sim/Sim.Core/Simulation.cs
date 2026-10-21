@@ -83,6 +83,12 @@ namespace Sim.Core
                 if (config.Game.Credit != null) state.Credit = new CreditState { Score = config.Game.Credit.Score.StartScore, NoticeAnnounced = true };
                 FounderRules.PayFirstSeason(sim);
                 if (config.Game.People != null) PeopleSystem.Initialise(sim);
+                if (config.Game.Onboarding != null)
+                {
+                    state.Guidance = new Progress.GuidanceState();
+                    state.Era = new Progress.EraState();
+                    state._stepCount = config.Game.Onboarding.Steps.Count;
+                }
             }
 
             // The first passes are at the next boundary strictly after the start time.

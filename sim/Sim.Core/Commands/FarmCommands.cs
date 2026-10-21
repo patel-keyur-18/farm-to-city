@@ -114,6 +114,7 @@ namespace Sim.Core.Commands
             farm.Crops.Remove(c);
             LandSystem.SetOccupied(sim, TileId, false);
             sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, grams, c.Breakdown));
+            Progress.EraRules.OnHarvest(sim, TileId, c.Breakdown.Care);
             return CommandResult.Ok;
         }
     }

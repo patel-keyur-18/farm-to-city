@@ -42,6 +42,18 @@ namespace Game.Presentation.Ui
             e.style.paddingLeft = e.style.paddingRight = h;
         }
 
+        /// <summary>
+        /// A veil that dims the whole screen though it sits in the safe area (owner, Sprint 8 device run): it reaches past every edge
+        /// by more than any inset, and pads back by the same, so what it centres stays centred in the safe area.
+        /// </summary>
+        public static void Veil(VisualElement e)
+        {
+            const float bleed = 400f;
+            e.style.position = Position.Absolute;
+            e.style.left = e.style.right = e.style.top = e.style.bottom = -bleed;
+            e.style.paddingLeft = e.style.paddingRight = e.style.paddingTop = e.style.paddingBottom = bleed;
+        }
+
         public static Label Text(string text, float size, Color colour, Font font = null, bool outline = false)
         {
             var l = new Label(text);

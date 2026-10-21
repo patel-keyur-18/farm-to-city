@@ -44,40 +44,40 @@
 | Feature | Title | Epic | Phase | Spec | Status | Stories | Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [F00.1](features/F00.1-repository-build-and-ci.md) | Repository, build and CI | E00 | 0 | ADR 0018, 0020, 0026 | Done | US-001–US-004 | 7 |
-| [F00.2](features/F00.2-phase-1-feature-specs.md) | Phase 1 feature specs | E00 | 0 | GDD, ADR 0019 | In progress | US-005–US-012 | 24 |
-| [F00.3](features/F00.3-economy-model.md) | Economy model | E00 | 0 | GDD Balancing, ADR 0008, 0016 | Backlog | US-013–US-016 | 14 |
-| [F00.4](features/F00.4-unity-project-and-bootstrap.md) | Unity project and bootstrap | E00 | 0 | ADR 0017, 0018, 0026 | Backlog | US-017–US-020 | 7 |
-| [F00.5](features/F00.5-performance-spike.md) | Performance spike | E00 | 0 | GDD performance budget, ADR 0026 | Backlog | US-021–US-023 | 9 |
-| [F00.6](features/F00.6-art-style-check.md) | Art style check | E00 | 0 | ADR 0007, 0017 | Backlog | US-024–US-024 | 2 |
+| [F00.2](features/F00.2-phase-1-feature-specs.md) | Phase 1 feature specs | E00 | 0 | GDD, ADR 0019 | Done | US-005–US-012 | 24 |
+| [F00.3](features/F00.3-economy-model.md) | Economy model | E00 | 0 | GDD Balancing, ADR 0008, 0016 | Done | US-013–US-016 | 14 |
+| [F00.4](features/F00.4-unity-project-and-bootstrap.md) | Unity project and bootstrap | E00 | 0 | ADR 0017, 0018, 0026 | Done | US-017–US-020 | 7 |
+| [F00.5](features/F00.5-performance-spike.md) | Performance spike | E00 | 0 | GDD performance budget, ADR 0026 | Done | US-021–US-023 | 9 |
+| [F00.6](features/F00.6-art-style-check.md) | Art style check | E00 | 0 | ADR 0007, 0017 | Done | US-024–US-024 | 2 |
 | [F01.1](features/F01.1-sim-foundations.md) | Sim foundations | E01 | 1 | Spec 001 §3.1 | Done | US-025–US-028 | 9 |
 | [F01.2](features/F01.2-calendar-and-scheduler.md) | Calendar and scheduler | E01 | 1 | Spec 001 §3.2–3.3 | Done | US-029–US-031 | 10 |
-| [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Done | US-032–US-033 | 6 |
+| [F01.3](features/F01.3-weather-and-forecast.md) | Weather and forecast | E01 | 1 | Spec 001 §3.5–3.6 | Done | US-032–US-033, US-184 | 10 |
 | [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Done | US-034–US-035 | 4 |
 | [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Done | US-036–US-037 | 2 |
 | [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | [Spec 002](../specs/002-land-and-soil.md) | Done | US-038–US-041 | 10 |
-| [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-042–US-046, US-177 | 20 |
-| [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-047–US-049 | 7 |
-| [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Ready | US-050–US-053 | 11 |
-| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-054–US-056, US-178–US-181 | 17 |
-| [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Ready | US-057–US-058 | 4 |
-| [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Ready | US-059–US-062 | 14 |
-| [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Backlog | US-063–US-065 | 9 |
+| [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-042–US-046, US-177 | 20 |
+| [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-047–US-049 | 7 |
+| [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-050–US-053 | 11 |
+| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-054–US-056, US-178–US-181 | 17 |
+| [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-057–US-058 | 4 |
+| [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Done | US-059–US-062 | 14 |
+| [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Done | US-063–US-065 | 9 |
 | [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Done | US-066–US-067 | 5 |
-| [F06.2](features/F06.2-resident-farm-hand.md) | Resident farm hand | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Ready | US-068–US-070 | 9 |
-| [F06.3](features/F06.3-standing-orders.md) | Standing orders | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Ready | US-071–US-072 | 6 |
+| [F06.2](features/F06.2-resident-farm-hand.md) | Resident farm hand | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Done | US-068–US-070 | 9 |
+| [F06.3](features/F06.3-standing-orders.md) | Standing orders | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Done | US-071–US-072 | 6 |
 | [F07.1](features/F07.1-save-system.md) | Save system | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-073–US-075 | 11 |
 | [F07.2](features/F07.2-local-notifications.md) | Local notifications | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-076–US-076 | 3 |
 | [F07.3](features/F07.3-local-play-log.md) | Local play log | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-077–US-077 | 2 |
-| [F08.1](features/F08.1-map-and-field-interaction.md) | Map and field interaction | E08 | 1 | Spec 008 (to write) | Backlog | US-078–US-079 | 8 |
-| [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (approved) | In progress | US-080–US-084, US-182 | 21 |
-| [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (to write) | Backlog | US-085–US-086 | 4 |
-| [F08.5](features/F08.5-basic-feedback-sounds.md) | Basic feedback sounds | E08 | 1 | Spec 008 (to write), ADR 0007 | Backlog | US-087–US-087 | 2 |
-| [F08.4](features/F08.4-developer-panel-unity.md) | Developer panel (Unity) | E08 | 1 | Spec 001 §3.8, ADR 0023 | Backlog | US-088–US-088 | 2 |
-| [F09.1](features/F09.1-first-session.md) | First session | E09 | 1 | Spec 009 (to write) | Backlog | US-089–US-090 | 7 |
-| [F09.2](features/F09.2-letter-chapters.md) | Letter chapters | E09 | 1 | Spec 009 (to write) | Backlog | US-091–US-092 | 6 |
-| [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (to write), GDD eras | Backlog | US-093–US-094 | 5 |
+| [F08.1](features/F08.1-map-and-field-interaction.md) | Map and field interaction | E08 | 1 | Spec 008 (to write) | Done | US-078–US-079 | 8 |
+| [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (approved) | Done | US-080–US-084, US-182 | 21 |
+| [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (to write) | Done | US-085–US-086 | 4 |
+| [F08.5](features/F08.5-basic-feedback-sounds.md) | Basic feedback sounds | E08 | 1 | Spec 008 (approved), ADR 0007 | Done | US-087 | 2 |
+| [F08.4](features/F08.4-developer-panel-unity.md) | Developer panel (Unity) | E08 | 1 | Spec 001 §3.8, ADR 0023 | Done | US-088–US-088 | 2 |
+| [F09.1](features/F09.1-first-session.md) | First session | E09 | 1 | Spec 009 (approved) | Device run passed; sale-nudge fix to re-check | US-089–US-090 | 7 |
+| [F09.2](features/F09.2-letter-chapters.md) | Letter chapters | E09 | 1 | Spec 009 (approved) | Done | US-091–US-092 | 6 |
+| [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (approved), GDD eras | Done | US-093–US-094 | 5 |
 | [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate | Backlog | US-095–US-097 | 8 |
-| [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016 | Backlog | US-098–US-101 | 13 |
+| [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016, 0045 | In progress (US-098 done) | US-098–US-101 | 13 |
 | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | To write at the start of Phase 2–4 | Backlog | US-102–US-104 | 7 |
 | [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | To write at the start of Phase 2 | Backlog | US-105–US-106 | 8 |
 | [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | To write at the start of Phase 2 | Backlog | US-107–US-108 | 8 |

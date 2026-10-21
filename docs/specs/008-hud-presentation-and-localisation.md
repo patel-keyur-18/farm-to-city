@@ -212,7 +212,7 @@ The report opens as a sheet at each `SeasonClosed` (and from Finance). Each line
 | When | On the first live `Sync` after an away advance (`AwayAdvanceCompleted`), as a card over the map |
 | Content | Time away as the title (and "The farm paused after 72 hours" when capped); what became ready; sales by way (market, trader, mandi) with totals; day labour paid; home use; spoilage (store, field, tree) in kg; pest warnings; sick days; hands' work and contracts; season closes (**See the report**); the price index change |
 | Rows | One card with the farm and people rows, grouped by kind, most valuable first, each with a picture, money rows counting up; at most 8 rows, then "and N more" (tap: all) |
-| Shown | Only when something happened (at least one row); a short switch away with nothing to report shows no card (ADR 0043 §8) |
+| Shown | Only when something happened (at least one row) **and** the absence was at least `awayCardMinHours` (8, `content/ui.json`) or hit the cap; a shorter absence shows no card, since the HUD, the bell and the toasts cover it (ADR 0043 §8, ADR 0046 §2) |
 | Collect all | Sends `Harvest`, `PickGarden` and `PickFruit` for every ready thing, nearest to spoiling first, with **StoreOnly**. Whatever doesn't fit stays where it is, and one prompt offers "Sell the rest to the trader: N coins" (the same commands with SellRestToTrader) |
 
 ### 3.10 Alerts
@@ -389,7 +389,7 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 | AC-5 | Each *Why?* source of §3.6 lists exactly the causes of its spec's formula, in words with their effect and no factor, for a known state (the yield example of spec 003 §3.4, labour 7.2 h, potato's price band in Spring, a mandi trip of 1,000 kg, the land example of spec 002 §3.5, net worth, a tree's payback) | `WhyTests.Sources` |
 | AC-6 | The crop-calendar card for tile 20 in Spring gives the §3.7 rows: potato "Harvest about 1,531 kg · Spend 3,850 coins · Sells for about 8,120 coins · Profit about 4,270 coins" (a quarter of the season's 17,060), radish "Profit about 350 coins", wheat greyed "Winter only"; at moisture 38 both rate "fair"; the fertilisers show their effect | `CalendarTests.CropCalendarCard` |
 | AC-7 | The season report view shows every ADR 0032 line with its label and *Why?* key in §3.8's order, its amounts equal the report's, and the home-use and cash-flow notes appear when non-zero | `ReportViewTests.Labels_AndWhy` |
-| AC-8 | *While you were away* built from the events of a 30-hour away advance groups ready things, sales by way, day labour, home use, spoilage, pests, sick days and season closes, with totals equal to the events' sums, and caps rows at 8 | `AwayViewTests.Summary` |
+| AC-8 | *While you were away* built from the events of a 30-hour away advance groups ready things, sales by way, day labour, home use, spoilage, pests, sick days and season closes, with totals equal to the events' sums, and caps rows at 8; the same events after an absence shorter than `awayCardMinHours` (and not capped) bring no card | `AwayViewTests.Summary` |
 | AC-9 | Every domain event type in `Sim.Core` is mapped by `Sim.View`'s event map to a motion, an away row, an alert, or "state only"; a new event type without a mapping fails | `MotionTests.EveryEventMapped` |
 | AC-10 | With reduced motion on, every motion's duration is at most 0.1 s and none bounces or flies | `MotionTests.ReducedMotion` |
 | AC-11 | Collect all with room for everything collects every ready crop, bed and batch (nearest to spoiling first); with a full store it collects what fits and offers the rest to the trader for exactly the floor value | `CollectTests.CollectAll` |
@@ -503,6 +503,11 @@ The owner's device run passed apart from seven points, all settled in ADR 0044:
 4. **Text size** is 80% / 100% / 125% (`PanelSettings.scale` 0.8 / 1.0 / 1.25; replaces note 10's sizes).
 5. **Repaying** works out the amount at the press, so "All of it" closes the loan (`PanelTests.Choices`).
 6. **Net worth** is unchanged (it is mostly land at today's price). Money and loans shows "Of that, your land" under it.
+
+### Sprint 8 device review (2026-10-21, ADR 0046)
+
+1. **Veils** (cards, letter pages, *Why?*, the away card, the developer panel) cover the whole screen, past the safe area (`UiKit.Veil`); what they hold stays centred in the safe area.
+2. ***While you were away*** shows only after `awayCardMinHours` (8) or at the cap (§3.9, AC-8): the house eats every day, so before this almost every return brought a card.
 
 ## 11. Cut first
 

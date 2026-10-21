@@ -95,6 +95,14 @@ namespace Sim.View.Tests
             Assert.That(CollectAll.ReadyCount(sim), Is.GreaterThan(0));
             Assert.That(AwayCard.Build(ctx, new SimEvent[] { new AwayAdvanceCompleted(sim.State.Clock.SimTime, sim.State.Clock.SimTime - 600, sim.State.Clock.SimTime, 600, 600, false) }), Is.Null);
 
+            // A short absence is normal play (ADR 0046 §2): the same news after 7 hours away brings no card; the cap always does.
+            List<SimEvent> shortAway = events.Where(e => !(e is AwayAdvanceCompleted)).ToList();
+            long now = sim.State.Clock.SimTime;
+            shortAway.Add(new AwayAdvanceCompleted(now, now - 7 * Hour, now, 7 * Hour, 7 * Hour, false));
+            Assert.That(AwayCard.Build(ctx, shortAway), Is.Null);
+            shortAway[shortAway.Count - 1] = new AwayAdvanceCompleted(now, now - ctx.Ui.AwayCardMinHours * Hour, now, ctx.Ui.AwayCardMinHours * Hour, ctx.Ui.AwayCardMinHours * Hour, false);
+            Assert.That(AwayCard.Build(ctx, shortAway), Is.Not.Null);
+
             // Nothing happened: no card.
             Assert.That(AwayCard.Build(ViewKit2.Context(ViewKit.NewGame()), new SimEvent[] { new AwayAdvanceCompleted(70, 10, 70, 60, 60, false) }), Is.Null);
         }

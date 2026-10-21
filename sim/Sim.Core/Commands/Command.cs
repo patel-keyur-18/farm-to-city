@@ -79,6 +79,11 @@ namespace Sim.Core.Commands
         LenderDoesNotRestructure,
         LoanSecured,
 
+        // Spec 009 (onboarding)
+        UnknownChapter,
+        UnknownStep,
+        NotCurrentStep,
+
         // Spec 006 (people, ADR 0039)
         NoneAvailable,
         NotQuarters,

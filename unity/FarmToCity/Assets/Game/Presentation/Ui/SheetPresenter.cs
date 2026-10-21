@@ -118,7 +118,10 @@ namespace Game.Presentation.Ui
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
-                case "menu": case "alert": case "cart": return IconBank.Basket;
+                case "menu": return IconBank.Ledger;
+                case "alert": return IconBank.Bell;
+                case "cart": return IconBank.Cart;
+                case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
                 case "compost": case "fertiliser_chemical": case "spray": case "spinach": case "coriander":
@@ -174,9 +177,8 @@ namespace Game.Presentation.Ui
         /// </summary>
         public void Confirm(ConfirmVm vm, Action yes, Action no)
         {
-            var veil = new VisualElement();
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            var veil = new VisualElement { name = "Veil" };
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -202,9 +204,8 @@ namespace Game.Presentation.Ui
         /// <summary>A card over everything (spec 007 §7, ADR 0041): a title, a sentence and its buttons; any button closes it.</summary>
         public void Card(CardVm vm, Action<string> onButton)
         {
-            var veil = new VisualElement();
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            var veil = new VisualElement { name = "Veil" };
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -236,6 +237,72 @@ namespace Game.Presentation.Ui
             _holder.parent.Add(veil);
             card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
             _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
+        /// <summary>True while a card, the away card or a letter page is over the map (the letter waits for it to close).</summary>
+        public bool OverlayOpen
+        {
+            get { VisualElement r = _holder.parent; return r != null && (r.Q("AwayVeil") != null || r.Q("Veil") != null); }
+        }
+
+        /// <summary>
+        /// A page of Dadi's letter (spec 009 §7): over the map like a sheet of paper, the title, the text (scrolls if long), the
+        /// signature, the footer and its buttons; any button closes it.
+        /// </summary>
+        public void Letter(LetterVm vm, Action<string> onButton)
+        {
+            var veil = new VisualElement { name = "Veil" };
+            UiKit.Veil(veil);
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement page = UiKit.Panel(18);
+            page.name = "LetterPage";
+            page.style.backgroundColor = new Color(1f, 0.97f, 0.88f, 1f);
+            UiKit.Border(page, 4, UiKit.Sand);
+            UiKit.Padding(page, 26, 44);
+            page.style.width = Length.Percent(62);
+            page.style.maxHeight = Length.Percent(92);
+            page.Add(UiKit.Heading1(vm.Title, 50));
+            var scroll = NewScroll();
+            scroll.style.flexShrink = 1;
+            Label text = UiKit.Text(vm.Text, 34, UiKit.Ink, UiKit.Body);
+            text.style.whiteSpace = WhiteSpace.Normal;
+            text.style.marginTop = 8;
+            scroll.Add(text);
+            Label sign = UiKit.Text(vm.Signature, 36, UiKit.Wood, UiKit.Heading);
+            sign.style.unityTextAlign = TextAnchor.MiddleRight;
+            sign.style.marginTop = 12;
+            scroll.Add(sign);
+            page.Add(scroll);
+            Label footer = UiKit.Text(vm.Footer, 24, UiKit.GreyDark, UiKit.Body);
+            footer.style.whiteSpace = WhiteSpace.NoWrap;
+            footer.style.marginTop = 6;
+            page.Add(footer);
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.alignItems = Align.Center;
+            buttons.style.marginTop = 10;
+            var spacer = new VisualElement { pickingMode = PickingMode.Ignore };
+            spacer.style.flexGrow = 1;
+            foreach (CardButton b in vm.Buttons)
+            {
+                ActionLook look = b.Kind == ActionKind.Primary ? ActionLook.Primary : ActionLook.Secondary;
+                string id = b.Id;
+                Button button = UiKit.MakeButton(b.Label, look, () => { veil.RemoveFromHierarchy(); onButton(id); });
+                button.name = "letter:" + id;
+                button.style.flexShrink = 0;
+                // "I'll find my own way" on the left, the page's own buttons on the right.
+                if (id == LetterIds.Skip) buttons.Insert(0, button);
+                else buttons.Add(button);
+            }
+            buttons.Insert(vm.Buttons.Exists(x => x.Id == LetterIds.Skip) ? 1 : 0, spacer);
+            page.Add(buttons);
+            veil.Add(page);
+            _holder.parent.Add(veil);
+            page.style.translate = new Translate(0, 60);
+            page.style.opacity = 0f;
+            _tweens.Run(page, 0.3f, Ease.OutCubic, k => { page.style.translate = new Translate(0, 60 * (1f - k)); page.style.opacity = k; });
         }
 
         public void Close()
@@ -389,8 +456,7 @@ namespace Game.Presentation.Ui
         {
             var veil = new VisualElement();
             veil.name = "WhyVeil";
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.45f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
@@ -475,8 +541,7 @@ namespace Game.Presentation.Ui
         {
             var veil = new VisualElement();
             veil.name = "AwayVeil";
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0; veil.style.right = 0; veil.style.top = 0; veil.style.bottom = 0;
+            UiKit.Veil(veil);
             veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.4f);
             veil.style.justifyContent = Justify.Center;
             veil.style.alignItems = Align.Center;
