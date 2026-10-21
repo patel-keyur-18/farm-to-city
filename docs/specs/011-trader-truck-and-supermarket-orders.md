@@ -4,7 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Storage and selling); Economy (Regional trader); Offline play (notifications)
-- Amends: spec 004 §3.1 (the daily factor), §3.2 (the night pause), §3.3 (capacity resets at 6:00; the truck); spec 006 §3.8 (the hand delivers first, BestCrop); spec 007 §3.5 (a notification kind); spec 003 content (rice and potato times)
+- Amends: spec 004 §3.1 (the daily factor), §3.2 (the night pause), §3.3 (capacity resets at 6:00; the truck); spec 006 §3.8 (the hand delivers first, BestCrop); spec 005 §3.2 (account 1300 Owed by buyers); spec 007 §3.5 (a notification kind); spec 003 content (rice and potato times)
 - Related ADRs: 0054 (the trader's truck), 0055 (supermarket orders, rice and potato in 15 h), 0034 (a glut drains hour by hour), 0037 (the mandi trip), 0048 and 0050 (the hand's crop choice), 0053 (the roads)
 - Depends on specs: 004 (market and store: amended here), 003 (crops: rice and potato times), 006 (the hand's orders: amended here), 007 (notifications), 010 (the roads and the truck stop)
 
@@ -81,7 +81,8 @@ P_regional(good, t) = GoodDef.basePrice × PriceIndex × SeasonalFactor(good, se
 | Amount | `amount = round_down_to(OrderDef.lotKg, BaseSowing(crop) × (OrderDef.sowingsMin + (sowingsMax − sowingsMin) × u))`, where `BaseSowing = seasonYieldPerAcre × cycleShare` (one acre's base harvest, spec 003), `u` a seeded draw, `lotKg` 10 kg, at least one lot | 1–2 sowings |
 | Price | `orderPrice = P_regional(crop, at posting) × (1 + premium)`, `premium = OrderDef.premiumMin + (premiumMax − premiumMin) × u` rounded to 0.01 | 15–30% |
 | Fresh today | The store keeps `freshToday[good]`: grams added by a **harvest** (`StoreAdd` from a crop, by anyone) since the last `arriveHour` pass, reset there. Stock leaves oldest first, so the fresh stock is `min(freshToday, stock not on offer)` | |
-| Delivering | `DeliverOrder(orderId, q)` takes q of fresh stock (§10 G3 for who carries it), pays `Value(q, orderPrice)` at once (Dr Cash, Cr 4000 Crop sales) and lowers what's left of the order. Partial deliveries are allowed. Emits `OrderDelivered` | `q ≤ min(left, fresh stock)` |
+| Delivering | `DeliverOrder(orderId, q)` takes q of fresh stock to the supermarket's collection point at the truck stop (no cost, no labour; a van collects) and lowers what's left of the order. The sale is booked at delivery: Dr 1300 Owed by buyers, Cr 4000 Crop sales, `Value(q, orderPrice)`. Partial deliveries are allowed. Emits `OrderDelivered` | `q ≤ min(left, fresh stock)` |
+| Payment | At the next `arriveHour` pass (6:00) the supermarket pays everything it owes: Dr Cash, Cr 1300. Emits `OrderPaid(amount)`. It never defaults in Phase 2. What is owed counts in net worth as an asset (spec 005 §3.5) |
 | Lapse | At the next `arriveHour` pass whatever is left lapses (emits `OrderLapsed` with the amount left). Delivery closes at the midnight pass (`leaveHour`): from then until 6:00 `DeliverOrder` is rejected with `OrderClosed`. No penalty | |
 | The hand delivers first | When a hand's order harvests a crop that has an open order and his sell rule sells it (SELL TO TRADER or OFFER AT), the fresh harvest goes to the supermarket order first, up to what's left; the rest follows the sell rule. STORE keeps it in store (the player can deliver it). A careless hand delivers first too | |
 | The hand's choice counts the order price | In `FarmRules.BestCrop` (ADR 0048, 0050), for a crop with an open order whose harvest, sown now, would be ready before midnight, the expected harvest is valued at `orderPrice` up to what's left of the order and at the Floor beyond it | |
@@ -107,7 +108,7 @@ Example (Spring, potato at 15 h, index 1.00): `BaseSowing` = 7,000 × 15 ÷ 96 =
 
 ### 3.6 Processing order
 
-At the hourly pass at `arriveHour`, system Market: (0) the daily factors are drawn (§3.1b), (1) the truck arrives (resets), (2) open orders lapse, (3) new orders are drawn, (4) the market clears the hour that just ended (paused, §3.2). At the midnight pass: the truck leaves (if here), delivery closes, then the market clears. Orders are processed in id order.
+At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what it owes, then the daily factors are drawn (§3.1b), (1) the truck arrives (resets), (2) open orders lapse, (3) new orders are drawn, (4) the market clears the hour that just ended (paused, §3.2). At the midnight pass: the truck leaves (if here), delivery closes, then the market clears. Orders are processed in id order.
 
 ## 4. Data
 
@@ -152,6 +153,7 @@ At the hourly pass at `arriveHour`, system Market: (0) the daily factors are dra
 | `OrdersPosted` | `orders` (crop, amount, price) | The posting | Notifications, HUD badge, away card |
 | `OrderDelivered` | `orderId`, `q`, `amount`, `byHand` | A delivery | HUD (coins fly), away card, play log |
 | `OrderLapsed` | `orderId`, `left` | The next posting | Away card |
+| `OrderPaid` | `amount` | The 6:00 payment | HUD (coins fly), away card, play log |
 
 ## 6. Decision card
 
@@ -177,13 +179,15 @@ Orders sheet                                      [×]
 | Only produce harvested today counts               |
 +--------------------------------------------------+
 
-Store sheet, the trader's row:
+Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | Trader's truck · here till midnight · 2,800 kg room   |
 | Trader's truck · back at 6:00                          |
+| Supermarket pays you 13,382 at 6:00 tomorrow   [Why?]  |
 ```
 
 - The truck drives in along the district road and up the farm lane at 6:00, parks at the stop by the labour quarters, and drives off when it leaves. Tapping it opens the Store sheet.
 - *Why?* on the order price: "Regional price 6.80 × 1.20 (supermarket premium 20%)". On the truck's room: per-crop room and the total load left.
+- **Money owed by the supermarket** shows on the Store sheet ("Supermarket pays you 13,382 at 6:00 tomorrow", or "at 6:00" after midnight), on the Orders sheet under the delivered order, and on the Money sheet as a row of net worth. Its *Why?*: "Delivered today: potato 1,640 kg × 8.16. Booked as a sale today; the cash comes at 6:00".
 - "Sow by HH:MM" is the latest sowing time at which the crop ripens before midnight.
 
 ## 8. Acceptance criteria
@@ -199,7 +203,7 @@ Store sheet, the trader's row:
 | AC-6 | From the midnight pass to the 6:00 pass an offer sells nothing and the trader takes none of it; a glutted price moves towards P_regional in those hours; from the 7:00 pass it sells again | `MarketTests.Stall_PausedAtNight` |
 | AC-7 | At 6:00 two orders are posted for distinct eligible crops (in season, growth ≤ 18 h), with amounts of 1–2 sowings in 10 kg lots and prices 15–30% over P_regional; the draws are the same for the same seed; with no eligible crop none are posted | `OrderTests.Posting` |
 | AC-8 | Only produce harvested since 6:00 counts as fresh; selling or eating older stock first leaves the fresh amount unchanged; `DeliverOrder` beyond the fresh stock is rejected with `InsufficientStock` | `OrderTests.FreshToday` |
-| AC-9 | A delivery pays `Value(q, orderPrice)` at once and balances in the ledger; partial deliveries add up; after midnight `DeliverOrder` is rejected with `OrderClosed`; at the next 6:00 what's left lapses with `OrderLapsed` and no cost | `OrderTests.DeliverAndLapse` |
+| AC-9 | A delivery books `Value(q, orderPrice)` as a sale owed (Dr 1300, Cr 4000) and the ledger balances; cash is unchanged until the next 6:00 pass, which pays it all (Dr Cash, Cr 1300, `OrderPaid`); net worth counts what's owed; partial deliveries add up; after midnight `DeliverOrder` is rejected with `OrderClosed`; at the next 6:00 what's left lapses with `OrderLapsed` and no cost | `OrderTests.DeliverAndLapse` |
 | AC-10 | A hand's SELL TO TRADER or OFFER AT harvest of an ordered crop fills the order first and sends only the rest to the trader or the stall; a STORE harvest stays in store | `OrderTests.HandDeliversFirst` |
 | AC-11 | With an open potato order and potato ripening before midnight, the hand's `BestCrop` values its harvest at the order price up to what's left; after midnight it uses the Floor | `OrderTests.BestCrop_CountsOrderPrice` |
 | AC-12 | Rice and potato take 15 h; their per-sowing harvest and seed scale by `cycleShare`; one acre's season totals equal the 24 h version's; a crop sown before the change keeps its `readyAt` | `CropTests.RiceAndPotato_15h` |
@@ -220,7 +224,7 @@ Store sheet, the trader's row:
 
 - **G1. A daily price.** **Closed (owner, 2026-10-21):** prices move daily at 6:00 by a bounded, mean-reverting factor per produce good (§3.1b).
 - **G2. The price overnight.** **Closed (owner, 2026-10-21):** the valley's market keeps clearing while the stall is closed; the player's supply is 0, so a glut recovers by morning (§3.2).
-- **G3. Who carries an order.** Recommended: the supermarket's van collects from the farm gate when the player delivers; no cost, partial deliveries paid at once.
+- **G3. Who carries an order.** **Closed (owner, 2026-10-21):** delivered to the supermarket's collection point at the truck stop (no cost, a van collects), partial deliveries allowed, booked as a sale owed at delivery and paid at 6:00 the next morning; the Store sheet says "Supermarket pays you X at 6:00 tomorrow" (§3.3, §7).
 - **G4. Which goods can be ordered.** Recommended: field crops only (no fruit, no garden greens).
 - **G5. The hand's sales overnight.** His SELL TO TRADER harvests while the truck is away go to the store. Recommended: at 6:00 he sells to the truck what his orders stored that way overnight.
 - **G6. The first session and the first week.** A first session played between midnight and 6:00 can't make its first sale. When do the truck's hours and the orders start?
