@@ -76,9 +76,17 @@ namespace Sim.Core.Farm
                 fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good)), fertGrams);
         }
 
+        /// <summary>What sowing one cycle would buy now: certified seed not in the store, and fertiliser not in the store (spec 003 §3.2).</summary>
+        public static long SowingCost(Simulation sim, CropDef crop, SeedSource seed, FertiliserDef fert)
+        {
+            long seedCost = seed == SeedSource.Certified ? Store.ShortfallCost(sim, crop.SeedGood, CycleGrams(sim.Clock, crop, crop.SeedPerAcrePerSeason)) : 0;
+            return seedCost + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, CycleGrams(sim.Clock, crop, fert.KgPerAcrePerSeason)));
+        }
+
         /// <summary>
-        /// The hand's pick (ADR 0048 §1): the crop sowable this season with the highest expected profit per season on the tile,
-        /// profit ÷ cycleShare, compared by cross-multiplying growth times. Ties go to the earlier crop; −1 if none is in season.
+        /// The hand's pick (ADR 0048 §1, ADR 0050): of the crops sowable this season whose seed and fertiliser he can pay for now,
+        /// the one with the highest expected profit per season on the tile, profit ÷ cycleShare, compared by cross-multiplying
+        /// growth times. Ties go to the earlier crop; −1 if none is in season and affordable.
         /// </summary>
         public static int BestCrop(Simulation sim, Tile tile, FertiliserDef fert)
         {
@@ -89,7 +97,7 @@ namespace Sim.Core.Farm
             for (int i = 0; i < farm.Crops.Count; i++)
             {
                 CropDef c = farm.Crops[i];
-                if (!c.SowSeasons[season]) continue;
+                if (!c.SowSeasons[season] || !sim.State.Ledger.CanAfford(SowingCost(sim, c, SeedSource.Certified, fert))) continue;
                 long profit = Estimate(sim, tile, c, fert).Profit;
                 if (best >= 0 && (BigInteger)profit * bestGrowth <= (BigInteger)bestProfit * c.GrowthSeconds) continue;
                 best = i;

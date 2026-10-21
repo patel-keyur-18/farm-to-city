@@ -119,6 +119,39 @@ namespace Sim.Core.Tests
             Assert.That((farm.Crops[c20.Def].Id, c20.Seed), Is.EqualTo((expected, SeedSource.Certified)));
         }
 
+        // Spec 006 AC-26 (ADR 0050): with the inherited seed potato used up and little cash, the hand doesn't sit idle waiting for
+        // potato seed he can't pay for: he sows the best crop he can pay for now, and waits only when nothing is affordable.
+        [Test]
+        public void NeverIdleWhileACropIsAffordable()
+        {
+            Simulation sim = Start(NoInflation((f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j));
+            Hand h = QuietHand(sim);
+            Definitions.FarmDefs farm = sim.Config.Game.Farm;
+            int seedPotato = farm.Crops[farm.IndexOfCrop("potato")].SeedGood;
+            Market.Store.Take(sim, seedPotato, sim.State.Market.InStore(seedPotato));
+            CashTo(sim, 3_000 * Coin);
+            Definitions.FertiliserDef none = farm.Fertilisers[farm.IndexOfFertiliser("none")];
+            Assert.That(sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, farm.Crops[farm.IndexOfCrop("potato")], SeedSource.Certified, none)), Is.False, "potato seed is out of reach");
+
+            sim.DrainEvents();
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(19, "potato", SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.DrainEvents().OfType<OrderWaiting>(), Is.Empty, "nobody waits");
+            foreach (int tile in new[] { HomeTile, 19 })
+            {
+                Crop c = sim.State.Farm.CropOn(tile);
+                Assert.That(c, Is.Not.Null, "tile " + tile + " sown at once");
+                Assert.That(sim.State.Ledger.Cash, Is.GreaterThanOrEqualTo(0));
+                Assert.That(farm.Crops[c.Def].Id, Is.Not.EqualTo("potato").And.Not.EqualTo("wheat"));
+            }
+
+            // With no cash at all and no seed in the store, he waits and says why.
+            CashTo(sim, 0);
+            foreach (var g in sim.Config.Game.Farm.Crops) Market.Store.Take(sim, g.SeedGood, sim.State.Market.InStore(g.SeedGood));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(20, OrderSpec.HandChooses, SeedSource.Certified, "none", SellRule.Store)));
+            Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, 20).Waiting, Is.EqualTo(OrderWait.InsufficientFunds));
+        }
+
         // ADR 0040: a new order starts at once; one action per hand per sim hour.
         [Test]
         public void StartsAtOnce_OneActionAnHour_PlayerWins()
@@ -230,6 +263,8 @@ namespace Sim.Core.Tests
             Simulation sim = Start(NoPests());
             Hand h = SteadyHand(sim);
             CashTo(sim, 0);
+            // No seed in the store either: with seed at hand he would sow it (ADR 0050).
+            foreach (Definitions.CropDef c in sim.Config.Game.Farm.Crops) Market.Store.Take(sim, c.SeedGood, sim.State.Market.InStore(c.SeedGood));
             long liabilities = sim.State.Ledger.Balance(Account.MoneylenderLoans) + sim.State.Ledger.Balance(Account.BankLoans);
             sim.DrainEvents();
             Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, KeepWheat()));

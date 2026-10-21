@@ -73,7 +73,11 @@ namespace Sim.Core.People
             int pick = CropToSow(sim, o);
             if (pick < 0)
             {
-                Wait(sim, o, OrderWait.OutOfSeason);
+                // Nothing he can sow: out of season, or no crop whose seed he can pay for (orders never borrow, ADR 0009).
+                bool anyInSeason = false;
+                int season = (int)Calendar.SeasonAt(t, sim.Clock);
+                foreach (CropDef d in defs.Farm.Crops) anyInSeason |= d.SowSeasons[season];
+                Wait(sim, o, anyInSeason ? OrderWait.InsufficientFunds : OrderWait.OutOfSeason);
                 return false;
             }
             CropDef crop = defs.Farm.Crops[pick];
@@ -92,14 +96,23 @@ namespace Sim.Core.People
         }
 
         /// <summary>
-        /// What the hand sows (ADR 0048 §1): the order's crop while it is in season; otherwise, or when the choice is his (crop −1),
-        /// the in-season crop with the best expected profit per season on this field.
+        /// What the hand sows (ADR 0048 §1, ADR 0050): the order's crop while it is in season and its seed can be paid for now;
+        /// otherwise, or when the choice is his (crop −1), the in-season crop he can pay for with the best expected profit per
+        /// season on this field. Never idle while any crop can be sown.
         /// </summary>
         internal static int CropToSow(Simulation sim, StandingOrder o)
         {
             FarmDefs farm = sim.Config.Game.Farm;
-            if (o.Crop >= 0 && farm.Crops[o.Crop].SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return o.Crop;
-            return FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)o.Target], farm.Fertilisers[o.Fertiliser]);
+            FertiliserDef fert = farm.Fertilisers[o.Fertiliser];
+            if (o.Crop >= 0)
+            {
+                CropDef own = farm.Crops[o.Crop];
+                bool seed = o.Seed != SeedSource.Saved
+                    || (sim.State.Market.InStore(own.OutputGood) >= FarmRules.CycleGrams(sim.Clock, own, own.SeedPerAcrePerSeason) && sim.State.Farm.SavedSeedAgeOf(o.Crop) != null);
+                if (seed && own.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]
+                    && sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, own, o.Seed, fert))) return o.Crop;
+            }
+            return FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)o.Target], fert);
         }
 
         private static bool Tree(Simulation sim, Hand h, StandingOrder o)
