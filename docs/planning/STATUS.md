@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 8 (onboarding, the letter, the Hamlet unlock, Phase 1 bots): planning review done (ADR 0045), coding next after the owner's go. Sprint 7 done (PR #12 merged; device runs 1 and 2 passed) |
+| Sprint | Sprint 8 (onboarding, the letter, the Hamlet unlock, Phase 1 bots): built, 21 of 21 points; device run pending. Sprint 7 done (PR #12 merged) |
 | Branch with latest work | `sprint/08-onboarding-hamlet` (from `main`, which has Sprint 7 / PR #12) |
-| Last updated | 2026-10-20 |
+| Last updated | 2026-10-21 |
 
 ## Done so far
 
@@ -115,14 +115,21 @@
   - **Unity:** the HUD (weather run, tap / hold on time, cash and store, Menu, People, the ! alerts), the **?** chips and row taps, the *Why?* card, every panel's route, the away card, the report at a live close, the sell-the-rest card, Settings (`PanelSettings.scale` for text, PlayerPrefs), `Motion/Sounds.cs`, `Plugins/iOS/FarmToCityNative.mm` with `Game.Services.NativeFeel`; the developer panel lost its format, motion and loan buttons. Captures `docs/art/s07-*.png`.
   - **Verified in the Editor with touch:** every new sheet and card, text at 125% and 150%, the Sprint 6 save refused and kept, a plain tap on the time card (no developer panel), the sell-the-rest card (+608 coins exactly). Fixed during the tour: the hold timer of the time card, the *Why?* card's first tap, the next loan payment (projected to the close), subsistence explained not offered, the bank loan only for buyable land, an away card with nothing new, row alignment. **Development build:** Unity build succeeded; Xcode unsigned compile in the pull request.
 
+- **Sprint 8 (branch `sprint/08-onboarding-hamlet`): 21 of 21 points built; device run pending.**
+  - **Planning review (2026-10-20):** 5 gaps decided with the owner, **ADR 0045** (spec 009 §3.2, §7, §8, §10 amended and re-approved; spec 007 §10; the GDD; CLAUDE.md): a nudge pill per first-session step and the tour during the garden wait; the long crop on any acre; `comeBack` asks (Yes, nudge me / Not now; never at night) with the plain card as the fallback; AC-11 to AC-16; the Phase 1 health checks with thresholds measured, then set realistically; Sprint 8's build a feature-complete Development build.
+  - **Sim (US-093, US-098):** `content/eras.json` and `content/onboarding.json` (loaded with the people content, so the frozen golden content has neither and **the golden hashes are unchanged**); `Sim.Core.Progress`: `GuidanceState`, `EraState`, `EraRules` (after each field harvest and season close), `EraProgress`, `EraUnlocked`; `SeeChapter`, `CompleteStep`, `SkipFirstSession`; save schema 3 (Sprint 7 saves refused and kept). Balancer: `CautiousSaverBot`, `RandomBot`, `RecoveringBot`; `GateTests` `HamletPace` (median day 5.4), `Phase1_StressBots` (cautious 1.002 ×, random 0.908 ×), `NeverStuck` (credit refused: 1,000 of 1,000 by season 2), `RecoverableBankruptcy` (84 of 84; the Hamlet again in a median of 8 days), `ExactLedger`, `BoundedPrices` (rail 0.000%). Median season farm profit 26,048, inside spec 003 §9's band: not tuned. 264 tests.
+  - **`Sim.View` (69 tests):** `Guide` (steps, chapters once in priority order, nudges, the tour, the triggers), `Letter.Page`, `Letter.List`, `Letter.MissingStrings`, `Hints.Season`, `ProgressSheet` and its *Why?*, `NotifyAsk.Moment(letterWillAsk)`.
+  - **Unity:** `GameRoot.Guide` (observe, steps, a page when nothing else is on screen, the nudge pill, the gold arrow `MapPresenter.Guide`, the Hamlet's warm light and banner), `SheetPresenter.Letter`, Menu → Dadi's letter, Becoming a Hamlet; Blender icons for the letter, the Menu (a ledger), the alerts (a bell) and the mandi trolley. Captures `docs/art/s08-*.png`.
+  - **Verified in the Editor with touch:** the whole first session from the refused Sprint 7 town to "a good first day" (both the ask and the notifications-on page), reading pages again, the progress sheet, the Hamlet banner and page, the new icons. Fixed during the tour (spec 009 §10 implementation notes): `firstReturn` follows the away card; the first-basket and trader pages after their moment; the page footer on its own line; the pill at the bottom centre; the arrow above the ready marker; Show me when reading again; "ready at"; the season titles; the founder sheet's "work work". **Development build:** Unity build succeeded (developer panel, goldens, new content); Xcode unsigned compile in the pull request.
+
 ## In progress
 
-Sprint 8: planning review done (ADR 0045, 5 gaps; spec 009 amended and re-approved). Coding waits for the owner's go.
+None: Sprint 8 is built; the owner runs the device checklist and merges.
 
 ## Next up
 
-1. **Claude:** Sprint 8 test-first, in order: US-093 (the era check, `Sim.Core`), US-091 and US-090's state (`Guidance`, `SeeChapter`, `CompleteStep`, `SkipFirstSession`; save schema 3; goldens re-pinned), US-098 (bots and checks, thresholds measured first), then `Sim.View` (triggers, steps, nudges, hints, the letter sheet, progress) and Unity (letter sheet, highlights, nudge pill, celebration). Carry-overs: the letter's ask (US-090.T3); farm profit reported against spec 003 §9; Blender icons for the Menu, alerts and trolley if time allows; alert dismissals deferred to Sprint 9.
-2. **Owner:** give the go for coding.
+1. **Owner:** a Development build (delete `unity/FarmToCity/Builds/iOS` first; `--options '["Development"]'`), run `docs/test-checklists/s08-onboarding-hamlet.md`, report, merge the pull request.
+2. **Claude:** fix anything the device run finds; then Sprint 9 (US-095 release candidate: full regression, frame time, a Release build; save migrations from that build on, ADR 0041 §2; US-096 playtest week; US-097 tune and decide). Sprint 9's planning review first.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -130,7 +137,7 @@ Sprint 8: planning review done (ADR 0045, 5 gaps; spec 009 amended and re-approv
 | --- | --- |
 | Sprint 6 | Done (device runs passed, PR #11 merged) |
 | Sprint 7 | Done (device runs 1 and 2 passed, PR #12 merged) |
-| Sprint 8 | Answer the planning review; run the release-candidate checklist; merge the pull request |
+| Sprint 8 | ~~Answer the planning review~~ (done); run the device checklist; merge the pull request |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
 
@@ -141,6 +148,7 @@ None. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 find
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
 - **Unity Editor quirks:** to test touch in the Editor, remove the mouse device, add a `Touchscreen`, set `InputSystem.settings.editorInputBehaviorInPlayMode = AllDeviceInputAlwaysGoesToGameView`, and queue `TouchState` events from `InputSystem.onBeforeUpdate` (dynamic updates only); the Game view maps touch y to the UI with an offset, so aim UI taps by the event's logged panel position. Removing the mouse lasts until the Editor restarts. The Editor pauses the game when it loses focus (set `Application.runInBackground = true` through `unity command eval` to drive and capture play mode); editing sim sources while playing reloads the domain and nulls `GameRoot`'s fields (stop and play again). **Touch in the Editor is scripted** (Sprint 5): `unity command eval --code 'return Game.Editor.TouchDriver.Setup();'`, then `TouchDriver.TapElement("People")` (scrolls the element into view, then taps), `TouchDriver.Tap(x, y)` and `TouchDriver.Drag(...)` in camera pixels (the Game view's toolbar makes `Screen.height` taller than the panel; `ScreenOf` aims by the panel's height). **Fast enter-play-mode is on** (no domain reload): static caches survive between play sessions, so anything holding runtime-made Unity objects must check `== null` (the sprite banks do). `DebugAdvance` only takes 1 h, 1 day, a season or the away cap; check its result in scripts. A UI element built inside a click handler may not get touch clicks: open it on the next UI tick (`schedule.Execute`).
+- **Sprint 8 Editor notes:** `capture_game_view --save_path` is relative to `Assets/` (a `Temp/cap/x.png` lands in `Assets/Temp/cap/`): copy the captures to `docs/art/` and delete `Assets/Temp` and `Assets/Temp.meta` before committing. `unity command build` now needs `--confirm true`. Editing a C# file Unity compiles (`Assets/` or `sim/`) during play mode reloads the domain and loses the session: stop play first. JSON content edits don't reload (they're read at the next launch).
 - `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID, and now `enableFrameTimingStats: 1`, set by the build step each build). Leave it uncommitted.
 
 ## Half-done work

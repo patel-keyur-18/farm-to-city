@@ -16,7 +16,7 @@
 | S5 | 23–29 Nov 2026 | 1 | People: day labourers, the resident hand and standing orders, with their UI. | 21 | — | Yes |
 | S6 | 30 Nov – 6 Dec 2026 | 1 | Saves, notifications and the play log; regulars; every sprite, the ground, icons and walk cycles rendered in Blender (ADR 0041). | 26 | — | Yes |
 | S7 | 7–13 Dec 2026 | 1 | Full HUD, panels with Why?, While-you-were-away and settings; hourly weather spells (ADR 0042). | 19 | — | Yes |
-| S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | — | Yes: release candidate |
+| S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | Spec 009 amendment (ADR 0045) | Yes: feature-complete Development build |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10+ | From 28 Dec 2026 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
 
@@ -355,7 +355,7 @@
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 
-- **Status:** In progress. Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
+- **Status:** Built (21 of 21 points); device run pending. Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
 - **Branch:** `sprint/08-onboarding-hamlet`
 - **Goal:** Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks.
 - **Points:** 21
@@ -374,14 +374,26 @@
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025)
-- [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025); the UI is verified in the Editor with touch (mouse removed), the device run is the owner's
+- [x] Test checklist written in `docs/test-checklists/` (`s08-onboarding-hamlet.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; owner merges to `main`
+
+**Done this sprint (Claude):**
+- **Sprint 7 closed** (checks 29–34 passed). **Planning review** (ADR 0045, spec 009 re-approved): nudges and the tour, the long crop on any acre, the `comeBack` ask with the card as fallback, AC-11 to AC-16, the Phase 1 health checks with measured thresholds, a feature-complete Development build.
+- **US-093:** `content/eras.json`, `EraState`, `EraRules` (after each field harvest and season close), `EraProgress` and `EraUnlocked`; save schema 3. The onboarding and era content load with the people content, so the frozen golden content has neither and **the golden hashes are unchanged**. `GateTests.HamletPace`: 100 of 100 seeds unlock, median day 5.4 (target 7 ± 2).
+- **US-098:** the cautious saver, random and recovering bots; `NeverStuck` (credit refused: 1,000 of 1,000 profitable by season 2), `RecoverableBankruptcy` (84 of 84 foreclosed towns profitable the next season; the Hamlet's conditions again in a median of 8 days, max 9.6), `ExactLedger`, `BoundedPrices` (rail 0.000%). Median season farm profit 26,048, inside spec 003 §9's band: nothing tuned.
+- **US-089 to US-092, US-094 (`Sim.View`):** `Guide` (steps, chapters once in priority order, nudges, the tour), `Letter.Page` and `Letter.List`, `Hints.Season` from content, `ProgressSheet` with its *Why?*, the notification card as the fallback. **Unity:** the letter page, the nudge pill, the gold arrow, Menu → Dadi's letter, Becoming a Hamlet, the warm light and banner.
+- **Editor tour with touch** (captures `docs/art/s08-*.png`) found and fixed: "Welcome back" over no away card (trigger `awayCard`), the first-basket and trader pages before their moment (`pageAfter`), the footer wrapping beside three buttons, the pill over the arrow (now bottom centre), the arrow over the ready marker, Show me when reading again, "ready at", the season titles, a Sprint 7 "work work".
+- **Carry-over:** Blender icons for the letter, the Menu (a *bahi-khata* ledger), the alerts (a bell) and the mandi trolley.
+- 264 `Sim.Core` and 69 `Sim.View` tests pass. Development build: Unity build succeeded (the developer panel, the golden files, the new content).
 
 **Review (owner's device results):** —
 
-**Retro:** —
+**Retro (Claude):**
+- *Went well:* gating the onboarding content on the people content kept the goldens untouched with no special case. Measuring each health check before fixing its threshold gave thresholds that are realistic and still fail on a regression. The bot that follows the highlights made the first session testable end to end.
+- *To improve:* the spec's step pages mixed "before" and "after" texts; only playing them showed it. Read each page against the moment it opens when a spec gives texts. Editing any file Unity watches during play mode reloads the domain (the sim's sources included): stop first, always.
+- *Carry over:* save migrations from the Sprint 9 playtest build (ADR 0041 §2); alert dismissals if playtesters ask; the guide's memory of events is per launch (spec 009 §10 notes) if playtesters hit it.
 
 ## Sprint 9 · 21–27 Dec 2026 · Phase 1
 
