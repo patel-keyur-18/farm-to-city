@@ -228,9 +228,9 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | AC-12 | Rice and potato take 15 h; their per-sowing harvest and seed scale by `cycleShare`; one acre's season totals equal the 24 h version's; a crop sown before the change keeps its `readyAt` | `CropTests.RiceAndPotato_15h` |
 | AC-13 | The notification planner adds one `OrdersPosted` item at 6:00, moved to 07:00 by quiet hours, with the crops' names and no amount | `NotificationTests.Plan_OrdersPosted` |
 | AC-14 | A schema-4 save loads at schema 5 with `truckHere` by its hour, `truckLoadToday` = the sum of its trader counts, no orders and no fresh stock; it advances a day and round-trips | `MigrationTests.Schema5_TruckAndOrders` |
+| AC-15 | A year with the bot under the new rules gives the same hash in one chunk or many; the golden replays on frozen content are unchanged | `TruckTests.ChunkingInvariance`, `ReplayTests.*` |
 | AC-16 | In a new game started at 2:00, selling the first garden basket to the trader succeeds; after the first-sale step the same sale at 2:00 is rejected with `TraderAway` | `TruckTests.FirstSale_AnyHour` |
 | AC-17 | No orders are posted before the first session's last step is done; the first `arriveHour` pass after it posts them and triggers `firstOrders` once; the first `TraderAway` triggers `truckAway` once; `comeBack` reads "tonight" or "tomorrow" by the ready date | `OrderTests.StartAfterFirstSession`, `FirstSessionTests.TruckAndOrdersChapters` |
-| AC-15 | A year with the bot under the new rules gives the same hash in one chunk or many; the golden replays on frozen content are unchanged | `TruckTests.ChunkingInvariance`, `ReplayTests.*` |
 
 ## 9. Balancing hooks
 
