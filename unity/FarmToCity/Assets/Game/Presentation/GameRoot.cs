@@ -133,7 +133,7 @@ namespace Game.Presentation
             _map = MapPresenter.Create(transform, _tweens, _ui);
             _map.Refresh(_mapVm, false);
             _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
-            _input.Focus(3.5f, 2.5f); // the inherited parcels
+            _input.Focus(_mapVm.HomeX, _mapVm.HomeY); // the yard (spec 010 §3.5)
 
             _sounds = new Sounds(gameObject);
             ApplyLookAndSound();

@@ -14,6 +14,7 @@ namespace Game.Presentation.Map
     public sealed class MapInput : MonoBehaviour
     {
         private const float DragStartPixels = 14f, TapSeconds = 0.4f;
+        private const float OpeningHalfHeight = 1.4f; // world units: about 4 × 3 acres on the phone
 
         private Camera _camera;
         private MapPresenter _map;
@@ -58,11 +59,13 @@ namespace Game.Presentation.Map
             Apply();
         }
 
-        /// <summary>Starts on the inherited land: the middle of its 4 × 2 acres.</summary>
+        /// <summary>
+        /// Centres a tile (the yard at the start) at the zoom Phase 1 opened at: the farm and the yard fill the view (spec 010 §3.5).
+        /// </summary>
         public void Focus(float tileX, float tileY)
         {
             Vector2 c = new Vector2((tileX - tileY) * _map.Grid.HalfWidth, -(tileX + tileY) * _map.Grid.HalfHeight);
-            _view.FocusWorld(c.x, c.y, _view.MaxHalfHeight * 0.62f);
+            _view.FocusWorld(c.x, c.y, OpeningHalfHeight);
             Apply();
         }
 

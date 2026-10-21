@@ -288,18 +288,18 @@ namespace Sim.View.Views
         }
 
         /// <summary>
-        /// What a neighbour grows this season (spec 010 §3.7), stable per parcel: Winter wheat or potato, the Monsoon rice (sandy
-        /// land lies fallow), Summer lentils or fallow, Spring potato or radish.
+        /// What a neighbour grows this season (spec 010 §3.7), stable per parcel, null for fallow: Spring potato, radish or fallow;
+        /// the dry Summer mostly fallow, some lentils; the Monsoon mostly rice (sandy land and a third lie fallow); Winter wheat or potato.
         /// </summary>
         public static string NeighbourCrop(string soil, int parcel, int season)
         {
-            bool first = (parcel * 7 + season * 3) % 2 == 0;
+            int k = ((parcel * 7 + season * 3) % 3 + 3) % 3;
             switch (season)
             {
-                case 0: return first ? "potato" : "radish";
-                case 1: return first ? "lentils" : null;
-                case 2: return soil == "sandy" ? null : "rice";
-                default: return first ? "wheat" : "potato";
+                case 0: return k == 0 ? "potato" : k == 1 ? "radish" : null;
+                case 1: return k == 0 ? "lentils" : null;
+                case 2: return soil == "sandy" || k == 2 ? null : "rice";
+                default: return k == 1 ? "potato" : "wheat";
             }
         }
 

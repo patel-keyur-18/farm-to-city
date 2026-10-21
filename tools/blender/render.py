@@ -1493,6 +1493,303 @@ for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "b
 SPRITES.update(ICONS)
 
 
+# ---------------------------------------------------------------- the village and the valley (spec 010, ADR 0052, 0053)
+
+ROAD, ROAD_RUT, VERGE = 0xC9A574, 0xB08A5A, 0x7FA843
+LIME, LIME_SHADE = 0xF2EBDC, 0xD8CDB8
+SAFFRON = 0xE8892A
+
+
+def model_road(links):
+    """A road acre: a grass verge, a dirt road from the middle to each linked edge (1 = +x, 2 = -x, 4 = +y, 8 = -y), wheel ruts."""
+    o = ground_block("road", GRASS, GRASS_EDGE)
+    b = Batch("road")
+    dirt, rut = toon("road", ROAD), toon("rut", ROAD_RUT)
+    half = 0.5 + SEAM
+    w = 0.40
+    b.box(dirt, (w, w, 0.004), Matrix.Translation((0, 0, 0.003)))
+    for bit, (dx, dy) in ((1, (1, 0)), (2, (-1, 0)), (4, (0, 1)), (8, (0, -1))):
+        if not links & bit:
+            continue
+        length = half
+        cx, cy = dx * length / 2, dy * length / 2
+        size = (length, w, 0.004) if dx else (w, length, 0.004)
+        b.box(dirt, size, Matrix.Translation((cx, cy, 0.003)))
+        for k in (-0.09, 0.09):
+            rs = (length, 0.035, 0.002) if dx else (0.035, length, 0.002)
+            b.box(rut, rs, Matrix.Translation((cx + (0 if dx else k), cy + (k if dx else 0), 0.0055)))
+    # A ditch line and a couple of verge stones along one side.
+    stones = toon("vergeStone", 0xC9C2B4)
+    for i, (x, y) in enumerate(((0.36, 0.36), (-0.36, -0.36), (0.36, -0.36))):
+        b.sphere(stones, 0.02, Matrix.Translation((x, y, 0.008)), scale=(1.2, 1, 0.6), segs=8, rings=5)
+    return o + b.objects()
+
+
+def model_flat(kind):
+    """An edge tile past the map: a flat top with no sides, so it fades into the meadow behind it (spec 010 §3.6)."""
+    top = {"grass": GRASS, "water": WATER_TOP, "soil": SOIL_GROOVE, "earth": EARTH, "road": GRASS}[kind]
+    s = 1.0 + SEAM
+    o = [box("flat" + kind, (s, s, 0.004), (0, 0, -0.002), toon("flat" + kind, top), outline=False)]
+    if kind == "water":
+        b = Batch("ripples")
+        ripple = toon("ripple", 0xB5E0EA)
+        for i, (x, y) in enumerate(((-0.25, -0.2), (0.15, 0.1), (0.3, -0.3), (-0.1, 0.3))):
+            b.box(ripple, (0.16, 0.018, 0.002), Matrix.Translation((x, y, 0.001)))
+        o += b.objects()
+    if kind == "soil":
+        b = Batch("ridges")
+        soil_ridges(b, top_z=0.0)
+        o += b.objects()
+    if kind == "road":
+        b = Batch("flatRoad")
+        b.box(toon("road", ROAD), (s, 0.40, 0.004), Matrix.Translation((0, 0, 0.001)))
+        for k in (-0.09, 0.09):
+            b.box(toon("rut", ROAD_RUT), (s, 0.035, 0.002), Matrix.Translation((0, k, 0.0035)))
+        o += b.objects()
+    return o
+
+
+def model_bank(variant):
+    """The river bank (row 0): grass with reeds along the river side; variant 1 has the stone washing steps (a ghat)."""
+    o = ground_block("bank", 0x93BC55, GRASS_EDGE)
+    b = Batch("reeds")
+    reed, tip = toon("reed", 0x6E9A3A), toon("reedTip", 0xA8874A)
+    import random
+    rnd = random.Random(11 + variant)
+    for i in range(26):
+        x, y = rnd.uniform(-0.45, 0.45), rnd.uniform(-0.48, -0.30)
+        h = rnd.uniform(0.07, 0.13)
+        b.cone(reed, 0.008, 0.002, h, at(x, y, 0.0, tilt=rnd.uniform(0, 0.25), tilt_dir=rnd.uniform(0, math.tau)), segs=4)
+        if i % 3 == 0:
+            b.sphere(tip, 0.009, Matrix.Translation((x, y, h)), scale=(0.7, 0.7, 1.6), segs=6, rings=4)
+    o += b.objects()
+    if variant == 1:
+        st = toon("ghat", STONE)
+        for i in range(3):
+            o.append(box("step%d" % i, (0.34, 0.08, 0.02), (0.05, -0.30 - i * 0.07, 0.01 - i * 0.012), st, bevel=0.004))
+    return o
+
+
+def model_commons():
+    """The grazing commons: shorter, yellower grass, worn paths and a few dung pats where village animals graze."""
+    o = ground_block("commons", 0xA3BF5A, 0x93AE4E)
+    b = Batch("commons")
+    path, pat, tuft = toon("path", 0xC2A878), toon("pat", 0x6B4A2E), toon("dryTuft", 0x8FAE45)
+    b.box(path, (0.9, 0.06, 0.003), at(0, 0.05, 0.002, rot_z=math.radians(25)))
+    for x, y in ((0.2, -0.2), (-0.25, 0.25), (0.3, 0.3)):
+        b.sphere(pat, 0.018, Matrix.Translation((x, y, 0.004)), scale=(1.3, 1, 0.35), segs=8, rings=4)
+    import random
+    rnd = random.Random(5)
+    for i in range(14):
+        b.cone(tuft, 0.02, 0.0, 0.035, Matrix.Translation((rnd.uniform(-0.45, 0.45), rnd.uniform(-0.45, 0.45), 0)), segs=5)
+    return o + b.objects()
+
+
+def walls(name, w, d, h, mat, z=0.04):
+    return box(name, (w, d, h), (0, 0, z + h / 2), mat)
+
+
+def model_house(variant):
+    """A village house: variant 0 a mud house with a terracotta tile roof, variant 1 a lime-plastered flat roof with a parapet."""
+    o = [box("plinth", (0.42, 0.32, 0.04), (0, 0, 0.02), toon("plinth", PLINTH), bevel=0.006)]
+    if variant == 0:
+        o.append(walls("walls", 0.36, 0.26, 0.16, toon("mud", MUD)))
+        o.append(gable_roof("roof", 0.36, 0.26, 0.10, 0.20, toon("tile", TILE), overhang=0.04))
+    else:
+        o.append(walls("walls", 0.36, 0.26, 0.18, toon("lime", LIME)))
+        o.append(box("parapet", (0.37, 0.27, 0.03), (0, 0, 0.235), toon("limeShade", LIME_SHADE)))
+        o.append(box("water_tank", (0.07, 0.07, 0.06), (0.1, 0.06, 0.28), toon("tank", 0x3A3A3A)))
+    o.append(box("door", (0.07, 0.012, 0.11), (0.06, -0.131, 0.095), toon("door", (DOOR, 0x8C3E3E)[variant])))
+    o.append(box("window", (0.06, 0.012, 0.05), (-0.09, -0.131, 0.13), toon("wood_dark", WOOD_DARK)))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def shop(name, wall_hex, board_hex, awning_hex):
+    """A one-room village shop: walls, a flat roof, a signboard over the open front and a cloth awning."""
+    o = [box("plinth", (0.40, 0.30, 0.04), (0, 0, 0.02), toon("plinth", PLINTH), bevel=0.006),
+         walls("walls", 0.34, 0.24, 0.17, toon(name + "wall", wall_hex)),
+         box("roof", (0.36, 0.26, 0.02), (0, 0, 0.22), toon("limeShade", LIME_SHADE)),
+         box("front", (0.22, 0.012, 0.11), (0.0, -0.121, 0.095), toon("shopDark", 0x4A3424)),
+         box("board", (0.30, 0.014, 0.05), (0, -0.128, 0.19), toon(name + "board", board_hex), bevel=0.003)]
+    aw = toon(name + "awning", awning_hex)
+    o.append(poly_mesh("awning", [(-0.15, -0.125, 0.16), (0.15, -0.125, 0.16), (0.15, -0.21, 0.12), (-0.15, -0.21, 0.12)], [(0, 1, 2, 3)], aw))
+    for x in (-0.14, 0.14):
+        o.append(box("pole%d" % (x > 0), (0.01, 0.01, 0.12), (x, -0.205, 0.06), toon("wood", WOOD)))
+    return o
+
+
+def model_grocery():
+    o = shop("grocery", MUD, 0xF2C94C, 0x2E7DBF)
+    jute = toon("jute", 0xC9A86A)
+    for i, x in enumerate((-0.10, -0.04, 0.02)):
+        o.append(sphere("sack%d" % i, 0.035, (x, -0.17, 0.035), jute, scale=(1, 0.9, 1.2), segs=10, rings=6))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_chemist():
+    o = shop("chemist", LIME, 0xFFFFFF, 0x3F9A5A)
+    green = toon("cross", 0x2F9E55)
+    o.append(box("crossV", (0.012, 0.004, 0.04), (0, -0.137, 0.19), green, outline=False))
+    o.append(box("crossH", (0.04, 0.004, 0.012), (0, -0.137, 0.19), green, outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_dealer():
+    o = shop("dealer", 0xE6D3A8, 0x3F9A5A, 0xD9A93C)
+    sack, bag = toon("fertSack", 0xF5F1E6), toon("seedBag", 0x6E9A3A)
+    for i in range(3):
+        o.append(box("stack%d" % i, (0.12, 0.07, 0.03), (-0.20, -0.08, 0.055 + i * 0.03), sack if i % 2 == 0 else bag, bevel=0.006))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_tea_stall():
+    """A tea stall: a thatched lean-to over a counter, a kettle on a clay stove and a bench."""
+    o = [box("counter", (0.22, 0.10, 0.08), (0, 0.02, 0.04), toon("wood", WOOD)),
+         cylinder("stove", 0.03, 0.035, 0.04, (0.06, 0.02, 0.10), toon("clay", 0xB4572E), segs=10),
+         sphere("kettle", 0.025, (0.06, 0.02, 0.14), toon("brass", 0xD9A93C), scale=(1, 1, 0.8), segs=10, rings=6),
+         box("bench", (0.20, 0.05, 0.015), (0, -0.14, 0.05), toon("wood_dark", WOOD_DARK))]
+    for x in (-0.09, 0.09):
+        o.append(box("benchLeg%d" % (x > 0), (0.012, 0.04, 0.045), (x, -0.14, 0.022), toon("wood_dark", WOOD_DARK), outline=False))
+    for x in (-0.12, 0.12):
+        o.append(box("post%d" % (x > 0), (0.014, 0.014, 0.20), (x, 0.08, 0.10), toon("wood", WOOD)))
+        o.append(box("front%d" % (x > 0), (0.014, 0.014, 0.15), (x, -0.07, 0.075), toon("wood", WOOD)))
+    o.append(poly_mesh("thatch", [(-0.16, 0.11, 0.21), (0.16, 0.11, 0.21), (0.16, -0.11, 0.15), (-0.16, -0.11, 0.15)], [(0, 1, 2, 3)], toon("thatch", THATCH)))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_temple():
+    """A small village temple: a white plinth and sanctum under a curved shikhara, a saffron flag on top."""
+    lime, shade = toon("lime", LIME), toon("limeShade", LIME_SHADE)
+    o = [box("plinth", (0.30, 0.30, 0.05), (0, 0, 0.025), toon("stone", STONE), bevel=0.006),
+         box("sanctum", (0.18, 0.18, 0.14), (0, 0, 0.12), lime),
+         box("door", (0.06, 0.012, 0.09), (0, -0.091, 0.095), toon("templeDoor", 0xB8322A))]
+    for i in range(4):
+        r = 0.10 - i * 0.022
+        o.append(cylinder("tier%d" % i, r, r * 0.85, 0.05, (0, 0, 0.215 + i * 0.045), shade if i % 2 else lime, segs=8))
+    o.append(sphere("kalash", 0.018, (0, 0, 0.40), toon("gold", 0xE6B33A), segs=8, rings=6))
+    o.append(box("flagpole", (0.006, 0.006, 0.12), (0.02, 0, 0.46), toon("wood", WOOD), outline=False))
+    o.append(poly_mesh("flag", [(0.023, 0, 0.52), (0.10, 0, 0.50), (0.023, 0, 0.47)], [(0, 1, 2)], toon("saffron", SAFFRON)))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_council_hall():
+    """The council hall (panchayat bhavan): a flat-roofed hall with a pillared veranda, steps and a flag."""
+    lime, shade = toon("lime", LIME), toon("limeShade", LIME_SHADE)
+    o = [box("plinth", (0.46, 0.34, 0.05), (0, 0, 0.025), toon("stone", STONE), bevel=0.006),
+         walls("walls", 0.40, 0.20, 0.17, lime, z=0.05),
+         box("roof", (0.44, 0.30, 0.025), (0, -0.03, 0.235), shade),
+         box("steps", (0.14, 0.06, 0.025), (0, -0.19, 0.012), toon("stone_dark", STONE_DARK))]
+    for x in (-0.17, -0.06, 0.06, 0.17):
+        o.append(cylinder("pillar%d" % int(x * 100), 0.014, 0.014, 0.17, (x, -0.13, 0.135), lime, segs=8))
+    o.append(box("pole", (0.008, 0.008, 0.16), (0.18, 0.05, 0.33), toon("wood", WOOD), outline=False))
+    for i, hexv in enumerate((0xFF9933, 0xFFFFFF, 0x138808)):
+        o.append(box("band%d" % i, (0.07, 0.003, 0.016), (0.218, 0.05, 0.40 - i * 0.016), toon("flag%d" % i, hexv), outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_school_plot():
+    """The empty school plot: a low brick boundary with a gap for the gate and a board on a post."""
+    brick = toon("brick", 0xB4572E)
+    o = []
+    for x, y, w, d in ((0, 0.30, 0.62, 0.03), (0, -0.30, 0.62, 0.03), (-0.30, 0, 0.03, 0.62), (0.30, 0.15, 0.03, 0.30)):
+        o.append(box("wall%d%d" % (int(x * 10), int(y * 10)), (w, d, 0.04), (x, y, 0.02), brick))
+    o.append(box("post", (0.014, 0.014, 0.16), (0.22, -0.22, 0.08), toon("wood", WOOD)))
+    o.append(box("board", (0.12, 0.010, 0.07), (0.22, -0.23, 0.15), toon("signBoard", 0xF2DFB0), bevel=0.003))
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_banyan():
+    """The banyan with the threshing floor: a huge spreading canopy, aerial roots, a round platform round the trunk."""
+    bark, dark, mid, light = toon("bark", 0x7A4E2E), toon("banyanDark", 0x2E6E33), toon("banyanMid", 0x3C8A3C), toon("banyanLight", 0x5CA84A)
+    o = [cylinder("floor", 0.30, 0.30, 0.03, (0, 0, 0.015), toon("floor", 0xD6BC90), segs=24),
+         cylinder("platform", 0.10, 0.10, 0.06, (0, 0, 0.03), toon("stone", STONE), segs=16),
+         cylinder("trunk", 0.06, 0.045, 0.30, (0, 0, 0.18), bark, segs=10, smooth=True)]
+    for i in range(6):
+        a = i * math.tau / 6
+        o.append(cylinder("root%d" % i, 0.008, 0.008, 0.25, (math.cos(a) * 0.17, math.sin(a) * 0.17, 0.15), bark, segs=5, outline=False))
+    for i, (x, y, z, r) in enumerate(((0, 0, 0.42, 0.24), (0.18, 0.05, 0.38, 0.17), (-0.17, 0.08, 0.38, 0.17), (0.04, -0.18, 0.37, 0.17),
+                                      (-0.08, 0.18, 0.40, 0.16), (0.0, 0.0, 0.55, 0.15))):
+        o.append(sphere("canopy%d" % i, r, (x, y, z), light if z > 0.5 else (dark if i % 2 else mid), scale=(1, 1, 0.7), segs=14, rings=9))
+    return group(o, scale=BUILDING_SCALE / 1.3)
+
+
+def model_pond():
+    """The village pond: an oval of water in a stone rim, steps down on the near side."""
+    o = [cylinder("rim", 0.34, 0.34, 0.02, (0, 0, 0.01), toon("stone", STONE), segs=28),
+         cylinder("water", 0.30, 0.30, 0.01, (0, 0, 0.022), toon("pond", WATER), segs=28, outline=False)]
+    for i in range(2):
+        o.append(box("step%d" % i, (0.14, 0.05, 0.015), (0.0, -0.31 - i * 0.04, 0.012 - i * 0.006), toon("stone_dark", STONE_DARK)))
+    for i, (x, y) in enumerate(((0.1, 0.05), (-0.12, -0.08))):
+        o.append(cylinder("lotus%d" % i, 0.04, 0.04, 0.004, (x, y, 0.029), toon("lotusLeaf", 0x4E9A4A), segs=10, outline=False))
+    o.append(sphere("lotus", 0.018, (0.1, 0.05, 0.04), toon("lotus", 0xF4A6C0), segs=8, rings=5))
+    return o
+
+
+def model_hill(variant):
+    """Hills behind the village (past column 0): a broad grassy mound with rocks and scrub; three sizes."""
+    k = (1.0, 1.4, 1.8)[variant]
+    grass, dry, rock = toon("hill", 0x7FA34A), toon("hillDry", 0x9DB35C), toon("rock", 0xA8A194)
+    o = [sphere("mound", 0.9 * k, (0, 0, 0), grass, scale=(1.0, 0.8, 0.45), segs=20, rings=12),
+         sphere("crest", 0.55 * k, (0.15 * k, 0.1 * k, 0.25 * k), dry, scale=(1.0, 0.8, 0.5), segs=16, rings=10)]
+    b = Batch("hillScrub")
+    bush = toon("hillBush", 0x4E7E34)
+    import random
+    rnd = random.Random(30 + variant)
+    for i in range(9):
+        a = rnd.uniform(0, math.tau)
+        r = rnd.uniform(0.2, 0.7) * k
+        x, y = math.cos(a) * r, math.sin(a) * r * 0.8
+        z = 0.45 * k * max(0.0, 1 - (r / (0.9 * k)) ** 2) ** 0.5
+        b.sphere(bush, 0.06 * k, Matrix.Translation((x, y, z)), scale=(1, 1, 0.8), segs=8, rings=5)
+    for i in range(3):
+        b.sphere(rock, 0.07 * k, Matrix.Translation((rnd.uniform(-0.4, 0.4) * k, rnd.uniform(-0.4, 0.4) * k, 0.25 * k)), scale=(1.3, 1, 0.7), segs=7, rings=5)
+    return o + b.objects(outline_for=(bush,))
+
+
+def model_scrub():
+    """Scrub on the near edge: a cluster of thorny bushes and a lantana patch."""
+    b = Batch("scrub")
+    a_, b_, flower = toon("scrubA", 0x5E8A36), toon("scrubB", 0x7A9A40), toon("lantana", 0xF08A3C)
+    import random
+    rnd = random.Random(21)
+    for i in range(7):
+        x, y = rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3)
+        b.sphere(a_ if i % 2 else b_, rnd.uniform(0.05, 0.08), Matrix.Translation((x, y, 0.04)), scale=(1, 1, 0.75), segs=8, rings=5)
+    for i in range(5):
+        b.sphere(flower, 0.012, Matrix.Translation((rnd.uniform(-0.25, 0.25), rnd.uniform(-0.25, 0.25), 0.09)), segs=6, rings=4)
+    return b.objects(outline_for=(a_, b_))
+
+
+def model_bund(axis):
+    """A field bund (mendh): the raised earth ridge round your own fields, grass on top, one tile edge long along x or y."""
+    b = Batch("bund")
+    earth, top, tuft = toon("bund", 0xB98A55), toon("bundTop", 0x8CB84E), toon("bundTuft", 0x6FA03A)
+    size = (1.0, 0.07, 0.035) if axis == "x" else (0.07, 1.0, 0.035)
+    b.box(earth, size, Matrix.Translation((0, 0, 0.0175)))
+    b.box(top, (size[0] * 0.98, size[1] * 0.7, 0.006), Matrix.Translation((0, 0, 0.036)))
+    for i in range(6):
+        u = -0.42 + i * 0.17
+        x, y = (u, 0) if axis == "x" else (0, u)
+        b.cone(tuft, 0.016, 0.0, 0.03, Matrix.Translation((x, y, 0.035)), segs=5)
+    return b.objects(outline_for=(earth,))
+
+
+SPRITES["bund_x"] = lambda: model_bund("x")
+SPRITES["bund_y"] = lambda: model_bund("y")
+for _m in (3, 12, 11, 4, 8):
+    SPRITES["ground_road_%d" % _m] = (lambda m=_m: (lambda: model_road(m)))()
+for _k in ("grass", "water", "soil", "earth", "road"):
+    SPRITES["edge_" + _k] = (lambda k=_k: (lambda: model_flat(k)))()
+SPRITES.update({
+    "ground_bank_0": lambda: model_bank(0), "ground_bank_1": lambda: model_bank(1), "ground_commons": model_commons,
+    "place_house_0": lambda: model_house(0), "place_house_1": lambda: model_house(1),
+    "place_grocery": model_grocery, "place_chemist": model_chemist, "place_dealer": model_dealer, "place_tea_stall": model_tea_stall,
+    "place_temple": model_temple, "place_council_hall": model_council_hall, "place_school_plot": model_school_plot,
+    "place_banyan": model_banyan, "place_pond": model_pond,
+    "hill_0": lambda: model_hill(0), "hill_1": lambda: model_hill(1), "hill_2": lambda: model_hill(2), "scrub": model_scrub,
+})
+
+
 # ---------------------------------------------------------------- framing and render
 
 def frame_and_render(sc, cam, name, objs):

@@ -128,7 +128,7 @@ namespace Sim.View.Views
             foreach (PlaceDef p in sim.Config.Game.Map.Places) if (p.Tile == tile.Id) kind = p.Kind;
             var vm = new SheetVm { Icon = "place_" + kind, Title = ctx.Strings.Get("place." + kind), Subtitle = ctx.Strings.Get("place." + kind + ".line") };
             if (kind == "chemist")
-                vm.Actions.Add(ActionVm.Checked(ctx, "medicine", ctx.Strings.Get("founder.buyMedicine"),
+                vm.Actions.Add(ActionVm.Checked(ctx, "medicine", ctx.Strings.Get("place.chemist.buy"),
                     ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.MedicineCost)), ActionKind.Primary, at => new BuyMedicine(at)));
             if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
             return vm;

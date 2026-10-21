@@ -98,6 +98,8 @@ namespace Game.Presentation
             _logCount = Sim.State.CommandLog.Entries.Count;
             StartSession(_lastSyncWall);
             if (o.State == null) SaveNow(); // the first save of a new town
+            if (o.MigratedMap) { PlayerPrefs.DeleteKey("camera.x"); PlayerPrefs.DeleteKey("camera.y"); PlayerPrefs.DeleteKey("camera.h"); } // spec 010 §3.4
+            if (o.RoadTake != null) return Cards.LandTaken(_ctx, o.RoadTake);
             if (o.Restored) return Cards.Restored(_ctx, o.SavedAtWallUtc, Info());
             if (o.Error != SaveError.None) return Cards.Unreadable(_ctx, o.Error, o.KeptAs);
             return null; // the first Sync is the away advance, with its card
@@ -333,7 +335,7 @@ namespace Game.Presentation
             _sheet.Close();
             _open = null;
             _selected = Hit.None;
-            if (focus) _input.Focus(3.5f, 2.5f);
+            if (focus) _input.Focus(_mapVm.HomeX, _mapVm.HomeY);
             SaveNow();
             StartSession(WallNow()); // the new town's first session starts here in the play log (ADR 0047 §2)
             Refresh(false);

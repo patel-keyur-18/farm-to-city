@@ -128,12 +128,17 @@ namespace Game.Presentation.Ui
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
+                case "road": return SpriteBank.Rendered("ground_road_3");
+                case "commons": return SpriteBank.Rendered("ground_commons");
+                case "bank": return SpriteBank.Rendered("ground_bank_1");
+                case "place_house": return SpriteBank.Rendered("place_house_0");
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
                 case "potato": case "radish": case "wheat": case "rice": case "lentils": return SpriteBank.Crop(icon, CropStage.Growing3);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
+                    if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);
                     return SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }

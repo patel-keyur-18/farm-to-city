@@ -208,6 +208,15 @@ namespace Sim.View.Views
             return c;
         }
 
+        /// <summary>The farm lane took the old save's acre south of the huts (spec 010 §3.4): what the village paid, once.</summary>
+        public static CardVm LandTaken(ViewContext ctx, Sim.Core.Saves.RoadTake take)
+        {
+            var c = new CardVm { Title = ctx.Strings.Get("card.landTakenTitle"),
+                Text = ctx.Strings.Get("card.landTakenText", "amount", ctx.Fmt.Coins(take.Compensation + take.OnIt - take.LoanRepaid)) };
+            c.Buttons.Add(new CardButton(SettingsIds.Ok, ctx.Strings.Get("card.ok"), ActionKind.Primary));
+            return c;
+        }
+
         /// <summary>The town couldn't be read by this build: kept on the phone, a new town started (ADR 0041 §2).</summary>
         public static CardVm Unreadable(ViewContext ctx, SaveError error, string keptAs)
         {
