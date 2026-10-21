@@ -42,6 +42,9 @@ namespace Game.Services
 
         /// <summary>Removes scheduled and delivered notifications (the player is back).</summary>
         void CancelAll();
+
+        /// <summary>Calls back true once per notification tap that opened the app (the play log's <c>fromNote</c>, ADR 0047 §2).</summary>
+        void OpenedByNote(Action<bool> done);
     }
 
     public static class NotificationServices
@@ -71,6 +74,8 @@ namespace Game.Services
         }
 
         public void CancelAll() { Last.Clear(); }
+
+        public void OpenedByNote(Action<bool> done) { done(false); }
     }
 
 #if UNITY_IOS
@@ -104,9 +109,28 @@ namespace Game.Services
                     Body = n.Body,
                     ThreadIdentifier = n.Thread,
                     ShowInForeground = false,
+                    Data = nowWallUtc + ":" + i, // unique per schedule, so a stale "last responded" isn't counted twice
                     Trigger = new iOSNotificationTimeIntervalTrigger { TimeInterval = TimeSpan.FromSeconds(Math.Max(1, n.WallUtc - nowWallUtc)), Repeats = false },
                 });
             }
+        }
+
+        public void OpenedByNote(Action<bool> done) { _host.StartCoroutine(Opened(done)); }
+
+        private static IEnumerator Opened(Action<bool> done)
+        {
+            QueryLastRespondedNotificationOp op = iOSNotificationCenter.QueryLastRespondedNotification();
+            float until = Time.realtimeSinceStartup + 2f;
+            while (op.State == QueryLastRespondedNotificationState.Pending && Time.realtimeSinceStartup < until) yield return null;
+            iOSNotification n = op.State == QueryLastRespondedNotificationState.HaveRespondedNotification ? op.Notification : null;
+            // iOS keeps the last responded notification across launches: count each one once.
+            bool fresh = n != null && !string.IsNullOrEmpty(n.Data) && n.Data != PlayerPrefs.GetString("note.lastOpened", "");
+            if (fresh)
+            {
+                PlayerPrefs.SetString("note.lastOpened", n.Data);
+                PlayerPrefs.Save();
+            }
+            done(fresh);
         }
 
         public void CancelAll()

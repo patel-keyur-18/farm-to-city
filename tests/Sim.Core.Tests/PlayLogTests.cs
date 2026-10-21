@@ -23,7 +23,7 @@ namespace Sim.Core.Tests
             Simulation sim = NewFarm();
             var log = new PlayLog(Def(), "") { Enabled = true };
             log.NewGame(Wall0, sim.State.Clock.SimTime);
-            log.SessionStart(Wall0, 0, "0.1.0", "iPhone14,5");
+            log.SessionStart(Wall0, 0, "0.1.0", "iPhone14,5", 330, false);
 
             // Sow and harvest radish twice, and sell: firstHarvest and firstSale once each.
             for (int i = 0; i < 2; i++)
@@ -40,7 +40,7 @@ namespace Sim.Core.Tests
             log.Away(Wall0 + 500, sim.State.Clock.SimTime, 7200, 7200, false);
             log.SessionEnd(Wall0 + 600, sim.State.Clock.SimTime, 600);
             Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "hamletUnlocked", "away", "sessionEnd" }));
-            Assert.That(log.Lines[1], Is.EqualTo("{\"t\":" + Wall0 + ",\"sim\":0,\"type\":\"sessionStart\",\"build\":\"0.1.0\",\"device\":\"iPhone14,5\"}"));
+            Assert.That(log.Lines[1], Is.EqualTo("{\"t\":" + Wall0 + ",\"sim\":0,\"type\":\"sessionStart\",\"build\":\"0.1.0\",\"device\":\"iPhone14,5\",\"tz\":330,\"fromNote\":false}"));
 
             // Milestones are once per town, also after the log is read back from its file; a new town starts again.
             var again = new PlayLog(Def(), log.Text) { Enabled = true };
@@ -60,7 +60,7 @@ namespace Sim.Core.Tests
 
             // Off: nothing is written.
             var off = new PlayLog(Def(), "");
-            off.SessionStart(Wall0, 0, "0.1.0", "x");
+            off.SessionStart(Wall0, 0, "0.1.0", "x", 0, false);
             off.NewGame(Wall0, 0);
             Assert.That(off.Text, Is.Empty);
 
@@ -69,6 +69,53 @@ namespace Sim.Core.Tests
             for (int i = 0; i < 1000; i++) small.SessionEnd(Wall0 + i, i, i);
             Assert.That(System.Text.Encoding.UTF8.GetByteCount(small.Text), Is.LessThanOrEqualTo(10_000));
             Assert.That(small.Lines.Last(), Does.Contain("\"sim\":999,"));
+        }
+        // Spec 007 AC-15 (ADR 0047 §2): the time zone and a notification tap on each session; the first session's steps once
+        // per town, then firstSessionDone (skipped or not).
+        [Test]
+        public void PlaytestFields()
+        {
+            SimConfig config = SaveTests.Config();
+            var d = config.Game.Onboarding;
+            Simulation sim = Simulation.NewGame(config, new NewGame(7, Wall0, 9 * Hour));
+            var log = new PlayLog(Def(), "") { Enabled = true };
+            log.NewGame(Wall0, 0);
+            log.SessionStart(Wall0 + 1, 0, "b", "d", -300, true);
+            Assert.That(log.Lines.Last(), Does.EndWith(",\"tz\":-300,\"fromNote\":true}"));
+
+            log.Guidance(Wall0 + 2, 0, sim.State.Guidance, d);
+            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart" }), "no step done yet");
+            long t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new CompleteStep(t, d.Steps[0].Id)).Accepted, Is.True);
+            Assert.That(sim.Execute(new CompleteStep(t, d.Steps[1].Id)).Accepted, Is.True);
+            log.Guidance(Wall0 + 60, t, sim.State.Guidance, d);
+            log.Guidance(Wall0 + 61, t, sim.State.Guidance, d);
+            Assert.That(log.Lines.Skip(2), Is.EqualTo(new[]
+            {
+                "{\"t\":" + (Wall0 + 60) + ",\"sim\":" + t + ",\"type\":\"step\",\"id\":\"" + d.Steps[0].Id + "\"}",
+                "{\"t\":" + (Wall0 + 60) + ",\"sim\":" + t + ",\"type\":\"step\",\"id\":\"" + d.Steps[1].Id + "\"}",
+            }), "each step once");
+
+            // Read back from its file: the steps already logged aren't logged again; a skip ends the first session.
+            var again = new PlayLog(Def(), log.Text) { Enabled = true };
+            Assert.That(sim.Execute(new SkipFirstSession(t)).Accepted, Is.True);
+            again.Guidance(Wall0 + 90, t, sim.State.Guidance, d);
+            again.Guidance(Wall0 + 91, t, sim.State.Guidance, d);
+            Assert.That(again.Lines.Skip(4), Is.EqualTo(new[] { "{\"t\":" + (Wall0 + 90) + ",\"sim\":" + t + ",\"type\":\"firstSessionDone\",\"skipped\":true}" }));
+
+            // A town that finishes every step: each step, then firstSessionDone not skipped; a new town starts again.
+            again.NewGame(Wall0 + 100, 0);
+            Simulation full = Simulation.NewGame(config, new NewGame(8, Wall0, 9 * Hour));
+            foreach (var step in d.Steps) Assert.That(full.Execute(new CompleteStep(full.State.Clock.SimTime, step.Id)).Accepted, Is.True, step.Id);
+            again.Guidance(Wall0 + 200, 0, full.State.Guidance, d);
+            var types = Types(again).Skip(6).ToArray();
+            Assert.That(types.Count(x => x == "step"), Is.EqualTo(d.Steps.Count));
+            Assert.That(again.Lines.Last(), Does.EndWith("\"type\":\"firstSessionDone\",\"skipped\":false}"));
+
+            // Off: nothing.
+            var off = new PlayLog(Def(), "");
+            off.Guidance(Wall0, 0, full.State.Guidance, d);
+            Assert.That(off.Text, Is.Empty);
         }
     }
 }

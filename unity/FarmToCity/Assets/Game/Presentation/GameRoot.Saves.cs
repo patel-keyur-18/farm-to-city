@@ -89,7 +89,6 @@ namespace Game.Presentation
             _saves = new SaveService(SavesFolder, DocumentsFolder, _savesDefs.Save);
             _notes = NotificationServices.ForPlatform(this);
             _playLog = new PlayLog(_savesDefs.PlayLog, File.Exists(PlayLogPath) ? File.ReadAllText(PlayLogPath) : "") { Enabled = PlayLogOn };
-            _notes.CancelAll();
 
             _lastSyncWall = WallNow();
             LoadOutcome o = _saves.Load(_config, _lastSyncWall, UtcOffsetMinutes());
@@ -97,9 +96,7 @@ namespace Game.Presentation
             _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
             _guide = new Guide(); // what happened since launch belongs to the old town
             _logCount = Sim.State.CommandLog.Entries.Count;
-            _sessionStart = _lastSyncWall;
-            _playLog.SessionStart(_lastSyncWall, Sim.State.Clock.SimTime, Application.version + " / sim " + SimInfo.Version, SystemInfo.deviceModel);
-            WritePlayLog();
+            StartSession(_lastSyncWall);
             if (o.State == null) SaveNow(); // the first save of a new town
             if (o.Restored) return Cards.Restored(_ctx, o.SavedAtWallUtc, Info());
             if (o.Error != SaveError.None) return Cards.Unreadable(_ctx, o.Error, o.KeptAs);
@@ -193,13 +190,22 @@ namespace Game.Presentation
             PlayerPrefs.Save();
         }
 
-        private void Returning()
+        private void Returning() { StartSession(WallNow()); }
+
+        /// <summary>A session starts: the play log's line once we know whether a notification tap opened the app, then clear them.</summary>
+        private void StartSession(long wall)
         {
+            _sessionStart = wall;
+            long simTime = Sim.State.Clock.SimTime;
+            _notes.OpenedByNote(fromNote =>
+            {
+                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), fromNote);
+                WritePlayLog();
+            });
             _notes.CancelAll();
-            _sessionStart = WallNow();
-            _playLog.SessionStart(_sessionStart, Sim.State.Clock.SimTime, Application.version + " / sim " + SimInfo.Version, SystemInfo.deviceModel);
-            WritePlayLog();
         }
+
+        private static string BuildName { get { return Application.version + " / sim " + SimInfo.Version; } }
 
         private void RestoreCamera()
         {
@@ -253,7 +259,11 @@ namespace Game.Presentation
                 case SettingsIds.PlayLog:
                     PlayLogOn = !PlayLogOn;
                     _playLog.Enabled = PlayLogOn;
-                    if (PlayLogOn) _playLog.SessionStart(WallNow(), Sim.State.Clock.SimTime, Application.version + " / sim " + SimInfo.Version, SystemInfo.deviceModel);
+                    if (PlayLogOn)
+                    {
+                        _playLog.SessionStart(WallNow(), Sim.State.Clock.SimTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), false);
+                        _playLog.Guidance(WallNow(), Sim.State.Clock.SimTime, Sim.State.Guidance, Sim.Config.Game.Onboarding);
+                    }
                     WritePlayLog();
                     break;
                 case SettingsIds.Export:

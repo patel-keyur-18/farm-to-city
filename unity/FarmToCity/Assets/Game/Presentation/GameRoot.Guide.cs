@@ -31,6 +31,9 @@ namespace Game.Presentation
             if (Sim.State.Guidance == null) return;
             _guide.Observe(Sim, events);
             foreach (Command c in _guide.StepCommands(Sim, Sim.State.Clock.SimTime)) Sim.Execute(c);
+            int lines = _playLog.Lines.Count;
+            _playLog.Guidance(WallNow(), Sim.State.Clock.SimTime, Sim.State.Guidance, Sim.Config.Game.Onboarding);
+            if (_playLog.Lines.Count != lines) WritePlayLog();
             foreach (SimEvent e in events) if (e is EraUnlocked) Celebrate();
             // Next tick: cards and the away card queued this tick go first, and the page waits for them (spec 009 §3.1).
             _safeRoot.schedule.Execute(MaybeOpenLetter);
