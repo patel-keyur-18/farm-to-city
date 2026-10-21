@@ -355,7 +355,7 @@
 
 ## Sprint 8 · 14–20 Dec 2026 · Phase 1
 
-- **Status:** Device run passed 2026-10-21; three findings fixed (ADR 0046), re-check pending (checks 33–36). Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
+- **Status:** Done. Device run passed 2026-10-21; three findings fixed (ADR 0046), re-check passed (checks 33–36, 2026-10-21); PR #13 merged. Planning review 2026-10-20 (ADR 0045: 5 gaps); spec 009 amended and re-approved the same day
 - **Branch:** `sprint/08-onboarding-hamlet`
 - **Goal:** Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks.
 - **Points:** 21
@@ -365,7 +365,7 @@
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | Done |
-| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Device run passed; sale-nudge fix to re-check |
+| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Done |
 | US-091 | Guided-once triggers | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
 | US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
 | US-093 | Era unlock check | [F09.3](features/F09.3-hamlet-unlock.md) | 3 | Must | Done |
@@ -392,7 +392,7 @@
 1. A letter page dimmed only the safe area, not the whole screen. Every veil now reaches past the safe area (`UiKit.Veil`): cards, letter pages, *Why?*, the away card, the developer panel.
 2. The away card and "Welcome back" came after an hour away: the house eats every day, so something always "happened". The owner asked for the card only at the 72 h cap; on the recommendation, the card now needs **8 hours away** or the cap (`awayCardMinHours` in `content/ui.json`), so a day or two away still gets its summary.
 3. After **Away cap**, "Open the Store and sell to the trader" stayed with the store bouncing and nothing to sell (the house had eaten the inherited grain). The sale nudge now shows only while the trader would buy something. Also: the developer panel opens above the nudge, and its new **Away +1 hour** tests the threshold.
-- Verified in the Editor with touch: the veil past a simulated inset (`docs/art/s08-letter-veil-full-screen.png`), no card after an hour away, the card after a day. Re-check on the phone: checks 33–36.
+- Verified in the Editor with touch: the veil past a simulated inset (`docs/art/s08-letter-veil-full-screen.png`), no card after an hour away, the card after a day. Re-check on the phone: checks 33–36 **PASS** (2026-10-21).
 
 **Retro (Claude):**
 - *Went well:* gating the onboarding content on the people content kept the goldens untouched with no special case. Measuring each health check before fixing its threshold gave thresholds that are realistic and still fail on a regression. The bot that follows the highlights made the first session testable end to end.
@@ -400,20 +400,20 @@
 - *To improve:* the spec's step pages mixed "before" and "after" texts; only playing them showed it. Read each page against the moment it opens when a spec gives texts. Editing any file Unity watches during play mode reloads the domain (the sim's sources included): stop first, always.
 - *Carry over:* save migrations from the Sprint 9 playtest build (ADR 0041 §2); alert dismissals if playtesters ask; the guide's memory of events is per launch (spec 009 §10 notes) if playtesters hit it.
 
-## Sprint 9 · 21–27 Dec 2026 · Phase 1
+## Sprint 9 · 21 Dec 2026 – 3 Jan 2027 · Phase 1 (2 weeks, ADR 0047 §6)
 
-- **Status:** Planned
-- **Branch:** `sprint/09-playtest` (or the branch the session assigns)
-- **Goal:** Playtest week, tuning and the Phase 1 gate review.
-- **Points:** 8
-- **Specs for the owner to review:** —
-- **Device build:** Yes: playtest build
-- Gate: testers come back on day 2 and day 3 unprompted (from play logs).
+- **Status:** In progress. Planning review done 2026-10-21 (ADR 0047: 6 gaps); the release candidate built (commit `33afedb`, Development and Release); the owner's Parts A and B, then the playtest week
+- **Branch:** `sprint/09-playtest`
+- **Goal:** Release candidate, the owner's solo playtest week, tuning and the Phase 1 gate review (part A).
+- **Points:** 10
+- **Specs for the owner to review:** — (spec 007 §3.1, §3.6, AC-14, AC-15 and spec 009 §10 amended with ADR 0047)
+- **Device build:** Yes: a Development and a Release build from the release-candidate commit; a tuned Release build only if tuning changes something
+- **Gate (ADR 0047 §5, part A):** A1 a reason to return on at least 4 of days 2–7 (3 by the game, from the diary); A2 at least 2 notification returns, none in quiet hours; A3 the Hamlet on day 5–9; A4 no blocker; A5 the RC passes; A6 CI green. Part B (fresh players) is US-185, later.
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 2 | Must | To do |
-| US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
+| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 4 | Must | Built; device run pending (T4 waits on it) |
+| US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | Play log and diary ready; the week pending |
 | US-097 | Tune and decide | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
 
 **Sprint end checklist**
@@ -422,6 +422,17 @@
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened; owner merges to `main`
+
+**Planning review (2026-10-21, ADR 0047):** the owner is the only playtester (free account, iPhone 13); the play log adds `tz`, `fromNote` and the first-session steps, with a daily diary; migrations from the RC (`minSchema` frozen at 3, a fixture per schema); a Development build for regression and frame time, a Release build for the playtest, and the blocker definition; the gate split into part A (this sprint) and part B (US-185); 2 weeks, 10 points.
+
+**Done this sprint (Claude):**
+- **Sprint 8 closed** (checks 33–36 passed). **Planning review** (ADR 0047).
+- **US-095:** `MigrationTests` on the frozen `saves/schema3.ftc` (spec 007 AC-14); the developer panel's **Measure frame time (20 s)** and frame-timing stats in Development builds; `s09-release-candidate.md` (Part A: 57 rows from s04–s08; Part B: the Release smoke list).
+- **US-096:** the play log's `tz`, `fromNote`, `step` and `firstSessionDone` (spec 007 AC-15), a session line for a new town; Part C, the diary.
+- Verified in the Editor with touch: Play log On → New game → Replace → Continue (the log's `newGame`, `step`, `tz`); the frame-time button, countdown and result.
+- 268 `Sim.Core` and 69 `Sim.View` tests pass. Development and Release Unity builds succeeded from `33afedb`.
+
+**Carry over (from Sprint 8):** the first session's 10 minutes (recorded by the play log, not gated: ADR 0047 §5); alert dismissals and the guide's per-launch memory only if the playtest hits them.
 
 **Review (owner's device results):** —
 

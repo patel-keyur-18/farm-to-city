@@ -48,7 +48,7 @@ payload   := gzip( state section | replay-base section (empty until the first ch
 | What a save holds | Everything the state hash covers (spec 001 to 006: clock, scheduler, jobs, weather, land, ledger, finance, market, farm, credit, people) plus the command log and the replay base. Not saved: where people stand on the map, the open sheet, pending events and the away card; the camera is in the settings file (ADR 0041) |
 | Round trip | `Load(Save(state))` has the same `ComputeHash()`, and both continue identically: every later command gives the same state and the same events |
 | References | A state field that points into content (a crop, a good, a building, a trait) is written as the definition's **id string** and resolved on load, so a build that reorders or adds content still loads older saves. An unknown id fails the load with `UnknownContentId` (a migration must map it) |
-| Versions | `formatVersion` is the container (1). `schemaVersion` starts at 1 and rises whenever the state's fields change; the reader handles every schema from `SaveDef.minSchema` up, filling new fields with their documented defaults (migration in code, one step per version, each with a test). A newer schema than the build knows is refused with `SaveFromNewerVersion`. **Until the Phase 1 playtest build (Sprint 9)** a state change raises `schemaVersion` and `minSchema` together: an older save is refused with `SaveTooOld`, kept as `town.unreadable-<date>.ftc` (never deleted, exportable) and a new town starts with a notice; from the playtest build every state change ships a migration with a test (ADR 0041) |
+| Versions | `formatVersion` is the container (1). `schemaVersion` starts at 1 and rises whenever the state's fields change; the reader handles every schema from `SaveDef.minSchema` up, filling new fields with their documented defaults (migration in code, one step per version, each with a test). A newer schema than the build knows is refused with `SaveFromNewerVersion`. Until the Sprint 9 release candidate a state change raised `schemaVersion` and `minSchema` together (older saves refused with `SaveTooOld`, kept as `town.unreadable-<date>.ftc`; ADR 0041). **From the release candidate (schema 3) on, `minSchema` stays 3** and every state change ships a migration step with a test and a frozen fixture save per schema (ADR 0047 §3, AC-14). `SaveTooOld` remains only for saves below 3 |
 | Header extras | The build (`simVersion`) and a content fingerprint (FNV-1a of the content files), so a save's command log is replayed only on matching content |
 | Checksum | FNV-1a 64 of the compressed payload (the hash spec 001 already uses). A mismatch, a short file or a parse error is `CorruptSave` |
 | Compression | `System.IO.Compression.GZipStream` (in .NET Standard 2.1 and Unity's IL2CPP) at the fastest level |
@@ -110,11 +110,11 @@ plan = NotificationPlanner.Plan(sim, settings, deviceUtcOffset)   pure, in Sim.C
 | Rule | Behaviour |
 | --- | --- |
 | Opt-in | Off by default; a settings switch ("Help the developer: keep a local play log"). Nothing is ever sent anywhere |
-| Entries | One JSON object per line in `playlog.jsonl`: `{ "t": wallUtc, "sim": simTime, "type": ..., ... }`. Types: `sessionStart` (build, device model), `sessionEnd` (seconds played), `away` (seconds away, applied, capped), and milestones, each once per town: `firstHarvest`, `firstGardenPick`, `firstSale`, `firstHire` (day labourer or hand), `firstHand`, `firstLoan`, `firstSeasonClose`, `hamletUnlocked`, and `newGame` |
+| Entries | One JSON object per line in `playlog.jsonl`: `{ "t": wallUtc, "sim": simTime, "type": ..., ... }`. Types: `sessionStart` (build, device model, `tz` the device's UTC offset in minutes, `fromNote` true when opened by tapping a notification; ADR 0047), `step` (`id`: each first-session step once per town, when completed) and `firstSessionDone` (`skipped` true after *I'll find my own way*), `sessionEnd` (seconds played), `away` (seconds away, applied, capped), and milestones, each once per town: `firstHarvest`, `firstGardenPick`, `firstSale`, `firstHire` (day labourer or hand), `firstHand`, `firstLoan`, `firstSeasonClose`, `hamletUnlocked`, and `newGame` |
 | Source | Sessions from the app lifecycle; milestones from sim events in `Game.Presentation` (the sim stays unaware of the log) |
 | Size | Capped at `PlayLogDef.maxBytes` (1 MB): the oldest lines are dropped |
 | Export | Like a save: `FarmToCity-playlog-<date>.jsonl` into Documents (Files app) |
-| Owner's use | Session days and lengths and milestone times show whether testers come back on day 2 and day 3 and reach the Hamlet in about a week (the Phase 1 gate, F10.1) |
+| Owner's use | Session days (local, from `tz`), lengths, notification returns, the first session's length and milestone times judge the Phase 1 gate's part A (ADR 0047 §5) and, later, part B: fresh players back on day 2 and day 3 (US-185) |
 
 ## 4. Data
 
@@ -192,6 +192,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-1 | Property: for 50 seeded states (crops, garden, trees, the founder, the ledger with reports and prepayments, the store, weather), `Read(Write(state))` has the same hash, and running the same 200 random commands on both gives the same hash and the same event lists | `SaveTests.RoundTrip_Property` |
 | AC-2 | Flipping any single byte of a save, or cutting it short, makes `Read` fail with `CorruptSave`; never a wrong state | `SaveTests.Corruption_Detected` |
 | AC-3 | A save written at schema 1 loads in a build at schema 2 with the new field's default; a save from a newer schema is refused with `SaveFromNewerVersion`; a save below `minSchema` is refused with `SaveTooOld` and the store keeps it as `town.unreadable-<date>.ftc` (ADR 0041) | `SaveTests.Schema_MigrateAndRefuseNewer` |
+| AC-14 | Every frozen fixture in `tests/Sim.Core.Tests/saves/` loads with the current content: while its schema is current its hash equals the pinned one; after a migration its plain values are unchanged and new fields hold their defaults; it then advances a game day and round-trips. `SchemaVersion` without a fixture fails; `minSchema` is 3 (ADR 0047 §3) | `MigrationTests.EverySchemaLoads`, `MigrationTests.SchemaHasFixture`, `MigrationTests.MinSchemaFrozen` |
 | AC-4 | A save loads correctly with content whose goods, crops and buildings are listed in a different order; a save naming an id the content lacks fails with `UnknownContentId` | `SaveTests.ContentIds_NotIndices` |
 | AC-5 | 3,600 one-second live Syncs leave one `LiveRun` entry; replaying the compacted log gives exactly the hash of the uncompacted run; a sow, an away Sync and a backwards clock each break the run | `SaveTests.SyncCompaction` |
 | AC-6 | After 10 game years of bot play (spec 003 `FarmBot`) with per-second Syncs, the save is under 200 KB and the log under `maxLogEntries`; with a small cap in test content, a save at the cap checkpoints (replay base = the state, the log empty), the town's hash is unchanged, and replaying base + log reproduces the latest hash | `SaveTests.Size_AndCheckpoint` |
@@ -201,6 +202,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-10 | The planner returns only items within the away cap, grouped within 30 minutes (information within 240), none in quiet hours (moved to 07:00), at most `maxPending` ranked urgent, needs you, information, and nothing when notifications are off; a field with a standing order gives no "ready" item | `NotificationTests.Plan_GroupQuietRank` |
 | AC-13 | The planner's items match the real away advance: for a seeded town with a hand, orders and a loan, every planned item due by time T is among the events of an actual away advance to T, at the same sim time, and the real state is unchanged by planning (ADR 0041) | `NotificationTests.Plan_MatchesRealAbsence` |
 | AC-11 | The play log writes session and milestone lines once each per town, nothing when it is off, and stays under its byte cap | `PlayLogTests.Entries_OnceAndCapped` |
+| AC-15 | `sessionStart` carries `tz` and `fromNote`; each first-session step logs one `step` line per town, and `firstSessionDone` logs once with `skipped` when the player skipped (ADR 0047 §2) | `PlayLogTests.PlaytestFields` |
 | AC-12 | Performance (CI, Release): writing and reading the 10-year save takes under 50 ms each | `PerfTests.Save_WriteRead` (category `Perf`) |
 
 The atomic rename, `OnApplicationPause` and iOS notifications are checked on the device with the Sprint 6 test checklist (`docs/test-checklists/`), since `Game.Services` is Unity code.
@@ -251,3 +253,8 @@ All six were answered in the review with the owner (2026-10-18):
 3. Daily backups (keep hourly ones).
 4. Import (keep export, which also serves bug reports).
 5. Grouping (one notification per item, still within the 64-pending limit).
+
+### Sprint 9 planning review (2026-10-21, ADR 0047)
+
+1. **Migrations from the release candidate:** `minSchema` frozen at 3; a frozen fixture save per schema (a seeded bot town, and the owner's playtest town at the end of the week); `MigrationTests` (AC-14). AC-3's "schema 1 loads at schema 2" part is covered by AC-14 with the first real migration.
+2. **The play log for the playtest:** `tz`, `fromNote`, `step` and `firstSessionDone` (AC-15). Opt-in unchanged; the owner turns it on before **New game**.

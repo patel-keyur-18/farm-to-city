@@ -274,6 +274,10 @@ All six were answered in the review with the owner (2026-10-18), each as recomme
 - The *While you were away* card now needs 8 hours away (spec 008 §3.9), so `firstReturn` comes after the first return of 8 hours or more.
 - The first session took the owner 10 minutes (checks 1 to 12), at the low edge of §9's 15–20 ± 5. Sprint 9's playtest measures it with new players before anything is tuned.
 
+**Sprint 9 planning review (2026-10-21, ADR 0047):**
+
+- The playtest is the owner alone, who knows the steps, so the first session's length is **recorded, not gated**: the play log's `step` lines and `firstSessionDone` (spec 007 §3.6) show where the minutes go. §9's target stays judged by the bot (AC-2); the session is tuned only if the diary names a step that dragged or confused.
+
 ## 11. Cut first
 
 1. The Hamlet celebration vignette (keep the chapter).

@@ -13,7 +13,7 @@ namespace Game.Presentation.DevTools
     /// <summary>
     /// The developer panel (spec 008 §3.14, ADR 0017, 0038): hold the time strip for three seconds. Time travel through
     /// <c>DebugAdvance</c> (+1 hour, +1 day, +1 season, the away cap), an in-memory snapshot and restore, and the golden-replay
-    /// check of ADR 0035. Number format and reduced motion are in Settings, loans in Money and loans (ADR 0043). Compiled out of
+    /// check of ADR 0035, and the frame-time check (ADR 0047 §4). Number format and reduced motion are in Settings, loans in Money and loans (ADR 0043). Compiled out of
     /// release builds: it exists only in development builds and the Editor.
     /// </summary>
     public sealed class DevPanel
@@ -30,7 +30,7 @@ namespace Game.Presentation.DevTools
 
         private readonly VisualElement _root;
         private readonly Host _host;
-        private readonly Label _status, _result;
+        private readonly Label _status, _result, _countdown;
         private bool _open;
 
         public DevPanel(VisualElement parent, Host host)
@@ -54,6 +54,8 @@ namespace Game.Presentation.DevTools
             panel.Add(UiKit.Heading1("Developer panel", 56));
             _status = UiKit.Text("", 30, UiKit.Wood, UiKit.Body);
             panel.Add(_status);
+            _result = UiKit.Text("", 28, UiKit.Ink, UiKit.Body); // under the status, so a result is seen without scrolling
+            panel.Add(_result);
 
             var scroll = new ScrollView(ScrollViewMode.Vertical);
             scroll.verticalScrollerVisibility = ScrollerVisibility.Hidden;
@@ -72,8 +74,18 @@ namespace Game.Presentation.DevTools
             scroll.Add(ButtonRow(Btn("Snapshot", () => host.Snapshot()), Btn("Restore", () => host.Restore())));
             scroll.Add(Section("Determinism (ADR 0035)"));
             scroll.Add(ButtonRow(Btn("Golden replays", RunGoldens)));
-            _result = UiKit.Text("", 28, UiKit.Ink, UiKit.Body);
-            scroll.Add(_result);
+            scroll.Add(Section("Performance (ADR 0047)"));
+            scroll.Add(ButtonRow(Btn("Measure frame time (20 s)", MeasureFrames)));
+
+            _countdown = UiKit.Text("", 30, Color.white, UiKit.Body);
+            _countdown.pickingMode = PickingMode.Ignore;
+            _countdown.style.position = Position.Absolute;
+            _countdown.style.top = 12;
+            _countdown.style.left = 12;
+            _countdown.style.backgroundColor = new Color(0f, 0f, 0f, 0.55f);
+            UiKit.Padding(_countdown, 4, 10);
+            _countdown.style.display = DisplayStyle.None;
+            parent.Add(_countdown);
 
             panel.Add(ButtonRow(Btn("Close", Close, ActionLook.Secondary)));
         }
@@ -126,6 +138,26 @@ namespace Game.Presentation.DevTools
             CalendarDate d = Calendar.From(sim.State.Clock.SimTime, sim.Clock);
             _status.text = "seed " + sim.State.Seed + " · sim time " + sim.State.Clock.SimTime + " s · " + d + " · isAway " + sim.State.Clock.IsAway
                 + (_host.Status != null ? "\n" + _host.Status() : "");
+        }
+
+        /// <summary>Closes the panel, waits 3 s (go to the view), measures 20 s, then opens again with the result.</summary>
+        private void MeasureFrames()
+        {
+            Close();
+            _countdown.style.display = DisplayStyle.Flex;
+            _countdown.BringToFront();
+            IVisualElementScheduledItem tick = _countdown.schedule.Execute(() =>
+            {
+                float left = FrameRecorder.Remaining;
+                _countdown.text = left > 20f ? "Frame time: go to the view (" + Mathf.CeilToInt(left - 20f) + ")" : "Measuring… " + Mathf.CeilToInt(left) + " s";
+            }).Every(250);
+            FrameRecorder.Measure(report =>
+            {
+                tick.Pause();
+                _countdown.style.display = DisplayStyle.None;
+                _result.text = "Frame time\n" + report;
+                Open();
+            });
         }
 
         private void RunGoldens()

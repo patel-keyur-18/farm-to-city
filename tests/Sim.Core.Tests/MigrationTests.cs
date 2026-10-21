@@ -1,0 +1,141 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using NUnit.Framework;
+using Sim.Content;
+using Sim.Core.Commands;
+using Sim.Core.Saves;
+
+namespace Sim.Core.Tests
+{
+    /// <summary>
+    /// Save migrations from the release candidate on (spec 007 AC-14, ADR 0047 §3). Every frozen save in <c>saves/</c> must
+    /// load in every later build: while its schema is current its hash is the pinned one; after a migration its plain facts
+    /// are unchanged. <c>FTC_UPDATE_SAVES=1</c> writes the bot fixture of the current schema and pins the facts of every
+    /// current-schema fixture (a device town dropped in as <c>schemaN-device.ftc</c> included). Never re-pin an older schema.
+    /// </summary>
+    public class MigrationTests
+    {
+        private static bool Update { get { return Environment.GetEnvironmentVariable("FTC_UPDATE_SAVES") == "1"; } }
+
+        private static string Dir { get { return TestContent.TestFile("saves"); } }
+
+        private static int MinSchema { get { return ContentLoader.LoadSaves(TestContent.ReadContent("saves.json")).Save.MinSchema; } }
+
+        private static string BotFixture(int schema) { return Path.Combine(Dir, "schema" + schema + ".ftc"); }
+
+        [Test]
+        public void MinSchemaFrozen()
+        {
+            Assert.That(MinSchema, Is.EqualTo(3),
+                "refusing old saves again needs a new ADR (ADR 0047 §3)");
+        }
+
+        [Test]
+        public void SchemaHasFixture()
+        {
+            if (Update) WriteBotFixture();
+            Assert.That(File.Exists(BotFixture(SaveCodec.SchemaVersion)), Is.True,
+                "schema " + SaveCodec.SchemaVersion + " needs a frozen fixture and a migration step: run with FTC_UPDATE_SAVES=1");
+        }
+
+        [Test]
+        public void EverySchemaLoads()
+        {
+            if (Update) WriteBotFixture();
+            SimConfig config = SaveTests.Config();
+            string[] files = Directory.GetFiles(Dir, "*.ftc").OrderBy(f => f, StringComparer.Ordinal).ToArray();
+            Assert.That(files, Is.Not.Empty);
+            foreach (string file in files)
+            {
+                string name = Path.GetFileName(file);
+                byte[] bytes = File.ReadAllBytes(file);
+                LoadResult r = SaveCodec.Read(bytes, config, MinSchema);
+                Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                string pinPath = Path.ChangeExtension(file, ".json");
+                if (Update && r.Header.Schema == SaveCodec.SchemaVersion) Pin(pinPath, r.State);
+                Assert.That(File.Exists(pinPath), Is.True, name + " has its pinned facts");
+                Pinned pin = JsonSerializer.Deserialize<Pinned>(File.ReadAllText(pinPath));
+
+                Assert.That(pin.Schema, Is.EqualTo(r.Header.Schema), name);
+                if (r.Header.Schema == SaveCodec.SchemaVersion)
+                    Assert.That("0x" + r.State.ComputeHash().ToString("X16"), Is.EqualTo(pin.Hash), name + ": the current schema loads exactly");
+                // After a migration the hash changes with the new fields; the old facts may not. Each migration step adds its
+                // own asserts here that the new fields hold their documented defaults.
+                Assert.That(Facts(r.State), Is.EqualTo(pin.Facts), name + ": plain facts");
+
+                Simulation sim = Simulation.FromState(config, r.State);
+                sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+                sim.DrainEvents();
+                LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+                Assert.That(again.Error, Is.EqualTo(SaveError.None), name + " after a day: " + again.Detail);
+                Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + ": a day later it round-trips");
+            }
+        }
+
+        /// <summary>
+        /// The bot fixture: the competent bot's town after 2 seasons (a hand and hut, orders, trees, the garden, the era's
+        /// progress), with a seed that took a loan, and the letter's first steps seen and done.
+        /// </summary>
+        private static void WriteBotFixture()
+        {
+            SimConfig config = SaveTests.Config();
+            Simulation sim = null;
+            for (ulong seed = 1; seed < 100; seed++)
+            {
+                sim = SaveTests.Town(seed, 2);
+                if (sim.State.Credit.Loans.Count > 0 && sim.State.People.Hands.Count > 0 && sim.State.People.Orders.Count > 0) break;
+            }
+            long t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new SeeChapter(t, "welcome")).Accepted, Is.True);
+            Assert.That(sim.Execute(new CompleteStep(t, "welcome")).Accepted, Is.True);
+            sim.DrainEvents();
+            Assert.That(sim.State.Credit.Loans.Count, Is.GreaterThan(0), "a loan");
+            Assert.That(sim.State.People.Hands.Count, Is.GreaterThan(0), "a hand");
+            Assert.That(sim.State.Farm.Trees.Count, Is.GreaterThan(0), "trees");
+            Assert.That(sim.State.Era.SeasonPeriod, Is.GreaterThanOrEqualTo(0), "the era's progress");
+            Directory.CreateDirectory(Dir);
+            File.WriteAllBytes(BotFixture(SaveCodec.SchemaVersion), SaveCodec.Write(sim.State, config, TestSim.Wall0));
+        }
+
+        private static void Pin(string path, GameState s)
+        {
+            var pin = new Pinned { Schema = SaveCodec.SchemaVersion, Hash = "0x" + s.ComputeHash().ToString("X16"), Facts = Facts(s) };
+            File.WriteAllText(path, JsonSerializer.Serialize(pin, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        }
+
+        /// <summary>What a player would notice if a migration lost it. Keep this list stable: add, never change.</summary>
+        internal static SortedDictionary<string, long> Facts(GameState s)
+        {
+            return new SortedDictionary<string, long>(StringComparer.Ordinal)
+            {
+                ["simTime"] = s.Clock.SimTime,
+                ["cash"] = s.Ledger.Cash,
+                ["parcelsOwned"] = s.Land.Parcels.Count(p => p.Owned),
+                ["buildings"] = s.Land.Buildings.Count,
+                ["crops"] = s.Farm.Crops.Count,
+                ["gardenBedsSown"] = s.Farm.Beds.Count(b => b.Crop >= 0),
+                ["trees"] = s.Farm.Trees.Count,
+                ["storeTotal"] = s.Market.Stock.Sum(),
+                ["roster"] = s.People.Roster.Count,
+                ["hands"] = s.People.Hands.Count,
+                ["orders"] = s.People.Orders.Count,
+                ["loansOpen"] = s.Credit.Loans.Count(l => l.IsOpen),
+                ["seasonReports"] = s.Finance.Reports.Count,
+                ["guidanceStep"] = s.Guidance.Step,
+                ["chaptersSeen"] = s.Guidance.Seen.Count,
+                ["era"] = s.Era.Current,
+                ["profitableSeasons"] = s.Era.ProfitableSeasons,
+            };
+        }
+
+        public sealed class Pinned
+        {
+            public int Schema { get; set; }
+            public string Hash { get; set; }
+            public SortedDictionary<string, long> Facts { get; set; }
+        }
+    }
+}

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Progress;
 
 namespace Sim.Core.Saves
 {
@@ -43,9 +44,12 @@ namespace Sim.Core.Saves
 
         public void NewGame(long wallUtc, long simTime) { Write(wallUtc, simTime, "newGame", null); }
 
-        public void SessionStart(long wallUtc, long simTime, string build, string device)
+        /// <param name="tzMinutes">The device's UTC offset, so days are the player's calendar days (ADR 0047 §2).</param>
+        /// <param name="fromNote">True when the app was opened by tapping a notification.</param>
+        public void SessionStart(long wallUtc, long simTime, string build, string device, int tzMinutes, bool fromNote)
         {
-            Write(wallUtc, simTime, "sessionStart", ",\"build\":" + Quote(build) + ",\"device\":" + Quote(device));
+            Write(wallUtc, simTime, "sessionStart", ",\"build\":" + Quote(build) + ",\"device\":" + Quote(device)
+                + ",\"tz\":" + tzMinutes + ",\"fromNote\":" + (fromNote ? "true" : "false"));
         }
 
         public void SessionEnd(long wallUtc, long simTime, long secondsPlayed)
@@ -63,6 +67,19 @@ namespace Sim.Core.Saves
         {
             if (!Enabled || _reached.Contains(type)) return;
             Write(wallUtc, simTime, type, null);
+        }
+
+        /// <summary>
+        /// The first session's steps done so far, each once per town, then <c>firstSessionDone</c> when every step is done or
+        /// the player skipped (ADR 0047 §2). Reads the state, so any path that completes a step is logged.
+        /// </summary>
+        public void Guidance(long wallUtc, long simTime, GuidanceState g, OnboardingDefs d)
+        {
+            if (!Enabled || g == null || d == null) return;
+            for (int i = 0; i < g.Step && i < d.Steps.Count; i++)
+                if (!_reached.Contains("step:" + d.Steps[i].Id)) Write(wallUtc, simTime, "step", ",\"id\":" + Quote(d.Steps[i].Id));
+            if ((g.Skipped || g.Step >= d.Steps.Count) && !_reached.Contains("firstSessionDone"))
+                Write(wallUtc, simTime, "firstSessionDone", ",\"skipped\":" + (g.Skipped ? "true" : "false"));
         }
 
         /// <summary>Logs the Phase 1 milestones these events reach for the first time in this town.</summary>
@@ -108,6 +125,11 @@ namespace Sim.Core.Saves
             string type = line.Substring(at + 8, line.IndexOf('"', at + 8) - at - 8);
             if (type == "newGame") _reached.Clear();
             else if (type.StartsWith("first", System.StringComparison.Ordinal) || type == "hamletUnlocked") _reached.Add(type);
+            else if (type == "step")
+            {
+                int id = line.IndexOf("\"id\":\"", at, System.StringComparison.Ordinal) + 6;
+                if (id >= 6) _reached.Add("step:" + line.Substring(id, line.IndexOf('"', id) - id));
+            }
         }
 
         private static string Quote(string s)

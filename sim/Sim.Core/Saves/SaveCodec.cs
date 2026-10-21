@@ -18,7 +18,7 @@ namespace Sim.Core.Saves
         /// <summary>Written by a build with a newer schema than this one knows.</summary>
         SaveFromNewerVersion,
 
-        /// <summary>Older than this build's <c>minSchema</c>: refused and kept until the playtest build (ADR 0041).</summary>
+        /// <summary>Older than <c>minSchema</c> (3, frozen from the release candidate, ADR 0047): refused and kept (ADR 0041).</summary>
         SaveTooOld,
 
         /// <summary>The save names a content id (or a content section) this build's content lacks; a migration must map it.</summary>
@@ -67,8 +67,11 @@ namespace Sim.Core.Saves
     {
         public const int FormatVersion = 1;
 
-        /// <summary>Raised whenever the state's fields change (spec 007 §3.1); until Sprint 9 <c>minSchema</c> rises with it (ADR 0041).</summary>
-        public const int SchemaVersion = 3; // 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); older saves are refused and kept (ADR 0041 §2)
+        /// <summary>
+        /// Raised whenever the state's fields change (spec 007 §3.1). From schema 3 on <c>minSchema</c> stays 3: a new schema ships a
+        /// migration step in the readers (branch on <see cref="SaveReader.Schema"/>) and a frozen fixture save (ADR 0047 §3, AC-14).
+        /// </summary>
+        public const int SchemaVersion = 3; // 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
 
         public const int DefaultMaxLogEntries = 100_000;
 

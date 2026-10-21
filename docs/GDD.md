@@ -1034,7 +1034,7 @@ The Village and Township targets are provisional, and the reachable-eras check c
 
 **Playtests.** Begin with friends and colleagues at the Homestead slice, and run a structured test each milestone. To check the learning outcome, give players a 10-question quiz on margins, cash flow, depreciation and hiring before and after 5 hours of play.
 
-**Telemetry.** There is no server, so the game keeps an opt-in local log of session start and end times, milestones and decisions. A tester can export it as a file and share it. It ships in Phase 1, where it measures the exit gate (ADR 0024).
+**Telemetry.** There is no server, so the game keeps an opt-in local log of session start and end times, milestones and decisions. A tester can export it as a file and share it. It ships in Phase 1, where it measures the exit gate (ADR 0024): local days, notification returns and the first session's steps (ADR 0047).
 
 ## Spec-driven workflow
 
@@ -1088,7 +1088,7 @@ flowchart TB
     P5["Phase 5 · Polish<br/>Localisation, accessibility, art pipeline; store release only if the owner decides"]
 
     P0 -->|"Gate: no money loops; 2,000 agents at 60 fps; replays match on iPhone"| P1
-    P1 -->|"Gate: testers come back on day 2 and day 3 unprompted"| P2
+    P1 -->|"Gate: a reason to return each day, the Hamlet in about a week, nothing broke (ADR 0047)"| P2
     P2 -->|"Gate: a week of play; players can explain profit versus cash"| P3
     P3 -->|"Gate: 4 weeks of play; the balancer finds no exploits"| P4
     P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
@@ -1097,7 +1097,7 @@ flowchart TB
 | Phase | Scope | Exit gate |
 | --- | --- | --- |
 | 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
-| 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Testers come back on day 2 and day 3 unprompted |
+| 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Part A, on the owner's solo playtest week (ADR 0047): a reason to return on at least 4 of days 2–7, notification returns at sensible times, the Hamlet on day 5–9, no blocker, the release candidate and CI passing. Part B, before Launch at the latest: fresh players come back on day 2 and day 3 unprompted (2 of 3) |
 | 2 · Hamlet and Village | Citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
 | 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |

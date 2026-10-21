@@ -11,7 +11,7 @@ namespace Game.Editor
     /// <summary>
     /// iOS build settings for saves and notifications (spec 007 §3.4, §3.5, ADR 0041): the app's Documents folder shows in the Files
     /// app (export and import, no plugin needed), and the notifications package never asks for permission at launch: the game asks
-    /// first, and iOS's dialog follows only a "Yes".
+    /// first, and iOS's dialog follows only a "Yes". Development builds also get frame-timing stats (ADR 0047 §4).
     /// </summary>
     public sealed class IosBuildStep : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
@@ -20,6 +20,8 @@ namespace Game.Editor
         public void OnPreprocessBuild(BuildReport report)
         {
             Unity.Notifications.NotificationSettings.iOSSettings.RequestAuthorizationOnAppLaunch = false;
+            // The developer panel's frame-time check reads FrameTimingManager (ADR 0047 §4); a Release build needs none of it.
+            PlayerSettings.enableFrameTimingStats = (report.summary.options & BuildOptions.Development) != 0;
         }
 
         public void OnPostprocessBuild(BuildReport report)
