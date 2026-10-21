@@ -400,19 +400,19 @@
 - *To improve:* the spec's step pages mixed "before" and "after" texts; only playing them showed it. Read each page against the moment it opens when a spec gives texts. Editing any file Unity watches during play mode reloads the domain (the sim's sources included): stop first, always.
 - *Carry over:* save migrations from the Sprint 9 playtest build (ADR 0041 §2); alert dismissals if playtesters ask; the guide's memory of events is per launch (spec 009 §10 notes) if playtesters hit it.
 
-## Sprint 9 · 21–27 Dec 2026 · Phase 1
+## Sprint 9 · 21 Dec 2026 – 3 Jan 2027 · Phase 1 (2 weeks, ADR 0047 §6)
 
-- **Status:** Planned
-- **Branch:** `sprint/09-playtest` (or the branch the session assigns)
-- **Goal:** Playtest week, tuning and the Phase 1 gate review.
-- **Points:** 8
-- **Specs for the owner to review:** —
-- **Device build:** Yes: playtest build
-- Gate: testers come back on day 2 and day 3 unprompted (from play logs).
+- **Status:** Planning review done 2026-10-21 (ADR 0047: 6 gaps); waiting for the owner's go-ahead to start
+- **Branch:** `sprint/09-playtest`
+- **Goal:** Release candidate, the owner's solo playtest week, tuning and the Phase 1 gate review (part A).
+- **Points:** 10
+- **Specs for the owner to review:** — (spec 007 §3.1, §3.6, AC-14, AC-15 and spec 009 §10 amended with ADR 0047)
+- **Device build:** Yes: a Development and a Release build from the release-candidate commit; a tuned Release build only if tuning changes something
+- **Gate (ADR 0047 §5, part A):** A1 a reason to return on at least 4 of days 2–7 (3 by the game, from the diary); A2 at least 2 notification returns, none in quiet hours; A3 the Hamlet on day 5–9; A4 no blocker; A5 the RC passes; A6 CI green. Part B (fresh players) is US-185, later.
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 2 | Must | To do |
+| US-095 | Release candidate | [F10.1](features/F10.1-playtest-and-tuning.md) | 4 | Must | To do |
 | US-096 | Playtest week | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
 | US-097 | Tune and decide | [F10.1](features/F10.1-playtest-and-tuning.md) | 3 | Must | To do |
 
@@ -422,6 +422,10 @@
 - [ ] Test checklist written in `docs/test-checklists/` (if there is a build)
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened; owner merges to `main`
+
+**Planning review (2026-10-21, ADR 0047):** the owner is the only playtester (free account, iPhone 13); the play log adds `tz`, `fromNote` and the first-session steps, with a daily diary; migrations from the RC (`minSchema` frozen at 3, a fixture per schema); a Development build for regression and frame time, a Release build for the playtest, and the blocker definition; the gate split into part A (this sprint) and part B (US-185); 2 weeks, 10 points.
+
+**Carry over (from Sprint 8):** the first session's 10 minutes (recorded by the play log, not gated: ADR 0047 §5); alert dismissals and the guide's per-launch memory only if the playtest hits them.
 
 **Review (owner's device results):** —
 

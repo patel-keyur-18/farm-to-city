@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice (Phase 0 gate passed 2026-10-18, ADR 0035) |
-| Sprint | Sprint 9 (release candidate, playtest week, tuning, the Phase 1 gate): planning review. Sprint 8 done (PR #13 merged; re-check of checks 33–36 passed 2026-10-21) |
+| Sprint | Sprint 9 (release candidate, solo playtest week, tuning, the Phase 1 gate; 2 weeks, 10 points): planning review done (ADR 0047), waiting for the owner's go-ahead. Sprint 8 done (PR #13 merged) |
 | Branch with latest work | `sprint/09-playtest` (from `main`, which has Sprint 8 / PR #13) |
 | Last updated | 2026-10-21 |
 
@@ -126,11 +126,14 @@
 
 ## In progress
 
-Sprint 9 planning review (gaps raised one at a time with the owner).
+None: the owner's go-ahead to start US-095.
 
 ## Next up
 
-1. **Claude:** Sprint 9 (US-095 release candidate: full regression, frame time, a Release build; save migrations from that build on, ADR 0041 §2; US-096 playtest week; US-097 tune and decide). Sprint 9's planning review first.
+1. **Owner:** approve the start of Sprint 9's work.
+2. **Claude:** US-095 test-first: the migration fixtures and `MigrationTests` (Sim.Core), then US-096's play log fields (Sim.Core, then Unity), then the frame-time recorder and the iOS build step, then `s09-release-candidate.md` and the playtest checklist; the RC commit and its two builds (ADR 0047 §3, §4).
+3. **Owner:** the Development build's regression and frame time, then the Release smoke list, then 7 days of play with the log on and the diary.
+4. **Claude:** US-097: read the log and diary, tune, the gate A1–A6, the retro.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -140,17 +143,19 @@ Sprint 9 planning review (gaps raised one at a time with the owner).
 | Sprint 7 | Done (device runs 1 and 2 passed, PR #12 merged) |
 | Sprint 8 | Done (device run and re-check passed, PR #13 merged) |
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
-| Sprint 9 | Run the playtest week with 3–5 testers, collect their play logs, and make the gate decision |
+| Sprint 9 | Run the RC regression and frame time (Development), the smoke list (Release), play 7 days with the log on and the diary, send the log; the gate decision |
 
 ## Open questions (with the owner)
 
-None. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 findings and 5 implementation notes (ADR 0037), the gate (ADR 0035).
+- **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
+
+Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 findings and 5 implementation notes (ADR 0037), the gate (ADR 0035).
 
 **Noted for later specs (no decision needed now):**
 - NUnit 5.0 was released on 27 Sep 2026. ADR 0026 names NUnit 4, so the tests use 4.6.1. Moving to 5 would need a small ADR.
 - **Unity Editor quirks:** to test touch in the Editor, remove the mouse device, add a `Touchscreen`, set `InputSystem.settings.editorInputBehaviorInPlayMode = AllDeviceInputAlwaysGoesToGameView`, and queue `TouchState` events from `InputSystem.onBeforeUpdate` (dynamic updates only); the Game view maps touch y to the UI with an offset, so aim UI taps by the event's logged panel position. Removing the mouse lasts until the Editor restarts. The Editor pauses the game when it loses focus (set `Application.runInBackground = true` through `unity command eval` to drive and capture play mode); editing sim sources while playing reloads the domain and nulls `GameRoot`'s fields (stop and play again). **Touch in the Editor is scripted** (Sprint 5): `unity command eval --code 'return Game.Editor.TouchDriver.Setup();'`, then `TouchDriver.TapElement("People")` (scrolls the element into view, then taps), `TouchDriver.Tap(x, y)` and `TouchDriver.Drag(...)` in camera pixels (the Game view's toolbar makes `Screen.height` taller than the panel; `ScreenOf` aims by the panel's height). **Fast enter-play-mode is on** (no domain reload): static caches survive between play sessions, so anything holding runtime-made Unity objects must check `== null` (the sprite banks do). `DebugAdvance` only takes 1 h, 1 day, a season or the away cap; check its result in scripts. A UI element built inside a click handler may not get touch clicks: open it on the next UI tick (`schedule.Execute`).
 - **Sprint 8 Editor notes:** `capture_game_view --save_path` is relative to `Assets/` (a `Temp/cap/x.png` lands in `Assets/Temp/cap/`): copy the captures to `docs/art/` and delete `Assets/Temp` and `Assets/Temp.meta` before committing. `unity command build` now needs `--confirm true`. Editing a C# file Unity compiles (`Assets/` or `sim/`) during play mode reloads the domain and loses the session: stop play first. JSON content edits don't reload (they're read at the next launch).
-- `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID, and now `enableFrameTimingStats: 1`, set by the build step each build). Leave it uncommitted.
+- `ProjectSettings.asset` on the owner's Mac has uncommitted local changes (signing, team ID 67UVMX74UB, automatic signing, `runInBackground`). Leave it uncommitted. Nothing set `enableFrameTimingStats` until Sprint 9 (ADR 0047 §4: the iOS build step sets it for Development builds).
 
 ## Half-done work
 

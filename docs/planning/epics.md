@@ -7,7 +7,7 @@
 | Phase | Name | Epics | Exit gate |
 | --- | --- | --- | --- |
 | 0 | Pre-production | E00, E20 (start) | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13) |
-| 1 | Vertical slice: Homestead to Hamlet unlock | E01–E10 | Testers come back on day 2 and day 3 unprompted |
+| 1 | Vertical slice: Homestead to Hamlet unlock | E01–E10 | Part A (owner's solo week, ADR 0047): a reason to return each day, the Hamlet on day 5–9, no blocker, RC and CI pass. Part B (US-185, before Launch): fresh players back on day 2 and day 3 unprompted |
 | 2 | Hamlet and Village | E11–E14 | A week of play; players can explain profit versus cash |
 | 3 | Township | E15–E16 | 4 weeks of play; the balancer finds no exploits |
 | 4 | Town and City | E17–E18 | 20,000 population at 60 fps on the reference phone |
@@ -27,7 +27,7 @@
 | E07 | Saves and platform services | 1 | Safety save points, export and import, local notifications and the local play log. | [F07.1](features/F07.1-save-system.md), [F07.2](features/F07.2-local-notifications.md), [F07.3](features/F07.3-local-play-log.md) | 16 |
 | E08 | Presentation | 1 | The code-first Unity layer: map, field interaction, HUD, panels with Why?, localisation groundwork and the developer panel. | [F08.1](features/F08.1-map-and-field-interaction.md), [F08.2](features/F08.2-hud-and-panels.md), [F08.3](features/F08.3-localisation-and-formatting.md), [F08.5](features/F08.5-basic-feedback-sounds.md), [F08.4](features/F08.4-developer-panel-unity.md) | 37 |
 | E09 | Onboarding and progression | 1 | The first session, the grandparent's letter chapters across the first week (ADR 0015), and the Hamlet unlock that ends Phase 1. | [F09.1](features/F09.1-first-session.md), [F09.2](features/F09.2-letter-chapters.md), [F09.3](features/F09.3-hamlet-unlock.md), [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 25 |
-| E10 | Phase 1 playtest and tuning | 1 | Release candidate, testers, play logs, tuning, and the Phase 1 exit gate. | [F10.1](features/F10.1-playtest-and-tuning.md) | 8 |
+| E10 | Phase 1 playtest and tuning | 1 | Release candidate, testers, play logs, tuning, and the Phase 1 exit gate. | [F10.1](features/F10.1-playtest-and-tuning.md) | 12 |
 | E11 | Citizens and households | 2 | Citizens with skills, traits and life stages; households, needs and happiness; births, migration and family trees; full hiring. | [F11.1](features/F11.1-citizens-and-life-clock.md), [F11.2](features/F11.2-households-needs-and-happiness.md), [F11.3](features/F11.3-population-flows-and-family-trees.md), [F11.4](features/F11.4-full-hiring-and-hr.md) | 38 |
 | E12 | Businesses | 2–3 | Founding, running and failing businesses with their own books; production chains; services and customer choice; rivals. | [F12.1](features/F12.1-business-founding-and-books.md), [F12.2](features/F12.2-production-chains.md), [F12.3](features/F12.3-services-and-customer-choice.md), [F12.4](features/F12.4-rivals-and-competition.md), [F12.5](features/F12.5-invoices-and-payment-terms.md), [F12.6](features/F12.6-managers-valuation-and-exit.md) | 52 |
 | E13 | Farm expansion | 2 | Livestock, the irrigation and equipment ladders, whole-acre orchards and the granary. | [F13.1](features/F13.1-livestock.md), [F13.2](features/F13.2-irrigation-and-equipment.md), [F13.3](features/F13.3-orchards-and-granary.md) | 18 |
@@ -76,7 +76,7 @@
 | [F09.1](features/F09.1-first-session.md) | First session | E09 | 1 | Spec 009 (approved) | Done | US-089–US-090 | 7 |
 | [F09.2](features/F09.2-letter-chapters.md) | Letter chapters | E09 | 1 | Spec 009 (approved) | Done | US-091–US-092 | 6 |
 | [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (approved), GDD eras | Done | US-093–US-094 | 5 |
-| [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate | Backlog | US-095–US-097 | 8 |
+| [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate, ADR 0047 | Sprint 9 (planned) | US-095–US-097, US-185 | 12 |
 | [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016, 0045 | In progress (US-098 done) | US-098–US-101 | 13 |
 | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | To write at the start of Phase 2–4 | Backlog | US-102–US-104 | 7 |
 | [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | To write at the start of Phase 2 | Backlog | US-105–US-106 | 8 |
