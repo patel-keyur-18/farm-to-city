@@ -444,7 +444,7 @@
 
 ## Sprint 10 · 4–10 Jan 2027 · Phase 1 (playtest fixes)
 
-- **Status:** Code done 2026-10-21 (ADR 0048); the owner's device check pending
+- **Status:** Code done 2026-10-21 (ADR 0048); the owner's review changes done the same day (ADR 0049); the device check pending
 - **Branch:** `sprint/10-people-fixes`
 - **Goal:** The owner's Phase 1 playtest findings: the hand works every season and is seen working; labourers stay till harvest.
 - **Points:** 6
@@ -473,3 +473,10 @@
   - Dadi's "More hands" page and three labels still described hiring for a day.
   - An order line now names the hand's pick when it differs from the order's crop ("Keep Lentils (Rice now)").
 - 270 `Sim.Core` (balance gate and goldens unchanged) and 70 `Sim.View` tests pass.
+
+**Review (owner, 2026-10-21; ADR 0049):** three changes, made the same day.
+1. **People were drawn under the crops near a field's edges.** Crops now have their own layer, below everyone and everything standing on the land.
+2. **An order on a second field waited up to an hour**, because a hand did one action an hour. `orderActionsPerHour` is now 6, so every order acts at once; Care still limits what a hand manages. This exposed a bug: sowing by hand and changing the order lost the player's sowing. The player's sowing now runs first.
+3. **Hiring is back in People** ("till the crops are in"). Labourers stay until the last growing crop's ready hour and bring in every ripe field that has no hand's order. The field sheet no longer hires.
+- **Verified in the Editor with touch:** the People hire rows and costs; 2 labourers hired, standing on top of the rice at the field's edge (`docs/art/s10-people-on-top-of-crops.png`); a field sheet without hire rows; two orders given through the order sheet, one after the other, both sown at once. No console errors.
+- All 270 `Sim.Core` tests (balance gate included) and 70 `Sim.View` tests pass.

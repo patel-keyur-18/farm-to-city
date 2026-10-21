@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 1 · Homestead slice, complete (the owner closed Sprint 9 on 2026-10-21); Sprint 10 fixes the playtest's people findings before Phase 2 |
-| Sprint | Sprint 10 (playtest fixes, ADR 0048): code done; the owner's device check (`s10-people-fixes.md`) pending |
+| Sprint | Sprint 10 (playtest fixes, ADR 0048; review changes, ADR 0049): code done; the owner's device check (`s10-people-fixes.md`) pending |
 | Branch with latest work | `sprint/10-people-fixes` (from `main`, which has Sprint 9 / PR #14) |
 | Last updated | 2026-10-21 |
 
@@ -137,6 +137,11 @@
   - 270 `Sim.Core` tests and 70 `Sim.View` tests pass. The balance gate and the goldens are unchanged. Unity compiles.
   - **Editor tour with touch passed** (`docs/art/s10-*.png`): the hire rows, the hire *Why?*, the order sheet's "Let Manoj choose", the map with the hand and labourers, the labourers' harvest and leaving, the People and hand sheets. No console errors.
   - Fixed during the tour: the field sheet now stays open after a hire; four labourer strings still described hiring for a day; an order line names the hand's pick ("Keep Lentils (Rice now)").
+  - **Owner's review (ADR 0049), done the same day:**
+    - Crops are drawn below people.
+    - Every order acts at once (`orderActionsPerHour` 6), so two fields given together are both worked. The player's sowing now runs before an order change.
+    - Labourers are hired from **People** until the last growing crop is in; they harvest ripe fields that have no hand's order. The field sheet no longer hires.
+    - Verified in the Editor with touch; all tests pass.
   - The Editor's town is now the schema-4 fixture town (imported). The touch driver removed the Editor's mouse until the Editor restarts.
 
 ## In progress

@@ -9,7 +9,9 @@
 **What this build changes (ADR 0048):**
 - **The hand works every season.** An order's crop is sown when it's in season. In the other seasons, the hand sows the in-season crop that pays best on that field's soil and moisture. The order sheet has a new first row, **Let Manoj choose** (his name), which leaves every season's crop to him.
 - **The hand is seen working.** A hand you pay walks round his own fields first, then every other growing field, because his hours care for all of them. He goes home only when nothing grows, or when his wage is unpaid.
-- **Labourers stay till the harvest.** Hire them from a **growing field's sheet** with **1 labourer till harvest**, **2 labourers till harvest** and so on, each showing its cost. They are paid upfront up to the hour the crop is ready. They tend it, harvest it into the store, then go home. The People sheet no longer hires anyone: it shows who is free and points you to a growing field.
+- **Labourers stay till the crops are in (ADR 0049).** Hire them in **People** → **N labourers till harvest**; each row shows the cost. They are paid upfront until the last crop growing now is ready. They tend every field and bring in each field that has no order from Manoj as it ripens, then go home. Fields no longer offer hiring.
+- **Orders on several fields work at once (ADR 0049).** Give Manoj orders on two fields one after the other: both are sown straight away.
+- **People stand on top of the crops**, even at a field's edges.
 
 **Your questions:** (1) does the hand now run his fields with no help from you? (2) are his crop choices sensible for each season? (3) is hiring from the field clear, and does the cost feel fair?
 
@@ -27,11 +29,12 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 | 5 | US-186 | **+1 season** twice, watching his fields | At each new season, every ordered field is harvested and re-sown with a crop of that season. No field sits empty for long | | |
 | 6 | US-186, ADR 0048 §2 | Watch Manoj while crops grow, including fields with no order | He walks between fields and hoes. He never stands idle at his hut while anything is growing | | **Screenshot** |
 | 7 | US-186 | **Away cap (72 h)** | The away card lists what Manoj harvested, sold and sowed. Every ordered field is busy | | |
-| 8 | US-187, AC-25 | Tap a growing field | "1 labourer till harvest" (and more rows, one per free labourer), each with a cost. The **?** explains: one labourer a day, until the crop is ready, they harvest it and go home | | **Screenshot** |
-| 9 | US-187, AC-3 | Hire 1 | The cost leaves your cash. The sheet **stays open** and shows "Labourers on this crop: 1, harvest in …". A labourer walks in from the west to that field first | | |
-| 10 | US-187, AC-25 | Hire on a 24-hour crop (potato or rice), then **+1 day** | The labourer is still there after midnight. People shows them as working "till their crops are ready" | | |
-| 11 | US-187, AC-25 | Advance until that crop is ready (**+1 hour** steps) | Within the hour it's ready, the labourer harvests it into the store (or to the trader if the store is full) and walks off west | | |
-| 12 | US-187 | Open **People** | No hire buttons. "Hire labourers: Tap a growing field: they stay till its harvest" | | |
+| 8 | US-187, AC-25 | With crops growing, open **People** | "1 labourer till harvest", "2 labourers till harvest", and so on, each with a cost. The **?** says they stay until the last crop growing now is ready, harvest each field without an order, then go home. A field's own sheet has **no** hire rows | | **Screenshot** |
+| 9 | US-187, AC-3 | Hire 2 | The cost leaves your cash. People shows "Working today: 2, till the crops are in". Two labourers walk in from the west to the fields | | |
+| 10 | US-187, AC-25 | **+1 day** | The labourers are still there after midnight if a crop is still growing | | |
+| 11 | US-187, AC-25 | Advance in **+1 hour** steps until the crops ripen | Each field **without** an order from Manoj is harvested into the store within the hour it ripens. Manoj's fields are harvested by Manoj. After the last crop, the labourers walk off west | | |
+| 12 | ADR 0049 | Give Manoj orders on two empty fields, one right after the other | Both fields are sown at once, and he walks between them | | |
+| 12b | ADR 0049 | Watch people near the edges of fields of tall rice | Everyone is drawn on top of the crops, never under them | | **Screenshot** |
 | 13 | Regression | Sow by hand on a field ordered with a crop | You're asked whether to change Manoj's order. On a "Let Manoj choose" field, you aren't asked: his choice stays | | |
 
 ## Report
