@@ -34,6 +34,7 @@ Use the developer panel (hold the time card for 3 seconds) for time: **+1 hour**
 | 10 | US-187, AC-25 | **+1 day** | The labourers are still there after midnight if a crop is still growing | | |
 | 11 | US-187, AC-25 | Advance in **+1 hour** steps until the crops ripen | Each field **without** an order from Manoj is harvested into the store within the hour it ripens. Manoj's fields are harvested by Manoj. After the last crop, the labourers walk off west | | |
 | 12 | ADR 0049 | Give Manoj orders on two empty fields, one right after the other | Both fields are sown at once, and he walks between them | | |
+| 12c | ADR 0050 | With little cash (under about 3,500) in Spring and no seed potato left, give Manoj an every-season order on an empty field | He sows at once with a crop he can pay for (e.g. radish), never waits in his hut. The order line says "(Radish now)" | | |
 | 12b | ADR 0049 | Watch people near the edges of fields of tall rice | Everyone is drawn on top of the crops, never under them | | **Screenshot** |
 | 13 | Regression | Sow by hand on a field ordered with a crop | You're asked whether to change Manoj's order. On a "Let Manoj choose" field, you aren't asked: his choice stays | | |
 

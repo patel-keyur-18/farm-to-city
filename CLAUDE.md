@@ -158,6 +158,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0047 | Sprint 9 review: the owner is the only playtester; play log adds `tz`, `fromNote` and first-session steps; migrations from the RC (`minSchema` frozen at 3, a fixture save per schema); a Development build for regression and frame time, a Release build for the playtest; the Phase 1 gate split (A: solo week; B: fresh players before Launch); Sprint 9 runs 2 weeks, 10 points |
 | 0048 | Playtest findings: an every-season order sows the hand's best in-season pick (profit per season on the field's soil and moisture) when its crop is out of season, or always with "Let him choose"; a paid hand is seen tending every growing field; labourers are hired from a growing field until its harvest, which they bring in; save schema 4 |
 | 0049 | Sprint 10 review: every order acts at once (`orderActionsPerHour` 6; Care limits what a hand manages); labourers hired from People till the crops growing now are in, harvesting ripe fields with no hand's order; crops drawn below people |
+| 0050 | The hand sows the best crop he can pay for: his choice skips crops whose seed cash can't cover, and an order's own crop falls back to his best affordable pick; he waits only when nothing in season is affordable |
 
 ## Current status
 

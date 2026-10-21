@@ -142,6 +142,8 @@
     - Every order acts at once (`orderActionsPerHour` 6), so two fields given together are both worked. The player's sowing now runs before an order change.
     - Labourers are hired from **People** until the last growing crop is in; they harvest ripe fields that have no hand's order. The field sheet no longer hires.
     - Verified in the Editor with touch; all tests pass.
+  - **Owner's follow-up (ADR 0050):** the hand ignored seed cost, so with little cash and no seed potato left he waited for potato seed. He now sows the best crop he can pay for. Reproduced and verified in the Editor at 2,000 coins.
+  - The Editor town now has 1,830 coins, a second hut being built and its loans repaid: these are leftovers from setting up that test.
   - The Editor's town is now the schema-4 fixture town (imported). The touch driver removed the Editor's mouse until the Editor restarts.
 
 ## In progress
