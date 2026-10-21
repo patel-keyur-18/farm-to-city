@@ -16,7 +16,7 @@ namespace Sim.Content
         };
 
         /// <summary>The commands a <c>rejection</c> trigger can name.</summary>
-        public static readonly string[] OnboardingCommands = { "Sow", "BuildHandHut", "HireDayLabourers", "OfferContract", "BuyParcel" };
+        public static readonly string[] OnboardingCommands = { "Sow", "BuildHandHut", "HireLabourers", "OfferContract", "BuyParcel" };
 
         private static readonly string[] GoalKinds = { "chapterClosed", "bedGrowing", "sheetVisited", "event", "cropSown" };
         private static readonly string[] TriggerKinds = { "step", "event", "storeAbovePercent", "traderFull", "seasonStart", "careBelowForHours", "rejection", "cashBelowHutCost", "awayCard" };

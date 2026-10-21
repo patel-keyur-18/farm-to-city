@@ -1,5 +1,9 @@
+using System.Numerics;
 using Sim.Core.Definitions;
+using Sim.Core.Land;
+using Sim.Core.Market;
 using Sim.Core.Maths;
+using Sim.Core.Time;
 
 namespace Sim.Core.Farm
 {
@@ -53,6 +57,67 @@ namespace Sim.Core.Farm
                 Fertiliser = fertiliser, CropHealth = cropHealth, Uncapped = product, Capped = capped,
                 Grams = kg.MulRatio(1000, 1).RoundToLong(),
             };
+        }
+
+        /// <summary>
+        /// One sowing on the tile as the sow sheet shows it (spec 008 §3.7, ADR 0048 §1): the yield formula with what is known now
+        /// (soil, water at today's moisture, fertiliser; care, seed, weather and health at 1), the harvest at the trader's floor
+        /// today, and its seed and fertiliser at today's input prices.
+        /// </summary>
+        public static SowingEstimate Estimate(Simulation sim, Tile tile, CropDef crop, FertiliserDef fert)
+        {
+            FarmDef farm = sim.Config.Game.Farm.Farm;
+            long harvest = Yield(farm, crop.SeasonYieldPerAcre * CycleShare(sim.Clock, crop), LandRules.SoilFactor(sim, tile), WaterFactor(farm, crop, tile.Moisture),
+                Fixed.One, Fixed.One, Fixed.One, fert.YieldFactor, Fixed.One).Grams;
+            long seedGrams = CycleGrams(sim.Clock, crop, crop.SeedPerAcrePerSeason);
+            long fertGrams = fert.Good < 0 ? 0 : CycleGrams(sim.Clock, crop, fert.KgPerAcrePerSeason);
+            return new SowingEstimate(harvest, MarketRules.Value(sim, crop.OutputGood, harvest, MarketRules.Floor(sim, crop.OutputGood)),
+                MarketRules.Value(sim, crop.SeedGood, seedGrams, MarketRules.InputPrice(sim, crop.SeedGood)),
+                fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good)), fertGrams);
+        }
+
+        /// <summary>
+        /// The hand's pick (ADR 0048 §1): the crop sowable this season with the highest expected profit per season on the tile,
+        /// profit ÷ cycleShare, compared by cross-multiplying growth times. Ties go to the earlier crop; −1 if none is in season.
+        /// </summary>
+        public static int BestCrop(Simulation sim, Tile tile, FertiliserDef fert)
+        {
+            FarmDefs farm = sim.Config.Game.Farm;
+            int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+            int best = -1;
+            long bestProfit = 0, bestGrowth = 1;
+            for (int i = 0; i < farm.Crops.Count; i++)
+            {
+                CropDef c = farm.Crops[i];
+                if (!c.SowSeasons[season]) continue;
+                long profit = Estimate(sim, tile, c, fert).Profit;
+                if (best >= 0 && (BigInteger)profit * bestGrowth <= (BigInteger)bestProfit * c.GrowthSeconds) continue;
+                best = i;
+                bestProfit = profit;
+                bestGrowth = c.GrowthSeconds;
+            }
+            return best;
+        }
+    }
+
+    /// <summary>One sowing's expected harvest (grams), its value at the trader's floor and its inputs at today's prices.</summary>
+    public readonly struct SowingEstimate
+    {
+        public long HarvestGrams { get; }
+        public long Get { get; }
+        public long SeedValue { get; }
+        public long FertiliserValue { get; }
+        public long FertiliserGrams { get; }
+        public long Spend { get { return SeedValue + FertiliserValue; } }
+        public long Profit { get { return Get - Spend; } }
+
+        public SowingEstimate(long harvestGrams, long get, long seedValue, long fertiliserValue, long fertiliserGrams)
+        {
+            HarvestGrams = harvestGrams;
+            Get = get;
+            SeedValue = seedValue;
+            FertiliserValue = fertiliserValue;
+            FertiliserGrams = fertiliserGrams;
         }
     }
 }

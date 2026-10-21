@@ -71,27 +71,55 @@ namespace Sim.Core.People
                 Regulars(sim);
                 Arrivals(sim);
             }
+            Release(sim);
             Orders.Run(sim);
         }
 
-        // ---- day labourers (§3.2) ----
+        // ---- labourers (§3.2, ADR 0048 §3) ----
 
+        /// <summary>A new day's pool: labourers whose crop is ready by now go first, so they can be drawn again; the rest stay.</summary>
         private static void NewDay(Simulation sim)
         {
-            PeopleState s = sim.State.People;
-            int gone = 0;
-            FarmSystem.Accrue(sim);
-            foreach (Neighbour n in s.Roster)
-            {
-                if (n.HiredToday) gone++;
-                n.HiredToday = false;
-            }
+            Release(sim);
             DrawPool(sim);
-            FarmSystem.Refresh(sim);
-            if (gone > 0) sim.Emit(new DayLabourersLeft(sim.State.Clock.SimTime, gone));
         }
 
-        /// <summary>A seeded shuffle of the roster (stream DayLabourPool, counter = day); the first availablePerDay are free.</summary>
+        /// <summary>
+        /// Labourers whose time is up (live or away), field by field in neighbour id order: they harvest their crop if it's ready
+        /// (overflow to the trader, so nothing is lost), then go home. Runs before the hands' orders.
+        /// </summary>
+        private static void Release(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            long t = sim.State.Clock.SimTime;
+            bool any = false;
+            foreach (Neighbour n in s.Roster) any |= n.Hired && t >= n.Until;
+            if (!any) return;
+            FarmSystem.Accrue(sim);
+            var fields = new List<int>();
+            foreach (Neighbour n in s.Roster) if (n.Hired && t >= n.Until && !fields.Contains(n.Tile)) fields.Add(n.Tile);
+            foreach (int tile in fields)
+            {
+                long grams = 0;
+                Crop c = tile < 0 ? null : sim.State.Farm.CropOn(tile);
+                if (c != null && c.State == CropState.Ready && new Harvest(t, tile, Overflow.SellRestToTrader).ApplyNow(sim).Accepted) grams = c.HarvestGrams;
+                int count = 0;
+                foreach (Neighbour n in s.Roster)
+                {
+                    if (!n.Hired || t < n.Until || n.Tile != tile) continue;
+                    n.Tile = -1;
+                    n.Until = 0;
+                    count++;
+                }
+                sim.Emit(new LabourersLeft(t, tile, count, grams));
+            }
+            FarmSystem.Refresh(sim);
+        }
+
+        /// <summary>
+        /// A seeded shuffle of the roster (stream DayLabourPool, counter = day); the first availablePerDay of those not already
+        /// on a crop are free (ADR 0048 §3).
+        /// </summary>
         private static void DrawPool(Simulation sim)
         {
             PeopleState s = sim.State.People;
@@ -109,7 +137,12 @@ namespace Sim.Core.People
                 order[j] = tmp;
             }
             foreach (Neighbour x in s.Roster) x.FreeToday = false;
-            for (int i = 0; i < free && i < n; i++) s.Roster[order[i]].FreeToday = true;
+            for (int i = 0; i < n && free > 0; i++)
+            {
+                if (s.Roster[order[i]].Hired) continue;
+                s.Roster[order[i]].FreeToday = true;
+                free--;
+            }
         }
 
         // ---- the hand's hut (§3.4) ----

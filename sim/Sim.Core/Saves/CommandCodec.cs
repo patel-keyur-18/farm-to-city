@@ -24,6 +24,7 @@ namespace Sim.Core.Saves
             HireDayLabourers, BuildHandHut, PostJob, Interview, OfferContract, RenewContract, DismissHand,
             SetStandingOrder, ClearStandingOrder,
             SeeChapter, CompleteStep, SkipFirstSession,
+            HireLabourers,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -73,7 +74,7 @@ namespace Sim.Core.Saves
                     At(c, Tag.GoToMandi); w.WriteInt(c.Loads.Count);
                     foreach (MandiLoad l in c.Loads) { w.WriteString(l.GoodId); w.WriteLong(l.Quantity); }
                     break;
-                case HireDayLabourers c: At(c, Tag.HireDayLabourers); w.WriteInt(c.Count); break;
+                case HireLabourers c: At(c, Tag.HireLabourers); w.WriteInt(c.TileId); w.WriteInt(c.Count); break;
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
                 case PostJob c: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
@@ -147,7 +148,8 @@ namespace Sim.Core.Saves
                     for (int i = 0; i < n; i++) loads.Add(new MandiLoad(r.ReadString(), r.ReadLong()));
                     return new GoToMandi(at, loads);
                 }
-                case Tag.HireDayLabourers: return new HireDayLabourers(at, r.ReadInt());
+                case Tag.HireDayLabourers: return new HireLabourers(at, -1, r.ReadInt()); // retired by ADR 0048: kept in old logs, never valid again
+                case Tag.HireLabourers: { int tile = r.ReadInt(); return new HireLabourers(at, tile, r.ReadInt()); }
                 case Tag.BuildHandHut: return new BuildHandHut(at, r.ReadInt());
                 case Tag.PostJob: return new PostJob(at, r.ReadBool());
                 case Tag.Interview: return new Interview(at, r.ReadLong());

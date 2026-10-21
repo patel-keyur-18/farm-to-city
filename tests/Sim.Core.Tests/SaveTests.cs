@@ -249,7 +249,7 @@ namespace Sim.Core.Tests
                 case 7: return new SellToTrader(t, good, r.Next(1, 200) * 1000L);
                 case 8: return new Buy(t, good, r.Next(1, 50) * 1000L);
                 case 9: return new Withdraw(t, good, r.Next(1, 50) * 1000L);
-                case 10: return new HireDayLabourers(t, r.Next(1, 3));
+                case 10: return new HireLabourers(t, tile, r.Next(1, 3));
                 case 11: return new SetStandingOrder(t, hand, OrderSpec.KeepCrop(tile, Crops[r.Next(Crops.Length)], SeedSource.Certified, "none", (SellRule)r.Next(3), Fixed.FromInt(20)));
                 case 12: return new ClearStandingOrder(t, hand, OrderTargetKind.Field, tile);
                 case 13: return new TakeLoan(t, r.Next(2) == 0 ? "moneylender" : "coop_bank", r.Next(1, 20) * 1000_00L, 4);

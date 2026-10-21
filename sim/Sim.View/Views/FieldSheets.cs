@@ -60,6 +60,7 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(ctx.Strings.Get("field.pests"), ctx.Strings.Get(crop.Spray == SprayState.None ? "field.pestsFound" : "field.pestsSprayed")));
                 else if (crop.Spray != SprayState.None) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.pests"), ctx.Strings.Get("field.pestsSprayed")));
                 vm.Actions.Add(ActionVm.Checked(ctx, "spray", ctx.Strings.Get("action.spray"), null, ActionKind.Primary, at => new Spray(at, tileId)));
+                AddLabourRows(ctx, vm, tileId);
             }
             else
             {
@@ -239,6 +240,33 @@ namespace Sim.View.Views
             while (n < places) vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("quarters.free")));
             vm.Actions.Add(ActionVm.Open("buildHut", ctx.Strings.Get("people.buildHut"), new SheetRequest("HutPlacement", 0)));
             return vm;
+        }
+
+        /// <summary>
+        /// On a growing field (ADR 0048 §3): the labourers already on its crop, and a hire row for each number free today. They stay
+        /// until the crop is ready, harvest it and go home; paid upfront to then.
+        /// </summary>
+        private static void AddLabourRows(ViewContext ctx, SheetVm vm, int tileId)
+        {
+            Simulation sim = ctx.Sim;
+            Sim.Core.People.PeopleState p = sim.State.People;
+            if (p == null) return;
+            long until = Sim.Core.People.PeopleRules.LabourUntil(sim, tileId);
+            int here = 0;
+            foreach (Sim.Core.People.Neighbour n in p.Roster) if (n.Hired && n.Tile == tileId) here++;
+            if (here > 0)
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.labourers"), ctx.Strings.Plural("field.labourersValue", here, "time", ctx.Fmt.Duration(System.Math.Max(0, until - ctx.Now)))));
+            int free = Sim.Core.People.PeopleRules.FreeNow(sim);
+            string now = PeopleWords.CareWith(ctx, Fixed.Zero);
+            for (int k = 1; k <= free; k++)
+            {
+                int count = k;
+                var line = new LineVm(ctx.Strings.Plural("field.hireN", count),
+                    ctx.Strings.Get("people.carePreview", "from", now, "to", PeopleWords.CareWith(ctx, sim.Config.Game.People.Pool.HoursPerDay.MulRatio(count, 1))), "hire", tileId * 100L + count);
+                line.Action = ActionVm.Checked(ctx, "hire:" + count, ctx.Strings.Get("action.hire"),
+                    ctx.Fmt.Coins(Sim.Core.People.PeopleRules.LabourCost(sim, count, until)), ActionKind.Primary, at => new HireLabourers(at, tileId, count));
+                vm.Lines.Add(line);
+            }
         }
 
         /// <summary>On a field or tree: "Ramesh's orders" with the order or a button to give one (ADR 0039 §8).</summary>

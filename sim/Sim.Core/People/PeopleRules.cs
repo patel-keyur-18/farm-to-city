@@ -23,13 +23,13 @@ namespace Sim.Core.People
             return hours * p.Traits[h.Trait1].HoursFactor * p.Traits[h.Trait2].HoursFactor;
         }
 
-        /// <summary>Day labourers' hours a day while they're hired today.</summary>
+        /// <summary>Labourers' hours a day while they're hired.</summary>
         public static Fixed DayLabourHours(Simulation sim)
         {
             PeopleState s = sim.State.People;
             if (s == null) return Fixed.Zero;
             int n = 0;
-            foreach (Neighbour x in s.Roster) if (x.HiredToday) n++;
+            foreach (Neighbour x in s.Roster) if (x.Hired) n++;
             return sim.Config.Game.People.Pool.HoursPerDay.MulRatio(n, 1);
         }
 
@@ -72,19 +72,27 @@ namespace Sim.Core.People
         /// <summary>The next daily pass after t.</summary>
         public static long NextDailyPass(long t) { return (t / Day + 1) * Day; }
 
-        /// <summary>Cost of <paramref name="count"/> day labourers for the rest of today: dailyWage × (nextDailyPass − t) ÷ 86,400 each.</summary>
-        public static long DayLabourCost(Simulation sim, int count)
+        /// <summary>When labourers hired for the crop on the tile go home: its readyAt rounded up to the hour (ADR 0048 §3); 0 if none grows.</summary>
+        public static long LabourUntil(Simulation sim, int tileId)
+        {
+            Crop c = sim.State.Farm.CropOn(tileId);
+            if (c == null || c.State != CropState.Growing) return 0;
+            return (c.ReadyAt + 3599) / 3600 * 3600;
+        }
+
+        /// <summary>Cost of <paramref name="count"/> labourers until <paramref name="until"/>: dailyWage × (until − t) ÷ 86,400 each.</summary>
+        public static long LabourCost(Simulation sim, int count, long until)
         {
             long t = sim.State.Clock.SimTime;
             long wage = MarketRules.Indexed(sim, sim.Config.Game.People.Pool.DailyWage);
-            return (long)((BigInteger)wage * count * (NextDailyPass(t) - t) / Day);
+            return (long)((BigInteger)wage * count * System.Math.Max(0, until - t) / Day);
         }
 
         /// <summary>Labourers free today and not yet hired.</summary>
         public static int FreeNow(Simulation sim)
         {
             int n = 0;
-            foreach (Neighbour x in sim.State.People.Roster) if (x.FreeToday && !x.HiredToday) n++;
+            foreach (Neighbour x in sim.State.People.Roster) if (x.FreeToday && !x.Hired) n++;
             return n;
         }
 

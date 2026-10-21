@@ -37,19 +37,20 @@ namespace Sim.Core.Tests
             Assert.That(differs, Is.True, "the pool changes from day to day");
         }
 
-        // Spec 006 AC-3.
+        // Spec 006 AC-3 (ADR 0048 §3): wheat sown at 18:00 is ready at midnight, so two labourers are paid to then.
         [Test]
         public void Hire_CostAndCare()
         {
             Simulation sim = Start(localSeconds: 0);
+            Assert.That(sim.Execute(new HireLabourers(18 * Hour, HomeTile, 1)).Reason, Is.EqualTo(RejectReason.NotGrowing), "nothing grows yet");
             Ok(sim, new Sow(18 * Hour, HomeTile, "wheat", Farm.SeedSource.Certified, "none"));
             Fixed before = PeopleRules.CareSupply(sim);
             long cash = sim.State.Ledger.Cash, labour = sim.State.Ledger.Balance(Account.HiredLabour);
-            Ok(sim, new HireDayLabourers(18 * Hour, 2));
+            Ok(sim, new HireLabourers(18 * Hour, HomeTile, 2));
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(4_687_50));
             Assert.That(sim.State.Ledger.Balance(Account.HiredLabour) - labour, Is.EqualTo(4_687_50));
             Assert.That(PeopleRules.CareSupply(sim) - before, Is.EqualTo(Fixed.FromInt(16)));
-            Assert.That(P(sim).Roster.Where(n => n.HiredToday).All(n => n.SecondsWorked == 6 * Hour), Is.True);
+            Assert.That(P(sim).Roster.Where(n => n.Hired).All(n => n.SecondsWorked == 6 * Hour && n.Tile == HomeTile && n.Until == Day), Is.True);
 
             // Time-weighted: the crop's Care sum gains the higher ratio only from 18:00.
             var crop = sim.State.Farm.Crops[0];
@@ -60,38 +61,81 @@ namespace Sim.Core.Tests
             // Hiring more than are free is rejected and changes nothing.
             int free = PeopleRules.FreeNow(sim);
             ulong hash = sim.State.ComputeHash();
-            Assert.That(sim.Execute(new HireDayLabourers(19 * Hour, free + 1)).Reason, Is.EqualTo(RejectReason.NoneAvailable));
+            Assert.That(sim.Execute(new HireLabourers(19 * Hour, HomeTile, free + 1)).Reason, Is.EqualTo(RejectReason.NoneAvailable));
             Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash));
 
-            // They go home at the daily pass.
+            // At midnight the wheat is ready (the same second): they harvest it, then go home.
+            sim.DrainEvents();
             sim.AdvanceTo(Day);
             Assert.That(PeopleRules.DayLabourHours(sim), Is.EqualTo(Fixed.Zero));
             Assert.That(PeopleRules.CareSupply(sim), Is.EqualTo(Farm.FounderRules.FieldHours(sim)));
+            Assert.That(sim.State.Farm.CropOn(HomeTile), Is.Null, "harvested");
+            Events.LabourersLeft left = sim.PendingEvents.OfType<Events.LabourersLeft>().Single();
+            Assert.That((left.TileId, left.Count), Is.EqualTo((HomeTile, 2)));
+            Assert.That(left.HarvestedGrams, Is.GreaterThan(0));
+        }
+
+        // Spec 006 AC-25 (ADR 0048 §3): hired for a 24-hour potato crop, they stay through the daily pass to its harvest, live or
+        // away, and aren't free to anyone else meanwhile.
+        [Test]
+        public void CropContract_StaysToHarvest()
+        {
+            Simulation sim = Start(localSeconds: 0);
+            long t = 18 * Hour + 1800;
+            sim.AdvanceTo(t);
+            Ok(sim, new Sow(t, HomeTile, "potato", Farm.SeedSource.Certified, "none"));
+            int free = PeopleRules.FreeNow(sim);
+            long cash = sim.State.Ledger.Cash;
+            Ok(sim, new HireLabourers(t, HomeTile, 2));
+            long until = Day + 19 * Hour; // ready at 42:30, rounded up to the hour
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(2L * 9_375_00 * (until - t) / Day), "paid upfront to the harvest hour");
+            Assert.That(PeopleRules.FreeNow(sim), Is.EqualTo(free - 2));
+            sim.DrainEvents();
+
+            Simulation live = Simulation.FromState(sim.Config, sim.State.Clone());
+            Simulation away = Simulation.FromState(sim.Config, sim.State.Clone());
+            live.AdvanceTo(Day + Hour);
+            Assert.That(P(live).Roster.Count(n => n.Hired), Is.EqualTo(2), "still there after the daily pass");
+            Assert.That(P(live).Roster.Count(n => n.Hired && n.FreeToday), Is.EqualTo(0), "not drawn for the new day");
+            live.AdvanceTo(until - 1);
+            Assert.That(P(live).Roster.Count(n => n.Hired), Is.EqualTo(2), "still there in the last hour");
+            Assert.That(live.State.Farm.CropOn(HomeTile).State, Is.EqualTo(Farm.CropState.Ready));
+            live.AdvanceTo(until + Hour);
+            Ok(away, new AdvanceTo(until + Hour, AdvanceMode.Away));
+            Assert.That(P(live).Roster.Count(n => n.Hired), Is.EqualTo(0));
+            Assert.That(live.State.Farm.CropOn(HomeTile), Is.Null, "the labourers harvested it");
+            Assert.That(live.DrainEvents().OfType<Events.LabourersLeft>().Single().SimTime, Is.EqualTo(until));
+            Assert.That(away.State.ComputeHash(), Is.EqualTo(live.State.ComputeHash()), "the same live or away");
         }
 
         // Spec 006 AC-4 (ADR 0039 §3, ADR 0041 §7).
         [Test]
         public void Regular_AsksToMoveIn()
         {
-            // Six 1-hour hires at 23:00 are six part days, not six days: nobody asks, even with a hut standing empty.
+            // Six 1-hour hires at 23:00 (on radish ready at midnight) are six part days, not six days: nobody asks, even with a
+            // hut standing empty.
             Simulation part = Start(seed: 5);
             BuildHut(part);
-            for (int d = 1; d <= 6; d++)
+            for (int d = 2; d <= 7; d++)
             {
+                part.AdvanceTo(d * Day - 2 * Hour);
+                Ok(part, new Sow(part.State.Clock.SimTime, HomeTile, "radish", Farm.SeedSource.Certified, "none"));
                 part.AdvanceTo(d * Day - Hour);
-                Ok(part, new HireDayLabourers(part.State.Clock.SimTime, 1));
+                Ok(part, new HireLabourers(part.State.Clock.SimTime, HomeTile, 1));
             }
             part.AdvanceTo(part.State.Clock.SimTime + 2 * Day);
             Assert.That(P(part).Applicants.Where(a => a.FromRosterId != 0), Is.Empty);
             Assert.That(P(part).Roster.Max(n => n.SecondsWorked), Is.LessThan(6 * Day));
 
-            // Hire every free labourer at the start of each day: someone reaches six full days. No hut, no ask.
+            // Hire every free labourer at the start of each day onto a new potato crop: someone reaches six full days. No hut, no ask.
             Simulation sim = Start(seed: 5, game: Game((f, j) => f == "people.json" ? j.Replace("\"acceptChance\": 0.85", "\"acceptChance\": 0.0") : j));
             for (int d = 0; P(sim).Roster.Max(n => n.SecondsWorked) < 6 * Day; d++)
             {
                 sim.AdvanceTo(d * Day + 1);
-                int free = P(sim).Roster.Count(n => n.FreeToday);
-                Ok(sim, new HireDayLabourers(sim.State.Clock.SimTime, free));
+                int free = PeopleRules.FreeNow(sim);
+                int tile = new[] { 18, 19, 20, 26, 27, 28 }.First(x => sim.State.Farm.CropOn(x) == null);
+                Ok(sim, new Sow(sim.State.Clock.SimTime, tile, "potato", Farm.SeedSource.Certified, "none"));
+                if (free > 0) Ok(sim, new HireLabourers(sim.State.Clock.SimTime, tile, free));
             }
             sim.AdvanceTo(sim.State.Clock.SimTime + Day);
             Assert.That(P(sim).Applicants, Is.Empty);
@@ -132,8 +176,9 @@ namespace Sim.Core.Tests
             for (int i = 0; i < 24 * 8 && P(sim).Applicants.Count < sim.Config.Game.People.Hand.MaxApplicants; i++)
                 sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
             Assert.That(P(sim).Applicants.Count, Is.EqualTo(3));
-            sim.AdvanceTo((sim.State.Clock.SimTime / Day + 1) * Day); // a hire at the daily pass is a full day
-            Ok(sim, new HireDayLabourers(sim.State.Clock.SimTime, 1));
+            sim.AdvanceTo((sim.State.Clock.SimTime / Day + 1) * Day); // a hire for a 24-hour crop sown on the hour is a full day
+            Ok(sim, new Sow(sim.State.Clock.SimTime, HomeTile, "potato", Farm.SeedSource.Certified, "none"));
+            Ok(sim, new HireLabourers(sim.State.Clock.SimTime, HomeTile, 1));
             sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
             Assert.That(P(sim).Applicants.Count(a => a.FromRosterId != 0), Is.EqualTo(1), "joins a full queue");
             Assert.That(P(sim).Applicants.Count, Is.EqualTo(4));

@@ -28,7 +28,7 @@ namespace Sim.View.Tests
 
         private static long T(Simulation sim) { return sim.State.Clock.SimTime; }
 
-        /// <summary>Potato on the well acres, a garden bed, a mango, day labourers, a hut and a hand with an order.</summary>
+        /// <summary>Potato on the well acres, a garden bed, a mango, labourers on a radish, a hut and a hand with an order.</summary>
         public static Simulation Growing()
         {
             Simulation sim = Rich();
@@ -38,7 +38,8 @@ namespace Sim.View.Tests
             Ok(sim, new SowGarden(T(sim), bed.Id, "garden_spinach"));
             TreeSlot slot = sim.State.Land.Slots.First(s => s.Kind == SlotKind.Yard && s.TreeId == 0);
             Ok(sim, new PlantTree(T(sim), slot.Id, "mango"));
-            Ok(sim, new HireDayLabourers(T(sim), 2));
+            Ok(sim, new Sow(T(sim), 27, "radish", SeedSource.Certified, "none"));
+            Ok(sim, new HireLabourers(T(sim), 27, 2)); // a radish of their own, so the other crops stay for the player
             Ok(sim, new BuildHandHut(T(sim), 37));
             for (int i = 0; i < 24 * 10 && sim.State.People.Hands.Count == 0; i++)
             {

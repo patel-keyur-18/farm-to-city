@@ -3,6 +3,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Market;
+using Sim.Core.Time;
 
 namespace Sim.Core.People
 {
@@ -69,9 +70,16 @@ namespace Sim.Core.People
                 return Collect(sim, h, o, good, new Harvest(t, tile, Overflow.SellRestToTrader), OrderAction.Harvested, c.HarvestGrams);
             }
             if (c != null) return false; // growing: nothing to do
-            CropDef crop = defs.Farm.Crops[o.Crop];
+            int pick = CropToSow(sim, o);
+            if (pick < 0)
+            {
+                Wait(sim, o, OrderWait.OutOfSeason);
+                return false;
+            }
+            CropDef crop = defs.Farm.Crops[pick];
             long cash = sim.State.Ledger.Cash;
-            CommandResult r = new Sow(t, tile, crop.Id, o.Seed, defs.Farm.Fertilisers[o.Fertiliser].Id).ApplyNow(sim);
+            // The order's seed source is for its own crop; the hand's other picks use certified seed.
+            CommandResult r = new Sow(t, tile, crop.Id, pick == o.Crop ? o.Seed : SeedSource.Certified, defs.Farm.Fertilisers[o.Fertiliser].Id).ApplyNow(sim);
             if (!r.Accepted)
             {
                 Wait(sim, o, r.Reason == RejectReason.OutOfSeason ? OrderWait.OutOfSeason
@@ -81,6 +89,17 @@ namespace Sim.Core.People
             }
             Done(sim, h, o, OrderAction.Sowed, defs.Market.Goods[crop.OutputGood].Id, 0, sim.State.Ledger.Cash - cash);
             return true;
+        }
+
+        /// <summary>
+        /// What the hand sows (ADR 0048 §1): the order's crop while it is in season; otherwise, or when the choice is his (crop −1),
+        /// the in-season crop with the best expected profit per season on this field.
+        /// </summary>
+        internal static int CropToSow(Simulation sim, StandingOrder o)
+        {
+            FarmDefs farm = sim.Config.Game.Farm;
+            if (o.Crop >= 0 && farm.Crops[o.Crop].SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return o.Crop;
+            return FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)o.Target], farm.Fertilisers[o.Fertiliser]);
         }
 
         private static bool Tree(Simulation sim, Hand h, StandingOrder o)
@@ -119,7 +138,8 @@ namespace Sim.Core.People
                 else if (o.Sell == SellRule.Offer)
                 {
                     m.Offered[good] += stored;
-                    m.MinPrice[good] = o.MinPrice;
+                    // The minimum is for the order's own crop; the hand's other picks keep the good's current minimum (ADR 0048 §1).
+                    if (o.Kind == OrderTargetKind.Tree || (o.Crop >= 0 && sim.Config.Game.Farm.Crops[o.Crop].OutputGood == good)) m.MinPrice[good] = o.MinPrice;
                 }
             }
             Done(sim, h, o, action, goodId, quantity, sim.State.Ledger.Cash - cash);

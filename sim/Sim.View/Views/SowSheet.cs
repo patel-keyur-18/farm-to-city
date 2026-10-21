@@ -105,7 +105,6 @@ namespace Sim.View.Views
             foreach (FertiliserDef f in defs.Farm.Fertilisers)
                 vm.Fertilisers.Add(new FertiliserVm { Id = f.Id, Name = ctx.Strings.Get("fertiliser." + f.Id), EffectText = Effect(ctx, f), Selected = f.Id == fertiliserId });
 
-            Fixed soilFactor = LandRules.SoilFactor(sim, tile);
             FertiliserDef fert = defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fertiliserId)];
             foreach (CropDef crop in defs.Farm.Crops)
             {
@@ -114,17 +113,15 @@ namespace Sim.View.Views
                 string name = ctx.Strings.Get(c.NameKey);
                 Fixed water = FarmRules.WaterFactor(defs.Farm.Farm, c, tile.Moisture);
                 Suits suits = water >= Fixed.One ? Suits.Good : water >= Fixed.Parse("0.85") ? Suits.Fair : Suits.Poor;
-                Fixed floor = MarketRules.Floor(sim, c.OutputGood);
-                // This one sowing: the yield formula with what is known now (soil, water, fertiliser; care, seed, weather and
-                // health at 1), its seed and fertiliser at today's input prices, and the harvest at the trader's price today.
-                long harvest = FarmRules.Yield(defs.Farm.Farm, c.SeasonYieldPerAcre * FarmRules.CycleShare(sim.Clock, c), soilFactor, water,
-                    Fixed.One, Fixed.One, Fixed.One, fert.YieldFactor, Fixed.One).Grams;
-                long get = Round10Coins(MarketRules.Value(sim, c.OutputGood, harvest, floor));
+                // This one sowing (FarmRules.Estimate, the same numbers a hand picks his crop by, ADR 0048).
+                SowingEstimate e = FarmRules.Estimate(sim, tile, c, fert);
+                long harvest = e.HarvestGrams;
+                long get = Round10Coins(e.Get);
                 long seedGrams = FarmRules.CycleGrams(sim.Clock, c, c.SeedPerAcrePerSeason);
-                long fertGrams = fert.Good < 0 ? 0 : FarmRules.CycleGrams(sim.Clock, c, fert.KgPerAcrePerSeason);
-                long seedValue = MarketRules.Value(sim, c.SeedGood, seedGrams, MarketRules.InputPrice(sim, c.SeedGood));
-                long fertValue = fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good));
-                long spend = seedValue + fertValue;
+                long fertGrams = e.FertiliserGrams;
+                long seedValue = e.SeedValue;
+                long fertValue = e.FertiliserValue;
+                long spend = e.Spend;
                 long profit = Round10Coins(get - spend);
                 long buy = (seed == SeedSource.Certified ? Store.ShortfallCost(sim, c.SeedGood, seedGrams) : 0)
                     + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, fertGrams));
@@ -148,7 +145,7 @@ namespace Sim.View.Views
                     at => new Sow(at, tileId, c.Id, seed, fertiliserId), "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons));
                 // An ordered field sown with another crop: the player wins, and may change the order too (ADR 0039 §6).
                 Sim.Core.People.StandingOrder order = sim.State.People?.OrderFor(Sim.Core.People.OrderTargetKind.Field, tileId);
-                if (order != null && order.Crop != defs.Farm.IndexOfCrop(c.Id))
+                if (order != null && order.Crop >= 0 && order.Crop != defs.Farm.IndexOfCrop(c.Id)) // the hand's choice stays his
                 {
                     Sim.Core.People.StandingOrder o = order;
                     string hand = PeopleWords.Name(ctx, sim.State.People.Hand(o.HandId).Name);

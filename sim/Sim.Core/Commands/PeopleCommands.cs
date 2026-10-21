@@ -10,37 +10,49 @@ using Sim.Core.People;
 
 namespace Sim.Core.Commands
 {
-    /// <summary>Hires day labourers for the rest of today, paid upfront pro rata (spec 006 §3.2).</summary>
-    public sealed class HireDayLabourers : TimedCommand
+    /// <summary>
+    /// Hires labourers for the crop growing on a field (spec 006 §3.2, ADR 0048 §3): they stay until its readyAt rounded up to
+    /// the hour, paid upfront pro rata (Dr 5100), then harvest it and go home.
+    /// </summary>
+    public sealed class HireLabourers : TimedCommand
     {
+        public int TileId { get; }
         public int Count { get; }
 
-        public HireDayLabourers(long at, int count) : base(at) { Count = count; }
+        public HireLabourers(long at, int tileId, int count) : base(at)
+        {
+            TileId = tileId;
+            Count = count;
+        }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
             if (sim.State.People == null || Count <= 0) return CommandResult.Reject(RejectReason.InvalidArgument);
+            if (TileId < 0 || TileId >= sim.State.Land.Tiles.Count || !sim.State.Land.Parcels[sim.State.Land.Tiles[TileId].ParcelId].Owned)
+                return CommandResult.Reject(RejectReason.NotGrowing);
+            long until = PeopleRules.LabourUntil(sim, TileId);
+            if (until == 0) return CommandResult.Reject(RejectReason.NotGrowing);
             if (PeopleRules.FreeNow(sim) < Count) return CommandResult.Reject(RejectReason.NoneAvailable);
-            long cost = PeopleRules.DayLabourCost(sim, Count);
+            long cost = PeopleRules.LabourCost(sim, Count, until);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             long t = sim.State.Clock.SimTime;
-            long seconds = PeopleRules.NextDailyPass(t) - t;
             FarmSystem.Accrue(sim);
             var ids = new List<long>();
             foreach (Neighbour n in sim.State.People.Roster)
             {
                 if (ids.Count == Count) break;
-                if (!n.FreeToday || n.HiredToday) continue;
-                n.HiredToday = true;
-                n.SecondsWorked += seconds;
+                if (!n.FreeToday || n.Hired) continue;
+                n.Tile = TileId;
+                n.Until = until;
+                n.SecondsWorked += until - t;
                 ids.Add(n.Id);
             }
             if (cost > 0)
                 sim.State.Ledger.Post(t, sim.Period, "ledger.dayLabourers", "people",
                     new Posting(Account.HiredLabour, cost), new Posting(Account.Cash, -cost));
             FarmSystem.Refresh(sim);
-            sim.Emit(new DayLabourersHired(t, ids.AsReadOnly(), cost));
+            sim.Emit(new LabourersHired(t, TileId, ids.AsReadOnly(), cost, until));
             return CommandResult.Ok;
         }
     }
@@ -224,6 +236,9 @@ namespace Sim.Core.Commands
     {
         public OrderTargetKind Kind { get; }
         public long Target { get; }
+        /// <summary>The crop id for <see cref="CropId"/> that leaves the choice to the hand (ADR 0048 §1).</summary>
+        public const string HandChooses = "auto";
+
         public string CropId { get; }
         public SeedSource Seed { get; }
         public string FertiliserId { get; }
@@ -287,9 +302,9 @@ namespace Sim.Core.Commands
                 if (Order.Target < 0 || Order.Target >= sim.State.Land.Tiles.Count) return CommandResult.Reject(RejectReason.UnknownTarget);
                 Tile tile = sim.State.Land.Tiles[(int)Order.Target];
                 if (tile.Terrain != Terrain.Farm || !sim.State.Land.Parcels[tile.ParcelId].Owned) return CommandResult.Reject(RejectReason.UnknownTarget);
-                crop = defs.Farm.IndexOfCrop(Order.CropId);
-                if (crop < 0) return CommandResult.Reject(RejectReason.UnknownCrop);
-                if (Order.Seed == SeedSource.Saved && !defs.Farm.Crops[crop].CanSaveSeed) return CommandResult.Reject(RejectReason.SeedCannotBeSaved);
+                crop = Order.CropId == OrderSpec.HandChooses ? -1 : defs.Farm.IndexOfCrop(Order.CropId);
+                if (crop < 0 && Order.CropId != OrderSpec.HandChooses) return CommandResult.Reject(RejectReason.UnknownCrop);
+                if (Order.Seed == SeedSource.Saved && (crop < 0 || !defs.Farm.Crops[crop].CanSaveSeed)) return CommandResult.Reject(RejectReason.SeedCannotBeSaved);
                 fert = defs.Farm.IndexOfFertiliser(Order.FertiliserId);
                 if (fert < 0) return CommandResult.Reject(RejectReason.UnknownFertiliser);
             }

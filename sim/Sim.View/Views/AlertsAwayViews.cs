@@ -254,7 +254,7 @@ namespace Sim.View.Views
             { "ParcelSeized", Use.Alert }, { "ForeclosureCompleted", Use.Alert }, { "CreditScoreChanged", Use.StateOnly }, { "ObligationPaid", Use.StateOnly },
             { "ObligationUnpaid", Use.Alert },
             // Spec 006.
-            { "DayLabourersHired", Use.Motion }, { "DayLabourersLeft", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
+            { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "HandDismissed", Use.StateOnly },

@@ -71,7 +71,7 @@ namespace Sim.Core.Saves
         /// Raised whenever the state's fields change (spec 007 §3.1). From schema 3 on <c>minSchema</c> stays 3: a new schema ships a
         /// migration step in the readers (branch on <see cref="SaveReader.Schema"/>) and a frozen fixture save (ADR 0047 §3, AC-14).
         /// </summary>
-        public const int SchemaVersion = 3; // 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
+        public const int SchemaVersion = 4; // 4: labourers hired for a crop, a neighbour's tile and until (ADR 0048); 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
 
         public const int DefaultMaxLogEntries = 100_000;
 

@@ -3,29 +3,43 @@ using Sim.Core.People;
 
 namespace Sim.Core.Events
 {
-    /// <summary>Day labourers hired for the rest of the day (spec 006 §3.2).</summary>
-    public sealed class DayLabourersHired : SimEvent
+    /// <summary>Labourers hired for the crop on a field, until its harvest (spec 006 §3.2, ADR 0048 §3).</summary>
+    public sealed class LabourersHired : SimEvent
     {
+        public int TileId { get; }
         public IReadOnlyList<long> NeighbourIds { get; }
         public long Cost { get; }
+        public long Until { get; }
 
-        public DayLabourersHired(long simTime, IReadOnlyList<long> neighbourIds, long cost) : base(simTime)
+        public LabourersHired(long simTime, int tileId, IReadOnlyList<long> neighbourIds, long cost, long until) : base(simTime)
         {
+            TileId = tileId;
             NeighbourIds = neighbourIds;
             Cost = cost;
+            Until = until;
         }
 
-        protected override string Describe() { return "DayLabourersHired(ids=" + string.Join(",", NeighbourIds) + ", cost=" + Cost + ")"; }
+        protected override string Describe()
+        {
+            return "LabourersHired(tile=" + TileId + ", ids=" + string.Join(",", NeighbourIds) + ", cost=" + Cost + ", until=" + Until + ")";
+        }
     }
 
-    /// <summary>The day labourers went home at the daily pass.</summary>
-    public sealed class DayLabourersLeft : SimEvent
+    /// <summary>Labourers went home when their crop was ready, having harvested it (grams; 0 if there was nothing to harvest).</summary>
+    public sealed class LabourersLeft : SimEvent
     {
+        public int TileId { get; }
         public int Count { get; }
+        public long HarvestedGrams { get; }
 
-        public DayLabourersLeft(long simTime, int count) : base(simTime) { Count = count; }
+        public LabourersLeft(long simTime, int tileId, int count, long harvestedGrams) : base(simTime)
+        {
+            TileId = tileId;
+            Count = count;
+            HarvestedGrams = harvestedGrams;
+        }
 
-        protected override string Describe() { return "DayLabourersLeft(count=" + Count + ")"; }
+        protected override string Describe() { return "LabourersLeft(tile=" + TileId + ", count=" + Count + ", harvested=" + HarvestedGrams + ")"; }
     }
 
     /// <summary>A hand's hut was started (spec 006 §3.4).</summary>

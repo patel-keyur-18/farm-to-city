@@ -27,7 +27,7 @@
     { "id": "season.winter",     "triggers": [{ "kind": "seasonStart", "season": "winter" }], "action": "founder" },
     { "id": "season.spring",     "triggers": [{ "kind": "seasonStart", "season": "spring" }] },
     { "id": "labour",            "triggers": [{ "kind": "careBelowForHours", "hours": 1 }], "action": "people" },
-    { "id": "borrowing",         "triggers": [{ "kind": "rejection", "reason": "InsufficientFunds", "commands": ["Sow", "BuildHandHut", "HireDayLabourers", "OfferContract"] },
+    { "id": "borrowing",         "triggers": [{ "kind": "rejection", "reason": "InsufficientFunds", "commands": ["Sow", "BuildHandHut", "HireLabourers", "OfferContract"] },
                                               { "kind": "cashBelowHutCost", "after": "labour" }], "action": "money" },
     { "id": "sick",              "triggers": [{ "kind": "event", "events": ["FounderSick"] }], "action": "founder" },
     { "id": "hamlet",            "triggers": [{ "kind": "event", "events": ["EraUnlocked"] }], "action": "progress" }

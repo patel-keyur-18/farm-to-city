@@ -93,7 +93,7 @@ namespace Sim.Core.Saves
                     case CropHarvested _: Milestone(wallUtc, e.SimTime, "firstHarvest"); break;
                     case GardenPicked _: Milestone(wallUtc, e.SimTime, "firstGardenPick"); break;
                     case SoldToTrader _: case MarketSales _: case MandiTripReturned _: Milestone(wallUtc, e.SimTime, "firstSale"); break;
-                    case DayLabourersHired _: Milestone(wallUtc, e.SimTime, "firstHire"); break;
+                    case LabourersHired _: Milestone(wallUtc, e.SimTime, "firstHire"); break;
                     case HandHired _:
                         Milestone(wallUtc, e.SimTime, "firstHire");
                         Milestone(wallUtc, e.SimTime, "firstHand");

@@ -89,7 +89,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             SheetVm s = PeopleSheet.Build(ViewKit2.Context(sim));
-            Assert.That(s.Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(PeopleRules.FreeNow(sim)));
+            Assert.That(s.Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "labourers are hired from a growing field (ADR 0048)");
             Assert.That(s.Lines.Single(l => l.Action?.Id == "buildHut").Action.Opens.Value.Kind, Is.EqualTo("HutPlacement"));
             Assert.That(s.Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
 
@@ -111,7 +111,15 @@ namespace Sim.View.Tests
             LineVm give = FieldSheets.ForTile(ctx, 19).Lines.Single(l => l.Action?.Id == "order");
             Assert.That(give.Action.Opens.Value.Kind, Is.EqualTo("Order"));
             SheetVm crops = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, null);
-            Assert.That(crops.Lines.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count));
+            Assert.That(crops.Lines.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count + 1), "the hand's choice, then each crop");
+            Assert.That(crops.Lines[0].Action.Opens.Value.Arg, Is.EqualTo(OrderSpec.HandChooses));
+            SheetVm auto = OrderSheet.Build(ctx, OrderTargetKind.Field, 26, OrderSpec.HandChooses + "|every");
+            Assert.That(auto.Lines.Any(l => l.Action?.Id == "set:offer"), Is.False, "no minimum price: his crop changes with the season");
+            Assert.That(sim.Execute(auto.Lines.Single(l => l.Action?.Id == "set:store").Action.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(sim.State.People.OrderFor(OrderTargetKind.Field, 26).Crop, Is.EqualTo(-1));
+            Assert.That(sim.State.Farm.CropOn(26), Is.Not.Null, "he sows at once");
+            string pick = ctx.Strings.Get(sim.Config.Game.Farm.Crops[sim.State.Farm.CropOn(26).Def].NameKey);
+            Assert.That(PeopleWords.Order(ctx, sim.State.People.OrderFor(OrderTargetKind.Field, 26)), Does.StartWith("Let ").And.Contain("(" + pick + " now)"));
             SheetVm how = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, "radish");
             Assert.That(how.Lines.Select(l => l.Action?.Opens?.Arg), Is.EqualTo(new[] { "radish|once", "radish|every" }), "this season only, or every season");
             SheetVm sell = OrderSheet.Build(ctx, OrderTargetKind.Field, 19, "radish|every");
@@ -176,7 +184,7 @@ namespace Sim.View.Tests
             Ok(sim, new Sow(t, 19, "radish", SeedSource.Certified, "none"));
             Ok(sim, new Sow(t, 20, "radish", SeedSource.Certified, "none"));
             PersonVm idle = MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Hand);
-            Assert.That(idle.Patrol, Is.Empty, "no orders: home");
+            Assert.That(idle.Patrol, Is.EqualTo(new[] { 19, 20 }), "no orders: his hours still tend the growing fields (ADR 0048 §2)");
             Assert.That(idle.HomeTile, Is.EqualTo(37));
             Assert.That(idle.HomeHut, Is.EqualTo(h.HutId));
             Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(19, "radish", SeedSource.Certified, "none", SellRule.Store)));
@@ -187,13 +195,40 @@ namespace Sim.View.Tests
             Ok(sim, new Sow(t, 26, "radish", SeedSource.Certified, "none"));
             map = MapView.Build(ViewKit2.Context(sim));
             Assert.That(map.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Is.EqualTo(new[] { 26 }), "and works the field nobody else has");
+            Assert.That(map.People.Single(p => p.Kind == PersonKind.Hand).Patrol, Is.EqualTo(new[] { 19, 20, 26 }), "his own fields first, then the rest");
+
+            // Nothing growing and no orders: home.
+            foreach (int tile in new[] { 19, 20 }) Ok(sim, new ClearStandingOrder(t, h.Id, OrderTargetKind.Field, tile));
+            foreach (int tile in new[] { 19, 20, 26 }) Ok(sim, new ClearField(t, tile));
+            Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Hand).Patrol, Is.Empty);
+        }
+
+        // Spec 006 AC-25 (ADR 0048 §3): labourers are hired from a growing field, till its harvest.
+        [Test]
+        public void FieldSheet_HiresTillHarvest()
+        {
+            Simulation sim = Rich();
+            long t = sim.State.Clock.SimTime;
+            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 20).Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
+            Ok(sim, new Sow(t, 20, "potato", SeedSource.Certified, "none"));
+            int free = PeopleRules.FreeNow(sim);
+            SheetVm field = FieldSheets.ForTile(ViewKit2.Context(sim), 20);
+            List<LineVm> hires = field.Lines.Where(l => l.Action?.Id?.StartsWith("hire:") == true).ToList();
+            Assert.That(hires.Count, Is.EqualTo(free));
+            Assert.That(hires[0].Label, Is.EqualTo("1 labourer till harvest"));
+            Assert.That(sim.Execute(hires[0].Action.Create(t)).Accepted, Is.True);
+            field = FieldSheets.ForTile(ViewKit2.Context(sim), 20);
+            Assert.That(field.Lines.Single(l => l.Label == "Labourers on this crop").Value, Does.StartWith("1, harvest in"));
+            MapVm map = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(map.People.Single(p => p.Kind == PersonKind.Labourer).Patrol[0], Is.EqualTo(20), "to their own field first");
         }
 
         [Test]
         public void Map_People_And_Construction()
         {
             Simulation sim = Rich();
-            Ok(sim, new HireDayLabourers(sim.State.Clock.SimTime, 2));
+            Ok(sim, new Sow(sim.State.Clock.SimTime, 20, "potato", SeedSource.Certified, "none"));
+            Ok(sim, new HireLabourers(sim.State.Clock.SimTime, 20, 2));
             Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 37));
             sim.AdvanceTo(sim.State.Clock.SimTime + 12 * Hour);
             MapVm map = MapView.Build(ViewKit2.Context(sim));
