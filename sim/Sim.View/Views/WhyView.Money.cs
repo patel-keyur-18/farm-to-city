@@ -66,6 +66,8 @@ namespace Sim.View.Views
             if (!good.PriceControlled) Row(vm, ctx, "why.price.index", Effect(ctx, sim.State.Market.PriceIndex));
             else Text(vm, ctx, "why.price.controlled");
             Row(vm, ctx, "why.price.season", Effect(ctx, sim.Config.Game.Market.Region.SeasonalFactor(g, (int)s)), "season", SeasonName(ctx, s));
+            if (sim.Config.Game.Market.Truck != null && good.Kind == GoodKind.Produce && !good.PriceControlled)
+                Row(vm, ctx, "why.price.today", Effect(ctx, sim.State.Market.DailyFactorOf(g))); // spec 011 §3.1b
             Row(vm, ctx, "why.price.regional", Price(ctx, MarketRules.RegionalPrice(sim, g)));
             return vm;
         }

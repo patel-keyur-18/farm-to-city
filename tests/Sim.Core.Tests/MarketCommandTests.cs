@@ -161,7 +161,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Offer_MinPrice()
         {
-            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet(TestSim.NoSpoilage));
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet((f, j) => TestSim.NoTruck(f, TestSim.NoSpoilage(f, j))));
             int potato = Good(sim, "potato");
             sim.State.Market.Stock[potato] = 240_000;
             Assert.That(sim.Execute(new Offer(0, "potato", 240_000, Fixed.Parse("6.50"))).Accepted, Is.True); // regional 6.80, floor 5.30

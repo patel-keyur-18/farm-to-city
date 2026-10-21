@@ -57,6 +57,7 @@ namespace Sim.Core.Commands
             if (Quantity > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
             sim.State.Market.Offered[g] += Quantity;
             sim.State.Market.MinPrice[g] = MinPrice ?? Fixed.Zero;
+            Store.CutHeld(sim, g);
             return CommandResult.Ok;
         }
     }
@@ -84,7 +85,10 @@ namespace Sim.Core.Commands
         }
     }
 
-    /// <summary>Sells stock not on offer to the regional trader at the floor, now, up to its capacity today (spec 004 §3.3).</summary>
+    /// <summary>
+    /// Sells stock not on offer to the regional trader at the floor, now, up to its capacity today (spec 004 §3.3); refused
+    /// with TraderAway while the truck is away (spec 011 §3.1).
+    /// </summary>
     public sealed class SellToTrader : TimedCommand
     {
         public string GoodId { get; }
@@ -100,6 +104,7 @@ namespace Sim.Core.Commands
         {
             RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
             if (r != RejectReason.None) return CommandResult.Reject(r);
+            if (!MarketRules.TraderBuys(sim)) return CommandResult.Reject(RejectReason.TraderAway);
             if (!MarketChecks.IsProduce(sim, g)) return CommandResult.Reject(RejectReason.NotProduce);
             if (Quantity > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
             if (Quantity > MarketRules.TraderCapacityLeft(sim, g)) return CommandResult.Reject(RejectReason.TraderFull);

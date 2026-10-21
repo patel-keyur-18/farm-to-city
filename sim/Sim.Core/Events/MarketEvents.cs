@@ -142,3 +142,53 @@ namespace Sim.Core.Events
         protected override string Describe() { return "InputsBought(good=" + GoodId + ", q=" + Quantity + ", amount=" + Amount + ")"; }
     }
 }
+
+namespace Sim.Core.Events
+{
+    /// <summary>Why the trader's truck left (spec 011 §5).</summary>
+    public enum TruckLeaveReason
+    {
+        Day = 0,
+        Full = 1,
+    }
+
+    /// <summary>The trader's truck pulled up at 6:00: its counts reset (spec 011 §3.1).</summary>
+    public sealed class TruckArrived : SimEvent
+    {
+        public TruckArrived(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "TruckArrived"; }
+    }
+
+    /// <summary>The truck left, full or at midnight, with what it bought today in grams (spec 011 §5).</summary>
+    public sealed class TruckLeft : SimEvent
+    {
+        public TruckLeaveReason Reason { get; }
+        public long LoadGrams { get; }
+
+        public TruckLeft(long simTime, TruckLeaveReason reason, long loadGrams) : base(simTime)
+        {
+            Reason = reason;
+            LoadGrams = loadGrams;
+        }
+
+        protected override string Describe() { return "TruckLeft(" + Reason + ", " + LoadGrams + " g)"; }
+    }
+
+    /// <summary>At 6:00 the hands sold what their SELL TO TRADER orders held for the truck (spec 011 §3.1).</summary>
+    public sealed class HandSoldHeld : SimEvent
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+        public long Amount { get; }
+
+        public HandSoldHeld(long simTime, string goodId, long quantity, long amount) : base(simTime)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "HandSoldHeld(good=" + GoodId + ", q=" + Quantity + ", amount=" + Amount + ")"; }
+    }
+}

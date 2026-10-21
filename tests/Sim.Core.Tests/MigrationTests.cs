@@ -72,6 +72,20 @@ namespace Sim.Core.Tests
                     Assert.That(r.State.People.Roster.All(n => n.Tile == -1 && (n.Until == 0 || n.Until == pass)), Is.True, name + ": labourers migrated");
                 }
 
+                if (r.Header.Schema < 6)
+                {
+                    // Spec 011 §4 (AC-14): the truck here by the save's hour, its load the trader's counts, no daily move, nothing held.
+                    Market.MarketState m = r.State.Market;
+                    int hour = (int)(r.State.Clock.SimTime % TestSim.Day / TestSim.Hour);
+                    Assert.That(m.TruckHere, Is.EqualTo(hour >= 6), name + ": the truck by the hour");
+                    Assert.That(m.TruckLoadToday, Is.EqualTo(m.TraderBoughtToday.Sum()), name + ": the load");
+                    for (int g = 0; g < m.Stock.Length; g++)
+                    {
+                        Assert.That(m.DailyFactorOf(g), Is.EqualTo(Maths.Fixed.One), name + ": factor 1");
+                        Assert.That(m.HeldForTruckOf(g), Is.EqualTo(0), name + ": nothing held");
+                    }
+                }
+
                 Simulation sim = Simulation.FromState(config, r.State);
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
                 sim.DrainEvents();

@@ -112,7 +112,7 @@ namespace Sim.Core.Tests
         [Test]
         public void GroceriesSaved()
         {
-            Simulation sim = NewFarm(game: RichGame());
+            Simulation sim = NewFarm(game: RichGame(NoTruck));
             Assert.That(sim.Execute(new SowGarden(0, 1, "garden_spinach")).Accepted, Is.True);
             Assert.That(sim.Execute(new PickGarden(15 * 60, 1)).Accepted, Is.True);
             sim.AdvanceTo(Day);

@@ -90,9 +90,9 @@ namespace Sim.View.Tests
 
             int potato = sim.Config.Game.Market.Goods.ToList().FindIndex(g => g.Id == "potato");
             WhyVm trader = WhyView.Build(ctx, "traderPrice", potato);
-            Assert.That(trader.Value, Is.EqualTo("5.30 /kg"), "potato in Spring (spec 004 AC-2)");
+            Assert.That(trader.Value, Is.EqualTo(ctx.Fmt.PricePerKg(Sim.Core.Market.MarketRules.Floor(sim, potato))), "potato in Spring (spec 004 AC-2, today's market spec 011 §3.1b)");
             Assert.That(trader.Rows.Select(r => r.Label), Is.EqualTo(new[]
-                { "Usual price in the valley", "Prices this year (they rise a little each season)", "Season: Spring", "The valley's price today", "Carting it to town costs" }));
+                { "Usual price in the valley", "Prices this year (they rise a little each season)", "Season: Spring", "Today's market (set at 6:00)", "The valley's price today", "Carting it to town costs" }));
 
             Tile unowned = sim.State.Land.Tiles.First(t => t.Terrain == Terrain.Farm && !sim.State.Land.Parcels[t.ParcelId].Owned);
             WhyVm land = WhyView.Build(ctx, "landPrice", unowned.Id);

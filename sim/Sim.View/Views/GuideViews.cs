@@ -239,6 +239,7 @@ namespace Sim.View.Views
                     long cap = Store.CapacityGrams(sim);
                     return cap > 0 && Store.UsedGrams(sim) * 100 > cap * t.Number;
                 case TriggerKind.TraderFull:
+                    if (!MarketRules.TraderBuys(sim)) return false; // the truck away isn't "full" (spec 011: truckAway)
                     var goods = sim.Config.Game.Market.Goods;
                     for (int g = 0; g < goods.Count; g++)
                         if (goods[g].Kind == GoodKind.Produce && sim.Config.Game.Market.Region.TraderBuyPerDay(g) > 0 && MarketRules.TraderCapacityLeft(sim, g) == 0) return true;

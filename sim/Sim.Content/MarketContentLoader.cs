@@ -17,8 +17,8 @@ namespace Sim.Content
             RegionDef region = LoadRegion(regionJson, goods);
             const string root = "market";
             JObject o = Object(Parse(marketJson, root), root);
-            OnlyFields(o, root, "market", "mandi", "economy");
-            return new MarketDefs(goods, region, LoadEconomy(o, root), LoadMarket(o, root), LoadMandi(o, root));
+            OnlyFields(o, root, "market", "mandi", "economy", "truck");
+            return new MarketDefs(goods, region, LoadEconomy(o, root), LoadMarket(o, root), LoadMandi(o, root), LoadTruck(o, root));
         }
 
         private static List<GoodDef> LoadGoods(string json)
@@ -33,7 +33,7 @@ namespace Sim.Content
                 string p = Index(root + ".goods", i);
                 JObject g = Object(tokens[i], p);
                 OnlyFields(g, p, "id", "nameKey", "kind", "unit", "basePrice", "elasticity", "spoilagePerDay", "sales",
-                    "edible", "weightKg", "priceControlled");
+                    "edible", "weightKg", "priceControlled", "dailyVolatility", "dailyBand");
                 string id = UniqueId(g, p, list.ConvertAll(x => x.Id));
                 string kind = String(Required(g, p, "kind"), p + ".kind");
                 if (kind != "produce" && kind != "input") throw new ContentException(p + ".kind", "expected produce or input");
@@ -63,8 +63,12 @@ namespace Sim.Content
                 if (edible && !produce) throw new ContentException(p + ".edible", "only produce is edible");
                 Fixed weight = g["weightKg"] == null ? Fixed.One : Bounded(g, p, "weightKg", "0", "100");
                 bool controlled = g["priceControlled"] != null && Bool(g["priceControlled"], p + ".priceControlled");
+                if (!produce && (g["dailyVolatility"] != null || g["dailyBand"] != null))
+                    throw new ContentException(p + ".dailyVolatility", "only produce has a daily price (spec 011 §3.1b)");
+                Fixed volatility = g["dailyVolatility"] == null ? Fixed.Zero : Bounded(g, p, "dailyVolatility", "0", "0.1");
+                Fixed band = g["dailyBand"] == null ? Fixed.Zero : Bounded(g, p, "dailyBand", "0", "0.25");
                 list.Add(new GoodDef(id, String(Required(g, p, "nameKey"), p + ".nameKey"), produce ? GoodKind.Produce : GoodKind.Input,
-                    u, price, elasticity, spoilage, sales, edible, weight, controlled));
+                    u, price, elasticity, spoilage, sales, edible, weight, controlled, volatility, band));
             }
             return list;
         }
@@ -156,7 +160,7 @@ namespace Sim.Content
         {
             string p = root + ".market";
             JObject m = Object(Required(o, root, "market"), p);
-            OnlyFields(m, p, "adjustmentRate", "railMin", "railMax", "offerSpreadHours", "unmetWindowHours", "minLotKg");
+            OnlyFields(m, p, "adjustmentRate", "railMin", "railMax", "offerSpreadHours", "unmetWindowHours", "minLotKg", "dailyReversion");
             Fixed k = Bounded(m, p, "adjustmentRate", "0.01", "1");
             Fixed railMin = Number(Required(m, p, "railMin"), p + ".railMin");
             if (railMin <= Fixed.Zero || railMin >= Fixed.One) throw new ContentException(p + ".railMin", "must be between 0 and 1");
@@ -167,7 +171,24 @@ namespace Sim.Content
             int window = Int(Required(m, p, "unmetWindowHours"), p + ".unmetWindowHours");
             Range(window, 1, 384, p + ".unmetWindowHours");
             Fixed lot = Bounded(m, p, "minLotKg", "0.001", "1000");
-            return new MarketDef(k, railMin, railMax, spread, window, lot.MulRatio(1000, 1).RoundToLong());
+            Fixed reversion = m["dailyReversion"] == null ? Fixed.Zero : Bounded(m, p, "dailyReversion", "0", "1");
+            return new MarketDef(k, railMin, railMax, spread, window, lot.MulRatio(1000, 1).RoundToLong(), reversion);
+        }
+
+        /// <summary>The trader's truck (spec 011 §4); absent in Phase 1 content.</summary>
+        private static TruckDef LoadTruck(JObject o, string root)
+        {
+            if (o["truck"] == null) return null;
+            string p = root + ".truck";
+            JObject t = Object(o["truck"], p);
+            OnlyFields(t, p, "arriveHour", "leaveHour", "loadKg");
+            int arrive = Int(Required(t, p, "arriveHour"), p + ".arriveHour");
+            Range(arrive, 0, 23, p + ".arriveHour");
+            int leave = Int(Required(t, p, "leaveHour"), p + ".leaveHour");
+            Range(leave, 0, 23, p + ".leaveHour");
+            if (leave == arrive) throw new ContentException(p + ".leaveHour", "must differ from arriveHour");
+            Fixed load = Bounded(t, p, "loadKg", "1", "1000000");
+            return new TruckDef(arrive, leave, load.MulRatio(1000, 1).RoundToLong());
         }
 
         private static MandiDef LoadMandi(JObject o, string root)

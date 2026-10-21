@@ -210,6 +210,9 @@ namespace Sim.Core.People
         StoreFull = 3,
         NoSavedSeed = 4,
         Paused = 5,
+
+        /// <summary>The store is full and the trader's truck is away (spec 011 §3.6b).</summary>
+        TraderAway = 6,
     }
 
     /// <summary>A standing order: one hand, one target (spec 006 §3.8). Target: a tile id or a tree slot id.</summary>

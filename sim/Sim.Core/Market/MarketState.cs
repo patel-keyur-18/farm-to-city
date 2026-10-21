@@ -8,7 +8,7 @@ namespace Sim.Core.Market
     {
         public Fixed PriceIndex { get; internal set; }
 
-        /// <summary>What the trader has bought today, per good, in quantity units. Reset at each daily pass.</summary>
+        /// <summary>What the trader has bought today, per good, in quantity units. Reset when the truck arrives (or, without a truck, at each daily pass).</summary>
         internal long[] TraderBoughtToday;
 
         /// <summary>The hut store: quantity per good in its units (grams, ml, each), produce and inputs (spec 004 §3.5).</summary>
@@ -37,8 +37,26 @@ namespace Sim.Core.Market
         public MandiTrip Trip { get; internal set; }
         public long LastTripDay { get; internal set; } = -1;
 
+        /// <summary>Whether the content has the trader's truck (spec 011): only then are the fields below kept, hashed and saved.</summary>
+        internal bool Trading;
+
+        /// <summary>The truck is at the farm (spec 011 §3.1); the load it has bought since it arrived, in grams.</summary>
+        public bool TruckHere { get; internal set; }
+        public long TruckLoadToday { get; internal set; }
+
+        /// <summary>Each produce good's daily price factor (spec 011 §3.1b), and yesterday's for the good's sheet; 1 for inputs.</summary>
+        internal Fixed[] DailyFactor;
+        internal Fixed[] PrevFactor;
+
+        /// <summary>What hands' SELL TO TRADER orders stored while the truck was away or full, sold at the next arrival (spec 011 §3.1).</summary>
+        internal long[] HeldForTruck;
+
         internal MarketState(int goods, int unmetWindow)
         {
+            DailyFactor = new Fixed[goods];
+            PrevFactor = new Fixed[goods];
+            for (int g = 0; g < goods; g++) DailyFactor[g] = PrevFactor[g] = Fixed.One;
+            HeldForTruck = new long[goods];
             TraderBoughtToday = new long[goods];
             Stock = new long[goods];
             StockCost = new long[goods];
@@ -77,6 +95,12 @@ namespace Sim.Core.Market
 
         public long RailHitsOf(int good) { return RailHits[good]; }
 
+        public Fixed DailyFactorOf(int good) { return DailyFactor[good]; }
+
+        public Fixed YesterdayFactorOf(int good) { return PrevFactor[good]; }
+
+        public long HeldForTruckOf(int good) { return HeldForTruck[good]; }
+
         public long MarketHours { get { return Hours; } }
 
         internal MarketState Clone()
@@ -97,6 +121,12 @@ namespace Sim.Core.Market
                 Hours = Hours,
                 Trip = Trip?.Clone(),
                 LastTripDay = LastTripDay,
+                Trading = Trading,
+                TruckHere = TruckHere,
+                TruckLoadToday = TruckLoadToday,
+                DailyFactor = (Fixed[])DailyFactor.Clone(),
+                PrevFactor = (Fixed[])PrevFactor.Clone(),
+                HeldForTruck = (long[])HeldForTruck.Clone(),
             };
             for (int g = 0; g < Unmet.Length; g++) c.Unmet[g] = (Fixed[])Unmet[g].Clone();
             return c;
@@ -124,10 +154,19 @@ namespace Sim.Core.Market
             h.WriteBool(Trip != null);
             if (Trip != null) Trip.WriteTo(h);
             h.WriteLong(LastTripDay);
+            if (!Trading) return; // Phase 1 content (the golden replays) hashes as before
+            h.WriteBool(TruckHere);
+            h.WriteLong(TruckLoadToday);
+            for (int g = 0; g < Stock.Length; g++)
+            {
+                h.WriteFixed(DailyFactor[g]);
+                h.WriteFixed(PrevFactor[g]);
+                h.WriteLong(HeldForTruck[g]);
+            }
         }
 
         /// <summary>Per-good arrays are written in the save's good order and put back in the running content's.</summary>
-        internal static MarketState ReadFrom(SaveReader r, int unmetWindow)
+        internal static MarketState ReadFrom(SaveReader r, int unmetWindow, Definitions.TruckDef truck, long simTime)
         {
             Fixed index = r.ReadFixed();
             int goods = r.ReadCount();
@@ -152,6 +191,24 @@ namespace Sim.Core.Market
             s.Hours = r.ReadLong();
             s.Trip = r.ReadBool() ? MandiTrip.ReadFrom(r) : null;
             s.LastTripDay = r.ReadLong();
+            if (truck == null) return s;
+            s.Trading = true;
+            if (r.Schema < 6)
+            {
+                // Spec 011 §4: the truck is here by the save's hour, its load is what the trader bought today.
+                s.TruckHere = truck.HereAt((int)(simTime % Definitions.ClockDef.SecondsPerDay / 3600));
+                foreach (long q in s.TraderBoughtToday) s.TruckLoadToday += q;
+                return s;
+            }
+            s.TruckHere = r.ReadBool();
+            s.TruckLoadToday = r.ReadLong();
+            for (int g = 0; g < goods; g++)
+            {
+                int at = r.Slot(ContentTable.Good, g);
+                s.DailyFactor[at] = r.ReadFixed();
+                s.PrevFactor[at] = r.ReadFixed();
+                s.HeldForTruck[at] = r.ReadLong();
+            }
             return s;
         }
     }

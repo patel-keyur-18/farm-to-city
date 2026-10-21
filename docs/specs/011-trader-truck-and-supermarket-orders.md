@@ -144,7 +144,7 @@ At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what
 | `MarketDef` | `dailyReversion` | Fixed | 0.3 | 0–1 | |
 | `NotifyDef` | kinds | | adds `OrdersPosted` (Needs you) | | |
 
-**New or changed state** (save schema 5, with spec 010):
+**New or changed state** (save schema 6; schema 5 is spec 010's map. Implementation note, 2026-10-21: the Editor's town was already at schema 5, so these fields take their own schema; a schema-5 or older save migrates as below and becomes its own replay base, as the map migration does):
 
 | Entity | Field | Type | Notes |
 | --- | --- | --- | --- |
@@ -152,6 +152,7 @@ At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what
 | | `truckLoadToday` | long (g) | Migrated as the sum of `traderBoughtToday` |
 | | `freshToday` | long[] per good (g) | Migrated as 0 |
 | | `dailyFactor` | Fixed[] per good | Migrated as 1.0 |
+| | `prevFactor` | Fixed[] per good | Yesterday's factor, for the good's sheet ("yesterday 5.30, ▲6%"). Migrated as 1.0 |
 | | `heldForTruck` | long[] per good (g) | Migrated as 0 |
 | `SupermarketOrder` | `id`, `crop`, `amount`, `delivered`, `price`, `postedAt` | | In id order; `NextOrderId` |
 
@@ -228,7 +229,7 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | AC-11 | With an open potato order and potato ripening before midnight, the hand's `BestCrop` values its harvest at the order price up to what's left; after midnight it uses the Floor | `OrderTests.BestCrop_CountsOrderPrice` |
 | AC-12 | Rice and potato take 15 h; their per-sowing harvest and seed scale by `cycleShare`; one acre's season totals equal the 24 h version's; a crop sown before the change keeps its `readyAt` | `CropTests.RiceAndPotato_15h` |
 | AC-13 | The notification planner adds one `OrdersPosted` item at 6:00, moved to 07:00 by quiet hours, with the crops' names and no amount | `NotificationTests.Plan_OrdersPosted` |
-| AC-14 | A schema-4 save loads at schema 5 with `truckHere` by its hour, `truckLoadToday` = the sum of its trader counts, no orders and no fresh stock; it advances a day and round-trips | `MigrationTests.Schema5_TruckAndOrders` |
+| AC-14 | A schema-4 or schema-5 save loads at schema 6 with `truckHere` by its hour, `truckLoadToday` = the sum of its trader counts, no orders and no fresh stock; it advances a day and round-trips | `MigrationTests.Schema5_TruckAndOrders` |
 | AC-15 | A year with the bot under the new rules gives the same hash in one chunk or many; the golden replays on frozen content are unchanged | `TruckTests.ChunkingInvariance`, `ReplayTests.*` |
 | AC-16 | In a new game started at 2:00, selling the first garden basket to the trader succeeds; after the first-sale step the same sale at 2:00 is rejected with `TraderAway` | `TruckTests.FirstSale_AnyHour` |
 | AC-17 | No orders are posted before the first session's last step is done; the first `arriveHour` pass after it posts them and triggers `firstOrders` once; the first `TraderAway` triggers `truckAway` once; `comeBack` reads "tonight" or "tomorrow" by the ready date | `OrderTests.StartAfterFirstSession`, `FirstSessionTests.TruckAndOrdersChapters` |

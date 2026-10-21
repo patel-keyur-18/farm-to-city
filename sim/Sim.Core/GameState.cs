@@ -120,7 +120,7 @@ namespace Sim.Core
             s.Land = LandState.ReadFrom(r, g.Map);
             s.Ledger = Ledger.ReadFrom(r);
             s.Finance = FinanceState.ReadFrom(r);
-            s.Market = MarketState.ReadFrom(r, g.Market.Market.UnmetWindowHours);
+            s.Market = MarketState.ReadFrom(r, g.Market.Market.UnmetWindowHours, g.Market.Truck, s.Clock.SimTime);
             s.Farm = FarmState.ReadFrom(r, s.Land.Tiles.Count);
             if (g.Credit != null) s.Credit = CreditState.ReadFrom(r);
             if (g.People != null) s.People = PeopleState.ReadFrom(r, s.Clock.SimTime);

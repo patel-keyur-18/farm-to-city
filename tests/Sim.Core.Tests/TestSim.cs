@@ -47,6 +47,15 @@ namespace Sim.Core.Tests
             return file == "goods.json" ? System.Text.RegularExpressions.Regex.Replace(json, "\"spoilagePerDay\": [0-9.]+", "\"spoilagePerDay\": 0") : json;
         }
 
+        /// <summary>
+        /// A content edit without the trader's truck (spec 011): the Phase 1 trader, always there, with no daily price and no
+        /// night pause. For spec 004's examples of the market's own rules; the truck has its own tests.
+        /// </summary>
+        public static string NoTruck(string file, string json)
+        {
+            return file == "market.json" ? System.Text.RegularExpressions.Regex.Replace(json, "\\s*\"truck\": \\{[^}]*\\},", "") : json;
+        }
+
         /// <summary>Content with no inflation (the price index stays at its start), for tests of year-0 examples.</summary>
         public static GameDefs NoInflation(System.Func<string, string, string> edit = null)
         {

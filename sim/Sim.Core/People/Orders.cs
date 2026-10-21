@@ -131,7 +131,7 @@ namespace Sim.Core.People
             CommandResult r = collect.ApplyNow(sim);
             if (!r.Accepted)
             {
-                Wait(sim, o, OrderWait.StoreFull);
+                Wait(sim, o, r.Reason == RejectReason.TraderAway ? OrderWait.TraderAway : OrderWait.StoreFull);
                 return false;
             }
             long stored = m.Stock[good] - before;
@@ -147,10 +147,13 @@ namespace Sim.Core.People
                         Store.Take(sim, good, q);
                         Store.SellToTrader(sim, good, q, "hand:" + h.Id);
                     }
+                    // What the truck can't take now (away or full) is held for its next arrival (spec 011 §3.1).
+                    if (sim.Config.Game.Market.Truck != null) m.HeldForTruck[good] += stored - q;
                 }
                 else if (o.Sell == SellRule.Offer)
                 {
                     m.Offered[good] += stored;
+                    Store.CutHeld(sim, good);
                     // The minimum is for the order's own crop; the hand's other picks keep the good's current minimum (ADR 0048 §1).
                     if (o.Kind == OrderTargetKind.Tree || (o.Crop >= 0 && sim.Config.Game.Farm.Crops[o.Crop].OutputGood == good)) m.MinPrice[good] = o.MinPrice;
                 }

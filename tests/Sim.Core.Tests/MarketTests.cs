@@ -84,7 +84,7 @@ namespace Sim.Core.Tests
         public void TraderHoldsFloor_UntilCapacity()
         {
             Simulation sim = TestSim.NewFarm(game: TestSim.Quiet((f, j) =>
-                f == "region.json" ? j.Replace("\"potato\": 3000,", "\"potato\": 200,") : j));
+                f == "region.json" ? j.Replace("\"potato\": 3000,", "\"potato\": 200,") : TestSim.NoTruck(f, j)));
             int potato = Good(sim, "potato");
             PutOnOffer(sim, potato, 1_200_000); // 1,200 kg: 50 kg an hour on the stall
             Fixed floor = MarketRules.Floor(sim, potato);
@@ -120,7 +120,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Offer_SellsProRata()
         {
-            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet(TestSim.NoTruck));
             int wheat = Good(sim, "wheat"), mango = Good(sim, "mango");
             PutOnOffer(sim, wheat, 4_800); // 200 g an hour: wheat's thin, inelastic market (e = 0.4) takes a little
             PutOnOffer(sim, mango, 1_200);  // 50 g an hour: the minimum lot of 100 g applies

@@ -25,7 +25,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Regional_Band()
         {
-            Simulation sim = TestSim.NewFarm(game: TestSim.NoInflation()); // t = 0: Spring; index 1.00 throughout
+            Simulation sim = TestSim.NewFarm(game: TestSim.NoInflation(TestSim.NoTruck)); // t = 0: Spring; index 1.00 throughout, no daily move
             int potato = Good(sim, "potato");
             AssertPrice(MarketRules.RegionalPrice(sim, potato), "6.80");
             AssertPrice(MarketRules.Floor(sim, potato), "5.30");

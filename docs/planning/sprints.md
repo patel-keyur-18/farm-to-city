@@ -511,7 +511,7 @@
 | US-189 | Save schema 5: remap tile ids, the farm lane takes `s5` | [F02.4](features/F02.4-village-map.md) | 5 | Must | To do |
 | US-190 | The village on screen: camera, edge, places, neighbours' fields | [F02.4](features/F02.4-village-map.md) | 5 | Must | To do |
 | US-191 | Village and edge art in Blender | [F02.4](features/F02.4-village-map.md) | 5 | Must | To do |
-| US-192 | The truck's day, the daily price and the stall at night | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | To do |
+| US-192 | The truck's day, the daily price and the stall at night | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
 | US-193 | Supermarket orders | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | To do |
 | US-194 | Rice and potato in 15 hours; balance re-measured | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 2 | Must | To do |
 | US-195 | Orders and truck on screen | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | To do |
