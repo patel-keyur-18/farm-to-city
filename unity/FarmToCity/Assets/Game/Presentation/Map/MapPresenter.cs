@@ -111,6 +111,9 @@ namespace Game.Presentation.Map
         private readonly Dictionary<long, Vector2> _slotWorld = new Dictionary<long, Vector2>(), _bedWorld = new Dictionary<long, Vector2>();
         private Vector2 _hutWorld, _wellWorld;
         private SpriteRenderer _ring;
+        private SpriteRenderer _arrow;
+        private Hit _arrowHit = Hit.None;
+        private const float ArrowScale = 0.42f;
         private int _ringTile = -1;
         private Color _tint = Color.white;
         private bool _built;
@@ -215,6 +218,9 @@ namespace Game.Presentation.Map
             BuildYardDressing(map);
             _ring = NewRenderer("ring", SpriteBank.SelectionRing, Vector3.zero, 9000);
             _ring.gameObject.SetActive(false);
+            _arrow = NewRenderer("guideArrow", SpriteBank.GuideArrow, Vector3.zero, 9500);
+            _arrow.transform.localScale = Vector3.one * ArrowScale;
+            _arrow.gameObject.SetActive(false);
             _built = true;
         }
 
@@ -626,6 +632,7 @@ namespace Game.Presentation.Map
             foreach (KeyValuePair<long, Spot> kv in _slots) if (kv.Value.Marker.enabled) kv.Value.Marker.transform.position = MarkerAt(kv.Value, 0f, bob);
             foreach (KeyValuePair<long, Spot> kv in _beds) if (kv.Value.Marker.enabled) kv.Value.Marker.transform.position = MarkerAt(kv.Value, 0f, bob);
             if (_ring.gameObject.activeSelf) _ring.color = new Color(1f, 1f, 1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f));
+            if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
@@ -686,6 +693,29 @@ namespace Game.Presentation.Map
         }
 
         public void ClearSelection() { _ringTile = -1; _ring.gameObject.SetActive(false); }
+
+        /// <summary>
+        /// The first session's highlight (spec 009 §7): the target bounces once and a gold arrow bobs over it until the step is
+        /// done. Hit.None hides it.
+        /// </summary>
+        public void Guide(Hit hit)
+        {
+            if (!_built || (hit.Kind == _arrowHit.Kind && hit.Id == _arrowHit.Id)) return;
+            _arrowHit = hit;
+            _arrow.gameObject.SetActive(hit.Kind != HitKind.None);
+            if (hit.Kind == HitKind.None) return;
+            _arrow.transform.position = ArrowAt(hit);
+            Bounce(hit);
+            Pop(_arrow.transform, ArrowScale);
+        }
+
+        /// <summary>Just above what the arrow points at: a field's middle, a bed, the hut's roof.</summary>
+        private Vector3 ArrowAt(Hit hit)
+        {
+            Vector2 w = WorldOf(hit);
+            float up = hit.Kind == HitKind.Hut ? 0.42f : hit.Kind == HitKind.Bed ? 0.3f : 0.2f; // above a ready marker
+            return new Vector3(w.x, w.y + up, 0);
+        }
 
         /// <summary>The tap squash (spec 008 §3.12): 1 → 1.15 → 1, up in 0.12 s and back in 0.23 s with a little overshoot.</summary>
         public void Bounce(Hit hit)

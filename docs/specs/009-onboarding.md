@@ -257,6 +257,17 @@ All six were answered in the review with the owner (2026-10-18), each as recomme
 10. **The Phase 1 health checks** (F20.1, not this spec): cautious saver and random bots, never stuck with credit refused, recovery after foreclosure, exact ledgers, bounded prices; thresholds measured first and set realistically.
 11. **Sprint 8's build** is a feature-complete Development build; the release candidate is Sprint 9's (US-095).
 
+**Implementation notes (Sprint 8, no rule changed):**
+
+- A page is marked seen (`SeeChapter`) when it is closed, so a page open when the app is killed comes back on the next launch.
+- `firstReturn` has the trigger `awayCard`: it follows a While-you-were-away card. A short absence with nothing new shows no card (ADR 0043 §8), and "Here's what happened while you were away" over no card read wrongly.
+- `firstPick` and `firstSale` have `pageAfter`: their pages react to the goal ("There: your first basket", "That's money today"), so they open when the step is done; the other step pages open when their step starts.
+- What happened since launch (events, sheets visited, hours of low Care) is the guide's memory only. After a relaunch a step whose event came before it waits for the next one; a chapter whose moment passed comes the next time it holds.
+- The era is checked after field harvests and season closes only (§3.6): a hut finished last unlocks at the next harvest or close.
+- `firstFieldHarvest` says "Tap the ? beside it" (a *Why?* opens only from its ?, ADR 0044 §3). The season pages' titles are the season ("Winter"); their text keeps §3.4's opening word.
+- The `comeBack` page leaves out "I'll find my own way" (nothing is left to skip).
+- The highlight is a gold arrow bobbing over the target (the store pill bounces every 2 s); the nudge pill sits at the bottom centre.
+
 ## 11. Cut first
 
 1. The Hamlet celebration vignette (keep the chapter).

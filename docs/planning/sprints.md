@@ -364,12 +364,12 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | To do |
-| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | To do |
+| US-089 | The letter | [F09.1](features/F09.1-first-session.md) | 2 | Must | Built, device run pending |
+| US-090 | Guided first actions | [F09.1](features/F09.1-first-session.md) | 5 | Must | Built, device run pending |
 | US-091 | Guided-once triggers | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Done |
-| US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | To do |
+| US-092 | Chapters | [F09.2](features/F09.2-letter-chapters.md) | 3 | Must | Built, device run pending |
 | US-093 | Era unlock check | [F09.3](features/F09.3-hamlet-unlock.md) | 3 | Must | Done |
-| US-094 | Hamlet celebration | [F09.3](features/F09.3-hamlet-unlock.md) | 2 | Must | To do |
+| US-094 | Hamlet celebration | [F09.3](features/F09.3-hamlet-unlock.md) | 2 | Must | Built, device run pending |
 | US-098 | Phase 1 bots and checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Done |
 
 **Sprint end checklist**

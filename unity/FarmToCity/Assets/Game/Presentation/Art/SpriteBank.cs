@@ -120,6 +120,21 @@ namespace Game.Presentation.Art
             }
         }
 
+        /// <summary>The first session's highlight (spec 009 §7): a gold arrow with a white edge, its pivot at the tip.</summary>
+        public static Sprite GuideArrow
+        {
+            get
+            {
+                return Get("guideArrow", () =>
+                {
+                    var p = new Painter(64, 84);
+                    Vector2[] d = { new Vector2(32, 4), new Vector2(60, 40), new Vector2(43, 40), new Vector2(43, 80), new Vector2(21, 80), new Vector2(21, 40), new Vector2(4, 40) };
+                    p.OutlinedPolygon(d, new Color(0.98f, 0.76f, 0.2f, 1f), new Color(1f, 1f, 1f, 1f), 3.2f);
+                    return p.ToSprite(Ppu, new Vector2(0.5f, 0f));
+                });
+            }
+        }
+
         public static Sprite SelectionRing
         {
             get

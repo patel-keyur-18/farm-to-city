@@ -25,6 +25,9 @@ namespace Sim.Core.Definitions
         CareBelowForHours,
         Rejection,
         CashBelowHutCost,
+
+        /// <summary>The While you were away card was shown (a return with news, not every away advance).</summary>
+        AwayCard,
     }
 
     /// <summary>A step's goal or a chapter's trigger: a kind and the parameters that kind uses (unused ones are empty).</summary>
@@ -75,8 +78,12 @@ namespace Sim.Core.Definitions
         /// </summary>
         public IReadOnlyList<string> Tour { get; }
 
-        public StepDef(string id, ConditionDef goal, string highlight, int chapter, IReadOnlyList<string> tour)
+        /// <summary>The page reacts to the goal ("There: your first basket"): it opens when the step is done, not when it starts.</summary>
+        public bool PageAfter { get; }
+
+        public StepDef(string id, ConditionDef goal, string highlight, int chapter, IReadOnlyList<string> tour, bool pageAfter = false)
         {
+            PageAfter = pageAfter;
             Id = id;
             Goal = goal;
             Highlight = highlight;

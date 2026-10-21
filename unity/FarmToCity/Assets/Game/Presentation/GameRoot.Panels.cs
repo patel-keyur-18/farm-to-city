@@ -136,6 +136,8 @@ namespace Game.Presentation
             switch (r.Kind)
             {
                 case "Menu": _sheet.Show(MenuSheet.Build(_ctx), refreshOnly); break;
+                case "Letter": _sheet.Show(Letter.List(_ctx), refreshOnly); break;
+                case "Progress": _sheet.Show(ProgressSheet.Build(_ctx), refreshOnly); break;
                 case "Lands": _sheet.Show(LandsSheet.Build(_ctx), refreshOnly); break;
                 case "Money": _sheet.Show(MoneySheet.Build(_ctx), refreshOnly); break;
                 case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id), refreshOnly); break;

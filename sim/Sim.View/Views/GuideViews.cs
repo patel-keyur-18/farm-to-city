@@ -116,6 +116,21 @@ namespace Sim.View.Views
             }
         }
 
+        /// <summary>The host showed the While you were away card (the <c>awayCard</c> trigger: "Welcome back" follows it).</summary>
+        public void AwayCardShown(Simulation sim) { EnqueueKind(sim, TriggerKind.AwayCard); }
+
+        private void EnqueueKind(Simulation sim, TriggerKind kind)
+        {
+            OnboardingDefs d = Defs(sim);
+            if (d == null) return;
+            for (int i = 0; i < d.Chapters.Count; i++)
+            {
+                if (sim.State.Guidance.HasSeen(i) || _queue.Contains(i)) continue;
+                foreach (ConditionDef t in d.Chapters[i].Triggers)
+                    if (t.Trigger == kind) { Enqueue(i); break; }
+            }
+        }
+
         /// <summary>A sheet the player opened (the <c>sheetVisited</c> goal): "Founder", "Store"...</summary>
         public void SheetVisited(string kind) { _sheets.Add(kind); }
 
@@ -129,13 +144,19 @@ namespace Sim.View.Views
             return list;
         }
 
-        /// <summary>The chapter to open now, or null: the current step's page first, then the due pages in priority order.</summary>
+        /// <summary>
+        /// The chapter to open now, or null: a finished step's page that reacts to it, then the current step's page, then the due
+        /// pages in priority order.
+        /// </summary>
         public string Next(Simulation sim)
         {
             OnboardingDefs d = Defs(sim);
             if (d == null) return null;
             GuidanceState g = sim.State.Guidance;
-            if (FirstSessionActive(sim))
+            if (!g.Skipped)
+                for (int s = 0; s < g.Step && s < d.Steps.Count; s++)
+                    if (d.Steps[s].PageAfter && !g.HasSeen(d.Steps[s].Chapter)) return d.Chapters[d.Steps[s].Chapter].Id;
+            if (FirstSessionActive(sim) && !d.Steps[g.Step].PageAfter)
             {
                 int ch = d.Steps[g.Step].Chapter;
                 if (!g.HasSeen(ch)) return d.Chapters[ch].Id;
@@ -156,7 +177,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             if (!FirstSessionActive(sim)) return null;
             StepDef st = Defs(sim).Steps[sim.State.Guidance.Step];
-            if (!sim.State.Guidance.HasSeen(st.Chapter) || st.Goal.Goal == GoalKind.ChapterClosed) return null;
+            if (!(st.PageAfter || sim.State.Guidance.HasSeen(st.Chapter)) || st.Goal.Goal == GoalKind.ChapterClosed) return null;
             var vm = new NudgeVm { Highlight = Highlight(sim, st.Highlight) };
             vm.Lines.Add(ctx.Strings.Get("nudge." + st.Id));
             vm.Opens.Add(null);
@@ -217,7 +238,7 @@ namespace Sim.View.Views
                     GameDefs game = sim.Config.Game;
                     if (game.People == null || !sim.State.Guidance.HasSeen(t.AfterChapter) || EraRules.Huts(sim) > 0 || sim.State.People.Constructions.Count > 0) return false;
                     return sim.State.Ledger.Cash < MarketRules.Indexed(sim, game.Buildings[game.People.HandHut].Value);
-                default: return false; // Step: opened by its step; Rejection: see Rejected
+                default: return false; // Step: opened by its step; Rejection: see Rejected; AwayCard: see AwayCardShown
             }
         }
 
@@ -286,7 +307,7 @@ namespace Sim.View.Views
             }
             if (vm.ShowMe != null) vm.Buttons.Add(new CardButton(LetterIds.ShowMe, s.Get("letter.showMe"), ActionKind.Secondary));
             vm.Buttons.Add(new CardButton(LetterIds.Continue, s.Get("letter.continue"), ActionKind.Primary));
-            if (!reading && Guide.FirstSessionActive(sim) && d.Steps[g.Step].Chapter == index && g.Step > 0)
+            if (!reading && Guide.FirstSessionActive(sim) && d.Steps[g.Step].Chapter == index && g.Step > 0 && g.Step < d.Steps.Count - 1)
                 vm.Buttons.Add(new CardButton(LetterIds.Skip, s.Get("letter.skip"), ActionKind.Secondary));
             return vm;
         }
@@ -302,7 +323,7 @@ namespace Sim.View.Views
                 string id = d.Chapters[c].Id;
                 vm.Lines.Add(new LineVm(s.Get("letterTitle." + id), null) { Action = ActionVm.Open("read:" + id, s.Get("letter.read"), new SheetRequest("LetterPage", c)) });
             }
-            vm.Lines.Add(new LineVm(s.Get("progress.title"), null) { Icon = "hut", Action = ActionVm.Open("progress", s.Get("action.open"), new SheetRequest("Progress", 0)) });
+            vm.Lines.Add(new LineVm(s.Get("progress.title"), null) { Action = ActionVm.Open("progress", s.Get("action.open"), new SheetRequest("Progress", 0)) });
             return vm;
         }
 

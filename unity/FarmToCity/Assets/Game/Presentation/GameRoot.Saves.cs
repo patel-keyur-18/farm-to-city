@@ -95,6 +95,7 @@ namespace Game.Presentation
             LoadOutcome o = _saves.Load(_config, _lastSyncWall, UtcOffsetMinutes());
             Sim = o.State != null ? Simulation.FromState(_config, o.State) : NewTownSim();
             _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            _guide = new Guide(); // what happened since launch belongs to the old town
             _logCount = Sim.State.CommandLog.Entries.Count;
             _sessionStart = _lastSyncWall;
             _playLog.SessionStart(_lastSyncWall, Sim.State.Clock.SimTime, Application.version + " / sim " + SimInfo.Version, SystemInfo.deviceModel);
@@ -141,7 +142,7 @@ namespace Game.Presentation
             }
             if (_playLog.Lines.Count != lines) WritePlayLog();
 
-            NotifyAskMoment? ask = NotifyAsk.Moment(events, NotifyAsked, NotificationsOn, Sim.State.Clock.LastWallUtc, Sim.State.Clock.SimTime);
+            NotifyAskMoment? ask = NotifyAsk.Moment(events, NotifyAsked, NotificationsOn, Sim.State.Clock.LastWallUtc, Sim.State.Clock.SimTime, Guide.FirstSessionActive(Sim));
             if (ask.HasValue)
             {
                 NotifyAsked = NotifyAsked + 1;
@@ -317,6 +318,7 @@ namespace Game.Presentation
         private void ResetTown(bool focus)
         {
             _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            _guide = new Guide();
             _logCount = Sim.State.CommandLog.Entries.Count;
             _sheet.Close();
             _open = null;

@@ -19,7 +19,7 @@ namespace Sim.Content
         public static readonly string[] OnboardingCommands = { "Sow", "BuildHandHut", "HireDayLabourers", "OfferContract", "BuyParcel" };
 
         private static readonly string[] GoalKinds = { "chapterClosed", "bedGrowing", "sheetVisited", "event", "cropSown" };
-        private static readonly string[] TriggerKinds = { "step", "event", "storeAbovePercent", "traderFull", "seasonStart", "careBelowForHours", "rejection", "cashBelowHutCost" };
+        private static readonly string[] TriggerKinds = { "step", "event", "storeAbovePercent", "traderFull", "seasonStart", "careBelowForHours", "rejection", "cashBelowHutCost", "awayCard" };
 
         /// <summary>Loads <c>onboarding.json</c> and <c>eras.json</c> (spec 009 §4, AC-1) and checks every kind, id and reference.</summary>
         public static OnboardingDefs LoadOnboarding(string onboardingJson, string erasJson)
@@ -56,7 +56,7 @@ namespace Sim.Content
             {
                 string p = Index(root + ".steps", i);
                 JObject s = Object(stepTokens[i], p);
-                OnlyFields(s, p, "id", "goal", "highlight", "chapter", "tour");
+                OnlyFields(s, p, "id", "goal", "highlight", "chapter", "tour", "pageAfter");
                 string id = UniqueId(s, p, stepIds);
                 stepIds.Add(id);
                 string chapterId = String(Required(s, p, "chapter"), Join(p, "chapter"));
@@ -71,7 +71,7 @@ namespace Sim.Content
                     List<JToken> tt = Array(s["tour"], Join(p, "tour"));
                     for (int k = 0; k < tt.Count; k++) tour.Add(String(tt[k], Index(Join(p, "tour"), k)));
                 }
-                steps.Add(new StepDef(id, goal, OptionalString(s, p, "highlight"), chapter, tour.AsReadOnly()));
+                steps.Add(new StepDef(id, goal, OptionalString(s, p, "highlight"), chapter, tour.AsReadOnly(), s["pageAfter"] != null && Bool(s["pageAfter"], Join(p, "pageAfter"))));
             }
 
             const string er = "eras";

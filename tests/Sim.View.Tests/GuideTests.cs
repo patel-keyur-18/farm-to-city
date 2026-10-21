@@ -122,7 +122,8 @@ namespace Sim.View.Tests
             Assert.That(sim.State.Guidance.Step, Is.EqualTo(0), "the welcome page isn't read yet");
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("welcome"));
             Assert.That(sim.State.Guidance.Step, Is.EqualTo(3), "garden and household skipped: their goals already hold");
-            Assert.That(guide.Next(sim), Is.EqualTo("firstPick"));
+            Assert.That(guide.Next(sim), Is.Null, "no page until the pick");
+            Assert.That(guide.Nudge(ViewKit2.Context(sim)).Lines[0], Is.EqualTo("Pick the bed when it's ready"));
 
             // The same commands are accepted with or without the first session (the guide never rejects or delays).
             Simulation other = ViewKit.NewGame();
@@ -168,7 +169,7 @@ namespace Sim.View.Tests
             Assert.That(guide.Nudge(ctx).Lines.Count, Is.EqualTo(1), "no tour on the household step");
             guide.SheetVisited("Founder");
             GuideKit.Settle(sim, guide);
-            GuideKit.ReadNext(sim, guide); // firstPick
+            Assert.That(guide.Next(sim), Is.Null, "the first-pick page waits for the pick (it reacts to it)");
             n = guide.Nudge(ctx);
             Assert.That(n.Lines.Count, Is.EqualTo(4), "the pick nudge and three tour lines while the bed grows");
             Assert.That(n.Opens.Skip(1).Select(o => o.Value.Kind), Is.EqualTo(new[] { "Store", "Tile", "Founder" }));
@@ -235,10 +236,15 @@ namespace Sim.View.Tests
             GuideKit.Settle(sim, guide);
             Assert.That(guide.Next(sim), Is.Null);
 
-            // Away: the first return queues its page (opened after the away card) with what happened while away.
+            // Away: a short absence with no news shows no away card and no page; the first return with a card queues its page.
+            GuideKit.Ok(sim, new Sync(sim.State.Clock.LastWallUtc + 20 * 60));
+            GuideKit.Settle(sim, guide);
+            Assert.That(AwayCard.Build(ViewKit2.Context(sim), sim.LastAwayReport), Is.Null);
+            Assert.That(guide.Next(sim), Is.Null);
             GuideKit.Ok(sim, new Sync(sim.State.Clock.LastWallUtc + 30 * 3600));
             GuideKit.Settle(sim, guide);
-            Assert.That(sim.LastAwayReport.OfType<AwayAdvanceCompleted>().Count(), Is.EqualTo(1));
+            Assert.That(AwayCard.Build(ViewKit2.Context(sim), sim.LastAwayReport), Is.Not.Null);
+            guide.AwayCardShown(sim);
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("firstReturn"));
 
             // A season start, the first close, care short for an hour, money short for a sowing, cash below the hut's cost.
