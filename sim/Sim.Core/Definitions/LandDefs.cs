@@ -100,11 +100,15 @@ namespace Sim.Core.Definitions
         /// <summary>The well acres (<c>WellDef.irrigatedTiles</c>, ADR 0032): the only tiles the well's floor applies to.</summary>
         public IReadOnlyList<int> WellTiles { get; }
 
+        /// <summary>What the village pays for land a road takes, × its price (spec 010 §3.4; 2.0).</summary>
+        public Fixed RoadTakeFactor { get; }
+
         public LandDef(IReadOnlyList<Fixed> moistureByWeather, IReadOnlyList<CurvePoint> fertilityFactorCurve,
             Fixed fallowRecoveryPerSeason, long acreBasePrice, Fixed fertilityPriceMin, Fixed fertilityPriceMax,
             Fixed quickSaleFactor, int fieldEdgeSlotsPerAcre, Fixed minShadeFactor,
-            Fixed wellMoistureFloor, IReadOnlyList<int> wellTiles)
+            Fixed wellMoistureFloor, IReadOnlyList<int> wellTiles, Fixed roadTakeFactor)
         {
+            RoadTakeFactor = roadTakeFactor;
             WellTiles = new List<int>(wellTiles).AsReadOnly();
             MoistureByWeather = new List<Fixed>(moistureByWeather).AsReadOnly();
             FertilityFactorCurve = new List<CurvePoint>(fertilityFactorCurve).AsReadOnly();

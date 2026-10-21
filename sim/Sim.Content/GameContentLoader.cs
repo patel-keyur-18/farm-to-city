@@ -70,7 +70,7 @@ namespace Sim.Content
             JObject l = Object(Required(o, root, "land"), lp);
             OnlyFields(l, lp, "moistureByWeather", "fertilityFactorCurve", "fallowRecoveryPerSeason", "acreBasePrice",
                 "fertilityPriceMin", "fertilityPriceMax", "quickSaleFactor", "fieldEdgeSlotsPerAcre",
-                "minShadeFactor");
+                "minShadeFactor", "roadTakeFactor");
 
             // Stored in the declared order of the weather types, never in JSON object order.
             string mp = lp + ".moistureByWeather";
@@ -130,7 +130,8 @@ namespace Sim.Content
             return new LandDef(moistureList, curve, Bounded(l, lp, "fallowRecoveryPerSeason", "0", "25"), acrePrice,
                 fpMin, fpMax, Bounded(l, lp, "quickSaleFactor", "0.3", "1"), slots,
                 Bounded(l, lp, "minShadeFactor", "0.5", "1"),
-                Bounded(well, wp, "moistureFloor", "0", "100"), wellTiles);
+                Bounded(well, wp, "moistureFloor", "0", "100"), wellTiles,
+                l["roadTakeFactor"] == null ? Fixed.One : Bounded(l, lp, "roadTakeFactor", "1", "5"));
         }
 
         private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank" };

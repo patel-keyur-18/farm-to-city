@@ -83,7 +83,7 @@ namespace Sim.Core.Land
         {
             var t = new Tile
             {
-                Id = r.ReadInt(), Terrain = (Terrain)r.ReadInt(), Soil = r.ReadRef(ContentTable.Soil), Drainage = r.ReadRef(ContentTable.Drainage),
+                Id = r.ReadTile(), Terrain = (Terrain)r.ReadInt(), Soil = r.ReadRef(ContentTable.Soil), Drainage = r.ReadRef(ContentTable.Drainage),
                 Fertility = r.ReadFixed(), Moisture = r.ReadFixed(), WellLift = r.ReadFixed(), ParcelId = r.ReadRef(ContentTable.Parcel),
                 VacantSince = r.ReadLong(),
             };
@@ -161,7 +161,7 @@ namespace Sim.Core.Land
         {
             return new Building
             {
-                Id = r.ReadLong(), Def = r.ReadRef(ContentTable.Building), TileId = r.ReadInt(), Cost = r.ReadLong(), Depreciated = r.ReadLong(),
+                Id = r.ReadLong(), Def = r.ReadRef(ContentTable.Building), TileId = r.ReadTile(), Cost = r.ReadLong(), Depreciated = r.ReadLong(),
                 SeasonsDepreciated = r.ReadInt(),
             };
         }
@@ -198,7 +198,7 @@ namespace Sim.Core.Land
 
         internal static TreeSlot ReadFrom(SaveReader r)
         {
-            return new TreeSlot { Id = r.ReadLong(), Kind = (SlotKind)r.ReadInt(), TileId = r.ReadInt(), TreeId = r.ReadLong(), TreeMature = r.ReadBool(), Shade = r.ReadFixed() };
+            return new TreeSlot { Id = r.ReadLong(), Kind = (SlotKind)r.ReadInt(), TileId = r.ReadTile(), TreeId = r.ReadLong(), TreeMature = r.ReadBool(), Shade = r.ReadFixed() };
         }
     }
 
@@ -249,16 +249,30 @@ namespace Sim.Core.Land
         {
             var s = new LandState { HourWeather = r.ReadRef(ContentTable.Weather) };
             int n = r.ReadCount();
-            if (n != map.Tiles.Count) throw new SaveContentException("the map has " + map.Tiles.Count + " tiles, the save " + n);
-            for (int i = 0; i < n; i++) s.Tiles.Add(Tile.ReadFrom(r));
+            // Schema 5 (spec 010 §3.4): an old save's 8 × 6 map moves into the 16 × 12 map; the new land starts from content.
+            r.OldMap = r.Schema < MapMigration.Schema && n == MapMigration.OldTiles && map.Tiles.Count != n;
+            if (n != map.Tiles.Count && !r.OldMap) throw new SaveContentException("the map has " + map.Tiles.Count + " tiles, the save " + n);
+            var tiles = new Tile[map.Tiles.Count];
+            for (int i = 0; i < n; i++)
+            {
+                Tile t = Tile.ReadFrom(r);
+                if (r.OldMap) t.Terrain = map.Tiles[t.Id].Terrain; // the farm lane's acre becomes a road acre
+                tiles[t.Id] = t;
+            }
+            for (int p = 0; p < map.Parcels.Count; p++)
+                foreach (int i in map.Parcels[p].Tiles)
+                    if (tiles[i] == null) { tiles[i] = LandSystem.NewTile(map, i); tiles[i].ParcelId = p; }
+            s.Tiles.AddRange(tiles);
             n = r.ReadCount();
-            if (n != map.Parcels.Count) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
-            var parcels = new Parcel[n];
+            if (n != map.Parcels.Count && !r.OldMap) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
+            var parcels = new Parcel[map.Parcels.Count];
             for (int i = 0; i < n; i++)
             {
                 Parcel p = Parcel.ReadFrom(r);
                 parcels[p.Id] = p;
             }
+            for (int i = 0; i < parcels.Length; i++)
+                if (parcels[i] == null) parcels[i] = new Parcel { Id = i };
             s.Parcels.AddRange(parcels);
             s.NextBuildingId = r.ReadLong();
             n = r.ReadCount();

@@ -164,6 +164,7 @@
   "reject.StoreFull": "The store is full.",
   "reject.TraderFull": "The trader can't take any more today.",
   "reject.NotForSale": "This land isn't for sale.",
+  "ledger.landTakenForRoad": "Land taken for the farm lane",
   "reject.UnknownGood": "There is no such good.",
   "reject.NotProduce": "Only farm produce can be sold.",
   "reject.InvalidQuantity": "That isn't a valid amount.",

@@ -79,8 +79,8 @@ namespace Sim.Core.Tests
             foreach (JToken p in (JArray)old["parcels"])
             {
                 string id = (string)p["id"];
-                if (id == "s5") { Assert.That(map.IndexOfParcel("s5"), Is.EqualTo(-1)); continue; }
                 ParcelDef now = map.Parcels[map.IndexOfParcel(id)];
+                if (id == "s5") Assert.That(now.ForSale, Is.False, "s5 stays as the farm lane's road acre, so old saves load by id");
                 Assert.That(now.Tiles, Is.EqualTo(((JArray)p["tiles"]).Select(t => Remap((int)t))), id);
             }
         }
@@ -145,6 +145,14 @@ namespace Sim.Core.Tests
             Assert.That(Buy(sim, "s2").Accepted, Is.True); // (6, 7) and (6, 8), next to home_b
             Assert.That(Buy(sim, "s8").Accepted, Is.True); // (6, 9) and (6, 10), next to s2
             Assert.That(Buy(sim, "s9").Reason, Is.EqualTo(RejectReason.NotAdjacent), "s9 touches s8 only across the farm lane");
+        }
+
+        // Spec 010 AC-8: a year of play on the 16 × 12 map, in one advance and in 500 chunks (the goldens stay on frozen content).
+        [Test]
+        public void ChunkingInvariance_Phase2Map()
+        {
+            Assert.That(TestContent.Game().Map.Tiles.Count, Is.EqualTo(192));
+            FarmPlayTests.AssertChunkingInvariant(11);
         }
 
         // Spec 010 AC-5.

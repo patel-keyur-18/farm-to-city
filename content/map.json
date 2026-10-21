@@ -214,6 +214,7 @@
     { "id": "se1",     "tiles": [120, 121, 136, 137], "locationFactor": 1.05 },
     { "id": "s3",      "tiles": [130, 131], "locationFactor": 1.0 },
     { "id": "s4",      "tiles": [132, 133], "locationFactor": 1.0 },
+    { "id": "s5",      "tiles": [135], "locationFactor": 1.0, "forSale": false },
     { "id": "r1",      "tiles": [32, 33], "locationFactor": 1.05 },
     { "id": "r2",      "tiles": [34, 35], "locationFactor": 1.05 },
     { "id": "r3",      "tiles": [36, 37], "locationFactor": 1.05 },
@@ -246,7 +247,7 @@
     { "id": "se3",     "tiles": [125, 126, 141, 142], "locationFactor": 1.05, "forSale": false, "owner": "neighbour.gopal" },
     { "id": "se4",     "tiles": [155, 156, 171, 172], "locationFactor": 1.05, "forSale": false, "owner": "neighbour.usha" },
     { "id": "se5",     "tiles": [157, 158, 173, 174], "locationFactor": 1.05, "forSale": false, "owner": "neighbour.baldev" },
-    { "id": "road",    "tiles": [58, 74, 90, 106, 122, 135, 138, 151, 154, 167, 170, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191], "forSale": false },
+    { "id": "road",    "tiles": [58, 74, 90, 106, 122, 138, 151, 154, 167, 170, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191], "forSale": false },
     { "id": "centre",  "tiles": [59, 60, 61, 62, 75, 76, 77, 78, 91, 92, 93, 94, 107, 108, 109, 110], "forSale": false },
     { "id": "commons", "tiles": [0, 1, 2, 3, 4, 5, 6, 7], "forSale": false },
     { "id": "bank",    "tiles": [8, 9, 10, 11, 12, 13, 14, 15], "forSale": false }

@@ -89,7 +89,7 @@ namespace Sim.Core.Progress
         {
             var e = new EraState { Current = r.ReadRef(ContentTable.Era), SeasonPeriod = r.ReadLong() };
             int n = r.ReadCount();
-            for (int i = 0; i < n; i++) e.SeasonAcres.Add(r.ReadInt());
+            for (int i = 0; i < n; i++) e.SeasonAcres.Add(r.ReadTile());
             e.SeasonCareSum = r.ReadFixed();
             e.SeasonHarvests = r.ReadInt();
             e.ProfitableSeasons = r.ReadInt();

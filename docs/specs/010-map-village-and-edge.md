@@ -100,7 +100,8 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 | Tile ids | A schema-4 save has 8 × 6 tiles. Each old tile id `i` becomes `Remap(i) = (i / 8 + 3) × 16 + (i mod 8 + 2)` (integer division). Every field holding a tile id is remapped: tiles (fertility, moisture, `vacantSince`, season totals), crops, tree slots, buildings, hand's-hut constructions, people's current tiles, standing-order targets, labourers' fields |
 | New tiles | Tiles that didn't exist take their values from `content/map.json` |
 | Parcels | Keep their ids, ownership, cost basis and loans. New parcels start unowned |
-| `s5` | Its tile becomes a road acre. A save that owns `s5` is paid, in this order: (1) compensation of `2 × ParcelPrice` (`LandDef.roadTakeFactor` 2.0) at the migration's sim time; (2) a growing or ripe crop on it at its expected harvest × Floor, and each tree in its slots at book value; then crop and trees are removed. A loan secured on `s5` is repaid from the payment first (ADR 0038). The ledger records a sale (gain over cost basis: "Land taken for the farm lane"), and `ParcelTakenForRoad` is emitted for a one-time notice. New towns never own `s5` |
+| `s5` | Its tile becomes a road acre. A save that owns `s5` is paid, in this order: (1) compensation of `2 × ParcelPrice` (`LandDef.roadTakeFactor` 2.0) at the migration's sim time; (2) a growing or ripe crop on it at its expected harvest × Floor, and each tree in its slots at book value; then crop and trees are removed. A loan secured on `s5` is repaid from the payment first (ADR 0038). The ledger records a sale (gain over cost basis: "Land taken for the farm lane"), and the load result carries `RoadTake` for a one-time notice (the migration runs before the game's sim exists, so it can't emit an event). Implementation: `s5` stays in content as a one-acre road parcel (never for sale), so old saves load it by id. New towns never own `s5` |
+| History | An old command log can't replay on the new map: the migrated town becomes its own replay base (spec 007 AC-6) |
 | Content references | `LandDef.well.irrigatedTiles` becomes 86 and 102, the start's buildings tile 87; the tests and fixtures that name tile ids are renumbered |
 | Camera | The remembered camera position (settings, ADR 0041) is reset to open on the yard after a migration |
 | Fixtures | A schema-5 fixture (the schema-4 fixture town migrated, then a new bot town) is added; schemas 3 and 4 still load (ADR 0047) |
@@ -162,7 +163,7 @@ New parcels for sale (tile ids): `r1` 32, 33; `r2` 34, 35; `r3` 36, 37; `r4` 38,
 
 | Event | Payload | Emitted when | Consumers |
 | --- | --- | --- | --- |
-| `ParcelTakenForRoad` | `parcelId`, `compensation`, `onIt` (crop and trees paid), `loanRepaid` | A migrated save owned `s5` (§3.4) | Ledger, the one-time notice, play log |
+| `RoadTake` (on `LoadResult`, not an event) | `parcelId`, `compensation`, `onIt` (crop and trees paid), `loanRepaid` | A migrated save owned `s5` (§3.4) | The one-time notice, play log |
 
 ## 6. Decision card
 
@@ -205,7 +206,7 @@ Place sheet (chemist)            Not-for-sale card
 | AC-4 | `BuyParcel` on a not-for-sale parcel is rejected with `NotForSale` and nothing changes; on the village's land too; a for-sale parcel whose only contact with owned land is across a road acre is rejected with `NotAdjacent` | `LandTests.Buy_NotForSale`, `LandTests.Buy_RoadsDontConnect` |
 | AC-5 | `Sow` on a road, village, commons or bank tile is rejected with `NotOwned`, `BuildHandHut` with `NotQuarters`; none of them has a tree slot | `LandTests.VillageLand_NeverWorked` |
 | AC-6 | The frozen schema-4 fixture loads at schema 5: every tile's plain values sit at `Remap(i)`; every crop, slot, building, construction, person and order points at the remapped tile; new tiles hold their content values; the town then advances a game day and round-trips byte for byte | `MigrationTests.Schema5_RemapsTiles` (and `MigrationTests.EverySchemaLoads`) |
-| AC-7 | A schema-4 save that owns `s5` with a growing crop, a tree and a land loan secured on it loads with `s5` a road acre; cash rises by 2 × its price plus the crop's expected value and the tree's book value, less the loan repaid; the loan is closed; the ledger balances; `ParcelTakenForRoad` is emitted once | `MigrationTests.Schema5_FarmLaneParcel` |
+| AC-7 | A schema-4 save that owns `s5` with a growing crop, a tree and a land loan secured on it loads with `s5` a road acre; cash rises by 2 × its price plus the crop's expected value and the tree's book value, less the loan repaid; the loan is closed; the ledger balances; the load result carries `RoadTake`; the migrated town replays from itself (the frozen case `saves/cases/schema4-s5.ftc`) | `MigrationTests.Schema5_FarmLaneParcel` |
 | AC-8 | One game year on the new map with the Phase 1 bot gives the same hash run in one chunk or many (chunking invariance), and the golden replays on frozen content are unchanged | `LandTests.ChunkingInvariance_Phase2Map`, `ReplayTests.*` |
 | AC-9 | The 16 × 12 grid's pick returns each tile's id at its centre and −1 outside; the camera opens centred on the yard; zoomed out all the way the whole map fits; pan keeps the centre inside the map | `MapTests.Grid16x12_PickAndBounds`, `MapTests.Camera_OpensOnYard` |
 | AC-10 | For a sample of allowed camera positions and zooms (both extremes, each corner), the visible rectangle outside the map lies inside the edge band | `MapTests.Edge_CoversView` |

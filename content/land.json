@@ -18,7 +18,8 @@
     "fertilityPriceMax": 1.20,
     "quickSaleFactor": 0.80,
     "fieldEdgeSlotsPerAcre": 2,
-    "minShadeFactor": 0.80
+    "minShadeFactor": 0.80,
+    "roadTakeFactor": 2.0
   },
   "well": { "moistureFloor": 30, "irrigatedTiles": [86, 102] }
 }
