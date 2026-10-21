@@ -119,7 +119,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 | Rule | Behaviour |
 | --- | --- |
 | What | A band of land that can't be played, drawn around the map: **the river** past the north edge (beyond row 0's bank, top-right on screen); **hills** behind, past the west edge (column 0, top-left on screen); **scrub and neighbours' fields** past the south and east edges (the near side on screen), with the district road running on off both ends |
-| Coverage | At every allowed camera position and zoom, every part of the screen outside the map shows edge terrain. The sky-blue background is never seen |
+| Coverage | The camera's background is the meadow, tinted like the land, so the sky-blue is never seen. Over it, three rings of flat edge tiles round the map (sorted with the map's tiles, so the front ones hide its block sides) carry the detail, and the river and the district road run on past anything the camera's clamp can show (implementation, Sprint 11: a band of block tiles wide enough for every camera position would be about 20 tiles deep) |
 | State | None. The edge doesn't respond to taps |
 
 ### 3.7 Neighbours' land (presentation)
@@ -129,7 +129,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 | Look | Neighbours' farm tiles show a seasonal crop by their soil (wheat or potato in Winter, rice in the Monsoon, lentils or fallow in Summer, potato or radish in Spring), drawn with the farm's half-grown crop sprite (no growth stages). The view picks each parcel's crop from its id and the season, so it is stable and changes at the season change. It has no sim state (§10 G6) |
 | For sale | A small sign board on one tile of each parcel for sale. Tapping any tile of it opens the buy sheet (spec 002 §7) |
 | Not for sale | Tapping opens a card: "<Name>'s farm · not for sale". Shows the size and soil, no price. Names are fixed per parcel in content (`parcels[].owner`, a string key) |
-| Owned land | Unowned land is no longer desaturated (amends spec 008 §3.4). The player's land is marked by a subtle boundary line; the for-sale signs mark what can be bought |
+| Owned land | Unowned land is no longer desaturated (amends spec 008 §3.4); a neighbour's field lying fallow shows grass. The player's fields are marked by a field bund (*mendh*) round their outside edges, redrawn on a purchase or sale; the yard and the quarters keep their fence; the for-sale signs mark what can be bought |
 
 ### 3.8 Processing order
 
@@ -209,7 +209,7 @@ Place sheet (chemist)            Not-for-sale card
 | AC-7 | A schema-4 save that owns `s5` with a growing crop, a tree and a land loan secured on it loads with `s5` a road acre; cash rises by 2 × its price plus the crop's expected value and the tree's book value, less the loan repaid; the loan is closed; the ledger balances; the load result carries `RoadTake`; the migrated town replays from itself (the frozen case `saves/cases/schema4-s5.ftc`) | `MigrationTests.Schema5_FarmLaneParcel` |
 | AC-8 | One game year on the new map with the Phase 1 bot gives the same hash run in one chunk or many (chunking invariance), and the golden replays on frozen content are unchanged | `LandTests.ChunkingInvariance_Phase2Map`, `ReplayTests.*` |
 | AC-9 | The 16 × 12 grid's pick returns each tile's id at its centre and −1 outside; the camera opens centred on the yard; zoomed out all the way the whole map fits; pan keeps the centre inside the map | `MapTests.Grid16x12_PickAndBounds`, `MapTests.Camera_OpensOnYard` |
-| AC-10 | For a sample of allowed camera positions and zooms (both extremes, each corner), the visible rectangle outside the map lies inside the edge band | `MapTests.Edge_CoversView` |
+| AC-10 | For a sample of allowed camera positions and zooms (both extremes, each corner) and three screen shapes, every visible point on the river's rows is a river tile and on the road's row a road tile; the ring surrounds the map; the edge kinds sit where §3.6 puts them | `MapTests.Edge_CoversView` |
 | AC-11 | Tapping a place opens its sheet: the chemist's offers Buy medicine, the dealer's Buy inputs, the rest their description; a for-sale parcel opens the buy sheet; a not-for-sale parcel opens its card with the owner's name and no price | `MapTests.PlaceAndParcelCards` |
 
 On the device (test checklist, not automated): frame time on the iPhone 13 with the whole map in view stays within ADR 0035's budget (main thread p95 ≤ 8.3 ms, half the 60 fps frame).
