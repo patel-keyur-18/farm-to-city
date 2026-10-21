@@ -39,18 +39,23 @@ namespace Sim.Core.Market
         }
 
         /// <summary>
-        /// The 6:00 pass before the market clears (spec 011 §3.6): the day's price factors, the truck arrives (its counts
-        /// reset), then the hands sell what they held for it.
+        /// The 6:00 pass before the market clears (spec 011 §3.6): the supermarket pays, the day's price factors, the truck
+        /// arrives (its counts reset), the hands sell what they held for it, yesterday's orders lapse and today's are posted.
         /// </summary>
         private static void Morning(Simulation sim)
         {
             MarketState m = sim.State.Market;
+            bool orders = sim.Config.Game.Market.Orders != null;
+            if (orders) Supermarket.Pay(sim);
             DrawDailyFactors(sim);
             System.Array.Clear(m.TraderBoughtToday, 0, m.TraderBoughtToday.Length);
             m.TruckLoadToday = 0;
             m.TruckHere = true;
             sim.Emit(new Events.TruckArrived(sim.State.Clock.SimTime));
             SellHeld(sim);
+            if (!orders) return;
+            Supermarket.Lapse(sim);
+            if (Supermarket.Started(sim)) Supermarket.Post(sim);
         }
 
         /// <summary>The midnight pass: the truck leaves if it is still here (spec 011 §3.1).</summary>

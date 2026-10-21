@@ -249,7 +249,8 @@ namespace Sim.View.Views
             { "MarketSales", Use.Motion }, { "GoodsSpoiled", Use.Away }, { "MandiTripStarted", Use.Motion }, { "MandiTripReturned", Use.Motion },
             { "PriceIndexChanged", Use.Away }, { "SoldToTrader", Use.Motion },
             // Spec 011.
-            { "TruckArrived", Use.Motion }, { "TruckLeft", Use.Away }, { "HandSoldHeld", Use.Away }, { "InputsBought", Use.Motion },
+            { "TruckArrived", Use.Motion }, { "TruckLeft", Use.Away }, { "HandSoldHeld", Use.Away },
+            { "OrdersPosted", Use.Alert }, { "OrderDelivered", Use.Motion }, { "OrderLapsed", Use.Away }, { "OrderPaid", Use.Motion }, { "InputsBought", Use.Motion },
             // Spec 005.
             { "LedgerReconciliationFailed", Use.StateOnly }, { "SeasonClosed", Use.Away }, { "LoanTaken", Use.Motion }, { "LoanRepayment", Use.Motion },
             { "LoanPaymentMissed", Use.Alert }, { "LoanRestructured", Use.StateOnly }, { "LoanDefaulted", Use.Alert }, { "FinalNotice", Use.Alert },

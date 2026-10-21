@@ -162,7 +162,7 @@ namespace Sim.Core.Tests
         [Test]
         public void HandSellsHeldAtSix()
         {
-            Simulation sim = Start(Game((f, j) => Load(50)(f, NoSpoilage(f, j))));
+            Simulation sim = Start(Game((f, j) => Load(50)(f, NoOrders(f, NoSpoilage(f, j))))); // no orders: he'd fill one first
             Ok(sim, new SkipFirstSession(0));
             Hand h = HireHand(sim);
             long t = sim.State.Clock.SimTime;

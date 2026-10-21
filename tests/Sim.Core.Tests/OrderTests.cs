@@ -13,7 +13,7 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    public class OrderTests
+    public partial class OrderTests
     {
         /// <summary>No wheat pests (away rules soften outbreaks, so a live-versus-away comparison needs none).</summary>
         private static GameDefs NoPests(System.Func<string, string, string> edit = null)

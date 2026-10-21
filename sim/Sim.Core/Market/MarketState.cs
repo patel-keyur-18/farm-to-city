@@ -51,8 +51,16 @@ namespace Sim.Core.Market
         /// <summary>What hands' SELL TO TRADER orders stored while the truck was away or full, sold at the next arrival (spec 011 §3.1).</summary>
         internal long[] HeldForTruck;
 
+        /// <summary>Grams added to the store by a harvest or picking since the last 6:00 pass (spec 011 §3.3).</summary>
+        internal long[] FreshToday;
+
+        /// <summary>Today's supermarket orders, in id order (spec 011 §3.3), and the next order's id.</summary>
+        internal System.Collections.Generic.List<SupermarketOrder> Orders = new System.Collections.Generic.List<SupermarketOrder>();
+        public long NextOrderId { get; internal set; } = 1;
+
         internal MarketState(int goods, int unmetWindow)
         {
+            FreshToday = new long[goods];
             DailyFactor = new Fixed[goods];
             PrevFactor = new Fixed[goods];
             for (int g = 0; g < goods; g++) DailyFactor[g] = PrevFactor[g] = Fixed.One;
@@ -101,6 +109,11 @@ namespace Sim.Core.Market
 
         public long HeldForTruckOf(int good) { return HeldForTruck[good]; }
 
+        public long FreshTodayOf(int good) { return FreshToday[good]; }
+
+        /// <summary>Today's supermarket orders in id order (delivered, part delivered or open).</summary>
+        public System.Collections.Generic.IReadOnlyList<SupermarketOrder> SupermarketOrders { get { return Orders; } }
+
         public long MarketHours { get { return Hours; } }
 
         internal MarketState Clone()
@@ -127,6 +140,9 @@ namespace Sim.Core.Market
                 DailyFactor = (Fixed[])DailyFactor.Clone(),
                 PrevFactor = (Fixed[])PrevFactor.Clone(),
                 HeldForTruck = (long[])HeldForTruck.Clone(),
+                FreshToday = (long[])FreshToday.Clone(),
+                Orders = Orders.ConvertAll(o => o.Clone()),
+                NextOrderId = NextOrderId,
             };
             for (int g = 0; g < Unmet.Length; g++) c.Unmet[g] = (Fixed[])Unmet[g].Clone();
             return c;
@@ -162,7 +178,11 @@ namespace Sim.Core.Market
                 h.WriteFixed(DailyFactor[g]);
                 h.WriteFixed(PrevFactor[g]);
                 h.WriteLong(HeldForTruck[g]);
+                h.WriteLong(FreshToday[g]);
             }
+            h.WriteLong(NextOrderId);
+            h.WriteInt(Orders.Count);
+            foreach (SupermarketOrder o in Orders) o.WriteTo(h);
         }
 
         /// <summary>Per-good arrays are written in the save's good order and put back in the running content's.</summary>
@@ -208,8 +228,57 @@ namespace Sim.Core.Market
                 s.DailyFactor[at] = r.ReadFixed();
                 s.PrevFactor[at] = r.ReadFixed();
                 s.HeldForTruck[at] = r.ReadLong();
+                s.FreshToday[at] = r.ReadLong();
             }
+            s.NextOrderId = r.ReadLong();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Orders.Add(SupermarketOrder.ReadFrom(r));
             return s;
+        }
+    }
+}
+
+namespace Sim.Core.Market
+{
+    /// <summary>A city supermarket's order for one good, delivered by midnight, paid at 6:00 next morning (spec 011 §3.3).</summary>
+    public sealed class SupermarketOrder
+    {
+        public long Id { get; internal set; }
+        public int Good { get; internal set; }
+
+        /// <summary>The amount asked for and what has been delivered, in grams.</summary>
+        public long Amount { get; internal set; }
+        public long Delivered { get; internal set; }
+
+        /// <summary>The order's price, coins per kg: P_regional at posting × (1 + premium).</summary>
+        public Fixed Price { get; internal set; }
+
+        /// <summary>The premium over P_regional at posting (for the Why?).</summary>
+        public Fixed Premium { get; internal set; }
+        public long PostedAt { get; internal set; }
+
+        public long Left { get { return Amount - Delivered; } }
+
+        internal SupermarketOrder Clone() { return (SupermarketOrder)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Id);
+            h.WriteRef(ContentTable.Good, Good);
+            h.WriteLong(Amount);
+            h.WriteLong(Delivered);
+            h.WriteFixed(Price);
+            h.WriteFixed(Premium);
+            h.WriteLong(PostedAt);
+        }
+
+        internal static SupermarketOrder ReadFrom(SaveReader r)
+        {
+            return new SupermarketOrder
+            {
+                Id = r.ReadLong(), Good = r.ReadRef(ContentTable.Good), Amount = r.ReadLong(), Delivered = r.ReadLong(),
+                Price = r.ReadFixed(), Premium = r.ReadFixed(), PostedAt = r.ReadLong(),
+            };
         }
     }
 }

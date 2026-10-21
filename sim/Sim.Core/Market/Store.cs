@@ -73,6 +73,7 @@ namespace Sim.Core.Market
                 SellToTrader(sim, good, rest, reference);
             }
             sim.State.Market.Stock[good] += quantity - rest;
+            if (sim.State.Market.Trading) sim.State.Market.FreshToday[good] += quantity - rest; // a harvest: fresh today (spec 011 §3.3)
             return Commands.RejectReason.None;
         }
 

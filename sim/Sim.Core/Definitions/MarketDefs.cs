@@ -213,6 +213,36 @@ namespace Sim.Core.Definitions
         }
     }
 
+    /// <summary><c>OrderDef</c> from <c>content/market.json</c> (spec 011 §3.3, ADR 0055): the city supermarket's daily orders.</summary>
+    public sealed class OrderDef
+    {
+        public int PerDay { get; }
+        public Fixed SowingsMin { get; }
+        public Fixed SowingsMax { get; }
+        public long LotGrams { get; }
+        public Fixed PremiumMin { get; }
+        public Fixed PremiumMax { get; }
+        public int GreensPerDay { get; }
+        public Fixed GreenPickingsMin { get; }
+        public Fixed GreenPickingsMax { get; }
+        public long GreensLotGrams { get; }
+
+        public OrderDef(int perDay, Fixed sowingsMin, Fixed sowingsMax, long lotGrams, Fixed premiumMin, Fixed premiumMax,
+            int greensPerDay, Fixed greenPickingsMin, Fixed greenPickingsMax, long greensLotGrams)
+        {
+            PerDay = perDay;
+            SowingsMin = sowingsMin;
+            SowingsMax = sowingsMax;
+            LotGrams = lotGrams;
+            PremiumMin = premiumMin;
+            PremiumMax = premiumMax;
+            GreensPerDay = greensPerDay;
+            GreenPickingsMin = greenPickingsMin;
+            GreenPickingsMax = greenPickingsMax;
+            GreensLotGrams = greensLotGrams;
+        }
+    }
+
     /// <summary>Goods, the region and the economy (spec 004). Goods are indexed in file order.</summary>
     public sealed class MarketDefs
     {
@@ -225,10 +255,14 @@ namespace Sim.Core.Definitions
         /// <summary>The trader's truck (spec 011); null in Phase 1 content, where the trader is always there.</summary>
         public TruckDef Truck { get; }
 
+        /// <summary>Supermarket orders (spec 011 §3.3); null without them. Needs the truck (orders post at its arrival).</summary>
+        public OrderDef Orders { get; }
+
         public MarketDefs(IReadOnlyList<GoodDef> goods, RegionDef region, EconomyDef economy, MarketDef market, MandiDef mandi,
-            TruckDef truck = null)
+            TruckDef truck = null, OrderDef orders = null)
         {
             Truck = truck;
+            Orders = orders;
             Goods = new List<GoodDef>(goods).AsReadOnly();
             Region = region ?? throw new ArgumentNullException(nameof(region));
             Economy = economy ?? throw new ArgumentNullException(nameof(economy));

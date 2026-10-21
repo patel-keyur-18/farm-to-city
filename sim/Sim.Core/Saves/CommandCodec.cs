@@ -25,6 +25,7 @@ namespace Sim.Core.Saves
             SetStandingOrder, ClearStandingOrder,
             SeeChapter, CompleteStep, SkipFirstSession,
             HireLabourers,
+            DeliverOrder,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -69,6 +70,7 @@ namespace Sim.Core.Saves
                     break;
                 case Withdraw c: At(c, Tag.Withdraw); w.WriteString(c.GoodId); w.WriteLong(c.Quantity); break;
                 case SellToTrader c: At(c, Tag.SellToTrader); w.WriteString(c.GoodId); w.WriteLong(c.Quantity); break;
+                case DeliverOrder c: At(c, Tag.DeliverOrder); w.WriteLong(c.OrderId); w.WriteLong(c.Quantity); break;
                 case Buy c: At(c, Tag.Buy); w.WriteString(c.GoodId); w.WriteLong(c.Quantity); break;
                 case GoToMandi c:
                     At(c, Tag.GoToMandi); w.WriteInt(c.Loads.Count);
@@ -140,6 +142,7 @@ namespace Sim.Core.Saves
                 }
                 case Tag.Withdraw: return new Withdraw(at, r.ReadString(), r.ReadLong());
                 case Tag.SellToTrader: return new SellToTrader(at, r.ReadString(), r.ReadLong());
+                case Tag.DeliverOrder: return new DeliverOrder(at, r.ReadLong(), r.ReadLong());
                 case Tag.Buy: return new Buy(at, r.ReadString(), r.ReadLong());
                 case Tag.GoToMandi:
                 {

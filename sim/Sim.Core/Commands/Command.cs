@@ -106,6 +106,11 @@ namespace Sim.Core.Commands
         // Spec 011 (the trader's truck and supermarket orders)
         /// <summary>The truck has left (full, or between midnight and 6:00): "back at 6:00".</summary>
         TraderAway,
+        UnknownOrder,
+        /// <summary>The order lapsed, or deliveries are closed (midnight to 6:00).</summary>
+        OrderClosed,
+        /// <summary>More than what's left of the order.</summary>
+        OrderFilled,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -95,6 +95,34 @@ namespace Sim.Core.Tests
             }
         }
 
+        // Spec 011 AC-14: every older fixture loads at schema 6 with the truck by its hour, its load the trader's counts, no
+        // orders, nothing fresh, nothing owed; it advances a day and round-trips.
+        [Test]
+        public void Schema5_TruckAndOrders()
+        {
+            SimConfig config = SaveTests.Config();
+            string[] older = Directory.GetFiles(Dir, "*.ftc", SearchOption.AllDirectories).Where(f => SaveCodec.Read(File.ReadAllBytes(f), config, MinSchema).Header.Schema < 6).ToArray();
+            Assert.That(older.Length, Is.GreaterThanOrEqualTo(3), "schema 3, 4 and 5 fixtures");
+            foreach (string file in older)
+            {
+                string name = Path.GetFileName(file);
+                LoadResult r = SaveCodec.Read(File.ReadAllBytes(file), config, MinSchema);
+                Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                Market.MarketState m = r.State.Market;
+                Assert.That(m.TruckHere, Is.EqualTo(r.State.Clock.SimTime % TestSim.Day >= 6 * TestSim.Hour), name);
+                Assert.That(m.TruckLoadToday, Is.EqualTo(m.TraderBoughtToday.Sum()), name);
+                Assert.That(m.SupermarketOrders, Is.Empty, name);
+                Assert.That(m.FreshToday.All(q => q == 0), Is.True, name);
+                Assert.That(r.State.Ledger.Balance(Finance.Account.OwedByBuyers), Is.EqualTo(0), name);
+                Simulation sim = Simulation.FromState(config, r.State);
+                sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+                LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+                Assert.That(again.Error, Is.EqualTo(SaveError.None), name);
+                Assert.That(again.Header.Schema, Is.EqualTo(6));
+                Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + " round-trips");
+            }
+        }
+
         /// <summary>
         /// The bot fixture: the competent bot's town after 2 seasons (a hand and hut, orders, trees, the garden, the era's
         /// progress), with a seed that took a loan, and the letter's first steps seen and done.

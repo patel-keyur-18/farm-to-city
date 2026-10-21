@@ -115,6 +115,35 @@ namespace Sim.Core.Commands
     }
 
     /// <summary>
+    /// Delivers fresh produce (harvested since 6:00) to the supermarket's collection point at the truck stop: no cost, no labour;
+    /// booked as a sale owed (Dr 1300, Cr sales) and paid at 6:00 next morning (spec 011 §3.3).
+    /// </summary>
+    public sealed class DeliverOrder : TimedCommand
+    {
+        public long OrderId { get; }
+        public long Quantity { get; }
+
+        public DeliverOrder(long at, long orderId, long quantity) : base(at)
+        {
+            OrderId = orderId;
+            Quantity = quantity;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            MarketState m = sim.State.Market;
+            if (sim.Config.Game?.Market.Orders == null || OrderId <= 0 || OrderId >= m.NextOrderId) return CommandResult.Reject(RejectReason.UnknownOrder);
+            SupermarketOrder o = m.Orders.Find(x => x.Id == OrderId);
+            if (o == null || !Supermarket.DeliveryOpen(sim)) return CommandResult.Reject(RejectReason.OrderClosed);
+            if (Quantity <= 0) return CommandResult.Reject(RejectReason.InvalidQuantity);
+            if (Quantity > Supermarket.FreshStock(sim, o.Good)) return CommandResult.Reject(RejectReason.InsufficientStock);
+            if (Quantity > o.Left) return CommandResult.Reject(RejectReason.OrderFilled);
+            Supermarket.Deliver(sim, o, Quantity, false);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
     /// Buys an input (not saplings) into the store at today's input price (spec 004 §3.4): Dr 1200 Inputs in store,
     /// Cr Cash, at average cost (ADR 0034).
     /// </summary>

@@ -137,6 +137,17 @@ namespace Sim.Core.People
             long stored = m.Stock[good] - before;
             string goodId = sim.Config.Game.Market.Goods[good].Id;
             bool careless = PeopleRules.HasTrait(sim, h, x => x.Careless);
+            // An open supermarket order is filled first when he sells (a careless hand too); STORE keeps it (spec 011 §3.3).
+            if (stored > 0 && (careless || o.Sell != SellRule.Store))
+            {
+                SupermarketOrder so = Supermarket.OpenOrderFor(sim, good);
+                long q = so == null ? 0 : System.Math.Min(System.Math.Min(stored, so.Left), Supermarket.FreshStock(sim, good));
+                if (q > 0)
+                {
+                    Supermarket.Deliver(sim, so, q, true);
+                    stored -= q;
+                }
+            }
             if (stored > 0)
             {
                 if (careless || o.Sell == SellRule.Trader)

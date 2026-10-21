@@ -53,7 +53,13 @@ namespace Sim.Core.Tests
         /// </summary>
         public static string NoTruck(string file, string json)
         {
-            return file == "market.json" ? System.Text.RegularExpressions.Regex.Replace(json, "\\s*\"truck\": \\{[^}]*\\},", "") : json;
+            return file == "market.json" ? System.Text.RegularExpressions.Regex.Replace(json, "\\s*\"(truck|orders)\": \\{[^}]*\\},", "") : json;
+        }
+
+        /// <summary>A content edit without supermarket orders (spec 011 §3.3), for tests of the truck alone.</summary>
+        public static string NoOrders(string file, string json)
+        {
+            return file == "market.json" ? System.Text.RegularExpressions.Regex.Replace(json, "\\s*\"orders\": \\{[^}]*\\},", "") : json;
         }
 
         /// <summary>Content with no inflation (the price index stays at its start), for tests of year-0 examples.</summary>

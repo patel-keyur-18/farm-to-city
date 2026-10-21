@@ -17,8 +17,11 @@ namespace Sim.Content
             RegionDef region = LoadRegion(regionJson, goods);
             const string root = "market";
             JObject o = Object(Parse(marketJson, root), root);
-            OnlyFields(o, root, "market", "mandi", "economy", "truck");
-            return new MarketDefs(goods, region, LoadEconomy(o, root), LoadMarket(o, root), LoadMandi(o, root), LoadTruck(o, root));
+            OnlyFields(o, root, "market", "mandi", "economy", "truck", "orders");
+            TruckDef truck = LoadTruck(o, root);
+            OrderDef orders = LoadOrders(o, root);
+            if (orders != null && truck == null) throw new ContentException(root + ".orders", "orders post when the truck arrives: needs a truck");
+            return new MarketDefs(goods, region, LoadEconomy(o, root), LoadMarket(o, root), LoadMandi(o, root), truck, orders);
         }
 
         private static List<GoodDef> LoadGoods(string json)
@@ -204,6 +207,29 @@ namespace Sim.Content
             Fixed commission = Bounded(m, p, "commissionRate", "0", "0.2");
             Fixed founder = Bounded(m, p, "founderHours", "0", hours.ToString(System.Globalization.CultureInfo.InvariantCulture));
             return new MandiDef(hours, cart.MulRatio(1000, 1).RoundToLong(), hire, commission, founder);
+        }
+
+        /// <summary>The supermarket's orders (spec 011 §4); absent in Phase 1 content.</summary>
+        private static OrderDef LoadOrders(JObject o, string root)
+        {
+            if (o["orders"] == null) return null;
+            string p = root + ".orders";
+            JObject x = Object(o["orders"], p);
+            OnlyFields(x, p, "perDay", "sowingsMin", "sowingsMax", "lotKg", "premiumMin", "premiumMax", "greensPerDay",
+                "greenPickingsMin", "greenPickingsMax", "greensLotKg");
+            int perDay = Int(Required(x, p, "perDay"), p + ".perDay");
+            Range(perDay, 0, 4, p + ".perDay");
+            Fixed sMin = Bounded(x, p, "sowingsMin", "0.01", "10"), sMax = Bounded(x, p, "sowingsMax", "0.01", "10");
+            if (sMin > sMax) throw new ContentException(p + ".sowingsMax", "must be at least sowingsMin");
+            Fixed lot = Bounded(x, p, "lotKg", "0.001", "1000");
+            Fixed pMin = Bounded(x, p, "premiumMin", "0", "2"), pMax = Bounded(x, p, "premiumMax", "0", "2");
+            if (pMin > pMax) throw new ContentException(p + ".premiumMax", "must be at least premiumMin");
+            int greens = Int(Required(x, p, "greensPerDay"), p + ".greensPerDay");
+            Range(greens, 0, 1, p + ".greensPerDay");
+            Fixed gMin = Bounded(x, p, "greenPickingsMin", "0.01", "20"), gMax = Bounded(x, p, "greenPickingsMax", "0.01", "20");
+            if (gMin > gMax) throw new ContentException(p + ".greenPickingsMax", "must be at least greenPickingsMin");
+            Fixed gLot = Bounded(x, p, "greensLotKg", "0.001", "100");
+            return new OrderDef(perDay, sMin, sMax, lot.MulRatio(1000, 1).RoundToLong(), pMin, pMax, greens, gMin, gMax, gLot.MulRatio(1000, 1).RoundToLong());
         }
 
         private static int IndexOfGood(List<GoodDef> goods, string id, string path)
