@@ -4,6 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Storage and selling); Economy (Regional trader); Offline play (notifications)
+- Amends: spec 004 §3.1 (the daily factor), §3.2 (the night pause), §3.3 (capacity resets at 6:00; the truck); spec 006 §3.8 (the hand delivers first, BestCrop); spec 007 §3.5 (a notification kind); spec 003 content (rice and potato times)
 - Related ADRs: 0054 (the trader's truck), 0055 (supermarket orders, rice and potato in 15 h), 0034 (a glut drains hour by hour), 0037 (the mandi trip), 0048 and 0050 (the hand's crop choice), 0053 (the roads)
 - Depends on specs: 004 (market and store: amended here), 003 (crops: rice and potato times), 006 (the hand's orders: amended here), 007 (notifications), 010 (the roads and the truck stop)
 
@@ -40,19 +41,34 @@ Money is `long` in 1/100 coin, quantities in grams, factors `Fixed` (ADR 0018). 
 | Arrival | At the hourly pass at hour `TruckDef.arriveHour` (6), system Market, before the market clears: the per-crop counts `traderBoughtToday` reset to 0, the load `truckLoadToday` resets to 0, and the truck is **here**. Emits `TruckArrived` | 0–23 |
 | Here | From arrival until it leaves. `TruckHere` is state (a bool) | |
 | Leaving | When `truckLoadToday ≥ TruckDef.loadKg` after any purchase (emits `TruckLeft(Full)`), or at the hourly pass at hour `TruckDef.leaveHour` (0, midnight; emits `TruckLeft(Day)`), whichever is first | |
-| The day's price | The truck buys at the **Floor** (spec 004 §3.1). P_regional changes only at a season start or an index step, both at midnight, so the Floor is constant from 6:00 to midnight: the truck's price is set by 6:00 and held all day without extra state. (§10 G1 asks whether the regional price should also move day to day) | |
+| The day's price | The truck buys at the **Floor** (spec 004 §3.1). P_regional changes only at a season start or an index step (both at midnight) and with the daily factor (§3.1b, at 6:00), so the Floor is constant from 6:00 to midnight: the truck's price is set at 6:00 and held all day without extra state | |
 | Capacity | `TraderCapacityLeft(good) = TruckHere ? min(traderBuyPerDay(good) − traderBoughtToday(good), loadKg − truckLoadToday) : 0`. Every trader purchase goes through it: `SellToTrader`, harvest overflow (`SellRestToTrader`), the trader holding the floor on the stall (spec 004 §3.2), the hand's SELL TO TRADER, labourers' harvests. Every purchase adds to both counts | `loadKg` 4,000 kg (tuned so a normal day rarely fills it) |
 | Away | While the truck isn't here, `SellToTrader` is rejected with **`TraderAway`** ("Back at 6:00"). A harvest with `SellRestToTrader` whose rest doesn't fit the store is rejected with `TraderAway` and waits in the field, as with `TraderFull` (spec 003). The trader doesn't hold the floor on the stall | |
 | Away while you're away | The truck runs the same live and away. The away card says what it bought ("The trader bought 1,200 kg of potato") | |
 
 The trader's per-crop counts used to reset at the midnight daily pass (spec 004 §3.3). They now reset at the truck's arrival.
 
+### 3.1b The daily price (amends spec 004 §3.1; §10 G1)
+
+At the hourly pass at `arriveHour`, before the truck arrives, each produce good in id order draws its daily factor:
+
+```
+f ← f + MarketDef.dailyReversion × (1 − f) + GoodDef.dailyVolatility × (2u − 1)     u: seeded draw (stream DailyPrice, counter = day index × goods + good)
+f ← clamp(f, 1 − GoodDef.dailyBand, 1 + GoodDef.dailyBand)
+P_regional(good, t) = GoodDef.basePrice × PriceIndex × SeasonalFactor(good, season(t)) × f
+```
+
+- Produce only: inputs (seed, fertiliser, spray, saplings) keep their seasonal price, and price-controlled goods ignore it.
+- Every price built on P_regional follows: the truck's Floor, the stall's market (it already rescales when P_regional changes, spec 004 §3.2), the Ceiling, order prices, the mandi, and stored produce in net worth.
+- Placeholders: wheat, rice and lentils volatility 0.015, band 0.05; potato, radish, fruit and greens volatility 0.04, band 0.12; reversion 0.3. The mean of `f` is 1, so prices are neutral on average.
+- The good's sheet shows today's change: "Potato 5.62 today (yesterday 5.30, ▲6%)", with a *Why?* ("Season price 6.80 × today's market +4%").
+
 ### 3.2 The stall's night pause (ADR 0054)
 
 | Rule | Behaviour |
 | --- | --- |
 | Pause | At the hourly passes for the hours from `TruckDef.leaveHour` to `arriveHour` (the passes at 1:00 … 6:00, each clearing the hour that just ended), the founder's offer adds nothing to supply: `S_founder = 0`, so it sells nothing and the trader takes none of it. The offer stays in the store (and keeps spoiling) |
-| The price overnight | The valley's market keeps clearing without the stall (spec 004 §3.2 with `S_founder = 0`), so a glutted price recovers towards P_regional overnight (§10 G2) |
+| The price overnight | The valley's market keeps clearing without the stall (spec 004 §3.2 with `S_founder = 0`), so a glutted price recovers towards P_regional overnight: about 80% of the gap by 6:00 at damping 0.25 (§10 G2) |
 | Labels | The good's sheet and the Store show "Stall closed till 6:00" in those hours |
 
 ### 3.3 Supermarket orders (ADR 0055)
@@ -91,7 +107,7 @@ Example (Spring, potato at 15 h, index 1.00): `BaseSowing` = 7,000 × 15 ÷ 96 =
 
 ### 3.6 Processing order
 
-At the hourly pass at `arriveHour`, system Market: (1) the truck arrives (resets), (2) open orders lapse, (3) new orders are drawn, (4) the market clears the hour that just ended (paused, §3.2). At the midnight pass: the truck leaves (if here), delivery closes, then the market clears. Orders are processed in id order.
+At the hourly pass at `arriveHour`, system Market: (0) the daily factors are drawn (§3.1b), (1) the truck arrives (resets), (2) open orders lapse, (3) new orders are drawn, (4) the market clears the hour that just ended (paused, §3.2). At the midnight pass: the truck leaves (if here), delivery closes, then the market clears. Orders are processed in id order.
 
 ## 4. Data
 
@@ -107,6 +123,9 @@ At the hourly pass at `arriveHour`, system Market: (1) the truck arrives (resets
 | | `lotKg` | long (kg) | 10 | > 0 | |
 | | `premiumMin`, `premiumMax` | Fixed | 0.15, 0.30 | 0 ≤ min ≤ max | Over P_regional |
 | `CropDef` | `growthMinutes` | int | rice 900, potato 900 | | Were 1,440 |
+| `GoodDef` | `dailyVolatility` | Fixed | §3.1b | 0–0.1 | Produce only; 0 = no daily move |
+| | `dailyBand` | Fixed | §3.1b | 0–0.25 | |
+| `MarketDef` | `dailyReversion` | Fixed | 0.3 | 0–1 | |
 | `NotifyDef` | kinds | | adds `OrdersPosted` (Needs you) | | |
 
 **New or changed state** (save schema 5, with spec 010):
@@ -116,6 +135,7 @@ At the hourly pass at `arriveHour`, system Market: (1) the truck arrives (resets
 | `MarketState` | `truckHere` | bool | Migrated as `true` if the save's hour is 6–23, else `false` |
 | | `truckLoadToday` | long (g) | Migrated as the sum of `traderBoughtToday` |
 | | `freshToday` | long[] per good (g) | Migrated as 0 |
+| | `dailyFactor` | Fixed[] per good | Migrated as 1.0 |
 | `SupermarketOrder` | `id`, `crop`, `amount`, `delivered`, `price`, `postedAt` | | In id order; `NextOrderId` |
 
 ## 5. Commands and events
@@ -174,6 +194,7 @@ Store sheet, the trader's row:
 | AC-2 | A sale that fills the load makes the truck leave at once with `TruckLeft(Full)`; after that, and between midnight and 6:00, `SellToTrader` is rejected with `TraderAway` and nothing changes | `TruckTests.Full_LeavesAndRefuses` |
 | AC-3 | Capacity is the lesser of the crop's room and the load's room; every kind of trader purchase (sell, overflow, floor hold, hand's rule, labourers) adds to both | `TruckTests.Capacity_SharedLoad` |
 | AC-4 | The truck's price is the same at every hour from 6:00 to 23:59 of a day, including a day that starts a new season | `TruckTests.Price_HeldAllDay` |
+| AC-4b | At each 6:00 pass every produce good's daily factor follows §3.1b and stays inside its band; inputs and price-controlled goods don't move; over 1,000 days the mean factor is within 1% of 1; the same seed gives the same factors | `MarketTests.DailyPrice_BoundedAndNeutral` |
 | AC-5 | A harvest that doesn't fit the store while the truck is away is rejected with `TraderAway` and stays ready in the field | `TruckTests.Overflow_WaitsWhileAway` |
 | AC-6 | From the midnight pass to the 6:00 pass an offer sells nothing and the trader takes none of it; a glutted price moves towards P_regional in those hours; from the 7:00 pass it sells again | `MarketTests.Stall_PausedAtNight` |
 | AC-7 | At 6:00 two orders are posted for distinct eligible crops (in season, growth ≤ 18 h), with amounts of 1–2 sowings in 10 kg lots and prices 15–30% over P_regional; the draws are the same for the same seed; with no eligible crop none are posted | `OrderTests.Posting` |
@@ -197,8 +218,8 @@ Store sheet, the trader's row:
 
 ## 10. Open questions (gaps to close with the owner, one at a time)
 
-- **G1. A daily price.** P_regional moves only by season, so the truck pays the same price for 4 days. Should it move day to day?
-- **G2. The price overnight.** Recommended: the valley's market keeps clearing while the stall is closed, so a glut recovers by morning (§3.2).
+- **G1. A daily price.** **Closed (owner, 2026-10-21):** prices move daily at 6:00 by a bounded, mean-reverting factor per produce good (§3.1b).
+- **G2. The price overnight.** **Closed (owner, 2026-10-21):** the valley's market keeps clearing while the stall is closed; the player's supply is 0, so a glut recovers by morning (§3.2).
 - **G3. Who carries an order.** Recommended: the supermarket's van collects from the farm gate when the player delivers; no cost, partial deliveries paid at once.
 - **G4. Which goods can be ordered.** Recommended: field crops only (no fruit, no garden greens).
 - **G5. The hand's sales overnight.** His SELL TO TRADER harvests while the truck is away go to the store. Recommended: at 6:00 he sells to the truck what his orders stored that way overnight.
