@@ -232,7 +232,7 @@ animals-order := LOOK AFTER the shed [KEEP straw and feed for N days]
 
 ### 3.13 When cattle unlock (§10 G2)
 
-The shed can be built from the **Hamlet** era (spec 009's `EraUnlocked(hamlet)`). The `hamlet` letter adds a line, and a new chapter `cattle` opens with the first visit to the yard after the Hamlet: "A buffalo in the yard pays every morning. Build a shed, and grow her green fodder…" (action: the shed sheet). Before the Hamlet, tapping the yard's south acre shows "A cattle shed can go here once you're a Hamlet".
+The shed can be built from the **Hamlet** era (spec 009's `EraUnlocked(hamlet)`). The `hamlet` letter adds a line, and a new chapter `cattle` opens with the first visit to the yard after the Hamlet: "A buffalo in the yard pays every morning. Build a shed, and grow her green fodder…" (action: the shed sheet). Before the Hamlet, tapping the yard's south acre shows "A cattle shed can go here once you're a Hamlet", and the Becoming a Hamlet progress sheet lists "A cattle shed: buffalo and cows" among its rewards.
 
 ### 3.14 Notifications (amends spec 007 §3.5)
 
@@ -391,7 +391,7 @@ Shed sheet                                                            [×]
 ## 10. Open questions
 
 - **G1. The time scale.** **Closed (owner, 2026-10-22):** one game day = 22.8 real days (a quarter ÷ 4, ADR 0008), not ADR 0056's 30; content gives amounts per real day; about one calf a game year (§3.1, §3.2).
-- **G2. When cattle unlock.** From the Hamlet, with a letter chapter. Recommended.
+- **G2. When cattle unlock.** **Closed (owner, 2026-10-22):** from the Hamlet; the `cattle` chapter on the first yard tap after it; a locked note on the yard's south acre before it; the Becoming a Hamlet sheet lists cattle as a reward (§3.13).
 - **G3. Green fodder.** Berseem and multi-cut sorghum cut daily from 6 h after sowing; the commons' share by season; bought green fodder from neighbours (on by default). Recommended.
 - **G4. Straw.** Into the stack only once the shed exists; surplus left on the field (not sold, so crop income is unchanged); straw can be bought. Recommended.
 - **G5. Stocks and who refills them.** The feed room 2.4 t (4 days for 4 buffalo, over the 72 h away cap), the stack 10 t, a compost pit in every yard; goods kept in their own place; the player fills, or the hand's animals order keeps them stocked. Recommended.
