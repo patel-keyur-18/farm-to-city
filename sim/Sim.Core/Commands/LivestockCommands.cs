@@ -57,16 +57,26 @@ namespace Sim.Core.Commands
             if (kind < 0) return CommandResult.Reject(RejectReason.UnknownAnimal);
             if (LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
             if (s.Animals.Count >= LivestockRules.Stalls(sim)) return CommandResult.Reject(RejectReason.ShedFull);
-            if (Financing != null) return CommandResult.Reject(RejectReason.InvalidArgument); // the dairy loan comes with US-202
             long cost = MarketRules.Indexed(sim, LivestockRules.Defs(sim).Animals[kind].Price);
-            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            int lender = -1;
+            long loan = 0;
+            if (Financing != null)
+            {
+                // The dairy loan (§3.12): no more than her price; the bank counts her at livestockLtv (as a land loan counts its parcel, ADR 0028).
+                if (Financing.Amount > cost) return CommandResult.Reject(RejectReason.InvalidAmount);
+                RejectReason r = CreditRules.Check(sim, Financing.LenderId, Financing.Amount, Financing.TermSeasons, 0, out lender, cost);
+                if (r != RejectReason.None) return CommandResult.Reject(r);
+                loan = Financing.Amount;
+            }
+            if (!sim.State.Ledger.CanAfford(cost - loan)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             long t = sim.State.Clock.SimTime;
+            long loanId = Financing == null ? 0 : CreditSystem.Create(sim, lender, loan, Financing.TermSeasons).Id;
             FarmSystem.Accrue(sim); // her labour joins the Care demand from now (§3.9)
             var a = new Animal
             {
                 Id = s.NextAnimalId++, Kind = kind, Name = PickName(sim, s.NextAnimalId - 1), BoughtAt = t, Cost = cost, Stage = AnimalStage.Milking,
-                VaccinatedPeriod = sim.Period, Since = t,
+                VaccinatedPeriod = sim.Period, Since = t, LoanId = loanId,
             };
             sim.State.Ledger.Post(t, sim.Period, "ledger.buyAnimal", "animal:" + a.Id, new Posting(Account.Livestock, cost), new Posting(Account.Cash, -cost));
             s.Animals.Add(a);
@@ -105,13 +115,17 @@ namespace Sim.Core.Commands
             Animal a = LivestockRules.Find(sim, AnimalId);
             if (a == null) return CommandResult.Reject(RejectReason.UnknownAnimal);
             long t = sim.State.Clock.SimTime;
-            LivestockSystem.Collect(sim, new List<Animal> { a }, false);
             long proceeds = LivestockRules.SellPrice(sim, a);
+            // Selling collateral repays the bank first (ADR 0038): what the rest of the herd and the land can't support.
+            long required = CreditSystem.RequiredOnSale(sim, -1, a.Id);
+            if (proceeds < required) return CommandResult.Reject(RejectReason.LoanSecured);
+            LivestockSystem.Collect(sim, new List<Animal> { a }, false);
             var postings = new List<Posting> { new Posting(Account.Cash, proceeds), new Posting(Account.Livestock, -a.Cost) };
             long diff = proceeds - a.Cost;
             if (diff > 0) postings.Add(new Posting(Account.GainOnAssetSales, -diff));
             if (diff < 0) postings.Add(new Posting(Account.LossOnAssetSales, -diff));
             sim.State.Ledger.Post(t, sim.Period, "ledger.sellAnimal", "animal:" + a.Id, postings.ToArray());
+            if (required > 0) CreditSystem.RepaySecured(sim, required);
             FarmSystem.Accrue(sim);
             sim.State.Livestock.Animals.Remove(a);
             FarmSystem.Refresh(sim);

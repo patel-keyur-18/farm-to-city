@@ -1554,5 +1554,7 @@
   "notify.AnimalSick.body": "The vet came; she's resting.",
   "notify.CalfBorn.title": "{name} had a calf",
   "notify.CalfBorn.body": "The calf was sold at the cattle fair.",
-  "animal.someone": "An animal"
+  "animal.someone": "An animal",
+  "ledger.animalSeized": "An animal taken by the lenders",
+  "event.AnimalSeized": "The lenders took an animal to cover the debt."
 }

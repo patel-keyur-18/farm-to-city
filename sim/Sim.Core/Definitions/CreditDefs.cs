@@ -73,6 +73,9 @@ namespace Sim.Core.Definitions
         public bool Secured { get; }
         public long BaseLimit { get; }
         public Fixed CollateralLtv { get; }
+
+        /// <summary>The share of an animal's value a secured lender lends against (spec 012 §3.12; bank 0.75, a quarter down).</summary>
+        public Fixed LivestockLtv { get; internal set; }
         public Fixed IncomeMultiple { get; }
         public int MinScore { get; }
 

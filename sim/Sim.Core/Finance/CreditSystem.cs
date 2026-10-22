@@ -299,6 +299,21 @@ namespace Sim.Core.Finance
             }
             FarmSystem.Refresh(sim);
 
+            // 1b. Animals, in id order, at their fair price, only until the debt is covered (spec 012 §3.12). The shed stays (the yard).
+            if (sim.State.Livestock != null)
+                foreach (Livestock.Animal a in sim.State.Livestock.Animals.ToArray())
+                {
+                    if (debt <= pot) break;
+                    long value = Livestock.LivestockRules.SellPrice(sim, a);
+                    long gain = value - a.Cost;
+                    ledger.Post(t, period, "ledger.animalSeized", "animal:" + a.Id, new Posting(Account.Cash, value), new Posting(Account.Livestock, -a.Cost),
+                        gain >= 0 ? new Posting(Account.GainOnAssetSales, -gain) : new Posting(Account.LossOnAssetSales, -gain));
+                    sim.State.Livestock.Animals.Remove(a);
+                    pot += value;
+                    sim.Emit(new AnimalSeized(t, a.Id, a.Name, value));
+                }
+            FarmSystem.Refresh(sim);
+
             // 2. Stored produce at the Floor, highest value first, only until the debt is covered.
             var produce = new List<KeyValuePair<string, long>>();
             if (debt > pot)
@@ -400,20 +415,22 @@ namespace Sim.Core.Finance
         /// What a sale must repay to the secured lenders: <c>max(0, bankOwed − ltv × remaining collateral)</c>, where the remaining
         /// collateral excludes the parcel being sold.
         /// </summary>
-        internal static long RequiredOnSale(Simulation sim, int parcelId)
+        internal static long RequiredOnSale(Simulation sim, int parcelId, long animalId = -1)
         {
             if (sim.State.Credit == null) return 0;
             CreditDefs defs = sim.Config.Game.Credit;
             long owed = 0;
-            Fixed ltv = Fixed.Zero;
+            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero;
             foreach (Loan l in sim.State.Credit.Loans)
             {
                 if (!l.IsOpen || !defs.Lenders[l.Lender].Secured) continue;
                 owed += CreditRules.OwedNow(sim, l);
                 if (defs.Lenders[l.Lender].CollateralLtv > ltv) ltv = defs.Lenders[l.Lender].CollateralLtv;
+                if (defs.Lenders[l.Lender].LivestockLtv > animalLtv) animalLtv = defs.Lenders[l.Lender].LivestockLtv;
             }
             if (owed == 0) return 0;
-            long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv);
+            // What stays behind the loans once this parcel or animal is sold (spec 005 §3.6, spec 012 §3.12).
+            long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv) + Money.MulRate(CreditRules.LivestockCollateral(sim, 0, animalId), animalLtv);
             return System.Math.Max(0, owed - supported);
         }
 

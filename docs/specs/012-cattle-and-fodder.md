@@ -411,6 +411,7 @@ Shed sheet                                                            [×]
 - A fodder field's growth job ends its stand at the close of its last cut season; its soil change is applied at each cut and on clearing, pro rata.
 - A save loads content that has gained goods or crops since it was written (they start empty).
 - The vet vaccinates on the first 6:00 of each season, after the morning's milk money (so the milk can pay for it), not at the seasonal pass; the disease draw is keyed by the animal and the day.
+- The dairy loan uses spec 005's limit as a land loan does: the animal counts at `livestockLtv` (0.75) of her fair value, and the bank's score factor applies, so at the starting score (650) and with no other collateral or income the bank lends up to 56,200 on a 1,00,000 buffalo (about 44,000 down); at score 750 up to 75,000. The buy card shows the limit and its *Why?* (US-205). Foreclosure takes animals only until the debt is covered (`AnimalSeized`).
 - The hand's animals order is checked at every hourly pass with his other orders (it buys only when a place is under its days), so it also acts the moment it's given.
 
 ### Changes after approval (owner, 2026-10-22, ADR 0061)

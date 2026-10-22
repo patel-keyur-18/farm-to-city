@@ -193,4 +193,21 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "AnimalSick(animal=" + AnimalId + ", cost=" + Cost + ", vet=" + VetCame + ")"; }
     }
+
+    /// <summary>Foreclosure took an animal at her fair price (spec 012 §3.12).</summary>
+    public sealed class AnimalSeized : SimEvent
+    {
+        public long AnimalId { get; }
+        public string Name { get; }
+        public long Amount { get; }
+
+        public AnimalSeized(long simTime, long animalId, string name, long amount) : base(simTime)
+        {
+            AnimalId = animalId;
+            Name = name;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "AnimalSeized(animal=" + AnimalId + ", amount=" + Amount + ")"; }
+    }
 }

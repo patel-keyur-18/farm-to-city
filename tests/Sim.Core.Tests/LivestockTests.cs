@@ -211,7 +211,7 @@ namespace Sim.Core.Tests
         }
 
         [Test]
-        public void Books_FarmProfitCountsMilk()
+        public void Books()
         {
             Simulation sim = LivestockKit.WithShed();
             LivestockKit.Buy(sim);
@@ -416,6 +416,66 @@ namespace Sim.Core.Tests
                 return string.Join(",", days);
             }
             Assert.That(Run(), Is.EqualTo(Run()));
+        }
+        // ---- US-202: the dairy loan and foreclosure (spec 012 §3.12) ----
+
+        [Test]
+        public void DairyLoan_Foreclosure()
+        {
+            Simulation sim = LivestockKit.WithShed();
+            long t = sim.State.Clock.SimTime;
+            int bank = sim.Config.Game.Credit.IndexOfLender("coop_bank");
+            Assert.That(Finance.CreditRules.Limit(sim, bank).Limit, Is.EqualTo(0), "no land, no income yet: nothing to lend against");
+            // With her as collateral: 1,00,000 × 0.75 × the score factor at 650 (0.75) = 56,250, rounded down to 56,200.
+            Assert.That(Finance.CreditRules.Limit(sim, bank, 0, Money(100000)).Limit, Is.EqualTo(Money(56200)));
+            Assert.That(sim.Execute(new BuyAnimal(t, "buffalo", new Financing("coop_bank", Money(60000), 8))).Reason, Is.EqualTo(RejectReason.OverLimit));
+            Assert.That(sim.Execute(new BuyAnimal(t, "buffalo", new Financing("coop_bank", Money(100001), 8))).Reason, Is.EqualTo(RejectReason.InvalidAmount));
+            long cash = sim.State.Ledger.Cash;
+            Ok(sim, new BuyAnimal(t, "buffalo", new Financing("coop_bank", Money(50000), 8)));
+            Animal a = LivestockKit.L(sim).Animals.Single();
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(Money(50000)), "half down, half the bank's");
+            Assert.That(a.LoanId, Is.GreaterThan(0));
+            Assert.That(sim.State.Ledger.Balance(Account.BankLoans), Is.EqualTo(-Money(50000)));
+
+            // Selling her repays the bank first: nothing else supports the loan.
+            sim.AdvanceTo(t + Hour);
+            Ok(sim, new SellAnimal(sim.State.Clock.SimTime, a.Id));
+            Assert.That(sim.State.Ledger.Balance(Account.BankLoans), Is.EqualTo(0), "the bank was paid from the sale");
+
+            // Foreclosure takes animals after bought land, at their fair price, only until the debt is covered; the shed stays.
+            Ok(sim, new BuyAnimal(sim.State.Clock.SimTime, "buffalo", new Financing("coop_bank", Money(50000), 8)));
+            LivestockKit.Buy(sim, "cow");
+            sim.DrainEvents();
+            Finance.CreditSystem.Foreclose(sim);
+            var seized = sim.PendingEvents.OfType<AnimalSeized>().ToList();
+            Assert.That(seized.Count, Is.EqualTo(1), "one buffalo covers the 50,000");
+            Assert.That(seized[0].Amount, Is.EqualTo(Money(80000)));
+            Assert.That(LivestockKit.L(sim).Animals.Single().Kind, Is.EqualTo(sim.Config.Game.Livestock.IndexOfAnimal("cow")));
+            Assert.That(LivestockRules.Shed(sim), Is.Not.Null, "the shed is on the protected yard");
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+
+        // AC-16: a dairy year gives the same hash in one advance or in hours.
+        [Test]
+        public void ChunkingInvariance()
+        {
+            Simulation Setup()
+            {
+                Simulation sim = LivestockKit.WithShed();
+                long t = sim.State.Clock.SimTime;
+                Ok(sim, new Sow(t, HomeTile, "berseem", Farm.SeedSource.Certified, "compost"));
+                LivestockKit.Buy(sim);
+                LivestockKit.Buy(sim, "cow");
+                Fill(sim, "straw", 5_000_000);
+                Fill(sim, "cattle_feed", 2_000_000);
+                return sim;
+            }
+            Simulation one = Setup(), many = Setup();
+            long end = one.State.Clock.SimTime + one.Clock.SecondsPerSeason * 4 + 7 * Hour + 13;
+            one.AdvanceTo(end);
+            for (long x = many.State.Clock.SimTime; x < end; x += 3 * Hour + 17) many.AdvanceTo(System.Math.Min(end, x));
+            many.AdvanceTo(end);
+            Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
         }
     }
 }

@@ -10,6 +10,9 @@ namespace Sim.Core.Finance
     public sealed class CreditLimit
     {
         public long Collateral { get; internal set; }
+
+        /// <summary>The animals the lender lends against, at their fair value (spec 012 §3.12).</summary>
+        public long Livestock { get; internal set; }
         public long AverageFarmProfit { get; internal set; }
         public bool ScoreTooLow { get; internal set; }
         public Fixed ScoreFactor { get; internal set; }
@@ -44,6 +47,20 @@ namespace Sim.Core.Finance
             return sum;
         }
 
+        /// <summary>
+        /// Σ owned animals at their fair value (price × index × health, the fair's full price before its cut), plus <paramref name="extra"/>
+        /// (an animal being bought), less <paramref name="excludeAnimal"/> (spec 012 §3.12).
+        /// </summary>
+        public static long LivestockCollateral(Simulation sim, long extra = 0, long excludeAnimal = -1)
+        {
+            long sum = extra;
+            if (sim.State.Livestock == null) return sum;
+            foreach (Livestock.Animal a in sim.State.Livestock.Animals)
+                if (a.Id != excludeAnimal)
+                    sum += Money.MulRate(Market.MarketRules.Indexed(sim, sim.Config.Game.Livestock.Animals[a.Kind].Price), a.Health);
+            return sum;
+        }
+
         /// <summary>max(0, mean farm profit of the last up to 4 closed seasons); 0 before the first close.</summary>
         public static long AverageFarmProfit(Simulation sim)
         {
@@ -68,7 +85,7 @@ namespace Sim.Core.Finance
         /// <c>limit = max(0, min(eraCap, (base + ltv × collateral + incomeMultiple × avgIncome) × scoreFactor) − owed)</c>, rounded down
         /// to a whole 100 coins (spec 005 §3.6). <paramref name="extraCollateral"/> is the parcel a land-purchase loan buys (ADR 0028).
         /// </summary>
-        public static CreditLimit Limit(Simulation sim, int lender, long extraCollateral = 0)
+        public static CreditLimit Limit(Simulation sim, int lender, long extraCollateral = 0, long extraLivestock = 0)
         {
             CreditDefs credit = sim.Config.Game.Credit;
             LenderDef def = credit.Lenders[lender];
@@ -76,6 +93,7 @@ namespace Sim.Core.Finance
             var r = new CreditLimit
             {
                 Collateral = def.Secured ? Collateral(sim, extraCollateral) : 0,
+                Livestock = def.Secured ? LivestockCollateral(sim, extraLivestock) : 0,
                 AverageFarmProfit = AverageFarmProfit(sim),
                 EraCap = def.EraCaps[LenderDef.HomesteadEra], // the Village cap joins with the era unlock (F09.4)
                 Owed = Owed(sim, lender),
@@ -83,7 +101,8 @@ namespace Sim.Core.Finance
             if (score < def.MinScore) { r.ScoreTooLow = true; r.ScoreFactor = Fixed.Zero; return r; }
             r.ScoreFactor = !def.ScoreScaledLimit || credit.Score.FullScore <= def.MinScore ? Fixed.One
                 : Fixed.Parse("0.5") + Fixed.Parse("0.5") * Min1(Fixed.FromInt(score - def.MinScore) / Fixed.FromInt(credit.Score.FullScore - def.MinScore));
-            r.RawLimit = def.BaseLimit + Money.MulRate(r.Collateral, def.CollateralLtv) + Money.MulRate(r.AverageFarmProfit, def.IncomeMultiple);
+            r.RawLimit = def.BaseLimit + Money.MulRate(r.Collateral, def.CollateralLtv) + Money.MulRate(r.Livestock, def.LivestockLtv)
+                + Money.MulRate(r.AverageFarmProfit, def.IncomeMultiple);
             long scaled = Money.MulRate(r.RawLimit, r.ScoreFactor);
             long room = System.Math.Min(r.EraCap, scaled) - r.Owed;
             r.Limit = room <= 0 ? 0 : room - room % HundredCoins;
@@ -96,7 +115,7 @@ namespace Sim.Core.Finance
         /// Whether a loan could be taken (shared by TakeLoan and the financing of BuyParcel): the rejection reason, or None.
         /// <paramref name="lender"/> is the lender's index, or −1 for an unknown lender.
         /// </summary>
-        internal static RejectReason Check(Simulation sim, string lenderId, long amount, int term, long extraCollateral, out int lender)
+        internal static RejectReason Check(Simulation sim, string lenderId, long amount, int term, long extraCollateral, out int lender, long extraLivestock = 0)
         {
             lender = -1;
             CreditDefs credit = sim.Config.Game == null ? null : sim.Config.Game.Credit;
@@ -107,7 +126,7 @@ namespace Sim.Core.Finance
             if (amount <= 0 || amount % Money.Coin != 0) return RejectReason.InvalidAmount;
             if (amount < def.MinAmount) return RejectReason.BelowMinimum;
             if (term < def.MinTerm || term > def.MaxTerm) return RejectReason.InvalidTerm;
-            CreditLimit limit = Limit(sim, lender, extraCollateral);
+            CreditLimit limit = Limit(sim, lender, extraCollateral, extraLivestock);
             if (limit.ScoreTooLow) return RejectReason.ScoreTooLow;
             if (amount > limit.Limit) return RejectReason.OverLimit;
             return RejectReason.None;
