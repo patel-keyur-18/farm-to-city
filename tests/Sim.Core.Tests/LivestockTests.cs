@@ -94,7 +94,7 @@ namespace Sim.Core.Tests
             LivestockKit.Buy(sim, "cow");
             Assert.That(LivestockKit.L(sim).Animals.Select(x => x.Name).Distinct().Count(), Is.EqualTo(4), "four different names");
             Assert.That(sim.Execute(new BuyAnimal(t, "buffalo")).Reason, Is.EqualTo(RejectReason.ShedFull));
-            Assert.That(Reporting.NetWorth(sim).LivestockAtBook, Is.EqualTo(Money(340000)));
+            Assert.That(Reporting.NetWorth(sim).LivestockAtBook, Is.EqualTo(Money(350000)), "2 buffalo and 2 cows at 75,000");
         }
 
         [Test]
@@ -476,6 +476,18 @@ namespace Sim.Core.Tests
             for (long x = many.State.Clock.SimTime; x < end; x += 3 * Hour + 17) many.AdvanceTo(System.Math.Min(end, x));
             many.AdvanceTo(end);
             Assert.That(many.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
+        }
+        // A rich town buying feed: the most a sum buys is exact at any size (no fixed-point overflow, found by SaveTests).
+        [Test]
+        public void QuantityFor_AnySize()
+        {
+            foreach (long money in new[] { 1L, 299L, 300L, 2_188_278_870L, 900_000_000_000L })
+            {
+                long q = Finance.Money.QuantityFor(money, Fixed.FromInt(3), 1000);
+                Assert.That(Finance.Money.Value(q, Fixed.FromInt(3), 1000), Is.LessThanOrEqualTo(money));
+                Assert.That(Finance.Money.Value(q + 1, Fixed.FromInt(3), 1000), Is.GreaterThan(money));
+            }
+            Assert.That(Finance.Money.QuantityFor(1000, Fixed.Zero, 1000), Is.EqualTo(0));
         }
     }
 }

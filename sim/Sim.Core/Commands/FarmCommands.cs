@@ -133,7 +133,6 @@ namespace Sim.Core.Commands
             Crop c = sim.State.Farm?.CropOn(TileId);
             if (c == null) return CommandResult.Reject(RejectReason.NoCrop);
             FarmSystem.Accrue(sim);
-            if (sim.Config.Game.Farm.Crops[c.Def].Fodder) Livestock.FodderRules.Settle(sim, c); // the soil change for the time it stood
             if (c.State == CropState.Growing) sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
             if (c.PestJobId != 0) sim.CompleteJob(sim.State.Jobs.Find(c.PestJobId));
             sim.State.Farm.Crops.Remove(c);

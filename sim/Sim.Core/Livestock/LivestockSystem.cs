@@ -96,7 +96,7 @@ namespace Sim.Core.Livestock
         }
 
         /// <summary>One animal's ration for the coming game day in grams: green, straw, feed (feed × dryFeedFactor while dry; §3.7).</summary>
-        internal static (long Green, long Straw, long Feed) Need(Simulation sim, Animal a)
+        public static (long Green, long Straw, long Feed) NeedOf(Simulation sim, Animal a)
         {
             AnimalDef d = LivestockRules.Defs(sim).Animals[a.Kind];
             Fixed feed = a.Stage == AnimalStage.Dry ? d.Feed * d.DryFeedFactor : d.Feed;
@@ -123,7 +123,7 @@ namespace Sim.Core.Livestock
             }
             foreach (Animal a in s.Animals)
             {
-                var n = Need(sim, a);
+                var n = NeedOf(sim, a);
                 report.GreenNeed += n.Green;
                 report.StrawNeed += n.Straw;
                 report.FeedNeed += n.Feed;
@@ -138,9 +138,7 @@ namespace Sim.Core.Livestock
             if (left > 0 && s.BuyGreenFodder)
             {
                 Fixed price = ld.GreenFodderBuyPrice * sim.State.Market.PriceIndex;
-                long afford = price == Fixed.Zero ? left : (Fixed.FromInt(sim.State.Ledger.Cash * 10) / price).FloorToLong(); // grams the cash buys: money × 1000 ÷ (price × 100)
-                long q = System.Math.Min(left, afford);
-                while (q > 0 && Money.Value(q, price, 1000) > sim.State.Ledger.Cash) q--;
+                long q = price <= Fixed.Zero ? left : System.Math.Min(left, Money.QuantityFor(sim.State.Ledger.Cash, price, 1000));
                 if (q > 0)
                 {
                     long cost = Money.Value(q, price, 1000);
@@ -202,26 +200,13 @@ namespace Sim.Core.Livestock
             report.GreenSoldAmount = amount;
         }
 
-        /// <summary>Game days the straw or the feed in stock lasts at today's need (long.MaxValue with no need).</summary>
-        public static long DaysLeft(Simulation sim, int good)
-        {
-            LivestockDefs defs = LivestockRules.Defs(sim);
-            long need = 0;
-            foreach (Animal a in sim.State.Livestock.Animals)
-            {
-                var n = Need(sim, a);
-                need += good == defs.Straw ? n.Straw : n.Feed;
-            }
-            return need <= 0 ? long.MaxValue : sim.State.Market.Stock[good] / need;
-        }
-
         /// <summary>Warns once when straw or feed lasts less than lowDays (§3.7); again only after a refill above it.</summary>
         internal static void LowCheck(Simulation sim)
         {
             LivestockState s = sim.State.Livestock;
             LivestockDefs defs = LivestockRules.Defs(sim);
             if (s.Animals.Count == 0) return;
-            long straw = DaysLeft(sim, defs.Straw), feed = DaysLeft(sim, defs.Feed), low = defs.Livestock.LowDays;
+            long straw = LivestockRules.DaysLeft(sim, defs.Straw), feed = LivestockRules.DaysLeft(sim, defs.Feed), low = defs.Livestock.LowDays;
             long t = sim.State.Clock.SimTime;
             if (straw < low && !s.StrawLow) { s.StrawLow = true; sim.Emit(new FeedLow(t, sim.Config.Game.Market.Goods[defs.Straw].Id, straw)); }
             if (feed < low && !s.FeedLow) { s.FeedLow = true; sim.Emit(new FeedLow(t, sim.Config.Game.Market.Goods[defs.Feed].Id, feed)); }
@@ -233,8 +218,8 @@ namespace Sim.Core.Livestock
             LivestockState s = sim.State.Livestock;
             if (s == null) return;
             LivestockDefs defs = LivestockRules.Defs(sim);
-            if (place == GoodPlace.StrawStack && DaysLeft(sim, defs.Straw) >= defs.Livestock.LowDays) s.StrawLow = false;
-            if (place == GoodPlace.FeedRoom && DaysLeft(sim, defs.Feed) >= defs.Livestock.LowDays) s.FeedLow = false;
+            if (place == GoodPlace.StrawStack && LivestockRules.DaysLeft(sim, defs.Straw) >= defs.Livestock.LowDays) s.StrawLow = false;
+            if (place == GoodPlace.FeedRoom && LivestockRules.DaysLeft(sim, defs.Feed) >= defs.Livestock.LowDays) s.FeedLow = false;
         }
 
         /// <summary>A wheat or rice harvest's straw goes to the stack once the shed stands; the rest is ploughed in (§3.8).</summary>
@@ -344,9 +329,7 @@ namespace Sim.Core.Livestock
                 if (want <= 0 || allowance <= value) break;
                 Fixed price = LivestockRules.MilkPrice(sim, animals[i].Kind);
                 if (price <= Fixed.Zero) continue; // milk with no price isn't counted against the food allowance
-                long fit = (Fixed.FromInt((allowance - value) * 10) / price).FloorToLong(); // ml worth the allowance left: money × 1000 ÷ (price × 100)
-                long q = System.Math.Min(System.Math.Min(want, ml[i]), fit);
-                while (q > 0 && value + Money.Value(q, price, 1000) > allowance) q--;
+                long q = System.Math.Min(System.Math.Min(want, ml[i]), Money.QuantityFor(allowance - value, price, 1000)); // ml the allowance left buys
                 if (q <= 0) continue;
                 home[i] = q;
                 value += Money.Value(q, price, 1000);

@@ -75,6 +75,7 @@ namespace Tools.Balancer
             Deliver(sim, t);
             if (!HoldsProduce(sim)) Sell(sim, t);
             Employ(sim, t);
+            if (KeepsCattle) Cattle(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
             Garden(sim, t);
             SplitLabour(sim, t);
@@ -200,6 +201,90 @@ namespace Tools.Balancer
         private int _orderSeason = -1;
 
         protected virtual bool PostAboveMarket { get { return false; } }
+
+        // ---- Cattle (spec 012 §9): after the Hamlet, a shed and two buffalo, a fodder acre, feed kept stocked ----
+
+        /// <summary>Whether the bot keeps cattle once they unlock (every farmer bot does, so stress ratios compare like with like).</summary>
+        protected virtual bool KeepsCattle { get { return true; } }
+
+        /// <summary>How many buffalo it keeps.</summary>
+        protected virtual int Herd { get { return 2; } }
+
+        /// <summary>Whether it grows its own green fodder (the dairy stress bot buys everything).</summary>
+        protected virtual bool GrowsFodder { get { return true; } }
+
+        /// <summary>The share of an animal's price it borrows from the bank when it can (0: buys with cash).</summary>
+        protected virtual Fixed DairyLoanShare { get { return Fixed.Parse("0.5"); } }
+
+        /// <summary>
+        /// Cash kept back before building or buying for the dairy: the next close's living costs and hands' wages, a season of
+        /// bought feed for the herd after the purchase, and a margin, so the household is never left short at a close.
+        /// </summary>
+        private long Reserve(Simulation sim)
+        {
+            DietPlanDef plan = sim.Config.Game.Farm.DietPlans[sim.State.Farm.Founder.DietPlan];
+            long wages = 0;
+            if (sim.State.People != null) foreach (Hand h in sim.State.People.Hands) wages += h.Wage;
+            int animals = (sim.State.Livestock?.Animals.Count ?? 0) + 1;
+            return MarketRules.Indexed(sim, plan.CostPerSeason) + wages + animals * 25_000 * Money.Coin + 30_000 * Money.Coin;
+        }
+
+        protected void Cattle(Simulation sim, long t)
+        {
+            var defs = sim.Config.Game.Livestock;
+            if (defs == null || !Sim.Core.Livestock.LivestockRules.Unlocked(sim)) return;
+            var herd = sim.State.Livestock;
+            if (Sim.Core.Livestock.LivestockRules.Shed(sim) == null)
+            {
+                long shed = MarketRules.Indexed(sim, sim.Config.Game.Buildings[defs.Shed].Value);
+                if (herd.ShedReadyAt == 0 && sim.State.Ledger.Cash >= shed + Reserve(sim)) Ok(sim, new BuildShed(t));
+                return;
+            }
+            if (herd.Animals.Count < Herd)
+            {
+                long price = MarketRules.Indexed(sim, defs.Animals[defs.IndexOfAnimal("buffalo")].Price);
+                long loan = 0;
+                if (DairyLoanShare > Fixed.Zero && sim.State.Credit != null)
+                {
+                    int bank = sim.Config.Game.Credit.IndexOfLender("coop_bank");
+                    long limit = CreditRules.Limit(sim, bank, 0, price).Limit;
+                    loan = Math.Min(limit, Money.MulRate(price, DairyLoanShare));
+                    loan -= loan % (100 * Money.Coin);
+                    if (loan < sim.Config.Game.Credit.Lenders[bank].MinAmount) loan = 0;
+                }
+                if (sim.State.Ledger.Cash - (price - loan) >= Reserve(sim))
+                    Ok(sim, new BuyAnimal(t, "buffalo", loan > 0 ? new Financing("coop_bank", loan, 8) : null));
+            }
+            if (herd.Animals.Count == 0) return;
+            // Feed: the hand's animals order when there is a hand, otherwise the bot fills what lasts under 2 days.
+            PeopleState p = sim.State.People;
+            if (p != null && p.Hands.Count > 0 && p.OrderFor(OrderTargetKind.Animals, 0) == null)
+                Ok(sim, new SetStandingOrder(t, p.Hands[0].Id, OrderSpec.LookAfterAnimals(3)));
+            if (p == null || p.OrderFor(OrderTargetKind.Animals, 0) == null)
+                foreach (int good in new[] { defs.Straw, defs.Feed })
+                    if (Sim.Core.Livestock.LivestockRules.DaysLeft(sim, good) < 2)
+                    {
+                        long need = 0;
+                        foreach (var a in herd.Animals)
+                        {
+                            var d = defs.Animals[a.Kind];
+                            need += ((good == defs.Straw ? d.Straw : d.Feed) * defs.Livestock.RealDaysPerGameDay * Fixed.FromInt(3000)).RoundToLong();
+                        }
+                        Ok(sim, new Buy(t, sim.Config.Game.Market.Goods[good].Id, Math.Min(need, Store.Fits(sim, good))));
+                    }
+            // A fodder acre: the last inherited acre, sorghum in Summer, berseem in Winter.
+            if (GrowsFodder)
+            {
+                int[] acres = AcresOf(sim);
+                int tile = acres[acres.Length - 1];
+                string fodder = Season(sim, t) == 1 ? "sorghum" : Season(sim, t) == 3 ? "berseem" : null;
+                if (fodder != null && sim.State.Farm.CropOn(tile) == null)
+                {
+                    if (p != null && p.OrderFor(OrderTargetKind.Field, tile) is StandingOrder o) Ok(sim, new ClearStandingOrder(t, o.HandId, OrderTargetKind.Field, tile));
+                    Ok(sim, new Sow(t, tile, fodder, SeedSource.Certified, "none"));
+                }
+            }
+        }
 
         /// <summary>False for a bot that never borrows (the cautious saver, the never-stuck check).</summary>
         protected virtual bool MayBorrow { get { return true; } }
@@ -670,5 +755,17 @@ namespace Tools.Balancer
             list.Sort();
             return list;
         }
+    }
+
+    /// <summary>
+    /// Stress bot (spec 012 §9): fills the shed with buffalo on the biggest dairy loans it can get, buys every kilo of feed and grows
+    /// no fodder. It should stay solvent and never beat the competent bot by more than 1.20 ×.
+    /// </summary>
+    public sealed class DairyBot : FarmerBot
+    {
+        public override string Name { get { return "dairy-max"; } }
+        protected override int Herd { get { return 4; } }
+        protected override bool GrowsFodder { get { return false; } }
+        protected override Fixed DairyLoanShare { get { return Fixed.Parse("0.75"); } }
     }
 }

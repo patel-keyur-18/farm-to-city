@@ -59,7 +59,7 @@ ADR 0056's per-game-day figures used 30 real days a game day; at 22.8 every amou
 
 | Field | Buffalo (Murrah) | Cow (crossbred) | Notes |
 | --- | --- | --- | --- |
-| Price at the fair | 1,00,000 | 70,000 | × PriceIndex |
+| Price at the fair | 1,00,000 | 75,000 (70,000 before the balancer, US-203) | × PriceIndex |
 | Milk, mean over a lactation | 8 L a real day (182 L a game day) | 11 L (251 L) | |
 | Fat | 7.0% | 4.0% | Sets the co-op's price (§3.5) |
 | Season milk factor | 1.00 all year | Summer 0.85, else 1.00 | Crossbred cows suffer in the heat |
@@ -186,7 +186,7 @@ Two new `CropDef`s with a `fodder` block. They are sown with the sow sheet like 
 | Rule | Behaviour |
 | --- | --- |
 | Cutting | At each 6:00 pass after the first cut is due, a fodder field gives `seasonYieldPerAcre × elapsed ÷ S × Soil × Water × Care × Weather × Fertiliser` of green fodder, the factors as the day's time-weighted means (spec 003 §3.4–3.7), capped at `yieldCap` × base. Fodder has no pest check (fodder is cut long before pests build up) |
-| How long | The field stays sown until the end of its last cut season; then it is cleared (`FodderEnded`). `ClearField` ends it early. Seed is paid once at sowing (a fodder field is sown once). Fertiliser is paid at sowing for the time it will stand; its fertility change and the crop's are applied pro rata to the time it stood, at each season close and at its end |
+| How long | The field stays sown until the end of its last cut season; then it is cleared (`FodderEnded`). `ClearField` ends it early. Seed is paid once at sowing (a fodder field is sown once). Fertiliser is paid at sowing for the time it will stand; its fertility change and the crop's are applied pro rata to the time it stood, at each morning's cut and at its end |
 | Never stored | The cut goes straight to the animals (§3.7). It isn't a good in the store; what they don't eat is sold standing to neighbours that morning (§3.7) |
 | Orders | A hand's field order can keep fodder ("KEEP green fodder ON field 28"): he sows berseem in Winter and sorghum in Summer, whichever is in season when the field is empty, so berseem (Winter–Spring) then sorghum (Summer–Monsoon) feed the animals all year; if neither can be sown now he sows his best pick as any order does (ADR 0048), so the field never stands idle. A hand never picks fodder by himself in other orders (`BestCrop` skips fodder: its value is the bought fodder it saves, which the sow sheet shows) |
 | The sow sheet | A fodder card shows "Feeds about 6 buffalo · saves about 1,850 coins a day of bought fodder" with a *Why?* |
@@ -314,7 +314,7 @@ At the 6:00 hourly pass, system Agriculture, before the Market system's truck an
 | Decision | Immediate cost | Delayed effect | Side effects on other systems | Reversibility |
 | --- | --- | --- | --- | --- |
 | Build the shed | 40,000 | Room for 4 animals, a feed room, a straw stack | Depreciation | No (protected, never sold) |
-| Buy a buffalo or a cow | 1,00,000 or 70,000, or a dairy loan | About 10,000 a day of milk while in milk; a calf a year | 1.5 h a day of labour; feed every day | Sell at 80% |
+| Buy a buffalo or a cow | 1,00,000 or 75,000, or a dairy loan | About 10,000 a day of milk while in milk; a calf a year | 1.5 h a day of labour; feed every day | Sell at 80% |
 | Grow fodder on an acre | Seed; the acre isn't growing a cash crop | Saves about 1,850 coins a day of bought green fodder per buffalo it feeds; what they don't eat sells standing at 1 a kg | Labour 3 h a day; berseem feeds the soil | Clear the field |
 | Keep the straw | — | Free dry fodder | The stack's room | — |
 | Fill the feed room | Cash now | Milk stays up while away | An asset in store | Use it |
@@ -334,7 +334,7 @@ Shed sheet                                                            [×]
 | [cow]     Gauri    Dry, calf in 2 days                 ❤ 90%  [?]   |
 | [buffalo] Ganga    In milk, day 9 · 160 L · ill today  ❤ 80%  [?]   |
 |                                         [Buy a buffalo 1,00,000]    |
-|                                         [Buy a cow 70,000]          |
+|                                         [Buy a cow 75,000]          |
 | FEED (every morning at 6:00)                                        |
 | Green fodder  1,700 kg a day: commons 170, berseem 1,200,           |
 |               bought 330 (990 coins)                         [?]    |
@@ -382,15 +382,15 @@ Shed sheet                                                            [×]
 
 ## 9. Balancing hooks
 
-| Metric | Expected effect | Tolerance |
-| --- | --- | --- |
-| A buffalo's payback, all feed bought | About 2.5 game years | 2–3.5 |
-| A buffalo's payback, home-grown green and straw | About 1.3 game years | 1–2 |
-| A cow's payback vs a buffalo's | Faster per coin, less per stall | Cow 10–30% faster |
-| A buffalo's net a season vs an owner-operated acre's | About equal (real Indian smallholder figures) | 0.7–1.5 × |
-| Competent bot (buys 2 buffalo after the Hamlet) net worth after 2 years | Up | Stress bots within 1.20 × (ADR 0016) |
-| A new `DairyBot` (all bought feed, max loan) | Never stuck; repays | Within 1.20 × |
-| Hamlet day | Unchanged | Day 5–9 |
+| Metric | Expected effect | Tolerance | Measured (US-203, 2026-10-22; `GateTests.Dairy`, `GateTests.Dairy_Bots`) |
+| --- | --- | --- | --- |
+| A buffalo's payback, all feed bought | About 2.5 game years | 2–3.5 | 2.37 years (net 2,640 a game day over an 18-day cycle) |
+| A buffalo's payback, home-grown green and straw | About 1.3 game years | 1–2 | 1.25 years (net 5,000 a day) |
+| A cow's payback vs a buffalo's | Faster per coin, less per stall | Cow 10–30% faster | 26% faster (0.93 vs 1.25 years) after tuning the cow to 75,000 (at 70,000 she was 31% faster) |
+| A buffalo's net a season vs an owner-operated acre's | About equal (real Indian smallholder figures) | 0.7–1.5 × | 1.20 × home-grown, 0.63 × all bought |
+| Competent bot (buys 2 buffalo after the Hamlet) net worth after 2 years | Up | Stress bots within 1.20 × (ADR 0016) | Two buffalo by year 2; every stress bot within 1.20 × |
+| A new `DairyBot` (a full shed on the biggest loans, all feed bought, no fodder) | Never stuck; repays | Within 1.20 × | 1.021 × competent |
+| Hamlet day | Unchanged | Day 5–9 | 5.4 (unchanged) |
 
 ## 10. Open questions (closed with the owner, 2026-10-22; ADR 0060)
 
@@ -408,7 +408,7 @@ Shed sheet                                                            [×]
 
 - Green fodder's two prices live in `livestock.json` (it is never a good in the store).
 - Fodder crops can be sown from the Hamlet, with cattle (`EraLocked` before), so the first week's sow sheet and season hints stay as they were; the sow sheet's fodder card comes with US-205.
-- A fodder field's growth job ends its stand at the close of its last cut season; its soil change is applied at each cut and on clearing, pro rata.
+- A fodder field's growth job ends its stand at the close of its last cut season; its soil change is applied at each morning's cut and at its end, pro rata. Clearing it early forfeits the hours since the last cut, as clearing any crop does (US-203: the zero-time check found that booking it on clearing raised land value at once).
 - A save loads content that has gained goods or crops since it was written (they start empty).
 - The vet vaccinates on the first 6:00 of each season, after the morning's milk money (so the milk can pay for it), not at the seasonal pass; the disease draw is keyed by the animal and the day.
 - The dairy loan uses spec 005's limit as a land loan does: the animal counts at `livestockLtv` (0.75) of her fair value, and the bank's score factor applies, so at the starting score (650) and with no other collateral or income the bank lends up to 56,200 on a 1,00,000 buffalo (about 44,000 down); at score 750 up to 75,000. The buy card shows the limit and its *Why?* (US-205). Foreclosure takes animals only until the debt is covered (`AnimalSeized`).

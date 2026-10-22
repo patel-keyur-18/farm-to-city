@@ -120,5 +120,18 @@ namespace Sim.Core.Livestock
             LivestockState s = sim.State.Livestock;
             return s == null ? null : s.Animals.Find(a => a.Id == id);
         }
+        /// <summary>Game days the straw or the feed in stock lasts at today's need (long.MaxValue with no need).</summary>
+        public static long DaysLeft(Simulation sim, int good)
+        {
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            long need = 0;
+            foreach (Animal a in sim.State.Livestock.Animals)
+            {
+                var n = LivestockSystem.NeedOf(sim, a);
+                need += good == defs.Straw ? n.Straw : n.Feed;
+            }
+            return need <= 0 ? long.MaxValue : sim.State.Market.Stock[good] / need;
+        }
+
     }
 }

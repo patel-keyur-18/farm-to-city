@@ -135,13 +135,11 @@ namespace Sim.Core.People
             bool acted = false, broke = false;
             foreach (int good in new[] { defs.Straw, defs.Feed })
             {
-                if (Livestock.LivestockSystem.DaysLeft(sim, good) >= o.Days) continue;
+                if (Livestock.LivestockRules.DaysLeft(sim, good) >= o.Days) continue;
                 long room = Store.Fits(sim, good);
                 Definitions.GoodDef g = sim.Config.Game.Market.Goods[good];
                 Maths.Fixed price = MarketRules.InputPrice(sim, good);
-                long afford = (Maths.Fixed.FromInt(sim.State.Ledger.Cash * 10) / price).FloorToLong(); // grams the cash buys
-                long q = System.Math.Min(room, afford);
-                while (q > 0 && MarketRules.Value(sim, good, q, price) > sim.State.Ledger.Cash) q--;
+                long q = System.Math.Min(room, Finance.Money.QuantityFor(sim.State.Ledger.Cash, price, g.UnitSize));
                 if (q <= 0) { broke = true; continue; }
                 long cash = sim.State.Ledger.Cash;
                 if (Store.BuyInput(sim, good, q, "order:animals") != RejectReason.None) { broke = true; continue; }
