@@ -387,7 +387,10 @@ namespace Game.Presentation
                     break;
                 case "Order":
                     bool tree = r.Arg != null && r.Arg.StartsWith("tree", StringComparison.Ordinal);
-                    _sheet.Show(OrderSheet.Build(_ctx, tree ? OrderTargetKind.Tree : OrderTargetKind.Field, r.Id, r.Arg), refreshOnly);
+                    OrderTargetKind kind = tree ? OrderTargetKind.Tree : OrderTargetKind.Field;
+                    // A field's crop is chosen on the sow sheet, with the fertiliser and every figure (ADR 0059 §3).
+                    if (OrderSheet.IsCropStep(kind, r.Arg) && PeopleWords.OrderHand(Sim, kind, r.Id) != null) _sheet.Show(OrderSheet.Crops(_ctx, r.Id, r.Arg), refreshOnly);
+                    else _sheet.Show(OrderSheet.Build(_ctx, kind, r.Id, r.Arg), refreshOnly);
                     break;
                 case "HutPlacement": if (!refreshOnly) StartPlacing(); break;
                 case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
@@ -404,7 +407,20 @@ namespace Game.Presentation
             }
         }
 
-        private void ShowSow(int tile, bool refresh = false)
+        /// <summary>A fertiliser chip: on the sow sheet it changes this sowing; on a hand's order, the order's (ADR 0059 §3).</summary>
+        private void OnFertiliser(string f)
+        {
+            if (_open.Value.Kind == "Order")
+            {
+                _open = new SheetRequest("Order", _open.Value.Id, "+" + f);
+                ShowCurrentSheet(refreshOnly: true);
+                return;
+            }
+            _fertiliser = f;
+            ShowSow((int)_open.Value.Id, refresh: true);
+        }
+
+                private void ShowSow(int tile, bool refresh = false)
         {
             _open = new SheetRequest("Sow", tile);
             _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser), refresh);

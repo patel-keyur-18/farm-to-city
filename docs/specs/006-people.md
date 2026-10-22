@@ -125,6 +125,8 @@ sell-rule   := STORE | OFFER AT minPrice | SELL TO TRADER
 
 Examples: "keep wheat on the north field with certified seed and compost; offer above 26 coins, otherwise keep it in store", "pick the mango tree; sell to the trader".
 
+**Giving a field order (ADR 0059 §3).** The order sheet's first step is the player's own sow sheet for that field: the fertiliser choice (Normal, Compost, Chemical) and every crop card's figures, with **Choose** in place of Sow (also on out-of-season crops: "Sown in Winter; Geeta picks the best crop in between"), and "Let Geeta choose" with the hand's pick now on that fertiliser. The order keeps the fertiliser; a changed order starts from its own. Then this season or every season, then the sell rule.
+
 | Rule | Behaviour |
 | --- | --- |
 | Set | `SetStandingOrder(handId, order)` replaces the hand's order for that target. An order is **every season** (repeats, the default) or **this season only** (`OrderSpec.ThisSeasonOnly()`: after its harvest or pick is in and sold or stored it clears, emitting `OrderCompleted`; ADR 0040); `ClearStandingOrder(handId, target)`. A hand holds up to `HandDef.maxOrders` (6) orders. Rejected with `NoHand`, `NotUnderContract`, `UnknownTarget`, `TooManyOrders`, or spec 003's crop checks (`UnknownCrop`, `SeedCannotBeSaved`, `UnknownFertiliser`) |

@@ -517,7 +517,7 @@
 | US-195 | Orders and truck on screen | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
 | US-196 | One row per supermarket order (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 1 | Must | Done |
 | US-197 | The Store in sections (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 3 | Must | Done |
-| US-198 | A hand's field order starts with the sow sheet (device review, ADR 0059) | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
+| US-198 | A hand's field order starts with the sow sheet (device review, ADR 0059) | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
 
 **Order of work:** US-188 → US-189 (the map and its migration) → US-192 → US-193 → US-194 (the sim) → US-191 → US-190 → US-195 (art and screens) → the device build.
 

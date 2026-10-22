@@ -99,7 +99,7 @@ namespace Game.Presentation
             _sheet = new SheetPresenter(_safeRoot, _tweens)
             {
                 OnAction = OnSheetAction,
-                OnFertiliser = f => { _fertiliser = f; ShowSow((int)_open.Value.Id, refresh: true); },
+                OnFertiliser = OnFertiliser,
                 OnClosed = OnSheetClosed,
                 OnWhy = ShowWhy,
                 OnOpenRow = Push,

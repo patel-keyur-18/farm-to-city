@@ -758,6 +758,8 @@ namespace Game.Presentation.Ui
         {
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.FreeHoursText);
             foreach (FertiliserVm f in vm.Fertilisers) key.Append('|').Append(f.Id).Append(f.Selected);
+            foreach (LineVm l in vm.Lines) key.Append('|').Append(l.Label).Append('=').Append(l.Value);
+            foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Enabled);
             foreach (CropRowVm r in vm.Rows)
                 key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
@@ -768,7 +770,7 @@ namespace Game.Presentation.Ui
             scroll.style.marginTop = 8;
             scroll.style.flexGrow = 1;
             scroll.style.flexShrink = 1;
-            scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
+            if (vm.FreeHoursText != null) scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
 
             // The fertiliser choice (owner, Sprint 6): three equal cards, each with what it does; the chosen one is green, and every
             // crop row below shows its effect on the harvest and its cost.
@@ -789,6 +791,7 @@ namespace Game.Presentation.Ui
             Label note = UiKit.Text(vm.NoteText, 27, UiKit.Wood, UiKit.Body);
             note.style.marginTop = 6; note.style.marginBottom = 4;
             scroll.Add(note);
+            foreach (LineVm l in vm.Lines) scroll.Add(Row(l)); // a hand's order: the order now, "Let him choose"
 
             foreach (CropRowVm r in vm.Rows)
             {
@@ -798,7 +801,6 @@ namespace Game.Presentation.Ui
                 card.style.paddingTop = card.style.paddingBottom = 10;
                 card.style.borderBottomWidth = 2;
                 card.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
-                card.style.opacity = r.SowableNow ? 1f : 0.62f;
 
                 var name = new VisualElement { pickingMode = PickingMode.Ignore };
                 name.style.width = 230;
@@ -806,6 +808,7 @@ namespace Game.Presentation.Ui
                 name.Add(UiKit.Heading1(r.Name, 46));
                 name.Add(UiKit.Text(r.TimeText, 30, UiKit.Wood, UiKit.Body));
                 card.Add(name);
+                name.style.opacity = r.SowableNow ? 1f : 0.62f; // out of season: faded, but a hand's Choose stays bright
 
                 var info = new VisualElement { pickingMode = PickingMode.Ignore };
                 info.style.flexGrow = 1;
@@ -838,10 +841,16 @@ namespace Game.Presentation.Ui
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                     info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));
                 }
-                else info.Add(UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body));
+                else
+                {
+                    Label season = UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body);
+                    season.style.whiteSpace = WhiteSpace.Normal;
+                    season.style.opacity = 0.8f;
+                    info.Add(season);
+                }
                 card.Add(info);
 
-                if (r.SowableNow)
+                if (r.SowableNow || (r.Sow != null && r.Sow.Kind == ActionKind.Open))
                 {
                     VisualElement sow = ActionColumn(r.Sow);
                     sow.style.flexShrink = 0;
@@ -851,6 +860,15 @@ namespace Game.Presentation.Ui
                 scroll.Add(card);
             }
             sheet.Add(scroll);
+            if (vm.Actions.Count > 0)
+            {
+                var actions = new VisualElement { pickingMode = PickingMode.Ignore };
+                actions.style.flexDirection = FlexDirection.Row;
+                actions.style.marginTop = 6;
+                actions.style.flexShrink = 0;
+                foreach (ActionVm a in vm.Actions) actions.Add(ActionColumn(a));
+                sheet.Add(actions);
+            }
             Show(sheet, refresh);
         }
     }

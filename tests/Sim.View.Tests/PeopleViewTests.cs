@@ -110,9 +110,35 @@ namespace Sim.View.Tests
             // A field sheet offers the order; the order sheet steps crop, then sell rule.
             LineVm give = FieldSheets.ForTile(ctx, 85).Lines.Single(l => l.Action?.Id == "order");
             Assert.That(give.Action.Opens.Value.Kind, Is.EqualTo("Order"));
-            SheetVm crops = OrderSheet.Build(ctx, OrderTargetKind.Field, 85, null);
-            Assert.That(crops.Lines.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count + 1), "the hand's choice, then each crop");
-            Assert.That(crops.Lines[0].Action.Opens.Value.Arg, Is.EqualTo(OrderSpec.HandChooses));
+            // ADR 0059 §3: the crop step is the player's sow sheet, with the fertiliser choice and every figure, and Choose.
+            Assert.That(OrderSheet.IsCropStep(OrderTargetKind.Field, null), Is.True);
+            SowSheetVm crops = OrderSheet.Crops(ctx, 85, null);
+            Assert.That(crops.Rows.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count), "each crop");
+            Assert.That(crops.Fertilisers.Select(f => f.Name), Is.EqualTo(new[] { "Normal", "Compost", "Chemical" }));
+            Assert.That(crops.Lines.Single().Action.Opens.Value.Arg, Is.EqualTo(OrderSpec.HandChooses + "+none"), "the hand's choice first");
+            Assert.That(crops.Rows.All(r => r.Sow.Label == "Choose" && r.Sow.Opens.HasValue), Is.True, "in season or not");
+            Assert.That(crops.Rows.Where(r => !r.SowableNow).Select(r => r.SeasonNote), Has.All.Contain("picks the best crop in between"));
+            SowSheetVm compost = OrderSheet.Crops(ctx, 85, "+compost");
+            Assert.That(OrderSheet.IsCropStep(OrderTargetKind.Field, "+compost"), Is.True);
+            Assert.That(compost.Fertilisers.Single(f => f.Selected).Id, Is.EqualTo("compost"));
+            SowSheetVm own = SowSheet.Build(ctx, 85, "compost");
+            Assert.That(compost.Rows.Select(r => r.HarvestText + r.SpendText + r.GetText + r.ProfitText + r.InputsText + r.LabourText + r.SoilText),
+                Is.EqualTo(own.Rows.Select(r => r.HarvestText + r.SpendText + r.GetText + r.ProfitText + r.InputsText + r.LabourText + r.SoilText)), "the same figures as sowing yourself");
+            Assert.That(compost.Rows.Single(r => r.CropId == "radish").Sow.Opens.Value.Arg, Is.EqualTo("radish+compost"));
+            SheetVm withCompost = OrderSheet.Build(ctx, OrderTargetKind.Field, 85, "radish+compost|once");
+            Assert.That(withCompost.Subtitle, Does.StartWith("Keep Radish with compost"));
+            Simulation c2 = Rich();
+            Hand h2 = Hire(c2);
+            ViewContext ctx2 = ViewKit2.Context(c2);
+            ActionVm trader = OrderSheet.Build(ctx2, OrderTargetKind.Field, 85, "radish+compost|every").Lines.Single(l => l.Action?.Id == "set:trader").Action;
+            Assert.That(c2.Execute(trader.Create(c2.State.Clock.SimTime)).Accepted, Is.True);
+            StandingOrder kept = c2.State.People.OrderFor(OrderTargetKind.Field, 85);
+            Assert.That(c2.Config.Game.Farm.Fertilisers[kept.Fertiliser].Id, Is.EqualTo("compost"), "the order keeps the fertiliser");
+            Assert.That(PeopleWords.Order(ctx2, kept), Does.StartWith("Keep Radish with compost"));
+            Assert.That(OrderSheet.Crops(ctx2, 85, null).Lines[0].Label, Is.EqualTo("The order now"));
+            Assert.That(OrderSheet.Crops(ctx2, 85, null).Actions.Single().Id, Is.EqualTo("clearOrder"));
+            Assert.That(OrderSheet.Crops(ctx2, 85, null).Fertilisers.Single(f => f.Selected).Id, Is.EqualTo("compost"), "a changed order starts from its fertiliser");
+            Assert.That(OrderSheet.Crops(ctx2, 85, "+none").Fertilisers.Single(f => f.Selected).Id, Is.EqualTo("none"), "until another is tapped");
             SheetVm auto = OrderSheet.Build(ctx, OrderTargetKind.Field, 100, OrderSpec.HandChooses + "|every");
             Assert.That(auto.Lines.Any(l => l.Action?.Id == "set:offer"), Is.False, "no minimum price: his crop changes with the season");
             Assert.That(sim.Execute(auto.Lines.Single(l => l.Action?.Id == "set:store").Action.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
