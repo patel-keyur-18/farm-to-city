@@ -498,7 +498,7 @@
 
 ## Sprint 11 · 11–24 Jan 2027 · Phase 2 (planning, the village, the truck and orders; 2 weeks, ADR 0057)
 
-- **Status:** In progress. ADRs and specs done (2026-10-21); coding next
+- **Status:** Done in the Editor (2026-10-22): every story coded and tested with touch; Development build made; the owner's device check and the PR merge next
 - **Branch:** `sprint/11-phase2-planning`
 - **Goal:** Phase 2's decisions recorded (ADRs 0052–0057), specs 010 and 011 approved, the Phase 2 sprints planned, and the village map, the trader's truck, daily prices and supermarket orders built and playable on the iPhone.
 - **Points:** 35
@@ -523,13 +523,14 @@
 - [x] ADRs 0052–0057 written; GDD and `CLAUDE.md` updated
 - [x] Specs 010 and 011 written, every gap closed with the owner, approved
 - [x] Phase 2 sprints planned (this file), feature files F02.4 and F04.3 with stories and tasks; `epics.md` updated
-- [ ] All Must stories meet the Definition of Done (ADR 0025); the owner's device check passed
-- [ ] Test checklist written in `docs/test-checklists/` (`s11-village-truck-orders.md`)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened; owner merges to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; [ ] the owner's device check passed (US-190.T6 measured there)
+- [x] Test checklist written in `docs/test-checklists/` (`s11-village-truck-orders.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; [ ] owner merges to `main`
 
 **Done this sprint (Claude):**
 - ADRs 0052–0057 (the map grows by era, the village layout, the truck, supermarket orders, cattle, the Phase 2 spec cadence); GDD and `CLAUDE.md` updated.
 - Spec 010 (map, village and edge): 6 gaps closed with the owner (the for-sale layout; a full river-bank strip with the commons in its west half; `s5` paid at 2 × its price; soils and location by geography; the dealer and tappable places; neighbours' seasonal fields). Specs 002 and 008 amended.
 - Spec 011 (the trader's truck and supermarket orders): 6 gaps closed (a daily price at 6:00; the market clears overnight; delivery at the collection point, paid at 6:00 next morning, shown in the Store; two crop orders plus a small greens order; the hand sells held produce at 6:00; the first sale at any hour, orders after the first session). Specs 003–007 and 009 amended.
+- US-188–US-191 (the 16 × 12 village map, its migration, the village on screen, the Blender village art), US-192 (the truck, daily prices, the stall at night), US-193 (supermarket orders), US-194 (15-hour rice and potato; ADR 0058 balance: orders 0.5–1 acre's sowing, 14.8% of sales), US-195 (orders and the truck on screen; the truck and van in Blender). 303 + 80 tests; Editor tours with touch; Development build.
 
