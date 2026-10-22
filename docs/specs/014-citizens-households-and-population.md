@@ -46,7 +46,8 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | --- | --- |
 | The town | People who live on the founder's land: in a hand's hut or a family house. They are the population |
 | The founder | Not a citizen (ADR 0003): doesn't age, isn't counted |
-| The old village centre | The houses, grocer, chemist and temple east of the farm are neighbours (ADR 0053): drawn and named, never simulated as citizens, never counted. Their people are the day-labour roster and the market's existing demand |
+| The village is the town (ADR 0061) | The farm is part of the village; the centre's places (temple, banyan square, grocer, tea stall, chemist, council hall, school plot, dealer, dairy co-op) are the town's and serve the player's citizens |
+| The old families | The families already living in the centre's houses are neighbours (ADR 0053, 0061): drawn and named, never simulated as citizens, never counted. Their people are the day-labour roster and the market's existing demand. The HUD shows "Your people". They may join the citizen model in Phase 3 (noted, not decided) |
 | Day labourers | Neighbours who commute: not citizens (spec 006) |
 
 ### 3.2 The life clock (ADR 0002; §10 G3)
@@ -240,7 +241,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 
 ## 10. Open questions
 
-- **G1. Who counts.** People on the founder's land only; the old village centre stays neighbours. Recommended.
+- **G1. Who counts.** **Closed (owner, 2026-10-22; ADR 0061):** the village is the town and its places serve the citizens; the population is the people on the founder's land ("Your people"); the old families stay neighbours, not counted (the owner accepted the pushback: counting them would start the town at about 35 and pass the Homestead, Hamlet and Village thresholds at once).
 - **G2. Homes.** A family house (60,000, 6 people, 4 an acre, rent 6,000 a season) built by the founder; a hand's hut stays single. Recommended.
 - **G3. The life clock and lifespans.** 1 life-year a season (ADR 0002); retirement at 60; deaths only for elders, about 72 years' expectancy; births 0.10 a season for a couple, at most 3 children. Recommended.
 - **G4. Engel's law and the budget.** The curve, the food basket and the shares above. Recommended.

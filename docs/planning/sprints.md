@@ -20,7 +20,7 @@
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10 | 4–10 Jan 2027 | 1 | Playtest fixes: the hand works every season, labourers till harvest (ADR 0048). | 6 | Spec 006 amendment (ADR 0048) | Yes: Development build |
 | S11 | 11–24 Jan 2027 (2 weeks, ADR 0057) | 2 | ADRs 0052–0057; specs 010 and 011 approved; the village map, the trader's truck, daily prices and supermarket orders built. | 35 | 010, 011 | Yes: the village map, the truck and orders |
-| S12 | 25–31 Jan 2027 (may run 2 weeks, as S11) | 2 | Spec 012 approved (ADR 0060) and built: buffalo and cows, the shed, fodder, straw, milk to the co-op. Spec 014 written and approved. | 36 (re-pointed with spec 012) | 012, 014 | Yes: cattle |
+| S12 | 25 Jan – 7 Feb 2027 (2 weeks, as S11) | 2 | Spec 012 approved (ADR 0060) and built: buffalo and cows, the shed, fodder, straw, milk to the co-op; the village redrawn with the dairy co-op (ADR 0061). Spec 014 written and approved. | 44 (re-pointed with spec 012 and ADR 0061) | 012, 014 | Yes: cattle |
 | S13 | 1–7 Feb 2027 | 2 | Citizens and the life clock; households, needs and happiness (F11.1, F11.2). | 16 | 016, 015 | Yes |
 | S14 | 8–14 Feb 2027 | 2 | Population flows and family trees (F11.3); founding a business and its books (F12.1). | 25 | 017, 013 | Yes |
 | S15 | 15–21 Feb 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
@@ -539,10 +539,10 @@
 
 ## Sprint 12 · 25–31 Jan 2027 · Phase 2 (cattle; spec 014 written)
 
-- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done (owner's review), US-199 next
+- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-199 next
 - **Branch:** `sprint/12-cattle-citizens`
 - **Goal:** Spec 012 approved and built: buffalo and cows in a shed, milk to the co-op every morning, fodder, straw and feed, playable on the iPhone. Spec 014 (citizens, households and population) written and approved; its code comes in Sprints 13–14.
-- **Points:** 36 (spec 012 re-pointed the ~15 estimate; the owner's review time is the limit, so the sprint may run 2 weeks as Sprint 11 did)
+- **Points:** 44 (spec 012 re-pointed the ~15 estimate to 36; US-206 adds 8 (ADR 0061); runs 2 weeks as Sprint 11 did)
 - **Specs for the owner to review:** 012 (approved 2026-10-22), 014
 - **Device build:** Yes: Development build (`s12-cattle.md`)
 
@@ -556,8 +556,9 @@
 | US-203 | Balance: a dairy bot and payback | [F13.1](features/F13.1-livestock.md) | 2 | Must | To do |
 | US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
 | US-205 | Cattle on screen | [F13.1](features/F13.1-livestock.md) | 8 | Must | To do |
+| US-206 | The village redrawn: a middle street, buildings from all sides, the dairy co-op (ADR 0061) | [F02.4](features/F02.4-village-map.md) | 8 | Must | To do |
 
-**Order of work:** US-126 → US-199 → US-200 → US-201 → US-202 (the sim, each reviewed by the owner) → US-203 (balance) → US-204 (art) → US-205 (screens, Editor tour) → spec 014 written alongside, its gaps closed with the owner → the device build.
+**Order of work:** US-126 → US-199 → US-200 → US-201 → US-202 (the sim, each reviewed by the owner) → US-203 (balance) → US-204 and US-206 (art, the village redrawn) → US-205 (screens, Editor tour) → spec 014 written alongside, its gaps closed with the owner → the device build.
 
 **Sprint end checklist**
 
