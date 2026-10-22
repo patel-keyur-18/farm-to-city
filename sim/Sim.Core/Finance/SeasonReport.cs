@@ -50,12 +50,15 @@ namespace Sim.Core.Finance
         public long LoanPrincipal { get; internal set; }
         public long InterestPayable { get; internal set; }
 
+        /// <summary>What the supermarket owes for deliveries, paid at 6:00 (account 1300, spec 011 §3.3).</summary>
+        public long OwedByBuyers { get; internal set; }
+
         /// <summary>Assets − liabilities on the ledger; the difference from Total is land and stored goods at market value.</summary>
         public long BookEquity { get; internal set; }
 
         public long Total
         {
-            get { return Cash + Prepaid + LandAtMarket + BuildingsAtBook + TreesAtBook + StoredGoods - LoanPrincipal - InterestPayable; }
+            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + StoredGoods - LoanPrincipal - InterestPayable; }
         }
     }
 
@@ -124,7 +127,7 @@ namespace Sim.Core.Finance
             {
                 // Save-only: the parts of net worth and the closing cash, which the hash leaves out. The lines are rebuilt.
                 NetWorthSnapshot n = NetWorth;
-                foreach (long v in new[] { n.Cash, n.Prepaid, n.LandAtMarket, n.BuildingsAtBook, n.TreesAtBook, n.StoredGoods, n.LoanPrincipal, n.InterestPayable })
+                foreach (long v in new[] { n.Cash, n.Prepaid, n.LandAtMarket, n.BuildingsAtBook, n.TreesAtBook, n.StoredGoods, n.LoanPrincipal, n.InterestPayable, n.OwedByBuyers })
                     h.WriteLong(v);
                 h.WriteLong(CashFlow.Closing);
                 h.WriteBool(Credit != null);
@@ -157,6 +160,7 @@ namespace Sim.Core.Finance
                 Cash = r.ReadLong(), Prepaid = r.ReadLong(), LandAtMarket = r.ReadLong(), BuildingsAtBook = r.ReadLong(), TreesAtBook = r.ReadLong(),
                 StoredGoods = r.ReadLong(), LoanPrincipal = r.ReadLong(), InterestPayable = r.ReadLong(), BookEquity = equity,
             };
+            if (r.Schema >= 6) worth.OwedByBuyers = r.ReadLong();
             if (worth.Total != total) throw new SaveFormatException("a season report's net worth doesn't add up");
             cash.Closing = r.ReadLong();
             CreditSummary credit = null;

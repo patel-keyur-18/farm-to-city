@@ -121,6 +121,7 @@ namespace Game.Presentation.Ui
                 case "menu": return IconBank.Ledger;
                 case "alert": return IconBank.Bell;
                 case "cart": return IconBank.Cart;
+                case "orders": return IconBank.Orders;
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
@@ -128,12 +129,17 @@ namespace Game.Presentation.Ui
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
+                case "road": return SpriteBank.Rendered("ground_road_3");
+                case "commons": return SpriteBank.Rendered("ground_commons");
+                case "bank": return SpriteBank.Rendered("ground_bank_1");
+                case "place_house": return SpriteBank.Rendered("place_house_0");
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
                 case "potato": case "radish": case "wheat": case "rice": case "lentils": return SpriteBank.Crop(icon, CropStage.Growing3);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
+                    if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);
                     return SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }
@@ -343,6 +349,7 @@ namespace Game.Presentation.Ui
 
         private VisualElement Row(LineVm line)
         {
+            if (line.Buttons != null) return PictureButtons(line.Buttons);
             if (line.IsHeader)
             {
                 // A section heading: a wood title with a rule under it, a little air above.
@@ -360,7 +367,7 @@ namespace Game.Presentation.Ui
             row.style.borderBottomWidth = 2;
             row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
             Tappable(row, line);
-            if (line.Action == null)
+            if (line.Action == null && line.Note == null && line.Badge == null)
             {
                 row.Add(WithIcon(line.Icon, 56, UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body)));
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
@@ -397,14 +404,103 @@ namespace Game.Presentation.Ui
                 text.Add(starLine);
             }
             else text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
+            if (line.Note != null)
+            {
+                // The row's state (an order: when to sow, what's fresh, how much is delivered), in its colour.
+                Label note = UiKit.Text(line.Note, 30, line.NoteTone == Tone.Good ? UiKit.GreenDark : line.NoteTone == Tone.Warn ? UiKit.Warn : UiKit.Ink, UiKit.Heading);
+                note.style.whiteSpace = WhiteSpace.Normal;
+                note.style.marginTop = 2;
+                text.Add(note);
+            }
             VisualElement left = WithIcon(line.Icon, 84, text);
             left.style.flexGrow = 1; // the ? chip and the button sit together on the right
             row.Add(left);
             AddWhyChip(row, line);
-            VisualElement button = ActionColumn(line.Action);
-            button.style.alignItems = Align.FlexEnd;
-            button.style.flexShrink = 0;
-            row.Add(button);
+            if (line.Badge != null)
+            {
+                // Something done ("Delivered"): a green tag where the button was.
+                Label tag = UiKit.Text(line.Badge, 32, Color.white, UiKit.Heading);
+                tag.name = "badge";
+                tag.style.backgroundColor = UiKit.GreenDark;
+                tag.style.flexShrink = 0;
+                tag.style.minWidth = 350;
+                tag.style.unityTextAlign = TextAnchor.MiddleCenter;
+                UiKit.Radius(tag, 24);
+                UiKit.Padding(tag, 10, 24);
+                row.Add(tag);
+            }
+            else if (line.Action != null)
+            {
+                VisualElement button = ActionColumn(line.Action);
+                button.style.alignItems = Align.FlexEnd;
+                button.style.flexShrink = 0;
+                row.Add(button);
+            }
+            return row;
+        }
+
+        /// <summary>
+        /// Big picture buttons side by side (the Store's shortcuts, ADR 0059 §2): a picture, what it opens, a line under it, and a
+        /// red count in the corner when there's something waiting.
+        /// </summary>
+        private VisualElement PictureButtons(System.Collections.Generic.List<ActionVm> actions)
+        {
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.marginTop = 14; row.style.marginBottom = 8;
+            foreach (ActionVm a in actions)
+            {
+                ActionVm action = a;
+                var b = new Button(() => { if (OnAction != null) OnAction(action); }) { text = "", name = "tile:" + a.Id };
+                b.style.flexGrow = 1; b.style.flexBasis = 0;
+                b.style.marginLeft = 0; b.style.marginRight = 16;
+                b.style.flexDirection = FlexDirection.Row;
+                b.style.alignItems = Align.Center;
+                b.style.backgroundColor = UiKit.CreamDark;
+                UiKit.Radius(b, 26);
+                UiKit.Border(b, 4, UiKit.Sand);
+                UiKit.Padding(b, 14, 18);
+                Sprite pic = Thumbnail(a.Icon);
+                if (pic != null)
+                {
+                    VisualElement icon = UiKit.Icon(pic, 92);
+                    icon.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                    icon.style.marginRight = 16;
+                    icon.style.flexShrink = 0;
+                    icon.pickingMode = PickingMode.Ignore;
+                    b.Add(icon);
+                }
+                var words = new VisualElement { pickingMode = PickingMode.Ignore };
+                words.style.flexShrink = 1;
+                Label title = UiKit.Heading1(a.Label, 38);
+                title.pickingMode = PickingMode.Ignore;
+                title.style.whiteSpace = WhiteSpace.Normal;
+                title.style.unityTextAlign = TextAnchor.MiddleLeft; // a Button centres its text by default
+                words.Add(title);
+                if (!string.IsNullOrEmpty(a.Detail))
+                {
+                    Label detail = UiKit.Text(a.Detail, 28, UiKit.Wood, UiKit.Body);
+                    detail.pickingMode = PickingMode.Ignore;
+                    detail.style.whiteSpace = WhiteSpace.Normal;
+                    detail.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    words.Add(detail);
+                }
+                b.Add(words);
+                if (a.Count > 0)
+                {
+                    Label count = UiKit.Text(a.Count.ToString(), 30, Color.white, UiKit.Heading);
+                    count.pickingMode = PickingMode.Ignore;
+                    count.style.position = Position.Absolute;
+                    count.style.top = -14; count.style.right = -10;
+                    count.style.width = 52; count.style.height = 52;
+                    count.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    count.style.backgroundColor = UiKit.Red;
+                    UiKit.Radius(count, 26);
+                    UiKit.Border(count, 3, Color.white);
+                    b.Add(count);
+                }
+                row.Add(b);
+            }
             return row;
         }
 
@@ -631,7 +727,8 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
             foreach (LineVm l in vm.Lines)
             {
-                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
@@ -661,6 +758,8 @@ namespace Game.Presentation.Ui
         {
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.FreeHoursText);
             foreach (FertiliserVm f in vm.Fertilisers) key.Append('|').Append(f.Id).Append(f.Selected);
+            foreach (LineVm l in vm.Lines) key.Append('|').Append(l.Label).Append('=').Append(l.Value);
+            foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Enabled);
             foreach (CropRowVm r in vm.Rows)
                 key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
@@ -671,7 +770,7 @@ namespace Game.Presentation.Ui
             scroll.style.marginTop = 8;
             scroll.style.flexGrow = 1;
             scroll.style.flexShrink = 1;
-            scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
+            if (vm.FreeHoursText != null) scroll.Add(UiKit.Text(vm.FreeHoursText, 32, UiKit.Wood, UiKit.Body));
 
             // The fertiliser choice (owner, Sprint 6): three equal cards, each with what it does; the chosen one is green, and every
             // crop row below shows its effect on the harvest and its cost.
@@ -692,6 +791,7 @@ namespace Game.Presentation.Ui
             Label note = UiKit.Text(vm.NoteText, 27, UiKit.Wood, UiKit.Body);
             note.style.marginTop = 6; note.style.marginBottom = 4;
             scroll.Add(note);
+            foreach (LineVm l in vm.Lines) scroll.Add(Row(l)); // a hand's order: the order now, "Let him choose"
 
             foreach (CropRowVm r in vm.Rows)
             {
@@ -701,7 +801,6 @@ namespace Game.Presentation.Ui
                 card.style.paddingTop = card.style.paddingBottom = 10;
                 card.style.borderBottomWidth = 2;
                 card.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
-                card.style.opacity = r.SowableNow ? 1f : 0.62f;
 
                 var name = new VisualElement { pickingMode = PickingMode.Ignore };
                 name.style.width = 230;
@@ -709,6 +808,7 @@ namespace Game.Presentation.Ui
                 name.Add(UiKit.Heading1(r.Name, 46));
                 name.Add(UiKit.Text(r.TimeText, 30, UiKit.Wood, UiKit.Body));
                 card.Add(name);
+                name.style.opacity = r.SowableNow ? 1f : 0.62f; // out of season: faded, but a hand's Choose stays bright
 
                 var info = new VisualElement { pickingMode = PickingMode.Ignore };
                 info.style.flexGrow = 1;
@@ -741,10 +841,16 @@ namespace Game.Presentation.Ui
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                     info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));
                 }
-                else info.Add(UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body));
+                else
+                {
+                    Label season = UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body);
+                    season.style.whiteSpace = WhiteSpace.Normal;
+                    season.style.opacity = 0.8f;
+                    info.Add(season);
+                }
                 card.Add(info);
 
-                if (r.SowableNow)
+                if (r.SowableNow || (r.Sow != null && r.Sow.Kind == ActionKind.Open))
                 {
                     VisualElement sow = ActionColumn(r.Sow);
                     sow.style.flexShrink = 0;
@@ -754,6 +860,15 @@ namespace Game.Presentation.Ui
                 scroll.Add(card);
             }
             sheet.Add(scroll);
+            if (vm.Actions.Count > 0)
+            {
+                var actions = new VisualElement { pickingMode = PickingMode.Ignore };
+                actions.style.flexDirection = FlexDirection.Row;
+                actions.style.marginTop = 6;
+                actions.style.flexShrink = 0;
+                foreach (ActionVm a in vm.Actions) actions.Add(ActionColumn(a));
+                sheet.Add(actions);
+            }
             Show(sheet, refresh);
         }
     }

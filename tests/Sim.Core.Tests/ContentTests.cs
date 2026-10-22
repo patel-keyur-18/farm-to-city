@@ -164,18 +164,18 @@ namespace Sim.Core.Tests
         [Test]
         public void Land_Validation()
         {
-            // Tile 19 (inherited) also in w1.
-            ContentException e = Error("map.json", j => j.Replace("\"tiles\": [16, 17]", "\"tiles\": [16, 17, 19]"));
+            // Tile 85 (inherited) also in w1.
+            ContentException e = Error("map.json", j => j.Replace("\"tiles\": [82, 83]", "\"tiles\": [82, 83, 85]"));
             Assert.That(e.FieldPath, Is.EqualTo("map.parcels[9].tiles[2]"));
-            Assert.That(e.Message, Does.Contain("tile 19").And.Contain("two parcels"));
+            Assert.That(e.Message, Does.Contain("tile 85").And.Contain("two parcels"));
 
-            // Tile 17 in no parcel.
-            e = Error("map.json", j => j.Replace("\"tiles\": [16, 17]", "\"tiles\": [16]"));
-            Assert.That(e.FieldPath, Is.EqualTo("map.tiles[17]"));
+            // Tile 83 in no parcel.
+            e = Error("map.json", j => j.Replace("\"tiles\": [82, 83]", "\"tiles\": [82]"));
+            Assert.That(e.FieldPath, Is.EqualTo("map.tiles[83]"));
             Assert.That(e.Message, Does.Contain("no parcel"));
 
             // A tile names an unknown soil.
-            e = Error("map.json", j => j.Replace("\"soil\": \"sandy\", \"drainage\": \"good\",     \"fertility\": 40", "\"soil\": \"peat\", \"drainage\": \"good\",     \"fertility\": 40"));
+            e = Error("map.json", j => j.Replace("\"soil\": \"loam\"", "\"soil\": \"peat\""));
             Assert.That(e.FieldPath, Is.EqualTo("map.tiles[0].soil"));
 
             // moistureByWeather misses a weather id.
@@ -190,7 +190,7 @@ namespace Sim.Core.Tests
                 Is.EqualTo("start.inheritedParcels"));
             Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\"]", "[\"home_a\", \"home_a\"]")).FieldPath,
                 Is.EqualTo("start.inheritedParcels[1]"));
-            Assert.That(Error("start.json", j => j.Replace("\"tile\": 21 },\n    { \"building\": \"well\"", "\"tile\": 20 },\n    { \"building\": \"well\"")).FieldPath,
+            Assert.That(Error("start.json", j => j.Replace("\"tile\": 87 },\n    { \"building\": \"well\"", "\"tile\": 86 },\n    { \"building\": \"well\"")).FieldPath,
                 Is.EqualTo("start.buildings[0].tile"));
             Assert.That(Error("finance.json", j => j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 0")).FieldPath, Is.EqualTo("finance.ledger.retainSeasons"));
         }

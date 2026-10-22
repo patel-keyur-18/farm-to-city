@@ -83,10 +83,17 @@ namespace Sim.View.Views
             string what = o.Kind != OrderTargetKind.Field ? ctx.Strings.Get("order.pick")
                 : o.Crop < 0 ? ctx.Strings.Get("order.handChooses", "name", Name(ctx, ctx.Sim.State.People.Hand(o.HandId).Name))
                 : ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[o.Crop].NameKey));
+            if (o.Kind == OrderTargetKind.Field) what += With(ctx, ctx.Sim.Config.Game.Farm.Fertilisers[o.Fertiliser].Id);
             // The hand's pick on the field now, when it isn't the order's crop (out of season, or his choice; ADR 0048).
             Crop now = o.Kind == OrderTargetKind.Field ? ctx.Sim.State.Farm.CropOn((int)o.Target) : null;
             if (now != null && now.Def != o.Crop) what += " " + ctx.Strings.Get("order.now", "crop", ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[now.Def].NameKey));
             return what + " · " + sell + " · " + ctx.Strings.Get(o.Once ? "order.once" : "order.every");
+        }
+
+        /// <summary>" with compost" for an order's fertiliser, nothing without one.</summary>
+        public static string With(ViewContext ctx, string fertiliserId)
+        {
+            return fertiliserId == "none" ? "" : " " + ctx.Strings.Get("order.with." + fertiliserId);
         }
 
         /// <summary>"Last: harvested 1,200 kg, 3 h ago", or the waiting reason, or null before the first action.</summary>
@@ -296,11 +303,74 @@ namespace Sim.View.Views
     }
 
     /// <summary>
-    /// Giving a hand an order from the map (ADR 0039 §8): a field's crop first (Arg null), then how to sell (Arg = crop, or
-    /// "crop|minimum" while the minimum is being stepped). Trees go straight to selling (Arg "tree").
+    /// Giving a hand an order from the map (ADR 0039 §8): a field's crop first, on the sow sheet (<see cref="Crops"/>, ADR 0059 §3),
+    /// then how long, then how to sell. Arg carries the steps chosen so far: "radish+compost|once|26" (the crop, or "auto" for the
+    /// hand's choice, then the fertiliser), or "+compost" while the fertiliser is chosen. Trees go straight to selling (Arg "tree").
     /// </summary>
     public static class OrderSheet
     {
+        /// <summary>The crop step: a field order with no crop chosen yet (shown by <see cref="Crops"/>).</summary>
+        public static bool IsCropStep(OrderTargetKind kind, string arg)
+        {
+            return kind == OrderTargetKind.Field && Head(arg).Split('+')[0].Length == 0;
+        }
+
+        private static string Head(string arg) { return string.IsNullOrEmpty(arg) ? "" : arg.Split('|')[0]; }
+
+        /// <summary>The fertiliser in Arg's first step ("radish+compost"), "none" when there's none.</summary>
+        private static string FertiliserOf(string arg)
+        {
+            string[] head = Head(arg).Split('+');
+            return head.Length > 1 && head[1].Length > 0 ? head[1] : "none";
+        }
+
+        /// <summary>
+        /// The crop step (ADR 0059 §3): the player's sow sheet for this field, with the fertiliser choice and every crop's figures,
+        /// "Let him choose" (with his pick now) first, and Choose on each crop, in season or not (out of season he sows his best
+        /// pick in between, ADR 0048).
+        /// </summary>
+        public static SowSheetVm Crops(ViewContext ctx, long target, string arg)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var s = ctx.Strings;
+            // A changed order starts from its own fertiliser until another is tapped.
+            StandingOrder existing = sim.State.People?.OrderFor(OrderTargetKind.Field, target);
+            string fert = existing != null && Head(arg).IndexOf('+') < 0 ? defs.Farm.Fertilisers[existing.Fertiliser].Id : FertiliserOf(arg);
+            SowSheetVm vm = SowSheet.Build(ctx, (int)target, fert);
+            Hand h = PeopleWords.OrderHand(sim, OrderTargetKind.Field, target);
+            if (h == null)
+            {
+                vm.Title = s.Get("order.noHand");
+                vm.Rows.Clear();
+                vm.Fertilisers.Clear();
+                return vm;
+            }
+            string name = PeopleWords.Name(ctx, h.Name);
+            vm.Title = s.Get("order.title", "name", name, "place", PeopleWords.Target(ctx, OrderTargetKind.Field, target));
+            vm.FreeHoursText = null; // the hand's work, not the player's
+            vm.FertiliserHeading = s.Get("order.fertiliserHeading", "name", name);
+            if (existing != null) vm.Lines.Add(new LineVm(s.Get("order.current"), PeopleWords.Order(ctx, existing)));
+            // The hand's choice (ADR 0048 §1): the in-season crop that pays best on this field with this fertiliser, every time he sows.
+            int best = FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)target], defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fert)]);
+            var choice = new LineVm(s.Get("order.handChooses", "name", name),
+                best < 0 ? s.Get("order.handChoosesWhy") : s.Get("order.handChoosesNow", "crop", s.Get(defs.Farm.Crops[best].NameKey)));
+            choice.Action = ActionVm.Open("crop:" + OrderSpec.HandChooses, s.Get("action.choose"), new SheetRequest("Order", target, OrderSpec.HandChooses + "+" + fert));
+            vm.Lines.Add(choice);
+            foreach (CropRowVm r in vm.Rows)
+            {
+                CropDef c = defs.Farm.Crops[defs.Farm.IndexOfCrop(r.CropId)];
+                r.Sow = ActionVm.Open("crop:" + c.Id, s.Get("action.choose"), new SheetRequest("Order", target, c.Id + "+" + fert));
+                if (!r.SowableNow) r.SeasonNote = s.Get("order.othersBest", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons), "name", name);
+            }
+            if (existing != null)
+            {
+                long holder = existing.HandId;
+                vm.Actions.Add(ActionVm.Checked(ctx, "clearOrder", s.Get("action.removeOrder"), null, ActionKind.Danger, at => new ClearStandingOrder(at, holder, OrderTargetKind.Field, target)));
+            }
+            return vm;
+        }
+
         public static SheetVm Build(ViewContext ctx, OrderTargetKind kind, long target, string arg)
         {
             Simulation sim = ctx.Sim;
@@ -312,39 +382,20 @@ namespace Sim.View.Views
                 vm.Title = ctx.Strings.Get("order.noHand");
                 return vm;
             }
+            if (IsCropStep(kind, arg)) throw new System.ArgumentException("a field's crop is chosen on OrderSheet.Crops");
             string name = PeopleWords.Name(ctx, h.Name);
             vm.Title = ctx.Strings.Get("order.title", "name", name, "place", PeopleWords.Target(ctx, kind, target));
             StandingOrder existing = sim.State.People.OrderFor(kind, target);
             if (existing != null) vm.Subtitle = PeopleWords.Order(ctx, existing);
 
-            // Arg: the steps chosen so far, "crop|once|26" (a tree: "tree|every|40"). Crop, then how long, then how to sell.
-            string[] parts = string.IsNullOrEmpty(arg) ? new string[0] : arg.Split('|');
-            string crop = kind == OrderTargetKind.Field && parts.Length > 0 ? parts[0] : null;
-            string head = kind == OrderTargetKind.Field ? crop : "tree";
-            if (kind == OrderTargetKind.Field && crop == null)
-            {
-                Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
-                // The hand's choice (ADR 0048 §1): the in-season crop that pays best on this field, every time he sows.
-                int best = FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)target], defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser("none")]);
-                var choice = new LineVm(ctx.Strings.Get("order.handChooses", "name", name),
-                    best < 0 ? ctx.Strings.Get("order.handChoosesWhy") : ctx.Strings.Get("order.handChoosesNow", "crop", ctx.Strings.Get(defs.Farm.Crops[best].NameKey)));
-                choice.Action = ActionVm.Open("crop:" + OrderSpec.HandChooses, ctx.Strings.Get("action.choose"), new SheetRequest("Order", target, OrderSpec.HandChooses));
-                vm.Lines.Add(choice);
-                foreach (CropDef c in defs.Farm.Crops)
-                {
-                    bool now = c.SowSeasons[(int)season];
-                    string cname = ctx.Strings.Get(c.NameKey);
-                    var line = new LineVm(cname, now ? ctx.Strings.Get("order.sowsNow")
-                        : ctx.Strings.Get("order.othersBest", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons), "name", name));
-                    line.Action = ActionVm.Open("crop:" + c.Id, ctx.Strings.Get("action.choose"), new SheetRequest("Order", target, c.Id));
-                    vm.Lines.Add(line);
-                }
-                AddClear(ctx, vm, h, existing, kind, target);
-                return vm;
-            }
+            // Arg: the steps chosen so far, "crop+fertiliser|once|26" (a tree: "tree|every|40"). Crop, then how long, then how to sell.
+            string[] parts = arg.Split('|');
+            string head = kind == OrderTargetKind.Field ? parts[0] : "tree";
+            string crop = kind == OrderTargetKind.Field ? head.Split('+')[0] : null;
+            string fert = FertiliserOf(arg);
             bool auto = crop == OrderSpec.HandChooses;
-            if (crop != null) vm.Subtitle = auto ? ctx.Strings.Get("order.handChooses", "name", name)
-                : ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].NameKey));
+            if (crop != null) vm.Subtitle = (auto ? ctx.Strings.Get("order.handChooses", "name", name)
+                : ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].NameKey))) + PeopleWords.With(ctx, fert);
             if (parts.Length < 2)
             {
                 // How long: this season only (the order clears after its harvest) or every season (a standing order).
@@ -368,7 +419,7 @@ namespace Sim.View.Views
             long minimum = min.HasValue ? min.Value.RoundToLong() : today;
             OrderSpec Spec(SellRule rule, long m)
             {
-                OrderSpec spec = crop != null ? OrderSpec.KeepCrop((int)target, crop, SeedSource.Certified, "none", rule, Fixed.FromInt((int)m)) : OrderSpec.PickTree(target, rule, Fixed.FromInt((int)m));
+                OrderSpec spec = crop != null ? OrderSpec.KeepCrop((int)target, crop, SeedSource.Certified, fert, rule, Fixed.FromInt((int)m)) : OrderSpec.PickTree(target, rule, Fixed.FromInt((int)m));
                 return once ? spec.ThisSeasonOnly() : spec;
             }
 

@@ -208,6 +208,15 @@ namespace Sim.View.Views
             return c;
         }
 
+        /// <summary>The farm lane took the old save's acre south of the huts (spec 010 §3.4): what the village paid, once.</summary>
+        public static CardVm LandTaken(ViewContext ctx, Sim.Core.Saves.RoadTake take)
+        {
+            var c = new CardVm { Title = ctx.Strings.Get("card.landTakenTitle"),
+                Text = ctx.Strings.Get("card.landTakenText", "amount", ctx.Fmt.Coins(take.Compensation + take.OnIt - take.LoanRepaid)) };
+            c.Buttons.Add(new CardButton(SettingsIds.Ok, ctx.Strings.Get("card.ok"), ActionKind.Primary));
+            return c;
+        }
+
         /// <summary>The town couldn't be read by this build: kept on the phone, a new town started (ADR 0041 §2).</summary>
         public static CardVm Unreadable(ViewContext ctx, SaveError error, string keptAs)
         {
@@ -222,7 +231,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string text = moment.CropId == null
                 ? s.Get("card.notifyAgain")
-                : s.Get("card.notifyAsk", "crop", Names.Of(ctx, moment.CropId), "time", WallTime.When(ctx, moment.ReadyWallUtc, info));
+                : s.Get("card.notifyAsk", "crop", Names.Of(ctx, moment.CropId), "time", WallTime.Ready(ctx, moment.ReadyWallUtc, info));
             var c = new CardVm { Title = s.Get("card.notifyTitle"), Text = text };
             c.Buttons.Add(new CardButton(SettingsIds.Yes, s.Get("card.yesNudge"), ActionKind.Primary));
             c.Buttons.Add(new CardButton(SettingsIds.NotNow, s.Get("card.notNow"), ActionKind.Secondary));
@@ -264,7 +273,8 @@ namespace Sim.View.Views
     {
         /// <summary>
         /// The moment to ask in these events, or null. <paramref name="asked"/> counts asks so far (at most 2); the second only
-        /// after a "not now" (ADR 0036, spec 007 §3.5). A field crop of at least a day is "the long crop" (ADR 0041 §6). While
+        /// after a "not now" (ADR 0036, spec 007 §3.5). A field crop of at least 12 hours is "the long crop" (ADR 0041 §6, the
+        /// first session's longCrop step; ADR 0058: no crop takes a day since rice and potato take 15 h). While
         /// <paramref name="letterWillAsk"/> (the first session runs, so its <c>comeBack</c> page asks first), the card stays quiet:
         /// it is the fallback after a skip (ADR 0045 §2).
         /// </summary>
@@ -273,7 +283,7 @@ namespace Sim.View.Views
             if (on || asked >= 2) return null;
             foreach (SimEvent e in events)
             {
-                if (asked == 0 && !letterWillAsk && e is CropSown c && c.ReadyAt - c.SimTime >= 86400)
+                if (asked == 0 && !letterWillAsk && e is CropSown c && c.ReadyAt - c.SimTime >= 12 * 3600)
                     return new NotifyAskMoment(c.CropId, lastWallUtc + (c.ReadyAt - simTime));
                 if (asked == 1 && e is SeasonClosed) return new NotifyAskMoment(null, 0);
             }
@@ -288,6 +298,14 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             string k = "notify." + n.Kind;
+            if (n.Kind == NotifyKind.OrdersPosted)
+            {
+                // "3 supermarket orders: potato, radish and spinach" (spec 011 §3.5): names, never money.
+                var names = new List<string>();
+                foreach (string id in (n.CropId ?? "").Split(',')) if (id.Length > 0) names.Add(Names.Of(ctx, id).ToLowerInvariant());
+                string list = names.Count <= 1 ? string.Join("", names) : string.Join(", ", names.GetRange(0, names.Count - 1)) + " " + s.Get("list.and") + " " + names[names.Count - 1];
+                return (s.Plural("notify.OrdersPosted.title", names.Count, "goods", list), s.Get("notify.OrdersPosted.body"));
+            }
             bool counted = n.Kind == NotifyKind.CropReady || n.Kind == NotifyKind.BedReady || n.Kind == NotifyKind.FruitRipe || n.Kind == NotifyKind.HandsWork;
             string count = ctx.Fmt.Integer(n.Count);
             string title = !counted ? s.Get(k + ".title")
@@ -326,6 +344,18 @@ namespace Sim.View.Views
             if (days == 0) return ctx.Strings.Get("time.today", "time", clock);
             if (days == 1) return ctx.Strings.Get("time.tomorrow", "time", clock);
             if (days == -1) return ctx.Strings.Get("time.yesterday", "time", clock);
+            return ctx.Strings.Get("time.onDate", "date", at.ToString("d MMM", CultureInfo.InvariantCulture), "time", clock);
+        }
+
+        /// <summary>When something will be ready, in a sentence: "tonight at 23:40", "today at 14:00", "tomorrow at 05:10" (spec 011 §3.6b).</summary>
+        public static string Ready(ViewContext ctx, long wallUtc, SettingsInfo info)
+        {
+            DateTime at = DateTimeOffset.FromUnixTimeSeconds(wallUtc + info.UtcOffsetMinutes * 60L).UtcDateTime;
+            DateTime now = DateTimeOffset.FromUnixTimeSeconds(info.NowWallUtc + info.UtcOffsetMinutes * 60L).UtcDateTime;
+            string clock = at.ToString("HH:mm", CultureInfo.InvariantCulture);
+            int days = (at.Date - now.Date).Days;
+            if (days == 0) return ctx.Strings.Get(at.Hour >= 18 ? "time.tonightAt" : "time.todayAt", "time", clock);
+            if (days == 1) return ctx.Strings.Get("time.tomorrowAt", "time", clock);
             return ctx.Strings.Get("time.onDate", "date", at.ToString("d MMM", CultureInfo.InvariantCulture), "time", clock);
         }
     }

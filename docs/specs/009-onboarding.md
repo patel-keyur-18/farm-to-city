@@ -1,6 +1,6 @@
 # 009. Onboarding: the letter, the first session, the guided first week and the Hamlet unlock
 
-- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16)
+- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 step 5 (the first sale at any hour), §3.3 (chapters `firstOrders` and `truckAway`), §3.6 (`comeBack` says tonight or tomorrow)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens (Onboarding); Player journey and eras (Homestead, Hamlet); Learning layer
@@ -61,7 +61,7 @@ While the garden grows (steps 2–4, 5–15 minutes) the `household` chapter and
 
 **Nudges and the tour (ADR 0045).** While a step is current and its chapter is closed, a one-line nudge (`nudge.<step>`) shows as a pill at the top of the map ("Tap a garden bed and sow radish"); tapping it replays the step's highlight; it goes when the step is done or the session is skipped. The tour is three lines (`tour.1`–`tour.3`: the store, the well and rain-fed acres, the founder's hours) that the pill rotates through while the first bed grows, each opening its sheet; no extra chapters.
 
-**The ask's fallback (ADR 0045).** If `comeBack` hasn't asked (the session was skipped, or passed another way), spec 007's plain card asks at the first field crop of at least a day. Either counts as the first ask; the second comes after the first season close; then never.
+**The ask's fallback (ADR 0045).** If `comeBack` hasn't asked (the session was skipped, or passed another way), spec 007's plain card asks at the first field crop of at least 12 hours (ADR 0058). Either counts as the first ask; the second comes after the first season close; then never.
 
 **Timing target:** steps 1–7 in 15–20 minutes of play (ADR 0015), measured by a bot that follows the highlights (AC-2).
 
@@ -225,7 +225,7 @@ Tests in `tests/Sim.View.Tests` (triggers, steps, hints) and `tests/Sim.Core.Tes
 | AC-11 | The letter sheet shows the chapter's text, the signature "Your Dadi, Kamla" and "n of m seen", and **Show me** only when the chapter has an action; Continue sends `SeeChapter` (ADR 0045) | `LetterTests.Sheet` |
 | AC-12 | Menu → Letter lists exactly the seen chapters in the order seen, then "Becoming a Hamlet"; an unseen chapter never appears; reopening one sends no command | `ChapterTests.ReopenList` |
 | AC-13 | While a step is current and its chapter is closed its nudge shows; the tour lines rotate only during the garden wait; nothing shows once the step is done or the session skipped | `FirstSessionTests.Nudges` |
-| AC-14 | `comeBack` asks with Yes / Not now, and shows only Continue when notifications are on; after a skip the card asks at the first field crop of at least a day; at most 2 asks in all | `FirstSessionTests.ComeBackAsks` |
+| AC-14 | `comeBack` asks with Yes / Not now, and shows only Continue when notifications are on; after a skip the card asks at the first field crop of at least 12 hours; at most 2 asks in all | `FirstSessionTests.ComeBackAsks` |
 | AC-15 | Over 100 seeds the competent bot's `EraUnlocked(hamlet)` comes at a median of day 7 ± 2, from the sim's own rule | `GateTests.HamletPace` |
 | AC-16 | In AC-2's run, the first sale comes within 15 minutes of sim time | `FirstSessionTests.HighlightsComplete` |
 

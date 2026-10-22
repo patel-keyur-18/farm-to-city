@@ -16,7 +16,7 @@ namespace Sim.Core.Tests
     /// <summary>A scripted employer: huts, day labour, hands, orders, a forced lapse and a dismissal (spec 006 AC-16).</summary>
     public static class PeopleBot
     {
-        private static readonly int[] Fields = { 18, 19, 20, 26, 27, 28 };
+        private static readonly int[] Fields = { 84, 85, 86, 100, 101, 102 };
 
         public static void Play(Simulation sim, long t)
         {
@@ -24,7 +24,7 @@ namespace Sim.Core.Tests
             PeopleState p = sim.State.People;
             long season = t / S;
             if (p.Constructions.Count == 0 && PeopleRules.HutCount(sim) < 2)
-                sim.Execute(new BuildHandHut(t, 37));
+                sim.Execute(new BuildHandHut(t, 119));
             Farm.Crop growing = sim.State.Farm.Crops.Find(c => c.State == Farm.CropState.Growing);
             if (t % Day < 4 * Hour && PeopleRules.FreeNow(sim) > 0 && growing != null) sim.Execute(new HireLabourers(t, 1));
             if (p.Applicants.Count > 0 && PeopleRules.EmptyHut(sim) != null)
@@ -112,7 +112,7 @@ namespace Sim.Core.Tests
             Hand a = HireHand(setup);
             Hand b = HireHand(setup);
             long t = setup.State.Clock.SimTime;
-            foreach (int tile in new[] { 18, 19, 20, 26, 27, 28 })
+            foreach (int tile in new[] { 84, 85, 86, 100, 101, 102 })
                 Ok(setup, new SetStandingOrder(t, a.Id, OrderSpec.KeepCrop(tile, "wheat", SeedSource.Certified, "none", SellRule.Offer, Fixed.FromInt(20))));
             foreach (var slot in setup.State.Land.Slots.Take(6))
                 Ok(setup, new SetStandingOrder(t, b.Id, OrderSpec.PickTree(slot.Id, SellRule.Trader)));

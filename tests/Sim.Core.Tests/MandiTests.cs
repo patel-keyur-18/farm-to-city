@@ -15,7 +15,7 @@ namespace Sim.Core.Tests
 
         private static Simulation WithPotato(long grams, ulong seed = 42)
         {
-            Simulation sim = NewFarm(seed, game: Quiet(NoSpoilage));
+            Simulation sim = NewFarm(seed, game: Quiet((f, j) => NoTruck(f, NoSpoilage(f, j)))); // spec 004 prices, no daily move
             sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("potato")] += grams;
             return sim;
         }

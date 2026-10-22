@@ -101,5 +101,25 @@ namespace Sim.Core.Tests
             }
             Assert.That(checkedTowns, Is.GreaterThan(2));
         }
+
+        // Spec 011 AC-13: the 6:00 orders give one Needs-you notification a day, moved to 07:00 by quiet hours, naming the goods.
+        [Test]
+        public void Plan_OrdersPosted()
+        {
+            Simulation sim = NewFarm(localSeconds: 13 * 3600 + 1800, game: Quiet()); // 13:30 in India at Wall0
+            Assert.That(sim.Execute(new SkipFirstSession(sim.State.Clock.SimTime)).Accepted, Is.True);
+            List<PlannedNotification> plan = NotificationPlanner.Plan(sim, Def(), true, India);
+            var orders = plan.Where(p => p.Kind == NotifyKind.OrdersPosted).ToList();
+            Assert.That(orders.Count, Is.EqualTo(3), "one each morning of the 72-hour absence");
+            Assert.That(orders.All(p => p.Importance == NotifyImportance.NeedsYou), Is.True);
+            foreach (PlannedNotification p in orders)
+            {
+                long local = (p.WallUtc + India * 60) % 86400;
+                Assert.That(local, Is.EqualTo(7 * 3600), "6:00 is in quiet hours: moved to 07:00");
+                string[] goods = p.CropId.Split(',');
+                Assert.That(goods.Length, Is.EqualTo(3), "two crop orders and a greens order");
+                Assert.That(goods.All(g => sim.Config.Game.Market.IndexOf(g) >= 0), Is.True, "goods by id, never amounts: " + p.CropId);
+            }
+        }
     }
 }

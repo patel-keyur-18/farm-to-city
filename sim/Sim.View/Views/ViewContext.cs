@@ -139,6 +139,12 @@ namespace Sim.View.Views
 
         /// <summary>Asked before the command is sent, or null.</summary>
         public ConfirmVm Confirm { get; internal set; }
+
+        /// <summary>A picture for a big picture button (the Store's shortcuts), or null.</summary>
+        public string Icon { get; internal set; }
+
+        /// <summary>A red count on a picture button (open orders), 0 for none.</summary>
+        public int Count { get; internal set; }
         private readonly Func<long, Command> _make;
 
         internal ActionVm(string id, string label, string detail, ActionKind kind, bool enabled, string disabledReason, Func<long, Command> make, SheetRequest? opens = null)
@@ -172,6 +178,14 @@ namespace Sim.View.Views
         }
     }
 
+    /// <summary>The colour of a row's note: plain, good news (green) or a warning (amber).</summary>
+    public enum Tone
+    {
+        Plain = 0,
+        Good = 1,
+        Warn = 2,
+    }
+
     /// <summary>One label and value row on a sheet.</summary>
     public sealed class LineVm
     {
@@ -198,6 +212,16 @@ namespace Sim.View.Views
 
         /// <summary>A good's id for a small picture before the label (the store's rows), or null.</summary>
         public string Icon { get; internal set; }
+
+        /// <summary>A third line under the value, in <see cref="NoteTone"/>'s colour (an order's state), or null.</summary>
+        public string Note { get; internal set; }
+        public Tone NoteTone { get; internal set; }
+
+        /// <summary>A green tag where a button would be, for something done ("Delivered"), or null.</summary>
+        public string Badge { get; internal set; }
+
+        /// <summary>A row of big picture buttons side by side instead of a label and value (the Store's shortcuts), or null.</summary>
+        public System.Collections.Generic.List<ActionVm> Buttons { get; internal set; }
 
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 

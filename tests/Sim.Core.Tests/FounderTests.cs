@@ -188,7 +188,7 @@ namespace Sim.Core.Tests
         [Test]
         public void EatFromStore_Daily()
         {
-            Simulation sim = NewFarm(game: RichGame(NoSpoilage));
+            Simulation sim = NewFarm(game: RichGame((f, j) => NoTruck(f, NoSpoilage(f, j))));
             int radish = FarmTest.Good(sim, "radish"), wheat = FarmTest.Good(sim, "wheat"), lentils = FarmTest.Good(sim, "lentils");
             sim.State.Market.Stock[radish] = 50_000;
             sim.State.Market.Stock[wheat] = 200_000;

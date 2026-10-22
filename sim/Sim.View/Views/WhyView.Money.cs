@@ -66,6 +66,8 @@ namespace Sim.View.Views
             if (!good.PriceControlled) Row(vm, ctx, "why.price.index", Effect(ctx, sim.State.Market.PriceIndex));
             else Text(vm, ctx, "why.price.controlled");
             Row(vm, ctx, "why.price.season", Effect(ctx, sim.Config.Game.Market.Region.SeasonalFactor(g, (int)s)), "season", SeasonName(ctx, s));
+            if (sim.Config.Game.Market.Truck != null && good.Kind == GoodKind.Produce && !good.PriceControlled)
+                Row(vm, ctx, "why.price.today", Effect(ctx, sim.State.Market.DailyFactorOf(g))); // spec 011 §3.1b
             Row(vm, ctx, "why.price.regional", Price(ctx, MarketRules.RegionalPrice(sim, g)));
             return vm;
         }
@@ -101,6 +103,10 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.traderRoom.title", ctx.Fmt.Kg(MarketRules.TraderCapacityLeft(sim, g)));
             Row(vm, ctx, "why.traderRoom.day", ctx.Fmt.Kg(sim.Config.Game.Market.Region.TraderBuyPerDay(g)));
             Row(vm, ctx, "why.traderRoom.bought", ctx.Fmt.Kg(sim.State.Market.TraderBought(g)));
+            TruckDef truck = sim.Config.Game.Market.Truck;
+            if (truck != null)
+                Row(vm, ctx, sim.State.Market.TruckHere ? "why.traderRoom.load" : "why.traderRoom.away",
+                    ctx.Fmt.Kg(sim.State.Market.TruckHere ? truck.LoadGrams - sim.State.Market.TruckLoadToday : 0));
             vm.Footnote = ctx.Strings.Get("why.traderRoom.lesson");
             return vm;
         }
@@ -154,10 +160,11 @@ namespace Sim.View.Views
         private static WhyVm NetWorth(ViewContext ctx, long id)
         {
             NetWorthSnapshot n = Reporting.NetWorth(ctx.Sim);
-            long total = n.Cash + n.Prepaid + n.LandAtMarket + n.BuildingsAtBook + n.TreesAtBook + n.StoredGoods - n.LoanPrincipal - n.InterestPayable;
+            long total = n.Cash + n.Prepaid + n.OwedByBuyers + n.LandAtMarket + n.BuildingsAtBook + n.TreesAtBook + n.StoredGoods - n.LoanPrincipal - n.InterestPayable;
             WhyVm vm = New(ctx, "why.netWorth.title", Money(ctx, total));
             Row(vm, ctx, "why.netWorth.cash", Money(ctx, n.Cash));
             if (n.Prepaid != 0) Row(vm, ctx, "why.netWorth.prepaid", Money(ctx, n.Prepaid));
+            if (n.OwedByBuyers != 0) Row(vm, ctx, "why.netWorth.owed", Money(ctx, n.OwedByBuyers));
             Row(vm, ctx, "why.netWorth.land", Money(ctx, n.LandAtMarket));
             Row(vm, ctx, "why.netWorth.buildings", Money(ctx, n.BuildingsAtBook));
             if (n.TreesAtBook != 0) Row(vm, ctx, "why.netWorth.trees", Money(ctx, n.TreesAtBook));

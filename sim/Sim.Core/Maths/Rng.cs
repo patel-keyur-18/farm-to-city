@@ -16,6 +16,8 @@ namespace Sim.Core.Maths
         People = 6,
         DayLabourPool = 7,
         Applicants = 8,
+        DailyPrice = 9,
+        Orders = 10,
     }
 
     /// <summary>

@@ -28,6 +28,7 @@ namespace Sim.Core.Finance
             {
                 Cash = l.Cash,
                 Prepaid = l.Balance(Account.PrepaidLivingCosts) + l.Balance(Account.PrepaidWages) + l.Balance(Account.PrepaidRent),
+                OwedByBuyers = l.Balance(Account.OwedByBuyers),
                 LandAtMarket = land,
                 BuildingsAtBook = l.Balance(Account.Buildings) + l.Balance(Account.AccumulatedDepreciation),
                 TreesAtBook = l.Balance(Account.Trees),

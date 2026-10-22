@@ -10,7 +10,7 @@ using Sim.View.Views;
 namespace Sim.View.Tests
 {
     /// <summary>Spec 008 §3.4: the map view model, the isometric geometry, the camera and the tints.</summary>
-    public class MapTests
+    public partial class MapTests
     {
         private const long Hour = 3600, Day = 86400;
 
@@ -19,24 +19,24 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             MapVm map = MapView.Build(ViewKit2.Context(sim));
-            Assert.That(map.Width, Is.EqualTo(8));
-            Assert.That(map.Height, Is.EqualTo(6));
-            Assert.That(map.Tiles.Count, Is.EqualTo(48));
+            Assert.That(map.Width, Is.EqualTo(16));
+            Assert.That(map.Height, Is.EqualTo(12));
+            Assert.That(map.Tiles.Count, Is.EqualTo(192));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Farm), Is.EqualTo(6));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(2));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(39));
-            Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 20, 28 }));
-            Assert.That(map.Tiles[21].Kind, Is.EqualTo(TileKind.Yard));
-            Assert.That(map.Tiles[20].X, Is.EqualTo(4));
-            Assert.That(map.Tiles[20].Y, Is.EqualTo(2));
-            Assert.That(map.Tiles.Where(t => t.Kind != TileKind.Unowned).All(t => t.Protected), Is.True);
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(124), "neighbours' farms: 78 for sale, 46 not yet");
+            Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 86, 102 }));
+            Assert.That(map.Tiles[87].Kind, Is.EqualTo(TileKind.Yard));
+            Assert.That(map.Tiles[86].X, Is.EqualTo(6));
+            Assert.That(map.Tiles[86].Y, Is.EqualTo(5));
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters).All(t => t.Protected), Is.True);
             Assert.That(map.Buildings.Select(b => b.DefId), Is.EqualTo(new[] { "hut", "well" }));
             Assert.That(map.Slots.Count(s => s.Yard), Is.EqualTo(4));
             Assert.That(map.Slots.Count(s => !s.Yard), Is.EqualTo(12));
             Assert.That(map.Slots.All(s => s.Stage == TreeStage.Empty), Is.True);
             Assert.That(map.Slots.All(s => s.Owned), Is.True, "the inherited land's slots: drawn as planting spots and tappable");
             Assert.That(map.Beds.Count, Is.EqualTo(2));
-            Assert.That(map.Slots.Where(s => s.TileId == 20).Select(s => s.Index), Is.EqualTo(new[] { 0, 1 }));
+            Assert.That(map.Slots.Where(s => s.TileId == 86).Select(s => s.Index), Is.EqualTo(new[] { 0, 1 }));
         }
 
         [Test]
@@ -45,22 +45,22 @@ namespace Sim.View.Tests
             Simulation sim = ViewKit.NewGame();
             ViewContext ctx = ViewKit2.Context(sim);
             long t = sim.State.Clock.SimTime;
-            Assert.That(sim.Execute(new Sow(t, 20, "potato", Sim.Core.Farm.SeedSource.Certified, "none")).Accepted, Is.True); // 24 h
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.Growing1));
-            Assert.That(MapView.Build(ctx).Tiles[20].CropId, Is.EqualTo("potato"));
-            sim.AdvanceTo(t + 10 * Hour);
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.Growing2), "10 of 24 hours");
-            sim.AdvanceTo(t + 20 * Hour);
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.Growing3), "20 of 24 hours");
-            Assert.That(MapView.Build(ctx).Tiles[20].Progress, Is.InRange(0.8f, 0.85f));
-            sim.AdvanceTo(t + 24 * Hour);
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.Ready));
-            sim.AdvanceTo(t + 24 * Hour + 72 * Hour);
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.Ready), "the grace is inclusive");
-            sim.AdvanceTo(t + 24 * Hour + 72 * Hour + 1);
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.Spoiling));
-            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 20, Sim.Core.Market.Overflow.SellRestToTrader)).Accepted, Is.True);
-            Assert.That(MapView.Build(ctx).Tiles[20].Stage, Is.EqualTo(CropStage.None));
+            Assert.That(sim.Execute(new Sow(t, 86, "potato", Sim.Core.Farm.SeedSource.Certified, "none")).Accepted, Is.True); // 15 h
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing1));
+            Assert.That(MapView.Build(ctx).Tiles[86].CropId, Is.EqualTo("potato"));
+            sim.AdvanceTo(t + 6 * Hour);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing2), "6 of 15 hours");
+            sim.AdvanceTo(t + 13 * Hour);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing3), "13 of 15 hours");
+            Assert.That(MapView.Build(ctx).Tiles[86].Progress, Is.InRange(0.85f, 0.9f));
+            sim.AdvanceTo(t + 15 * Hour);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Ready));
+            sim.AdvanceTo(t + 15 * Hour + 72 * Hour);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Ready), "the grace is inclusive");
+            sim.AdvanceTo(t + 15 * Hour + 72 * Hour + 1);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Spoiling));
+            Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 86, Sim.Core.Market.Overflow.SellRestToTrader)).Accepted, Is.True);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.None));
         }
 
         [Test]
@@ -94,10 +94,10 @@ namespace Sim.View.Tests
             Simulation sim = ViewKit.NewGame(edit: (f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j);
             Assert.That(sim.Execute(new BuyParcel(sim.State.Clock.SimTime, "w1")).Accepted, Is.True);
             MapVm map = MapView.Build(ViewKit2.Context(sim));
-            Assert.That(map.Tiles[16].Kind, Is.EqualTo(TileKind.Farm));
-            Assert.That(map.Tiles[16].Protected, Is.False);
-            Assert.That(map.Tiles[16].ParcelKey, Is.EqualTo("w1"));
-            Assert.That(map.Slots.Count(s => s.TileId == 16), Is.EqualTo(2));
+            Assert.That(map.Tiles[82].Kind, Is.EqualTo(TileKind.Farm));
+            Assert.That(map.Tiles[82].Protected, Is.False);
+            Assert.That(map.Tiles[82].ParcelKey, Is.EqualTo("w1"));
+            Assert.That(map.Slots.Count(s => s.TileId == 82), Is.EqualTo(2));
         }
 
         // ---- geometry ----

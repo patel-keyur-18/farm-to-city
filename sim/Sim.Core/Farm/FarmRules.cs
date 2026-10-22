@@ -85,7 +85,7 @@ namespace Sim.Core.Farm
 
         /// <summary>
         /// The hand's pick (ADR 0048 §1, ADR 0050): of the crops sowable this season whose seed and fertiliser he can pay for now,
-        /// the one with the highest expected profit per season on the tile, profit ÷ cycleShare, compared by cross-multiplying
+        /// the one with the highest expected profit per season on the tile (an open order counted at its price, spec 011), profit ÷ cycleShare, compared by cross-multiplying
         /// growth times. Ties go to the earlier crop; −1 if none is in season and affordable.
         /// </summary>
         public static int BestCrop(Simulation sim, Tile tile, FertiliserDef fert)
@@ -98,7 +98,9 @@ namespace Sim.Core.Farm
             {
                 CropDef c = farm.Crops[i];
                 if (!c.SowSeasons[season] || !sim.State.Ledger.CanAfford(SowingCost(sim, c, SeedSource.Certified, fert))) continue;
-                long profit = Estimate(sim, tile, c, fert).Profit;
+                SowingEstimate e = Estimate(sim, tile, c, fert);
+                // An open supermarket order he can fill counts at its price (spec 011 §3.3, AC-11).
+                long profit = Supermarket.HarvestValue(sim, c.OutputGood, e.HarvestGrams, sim.State.Clock.SimTime + c.GrowthSeconds) - e.Spend;
                 if (best >= 0 && (BigInteger)profit * bestGrowth <= (BigInteger)bestProfit * c.GrowthSeconds) continue;
                 best = i;
                 bestProfit = profit;

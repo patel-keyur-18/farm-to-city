@@ -84,13 +84,13 @@ namespace Sim.Core.Tests
             Hand h = HireHand(sim);
             long t = (sim.State.Clock.SimTime / Day + 1) * Day + 18 * Hour + 1800; // 18:30
             sim.AdvanceTo(t);
-            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(20, "radish", Farm.SeedSource.Certified, "none", SellRule.Store)));
-            Ok(sim, new Sow(t, 19, "radish", Farm.SeedSource.Certified, "none"));
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(86, "radish", Farm.SeedSource.Certified, "none", SellRule.Store)));
+            Ok(sim, new Sow(t, 85, "radish", Farm.SeedSource.Certified, "none"));
             Ok(sim, new Sow(t, HomeTile, "potato", Farm.SeedSource.Certified, "none"));
             int free = PeopleRules.FreeNow(sim);
             long cash = sim.State.Ledger.Cash;
             Ok(sim, new HireLabourers(t, 2));
-            long until = t + Day + 1800; // the potato is ready at 18:30 tomorrow, rounded up to 19:00
+            long until = t + 15 * Hour + 1800; // the potato (15 h) is ready at 9:30 tomorrow, rounded up to 10:00
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(2L * 9_375_00 * (until - t) / Day), "paid upfront to the last harvest hour");
             Assert.That(PeopleRules.FreeNow(sim), Is.EqualTo(free - 2));
             sim.DrainEvents();
@@ -98,7 +98,7 @@ namespace Sim.Core.Tests
             Simulation live = Simulation.FromState(sim.Config, sim.State.Clone());
             Simulation away = Simulation.FromState(sim.Config, sim.State.Clone());
             live.AdvanceTo(t + 3 * Hour);
-            Assert.That(live.PendingEvents.OfType<Events.LabourersHarvested>().Select(e => e.TileId), Is.EqualTo(new[] { 19 }), "the radish as it ripened");
+            Assert.That(live.PendingEvents.OfType<Events.LabourersHarvested>().Select(e => e.TileId), Is.EqualTo(new[] { 85 }), "the radish as it ripened");
             live.AdvanceTo((t / Day + 1) * Day + Hour);
             Assert.That(P(live).Roster.Count(n => n.Hired), Is.EqualTo(2), "still there after the daily pass");
             Assert.That(P(live).Roster.Count(n => n.Hired && n.FreeToday), Is.EqualTo(0), "not drawn for the new day");
@@ -139,7 +139,7 @@ namespace Sim.Core.Tests
             {
                 sim.AdvanceTo(d * Day + 1);
                 int free = PeopleRules.FreeNow(sim);
-                int tile = new[] { 18, 19, 20, 26, 27, 28 }.First(x => sim.State.Farm.CropOn(x) == null);
+                int tile = new[] { 84, 85, 86, 100, 101, 102 }.First(x => sim.State.Farm.CropOn(x) == null);
                 Ok(sim, new Sow(sim.State.Clock.SimTime, tile, "potato", Farm.SeedSource.Certified, "none"));
                 if (free > 0) Ok(sim, new HireLabourers(sim.State.Clock.SimTime, free));
             }
@@ -176,8 +176,9 @@ namespace Sim.Core.Tests
         public void Regular_FullQueue_AsksOnce()
         {
             // One full day makes a regular here, and applicants wait 5 days, so the walk-in queue stays full.
-            Simulation sim = Start(seed: 9, game: Game((f, j) => f != "people.json" ? j
-                : j.Replace("\"regularThresholdDays\": 6", "\"regularThresholdDays\": 1").Replace("\"applicantWaitDays\": 2", "\"applicantWaitDays\": 5")));
+            // A 24-hour potato (Phase 1's time) makes a hire sown on the hour a full day.
+            Simulation sim = Start(seed: 9, game: Game((f, j) => f == "crops.json" ? j.Replace("\"growthMinutes\": 900", "\"growthMinutes\": 1440")
+                : f != "people.json" ? j : j.Replace("\"regularThresholdDays\": 6", "\"regularThresholdDays\": 1").Replace("\"applicantWaitDays\": 2", "\"applicantWaitDays\": 5")));
             BuildHut(sim);
             for (int i = 0; i < 24 * 8 && P(sim).Applicants.Count < sim.Config.Game.People.Hand.MaxApplicants; i++)
                 sim.AdvanceTo(sim.State.Clock.SimTime + Hour);

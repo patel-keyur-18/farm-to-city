@@ -29,9 +29,9 @@ namespace Sim.Core.Tests
             for (int i = 0; i < 2; i++)
             {
                 long t = sim.State.Clock.SimTime;
-                Assert.That(sim.Execute(new Sow(t, 20, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+                Assert.That(sim.Execute(new Sow(t, 86, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
                 sim.AdvanceTo(t + 3 * Hour);
-                Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 20)).Accepted, Is.True);
+                Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 86)).Accepted, Is.True);
                 Assert.That(sim.Execute(new SellToTrader(sim.State.Clock.SimTime, "radish", 1000)).Accepted, Is.True);
                 log.OnEvents(sim.DrainEvents(), Wall0 + 100 * (i + 1));
             }
@@ -39,22 +39,22 @@ namespace Sim.Core.Tests
             log.OnEvents(new Events.SimEvent[] { new Events.EraUnlocked(sim.State.Clock.SimTime, "hamlet"), new Events.EraUnlocked(sim.State.Clock.SimTime, "hamlet") }, Wall0 + 400);
             log.Away(Wall0 + 500, sim.State.Clock.SimTime, 7200, 7200, false);
             log.SessionEnd(Wall0 + 600, sim.State.Clock.SimTime, 600);
-            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "hamletUnlocked", "away", "sessionEnd" }));
+            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "firstTruck", "hamletUnlocked", "away", "sessionEnd" }));
             Assert.That(log.Lines[1], Is.EqualTo("{\"t\":" + Wall0 + ",\"sim\":0,\"type\":\"sessionStart\",\"build\":\"0.1.0\",\"device\":\"iPhone14,5\",\"tz\":330,\"fromNote\":false}"));
 
             // Milestones are once per town, also after the log is read back from its file; a new town starts again.
             var again = new PlayLog(Def(), log.Text) { Enabled = true };
             again.OnEvents(new Events.SimEvent[0], Wall0);
             long t2 = sim.State.Clock.SimTime;
-            sim.Execute(new Sow(t2, 20, "radish", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(t2, 86, "radish", SeedSource.Certified, "none"));
             sim.AdvanceTo(t2 + 3 * Hour);
-            sim.Execute(new Harvest(sim.State.Clock.SimTime, 20));
+            sim.Execute(new Harvest(sim.State.Clock.SimTime, 86));
             again.OnEvents(sim.DrainEvents(), Wall0 + 700);
             Assert.That(Types(again).Count(x => x == "firstHarvest"), Is.EqualTo(1));
             again.NewGame(Wall0 + 800, 0);
-            sim.Execute(new Sow(sim.State.Clock.SimTime, 20, "radish", SeedSource.Certified, "none"));
+            sim.Execute(new Sow(sim.State.Clock.SimTime, 86, "radish", SeedSource.Certified, "none"));
             sim.AdvanceTo(sim.State.Clock.SimTime + 3 * Hour);
-            sim.Execute(new Harvest(sim.State.Clock.SimTime, 20));
+            sim.Execute(new Harvest(sim.State.Clock.SimTime, 86));
             again.OnEvents(sim.DrainEvents(), Wall0 + 900);
             Assert.That(Types(again).Count(x => x == "firstHarvest"), Is.EqualTo(2));
 

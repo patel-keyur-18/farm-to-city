@@ -44,6 +44,7 @@ Every session starts with no memory. The repository is the only memory.
 - **Work on one branch per sprint** (`sprint/NN-short-name`), unless the session assigns a branch. Use small conventional commits (`docs:`, `feat:`, `test:`, `fix:`, `chore:`). One pull request per sprint, merged by the owner.
 - **Stop for the owner's review at the end of each task.** For anything ambiguous, give a recommendation and ask. Push back when something doesn't make sense.
 - **Every build handed to the owner comes with a test checklist** in `docs/test-checklists/`: what to try, what to expect, what to report.
+- **Test in the Unity Editor before calling a story done** (owner rule, 2026-10-21). Any story that changes what the player sees or taps: recompile, play, drive it with **scripted touch** (`Game.Editor.TouchDriver`, never the mouse), capture the Game view, look at every capture, and fix what renders or responds wrongly before reporting. Dotnet tests alone are not enough. How to drive the Editor is in `docs/planning/STATUS.md` (Environment notes).
 - **This file and `docs/` are the project's memory across sessions.** Keep them current.
 
 ## Engineering rules (non-negotiable)
@@ -160,6 +161,14 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0049 | Sprint 10 review: every order acts at once (`orderActionsPerHour` 6; Care limits what a hand manages); labourers hired from People till the crops growing now are in, harvesting ripe fields with no hand's order; crops drawn below people |
 | 0050 | The hand sows the best crop he can pay for: his choice skips crops whose seed cash can't cover, and an order's own crop falls back to his best affordable pick; he waits only when nothing in season is affordable |
 | 0051 | Compost +6 fertility a season (more than any crop takes) and the soil under a composted crop dries 20% more slowly; fertility shown to one decimal; the sow sheet shows the soil before and after each crop; chemical unchanged |
+| 0052 | The map grows by era: 16 × 12 acres in Phase 2 with the 8 × 6 farm unchanged at columns 2–9, rows 3–8 (tile ids remapped by a save migration); about 60–80 acres buyable; natural terrain past the edge; the camera opens on the farm |
+| 0053 | The village layout (north = river): the centre east of the farm, the commons north-west, neighbours for sale or not for sale yet; 27 road acres (district road, village lane, farm lane taking `s5`), never for sale |
+| 0054 | The trader's 4 t truck from 6:00 to midnight (or till full); its price and per-crop limits set at 6:00; a total load; selling refused while away; the stall paused midnight to 6:00 |
+| 0055 | Two supermarket orders at 6:00 (regional + 15–30%, by midnight, no penalty), fresh today only, the hand fills them first and counts their price; rice and potato in 15 h |
+| 0056 | Buffalo and cows in a 4-animal shed: co-op milk by quality; green fodder cut and carried, straw stack, feed room; fed automatically, no deaths from hunger in Phase 2; dung to compost; lactation, vaccination, 1.5 h a day an animal |
+| 0057 | Phase 2 specs (010–019) reviewed two per sprint, each a sprint before its code; the enhancements first (010 and 011 coded in Sprint 11 with a device build, 012 in Sprint 12) |
+| 0058 | Sprint 11 balance: an order is 0.5–1 acre's sowing (orders 14.8% of sales); the 15-hour crops' selling gain accepted (season farm profit median 46k); the long crop is ≥ 12 h; the bots play after the first session; the truckAway page also opens on a Store visit with the truck away |
+| 0059 | Sprint 11 device review (passed; frame time p95 5.37 ms): one row per supermarket order with a Delivered tag; the Store in sections with picture buttons; a hand's field order starts with the sow sheet (fertiliser choice and every figure) |
 
 ## Current status
 

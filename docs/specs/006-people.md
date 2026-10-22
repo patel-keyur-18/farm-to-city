@@ -1,6 +1,6 @@
 # 006. People: day labourers, the resident hand and standing orders
 
-- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039)
+- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.8 (the hand fills supermarket orders first, sells held produce at 6:00, and his crop choice counts the order price)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring starts in Homestead, Wages); Land, farming and livestock (Standing orders); Player journey and eras (Homestead, the Hamlet gate); Data model
@@ -124,6 +124,8 @@ sell-rule   := STORE | OFFER AT minPrice | SELL TO TRADER
 ```
 
 Examples: "keep wheat on the north field with certified seed and compost; offer above 26 coins, otherwise keep it in store", "pick the mango tree; sell to the trader".
+
+**Giving a field order (ADR 0059 §3).** The order sheet's first step is the player's own sow sheet for that field: the fertiliser choice (Normal, Compost, Chemical) and every crop card's figures, with **Choose** in place of Sow (also on out-of-season crops: "Sown in Winter; Geeta picks the best crop in between"), and "Let Geeta choose" with the hand's pick now on that fertiliser. The order keeps the fertiliser; a changed order starts from its own. Then this season or every season, then the sell rule.
 
 | Rule | Behaviour |
 | --- | --- |

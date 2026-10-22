@@ -12,7 +12,7 @@ namespace Sim.Core.Market
         /// <summary>Rejected with StoreFull if the goods don't fit; nothing changes.</summary>
         StoreOnly = 0,
 
-        /// <summary>Store what fits, sell the rest to the trader at the floor now; TraderFull if it can't take it.</summary>
+        /// <summary>Store what fits, sell the rest to the trader at the floor now; TraderAway or TraderFull if it can't take it.</summary>
         SellRestToTrader = 1,
     }
 
@@ -58,8 +58,8 @@ namespace Sim.Core.Market
 
         /// <summary>
         /// Adds a harvest or fruit to the store (spec 004 §3.5). With SellRestToTrader the part that doesn't fit is
-        /// sold to the trader at the floor now (one ledger entry, <c>SoldToTrader</c>). Returns StoreFull or
-        /// TraderFull without changing anything when it can't.
+        /// sold to the trader at the floor now (one ledger entry, <c>SoldToTrader</c>). Returns StoreFull, TraderAway (the
+        /// truck has left, spec 011 §3.1) or TraderFull without changing anything when it can't.
         /// </summary>
         internal static Commands.RejectReason Add(Simulation sim, int good, long quantity, Overflow overflow, string reference)
         {
@@ -68,10 +68,12 @@ namespace Sim.Core.Market
             if (rest > 0)
             {
                 if (overflow == Overflow.StoreOnly) return Commands.RejectReason.StoreFull;
+                if (!MarketRules.TraderBuys(sim)) return Commands.RejectReason.TraderAway;
                 if (rest > MarketRules.TraderCapacityLeft(sim, good)) return Commands.RejectReason.TraderFull;
                 SellToTrader(sim, good, rest, reference);
             }
             sim.State.Market.Stock[good] += quantity - rest;
+            if (sim.State.Market.Trading) sim.State.Market.FreshToday[good] += quantity - rest; // a harvest: fresh today (spec 011 §3.3)
             return Commands.RejectReason.None;
         }
 
@@ -83,6 +85,33 @@ namespace Sim.Core.Market
             MarketState m = sim.State.Market;
             m.Stock[good] -= quantity;
             if (m.Offered[good] > m.Stock[good]) m.Offered[good] = m.Stock[good]; // stock not on offer goes first
+            CutHeld(sim, good);
+        }
+
+        /// <summary>What the hands hold for the truck is never more than the stock not on offer (spec 011 §3.1).</summary>
+        internal static void CutHeld(Simulation sim, int good)
+        {
+            MarketState m = sim.State.Market;
+            long free = m.Stock[good] - m.Offered[good];
+            if (m.HeldForTruck[good] > free) m.HeldForTruck[good] = free;
+        }
+
+        /// <summary>
+        /// Counts a trader purchase against the crop's daily room and, with the truck, its load; a full load makes the truck
+        /// leave at once (spec 011 §3.1, TruckLeft(Full)).
+        /// </summary>
+        internal static void CountTraderPurchase(Simulation sim, int good, long quantity)
+        {
+            MarketState m = sim.State.Market;
+            m.TraderBoughtToday[good] += quantity;
+            Definitions.TruckDef truck = sim.Config.Game.Market.Truck;
+            if (truck == null) return;
+            m.TruckLoadToday += quantity;
+            if (m.TruckHere && m.TruckLoadToday >= truck.LoadGrams)
+            {
+                m.TruckHere = false;
+                sim.Emit(new TruckLeft(sim.State.Clock.SimTime, TruckLeaveReason.Full, m.TruckLoadToday));
+            }
         }
 
         /// <summary>Sells to the trader at the current floor: Dr Cash, Cr the good's sales account. Uses trader capacity.</summary>
@@ -90,11 +119,11 @@ namespace Sim.Core.Market
         {
             Fixed floor = MarketRules.Floor(sim, good);
             long amount = MarketRules.Value(sim, good, quantity, floor);
-            sim.State.Market.TraderBoughtToday[good] += quantity;
             if (amount > 0)
                 sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.soldToTrader", reference,
                     new Posting(Account.Cash, amount), new Posting(SalesAccount(sim, good), -amount));
             sim.Emit(new SoldToTrader(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, quantity, floor, amount));
+            CountTraderPurchase(sim, good, quantity); // after the sale's event, so a full truck leaves after it
             return amount;
         }
 

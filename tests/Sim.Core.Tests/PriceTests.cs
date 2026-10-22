@@ -25,7 +25,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Regional_Band()
         {
-            Simulation sim = TestSim.NewFarm(game: TestSim.NoInflation()); // t = 0: Spring; index 1.00 throughout
+            Simulation sim = TestSim.NewFarm(game: TestSim.NoInflation(TestSim.NoTruck)); // t = 0: Spring; index 1.00 throughout, no daily move
             int potato = Good(sim, "potato");
             AssertPrice(MarketRules.RegionalPrice(sim, potato), "6.80");
             AssertPrice(MarketRules.Floor(sim, potato), "5.30");
@@ -111,7 +111,7 @@ namespace Sim.Core.Tests
             Assert.That(MarketRules.Indexed(sim, 18_000_00), Is.EqualTo(Money.MulRate(18_000_00, index)));
 
             // Land: acreBasePrice × index × the tile's factors.
-            var tile = sim.State.Land.Tiles[18];
+            var tile = sim.State.Land.Tiles[84];
             GameDefs defs = sim.Config.Game;
             Fixed factor = defs.Soils[tile.Soil].PriceFactor * defs.Drainages[tile.Drainage].PriceFactor
                 * Sim.Core.Land.LandRules.FertilityPriceFactor(defs.Land, tile.Fertility) * defs.Map.Parcels[tile.ParcelId].LocationFactor;

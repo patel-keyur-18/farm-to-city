@@ -21,7 +21,7 @@ namespace Sim.Core.Tests
     /// </summary>
     public static class FarmBot
     {
-        private static readonly int[] Acres = { 18, 19, 20, 26, 27, 28 };
+        private static readonly int[] Acres = { 84, 85, 86, 100, 101, 102 };
         private static readonly string[][] BySeason =
         {
             new[] { "potato", "radish" },  // Spring
@@ -95,7 +95,7 @@ namespace Sim.Core.Tests
                 case 1: sim.Execute(new SetLabourSplit(t, 25 * (int)Rng.Below(Rng.Next(seed, (RngStream)904, k, 10), 5))); break;
                 case 2: sim.Execute(new SetWorkHours(t, Hours[(int)Rng.Below(Rng.Next(seed, (RngStream)904, k, 11), 5)])); break;
                 case 3: sim.Execute(new SetEatFromStore(t, Rng.Below(Rng.Next(seed, (RngStream)904, k, 12), 2) == 0)); break;
-                case 4: if (sim.State.Farm.CropOn(19) != null) sim.Execute(new ClearField(t, 19)); break;
+                case 4: if (sim.State.Farm.CropOn(85) != null) sim.Execute(new ClearField(t, 85)); break;
                 case 5: sim.Execute(new BuyMedicine(t)); break;
             }
         }
@@ -176,7 +176,7 @@ namespace Sim.Core.Tests
             {
                 Simulation sim = NewFarm(seed: 3, localSeconds: 8 * Hour, game: RichGame());
                 long t = sim.State.Clock.SimTime;
-                foreach (int tile in new[] { 18, 19, 20, 26, 27, 28 })
+                foreach (int tile in new[] { 84, 85, 86, 100, 101, 102 })
                     Assert.That(sim.Execute(new Sow(t, tile, "potato", SeedSource.Certified, "compost")).Accepted, Is.True);
                 int planted = 0;
                 foreach (TreeSlot slot in sim.State.Land.Slots.ToList())

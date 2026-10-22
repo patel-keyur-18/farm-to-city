@@ -1,6 +1,6 @@
 # Sprint plan
 
-> 1-week sprints (ADR 0025). Each sprint: at most 2 specs for the owner to review and 1 device build; ends with a test checklist (when there is a build) and one pull request that the owner merges. Dates are planned and shift if a sprint carries over. Phases 2–5 are planned in detail at the start of each phase (ADR 0019).
+> 1-week sprints (ADR 0025). Each sprint: at most 2 specs for the owner to review and 1 device build; ends with a test checklist (when there is a build) and one pull request that the owner merges. Dates are planned and shift if a sprint carries over. Phases 2–5 are planned in detail at the start of each phase (ADR 0019). Phase 2's specs are reviewed two per sprint, each a sprint before its code, with the owner's enhancements first (ADR 0057); points for Sprints 12–18 come from the feature files and are re-pointed when each spec is written.
 >
 > **Notes:** Story points show relative size only; the real capacity limit is the owner's review and device-testing time. Phase 1 features start in Phase 0 sprints as soon as their spec is approved, because most don't need Unity. Phase 0's exit gate is still checked at the end of Sprint 3. Corrections from the pre-implementation audit are recorded in ADR 0027.
 
@@ -19,7 +19,14 @@
 | S8 | 14–20 Dec 2026 | 1 | Onboarding: first session, letter chapters and the Hamlet unlock; Phase 1 balancer bots and health checks. | 21 | Spec 009 amendment (ADR 0045) | Yes: feature-complete Development build |
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10 | 4–10 Jan 2027 | 1 | Playtest fixes: the hand works every season, labourers till harvest (ADR 0048). | 6 | Spec 006 amendment (ADR 0048) | Yes: Development build |
-| S11+ | From 11 Jan 2027 | 2–5 | Planned at each phase start: first sprint(s) write that phase's specs, then implementation by feature priority | — | 2 per sprint | Yes |
+| S11 | 11–24 Jan 2027 (2 weeks, ADR 0057) | 2 | ADRs 0052–0057; specs 010 and 011 approved; the village map, the trader's truck, daily prices and supermarket orders built. | 35 | 010, 011 | Yes: the village map, the truck and orders |
+| S12 | 25–31 Jan 2027 | 2 | Spec 012 written, approved and built: buffalo and cows, fodder, straw, the shed. Spec 014 written. | ~15 (re-pointed with spec 012) | 012, 014 | Yes: cattle |
+| S13 | 1–7 Feb 2027 | 2 | Citizens and the life clock; households, needs and happiness (F11.1, F11.2). | 16 | 016, 015 | Yes |
+| S14 | 8–14 Feb 2027 | 2 | Population flows and family trees (F11.3); founding a business and its books (F12.1). | 25 | 017, 013 | Yes |
+| S15 | 15–21 Feb 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
+| S16 | 22 Feb – 7 Mar 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3). | 26 | — | Yes |
+| S17 | 8–14 Mar 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
+| S18 | 15–21 Mar 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 12 | — | Yes: Phase 2 playtest build |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -488,3 +495,45 @@
 **Review (owner's device check, 2026-10-21):** passed on the iPhone 13 ("looks good"). Sprint 10 is closed when PR #15 is merged.
 
 **Phase 2 planning started in the same session.** The owner's enhancement requests were decided one at a time and recorded in `STATUS.md` (Next up) for the Phase 2 ADRs and specs: a 16 × 12 map growing by era; the village layout with road acres and neighbours not for sale; the trader's 4 t truck (6:00 to midnight, a daily price, the stall paused at night); daily supermarket orders (fresh today, rice and potato in 15 h, the hand delivering first); and buffalo and cows (cut-and-carry green fodder, a straw stack, a feed room).
+
+## Sprint 11 · 11–24 Jan 2027 · Phase 2 (planning, the village, the truck and orders; 2 weeks, ADR 0057)
+
+- **Status:** The owner's device check passed (2026-10-22, frame time p95 5.37 ms). The device review's US-196–US-198 (ADR 0059) done and Editor-tested; follow-up Development build made (`s11b-device-review-sheets.md`); the owner's check and the PR merge next
+- **Branch:** `sprint/11-phase2-planning`
+- **Goal:** Phase 2's decisions recorded (ADRs 0052–0057), specs 010 and 011 approved, the Phase 2 sprints planned, and the village map, the trader's truck, daily prices and supermarket orders built and playable on the iPhone.
+- **Points:** 42 (35 planned + 7 from the device review)
+- **Specs for the owner to review:** 010 (approved 2026-10-21), 011 (approved 2026-10-21)
+- **Device build:** Yes: Development build (`s11-village-truck-orders.md`)
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-188 | The 16 × 12 map and the village layout | [F02.4](features/F02.4-village-map.md) | 3 | Must | Done |
+| US-189 | Save schema 5: remap tile ids, the farm lane takes `s5` | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
+| US-190 | The village on screen: camera, edge, places, neighbours' fields | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
+| US-191 | Village and edge art in Blender | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
+| US-192 | The truck's day, the daily price and the stall at night | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
+| US-193 | Supermarket orders | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
+| US-194 | Rice and potato in 15 hours; balance re-measured | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 2 | Must | Done |
+| US-195 | Orders and truck on screen | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
+| US-196 | One row per supermarket order (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 1 | Must | Done |
+| US-197 | The Store in sections (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 3 | Must | Done |
+| US-198 | A hand's field order starts with the sow sheet (device review, ADR 0059) | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
+
+**Order of work:** US-188 → US-189 (the map and its migration) → US-192 → US-193 → US-194 (the sim) → US-191 → US-190 → US-195 (art and screens) → the device build.
+
+**Sprint end checklist**
+
+- [x] ADRs 0052–0057 written; GDD and `CLAUDE.md` updated
+- [x] Specs 010 and 011 written, every gap closed with the owner, approved
+- [x] Phase 2 sprints planned (this file), feature files F02.4 and F04.3 with stories and tasks; `epics.md` updated
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; [x] the owner's device check passed (US-190.T6 measured there, 2026-10-22)
+- [x] Test checklists written in `docs/test-checklists/` (`s11-village-truck-orders.md`; follow-up `s11b-device-review-sheets.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened; [ ] owner merges to `main`
+
+**Done this sprint (Claude):**
+- ADRs 0052–0057 (the map grows by era, the village layout, the truck, supermarket orders, cattle, the Phase 2 spec cadence); GDD and `CLAUDE.md` updated.
+- Spec 010 (map, village and edge): 6 gaps closed with the owner (the for-sale layout; a full river-bank strip with the commons in its west half; `s5` paid at 2 × its price; soils and location by geography; the dealer and tappable places; neighbours' seasonal fields). Specs 002 and 008 amended.
+- Spec 011 (the trader's truck and supermarket orders): 6 gaps closed (a daily price at 6:00; the market clears overnight; delivery at the collection point, paid at 6:00 next morning, shown in the Store; two crop orders plus a small greens order; the hand sells held produce at 6:00; the first sale at any hour, orders after the first session). Specs 003–007 and 009 amended.
+- US-188–US-191 (the 16 × 12 village map, its migration, the village on screen, the Blender village art), US-192 (the truck, daily prices, the stall at night), US-193 (supermarket orders), US-194 (15-hour rice and potato; ADR 0058 balance: orders 0.5–1 acre's sowing, 14.8% of sales), US-195 (orders and the truck on screen; the truck and van in Blender). 303 + 80 tests; Editor tours with touch; Development build.
+

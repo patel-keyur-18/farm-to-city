@@ -118,7 +118,9 @@ Farming is the first business the player runs, so it introduces every core idea:
 - soil type (loam, clay, sandy)
 - drainage
 
-The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitchen garden) and the labour quarters for hands' huts, protected forever (ADR 0030, ADR 0040). The map (8 × 6 acres) grows as the player buys adjacent parcels. Price depends on soil and location. Land the player doesn't own is neighbours' farms.
+The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitchen garden) and the labour quarters for hands' huts, protected forever (ADR 0030, ADR 0040). The map grows by era (ADR 0052): Homestead to Village play on 16 × 12 acres, with the original 8 × 6 farm unchanged inside it, and Township, Town and City each add a ring. Natural terrain frames the map (hills, the river, scrub), and the camera stops at its edge. The player grows the farm by buying adjacent parcels; price depends on soil and location.
+
+- **The village around the farm (ADR 0053).** North is the river side. The village centre (houses, grocery, tea stall, chemist, temple, council hall, the banyan and threshing floor, the pond and an empty school plot) lies east of the farm, and the grazing commons on the river bank in the north-west. The district road runs along the south edge, with the village lane and the farm lane leading off it. An acre a road passes through is a road acre (road and verges on half of it), never for sale. Land the player doesn't own is neighbours' farms: some are for sale (about 77 acres in Phase 2) and some are **not for sale yet**. The centre, the commons and the river bank are never for sale.
 
 - **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
@@ -183,7 +185,12 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
 
-**Livestock.** Chickens, goats, cows and buffalo. Each needs feed, shelter, health care and breeding. Animals produce eggs, milk, wool and manure, and the manure becomes compost. Vet bills and disease outbreaks are a real risk.
+**Livestock (ADR 0056).** Phase 2 brings Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 70,000, about 11 L, a lower price and less milk in Summer), in a 4-animal cattle shed in the yard, bought at the village cattle fair (a bank dairy loan is possible). The village dairy co-op collects every morning and pays by quality, or milk feeds the household. One game day stands for about a real month of an animal's life.
+
+- **Feed** is eaten automatically every morning, also while away: green fodder (berseem in Winter, sorghum in Summer and the Monsoon) cut and carried daily from a fodder field and never stored; straw, a new harvest by-product, on a straw stack in the yard; and bought cattle feed in the shed's feed room. The grazing commons lower the green-fodder need, most in the Monsoon.
+- **A shortfall** cuts milk, and several hungry days lower health (a vet costs money). No animal dies of hunger in Phase 2. A notification comes 2 days before any feed runs out.
+- **Dung becomes compost,** about 3–4 t an animal a year. About 10 game days in milk, 2–3 dry, then a calf (sold at the fair for now). A vaccination each season and a seeded disease risk. About 1.5 labour hours a day per animal, and an "animals" order for the hand.
+- Goats and poultry come later; no pigs. Vet bills and disease outbreaks are a real risk.
 
 **Equipment ladder.** Hand tools, then an ox plough, then a tractor, then a harvester. Each machine has:
 
@@ -199,7 +206,8 @@ Players can buy, lease, or hire a machine for a day from a neighbour.
 - Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
 - **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
-- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, any time, up to a daily limit. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
+- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, up to a daily limit per crop. **The trader's truck (ADR 0054)** of about 4 t arrives at 6:00 and leaves when full or at midnight; its price is set at 6:00 and held all day, and while it is away selling to the trader is refused. The player's stall pauses from midnight to 6:00. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
+- **Supermarket orders (ADR 0055).** At 6:00 a city supermarket posts 2 orders (a crop, an amount of half to one acre's harvest, a price at 15–30% over the regional price) and a small order for spinach or coriander, to be delivered by midnight, with no penalty when missed. Only produce harvested after 6:00 counts, so orders reward planning the day's sowing; rice and potato grow in 15 hours, so a crop sown by 9:00 can fill one. The hand fills an open order before selling to the trader. Deliveries are paid at 6:00 next morning; orders stay a bonus, about 15% of a good farmer's sales (ADR 0058).
 - **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
 
 ## Economy
@@ -244,7 +252,7 @@ P_local    = P_regional × (Demand / Supply)^(1/e)
 - **Scope.** This hourly market covers tradeable goods. Services are priced by the businesses that provide them, and customers choose between them (see Businesses, Customer choice).
 - **Elasticity (e)** is the key lever. Necessities like flour have low elasticity: prices swing hard on shortages. Luxuries like sweets have high elasticity: overprice them and customers simply stop buying.
 
-**Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport, up to a daily capacity. This creates import and export decisions. Transport cost depends on the road link, which explains why a town on a highway gets better prices than a remote one.
+**Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport, up to a daily capacity. From Phase 2 it comes as a truck from 6:00 to midnight, with its buying price set each morning and a total load on top of the per-crop limits (ADR 0054). This creates import and export decisions. Transport cost depends on the road link, which explains why a town on a highway gets better prices than a remote one.
 
 **Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
@@ -1058,7 +1066,7 @@ This document is the master spec. No code is written for a feature until its fea
 
 **Per-feature loop:** spec → review → data definitions → simulation code with unit tests that meet the acceptance criteria → UI → playtest → tune numbers in data → update the spec to match reality.
 
-**Rolling-wave specs (ADR 0019).** All Phase 1 specs are written and approved in Sprint 0, before Phase 1 coding. Each later phase's specs are written in that phase's first sprint. Epics and features for every phase are planned in `docs/planning/`.
+**Rolling-wave specs (ADR 0019).** All Phase 1 specs are written and approved in Sprint 0, before Phase 1 coding. Each later phase's specs are written in that phase's first sprint. Phase 2's ten specs are written and reviewed two per sprint instead, each approved a sprint before its code, with the owner's enhancements (map and village, the truck and orders, cattle) first (ADR 0057). Epics and features for every phase are planned in `docs/planning/`.
 
 **Spec writing order (ADR 0027).** Specs are written in the order code needs them: 002 and 005 in Sprint 0, 003 and 004 in Sprint 1, 006 and 007 in Sprint 2, 008 and 009 in Sprint 3. Specs fix formulas, bounds and placeholder values. The economy model tunes the values afterwards, and only formula changes need re-approval.
 
@@ -1098,7 +1106,7 @@ flowchart TB
 | --- | --- | --- |
 | 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Part A, on the owner's solo playtest week (ADR 0047): a reason to return on at least 4 of days 2–7, notification returns at sensible times, the Hamlet on day 5–9, no blocker, the release candidate and CI passing. Part B, before Launch at the latest: fresh players come back on day 2 and day 3 unprompted (2 of 3) |
-| 2 · Hamlet and Village | Citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
+| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
 | 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
 | 5 · Polish | Localisation, accessibility, Blender art pipeline; store release only if the owner decides | Owner's call |

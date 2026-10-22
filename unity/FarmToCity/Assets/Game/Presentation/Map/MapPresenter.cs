@@ -17,6 +17,10 @@ namespace Game.Presentation.Map
 
         /// <summary>A hand's hut (Id = building id) or one being built (Id = −construction id).</summary>
         HandHut = 5,
+
+        /// <summary>The trader's truck (opens the Store) and the supermarket's van (opens the Orders), spec 011 §7.</summary>
+        Truck = 6,
+        Van = 7,
     }
 
     /// <summary>What a tap landed on: a tile, a tree slot, a garden bed or the hut (the store).</summary>
@@ -40,7 +44,7 @@ namespace Game.Presentation.Map
     /// day and season tint. Sprites are created once and updated in place each refresh; motion (pop-in, bobbing markers, the tap
     /// squash) is code-driven tweens. The simulation never waits for any of it.
     /// </summary>
-    public sealed class MapPresenter : MonoBehaviour
+    public sealed partial class MapPresenter : MonoBehaviour
     {
         private const float HalfWidth = 0.5f;
 
@@ -105,6 +109,19 @@ namespace Game.Presentation.Map
         private readonly List<SpriteRenderer> _detail = new List<SpriteRenderer>();
         private readonly List<Spot> _crops = new List<Spot>();
         private readonly List<SpriteRenderer> _signs = new List<SpriteRenderer>();
+        private readonly Dictionary<int, SpriteRenderer> _places = new Dictionary<int, SpriteRenderer>();
+        private readonly List<SpriteRenderer> _bunds = new List<SpriteRenderer>();
+        private int _bundsFor = -1; // the owned acres the bunds were drawn for
+
+        // The valley past the map (spec 010 §3.6): flat tiles sorted with the map's own (so the front ones hide its block sides),
+        // the season's crop on the edge fields, hills and scrub; the camera's background is the meadow.
+        private sealed class EdgeSpot
+        {
+            public EdgeTile Tile;
+            public SpriteRenderer Ground, Crop, Decor;
+        }
+        private readonly List<EdgeSpot> _edge = new List<EdgeSpot>();
+        private static readonly Color Meadow = new Color(138 / 255f, 179 / 255f, 71 / 255f, 1f);
         private readonly Dictionary<long, Spot> _slots = new Dictionary<long, Spot>();
         private readonly Dictionary<long, Spot> _beds = new Dictionary<long, Spot>();
         private readonly List<SpriteRenderer> _buildings = new List<SpriteRenderer>();
@@ -174,6 +191,13 @@ namespace Game.Presentation.Map
                 crop.Marker = NewRenderer("mark" + t.Id, null, c + new Vector3(0.02f, 0.34f, 0), Order(t.Id, _width, 90));
                 _crops.Add(crop);
             }
+            foreach (TileVm t in map.Tiles)
+            {
+                if (t.Place == null) continue;
+                string name = t.Place == "house" ? "place_house_" + t.Variant : "place_" + t.Place;
+                _places[t.Id] = NewRenderer(name, SpriteBank.Rendered(name), TileCentre(t.Id), Order(t.Id, _width, 45));
+            }
+            BuildEdge();
             foreach (SlotVm s in map.Slots)
             {
                 int i = Mathf.Min(s.Index, YardSlots.Length - 1);
@@ -227,11 +251,51 @@ namespace Game.Presentation.Map
             _built = true;
         }
 
+        private static int EdgeOrder(int x, int y, int offset = 0) { return (x + y) * 100 + offset; }
+
+        private void BuildEdge()
+        {
+            foreach (EdgeTile e in Sim.View.Views.EdgeView.Tiles(_width, _height))
+            {
+                (float wx, float wy) = _grid.Centre(e.X, e.Y);
+                var c = new Vector3(wx, wy, 0);
+                string ground = e.Kind == EdgeKind.River ? "edge_water" : e.Kind == EdgeKind.Field ? "edge_soil" : e.Kind == EdgeKind.Road ? "edge_road" : "edge_grass";
+                var v = new EdgeSpot { Tile = e, Ground = NewRenderer("edge" + e.X + "_" + e.Y, SpriteBank.Rendered(ground), c, GroundBase + EdgeOrder(e.X, e.Y)) };
+                if (e.Kind == EdgeKind.Field) v.Crop = NewRenderer("edgeCrop", null, c, CropBase + EdgeOrder(e.X, e.Y, 20));
+                string decor = null;
+                float scale = 1f;
+                if (e.Kind == EdgeKind.Hill && e.X <= -2 && ((e.Y - e.X * 2) % 4 + 4) % 4 == 0) decor = "hill_" + ((e.Y + 30) % 3);
+                if (e.Kind == EdgeKind.Scrub) decor = "scrub";
+                if (e.Kind == EdgeKind.FarBank && (e.X + e.Y) % 3 == 0) { decor = "tree_mango_mature"; scale = 0.55f; }
+                if (decor != null)
+                {
+                    v.Decor = NewRenderer("edgeDecor", SpriteBank.Rendered(decor), c, EdgeOrder(e.X, e.Y, 50));
+                    v.Decor.transform.localScale = Vector3.one * scale;
+                }
+                _edge.Add(v);
+            }
+        }
+
         public void Refresh(MapVm map, bool animate)
         {
             if (!_built) Build(map);
             Rgb t = Tint.Map(_ui, map.Season, map.SecondOfDay);
             _tint = new Color(t.R, t.G, t.B, 1f);
+            if (Camera.main != null) Camera.main.backgroundColor = _tint * Meadow; // never sky-blue past the map (spec 010 §3.6)
+            foreach (EdgeSpot e in _edge)
+            {
+                e.Ground.color = _tint;
+                if (e.Crop != null)
+                {
+                    string crop = Sim.View.Views.EdgeView.Crop(e.Tile.X, e.Tile.Y, map.Season);
+                    e.Crop.sprite = crop == null ? null : SpriteBank.Crop(crop, CropStage.Growing2);
+                    e.Ground.sprite = SpriteBank.Rendered(crop == null ? "edge_grass" : "edge_soil"); // fallow lies under grass
+                    e.Crop.color = _tint;
+                }
+                if (e.Decor != null) e.Decor.color = _tint;
+            }
+            foreach (KeyValuePair<int, SpriteRenderer> p in _places) p.Value.color = _tint;
+            RefreshBunds(map);
 
             foreach (TileVm tv in map.Tiles)
             {
@@ -239,10 +303,40 @@ namespace Game.Presentation.Map
                 switch (tv.Kind)
                 {
                     case TileKind.Unowned:
-                        ground.sprite = SpriteBank.Grass;
-                        ground.color = _tint * new Color(0.80f, 0.86f, 0.78f, 1f); // desaturated: neighbours' land
-                        detail.sprite = SpriteBank.GrassDetail(tv.Id);
-                        detail.color = _tint * new Color(0.85f, 0.9f, 0.85f, 0.8f);
+                        // A neighbour's field (spec 010 §3.7): tilled soil under the season's crop, or fallow grass; never greyed out.
+                        if (tv.NeighbourCrop != null)
+                        {
+                            ground.sprite = SpriteBank.SoilTile;
+                            ground.color = _tint * SoilColour(tv);
+                            detail.sprite = null;
+                        }
+                        else
+                        {
+                            ground.sprite = SpriteBank.Grass;
+                            ground.color = _tint;
+                            detail.sprite = SpriteBank.GrassDetail(tv.Id);
+                            detail.color = _tint;
+                        }
+                        break;
+                    case TileKind.Road:
+                        ground.sprite = SpriteBank.Rendered("ground_road_" + tv.RoadLinks) ?? SpriteBank.Rendered("ground_road_3");
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
+                    case TileKind.Village:
+                        ground.sprite = SpriteBank.Sand; // beaten earth round the houses
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
+                    case TileKind.Commons:
+                        ground.sprite = SpriteBank.Rendered("ground_commons");
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
+                    case TileKind.Bank:
+                        ground.sprite = SpriteBank.Rendered(tv.X == 12 ? "ground_bank_1" : "ground_bank_0"); // the ghat, up from the village
+                        ground.color = _tint;
+                        detail.sprite = null;
                         break;
                     case TileKind.Quarters:
                         // Beaten earth: the hands' compound.
@@ -267,8 +361,8 @@ namespace Game.Presentation.Map
                 _signs[tv.Id].color = _tint;
 
                 Spot crop = _crops[tv.Id];
-                Sprite cs = tv.CropId == null ? null : SpriteBank.Crop(tv.CropId, tv.Stage);
-                Apply(crop.Renderer, crop, cs, tv.CropId + ":" + tv.Stage, animate);
+                Sprite cs = tv.CropId != null ? SpriteBank.Crop(tv.CropId, tv.Stage) : tv.NeighbourCrop != null ? SpriteBank.Crop(tv.NeighbourCrop, CropStage.Growing2) : null;
+                Apply(crop.Renderer, crop, cs, (tv.CropId ?? "n" + tv.NeighbourCrop) + ":" + tv.Stage, animate);
                 crop.Renderer.color = _tint;
                 Sprite ms = tv.Stage == CropStage.Ready ? SpriteBank.MarkerReady : tv.Stage == CropStage.Spoiling ? SpriteBank.MarkerSpoiling
                     : tv.PestWarning ? SpriteBank.MarkerPest : null;
@@ -309,6 +403,7 @@ namespace Game.Presentation.Map
             foreach (SpriteRenderer r in _props) r.color = _tint;
             RefreshHandHuts(map, animate);
             RefreshPeople(map, animate);
+            RefreshVehicles(map, animate);
         }
 
         // ---- hands' huts, building sites and people (ADR 0039 §2, §8) ----
@@ -333,6 +428,41 @@ namespace Game.Presentation.Map
                 Fence(map, t.Id, x, y + 1, "fence_x", EdgeSW, 88);
                 Fence(map, t.Id, x - 1, y, "fence_y", EdgeNW, 4);
             }
+        }
+
+        private static bool Yours(TileKind k) { return k == TileKind.Farm || k == TileKind.Yard || k == TileKind.Quarters; }
+
+        /// <summary>
+        /// Your land's boundary (spec 010 §3.7): a field bund round the outside of your fields, redrawn when you buy or sell. The yard
+        /// and the quarters keep their fence.
+        /// </summary>
+        private void RefreshBunds(MapVm map)
+        {
+            int owned = 0;
+            foreach (TileVm t in map.Tiles) if (Yours(t.Kind)) owned = owned * 31 + t.Id + 1;
+            if (owned == _bundsFor) { foreach (SpriteRenderer b in _bunds) b.color = _tint; return; }
+            _bundsFor = owned;
+            foreach (SpriteRenderer b in _bunds) Destroy(b.gameObject);
+            _bunds.Clear();
+            foreach (TileVm t in map.Tiles)
+            {
+                if (t.Kind != TileKind.Farm) continue;
+                int x = t.Id % _width, y = t.Id / _width;
+                Bund(map, t.Id, x, y - 1, "bund_x", EdgeNE, 3);
+                Bund(map, t.Id, x + 1, y, "bund_y", EdgeSE, 87);
+                Bund(map, t.Id, x, y + 1, "bund_x", EdgeSW, 87);
+                Bund(map, t.Id, x - 1, y, "bund_y", EdgeNW, 3);
+            }
+        }
+
+        private void Bund(MapVm map, int tile, int nx, int ny, string sprite, Vector2 edge, int order)
+        {
+            bool inside = nx >= 0 && ny >= 0 && nx < _width && ny < _height;
+            if (inside && Yours(map.Tiles[ny * _width + nx].Kind)) return;
+            Vector3 pos = TileCentre(tile) + (Vector3)edge;
+            SpriteRenderer r = NewRenderer(sprite, SpriteBank.Rendered(sprite), pos, CropBase + Order(tile, _width, order, edge.y));
+            r.color = _tint;
+            _bunds.Add(r);
         }
 
         private void Prop(string sprite, int tile, Vector2 off, int order)
@@ -637,6 +767,7 @@ namespace Game.Presentation.Map
             if (_ring.gameObject.activeSelf) _ring.color = new Color(1f, 1f, 1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f));
             if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
+            AnimateVehicles();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }
@@ -651,6 +782,8 @@ namespace Game.Presentation.Map
                 case HitKind.Bed: return _bedWorld[hit.Id];
                 case HitKind.Hut: return _hutWorld;
                 case HitKind.HandHut: return hit.Id > 0 ? (Vector2)_handHuts[hit.Id].transform.position : (Vector2)_sites[-hit.Id].transform.position;
+                case HitKind.Truck: return _truck.transform.position;
+                case HitKind.Van: return VanWorld;
                 default: return TileCentre((int)hit.Id);
             }
         }
@@ -665,11 +798,22 @@ namespace Game.Presentation.Map
                     return new Hit(HitKind.Slot, kv.Key);
             foreach (KeyValuePair<long, Spot> kv in _beds)
                 if (Mathf.Abs(w.x - _bedWorld[kv.Key].x) / 0.17f + Mathf.Abs(w.y - _bedWorld[kv.Key].y) / 0.085f < 1f) return new Hit(HitKind.Bed, kv.Key);
+            Hit vehicle = PickVehicle(w);
+            if (vehicle.Kind != HitKind.None) return vehicle;
             if (Vector2.Distance(w, _hutWorld + new Vector2(0, 0.12f)) < 0.24f || Vector2.Distance(w, _wellWorld + new Vector2(0, 0.08f)) < 0.13f) return new Hit(HitKind.Hut, 0);
             foreach (KeyValuePair<long, SpriteRenderer> kv in _handHuts)
                 if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f * HandHutScale)) < 0.16f * HandHutScale) return new Hit(HitKind.HandHut, kv.Key);
             foreach (KeyValuePair<long, SpriteRenderer> kv in _sites)
                 if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f * HandHutScale)) < 0.16f * HandHutScale) return new Hit(HitKind.HandHut, -kv.Key);
+            // A village building is hit on its walls and roof, which stand over the acre behind it (spec 010 §3.3): the nearest wins.
+            int place = -1;
+            float best = 0.24f;
+            foreach (KeyValuePair<int, SpriteRenderer> kv in _places)
+            {
+                float d = Vector2.Distance(w, (Vector2)TileCentre(kv.Key) + new Vector2(0, 0.16f));
+                if (d < best) { best = d; place = kv.Key; }
+            }
+            if (place >= 0) return new Hit(HitKind.Tile, place);
             int tile = _grid.Pick(w.x, w.y);
             return tile < 0 ? Hit.None : new Hit(HitKind.Tile, tile);
         }
@@ -738,6 +882,8 @@ namespace Game.Presentation.Map
                 case HitKind.Bed: return _beds[hit.Id].Renderer.transform;
                 case HitKind.Hut: return _buildings.Count > 0 ? _buildings[0].transform : null;
                 case HitKind.HandHut: return hit.Id > 0 ? _handHuts[hit.Id].transform : _sites[-hit.Id].transform;
+                case HitKind.Truck: return _truck.transform;
+                case HitKind.Van: return _van.transform;
                 case HitKind.Tile:
                 {
                     Spot crop = _crops[(int)hit.Id];

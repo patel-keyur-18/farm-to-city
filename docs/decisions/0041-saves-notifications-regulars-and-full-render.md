@@ -1,6 +1,6 @@
 # 0041. Saves hold everything hashed, old saves refused until the playtest, notifications from a simulated absence, regulars, and every sprite rendered now (Sprint 6 planning review)
 
-- Status: Accepted
+- Status: Accepted; §6's "at least a day" superseded by ADR 0058 (12 hours)
 - Date: 2026-10-19
 - Deciders: Keyur Patel
 - Amends: spec 007 §3.1, §3.4, §3.5, §4, §8 (AC-3, AC-10), §9; spec 006 §3.3, §8 (AC-4); spec 008 §3.13 (where Settings lives in Sprint 6); ADR 0036 (the first notification ask before the letter exists); ADR 0039 §1 (walk frames later)

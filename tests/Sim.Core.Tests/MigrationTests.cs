@@ -72,12 +72,54 @@ namespace Sim.Core.Tests
                     Assert.That(r.State.People.Roster.All(n => n.Tile == -1 && (n.Until == 0 || n.Until == pass)), Is.True, name + ": labourers migrated");
                 }
 
+                if (r.Header.Schema < 6)
+                {
+                    // Spec 011 §4 (AC-14): the truck here by the save's hour, its load the trader's counts, no daily move, nothing held.
+                    Market.MarketState m = r.State.Market;
+                    int hour = (int)(r.State.Clock.SimTime % TestSim.Day / TestSim.Hour);
+                    Assert.That(m.TruckHere, Is.EqualTo(hour >= 6), name + ": the truck by the hour");
+                    Assert.That(m.TruckLoadToday, Is.EqualTo(m.TraderBoughtToday.Sum()), name + ": the load");
+                    for (int g = 0; g < m.Stock.Length; g++)
+                    {
+                        Assert.That(m.DailyFactorOf(g), Is.EqualTo(Maths.Fixed.One), name + ": factor 1");
+                        Assert.That(m.HeldForTruckOf(g), Is.EqualTo(0), name + ": nothing held");
+                    }
+                }
+
                 Simulation sim = Simulation.FromState(config, r.State);
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
                 sim.DrainEvents();
                 LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
                 Assert.That(again.Error, Is.EqualTo(SaveError.None), name + " after a day: " + again.Detail);
                 Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + ": a day later it round-trips");
+            }
+        }
+
+        // Spec 011 AC-14: every older fixture loads at schema 6 with the truck by its hour, its load the trader's counts, no
+        // orders, nothing fresh, nothing owed; it advances a day and round-trips.
+        [Test]
+        public void Schema5_TruckAndOrders()
+        {
+            SimConfig config = SaveTests.Config();
+            string[] older = Directory.GetFiles(Dir, "*.ftc", SearchOption.AllDirectories).Where(f => SaveCodec.Read(File.ReadAllBytes(f), config, MinSchema).Header.Schema < 6).ToArray();
+            Assert.That(older.Length, Is.GreaterThanOrEqualTo(3), "schema 3, 4 and 5 fixtures");
+            foreach (string file in older)
+            {
+                string name = Path.GetFileName(file);
+                LoadResult r = SaveCodec.Read(File.ReadAllBytes(file), config, MinSchema);
+                Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                Market.MarketState m = r.State.Market;
+                Assert.That(m.TruckHere, Is.EqualTo(r.State.Clock.SimTime % TestSim.Day >= 6 * TestSim.Hour), name);
+                Assert.That(m.TruckLoadToday, Is.EqualTo(m.TraderBoughtToday.Sum()), name);
+                Assert.That(m.SupermarketOrders, Is.Empty, name);
+                Assert.That(m.FreshToday.All(q => q == 0), Is.True, name);
+                Assert.That(r.State.Ledger.Balance(Finance.Account.OwedByBuyers), Is.EqualTo(0), name);
+                Simulation sim = Simulation.FromState(config, r.State);
+                sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+                LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+                Assert.That(again.Error, Is.EqualTo(SaveError.None), name);
+                Assert.That(again.Header.Schema, Is.EqualTo(6));
+                Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + " round-trips");
             }
         }
 
@@ -96,7 +138,8 @@ namespace Sim.Core.Tests
             }
             long t = sim.State.Clock.SimTime;
             Assert.That(sim.Execute(new SeeChapter(t, "welcome")).Accepted, Is.True);
-            Assert.That(sim.Execute(new CompleteStep(t, "welcome")).Accepted, Is.True);
+            // The bots play after the first session (they skip it, spec 011 §10 G6), so its first step is done only before that.
+            if (!sim.State.Guidance.Skipped) Assert.That(sim.Execute(new CompleteStep(t, "welcome")).Accepted, Is.True);
             sim.DrainEvents();
             Assert.That(sim.State.Credit.Loans.Count, Is.GreaterThan(0), "a loan");
             Assert.That(sim.State.People.Hands.Count, Is.GreaterThan(0), "a hand");

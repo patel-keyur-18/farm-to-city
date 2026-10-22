@@ -138,7 +138,7 @@ namespace Sim.Core.Farm
         {
             var c = new Crop
             {
-                Id = r.ReadLong(), TileId = r.ReadInt(), Def = r.ReadRef(ContentTable.Crop), State = (CropState)r.ReadInt(), SownAt = r.ReadLong(),
+                Id = r.ReadLong(), TileId = r.ReadTile(), Def = r.ReadRef(ContentTable.Crop), State = (CropState)r.ReadInt(), SownAt = r.ReadLong(),
                 ReadyAt = r.ReadLong(), Seed = (SeedSource)r.ReadInt(), SeedAge = r.ReadFixed(), Fertiliser = r.ReadRef(ContentTable.Fertiliser),
                 SoilFactor = r.ReadFixed(), WaterSum = r.ReadFixed(), CareSum = r.ReadFixed(), WeatherSum = r.ReadFixed(), WaterRate = r.ReadFixed(),
                 WeatherRate = r.ReadFixed(), JobId = r.ReadLong(),
@@ -349,7 +349,14 @@ namespace Sim.Core.Farm
             for (int i = 0; i < n; i++) s.Crops.Add(Crop.ReadFrom(r));
             s.TileRunCrop = new int[tiles];
             s.TileRun = new int[tiles];
-            for (int i = 0; i < tiles; i++) { s.TileRunCrop[i] = r.ReadRef(ContentTable.Crop); s.TileRun[i] = r.ReadInt(); }
+            for (int i = 0; i < tiles; i++) s.TileRunCrop[i] = -1;
+            int saved = r.OldMap ? Saves.MapMigration.OldTiles : tiles;
+            for (int i = 0; i < saved; i++)
+            {
+                int at = r.OldMap ? Saves.MapMigration.Remap(i) : i;
+                s.TileRunCrop[at] = r.ReadRef(ContentTable.Crop);
+                s.TileRun[at] = r.ReadInt();
+            }
             n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Beds.Add(GardenBed.ReadFrom(r));
             s.NextTreeId = r.ReadLong();

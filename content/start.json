@@ -1,8 +1,8 @@
 {
   "inheritedParcels": ["home_a", "home_b", "home_c"],
   "buildings": [
-    { "building": "hut",  "tile": 21 },
-    { "building": "well", "tile": 21 }
+    { "building": "hut",  "tile": 87 },
+    { "building": "well", "tile": 87 }
   ],
   "startingCash": 20000,
   "savedSeedAge": { "wheat": 2.0, "lentils": 2.0 },

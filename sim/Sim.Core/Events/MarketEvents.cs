@@ -142,3 +142,119 @@ namespace Sim.Core.Events
         protected override string Describe() { return "InputsBought(good=" + GoodId + ", q=" + Quantity + ", amount=" + Amount + ")"; }
     }
 }
+
+namespace Sim.Core.Events
+{
+    /// <summary>Why the trader's truck left (spec 011 §5).</summary>
+    public enum TruckLeaveReason
+    {
+        Day = 0,
+        Full = 1,
+    }
+
+    /// <summary>The trader's truck pulled up at 6:00: its counts reset (spec 011 §3.1).</summary>
+    public sealed class TruckArrived : SimEvent
+    {
+        public TruckArrived(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "TruckArrived"; }
+    }
+
+    /// <summary>The truck left, full or at midnight, with what it bought today in grams (spec 011 §5).</summary>
+    public sealed class TruckLeft : SimEvent
+    {
+        public TruckLeaveReason Reason { get; }
+        public long LoadGrams { get; }
+
+        public TruckLeft(long simTime, TruckLeaveReason reason, long loadGrams) : base(simTime)
+        {
+            Reason = reason;
+            LoadGrams = loadGrams;
+        }
+
+        protected override string Describe() { return "TruckLeft(" + Reason + ", " + LoadGrams + " g)"; }
+    }
+
+    /// <summary>At 6:00 the hands sold what their SELL TO TRADER orders held for the truck (spec 011 §3.1).</summary>
+    public sealed class HandSoldHeld : SimEvent
+    {
+        public string GoodId { get; }
+        public long Quantity { get; }
+        public long Amount { get; }
+
+        public HandSoldHeld(long simTime, string goodId, long quantity, long amount) : base(simTime)
+        {
+            GoodId = goodId;
+            Quantity = quantity;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "HandSoldHeld(good=" + GoodId + ", q=" + Quantity + ", amount=" + Amount + ")"; }
+    }
+}
+
+namespace Sim.Core.Events
+{
+    /// <summary>The supermarket posted today's orders at 6:00 (spec 011 §5): copies, in id order.</summary>
+    public sealed class OrdersPosted : SimEvent
+    {
+        public System.Collections.Generic.IReadOnlyList<Market.SupermarketOrder> Orders { get; }
+
+        public OrdersPosted(long simTime, System.Collections.Generic.IReadOnlyList<Market.SupermarketOrder> orders) : base(simTime) { Orders = orders; }
+
+        protected override string Describe()
+        {
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (Market.SupermarketOrder o in Orders) parts.Add(o.Id + ":" + o.Good + "×" + o.Amount + "@" + o.Price);
+            return "OrdersPosted(" + string.Join(", ", parts) + ")";
+        }
+    }
+
+    /// <summary>Fresh produce delivered to the supermarket's collection point; booked as owed (spec 011 §5).</summary>
+    public sealed class OrderDelivered : SimEvent
+    {
+        public long OrderId { get; }
+        public string GoodId { get; }
+        public long Quantity { get; }
+        public long Amount { get; }
+        public bool ByHand { get; }
+
+        public OrderDelivered(long simTime, long orderId, string goodId, long quantity, long amount, bool byHand) : base(simTime)
+        {
+            OrderId = orderId;
+            GoodId = goodId;
+            Quantity = quantity;
+            Amount = amount;
+            ByHand = byHand;
+        }
+
+        protected override string Describe() { return "OrderDelivered(" + OrderId + ", " + GoodId + " " + Quantity + ", amount=" + Amount + (ByHand ? ", by hand" : "") + ")"; }
+    }
+
+    /// <summary>An order lapsed at 6:00 with something left (no penalty, spec 011 §5).</summary>
+    public sealed class OrderLapsed : SimEvent
+    {
+        public long OrderId { get; }
+        public string GoodId { get; }
+        public long Left { get; }
+
+        public OrderLapsed(long simTime, long orderId, string goodId, long left) : base(simTime)
+        {
+            OrderId = orderId;
+            GoodId = goodId;
+            Left = left;
+        }
+
+        protected override string Describe() { return "OrderLapsed(" + OrderId + ", " + GoodId + " " + Left + " left)"; }
+    }
+
+    /// <summary>The supermarket paid what it owed at 6:00 (spec 011 §5).</summary>
+    public sealed class OrderPaid : SimEvent
+    {
+        public long Amount { get; }
+
+        public OrderPaid(long simTime, long amount) : base(simTime) { Amount = amount; }
+
+        protected override string Describe() { return "OrderPaid(" + Amount + ")"; }
+    }
+}

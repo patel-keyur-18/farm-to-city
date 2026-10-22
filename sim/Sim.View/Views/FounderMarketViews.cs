@@ -115,8 +115,10 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("good.onOffer"), ctx.Fmt.Kg(offered), "marketPrice", g));
             vm.Lines.Add(new LineVm(s.Get("good.spoils"), ctx.Fmt.Kg((Fixed.FromInt(free) * good.SpoilagePerDay).RoundToLong()), "spoilage", g));
             vm.Lines.Add(new LineVm(s.Get("good.market"), ctx.Fmt.PricePerKg(m.MarketPrice(g)), "marketPrice", g));
-            vm.Lines.Add(new LineVm(s.Get("good.trader"), ctx.Fmt.PricePerKg(floor), "traderPrice", g));
+            vm.Lines.Add(new LineVm(s.Get("good.trader"), sim.Config.Game.Market.Truck != null && good.Kind == GoodKind.Produce
+                ? OrdersSheet.TodayVsYesterday(ctx, g) : ctx.Fmt.PricePerKg(floor), "traderPrice", g));
             vm.Lines.Add(new LineVm(s.Get("good.traderRoom"), ctx.Fmt.Kg(room), "traderRoom", g));
+            if (MarketRules.StallClosed(sim)) vm.Lines.Add(new LineVm(s.Get("store.stallClosed"), null));
             vm.Actions.Add(new ActionVm("offer", s.Get("good.offer"), null, ActionKind.Open, free > 0, free > 0 ? null : s.Get("good.nothingFree"), null, new SheetRequest("Offer", g)));
             if (offered > 0)
                 vm.Actions.Add(ActionVm.Checked(ctx, "withdraw", s.Get("action.withdrawRow"), ctx.Fmt.Kg(offered), ActionKind.Secondary, at => new Withdraw(at, id, offered)));

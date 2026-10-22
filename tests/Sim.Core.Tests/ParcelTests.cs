@@ -27,17 +27,17 @@ namespace Sim.Core.Tests
         [Test]
         public void Price_Formula()
         {
-            // s5: one acre (tile 45) of loam, moderate drainage, fertility 50, location 1.0.
+            // n1: tiles 52 and 53 of loam, moderate drainage, fertility 55 and 58, location 1.0.
             Simulation sim = NewFarm(game: Rich());
-            Assert.That(LandRules.ParcelPrice(sim, P(sim, "s5")), Is.EqualTo(1_20_000_00));
+            Assert.That(LandRules.ParcelPrice(sim, P(sim, "n1")), Is.EqualTo(1_22_400_00 + 1_23_840_00));
 
-            // s1: tile 34 clay, poor, fertility 65 and tile 35 loam, moderate, fertility 55, location 0.95.
+            // s1: tile 116 clay, poor, fertility 65 and tile 117 loam, moderate, fertility 55, location 1.0 (spec 010 §3.2).
             GameDefs d = sim.Config.Game;
             Parcel s1 = P(sim, "s1");
-            long t20 = LandRules.TilePrice(sim, sim.State.Land.Tiles[34]);
-            long t21 = LandRules.TilePrice(sim, sim.State.Land.Tiles[35]);
-            Assert.That(t20, Is.EqualTo(92_443_00)); // 1,20,000 × 0.90 × 0.85 × 1.06 × 0.95 = 92,442.60, rounded to the coin
-            Assert.That(t21, Is.EqualTo(1_16_280_00)); // 1,20,000 × 1.00 × 1.00 × 1.02 × 0.95
+            long t20 = LandRules.TilePrice(sim, sim.State.Land.Tiles[116]);
+            long t21 = LandRules.TilePrice(sim, sim.State.Land.Tiles[117]);
+            Assert.That(t20, Is.EqualTo(97_308_00)); // 1,20,000 × 0.90 × 0.85 × 1.06 × 1.0
+            Assert.That(t21, Is.EqualTo(1_22_400_00)); // 1,20,000 × 1.00 × 1.00 × 1.02 × 1.0
             Assert.That(LandRules.ParcelPrice(sim, s1), Is.EqualTo(t20 + t21));
         }
 
@@ -67,7 +67,7 @@ namespace Sim.Core.Tests
             Parcel w1 = P(sim, "w1");
             Assert.That((w1.Owned, w1.Protected, w1.CostBasis, w1.AcquiredAt), Is.EqualTo((true, false, price, 5 * Hour)));
             Assert.That(sim.State.Land.Slots.Count, Is.EqualTo(slots + 4));
-            foreach (int tile in new[] { 16, 17 })
+            foreach (int tile in new[] { 82, 83 })
                 Assert.That(sim.State.Land.Slots.Count(s => s.TileId == tile && s.Kind == SlotKind.FieldEdge), Is.EqualTo(2));
             ParcelBought e = sim.DrainEvents().OfType<ParcelBought>().Single();
             Assert.That((e.ParcelId, e.Price, e.Acres), Is.EqualTo(("w1", price, 2)));
@@ -102,19 +102,19 @@ namespace Sim.Core.Tests
             Buy(sim, "e1");
             Assert.That(Sell(sim, "w2").Reason, Is.EqualTo(RejectReason.WouldStrandLand), "sw connects to home only through w2");
 
-            LandSystem.SetOccupied(sim, 22, true);
+            LandSystem.SetOccupied(sim, 88, true);
             Assert.That(Sell(sim, "e1").Reason, Is.EqualTo(RejectReason.ParcelInUse), "a crop");
-            LandSystem.SetOccupied(sim, 22, false);
-            TreeSlot slot = sim.State.Land.Slots.First(s => s.TileId == 23);
+            LandSystem.SetOccupied(sim, 88, false);
+            TreeSlot slot = sim.State.Land.Slots.First(s => s.TileId == 89);
             slot.TreeId = 7;
             Assert.That(Sell(sim, "e1").Reason, Is.EqualTo(RejectReason.ParcelInUse), "a tree");
             slot.TreeId = 0;
-            sim.State.Land.Buildings.Add(new Building { Id = 99, Def = 0, TileId = 30 });
+            sim.State.Land.Buildings.Add(new Building { Id = 99, Def = 0, TileId = 104 });
             Assert.That(Sell(sim, "e1").Reason, Is.EqualTo(RejectReason.ParcelInUse), "a building");
             sim.State.Land.Buildings.RemoveAt(sim.State.Land.Buildings.Count - 1);
 
             // Fertility has changed since purchase, so price ≠ cost basis: a loss on the sale.
-            sim.State.Land.Tiles[32].Fertility -= Maths.Fixed.FromInt(10);
+            sim.State.Land.Tiles[114].Fertility -= Maths.Fixed.FromInt(10);
             Parcel sw = P(sim, "sw");
             long basis = sw.CostBasis;
             long expected = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, sw), sim.Config.Game.Land.QuickSaleFactor));
@@ -126,7 +126,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash + expected));
             Assert.That(sim.State.Ledger.Balance(Account.LossOnAssetSales), Is.EqualTo(basis - expected));
             Assert.That(sw.Owned, Is.False);
-            Assert.That(sim.State.Land.Slots.Any(s => s.TileId == 32 || s.TileId == 33), Is.False);
+            Assert.That(sim.State.Land.Slots.Any(s => s.TileId == 114 || s.TileId == 115), Is.False);
             ParcelSold e = sim.DrainEvents().OfType<ParcelSold>().Single();
             Assert.That((e.ParcelId, e.Price, e.CostBasis), Is.EqualTo(("sw", expected, basis)));
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);

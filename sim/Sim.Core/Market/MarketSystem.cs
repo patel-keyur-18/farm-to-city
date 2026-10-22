@@ -18,14 +18,97 @@ namespace Sim.Core.Market
                 if (defs.Goods[g].Kind != Definitions.GoodKind.Produce) continue;
                 m.Price[g] = m.LastRegional[g] = MarketRules.RegionalPrice(sim, g);
             }
+            if (defs.Truck == null) return;
+            m.Trading = true;
+            m.TruckHere = defs.Truck.HereAt(MarketRules.HourOfDay(sim));
         }
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
-            if (pass == ItemClass.Hourly) ClearHour(sim);
+            Definitions.TruckDef truck = sim.Config.Game.Market.Truck;
+            if (pass == ItemClass.Hourly)
+            {
+                int hour = MarketRules.HourOfDay(sim);
+                if (truck != null && hour == truck.ArriveHour) Morning(sim);
+                if (truck != null && hour == truck.LeaveHour) Evening(sim);
+                ClearHour(sim, truck != null && truck.StallPausedAtPass(hour));
+            }
             if (pass == ItemClass.Daily) Spoil(sim);
-            if (pass == ItemClass.Daily) System.Array.Clear(sim.State.Market.TraderBoughtToday, 0, sim.State.Market.TraderBoughtToday.Length);
+            if (pass == ItemClass.Daily && truck == null) System.Array.Clear(sim.State.Market.TraderBoughtToday, 0, sim.State.Market.TraderBoughtToday.Length);
             if (pass == ItemClass.Seasonal) StepIndex(sim);
+        }
+
+        /// <summary>
+        /// The 6:00 pass before the market clears (spec 011 §3.6): the supermarket pays, the day's price factors, the truck
+        /// arrives (its counts reset), the hands sell what they held for it, yesterday's orders lapse and today's are posted.
+        /// </summary>
+        private static void Morning(Simulation sim)
+        {
+            MarketState m = sim.State.Market;
+            bool orders = sim.Config.Game.Market.Orders != null;
+            if (orders) Supermarket.Pay(sim);
+            DrawDailyFactors(sim);
+            System.Array.Clear(m.TraderBoughtToday, 0, m.TraderBoughtToday.Length);
+            m.TruckLoadToday = 0;
+            m.TruckHere = true;
+            sim.Emit(new Events.TruckArrived(sim.State.Clock.SimTime));
+            SellHeld(sim);
+            if (!orders) return;
+            Supermarket.Lapse(sim);
+            if (Supermarket.Started(sim)) Supermarket.Post(sim);
+        }
+
+        /// <summary>The midnight pass: the truck leaves if it is still here (spec 011 §3.1).</summary>
+        private static void Evening(Simulation sim)
+        {
+            MarketState m = sim.State.Market;
+            if (!m.TruckHere) return;
+            m.TruckHere = false;
+            sim.Emit(new Events.TruckLeft(sim.State.Clock.SimTime, Events.TruckLeaveReason.Day, m.TruckLoadToday));
+        }
+
+        /// <summary>
+        /// Spec 011 §3.1b: f ← clamp(f + reversion × (1 − f) + volatility × (2u − 1), 1 ± band) for each produce good in id
+        /// order, u a seeded draw (stream DailyPrice, counter = day × goods + good). Price-controlled goods don't move.
+        /// </summary>
+        internal static void DrawDailyFactors(Simulation sim)
+        {
+            Definitions.MarketDefs defs = sim.Config.Game.Market;
+            MarketState m = sim.State.Market;
+            ulong day = (ulong)(sim.State.Clock.SimTime / Definitions.ClockDef.SecondsPerDay);
+            for (int g = 0; g < defs.Goods.Count; g++)
+            {
+                Definitions.GoodDef good = defs.Goods[g];
+                if (good.Kind != Definitions.GoodKind.Produce || good.PriceControlled) continue;
+                ulong r = Maths.Rng.Next(sim.State.Seed, Maths.RngStream.DailyPrice, 0, day * (ulong)defs.Goods.Count + (ulong)g);
+                Maths.Fixed u = Maths.Fixed.FromRaw((long)(r >> 32));
+                Maths.Fixed f = m.DailyFactor[g];
+                f = f + defs.Market.DailyReversion * (Maths.Fixed.One - f) + good.DailyVolatility * (u + u - Maths.Fixed.One);
+                Maths.Fixed lo = Maths.Fixed.One - good.DailyBand, hi = Maths.Fixed.One + good.DailyBand;
+                m.DailyFactor[g] = f < lo ? lo : f > hi ? hi : f;
+                m.TruckPriceYesterday[g] = m.TruckPrice[g];
+                m.TruckPrice[g] = MarketRules.Floor(sim, g); // held all day (spec 011 §3.1)
+            }
+        }
+
+        /// <summary>
+        /// The hands' held sales (spec 011 §3.1): min(held, stock not on offer) of each good in id order, up to the truck's
+        /// room, at the new day's price; what doesn't fit stays held.
+        /// </summary>
+        private static void SellHeld(Simulation sim)
+        {
+            Definitions.MarketDefs defs = sim.Config.Game.Market;
+            MarketState m = sim.State.Market;
+            for (int g = 0; g < defs.Goods.Count; g++)
+            {
+                Store.CutHeld(sim, g);
+                long q = System.Math.Min(m.HeldForTruck[g], MarketRules.TraderCapacityLeft(sim, g));
+                if (q <= 0) continue;
+                m.HeldForTruck[g] -= q;
+                Store.Take(sim, g, q);
+                long amount = Store.SellToTrader(sim, g, q, "held:" + defs.Goods[g].Id);
+                sim.Emit(new Events.HandSoldHeld(sim.State.Clock.SimTime, defs.Goods[g].Id, q, amount));
+            }
         }
 
         public const string MandiJob = "mandi.trip";
@@ -89,8 +172,11 @@ namespace Sim.Core.Market
             }
         }
 
-        /// <summary>The hourly local market (spec 004 §3.2): each produce good in id order.</summary>
-        private static void ClearHour(Simulation sim)
+        /// <summary>
+        /// The hourly local market (spec 004 §3.2): each produce good in id order. While the stall is paused (spec 011 §3.2) the
+        /// founder's offer adds nothing and the valley's market clears without it; the trader holds the floor only while here.
+        /// </summary>
+        private static void ClearHour(Simulation sim, bool paused)
         {
             Definitions.MarketDefs defs = sim.Config.Game.Market;
             MarketState m = sim.State.Market;
@@ -107,9 +193,9 @@ namespace Sim.Core.Market
                     Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = MarketRules.Ceiling(sim, g),
                     Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g),
                     OtherSupplyPerDay = defs.Region.ValleySupplyPerDay(g) + defs.Region.ImportCapacityPerDay(g),
-                    Eligible = !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
+                    Eligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
                     TraderMayTake = !hasMin || m.MinPrice[g] <= floor,
-                    TraderCapacityLeft = MarketRules.TraderCapacityLeft(sim, g),
+                    TraderCapacityLeft = defs.Truck != null && !m.TruckHere ? 0 : MarketRules.TraderCapacityLeft(sim, g),
                 };
                 ClearingResult r = MarketClearing.Clear(defs.Market, input);
                 m.Price[g] = r.Price;
@@ -122,11 +208,11 @@ namespace Sim.Core.Market
                 long amount = local + trader;
                 m.Offered[g] -= r.Sold + r.ToTrader;
                 m.Stock[g] -= r.Sold + r.ToTrader;
-                m.TraderBoughtToday[g] += r.ToTrader;
                 if (amount > 0)
                     sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.marketSales", "market:" + defs.Goods[g].Id,
                         new Finance.Posting(Finance.Account.Cash, amount), new Finance.Posting(Store.SalesAccount(sim, g), -amount));
                 sim.Emit(new Events.MarketSales(sim.State.Clock.SimTime, defs.Goods[g].Id, r.Sold, r.Price, r.ToTrader, floor, amount));
+                if (r.ToTrader > 0) Store.CountTraderPurchase(sim, g, r.ToTrader);
             }
             m.UnmetHead = (m.UnmetHead + 1) % defs.Market.UnmetWindowHours;
             m.Hours++;

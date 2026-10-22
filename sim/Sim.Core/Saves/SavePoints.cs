@@ -39,6 +39,12 @@ namespace Sim.Core.Saves
 
         /// <summary>The name an unreadable town was kept under (ADR 0041), or null.</summary>
         public string KeptAs { get; internal set; }
+
+        /// <summary>The town was moved into the 16 × 12 map (spec 010 §3.4): the remembered camera no longer fits.</summary>
+        public bool MigratedMap { get; internal set; }
+
+        /// <summary>The farm lane took the town's parcel <c>s5</c>, for the one-time card; else null.</summary>
+        public RoadTake RoadTake { get; internal set; }
     }
 
     /// <summary>
@@ -118,7 +124,7 @@ namespace Sim.Core.Saves
             {
                 LoadResult r = SaveCodec.Read(_store.Read(c.Value), config, _def.MinSchema);
                 if (r.Ok)
-                    return new LoadOutcome { State = r.State, File = c.Value, Restored = c.Value != Latest, SavedAtWallUtc = r.Header.SavedAtWallUtc };
+                    return new LoadOutcome { State = r.State, File = c.Value, Restored = c.Value != Latest, SavedAtWallUtc = r.Header.SavedAtWallUtc, MigratedMap = r.MigratedMap, RoadTake = r.RoadTake };
                 if (failed == null) failed = new LoadOutcome { File = c.Value, Error = r.Error, Detail = r.Detail };
                 if (r.Error != SaveError.CorruptSave) { failed = new LoadOutcome { File = c.Value, Error = r.Error, Detail = r.Detail }; break; }
             }

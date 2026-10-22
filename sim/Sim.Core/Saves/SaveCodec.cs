@@ -50,6 +50,12 @@ namespace Sim.Core.Saves
         public SaveHeader Header { get; internal set; }
         public GameState State { get; internal set; }
         public bool Ok { get { return Error == SaveError.None; } }
+
+        /// <summary>The save held the Phase 1 8 × 6 map and was moved into the 16 × 12 map (spec 010 §3.4): reset the camera.</summary>
+        public bool MigratedMap { get; internal set; }
+
+        /// <summary>Set when the farm lane took the save's parcel <c>s5</c>, for the one-time notice; else null.</summary>
+        public RoadTake RoadTake { get; internal set; }
     }
 
     /// <summary>Thrown while reading when the save names content the running build doesn't have.</summary>
@@ -71,7 +77,7 @@ namespace Sim.Core.Saves
         /// Raised whenever the state's fields change (spec 007 §3.1). From schema 3 on <c>minSchema</c> stays 3: a new schema ships a
         /// migration step in the readers (branch on <see cref="SaveReader.Schema"/>) and a frozen fixture save (ADR 0047 §3, AC-14).
         /// </summary>
-        public const int SchemaVersion = 4; // 4: labourers hired for a crop, a neighbour's tile and until (ADR 0048); 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
+        public const int SchemaVersion = 6; // 6: the trader's truck, daily prices and supermarket orders (spec 011); 5: the 16 × 12 village map, tile ids remapped (spec 010, ADR 0052); 4: labourers hired for a crop, a neighbour's tile and until (ADR 0048); 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
 
         public const int DefaultMaxLogEntries = 100_000;
 
@@ -122,6 +128,15 @@ namespace Sim.Core.Saves
                         state.CommandLog.Add(t, CommandCodec.Read(r));
                     }
                     if (payload.Position != payload.Length) throw new SaveFormatException("bytes after the command log");
+                    if (r.OldMap)
+                    {
+                        result.MigratedMap = true;
+                        result.RoadTake = MapMigration.TakeFarmLane(Simulation.FromState(config, state));
+                    }
+                    // The old history can't replay on the new map or under the truck's rules: the migrated town becomes the
+                    // replay base (spec 007 AC-6).
+                    if (r.OldMap || (result.Header.Schema < 6 && config.Game?.Market.Truck != null))
+                        state.CommandLog.Checkpoint(Encode(state, config, result.Header.SavedAtWallUtc, result.Header.ContentFingerprint, SchemaVersion, false));
                     result.State = state;
                 }
             }

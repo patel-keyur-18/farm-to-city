@@ -25,9 +25,9 @@ namespace Game.Presentation.Ui
         private bool _urgentShown, _held;
         private readonly VisualElement _weatherIcon, _storeFill, _timeCard, _cashPill, _storePill, _collectHolder;
         private Button _collect;
-        private readonly VisualElement _people, _badge;
-        private readonly Label _badgeText;
-        private int _badgeShown = -1;
+        private readonly VisualElement _people, _badge, _orders, _ordersBadge;
+        private readonly Label _badgeText, _ordersBadgeText;
+        private int _badgeShown = -1, _ordersShown = -1;
         private string _weatherId;
         private long _shownCash = long.MinValue, _targetCash;
         private int _readyShown = -1;
@@ -40,6 +40,7 @@ namespace Game.Presentation.Ui
         public Action OnMoney { get; set; }
         public Action OnMenu { get; set; }
         public Action OnAlerts { get; set; }
+        public Action OnOrders { get; set; }
 
         /// <summary>An urgent alert has just appeared (the bell, F08.5).</summary>
         public Action OnUrgent { get; set; }
@@ -203,6 +204,33 @@ namespace Game.Presentation.Ui
             _people.RegisterCallback<ClickEvent>(_ => { if (OnPeople != null) OnPeople(); });
             _layer.Add(_people);
 
+            // Beside People: the supermarket's orders (spec 011 §7), a paper shop bag with a badge for orders still open today.
+            _orders = RoundButton(150, IconBank.Orders, 96);
+            _orders.name = "Orders";
+            _orders.style.position = Position.Absolute;
+            _orders.style.right = 368; _orders.style.bottom = 28;
+            _orders[0].style.marginTop = -18;
+            Label ordersWord = UiKit.Text(strings.Get("hud.orders"), 26, UiKit.Ink, UiKit.Heading);
+            ordersWord.style.position = Position.Absolute;
+            ordersWord.style.bottom = -6;
+            _orders.Add(ordersWord);
+            _ordersBadge = new VisualElement { pickingMode = PickingMode.Ignore };
+            _ordersBadge.style.position = Position.Absolute;
+            _ordersBadge.style.right = -6; _ordersBadge.style.top = -6;
+            _ordersBadge.style.width = 54; _ordersBadge.style.height = 54;
+            _ordersBadge.style.backgroundColor = UiKit.Red;
+            UiKit.Radius(_ordersBadge, 27);
+            UiKit.Border(_ordersBadge, 4, UiKit.RedDark);
+            _ordersBadge.style.alignItems = Align.Center;
+            _ordersBadge.style.justifyContent = Justify.Center;
+            _ordersBadgeText = UiKit.Text("", 32, Color.white, UiKit.Heading);
+            _ordersBadge.Add(_ordersBadgeText);
+            _ordersBadge.style.display = DisplayStyle.None;
+            _orders.Add(_ordersBadge);
+            _orders.RegisterCallback<ClickEvent>(_ => { if (OnOrders != null) OnOrders(); });
+            _orders.style.display = DisplayStyle.None;
+            _layer.Add(_orders);
+
             // HUD figures never wrap: on a phone's fractional UI scale the measured width can round a hair short, and the last
             // digit then dropped onto a hidden second line ("12:4", "4,38").
             foreach (Label l in new[] { _date, _clock, _weather, _cash, _store, _forecast })
@@ -315,6 +343,16 @@ namespace Game.Presentation.Ui
                 _badgeText.text = hud.PeopleBadge.ToString();
                 _badge.style.display = hud.PeopleBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 if (popped) Bounce(_people);
+            }
+
+            _orders.style.display = hud.HasOrders ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_ordersShown != hud.OrdersBadge)
+            {
+                bool popped = hud.OrdersBadge > _ordersShown && _ordersShown >= 0 && animate;
+                _ordersShown = hud.OrdersBadge;
+                _ordersBadgeText.text = hud.OrdersBadge.ToString();
+                _ordersBadge.style.display = hud.OrdersBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                if (popped) Bounce(_orders);
             }
 
             bool enabled = hud.ReadyCount > 0;

@@ -1,6 +1,6 @@
 # 005. Ledger and credit
 
-- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18); inputs in store added by ADR 0034 (2026-10-18); credit rules amended by ADR 0038 (2026-10-18, Sprint 4 planning review)
+- Status: Approved (2026-10-17); report lines added by ADR 0032 (2026-10-18); inputs in store added by ADR 0034 (2026-10-18); credit rules amended by ADR 0038 (2026-10-18, Sprint 4 planning review); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.2 (account 1300 Owed by buyers: supermarket sales paid at 6:00)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, credit, personal bankruptcy, never stuck, liquidity); Time and world simulation (settlement cadence); Businesses (books); Learning layer (cash ledger, balance sheet); Balancing and testing (exact ledgers, never stuck, recoverable bankruptcy); Data model (`LedgerEntry`, `Loan`, `LenderDef`, `StartDef`)

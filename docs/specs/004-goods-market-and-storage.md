@@ -1,6 +1,6 @@
 # 004. Goods, market and storage
 
-- Status: Approved (2026-10-17), with the Sprint 1 review decisions and the Sprint 3 planning review changes (ADR 0034) in §10
+- Status: Approved (2026-10-17), with the Sprint 1 review decisions and the Sprint 3 planning review changes (ADR 0034) in §10; amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 (a daily price factor at 6:00), §3.2 (the stall paused midnight to 6:00), §3.3 (the trader is a truck from 6:00 to midnight with a total load; its counts reset at 6:00; `TraderAway`), §3.5 (fresh today, held for the truck)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Economy (Price model, Regional trader, Inflation); Land, farming and livestock (Storage and selling); Data model (`GoodDef`, `MarketDef`, `RegionDef`)

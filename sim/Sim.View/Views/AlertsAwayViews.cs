@@ -162,6 +162,20 @@ namespace Sim.View.Views
             Fixed indexFrom = Fixed.Zero, indexTo = Fixed.Zero;
             var pests = new List<string>();
             int becameReady = 0;
+            // Spec 011 §7: what the truck took, the orders and the hands' held sales.
+            var truckGrams = new List<KeyValuePair<string, long>>();
+            void Truck(string good, long q)
+            {
+                if (q <= 0) return;
+                int i = truckGrams.FindIndex(x => x.Key == good);
+                if (i < 0) truckGrams.Add(new KeyValuePair<string, long>(good, q));
+                else truckGrams[i] = new KeyValuePair<string, long>(good, truckGrams[i].Value + q);
+            }
+            var orders = new List<long>();
+            var delivered = new Dictionary<long, long>(); // keyed lookups only
+            var lapsed = new Dictionary<long, long>();
+            var orderGood = new Dictionary<long, string>();
+            long paid = 0, held = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -172,8 +186,23 @@ namespace Sim.View.Views
                         long local = MarketRules.Value(sim, sim.Config.Game.Market.IndexOf(m.GoodId), m.LocalQuantity, m.Price);
                         vm.MarketSales += local;
                         vm.TraderSales += m.Amount - local;
+                        Truck(m.GoodId, m.TraderQuantity);
                         break;
-                    case SoldToTrader t: vm.TraderSales += t.Amount; break;
+                    case SoldToTrader t: vm.TraderSales += t.Amount; Truck(t.GoodId, t.Quantity); break;
+                    case HandSoldHeld hs: held += hs.Quantity; break;
+                    case OrderPaid op: paid += op.Amount; break;
+                    case OrdersPosted posted:
+                        foreach (SupermarketOrder o in posted.Orders) { orders.Add(o.Id); orderGood[o.Id] = sim.Config.Game.Market.Goods[o.Good].Id; }
+                        break;
+                    case OrderDelivered od:
+                        if (!orders.Contains(od.OrderId)) { orders.Add(od.OrderId); orderGood[od.OrderId] = od.GoodId; }
+                        delivered.TryGetValue(od.OrderId, out long sofar);
+                        delivered[od.OrderId] = sofar + od.Quantity;
+                        break;
+                    case OrderLapsed ol:
+                        if (!orders.Contains(ol.OrderId)) { orders.Add(ol.OrderId); orderGood[ol.OrderId] = ol.GoodId; }
+                        lapsed[ol.OrderId] = ol.Left;
+                        break;
                     case MandiTripReturned r: vm.MandiSales += r.Net; break;
                     case DayLabourPaid d: vm.DayLabour += d.Amount; break;
                     case HomeUseEaten h: vm.HomeUse += h.Value; break;
@@ -199,6 +228,7 @@ namespace Sim.View.Views
             Money(vm.MarketSales, "away.market", AwayRow.Sales, "coin");
             Money(vm.TraderSales, "away.trader", AwayRow.Sales, "coin");
             Money(vm.MandiSales, "away.mandi", AwayRow.Sales, "coin");
+            Money(paid, "away.supermarketPaid", AwayRow.Orders, "coin");
             Money(vm.DayLabour, "away.dayLabour", AwayRow.DayLabour, "coin");
             Money(vm.HomeUse, "away.homeUse", AwayRow.HomeUse, "basket");
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
@@ -207,6 +237,27 @@ namespace Sim.View.Views
             // Only what ripened while away is news; things already waiting before don't bring the card back (ADR 0043 §8).
             if (becameReady > 0 && vm.ReadyCount > 0) rows.Add(new LineVm(s.Get("away.ready"), s.Plural("away.readyValue", vm.ReadyCount), "away", (long)AwayRow.Ready) { Icon = "basket" });
             foreach (KeyValuePair<long, LineVm> m in money) rows.Add(m.Value);
+
+            // The truck, the orders and the hands' held sales (spec 011 §7).
+            if (truckGrams.Count > 0)
+            {
+                truckGrams.Sort((a, b) => b.Value.CompareTo(a.Value));
+                var parts = new List<string>();
+                for (int i = 0; i < truckGrams.Count && i < 2; i++) parts.Add(s.Get("away.truckGood", "qty", ctx.Fmt.Kg(truckGrams[i].Value), "good", Names.Of(ctx, truckGrams[i].Key).ToLowerInvariant()));
+                rows.Add(new LineVm(s.Get("away.truck"), string.Join(", ", parts) + (truckGrams.Count > 2 ? s.Get("away.andMore") : ""), "away", (long)AwayRow.Truck) { Icon = "coin" });
+            }
+            if (held > 0) rows.Add(new LineVm(s.Get("away.held"), ctx.Fmt.Kg(held), "away", (long)AwayRow.Held) { Icon = "person_hand_m" });
+            foreach (long id in orders)
+            {
+                delivered.TryGetValue(id, out long d);
+                bool gone = lapsed.TryGetValue(id, out long left);
+                if (d == 0 && !gone) continue; // still open, nothing done yet: the Orders sheet shows it
+                bool open = false;
+                foreach (SupermarketOrder o in sim.State.Market.SupermarketOrders) open |= o.Id == id && o.Left > 0;
+                string value = !gone ? s.Get(open ? "away.orderSoFar" : "away.orderDelivered", "qty", ctx.Fmt.Kg(d))
+                    : d > 0 ? s.Get("away.orderPart", "qty", ctx.Fmt.Kg(d), "left", ctx.Fmt.Kg(left)) : s.Get("away.orderLapsed");
+                rows.Add(new LineVm(s.Get("away.supermarketOrder", "good", Names.Of(ctx, orderGood[id])), value, "away", (long)AwayRow.Orders) { Icon = "basket" });
+            }
 
             // The people rows (US-182) after the money.
             AwayVm people = AwayView.People(ctx, events);
@@ -247,7 +298,10 @@ namespace Sim.View.Views
             { "FruitRipe", Use.Motion }, { "FruitPicked", Use.Motion }, { "TreeRemoved", Use.StateOnly }, { "TreeSpent", Use.StateOnly }, 
             // Spec 004.
             { "MarketSales", Use.Motion }, { "GoodsSpoiled", Use.Away }, { "MandiTripStarted", Use.Motion }, { "MandiTripReturned", Use.Motion },
-            { "PriceIndexChanged", Use.Away }, { "SoldToTrader", Use.Motion }, { "InputsBought", Use.Motion },
+            { "PriceIndexChanged", Use.Away }, { "SoldToTrader", Use.Motion },
+            // Spec 011.
+            { "TruckArrived", Use.Motion }, { "TruckLeft", Use.Away }, { "HandSoldHeld", Use.Away },
+            { "OrdersPosted", Use.Alert }, { "OrderDelivered", Use.Motion }, { "OrderLapsed", Use.Away }, { "OrderPaid", Use.Motion }, { "InputsBought", Use.Motion },
             // Spec 005.
             { "LedgerReconciliationFailed", Use.StateOnly }, { "SeasonClosed", Use.Away }, { "LoanTaken", Use.Motion }, { "LoanRepayment", Use.Motion },
             { "LoanPaymentMissed", Use.Alert }, { "LoanRestructured", Use.StateOnly }, { "LoanDefaulted", Use.Alert }, { "FinalNotice", Use.Alert },

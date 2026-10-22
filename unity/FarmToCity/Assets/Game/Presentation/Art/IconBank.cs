@@ -15,6 +15,7 @@ namespace Game.Presentation.Art
         public static Sprite Bell { get { return SpriteBank.Rendered("icon_bell") ?? Basket; } }
         public static Sprite Cart { get { return SpriteBank.Rendered("icon_cart") ?? Basket; } }
         public static Sprite Ledger { get { return SpriteBank.Rendered("icon_menu") ?? Basket; } }
+        public static Sprite Orders { get { return SpriteBank.Rendered("icon_orders") ?? Basket; } }
 
         /// <summary>A skill star (ADR 0039 §7): 0 empty, 1 faded (possible), 2 solid (sure).</summary>
         public static Sprite Star(int kind) { return SpriteBank.Rendered("icon_star_" + kind); }

@@ -51,7 +51,7 @@ namespace Sim.Core.People
             };
             if (r.Schema >= 4)
             {
-                n.Tile = r.ReadInt();
+                n.Tile = r.ReadTile();
                 n.Until = r.ReadLong();
             }
             else if (r.ReadBool()) n.Until = PeopleRules.NextDailyPass(now); // schema 3: hired today, paid to the daily pass (ADR 0048 §4)
@@ -210,6 +210,9 @@ namespace Sim.Core.People
         StoreFull = 3,
         NoSavedSeed = 4,
         Paused = 5,
+
+        /// <summary>The store is full and the trader's truck is away (spec 011 §3.6b).</summary>
+        TraderAway = 6,
     }
 
     /// <summary>A standing order: one hand, one target (spec 006 §3.8). Target: a tile id or a tree slot id.</summary>
@@ -259,13 +262,15 @@ namespace Sim.Core.People
 
         internal static StandingOrder ReadFrom(SaveReader r)
         {
-            return new StandingOrder
+            var o = new StandingOrder
             {
                 HandId = r.ReadLong(), Kind = (OrderTargetKind)r.ReadInt(), Target = r.ReadLong(), Crop = r.ReadRef(ContentTable.Crop),
                 Seed = (Farm.SeedSource)r.ReadInt(), Fertiliser = r.ReadRef(ContentTable.Fertiliser), Sell = (SellRule)r.ReadInt(), MinPrice = r.ReadFixed(),
                 Once = r.ReadBool(), LastAction = (OrderAction)r.ReadInt(), LastAt = r.ReadLong(), LastQuantity = r.ReadLong(), LastAmount = r.ReadLong(),
                 Waiting = (OrderWait)r.ReadInt(),
             };
+            if (r.OldMap && o.Kind == OrderTargetKind.Field) o.Target = Saves.MapMigration.Remap((int)o.Target); // spec 010 §3.4
+            return o;
         }
 
         /// <summary>Orders are kept sorted by (hand, kind, target).</summary>
@@ -300,7 +305,7 @@ namespace Sim.Core.People
 
         internal static Construction ReadFrom(SaveReader r)
         {
-            return new Construction { Id = r.ReadLong(), TileId = r.ReadInt(), Cost = r.ReadLong(), JobId = r.ReadLong(), ReadyAt = r.ReadLong() };
+            return new Construction { Id = r.ReadLong(), TileId = r.ReadTile(), Cost = r.ReadLong(), JobId = r.ReadLong(), ReadyAt = r.ReadLong() };
         }
     }
 

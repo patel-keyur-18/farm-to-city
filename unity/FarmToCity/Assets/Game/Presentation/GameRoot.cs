@@ -133,7 +133,7 @@ namespace Game.Presentation
             _map = MapPresenter.Create(transform, _tweens, _ui);
             _map.Refresh(_mapVm, false);
             _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
-            _input.Focus(3.5f, 2.5f); // the inherited parcels
+            _input.Focus(_mapVm.HomeX, _mapVm.HomeY); // the yard (spec 010 §3.5)
 
             _sounds = new Sounds(gameObject);
             ApplyLookAndSound();
@@ -239,6 +239,7 @@ namespace Game.Presentation
                     case MarketSales m: earned += m.Amount; break;
                     case MandiTripReturned r: earned += r.Net; break;
                     case DayLabourPaid d: earned += d.Amount; break;
+                    case OrderPaid op: earned += op.Amount; break;
                     case CropReady _: case BedReady _: case FruitRipe _: ready |= !away; break;
                     case CropSown _: case TreePlanted _: sown |= !away; break;
                     case SeasonClosed c: if (!away) closed = c.Period; break;
@@ -258,7 +259,13 @@ namespace Game.Presentation
                     case MarketSales _:
                     case MandiTripReturned _:
                     case DayLabourPaid _:
+                    case OrderPaid _:
                         coins = true;
+                        break;
+                    case OrdersPosted _: if (!away) Toast(_strings.Get("toast.orders")); break;
+                    case OrderDelivered d:
+                        // To the supermarket's van at the truck stop: from the store pill to the van (spec 011 §7).
+                        if (!away) _fx.Fly(IconBank.Good(d.GoodId), _hud.ScreenCentre(_hud.StoreTarget), _input.WorldToScreen(_map.VanWorld), 3, null);
                         break;
                     case PestWarning p:
                         Toast(_strings.Get("toast.pests"));
@@ -312,6 +319,8 @@ namespace Game.Presentation
                     OpenSheet(who != null ? new SheetRequest("Hand", who.Id) : new SheetRequest("People", 0));
                     break;
                 }
+                case HitKind.Truck: OpenSheet(new SheetRequest("Store", 0)); break; // the trader's truck (spec 011 §7)
+                case HitKind.Van: OpenSheet(new SheetRequest("Orders", 0)); break;
                 case HitKind.Slot: OpenSheet(new SheetRequest("Slot", hit.Id)); break;
                 case HitKind.Bed: OpenSheet(new SheetRequest("Bed", hit.Id)); break;
                 default: OpenSheet(new SheetRequest("Tile", hit.Id)); break;
@@ -359,7 +368,7 @@ namespace Game.Presentation
                 request = new SheetRequest("Tile", request.Id);
             }
             if (request.Kind == "Settings") _townFiles = _saves.TownFiles().Count;
-            _guide.SheetVisited(request.Kind);
+            _guide.SheetVisited(request.Kind, Sim);
             _ctx.LocalNow = DateTime.Now;
             _open = request;
             ShowCurrentSheet(refreshOnly: false);
@@ -378,7 +387,10 @@ namespace Game.Presentation
                     break;
                 case "Order":
                     bool tree = r.Arg != null && r.Arg.StartsWith("tree", StringComparison.Ordinal);
-                    _sheet.Show(OrderSheet.Build(_ctx, tree ? OrderTargetKind.Tree : OrderTargetKind.Field, r.Id, r.Arg), refreshOnly);
+                    OrderTargetKind kind = tree ? OrderTargetKind.Tree : OrderTargetKind.Field;
+                    // A field's crop is chosen on the sow sheet, with the fertiliser and every figure (ADR 0059 §3).
+                    if (OrderSheet.IsCropStep(kind, r.Arg) && PeopleWords.OrderHand(Sim, kind, r.Id) != null) _sheet.Show(OrderSheet.Crops(_ctx, r.Id, r.Arg), refreshOnly);
+                    else _sheet.Show(OrderSheet.Build(_ctx, kind, r.Id, r.Arg), refreshOnly);
                     break;
                 case "HutPlacement": if (!refreshOnly) StartPlacing(); break;
                 case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
@@ -395,7 +407,20 @@ namespace Game.Presentation
             }
         }
 
-        private void ShowSow(int tile, bool refresh = false)
+        /// <summary>A fertiliser chip: on the sow sheet it changes this sowing; on a hand's order, the order's (ADR 0059 §3).</summary>
+        private void OnFertiliser(string f)
+        {
+            if (_open.Value.Kind == "Order")
+            {
+                _open = new SheetRequest("Order", _open.Value.Id, "+" + f);
+                ShowCurrentSheet(refreshOnly: true);
+                return;
+            }
+            _fertiliser = f;
+            ShowSow((int)_open.Value.Id, refresh: true);
+        }
+
+                private void ShowSow(int tile, bool refresh = false)
         {
             _open = new SheetRequest("Sow", tile);
             _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser), refresh);

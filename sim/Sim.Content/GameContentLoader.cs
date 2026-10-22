@@ -70,7 +70,7 @@ namespace Sim.Content
             JObject l = Object(Required(o, root, "land"), lp);
             OnlyFields(l, lp, "moistureByWeather", "fertilityFactorCurve", "fallowRecoveryPerSeason", "acreBasePrice",
                 "fertilityPriceMin", "fertilityPriceMax", "quickSaleFactor", "fieldEdgeSlotsPerAcre",
-                "minShadeFactor");
+                "minShadeFactor", "roadTakeFactor");
 
             // Stored in the declared order of the weather types, never in JSON object order.
             string mp = lp + ".moistureByWeather";
@@ -130,14 +130,19 @@ namespace Sim.Content
             return new LandDef(moistureList, curve, Bounded(l, lp, "fallowRecoveryPerSeason", "0", "25"), acrePrice,
                 fpMin, fpMax, Bounded(l, lp, "quickSaleFactor", "0.3", "1"), slots,
                 Bounded(l, lp, "minShadeFactor", "0.5", "1"),
-                Bounded(well, wp, "moistureFloor", "0", "100"), wellTiles);
+                Bounded(well, wp, "moistureFloor", "0", "100"), wellTiles,
+                l["roadTakeFactor"] == null ? Fixed.One : Bounded(l, lp, "roadTakeFactor", "1", "5"));
         }
+
+        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank" };
+
+        private static bool IsVillageLand(Terrain t) { return t == Terrain.Road || t == Terrain.Village || t == Terrain.Commons || t == Terrain.Bank; }
 
         private static MapDef LoadMap(string json, List<SoilDef> soils, List<DrainageDef> drainages)
         {
             const string root = "map";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "width", "height", "tiles", "parcels");
+            OnlyFields(o, root, "width", "height", "tiles", "parcels", "places");
             int width = Int(Required(o, root, "width"), root + ".width");
             Range(width, 2, 16, root + ".width");
             int height = Int(Required(o, root, "height"), root + ".height");
@@ -153,8 +158,9 @@ namespace Sim.Content
                 JObject t = Object(tileTokens[i], p);
                 OnlyFields(t, p, "terrain", "soil", "drainage", "fertility", "moisture");
                 string terrain = String(Required(t, p, "terrain"), p + ".terrain");
-                if (terrain != "farm" && terrain != "yard" && terrain != "quarters") throw new ContentException(p + ".terrain", "expected farm, yard or quarters");
-                tiles.Add(new TileDef(terrain == "farm" ? Terrain.Farm : terrain == "yard" ? Terrain.Yard : Terrain.Quarters,
+                int kind = System.Array.IndexOf(TerrainNames, terrain);
+                if (kind < 0) throw new ContentException(p + ".terrain", "expected " + string.Join(", ", TerrainNames));
+                tiles.Add(new TileDef((Terrain)kind,
                     Ref(t, p, "soil", soils.ConvertAll(x => x.Id)), Ref(t, p, "drainage", drainages.ConvertAll(x => x.Id)),
                     Bounded(t, p, "fertility", "0", "100"), Bounded(t, p, "moisture", "0", "100")));
             }
@@ -167,10 +173,12 @@ namespace Sim.Content
             {
                 string p = Index(root + ".parcels", i);
                 JObject pa = Object(parcelTokens[i], p);
-                OnlyFields(pa, p, "id", "tiles", "locationFactor");
+                OnlyFields(pa, p, "id", "tiles", "locationFactor", "forSale", "owner");
                 string id = UniqueId(pa, p, parcels.ConvertAll(x => x.Id));
+                bool forSale = pa["forSale"] == null || Bool(pa["forSale"], p + ".forSale");
                 List<JToken> ids = Array(Required(pa, p, "tiles"), p + ".tiles");
-                if (ids.Count < 1 || ids.Count > 4) throw new ContentException(p + ".tiles", "a parcel has 1–4 tiles (has " + ids.Count + ")");
+                int most = forSale ? 4 : tiles.Count;
+                if (ids.Count < 1 || ids.Count > most) throw new ContentException(p + ".tiles", "a parcel has 1–" + most + " tiles (has " + ids.Count + ")");
                 var list = new List<int>();
                 for (int k = 0; k < ids.Count; k++)
                 {
@@ -181,12 +189,33 @@ namespace Sim.Content
                     owner[tile] = i;
                     list.Add(tile);
                 }
-                parcels.Add(new ParcelDef(id, list, Bounded(pa, p, "locationFactor", "0.5", "2")));
+                // The village's land (road, centre, commons, bank) is never mixed with farmland (spec 010 §3.1).
+                bool village = IsVillageLand(tiles[list[0]].Terrain);
+                foreach (int tile in list)
+                    if (IsVillageLand(tiles[tile].Terrain) != village) throw new ContentException(p + ".tiles", "mixes the village's land with farmland");
+                if (village && forSale) throw new ContentException(p + ".forSale", "the village's land is never for sale");
+                string ownerKey = pa["owner"] == null ? null : String(pa["owner"], p + ".owner");
+                Fixed location = pa["locationFactor"] == null && village ? Fixed.One : Bounded(pa, p, "locationFactor", "0.5", "2");
+                parcels.Add(new ParcelDef(id, list, location, forSale, ownerKey));
             }
             for (int t = 0; t < owner.Length; t++)
                 if (owner[t] < 0) throw new ContentException(Index(root + ".tiles", t), "the tile is in no parcel");
 
-            return new MapDef(width, height, tiles, parcels);
+            var places = new List<PlaceDef>();
+            List<JToken> placeTokens = o["places"] == null ? new List<JToken>() : Array(o["places"], root + ".places");
+            for (int i = 0; i < placeTokens.Count; i++)
+            {
+                string p = Index(root + ".places", i);
+                JObject pl = Object(placeTokens[i], p);
+                OnlyFields(pl, p, "id", "kind", "tile");
+                string id = UniqueId(pl, p, places.ConvertAll(x => x.Id));
+                int tile = Int(Required(pl, p, "tile"), p + ".tile");
+                Range(tile, 0, tiles.Count - 1, p + ".tile");
+                if (tiles[tile].Terrain != Terrain.Village) throw new ContentException(p + ".tile", "places stand on village tiles");
+                places.Add(new PlaceDef(id, String(Required(pl, p, "kind"), p + ".kind"), tile));
+            }
+
+            return new MapDef(width, height, tiles, parcels, places);
         }
 
         private static List<BuildingDef> LoadBuildings(string json)

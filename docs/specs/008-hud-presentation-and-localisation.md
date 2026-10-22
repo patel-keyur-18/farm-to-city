@@ -91,8 +91,8 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 
 | Rule | Behaviour |
 | --- | --- |
-| Grid | The 8 × 6 map (ADR 0030) on an isometric tilemap; the camera starts on the inherited parcels; pinch zoom between the whole map and about 3 acres; drag to pan, clamped to the map |
-| Tiles | By state: unowned (desaturated), owned farm (soil type), vacant, growing (3 stages by progress: under a third, under two thirds, beyond), ready (full stage plus a bobbing "ready" marker), waiting past the grace (a "spoiling" marker, ADR 0034), the yard (grass), the river |
+| Grid | The 8 × 6 map (ADR 0030; Phase 2: 16 × 12 with natural terrain past the edge and the camera opening on the yard, spec 010 §3.5–3.6) on an isometric tilemap; the camera starts on the inherited parcels; pinch zoom between the whole map and about 3 acres; drag to pan, clamped to the map |
+| Tiles | By state: unowned (desaturated; from Phase 2 neighbours' seasonal crops, for-sale signs and a boundary line on owned land instead, spec 010 §3.7), owned farm (soil type), vacant, growing (3 stages by progress: under a third, under two thirds, beyond), ready (full stage plus a bobbing "ready" marker), waiting past the grace (a "spoiling" marker, ADR 0034), the yard (grass), the river |
 | Slots | Tree sprites in yard and field-edge slots: sapling, young, mature, ripe |
 | Buildings | Hut, well, the hand's hut (and its construction stage), the mandi cart away (the cart sprite leaves the yard) |
 | Selection | Tap a tile, slot, bed or building: it bounces (§3.12) and its sheet opens |

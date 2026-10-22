@@ -15,7 +15,7 @@ namespace Sim.Core.Tests
     /// <summary>The Hamlet gate (spec 009 §3.6, AC-8; ADR 0030, 0032).</summary>
     public class EraTests
     {
-        private static readonly int[] SixAcres = { 18, 19, 20, 26, 27, 28 };
+        private static readonly int[] SixAcres = { 84, 85, 86, 100, 101, 102 };
         private static readonly Fixed Good = Fixed.Parse("0.95");
 
         private static int Unlocks(Simulation sim) { return sim.PendingEvents.OfType<EraUnlocked>().Count(); }
@@ -34,13 +34,13 @@ namespace Sim.Core.Tests
         public void HamletGate_RealHarvestCounts()
         {
             Simulation sim = Start();
-            Ok(sim, new Sow(sim.State.Clock.SimTime, 20, "radish", SeedSource.Certified, "none"));
+            Ok(sim, new Sow(sim.State.Clock.SimTime, 86, "radish", SeedSource.Certified, "none"));
             sim.AdvanceTo(sim.State.Clock.SimTime + 3 * Hour);
             sim.DrainEvents();
-            Ok(sim, new Harvest(sim.State.Clock.SimTime, 20));
+            Ok(sim, new Harvest(sim.State.Clock.SimTime, 86));
             CropHarvested h = Last<CropHarvested>(sim);
             EraProgress p = Last<EraProgress>(sim);
-            Assert.That(sim.State.Era.SeasonAcres, Is.EqualTo(new[] { 20 }));
+            Assert.That(sim.State.Era.SeasonAcres, Is.EqualTo(new[] { 86 }));
             Assert.That(sim.State.Era.SeasonCareSum, Is.EqualTo(h.Breakdown.Care));
             Assert.That(p.Acres, Is.EqualTo(1));
             Assert.That(p.MeanCare, Is.EqualTo(h.Breakdown.Care));
@@ -57,7 +57,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.PendingEvents.OfType<EraUnlocked>().Single().EraId, Is.EqualTo("hamlet"));
             Assert.That(sim.State.Era.Current, Is.EqualTo(1));
             Assert.That(sim.State.Era.UnlockedAt, Is.EqualTo(sim.State.Clock.SimTime));
-            EraRules.OnHarvest(sim, 18, Good);
+            EraRules.OnHarvest(sim, 84, Good);
             EraRules.OnSeasonClosed(sim, 100, sim.Period);
             Assert.That(Unlocks(sim), Is.EqualTo(1), "once");
         }
@@ -66,7 +66,7 @@ namespace Sim.Core.Tests
         public void HamletGate_SixHarvestsOnFewerAcresStayLocked()
         {
             Simulation sim = Ready();
-            foreach (int t in new[] { 18, 19, 20, 26, 27, 27, 27 }) EraRules.OnHarvest(sim, t, Good);
+            foreach (int t in new[] { 84, 85, 86, 100, 101, 101, 101 }) EraRules.OnHarvest(sim, t, Good);
             Assert.That(Unlocks(sim), Is.EqualTo(0));
             Assert.That(EraRules.Acres(sim, sim.Period), Is.EqualTo(5));
         }
@@ -82,7 +82,7 @@ namespace Sim.Core.Tests
             foreach (int t in SixAcres.Take(5)) EraRules.OnHarvest(sim, t, Fixed.Parse("0.9"));
             EraRules.OnHarvest(sim, SixAcres[5], Fixed.Parse("0.88"));
             Assert.That(Unlocks(sim), Is.EqualTo(0), "mean 0.897");
-            EraRules.OnHarvest(sim, 18, Fixed.Parse("0.95")); // every harvest counts in the mean: 0.904
+            EraRules.OnHarvest(sim, 84, Fixed.Parse("0.95")); // every harvest counts in the mean: 0.904
             Assert.That(Unlocks(sim), Is.EqualTo(1));
         }
 
@@ -95,7 +95,7 @@ namespace Sim.Core.Tests
             Assert.That(Unlocks(sim), Is.EqualTo(0), "building");
             sim.AdvanceTo(sim.State.Clock.SimTime + 24 * Hour); // the hut is done, but the check waits for a harvest or a close
             Assert.That(Unlocks(sim), Is.EqualTo(0));
-            EraRules.OnHarvest(sim, 18, Good);
+            EraRules.OnHarvest(sim, 84, Good);
             Assert.That(Unlocks(sim), Is.EqualTo(1));
         }
 
@@ -141,7 +141,7 @@ namespace Sim.Core.Tests
             Assert.That(load.Ok, Is.True, load.Detail);
             GameState copy = load.State;
             Assert.That(copy.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
-            Assert.That(copy.Era.SeasonAcres, Is.EqualTo(new[] { 18, 19, 20, 26 }));
+            Assert.That(copy.Era.SeasonAcres, Is.EqualTo(new[] { 84, 85, 86, 100 }));
         }
     }
 }

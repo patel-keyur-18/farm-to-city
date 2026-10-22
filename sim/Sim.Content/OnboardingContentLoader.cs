@@ -12,14 +12,14 @@ namespace Sim.Content
         public static readonly string[] OnboardingEvents =
         {
             "GardenPicked", "SoldToTrader", "MarketSales", "MandiTripReturned", "AwayAdvanceCompleted", "CropHarvested",
-            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked",
+            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked", "OrdersPosted",
         };
 
         /// <summary>The commands a <c>rejection</c> trigger can name.</summary>
-        public static readonly string[] OnboardingCommands = { "Sow", "BuildHandHut", "HireLabourers", "OfferContract", "BuyParcel" };
+        public static readonly string[] OnboardingCommands = { "Sow", "BuildHandHut", "HireLabourers", "OfferContract", "BuyParcel", "SellToTrader", "Harvest", "PickGarden", "PickFruit" };
 
         private static readonly string[] GoalKinds = { "chapterClosed", "bedGrowing", "sheetVisited", "event", "cropSown" };
-        private static readonly string[] TriggerKinds = { "step", "event", "storeAbovePercent", "traderFull", "seasonStart", "careBelowForHours", "rejection", "cashBelowHutCost", "awayCard" };
+        private static readonly string[] TriggerKinds = { "step", "event", "storeAbovePercent", "traderFull", "seasonStart", "careBelowForHours", "rejection", "cashBelowHutCost", "awayCard", "storeTruckAway" };
 
         /// <summary>Loads <c>onboarding.json</c> and <c>eras.json</c> (spec 009 §4, AC-1) and checks every kind, id and reference.</summary>
         public static OnboardingDefs LoadOnboarding(string onboardingJson, string erasJson)

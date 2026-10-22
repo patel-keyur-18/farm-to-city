@@ -1,6 +1,6 @@
 # 002. Land and soil
 
-- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17. Amended by ADR 0032 (well acres, 2026-10-18)
+- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17. Amended by ADR 0032 (well acres, 2026-10-18); by spec 010 (ADR 0052, 0053: the 16 × 12 map, new terrain kinds, `forSale`, `NotForSale`, location factors by geography; Phase 2)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, Fruit trees, Irrigation ladder); Assets and wealth (Farmland, Liquidity); City building (land bought parcel by parcel); Data model (`Tile` / `Parcel`)
@@ -45,7 +45,7 @@ All soil quantities are `Fixed` (ADR 0018). Every `Fixed` multiply rounds to nea
 
 | Rule | Behaviour | Bounds |
 | --- | --- | --- |
-| Tile | One acre. Has a `terrain` (Farm or Yard), a soil type, a drainage class, fertility and moisture. Tile id = `y × width + x`; tiles are always processed in id order | Map from `MapDef`, default 8 × 6 tiles |
+| Tile | One acre. Has a `terrain` (Farm or Yard), a soil type, a drainage class, fertility and moisture. Tile id = `y × width + x`; tiles are always processed in id order | Map from `MapDef`, default 8 × 6 tiles (Phase 2: 16 × 12, spec 010) |
 | Parcel | A group of tiles bought and sold together. Every tile belongs to exactly one parcel | 1–4 tiles per parcel |
 | Inherited parcels | Listed in `StartDef.inheritedParcels`. Owned from the start and **protected**: they can never be sold, seized or used as collateral (ADR 0009, 0030). Everything on them (hut, well, trees) is protected with them | At least one; together they hold a yard tile and the well |
 | Adjacency | A parcel can be bought only if one of its tiles shares an edge (not a corner) with an owned tile | 4-neighbour |
@@ -189,7 +189,7 @@ ADR 0021's `TreeSlotDef` (slot counts and shade) is realised as `LandDef.fieldEd
 | `inheritedParcels` | list of parcel ids | `home_a`, `home_b` | Non-empty, no duplicates; together they hold at least one yard tile and the well (ADR 0030) |
 | `buildings` | list of (building id, tile id) | hut and well on the yard tile 21 | Yard tiles of the inherited parcels only |
 
-Default map (8 × 6, 19 parcels of 1–4 acres; `H` = inherited, `y` = yard; tile id = y × 8 + x):
+Default map, Phase 1 (superseded in Phase 2 by spec 010 §3.2, where this farm sits at columns 2–9, rows 3–8) (8 × 6, 19 parcels of 1–4 acres; `H` = inherited, `y` = yard; tile id = y × 8 + x):
 
 ```
       x=0    x=1    x=2    x=3    x=4    x=5    x=6    x=7

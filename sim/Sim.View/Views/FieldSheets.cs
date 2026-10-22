@@ -24,7 +24,12 @@ namespace Sim.View.Views
             Tile tile = sim.State.Land.Tiles[tileId];
             Parcel parcel = sim.State.Land.Parcels[tile.ParcelId];
             string soil = ctx.Strings.Get(defs.Soils[tile.Soil].NameKey);
-            if (!parcel.Owned) return Unowned(ctx, tile, parcel);
+            switch (tile.Terrain)
+            {
+                case Terrain.Village: return Place(ctx, tile);
+                case Terrain.Road: case Terrain.Commons: case Terrain.Bank: return VillageLand(ctx, tile);
+            }
+            if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
 
@@ -112,6 +117,40 @@ namespace Sim.View.Views
                 vm.Actions.Add(new ActionVm("buyLoan", ctx.Strings.Get("land.buyLoan"), can ? ctx.Strings.Get("land.buyLoanDetail", "down", ctx.Fmt.Coins(price - loan)) : null,
                     ActionKind.Open, can, reason, null, new SheetRequest("LandLoan", tile.Id)));
             }
+            return vm;
+        }
+
+        /// <summary>A place in the village centre (spec 010 §3.3): what it is, and the chemist's and the dealer's own actions.</summary>
+        private static SheetVm Place(ViewContext ctx, Tile tile)
+        {
+            Simulation sim = ctx.Sim;
+            string kind = "house";
+            foreach (PlaceDef p in sim.Config.Game.Map.Places) if (p.Tile == tile.Id) kind = p.Kind;
+            var vm = new SheetVm { Icon = "place_" + kind, Title = ctx.Strings.Get("place." + kind), Subtitle = ctx.Strings.Get("place." + kind + ".line") };
+            if (kind == "chemist")
+                vm.Actions.Add(ActionVm.Checked(ctx, "medicine", ctx.Strings.Get("place.chemist.buy"),
+                    ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.MedicineCost)), ActionKind.Primary, at => new BuyMedicine(at)));
+            if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
+            return vm;
+        }
+
+        /// <summary>The village's own land (spec 010): a road acre, the commons, the river bank. Never for sale, never priced.</summary>
+        private static SheetVm VillageLand(ViewContext ctx, Tile tile)
+        {
+            string key = tile.Terrain == Terrain.Road ? "road" : tile.Terrain == Terrain.Commons ? "commons" : "bank";
+            return new SheetVm { Icon = key, Title = ctx.Strings.Get("village." + key), Subtitle = ctx.Strings.Get("village." + key + ".line") };
+        }
+
+        /// <summary>A neighbour's farm not for sale yet (spec 010 §3.7): whose it is, its size and soil, and no price.</summary>
+        private static SheetVm NotForSale(ViewContext ctx, Tile tile, Parcel parcel)
+        {
+            GameDefs defs = ctx.Sim.Config.Game;
+            ParcelDef def = defs.Map.Parcels[parcel.Id];
+            string name = def.OwnerKey != null ? ctx.Strings.Get(def.OwnerKey) : ctx.Strings.Get("land.neighbour");
+            // The size goes in the subtitle: a number on a row would need a Why? (ADR 0043), and there's nothing to explain.
+            var vm = new SheetVm { Icon = "field", Title = ctx.Strings.Get("land.ownerFarm", "name", name),
+                Subtitle = ctx.Strings.Get("land.notForSale") + " · " + ctx.Strings.Plural("land.acres", def.Tiles.Count) };
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("land.soil"), ctx.Strings.Get(defs.Soils[tile.Soil].NameKey)));
             return vm;
         }
 

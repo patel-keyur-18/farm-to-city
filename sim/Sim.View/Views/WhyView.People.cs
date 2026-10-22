@@ -21,6 +21,9 @@ namespace Sim.View.Views
         Seasons = 7,
         Index = 8,
         People = 9,
+        Truck = 10,
+        Orders = 11,
+        Held = 12,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

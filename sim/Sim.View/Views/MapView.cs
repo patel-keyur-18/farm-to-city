@@ -15,6 +15,12 @@ namespace Sim.View.Views
 
         /// <summary>The labour quarters: hands' huts (ADR 0040).</summary>
         Quarters = 3,
+
+        /// <summary>The village's land (spec 010): a road acre, the village centre, the grazing commons, the river bank.</summary>
+        Road = 4,
+        Village = 5,
+        Commons = 6,
+        Bank = 7,
     }
 
     /// <summary>What stands on a field (spec 008 §3.4): vacant, growing in three stages, ready, or waiting past its grace.</summary>
@@ -59,6 +65,18 @@ namespace Sim.View.Views
 
         /// <summary>Fertility 0..1, for the soil's shade of brown.</summary>
         public float Fertility { get; internal set; }
+
+        /// <summary>A neighbour's field: the season's crop drawn half-grown, or null for fallow (spec 010 §3.7; no sim state).</summary>
+        public string NeighbourCrop { get; internal set; }
+
+        /// <summary>A road acre's links to the road acres beside it: 1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1 (and off the map's edge).</summary>
+        public int RoadLinks { get; internal set; }
+
+        /// <summary>The place on a village tile (<c>house</c>, <c>temple</c>, …), else null (spec 010 §3.3).</summary>
+        public string Place { get; internal set; }
+
+        /// <summary>Which look of its place: houses come in two (by tile).</summary>
+        public int Variant { get; internal set; }
     }
 
     public enum TreeStage
@@ -159,10 +177,62 @@ namespace Sim.View.Views
         public long SimTime { get; internal set; }
         public int Season { get; internal set; }
         public long SecondOfDay { get; internal set; }
+
+        /// <summary>Where the camera opens: the middle of the yard, in tile coordinates (spec 010 §3.5).</summary>
+        public float HomeX { get; internal set; }
+        public float HomeY { get; internal set; }
+
+        /// <summary>
+        /// The trader's truck (spec 011 §7): its road from the district road's east end up to the stop by the labour quarters (tile
+        /// ids, the stop last), whether it is here, and the supermarket's van at the stop while today's orders are open.
+        /// </summary>
+        public List<int> TruckRoute { get; } = new List<int>();
+        public bool TruckHere { get; internal set; }
+        public bool VanHere { get; internal set; }
     }
 
     public static class MapView
     {
+        /// <summary>
+        /// The truck's road: a breadth-first search over road acres from the stop (the road acre beside the labour quarters) to the
+        /// road's end on the map's east edge (or any edge), neighbours in a fixed order so it is the same every time.
+        /// </summary>
+        private static void TruckRoute(MapVm map)
+        {
+            int w = map.Width, h = map.Height;
+            bool Road(int x, int y) { return x >= 0 && y >= 0 && x < w && y < h && map.Tiles[y * w + x].Kind == TileKind.Road; }
+            int stop = -1;
+            foreach (TileVm t in map.Tiles)
+            {
+                if (t.Kind != TileKind.Quarters) continue;
+                foreach (int[] d in new[] { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 0, -1 }, new[] { -1, 0 } })
+                    if (stop < 0 && Road(t.X + d[0], t.Y + d[1])) stop = (t.Y + d[1]) * w + t.X + d[0];
+            }
+            if (stop < 0) return;
+            var parent = new int[w * h];
+            for (int i = 0; i < parent.Length; i++) parent[i] = -2;
+            var queue = new Queue<int>();
+            queue.Enqueue(stop);
+            parent[stop] = -1;
+            int entry = -1, edge = -1;
+            while (queue.Count > 0)
+            {
+                int c = queue.Dequeue();
+                int cx = c % w, cy = c / w;
+                if (cx == w - 1 && entry < 0) entry = c;
+                if ((cx == 0 || cy == 0 || cx == w - 1 || cy == h - 1) && edge < 0 && c != stop) edge = c;
+                foreach (int[] d in new[] { new[] { 1, 0 }, new[] { 0, 1 }, new[] { -1, 0 }, new[] { 0, -1 } })
+                {
+                    int nx = cx + d[0], ny = cy + d[1];
+                    if (!Road(nx, ny) || parent[ny * w + nx] != -2) continue;
+                    parent[ny * w + nx] = c;
+                    queue.Enqueue(ny * w + nx);
+                }
+            }
+            if (entry < 0) entry = edge;
+            for (int c = entry; c >= 0; c = parent[c]) map.TruckRoute.Add(c);
+        }
+
         public static MapVm Build(ViewContext ctx)
         {
             Simulation sim = ctx.Sim;
@@ -176,17 +246,26 @@ namespace Sim.View.Views
                 Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400,
             };
 
+            var places = new Dictionary<int, string>();
+            foreach (PlaceDef p in defs.Map.Places) places[p.Tile] = p.Kind;
+            int yards = 0;
             foreach (Tile t in land.Tiles)
             {
                 Parcel parcel = land.Parcels[t.ParcelId];
+                ParcelDef pdef = defs.Map.Parcels[t.ParcelId];
                 var vm = new TileVm
                 {
                     Id = t.Id, X = t.Id % defs.Map.Width, Y = t.Id / defs.Map.Width,
-                    Kind = !parcel.Owned ? TileKind.Unowned : t.Terrain == Terrain.Yard ? TileKind.Yard : t.Terrain == Terrain.Quarters ? TileKind.Quarters : TileKind.Farm,
+                    Kind = Kind(t.Terrain, parcel.Owned),
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
                     WellAcre = LandSystem.IsWellTile(defs, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
-                if (!parcel.Owned && defs.Map.Parcels[t.ParcelId].Tiles[0] == t.Id && LandSystem.IsAdjacentToOwned(sim, t.ParcelId)) vm.ForSaleSign = true;
+                // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
+                if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
+                if (vm.Kind == TileKind.Unowned) vm.NeighbourCrop = NeighbourCrop(defs.Soils[t.Soil].Id, t.ParcelId, map.Season);
+                if (vm.Kind == TileKind.Road) vm.RoadLinks = RoadLinks(land, defs.Map, t.Id);
+                if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.Variant = (vm.X + vm.Y) % 2; }
+                if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
                 Crop crop = sim.State.Farm.CropOn(t.Id);
                 if (crop != null)
                 {
@@ -197,6 +276,13 @@ namespace Sim.View.Views
                     vm.Stage = crop.State == CropState.Ready ? (now > crop.ReadyAt + grace ? CropStage.Spoiling : CropStage.Ready) : GrowingStage(vm.Progress);
                 }
                 map.Tiles.Add(vm);
+            }
+
+            if (defs.Market.Truck != null)
+            {
+                TruckRoute(map);
+                map.TruckHere = sim.State.Market.TruckHere;
+                map.VanHere = sim.State.Market.SupermarketOrders.Count > 0 && Sim.Core.Market.Supermarket.DeliveryOpen(sim);
             }
 
             var perTile = new Dictionary<int, int>();
@@ -235,10 +321,52 @@ namespace Sim.View.Views
                 map.Beds.Add(vm);
             }
 
+            if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
+
             foreach (Building b in land.Buildings)
                 map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
             AddPeople(ctx, map);
             return map;
+        }
+
+        private static TileKind Kind(Terrain t, bool owned)
+        {
+            switch (t)
+            {
+                case Terrain.Road: return TileKind.Road;
+                case Terrain.Village: return TileKind.Village;
+                case Terrain.Commons: return TileKind.Commons;
+                case Terrain.Bank: return TileKind.Bank;
+            }
+            if (!owned) return TileKind.Unowned;
+            return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : TileKind.Farm;
+        }
+
+        /// <summary>
+        /// What a neighbour grows this season (spec 010 §3.7), stable per parcel, null for fallow: Spring potato, radish or fallow;
+        /// the dry Summer mostly fallow, some lentils; the Monsoon mostly rice (sandy land and a third lie fallow); Winter wheat or potato.
+        /// </summary>
+        public static string NeighbourCrop(string soil, int parcel, int season)
+        {
+            int k = ((parcel * 7 + season * 3) % 3 + 3) % 3;
+            switch (season)
+            {
+                case 0: return k == 0 ? "potato" : k == 1 ? "radish" : null;
+                case 1: return k == 0 ? "lentils" : null;
+                case 2: return soil == "sandy" || k == 2 ? null : "rice";
+                default: return k == 1 ? "potato" : "wheat";
+            }
+        }
+
+        /// <summary>A road acre's links (1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1): to road acres beside it, and on through the map's edge.</summary>
+        private static int RoadLinks(LandState land, MapDef map, int id)
+        {
+            int x = id % map.Width, y = id / map.Width, links = 0;
+            if (x + 1 >= map.Width || land.Tiles[id + 1].Terrain == Terrain.Road) links |= 1;
+            if (x - 1 < 0 || land.Tiles[id - 1].Terrain == Terrain.Road) links |= 2;
+            if (y + 1 < map.Height && land.Tiles[id + map.Width].Terrain == Terrain.Road) links |= 4;
+            if (y - 1 >= 0 && land.Tiles[id - map.Width].Terrain == Terrain.Road) links |= 8;
+            return links;
         }
 
         /// <summary>

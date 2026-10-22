@@ -32,6 +32,16 @@ namespace Sim.Core.Saves
             _counts = counts;
         }
 
+        /// <summary>Set by the land reader when a schema-4 save holds the 8 × 6 map (spec 010 §3.4): tile ids are remapped.</summary>
+        internal bool OldMap { get; set; }
+
+        /// <summary>A tile id, remapped to the 16 × 12 map for an old save; −1 (no tile) stays −1.</summary>
+        internal int ReadTile()
+        {
+            int v = ReadInt();
+            return OldMap && v >= 0 ? MapMigration.Remap(v) : v;
+        }
+
         public byte ReadByte() { return _r.ReadByte(); }
         public ulong ReadULong() { return _r.ReadUInt64(); }
         public long ReadLong() { return _r.ReadInt64(); }

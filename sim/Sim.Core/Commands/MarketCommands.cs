@@ -57,6 +57,7 @@ namespace Sim.Core.Commands
             if (Quantity > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
             sim.State.Market.Offered[g] += Quantity;
             sim.State.Market.MinPrice[g] = MinPrice ?? Fixed.Zero;
+            Store.CutHeld(sim, g);
             return CommandResult.Ok;
         }
     }
@@ -84,7 +85,10 @@ namespace Sim.Core.Commands
         }
     }
 
-    /// <summary>Sells stock not on offer to the regional trader at the floor, now, up to its capacity today (spec 004 §3.3).</summary>
+    /// <summary>
+    /// Sells stock not on offer to the regional trader at the floor, now, up to its capacity today (spec 004 §3.3); refused
+    /// with TraderAway while the truck is away (spec 011 §3.1).
+    /// </summary>
     public sealed class SellToTrader : TimedCommand
     {
         public string GoodId { get; }
@@ -100,11 +104,41 @@ namespace Sim.Core.Commands
         {
             RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
             if (r != RejectReason.None) return CommandResult.Reject(r);
+            if (!MarketRules.TraderBuys(sim)) return CommandResult.Reject(RejectReason.TraderAway);
             if (!MarketChecks.IsProduce(sim, g)) return CommandResult.Reject(RejectReason.NotProduce);
             if (Quantity > MarketChecks.Free(sim, g)) return CommandResult.Reject(RejectReason.InsufficientStock);
             if (Quantity > MarketRules.TraderCapacityLeft(sim, g)) return CommandResult.Reject(RejectReason.TraderFull);
             Store.Take(sim, g, Quantity);
             Store.SellToTrader(sim, g, Quantity, "trader:" + GoodId);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Delivers fresh produce (harvested since 6:00) to the supermarket's collection point at the truck stop: no cost, no labour;
+    /// booked as a sale owed (Dr 1300, Cr sales) and paid at 6:00 next morning (spec 011 §3.3).
+    /// </summary>
+    public sealed class DeliverOrder : TimedCommand
+    {
+        public long OrderId { get; }
+        public long Quantity { get; }
+
+        public DeliverOrder(long at, long orderId, long quantity) : base(at)
+        {
+            OrderId = orderId;
+            Quantity = quantity;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            MarketState m = sim.State.Market;
+            if (sim.Config.Game?.Market.Orders == null || OrderId <= 0 || OrderId >= m.NextOrderId) return CommandResult.Reject(RejectReason.UnknownOrder);
+            SupermarketOrder o = m.Orders.Find(x => x.Id == OrderId);
+            if (o == null || !Supermarket.DeliveryOpen(sim)) return CommandResult.Reject(RejectReason.OrderClosed);
+            if (Quantity <= 0) return CommandResult.Reject(RejectReason.InvalidQuantity);
+            if (Quantity > Supermarket.FreshStock(sim, o.Good)) return CommandResult.Reject(RejectReason.InsufficientStock);
+            if (Quantity > o.Left) return CommandResult.Reject(RejectReason.OrderFilled);
+            Supermarket.Deliver(sim, o, Quantity, false);
             return CommandResult.Ok;
         }
     }

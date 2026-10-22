@@ -19,13 +19,7 @@ namespace Sim.Core.Land
 
             for (int i = 0; i < defs.Map.Tiles.Count; i++)
             {
-                TileDef d = defs.Map.Tiles[i];
-                land.Tiles.Add(new Tile
-                {
-                    Id = i, Terrain = d.Terrain, Soil = d.Soil, Drainage = d.Drainage,
-                    Fertility = d.Fertility, Moisture = d.Moisture,
-                    VacantSince = 0, // the land lay fallow before the game began
-                });
+                land.Tiles.Add(NewTile(defs.Map, i));
             }
             for (int p = 0; p < defs.Map.Parcels.Count; p++)
             {
@@ -50,6 +44,17 @@ namespace Sim.Core.Land
         }
 
         /// <summary>Marks a parcel owned and creates the field-edge slots of its farm tiles, in tile id order.</summary>
+        /// <summary>A tile as the map starts it (the caller sets its parcel).</summary>
+        internal static Tile NewTile(MapDef map, int i)
+        {
+            TileDef d = map.Tiles[i];
+            return new Tile
+            {
+                Id = i, Terrain = d.Terrain, Soil = d.Soil, Drainage = d.Drainage, Fertility = d.Fertility, Moisture = d.Moisture,
+                VacantSince = 0, // the land lay fallow before the game began
+            };
+        }
+
         internal static void Acquire(Simulation sim, Parcel parcel, long t)
         {
             GameDefs defs = sim.Config.Game;

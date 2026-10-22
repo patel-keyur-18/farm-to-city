@@ -35,9 +35,9 @@ namespace Sim.Core.Tests
         {
             Simulation sim = Indebted(bank: 60_000, moneylender: 20_000);
             int w1 = ParcelOf(sim, "w1");
-            Assert.That(sim.Execute(new Sow(0, 16, "potato", SeedSource.Certified, "none")).Accepted, Is.True, "a crop on the bought land");
-            Assert.That(sim.Execute(new Sow(0, 20, "potato", SeedSource.Certified, "none")).Accepted, Is.True, "a crop on the inherited land");
-            TreeSlot boughtSlot = sim.State.Land.Slots.First(s => s.TileId == 16 && s.Kind == SlotKind.FieldEdge);
+            Assert.That(sim.Execute(new Sow(0, 82, "potato", SeedSource.Certified, "none")).Accepted, Is.True, "a crop on the bought land");
+            Assert.That(sim.Execute(new Sow(0, 86, "potato", SeedSource.Certified, "none")).Accepted, Is.True, "a crop on the inherited land");
+            TreeSlot boughtSlot = sim.State.Land.Slots.First(s => s.TileId == 82 && s.Kind == SlotKind.FieldEdge);
             TreeSlot yardSlot = sim.State.Land.Slots.First(s => s.Kind == SlotKind.Yard);
             Assert.That(sim.Execute(new PlantTree(0, boughtSlot.Id, "banana")).Accepted, Is.True);
             Assert.That(sim.Execute(new PlantTree(0, yardSlot.Id, "mango")).Accepted, Is.True);
@@ -59,9 +59,9 @@ namespace Sim.Core.Tests
             Assert.That(done.NewScore, Is.EqualTo(350));
             Assert.That(sim.State.Credit.Score, Is.EqualTo(350));
             Assert.That(sim.State.Land.Parcels[w1].Owned, Is.False);
-            Assert.That(sim.State.Farm.CropOn(16), Is.Null, "the crop on bought land is lost");
+            Assert.That(sim.State.Farm.CropOn(82), Is.Null, "the crop on bought land is lost");
             Assert.That(sim.State.Farm.TreeIn(boughtSlot.Id), Is.Null, "so is its tree");
-            Assert.That(sim.State.Farm.CropOn(20), Is.Not.Null, "the inherited acre keeps its crop");
+            Assert.That(sim.State.Farm.CropOn(86), Is.Not.Null, "the inherited acre keeps its crop");
             Assert.That(sim.State.Farm.TreeIn(yardSlot.Id), Is.Not.Null, "and the yard its tree");
             Assert.That(sim.State.Land.Parcels.Where(p => p.Protected).All(p => p.Owned), Is.True);
             Assert.That(sim.State.Credit.Loans.All(l => !l.IsOpen), Is.True);
@@ -170,7 +170,7 @@ namespace Sim.Core.Tests
         {
             Simulation sim = NewSim(cash: 0, freeBank: false, edit: TestSim.NoSpoilage);
             Assert.That(Take(sim, "moneylender", 20_000, 1).Accepted, Is.True);
-            Assert.That(sim.Execute(new Sow(0, 20, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 86, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
             var market = sim.Config.Game.Market;
             int potato = market.IndexOf("potato"), seed = market.IndexOf("seed_potato"), wheat = market.IndexOf("wheat");
             sim.State.Market.Stock[potato] = 6_000_000; // 6,000 kg: more than the debt needs
@@ -187,7 +187,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Market.Stock[potato], Is.GreaterThan(0).And.LessThan(6_000_000));
             Assert.That(sim.State.Market.Stock[wheat], Is.EqualTo(wheatBefore), "no more than needed is taken");
             Assert.That(sim.State.Market.Stock[seed], Is.EqualTo(seedBefore), "inputs are not seized");
-            Assert.That(sim.State.Farm.CropOn(20), Is.Not.Null, "field crops on the inherited acres stay");
+            Assert.That(sim.State.Farm.CropOn(86), Is.Not.Null, "field crops on the inherited acres stay");
             Assert.That(sim.State.Credit.Score, Is.EqualTo(350));
             ReconcileOk(sim);
 

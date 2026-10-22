@@ -131,12 +131,23 @@ namespace Sim.Core.People
             CommandResult r = collect.ApplyNow(sim);
             if (!r.Accepted)
             {
-                Wait(sim, o, OrderWait.StoreFull);
+                Wait(sim, o, r.Reason == RejectReason.TraderAway ? OrderWait.TraderAway : OrderWait.StoreFull);
                 return false;
             }
             long stored = m.Stock[good] - before;
             string goodId = sim.Config.Game.Market.Goods[good].Id;
             bool careless = PeopleRules.HasTrait(sim, h, x => x.Careless);
+            // An open supermarket order is filled first when he sells (a careless hand too); STORE keeps it (spec 011 §3.3).
+            if (stored > 0 && (careless || o.Sell != SellRule.Store))
+            {
+                SupermarketOrder so = Supermarket.OpenOrderFor(sim, good);
+                long q = so == null ? 0 : System.Math.Min(System.Math.Min(stored, so.Left), Supermarket.FreshStock(sim, good));
+                if (q > 0)
+                {
+                    Supermarket.Deliver(sim, so, q, true);
+                    stored -= q;
+                }
+            }
             if (stored > 0)
             {
                 if (careless || o.Sell == SellRule.Trader)
@@ -147,10 +158,13 @@ namespace Sim.Core.People
                         Store.Take(sim, good, q);
                         Store.SellToTrader(sim, good, q, "hand:" + h.Id);
                     }
+                    // What the truck can't take now (away or full) is held for its next arrival (spec 011 §3.1).
+                    if (sim.Config.Game.Market.Truck != null) m.HeldForTruck[good] += stored - q;
                 }
                 else if (o.Sell == SellRule.Offer)
                 {
                     m.Offered[good] += stored;
+                    Store.CutHeld(sim, good);
                     // The minimum is for the order's own crop; the hand's other picks keep the good's current minimum (ADR 0048 §1).
                     if (o.Kind == OrderTargetKind.Tree || (o.Crop >= 0 && sim.Config.Game.Farm.Crops[o.Crop].OutputGood == good)) m.MinPrice[good] = o.MinPrice;
                 }

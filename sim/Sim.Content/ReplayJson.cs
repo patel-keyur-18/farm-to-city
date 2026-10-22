@@ -179,6 +179,7 @@ namespace Sim.Content
                     return new Offer(At(), S("good"), L("quantity"), c["minPriceRaw"] == null ? (Fixed?)null : Fixed.FromRaw(L("minPriceRaw")));
                 case "Withdraw": Only("good", "quantity"); return new Withdraw(At(), S("good"), L("quantity"));
                 case "SellToTrader": Only("good", "quantity"); return new SellToTrader(At(), S("good"), L("quantity"));
+                case "DeliverOrder": Only("order", "quantity"); return new DeliverOrder(At(), L("order"), L("quantity"));
                 case "Buy": Only("good", "quantity"); return new Buy(At(), S("good"), L("quantity"));
                 case "GoToMandi":
                 {
@@ -246,6 +247,7 @@ namespace Sim.Content
                     break;
                 case Withdraw x: T("Withdraw", x.At); Prop(w, "good", x.GoodId); N("quantity", x.Quantity); break;
                 case SellToTrader x: T("SellToTrader", x.At); Prop(w, "good", x.GoodId); N("quantity", x.Quantity); break;
+                case DeliverOrder x: T("DeliverOrder", x.At); N("order", x.OrderId); N("quantity", x.Quantity); break;
                 case Buy x: T("Buy", x.At); Prop(w, "good", x.GoodId); N("quantity", x.Quantity); break;
                 case GoToMandi x:
                     T("GoToMandi", x.At);

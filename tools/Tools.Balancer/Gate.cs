@@ -154,8 +154,8 @@ namespace Tools.Balancer
             Parcel parcel = sim.State.Land.Parcels[(int)Rng.Below(Rng.Next(r, (RngStream)952, 0, 0), (ulong)sim.State.Land.Parcels.Count)];
             string parcelId = defs.Map.Parcels[parcel.Id].Id;
             TreeSlot slot = sim.State.Land.Slots.Count == 0 ? null : sim.State.Land.Slots[(int)Rng.Below(Rng.Next(r, (RngStream)953, 0, 0), (ulong)sim.State.Land.Slots.Count)];
-            int[] acres = { 18, 19, 20, 26, 27, 28 };
-            int tile = acres[(int)Rng.Below(Rng.Next(r, (RngStream)954, 0, 0), 6)];
+            int[] acres = Home.FarmTiles(defs);
+            int tile = acres[(int)Rng.Below(Rng.Next(r, (RngStream)954, 0, 0), (ulong)acres.Length)];
             switch (Rng.Below(Rng.Next(r, (RngStream)955, 0, 0), 16))
             {
                 case 0: return new Offer(t, good, q, (r & 1) == 0 ? (Fixed?)null : MarketRules.RegionalPrice(sim, g));
@@ -206,6 +206,31 @@ namespace Tools.Balancer
             for (int b = 0; b < makers.Count; b++)
                 list.Add(new StressResult { Bot = names[b], MedianNetWorth = medians[b], Ratio = medians[b] / medians[0] });
             return list;
+        }
+
+        /// <summary>Spec 011 §9: the competent bot's days the truck filled, and the supermarket's share of its sales, over a run.</summary>
+        public sealed class TradeResult
+        {
+            public int TruckDays, TruckFullDays;
+            public long Supermarket, AllSales;
+            public double FullShare { get { return TruckDays == 0 ? 0 : (double)TruckFullDays / TruckDays; } }
+            public double OrderShare { get { return AllSales == 0 ? 0 : (double)Supermarket / AllSales; } }
+        }
+
+        public static TradeResult Trade(SimConfig config, int seeds, int seasons = 8)
+        {
+            var runs = new Economy.Run[seeds];
+            Parallel.For(0, seeds, i => runs[i] = Economy.RunBot(config, new FarmerBot(), seasons, (ulong)(i + 1), null));
+            var r = new TradeResult();
+            foreach (Economy.Run run in runs)
+                foreach (Economy.SeasonRow s in run.Seasons)
+                {
+                    r.TruckDays += s.TruckDays;
+                    r.TruckFullDays += s.TruckFullDays;
+                    r.Supermarket += s.Supermarket;
+                    r.AllSales += s.Trader + s.Local + s.Mandi + s.Supermarket;
+                }
+            return r;
         }
 
         // ---- ADR 0038: the debt bots must actually borrow, miss, default and be foreclosed (every mechanic is used) ----
@@ -441,6 +466,9 @@ namespace Tools.Balancer
                 + rec.SeasonsToProfit.Count(x => x > 3) + " / " + rec.SeasonsToProfit.Count(x => x < 0) + "; the Hamlet's conditions again in " + ham.Count
                 + (ham.Count == 0 ? "" : ", days median " + ham[ham.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + ", max " + ham.Last().ToString("0.0", CultureInfo.InvariantCulture)));
             Console.WriteLine("  Exact ledger (5 bots × " + n + " seeds × 8 seasons): " + (ExactLedger(config, n) is var led && led.Count == 0 ? "pass" : "FAIL " + string.Join("; ", led.Take(5))));
+            TradeResult trade = Trade(config, n);
+            Console.WriteLine("  The truck and orders (spec 011 §9): the truck filled on " + (100 * trade.FullShare).ToString("0.0", CultureInfo.InvariantCulture)
+                + "% of days (under 10%); supermarket orders " + (100 * trade.OrderShare).ToString("0.0", CultureInfo.InvariantCulture) + "% of sales (under 20%)");
             Console.WriteLine("  Bounded prices: the rail in " + (100 * RailShare(config, n)).ToString("0.000", CultureInfo.InvariantCulture) + "% of good-hours (under 0.1%)");
             Console.WriteLine("  Land-flipper over 4 years (it can first afford a parcel in year 3):");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 16, new Func<Bot>[] { () => new LandFlipperBot() }))

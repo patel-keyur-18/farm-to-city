@@ -83,6 +83,10 @@ namespace Sim.View.Views
         public string FertiliserHeading { get; internal set; }
         public List<FertiliserVm> Fertilisers { get; } = new List<FertiliserVm>();
         public List<CropRowVm> Rows { get; } = new List<CropRowVm>();
+
+        /// <summary>Rows above the crops (a hand's order: his current order and "Let him choose"), and buttons under them.</summary>
+        public List<LineVm> Lines { get; } = new List<LineVm>();
+        public List<ActionVm> Actions { get; } = new List<ActionVm>();
     }
 
     /// <summary>The sow sheet with the crop-calendar card (spec 008 §3.5, §3.7).</summary>

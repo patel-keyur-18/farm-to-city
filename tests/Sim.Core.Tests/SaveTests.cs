@@ -233,7 +233,7 @@ namespace Sim.Core.Tests
         internal static Command RandomCommand(Simulation sim, Random r)
         {
             long t = sim.State.Clock.SimTime;
-            int[] acres = { 18, 19, 20, 26, 27, 28 };
+            int[] acres = { 84, 85, 86, 100, 101, 102 };
             int tile = acres[r.Next(acres.Length)];
             string good = Goods[r.Next(Goods.Length)];
             PeopleState p = sim.State.People;
