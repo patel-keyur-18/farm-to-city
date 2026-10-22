@@ -243,7 +243,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 
 - **G1. Who counts.** **Closed (owner, 2026-10-22; ADR 0061):** the village is the town and its places serve the citizens; the population is the people on the founder's land ("Your people"); the old families stay neighbours, not counted (the owner accepted the pushback: counting them would start the town at about 35 and pass the Homestead, Hamlet and Village thresholds at once).
 - **G2. Homes.** **Closed (owner, 2026-10-22):** a family house the founder builds (60,000, 48 h, 6 people, 4 an acre or the quarters' free places; the acre stops farming), rent 6,000 a season, a family 2 seasons behind leaves owing nothing; a hand's hut stays single (§3.4).
-- **G3. The life clock and lifespans.** 1 life-year a season (ADR 0002); retirement at 60; deaths only for elders, about 72 years' expectancy; births 0.10 a season for a couple, at most 3 children. Recommended.
+- **G3. The life clock and lifespans.** **Closed (owner, 2026-10-22):** 1 life-year a season (ADR 0002); child 0–17, adult 18–59, elder 60+; a hand retires at 60 after his season; births 0.10 a season for a couple (woman 20–40), at most 3, less when crowded or unhappy; deaths only for elders, 1.5% a year at 60 doubling every 8 years (about 72 years' expectancy) (§3.2, §3.9).
 - **G4. Engel's law and the budget.** The curve, the food basket and the shares above. Recommended.
 - **G5. Needs and happiness in Phase 2.** The four layers with what exists by the Village (no school, no clinic yet). Recommended.
 - **G6. Migration.** Families for empty houses live or away; a hand can bring his family; unhappy or rent-behind households leave. Recommended.
