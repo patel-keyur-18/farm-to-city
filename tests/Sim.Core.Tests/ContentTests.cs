@@ -234,6 +234,27 @@ namespace Sim.Core.Tests
             GameDefs none = TestContent.Game((f, j) => f == "buildings.json" ? System.Text.RegularExpressions.Regex.Replace(j, ",\\s*\\{ \"id\": \"hand_hut\"[^}]*\\}", "") : j);
             Assert.That(none.People, Is.Null);
         }
+        [Test]
+        public void Livestock()
+        {
+            GameDefs g = TestContent.Game();
+            LivestockDefs d = g.Livestock;
+            Assert.That(d, Is.Not.Null);
+            Assert.That(g.Buildings[d.Shed].Animals, Is.EqualTo(4));
+            Assert.That(g.Map.Tiles[d.Livestock.ShedTile].Terrain, Is.EqualTo(Terrain.Yard));
+            Assert.That(g.Onboarding.Eras[d.UnlockEra].Id, Is.EqualTo("hamlet"));
+            foreach (AnimalDef a in d.Animals)
+            {
+                // Spec 012 §3.2: the curve's mean over the milk days is 1.00 ± 1%.
+                Sim.Core.Maths.Fixed sum = Sim.Core.Maths.Fixed.Zero;
+                for (int day = 0; day < a.MilkDays; day++) sum += Sim.Core.Livestock.LivestockRules.Lactation(d.Livestock, day);
+                double mean = double.Parse(sum.MulRatio(1, a.MilkDays).ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                Assert.That(mean, Is.EqualTo(1.0).Within(0.01), a.Id);
+            }
+            Assert.That((d.Livestock.GreenWeight + d.Livestock.StrawWeight + d.Livestock.FeedWeight - Sim.Core.Maths.Fixed.One).Raw, Is.InRange(-10, 10));
+            Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "livestock.json" ? j.Replace("\"shedTile\": 103", "\"shedTile\": 84") : j));
+            Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "livestock.json" ? j.Replace("\"green\": 0.4,", "\"green\": 0.5,") : j));
+        }
     }
 }
 

@@ -86,6 +86,16 @@ namespace Sim.Core.Tests
                     }
                 }
 
+                if (r.Header.Schema < 7)
+                {
+                    // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.
+                    Livestock.LivestockState l = r.State.Livestock;
+                    Assert.That(l.Animals, Is.Empty, name);
+                    Assert.That(l.ShedReadyAt, Is.EqualTo(0), name);
+                    Assert.That(l.BuyGreenFodder, Is.True, name);
+                    Assert.That(r.State.Ledger.Balance(Finance.Account.Livestock), Is.EqualTo(0), name);
+                }
+
                 Simulation sim = Simulation.FromState(config, r.State);
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
                 sim.DrainEvents();
@@ -118,7 +128,31 @@ namespace Sim.Core.Tests
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
                 LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
                 Assert.That(again.Error, Is.EqualTo(SaveError.None), name);
-                Assert.That(again.Header.Schema, Is.EqualTo(6));
+                Assert.That(again.Header.Schema, Is.EqualTo(SaveCodec.SchemaVersion));
+                Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + " round-trips");
+            }
+        }
+
+        // Spec 012 AC-16: every schema-6 or older fixture loads at schema 7 with no cattle, becomes its own replay base, advances a
+        // day and round-trips.
+        [Test]
+        public void Schema6_Livestock()
+        {
+            SimConfig config = SaveTests.Config();
+            string[] older = Directory.GetFiles(Dir, "*.ftc", SearchOption.AllDirectories).Where(f => SaveCodec.Read(File.ReadAllBytes(f), config, MinSchema).Header.Schema < 7).ToArray();
+            Assert.That(older.Length, Is.GreaterThanOrEqualTo(4), "schema 3 to 6 fixtures");
+            foreach (string file in older)
+            {
+                string name = Path.GetFileName(file);
+                LoadResult r = SaveCodec.Read(File.ReadAllBytes(file), config, MinSchema);
+                Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                Assert.That(r.State.Livestock, Is.Not.Null, name);
+                Assert.That(r.State.Livestock.Animals, Is.Empty, name);
+                Assert.That(r.State.CommandLog.Base, Is.Not.Null, name + ": the migrated town is its own replay base");
+                Simulation sim = Simulation.FromState(config, r.State);
+                sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+                LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+                Assert.That(again.Error, Is.EqualTo(SaveError.None), name);
                 Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + " round-trips");
             }
         }

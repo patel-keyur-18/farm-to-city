@@ -2,6 +2,7 @@ using Sim.Core.Commands;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
+using Sim.Core.Livestock;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.People;
@@ -59,6 +60,9 @@ namespace Sim.Core
         /// <summary>The era and the next era's progress (spec 009); null when the content has no onboarding.</summary>
         public EraState Era { get; internal set; }
 
+        /// <summary>Cattle (spec 012); null when the content has no cattle shed.</summary>
+        public LivestockState Livestock { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -89,6 +93,8 @@ namespace Sim.Core
                 Guidance.WriteTo(h, _stepCount);
                 Era.WriteTo(h);
             }
+            // Spec 012, after everything else: content without a cattle shed (the golden replays' frozen content) hashes as before.
+            if (Livestock != null) Livestock.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -130,6 +136,7 @@ namespace Sim.Core
                 s.Guidance = GuidanceState.ReadFrom(r, s._stepCount);
                 s.Era = EraState.ReadFrom(r);
             }
+            if (g.Livestock != null) s.Livestock = r.Schema >= 7 ? LivestockState.ReadFrom(r) : new LivestockState { LastFeeding = new FeedingReport() }; // schema 6: no cattle yet
             return s;
         }
 
@@ -160,6 +167,7 @@ namespace Sim.Core
                 People = People?.Clone(),
                 Guidance = Guidance?.Clone(),
                 Era = Era?.Clone(),
+                Livestock = Livestock?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

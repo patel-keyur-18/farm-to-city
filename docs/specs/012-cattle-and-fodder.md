@@ -71,7 +71,7 @@ ADR 0056's per-game-day figures used 30 real days a game day; at 22.8 every amou
 | Dung to compost | 9.5 kg a real day (about 3.5 t a year) | 9.5 | §3.8 |
 | Calf at the fair | 5,000 | 4,000 | §3.6 |
 
-**Lactation curve.** Milk on day d of a lactation is `mean × LactationCurve(d)`, a piecewise-linear curve in data: `[[0, 1.10], [3, 1.20], [13, 0.70]]` (rises to a peak about two real months after calving, then falls). Its mean over 13 days is 1.00 within 1%, checked by a content test.
+**Lactation curve.** Milk on day d of a lactation is `mean × LactationCurve(d)`, a piecewise-linear curve in data: `[[0, 1.10], [3, 1.20], [13, 0.66]]` (rises to a peak about two real months after calving, then falls). Its mean over 13 days is 1.00 within 1%, checked by a content test.
 
 **Names.** Each animal gets a seeded name from `LivestockDef.names` (Lakshmi, Gauri, Kamdhenu, Nandini, Ganga, Radha, Sundari, Kali, …; stream Livestock, counter = animal id). The player can't rename in Phase 2.
 

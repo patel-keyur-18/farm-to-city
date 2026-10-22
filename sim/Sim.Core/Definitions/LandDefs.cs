@@ -238,9 +238,22 @@ namespace Sim.Core.Definitions
         /// <summary>Resident hands it houses (hand's hut 1).</summary>
         public int HousesHands { get; }
 
+        /// <summary>Animals the cattle shed holds (spec 012 §3.3; cattle shed 4).</summary>
+        public int Animals { get; }
+
+        /// <summary>Capacity in kg of the places that come with this building (spec 012 §3.3): the shed's feed room and straw stack, the home's compost pit.</summary>
+        public long FeedRoomKg { get; }
+        public long StrawStackKg { get; }
+        public long CompostPitKg { get; }
+
         public BuildingDef(string id, string nameKey, int yardTreeSlots, long value, int usefulLifeSeasons, long storeCapacityKg,
-            Fixed restRecovery, int gardenBeds, int buildHours = 0, int housesHands = 0)
+            Fixed restRecovery, int gardenBeds, int buildHours = 0, int housesHands = 0, int animals = 0, long feedRoomKg = 0, long strawStackKg = 0,
+            long compostPitKg = 0)
         {
+            Animals = animals;
+            FeedRoomKg = feedRoomKg;
+            StrawStackKg = strawStackKg;
+            CompostPitKg = compostPitKg;
             BuildHours = buildHours;
             HousesHands = housesHands;
             RestRecovery = restRecovery;
@@ -344,10 +357,14 @@ namespace Sim.Core.Definitions
         /// <summary>The first session, the letter's chapters and the eras (spec 009), or null without people.</summary>
         public OnboardingDefs Onboarding { get; }
 
+        /// <summary>Buffalo, cows and the shed (spec 012), or null when the buildings have no cattle shed.</summary>
+        public LivestockDefs Livestock { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
-            PeopleDefs people = null, OnboardingDefs onboarding = null)
+            PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null)
         {
+            Livestock = livestock;
             Onboarding = onboarding;
             People = people;
             Credit = credit;

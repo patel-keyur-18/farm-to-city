@@ -53,12 +53,15 @@ namespace Sim.Core.Finance
         /// <summary>What the supermarket owes for deliveries, paid at 6:00 (account 1300, spec 011 §3.3).</summary>
         public long OwedByBuyers { get; internal set; }
 
+        /// <summary>Animals at cost (account 1750, spec 012 §3.12): they don't age or depreciate in Phase 2.</summary>
+        public long LivestockAtBook { get; internal set; }
+
         /// <summary>Assets − liabilities on the ledger; the difference from Total is land and stored goods at market value.</summary>
         public long BookEquity { get; internal set; }
 
         public long Total
         {
-            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + StoredGoods - LoanPrincipal - InterestPayable; }
+            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + StoredGoods - LoanPrincipal - InterestPayable; }
         }
     }
 
@@ -129,6 +132,7 @@ namespace Sim.Core.Finance
                 NetWorthSnapshot n = NetWorth;
                 foreach (long v in new[] { n.Cash, n.Prepaid, n.LandAtMarket, n.BuildingsAtBook, n.TreesAtBook, n.StoredGoods, n.LoanPrincipal, n.InterestPayable, n.OwedByBuyers })
                     h.WriteLong(v);
+                h.WriteLong(n.LivestockAtBook);
                 h.WriteLong(CashFlow.Closing);
                 h.WriteBool(Credit != null);
             }
@@ -161,6 +165,7 @@ namespace Sim.Core.Finance
                 StoredGoods = r.ReadLong(), LoanPrincipal = r.ReadLong(), InterestPayable = r.ReadLong(), BookEquity = equity,
             };
             if (r.Schema >= 6) worth.OwedByBuyers = r.ReadLong();
+            if (r.Schema >= 7) worth.LivestockAtBook = r.ReadLong();
             if (worth.Total != total) throw new SaveFormatException("a season report's net worth doesn't add up");
             cash.Closing = r.ReadLong();
             CreditSummary credit = null;

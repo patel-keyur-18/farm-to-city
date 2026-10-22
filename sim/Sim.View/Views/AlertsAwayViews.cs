@@ -316,6 +316,9 @@ namespace Sim.View.Views
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.
             { "EraProgress", Use.StateOnly }, { "EraUnlocked", Use.Away },
+            // Spec 012.
+            { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
+            { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away },
         };
     }
 }

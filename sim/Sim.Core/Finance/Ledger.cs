@@ -143,10 +143,9 @@ namespace Sim.Core.Finance
         internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(NextEntryId);
-            if (!h.Hashing) h.WriteInt(_balances.Length); // the chart of accounts is code: checked on load
-            int owed = Accounts.IndexOf(Account.OwedByBuyers);
+            if (!h.Hashing) h.WriteInt(_balances.Length); // a save is always the current schema // the chart of accounts is code: checked on load
             for (int i = 0; i < _balances.Length; i++)
-                if (!h.Hashing || i != owed || _balances[i] != 0) h.WriteLong(_balances[i]); // 1300 (spec 011) hashes only once used: the goldens stay as they were
+                if (!h.Hashing || Accounts.SinceSchema(Accounts.All[i]) == 0 || _balances[i] != 0) h.WriteLong(_balances[i]); // late accounts hash only once used: the goldens stay as they were
             h.WriteInt(_entries.Count);
             foreach (JournalEntry e in _entries)
             {
@@ -168,11 +167,11 @@ namespace Sim.Core.Finance
         {
             var l = new Ledger { NextEntryId = r.ReadLong() };
             int n = r.ReadInt();
-            int owed = Accounts.IndexOf(Account.OwedByBuyers);
-            bool old = r.Schema < 6 && n == l._balances.Length - 1; // before 1300 Owed by buyers (spec 011)
-            if (n != l._balances.Length && !old) throw new SaveFormatException(n + " accounts, this build has " + l._balances.Length);
+            int expected = 0;
+            foreach (Account a in Accounts.All) if (Accounts.SinceSchema(a) <= r.Schema) expected++; // accounts added after the save's schema aren't in it
+            if (n != expected) throw new SaveFormatException(n + " accounts, schema " + r.Schema + " has " + expected);
             for (int i = 0; i < l._balances.Length; i++)
-                if (!old || i != owed) l._balances[i] = r.ReadLong();
+                if (Accounts.SinceSchema(Accounts.All[i]) <= r.Schema) l._balances[i] = r.ReadLong();
             n = r.ReadCount();
             for (int i = 0; i < n; i++)
             {

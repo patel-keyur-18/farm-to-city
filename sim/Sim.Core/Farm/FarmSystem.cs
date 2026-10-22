@@ -85,6 +85,7 @@ namespace Sim.Core.Farm
                 if (c.Wet) c.WetSeconds += dt;
             }
             FounderRules.Accrue(sim, dt);
+            Livestock.LivestockSystem.AccrueCare(sim, dt);
             farm.LastAccrual = t;
         }
 
@@ -105,6 +106,7 @@ namespace Sim.Core.Farm
                 c.Wet = defs.Farm.Pests.WetWeather[weather];
                 demand += def.LabourPerAcrePerDay + tile.WellLift.MulRatio(24, 1) * defs.Farm.Farm.BucketHoursPerMoisturePoint;
             }
+            demand += Livestock.LivestockRules.LabourDemand(sim); // every animal, dry or in milk (spec 012 §3.9)
             Fixed cap = defs.Farm.Farm.CareCap;
             if (demand == Fixed.Zero) { farm.CareRatio = cap; return; }
             Fixed ratio = People.PeopleRules.CareSupply(sim) / demand;
@@ -120,7 +122,7 @@ namespace Sim.Core.Farm
                 if (c.State == CropState.Growing)
                     demand += defs.Farm.Crops[c.Def].LabourPerAcrePerDay
                         + sim.State.Land.Tiles[c.TileId].WellLift.MulRatio(24, 1) * defs.Farm.Farm.BucketHoursPerMoisturePoint;
-            return demand;
+            return demand + Livestock.LivestockRules.LabourDemand(sim);
         }
 
         /// <summary>

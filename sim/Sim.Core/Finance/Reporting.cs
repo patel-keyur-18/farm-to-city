@@ -6,10 +6,10 @@ namespace Sim.Core.Finance
     /// <summary>The season report (spec 005 §3.4 step 3, ADR 0032 grouping) and net worth (§3.5).</summary>
     public static class Reporting
     {
-        private static readonly Account[] FarmIncome = { Account.CropSales, Account.FruitSales };
+        private static readonly Account[] FarmIncome = { Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales };
         private static readonly Account[] FarmCosts =
         {
-            Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.HiredLabour, Account.Rent,
+            Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,
             Account.Depreciation, Account.TransportAndSelling,
         };
         private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.GainOnAssetSales, Account.DebtWrittenOff };
@@ -32,6 +32,7 @@ namespace Sim.Core.Finance
                 LandAtMarket = land,
                 BuildingsAtBook = l.Balance(Account.Buildings) + l.Balance(Account.AccumulatedDepreciation),
                 TreesAtBook = l.Balance(Account.Trees),
+                LivestockAtBook = l.Balance(Account.Livestock),
                 StoredGoods = Market.Store.Value(sim),
                 LoanPrincipal = -(l.Balance(Account.MoneylenderLoans) + l.Balance(Account.BankLoans)),
                 InterestPayable = -l.Balance(Account.InterestPayable) + CreditRules.AccruedUnposted(sim),

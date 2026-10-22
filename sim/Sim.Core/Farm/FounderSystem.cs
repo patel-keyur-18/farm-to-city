@@ -99,6 +99,8 @@ namespace Sim.Core.Farm
             FounderState s = sim.State.Farm.Founder;
             long allowance = s.AllowanceSum.RoundToLong();
             s.AllowanceSum = Fixed.Zero;
+            Livestock.LivestockState herd = sim.State.Livestock;
+            if (herd != null) { allowance -= herd.HomeMilkCredit; herd.HomeMilkCredit = 0; } // the milk the household kept is part of the day's food (spec 012 §3.5)
             if (allowance <= 0) return;
             var goods = sim.Config.Game.Market.Goods;
             bool[] done = new bool[goods.Count];

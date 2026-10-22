@@ -18,6 +18,7 @@ namespace Sim.Core.Maths
         Applicants = 8,
         DailyPrice = 9,
         Orders = 10,
+        Livestock = 11,
     }
 
     /// <summary>

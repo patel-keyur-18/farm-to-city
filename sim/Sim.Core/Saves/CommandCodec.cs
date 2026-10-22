@@ -26,6 +26,7 @@ namespace Sim.Core.Saves
             SeeChapter, CompleteStep, SkipFirstSession,
             HireLabourers,
             DeliverOrder,
+            BuildShed, BuyAnimal, SellAnimal, SetBuyGreenFodder,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -78,6 +79,12 @@ namespace Sim.Core.Saves
                     break;
                 case HireLabourers c: At(c, Tag.HireLabourers); w.WriteInt(-1); w.WriteInt(c.Count); break; // the field slot of Sprint 10's first build, unused since ADR 0049
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
+                case BuildShed c: At(c, Tag.BuildShed); break;
+                case BuyAnimal c:
+                    At(c, Tag.BuyAnimal); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case SellAnimal c: At(c, Tag.SellAnimal); w.WriteLong(c.AnimalId); break;
                 case PostJob c: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
@@ -154,6 +161,14 @@ namespace Sim.Core.Saves
                 case Tag.HireDayLabourers: return new HireLabourers(at, r.ReadInt()); // retired by ADR 0048: kept in old logs as a hire
                 case Tag.HireLabourers: r.ReadInt(); return new HireLabourers(at, r.ReadInt());
                 case Tag.BuildHandHut: return new BuildHandHut(at, r.ReadInt());
+                case Tag.BuildShed: return new BuildShed(at);
+                case Tag.BuyAnimal:
+                {
+                    string kind = r.ReadString();
+                    Financing f = r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null;
+                    return new BuyAnimal(at, kind, f);
+                }
+                case Tag.SellAnimal: return new SellAnimal(at, r.ReadLong());
                 case Tag.PostJob: return new PostJob(at, r.ReadBool());
                 case Tag.Interview: return new Interview(at, r.ReadLong());
                 case Tag.OfferContract: return new OfferContract(at, r.ReadLong());
