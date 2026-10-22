@@ -498,7 +498,7 @@
 
 ## Sprint 11 · 11–24 Jan 2027 · Phase 2 (planning, the village, the truck and orders; 2 weeks, ADR 0057)
 
-- **Status:** The owner's device check passed (2026-10-22, frame time p95 5.37 ms). The device review added US-196–US-198 (ADR 0059); then a follow-up Development build and the PR merge
+- **Status:** The owner's device check passed (2026-10-22, frame time p95 5.37 ms). The device review's US-196–US-198 (ADR 0059) done and Editor-tested; follow-up Development build made (`s11b-device-review-sheets.md`); the owner's check and the PR merge next
 - **Branch:** `sprint/11-phase2-planning`
 - **Goal:** Phase 2's decisions recorded (ADRs 0052–0057), specs 010 and 011 approved, the Phase 2 sprints planned, and the village map, the trader's truck, daily prices and supermarket orders built and playable on the iPhone.
 - **Points:** 42 (35 planned + 7 from the device review)
@@ -527,7 +527,7 @@
 - [x] Specs 010 and 011 written, every gap closed with the owner, approved
 - [x] Phase 2 sprints planned (this file), feature files F02.4 and F04.3 with stories and tasks; `epics.md` updated
 - [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; [x] the owner's device check passed (US-190.T6 measured there, 2026-10-22)
-- [x] Test checklist written in `docs/test-checklists/` (`s11-village-truck-orders.md`)
+- [x] Test checklists written in `docs/test-checklists/` (`s11-village-truck-orders.md`; follow-up `s11b-device-review-sheets.md`)
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; [ ] owner merges to `main`
 
