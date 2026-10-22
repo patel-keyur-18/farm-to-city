@@ -30,8 +30,56 @@ namespace Sim.Core.Livestock
             Dung(sim);
             Collect(sim, sim.State.Livestock.Animals, true);
             AdvanceDays(sim);
+            Vaccinate(sim);
+            Disease(sim);
             Feed(sim, FodderRules.Cut(sim));
             LowCheck(sim);
+        }
+
+        /// <summary>
+        /// The co-op's vet vaccinates every animal on the first morning of each season, if cash allows (5030); otherwise she goes
+        /// unvaccinated this season and nothing is owed (§3.10). A bought animal is already vaccinated for her season.
+        /// </summary>
+        private static void Vaccinate(Simulation sim)
+        {
+            long t = sim.State.Clock.SimTime;
+            if (t % sim.Clock.SecondsPerSeason >= ClockDef.SecondsPerDay) return; // only the season's first morning
+            long cost = Market.MarketRules.Indexed(sim, LivestockRules.Defs(sim).Livestock.VaccineCost);
+            foreach (Animal a in sim.State.Livestock.Animals)
+            {
+                if (a.VaccinatedPeriod == sim.Period) continue;
+                if (!sim.State.Ledger.CanAfford(cost)) { sim.Emit(new VaccinationMissed(t, a.Id)); continue; }
+                if (cost > 0) sim.State.Ledger.Post(t, sim.Period, "ledger.vaccine", "animal:" + a.Id, new Posting(Account.VetAndBreeding, cost), new Posting(Account.Cash, -cost));
+                a.VaccinatedPeriod = sim.Period;
+            }
+        }
+
+        /// <summary>
+        /// A day of illness passes, then a seeded draw per animal (stream Livestock, key = animal, counter = day): below
+        /// diseaseChance × (vaccinated ? 1 : unvaccinatedFactor) × (1 + sickHealthFactor × (1 − health)) she falls ill. The vet comes at
+        /// once (5030) and her next day's milk is lost; with no cash for him she is ill 2 days and loses twice the health (§3.10).
+        /// </summary>
+        private static void Disease(Simulation sim)
+        {
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
+            long t = sim.State.Clock.SimTime;
+            ulong day = (ulong)(t / ClockDef.SecondsPerDay);
+            long vet = Market.MarketRules.Indexed(sim, ld.VetVisitCost);
+            foreach (Animal a in sim.State.Livestock.Animals)
+            {
+                if (a.SickDays > 0) a.SickDays--;
+                if (a.SickDays > 0) continue;
+                Fixed chance = LivestockRules.DiseaseChance(sim, a);
+                Fixed u = Fixed.FromRaw((long)(Rng.Next(sim.State.Seed, RngStream.Livestock, (ulong)a.Id, day) >> 32));
+                if (u >= chance) continue;
+                bool vetCame = sim.State.Ledger.CanAfford(vet);
+                if (vetCame && vet > 0)
+                    sim.State.Ledger.Post(t, sim.Period, "ledger.vet", "animal:" + a.Id, new Posting(Account.VetAndBreeding, vet), new Posting(Account.Cash, -vet));
+                a.SickDays = vetCame ? 1 : 2;
+                a.Health = a.Health - (vetCame ? ld.SickHealthLoss : ld.SickHealthLoss + ld.SickHealthLoss);
+                if (a.Health < ld.MinHealth) a.Health = ld.MinHealth;
+                sim.Emit(new AnimalSick(t, a.Id, vetCame ? vet : 0, vetCame));
+            }
         }
 
         private static long Grams(Fixed kg) { return (kg * Fixed.FromInt(1000)).RoundToLong(); }
@@ -295,6 +343,7 @@ namespace Sim.Core.Livestock
             {
                 if (want <= 0 || allowance <= value) break;
                 Fixed price = LivestockRules.MilkPrice(sim, animals[i].Kind);
+                if (price <= Fixed.Zero) continue; // milk with no price isn't counted against the food allowance
                 long fit = (Fixed.FromInt((allowance - value) * 10) / price).FloorToLong(); // ml worth the allowance left: money × 1000 ÷ (price × 100)
                 long q = System.Math.Min(System.Math.Min(want, ml[i]), fit);
                 while (q > 0 && value + Money.Value(q, price, 1000) > allowance) q--;

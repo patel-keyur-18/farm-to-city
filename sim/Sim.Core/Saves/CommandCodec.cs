@@ -187,7 +187,9 @@ namespace Sim.Core.Saves
                     var sell = (SellRule)r.ReadInt();
                     Fixed min = r.ReadFixed();
                     bool once = r.ReadBool();
-                    OrderSpec o = kind == OrderTargetKind.Tree ? OrderSpec.PickTree(target, sell, min) : OrderSpec.KeepCrop((int)target, crop, seed, fert, sell, min);
+                    OrderSpec o = kind == OrderTargetKind.Tree ? OrderSpec.PickTree(target, sell, min)
+                        : kind == OrderTargetKind.Animals ? OrderSpec.LookAfterAnimals((int)min.FloorToLong())
+                        : OrderSpec.KeepCrop((int)target, crop, seed, fert, sell, min);
                     return new SetStandingOrder(at, hand, once ? o.ThisSeasonOnly() : o);
                 }
                 case Tag.ClearStandingOrder: return new ClearStandingOrder(at, r.ReadLong(), (OrderTargetKind)r.ReadInt(), r.ReadLong());

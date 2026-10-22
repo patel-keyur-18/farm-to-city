@@ -24,6 +24,12 @@ namespace Sim.Core.Saves
 
         /// <summary>Straw or cattle feed will last less than 2 days (spec 012 §3.14); CropId is the good.</summary>
         FeedLow = 9,
+
+        /// <summary>An animal fell ill; CropId is her name (spec 012 §3.14). Information.</summary>
+        AnimalSick = 10,
+
+        /// <summary>A calf was born and sold; CropId is the mother's name. Information.</summary>
+        CalfBorn = 11,
     }
 
     public enum NotifyImportance
@@ -73,7 +79,7 @@ namespace Sim.Core.Saves
         public static NotifyImportance ImportanceOf(NotifyKind kind)
         {
             if (kind <= NotifyKind.ContractLapsed) return NotifyImportance.Urgent;
-            return kind == NotifyKind.HandsWork ? NotifyImportance.Information : NotifyImportance.NeedsYou;
+            return kind == NotifyKind.HandsWork || kind == NotifyKind.AnimalSick || kind == NotifyKind.CalfBorn ? NotifyImportance.Information : NotifyImportance.NeedsYou;
         }
 
         public static List<PlannedNotification> Plan(Simulation sim, NotifyDef def, bool enabled, int utcOffsetMinutes)
@@ -119,6 +125,8 @@ namespace Sim.Core.Saves
                         items.Add(new AbsenceItem(at, NotifyKind.OrdersPosted, string.Join(",", goods)));
                         break;
                     case FeedLow f: items.Add(new AbsenceItem(at, NotifyKind.FeedLow, f.Good)); break;
+                    case AnimalSick a: items.Add(new AbsenceItem(at, NotifyKind.AnimalSick, Livestock.LivestockRules.Find(sim, a.AnimalId)?.Name)); break;
+                    case CalfBorn b: items.Add(new AbsenceItem(at, NotifyKind.CalfBorn, Livestock.LivestockRules.Find(sim, b.AnimalId)?.Name)); break;
                     case OrderExecuted o:
                         if (o.Action == OrderAction.Harvested || o.Action == OrderAction.Picked) items.Add(new AbsenceItem(at, NotifyKind.HandsWork, o.GoodId));
                         break;

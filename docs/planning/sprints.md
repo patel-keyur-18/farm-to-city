@@ -539,7 +539,7 @@
 
 ## Sprint 12 · 25–31 Jan 2027 · Phase 2 (cattle; spec 014 written)
 
-- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-199 done and approved; US-200 done (owner's review); US-201 next
+- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-199 and US-200 done and approved; US-201 done (owner's review); US-202 next
 - **Branch:** `sprint/12-cattle-citizens`
 - **Goal:** Spec 012 approved and built: buffalo and cows in a shed, milk to the co-op every morning, fodder, straw and feed, playable on the iPhone. Spec 014 (citizens, households and population) written and approved; its code comes in Sprints 13–14.
 - **Points:** 49 (spec 012 re-pointed the ~15 estimate to 36; US-206 adds 8 (ADR 0061), US-207 5 (ADR 0062); runs 2 weeks as Sprint 11 did)
@@ -551,7 +551,7 @@
 | US-126 | Raise animals: the shed, buying and selling, milk and the lactation cycle | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
 | US-199 | Feeding: the feed room, the straw stack, the compost pit, hunger and health | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
 | US-200 | Green fodder: berseem and sorghum cut daily, sold standing, the fodder order | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
-| US-201 | Health and help: vaccination, disease and the vet, the animals order | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
+| US-201 | Health and help: vaccination, disease and the vet, the animals order | [F13.1](features/F13.1-livestock.md) | 3 | Must | Done |
 | US-202 | The books: accounts, the dairy loan, foreclosure, save schema 7 | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
 | US-203 | Balance: a dairy bot and payback | [F13.1](features/F13.1-livestock.md) | 2 | Must | To do |
 | US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |

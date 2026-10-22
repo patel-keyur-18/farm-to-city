@@ -166,4 +166,31 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "FodderEnded(tile=" + TileId + ", crop=" + CropId + ")"; }
     }
+
+    /// <summary>No cash for the season's vaccination: she goes unvaccinated this season (spec 012 §3.10).</summary>
+    public sealed class VaccinationMissed : SimEvent
+    {
+        public long AnimalId { get; }
+
+        public VaccinationMissed(long simTime, long animalId) : base(simTime) { AnimalId = animalId; }
+
+        protected override string Describe() { return "VaccinationMissed(animal=" + AnimalId + ")"; }
+    }
+
+    /// <summary>She fell ill; the vet came (and cost) or, with no cash, didn't (spec 012 §3.10).</summary>
+    public sealed class AnimalSick : SimEvent
+    {
+        public long AnimalId { get; }
+        public long Cost { get; }
+        public bool VetCame { get; }
+
+        public AnimalSick(long simTime, long animalId, long cost, bool vetCame) : base(simTime)
+        {
+            AnimalId = animalId;
+            Cost = cost;
+            VetCame = vetCame;
+        }
+
+        protected override string Describe() { return "AnimalSick(animal=" + AnimalId + ", cost=" + Cost + ", vet=" + VetCame + ")"; }
+    }
 }

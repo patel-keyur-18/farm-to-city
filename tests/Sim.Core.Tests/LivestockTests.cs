@@ -338,5 +338,84 @@ namespace Sim.Core.Tests
             LivestockKit.ToMorning(sim);
             Assert.That(sim.State.Market.Stock[compost] - before, Is.EqualTo(216_600), "9.5 kg × 22.8 a game day");
         }
+        // ---- US-201: health (spec 012 §3.10) ----
+
+        /// <summary>The co-op pays nothing, so a town with no cash stays without it (the vet and vaccine tests).</summary>
+        private static string NoMilkMoney(string file, string json)
+        {
+            return file == "livestock.json" ? json.Replace("\"milkBasePerLitre\": 12", "\"milkBasePerLitre\": 0").Replace("\"milkPerFatPoint\": 6.5", "\"milkPerFatPoint\": 0") : json;
+        }
+
+        [Test]
+        public void Health_VaccineDisease()
+        {
+            Simulation sim = LivestockKit.WithShed(Game(NoMilkMoney)); // the morning's milk money would pay the vet
+            Animal a = LivestockKit.Buy(sim);
+            Assert.That(LivestockRules.DiseaseChance(sim, a), Is.EqualTo(Fixed.Parse("0.01")));
+            a.Health = Fixed.Parse("0.5");
+            Assert.That(LivestockRules.DiseaseChance(sim, a), Is.EqualTo(Fixed.Parse("0.02")), "× (1 + 2 × 0.5)");
+            a.Health = Fixed.One;
+
+            // The first morning of the next season: the co-op's vet vaccinates her (300).
+            long vet = sim.State.Ledger.Balance(Account.VetAndBreeding);
+            sim.AdvanceTo(sim.Clock.SecondsPerSeason + 6 * Hour);
+            Assert.That(a.VaccinatedPeriod, Is.EqualTo(1));
+            Assert.That(sim.State.Ledger.Balance(Account.VetAndBreeding) - vet, Is.GreaterThanOrEqualTo(Money(300)));
+
+            // With no cash at the next season start she goes unvaccinated and her risk is × 3; nothing is owed.
+            CashTo(sim, 0);
+            sim.DrainEvents();
+            sim.AdvanceTo(2 * sim.Clock.SecondsPerSeason + 6 * Hour);
+            Assert.That(sim.PendingEvents.OfType<VaccinationMissed>().Count(), Is.EqualTo(1));
+            Assert.That(a.VaccinatedPeriod, Is.EqualTo(1));
+            Assert.That(LivestockRules.DiseaseChance(sim, a), Is.EqualTo(Fixed.Parse("0.03") * (Fixed.One + Fixed.FromInt(2) * (Fixed.One - a.Health))));
+            Assert.That(sim.State.Ledger.Cash, Is.GreaterThanOrEqualTo(0));
+        }
+
+        [Test]
+        public void Disease_VetAndNoVet()
+        {
+            foreach (bool cash in new[] { true, false })
+            {
+                Simulation sim = LivestockKit.WithShed(Game((f, j) => NoMilkMoney(f, NoSpoilage(f, j))));
+                Animal a = LivestockKit.Buy(sim);
+                if (!cash) CashTo(sim, 0);
+                AnimalSick sick = null;
+                for (int d = 0; d < 400 && sick == null; d++)
+                {
+                    sim.DrainEvents();
+                    if (cash) { Fill(sim, "straw", 136_800); Fill(sim, "cattle_feed", 114_000); }
+                    LivestockKit.ToMorning(sim);
+                    sick = sim.PendingEvents.OfType<AnimalSick>().FirstOrDefault();
+                }
+                Assert.That(sick, Is.Not.Null, "a seeded illness within 400 days");
+                Assert.That(sick.VetCame, Is.EqualTo(cash));
+                Assert.That(sick.Cost, Is.EqualTo(cash ? Money(1500) : 0));
+                Assert.That(a.SickDays, Is.EqualTo(cash ? 1 : 2));
+                sim.DrainEvents();
+                LivestockKit.ToMorning(sim);
+                Assert.That(a.LastMilkMl, Is.EqualTo(0), "her milk on a sick day is thrown away");
+                Assert.That(LivestockKit.L(sim).Animals, Has.Count.EqualTo(1), "illness never kills");
+            }
+        }
+
+        [Test]
+        public void Disease_SameSeedSameDays()
+        {
+            string Run()
+            {
+                Simulation sim = LivestockKit.WithShed();
+                LivestockKit.Buy(sim);
+                var days = new System.Collections.Generic.List<long>();
+                for (int d = 0; d < 120; d++)
+                {
+                    sim.DrainEvents();
+                    LivestockKit.ToMorning(sim);
+                    if (sim.PendingEvents.OfType<AnimalSick>().Any()) days.Add(sim.State.Clock.SimTime / Day);
+                }
+                return string.Join(",", days);
+            }
+            Assert.That(Run(), Is.EqualTo(Run()));
+        }
     }
 }

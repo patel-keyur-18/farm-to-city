@@ -90,6 +90,13 @@ namespace Sim.Core.Livestock
             return ml.MulRatio(seconds, ClockDef.SecondsPerDay).RoundToLong();
         }
 
+        /// <summary>Her chance of falling ill this morning (§3.10): diseaseChance × (vaccinated this season ? 1 : unvaccinatedFactor) × (1 + sickHealthFactor × (1 − health)).</summary>
+        public static Fixed DiseaseChance(Simulation sim, Animal a)
+        {
+            LivestockDef ld = Defs(sim).Livestock;
+            return ld.DiseaseChance * (a.VaccinatedPeriod == sim.Period ? Fixed.One : ld.UnvaccinatedFactor) * (Fixed.One + ld.SickHealthFactor * (Fixed.One - a.Health));
+        }
+
         /// <summary>Hours a game day the animals need from the Care pool (§3.9).</summary>
         public static Fixed LabourDemand(Simulation sim)
         {

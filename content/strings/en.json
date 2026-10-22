@@ -1545,5 +1545,14 @@
   "crop.sorghum": "Fodder sorghum",
   "good.seed_berseem": "Berseem seed",
   "good.seed_sorghum": "Sorghum seed",
-  "event.FodderEnded": "A fodder field's last cutting season is over."
+  "event.FodderEnded": "A fodder field's last cutting season is over.",
+  "ledger.vaccine": "The season's vaccination by the co-op's vet",
+  "ledger.vet": "The vet's visit to a sick animal",
+  "event.VaccinationMissed": "An animal missed this season's vaccination: there wasn't the cash.",
+  "event.AnimalSick": "An animal fell ill.",
+  "notify.AnimalSick.title": "{name} was ill",
+  "notify.AnimalSick.body": "The vet came; she's resting.",
+  "notify.CalfBorn.title": "{name} had a calf",
+  "notify.CalfBorn.body": "The calf was sold at the cattle fair.",
+  "animal.someone": "An animal"
 }

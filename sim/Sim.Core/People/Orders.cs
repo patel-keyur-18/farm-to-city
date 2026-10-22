@@ -50,7 +50,8 @@ namespace Sim.Core.People
 
         private static void Act(Simulation sim, Hand h, StandingOrder o)
         {
-            if (o.Kind == OrderTargetKind.Field ? Field(sim, h, o) : Tree(sim, h, o)) h.ActionsInHour++;
+            bool acted = o.Kind == OrderTargetKind.Field ? Field(sim, h, o) : o.Kind == OrderTargetKind.Tree ? Tree(sim, h, o) : Animals(sim, h, o);
+            if (acted) h.ActionsInHour++;
         }
 
         private static bool Field(Simulation sim, Hand h, StandingOrder o)
@@ -121,6 +122,34 @@ namespace Sim.Core.People
                 }
             }
             return FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)o.Target], fert);
+        }
+
+        /// <summary>
+        /// The animals order (spec 012 §3.11): when the straw or the feed would last less than the order's days, he buys to fill that
+        /// place (straw from neighbours, feed from the dealer) at today's price, as far as cash allows; otherwise he waits for money.
+        /// </summary>
+        private static bool Animals(Simulation sim, Hand h, StandingOrder o)
+        {
+            LivestockDefs defs = Livestock.LivestockRules.Defs(sim);
+            if (Livestock.LivestockRules.Shed(sim) == null || sim.State.Livestock.Animals.Count == 0) return false;
+            bool acted = false, broke = false;
+            foreach (int good in new[] { defs.Straw, defs.Feed })
+            {
+                if (Livestock.LivestockSystem.DaysLeft(sim, good) >= o.Days) continue;
+                long room = Store.Fits(sim, good);
+                Definitions.GoodDef g = sim.Config.Game.Market.Goods[good];
+                Maths.Fixed price = MarketRules.InputPrice(sim, good);
+                long afford = (Maths.Fixed.FromInt(sim.State.Ledger.Cash * 10) / price).FloorToLong(); // grams the cash buys
+                long q = System.Math.Min(room, afford);
+                while (q > 0 && MarketRules.Value(sim, good, q, price) > sim.State.Ledger.Cash) q--;
+                if (q <= 0) { broke = true; continue; }
+                long cash = sim.State.Ledger.Cash;
+                if (Store.BuyInput(sim, good, q, "order:animals") != RejectReason.None) { broke = true; continue; }
+                Done(sim, h, o, OrderAction.Bought, g.Id, q, cash - sim.State.Ledger.Cash);
+                acted = true;
+            }
+            if (broke && !acted) Wait(sim, o, OrderWait.InsufficientFunds);
+            return acted;
         }
 
         private static bool Tree(Simulation sim, Hand h, StandingOrder o)

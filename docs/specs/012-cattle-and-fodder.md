@@ -410,6 +410,8 @@ Shed sheet                                                            [×]
 - Fodder crops can be sown from the Hamlet, with cattle (`EraLocked` before), so the first week's sow sheet and season hints stay as they were; the sow sheet's fodder card comes with US-205.
 - A fodder field's growth job ends its stand at the close of its last cut season; its soil change is applied at each cut and on clearing, pro rata.
 - A save loads content that has gained goods or crops since it was written (they start empty).
+- The vet vaccinates on the first 6:00 of each season, after the morning's milk money (so the milk can pay for it), not at the seasonal pass; the disease draw is keyed by the animal and the day.
+- The hand's animals order is checked at every hourly pass with his other orders (it buys only when a place is under its days), so it also acts the moment it's given.
 
 ### Changes after approval (owner, 2026-10-22, ADR 0061)
 
