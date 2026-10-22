@@ -19,7 +19,7 @@ namespace Sim.Content
 
             string lp = root + ".livestock";
             JObject l = Object(Required(o, root, "livestock"), lp);
-            OnlyFields(l, lp, "realDaysPerGameDay", "feedHour", "shedTile", "unlockEra", "householdLitresPerDay", "milkBasePerLitre", "milkPerFatPoint",
+            OnlyFields(l, lp, "realDaysPerGameDay", "feedHour", "shedTile", "unlockEra", "householdLitresPerDay", "greenFodderBuyPrice", "greenFodderSellPrice", "milkBasePerLitre", "milkPerFatPoint",
                 "commonsShare", "minMilkFactor", "hungryBelow", "hungerGraceDays", "hungerHealthLoss", "healthRecoveryPerDay", "minHealth", "feedWeights",
                 "lowDays", "diseaseChance", "unvaccinatedFactor", "sickHealthFactor", "sickHealthLoss", "vaccineCost", "vetVisitCost", "lactationCurve", "names");
 
@@ -48,6 +48,8 @@ namespace Sim.Content
                 ShedTile = shedTile,
                 UnlockEra = eraId,
                 HouseholdLitresPerDay = Bounded(l, lp, "householdLitresPerDay", "0", "10"),
+                GreenFodderBuyPrice = Bounded(l, lp, "greenFodderBuyPrice", "0", "50"),
+                GreenFodderSellPrice = Bounded(l, lp, "greenFodderSellPrice", "0", "50"),
                 MilkBasePerLitre = Bounded(l, lp, "milkBasePerLitre", "0", "200"),
                 MilkPerFatPoint = Bounded(l, lp, "milkPerFatPoint", "0", "50"),
                 CommonsShare = SeasonFactors(l, lp, "commonsShare", "0", "1"),
@@ -96,7 +98,25 @@ namespace Sim.Content
                     Bounded(a, p, "dungCompostKgPerDay", "0", "50"), Money(Required(a, p, "calfPrice"), Join(p, "calfPrice")),
                     Bounded(a, p, "sellShare", "0", "1")));
             }
-            return new LivestockDefs(def, animals, shed, era);
+            if (def.GreenFodderSellPrice > def.GreenFodderBuyPrice) throw new ContentException(Join(lp, "greenFodderSellPrice"), "must not be above the buying price");
+            if (!buildings.Exists(b => b.CompostPitKg > 0) || shedDef.FeedRoomKg <= 0 || shedDef.StrawStackKg <= 0)
+                throw new ContentException("buildings", "the home needs a compost pit and the cattle shed a feed room and a straw stack");
+            return new LivestockDefs(def, animals, shed, era, PlaceGood(market, GoodPlace.StrawStack), PlaceGood(market, GoodPlace.FeedRoom),
+                PlaceGood(market, GoodPlace.CompostPit));
+        }
+
+        /// <summary>The one good kept in a place (spec 012 §3.3).</summary>
+        private static int PlaceGood(MarketDefs market, GoodPlace place)
+        {
+            int found = -1;
+            for (int g = 0; g < market.Goods.Count; g++)
+            {
+                if (market.Goods[g].Place != place) continue;
+                if (found >= 0) throw new ContentException("goods", "more than one good kept in the " + place);
+                found = g;
+            }
+            if (found < 0) throw new ContentException("goods", "no good is kept in the " + place);
+            return found;
         }
 
         private static List<Fixed> SeasonFactors(JObject o, string path, string name, string min, string max)

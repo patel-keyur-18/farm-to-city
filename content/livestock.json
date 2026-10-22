@@ -5,6 +5,8 @@
     "shedTile": 103,
     "unlockEra": "hamlet",
     "householdLitresPerDay": 1.5,
+    "greenFodderBuyPrice": 3,
+    "greenFodderSellPrice": 1,
     "milkBasePerLitre": 12,
     "milkPerFatPoint": 6.5,
     "commonsShare": { "spring": 0.10, "summer": 0.05, "monsoon": 0.40, "winter": 0.10 },

@@ -26,34 +26,66 @@ namespace Sim.Core.Market
             return (long)((n + (BigInteger.One << (Fixed.FractionBits - 1))) >> Fixed.FractionBits);
         }
 
-        /// <summary>The founder's store capacity in grams: the sum over their buildings.</summary>
-        public static long CapacityGrams(Simulation sim)
+        /// <summary>
+        /// The founder's capacity in grams for a place: the hut store, or the shed's feed room and straw stack, or the yard's
+        /// compost pit (spec 012 §3.3): the sum over their buildings.
+        /// </summary>
+        public static long CapacityGrams(Simulation sim, GoodPlace place = GoodPlace.Store)
         {
             long kg = 0;
-            foreach (Land.Building b in sim.State.Land.Buildings) kg += sim.Config.Game.Buildings[b.Def].StoreCapacityKg;
+            foreach (Land.Building b in sim.State.Land.Buildings)
+            {
+                BuildingDef d = sim.Config.Game.Buildings[b.Def];
+                kg += place == GoodPlace.Store ? d.StoreCapacityKg : place == GoodPlace.FeedRoom ? d.FeedRoomKg
+                    : place == GoodPlace.StrawStack ? d.StrawStackKg : d.CompostPitKg;
+            }
             return kg * 1000;
         }
 
-        /// <summary>The weight of everything in store, in grams.</summary>
-        public static long UsedGrams(Simulation sim)
+        /// <summary>The weight of everything kept in a place (the hut store by default), in grams.</summary>
+        public static long UsedGrams(Simulation sim, GoodPlace place = GoodPlace.Store)
         {
             var goods = sim.Config.Game.Market.Goods;
             long used = 0;
-            for (int g = 0; g < goods.Count; g++) used += WeightGrams(goods[g], sim.State.Market.Stock[g]);
+            for (int g = 0; g < goods.Count; g++)
+                if (goods[g].Place == place) used += WeightGrams(goods[g], sim.State.Market.Stock[g]);
             return used;
         }
 
-        /// <summary>The most of a good that fits the free space (rounded down).</summary>
+        /// <summary>The most of a good that fits the free space of its place (rounded down).</summary>
         public static long Fits(Simulation sim, int good)
         {
             GoodDef g = sim.Config.Game.Market.Goods[good];
-            long free = CapacityGrams(sim) - UsedGrams(sim);
+            long free = CapacityGrams(sim, g.Place) - UsedGrams(sim, g.Place);
             if (free <= 0) return 0;
             if (g.WeightKg == Fixed.Zero) return long.MaxValue;
             // q × weightKg × (1000 / unitSize) ≤ free  ⇔  q ≤ free × 2^32 ÷ (weightKg.Raw × (1000 / unitSize))
             BigInteger q = (new BigInteger(free) << Fixed.FractionBits) / (new BigInteger(g.WeightKg.Raw) * (1000 / g.UnitSize));
             while (q > 0 && WeightGrams(g, (long)q) > free) q -= 1; // the weight is rounded to the nearest gram
             return (long)q;
+        }
+
+        /// <summary>
+        /// Buys an input into its place at today's input price (spec 004 §3.4): Dr 1200, Cr Cash, at average cost (ADR 0034). The
+        /// feed room and the straw stack need the cattle shed (spec 012 §3.3: <c>NoShed</c>); a place without room is
+        /// <c>PlaceFull</c>, the hut store <c>StoreFull</c>. Shared by <c>Buy</c>, the shed's Fill and the hand's animals order.
+        /// </summary>
+        internal static Commands.RejectReason BuyInput(Simulation sim, int good, long quantity, string reference)
+        {
+            GoodDef def = sim.Config.Game.Market.Goods[good];
+            if ((def.Place == GoodPlace.FeedRoom || def.Place == GoodPlace.StrawStack) && Livestock.LivestockRules.Shed(sim) == null)
+                return Commands.RejectReason.NoShed;
+            if (quantity > Fits(sim, good)) return def.Place == GoodPlace.Store ? Commands.RejectReason.StoreFull : Commands.RejectReason.PlaceFull;
+            long cost = MarketRules.Value(sim, good, quantity, MarketRules.InputPrice(sim, good));
+            if (!sim.State.Ledger.CanAfford(cost)) return Commands.RejectReason.InsufficientFunds;
+            if (cost > 0)
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.inputsBought", reference,
+                    new Posting(Account.InputsInStore, cost), new Posting(Account.Cash, -cost));
+            sim.State.Market.Stock[good] += quantity;
+            sim.State.Market.StockCost[good] += cost;
+            Livestock.LivestockSystem.Refilled(sim, def.Place);
+            sim.Emit(new InputsBought(sim.State.Clock.SimTime, def.Id, quantity, cost));
+            return Commands.RejectReason.None;
         }
 
         /// <summary>
@@ -130,6 +162,8 @@ namespace Sim.Core.Market
         /// <summary>An input's expense account when used or spoiled: 5000 for seed, 5010 for fertiliser, compost and spray.</summary>
         internal static Account UseAccount(Simulation sim, int good)
         {
+            GoodPlace place = sim.Config.Game.Market.Goods[good].Place;
+            if (place == GoodPlace.FeedRoom || place == GoodPlace.StrawStack) return Account.AnimalFeed; // spec 012 §3.7
             foreach (CropDef c in sim.Config.Game.Farm.Crops) if (c.SeedGood == good) return Account.SeedsAndPlanting;
             foreach (GardenCropDef c in sim.Config.Game.Farm.GardenCrops) if (c.SeedGood == good) return Account.SeedsAndPlanting;
             return Account.FertiliserAndSpraying;

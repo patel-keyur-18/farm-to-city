@@ -104,4 +104,51 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "CalfBorn(animal=" + AnimalId + ", amount=" + Amount + ")"; }
     }
+
+    /// <summary>Straw or feed will last less than <c>lowDays</c> game days (spec 012 §3.7); once until refilled.</summary>
+    public sealed class FeedLow : SimEvent
+    {
+        public string Good { get; }
+        public long DaysLeft { get; }
+
+        public FeedLow(long simTime, string good, long daysLeft) : base(simTime)
+        {
+            Good = good;
+            DaysLeft = daysLeft;
+        }
+
+        protected override string Describe() { return "FeedLow(good=" + Good + ", daysLeft=" + DaysLeft + ")"; }
+    }
+
+    /// <summary>The morning's feeding (spec 012 §3.7): grams of green from each source, straw and feed given, and what it cost.</summary>
+    public sealed class AnimalsFed : SimEvent
+    {
+        public long GreenNeed { get; }
+        public long GreenGiven { get; }
+        public long GreenBoughtAmount { get; }
+        public long GreenSold { get; }
+        public long GreenSoldAmount { get; }
+        public long StrawGiven { get; }
+        public long FeedGiven { get; }
+        public Sim.Core.Maths.Fixed FedScore { get; }
+
+        public AnimalsFed(long simTime, long greenNeed, long greenGiven, long greenBoughtAmount, long greenSold, long greenSoldAmount, long strawGiven,
+            long feedGiven, Sim.Core.Maths.Fixed fedScore) : base(simTime)
+        {
+            GreenNeed = greenNeed;
+            GreenGiven = greenGiven;
+            GreenBoughtAmount = greenBoughtAmount;
+            GreenSold = greenSold;
+            GreenSoldAmount = greenSoldAmount;
+            StrawGiven = strawGiven;
+            FeedGiven = feedGiven;
+            FedScore = fedScore;
+        }
+
+        protected override string Describe()
+        {
+            return "AnimalsFed(green=" + GreenGiven + "/" + GreenNeed + ", bought=" + GreenBoughtAmount + ", sold=" + GreenSold + ", straw=" + StrawGiven
+                + ", feed=" + FeedGiven + ", fed=" + FedScore + ")";
+        }
+    }
 }

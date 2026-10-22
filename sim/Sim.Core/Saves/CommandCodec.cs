@@ -85,6 +85,7 @@ namespace Sim.Core.Saves
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
                 case SellAnimal c: At(c, Tag.SellAnimal); w.WriteLong(c.AnimalId); break;
+                case SetBuyGreenFodder c: At(c, Tag.SetBuyGreenFodder); w.WriteBool(c.On); break;
                 case PostJob c: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
@@ -169,6 +170,7 @@ namespace Sim.Core.Saves
                     return new BuyAnimal(at, kind, f);
                 }
                 case Tag.SellAnimal: return new SellAnimal(at, r.ReadLong());
+                case Tag.SetBuyGreenFodder: return new SetBuyGreenFodder(at, r.ReadBool());
                 case Tag.PostJob: return new PostJob(at, r.ReadBool());
                 case Tag.Interview: return new Interview(at, r.ReadLong());
                 case Tag.OfferContract: return new OfferContract(at, r.ReadLong());

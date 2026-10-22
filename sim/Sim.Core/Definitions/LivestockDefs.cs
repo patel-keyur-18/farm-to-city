@@ -85,6 +85,10 @@ namespace Sim.Core.Definitions
         /// <summary>Milk the household keeps, litres a real day (§3.5).</summary>
         public Fixed HouseholdLitresPerDay { get; set; }
 
+        /// <summary>Green fodder from neighbours, coins a kg (× PriceIndex): bought for a shortfall, sold standing when spare (§3.7).</summary>
+        public Fixed GreenFodderBuyPrice { get; set; }
+        public Fixed GreenFodderSellPrice { get; set; }
+
         /// <summary>The co-op's price a litre: base + perFatPoint × fat% (§3.5), money.</summary>
         public Fixed MilkBasePerLitre { get; set; }
         public Fixed MilkPerFatPoint { get; set; }
@@ -135,8 +139,16 @@ namespace Sim.Core.Definitions
         /// <summary>Index of <see cref="LivestockDef.UnlockEra"/> in the onboarding eras, or 0 without eras.</summary>
         public int UnlockEra { get; }
 
-        public LivestockDefs(LivestockDef livestock, IReadOnlyList<AnimalDef> animals, int shed, int unlockEra)
+        /// <summary>The goods kept in the straw stack, the feed room and the compost pit (spec 012 §3.3).</summary>
+        public int Straw { get; }
+        public int Feed { get; }
+        public int Compost { get; }
+
+        public LivestockDefs(LivestockDef livestock, IReadOnlyList<AnimalDef> animals, int shed, int unlockEra, int straw, int feed, int compost)
         {
+            Straw = straw;
+            Feed = feed;
+            Compost = compost;
             Livestock = livestock;
             Animals = new List<AnimalDef>(animals).AsReadOnly();
             Shed = shed;

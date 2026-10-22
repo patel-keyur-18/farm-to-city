@@ -150,8 +150,9 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Market.StockCostOf(seed), Is.EqualTo(0));
 
             // Capacity and cash.
-            Rejects(sim, new Buy(sim.State.Clock.SimTime, "compost", 1_500_000), RejectReason.StoreFull); // 1,250 kg free
-            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "compost", 1_000_000)).Accepted, Is.True);
+            Rejects(sim, new Buy(sim.State.Clock.SimTime, "fertiliser_chemical", 1_500_000), RejectReason.StoreFull); // 1,250 kg free (compost lives in the compost pit, spec 012)
+            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "fertiliser_chemical", 1_000_000)).Accepted, Is.True);
+            Rejects(sim, new Buy(sim.State.Clock.SimTime, "compost", 8_000_001), RejectReason.PlaceFull);
             Simulation broke = TestSim.NewFarm(game: TestContent.Game());
             Rejects(broke, new Buy(0, "spray", 100_000), RejectReason.InsufficientFunds); // 100 L × 525 = 52,500
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);

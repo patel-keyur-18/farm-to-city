@@ -26,6 +26,15 @@ namespace Sim.Core.Definitions
         Fruit = 2,
     }
 
+    /// <summary>Where a good is kept (spec 012 §3.3): the hut store, or a place of its own that counts against its own room.</summary>
+    public enum GoodPlace
+    {
+        Store = 0,
+        FeedRoom = 1,
+        StrawStack = 2,
+        CompostPit = 3,
+    }
+
     /// <summary>A tradeable good from <c>content/goods.json</c> (spec 004 §4).</summary>
     public sealed class GoodDef
     {
@@ -53,10 +62,14 @@ namespace Sim.Core.Definitions
         public Fixed DailyVolatility { get; }
         public Fixed DailyBand { get; }
 
+        /// <summary>Where it's kept (spec 012 §3.3); the hut store unless a place is given.</summary>
+        public GoodPlace Place { get; }
+
         public GoodDef(string id, string nameKey, GoodKind kind, GoodUnit unit, Fixed basePrice, Fixed elasticity,
             Fixed spoilagePerDay, SalesKind sales, bool edible, Fixed weightKg, bool priceControlled,
-            Fixed dailyVolatility = default, Fixed dailyBand = default)
+            Fixed dailyVolatility = default, Fixed dailyBand = default, GoodPlace place = GoodPlace.Store)
         {
+            Place = place;
             DailyVolatility = dailyVolatility;
             DailyBand = dailyBand;
             Id = id;

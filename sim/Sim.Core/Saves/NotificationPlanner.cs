@@ -21,6 +21,9 @@ namespace Sim.Core.Saves
 
         /// <summary>The supermarket's 6:00 orders (spec 011 §3.5); CropId lists the goods, comma-separated.</summary>
         OrdersPosted = 8,
+
+        /// <summary>Straw or cattle feed will last less than 2 days (spec 012 §3.14); CropId is the good.</summary>
+        FeedLow = 9,
     }
 
     public enum NotifyImportance
@@ -115,6 +118,7 @@ namespace Sim.Core.Saves
                         foreach (Market.SupermarketOrder so in p.Orders) goods.Add(sim.Config.Game.Market.Goods[so.Good].Id);
                         items.Add(new AbsenceItem(at, NotifyKind.OrdersPosted, string.Join(",", goods)));
                         break;
+                    case FeedLow f: items.Add(new AbsenceItem(at, NotifyKind.FeedLow, f.Good)); break;
                     case OrderExecuted o:
                         if (o.Action == OrderAction.Harvested || o.Action == OrderAction.Picked) items.Add(new AbsenceItem(at, NotifyKind.HandsWork, o.GoodId));
                         break;

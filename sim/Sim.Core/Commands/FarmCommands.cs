@@ -103,6 +103,7 @@ namespace Sim.Core.Commands
             long grams = c.HarvestGrams;
             RejectReason r = Store.Add(sim, def.OutputGood, grams, Overflow, "crop:" + c.Id);
             if (r != RejectReason.None) return CommandResult.Reject(r);
+            Livestock.LivestockSystem.AddStraw(sim, def, grams); // wheat and rice give straw to the stack (spec 012 §3.8)
 
             // The harvest's saved seed is one cycle older than the seed it grew from (§3.9).
             FarmState farm = sim.State.Farm;

@@ -38,7 +38,7 @@ namespace Sim.Content
                 JObject c = Object(tokens[i], p);
                 OnlyFields(c, p, "id", "nameKey", "outputGood", "seedGood", "sowSeasons", "growthMinutes", "seasonYieldPerAcre",
                     "seedPerAcrePerSeason", "moistureMin", "moistureMax", "labourPerAcrePerDay", "fertilityPerSeason", "canSaveSeed",
-                    "savedSeedLossPerSeason", "savedSeedFloor");
+                    "savedSeedLossPerSeason", "savedSeedFloor", "strawPerKg");
                 string id = UniqueId(c, p, crops.ConvertAll(x => x.Id));
                 int output = GoodRef(c, p, "outputGood", market, GoodKind.Produce);
                 int seed = GoodRef(c, p, "seedGood", market, GoodKind.Input);
@@ -61,7 +61,7 @@ namespace Sim.Content
                 }
                 crops.Add(new CropDef(id, String(Required(c, p, "nameKey"), p + ".nameKey"), output, seed, seasons, minutes, yield, seedKg,
                     mMin, mMax, Bounded(c, p, "labourPerAcrePerDay", "0", "24"), Bounded(c, p, "fertilityPerSeason", "-20", "20"),
-                    canSave, loss, floor));
+                    canSave, loss, floor) { StrawPerKg = c["strawPerKg"] == null ? Fixed.Zero : Bounded(c, p, "strawPerKg", "0", "5") });
             }
 
             garden = new List<GardenCropDef>();

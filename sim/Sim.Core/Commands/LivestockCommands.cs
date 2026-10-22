@@ -72,6 +72,7 @@ namespace Sim.Core.Commands
             s.Animals.Add(a);
             FarmSystem.Refresh(sim);
             sim.Emit(new AnimalBought(t, a.Id, KindId, a.Name, cost));
+            LivestockSystem.LowCheck(sim); // a first animal never arrives to an empty feed room unnoticed (§3.7)
             return CommandResult.Ok;
         }
 
@@ -115,6 +116,24 @@ namespace Sim.Core.Commands
             sim.State.Livestock.Animals.Remove(a);
             FarmSystem.Refresh(sim);
             sim.Emit(new AnimalSold(t, a.Id, a.Name, proceeds));
+            return CommandResult.Ok;
+        }
+    }
+}
+
+namespace Sim.Core.Commands
+{
+    /// <summary>Buy the green fodder shortfall from neighbours every morning, or not (spec 012 §3.7; on by default).</summary>
+    public sealed class SetBuyGreenFodder : TimedCommand
+    {
+        public bool On { get; }
+
+        public SetBuyGreenFodder(long at, bool on) : base(at) { On = on; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (sim.State.Livestock == null) return CommandResult.Reject(RejectReason.NoShed);
+            sim.State.Livestock.BuyGreenFodder = On;
             return CommandResult.Ok;
         }
     }

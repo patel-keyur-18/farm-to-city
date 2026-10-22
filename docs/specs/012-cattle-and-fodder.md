@@ -268,7 +268,7 @@ At the 6:00 hourly pass, system Agriculture, before the Market system's truck an
 | `MilkDef` | `basePerLitre`, `perFatPoint` | money | 12, 6.5 | ≥ 0 | |
 | `BuildingDef` (`buildings.json`) | `cattle_shed`: `value` 40,000, `buildHours` 24, `usefulLifeSeasons` 60, `animals` 4, `feedRoomKg` 2,400, `strawStackKg` 10,000 | | | | |
 | | `hut.compostPitKg` | kg | 8,000 | | |
-| `GoodDef` (`goods.json`) | new `cattle_feed` (input, 28 a kg, place `feedRoom`), `straw` (input, 6 a kg, place `strawStack`), `green_fodder` (never stocked: `basePrice` 3 to buy, `sellPrice` 1 to sell standing), `seed_berseem` (input, 180 a kg), `seed_sorghum` (input, 90 a kg); `compost` gets place `compostPit`; new fields `place`, `sellPrice` | | | | |
+| `GoodDef` (`goods.json`) | new `cattle_feed` (input, 28 a kg, place `feedRoom`), `straw` (input, 6 a kg, place `strawStack`), (green fodder is never stocked, so its prices are `LivestockDef.greenFodderBuyPrice` 3 and `greenFodderSellPrice` 1 in `livestock.json`, implementation note US-199), `seed_berseem` (input, 180 a kg), `seed_sorghum` (input, 90 a kg); `compost` gets place `compostPit`; new field `place` | | | | |
 | `CropDef` (`crops.json`) | `strawPerKg` (wheat 1.5, rice 1.2); new crops `berseem`, `sorghum` with a `fodder` block (`cutSeasons`) | | §3.8b | | |
 | `LenderDef` | `livestockLtv` | Fixed | bank 0.75, moneylender 0 | 0–1 | |
 | `NotifyDef` | kinds | | `FeedLow`, `AnimalSick`, `CalfBorn` | | |

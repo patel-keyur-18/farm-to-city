@@ -336,10 +336,11 @@ namespace Sim.Core.Farm
         {
             var s = new FarmState { NextCropId = r.ReadLong(), CareRatio = r.ReadFixed(), LastAccrual = r.ReadLong() };
             int crops = r.Count(ContentTable.Crop);
-            if (r.SavedCount(ContentTable.Crop) != crops) throw new SaveContentException("the content has " + crops + " crops, the save " + r.SavedCount(ContentTable.Crop));
+            // Crops added to the content since the save have no saved seed (spec 012's berseem and sorghum); none may be missing.
+            if (r.SavedCount(ContentTable.Crop) > crops) throw new SaveContentException("the content has " + crops + " crops, the save " + r.SavedCount(ContentTable.Crop));
             s.SavedSeedAge = new Fixed[crops];
             s.HasSavedSeed = new bool[crops];
-            for (int i = 0; i < crops; i++)
+            for (int i = 0; i < r.SavedCount(ContentTable.Crop); i++)
             {
                 int at = r.Slot(ContentTable.Crop, i);
                 s.HasSavedSeed[at] = r.ReadBool();

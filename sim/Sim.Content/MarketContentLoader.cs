@@ -36,7 +36,7 @@ namespace Sim.Content
                 string p = Index(root + ".goods", i);
                 JObject g = Object(tokens[i], p);
                 OnlyFields(g, p, "id", "nameKey", "kind", "unit", "basePrice", "elasticity", "spoilagePerDay", "sales",
-                    "edible", "weightKg", "priceControlled", "dailyVolatility", "dailyBand");
+                    "edible", "weightKg", "priceControlled", "dailyVolatility", "dailyBand", "place");
                 string id = UniqueId(g, p, list.ConvertAll(x => x.Id));
                 string kind = String(Required(g, p, "kind"), p + ".kind");
                 if (kind != "produce" && kind != "input") throw new ContentException(p + ".kind", "expected produce or input");
@@ -71,9 +71,22 @@ namespace Sim.Content
                 Fixed volatility = g["dailyVolatility"] == null ? Fixed.Zero : Bounded(g, p, "dailyVolatility", "0", "0.1");
                 Fixed band = g["dailyBand"] == null ? Fixed.Zero : Bounded(g, p, "dailyBand", "0", "0.25");
                 list.Add(new GoodDef(id, String(Required(g, p, "nameKey"), p + ".nameKey"), produce ? GoodKind.Produce : GoodKind.Input,
-                    u, price, elasticity, spoilage, sales, edible, weight, controlled, volatility, band));
+                    u, price, elasticity, spoilage, sales, edible, weight, controlled, volatility, band, Place(g, p)));
             }
             return list;
+        }
+
+        private static readonly string[] PlaceIds = { "store", "feedRoom", "strawStack", "compostPit" };
+
+        /// <summary>A good's place (spec 012 §3.3): kg inputs only.</summary>
+        private static GoodPlace Place(JObject g, string p)
+        {
+            if (g["place"] == null) return GoodPlace.Store;
+            string id = String(g["place"], p + ".place");
+            int i = System.Array.IndexOf(PlaceIds, id);
+            if (i < 0) throw new ContentException(p + ".place", "expected store, feedRoom, strawStack or compostPit");
+            if (i > 0 && String(g["kind"], p + ".kind") != "input") throw new ContentException(p + ".place", "only inputs have a place of their own");
+            return (GoodPlace)i;
         }
 
         private static RegionDef LoadRegion(string json, List<GoodDef> goods)

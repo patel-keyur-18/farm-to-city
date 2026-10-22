@@ -221,5 +221,122 @@ namespace Sim.Core.Tests
                 new System.Collections.Generic.KeyValuePair<Account, long>(Account.VetAndBreeding, -5) });
             Assert.That(lines.Single(l => l.Key == "farmProfit").Amount, Is.EqualTo(65));
         }
+        // ---- US-199: feeding (spec 012 §3.7, §3.8) ----
+
+        private static void Fill(Simulation sim, string good, long grams) { Ok(sim, new Buy(sim.State.Clock.SimTime, good, grams)); }
+
+        [Test]
+        public void Feeding_Order()
+        {
+            Simulation sim = LivestockKit.WithShed(Game(NoSpoilage));
+            Fill(sim, "straw", 500_000);
+            Fill(sim, "cattle_feed", 500_000);
+            LivestockKit.Buy(sim);
+            long feedAccount = sim.State.Ledger.Balance(Account.AnimalFeed);
+            sim.DrainEvents();
+            LivestockKit.ToMorning(sim);
+            // Need a game day: green 27 × 22.8 = 615.6 kg (Spring: the commons give 10%), straw 136.8 kg, feed 114 kg.
+            AnimalsFed f = sim.PendingEvents.OfType<AnimalsFed>().Single();
+            FeedingReport r = LivestockKit.L(sim).LastFeeding;
+            Assert.That(r.GreenNeed, Is.EqualTo(615_600));
+            Assert.That(r.GreenCommons, Is.EqualTo(61_560));
+            Assert.That(r.GreenBought, Is.EqualTo(554_040));
+            Assert.That(r.GreenBoughtAmount, Is.EqualTo(Finance.Money.Value(554_040, Fixed.FromInt(3), 1000)));
+            Assert.That(r.StrawGiven, Is.EqualTo(136_800));
+            Assert.That(r.FeedGiven, Is.EqualTo(114_000));
+            Assert.That(f.FedScore, Is.EqualTo(Fixed.One));
+            long strawCost = Finance.Money.Value(136_800, Fixed.FromInt(6) * Fixed.Parse("0.85"), 1000); // Spring's straw price
+            Assert.That(sim.State.Ledger.Balance(Account.AnimalFeed) - feedAccount, Is.EqualTo(r.GreenBoughtAmount + strawCost + Finance.Money.Value(114_000, Fixed.FromInt(28), 1000)).Within(2));
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+
+            // Nothing bought, no straw left: only the feed's weight counts.
+            Ok(sim, new SetBuyGreenFodder(sim.State.Clock.SimTime, false));
+            sim.State.Market.Stock[sim.Config.Game.Livestock.Straw] = 0;
+            sim.State.Market.StockCost[sim.Config.Game.Livestock.Straw] = 0;
+            LivestockKit.ToMorning(sim);
+            FeedingReport r2 = LivestockKit.L(sim).LastFeeding;
+            Assert.That(r2.GreenBought, Is.EqualTo(0));
+            Assert.That(System.Math.Abs((LivestockKit.L(sim).Animals[0].FedScore - Fixed.Parse("0.44")).Raw), Is.LessThan(100), "commons 10% × 0.4 + feed 0.4");
+        }
+
+        [Test]
+        public void Hunger_NeverDies()
+        {
+            Simulation sim = LivestockKit.WithShed();
+            Animal a = LivestockKit.Buy(sim);
+            Ok(sim, new SetBuyGreenFodder(sim.State.Clock.SimTime, false));
+            LivestockKit.ToMorning(sim);
+            Assert.That(a.HungryDays, Is.EqualTo(1));
+            Assert.That(a.Health, Is.EqualTo(Fixed.One), "one hungry morning does no harm");
+            LivestockKit.ToMorning(sim);
+            Assert.That(a.Health, Is.EqualTo(Fixed.Parse("0.9")));
+            for (int d = 0; d < 10; d++) LivestockKit.ToMorning(sim);
+            Assert.That(a.Health, Is.EqualTo(Fixed.Parse("0.5")), "never below the floor");
+            Assert.That(LivestockKit.L(sim).Animals, Has.Count.EqualTo(1), "she never dies");
+            Ok(sim, new SetBuyGreenFodder(sim.State.Clock.SimTime, true));
+            Fill(sim, "straw", 500_000);
+            Fill(sim, "cattle_feed", 500_000);
+            LivestockKit.ToMorning(sim);
+            Assert.That(a.HungryDays, Is.EqualTo(0));
+            Assert.That(a.Health, Is.EqualTo(Fixed.Parse("0.55")));
+        }
+
+        [Test]
+        public void FeedLow()
+        {
+            Simulation sim = LivestockKit.WithShed();
+            sim.DrainEvents();
+            LivestockKit.Buy(sim);
+            Assert.That(sim.PendingEvents.OfType<FeedLow>().Select(e => e.Good), Is.EquivalentTo(new[] { "straw", "cattle_feed" }), "warned at purchase");
+            sim.DrainEvents();
+            LivestockKit.ToMorning(sim);
+            Assert.That(sim.PendingEvents.OfType<FeedLow>(), Is.Empty, "once until refilled");
+            Fill(sim, "cattle_feed", 400_000);
+            LivestockKit.ToMorning(sim); // 2.5 days left: not yet low
+            Assert.That(sim.PendingEvents.OfType<FeedLow>().Where(e => e.Good == "cattle_feed"), Is.Empty);
+            sim.DrainEvents();
+            LivestockKit.ToMorning(sim); // 1.5 days left
+            Assert.That(sim.PendingEvents.OfType<FeedLow>().Single(e => e.Good == "cattle_feed").DaysLeft, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Places_OutsideTheHutStore()
+        {
+            Simulation sim = LivestockKit.WithShed();
+            long used = Market.Store.UsedGrams(sim);
+            Fill(sim, "cattle_feed", 2_400_000);
+            Fill(sim, "compost", 1_000_000);
+            Assert.That(Market.Store.UsedGrams(sim), Is.EqualTo(used), "feed and compost don't take the hut store's room");
+            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "cattle_feed", 1000)).Reason, Is.EqualTo(RejectReason.PlaceFull));
+            Simulation bare = Start();
+            Assert.That(bare.Execute(new Buy(0, "straw", 1000)).Reason, Is.EqualTo(RejectReason.NoShed));
+        }
+
+        [Test]
+        public void Straw_FromHarvest()
+        {
+            foreach (bool shed in new[] { true, false })
+            {
+                Simulation sim = shed ? LivestockKit.WithShed() : Start();
+                int straw = sim.Config.Game.Livestock.Straw;
+                long t = sim.State.Clock.SimTime;
+                Ok(sim, new Sow(t, HomeTile, "wheat", Farm.SeedSource.Certified, "none"));
+                sim.AdvanceTo(t + 6 * Hour);
+                Ok(sim, new Harvest(sim.State.Clock.SimTime, HomeTile, Market.Overflow.SellRestToTrader));
+                long grams = sim.PendingEvents.OfType<CropHarvested>().Last().Grams;
+                Assert.That(sim.State.Market.Stock[straw], Is.EqualTo(shed ? (Fixed.Parse("1.5").MulRatio(grams, 1)).RoundToLong() : 0), shed ? "1.5 kg a kg of wheat" : "no stack: ploughed in");
+            }
+        }
+
+        [Test]
+        public void Dung_ToCompostPit()
+        {
+            Simulation sim = LivestockKit.WithShed();
+            int compost = sim.Config.Game.Livestock.Compost;
+            long before = sim.State.Market.Stock[compost];
+            LivestockKit.Buy(sim);
+            LivestockKit.ToMorning(sim);
+            Assert.That(sim.State.Market.Stock[compost] - before, Is.EqualTo(216_600), "9.5 kg × 22.8 a game day");
+        }
     }
 }

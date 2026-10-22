@@ -1531,5 +1531,14 @@
   "account.MilkSales": "Milk sold and drunk at home",
   "account.LivestockSales": "Calves sold",
   "account.AnimalFeed": "Animal feed",
-  "account.VetAndBreeding": "Vet and breeding"
+  "account.VetAndBreeding": "Vet and breeding",
+  "good.straw": "Straw",
+  "good.cattle_feed": "Cattle feed",
+  "ledger.greenFodder": "Green fodder bought from neighbours",
+  "ledger.feedEaten": "Straw and feed eaten by the animals",
+  "ledger.fodderSold": "Spare green fodder sold standing to neighbours",
+  "event.FeedLow": "Feed is running low in the shed.",
+  "event.AnimalsFed": "The animals were fed.",
+  "notify.FeedLow.title": "{good} for less than 2 days",
+  "notify.FeedLow.body": "Fill it from the shed, or give your hand the animals order."
 }

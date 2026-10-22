@@ -104,6 +104,24 @@ namespace Sim.Core.Tests
 
         // Spec 011 AC-13: the 6:00 orders give one Needs-you notification a day, moved to 07:00 by quiet hours, naming the goods.
         [Test]
+        public void Plan_FeedLow()
+        {
+            // Spec 012 AC-7: straw running low makes one Needs-you notification, moved out of quiet hours, naming the good.
+            Simulation sim = LivestockKit.WithShed(Quiet());
+            Assert.That(sim.Execute(new SkipFirstSession(sim.State.Clock.SimTime)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "cattle_feed", 2_000_000)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Buy(sim.State.Clock.SimTime, "straw", 136_800 * 3)).Accepted, Is.True);
+            Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, "buffalo")).Accepted, Is.True);
+            List<PlannedNotification> plan = NotificationPlanner.Plan(sim, Def(), true, India);
+            var low = plan.Where(p => p.Kind == NotifyKind.FeedLow).ToList();
+            Assert.That(low.Count, Is.EqualTo(1));
+            Assert.That(low[0].CropId, Is.EqualTo("straw"));
+            Assert.That(low[0].Importance, Is.EqualTo(NotifyImportance.NeedsYou));
+            long local = (low[0].WallUtc + India * 60) % 86400;
+            Assert.That(local, Is.GreaterThanOrEqualTo(7 * 3600).And.LessThan(22 * 3600), "outside quiet hours");
+        }
+
+        [Test]
         public void Plan_OrdersPosted()
         {
             Simulation sim = NewFarm(localSeconds: 13 * 3600 + 1800, game: Quiet()); // 13:30 in India at Wall0

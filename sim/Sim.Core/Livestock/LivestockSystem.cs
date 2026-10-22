@@ -27,8 +27,177 @@ namespace Sim.Core.Livestock
 
         private static void Morning(Simulation sim)
         {
+            Dung(sim);
             Collect(sim, sim.State.Livestock.Animals, true);
             AdvanceDays(sim);
+            Feed(sim, 0); // the fodder fields' cut comes with US-200
+            LowCheck(sim);
+        }
+
+        private static long Grams(Fixed kg) { return (kg * Fixed.FromInt(1000)).RoundToLong(); }
+
+        /// <summary>Each animal's dung since her last milking goes to the compost pit at no cost; what doesn't fit is spread and lost (§3.8).</summary>
+        private static void Dung(Simulation sim)
+        {
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            long t = sim.State.Clock.SimTime, grams = 0;
+            foreach (Animal a in sim.State.Livestock.Animals)
+                grams += (LivestockRules.PerGameDay(sim, defs.Animals[a.Kind].DungCompostKgPerDay) * Fixed.FromInt(1000)).MulRatio(t - a.Since, ClockDef.SecondsPerDay).RoundToLong();
+            long q = System.Math.Min(grams, Market.Store.Fits(sim, defs.Compost));
+            if (q > 0) sim.State.Market.Stock[defs.Compost] += q;
+        }
+
+        /// <summary>One animal's ration for the coming game day in grams: green, straw, feed (feed × dryFeedFactor while dry; §3.7).</summary>
+        internal static (long Green, long Straw, long Feed) Need(Simulation sim, Animal a)
+        {
+            AnimalDef d = LivestockRules.Defs(sim).Animals[a.Kind];
+            Fixed feed = a.Stage == AnimalStage.Dry ? d.Feed * d.DryFeedFactor : d.Feed;
+            return (Grams(LivestockRules.PerGameDay(sim, d.Green)), Grams(LivestockRules.PerGameDay(sim, d.Straw)), Grams(LivestockRules.PerGameDay(sim, feed)));
+        }
+
+        /// <summary>
+        /// The morning's feeding (§3.7): green from the commons' share, then the fodder fields' cut, then bought from neighbours (if on
+        /// and cash allows); what the cut leaves over is sold standing. Straw from the stack and feed from the feed room at average
+        /// cost (5020). Every animal gets the same share of each feed; the fed score, hunger and health follow.
+        /// </summary>
+        internal static void Feed(Simulation sim, long ownCut)
+        {
+            LivestockState s = sim.State.Livestock;
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            LivestockDef ld = defs.Livestock;
+            long t = sim.State.Clock.SimTime;
+            var report = new FeedingReport();
+            s.LastFeeding = report;
+            if (s.Animals.Count == 0)
+            {
+                SellStanding(sim, report, ownCut);
+                return;
+            }
+            foreach (Animal a in s.Animals)
+            {
+                var n = Need(sim, a);
+                report.GreenNeed += n.Green;
+                report.StrawNeed += n.Straw;
+                report.FeedNeed += n.Feed;
+            }
+
+            Season season = Calendar.SeasonAt(t, sim.Clock);
+            report.GreenCommons = ld.CommonsShare[(int)season].MulRatio(report.GreenNeed, 1).RoundToLong();
+            long left = report.GreenNeed - report.GreenCommons;
+            report.GreenOwn = System.Math.Min(left, ownCut);
+            left -= report.GreenOwn;
+            SellStanding(sim, report, ownCut - report.GreenOwn);
+            if (left > 0 && s.BuyGreenFodder)
+            {
+                Fixed price = ld.GreenFodderBuyPrice * sim.State.Market.PriceIndex;
+                long afford = price == Fixed.Zero ? left : (Fixed.FromInt(sim.State.Ledger.Cash * 10) / price).FloorToLong(); // grams the cash buys: money × 1000 ÷ (price × 100)
+                long q = System.Math.Min(left, afford);
+                while (q > 0 && Money.Value(q, price, 1000) > sim.State.Ledger.Cash) q--;
+                if (q > 0)
+                {
+                    long cost = Money.Value(q, price, 1000);
+                    if (cost > 0) sim.State.Ledger.Post(t, sim.Period, "ledger.greenFodder", "shed", new Posting(Account.AnimalFeed, cost), new Posting(Account.Cash, -cost));
+                    report.GreenBought = q;
+                    report.GreenBoughtAmount = cost;
+                }
+            }
+            report.StrawGiven = TakeFeed(sim, defs.Straw, report.StrawNeed);
+            report.FeedGiven = TakeFeed(sim, defs.Feed, report.FeedNeed);
+
+            long green = report.GreenCommons + report.GreenOwn + report.GreenBought;
+            // 1 − Σ weight × shortfall: exactly 1 when every feed is met, whatever the weights' rounding.
+            Fixed score = Fixed.One - ld.GreenWeight * (Fixed.One - Share(green, report.GreenNeed))
+                - ld.StrawWeight * (Fixed.One - Share(report.StrawGiven, report.StrawNeed)) - ld.FeedWeight * (Fixed.One - Share(report.FeedGiven, report.FeedNeed));
+            if (score < Fixed.Zero) score = Fixed.Zero;
+            foreach (Animal a in s.Animals)
+            {
+                a.FedScore = score;
+                if (score < ld.HungryBelow)
+                {
+                    a.HungryDays++;
+                    if (a.HungryDays >= ld.HungerGraceDays) a.Health = a.Health - ld.HungerHealthLoss;
+                }
+                else
+                {
+                    a.HungryDays = 0;
+                    a.Health = a.Health + ld.HealthRecoveryPerDay;
+                }
+                if (a.Health < ld.MinHealth) a.Health = ld.MinHealth;
+                if (a.Health > Fixed.One) a.Health = Fixed.One;
+            }
+            sim.Emit(new AnimalsFed(t, report.GreenNeed, green, report.GreenBoughtAmount, report.GreenSold, report.GreenSoldAmount, report.StrawGiven,
+                report.FeedGiven, score));
+        }
+
+        private static Fixed Share(long given, long need) { return need <= 0 || given >= need ? Fixed.One : Fixed.FromRatio(given, need); }
+
+        /// <summary>Takes up to the need from a place's stock, expensed at average cost (Dr 5020, Cr 1200); returns what was given.</summary>
+        private static long TakeFeed(Simulation sim, int good, long need)
+        {
+            long q = System.Math.Min(need, sim.State.Market.Stock[good]);
+            if (q <= 0) return 0;
+            long book = Market.Store.RemoveStock(sim, good, q);
+            if (book > 0)
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.feedEaten", "shed", new Posting(Account.AnimalFeed, book), new Posting(Account.InputsInStore, -book));
+            return q;
+        }
+
+        /// <summary>What the fodder fields cut beyond the animals' need is sold standing to neighbours (§3.7): Dr Cash, Cr 4000.</summary>
+        private static void SellStanding(Simulation sim, FeedingReport report, long grams)
+        {
+            if (grams <= 0) return;
+            Fixed price = LivestockRules.Defs(sim).Livestock.GreenFodderSellPrice * sim.State.Market.PriceIndex;
+            long amount = Money.Value(grams, price, 1000);
+            if (amount > 0)
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.fodderSold", "shed", new Posting(Account.Cash, amount), new Posting(Account.CropSales, -amount));
+            report.GreenSold = grams;
+            report.GreenSoldAmount = amount;
+        }
+
+        /// <summary>Game days the straw or the feed in stock lasts at today's need (long.MaxValue with no need).</summary>
+        public static long DaysLeft(Simulation sim, int good)
+        {
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            long need = 0;
+            foreach (Animal a in sim.State.Livestock.Animals)
+            {
+                var n = Need(sim, a);
+                need += good == defs.Straw ? n.Straw : n.Feed;
+            }
+            return need <= 0 ? long.MaxValue : sim.State.Market.Stock[good] / need;
+        }
+
+        /// <summary>Warns once when straw or feed lasts less than lowDays (§3.7); again only after a refill above it.</summary>
+        internal static void LowCheck(Simulation sim)
+        {
+            LivestockState s = sim.State.Livestock;
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            if (s.Animals.Count == 0) return;
+            long straw = DaysLeft(sim, defs.Straw), feed = DaysLeft(sim, defs.Feed), low = defs.Livestock.LowDays;
+            long t = sim.State.Clock.SimTime;
+            if (straw < low && !s.StrawLow) { s.StrawLow = true; sim.Emit(new FeedLow(t, sim.Config.Game.Market.Goods[defs.Straw].Id, straw)); }
+            if (feed < low && !s.FeedLow) { s.FeedLow = true; sim.Emit(new FeedLow(t, sim.Config.Game.Market.Goods[defs.Feed].Id, feed)); }
+        }
+
+        /// <summary>A place was filled (bought, or straw from a harvest): its low warning resets once it lasts lowDays again.</summary>
+        internal static void Refilled(Simulation sim, GoodPlace place)
+        {
+            LivestockState s = sim.State.Livestock;
+            if (s == null) return;
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            if (place == GoodPlace.StrawStack && DaysLeft(sim, defs.Straw) >= defs.Livestock.LowDays) s.StrawLow = false;
+            if (place == GoodPlace.FeedRoom && DaysLeft(sim, defs.Feed) >= defs.Livestock.LowDays) s.FeedLow = false;
+        }
+
+        /// <summary>A wheat or rice harvest's straw goes to the stack once the shed stands; the rest is ploughed in (§3.8).</summary>
+        internal static void AddStraw(Simulation sim, CropDef crop, long grams)
+        {
+            if (sim.State.Livestock == null || crop.StrawPerKg == Fixed.Zero || LivestockRules.Shed(sim) == null) return;
+            int straw = LivestockRules.Defs(sim).Straw;
+            long q = System.Math.Min(crop.StrawPerKg.MulRatio(grams, 1).RoundToLong(), Market.Store.Fits(sim, straw));
+            if (q <= 0) return;
+            sim.State.Market.Stock[straw] += q;
+            Refilled(sim, GoodPlace.StrawStack);
         }
 
         /// <summary>The Care ratio accrues with the crops' factors (§3.9): called from <see cref="FarmSystem.Accrue"/>.</summary>
