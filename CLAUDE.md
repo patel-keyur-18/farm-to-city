@@ -169,6 +169,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0057 | Phase 2 specs (010–019) reviewed two per sprint, each a sprint before its code; the enhancements first (010 and 011 coded in Sprint 11 with a device build, 012 in Sprint 12) |
 | 0058 | Sprint 11 balance: an order is 0.5–1 acre's sowing (orders 14.8% of sales); the 15-hour crops' selling gain accepted (season farm profit median 46k); the long crop is ≥ 12 h; the bots play after the first session; the truckAway page also opens on a Store visit with the truck away |
 | 0059 | Sprint 11 device review (passed; frame time p95 5.37 ms): one row per supermarket order with a Delivered tag; the Store in sections with picture buttons; a hand's field order starts with the sow sheet (fertiliser choice and every figure) |
+| 0060 | Spec 012 gaps: a game day is 22.8 real days for animals (182 L a buffalo); cattle from the Hamlet; berseem and sorghum cut daily, spare fodder sold standing, shortfall bought; straw stack, feed room, compost pit as places; co-op pays by fat at 6:00; automatic vaccination and vet; animals at cost, dairy loan at 0.75; nothing dies |
 
 ## Current status
 

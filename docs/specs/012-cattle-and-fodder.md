@@ -1,6 +1,6 @@
 # 012. Cattle and fodder
 
-- Status: Draft (Sprint 12). Gaps in §10 being closed with the owner one at a time
+- Status: Approved (owner, 2026-10-22). All gaps closed 2026-10-22 (ADR 0060)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Livestock; Crops; Storage and selling); Assets and wealth (Livestock); Offline play (notifications)
@@ -111,7 +111,7 @@ careFactor = min(1, the day's time-weighted Care ratio)                         
 | Rule | Behaviour |
 | --- | --- |
 | The co-op's price | `pricePerLitre = (MilkDef.basePerLitre + MilkDef.perFatPoint × fat%) × PriceIndex`: buffalo (12 + 6.5 × 7.0) = 57.50, cow (12 + 6.5 × 4.0) = 38.00. It pays by fat, as Indian co-ops do (§10 G6) |
-| The household's milk | While `eatFromStore` is on, the household keeps `LivestockDef.householdLitresPerDay` (1.5 L a real day, 34 L a game day), buffalo milk first, valued at the co-op's price and counted inside the day's food allowance (spec 003 §3.11) as home use: Dr Cash, Cr 4020 Milk sales (ADR 0032: drinking it or selling it gives the same farm profit) (§10 G6) |
+| The household's milk | While `eatFromStore` is on, the household keeps `LivestockDef.householdLitresPerDay` (1.5 L a real day, 34 L a game day), buffalo milk first, valued at the co-op's price, as home use: Dr Cash, Cr 4020 Milk sales (ADR 0032: drinking it or selling it gives the same farm profit). It is part of the day's food allowance (spec 003 §3.11): the next daily pass eats from the store only what's left of the allowance after the milk. The household never takes more than the allowance (§10 G6) |
 | The co-op | Buys the rest at once: Dr Cash, Cr 4020 Milk sales. Milk is never stored. Emits `MilkCollected(litres, amount, homeLitres)` |
 | Away | The same, live or away. The away card: "The co-op paid 41,950 for 728 L of milk" |
 
@@ -137,7 +137,7 @@ At the 6:00 pass, after milking and the day count, each animal in id order is fe
 2. **Your fodder fields' cut** (§3.8b), shared across animals in id order.
 3. **Bought from neighbours** if `buyGreenFodder` is on (default on): the rest at `GoodDef(green_fodder).basePrice` (3 coins a kg) × PriceIndex, Dr 5020 Animal feed, Cr Cash, as far as cash allows. Delivered cut; never stored.
 
-What the fields cut beyond the day's need is left standing and lost ("Your berseem gave 900 kg more than they ate"). With no animals the fields aren't cut.
+What the animals don't eat of the day's cut is sold standing to neighbours, who cut and carry it themselves, at `GoodDef(green_fodder).sellPrice` (1 coin a kg) × PriceIndex: Dr Cash, Cr 4000 Crop sales ("Neighbours bought 900 kg of berseem you didn't need: 900"). With no animals the whole cut is sold this way. Real farmers sell spare green fodder cheaply, so a fodder acre is never wasted, but it pays far less as a cash crop than wheat or potato (about 16,000 a season gross against wheat's 30,000), so it only pays to grow when it feeds your own animals.
 
 **Straw** comes from the straw stack and **feed** from the feed room, expensed at average cost (Dr 5020, Cr 1200; home-grown straw has no cost).
 
@@ -159,7 +159,7 @@ A dry animal's feed weight still counts (her ration is smaller). The score sets 
 | Bounds | Health stays in `[minHealth, 1]`; it lowers milk and raises disease risk (§3.10) | 0.50 |
 | Never dies | No animal dies of hunger or illness in Phase 2, and none is lost while away (ADR 0056; §10 G9) | |
 
-**Feed running low.** After feeding, if the straw or the feed would last less than `LivestockDef.lowDays` (2) more game days at today's need, emits `FeedLow(feed, daysLeft)` once until that place is refilled above it.
+**Feed running low.** After feeding, and at `BuyAnimal`, if the straw or the feed would last less than `LivestockDef.lowDays` (2) more game days at today's need, emits `FeedLow(feed, daysLeft)` once until that place is refilled above it. The shed sheet and the HUD alerts show a red "!" on that feed while it's low, and the buy card shows the days of straw and feed in stock with **Fill** buttons, so a first animal never arrives to an empty feed room unnoticed. One hungry morning does no harm (`hungerGraceDays` 2), so filling after she arrives is in time.
 
 ### 3.8 Dung to compost; straw from the harvest
 
@@ -185,10 +185,10 @@ Two new `CropDef`s with a `fodder` block. They are sown with the sow sheet like 
 
 | Rule | Behaviour |
 | --- | --- |
-| Cutting | At each 6:00 pass after the first cut is due, a fodder field gives `seasonYieldPerAcre × elapsed ÷ S × Soil × Water × Care × Fertiliser` of green fodder, the factors as the day's time-weighted means (spec 003 §3.4–3.7), capped at `yieldCap` × base |
+| Cutting | At each 6:00 pass after the first cut is due, a fodder field gives `seasonYieldPerAcre × elapsed ÷ S × Soil × Water × Care × Weather × Fertiliser` of green fodder, the factors as the day's time-weighted means (spec 003 §3.4–3.7), capped at `yieldCap` × base. Fodder has no pest check (fodder is cut long before pests build up) |
 | How long | The field stays sown until the end of its last cut season; then it is cleared (`FodderEnded`). `ClearField` ends it early. Seed is paid once at sowing (a fodder field is sown once). Fertiliser is paid at sowing for the time it will stand; its fertility change and the crop's are applied pro rata to the time it stood, at each season close and at its end |
-| Never stored | The cut goes straight to the animals (§3.7). It isn't a good in the store and can't be sold |
-| Orders | A hand's field order can keep berseem or sorghum ("KEEP berseem ON field 28"); a hand never picks fodder by himself (`BestCrop` skips fodder: its value is the bought fodder it saves, which the sow sheet shows) |
+| Never stored | The cut goes straight to the animals (§3.7). It isn't a good in the store; what they don't eat is sold standing to neighbours that morning (§3.7) |
+| Orders | A hand's field order can keep fodder ("KEEP green fodder ON field 28"): he sows berseem in Winter and sorghum in Summer, whichever is in season when the field is empty, so berseem (Winter–Spring) then sorghum (Summer–Monsoon) feed the animals all year; if neither can be sown now he sows his best pick as any order does (ADR 0048), so the field never stands idle. A hand never picks fodder by himself in other orders (`BestCrop` skips fodder: its value is the bought fodder it saves, which the sow sheet shows) |
 | The sow sheet | A fodder card shows "Feeds about 6 buffalo · saves about 1,850 coins a day of bought fodder" with a *Why?* |
 
 ### 3.9 Labour
@@ -205,7 +205,7 @@ Two new `CropDef`s with a `fodder` block. They are sown with the sow sheet like 
 | --- | --- | --- |
 | Vaccination | At each season start (seasonal pass, after spec 005's settlement), each animal is vaccinated by the co-op's vet for `vaccineCost` × PriceIndex: Dr 5030 Vet and breeding, Cr Cash. If cash is short the animal goes unvaccinated this season (`VaccinationMissed`); nothing is owed. A bought animal is already vaccinated | 300 a season (vaccines, deworming and the technician's service) |
 | Disease | At each 6:00 pass, a seeded draw per animal (stream Livestock, counter = day index × 8 + animal slot) below `diseaseChance × (vaccinated ? 1 : unvaccinatedFactor) × (1 + sickHealthFactor × (1 − health))` makes her sick today | 0.01 a day; × 3; 2 |
-| Sick | The vet is called at once for `vetVisitCost` × PriceIndex (Dr 5030, Cr Cash; if cash is short the vet still comes and the household's treatment waits: health −0.10 more instead); her milk for the coming day is lost (treatment, milk thrown away); health −`sickHealthLoss`. Emits `AnimalSick(animalId, cost)` | 1,500; −0.10 |
+| Sick | The vet is called at once for `vetVisitCost` × PriceIndex (Dr 5030, Cr Cash); her milk for the coming day is lost (treatment, milk thrown away); health −`sickHealthLoss`. If cash is short no vet comes: she is sick for 2 days and loses 2 × `sickHealthLoss`; nothing is owed (ADR 0009). Emits `AnimalSick(animalId, cost, vetCame)` | 1,500; −0.10 |
 | Never dies | Disease never kills an animal in Phase 2 | |
 
 ### 3.11 The hand's "animals" order (amends spec 006 §3.8)
@@ -238,7 +238,7 @@ The shed can be built from the **Hamlet** era (spec 009's `EraUnlocked(hamlet)`)
 
 | Kind | Importance | When | Text |
 | --- | --- | --- | --- |
-| `FeedLow` | Needs you | `FeedLow` at 6:00 (quiet hours move it to 07:00) | "Straw for 2 more days. Fill the stack or give Manoj the animals order" |
+| `FeedLow` | Needs you | `FeedLow` at 6:00 (quiet hours move it to 07:00) | "Straw for 2 more days. Fill the stack, or give {hand} the animals order" (without a hand: "Fill the stack from the shed") |
 | `AnimalSick` | Information | `AnimalSick` | "Lakshmi was ill. The vet came; she's resting" |
 | `CalfBorn` | Information | `CalfBorn` | "Gauri had a calf, sold at the fair" |
 
@@ -268,7 +268,7 @@ At the 6:00 hourly pass, system Agriculture, before the Market system's truck an
 | `MilkDef` | `basePerLitre`, `perFatPoint` | money | 12, 6.5 | ≥ 0 | |
 | `BuildingDef` (`buildings.json`) | `cattle_shed`: `value` 40,000, `buildHours` 24, `usefulLifeSeasons` 60, `animals` 4, `feedRoomKg` 2,400, `strawStackKg` 10,000 | | | | |
 | | `hut.compostPitKg` | kg | 8,000 | | |
-| `GoodDef` (`goods.json`) | new `cattle_feed` (input, 28 a kg, place `feedRoom`), `straw` (input, 6 a kg, place `strawStack`), `green_fodder` (price only, never stocked, 3 a kg); `compost` gets place `compostPit`; new field `place` | | | | |
+| `GoodDef` (`goods.json`) | new `cattle_feed` (input, 28 a kg, place `feedRoom`), `straw` (input, 6 a kg, place `strawStack`), `green_fodder` (never stocked: `basePrice` 3 to buy, `sellPrice` 1 to sell standing), `seed_berseem` (input, 180 a kg), `seed_sorghum` (input, 90 a kg); `compost` gets place `compostPit`; new fields `place`, `sellPrice` | | | | |
 | `CropDef` (`crops.json`) | `strawPerKg` (wheat 1.5, rice 1.2); new crops `berseem`, `sorghum` with a `fodder` block (`cutSeasons`) | | §3.8b | | |
 | `LenderDef` | `livestockLtv` | Fixed | bank 0.75, moneylender 0 | 0–1 | |
 | `NotifyDef` | kinds | | `FeedLow`, `AnimalSick`, `CalfBorn` | | |
@@ -303,7 +303,7 @@ At the 6:00 hourly pass, system Agriculture, before the Market system's truck an
 | `AnimalBought`, `AnimalSold` | `animalId`, `kind`, `amount` | Commands | Map, HUD, play log |
 | `MilkCollected` | `litres`, `amount`, `homeLitres` | 6:00 | HUD (coins fly), away card |
 | `AnimalDry`, `CalfBorn` | `animalId`, (`amount`) | §3.6 | Away card, notifications |
-| `AnimalSick` | `animalId`, `cost` | §3.10 | Away card, notifications |
+| `AnimalSick` | `animalId`, `cost`, `vetCame` | §3.10 | Away card, notifications |
 | `VaccinationMissed` | `animalId` | Season start, cash short | Away card, alerts |
 | `FeedLow` | `feed`, `daysLeft` | §3.7 | Notifications, HUD alert |
 | `AnimalsFed` | `green` (own, commons, bought), `straw`, `feed`, `boughtAmount` | 6:00 | Away card |
@@ -315,7 +315,7 @@ At the 6:00 hourly pass, system Agriculture, before the Market system's truck an
 | --- | --- | --- | --- | --- |
 | Build the shed | 40,000 | Room for 4 animals, a feed room, a straw stack | Depreciation | No (protected, never sold) |
 | Buy a buffalo or a cow | 1,00,000 or 70,000, or a dairy loan | About 10,000 a day of milk while in milk; a calf a year | 1.5 h a day of labour; feed every day | Sell at 80% |
-| Grow fodder on an acre | Seed; the acre isn't growing a cash crop | Saves about 1,850 coins a day of bought green fodder per buffalo it feeds | Labour 3 h a day; berseem feeds the soil | Clear the field |
+| Grow fodder on an acre | Seed; the acre isn't growing a cash crop | Saves about 1,850 coins a day of bought green fodder per buffalo it feeds; what they don't eat sells standing at 1 a kg | Labour 3 h a day; berseem feeds the soil | Clear the field |
 | Keep the straw | — | Free dry fodder | The stack's room | — |
 | Fill the feed room | Cash now | Milk stays up while away | An asset in store | Use it |
 | Give the hand the animals order | An order slot | Straw and feed never run out (if cash allows) | Cash leaves automatically | Remove the order |
@@ -352,6 +352,10 @@ Shed sheet                                                            [×]
 - **Fill** buys up to the place's room at today's price (a number picker as Buy inputs).
 - **The map:** buffalo and cows in their stalls (grazing on the commons in the day, ADR art style), the straw stack's height following its stock, the berseem and sorghum fields green, a milk can by the lane at 6:00 (cut first).
 - **The away card** gets the milk, feed bought, calves and vet visits.
+- **The Care *Why?*** (spec 008) gets a row for the animals ("4 animals: 6.0 h a day"), so the player sees why Care fell after buying one.
+- **A fodder field's sheet** shows "Cut every morning for your animals: 3,200 kg today · 2,400 eaten, 800 sold to neighbours", the factors' *Why?*, when it ends ("Cut till the end of Spring"), and Clear. No ready marker: the map shows it green and growing.
+- **Buy inputs** lists cattle feed and straw (with the shed), and says where each goes ("to the feed room", "to the straw stack", "to the compost pit"); the Store sheet's Seed and inputs section stops listing compost, which the shed sheet and the compost pit show.
+- **Net worth's *Why?*** gets a Livestock row; Money gets the dairy loan like any bank loan.
 - **The HUD** alerts (!) when feed is low.
 
 ## 8. Acceptance criteria
@@ -365,11 +369,11 @@ Shed sheet                                                            [×]
 | AC-5 | Feeding takes green from the commons share, then the fodder fields, then buys the rest (if on and cash allows); straw from the stack and feed from the room at average cost (5020); the fed score follows the weights; with buying off and no fodder the green weight scores 0 | `LivestockTests.Feeding_Order` |
 | AC-6 | Two hungry days in a row lower health 0.10 a day from the second; fed days recover 0.05; health never goes below 0.50; no animal is ever removed by hunger or illness | `LivestockTests.Hunger_NeverDies` |
 | AC-7 | `FeedLow` is emitted once when straw or feed falls under 2 days and again only after a refill; the planner makes a Needs-you notification moved out of quiet hours | `LivestockTests.FeedLow`, `NotificationTests.Plan_FeedLow` |
-| AC-8 | A berseem acre sown in Winter is cut daily from 6 h after sowing through Spring and ends at the Spring close; the cut follows Soil × Water × Care × Fertiliser; it is never in the store; with no animals nothing is cut; a hand never picks fodder by himself | `FodderTests.Berseem_CutDaily` |
+| AC-8 | A berseem acre sown in Winter is cut daily from 6 h after sowing through Spring and ends at the Spring close; the cut follows Soil × Water × Care × Weather × Fertiliser; it is never in the store; what the animals don't eat (all of it with no animals) is sold at 1 × index (4000); a fodder order sows berseem in Winter and sorghum in Summer; a hand never picks fodder in other orders | `FodderTests.Berseem_CutDaily`, `FodderTests.FodderOrder_AllYear` |
 | AC-9 | Harvesting 100 kg of wheat adds 150 kg of straw to the stack (by player, hand or labourers); with no shed or a full stack the rest is lost | `LivestockTests.Straw_FromHarvest` |
 | AC-10 | Dung adds 216.6 kg of compost a game day per animal to the pit; sowing with compost uses the pit first; compost in the pit doesn't count against the hut store | `LivestockTests.Dung_ToCompostPit` |
 | AC-11 | Each animal adds 1.5 h to the Care demand; with Care 0.5 the milk is halved | `LivestockTests.Labour_Care` |
-| AC-12 | Season start vaccinates each animal (5030) if cash allows, else `VaccinationMissed`; disease draws are seeded, × 3 unvaccinated; a sick day calls the vet (1,500), loses the next day's milk, and never kills | `LivestockTests.Health_VaccineDisease` |
+| AC-12 | Season start vaccinates each animal (5030) if cash allows, else `VaccinationMissed`; disease draws are seeded, × 3 unvaccinated; a sick day calls the vet (1,500) and loses the next day's milk; with no cash no vet comes, she is sick 2 days and nothing is owed; illness never kills | `LivestockTests.Health_VaccineDisease` |
 | AC-13 | The hand's animals order buys straw and feed to fill when under its days, at today's price, and waits with `InsufficientFunds` when cash is short | `OrderTests.AnimalsOrder` |
 | AC-14 | `BuyAnimal` with a bank `Financing` counts the animal at 0.75 of its price as collateral; selling her repays the bank first or is `LoanSecured`; foreclosure seizes animals after bought land at the sell price; the shed is never seized | `LivestockTests.DairyLoan_Foreclosure` |
 | AC-15 | Net worth adds animals at book value; the season report's farm income and costs include 4020, 4030, 5020, 5030 | `LivestockTests.Books` |
@@ -388,17 +392,17 @@ Shed sheet                                                            [×]
 | A new `DairyBot` (all bought feed, max loan) | Never stuck; repays | Within 1.20 × |
 | Hamlet day | Unchanged | Day 5–9 |
 
-## 10. Open questions
+## 10. Open questions (closed with the owner, 2026-10-22; ADR 0060)
 
 - **G1. The time scale.** **Closed (owner, 2026-10-22):** one game day = 22.8 real days (a quarter ÷ 4, ADR 0008), not ADR 0056's 30; content gives amounts per real day; about one calf a game year (§3.1, §3.2).
 - **G2. When cattle unlock.** **Closed (owner, 2026-10-22):** from the Hamlet; the `cattle` chapter on the first yard tap after it; a locked note on the yard's south acre before it; the Becoming a Hamlet sheet lists cattle as a reward (§3.13).
-- **G3. Green fodder.** Berseem and multi-cut sorghum cut daily from 6 h after sowing; the commons' share by season; bought green fodder from neighbours (on by default). Recommended.
-- **G4. Straw.** Into the stack only once the shed exists; surplus left on the field (not sold, so crop income is unchanged); straw can be bought. Recommended.
-- **G5. Stocks and who refills them.** The feed room 2.4 t (4 days for 4 buffalo, over the 72 h away cap), the stack 10 t, a compost pit in every yard; goods kept in their own place; the player fills, or the hand's animals order keeps them stocked. Recommended.
-- **G6. Milk.** The co-op pays at once at 6:00 by fat (12 + 6.5 × fat%); the household drinks 1.5 L a real day as home use, no nutrition bonus. Recommended.
-- **G7. Health.** Vaccination automatic each season (if cash); seeded disease with the vet called automatically; hunger lowers health; nothing dies. Recommended.
-- **G8. Money.** Animals at cost (no depreciation, no ageing in Phase 2); sold at 80%; the dairy loan at 0.75 of the animal; calves sold at birth; foreclosure seizes animals. Recommended.
-- **G9. Long neglect and silage.** No animal is lost to neglect in Phase 2 (ADR 0056's recommendation); silage later with the equipment ladder. Recommended.
+- **G3. Green fodder.** **Closed (owner, 2026-10-22):** berseem (sown Winter, cut Winter–Spring) and multi-cut sorghum (sown Summer, cut Summer–Monsoon), cut daily from 6 h after sowing; the commons' share by season; green fodder bought from neighbours for any shortfall (on by default). Review for sense (Claude, same day, owner's "make everything make sense"): what the animals don't eat is sold standing at 1 coin a kg instead of being lost, the cut follows Weather like any crop, and a hand's fodder order rotates berseem and sorghum through the year (§3.7, §3.8b).
+- **G4. Straw.** **Closed (owner, 2026-10-22):** straw into the stack only once the shed exists; surplus left on the field (not sold, so crop income is unchanged); straw can be bought (§3.8).
+- **G5. Stocks and who refills them.** **Closed (owner, 2026-10-22):** the feed room 2.4 t (over the 72 h away cap for 4 buffalo), the stack 10 t, a compost pit in every yard; goods kept in their own place; the player fills, or the hand's animals order keeps them stocked; a low-feed warning at purchase and on the sheet (§3.3, §3.7, §3.11).
+- **G6. Milk.** **Closed (owner, 2026-10-22):** the co-op pays at once at 6:00 by fat (12 + 6.5 × fat%); the household drinks 1.5 L a real day as home use inside its food allowance, no nutrition bonus (§3.5).
+- **G7. Health.** **Closed (owner, 2026-10-22):** vaccination automatic each season if cash allows; seeded disease with the vet called automatically (no vet when cash is short: a longer illness, nothing owed); hunger lowers health; nothing dies (§3.7, §3.10).
+- **G8. Money.** **Closed (owner, 2026-10-22):** animals at cost (no depreciation, no ageing in Phase 2); sold at 80% × health; the dairy loan counts the animal at 0.75; calves sold at birth; foreclosure seizes animals after bought land (§3.4, §3.6, §3.12).
+- **G9. Long neglect and silage.** **Closed (owner, 2026-10-22):** no animal is lost to neglect in Phase 2; silage later with the equipment ladder (§2, §3.7).
 
 ## 11. Cut first
 

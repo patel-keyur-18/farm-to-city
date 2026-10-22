@@ -30,7 +30,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
+| 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, cattle (buffalo and cows, ADR 0060), first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -185,12 +185,12 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
 
-**Livestock (ADR 0056).** Phase 2 brings Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 70,000, about 11 L, a lower price and less milk in Summer), in a 4-animal cattle shed in the yard, bought at the village cattle fair (a bank dairy loan is possible). The village dairy co-op collects every morning and pays by quality, or milk feeds the household. One game day stands for about a real month of an animal's life.
+**Livestock (ADR 0056, ADR 0060, spec 012).** From the Hamlet, the player can build a 4-animal cattle shed in the yard and buy Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 70,000, about 11 L, a lower price a litre and less milk in Summer) at the village cattle fair, with a bank dairy loan if needed. One game day stands for 22.8 real days of an animal's life (a season is a real quarter), so a buffalo gives about 182 L a game day. The village dairy co-op collects at 6:00 and pays by fat; the household drinks some as home use.
 
-- **Feed** is eaten automatically every morning, also while away: green fodder (berseem in Winter, sorghum in Summer and the Monsoon) cut and carried daily from a fodder field and never stored; straw, a new harvest by-product, on a straw stack in the yard; and bought cattle feed in the shed's feed room. The grazing commons lower the green-fodder need, most in the Monsoon.
-- **A shortfall** cuts milk, and several hungry days lower health (a vet costs money). No animal dies of hunger in Phase 2. A notification comes 2 days before any feed runs out.
-- **Dung becomes compost,** about 3–4 t an animal a year. About 10 game days in milk, 2–3 dry, then a calf (sold at the fair for now). A vaccination each season and a seeded disease risk. About 1.5 labour hours a day per animal, and an "animals" order for the hand.
-- Goats and poultry come later; no pigs. Vet bills and disease outbreaks are a real risk.
+- **Feed** is eaten automatically every morning at 6:00, also while away: green fodder (the grazing commons cover a share, most in the Monsoon; then berseem, sown in Winter and cut through Spring, or sorghum, sown in Summer and cut through the Monsoon; then bought from neighbours); straw, a by-product of wheat and rice, on a straw stack; and bought cattle feed in the shed's feed room. Green fodder is never stored; what the animals don't eat sells standing to neighbours cheaply.
+- **A shortfall** cuts milk, and several hungry days lower health. No animal dies in Phase 2. A notification comes 2 days before straw or feed runs out; the hand's "animals" order keeps them stocked.
+- **Dung becomes compost** in the yard's compost pit, about 3.5 t an animal a year. About 13 game days in milk and 3–5 dry, then a calf (sold at the fair for now). A vaccination each season, a seeded disease risk and the vet. 1.5 labour hours a day per animal from the Care pool.
+- Goats, poultry, raising calves and silage come later; no pigs.
 
 **Equipment ladder.** Hand tools, then an ox plough, then a tractor, then a harvester. Each machine has:
 
