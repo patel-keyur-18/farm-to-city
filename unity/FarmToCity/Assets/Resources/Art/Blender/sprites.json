@@ -601,6 +601,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_orders"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_sack"
   },
   {
@@ -1346,11 +1353,39 @@
    "name": "tree_pit"
   },
   {
+   "w": 310,
+   "h": 276,
+   "pivotX": 0.5,
+   "pivotY": 0.28559,
+   "name": "truck_back"
+  },
+  {
+   "w": 310,
+   "h": 254,
+   "pivotX": 0.5,
+   "pivotY": 0.32803,
+   "name": "truck_front"
+  },
+  {
    "w": 144,
    "h": 166,
    "pivotX": 0.5,
    "pivotY": 0.32111,
    "name": "tulsi"
+  },
+  {
+   "w": 246,
+   "h": 228,
+   "pivotX": 0.52003,
+   "pivotY": 0.3134,
+   "name": "van_back"
+  },
+  {
+   "w": 246,
+   "h": 230,
+   "pivotX": 0.52003,
+   "pivotY": 0.31406,
+   "name": "van_front"
   },
   {
    "w": 228,

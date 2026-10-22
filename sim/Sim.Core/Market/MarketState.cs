@@ -44,9 +44,12 @@ namespace Sim.Core.Market
         public bool TruckHere { get; internal set; }
         public long TruckLoadToday { get; internal set; }
 
-        /// <summary>Each produce good's daily price factor (spec 011 §3.1b), and yesterday's for the good's sheet; 1 for inputs.</summary>
+        /// <summary>Each produce good's daily price factor (spec 011 §3.1b); 1 for inputs.</summary>
         internal Fixed[] DailyFactor;
-        internal Fixed[] PrevFactor;
+
+        /// <summary>The truck's price set this morning and yesterday's, for the good's sheet ("yesterday 5.30, ▲6%"); 0 = not known.</summary>
+        internal Fixed[] TruckPrice;
+        internal Fixed[] TruckPriceYesterday;
 
         /// <summary>What hands' SELL TO TRADER orders stored while the truck was away or full, sold at the next arrival (spec 011 §3.1).</summary>
         internal long[] HeldForTruck;
@@ -62,8 +65,9 @@ namespace Sim.Core.Market
         {
             FreshToday = new long[goods];
             DailyFactor = new Fixed[goods];
-            PrevFactor = new Fixed[goods];
-            for (int g = 0; g < goods; g++) DailyFactor[g] = PrevFactor[g] = Fixed.One;
+            TruckPrice = new Fixed[goods];
+            TruckPriceYesterday = new Fixed[goods];
+            for (int g = 0; g < goods; g++) DailyFactor[g] = Fixed.One;
             HeldForTruck = new long[goods];
             TraderBoughtToday = new long[goods];
             Stock = new long[goods];
@@ -105,7 +109,8 @@ namespace Sim.Core.Market
 
         public Fixed DailyFactorOf(int good) { return DailyFactor[good]; }
 
-        public Fixed YesterdayFactorOf(int good) { return PrevFactor[good]; }
+        /// <summary>Yesterday's truck price, or null when not known (a new game or a migrated town's first day).</summary>
+        public Fixed? TruckPriceYesterdayOf(int good) { return TruckPriceYesterday[good] == Fixed.Zero ? (Fixed?)null : TruckPriceYesterday[good]; }
 
         public long HeldForTruckOf(int good) { return HeldForTruck[good]; }
 
@@ -138,7 +143,8 @@ namespace Sim.Core.Market
                 TruckHere = TruckHere,
                 TruckLoadToday = TruckLoadToday,
                 DailyFactor = (Fixed[])DailyFactor.Clone(),
-                PrevFactor = (Fixed[])PrevFactor.Clone(),
+                TruckPrice = (Fixed[])TruckPrice.Clone(),
+                TruckPriceYesterday = (Fixed[])TruckPriceYesterday.Clone(),
                 HeldForTruck = (long[])HeldForTruck.Clone(),
                 FreshToday = (long[])FreshToday.Clone(),
                 Orders = Orders.ConvertAll(o => o.Clone()),
@@ -176,7 +182,8 @@ namespace Sim.Core.Market
             for (int g = 0; g < Stock.Length; g++)
             {
                 h.WriteFixed(DailyFactor[g]);
-                h.WriteFixed(PrevFactor[g]);
+                h.WriteFixed(TruckPrice[g]);
+                h.WriteFixed(TruckPriceYesterday[g]);
                 h.WriteLong(HeldForTruck[g]);
                 h.WriteLong(FreshToday[g]);
             }
@@ -226,7 +233,8 @@ namespace Sim.Core.Market
             {
                 int at = r.Slot(ContentTable.Good, g);
                 s.DailyFactor[at] = r.ReadFixed();
-                s.PrevFactor[at] = r.ReadFixed();
+                s.TruckPrice[at] = r.ReadFixed();
+                s.TruckPriceYesterday[at] = r.ReadFixed();
                 s.HeldForTruck[at] = r.ReadLong();
                 s.FreshToday[at] = r.ReadLong();
             }

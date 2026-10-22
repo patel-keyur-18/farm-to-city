@@ -181,10 +181,58 @@ namespace Sim.View.Views
         /// <summary>Where the camera opens: the middle of the yard, in tile coordinates (spec 010 §3.5).</summary>
         public float HomeX { get; internal set; }
         public float HomeY { get; internal set; }
+
+        /// <summary>
+        /// The trader's truck (spec 011 §7): its road from the district road's east end up to the stop by the labour quarters (tile
+        /// ids, the stop last), whether it is here, and the supermarket's van at the stop while today's orders are open.
+        /// </summary>
+        public List<int> TruckRoute { get; } = new List<int>();
+        public bool TruckHere { get; internal set; }
+        public bool VanHere { get; internal set; }
     }
 
     public static class MapView
     {
+        /// <summary>
+        /// The truck's road: a breadth-first search over road acres from the stop (the road acre beside the labour quarters) to the
+        /// road's end on the map's east edge (or any edge), neighbours in a fixed order so it is the same every time.
+        /// </summary>
+        private static void TruckRoute(MapVm map)
+        {
+            int w = map.Width, h = map.Height;
+            bool Road(int x, int y) { return x >= 0 && y >= 0 && x < w && y < h && map.Tiles[y * w + x].Kind == TileKind.Road; }
+            int stop = -1;
+            foreach (TileVm t in map.Tiles)
+            {
+                if (t.Kind != TileKind.Quarters) continue;
+                foreach (int[] d in new[] { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 0, -1 }, new[] { -1, 0 } })
+                    if (stop < 0 && Road(t.X + d[0], t.Y + d[1])) stop = (t.Y + d[1]) * w + t.X + d[0];
+            }
+            if (stop < 0) return;
+            var parent = new int[w * h];
+            for (int i = 0; i < parent.Length; i++) parent[i] = -2;
+            var queue = new Queue<int>();
+            queue.Enqueue(stop);
+            parent[stop] = -1;
+            int entry = -1, edge = -1;
+            while (queue.Count > 0)
+            {
+                int c = queue.Dequeue();
+                int cx = c % w, cy = c / w;
+                if (cx == w - 1 && entry < 0) entry = c;
+                if ((cx == 0 || cy == 0 || cx == w - 1 || cy == h - 1) && edge < 0 && c != stop) edge = c;
+                foreach (int[] d in new[] { new[] { 1, 0 }, new[] { 0, 1 }, new[] { -1, 0 }, new[] { 0, -1 } })
+                {
+                    int nx = cx + d[0], ny = cy + d[1];
+                    if (!Road(nx, ny) || parent[ny * w + nx] != -2) continue;
+                    parent[ny * w + nx] = c;
+                    queue.Enqueue(ny * w + nx);
+                }
+            }
+            if (entry < 0) entry = edge;
+            for (int c = entry; c >= 0; c = parent[c]) map.TruckRoute.Add(c);
+        }
+
         public static MapVm Build(ViewContext ctx)
         {
             Simulation sim = ctx.Sim;
@@ -228,6 +276,13 @@ namespace Sim.View.Views
                     vm.Stage = crop.State == CropState.Ready ? (now > crop.ReadyAt + grace ? CropStage.Spoiling : CropStage.Ready) : GrowingStage(vm.Progress);
                 }
                 map.Tiles.Add(vm);
+            }
+
+            if (defs.Market.Truck != null)
+            {
+                TruckRoute(map);
+                map.TruckHere = sim.State.Market.TruckHere;
+                map.VanHere = sim.State.Market.SupermarketOrders.Count > 0 && Sim.Core.Market.Supermarket.DeliveryOpen(sim);
             }
 
             var perTile = new Dictionary<int, int>();

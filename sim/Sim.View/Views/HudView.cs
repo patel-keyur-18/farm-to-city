@@ -43,6 +43,10 @@ namespace Sim.View.Views
         /// <summary>Applicants waiting for an answer: the People button's badge (0 hides it).</summary>
         public int PeopleBadge { get; internal set; }
         public bool HasPeople { get; internal set; }
+
+        /// <summary>The supermarket's orders (spec 011 §7): shown once orders have begun; the badge counts open orders.</summary>
+        public bool HasOrders { get; internal set; }
+        public int OrdersBadge { get; internal set; }
     }
 
     public static class HudView
@@ -77,6 +81,8 @@ namespace Sim.View.Views
                 CollectText = ctx.Strings.Plural("hud.collect", ready),
                 HasPeople = sim.State.People != null,
                 PeopleBadge = sim.State.People == null ? 0 : sim.State.People.Applicants.Count,
+                HasOrders = Supermarket.Started(sim) || sim.State.Market.SupermarketOrders.Count > 0,
+                OrdersBadge = OrdersSheet.OpenCount(sim),
             };
         }
     }

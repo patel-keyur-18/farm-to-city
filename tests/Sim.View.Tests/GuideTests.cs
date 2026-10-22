@@ -64,7 +64,7 @@ namespace Sim.View.Tests
         }
     }
 
-    public class FirstSessionTests
+    public partial class FirstSessionTests
     {
         // Spec 009 AC-2, AC-16: a bot that only does what each step highlights finishes steps 1–7 within 20 minutes of sim time,
         // with the first sale within 15, using only player commands.
@@ -272,6 +272,7 @@ namespace Sim.View.Tests
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("labour"));
             guide.Rejected(sim, new Sow(sim.State.Clock.SimTime, 84, "lentils", SeedSource.Certified, "none"), RejectReason.InsufficientFunds);
             Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("borrowing"));
+            Assert.That(GuideKit.ReadNext(sim, guide), Is.EqualTo("firstOrders"), "the first 6:00 orders after the skipped session (spec 011), last in priority");
             Assert.That(guide.Next(sim), Is.Null);
         }
 

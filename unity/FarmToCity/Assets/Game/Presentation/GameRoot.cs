@@ -239,6 +239,7 @@ namespace Game.Presentation
                     case MarketSales m: earned += m.Amount; break;
                     case MandiTripReturned r: earned += r.Net; break;
                     case DayLabourPaid d: earned += d.Amount; break;
+                    case OrderPaid op: earned += op.Amount; break;
                     case CropReady _: case BedReady _: case FruitRipe _: ready |= !away; break;
                     case CropSown _: case TreePlanted _: sown |= !away; break;
                     case SeasonClosed c: if (!away) closed = c.Period; break;
@@ -258,7 +259,13 @@ namespace Game.Presentation
                     case MarketSales _:
                     case MandiTripReturned _:
                     case DayLabourPaid _:
+                    case OrderPaid _:
                         coins = true;
+                        break;
+                    case OrdersPosted _: if (!away) Toast(_strings.Get("toast.orders")); break;
+                    case OrderDelivered d:
+                        // To the supermarket's van at the truck stop: from the store pill to the van (spec 011 §7).
+                        if (!away) _fx.Fly(IconBank.Good(d.GoodId), _hud.ScreenCentre(_hud.StoreTarget), _input.WorldToScreen(_map.VanWorld), 3, null);
                         break;
                     case PestWarning p:
                         Toast(_strings.Get("toast.pests"));
@@ -312,6 +319,8 @@ namespace Game.Presentation
                     OpenSheet(who != null ? new SheetRequest("Hand", who.Id) : new SheetRequest("People", 0));
                     break;
                 }
+                case HitKind.Truck: OpenSheet(new SheetRequest("Store", 0)); break; // the trader's truck (spec 011 §7)
+                case HitKind.Van: OpenSheet(new SheetRequest("Orders", 0)); break;
                 case HitKind.Slot: OpenSheet(new SheetRequest("Slot", hit.Id)); break;
                 case HitKind.Bed: OpenSheet(new SheetRequest("Bed", hit.Id)); break;
                 default: OpenSheet(new SheetRequest("Tile", hit.Id)); break;
@@ -359,7 +368,7 @@ namespace Game.Presentation
                 request = new SheetRequest("Tile", request.Id);
             }
             if (request.Kind == "Settings") _townFiles = _saves.TownFiles().Count;
-            _guide.SheetVisited(request.Kind);
+            _guide.SheetVisited(request.Kind, Sim);
             _ctx.LocalNow = DateTime.Now;
             _open = request;
             ShowCurrentSheet(refreshOnly: false);

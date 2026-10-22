@@ -58,6 +58,8 @@ namespace Sim.View.Views
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
             { "seasonSoFar", SeasonSoFar },
+            // The truck and supermarket orders (spec 011).
+            { "orderPrice", OrderPrice }, { "owed", Owed }, { "truck", Truck },
             // Time and weather (spec 001).
             { "calendar", CalendarWhy }, { "forecast", Forecast }, { "saved", Saved }, { "importFiles", ImportFiles }, { "playLog", PlayLogWhy }, { "textSize", TextSize },
             // The founder (spec 003).

@@ -21,6 +21,17 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "store", Title = ctx.Strings.Get("store.title") };
             // How full it is, with its Why? (the HUD's store pill is a plain tap since the Sprint 7 device run, ADR 0044 §3).
             vm.Lines.Add(new LineVm(ctx.Strings.Get("store.filled"), ctx.Strings.Get("store.fill", "used", ctx.Fmt.Kg(used), "capacity", ctx.Fmt.Kg(capacity)), "store"));
+            // The trader's truck, the stall's night and the supermarket (spec 011 §7).
+            if (defs.Market.Truck != null)
+            {
+                vm.Lines.Add(OrdersSheet.TruckLine(ctx));
+                if (MarketRules.StallClosed(sim)) vm.Lines.Add(new LineVm(ctx.Strings.Get("store.stallClosed"), null));
+            }
+            if (Supermarket.Started(sim) || m.SupermarketOrders.Count > 0)
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("store.orders"), Supermarket.DeliveryOpen(sim)
+                    ? ctx.Strings.Plural("store.ordersValue", OrdersSheet.OpenCount(sim)) : ctx.Strings.Get("store.ordersClosed"))
+                { Action = ActionVm.Open("orders", ctx.Strings.Get("action.open"), new SheetRequest("Orders", 0)) });
+            if (sim.State.Ledger.Balance(Sim.Core.Finance.Account.OwedByBuyers) > 0) vm.Lines.Add(OrdersSheet.OwedLine(ctx));
             // The hub (ADR 0043 §7): buying inputs ahead and the mandi trip, then one row per good (a tap opens the good's sheet).
             vm.Lines.Add(new LineVm(ctx.Strings.Get("store.buyInputs"), ctx.Strings.Get("store.buyInputsNote"))
             { Action = ActionVm.Open("buyInputs", ctx.Strings.Get("action.open"), new SheetRequest("BuyInputs", 0)) });

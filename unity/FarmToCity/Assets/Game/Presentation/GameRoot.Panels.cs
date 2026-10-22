@@ -93,6 +93,7 @@ namespace Game.Presentation
                 OnMoney = () => OpenSheet(new SheetRequest("Money", 0)),
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
                 OnAlerts = () => OpenSheet(new SheetRequest("Alerts", 0)),
+                OnOrders = () => OpenSheet(new SheetRequest("Orders", 0)),
                 OnUrgent = () => _sounds.Play("urgent"),
             };
             _sheet = new SheetPresenter(_safeRoot, _tweens)
@@ -157,6 +158,7 @@ namespace Game.Presentation
                 case "MandiLoad": _sheet.Show(MandiSheet.Load(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Forecast": _sheet.Show(ForecastView.Sheet(_ctx), refreshOnly); break;
                 case "Alerts": _sheet.Show(Alerts.Sheet(_ctx), refreshOnly); break;
+                case "Orders": _sheet.Show(OrdersSheet.Build(_ctx), refreshOnly); break;
             }
         }
 
@@ -171,7 +173,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": return;
+                case "Store": case "People": case "Hand": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
                 case "BuyInput": Return(new SheetRequest("BuyInputs", 0)); return;

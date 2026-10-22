@@ -132,7 +132,14 @@ namespace Sim.View.Views
         }
 
         /// <summary>A sheet the player opened (the <c>sheetVisited</c> goal): "Founder", "Store"...</summary>
-        public void SheetVisited(string kind) { _sheets.Add(kind); }
+        public void SheetVisited(string kind, Simulation sim = null)
+        {
+            _sheets.Add(kind);
+            if (kind != "Store" || sim?.Config.Game?.Onboarding == null || MarketRules.TraderBuys(sim)) return;
+            var goods = sim.Config.Game.Market.Goods;
+            for (int g = 0; g < goods.Count; g++)
+                if (goods[g].Kind == GoodKind.Produce && sim.State.Market.InStore(g) > sim.State.Market.OnOffer(g)) { EnqueueKind(sim, TriggerKind.StoreTruckAway); return; }
+        }
 
         /// <summary>The steps whose goals hold now, in order, as commands to send (a goal reached early skips its step, AC-3).</summary>
         public List<Command> StepCommands(Simulation sim, long at)
@@ -373,7 +380,7 @@ namespace Sim.View.Views
         {
             switch (action.Split(':')[0])
             {
-                case "bed": case "field": case "founder": case "store": case "alerts": case "report": case "people": case "money": case "progress": return true;
+                case "bed": case "field": case "founder": case "store": case "alerts": case "report": case "people": case "money": case "progress": case "orders": return true;
                 default: return false;
             }
         }
@@ -397,6 +404,7 @@ namespace Sim.View.Views
                 case "people": return new SheetRequest("People", 0);
                 case "money": return new SheetRequest("Money", 0);
                 case "progress": return new SheetRequest("Progress", 0);
+                case "orders": return new SheetRequest("Orders", 0);
                 default: throw new ArgumentException("unknown letter action '" + action + "'");
             }
         }

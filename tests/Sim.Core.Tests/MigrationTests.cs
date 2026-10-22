@@ -138,7 +138,8 @@ namespace Sim.Core.Tests
             }
             long t = sim.State.Clock.SimTime;
             Assert.That(sim.Execute(new SeeChapter(t, "welcome")).Accepted, Is.True);
-            Assert.That(sim.Execute(new CompleteStep(t, "welcome")).Accepted, Is.True);
+            // The bots play after the first session (they skip it, spec 011 §10 G6), so its first step is done only before that.
+            if (!sim.State.Guidance.Skipped) Assert.That(sim.Execute(new CompleteStep(t, "welcome")).Accepted, Is.True);
             sim.DrainEvents();
             Assert.That(sim.State.Credit.Loans.Count, Is.GreaterThan(0), "a loan");
             Assert.That(sim.State.People.Hands.Count, Is.GreaterThan(0), "a hand");

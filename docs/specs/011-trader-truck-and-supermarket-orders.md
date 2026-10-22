@@ -114,7 +114,7 @@ Example (Spring, potato at 15 h, index 1.00, today's factor 1): `BaseSowing` = 7
 | Rule | Behaviour |
 | --- | --- |
 | `firstOrders` chapter | Triggered by the first `OrdersPosted`. "A shop in the city buys fresh produce straight from farms. It pays more than the trader, but only for what you harvest today, delivered by midnight, and it pays the next morning." Action: the Orders sheet |
-| `truckAway` chapter | Triggered by the first `TraderAway` rejection. "The trader's truck comes at 6:00 and leaves at midnight, or when it's full. The stall closes at night too. Keep it in the store, or take a cart to the mandi." Action: the Store sheet |
+| `truckAway` chapter | Triggered the first time the Store opens while the truck is away and there is produce in store, or by the first `TraderAway` rejection (ADR 0058). "The trader's truck comes at 6:00 and leaves at midnight, or when it's full. The stall closes at night too. Keep it in the store, or take a cart to the mandi." Action: the Store sheet |
 | `comeBack` text | "{readyWhen}" replaces "at {readyTime} tomorrow": "tonight at 23:40", "tomorrow at 05:10", by the ready date in local time |
 | Strings made stale (stale-text sweep, 2026-10-21) | `letter.longCrop` "It will be ready this time tomorrow" becomes "It takes about 15 hours"; `letter.firstSale` adds "His truck comes every morning at 6:00"; `order.sellTrader` "Sell to the trader at once" becomes "Sell to the trader (held till 6:00 when his truck is away)"; a new wait line `order.wait.TraderAway` "Waiting: the store is full and the truck is back at 6:00"; `reject.TraderAway` "The trader's truck is back at 6:00." |
 
@@ -205,7 +205,8 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | Supermarket pays you 6,691 at 6:00 tomorrow    [Why?]  |
 ```
 
-- The truck drives in along the district road and up the farm lane at 6:00, parks at the stop by the labour quarters, and drives off when it leaves. Tapping it opens the Store sheet.
+- The truck drives in along the district road and up the farm lane at 6:00, parks at the stop by the labour quarters, and drives off when it leaves. Tapping it opens the Store sheet. The supermarket's van waits an acre behind it while today's orders are open; tapping it opens the Orders sheet. The HUD's Orders button (a paper shop bag, beside People) shows once orders have begun, with a badge for orders still open (as built, US-195).
+- The good's sheet shows the truck's price today against yesterday's truck price (stored each morning, so a season's start compares with the last season's price); the first morning shows today's price alone.
 - *Why?* on the order price: "Regional price 6.80 × 1.20 (supermarket premium 20%)". On the truck's room: per-crop room and the total load left.
 - **Money owed by the supermarket** shows on the Store sheet ("Supermarket pays you 6,691 at 6:00 tomorrow", or "at 6:00" after midnight), on the Orders sheet under the delivered order, and on the Money sheet as a row of net worth. Its *Why?*: "Delivered today: potato 820 kg × 8.16. Booked as a sale today; the cash comes at 6:00".
 - "Sow by HH:MM" is the latest sowing time at which the crop ripens before midnight.

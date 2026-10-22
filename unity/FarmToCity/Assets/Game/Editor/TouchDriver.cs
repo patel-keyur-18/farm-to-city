@@ -125,7 +125,8 @@ namespace Game.Editor
 
         private static VisualElement Find(VisualElement e, string text, bool exact)
         {
-            if (e is TextElement t && t.text != null && (exact ? t.text == text : t.text.Contains(text)) && e.resolvedStyle.display != DisplayStyle.None) return e;
+            if (e is TextElement t && t.text != null && (exact ? t.text == text : t.text.Contains(text)) && e.resolvedStyle.display != DisplayStyle.None
+                && e.worldBound.width > 0f) return e; // skip what isn't laid out on screen (a hidden sheet's button)
             foreach (VisualElement c in e.Children())
             {
                 VisualElement f = Find(c, text, exact);

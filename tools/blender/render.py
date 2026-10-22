@@ -1464,6 +1464,17 @@ def icon_ui(kind):
         o.append(box("cord", (0.18, 0.012, 0.046), (0, 0.02, 0.016), cord, outline=False))
         o.append(box("label", (0.07, 0.045, 0.003), (0, -0.05, 0.037), pages, outline=False))
         return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.3))
+    elif kind == "orders":
+        # The supermarket's orders: a kraft paper shop bag with a green band, greens and a radish poking out.
+        kraft, band, green = toon("kraft", 0xC8955A), toon("shopBand", 0x2F9E5B), toon("leaf", 0x58BF4A)
+        o.append(box("bag", (0.16, 0.10, 0.18), (0, 0, 0.09), kraft, bevel=0.006))
+        o.append(box("band", (0.162, 0.102, 0.04), (0, 0, 0.10), band, outline=False))
+        o.append(box("fold", (0.165, 0.105, 0.012), (0, 0, 0.18), toon("kraftDark", 0xA8743E), outline=False))
+        for i, (x, y) in enumerate(((-0.04, 0.0), (0.0, 0.01), (0.04, -0.005))):
+            leafy = leaf_obj("greens%d" % i, (x, y, 0.19), 0.09, 0.035, math.radians(90 + (i - 1) * 25), math.radians(70), green)
+            o.extend(leafy if isinstance(leafy, list) else [leafy])
+        o.append(sphere("radish", 0.03, (0.035, 0.0, 0.2), toon("radishRed", 0xE9506A), scale=(1, 1, 1.2), segs=12, rings=8))
+        return turn(o, Matrix.Rotation(math.radians(20), 4, "Z"))
     elif kind == "close":
         white = toon("x", 0xFFF3D1)
         for a in (45, -45):
@@ -1488,7 +1499,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 
@@ -1788,6 +1799,61 @@ SPRITES.update({
     "place_banyan": model_banyan, "place_pond": model_pond,
     "hill_0": lambda: model_hill(0), "hill_1": lambda: model_hill(1), "hill_2": lambda: model_hill(2), "scrub": model_scrub,
 })
+
+
+# ---------------------------------------------------------------- the trader's truck and the supermarket's van (spec 011 §7)
+
+VEHICLE_SCALE = 1.25
+
+
+def wheels(o, xs, ys, r, name):
+    tyre, hub = toon("tyre", 0x3A3530), toon("hubMetal", 0xC9C2B4)
+    for x in xs:
+        for y in ys:
+            o.append(cylinder("%s%d%d" % (name, x > 0, y > 0), r, r, 0.028, (x, y, r), tyre, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+            o.append(cylinder("%shub%d%d" % (name, x > 0, y > 0), r * 0.45, r * 0.45, 0.031, (x, y, r), hub, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+
+
+def model_truck(facing):
+    """A small Indian goods truck (about 4 t): a saffron cab with a painted brow, an open wooden body with sacks; built front to -y."""
+    cab, cabDark, glass = toon("truckCab", 0xF2A93B), toon("truckCabDark", 0xC77E1E), toon("glass", 0x2E4F6E)
+    plank, plankDark, jute = toon("plank", 0x3F7FBF), toon("plankDark", 0x2B5A8A), toon("jute", 0xC9A46A)
+    o = [box("chassis", (0.2, 0.52, 0.03), (0, 0.0, 0.065), toon("chassis", 0x3A3530))]
+    o.append(box("cab", (0.21, 0.14, 0.15), (0, -0.19, 0.155), cab, bevel=0.01))
+    o.append(box("brow", (0.215, 0.05, 0.035), (0, -0.215, 0.245), toon("browGreen", 0x2F9E5B), bevel=0.005))
+    o.append(box("windscreen", (0.17, 0.012, 0.06), (0, -0.262, 0.185), glass, outline=False))
+    o.append(box("grille", (0.15, 0.012, 0.045), (0, -0.262, 0.11), cabDark, outline=False))
+    for x in (-0.07, 0.07):
+        o.append(sphere("lamp%d" % (x > 0), 0.014, (x, -0.263, 0.095), toon("lamp", 0xFFF3C4), segs=10, rings=6, outline=False))
+    o.append(box("bed", (0.21, 0.33, 0.025), (0, 0.075, 0.095), plankDark))
+    for x in (-0.1, 0.1):
+        o.append(box("side%d" % (x > 0), (0.012, 0.33, 0.09), (x, 0.075, 0.15), plank, bevel=0.003))
+    o.append(box("tail", (0.21, 0.012, 0.09), (0, 0.24, 0.15), plank, bevel=0.003))
+    o.append(box("headboard", (0.21, 0.012, 0.12), (0, -0.09, 0.165), plankDark, bevel=0.003))
+    for i, (x, y) in enumerate(((-0.05, 0.0), (0.05, 0.03), (-0.04, 0.14), (0.045, 0.16), (0.0, 0.08))):
+        o.append(sphere("sack%d" % i, 0.045, (x, y, 0.15 + (0.04 if i == 4 else 0)), jute, scale=(1.0, 1.2, 0.75), segs=12, rings=8))
+    wheels(o, (-0.1, 0.1), (-0.17, 0.14), 0.042, "wheel")
+    return group(o, rot_z=0.0 if facing == "front" else math.radians(-90), scale=VEHICLE_SCALE)
+
+
+def model_van(facing):
+    """The supermarket's small delivery van: white, a green stripe and a crate sign; built front to -y."""
+    body, stripe, glass = toon("vanBody", 0xF4F1EA), toon("vanStripe", 0x2F9E5B), toon("glass", 0x2E4F6E)
+    o = [box("body", (0.17, 0.30, 0.15), (0, 0.02, 0.135), body, bevel=0.012)]
+    o.append(poly_mesh("nose", [(-0.085, -0.13, 0.06), (0.085, -0.13, 0.06), (0.085, -0.19, 0.06), (-0.085, -0.19, 0.06),
+                                (-0.085, -0.13, 0.20), (0.085, -0.13, 0.20), (0.085, -0.16, 0.14), (-0.085, -0.16, 0.14)],
+                       [(0, 1, 2, 3), (4, 5, 1, 0), (3, 2, 6, 7), (7, 6, 5, 4), (0, 3, 7, 4), (1, 5, 6, 2)], body))
+    o.append(box("windscreen", (0.15, 0.01, 0.05), (0, -0.147, 0.17), glass, outline=False, rot=Matrix.Rotation(math.radians(-35), 3, "X")))
+    for x in (-0.086, 0.086):
+        o.append(box("stripe%d" % (x > 0), (0.004, 0.30, 0.03), (x, 0.02, 0.13), stripe, outline=False))
+        o.append(box("sign%d" % (x > 0), (0.004, 0.09, 0.06), (x, 0.06, 0.17), toon("signYellow", 0xF2C94C), outline=False))
+    wheels(o, (-0.085, 0.085), (-0.12, 0.11), 0.035, "vwheel")
+    return group(o, rot_z=0.0 if facing == "front" else math.radians(-90), scale=VEHICLE_SCALE)
+
+
+for _f in ("front", "back"):
+    SPRITES["truck_" + _f] = (lambda f=_f: (lambda: model_truck(f)))()
+    SPRITES["van_" + _f] = (lambda f=_f: (lambda: model_van(f)))()
 
 
 # ---------------------------------------------------------------- framing and render

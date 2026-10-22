@@ -100,6 +100,10 @@ namespace Sim.Core.Saves
                         break;
                     case LoanTaken _: Milestone(wallUtc, e.SimTime, "firstLoan"); break;
                     case SeasonClosed _: Milestone(wallUtc, e.SimTime, "firstSeasonClose"); break;
+                    case TruckArrived _: Milestone(wallUtc, e.SimTime, "firstTruck"); break;
+                    case OrdersPosted _: Milestone(wallUtc, e.SimTime, "firstOrders"); break;
+                    case OrderDelivered _: Milestone(wallUtc, e.SimTime, "firstOrderDelivered"); break;
+                    case OrderPaid _: Milestone(wallUtc, e.SimTime, "firstOrderPaid"); break;
                     case EraUnlocked u: Milestone(wallUtc, e.SimTime, u.EraId + "Unlocked"); break; // hamletUnlocked (spec 009 §3.6)
                 }
             }

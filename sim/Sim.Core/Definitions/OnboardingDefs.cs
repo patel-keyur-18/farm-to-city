@@ -28,6 +28,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>The While you were away card was shown (a return with news, not every away advance).</summary>
         AwayCard,
+
+        /// <summary>The Store opened while the trader's truck is away and there is produce to sell (spec 011 §3.6b, ADR 0058).</summary>
+        StoreTruckAway,
     }
 
     /// <summary>A step's goal or a chapter's trigger: a kind and the parameters that kind uses (unused ones are empty).</summary>

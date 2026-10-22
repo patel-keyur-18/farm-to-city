@@ -39,7 +39,7 @@ namespace Sim.Core.Tests
             log.OnEvents(new Events.SimEvent[] { new Events.EraUnlocked(sim.State.Clock.SimTime, "hamlet"), new Events.EraUnlocked(sim.State.Clock.SimTime, "hamlet") }, Wall0 + 400);
             log.Away(Wall0 + 500, sim.State.Clock.SimTime, 7200, 7200, false);
             log.SessionEnd(Wall0 + 600, sim.State.Clock.SimTime, 600);
-            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "hamletUnlocked", "away", "sessionEnd" }));
+            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "sessionStart", "firstHarvest", "firstSale", "firstTruck", "hamletUnlocked", "away", "sessionEnd" }));
             Assert.That(log.Lines[1], Is.EqualTo("{\"t\":" + Wall0 + ",\"sim\":0,\"type\":\"sessionStart\",\"build\":\"0.1.0\",\"device\":\"iPhone14,5\",\"tz\":330,\"fromNote\":false}"));
 
             // Milestones are once per town, also after the log is read back from its file; a new town starts again.

@@ -298,6 +298,14 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             string k = "notify." + n.Kind;
+            if (n.Kind == NotifyKind.OrdersPosted)
+            {
+                // "3 supermarket orders: potato, radish and spinach" (spec 011 §3.5): names, never money.
+                var names = new List<string>();
+                foreach (string id in (n.CropId ?? "").Split(',')) if (id.Length > 0) names.Add(Names.Of(ctx, id).ToLowerInvariant());
+                string list = names.Count <= 1 ? string.Join("", names) : string.Join(", ", names.GetRange(0, names.Count - 1)) + " " + s.Get("list.and") + " " + names[names.Count - 1];
+                return (s.Plural("notify.OrdersPosted.title", names.Count, "goods", list), s.Get("notify.OrdersPosted.body"));
+            }
             bool counted = n.Kind == NotifyKind.CropReady || n.Kind == NotifyKind.BedReady || n.Kind == NotifyKind.FruitRipe || n.Kind == NotifyKind.HandsWork;
             string count = ctx.Fmt.Integer(n.Count);
             string title = !counted ? s.Get(k + ".title")

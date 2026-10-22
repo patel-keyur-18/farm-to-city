@@ -85,8 +85,9 @@ namespace Sim.Core.Market
                 Maths.Fixed f = m.DailyFactor[g];
                 f = f + defs.Market.DailyReversion * (Maths.Fixed.One - f) + good.DailyVolatility * (u + u - Maths.Fixed.One);
                 Maths.Fixed lo = Maths.Fixed.One - good.DailyBand, hi = Maths.Fixed.One + good.DailyBand;
-                m.PrevFactor[g] = m.DailyFactor[g];
                 m.DailyFactor[g] = f < lo ? lo : f > hi ? hi : f;
+                m.TruckPriceYesterday[g] = m.TruckPrice[g];
+                m.TruckPrice[g] = MarketRules.Floor(sim, g); // held all day (spec 011 §3.1)
             }
         }
 

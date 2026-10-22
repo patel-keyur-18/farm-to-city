@@ -17,6 +17,10 @@ namespace Game.Presentation.Map
 
         /// <summary>A hand's hut (Id = building id) or one being built (Id = −construction id).</summary>
         HandHut = 5,
+
+        /// <summary>The trader's truck (opens the Store) and the supermarket's van (opens the Orders), spec 011 §7.</summary>
+        Truck = 6,
+        Van = 7,
     }
 
     /// <summary>What a tap landed on: a tile, a tree slot, a garden bed or the hut (the store).</summary>
@@ -40,7 +44,7 @@ namespace Game.Presentation.Map
     /// day and season tint. Sprites are created once and updated in place each refresh; motion (pop-in, bobbing markers, the tap
     /// squash) is code-driven tweens. The simulation never waits for any of it.
     /// </summary>
-    public sealed class MapPresenter : MonoBehaviour
+    public sealed partial class MapPresenter : MonoBehaviour
     {
         private const float HalfWidth = 0.5f;
 
@@ -399,6 +403,7 @@ namespace Game.Presentation.Map
             foreach (SpriteRenderer r in _props) r.color = _tint;
             RefreshHandHuts(map, animate);
             RefreshPeople(map, animate);
+            RefreshVehicles(map, animate);
         }
 
         // ---- hands' huts, building sites and people (ADR 0039 §2, §8) ----
@@ -762,6 +767,7 @@ namespace Game.Presentation.Map
             if (_ring.gameObject.activeSelf) _ring.color = new Color(1f, 1f, 1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f));
             if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
+            AnimateVehicles();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }
@@ -776,6 +782,8 @@ namespace Game.Presentation.Map
                 case HitKind.Bed: return _bedWorld[hit.Id];
                 case HitKind.Hut: return _hutWorld;
                 case HitKind.HandHut: return hit.Id > 0 ? (Vector2)_handHuts[hit.Id].transform.position : (Vector2)_sites[-hit.Id].transform.position;
+                case HitKind.Truck: return _truck.transform.position;
+                case HitKind.Van: return VanWorld;
                 default: return TileCentre((int)hit.Id);
             }
         }
@@ -790,6 +798,8 @@ namespace Game.Presentation.Map
                     return new Hit(HitKind.Slot, kv.Key);
             foreach (KeyValuePair<long, Spot> kv in _beds)
                 if (Mathf.Abs(w.x - _bedWorld[kv.Key].x) / 0.17f + Mathf.Abs(w.y - _bedWorld[kv.Key].y) / 0.085f < 1f) return new Hit(HitKind.Bed, kv.Key);
+            Hit vehicle = PickVehicle(w);
+            if (vehicle.Kind != HitKind.None) return vehicle;
             if (Vector2.Distance(w, _hutWorld + new Vector2(0, 0.12f)) < 0.24f || Vector2.Distance(w, _wellWorld + new Vector2(0, 0.08f)) < 0.13f) return new Hit(HitKind.Hut, 0);
             foreach (KeyValuePair<long, SpriteRenderer> kv in _handHuts)
                 if (Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f * HandHutScale)) < 0.16f * HandHutScale) return new Hit(HitKind.HandHut, kv.Key);
@@ -872,6 +882,8 @@ namespace Game.Presentation.Map
                 case HitKind.Bed: return _beds[hit.Id].Renderer.transform;
                 case HitKind.Hut: return _buildings.Count > 0 ? _buildings[0].transform : null;
                 case HitKind.HandHut: return hit.Id > 0 ? _handHuts[hit.Id].transform : _sites[-hit.Id].transform;
+                case HitKind.Truck: return _truck.transform;
+                case HitKind.Van: return _van.transform;
                 case HitKind.Tile:
                 {
                     Spot crop = _crops[(int)hit.Id];

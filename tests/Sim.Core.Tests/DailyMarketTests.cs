@@ -89,5 +89,22 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(TestSim.Day + 7 * TestSim.Hour);
             Assert.That(sim.PendingEvents.OfType<MarketSales>().Single(e => e.GoodId == "potato").LocalQuantity, Is.GreaterThan(0), "it sells again from the 7:00 pass");
         }
+
+        // Spec 011 §3.1b: the good's sheet compares today's truck price with yesterday's, also across a season's start.
+        [Test]
+        public void TruckPrice_TodayAndYesterday()
+        {
+            Simulation sim = TestSim.NewFarm(game: TestSim.Quiet());
+            Assert.That(sim.Execute(new SkipFirstSession(0)).Accepted, Is.True);
+            int rice = Good(sim, "rice");
+            long lastDay = sim.Clock.SecondsPerSeason / TestSim.Day - 1;
+            sim.AdvanceTo(lastDay * TestSim.Day + 7 * TestSim.Hour); // the season's last day
+            Fixed before = MarketRules.Floor(sim, rice);
+            Assert.That(sim.State.Market.TruckPrice[rice], Is.EqualTo(before));
+            sim.AdvanceTo((lastDay + 1) * TestSim.Day + 7 * TestSim.Hour); // the next season's first morning
+            Assert.That(sim.State.Market.TruckPriceYesterdayOf(rice), Is.EqualTo(before), "yesterday's price, not today's season");
+            Assert.That(sim.State.Market.TruckPrice[rice], Is.EqualTo(MarketRules.Floor(sim, rice)));
+            Assert.That(TestSim.NewFarm(game: TestSim.Quiet()).State.Market.TruckPriceYesterdayOf(rice), Is.Null, "a new game has no yesterday");
+        }
     }
 }

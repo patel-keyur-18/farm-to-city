@@ -18,6 +18,9 @@ namespace Sim.Core.Saves
         FruitRipe = 5,
         HutBuilt = 6,
         HandsWork = 7,
+
+        /// <summary>The supermarket's 6:00 orders (spec 011 §3.5); CropId lists the goods, comma-separated.</summary>
+        OrdersPosted = 8,
     }
 
     public enum NotifyImportance
@@ -106,6 +109,11 @@ namespace Sim.Core.Saves
                         break;
                     case FruitRipe f:
                         if (!HandWillTake(events, i, OrderTargetKind.Tree, f.SlotId)) items.Add(new AbsenceItem(at, NotifyKind.FruitRipe, f.TreeId));
+                        break;
+                    case OrdersPosted p:
+                        var goods = new List<string>();
+                        foreach (Market.SupermarketOrder so in p.Orders) goods.Add(sim.Config.Game.Market.Goods[so.Good].Id);
+                        items.Add(new AbsenceItem(at, NotifyKind.OrdersPosted, string.Join(",", goods)));
                         break;
                     case OrderExecuted o:
                         if (o.Action == OrderAction.Harvested || o.Action == OrderAction.Picked) items.Add(new AbsenceItem(at, NotifyKind.HandsWork, o.GoodId));
