@@ -550,7 +550,7 @@
 | --- | --- | --- | --- | --- | --- |
 | US-126 | Raise animals: the shed, buying and selling, milk and the lactation cycle | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
 | US-199 | Feeding: the feed room, the straw stack, the compost pit, hunger and health | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
-| US-200 | Green fodder: berseem and sorghum cut daily, sold standing, the fodder order | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
+| US-200 | Green fodder: berseem and sorghum cut daily, sold standing, the fodder order | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
 | US-201 | Health and help: vaccination, disease and the vet, the animals order | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
 | US-202 | The books: accounts, the dairy loan, foreclosure, save schema 7 | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
 | US-203 | Balance: a dairy bot and payback | [F13.1](features/F13.1-livestock.md) | 2 | Must | To do |

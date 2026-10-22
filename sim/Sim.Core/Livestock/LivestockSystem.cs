@@ -30,7 +30,7 @@ namespace Sim.Core.Livestock
             Dung(sim);
             Collect(sim, sim.State.Livestock.Animals, true);
             AdvanceDays(sim);
-            Feed(sim, 0); // the fodder fields' cut comes with US-200
+            Feed(sim, FodderRules.Cut(sim));
             LowCheck(sim);
         }
 

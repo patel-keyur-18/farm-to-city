@@ -36,19 +36,20 @@ namespace Sim.Core.Commands
             int c = defs.Farm.IndexOfCrop(CropId);
             if (c < 0) return CommandResult.Reject(RejectReason.UnknownCrop);
             CropDef crop = defs.Farm.Crops[c];
+            if (crop.Fodder && !Livestock.LivestockRules.Unlocked(sim)) return CommandResult.Reject(RejectReason.EraLocked); // with cattle, from the Hamlet
             if (!crop.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return CommandResult.Reject(RejectReason.OutOfSeason);
             int f = defs.Farm.IndexOfFertiliser(FertiliserId);
             if (f < 0) return CommandResult.Reject(RejectReason.UnknownFertiliser);
             FertiliserDef fert = defs.Farm.Fertilisers[f];
 
-            long seedGrams = FarmRules.CycleGrams(sim.Clock, crop, crop.SeedPerAcrePerSeason);
+            long seedGrams = FarmRules.SeedGrams(sim.Clock, crop);
             if (Seed == SeedSource.Saved)
             {
                 if (!crop.CanSaveSeed) return CommandResult.Reject(RejectReason.SeedCannotBeSaved);
                 if (sim.State.Market.InStore(crop.OutputGood) < seedGrams || sim.State.Farm.SavedSeedAgeOf(c) == null)
                     return CommandResult.Reject(RejectReason.NoSavedSeed);
             }
-            long fertGrams = fert.Good < 0 ? 0 : FarmRules.CycleGrams(sim.Clock, crop, fert.KgPerAcrePerSeason);
+            long fertGrams = FarmRules.FertiliserGrams(sim.Clock, crop, fert, sim.State.Clock.SimTime);
             long cost = FarmRules.SowingCost(sim, crop, Seed, fert);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
@@ -68,12 +69,13 @@ namespace Sim.Core.Commands
             long t = sim.State.Clock.SimTime;
             var sown = new Crop
             {
-                Id = id, TileId = TileId, Def = c, State = CropState.Growing, SownAt = t, ReadyAt = t + crop.GrowthSeconds,
-                Seed = Seed, SeedAge = age, Fertiliser = f, SoilFactor = LandRules.SoilFactor(sim, tile),
+                Id = id, TileId = TileId, Def = c, State = CropState.Growing, SownAt = t, ReadyAt = crop.Fodder ? FarmRules.StandEnd(sim.Clock, crop, t) : t + crop.GrowthSeconds,
+                Seed = Seed, SeedAge = age, Fertiliser = f, SoilFactor = LandRules.SoilFactor(sim, tile), LastCut = crop.Fodder ? t : 0,
             };
+            // A fodder field's job ends its stand (spec 012 §3.8b); it has no pest check (it is cut long before pests build up).
             sown.JobId = sim.ScheduleJob(FarmSystem.CropJob, id, sown.ReadyAt).Id;
             sown.Repeats = PestRules.RepeatsAt(sim, TileId, c);
-            sown.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, id, t + crop.GrowthSeconds / 2).Id;
+            if (!crop.Fodder) sown.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, id, t + crop.GrowthSeconds / 2).Id;
             farm.Crops.Add(sown);
             LandSystem.SetOccupied(sim, TileId, true);
             FarmSystem.Refresh(sim);
@@ -131,6 +133,7 @@ namespace Sim.Core.Commands
             Crop c = sim.State.Farm?.CropOn(TileId);
             if (c == null) return CommandResult.Reject(RejectReason.NoCrop);
             FarmSystem.Accrue(sim);
+            if (sim.Config.Game.Farm.Crops[c.Def].Fodder) Livestock.FodderRules.Settle(sim, c); // the soil change for the time it stood
             if (c.State == CropState.Growing) sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
             if (c.PestJobId != 0) sim.CompleteJob(sim.State.Jobs.Find(c.PestJobId));
             sim.State.Farm.Crops.Remove(c);

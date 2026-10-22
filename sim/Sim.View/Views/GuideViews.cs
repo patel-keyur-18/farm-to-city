@@ -458,6 +458,7 @@ namespace Sim.View.Views
             var dearer = new List<string>();
             foreach (CropDef c in farm.Crops)
             {
+                if (c.Fodder) continue; // fodder has its own place on the sow sheet once cattle unlock (spec 012 §3.8b)
                 string name = s.Get(c.NameKey).ToLowerInvariant();
                 if (c.SowSeasons[season]) crops.Add(name);
                 int good = c.OutputGood;

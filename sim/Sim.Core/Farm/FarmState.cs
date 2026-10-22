@@ -94,6 +94,9 @@ namespace Sim.Core.Farm
         /// <summary>Grams lost while waiting ready after the grace (ADR 0034).</summary>
         public long SpoiledGrams { get; internal set; }
 
+        /// <summary>A fodder field's last cut (or its sowing): its accrued sums and its soil change run from here (spec 012 §3.8b).</summary>
+        public long LastCut { get; internal set; }
+
         /// <summary>What a harvest would move into the store now.</summary>
         public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams; } }
 
@@ -132,6 +135,7 @@ namespace Sim.Core.Farm
             h.WriteInt((int)Outbreak);
             h.WriteFixed(RolledHealth);
             h.WriteLong(PestJobId);
+            if (!h.Hashing || LastCut != 0) h.WriteLong(LastCut); // fodder only (spec 012): other crops hash as before
         }
 
         internal static Crop ReadFrom(SaveReader r)
@@ -153,6 +157,7 @@ namespace Sim.Core.Farm
             c.Outbreak = (Outbreak)r.ReadInt();
             c.RolledHealth = r.ReadFixed();
             c.PestJobId = r.ReadLong();
+            if (r.Schema >= 7) c.LastCut = r.ReadLong();
             return c;
         }
     }

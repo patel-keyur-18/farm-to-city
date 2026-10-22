@@ -1540,5 +1540,10 @@
   "event.FeedLow": "Feed is running low in the shed.",
   "event.AnimalsFed": "The animals were fed.",
   "notify.FeedLow.title": "{good} for less than 2 days",
-  "notify.FeedLow.body": "Fill it from the shed, or give your hand the animals order."
+  "notify.FeedLow.body": "Fill it from the shed, or give your hand the animals order.",
+  "crop.berseem": "Berseem",
+  "crop.sorghum": "Fodder sorghum",
+  "good.seed_berseem": "Berseem seed",
+  "good.seed_sorghum": "Sorghum seed",
+  "event.FodderEnded": "A fodder field's last cutting season is over."
 }

@@ -1,9 +1,9 @@
 {
   "Schema": 7,
-  "Hash": "0x82BA902D63C21EB6",
+  "Hash": "0x5E757A0B5D0376FF",
   "Facts": {
     "buildings": 3,
-    "cash": 10616603,
+    "cash": 10787172,
     "chaptersSeen": 1,
     "crops": 6,
     "era": 1,
@@ -17,7 +17,7 @@
     "roster": 8,
     "seasonReports": 1,
     "simTime": 688200,
-    "storeTotal": 46710,
+    "storeTotal": 45904,
     "trees": 4
   }
 }

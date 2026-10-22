@@ -113,7 +113,7 @@ namespace Sim.View.Tests
             // ADR 0059 §3: the crop step is the player's sow sheet, with the fertiliser choice and every figure, and Choose.
             Assert.That(OrderSheet.IsCropStep(OrderTargetKind.Field, null), Is.True);
             SowSheetVm crops = OrderSheet.Crops(ctx, 85, null);
-            Assert.That(crops.Rows.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count), "each crop");
+            Assert.That(crops.Rows.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count(c => !c.Fodder)), "each crop (fodder has its own card, US-205)");
             Assert.That(crops.Fertilisers.Select(f => f.Name), Is.EqualTo(new[] { "Normal", "Compost", "Chemical" }));
             Assert.That(crops.Lines.Single().Action.Opens.Value.Arg, Is.EqualTo(OrderSpec.HandChooses + "+none"), "the hand's choice first");
             Assert.That(crops.Rows.All(r => r.Sow.Label == "Choose" && r.Sow.Opens.HasValue), Is.True, "in season or not");

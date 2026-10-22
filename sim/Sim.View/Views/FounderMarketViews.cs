@@ -213,7 +213,7 @@ namespace Sim.View.Views
             foreach (CropDef c in farm.Crops)
                 if (c.SeedGood == g)
                 {
-                    long one = FarmRules.CycleGrams(sim.Clock, c, c.SeedPerAcrePerSeason);
+                    long one = FarmRules.SeedGrams(sim.Clock, c); // a fodder acre is sown once (spec 012 §3.8b)
                     foreach (int acres in new[] { 1, 2, 6 }) list.Add(new KeyValuePair<string, long>(ctx.Strings.Plural("inputs.sowAcres", acres), one * acres));
                     return list;
                 }

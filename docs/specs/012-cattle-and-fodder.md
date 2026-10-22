@@ -404,6 +404,13 @@ Shed sheet                                                            [×]
 - **G8. Money.** **Closed (owner, 2026-10-22):** animals at cost (no depreciation, no ageing in Phase 2); sold at 80% × health; the dairy loan counts the animal at 0.75; calves sold at birth; foreclosure seizes animals after bought land (§3.4, §3.6, §3.12).
 - **G9. Long neglect and silage.** **Closed (owner, 2026-10-22):** no animal is lost to neglect in Phase 2; silage later with the equipment ladder (§2, §3.7).
 
+### Implementation notes (US-199, US-200; no rule change)
+
+- Green fodder's two prices live in `livestock.json` (it is never a good in the store).
+- Fodder crops can be sown from the Hamlet, with cattle (`EraLocked` before), so the first week's sow sheet and season hints stay as they were; the sow sheet's fodder card comes with US-205.
+- A fodder field's growth job ends its stand at the close of its last cut season; its soil change is applied at each cut and on clearing, pro rata.
+- A save loads content that has gained goods or crops since it was written (they start empty).
+
 ### Changes after approval (owner, 2026-10-22, ADR 0061)
 
 - **The dairy co-op has a building** in the village centre (place kind `dairy`, spec 010 §3.3). Tapping it shows the co-op's price a litre by fat ("Buffalo milk at 7% fat: 57.50 a litre · cow milk at 4%: 38.00"), what it collected this morning, and, once cattle unlock, **Your shed** and **The cattle fair** (the buy cards). Before the Hamlet it says "The co-op buys the village's milk every morning at 6:00. Once you're a Hamlet you can keep a buffalo or a cow."

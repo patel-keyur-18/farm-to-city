@@ -207,6 +207,11 @@ namespace Sim.Core.Farm
                 Crop c = farm.Crops.Find(x => x.Id == job.TargetId);
                 GameDefs defs = sim.Config.Game;
                 CropDef def = defs.Farm.Crops[c.Def];
+                if (def.Fodder)
+                {
+                    Livestock.FodderRules.End(sim, c, job);
+                    return;
+                }
                 FertiliserDef fert = defs.Farm.Fertilisers[c.Fertiliser];
                 long g = def.GrowthSeconds;
                 Fixed share = FarmRules.CycleShare(sim.Clock, def);

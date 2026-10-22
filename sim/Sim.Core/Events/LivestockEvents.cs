@@ -151,4 +151,19 @@ namespace Sim.Core.Events
                 + ", feed=" + FeedGiven + ", fed=" + FedScore + ")";
         }
     }
+
+    /// <summary>A fodder field's last cut season is over and the field is free (spec 012 §3.8b).</summary>
+    public sealed class FodderEnded : SimEvent
+    {
+        public int TileId { get; }
+        public string CropId { get; }
+
+        public FodderEnded(long simTime, int tileId, string cropId) : base(simTime)
+        {
+            TileId = tileId;
+            CropId = cropId;
+        }
+
+        protected override string Describe() { return "FodderEnded(tile=" + TileId + ", crop=" + CropId + ")"; }
+    }
 }

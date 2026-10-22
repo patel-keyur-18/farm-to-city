@@ -176,8 +176,8 @@ namespace Sim.Core.Tests
                 Is.EqualTo("region.seasonalFactor.wheet"));
             Assert.That(MarketError("region.json", "\"mango\": 400, ", "").Message, Does.Contain("missing produce good 'mango'"));
             Assert.That(MarketError("region.json", "\"roadTier\": \"track\"", "\"roadTier\": \"rail\"").FieldPath, Is.EqualTo("region.roadTier"));
-            Assert.That(MarketError("goods.json", "\"unit\": \"litre\"", "\"unit\": \"gallon\"").FieldPath, Is.EqualTo("goods.goods[22].unit")); // spray, after straw and cattle feed (spec 012)
-            Assert.That(MarketError("goods.json", "\"basePrice\": 60, \"weightKg", "\"basePrice\": 0, \"weightKg").FieldPath, Is.EqualTo("goods.goods[23].basePrice"));
+            Assert.That(MarketError("goods.json", "\"unit\": \"litre\"", "\"unit\": \"gallon\"").FieldPath, Is.EqualTo("goods.goods[24].unit")); // spray, after the fodder seeds, straw and cattle feed (spec 012)
+            Assert.That(MarketError("goods.json", "\"basePrice\": 60, \"weightKg", "\"basePrice\": 0, \"weightKg").FieldPath, Is.EqualTo("goods.goods[25].basePrice"));
             Assert.That(MarketError("region.json", "\"importCapacityPerDay\": { \"radish\": 15", "\"importCapacityPerDay\": { \"radish\": 0").FieldPath,
                 Is.EqualTo("region.importCapacityPerDay.radish"));
             Assert.That(MarketError("market.json", "\"railMin\": 0.5", "\"railMin\": 1").FieldPath, Is.EqualTo("market.market.railMin"));

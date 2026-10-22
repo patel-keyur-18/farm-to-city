@@ -14,7 +14,13 @@
       "labourPerAcrePerDay": 3.5, "fertilityPerSeason": 5,  "canSaveSeed": true, "savedSeedLossPerSeason": 0.05, "savedSeedFloor": 0.80 },
     { "id": "lentils", "nameKey": "crop.lentils", "outputGood": "lentils", "seedGood": "seed_lentils", "sowSeasons": ["summer", "winter"],
       "growthMinutes": 480,  "seasonYieldPerAcre": 350,  "seedPerAcrePerSeason": 6,   "moistureMin": 30, "moistureMax": 60,
-      "labourPerAcrePerDay": 2.0, "fertilityPerSeason": -4, "canSaveSeed": true, "savedSeedLossPerSeason": 0.02, "savedSeedFloor": 0.90 }
+      "labourPerAcrePerDay": 2.0, "fertilityPerSeason": -4, "canSaveSeed": true, "savedSeedLossPerSeason": 0.02, "savedSeedFloor": 0.90 },
+    { "id": "berseem", "nameKey": "crop.berseem", "seedGood": "seed_berseem", "sowSeasons": ["winter"], "fodder": { "cutSeasons": ["winter", "spring"] },
+      "growthMinutes": 360,  "seasonYieldPerAcre": 16000, "seedPerAcrePerSeason": 10,  "moistureMin": 45, "moistureMax": 80,
+      "labourPerAcrePerDay": 3.0, "fertilityPerSeason": -3, "canSaveSeed": false },
+    { "id": "sorghum", "nameKey": "crop.sorghum", "seedGood": "seed_sorghum", "sowSeasons": ["summer"], "fodder": { "cutSeasons": ["summer", "monsoon"] },
+      "growthMinutes": 360,  "seasonYieldPerAcre": 16000, "seedPerAcrePerSeason": 15,  "moistureMin": 30, "moistureMax": 70,
+      "labourPerAcrePerDay": 3.0, "fertilityPerSeason": 5,  "canSaveSeed": false }
   ],
   "gardenCrops": [
     { "id": "garden_radish",    "nameKey": "garden.radish",    "good": "radish",    "seedGood": "seed_radish",    "growthMinutes": 10, "harvestKg": 5,   "seedGramsPerSowing": 20 },

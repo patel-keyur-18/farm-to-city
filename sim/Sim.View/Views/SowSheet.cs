@@ -116,6 +116,7 @@ namespace Sim.View.Views
             FertiliserDef fert = defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fertiliserId)];
             foreach (CropDef crop in defs.Farm.Crops)
             {
+                if (crop.Fodder) continue; // fodder gets its own card with cattle (spec 012 §3.8b, US-205)
                 CropDef c = crop;
                 bool sowable = c.SowSeasons[(int)season];
                 string name = ctx.Strings.Get(c.NameKey);

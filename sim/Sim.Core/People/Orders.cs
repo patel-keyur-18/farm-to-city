@@ -91,7 +91,7 @@ namespace Sim.Core.People
                     : r.Reason == RejectReason.NoSavedSeed ? OrderWait.NoSavedSeed : OrderWait.Paused);
                 return false;
             }
-            Done(sim, h, o, OrderAction.Sowed, defs.Market.Goods[crop.OutputGood].Id, 0, sim.State.Ledger.Cash - cash);
+            Done(sim, h, o, OrderAction.Sowed, crop.Fodder ? crop.Id : defs.Market.Goods[crop.OutputGood].Id, 0, sim.State.Ledger.Cash - cash);
             return true;
         }
 
@@ -108,9 +108,17 @@ namespace Sim.Core.People
             {
                 CropDef own = farm.Crops[o.Crop];
                 bool seed = o.Seed != SeedSource.Saved
-                    || (sim.State.Market.InStore(own.OutputGood) >= FarmRules.CycleGrams(sim.Clock, own, own.SeedPerAcrePerSeason) && sim.State.Farm.SavedSeedAgeOf(o.Crop) != null);
+                    || (!own.Fodder && sim.State.Market.InStore(own.OutputGood) >= FarmRules.CycleGrams(sim.Clock, own, own.SeedPerAcrePerSeason) && sim.State.Farm.SavedSeedAgeOf(o.Crop) != null);
                 if (seed && own.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]
                     && sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, own, o.Seed, fert))) return o.Crop;
+                if (own.Fodder)
+                {
+                    // A fodder order keeps green fodder all year (spec 012 §3.8b): the other fodder crop when it is the one in season.
+                    int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+                    for (int i = 0; i < farm.Crops.Count; i++)
+                        if (farm.Crops[i].Fodder && farm.Crops[i].SowSeasons[season]
+                            && sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, farm.Crops[i], SeedSource.Certified, fert))) return i;
+                }
             }
             return FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)o.Target], fert);
         }
