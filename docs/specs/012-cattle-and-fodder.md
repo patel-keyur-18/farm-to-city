@@ -390,7 +390,7 @@ Shed sheet                                                            [×]
 
 ## 10. Open questions
 
-- **G1. The time scale.** One game day = 22.8 real days (a quarter ÷ 4, ADR 0008), not 30; amounts in content per real day. Recommended.
+- **G1. The time scale.** **Closed (owner, 2026-10-22):** one game day = 22.8 real days (a quarter ÷ 4, ADR 0008), not ADR 0056's 30; content gives amounts per real day; about one calf a game year (§3.1, §3.2).
 - **G2. When cattle unlock.** From the Hamlet, with a letter chapter. Recommended.
 - **G3. Green fodder.** Berseem and multi-cut sorghum cut daily from 6 h after sowing; the commons' share by season; bought green fodder from neighbours (on by default). Recommended.
 - **G4. Straw.** Into the stack only once the shed exists; surplus left on the field (not sold, so crop income is unchanged); straw can be bought. Recommended.
