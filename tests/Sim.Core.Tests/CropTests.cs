@@ -67,7 +67,7 @@ namespace Sim.Core.Tests
             FarmDefs f = sim.Config.Game.Farm;
             CropDef wheat = f.Crops[f.IndexOfCrop("wheat")], rice = f.Crops[f.IndexOfCrop("rice")];
             Assert.That(FarmRules.CycleShare(sim.Clock, wheat), Is.EqualTo(Fixed.Parse("0.0625")));
-            Assert.That(FarmRules.CycleShare(sim.Clock, rice), Is.EqualTo(Fixed.Parse("0.25")));
+            Assert.That(FarmRules.CycleShare(sim.Clock, rice), Is.EqualTo(Fixed.Parse("0.15625"))); // 15 h (ADR 0055)
             Assert.That(wheat.SeasonYieldPerAcre * FarmRules.CycleShare(sim.Clock, wheat), Is.EqualTo(Fixed.FromInt(75)));
             Assert.That(wheat.SeedPerAcrePerSeason * FarmRules.CycleShare(sim.Clock, wheat), Is.EqualTo(Fixed.Parse("1.6875")));
         }
@@ -128,19 +128,20 @@ namespace Sim.Core.Tests
             int seed = FarmTest.Good(sim, "seed_potato");
             long cash = sim.State.Ledger.Cash;
             Assert.That(sim.Execute(new Sow(0, 84, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
-            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash), "175 kg from the 600 kg inherited");
-            Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(425_000));
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash), "109.375 kg (15 h) from the 600 kg inherited");
+            Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(490_625));
 
-            // Compost: none in store, so 500 kg is bought at 2 × 1.05 = 2.10: 1,050.
+            // Compost: none in store, so 312.5 kg is bought at 2 × 1.05 = 2.10: 656.25.
             Assert.That(sim.Execute(new Sow(0, 85, "potato", SeedSource.Certified, "compost")).Accepted, Is.True);
-            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(1_050_00));
-            Assert.That(sim.State.Ledger.Balance(Account.FertiliserAndSpraying), Is.EqualTo(1_050_00));
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(656_25));
+            Assert.That(sim.State.Ledger.Balance(Account.FertiliserAndSpraying), Is.EqualTo(656_25));
 
-            // The third and fourth acres take the last 250 kg of stock, then buy 100 kg at 22.
-            Assert.That(sim.Execute(new Sow(0, 100, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            // Three more acres leave 53.125 kg; the sixth takes it and buys 56.25 kg at 22.
+            foreach (int tile in new[] { 86, 100, 101 }) Assert.That(sim.Execute(new Sow(0, tile, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(53_125));
             cash = sim.State.Ledger.Cash;
-            Assert.That(sim.Execute(new Sow(0, 101, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
-            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(100 * 22_00));
+            Assert.That(sim.Execute(new Sow(0, 102, "potato", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(1_237_50));
             Assert.That(sim.State.Market.InStore(seed), Is.EqualTo(0));
         }
 

@@ -129,7 +129,7 @@ namespace Sim.Core.Tests
             Definitions.FarmDefs farm = sim.Config.Game.Farm;
             int seedPotato = farm.Crops[farm.IndexOfCrop("potato")].SeedGood;
             Market.Store.Take(sim, seedPotato, sim.State.Market.InStore(seedPotato));
-            CashTo(sim, 3_000 * Coin);
+            CashTo(sim, 2_000 * Coin); // potato seed for a 15 h sowing costs about 2,400
             Definitions.FertiliserDef none = farm.Fertilisers[farm.IndexOfFertiliser("none")];
             Assert.That(sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, farm.Crops[farm.IndexOfCrop("potato")], SeedSource.Certified, none)), Is.False, "potato seed is out of reach");
 

@@ -114,7 +114,7 @@ namespace Sim.View.Tests
 
             ViewContext ctx = ViewKit2.Context(sim);
             CardVm card = Cards.NotifyAsk(ctx, m.Value, new SettingsInfo { NowWallUtc = sim.State.Clock.LastWallUtc, UtcOffsetMinutes = 0 });
-            Assert.That(card.Text, Does.StartWith("Potato will be ready at ").And.Contain("tomorrow"));
+            Assert.That(card.Text, Does.Match("^Potato will be ready (today|tonight|tomorrow) at \\d\\d:\\d\\d\\.")); // spec 011 §3.6b
             Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Yes, nudge me", "Not now" }));
 
             sim.AdvanceTo(sim.Clock.SecondsPerSeason + 1);

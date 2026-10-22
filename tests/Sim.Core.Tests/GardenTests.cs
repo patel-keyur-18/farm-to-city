@@ -46,14 +46,14 @@ namespace Sim.Core.Tests
             Assert.That(c.SeedAge, Is.EqualTo(Fixed.One));
             FarmTest.AssertNear(FarmRules.SeedFactor(defs.Crops[wheat], c.Seed, c.SeedAge), "0.98", 4);
 
-            // Potato: 8 cycles of 0.25 = age 2.0, factor 0.90.
+            // Potato (15 h, ADR 0055): 8 cycles of 0.15625 = age 1.25; age 2.0 gives factor 0.90.
             for (int k = 0; k < 8; k++)
             {
                 Assert.That(sim.Execute(new Sow(t, 85, "potato", k == 0 ? SeedSource.Certified : SeedSource.Saved, "none")).Accepted, Is.True, "potato " + k);
-                t += Day;
+                t += 15 * Hour;
                 Assert.That(sim.Execute(new Harvest(t, 85, Overflow.SellRestToTrader)).Accepted, Is.True);
             }
-            Assert.That(sim.State.Farm.SavedSeedAgeOf(potato), Is.EqualTo(Fixed.FromInt(2)));
+            Assert.That(sim.State.Farm.SavedSeedAgeOf(potato), Is.EqualTo(Fixed.Parse("1.25")));
             FarmTest.AssertNear(FarmRules.SeedFactor(defs.Crops[potato], SeedSource.Saved, Fixed.FromInt(2)), "0.90", 4);
 
             // The floors.

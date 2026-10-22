@@ -213,5 +213,45 @@ namespace Sim.Core.Tests
             sim.State.Guidance.Step = firstSale + 1;
             Assert.That(sim.Execute(new SellToTrader(2 * Hour, "spinach", 1_000)).Reason, Is.EqualTo(RejectReason.TraderAway));
         }
+
+        // Spec 011 AC-15: a year of the competent bot (the truck, daily prices, orders delivered) in one advance and in 500 chunks.
+        [Test]
+        public void ChunkingInvariance()
+        {
+            const ulong seed = 3;
+            GameDefs game = TestContent.Game();
+            int delivered = 0, arrivals = 0;
+            ulong Run(bool chunked)
+            {
+                Simulation sim = NewFarm(seed, 8 * Hour, game);
+                Ok(sim, new SkipFirstSession(8 * Hour));
+                var bot = new Tools.Balancer.FarmerBot();
+                bot.Start(sim);
+                long start = sim.State.Clock.SimTime, end = start + sim.Clock.SecondsPerYear;
+                var chunks = new System.Collections.Generic.List<long>();
+                for (ulong i = 0; chunked && i < 500; i++) chunks.Add(start + 1 + (long)Rng.Below(Rng.Next(seed, (RngStream)905, i, 0), (ulong)(end - start - 1)));
+                chunks.Sort();
+                int next = 0;
+                for (long t = start + 600; t < end; t += Hour)
+                {
+                    while (next < chunks.Count && chunks[next] < t) sim.AdvanceTo(chunks[next++]);
+                    sim.AdvanceTo(t);
+                    bot.Play(sim, t);
+                    foreach (SimEvent e in sim.DrainEvents())
+                    {
+                        if (!chunked && e is OrderDelivered) delivered++;
+                        if (!chunked && e is TruckArrived) arrivals++;
+                    }
+                }
+                while (next < chunks.Count) sim.AdvanceTo(chunks[next++]);
+                sim.AdvanceTo(end);
+                return sim.State.ComputeHash();
+            }
+
+            ulong one = Run(false);
+            Assert.That(delivered, Is.GreaterThan(10), "the bot filled orders");
+            Assert.That(arrivals, Is.GreaterThan(10), "the truck came");
+            Assert.That(Run(true), Is.EqualTo(one));
+        }
     }
 }

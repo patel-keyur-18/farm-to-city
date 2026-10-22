@@ -28,10 +28,10 @@ namespace Sim.View.Tests
             CropRowVm potato = sheet.Rows.Single(r => r.CropId == "potato"), radish = sheet.Rows.Single(r => r.CropId == "radish"), wheat = sheet.Rows.Single(r => r.CropId == "wheat");
 
             Assert.That(potato.SowableNow, Is.True);
-            // One sowing (owner, Sprint 6): spend, sells for, profit. One potato sowing is a quarter of the season's 17,060; a
+            // One sowing (owner, Sprint 6): spend, sells for, profit. One potato sowing (15 h) is 15/96 of the season's; a
             // 2-hour radish is 2/96 of 16,850.
             Assert.That(potato.HarvestText + " | " + potato.SpendText + " | " + potato.GetText + " | " + potato.ProfitText,
-                Is.EqualTo("Harvest about 1,531 kg | Spend 3,850 coins | Sells for about 8,120 coins | Profit about 4,270 coins"));
+                Is.EqualTo("Harvest about 957 kg | Spend 2,406 coins | Sells for about 5,070 coins | Profit about 2,660 coins"));
             Assert.That(radish.ProfitText, Is.EqualTo("Profit about 350 coins"));
             Assert.That(potato.Profit, Is.EqualTo(SowSheet.Round10Coins(potato.Get - potato.Spend)));
             Assert.That(radish.InputsText, Is.EqualTo("seed 50"));
@@ -42,15 +42,15 @@ namespace Sim.View.Tests
                 "Compost: +5% harvest · holds water",
                 "Chemical: +25% harvest",
             }));
-            // Fertility after this crop (ADR 0051): a potato takes 5 a season, a quarter season here; compost puts 6 back.
-            Assert.That(potato.SoilText, Is.EqualTo("Soil 45.0 → 43.8"));
+            // Fertility after this crop (ADR 0051): a potato takes 5 a season, 15/96 of a season here; compost puts 6 back.
+            Assert.That(potato.SoilText, Is.EqualTo("Soil 45.0 → 44.2"));
             Assert.That(potato.SoilFalls, Is.True);
             Assert.That(radish.SoilText + " " + radish.SoilFalls, Is.EqualTo("Soil 45.0 → 45.0 False"), "radish takes 0.04: no fall shown");
-            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86, "compost").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 45.3"));
-            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86, "chemical").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 43.0"));
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86, "compost").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 45.2"));
+            Assert.That(SowSheet.Build(ViewKit2.Context(sim), 86, "chemical").Rows.Single(r => r.CropId == "potato").SoilText, Is.EqualTo("Soil 45.0 → 43.8"));
             Assert.That(potato.Suits, Is.EqualTo(Suits.Good));
             Assert.That(radish.Suits, Is.EqualTo(Suits.Good));
-            Assert.That(potato.TimeText, Is.EqualTo("1 d"));
+            Assert.That(potato.TimeText, Is.EqualTo("15 h"));
             Assert.That(radish.TimeText, Is.EqualTo("2 h"));
 
             Assert.That(wheat.SowableNow, Is.False);

@@ -1,6 +1,6 @@
 # 0055. Daily supermarket orders, fresh today; rice and potato grow in 15 hours
 
-- Status: Accepted
+- Status: Accepted; §5 (the order's size) superseded by ADR 0058
 - Date: 2026-10-21
 - Deciders: Keyur Patel
 - Amends: spec 003 §3.1 and `content/crops.json` (rice and potato growth time); spec 004 (a new buyer); spec 006 (the hand fills orders first, and his crop choice counts the order price); spec 007 (a morning notification)

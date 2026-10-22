@@ -35,6 +35,8 @@ namespace Tools.Balancer
         public static Run RunBot(SimConfig config, Bot bot, int seasons, ulong seed, Action<Simulation> onHour)
         {
             Simulation sim = Simulation.NewGame(config, new NewGame(seed, 0, 8 * 3600));
+            // Bots play the game after the first session: the truck keeps its hours and orders come (spec 011 §10 G6).
+            if (sim.State.Guidance != null) sim.Execute(new SkipFirstSession(sim.State.Clock.SimTime));
             bot.Start(sim);
             var run = new Run { Sim = sim, Bot = bot };
             var season = new SeasonRow();
@@ -140,7 +142,8 @@ namespace Tools.Balancer
             private readonly Dictionary<long, long> _bedGrams = new Dictionary<long, long>(); // keyed lookups only
             private readonly Dictionary<long, int> _treeBatches = new Dictionary<long, int>();
             public double Kg, CareSum, WaterSum, GardenKg, AcreSeasons, SpoiledKg;
-            public long Trader, Local, Mandi, HomeUse;
+            public long Trader, Local, Mandi, HomeUse, Supermarket;
+            public int TruckFullDays, TruckDays;
             public SeasonReport Report;
             public Fixed Index;
             public string Line;
@@ -183,6 +186,9 @@ namespace Tools.Balancer
                     case MarketSales m: Local += m.Amount; break;
                     case MandiTripReturned r: Mandi += r.Net; MandiTrips++; break;
                     case HomeUseEaten u: HomeUse += u.Value; break;
+                    case OrderDelivered d: Supermarket += d.Amount; break;
+                    case TruckArrived _: TruckDays++; break;
+                    case TruckLeft l: if (l.Reason == TruckLeaveReason.Full) TruckFullDays++; break;
                     case PestWarning _: Outbreaks++; break;
                     case GoodsSpoiled s:
                         if (sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(s.GoodId)].Kind == GoodKind.Produce) SpoiledKg += s.Quantity / 1000.0;

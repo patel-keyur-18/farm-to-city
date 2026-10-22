@@ -98,6 +98,18 @@ namespace Sim.Core.Tests
             Assert.That(median, Is.InRange(5.0, 9.0));
         }
 
+        // Spec 011 §9 (US-194): the truck rarely fills and the supermarket's orders stay a bonus.
+        [Test]
+        public void TruckAndOrders()
+        {
+            Gate.TradeResult r = Gate.Trade(Live(), 100);
+            TestContext.Out.WriteLine("truck full " + r.FullShare.ToString("0.000") + " of " + r.TruckDays + " days; orders " + r.OrderShare.ToString("0.000") + " of sales");
+            Assert.That(r.TruckDays, Is.GreaterThan(0));
+            Assert.That(r.FullShare, Is.LessThan(0.1), "the truck fills under 1 day in 10");
+            Assert.That(r.Supermarket, Is.GreaterThan(0), "the bot fills orders");
+            Assert.That(r.OrderShare, Is.LessThan(0.2), "orders under 20% of sales");
+        }
+
         // ---- US-098 (ADR 0045 §4): the Phase 1 health checks, thresholds set from the measured runs with a margin ----
 
         // ADR 0016's stress set: the cautious saver at most 1.20 × competent, random below competent (leverage is Stress_Debt).

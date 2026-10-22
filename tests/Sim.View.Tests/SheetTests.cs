@@ -50,7 +50,7 @@ namespace Sim.View.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 3 * Hour);
             SheetVm sheet = FieldSheets.ForTile(ctx, 86);
             Assert.That(sheet.Title, Is.EqualTo("Potato, growing"));
-            Assert.That(sheet.Lines.Single(l => l.Label == "Time left").Value, Is.EqualTo("21 h"));
+            Assert.That(sheet.Lines.Single(l => l.Label == "Time left").Value, Is.EqualTo("12 h")); // potato takes 15 h (ADR 0055)
             Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Care").And.Contain("Water").And.Contain("Weather"));
             // Words, not factors (owner feedback, device run 2).
             foreach (string label in new[] { "Care", "Water", "Weather" })

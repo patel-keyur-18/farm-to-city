@@ -427,7 +427,7 @@ namespace Sim.View.Views
         {
             Crop c = LongCrop(ctx);
             long readyIn = c == null ? 0 : Math.Max(0, c.ReadyAt - ctx.Now);
-            return WallTime.When(ctx, info.NowWallUtc + readyIn, info);
+            return WallTime.Ready(ctx, info.NowWallUtc + readyIn, info);
         }
     }
 

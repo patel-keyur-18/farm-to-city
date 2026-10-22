@@ -90,7 +90,7 @@ namespace Sim.Core.Tests
             int free = PeopleRules.FreeNow(sim);
             long cash = sim.State.Ledger.Cash;
             Ok(sim, new HireLabourers(t, 2));
-            long until = t + Day + 1800; // the potato is ready at 18:30 tomorrow, rounded up to 19:00
+            long until = t + 15 * Hour + 1800; // the potato (15 h) is ready at 9:30 tomorrow, rounded up to 10:00
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(2L * 9_375_00 * (until - t) / Day), "paid upfront to the last harvest hour");
             Assert.That(PeopleRules.FreeNow(sim), Is.EqualTo(free - 2));
             sim.DrainEvents();
@@ -176,8 +176,9 @@ namespace Sim.Core.Tests
         public void Regular_FullQueue_AsksOnce()
         {
             // One full day makes a regular here, and applicants wait 5 days, so the walk-in queue stays full.
-            Simulation sim = Start(seed: 9, game: Game((f, j) => f != "people.json" ? j
-                : j.Replace("\"regularThresholdDays\": 6", "\"regularThresholdDays\": 1").Replace("\"applicantWaitDays\": 2", "\"applicantWaitDays\": 5")));
+            // A 24-hour potato (Phase 1's time) makes a hire sown on the hour a full day.
+            Simulation sim = Start(seed: 9, game: Game((f, j) => f == "crops.json" ? j.Replace("\"growthMinutes\": 900", "\"growthMinutes\": 1440")
+                : f != "people.json" ? j : j.Replace("\"regularThresholdDays\": 6", "\"regularThresholdDays\": 1").Replace("\"applicantWaitDays\": 2", "\"applicantWaitDays\": 5")));
             BuildHut(sim);
             for (int i = 0; i < 24 * 8 && P(sim).Applicants.Count < sim.Config.Game.People.Hand.MaxApplicants; i++)
                 sim.AdvanceTo(sim.State.Clock.SimTime + Hour);

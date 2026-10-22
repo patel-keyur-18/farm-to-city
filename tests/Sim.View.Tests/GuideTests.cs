@@ -205,7 +205,7 @@ namespace Sim.View.Tests
             LetterVm page = Letter.Page(ctx, "comeBack", false, GuideKit.Info(sim), 0);
             Assert.That(page.Asks, Is.True);
             Assert.That(page.Buttons.Select(b => b.Id), Is.EqualTo(new[] { LetterIds.Yes, LetterIds.NotNow }));
-            Assert.That(page.Text, Does.Contain("Your potato will be ready").And.Contain("tomorrow").And.EndWith("Never at night."));
+            Assert.That(page.Text, Does.Match("Your potato will be ready (today|tonight|tomorrow) at \\d\\d:\\d\\d\\.").And.EndWith("Never at night.")); // spec 011 §3.6b
             Assert.That(page.Text, Does.Not.Contain("twice"));
 
             LetterVm on = Letter.Page(ctx, "comeBack", false, GuideKit.Info(sim, notificationsOn: true), 0);

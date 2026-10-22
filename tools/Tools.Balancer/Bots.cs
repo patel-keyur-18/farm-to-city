@@ -72,6 +72,7 @@ namespace Tools.Balancer
             SprayOutbreaks(sim, t);
             if (sim.State.Farm.Founder.Health < Fixed.Parse("0.9")) Ok(sim, new BuyMedicine(t));
             Harvest(sim, t);
+            Deliver(sim, t);
             if (!HoldsProduce(sim)) Sell(sim, t);
             Employ(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
@@ -88,6 +89,16 @@ namespace Tools.Balancer
             }
             foreach (Tree tree in sim.State.Farm.Trees)
                 if (tree.RipeGrams > 0) Ok(sim, new PickFruit(t, tree.SlotId, Overflow.SellRestToTrader));
+        }
+
+        /// <summary>Fills today's supermarket orders from fresh stock (spec 011 §3.3): they pay more than the trader.</summary>
+        protected static void Deliver(Simulation sim, long t)
+        {
+            foreach (SupermarketOrder o in new List<SupermarketOrder>(sim.State.Market.SupermarketOrders))
+            {
+                long q = Math.Min(o.Left, Supermarket.FreshStock(sim, o.Good));
+                if (q > 0 && Supermarket.DeliveryOpen(sim)) Ok(sim, new DeliverOrder(t, o.Id, q));
+            }
         }
 
         /// <summary>A curative spray on every warned crop: the dose costs far less than the damage it saves.</summary>

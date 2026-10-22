@@ -72,7 +72,7 @@ namespace Sim.Core.Tests
                         Assert.That(eligible, Does.Contain(o.Good));
                         long baseSowing = Supermarket.BaseSowing(sim, farm.Crops.First(c => c.OutputGood == o.Good));
                         Assert.That(o.Amount % 10_000, Is.EqualTo(0), "10 kg lots");
-                        Assert.That(o.Amount, Is.InRange(System.Math.Max(10_000, baseSowing - 10_000), 2 * baseSowing), "1–2 sowings");
+                        Assert.That(o.Amount, Is.InRange(System.Math.Max(10_000, baseSowing / 2 - 10_000), baseSowing), "half to one acre's sowing (ADR 0058)");
                         checkedOrders++;
                     }
                     Assert.That(greens.Count, Is.EqualTo(1));
@@ -89,7 +89,7 @@ namespace Sim.Core.Tests
             Assert.That(Days(5, out _), Is.EqualTo(a), "the same seed, the same orders");
 
             // No crop ripens within the day: only the greens order.
-            Simulation slow = Skipped(Quiet((f, j) => f == "crops.json" ? j.Replace("\"growthMinutes\": 120", "\"growthMinutes\": 1200") : j));
+            Simulation slow = Skipped(Quiet((f, j) => f == "crops.json" ? j.Replace("\"growthMinutes\": 120,", "\"growthMinutes\": 1200,").Replace("\"growthMinutes\": 900", "\"growthMinutes\": 1200") : j));
             int s = (int)Calendar.SeasonAt(0, slow.Clock);
             Assert.That(slow.Config.Game.Farm.Crops.Where(c => c.SowSeasons[s]).All(c => c.GrowthSeconds > 18 * Hour), "Spring has no quick crop in this content");
             slow.AdvanceTo(6 * Hour);

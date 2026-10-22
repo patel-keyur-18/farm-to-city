@@ -513,7 +513,7 @@
 | US-191 | Village and edge art in Blender | [F02.4](features/F02.4-village-map.md) | 5 | Must | In progress (T4) |
 | US-192 | The truck's day, the daily price and the stall at night | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
 | US-193 | Supermarket orders | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
-| US-194 | Rice and potato in 15 hours; balance re-measured | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 2 | Must | To do |
+| US-194 | Rice and potato in 15 hours; balance re-measured | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 2 | Must | Done |
 | US-195 | Orders and truck on screen | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | To do |
 
 **Order of work:** US-188 → US-189 (the map and its migration) → US-192 → US-193 → US-194 (the sim) → US-191 → US-190 → US-195 (art and screens) → the device build.

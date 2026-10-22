@@ -208,6 +208,31 @@ namespace Tools.Balancer
             return list;
         }
 
+        /// <summary>Spec 011 §9: the competent bot's days the truck filled, and the supermarket's share of its sales, over a run.</summary>
+        public sealed class TradeResult
+        {
+            public int TruckDays, TruckFullDays;
+            public long Supermarket, AllSales;
+            public double FullShare { get { return TruckDays == 0 ? 0 : (double)TruckFullDays / TruckDays; } }
+            public double OrderShare { get { return AllSales == 0 ? 0 : (double)Supermarket / AllSales; } }
+        }
+
+        public static TradeResult Trade(SimConfig config, int seeds, int seasons = 8)
+        {
+            var runs = new Economy.Run[seeds];
+            Parallel.For(0, seeds, i => runs[i] = Economy.RunBot(config, new FarmerBot(), seasons, (ulong)(i + 1), null));
+            var r = new TradeResult();
+            foreach (Economy.Run run in runs)
+                foreach (Economy.SeasonRow s in run.Seasons)
+                {
+                    r.TruckDays += s.TruckDays;
+                    r.TruckFullDays += s.TruckFullDays;
+                    r.Supermarket += s.Supermarket;
+                    r.AllSales += s.Trader + s.Local + s.Mandi + s.Supermarket;
+                }
+            return r;
+        }
+
         // ---- ADR 0038: the debt bots must actually borrow, miss, default and be foreclosed (every mechanic is used) ----
 
         /// <summary>When the sim unlocks the Hamlet (<c>EraUnlocked</c>, spec 009 §3.6), in days from the new game, per seed (NaN if never).</summary>
@@ -441,6 +466,9 @@ namespace Tools.Balancer
                 + rec.SeasonsToProfit.Count(x => x > 3) + " / " + rec.SeasonsToProfit.Count(x => x < 0) + "; the Hamlet's conditions again in " + ham.Count
                 + (ham.Count == 0 ? "" : ", days median " + ham[ham.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + ", max " + ham.Last().ToString("0.0", CultureInfo.InvariantCulture)));
             Console.WriteLine("  Exact ledger (5 bots × " + n + " seeds × 8 seasons): " + (ExactLedger(config, n) is var led && led.Count == 0 ? "pass" : "FAIL " + string.Join("; ", led.Take(5))));
+            TradeResult trade = Trade(config, n);
+            Console.WriteLine("  The truck and orders (spec 011 §9): the truck filled on " + (100 * trade.FullShare).ToString("0.0", CultureInfo.InvariantCulture)
+                + "% of days (under 10%); supermarket orders " + (100 * trade.OrderShare).ToString("0.0", CultureInfo.InvariantCulture) + "% of sales (under 20%)");
             Console.WriteLine("  Bounded prices: the rail in " + (100 * RailShare(config, n)).ToString("0.000", CultureInfo.InvariantCulture) + "% of good-hours (under 0.1%)");
             Console.WriteLine("  Land-flipper over 4 years (it can first afford a parcel in year 3):");
             foreach (StressResult s in Stress(config, Math.Min(seeds, 100), 16, new Func<Bot>[] { () => new LandFlipperBot() }))

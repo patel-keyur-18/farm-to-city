@@ -45,19 +45,19 @@ namespace Sim.View.Tests
             Simulation sim = ViewKit.NewGame();
             ViewContext ctx = ViewKit2.Context(sim);
             long t = sim.State.Clock.SimTime;
-            Assert.That(sim.Execute(new Sow(t, 86, "potato", Sim.Core.Farm.SeedSource.Certified, "none")).Accepted, Is.True); // 24 h
+            Assert.That(sim.Execute(new Sow(t, 86, "potato", Sim.Core.Farm.SeedSource.Certified, "none")).Accepted, Is.True); // 15 h
             Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing1));
             Assert.That(MapView.Build(ctx).Tiles[86].CropId, Is.EqualTo("potato"));
-            sim.AdvanceTo(t + 10 * Hour);
-            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing2), "10 of 24 hours");
-            sim.AdvanceTo(t + 20 * Hour);
-            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing3), "20 of 24 hours");
-            Assert.That(MapView.Build(ctx).Tiles[86].Progress, Is.InRange(0.8f, 0.85f));
-            sim.AdvanceTo(t + 24 * Hour);
+            sim.AdvanceTo(t + 6 * Hour);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing2), "6 of 15 hours");
+            sim.AdvanceTo(t + 13 * Hour);
+            Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Growing3), "13 of 15 hours");
+            Assert.That(MapView.Build(ctx).Tiles[86].Progress, Is.InRange(0.85f, 0.9f));
+            sim.AdvanceTo(t + 15 * Hour);
             Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Ready));
-            sim.AdvanceTo(t + 24 * Hour + 72 * Hour);
+            sim.AdvanceTo(t + 15 * Hour + 72 * Hour);
             Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Ready), "the grace is inclusive");
-            sim.AdvanceTo(t + 24 * Hour + 72 * Hour + 1);
+            sim.AdvanceTo(t + 15 * Hour + 72 * Hour + 1);
             Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.Spoiling));
             Assert.That(sim.Execute(new Harvest(sim.State.Clock.SimTime, 86, Sim.Core.Market.Overflow.SellRestToTrader)).Accepted, Is.True);
             Assert.That(MapView.Build(ctx).Tiles[86].Stage, Is.EqualTo(CropStage.None));
