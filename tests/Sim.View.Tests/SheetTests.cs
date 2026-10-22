@@ -178,6 +178,12 @@ namespace Sim.View.Tests
             Assert.That(store.Lines.Select(l => l.Label), Does.Contain("Wheat").And.Contain("Lentils").And.Contain("Seed potato"));
             Assert.That(store.Lines[0].Label + " | " + store.Lines[0].Value + " | " + store.Lines[0].WhyKey, Does.StartWith("In the store | ").And.EndWith("of 2,000 kg | store"));
             Assert.That(store.Actions, Is.Empty, "each Sell sits on its good's row");
+            // ADR 0059 §2: picture buttons, then Sell to the trader (crops), then Seed and inputs.
+            Assert.That(store.Lines[1].Buttons.Select(b => b.Id), Is.EqualTo(new[] { "buyInputs", "mandi" }), "no orders before the first session ends");
+            var labels = store.Lines.Select(l => l.Label).ToList();
+            Assert.That(labels.IndexOf("Sell to the trader"), Is.LessThan(labels.IndexOf("Wheat")));
+            Assert.That(labels.IndexOf("Wheat"), Is.LessThan(labels.IndexOf("Seed and inputs")));
+            Assert.That(labels.IndexOf("Seed and inputs"), Is.LessThan(labels.IndexOf("Seed potato")));
             Assert.That(store.Lines.Single(l => l.Label == "Wheat").Icon, Is.EqualTo("wheat"), "each row shows its good's picture");
             Assert.That(store.Lines.Single(l => l.Label == "Seed potato").Icon, Is.EqualTo("seed_potato"));
             ActionVm sellWheat = store.Lines.Single(l => l.Label == "Wheat").Action;

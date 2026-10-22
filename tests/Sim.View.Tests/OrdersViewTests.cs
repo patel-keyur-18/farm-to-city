@@ -112,11 +112,15 @@ namespace Sim.View.Tests
             SheetVm store = StoreSheet.Build(ctx);
             Assert.That(store.Lines.Single(l => l.WhyKey == "truck").Value, Is.EqualTo("Back at 6:00"));
             Assert.That(store.Lines.Any(l => l.Label == "Stall closed till 6:00"), Is.True);
-            Assert.That(store.Lines.Single(l => l.Label == "Supermarket orders").Value, Is.EqualTo("Closed till 6:00"));
+            ActionVm Orders(SheetVm sheet) { return sheet.Lines.Single(l => l.Buttons != null).Buttons.Single(b => b.Id == "orders"); }
+            Assert.That(Orders(store).Detail, Is.EqualTo("Closed till 6:00"));
+            Assert.That(Orders(store).Count, Is.Zero);
             GuideKit.Live(sim, guide, 6 * 3600);
             store = StoreSheet.Build(ctx);
             Assert.That(store.Lines.Any(l => l.Label == "Stall closed till 6:00"), Is.False);
-            Assert.That(store.Lines.Single(l => l.Label == "Supermarket orders").Value, Is.EqualTo("3 to deliver"));
+            Assert.That(Orders(store).Label + " · " + Orders(store).Detail, Is.EqualTo("Supermarket orders · 3 to deliver"));
+            Assert.That(Orders(store).Count, Is.EqualTo(3), "the picture button's red count");
+            Assert.That(Orders(store).Opens.Value.Kind, Is.EqualTo("Orders"));
             int wheat = sim.Config.Game.Market.IndexOf("wheat");
             string Today() { return GoodSheet.Build(ctx, wheat).Lines.Single(l => l.WhyKey == "traderPrice").Value; }
             Assert.That(Today(), Does.Match("^[\\d.]+ /kg today$"), "the first morning: no yesterday yet");

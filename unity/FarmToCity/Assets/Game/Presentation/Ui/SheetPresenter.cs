@@ -121,6 +121,7 @@ namespace Game.Presentation.Ui
                 case "menu": return IconBank.Ledger;
                 case "alert": return IconBank.Bell;
                 case "cart": return IconBank.Cart;
+                case "orders": return IconBank.Orders;
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
@@ -348,6 +349,7 @@ namespace Game.Presentation.Ui
 
         private VisualElement Row(LineVm line)
         {
+            if (line.Buttons != null) return PictureButtons(line.Buttons);
             if (line.IsHeader)
             {
                 // A section heading: a wood title with a rule under it, a little air above.
@@ -433,6 +435,71 @@ namespace Game.Presentation.Ui
                 button.style.alignItems = Align.FlexEnd;
                 button.style.flexShrink = 0;
                 row.Add(button);
+            }
+            return row;
+        }
+
+        /// <summary>
+        /// Big picture buttons side by side (the Store's shortcuts, ADR 0059 §2): a picture, what it opens, a line under it, and a
+        /// red count in the corner when there's something waiting.
+        /// </summary>
+        private VisualElement PictureButtons(System.Collections.Generic.List<ActionVm> actions)
+        {
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.marginTop = 14; row.style.marginBottom = 8;
+            foreach (ActionVm a in actions)
+            {
+                ActionVm action = a;
+                var b = new Button(() => { if (OnAction != null) OnAction(action); }) { text = "", name = "tile:" + a.Id };
+                b.style.flexGrow = 1; b.style.flexBasis = 0;
+                b.style.marginLeft = 0; b.style.marginRight = 16;
+                b.style.flexDirection = FlexDirection.Row;
+                b.style.alignItems = Align.Center;
+                b.style.backgroundColor = UiKit.CreamDark;
+                UiKit.Radius(b, 26);
+                UiKit.Border(b, 4, UiKit.Sand);
+                UiKit.Padding(b, 14, 18);
+                Sprite pic = Thumbnail(a.Icon);
+                if (pic != null)
+                {
+                    VisualElement icon = UiKit.Icon(pic, 92);
+                    icon.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                    icon.style.marginRight = 16;
+                    icon.style.flexShrink = 0;
+                    icon.pickingMode = PickingMode.Ignore;
+                    b.Add(icon);
+                }
+                var words = new VisualElement { pickingMode = PickingMode.Ignore };
+                words.style.flexShrink = 1;
+                Label title = UiKit.Heading1(a.Label, 38);
+                title.pickingMode = PickingMode.Ignore;
+                title.style.whiteSpace = WhiteSpace.Normal;
+                title.style.unityTextAlign = TextAnchor.MiddleLeft; // a Button centres its text by default
+                words.Add(title);
+                if (!string.IsNullOrEmpty(a.Detail))
+                {
+                    Label detail = UiKit.Text(a.Detail, 28, UiKit.Wood, UiKit.Body);
+                    detail.pickingMode = PickingMode.Ignore;
+                    detail.style.whiteSpace = WhiteSpace.Normal;
+                    detail.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    words.Add(detail);
+                }
+                b.Add(words);
+                if (a.Count > 0)
+                {
+                    Label count = UiKit.Text(a.Count.ToString(), 30, Color.white, UiKit.Heading);
+                    count.pickingMode = PickingMode.Ignore;
+                    count.style.position = Position.Absolute;
+                    count.style.top = -14; count.style.right = -10;
+                    count.style.width = 52; count.style.height = 52;
+                    count.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    count.style.backgroundColor = UiKit.Red;
+                    UiKit.Radius(count, 26);
+                    UiKit.Border(count, 3, Color.white);
+                    b.Add(count);
+                }
+                row.Add(b);
             }
             return row;
         }
@@ -661,6 +728,7 @@ namespace Game.Presentation.Ui
             foreach (LineVm l in vm.Lines)
             {
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);

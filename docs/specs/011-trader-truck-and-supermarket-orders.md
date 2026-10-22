@@ -199,10 +199,17 @@ Orders sheet (one row per order, ADR 0059)                       [×]
 | Supermarket pays you 6,691 at 6:00 tomorrow           [?]       |
 +-----------------------------------------------------------------+
 
-Store sheet, the trader's row and, while anything is owed, the supermarket's:
-| Trader's truck · here till midnight · 2,800 kg room   |
-| Trader's truck · back at 6:00                          |
-| Supermarket pays you 6,691 at 6:00 tomorrow    [Why?]  |
+Store sheet (in sections, ADR 0059):
+| In the store                         733 kg of 2,000 kg  [?] |
+| [Supermarket orders (2)] [Buy inputs      ] [Mandi trip     ] |
+| [2 to deliver          ] [Seed, fertiliser] [Sell a big load] |
+| Supermarket pays you 6,691 at 6:00 tomorrow              [?] |
+| SELL TO THE TRADER                                            |
+| Trader's truck   Here till midnight · 2,800 kg room      [?] |
+|   (or "Back at 6:00", then "Stall closed till 6:00")         |
+| Rice  649 kg · trader pays 20.01 /kg    [?] [Sell 649 kg]    |
+| SEED AND INPUTS                                               |
+| Coriander seed                                 0.1 kg    [?] |
 ```
 
 - The truck drives in along the district road and up the farm lane at 6:00, parks at the stop by the labour quarters, and drives off when it leaves. Tapping it opens the Store sheet. The supermarket's van waits an acre behind it while today's orders are open; tapping it opens the Orders sheet. The HUD's Orders button (a paper shop bag, beside People) shows once orders have begun, with a badge for orders still open (as built, US-195).
