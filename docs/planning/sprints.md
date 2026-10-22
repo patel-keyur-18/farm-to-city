@@ -20,7 +20,7 @@
 | S9 | 21–27 Dec 2026 | 1 | Playtest week, tuning and the Phase 1 gate review. | 8 | — | Yes: playtest build |
 | S10 | 4–10 Jan 2027 | 1 | Playtest fixes: the hand works every season, labourers till harvest (ADR 0048). | 6 | Spec 006 amendment (ADR 0048) | Yes: Development build |
 | S11 | 11–24 Jan 2027 (2 weeks, ADR 0057) | 2 | ADRs 0052–0057; specs 010 and 011 approved; the village map, the trader's truck, daily prices and supermarket orders built. | 35 | 010, 011 | Yes: the village map, the truck and orders |
-| S12 | 25–31 Jan 2027 | 2 | Spec 012 written, approved and built: buffalo and cows, fodder, straw, the shed. Spec 014 written. | ~15 (re-pointed with spec 012) | 012, 014 | Yes: cattle |
+| S12 | 25–31 Jan 2027 (may run 2 weeks, as S11) | 2 | Spec 012 approved (ADR 0060) and built: buffalo and cows, the shed, fodder, straw, milk to the co-op. Spec 014 written and approved. | 36 (re-pointed with spec 012) | 012, 014 | Yes: cattle |
 | S13 | 1–7 Feb 2027 | 2 | Citizens and the life clock; households, needs and happiness (F11.1, F11.2). | 16 | 016, 015 | Yes |
 | S14 | 8–14 Feb 2027 | 2 | Population flows and family trees (F11.3); founding a business and its books (F12.1). | 25 | 017, 013 | Yes |
 | S15 | 15–21 Feb 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
@@ -536,4 +536,35 @@
 - Spec 010 (map, village and edge): 6 gaps closed with the owner (the for-sale layout; a full river-bank strip with the commons in its west half; `s5` paid at 2 × its price; soils and location by geography; the dealer and tappable places; neighbours' seasonal fields). Specs 002 and 008 amended.
 - Spec 011 (the trader's truck and supermarket orders): 6 gaps closed (a daily price at 6:00; the market clears overnight; delivery at the collection point, paid at 6:00 next morning, shown in the Store; two crop orders plus a small greens order; the hand sells held produce at 6:00; the first sale at any hour, orders after the first session). Specs 003–007 and 009 amended.
 - US-188–US-191 (the 16 × 12 village map, its migration, the village on screen, the Blender village art), US-192 (the truck, daily prices, the stall at night), US-193 (supermarket orders), US-194 (15-hour rice and potato; ADR 0058 balance: orders 0.5–1 acre's sowing, 14.8% of sales), US-195 (orders and the truck on screen; the truck and van in Blender). 303 + 80 tests; Editor tours with touch; Development build.
+
+## Sprint 12 · 25–31 Jan 2027 · Phase 2 (cattle; spec 014 written)
+
+- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); coding next
+- **Branch:** `sprint/12-cattle-citizens`
+- **Goal:** Spec 012 approved and built: buffalo and cows in a shed, milk to the co-op every morning, fodder, straw and feed, playable on the iPhone. Spec 014 (citizens, households and population) written and approved; its code comes in Sprints 13–14.
+- **Points:** 36 (spec 012 re-pointed the ~15 estimate; the owner's review time is the limit, so the sprint may run 2 weeks as Sprint 11 did)
+- **Specs for the owner to review:** 012 (approved 2026-10-22), 014
+- **Device build:** Yes: Development build (`s12-cattle.md`)
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-126 | Raise animals: the shed, buying and selling, milk and the lactation cycle | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
+| US-199 | Feeding: the feed room, the straw stack, the compost pit, hunger and health | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
+| US-200 | Green fodder: berseem and sorghum cut daily, sold standing, the fodder order | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
+| US-201 | Health and help: vaccination, disease and the vet, the animals order | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
+| US-202 | The books: accounts, the dairy loan, foreclosure, save schema 7 | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
+| US-203 | Balance: a dairy bot and payback | [F13.1](features/F13.1-livestock.md) | 2 | Must | To do |
+| US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
+| US-205 | Cattle on screen | [F13.1](features/F13.1-livestock.md) | 8 | Must | To do |
+
+**Order of work:** US-126 → US-199 → US-200 → US-201 → US-202 (the sim, each reviewed by the owner) → US-203 (balance) → US-204 (art) → US-205 (screens, Editor tour) → spec 014 written alongside, its gaps closed with the owner → the device build.
+
+**Sprint end checklist**
+
+- [x] Spec 012 written, every gap closed with the owner, approved (ADR 0060); GDD, `CLAUDE.md` and the amended specs updated
+- [ ] Spec 014 written, every gap closed with the owner, approved; F11.1–F11.3 broken into stories and tasks
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [ ] Test checklist `docs/test-checklists/s12-cattle.md`; Development build
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request opened with labels and the milestone; owner merges to `main`
 
