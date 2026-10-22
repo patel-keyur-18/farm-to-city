@@ -498,10 +498,10 @@
 
 ## Sprint 11 · 11–24 Jan 2027 · Phase 2 (planning, the village, the truck and orders; 2 weeks, ADR 0057)
 
-- **Status:** Done in the Editor (2026-10-22): every story coded and tested with touch; Development build made; the owner's device check and the PR merge next
+- **Status:** The owner's device check passed (2026-10-22, frame time p95 5.37 ms). The device review added US-196–US-198 (ADR 0059); then a follow-up Development build and the PR merge
 - **Branch:** `sprint/11-phase2-planning`
 - **Goal:** Phase 2's decisions recorded (ADRs 0052–0057), specs 010 and 011 approved, the Phase 2 sprints planned, and the village map, the trader's truck, daily prices and supermarket orders built and playable on the iPhone.
-- **Points:** 35
+- **Points:** 42 (35 planned + 7 from the device review)
 - **Specs for the owner to review:** 010 (approved 2026-10-21), 011 (approved 2026-10-21)
 - **Device build:** Yes: Development build (`s11-village-truck-orders.md`)
 
@@ -509,12 +509,15 @@
 | --- | --- | --- | --- | --- | --- |
 | US-188 | The 16 × 12 map and the village layout | [F02.4](features/F02.4-village-map.md) | 3 | Must | Done |
 | US-189 | Save schema 5: remap tile ids, the farm lane takes `s5` | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
-| US-190 | The village on screen: camera, edge, places, neighbours' fields | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done except T6 (device) |
+| US-190 | The village on screen: camera, edge, places, neighbours' fields | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
 | US-191 | Village and edge art in Blender | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
 | US-192 | The truck's day, the daily price and the stall at night | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
 | US-193 | Supermarket orders | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
 | US-194 | Rice and potato in 15 hours; balance re-measured | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 2 | Must | Done |
-| US-195 | Orders and truck on screen | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done (device check pending) |
+| US-195 | Orders and truck on screen | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 5 | Must | Done |
+| US-196 | One row per supermarket order (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 1 | Must | Done |
+| US-197 | The Store in sections (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 3 | Must | To do |
+| US-198 | A hand's field order starts with the sow sheet (device review, ADR 0059) | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
 
 **Order of work:** US-188 → US-189 (the map and its migration) → US-192 → US-193 → US-194 (the sim) → US-191 → US-190 → US-195 (art and screens) → the device build.
 
@@ -523,7 +526,7 @@
 - [x] ADRs 0052–0057 written; GDD and `CLAUDE.md` updated
 - [x] Specs 010 and 011 written, every gap closed with the owner, approved
 - [x] Phase 2 sprints planned (this file), feature files F02.4 and F04.3 with stories and tasks; `epics.md` updated
-- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; [ ] the owner's device check passed (US-190.T6 measured there)
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; [x] the owner's device check passed (US-190.T6 measured there, 2026-10-22)
 - [x] Test checklist written in `docs/test-checklists/` (`s11-village-truck-orders.md`)
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened; [ ] owner merges to `main`

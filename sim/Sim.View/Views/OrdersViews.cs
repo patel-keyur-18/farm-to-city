@@ -9,8 +9,9 @@ using Sim.Core.Time;
 namespace Sim.View.Views
 {
     /// <summary>
-    /// The supermarket's Orders sheet (spec 011 §7): today's orders, what's fresh in store for each with Deliver, "sow by HH:MM"
-    /// when nothing is fresh yet, and what the supermarket owes.
+    /// The supermarket's Orders sheet (spec 011 §7, owner's Sprint 11 device review): one row per order with what it wants and pays,
+    /// its state on the same row (when to sow, what's fresh to deliver, how much is delivered) and its button, or a "Delivered" tag
+    /// once it's filled; then what the supermarket owes.
     /// </summary>
     public static class OrdersSheet
     {
@@ -23,49 +24,61 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "basket", Title = s.Get("orders.title") };
             vm.Subtitle = m.SupermarketOrders.Count == 0 ? s.Get(Supermarket.Started(sim) ? "orders.none" : "orders.notYet")
                 : s.Get(open ? "orders.till" : "orders.closed");
-            foreach (SupermarketOrder o in m.SupermarketOrders)
-            {
-                GoodDef good = sim.Config.Game.Market.Goods[o.Good];
-                vm.Lines.Add(new LineVm(s.Get(good.NameKey), s.Get("orders.line", "qty", ctx.Fmt.Kg(o.Amount), "price", ctx.Fmt.PricePerKg(o.Price),
-                    "trader", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, o.Good))), "orderPrice", o.Id) { Icon = good.Id });
-                vm.Lines.Add(Status(ctx, o, open));
-            }
-            long owed = sim.State.Ledger.Balance(Account.OwedByBuyers);
-            if (owed > 0) vm.Lines.Add(OwedLine(ctx));
-            if (m.SupermarketOrders.Count > 0) vm.Lines.Add(new LineVm(s.Get("orders.freshOnly"), null));
+            foreach (SupermarketOrder o in m.SupermarketOrders) vm.Lines.Add(OrderLine(ctx, o, open));
+            if (sim.State.Ledger.Balance(Account.OwedByBuyers) > 0) vm.Lines.Add(OwedLine(ctx));
             return vm;
         }
 
-        /// <summary>The order's second row: delivered, what's fresh with Deliver, or when to sow for it.</summary>
-        private static LineVm Status(ViewContext ctx, SupermarketOrder o, bool open)
+        /// <summary>An order's row: "Wants 50.0 kg at 34.52 /kg · trader pays 27.89 /kg", its state under it, and Deliver or "Delivered".</summary>
+        private static LineVm OrderLine(ViewContext ctx, SupermarketOrder o, bool open)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
-            if (o.Left == 0) return new LineVm(s.Get("orders.done"), ctx.Fmt.Kg(o.Delivered));
-            if (!open) return new LineVm(s.Get("orders.lapsing"), s.Get("orders.left", "qty", ctx.Fmt.Kg(o.Left)));
+            GoodDef good = sim.Config.Game.Market.Goods[o.Good];
+            var line = new LineVm(s.Get(good.NameKey), s.Get("orders.line", "qty", ctx.Fmt.Kg(o.Amount), "price", ctx.Fmt.PricePerKg(o.Price),
+                "trader", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, o.Good))), "orderPrice", o.Id) { Icon = good.Id };
+            string progress = o.Delivered > 0 ? s.Get("orders.progress", "done", ctx.Fmt.Kg(o.Delivered), "qty", ctx.Fmt.Kg(o.Amount)) : null;
+            string With(string note) { return progress == null ? note : note + " · " + progress; }
+            if (o.Left == 0)
+            {
+                line.Badge = s.Get("orders.done");
+                line.Note = s.Get("orders.allDelivered", "qty", ctx.Fmt.Kg(o.Delivered));
+                line.NoteTone = Tone.Good;
+                return line;
+            }
+            if (!open)
+            {
+                line.Note = With(s.Get("orders.missed"));
+                line.NoteTone = Tone.Warn;
+                return line;
+            }
             long fresh = Supermarket.FreshStock(sim, o.Good);
-            string done = o.Delivered > 0 ? s.Get("orders.soFar", "qty", ctx.Fmt.Kg(o.Delivered)) : null;
             if (fresh > 0)
             {
                 long q = System.Math.Min(fresh, o.Left);
                 long id = o.Id;
-                var line = new LineVm(s.Get("orders.fresh", "qty", ctx.Fmt.Kg(fresh)), done);
+                line.Note = With(s.Get("orders.fresh", "qty", ctx.Fmt.Kg(fresh)));
+                line.NoteTone = Tone.Good;
                 line.Action = ActionVm.Checked(ctx, "deliver:" + id, s.Get("orders.deliver"), s.Get("orders.deliverDetail", "qty", ctx.Fmt.Kg(q),
                     "amount", ctx.Fmt.Coins(MarketRules.Value(sim, o.Good, q, o.Price))), ActionKind.Primary, at => new DeliverOrder(at, id, q));
                 return line;
             }
-            return new LineVm(s.Get("orders.noneFresh"), SowBy(ctx, o.Good) + (done == null ? "" : " · " + done));
+            line.Note = With(SowBy(ctx, o.Good, out bool late));
+            line.NoteTone = late ? Tone.Warn : Tone.Plain;
+            return line;
         }
 
-        /// <summary>"Sow by 22:00" for a field crop, "Pick from the garden" for a green, or "Too late to sow today".</summary>
-        public static string SowBy(ViewContext ctx, int good)
+        /// <summary>"Sow by 22:00 to harvest it today" for a field crop, "Pick it from the garden today" for a green, or "Too late to sow for today" (late).</summary>
+        public static string SowBy(ViewContext ctx, int good, out bool late)
         {
             Simulation sim = ctx.Sim;
+            late = false;
             foreach (CropDef c in sim.Config.Game.Farm.Crops)
             {
                 if (c.OutputGood != good) continue;
                 long by = Supermarket.SowBy(sim, c);
-                if (by < ctx.Now) return ctx.Strings.Get("orders.tooLate");
+                late = by < ctx.Now;
+                if (late) return ctx.Strings.Get("orders.tooLate");
                 return ctx.Strings.Get("orders.sowBy", "time", Text.Formatter.Clock(Calendar.From(by, sim.Clock)));
             }
             return ctx.Strings.Get("orders.pickGarden");

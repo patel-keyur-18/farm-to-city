@@ -365,7 +365,7 @@ namespace Game.Presentation.Ui
             row.style.borderBottomWidth = 2;
             row.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
             Tappable(row, line);
-            if (line.Action == null)
+            if (line.Action == null && line.Note == null && line.Badge == null)
             {
                 row.Add(WithIcon(line.Icon, 56, UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body)));
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
@@ -402,14 +402,38 @@ namespace Game.Presentation.Ui
                 text.Add(starLine);
             }
             else text.Add(UiKit.Text(line.Value, 30, UiKit.Wood, UiKit.Body));
+            if (line.Note != null)
+            {
+                // The row's state (an order: when to sow, what's fresh, how much is delivered), in its colour.
+                Label note = UiKit.Text(line.Note, 30, line.NoteTone == Tone.Good ? UiKit.GreenDark : line.NoteTone == Tone.Warn ? UiKit.Warn : UiKit.Ink, UiKit.Heading);
+                note.style.whiteSpace = WhiteSpace.Normal;
+                note.style.marginTop = 2;
+                text.Add(note);
+            }
             VisualElement left = WithIcon(line.Icon, 84, text);
             left.style.flexGrow = 1; // the ? chip and the button sit together on the right
             row.Add(left);
             AddWhyChip(row, line);
-            VisualElement button = ActionColumn(line.Action);
-            button.style.alignItems = Align.FlexEnd;
-            button.style.flexShrink = 0;
-            row.Add(button);
+            if (line.Badge != null)
+            {
+                // Something done ("Delivered"): a green tag where the button was.
+                Label tag = UiKit.Text(line.Badge, 32, Color.white, UiKit.Heading);
+                tag.name = "badge";
+                tag.style.backgroundColor = UiKit.GreenDark;
+                tag.style.flexShrink = 0;
+                tag.style.minWidth = 350;
+                tag.style.unityTextAlign = TextAnchor.MiddleCenter;
+                UiKit.Radius(tag, 24);
+                UiKit.Padding(tag, 10, 24);
+                row.Add(tag);
+            }
+            else if (line.Action != null)
+            {
+                VisualElement button = ActionColumn(line.Action);
+                button.style.alignItems = Align.FlexEnd;
+                button.style.flexShrink = 0;
+                row.Add(button);
+            }
             return row;
         }
 
@@ -636,7 +660,7 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
             foreach (LineVm l in vm.Lines)
             {
-                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);

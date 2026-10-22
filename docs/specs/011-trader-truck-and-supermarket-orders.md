@@ -186,18 +186,18 @@ At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what
 ```
 HUD:  [☀ 7:10 · Spring 2]  [🛒 2]  [₹ 14,200]  [Store 61%]
 
-Orders sheet                                      [×]
-+--------------------------------------------------+
-| City supermarket · today's orders · till 24:00    |
-| Potato     820 kg  at 8.16  (trader 5.30)  [Why?] |
-|          fresh in store: 600 kg  [Deliver 600]    |
-| Radish    120 kg   at 8.40  (trader 5.50)  [Why?] |
-|          fresh in store: 0 · sow by 22:00         |
-| Spinach    12 kg   at 26.40 (trader 20.50) [Why?] |
-|          fresh in store: 4 kg  [Deliver 4]        |
-+--------------------------------------------------+
-| Only produce harvested today counts               |
-+--------------------------------------------------+
+Orders sheet (one row per order, ADR 0059)                       [×]
++-----------------------------------------------------------------+
+| City supermarket                                                |
+| Harvest today, deliver by midnight, paid at 6:00 tomorrow       |
+| Potato  Wants 820 kg at 8.16 · the trader pays 5.30   [?]       |
+|         600 kg harvested today, ready to deliver   [Deliver 600] |
+| Radish  Wants 120 kg at 8.40 · the trader pays 5.50   [?]       |
+|         Sow by 22:00 to harvest it today · 40 kg of 120 kg delivered |
+| Spinach Wants 12 kg at 26.40 · the trader pays 20.50  [?]       |
+|         All 12 kg delivered                        [Delivered]  |
+| Supermarket pays you 6,691 at 6:00 tomorrow           [?]       |
++-----------------------------------------------------------------+
 
 Store sheet, the trader's row and, while anything is owed, the supermarket's:
 | Trader's truck · here till midnight · 2,800 kg room   |
@@ -208,7 +208,7 @@ Store sheet, the trader's row and, while anything is owed, the supermarket's:
 - The truck drives in along the district road and up the farm lane at 6:00, parks at the stop by the labour quarters, and drives off when it leaves. Tapping it opens the Store sheet. The supermarket's van waits an acre behind it while today's orders are open; tapping it opens the Orders sheet. The HUD's Orders button (a paper shop bag, beside People) shows once orders have begun, with a badge for orders still open (as built, US-195).
 - The good's sheet shows the truck's price today against yesterday's truck price (stored each morning, so a season's start compares with the last season's price); the first morning shows today's price alone.
 - *Why?* on the order price: "Regional price 6.80 × 1.20 (supermarket premium 20%)". On the truck's room: per-crop room and the total load left.
-- **Money owed by the supermarket** shows on the Store sheet ("Supermarket pays you 6,691 at 6:00 tomorrow", or "at 6:00" after midnight), on the Orders sheet under the delivered order, and on the Money sheet as a row of net worth. Its *Why?*: "Delivered today: potato 820 kg × 8.16. Booked as a sale today; the cash comes at 6:00".
+- **Money owed by the supermarket** shows on the Store sheet ("Supermarket pays you 6,691 at 6:00 tomorrow", or "at 6:00" after midnight), under the orders on the Orders sheet, and on the Money sheet as a row of net worth. Its *Why?*: "Delivered today: potato 820 kg × 8.16. Booked as a sale today; the cash comes at 6:00".
 - "Sow by HH:MM" is the latest sowing time at which the crop ripens before midnight.
 
 ## 8. Acceptance criteria

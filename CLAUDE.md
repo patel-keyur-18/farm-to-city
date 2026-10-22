@@ -168,6 +168,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0056 | Buffalo and cows in a 4-animal shed: co-op milk by quality; green fodder cut and carried, straw stack, feed room; fed automatically, no deaths from hunger in Phase 2; dung to compost; lactation, vaccination, 1.5 h a day an animal |
 | 0057 | Phase 2 specs (010–019) reviewed two per sprint, each a sprint before its code; the enhancements first (010 and 011 coded in Sprint 11 with a device build, 012 in Sprint 12) |
 | 0058 | Sprint 11 balance: an order is 0.5–1 acre's sowing (orders 14.8% of sales); the 15-hour crops' selling gain accepted (season farm profit median 46k); the long crop is ≥ 12 h; the bots play after the first session; the truckAway page also opens on a Store visit with the truck away |
+| 0059 | Sprint 11 device review (passed; frame time p95 5.37 ms): one row per supermarket order with a Delivered tag; the Store in sections with picture buttons; a hand's field order starts with the sow sheet (fertiliser choice and every figure) |
 
 ## Current status
 

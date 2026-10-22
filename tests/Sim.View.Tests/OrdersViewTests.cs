@@ -64,22 +64,36 @@ namespace Sim.View.Tests
         {
             Simulation sim = Morning(out ViewContext ctx);
             SheetVm sheet = OrdersSheet.Build(ctx);
-            Assert.That(sheet.Subtitle, Is.EqualTo("Today's orders · deliver by midnight"));
+            Assert.That(sheet.Subtitle, Is.EqualTo("Harvest today, deliver by midnight, paid at 6:00 tomorrow"));
             Assert.That(sim.State.Market.SupermarketOrders.Count, Is.EqualTo(3));
-            Assert.That(sheet.Lines.Count(l => l.WhyKey == "orderPrice"), Is.EqualTo(3));
-            Assert.That(sheet.Lines.Where(l => l.Label == "Nothing fresh yet").Select(l => l.Value),
-                Has.All.Match("^(Sow by \\d\\d:\\d\\d|Pick it from the garden|Too late to sow for today)"));
-            Assert.That(sheet.Lines.Last().Label, Is.EqualTo("Only produce harvested today counts."));
+            // One row per order (owner's Sprint 11 device review): its state is on the same row, no second row.
+            Assert.That(sheet.Lines.Count, Is.EqualTo(3));
+            Assert.That(sheet.Lines.All(l => l.WhyKey == "orderPrice" && l.Value.StartsWith("Wants ") && l.Badge == null && l.Action == null), Is.True);
+            Assert.That(sheet.Lines.Select(l => l.Note), Has.All.Match("^(Sow by \\d\\d:\\d\\d to harvest it today|Pick it from the garden today|Too late to sow for today)$"));
             Assert.That(HudView.Build(ctx).OrdersBadge, Is.EqualTo(3));
             Assert.That(HudView.Build(ctx).HasOrders, Is.True);
 
             SupermarketOrder o = sim.State.Market.SupermarketOrders[0];
+            LineVm Row() { return OrdersSheet.Build(ctx).Lines.Single(l => l.WhyKey == "orderPrice" && l.WhyId == o.Id); }
             sim.State.Market.Stock[o.Good] += 5_000; // a fresh harvest (the store's own rule is in OrderTests)
             sim.State.Market.FreshToday[o.Good] += 5_000;
-            LineVm fresh = OrdersSheet.Build(ctx).Lines.Single(l => l.Action != null && l.Action.Id == "deliver:" + o.Id);
-            Assert.That(fresh.Label, Is.EqualTo("Fresh in store: 5.0 kg"));
+            LineVm fresh = Row();
+            Assert.That(fresh.Note, Is.EqualTo("5.0 kg harvested today, ready to deliver"));
+            Assert.That(fresh.Action.Id, Is.EqualTo("deliver:" + o.Id));
             Assert.That(fresh.Action.Enabled, Is.True);
             GuideKit.Ok(sim, fresh.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(Row().Note, Does.EndWith(" · 5.0 kg of " + ctx.Fmt.Kg(o.Amount) + " delivered"), "part delivered: on the same row");
+            Assert.That(Row().Action, Is.Null);
+
+            // The rest: the row says Delivered, with no button and nothing about sowing.
+            sim.State.Market.Stock[o.Good] += o.Left;
+            sim.State.Market.FreshToday[o.Good] += o.Left;
+            GuideKit.Ok(sim, Row().Action.Create(sim.State.Clock.SimTime));
+            LineVm done = Row();
+            Assert.That(done.Badge, Is.EqualTo("Delivered"));
+            Assert.That(done.Note, Is.EqualTo("All " + ctx.Fmt.Kg(o.Amount) + " delivered"));
+            Assert.That(done.Action, Is.Null);
+            Assert.That(HudView.Build(ctx).OrdersBadge, Is.EqualTo(2));
             LineVm owed = OrdersSheet.Build(ctx).Lines.Single(l => l.WhyKey == "owed");
             Assert.That(owed.Label + " " + owed.Value, Does.Match("^Supermarket pays you [\\d,]+ coins at 6:00 tomorrow$"));
             Assert.That(StoreSheet.Build(ctx).Lines.Any(l => l.WhyKey == "owed"), Is.True);

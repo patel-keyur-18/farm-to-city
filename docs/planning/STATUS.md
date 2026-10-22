@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 11 (2 weeks, ADR 0057): all stories done and Editor-tested 2026-10-22; Development build made; waiting for the owner's device check (`s11-village-truck-orders.md`) and the PR merge |
+| Sprint | Sprint 11 (2 weeks, ADR 0057): device check passed 2026-10-22; the device review's stories US-196–US-198 (ADR 0059) in progress, then a follow-up build and the PR merge |
 | Branch with latest work | `sprint/11-phase2-planning` (from `main`, which has Sprint 10 / PR #15) |
 | Last updated | 2026-10-22 |
 
@@ -149,7 +149,7 @@
 
 ## In progress
 
-**Sprint 11** (`sprint/11-phase2-planning`, `docs/planning/sprints.md`): every story done and Editor-tested; the owner's device check is next. Planning part done on 2026-10-21:
+**Sprint 11** (`sprint/11-phase2-planning`, `docs/planning/sprints.md`): every planned story done; **the owner's device check passed on 2026-10-22** (30 minutes of play, all 21 checks; frame time with the whole map in view: main thread p95 5.37 ms, max 9.41 ms, GPU p95 4.60 ms, 60 fps, 0.00% over 25 ms; US-190.T6 ticked). Planning part done on 2026-10-21:
 - **ADRs 0052–0057** record the owner's Phase 2 decisions of 2026-10-21 (the map grows by era to 16 × 12; the village layout and road acres; the trader's 4 t truck; supermarket orders with rice and potato in 15 h; buffalo and cows; Phase 2 specs two per sprint, the enhancements first). GDD and `CLAUDE.md` updated.
 - **Spec 010 (map, village and edge): approved.** Gaps closed with the owner: the for-sale layout (78 acres buyable, 46 not for sale yet); row 0 a full river-bank strip with the 8-acre commons in its west half; a save owning `s5` paid 2 × its price plus what's on it; new soils and one geography rule for every parcel's location factor; the input dealer and tappable places; neighbours' seasonal fields, for-sale signs, named cards, no desaturation.
 - **Spec 011 (the trader's truck and supermarket orders): approved.** Gaps closed: produce prices move daily at 6:00 (bounded, mean-reverting); the market clears overnight while the stall is closed; orders delivered at the collection point and paid at 6:00 next morning ("Supermarket pays you X at 6:00 tomorrow" in the Store); two crop orders plus a small greens order daily; the hand sells held produce at 6:00; the first sale at any hour and orders from the morning after the first session.
@@ -166,11 +166,12 @@
   - **Tests:** 303 `Sim.Core` + 80 `Sim.View` pass; the golden replays are unchanged; CI on every push.
   - **Development build (2026-10-22):** Unity build succeeded (0 errors); the unsigned Xcode Release compile is in the pull request. Checklist `docs/test-checklists/s11-village-truck-orders.md` (21 checks, including US-190.T6, the frame time with the whole map in view).
   - The Editor's town is the owner's Sprint 10 town migrated, advanced to Winter day 3 by the tests. Backups of the earlier states are in the session scratchpad only.
+  - **Device review (owner, 2026-10-22; ADR 0059):** three changes, one story each. **US-196 done:** one row per supermarket order with its state on the same row (sow by, fresh with Deliver, part delivered, missed) and a green Delivered tag once filled; `LineVm.Note`, `NoteTone`, `Badge`. Editor tour with touch (`docs/art/s11-196-*.png`): closed orders at 02:46, the new orders at 6:00, Collect all, Deliver on radish (filled: Delivered) and coriander (1.5 of 4.5 kg). The clock and the radish and coriander sowings were set up by script. **US-197** (the Store in sections: the owner chose picture buttons for orders, Buy inputs and the mandi, then Sell to the trader and Seed and inputs) and **US-198** (a hand's field order starts with the sow sheet: fertiliser choice and every figure) are next.
 
 ## Next up
 
-1. **Owner:** install the Sprint 11 Development build over the Sprint 10 app (don't delete it first), work through `s11-village-truck-orders.md` (check 5 is US-190.T6, the frame time), report, and merge the Sprint 11 pull request.
-2. **Claude, after the device check:** fix what it finds; tick US-190.T6 with the measured numbers (F02.4, sprints.md).
+1. **Claude:** US-197 (the Store in sections), then US-198 (a hand's field order starts with the sow sheet), each Editor-tested with touch and reviewed by the owner; then a follow-up Development build with a short checklist for the three sheets.
+2. **Owner:** check the follow-up build and merge the Sprint 11 pull request.
 3. **Sprint 12:** write spec 012 (cattle, from ADR 0056; left open there: exact numbers, silage later, whether long neglect can lose an animal, recommended no) and spec 014 (citizens, households, population); close their gaps one at a time; build spec 012.
 
 ## Owner action checklist (Phases 0–1)
@@ -183,7 +184,7 @@
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Done (closed by the owner, PR #14 merged) |
 | Sprint 10 | Done (device check passed 2026-10-21); merge PR #15 |
-| Sprint 11 | Install the Development build, run `s11-village-truck-orders.md`, report; merge the Sprint 11 PR |
+| Sprint 11 | Done: device check passed 2026-10-22. Check the follow-up build (ADR 0059's three sheets); merge the Sprint 11 PR |
 
 ## Open questions (with the owner)
 
