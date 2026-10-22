@@ -1,6 +1,6 @@
 # 003. Crops, fruit trees and founder labour
 
-- Status: Approved (2026-10-17), with the Sprint 1 review decisions the Sprint 2 planning review changes (ADR 0032) and the Sprint 3 planning review changes (ADR 0034) in §10; amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 and content (rice and potato in 15 h)
+- Status: Approved (2026-10-17), with the Sprint 1 review decisions the Sprint 2 planning review changes (ADR 0032) and the Sprint 3 planning review changes (ADR 0034) in §10; amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 and content (rice and potato in 15 h); amended by spec 012 (ADR 0056, 0060; Phase 2): §3.1–3.3 (fodder crops berseem and sorghum are cut daily, not harvested; wheat and rice harvests give straw), §3.2 (compost from the pit first), §3.6 (animals add 1.5 h a day each to the Care demand), §3.11 (the household's milk is home use inside the food allowance)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Crops, Yield formula, Fruit trees, Ready to harvest, Inputs and trade-offs); Player journey and eras (The founder's routine); Data model (`CropDef`, `FounderDef`, `DietPlanDef`)
