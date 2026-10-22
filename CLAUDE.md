@@ -171,6 +171,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0059 | Sprint 11 device review (passed; frame time p95 5.37 ms): one row per supermarket order with a Delivered tag; the Store in sections with picture buttons; a hand's field order starts with the sow sheet (fertiliser choice and every figure) |
 | 0060 | Spec 012 gaps: a game day is 22.8 real days for animals (182 L a buffalo); cattle from the Hamlet; berseem and sorghum cut daily, spare fodder sold standing, shortfall bought; straw stack, feed room, compost pit as places; co-op pays by fat at 6:00; automatic vaccination and vet; animals at cost, dairy loan at 0.75; nothing dies |
 | 0061 | The village is the town: its places serve the player's citizens, its old families aren't counted ("Your people"); the centre redrawn on the same acres (a middle street, buildings from all sides facing their street, clusters, square, pond and temple); the dairy co-op gets a building |
+| 0062 | A living valley: neighbours' acres vary by soil (scrub, fallow, mustard, sugarcane, groves), farmsteads only on not-for-sale acres and the edge; a hedge-and-wall boundary with a gate and corner stones round everything you own (no desaturation) |
 
 ## Current status
 
