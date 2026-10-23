@@ -554,8 +554,8 @@
 | US-201 | Health and help: vaccination, disease and the vet, the animals order | [F13.1](features/F13.1-livestock.md) | 3 | Must | Done |
 | US-202 | The books: accounts, the dairy loan, foreclosure, save schema 7 | [F13.1](features/F13.1-livestock.md) | 3 | Must | Done |
 | US-203 | Balance: a dairy bot and payback | [F13.1](features/F13.1-livestock.md) | 2 | Must | Done |
-| US-213 | The cattle acre (ADR 0064) | [F13.1](features/F13.1-livestock.md) | 3 | Must | To do |
-| US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | To do |
+| US-213 | The cattle acre (ADR 0064) | [F13.1](features/F13.1-livestock.md) | 3 | Must | Done |
+| US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
 | US-205 | Cattle on screen | [F13.1](features/F13.1-livestock.md) | 8 | Must | To do |
 | US-206 | The village redrawn: a middle street, buildings from all sides, the dairy co-op (ADR 0061) | [F02.4](features/F02.4-village-map.md) | 8 | Must | To do |
 | US-207 | A living valley: varied neighbours' land, farmsteads, your land at a glance (ADR 0062) | [F02.4](features/F02.4-village-map.md) | 5 | Must | To do |

@@ -167,6 +167,37 @@ namespace Sim.View.Views
     }
 
     /// <summary>Everything the map draws, built from the state: tiles, tree slots, garden beds and buildings (spec 008 §3.4).</summary>
+    /// <summary>What the cattle acre shows (ADR 0064): its shed, its stocks as heights, and each animal's place and pose.</summary>
+    public sealed class CattleAcreVm
+    {
+        public int TileId { get; internal set; }
+
+        /// <summary>Before the Hamlet: the padlock sign, no shed.</summary>
+        public bool Locked { get; internal set; }
+
+        /// <summary>0 no shed, 1 being built, 2 built.</summary>
+        public int Shed { get; internal set; }
+
+        /// <summary>The straw stack: 0 empty, 1 low, 2 mid, 3 high, by how full it is.</summary>
+        public int Straw { get; internal set; }
+
+        /// <summary>The compost pit: 0 empty, 1 half, 2 full.</summary>
+        public int Compost { get; internal set; }
+        public List<AnimalVm> Animals { get; } = new List<AnimalVm>();
+    }
+
+    public sealed class AnimalVm
+    {
+        public long Id { get; internal set; }
+        public string Kind { get; internal set; }
+
+        /// <summary>stand, eat or lie.</summary>
+        public string Pose { get; internal set; }
+
+        /// <summary>Her place on the acre, 0–3 (place 0 is the neem's shade, with no manger).</summary>
+        public int Place { get; internal set; }
+    }
+
     public sealed class MapVm
     {
         public int Width { get; internal set; }
@@ -192,6 +223,9 @@ namespace Sim.View.Views
         public List<int> TruckRoute { get; } = new List<int>();
         public bool TruckHere { get; internal set; }
         public bool VanHere { get; internal set; }
+
+        /// <summary>The cattle acre, or null when the map has none.</summary>
+        public CattleAcreVm Cattle { get; internal set; }
     }
 
     public static class MapView
@@ -329,7 +363,44 @@ namespace Sim.View.Views
             foreach (Building b in land.Buildings)
                 map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
             AddPeople(ctx, map);
+            map.Cattle = CattleAcre(sim, map.SecondOfDay);
             return map;
+        }
+
+        /// <summary>
+        /// The cattle acre (ADR 0064). Animals take places 1, 2, 3, then the neem's shade (0), in id order. Poses: lying at night
+        /// (20:00–6:00) and when ill, eating in the morning feed (6:00–9:00), then turn by turn every 3 hours so the yard moves.
+        /// </summary>
+        public static CattleAcreVm CattleAcre(Simulation sim, long secondOfDay)
+        {
+            GameDefs defs = sim.Config.Game;
+            int tile = -1;
+            for (int i = 0; i < sim.State.Land.Tiles.Count && tile < 0; i++) if (sim.State.Land.Tiles[i].Terrain == Terrain.Cattle) tile = i;
+            if (tile < 0) return null;
+            var vm = new CattleAcreVm { TileId = tile, Compost = Level(sim, GoodPlace.CompostPit, 2) };
+            Sim.Core.Livestock.LivestockState s = sim.State.Livestock;
+            if (s == null) return vm;
+            vm.Locked = !Sim.Core.Livestock.LivestockRules.Unlocked(sim);
+            vm.Shed = Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? 2 : s.ShedReadyAt > 0 ? 1 : 0;
+            if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            int hour = (int)(secondOfDay / 3600);
+            int n = 0;
+            foreach (Sim.Core.Livestock.Animal a in s.Animals)
+            {
+                string pose = a.SickDays > 0 || hour >= 20 || hour < 6 ? "lie" : hour < 9 ? "eat" : new[] { "stand", "eat", "lie" }[(int)((a.Id + hour / 3) % 3)];
+                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = defs.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
+                n++;
+            }
+            return vm;
+        }
+
+        /// <summary>How full a place is in steps: 0 under 1% full, then 1..top in equal bands of what it holds.</summary>
+        internal static int Level(Simulation sim, GoodPlace place, int top)
+        {
+            long cap = Sim.Core.Market.Store.CapacityGrams(sim, place);
+            long used = Sim.Core.Market.Store.UsedGrams(sim, place);
+            if (cap <= 0 || used * 100 < cap) return 0;
+            return (int)System.Math.Min(top, 1 + used * top / cap);
         }
 
         private static TileKind Kind(Terrain t, bool owned)

@@ -51,14 +51,14 @@ namespace Game.Presentation.Map
         // Where things sit inside a tile, in world units from the tile centre (y up).
         private static readonly Vector2[] EdgeSlots = { new Vector2(-0.36f, -0.02f), new Vector2(0.36f, -0.02f) }; // the acre's left and right corners
         // The 2-acre yard (ADR 0040). The back acre: the house, the well beside it, two trees. The front acre, where the door faces:
-        // the kitchen garden, the tulsi planter, a haystack, the woodpile and two more trees. Offsets are from each tile's centre.
+        // the kitchen garden, the tulsi planter, the woodpile and two more trees (the straw lives on the cattle acre, ADR 0064). Offsets are from each tile's centre.
         private static readonly Vector2 HutSpot = new Vector2(-0.04f, 0.04f), WellSpot = new Vector2(0.35f, 0.0f);
         private static readonly int[] YardTreeTile = { 0, 0, 1, 1 }; // which yard acre each of the 4 yard tree places is drawn on
         // The house acre: its left corner, and in front of the house beside the well (never behind the roof). The front acre: its
         // left corner, and its bottom corner clear of the beds and the woodpile.
         private static readonly Vector2[] YardSlots = { new Vector2(-0.42f, -0.04f), new Vector2(0.22f, -0.15f), new Vector2(-0.40f, 0.02f), new Vector2(-0.10f, -0.21f) };
         private static readonly Vector2[] BedSpots = { new Vector2(-0.16f, 0.06f), new Vector2(0.06f, -0.05f) };
-        private static readonly Vector2 TulsiSpot = new Vector2(0.10f, 0.15f), HaystackSpot = new Vector2(0.31f, -0.02f), WoodpileSpot = new Vector2(0.20f, -0.14f);
+        private static readonly Vector2 TulsiSpot = new Vector2(0.10f, 0.15f), WoodpileSpot = new Vector2(0.20f, -0.14f);
 
         /// <summary>The two hut places of the labour quarters (ADR 0040).</summary>
         // A hand's hut is a one-room hut: drawn at 75% so it reads smaller than the founder's house, and the two places sit apart along
@@ -243,6 +243,7 @@ namespace Game.Presentation.Map
                 if (hut) _hutWorld = pos; else _wellWorld = pos;
             }
             BuildYardDressing(map);
+            BuildCattleAcre(map);
             _ring = NewRenderer("ring", SpriteBank.SelectionRing, Vector3.zero, 9000);
             _ring.gameObject.SetActive(false);
             _arrow = NewRenderer("guideArrow", SpriteBank.GuideArrow, Vector3.zero, 9500);
@@ -344,6 +345,12 @@ namespace Game.Presentation.Map
                         ground.color = _tint * new Color(0.95f, 0.86f, 0.70f, 1f);
                         detail.sprite = null;
                         break;
+                    case TileKind.Cattle:
+                        // Poor, sandy land under thin grass (ADR 0064); its pieces are MapPresenter.Cattle's.
+                        ground.sprite = SpriteBank.Rendered("ground_cattle") ?? SpriteBank.Grass;
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
                     case TileKind.Yard:
                         ground.sprite = SpriteBank.Grass;
                         ground.color = _tint * new Color(1.02f, 1.0f, 0.9f, 1f);
@@ -404,12 +411,14 @@ namespace Game.Presentation.Map
             RefreshHandHuts(map, animate);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
+            RefreshCattleAcre(map, animate);
         }
 
         // ---- hands' huts, building sites and people (ADR 0039 §2, §8) ----
 
         /// <summary>
-        /// The yard's props and the fence (ADR 0040): a tulsi planter by the door, a haystack and a woodpile on the front acre, and a
+        /// The yard's props and the fence (ADR 0040): a tulsi planter by the door and a woodpile on the front acre (the straw lives on the
+        /// cattle acre, ADR 0064, so the yard keeps no haystack), and a
         /// low bamboo fence wherever the yard or the quarters meet land that isn't yours (open to your fields and between them).
         /// </summary>
         private void BuildYardDressing(MapVm map)
@@ -417,7 +426,6 @@ namespace Game.Presentation.Map
             if (_yardTiles.Count == 0) return;
             int front = _yardTiles[_yardTiles.Count - 1];
             Prop("tulsi", front, TulsiSpot, 46);
-            Prop("haystack", front, HaystackSpot, 46);
             Prop("woodpile", front, WoodpileSpot, 46);
             foreach (TileVm t in map.Tiles)
             {
@@ -430,7 +438,7 @@ namespace Game.Presentation.Map
             }
         }
 
-        private static bool Yours(TileKind k) { return k == TileKind.Farm || k == TileKind.Yard || k == TileKind.Quarters; }
+        private static bool Yours(TileKind k) { return k == TileKind.Farm || k == TileKind.Yard || k == TileKind.Quarters || k == TileKind.Cattle; }
 
         /// <summary>
         /// Your land's boundary (spec 010 §3.7): a field bund round the outside of your fields, redrawn when you buy or sell. The yard

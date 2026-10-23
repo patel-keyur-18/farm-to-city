@@ -96,7 +96,7 @@ namespace Game.Presentation.Ui
             titles.Add(UiKit.Heading1(title, 52));
             if (!string.IsNullOrEmpty(subtitle)) titles.Add(UiKit.Text(subtitle, 30, UiKit.Wood, UiKit.Body));
             header.Add(titles);
-            var x = new Button(close) { text = "" };
+            var x = new Button(close) { text = "", name = "close" }; // named for the Editor's scripted touch (TouchDriver.TapNamed)
             x.style.width = 76; x.style.height = 76; x.style.backgroundColor = UiKit.Red;
             UiKit.Radius(x, 38);
             UiKit.Border(x, 4, UiKit.RedDark);
