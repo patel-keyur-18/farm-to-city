@@ -1810,6 +1810,216 @@ SPRITES.update({
 })
 
 
+# ---------------------------------------------------------------- the village redrawn (ADR 0061, US-206)
+# Every place in four facings (s, w, e, n: the door towards -y, -x, +x, +y), a little smaller than the farm's buildings so each
+# acre keeps a street, a front yard and a back yard; a third, two-storey house; the dairy co-op; streets, ground and props.
+
+VILLAGE_SCALE = 0.8      # times each model's own scale: room round every building (owner, ADR 0061)
+FACINGS = {"s": 0, "w": -90, "e": 90, "n": 180}
+
+
+def refit(objs, rot_deg=0.0, factor=1.0):
+    """Turns a built model about its origin and scales it again, keeping the outline's width on screen."""
+    m = Matrix.Diagonal((factor, factor, factor, 1.0)) @ Matrix.Rotation(math.radians(rot_deg), 4, "Z")
+    for o in objs:
+        o.matrix_world = m @ o.matrix_world
+        for mod in o.modifiers:
+            if mod.type == "SOLIDIFY":
+                mod.thickness /= factor
+    return objs
+
+
+def yard_pad(o, w, d, y0, mat_hex=0xCDB287):
+    """A packed-earth front yard before the door (-y), flush with the ground."""
+    o.append(box("pad", (w, d, 0.006), (0, y0, 0.003), toon("pad", mat_hex), outline=False))
+
+
+def back_details(o, w, d, z, mat):
+    """A window on the back and on each side wall, so a house turned away from the camera still reads as a home."""
+    o.append(box("backWin", (0.05, 0.012, 0.045), (-0.04, d / 2 + 0.002, z), mat))
+    for sx in (-1, 1):
+        o.append(box("sideWin%d" % sx, (0.012, 0.045, 0.045), (sx * (w / 2 + 0.002), 0.0, z), mat))
+
+
+def model_house_v(variant):
+    """A village house: 0 small mud with a tile roof, 1 lime-washed with a flat roof and parapet, 2 a bigger two-storey house
+    with a stair up the side; each with a packed-earth front yard and windows all round."""
+    o = []
+    dark = toon("wood_dark", WOOD_DARK)
+    if variant == 2:
+        w, d = 0.40, 0.28
+        yard_pad(o, 0.40, 0.14, -0.21)
+        o.append(box("plinth", (w + 0.04, d + 0.04, 0.04), (0, 0, 0.02), toon("plinth", PLINTH), bevel=0.006))
+        o.append(walls("ground", w, d, 0.15, toon("lime", 0xEFE3CB)))
+        o.append(box("band", (w + 0.01, d + 0.01, 0.02), (0, 0, 0.2), toon("ochreBand", 0xD39A4A), outline=False))
+        o.append(box("upper", (w * 0.62, d, 0.12), (-w * 0.19, 0, 0.27), toon("lime", 0xEFE3CB)))
+        o.append(box("parapet", (w + 0.01, d + 0.01, 0.025), (0, 0, 0.215), toon("limeShade", LIME_SHADE)))
+        o.append(box("roof2", (w * 0.62 + 0.01, d + 0.01, 0.02), (-w * 0.19, 0, 0.34), toon("limeShade", LIME_SHADE)))
+        o.append(box("door", (0.065, 0.012, 0.11), (0.08, -d / 2 - 0.003, 0.095), toon("door", 0x7A3E8C)))
+        o.append(box("win1", (0.06, 0.012, 0.05), (-0.09, -d / 2 - 0.003, 0.13), dark))
+        o.append(box("win2", (0.06, 0.012, 0.05), (-0.09, -d / 2 - 0.003, 0.28), dark))
+        for i in range(5):   # the stair up the right side to the roof terrace
+            o.append(box("stair%d" % i, (0.05, 0.03, 0.03), (w / 2 + 0.03, d / 2 - 0.04 - i * 0.035, 0.02 + i * 0.04), toon("stone", STONE)))
+        back_details(o, w, d, 0.13, dark)
+        o.append(box("tank", (0.06, 0.06, 0.05), (-0.14, 0.06, 0.375), toon("tank", 0x3A3A3A)))
+        return refit(group(o, scale=BUILDING_SCALE), 0, VILLAGE_SCALE)
+    w, d = (0.32, 0.24) if variant == 0 else (0.36, 0.26)
+    yard_pad(o, w, 0.12, -d / 2 - 0.07)
+    o.append(box("plinth", (w + 0.05, d + 0.05, 0.04), (0, 0, 0.02), toon("plinth", PLINTH), bevel=0.006))
+    if variant == 0:
+        o.append(walls("walls", w, d, 0.15, toon("mud", MUD)))
+        o.append(gable_roof("roof", w, d, 0.10, 0.19, toon("tile", TILE), overhang=0.04))
+    else:
+        o.append(walls("walls", w, d, 0.18, toon("lime", LIME)))
+        o.append(box("parapet", (w + 0.01, d + 0.01, 0.03), (0, 0, 0.235), toon("limeShade", LIME_SHADE)))
+        o.append(box("water_tank", (0.07, 0.07, 0.06), (0.1, 0.06, 0.28), toon("tank", 0x3A3A3A)))
+    o.append(box("door", (0.07, 0.012, 0.11), (0.06, -d / 2 - 0.003, 0.095), toon("door", (DOOR, 0x8C3E3E)[variant])))
+    o.append(box("window", (0.06, 0.012, 0.05), (-0.08, -d / 2 - 0.003, 0.13), dark))
+    back_details(o, w, d, 0.13, dark)
+    return refit(group(o, scale=BUILDING_SCALE), 0, VILLAGE_SCALE)
+
+
+def model_dairy():
+    """The village dairy co-op (ADR 0061): a lime-washed collection centre with a blue band and a painted milk can, a raised
+    platform where farmers pour their milk, cans waiting, a steel bulk-milk cooler on legs, and a weighing scale."""
+    o = []
+    yard_pad(o, 0.46, 0.16, -0.24)
+    o.append(box("plinth", (0.44, 0.32, 0.05), (0, 0, 0.025), toon("stone", STONE), bevel=0.006))
+    o.append(walls("walls", 0.38, 0.24, 0.17, toon("lime", LIME), z=0.05))
+    o.append(box("band", (0.385, 0.245, 0.03), (0, 0, 0.17), toon("dairyBlue", 0x2E6FBA), outline=False))
+    o.append(box("roof", (0.42, 0.30, 0.025), (0, -0.02, 0.235), toon("limeShade", LIME_SHADE)))
+    o.append(box("door", (0.08, 0.012, 0.11), (-0.1, -0.123, 0.105), toon("door", 0x2E6FBA)))
+    o.append(box("hatch", (0.10, 0.012, 0.06), (0.06, -0.123, 0.13), toon("wood_dark", WOOD_DARK)))
+    o.append(box("counter", (0.14, 0.05, 0.012), (0.06, -0.145, 0.10), toon("concrete", CONCRETE)))
+    # The painted can on the board above the hatch.
+    o.append(box("board", (0.16, 0.012, 0.05), (0.0, -0.126, 0.21), toon("boardWhite", 0xF7F4EC), outline=False))
+    o.append(cylinder("paintCan", 0.012, 0.012, 0.03, (0.0, -0.133, 0.21), toon("alu", 0xA9AFB5), segs=10, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    al, ald = toon("alu", 0xD5D9DD), toon("aluDark", 0xA9AFB5)
+    for i, (x, y) in enumerate(((0.12, -0.20), (0.16, -0.17), (0.2, -0.205))):   # farmers' cans on the platform
+        o.append(cylinder("can%d" % i, 0.018, 0.018, 0.045, (x, y, 0.0275), al, segs=12, smooth=True))
+        o.append(cylinder("lid%d" % i, 0.012, 0.012, 0.012, (x, y, 0.056), ald, segs=10))
+    # The bulk-milk cooler beside the building.
+    o.append(cylinder("cooler", 0.055, 0.055, 0.10, (0.27, 0.06, 0.12), toon("steel", 0xC9CDD2), segs=18, smooth=True, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    for x in (0.23, 0.31):
+        o.append(box("leg%d" % (x > 0.25), (0.01, 0.06, 0.07), (x, 0.06, 0.035), ald))
+    o.append(box("scale", (0.04, 0.04, 0.03), (-0.2, -0.18, 0.015), toon("scale", 0x4A4A4A)))
+    o.append(box("scaleTop", (0.05, 0.05, 0.006), (-0.2, -0.18, 0.033), ald, outline=False))
+    back_details(o, 0.38, 0.24, 0.13, toon("wood_dark", WOOD_DARK))
+    return refit(group(o, scale=BUILDING_SCALE), 0, VILLAGE_SCALE)
+
+
+def model_peepal():
+    """The peepal by the temple: a pale, twisting trunk with a broad, airy crown of light leaves and a red thread round it."""
+    bark = toon("peepalBark", 0x9C8A70)
+    o = [cylinder("trunk", 0.035, 0.026, 0.26, (0, 0, 0.13), bark, segs=10, smooth=True),
+         cylinder("thread", 0.037, 0.037, 0.012, (0, 0, 0.07), toon("thread", 0xC0262D), segs=12, outline=False),
+         cylinder("platform", 0.09, 0.09, 0.03, (0, 0, 0.015), toon("stone", STONE), segs=14)]
+    import random
+    rnd = random.Random(17)
+    mats = (toon("peepalA", 0x5FA843), toon("peepalB", 0x78BE52), toon("peepalC", 0x4A9038))
+    for i in range(14):
+        a, r = rnd.uniform(0, math.tau), rnd.uniform(0.02, 0.17)
+        z = 0.31 + rnd.uniform(-0.03, 0.07) + (0.17 - r) * 0.3
+        o.append(sphere("crown%d" % i, rnd.uniform(0.06, 0.085), (math.cos(a) * r, math.sin(a) * r, z), mats[i % 3], scale=(1, 1, 0.75), segs=12, rings=8))
+    return group(o, scale=1.25)
+
+
+def model_handpump():
+    """A green India Mark II handpump on a cement platform with a drain."""
+    green = toon("pumpGreen", 0x3F8E5A)
+    o = [cylinder("base", 0.06, 0.06, 0.012, (0, 0, 0.006), toon("concrete", CONCRETE), segs=16),
+         box("drain", (0.03, 0.08, 0.006), (0, -0.09, 0.004), toon("concrete", CONCRETE), outline=False),
+         cylinder("body", 0.016, 0.016, 0.11, (0, 0, 0.065), green, segs=10),
+         box("spout", (0.012, 0.04, 0.012), (0, -0.025, 0.08), green),
+         box("handle", (0.008, 0.008, 0.09), (0, 0.04, 0.12), toon("iron", 0x6C7278), rot=Matrix.Rotation(math.radians(55), 3, "X"))]
+    return group(o, scale=1.3)
+
+
+def model_charpai():
+    """A charpai (rope cot) set out in a yard."""
+    wood, rope = toon("wood", WOOD), toon("rope", 0xE8D9B0)
+    o = [box("frame", (0.16, 0.08, 0.012), (0, 0, 0.045), wood), box("rope", (0.14, 0.064, 0.006), (0, 0, 0.05), rope, outline=False)]
+    for x in (-0.07, 0.07):
+        for y in (-0.032, 0.032):
+            o.append(box("leg", (0.012, 0.012, 0.045), (x, y, 0.022), wood, outline=False))
+    return group(o, rot_z=math.radians(20), scale=1.3)
+
+
+def model_tethered(kind):
+    """A buffalo or cow tethered at a peg in a house's yard, with a small manger."""
+    o = model_animal(kind, "eat" if kind == "buffalo" else "stand")
+    o.append(cylinder("peg", 0.006, 0.005, 0.05, (0.1, -0.2, 0.025), toon("wood", WOOD), segs=6))
+    return o
+
+
+def model_street(axis):
+    """A village street, one acre long: packed earth with wheel ruts, grassy edges, a few stones; along x or y, centred."""
+    b = Batch("street")
+    dirt, rut, edge = toon("road", ROAD), toon("rut", ROAD_RUT), toon("streetEdge", 0xB89868)
+    L = 1.0 + SEAM
+    def sz(l, w, h): return (l, w, h) if axis == "x" else (w, l, h)
+    b.box(edge, sz(L, 0.26, 0.004), Matrix.Translation((0, 0, 0.002)))
+    b.box(dirt, sz(L, 0.22, 0.004), Matrix.Translation((0, 0, 0.003)))
+    for k in (-0.05, 0.05):
+        b.box(rut, sz(L, 0.022, 0.002), Matrix.Translation((0, k, 0.0055) if axis == "x" else (k, 0, 0.0055)))
+    return b.objects()
+
+
+def model_ground_village(variant):
+    """A village acre's ground: grass worn to earth in patches where people walk and sit."""
+    o = ground_block("village", 0x8DB24E, GRASS_EDGE)
+    import random
+    rnd = random.Random(60 + variant)
+    b = Batch("worn")
+    for i in range(6):
+        x, y, r = rnd.uniform(-0.35, 0.35), rnd.uniform(-0.35, 0.35), rnd.uniform(0.06, 0.13)
+        b.cone(toon("worn", 0xC9AE84), r, r * 0.95, 0.003, Matrix.Translation((x, y, 0.001)) @ Matrix.Diagonal((1.0, rnd.uniform(0.6, 1.0), 1.0, 1.0)), segs=12)
+    tufts = (toon("tuftA", 0x6FA03A), toon("tuftB", 0x8CC152))
+    for _ in range(10):
+        x, y = rnd.uniform(-0.42, 0.42), rnd.uniform(-0.42, 0.42)
+        for k in range(4):
+            a = k * math.tau / 4 + rnd.uniform(-0.4, 0.4)
+            b.cone(tufts[_ % 2], 0.009, 0.0, rnd.uniform(0.04, 0.06), at(x, y, 0.0, tilt=0.5, tilt_dir=a), segs=3)
+    return o + b.objects()
+
+
+def model_ground_square():
+    """The banyan's square: packed earth across the acre with a grass rim."""
+    o = ground_block("square", 0x8DB24E, GRASS_EDGE)
+    b = Batch("square")
+    b.cone(toon("squareEarth", 0xD3B98C), 0.42, 0.42, 0.003, Matrix.Translation((0, 0, 0.001)), segs=24)
+    return o + b.objects()
+
+
+def model_pond_big():
+    """The village pond across most of its acre: water in a grassy bank, ghat steps down on the temple's side (-x), lotus."""
+    o = [cylinder("bank", 0.44, 0.44, 0.012, (0, 0, 0.006), toon("pondBank", 0xA89A6A), segs=32),
+         cylinder("water", 0.39, 0.39, 0.01, (0, 0, 0.012), toon("pond", WATER), segs=32, outline=False)]
+    for i in range(3):
+        o.append(box("ghat%d" % i, (0.04, 0.22, 0.012), (-0.40 + i * 0.035, 0.0, 0.018 - i * 0.005), toon("stone_dark" if i % 2 else "stone", STONE_DARK if i % 2 else STONE)))
+    for i, (x, y) in enumerate(((0.12, 0.08), (-0.1, -0.15), (0.2, -0.12), (-0.02, 0.2))):
+        o.append(cylinder("lotus%d" % i, 0.035, 0.035, 0.004, (x, y, 0.019), toon("lotusLeaf", 0x4E9A4A), segs=10, outline=False))
+    o.append(sphere("lotus", 0.016, (0.12, 0.08, 0.03), toon("lotus", 0xF4A6C0), segs=8, rings=5))
+    o.append(sphere("lotus2", 0.014, (0.2, -0.12, 0.028), toon("lotus", 0xF4A6C0), segs=8, rings=5))
+    return o
+
+
+VILLAGE_PLACES = {"grocery": model_grocery, "chemist": model_chemist, "dealer": model_dealer, "tea_stall": model_tea_stall,
+                  "temple": model_temple, "council_hall": model_council_hall, "dairy": model_dairy}
+for _f, _deg in FACINGS.items():
+    for _v in range(3):
+        SPRITES["village_house_%d_%s" % (_v, _f)] = (lambda v=_v, d=_deg: (lambda: refit(model_house_v(v), d)))()
+    for _k, _fn in VILLAGE_PLACES.items():
+        SPRITES["village_%s_%s" % (_k, _f)] = (lambda fn=_fn, d=_deg, k=_k: (lambda: refit(fn(), d, 1.0 if k == "dairy" else VILLAGE_SCALE)))()
+SPRITES.update({"village_peepal": model_peepal, "village_handpump": model_handpump, "village_charpai": model_charpai,
+                "village_buffalo": lambda: model_tethered("buffalo"), "village_cow": lambda: model_tethered("cow"),
+                "street_x": lambda: model_street("x"), "street_y": lambda: model_street("y"),
+                "ground_village_0": lambda: model_ground_village(0), "ground_village_1": lambda: model_ground_village(1),
+                "ground_square": model_ground_square, "village_pond": model_pond_big,
+                "village_banyan": lambda: refit(model_banyan(), 0, 0.85), "village_tree": lambda: refit(model_neem(), 0, 0.7),
+                "village_haystack": lambda: refit(model_haystack(), 0, 0.75)})
+
+
 # ---------------------------------------------------------------- the trader's truck and the supermarket's van (spec 011 §7)
 
 VEHICLE_SCALE = 1.25
