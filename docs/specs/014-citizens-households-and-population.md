@@ -1,6 +1,6 @@
 # 014. Citizens, households and population
 
-- Status: Draft (Sprint 12). Gaps in §10 to be closed with the owner one at a time
+- Status: In review (Sprint 12): G1–G10 closed with the owner; §3.13 (every path achievable) awaits approval
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
@@ -57,7 +57,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | Ageing | Every citizen ages `lifeYearsPerSeason` at each season close | 1 |
 | Life stages | Child 0–17, adult 18–59, elder 60+ | |
 | Birthdays | A citizen's age shows as whole years; their birth season is kept | |
-| Retirement | An elder doesn't take a new job; a hand turning 60 finishes his season and retires (his contract isn't renewed; he stays home) | 60 |
+| Retirement | An elder doesn't take a new job; a hand turning 60 finishes his season and retires (his contract isn't renewed): alone, he goes home to his village and frees the hut; with his family in a family house, he stays as its elder (§3.13) | 60 |
 | On screen | "People age a year each season (a year of their life every 4 days)" in the citizen card's *Why?*. Animals don't age in Phase 2 (spec 012) | |
 
 ### 3.3 Citizens
@@ -124,7 +124,8 @@ food        = income × foodShare,  rent,  clothing 8%,  health 5%,  education 5
 | --- | --- | --- |
 | The basket | Per adult equivalent per real day: cereals 0.40 kg (wheat or rice, half each), lentils 0.05 kg, potato 0.10 kg, vegetables 0.15 kg (radish, spinach), milk 0.25 L; × 22.8 real days a game day | content |
 | Demand | Each hour the town's households add `basket ÷ 24` to the local market's demand at the regional price, scaled by food met (a household short of money buys less): `D_ref(good) += Σ households` | |
-| Effect | The founder's stall sells more as the town grows; a town of 80 eats about 2 acres of grain a season. Shown on the good's *Why?*: "The town buys about 640 kg a day" | |
+| Effect | The local market is a village of about 80 (wheat demand about 300 kg a game day), so a town of 80 (about 65 adult equivalents) about doubles it: a game day's buying is wheat 296 kg, rice 296, potato 148, lentils 74, radish 111, spinach 111; a season's cereals about 2,370 kg, 2 acres of wheat. The founder's stall sells faster (demand above the valley's supply). Shown on the good's *Why?* and the Store's market row: "Your town buys about 296 kg of wheat a day" | |
+| No spike | The price stays within the import ceiling (regional + transport, ADR 0012: wheat at most 25 → 26); merchants bring what the valley doesn't grow, so the shops never run out: a household's food met depends only on its budget (§3.5). The town lifts how much the founder sells, not the price | |
 | Milk | Bought from the co-op, not the market (spec 012) | |
 
 ### 3.8 Needs and happiness (§10 G5)
@@ -163,7 +164,7 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | A family moves in | While a family house stands empty, a family arrives every `familyEveryHours` ± seeded jitter: 2–5 people (a couple, 0–3 children, sometimes an elder), adults with skills and traits drawn as applicants (spec 006). They move in at once and pay rent from the next close. Live or away | 18 h ± 6 |
-| A hand's family | A hand under contract whose household is just him, with a free family house: at the next season close he asks to bring his family (a card: Yes / Not now); yes moves him and a seeded wife and 0–2 children into the house; his hut is free for another hand. The card says what changes: "From his next renewal his wage is 6,000 less: the house is part of his pay" (§3.6) | |
+| A hand's family | A hand under contract whose household is just him is offered a family house first when one is finished or falls empty (§3.13; a card: Yes / Not now); yes moves him and a seeded wife and 0–2 children into the house; his hut is free for another hand. The card says what changes: "From his next renewal his wage is 6,000 less: the house is part of his pay" (§3.6) | |
 | Moving out | A household whose happiness stays below `leaveBelow` for `leaveSeasons` season closes, or is 2 seasons behind on rent, leaves (seeded, 50% a close once eligible). A hand's household leaving ends his contract (spec 006 dismissal rules, no severance). Emits `HouseholdLeft` with the reason | 35; 2 |
 | Population | Citizens in the town; the HUD shows it with town happiness | |
 
@@ -175,6 +176,25 @@ A save's hands become citizens: a seeded age 22–45, gender male (Phase 1's han
 
 Hourly pass, system Population: families arrive. Daily pass, system Population: outside work paid, needs and happiness updated, food bought (demand). Seasonal pass, after spec 005's settlement: rent, ageing, retirement, deaths, births, marriages, budgets for the new season, moving out, hands' family requests. Citizens and households in id order.
 
+### 3.13 Every path achievable (owner, 2026-10-23)
+
+A whole-spec review for dead ends an average player could hit. Each row closes one.
+
+| Situation | Rule | Why |
+| --- | --- | --- |
+| When houses unlock | `BuildFamilyHouse` from the Hamlet (`unlockEra`), like the cattle shed; before it the Town tab says "Family houses come with the Hamlet" | The Hamlet's role is landowner; a Homestead has no money for houses |
+| Placing a house | "Build a family house" opens the map with the acres it can go on lit (owned, nothing growing, room for another house; the quarters' free places); an empty field's sheet also offers it. Refusals in words: "Something is growing here", "This acre has 4 houses" | Nobody has to guess where a house may go |
+| A hand's family and a free house | A family house that is finished or falls empty is offered first to a hand living alone (a card: "Manoj asks to bring his family here": Yes / Not now). Strangers arrive only after "Not now", or 18 h after the offer while away. Replaces "at the next season close" in §3.10 | Families move in every 18 h, so a house would almost never still be free at a close and the player could never say yes |
+| Remittance | A hand's household stops sending half his wage home once his family lives in town | His family is here |
+| A hand retires | A retired hand living alone leaves for his home village (his hut is free for a new hand, `CitizenRetired`, "Ramu (60) has gone home to his village"). One whose family lives in your family house stays as an elder of that household | Otherwise a retired man would hold the hut for ever and the player could never hire again |
+| A hand leaves the job | Dismissed or not renewed, a hand whose family lives in a family house stays as a tenant: he works outside, the household pays rent from the next close, and his housing deduction ends. A household with nobody working for you pays rent | A home isn't lost with a job; the founder still gets the house's value |
+| Selling land | An acre with a family house can't be sold (`ParcelInUse`, as with huts and the shed) | No family is made homeless by a tap |
+| Foreclosure | A family house stands on the land it was built on: the inherited acres are protected, so houses there are never seized. One on seized bought land goes with the land at book value, and its household leaves ("the bank took the land", `HouseholdLeft`); a hand's household leaving ends his contract (§3.10) | Foreclosure stays the one hard loss, and it is explained |
+| A widowed elder alone | Pays rent from savings; behind 2 seasons, leaves for family elsewhere ("Kamla has gone to live with her son in Rampur") | Never evicted harshly, never a house stuck for ever |
+| Counting households | A household is any family living on your land, a hand alone in his hut included, so the Village era's "5 households" (spec 018) is 2 hands' huts and 3 family houses: about 1,80,000 coins | Reachable in the Village pacing (2–3 weeks, ADR 0028) |
+| Raising happiness | Every lever is shown on the household card's needs *Why?* with what to do: "Give someone here a job (your hand)", "Build another house (7 people live in a house for 6)", "Food: their income buys 83% of what they need" | The player always sees what would help |
+| What can't be changed yet | Rows that the player can't move yet say so: "No school yet (the Village builds one)", "Health care: the chemist (a clinic comes with the Township)" | Never a red number with no way to fix it |
+
 ## 4. Data
 
 **New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48, `houseCapacity` 6, `housesPerAcre` 4, `rentPerSeason` 6,000); names with gender in `people.json`.
@@ -185,7 +205,7 @@ Hourly pass, system Population: families arrive. Daily pass, system Population: 
 
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
-| `BuildFamilyHouse` | `tile` | `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds` | §3.4 |
+| `BuildFamilyHouse` | `tile` | `EraLocked`, `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds` | §3.4, §3.13 |
 | `AnswerFamilyRequest` | `handId`, `yes` | `UnknownHand`, `NoEmptyHouse` | §3.10 |
 
 | Event | Payload | Consumers |
@@ -214,6 +234,7 @@ Town tab:
 | Manoj's family (4)  Family house 2 · income 32,000 a season · 😊 84  [›] |
 | Rekha's family (5)  Family house 3 · works outside · 😊 72          [›] |
 | [Build a family house 60,000]                                           |
+```
 
 Household card: members (age, stage, job), the budget pie with Engel's *Why?*, needs by layer with *Why?*, savings, rent.
 Citizen card: portrait, age and stage, job, skill, traits, health, story lines, and the person's close family only: parents, spouse, siblings, children, grandchildren (name, age, job). A relative in another house shows "→ lives in Family house 3" and opens their card (back button, ADR 0044); grandparents are one tap away on a parent's card. The departed fold into one line, "2 who have passed ›", closed by default, greyed with "passed away at 70" or "moved to Rampur" when opened.
@@ -227,7 +248,6 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
           |              |
       Ravi (12)      Asha (9)
   Budget [?] · Needs [?] · Rent paid ✓
-```
 ```
 
 ## 8. Acceptance criteria
@@ -247,12 +267,14 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
 | AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
+| AC-14 | Every row of §3.13: houses from the Hamlet; a free house offered to a hand alone first; a retired hand alone frees his hut; a dismissed hand's family stays as tenants; an acre with a house can't be sold; a seized house's household leaves; an elder alone behind on rent leaves; every needs row names its lever or says what isn't possible yet | `MigrationTests2.EveryPath`, `PeopleViewTests.NeedsLevers` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Population when the Village unlocks (spec 018) | 15–25 | ADR 0028 pacing |
+| Population when the Village unlocks (spec 018) | 12–25 (5 households) | ADR 0028 pacing |
+| A cautious and a random bot reach 5 households | By the Village pacing | Every bot, not only the competent one |
 | Town happiness, competent bot | 70–85 | |
 | Households leaving a year, competent bot | Under 1 in 10 | |
 | Rent's share of the founder's income | Small | Under 15% |
@@ -269,7 +291,7 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 - **G7. Death and tone.** **Closed (owner, 2026-10-23):** only elders die (§3.9's chances, about 72 years' expectancy; ×1.5 in poor health); worded gently ("passed away peacefully"), information only, no sound or push; a season's mourning (−10); no child or young adult deaths, no accidents and no funeral costs (the owner agreed with both pushbacks).
 - **G8. Work for everyone.** **Closed (owner, 2026-10-23):** adults 18–59 without a town job work outside at the founder's day-labour rate (9,000 a game day) on half the days, paid as the expected share daily (no daily roll, the owner accepted the pushback); the founder's day labourers come from the town first; the employment rate counts town jobs only (§3.6).
 - **G9. The family tree.** **Closed (owner, 2026-10-23):** three levels, each a tap deeper (the Town tab's household rows with "related" links, the household card's small tree, the citizen card's close family with siblings and links across houses); the departed folded into one line; kept only while a living citizen is their spouse, child or grandchild (no count cap; the owner asked that it never pile up) (§3.3, §7).
-- **G10. Households buy food locally.** Their basket adds to the market's demand, so a growing town buys the founder's produce. Recommended.
+- **G10. Households buy food locally.** **Closed (owner, 2026-10-23):** the basket (cereals 0.40 kg, lentils 0.05, potato 0.10, radish and spinach 0.15, milk 0.25 L a real day, × 22.8) adds to the local market's demand hourly, live or away; a town of 80 about doubles it, so the founder sells faster; the price stays under the import ceiling and the shops never run out; milk from the co-op; direct sales to townspeople are spec 017's shops (§3.7). The owner asked that everything stay achievable and make sense to an average player: §3.13.
 
 ## 11. Cut first
 
