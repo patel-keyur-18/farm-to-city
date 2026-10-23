@@ -24,7 +24,7 @@ namespace Sim.Content
                 "lowDays", "diseaseChance", "unvaccinatedFactor", "sickHealthFactor", "sickHealthLoss", "vaccineCost", "vetVisitCost", "lactationCurve", "names");
 
             int shedTile = BoundedInt(l, lp, "shedTile", 0, map.Tiles.Count - 1);
-            if (map.Tiles[shedTile].Terrain != Terrain.Yard) throw new ContentException(Join(lp, "shedTile"), "the shed goes on a yard acre");
+            if (map.Tiles[shedTile].Terrain != Terrain.Cattle) throw new ContentException(Join(lp, "shedTile"), "the shed goes on the cattle acre (ADR 0064)");
             string eraId = String(Required(l, lp, "unlockEra"), Join(lp, "unlockEra"));
             int era = 0;
             if (onboarding != null)

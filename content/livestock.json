@@ -2,7 +2,7 @@
   "livestock": {
     "realDaysPerGameDay": 22.8,
     "feedHour": 6,
-    "shedTile": 103,
+    "shedTile": 104,
     "unlockEra": "hamlet",
     "householdLitresPerDay": 1.5,
     "greenFodderBuyPrice": 3,

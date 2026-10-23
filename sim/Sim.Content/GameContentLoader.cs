@@ -137,7 +137,7 @@ namespace Sim.Content
                 l["roadTakeFactor"] == null ? Fixed.One : Bounded(l, lp, "roadTakeFactor", "1", "5"));
         }
 
-        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank" };
+        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank", "cattle" };
 
         private static bool IsVillageLand(Terrain t) { return t == Terrain.Road || t == Terrain.Village || t == Terrain.Commons || t == Terrain.Bank; }
 

@@ -69,7 +69,7 @@ namespace Sim.Core.Tests
             Assert.That(LivestockRules.Shed(sim), Is.Null);
             sim.AdvanceTo(t + 24 * Hour);
             Assert.That(LivestockRules.Shed(sim), Is.Not.Null);
-            Assert.That(LivestockRules.Shed(sim).TileId, Is.EqualTo(103));
+            Assert.That(LivestockRules.Shed(sim).TileId, Is.EqualTo(104), "the cattle acre (ADR 0064)");
             Assert.That(sim.PendingEvents.OfType<ShedBuilt>().Count(), Is.EqualTo(1));
             Assert.That(sim.Execute(new BuildShed(sim.State.Clock.SimTime)).Reason, Is.EqualTo(RejectReason.AlreadyBuilt));
         }

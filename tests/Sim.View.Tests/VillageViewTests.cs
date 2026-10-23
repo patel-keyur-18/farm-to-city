@@ -112,7 +112,7 @@ namespace Sim.View.Tests
 
             MapVm map = MapView.Build(ctx);
             Assert.That(map.Tiles.Where(t => t.ForSaleSign).All(t => sim.Config.Game.Map.Parcels[t.ParcelId].ForSale), Is.True, "signs only on land for sale");
-            Assert.That(map.Tiles.Count(t => t.ForSaleSign), Is.EqualTo(sim.Config.Game.Map.Parcels.Count(p => p.ForSale) - 3), "one sign a parcel for sale (not the inherited three)");
+            Assert.That(map.Tiles.Count(t => t.ForSaleSign), Is.EqualTo(sim.Config.Game.Map.Parcels.Count(p => p.ForSale) - 4), "one sign a parcel for sale (not the inherited four)");
             Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Unowned).All(t => t.NeighbourCrop == null || t.NeighbourCrop == "potato" || t.NeighbourCrop == "radish"), Is.True, "Spring: potato or radish");
             Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Village).Count(t => t.Place != null), Is.EqualTo(16));
             Assert.That(map.Tiles.Single(t => t.Id == 176).RoadLinks, Is.EqualTo(2 | 1), "the district road's west end runs on off the map");

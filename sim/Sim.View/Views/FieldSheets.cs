@@ -32,6 +32,7 @@ namespace Sim.View.Views
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
+            if (tile.Terrain == Terrain.Cattle) return CattleAcre(ctx);
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
@@ -159,6 +160,13 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "hut", Title = ctx.Strings.Get("yard.title"), Subtitle = ctx.Strings.Get("yard.subtitle") };
             vm.Actions.Add(ActionVm.Open("store", ctx.Strings.Get("action.openStore"), new SheetRequest("Store", 0)));
             return vm;
+        }
+
+        /// <summary>The cattle acre (ADR 0064): what it's for, and when it opens. The shed sheet comes with US-205.</summary>
+        private static SheetVm CattleAcre(ViewContext ctx)
+        {
+            bool open = Sim.Core.Livestock.LivestockRules.Unlocked(ctx.Sim);
+            return new SheetVm { Icon = "hut", Title = ctx.Strings.Get("cattleAcre.title"), Subtitle = ctx.Strings.Get(open ? "cattleAcre.open" : "cattleAcre.locked") };
         }
 
         /// <summary>The kitchen-garden bed sheet (spec 003 §3.13).</summary>

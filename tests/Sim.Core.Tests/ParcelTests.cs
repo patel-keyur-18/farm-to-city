@@ -63,7 +63,7 @@ namespace Sim.Core.Tests
 
             Assert.That(Buy(sim, "w1").Accepted, Is.True);
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - price));
-            Assert.That(sim.State.Ledger.Balance(Account.Land), Is.EqualTo(P(sim, "home_a").CostBasis + P(sim, "home_b").CostBasis + P(sim, "home_c").CostBasis + price));
+            Assert.That(sim.State.Ledger.Balance(Account.Land), Is.EqualTo(P(sim, "home_a").CostBasis + P(sim, "home_b").CostBasis + P(sim, "home_c").CostBasis + P(sim, "home_d").CostBasis + price));
             Parcel w1 = P(sim, "w1");
             Assert.That((w1.Owned, w1.Protected, w1.CostBasis, w1.AcquiredAt), Is.EqualTo((true, false, price, 5 * Hour)));
             Assert.That(sim.State.Land.Slots.Count, Is.EqualTo(slots + 4));
@@ -109,7 +109,7 @@ namespace Sim.Core.Tests
             slot.TreeId = 7;
             Assert.That(Sell(sim, "e1").Reason, Is.EqualTo(RejectReason.ParcelInUse), "a tree");
             slot.TreeId = 0;
-            sim.State.Land.Buildings.Add(new Building { Id = 99, Def = 0, TileId = 104 });
+            sim.State.Land.Buildings.Add(new Building { Id = 99, Def = 0, TileId = 105 });
             Assert.That(Sell(sim, "e1").Reason, Is.EqualTo(RejectReason.ParcelInUse), "a building");
             sim.State.Land.Buildings.RemoveAt(sim.State.Land.Buildings.Count - 1);
 

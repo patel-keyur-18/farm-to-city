@@ -2,45 +2,45 @@
  "pixelsPerUnit": 528,
  "sprites": [
   {
-   "w": 170,
-   "h": 176,
-   "pivotX": 0.55425,
-   "pivotY": 0.31721,
+   "w": 152,
+   "h": 156,
+   "pivotX": 0.54953,
+   "pivotY": 0.33274,
    "name": "animal_buffalo_eat"
   },
   {
-   "w": 194,
-   "h": 156,
-   "pivotX": 0.48975,
-   "pivotY": 0.37756,
+   "w": 170,
+   "h": 138,
+   "pivotX": 0.49075,
+   "pivotY": 0.38753,
    "name": "animal_buffalo_lie"
   },
   {
-   "w": 172,
-   "h": 176,
-   "pivotX": 0.55451,
-   "pivotY": 0.31721,
+   "w": 152,
+   "h": 156,
+   "pivotX": 0.55041,
+   "pivotY": 0.33274,
    "name": "animal_buffalo_stand"
   },
   {
-   "w": 168,
-   "h": 182,
-   "pivotX": 0.56257,
-   "pivotY": 0.30845,
+   "w": 150,
+   "h": 160,
+   "pivotX": 0.55718,
+   "pivotY": 0.32325,
    "name": "animal_cow_eat"
   },
   {
-   "w": 194,
-   "h": 154,
-   "pivotX": 0.48835,
-   "pivotY": 0.37643,
+   "w": 170,
+   "h": 138,
+   "pivotX": 0.48946,
+   "pivotY": 0.38795,
    "name": "animal_cow_lie"
   },
   {
-   "w": 168,
-   "h": 182,
-   "pivotX": 0.56115,
-   "pivotY": 0.30845,
+   "w": 150,
+   "h": 160,
+   "pivotX": 0.55595,
+   "pivotY": 0.32325,
    "name": "animal_cow_stand"
   },
   {
@@ -149,38 +149,45 @@
    "name": "bund_y"
   },
   {
-   "w": 586,
-   "h": 442,
-   "pivotX": 0.47941,
-   "pivotY": 0.36096,
+   "w": 112,
+   "h": 94,
+   "pivotX": 0.47201,
+   "pivotY": 0.43981,
+   "name": "cattle_manger"
+  },
+  {
+   "w": 326,
+   "h": 268,
+   "pivotX": 0.5,
+   "pivotY": 0.36082,
    "name": "cattle_shed"
   },
   {
-   "w": 562,
-   "h": 358,
-   "pivotX": 0.5,
-   "pivotY": 0.44467,
+   "w": 288,
+   "h": 206,
+   "pivotX": 0.50498,
+   "pivotY": 0.43086,
    "name": "cattle_shed_building"
   },
   {
-   "w": 254,
-   "h": 172,
+   "w": 190,
+   "h": 138,
    "pivotX": 0.5,
-   "pivotY": 0.46593,
+   "pivotY": 0.47218,
    "name": "compost_pit_0"
   },
   {
-   "w": 254,
-   "h": 172,
+   "w": 190,
+   "h": 138,
    "pivotX": 0.5,
-   "pivotY": 0.46593,
+   "pivotY": 0.47218,
    "name": "compost_pit_1"
   },
   {
-   "w": 254,
-   "h": 172,
+   "w": 190,
+   "h": 138,
    "pivotX": 0.5,
-   "pivotY": 0.46593,
+   "pivotY": 0.47218,
    "name": "compost_pit_2"
   },
   {
@@ -482,6 +489,13 @@
    "h": 464,
    "pivotX": 0.5,
    "pivotY": 0.64285,
+   "name": "ground_cattle"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
    "name": "ground_commons"
   },
   {
@@ -567,6 +581,34 @@
    "pivotX": 0.5,
    "pivotY": 0.26055,
    "name": "haystack"
+  },
+  {
+   "w": 338,
+   "h": 218,
+   "pivotX": 0.50058,
+   "pivotY": 0.46627,
+   "name": "hedge_gate_x"
+  },
+  {
+   "w": 338,
+   "h": 218,
+   "pivotX": 0.49852,
+   "pivotY": 0.46561,
+   "name": "hedge_gate_y"
+  },
+  {
+   "w": 338,
+   "h": 218,
+   "pivotX": 0.50037,
+   "pivotY": 0.46643,
+   "name": "hedge_x"
+  },
+  {
+   "w": 340,
+   "h": 218,
+   "pivotX": 0.49692,
+   "pivotY": 0.4659,
+   "name": "hedge_y"
   },
   {
    "w": 678,
@@ -1444,31 +1486,31 @@
    "name": "sign_sale"
   },
   {
-   "w": 228,
-   "h": 266,
+   "w": 174,
+   "h": 198,
    "pivotX": 0.5,
-   "pivotY": 0.2771,
+   "pivotY": 0.30353,
    "name": "straw_stack_empty"
   },
   {
-   "w": 228,
-   "h": 266,
+   "w": 174,
+   "h": 198,
    "pivotX": 0.5,
-   "pivotY": 0.2771,
+   "pivotY": 0.30353,
    "name": "straw_stack_high"
   },
   {
-   "w": 228,
-   "h": 266,
+   "w": 174,
+   "h": 198,
    "pivotX": 0.5,
-   "pivotY": 0.2771,
+   "pivotY": 0.30353,
    "name": "straw_stack_low"
   },
   {
-   "w": 228,
-   "h": 266,
+   "w": 174,
+   "h": 198,
    "pivotX": 0.5,
-   "pivotY": 0.2771,
+   "pivotY": 0.30353,
    "name": "straw_stack_mid"
   },
   {
@@ -1556,6 +1598,13 @@
    "name": "tree_mango_young"
   },
   {
+   "w": 232,
+   "h": 312,
+   "pivotX": 0.50478,
+   "pivotY": 0.26923,
+   "name": "tree_neem"
+  },
+  {
    "w": 278,
    "h": 384,
    "pivotX": 0.50014,
@@ -1624,6 +1673,13 @@
    "pivotX": 0.52003,
    "pivotY": 0.31406,
    "name": "van_front"
+  },
+  {
+   "w": 124,
+   "h": 118,
+   "pivotX": 0.49884,
+   "pivotY": 0.47344,
+   "name": "water_trough"
   },
   {
    "w": 228,

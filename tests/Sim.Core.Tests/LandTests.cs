@@ -19,13 +19,14 @@ namespace Sim.Core.Tests
             GameDefs defs = sim.Config.Game;
 
             Parcel[] home = land.Parcels.Where(p => p.Owned).ToArray();
-            Assert.That(home.Select(p => defs.Map.Parcels[p.Id].Id), Is.EqualTo(new[] { "home_a", "home_b", "home_c" }));
+            Assert.That(home.Select(p => defs.Map.Parcels[p.Id].Id), Is.EqualTo(new[] { "home_a", "home_b", "home_c", "home_d" }));
             Assert.That(home.All(p => p.Protected), Is.True);
 
             Tile[] tiles = land.Tiles.Where(t => land.Parcels[t.ParcelId].Owned).ToArray();
             Assert.That(tiles.Count(t => t.Terrain == Terrain.Farm), Is.EqualTo(6));
             Assert.That(tiles.Count(t => t.Terrain == Terrain.Yard), Is.EqualTo(2), "a 2-acre yard (ADR 0040)");
             Assert.That(tiles.Count(t => t.Terrain == Terrain.Quarters), Is.EqualTo(1), "the labour quarters");
+            Assert.That(tiles.Count(t => t.Terrain == Terrain.Cattle), Is.EqualTo(1), "the cattle acre (ADR 0064)");
             Tile yard = tiles.First(t => t.Terrain == Terrain.Yard);
 
             Assert.That(land.Buildings.Select(b => defs.Buildings[b.Def].Id), Is.EqualTo(new[] { "hut", "well" }));

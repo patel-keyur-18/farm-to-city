@@ -21,6 +21,9 @@ namespace Sim.View.Views
         Village = 5,
         Commons = 6,
         Bank = 7,
+
+        /// <summary>The cattle acre (ADR 0064): the shed's place from the Hamlet.</summary>
+        Cattle = 8,
     }
 
     /// <summary>What stands on a field (spec 008 §3.4): vacant, growing in three stages, ready, or waiting past its grace.</summary>
@@ -339,7 +342,7 @@ namespace Sim.View.Views
                 case Terrain.Bank: return TileKind.Bank;
             }
             if (!owned) return TileKind.Unowned;
-            return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : TileKind.Farm;
+            return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : t == Terrain.Cattle ? TileKind.Cattle : TileKind.Farm;
         }
 
         /// <summary>

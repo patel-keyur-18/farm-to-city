@@ -24,12 +24,13 @@ namespace Sim.View.Tests
             Assert.That(map.Tiles.Count, Is.EqualTo(192));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Farm), Is.EqualTo(6));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(2));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(124), "neighbours' farms: 78 for sale, 46 not yet");
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(123), "neighbours' farms: 77 for sale, 46 not yet");
+            Assert.That(map.Tiles.Single(t => t.Kind == TileKind.Cattle).Id, Is.EqualTo(104), "the cattle acre (ADR 0064)");
             Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 86, 102 }));
             Assert.That(map.Tiles[87].Kind, Is.EqualTo(TileKind.Yard));
             Assert.That(map.Tiles[86].X, Is.EqualTo(6));
             Assert.That(map.Tiles[86].Y, Is.EqualTo(5));
-            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters).All(t => t.Protected), Is.True);
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters || t.Kind == TileKind.Cattle).All(t => t.Protected), Is.True);
             Assert.That(map.Buildings.Select(b => b.DefId), Is.EqualTo(new[] { "hut", "well" }));
             Assert.That(map.Slots.Count(s => s.Yard), Is.EqualTo(4));
             Assert.That(map.Slots.Count(s => !s.Yard), Is.EqualTo(12));
@@ -37,6 +38,11 @@ namespace Sim.View.Tests
             Assert.That(map.Slots.All(s => s.Owned), Is.True, "the inherited land's slots: drawn as planting spots and tappable");
             Assert.That(map.Beds.Count, Is.EqualTo(2));
             Assert.That(map.Slots.Where(s => s.TileId == 86).Select(s => s.Index), Is.EqualTo(new[] { 0, 1 }));
+            Assert.That(map.Slots.Any(s => s.TileId == 104), Is.False, "no trees on the cattle acre");
+
+            // ADR 0064: its sheet says what it's for and when it opens.
+            SheetVm cattle = FieldSheets.ForTile(ViewKit2.Context(sim), 104);
+            Assert.That((cattle.Title, cattle.Subtitle), Is.EqualTo(("Your cattle yard", "Poor, sandy ground kept for animals. A shed, buffalo and cows can come here once you're a Hamlet")));
         }
 
         [Test]

@@ -23,6 +23,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>The rest of the river bank (spec 010).</summary>
         Bank = 6,
+
+        /// <summary>The cattle acre (ADR 0064): inherited barren land beside the yard, never farmed; the cattle shed's place.</summary>
+        Cattle = 7,
     }
 
     /// <summary>A soil type from <c>content/land.json</c> (spec 002 §4).</summary>
