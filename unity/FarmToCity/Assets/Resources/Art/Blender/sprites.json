@@ -135,6 +135,20 @@
    "name": "bed_garden_spinach_ready"
   },
   {
+   "w": 352,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48813,
+   "name": "bund_worn_x"
+  },
+  {
+   "w": 352,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48813,
+   "name": "bund_worn_y"
+  },
+  {
    "w": 354,
    "h": 226,
    "pivotX": 0.5,
@@ -170,6 +184,13 @@
    "name": "cattle_shed_building"
   },
   {
+   "w": 220,
+   "h": 214,
+   "pivotX": 0.50435,
+   "pivotY": 0.29204,
+   "name": "chhappar"
+  },
+  {
    "w": 190,
    "h": 138,
    "pivotX": 0.5,
@@ -189,6 +210,13 @@
    "pivotX": 0.5,
    "pivotY": 0.47218,
    "name": "compost_pit_2"
+  },
+  {
+   "w": 92,
+   "h": 106,
+   "pivotX": 0.5,
+   "pivotY": 0.36668,
+   "name": "corner_stone"
   },
   {
    "w": 530,
@@ -252,6 +280,13 @@
    "pivotX": 0.5,
    "pivotY": 0.46109,
    "name": "crop_lentils_ready"
+  },
+  {
+   "w": 532,
+   "h": 346,
+   "pivotX": 0.5,
+   "pivotY": 0.44109,
+   "name": "crop_mustard_g2"
   },
   {
    "w": 534,
@@ -371,6 +406,13 @@
    "pivotX": 0.48861,
    "pivotY": 0.41934,
    "name": "crop_sorghum_ready"
+  },
+  {
+   "w": 594,
+   "h": 400,
+   "pivotX": 0.49454,
+   "pivotY": 0.38389,
+   "name": "crop_sugarcane_g2"
   },
   {
    "w": 496,
@@ -546,6 +588,13 @@
    "pivotX": 0.5,
    "pivotY": 0.64285,
    "name": "ground_road_8"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_scrub"
   },
   {
    "w": 596,
@@ -1549,6 +1598,13 @@
    "name": "street_y"
   },
   {
+   "w": 224,
+   "h": 212,
+   "pivotX": 0.44738,
+   "pivotY": 0.18501,
+   "name": "tree_babul"
+  },
+  {
    "w": 342,
    "h": 322,
    "pivotX": 0.47231,
@@ -1687,6 +1743,13 @@
    "pivotX": 0.5,
    "pivotY": 0.32803,
    "name": "truck_front"
+  },
+  {
+   "w": 268,
+   "h": 242,
+   "pivotX": 0.60337,
+   "pivotY": 0.46707,
+   "name": "tubewell"
   },
   {
    "w": 144,

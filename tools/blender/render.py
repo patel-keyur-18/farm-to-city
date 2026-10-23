@@ -2551,6 +2551,150 @@ for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), (
     SPRITES[_n] = ICONS[_n]
 
 
+# ---------------------------------------------------------------- a living valley (ADR 0062, US-207)
+# Neighbours' land varied by soil: mustard in Winter, sugarcane, poor sandy acres gone to scrub with a babul, tube-well rooms,
+# farmsteads (a house, a thatched cattle shelter, haystacks) on acres not for sale; round your own land a hedge on a low mud wall,
+# whitewashed corner stones, and fresh bunds against the neighbours' worn, grassed-over ones.
+
+def crop_mustard(b, rnd, x, y, stage):
+    """Sarson in bloom: leaves at the foot, then thin stems topped by many small yellow florets, so a field reads as a yellow carpet."""
+    leaf_m, stem = toon("mustardLeaf", 0x5E9E3A), toon("mustardStem", 0x7FB24A)
+    flowers = (toon("mustardFlower", 0xF6D32B), toon("mustardFlowerDeep", 0xE8BC1E), toon("mustardFlowerPale", 0xFBE46A))
+    for k in range(4):
+        leaf(b, leaf_m, x, y, 0.02, 0.05, 0.03, k * math.tau / 4 + rnd.uniform(-0.3, 0.3), 0.4)
+    for k in range(4):
+        a = k * math.tau / 4 + rnd.uniform(-0.4, 0.4)
+        h = rnd.uniform(0.09, 0.13)
+        m = at(x + math.cos(a) * 0.012, y + math.sin(a) * 0.012, 0.02, tilt=rnd.uniform(0.1, 0.3), tilt_dir=a)
+        b.cone(stem, 0.0025, 0.0018, h, m, segs=4)
+        for j in range(7):
+            fa = j * math.tau / 7 + rnd.uniform(-0.5, 0.5)
+            b.sphere(flowers[(k + j) % 3], 0.0105, m @ Matrix.Translation((math.cos(fa) * 0.009, math.sin(fa) * 0.009, h + rnd.uniform(-0.012, 0.008))),
+                     scale=(1, 1, 0.8), segs=6, rings=4)
+
+
+def crop_sugarcane(b, rnd, x, y, stage):
+    """Ganna: a dense clump of tall canes hidden in long leaves that arch out and droop, the canes showing only near the ground."""
+    cane = toon("cane", 0x8FA654)
+    leaves = (toon("caneLeaf", 0x5DA53E), toon("caneLeafDeep", 0x468A33), toon("caneLeafLight", 0x78B84E))
+    for k in range(3):
+        a = k * math.tau / 3 + rnd.uniform(-0.5, 0.5)
+        h = rnd.uniform(0.2, 0.26)
+        m = at(x + math.cos(a) * 0.01, y + math.sin(a) * 0.01, 0.0, tilt=rnd.uniform(0.02, 0.08), tilt_dir=a)
+        b.cone(cane, 0.007, 0.006, h, m, segs=5)
+        for j in range(5):
+            z = h * (0.45 + j * 0.13)
+            pt = (m @ Matrix.Translation((0, 0, z))).to_translation()
+            leaf(b, leaves[(k + j) % 3], pt[0], pt[1], pt[2], rnd.uniform(0.1, 0.15), 0.024, a + j * 2.4 + rnd.uniform(-0.3, 0.3), rnd.uniform(-0.1, 0.35))
+
+
+CROPS.update({"mustard": crop_mustard, "sugarcane": crop_sugarcane})
+MATS.update({"mustard": (0x5E9E3A, 0x5E9E3A), "sugarcane": (0x4E8E36, 0x4E8E36)})
+
+
+def model_ground_scrub():
+    """A poor, sandy acre gone to scrub: dry yellow-green grass with bare sandy patches and tufts of coarse grass."""
+    import random
+    rnd = random.Random(44)
+    o = ground_block("scrub", 0xB4B36A, 0xA4A35C)
+    b = Batch("scrubTop")
+    sand, dry, green = toon("scrubSand", 0xD8C690), toon("scrubDry", 0xA9A04E), toon("scrubGreen", 0x7FA046)
+    for i in range(9):
+        b.sphere(sand, 1.0, Matrix.Translation((rnd.uniform(-0.38, 0.38), rnd.uniform(-0.38, 0.38), 0.002)),
+                 scale=(rnd.uniform(0.06, 0.12), rnd.uniform(0.05, 0.09), 0.002), segs=10, rings=3)
+    for _ in range(26):
+        x, y = rnd.uniform(-0.43, 0.43), rnd.uniform(-0.43, 0.43)
+        g = dry if rnd.random() < 0.6 else green
+        for k in range(5):
+            a = k * math.tau / 5 + rnd.uniform(-0.4, 0.4)
+            b.cone(g, 0.01, 0.0, rnd.uniform(0.04, 0.065), at(x, y, 0.0, tilt=0.5, tilt_dir=a), segs=3)
+    return o + b.objects()
+
+
+def model_babul():
+    """A babul (desert acacia) on poor land: a thin, leaning dark trunk forking into a wide, flat, two-tiered crown of fine leaves."""
+    import random
+    rnd = random.Random(12)
+    bark = toon("babulBark", 0x4A3626)
+    o = [cylinder("trunk", 0.016, 0.011, 0.18, (0.01, 0, 0.09), bark, segs=7, rot=Matrix.Rotation(math.radians(6), 3, "Y"))]
+    for a in (0.6, 2.6, 4.4):
+        o.append(cylinder("branch%.1f" % a, 0.008, 0.005, 0.12, (0.02 + math.cos(a) * 0.035, math.sin(a) * 0.035, 0.2), bark, segs=5,
+                          rot=Matrix.Rotation(a, 3, "Z") @ Matrix.Rotation(math.radians(55), 3, "Y"), outline=False))
+    b = Batch("babulCrown")
+    mats = (toon("babulDark", 0x5F7A3A), toon("babulMid", 0x728E44), toon("babulLight", 0x89A653))
+    for tier, (z, rr) in enumerate(((0.235, 0.15), (0.275, 0.1))):
+        for i in range(16 if tier == 0 else 9):
+            a, r = rnd.uniform(0, math.tau), rr * math.sqrt(rnd.uniform(0, 1))
+            b.sphere(mats[(i + tier) % 3], rnd.uniform(0.03, 0.045), Matrix.Translation((0.02 + math.cos(a) * r, math.sin(a) * r, z + rnd.uniform(-0.008, 0.008))),
+                     scale=(1.5, 1.5, 0.45), segs=10, rings=5)
+    o += b.objects(outline_for=tuple(b.parts))
+    return group(o, scale=1.2)
+
+
+def model_tubewell():
+    """A tube-well room in the fields: a small brick pump house with a flat roof; its pipe pours into a little tank and channel."""
+    brick, roof, door = toon("brick", 0xB5623E), toon("slab", 0xC9C2B4), toon("door", 0x3F6E8A)
+    cement, water, pipe = toon("cement", 0xBDB8AC), toon("tankWater", 0x86BAC6), toon("pipe", 0x5A5F66)
+    o = [box("room", (0.15, 0.13, 0.11), (0, 0.03, 0.055), brick, bevel=0.004),
+         box("roof", (0.17, 0.15, 0.014), (0, 0.03, 0.117), roof, bevel=0.003),
+         box("door", (0.045, 0.006, 0.075), (-0.035, -0.036, 0.04), door),
+         cylinder("pipe", 0.009, 0.009, 0.05, (0.035, -0.06, 0.065), pipe, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+         box("tank", (0.11, 0.07, 0.035), (0.035, -0.115, 0.0175), cement, bevel=0.003),
+         box("water", (0.095, 0.055, 0.004), (0.035, -0.115, 0.033), water, outline=False),
+         sphere("gush", 0.016, (0.035, -0.092, 0.05), toon("gush", 0xD6EEF4), scale=(0.8, 1.2, 1.4), segs=8, rings=5, outline=False),
+         box("channel", (0.028, 0.2, 0.01), (0.035, -0.25, 0.005), cement),
+         box("channelWater", (0.018, 0.2, 0.004), (0.035, -0.25, 0.011), water, outline=False)]
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_chhappar():
+    """A farmstead's cattle shelter: a low mud back wall, posts in front, a thick sloping thatch with a ragged edge, a manger."""
+    wood, thatch, dark, mud = toon("wood", WOOD), toon("thatch", THATCH), toon("thatchDark", THATCH_DARK), toon("mud", 0xA8784A)
+    o = [box("backWall", (0.2, 0.025, 0.13), (0, 0.06, 0.065), mud, bevel=0.004)]
+    for x in (-0.085, 0.085):
+        o.append(box("post%d" % (x > 0), (0.012, 0.012, 0.075), (x, -0.06, 0.0375), wood, outline=False))
+    o.append(poly_mesh("roof", [(-0.11, -0.085, 0.07), (0.11, -0.085, 0.07), (0.11, 0.08, 0.15), (-0.11, 0.08, 0.15),
+                                (-0.11, -0.085, 0.086), (0.11, -0.085, 0.086), (0.11, 0.08, 0.166), (-0.11, 0.08, 0.166)],
+                       [(0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)], thatch))
+    import random
+    rnd = random.Random(8)
+    bb = Batch("fringe")
+    for i in range(14):
+        x = -0.11 + i * 0.017
+        bb.cone(dark, 0.007, 0.0, rnd.uniform(0.02, 0.03), Matrix.Translation((x, -0.085, 0.072)) @ Matrix.Rotation(math.pi, 4, "X"), segs=4)
+    o += bb.objects()
+    o.append(box("manger", (0.15, 0.03, 0.025), (0, 0.03, 0.0125), mud, bevel=0.004))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_corner_stone():
+    """A boundary stone at a corner of your land: a short whitewashed stone with a red-ochre top."""
+    o = [box("stone", (0.028, 0.028, 0.05), (0, 0, 0.025), toon("lime", 0xF2EBDD), bevel=0.005),
+         box("top", (0.03, 0.03, 0.012), (0, 0, 0.047), toon("ochreRed", 0xC2452D), bevel=0.004)]
+    return group(o, scale=1.6)
+
+
+def model_bund_worn(axis):
+    """A neighbour's old bund: low, rounded and grassed over, so your fresh ones stand out against it."""
+    b = Batch("bundWorn")
+    earth, top, tuft = toon("bundWorn", 0xA08A5C), toon("bundWornTop", 0x86AE4C), toon("bundWornTuft", 0x74A040)
+    size = (1.0, 0.06, 0.016) if axis == "x" else (0.06, 1.0, 0.016)
+    b.box(earth, size, Matrix.Translation((0, 0, 0.008)))
+    b.box(top, (size[0] * 0.98, size[1] * 0.9, 0.006), Matrix.Translation((0, 0, 0.017)))
+    import random
+    rnd = random.Random(61 if axis == "x" else 62)
+    for i in range(10):
+        u = rnd.uniform(-0.46, 0.46)
+        x, y = (u, 0) if axis == "x" else (0, u)
+        b.cone(tuft, 0.016, 0.0, 0.03, Matrix.Translation((x, y, 0.016)), segs=5)
+    return b.objects(outline_for=(earth,))
+
+
+SPRITES.update({"crop_mustard_g2": lambda: model_crop("mustard", "g3"), "crop_sugarcane_g2": lambda: model_crop("sugarcane", "g3"),
+                "ground_scrub": model_ground_scrub, "tree_babul": model_babul, "tubewell": model_tubewell, "chhappar": model_chhappar,
+                "corner_stone": model_corner_stone, "bund_worn_x": lambda: model_bund_worn("x"), "bund_worn_y": lambda: model_bund_worn("y")})
+
+
 # ---------------------------------------------------------------- framing and render
 
 def frame_and_render(sc, cam, name, objs):
