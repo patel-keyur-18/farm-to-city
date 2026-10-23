@@ -71,6 +71,8 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | Health | 0.5–1.0: falls when food isn't met, recovers when it is (as the founder's, spec 003 §3.11, slower) |
 | Job | None, the founder's hand, "works outside" (§3.6), or later a business (spec 016) |
 | Story | Arrival, marriage, children, retirement, passing, kept as lines for the card |
+| Family (§10 G9) | Parents and spouse by id; children and siblings found from them. A spouse who married in shows "from Sitapur" (parents unknown); a Phase 1 hand shows "family in his home village" until his family moves in |
+| The departed | Someone who passed away or moved away is kept only while a citizen living in town is their spouse, child or grandchild; dropped at the season close when none is. At most two generations back from anyone alive, so it never grows without end (about 0.5 departed a living citizen; a town of 80 keeps about 40, about 4 KB) |
 
 ### 3.4 Households and homes (§10 G2)
 
@@ -177,7 +179,7 @@ Hourly pass, system Population: families arrive. Daily pass, system Population: 
 
 **New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48, `houseCapacity` 6, `housesPerAcre` 4, `rentPerSeason` 6,000); names with gender in `people.json`.
 
-**New state** (save schema 8): `Citizen` (id, name, gender, birthSeason, householdId, home, education, skill, traits, health, job, parents, spouse, story lines, diedAt), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed and the dead stay in the record for the family tree (up to `historyCap` 500, oldest first dropped).
+**New state** (save schema 8): `Citizen` (id, name, gender, birthSeason, householdId, home, education, skill, traits, health, job, parents, spouse, story lines, diedAt), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
 
 ## 5. Commands and events
 
@@ -214,7 +216,18 @@ Town tab:
 | [Build a family house 60,000]                                           |
 
 Household card: members (age, stage, job), the budget pie with Engel's *Why?*, needs by layer with *Why?*, savings, rent.
-Citizen card: portrait, age and stage, job, skill, traits, health, story lines, the family tree (parents, spouse, children; the departed greyed).
+Citizen card: portrait, age and stage, job, skill, traits, health, story lines, and the person's close family only: parents, spouse, siblings, children, grandchildren (name, age, job). A relative in another house shows "→ lives in Family house 3" and opens their card (back button, ADR 0044); grandparents are one tap away on a parent's card. The departed fold into one line, "2 who have passed ›", closed by default, greyed with "passed away at 70" or "moved to Rampur" when opened.
+
+Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one row per household, with "related: Rekha's" for families linked by marriage or birth, sortable by happiness, size or job; the household card draws its own family as a small tree (an elder above, the couple, the children below):
+
+```
+            Kamla (74)
+                |
+      Manoj (38) ── Sita (35, from Sitapur)
+          |              |
+      Ravi (12)      Asha (9)
+  Budget [?] · Needs [?] · Rent paid ✓
+```
 ```
 
 ## 8. Acceptance criteria
@@ -230,6 +243,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 | AC-7 | A household below 35 happiness for 2 closes, or 2 seasons behind on rent, leaves (50% a close); a hand's leaving ends his contract | `MigrationTests2.MovingOut` |
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-8 | Households add their basket to the local market's demand each hour | `MarketTests.TownDemand` |
+| AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
 | AC-9 | A schema-7 save's hands become citizens in households of one; it advances a season and round-trips | `MigrationTests.Schema7_Citizens` |
 | AC-10 | The golden replays are unchanged; a year of the bot gives the same hash in one chunk or many | `ReplayTests.*`, `CitizenTests.ChunkingInvariance` |
@@ -254,7 +268,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 - **G6. Migration.** **Closed (owner, 2026-10-23, with a change):** a family moves into an empty family house every 18 ± 6 h, live or away; a hand can bring his family into a free family house (Yes / Not now at a season close); a household below 35 happiness for 2 closes or 2 seasons behind on rent leaves (50% a close), and a hand's leaving ends his contract. The owner's change: the house is part of the hand's pay, so his cash wage is cut by its rent (6,000 × index) from his next renewal, a loyal hand's kept wage included; full wage again after they move out (§3.6, §3.10).
 - **G7. Death and tone.** **Closed (owner, 2026-10-23):** only elders die (§3.9's chances, about 72 years' expectancy; ×1.5 in poor health); worded gently ("passed away peacefully"), information only, no sound or push; a season's mourning (−10); no child or young adult deaths, no accidents and no funeral costs (the owner agreed with both pushbacks).
 - **G8. Work for everyone.** **Closed (owner, 2026-10-23):** adults 18–59 without a town job work outside at the founder's day-labour rate (9,000 a game day) on half the days, paid as the expected share daily (no daily roll, the owner accepted the pushback); the founder's day labourers come from the town first; the employment rate counts town jobs only (§3.6).
-- **G9. The family tree.** Parents, spouse and children on the citizen card; the departed kept up to 500. Recommended.
+- **G9. The family tree.** **Closed (owner, 2026-10-23):** three levels, each a tap deeper (the Town tab's household rows with "related" links, the household card's small tree, the citizen card's close family with siblings and links across houses); the departed folded into one line; kept only while a living citizen is their spouse, child or grandchild (no count cap; the owner asked that it never pile up) (§3.3, §7).
 - **G10. Households buy food locally.** Their basket adds to the market's demand, so a growing town buys the founder's produce. Recommended.
 
 ## 11. Cut first
