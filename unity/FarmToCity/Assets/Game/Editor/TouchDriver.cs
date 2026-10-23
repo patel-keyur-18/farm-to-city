@@ -97,7 +97,9 @@ namespace Game.Editor
         public static string TapNamed(string name)
         {
             UIDocument doc = Object.FindFirstObjectByType<UIDocument>();
-            VisualElement hit = doc == null ? null : doc.rootVisualElement.Q(name);
+            // Several sheets each have a #close: aim at the last one laid out and shown (the sheet on top).
+            VisualElement hit = null;
+            if (doc != null) doc.rootVisualElement.Query(name).ForEach(e => { if (e.worldBound.width > 0f && Shown(e)) hit = e; });
             if (hit == null) return "no element named '" + name + "'";
             hit.schedule.Execute(() => Tap(ScreenOf(hit).x, ScreenOf(hit).y)).ExecuteLater(120);
             return "tap #" + name;
@@ -133,6 +135,13 @@ namespace Game.Editor
                 if (f != null) return f;
             }
             return null;
+        }
+
+        private static bool Shown(VisualElement e)
+        {
+            for (; e != null; e = e.parent)
+                if (e.resolvedStyle.display == DisplayStyle.None || e.resolvedStyle.visibility == Visibility.Hidden || e.resolvedStyle.opacity <= 0f) return false;
+            return true;
         }
 
         public static string Pending() { return Steps.Count + " steps queued; " + string.Join(" | ", Log); }

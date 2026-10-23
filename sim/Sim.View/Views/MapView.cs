@@ -80,6 +80,9 @@ namespace Sim.View.Views
 
         /// <summary>Which look of its place: houses come in two (by tile).</summary>
         public int Variant { get; internal set; }
+
+        /// <summary>The village place's id (content), for its hand-placed layout (ADR 0061).</summary>
+        public string PlaceId { get; internal set; }
     }
 
     public enum TreeStage
@@ -284,7 +287,8 @@ namespace Sim.View.Views
             };
 
             var places = new Dictionary<int, string>();
-            foreach (PlaceDef p in defs.Map.Places) places[p.Tile] = p.Kind;
+            var placeIds = new Dictionary<int, string>();
+            foreach (PlaceDef p in defs.Map.Places) { places[p.Tile] = p.Kind; placeIds[p.Tile] = p.Id; }
             int yards = 0;
             foreach (Tile t in land.Tiles)
             {
@@ -301,7 +305,7 @@ namespace Sim.View.Views
                 if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
                 if (vm.Kind == TileKind.Unowned) vm.NeighbourCrop = NeighbourCrop(defs.Soils[t.Soil].Id, t.ParcelId, map.Season);
                 if (vm.Kind == TileKind.Road) vm.RoadLinks = RoadLinks(land, defs.Map, t.Id);
-                if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.Variant = (vm.X + vm.Y) % 2; }
+                if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
                 Crop crop = sim.State.Farm.CropOn(t.Id);
                 if (crop != null)

@@ -254,21 +254,21 @@
     { "id": "bank",    "tiles": [8, 9, 10, 11, 12, 13, 14, 15], "forSale": false }
   ],
   "places": [
-    { "id": "house_1",      "kind": "house",        "tile": 59 },
-    { "id": "house_2",      "kind": "house",        "tile": 60 },
-    { "id": "temple",       "kind": "temple",       "tile": 61 },
-    { "id": "pond",         "kind": "pond",         "tile": 62 },
-    { "id": "house_3",      "kind": "house",        "tile": 75 },
-    { "id": "grocery",      "kind": "grocery",      "tile": 76 },
-    { "id": "tea_stall",    "kind": "tea_stall",    "tile": 77 },
-    { "id": "banyan",       "kind": "banyan",       "tile": 78 },
-    { "id": "house_4",      "kind": "house",        "tile": 91 },
-    { "id": "chemist",      "kind": "chemist",      "tile": 92 },
-    { "id": "council_hall", "kind": "council_hall", "tile": 93 },
-    { "id": "school_plot",  "kind": "school_plot",  "tile": 94 },
-    { "id": "house_5",      "kind": "house",        "tile": 107 },
-    { "id": "house_6",      "kind": "house",        "tile": 108 },
-    { "id": "dealer",       "kind": "dealer",       "tile": 109 },
-    { "id": "house_7",      "kind": "house",        "tile": 110 }
+    { "id": "house_1", "kind": "house", "tile": 59 },
+    { "id": "dealer", "kind": "dealer", "tile": 60 },
+    { "id": "temple", "kind": "temple", "tile": 61 },
+    { "id": "pond", "kind": "pond", "tile": 62 },
+    { "id": "council_hall", "kind": "council_hall", "tile": 75 },
+    { "id": "grocery", "kind": "grocery", "tile": 76 },
+    { "id": "tea_stall", "kind": "tea_stall", "tile": 77 },
+    { "id": "banyan", "kind": "banyan", "tile": 78 },
+    { "id": "house_2", "kind": "house", "tile": 91 },
+    { "id": "chemist", "kind": "chemist", "tile": 92 },
+    { "id": "house_3", "kind": "house", "tile": 93 },
+    { "id": "school_plot", "kind": "school_plot", "tile": 94 },
+    { "id": "house_4", "kind": "house", "tile": 107 },
+    { "id": "dairy", "kind": "dairy", "tile": 108 },
+    { "id": "house_5", "kind": "house", "tile": 109 },
+    { "id": "house_6", "kind": "house", "tile": 110 }
   ]
 }

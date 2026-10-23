@@ -191,12 +191,7 @@ namespace Game.Presentation.Map
                 crop.Marker = NewRenderer("mark" + t.Id, null, c + new Vector3(0.02f, 0.34f, 0), Order(t.Id, _width, 90));
                 _crops.Add(crop);
             }
-            foreach (TileVm t in map.Tiles)
-            {
-                if (t.Place == null) continue;
-                string name = t.Place == "house" ? "place_house_" + t.Variant : "place_" + t.Place;
-                _places[t.Id] = NewRenderer(name, SpriteBank.Rendered(name), TileCentre(t.Id), Order(t.Id, _width, 45));
-            }
+            BuildVillage(map);
             BuildEdge();
             foreach (SlotVm s in map.Slots)
             {
@@ -296,6 +291,7 @@ namespace Game.Presentation.Map
                 if (e.Decor != null) e.Decor.color = _tint;
             }
             foreach (KeyValuePair<int, SpriteRenderer> p in _places) p.Value.color = _tint;
+            foreach (SpriteRenderer r in _villageProps) r.color = _tint;
             RefreshBunds(map);
 
             foreach (TileVm tv in map.Tiles)
@@ -325,7 +321,7 @@ namespace Game.Presentation.Map
                         detail.sprite = null;
                         break;
                     case TileKind.Village:
-                        ground.sprite = SpriteBank.Sand; // beaten earth round the houses
+                        ground.sprite = VillageGround(tv); // worn grass, streets and yards (ADR 0061)
                         ground.color = _tint;
                         detail.sprite = null;
                         break;
@@ -818,7 +814,7 @@ namespace Game.Presentation.Map
             float best = 0.24f;
             foreach (KeyValuePair<int, SpriteRenderer> kv in _places)
             {
-                float d = Vector2.Distance(w, (Vector2)TileCentre(kv.Key) + new Vector2(0, 0.16f));
+                float d = Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f)); // where it stands (ADR 0061)
                 if (d < best) { best = d; place = kv.Key; }
             }
             if (place >= 0) return new Hit(HitKind.Tile, place);

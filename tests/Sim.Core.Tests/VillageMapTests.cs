@@ -54,7 +54,7 @@ namespace Sim.Core.Tests
             Assert.That(map.Places.Count, Is.EqualTo(16));
             Assert.That(map.Places.All(p => map.Tiles[p.Tile].Terrain == Terrain.Village), Is.True);
             Assert.That(map.Places.Select(p => p.Kind).Distinct(), Is.EquivalentTo(new[]
-                { "house", "grocery", "tea_stall", "chemist", "dealer", "temple", "council_hall", "school_plot", "banyan", "pond" }));
+                { "house", "grocery", "tea_stall", "chemist", "dealer", "temple", "council_hall", "school_plot", "banyan", "pond", "dairy" }));
         }
 
         // Spec 010 AC-2: the Phase 1 farm sits unchanged at columns 2–9, rows 3–8 (saves/map-8x6.json is the Phase 1 map, frozen).

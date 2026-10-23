@@ -132,7 +132,38 @@ namespace Sim.View.Views
                 vm.Actions.Add(ActionVm.Checked(ctx, "medicine", ctx.Strings.Get("place.chemist.buy"),
                     ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.MedicineCost)), ActionKind.Primary, at => new BuyMedicine(at)));
             if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
+            if (kind == "dairy") Dairy(ctx, vm);
             return vm;
+        }
+
+        /// <summary>
+        /// The dairy co-op (ADR 0061, US-206): its price a litre by fat for each animal, what it collected from you this morning,
+        /// and the way to your cattle yard once cattle unlock; before the Hamlet, when they do.
+        /// </summary>
+        private static void Dairy(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            LivestockDefs defs = sim.Config.Game.Livestock;
+            if (defs == null) return;
+            for (int k = 0; k < defs.Animals.Count; k++)
+            {
+                AnimalDef a = defs.Animals[k];
+                long perLitre = (Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k) * Sim.Core.Maths.Fixed.FromInt(100)).RoundToLong();
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("dairy.price", "animal", ctx.Strings.Get(a.NameKey), "fat", ctx.Fmt.Decimal1(a.FatPercent)),
+                    ctx.Strings.Get("dairy.perLitre", "amount", ctx.Fmt.Paise(perLitre)), "milkPrice", k));
+            }
+            Sim.Core.Livestock.LivestockState s = sim.State.Livestock;
+            if (!Sim.Core.Livestock.LivestockRules.Unlocked(sim))
+            {
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("dairy.today"), ctx.Strings.Get("dairy.locked")));
+                return;
+            }
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("dairy.today"), s.LastMilkMl > 0
+                ? ctx.Strings.Get("dairy.collected", "milk", ctx.Fmt.Litres(s.LastMilkMl - s.LastHomeMl), "amount", ctx.Fmt.Coins(s.LastMilkAmount))
+                : ctx.Strings.Get("dairy.nothingYet"), s.LastMilkMl > 0 ? "milkToday" : null, 0));
+            int acre = -1;
+            for (int i = 0; i < sim.State.Land.Tiles.Count && acre < 0; i++) if (sim.State.Land.Tiles[i].Terrain == Terrain.Cattle) acre = i;
+            if (acre >= 0) vm.Actions.Add(ActionVm.Open("cattleYard", ctx.Strings.Get("dairy.yourYard"), new SheetRequest("Tile", acre)));
         }
 
         /// <summary>The village's own land (spec 010): a road acre, the commons, the river bank. Never for sale, never priced.</summary>
