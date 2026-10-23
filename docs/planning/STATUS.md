@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done (owner's review); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; US-204 next. Spec 014 drafted, G1 closed (ADR 0061), G2 next |
+| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; US-204 next. Spec 014 drafted, G1–G6 closed (G6 with the owner's change: a family house is part of the hand's pay), G7 next |
 | Branch with latest work | `sprint/12-cattle-citizens` (from `main`, which has Sprint 11 / PR #16) |
 | Last updated | 2026-10-22 |
 
@@ -177,13 +177,14 @@
 - **US-201 done (sim only):** the co-op's vet vaccinates on each season's first 6:00 if cash allows (`VaccinationMissed` otherwise); a seeded illness (stream Livestock) × 3 unvaccinated and more when unwell: the vet (1,500, 5030) and a day's milk lost, or 2 days and twice the health loss with no cash, never fatal (`AnimalSick`); the hand's animals order (`OrderSpec.LookAfterAnimals(days)`, 2–4) fills straw and feed when under its days or waits for money; notifications `AnimalSick` and `CalfBorn` (Information). Spec 014 G3 closed. 329 + 80 tests pass; Unity compiles.
 - **US-202 done (sim only):** the dairy loan (`BuyAnimal` with `Financing`; the bank's `livestockLtv` 0.75 × the animal's fair value in its limit, with its score factor); selling a secured animal repays the bank first or is `LoanSecured`; foreclosure takes animals after bought land, until the debt is covered (`AnimalSeized`); the shed stays. Spec 014 G4 closed. 331 + 80 tests pass; Unity compiles.
 - **US-203 done (balance):** `Tools.Balancer.Dairy` plays a whole lactation cycle; the competent bot builds the shed and keeps 2 buffalo after the Hamlet (a reserve of the next close's costs and a season's feed first), a fodder acre, the hand's animals order; `DairyBot` (a full shed on the biggest loans, all feed bought). Measured: buffalo payback 2.37 years bought / 1.25 home-grown; the cow tuned 70,000 → 75,000 (26% faster per coin); a buffalo 1.20 × an acre; dairy-max 1.021 × competent; Hamlet day 5.4; every gate passes. Found and fixed: clearing a fodder field raised land value at once (now forfeited, like any crop); a fixed-point overflow when a rich town bought feed (`Money.QuantityFor`). 334 + 80 tests pass; Unity compiles.
+- **US-203 approved by the owner (2026-10-23). Spec 014 G2–G6 closed;** G6 with the owner's change: a hand's family in a family house is housing in kind, his cash wage 6,000 × index less from his next renewal (spec 014 §3.6, AC-11).
 - **ADR 0062 (owner, 2026-10-22):** a living valley (neighbours' acres vary by soil, farmsteads only on not-for-sale acres, a hedge-and-wall boundary round your land): US-207 (5 points).
 - **Spec 014 drafted** (10 gaps). **G1 closed (ADR 0061):** the village is the town, its old families aren't counted ("Your people"). The owner also asked for the village centre to be redrawn naturally (a middle street, buildings from all sides facing their street, clusters) with a dairy co-op building: **US-206** (8 points) in Sprint 12, which now has 44 points and runs about 2 weeks.
 
 ## Next up
 
-1. **Owner:** spec 014 gaps G2–G10, one at a time. Report anything from the s11b build.
-2. **Claude:** US-199 (feeding, the places, straw and dung, hunger and health, `FeedLow`), then US-200–US-205 in the sprint's order; spec 014 alongside.
+1. **Owner:** spec 014 gaps G7–G10, one at a time. Report anything from the s11b build.
+2. **Claude:** US-204 (Blender art: shed, buffalo, cow, fodder, straw stack, compost pit, icons), then US-206, US-207, US-205 (each Editor-tested with scripted touch); spec 014 alongside.
 
 ## Owner action checklist (Phases 0–1)
 

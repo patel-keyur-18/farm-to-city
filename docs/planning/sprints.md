@@ -539,7 +539,7 @@
 
 ## Sprint 12 · 25–31 Jan 2027 · Phase 2 (cattle; spec 014 written)
 
-- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-126 and US-199–US-202 done and approved; US-203 done (owner's review); US-204 next
+- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-204 next
 - **Branch:** `sprint/12-cattle-citizens`
 - **Goal:** Spec 012 approved and built: buffalo and cows in a shed, milk to the co-op every morning, fodder, straw and feed, playable on the iPhone. Spec 014 (citizens, households and population) written and approved; its code comes in Sprints 13–14.
 - **Points:** 49 (spec 012 re-pointed the ~15 estimate to 36; US-206 adds 8 (ADR 0061), US-207 5 (ADR 0062); runs 2 weeks as Sprint 11 did)

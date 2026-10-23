@@ -4,7 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
-- Amends: spec 006 (a hand is a citizen with an age and a household; retirement), spec 002 (the family house on owned land), spec 004 (households' food adds to the local market's demand), spec 005 (account 4200 Rent received), spec 007 (save schema), spec 008 (the HUD's population and happiness; the Town tab)
+- Amends: spec 006 (a hand is a citizen with an age and a household; retirement; a family house as part of his pay), spec 002 (the family house on owned land), spec 004 (households' food adds to the local market's demand), spec 005 (account 4200 Rent received), spec 007 (save schema), spec 008 (the HUD's population and happiness; the Town tab)
 - Related ADRs: 0002 (the life clock: 1 life-year a season), 0003 (the founder doesn't age), 0022 (the first citizens are hands), 0011 (school and literacy), 0053 (the village centre is neighbours), 0057 (spec order)
 - Depends on specs: 001, 003, 004, 005, 006, 010
 
@@ -79,7 +79,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | A household | A family sharing a home: a couple, their children, sometimes an elder parent. Each citizen belongs to exactly one | |
 | A hand's hut | Houses one hand alone (spec 006): a household of one whose family stays in his home village; he sends half his wage home (`remitShare`) | 0.5 |
 | The family house | `BuildFamilyHouse(tile)` on an owned acre that isn't growing anything: `BuildingDef(family_house).value` 60,000 (a two-room pucca house), 48 h to build, houses `houseCapacity` people; an acre takes `housesPerAcre` houses and is no longer farmed while any stands. Also on the labour quarters' free places | 6 people; 4 an acre |
-| Rent | A household in a family house pays `rentPerSeason` × index at each season close (Dr Cash, Cr 4200 Rent received); a household that can't pay it falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays nothing (a benefit; spec 015 makes it a choice) | 6,000 |
+| Rent | A household in a family house pays `rentPerSeason` × index at each season close (Dr Cash, Cr 4200 Rent received); a household that can't pay it falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays no rent: the house is part of his pay instead (§3.6) | 6,000 |
 | Moving up | A hand whose family house is free can "send for his family" (§3.10) | |
 | Overcrowding | More people than `houseCapacity` leaves shelter partly unmet (§3.8) | |
 
@@ -109,6 +109,7 @@ food        = income × foodShare,  rent,  clothing 8%,  health 5%,  education 5
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | A hand | His wage (spec 006) is his household's income | |
+| Housing in kind (§10 G6) | While a hand's family lives in your family house, his cash wage is cut by the house's rent: `rentPerSeason` × index off the wage asked at each renewal, from the first renewal after they move in (season wages are paid upfront, ADR 0008, so never mid-season). It applies to a loyal hand's kept wage too. If the family moves out, his full wage returns at the next renewal. The hand's card shows "Housing: family house (worth 6,000 a season)" and the wage's *Why?* shows "30,000 − 6,000 for the family house = 24,000 in cash". Only the house is deducted: the founder gives no food or care. For the founder it is the same as renting the house out (6,000 less rent, 6,000 less wage) | 6,000 |
 | Works outside | Every adult under 60 without a job in town works as a day labourer in the region on `outsideDaysShare` of days at `outsideWage` × index, paid at the daily pass | 60%; 6,000 a game day |
 | Employment rate | Adults with a job in town ÷ adults of working age (a town statistic; the Town era needs 85%, Phase 3) | |
 | Children | Never work (GDD: no child labour) | |
@@ -158,7 +159,7 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | A family moves in | While a family house stands empty, a family arrives every `familyEveryHours` ± seeded jitter: 2–5 people (a couple, 0–3 children, sometimes an elder), adults with skills and traits drawn as applicants (spec 006). They move in at once and pay rent from the next close. Live or away | 18 h ± 6 |
-| A hand's family | A hand under contract whose household is just him, with a free family house: at the next season close he asks to bring his family (a card: Yes / Not now); yes moves him and a seeded wife and 0–2 children into the house; his hut is free for another hand | |
+| A hand's family | A hand under contract whose household is just him, with a free family house: at the next season close he asks to bring his family (a card: Yes / Not now); yes moves him and a seeded wife and 0–2 children into the house; his hut is free for another hand. The card says what changes: "From his next renewal his wage is 6,000 less: the house is part of his pay" (§3.6) | |
 | Moving out | A household whose happiness stays below `leaveBelow` for `leaveSeasons` season closes, or is 2 seasons behind on rent, leaves (seeded, 50% a close once eligible). A hand's household leaving ends his contract (spec 006 dismissal rules, no severance). Emits `HouseholdLeft` with the reason | 35; 2 |
 | Population | Citizens in the town; the HUD shows it with town happiness | |
 
@@ -195,7 +196,7 @@ Hourly pass, system Population: families arrive. Daily pass, system Population: 
 | Decision | Immediate cost | Delayed effect | Side effects | Reversibility |
 | --- | --- | --- | --- | --- |
 | Build a family house | 60,000; the acre stops farming | Rent 6,000 a season; a family who can work for you | More demand for your produce | No (Phase 2) |
-| Let a hand bring his family | — | He stays longer (happier); his hut frees up | Children, a household to keep happy | No |
+| Let a hand bring his family | No rent from that house | He stays longer (happier); his cash wage is 6,000 less from his next renewal; his hut frees up | Children, a household to keep happy | No |
 | Pay above the market (spec 006) | Wages | Happier households, fewer leave | | Next renewal |
 
 ## 7. UI
@@ -225,6 +226,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 | AC-5 | Happiness follows the layers, weights and gate; the three examples in §3.8 score 84, 74 and 62 | `HappinessTests.Layers` |
 | AC-6 | Births, marriages and deaths follow their chances (seeded, same seed same town); no child or adult under 60 dies | `PopulationTests.Flows` |
 | AC-7 | A household below 35 happiness for 2 closes, or 2 seasons behind on rent, leaves (50% a close); a hand's leaving ends his contract | `MigrationTests2.MovingOut` |
+| AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-8 | Households add their basket to the local market's demand each hour | `MarketTests.TownDemand` |
 | AC-9 | A schema-7 save's hands become citizens in households of one; it advances a season and round-trips | `MigrationTests.Schema7_Citizens` |
 | AC-10 | The golden replays are unchanged; a year of the bot gives the same hash in one chunk or many | `ReplayTests.*`, `CitizenTests.ChunkingInvariance` |
@@ -246,7 +248,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 - **G3. The life clock and lifespans.** **Closed (owner, 2026-10-22):** 1 life-year a season (ADR 0002); child 0–17, adult 18–59, elder 60+; a hand retires at 60 after his season; births 0.10 a season for a couple (woman 20–40), at most 3, less when crowded or unhappy; deaths only for elders, 1.5% a year at 60 doubling every 8 years (about 72 years' expectancy) (§3.2, §3.9).
 - **G4. Engel's law and the budget.** **Closed (owner, 2026-10-22):** the budget set at each close from the season's income; the Engel curve [[0, 0.65], [8,000, 0.55], [20,000, 0.40], [60,000, 0.25]] by income a person; rent, clothing 8%, health 5%, education 5%, the rest half leisure, half savings; food need 4,500 an adult a season (child 0.6, elder 0.8); savings cover a short season first (§3.5).
 - **G5. Needs and happiness in Phase 2.** **Closed (owner, 2026-10-22):** survival 40% (the least of food, shelter, water), security 30% (town jobs, the chemist at 0.5, rent paid), belonging 20% (temple and square 0.8), growth 10% (no school yet; leisure 0.3); each layer gated by the one below at 0.8; the examples score 84, 74 and 62; nobody above about 90 until the school (§3.8).
-- **G6. Migration.** Families for empty houses live or away; a hand can bring his family; unhappy or rent-behind households leave. Recommended.
+- **G6. Migration.** **Closed (owner, 2026-10-23, with a change):** a family moves into an empty family house every 18 ± 6 h, live or away; a hand can bring his family into a free family house (Yes / Not now at a season close); a household below 35 happiness for 2 closes or 2 seasons behind on rent leaves (50% a close), and a hand's leaving ends his contract. The owner's change: the house is part of the hand's pay, so his cash wage is cut by its rent (6,000 × index) from his next renewal, a loyal hand's kept wage included; full wage again after they move out (§3.6, §3.10).
 - **G7. Death and tone.** Only elders die, gently worded; no child or young adult deaths. Recommended.
 - **G8. Work for everyone.** Adults without a town job work outside at 60% of days; employment rate counts only town jobs. Recommended.
 - **G9. The family tree.** Parents, spouse and children on the citizen card; the departed kept up to 500. Recommended.
