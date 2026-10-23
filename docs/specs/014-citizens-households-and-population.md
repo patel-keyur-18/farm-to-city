@@ -4,7 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
-- Amends: spec 006 (a hand is a citizen with an age and a household; retirement; a family house as part of his pay), spec 002 (the family house on owned land), spec 004 (households' food adds to the local market's demand), spec 005 (account 4200 Rent received), spec 007 (save schema), spec 008 (the HUD's population and happiness; the Town tab)
+- Amends: spec 006 (a hand is a citizen with an age and a household; retirement; a family house as part of his pay; labourers hired from the town first), spec 002 (the family house on owned land), spec 004 (households' food adds to the local market's demand), spec 005 (account 4200 Rent received), spec 007 (save schema), spec 008 (the HUD's population and happiness; the Town tab)
 - Related ADRs: 0002 (the life clock: 1 life-year a season), 0003 (the founder doesn't age), 0022 (the first citizens are hands), 0011 (school and literacy), 0053 (the village centre is neighbours), 0057 (spec order)
 - Depends on specs: 001, 003, 004, 005, 006, 010
 
@@ -110,8 +110,9 @@ food        = income × foodShare,  rent,  clothing 8%,  health 5%,  education 5
 | --- | --- | --- |
 | A hand | His wage (spec 006) is his household's income | |
 | Housing in kind (§10 G6) | While a hand's family lives in your family house, his cash wage is cut by the house's rent: `rentPerSeason` × index off the wage asked at each renewal, from the first renewal after they move in (season wages are paid upfront, ADR 0008, so never mid-season). It applies to a loyal hand's kept wage too. If the family moves out, his full wage returns at the next renewal. The hand's card shows "Housing: family house (worth 6,000 a season)" and the wage's *Why?* shows "30,000 − 6,000 for the family house = 24,000 in cash". Only the house is deducted: the founder gives no food or care. For the founder it is the same as renting the house out (6,000 less rent, 6,000 less wage) | 6,000 |
-| Works outside | Every adult under 60 without a job in town works as a day labourer in the region on `outsideDaysShare` of days at `outsideWage` × index, paid at the daily pass | 60%; 6,000 a game day |
-| Employment rate | Adults with a job in town ÷ adults of working age (a town statistic; the Town era needs 85%, Phase 3) | |
+| Works outside (§10 G8) | Every adult 18–59, men and women, without a job in town works as a day labourer in the region: `outsideWage` = the founder's day-labour rate (`dayLabourWagePerHour` × 8 h) × index, × `outsideDaysShare`, paid at each daily pass (the expected share, no daily roll, so luck never swings a family's season). *Why?*: "Finds work about half the days: 9,000 × 0.5". A season: 4 × 0.5 × 9,000 = 18,000 an adult (a hand earns 30,000) | 50%; 9,000 a game day |
+| Your labourers first (amends spec 006) | When the founder hires day labourers, adults in town who work outside are taken first: they earn the labourer's day wage (9,375) for their household, in place of that day's outside work; neighbouring villages fill the rest as before | |
+| Employment rate | Adults with a job in town (a hand now, businesses from spec 016) ÷ adults of working age; outside work and day labour don't count (a town statistic; the Town era needs 85%, Phase 3) | |
 | Children | Never work (GDD: no child labour) | |
 | Elders | Don't work; they may live on savings or with family | |
 
@@ -229,6 +230,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 | AC-7 | A household below 35 happiness for 2 closes, or 2 seasons behind on rent, leaves (50% a close); a hand's leaving ends his contract | `MigrationTests2.MovingOut` |
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-8 | Households add their basket to the local market's demand each hour | `MarketTests.TownDemand` |
+| AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
 | AC-9 | A schema-7 save's hands become citizens in households of one; it advances a season and round-trips | `MigrationTests.Schema7_Citizens` |
 | AC-10 | The golden replays are unchanged; a year of the bot gives the same hash in one chunk or many | `ReplayTests.*`, `CitizenTests.ChunkingInvariance` |
 
@@ -251,7 +253,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 - **G5. Needs and happiness in Phase 2.** **Closed (owner, 2026-10-22):** survival 40% (the least of food, shelter, water), security 30% (town jobs, the chemist at 0.5, rent paid), belonging 20% (temple and square 0.8), growth 10% (no school yet; leisure 0.3); each layer gated by the one below at 0.8; the examples score 84, 74 and 62; nobody above about 90 until the school (§3.8).
 - **G6. Migration.** **Closed (owner, 2026-10-23, with a change):** a family moves into an empty family house every 18 ± 6 h, live or away; a hand can bring his family into a free family house (Yes / Not now at a season close); a household below 35 happiness for 2 closes or 2 seasons behind on rent leaves (50% a close), and a hand's leaving ends his contract. The owner's change: the house is part of the hand's pay, so his cash wage is cut by its rent (6,000 × index) from his next renewal, a loyal hand's kept wage included; full wage again after they move out (§3.6, §3.10).
 - **G7. Death and tone.** **Closed (owner, 2026-10-23):** only elders die (§3.9's chances, about 72 years' expectancy; ×1.5 in poor health); worded gently ("passed away peacefully"), information only, no sound or push; a season's mourning (−10); no child or young adult deaths, no accidents and no funeral costs (the owner agreed with both pushbacks).
-- **G8. Work for everyone.** Adults without a town job work outside at 60% of days; employment rate counts only town jobs. Recommended.
+- **G8. Work for everyone.** **Closed (owner, 2026-10-23):** adults 18–59 without a town job work outside at the founder's day-labour rate (9,000 a game day) on half the days, paid as the expected share daily (no daily roll, the owner accepted the pushback); the founder's day labourers come from the town first; the employment rate counts town jobs only (§3.6).
 - **G9. The family tree.** Parents, spouse and children on the citizen card; the departed kept up to 500. Recommended.
 - **G10. Households buy food locally.** Their basket adds to the market's demand, so a growing town buys the founder's produce. Recommended.
 
