@@ -34,7 +34,7 @@ The player's farm grows into a settlement of real families: people move in for w
 - Clinics, life expectancy from healthcare, water and sanitation: Phase 3 (civic services).
 - Festivals, crime, petitions, inequality: Phase 3.
 - Cohort simulation for large towns: Phase 4 (F17.1).
-- Child deaths, accidents, adults dying young: not planned (§10 G7).
+- Child deaths, accidents, adults dying young, funeral costs: not planned (§10 G7).
 
 ## 3. Rules and formulas
 
@@ -150,7 +150,8 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 | --- | --- | --- |
 | Births | At each season close, a household with a couple whose woman is 20–40 has a baby with chance `birthChance` × (room in the home ? 1 : 0.3) × (0.6 + 0.4 × happiness ÷ 100), fewer than `maxChildren` children. Seeded (stream Births). Emits `CitizenBorn` | 0.10; 3 |
 | Marriage | An adult child aged 22–30 marries with chance `marriageChance` a season; the spouse moves in from another village. If a family house is free the couple moves into it (a new household); otherwise they stay with the parents (crowding) | 0.25 |
-| Deaths | Only elders: at each season close, chance `deathBase × 2^((age − 60) ÷ deathDoubling)`, capped at 0.5, × (1.5 if health < 0.7). Seeded (stream Deaths). The household mourns (happiness −10 for a season). A widowed elder stays with family. Emits `CitizenDied` | 0.015; 8 years |
+| Deaths | Only elders: at each season close, chance `deathBase × 2^((age − 60) ÷ deathDoubling)`, capped at 0.5, × (1.5 if health < 0.7). Seeded (stream Deaths). The household mourns (happiness −10 for a season). A widowed elder stays with family; an elder living alone leaves the house empty for a new family (§3.10); savings stay with the household; the departed stay in the family tree, greyed. Emits `CitizenDied` | 0.015; 8 years |
+| Tone (§10 G7) | Worded gently and without blame: "Kamla Devi (76), Manoj's mother, passed away peacefully. Her family mourns this season." On the away card and the Town tab only, as information: no sound, no push notification. Her *Why?*: "At 76, about 4% a season; health 0.9". A hand never dies under contract (he retires at 60) | |
 | Life expectancy | About 72 with these defaults (rural India about 70); healthcare raises it in Phase 3 | |
 | While away | All of these happen while away and show on the away card | |
 
@@ -249,7 +250,7 @@ Citizen card: portrait, age and stage, job, skill, traits, health, story lines, 
 - **G4. Engel's law and the budget.** **Closed (owner, 2026-10-22):** the budget set at each close from the season's income; the Engel curve [[0, 0.65], [8,000, 0.55], [20,000, 0.40], [60,000, 0.25]] by income a person; rent, clothing 8%, health 5%, education 5%, the rest half leisure, half savings; food need 4,500 an adult a season (child 0.6, elder 0.8); savings cover a short season first (§3.5).
 - **G5. Needs and happiness in Phase 2.** **Closed (owner, 2026-10-22):** survival 40% (the least of food, shelter, water), security 30% (town jobs, the chemist at 0.5, rent paid), belonging 20% (temple and square 0.8), growth 10% (no school yet; leisure 0.3); each layer gated by the one below at 0.8; the examples score 84, 74 and 62; nobody above about 90 until the school (§3.8).
 - **G6. Migration.** **Closed (owner, 2026-10-23, with a change):** a family moves into an empty family house every 18 ± 6 h, live or away; a hand can bring his family into a free family house (Yes / Not now at a season close); a household below 35 happiness for 2 closes or 2 seasons behind on rent leaves (50% a close), and a hand's leaving ends his contract. The owner's change: the house is part of the hand's pay, so his cash wage is cut by its rent (6,000 × index) from his next renewal, a loyal hand's kept wage included; full wage again after they move out (§3.6, §3.10).
-- **G7. Death and tone.** Only elders die, gently worded; no child or young adult deaths. Recommended.
+- **G7. Death and tone.** **Closed (owner, 2026-10-23):** only elders die (§3.9's chances, about 72 years' expectancy; ×1.5 in poor health); worded gently ("passed away peacefully"), information only, no sound or push; a season's mourning (−10); no child or young adult deaths, no accidents and no funeral costs (the owner agreed with both pushbacks).
 - **G8. Work for everyone.** Adults without a town job work outside at 60% of days; employment rate counts only town jobs. Recommended.
 - **G9. The family tree.** Parents, spouse and children on the citizen card; the departed kept up to 500. Recommended.
 - **G10. Households buy food locally.** Their basket adds to the market's demand, so a growing town buys the founder's produce. Recommended.
