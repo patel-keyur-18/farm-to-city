@@ -172,6 +172,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0060 | Spec 012 gaps: a game day is 22.8 real days for animals (182 L a buffalo); cattle from the Hamlet; berseem and sorghum cut daily, spare fodder sold standing, shortfall bought; straw stack, feed room, compost pit as places; co-op pays by fat at 6:00; automatic vaccination and vet; animals at cost, dairy loan at 0.75; nothing dies |
 | 0061 | The village is the town: its places serve the player's citizens, its old families aren't counted ("Your people"); the centre redrawn on the same acres (a middle street, buildings from all sides facing their street, clusters, square, pond and temple); the dairy co-op gets a building |
 | 0062 | A living valley: neighbours' acres vary by soil (scrub, fallow, mustard, sugarcane, groves), farmsteads only on not-for-sale acres and the edge; a hedge-and-wall boundary with a gate and corner stones round everything you own (no desaturation) |
+| 0063 | Spec 014: your people live on your land (huts, family houses from the Hamlet at 60,000, rent 6,000); a life-year a season, only elders die, gently; Engel budgets; needs layers 40/30/20/10; families fill empty houses, a hand's family's house is part of his pay; outside work at the day-labour rate on half the days; a bounded family tree; the town's food adds to local demand; every path achievable |
 
 ## Current status
 

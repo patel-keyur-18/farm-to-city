@@ -254,7 +254,7 @@ P_local    = P_regional × (Demand / Supply)^(1/e)
 
 **Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport, up to a daily capacity. From Phase 2 it comes as a truck from 6:00 to midnight, with its buying price set each morning and a total load on top of the per-crop limits (ADR 0054). This creates import and export decisions. Transport cost depends on the road link, which explains why a town on a highway gets better prices than a remote one.
 
-**Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
+**Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). The town's households buy their food at the local market, so a growing town buys more of the founder's produce (spec 014). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
 **Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Every coin amount (living costs, wages, land, buildings, services) is a year-0 price that follows the price index when charged; wages are fixed when a contract is signed or renewed, so they follow with a lag. Loans stay nominal, and price-controlled goods (chemical fertiliser) ignore it (ADR 0034). Cash under the mattress quietly loses value, which teaches why saving and investing differ.
 
@@ -341,6 +341,8 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 - **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
 - **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
 
+**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 4 an acre, rent 6,000 a season). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
+
 **Hiring starts in Homestead (ADR 0022)**
 
 | | Day labourer | Resident farm hand |
@@ -397,6 +399,8 @@ Happiness comes from layered household needs, and civic buildings meet them only
 2. **Security:** a stable job, healthcare, safety.
 3. **Belonging:** community hall, market square, festivals, places of worship and culture.
 4. **Growth:** education, library, sports, leisure, culture.
+
+In Phase 2 the weights are 40, 30, 20 and 10%, each layer counting fully only when the one below is at least 0.8 met; every row on the household card names what would raise it, or says what isn't possible yet (spec 014).
 
 **Civic buildings**
 

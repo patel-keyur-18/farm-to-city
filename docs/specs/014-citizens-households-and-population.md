@@ -1,6 +1,6 @@
 # 014. Citizens, households and population
 
-- Status: In review (Sprint 12): G1–G10 closed with the owner; §3.13 (every path achievable) awaits approval
+- Status: Approved 2026-10-23 (ADR 0063)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
