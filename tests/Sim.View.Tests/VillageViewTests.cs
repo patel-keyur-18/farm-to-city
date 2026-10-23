@@ -100,13 +100,16 @@ namespace Sim.View.Tests
             // ADR 0061: the dairy co-op, on the side lane by the farm's lane: its price a litre by fat, and cattle with the Hamlet.
             SheetVm dairy = FieldSheets.ForTile(ctx, Tile("dairy"));
             Assert.That(dairy.Title, Is.EqualTo("The dairy co-op"));
-            Assert.That(dairy.Lines.Select(l => l.Label), Is.EqualTo(new[] { "Buffalo milk, 7.0% fat", "Cow milk, 4.0% fat", "This morning from you" }));
-            Assert.That(dairy.Lines[0].Value, Does.EndWith("a litre"));
-            Assert.That((dairy.Lines[2].Value, dairy.Actions.Count), Is.EqualTo(("Cattle come with the Hamlet", 0)));
+            // Laid out like the Orders sheet (owner's US-206 review): a pictured row per milk, then a picture button to the yard.
+            Assert.That(dairy.Lines.Take(2).Select(l => (l.Label, l.Icon, l.Note)), Is.EqualTo(new[] {
+                ("Buffalo milk", "animal_buffalo", "Cattle come with the Hamlet"), ("Cow milk", "animal_cow", "Cattle come with the Hamlet") }));
+            Assert.That(dairy.Lines[0].Value, Does.StartWith("7.0% fat · ").And.EndWith("a litre"));
+            ActionVm yard = dairy.Lines.Last().Buttons.Single();
+            Assert.That((dairy.Lines.Count, yard.Detail, yard.Opens.Value), Is.EqualTo((3, "Opens with the Hamlet", new SheetRequest("Tile", 104))), "the way to your cattle yard");
             sim.State.Era.Current = sim.Config.Game.Livestock.UnlockEra;
             dairy = FieldSheets.ForTile(ViewKit2.Context(sim), Tile("dairy"));
-            Assert.That(dairy.Lines[2].Value, Is.EqualTo("Nothing yet: no animal in milk"));
-            Assert.That(dairy.Actions.Single().Opens.Value, Is.EqualTo(new SheetRequest("Tile", 104)), "the way to your cattle yard");
+            Assert.That((dairy.Lines[0].Note, dairy.Lines[2].Label, dairy.Lines[2].Value), Is.EqualTo(("You have none yet", "This morning from you", "Nothing yet: no animal in milk")));
+            Assert.That(dairy.Lines.Last().Buttons.Single().Detail, Is.EqualTo("Build a shed there"));
 
             SheetVm road = FieldSheets.ForTile(ctx, 176);
             Assert.That((road.Title, road.Lines.Count, road.Actions.Count), Is.EqualTo(("The road", 0, 0)), "the village's land: never priced");

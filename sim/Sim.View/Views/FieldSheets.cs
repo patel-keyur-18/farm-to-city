@@ -137,33 +137,49 @@ namespace Sim.View.Views
         }
 
         /// <summary>
-        /// The dairy co-op (ADR 0061, US-206): its price a litre by fat for each animal, what it collected from you this morning,
-        /// and the way to your cattle yard once cattle unlock; before the Hamlet, when they do.
+        /// The dairy co-op (ADR 0061, US-206), laid out like the Orders and Store sheets (owner's US-206 review): a row per milk with
+        /// its picture, its price a litre by fat and, under it, your animals giving it (or when cattle come); what it collected from
+        /// you this morning; and a picture button to your cattle yard.
         /// </summary>
         private static void Dairy(ViewContext ctx, SheetVm vm)
         {
             Simulation sim = ctx.Sim;
+            var str = ctx.Strings;
             LivestockDefs defs = sim.Config.Game.Livestock;
             if (defs == null) return;
+            Sim.Core.Livestock.LivestockState s = sim.State.Livestock;
+            bool open = Sim.Core.Livestock.LivestockRules.Unlocked(sim);
+            vm.Icon = "milk"; // the co-op's milk can fills the header's picture like the Store's sack
             for (int k = 0; k < defs.Animals.Count; k++)
             {
                 AnimalDef a = defs.Animals[k];
                 long perLitre = (Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k) * Sim.Core.Maths.Fixed.FromInt(100)).RoundToLong();
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("dairy.price", "animal", ctx.Strings.Get(a.NameKey), "fat", ctx.Fmt.Decimal1(a.FatPercent)),
-                    ctx.Strings.Get("dairy.perLitre", "amount", ctx.Fmt.Paise(perLitre)), "milkPrice", k));
+                int owned = 0, milking = 0;
+                foreach (Sim.Core.Livestock.Animal x in s.Animals)
+                {
+                    if (x.Kind != k) continue;
+                    owned++;
+                    if (x.Stage == Sim.Core.Livestock.AnimalStage.Milking) milking++;
+                }
+                var line = new LineVm(str.Get("dairy.milk", "animal", str.Get(a.NameKey)),
+                    str.Get("dairy.priceValue", "fat", ctx.Fmt.Decimal1(a.FatPercent), "amount", ctx.Fmt.Paise(perLitre)), "milkPrice", k) { Icon = "animal_" + a.Id };
+                line.Note = !open ? str.Get("dairy.locked") : owned == 0 ? str.Get("dairy.noneYet") : str.Get("dairy.yours", "n", ctx.Fmt.Integer(owned), "milking", ctx.Fmt.Integer(milking));
+                line.NoteTone = open && milking > 0 ? Tone.Good : Tone.Plain;
+                vm.Lines.Add(line);
             }
-            Sim.Core.Livestock.LivestockState s = sim.State.Livestock;
-            if (!Sim.Core.Livestock.LivestockRules.Unlocked(sim))
-            {
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("dairy.today"), ctx.Strings.Get("dairy.locked")));
-                return;
-            }
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("dairy.today"), s.LastMilkMl > 0
-                ? ctx.Strings.Get("dairy.collected", "milk", ctx.Fmt.Litres(s.LastMilkMl - s.LastHomeMl), "amount", ctx.Fmt.Coins(s.LastMilkAmount))
-                : ctx.Strings.Get("dairy.nothingYet"), s.LastMilkMl > 0 ? "milkToday" : null, 0));
+            if (open)
+                vm.Lines.Add(new LineVm(str.Get("dairy.today"), s.LastMilkMl > 0
+                    ? str.Get("dairy.collected", "milk", ctx.Fmt.Litres(s.LastMilkMl - s.LastHomeMl), "amount", ctx.Fmt.Coins(s.LastMilkAmount))
+                    : str.Get("dairy.nothingYet"), s.LastMilkMl > 0 ? "milkToday" : null, 0));
             int acre = -1;
             for (int i = 0; i < sim.State.Land.Tiles.Count && acre < 0; i++) if (sim.State.Land.Tiles[i].Terrain == Terrain.Cattle) acre = i;
-            if (acre >= 0) vm.Actions.Add(ActionVm.Open("cattleYard", ctx.Strings.Get("dairy.yourYard"), new SheetRequest("Tile", acre)));
+            if (acre < 0) return;
+            string detail = !open ? str.Get("dairy.yardLocked")
+                : s.Animals.Count > 0 ? str.Plural("dairy.yardAnimals", s.Animals.Count)
+                : Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? str.Get("dairy.yardBuy") : str.Get("dairy.yardBuild");
+            ActionVm yard = ActionVm.Open("cattleYard", str.Get("dairy.yourYard"), new SheetRequest("Tile", acre), detail);
+            yard.Icon = "animal_buffalo";
+            vm.Lines.Add(new LineVm(null, null) { Buttons = new System.Collections.Generic.List<ActionVm> { yard } });
         }
 
         /// <summary>The village's own land (spec 010): a road acre, the commons, the river bank. Never for sale, never priced.</summary>
