@@ -745,7 +745,7 @@ def crop_wheat(b, rnd, x, y, stage):
         b.cone(deep if not ripe else toon("wheatLeafDry", 0xCDB25E), 0.009, 0.0, 0.06, at(x, y, 0.02, tilt=0.65, tilt_dir=a), segs=3)
 
 
-def crop_mat(b, stage, young, ripe, low=False):
+def crop_mat(b, stage, young, ripe, low=False, width=0.045, y0=-0.45, length=0.9):
     """A low, leafy band along each ridge so a grown field reads as a carpet rather than stalks on bare soil."""
     if stage == "g1":
         return
@@ -753,8 +753,8 @@ def crop_mat(b, stage, young, ripe, low=False):
     mat = ripe if stage == "ready" else young
     for x in RIDGE_X:
         # A half-buried rounded band along the ridge: an ellipse 0.045 wide and h tall, 0.9 long.
-        m = Matrix.Translation((x, -0.45, 0.012)) @ Matrix.Rotation(math.radians(-90), 4, "X") @ Matrix.Diagonal((0.045, h, 1.0, 1.0))
-        b.cone(mat, 1.0, 1.0, 0.9, m, segs=12)
+        m = Matrix.Translation((x, y0, 0.012)) @ Matrix.Rotation(math.radians(-90), 4, "X") @ Matrix.Diagonal((width, h, 1.0, 1.0))
+        b.cone(mat, 1.0, 1.0, length, m, segs=12)
 
 
 def leaf(b, mat, x, y, z, length, width, direction, tilt, rot=0.0):
@@ -859,11 +859,20 @@ def model_crop(crop, stage):
             b.cone(toon("potatoRidge", 0x9A6B45), 1.0, 1.0, 0.9, m, segs=12)
     elif MATS[crop] is not None:
         young, ripe = MATS[crop]
-        crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=crop == "lentils")
+        width = 0.06 if crop == "berseem" else 0.045   # berseem is broadcast: a near-continuous carpet
+        if stage == "cut":   # the far half still standing, the near half cut back to a thin stubble band
+            crop_mat(b, "ready", toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=True, width=width, y0=0.0, length=0.45)
+            crop_mat(b, "g2", toon(crop + "Stubble", 0x9A9A5A), None, low=True, width=width * 0.4, y0=-0.45, length=0.45)
+        else:
+            crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=crop in ("lentils", "berseem"), width=width)
     for x in RIDGE_X:
         for j in range(per_row):
             y = -0.42 + j * (0.84 / (per_row - 1)) + rnd.uniform(-0.012, 0.012)
-            CROPS[crop](b, rnd, x + rnd.uniform(-0.01, 0.01), y, stage)
+            # A fodder field being cut a strip a day (spec 012): the near half cut back to stubble, the far half standing.
+            st = ("stub" if y < 0.0 else "ready") if stage == "cut" else stage
+            CROPS[crop](b, rnd, x + rnd.uniform(-0.01, 0.01), y, st)
+    if stage == "cut":
+        fodder_bundles(b, rnd, crop)
     return b.objects(outline_for=(), smooth=False)
 
 
@@ -1854,6 +1863,400 @@ def model_van(facing):
 for _f in ("front", "back"):
     SPRITES["truck_" + _f] = (lambda f=_f: (lambda: model_truck(f)))()
     SPRITES["van_" + _f] = (lambda f=_f: (lambda: model_van(f)))()
+
+
+# ---------------------------------------------------------------- cattle (spec 012, US-204)
+
+ANIMAL_SCALE = 1.6              # a buffalo about 1.5 times a person's height in length, as in life
+STRAW, STRAW_DARK = 0xEBD48A, 0xC9A85A   # wheat bhusa: paler than the yard's haystack
+BRICK, BRICK_DARK = 0xB8613E, 0x93492E
+TIN, TIN_RIB, RUST = 0xB4BCC0, 0x8F989D, 0xB07048
+CONCRETE = 0xCFC8BA
+
+ANIMALS = {
+    # Murrah buffalo: jet black with a blue sheen, tightly coiled horns, a heavy body on short legs.
+    "buffalo": dict(body=0x47424F, dark=0x2A2730, muzzle=0x66606E, horn=0x2E2A2A, hoof=0x1C1A1E, legs=0.058, slim=1.0, patches=False),
+    # Crossbred cow (HF cross, the valley's commonest): white with black patches, a pink muzzle and udder, short horns.
+    "cow": dict(body=0xF5F1EA, dark=0xD9D2C8, muzzle=0xE9A7A0, horn=0xE8DCC0, hoof=0x3A302A, legs=0.068, slim=0.9, patches=True),
+}
+
+
+def model_animal(kind, pose="stand"):
+    """A buffalo or a cow built along y with the head at -y (toward the viewer), turned a little to show her side.
+    pose 'stand', 'eat' (head down to the manger) or 'lie' (legs folded under)."""
+    p = ANIMALS[kind]
+    def m(name, hexv):
+        return toon(kind + "_" + name, hexv, soft=True)
+    body, dark, muzzle, horn, hoof = m("body", p["body"]), m("dark", p["dark"]), m("muzzle", p["muzzle"]), m("horn", p["horn"]), m("hoof", p["hoof"])
+    eye_w, eye_d, glint = m("eyeWhite", 0xF2EBE2), m("eye", 0x120F14), m("glint", 0xFFFFFF)
+    lie = pose == "lie"
+    lh = p["legs"]
+    drop = (lh - 0.012) if lie else 0.0          # lying, the body rests on the ground
+    z0 = lh + 0.028 - drop                        # the body's centre height
+    w = p["slim"]
+    o, legs, head = [], [], []
+    o.append(sphere("body", 0.05, (0, 0.005, z0), body, scale=(0.95 * w, 1.75, 0.85), segs=18, rings=10))
+    o.append(sphere("rump", 0.045, (0, 0.052, z0 + 0.004), body, scale=(1.05 * w, 1.0, 0.95), segs=16, rings=10))
+    o.append(sphere("chest", 0.043, (0, -0.05, z0 + 0.002), body, scale=(1.0 * w, 1.0, 1.0), segs=16, rings=10))
+    if lie:
+        for s in (-1, 1):
+            legs.append(sphere("foldF%d" % s, 0.016, (s * 0.04 * w, -0.06, 0.016), body, scale=(0.9, 1.7, 0.6), segs=10, rings=6))
+            legs.append(sphere("foldH%d" % s, 0.02, (s * 0.046 * w, 0.05, 0.02), body, scale=(0.9, 1.5, 0.7), segs=10, rings=6))
+    else:
+        for i, (x, y) in enumerate(((-0.026, -0.055), (0.026, -0.055), (-0.027, 0.058), (0.027, 0.058))):
+            legs.append(cylinder("leg%d" % i, 0.0125, 0.0105, lh, (x * w, y, lh / 2 + 0.006), body if not p["patches"] else m("leg", 0xEFEAE2), segs=10, smooth=True))
+            legs.append(cylinder("hoof%d" % i, 0.011, 0.0115, 0.012, (x * w, y, 0.006), hoof, segs=10))
+        if p["patches"]:   # the udder
+            o.append(sphere("udder", 0.022, (0, 0.045, z0 - 0.04), m("udder", 0xEFB0A8), scale=(1.0, 1.0, 0.7), segs=12, rings=8))
+    o += legs
+    # Neck, head, muzzle, eyes, ears, horns: these bow together to eat.
+    hz = z0 + 0.02
+    head.append(sphere("neck", 0.03, (0, -0.088, hz - 0.004), body, scale=(0.9 * w, 1.1, 1.0), segs=14, rings=8))
+    head.append(sphere("head", 0.03, (0, -0.118, hz + 0.004), body, scale=(0.85, 1.2, 0.9), segs=16, rings=10))
+    head.append(sphere("muzzle", 0.022, (0, -0.148, hz - 0.01), muzzle, scale=(1.0, 0.9, 0.8), segs=14, rings=8))
+    for s in (-1, 1):
+        head.append(sphere("nostril%d" % s, 0.0035, (s * 0.008, -0.166, hz - 0.006), eye_d, segs=6, rings=4, outline=False))
+        head.append(sphere("eyeW%d" % s, 0.0062, (s * 0.021, -0.128, hz + 0.013), eye_w, segs=8, rings=6, outline=False))
+        head.append(sphere("eye%d" % s, 0.0048, (s * 0.0225, -0.1315, hz + 0.0135), eye_d, segs=8, rings=6, outline=False))
+        head.append(sphere("glint%d" % s, 0.0014, (s * 0.023, -0.1355, hz + 0.0155), glint, segs=6, rings=4, outline=False))
+        ear_y, ear_z = (-0.106, hz + 0.012) if kind == "buffalo" else (-0.104, hz + 0.016)
+        head.append(sphere("ear%d" % s, 0.013, (s * 0.037, ear_y, ear_z), body, scale=(1.7, 0.6, 0.7), segs=10, rings=6))
+        if kind == "buffalo":
+            # Murrah horns: a tight coil back and down beside the ear.
+            c = Vector((s * 0.026, -0.1, hz + 0.022))
+            for k in range(14):
+                t = k / 13.0
+                th = -0.5 + t * 4.4
+                r = 0.016 * (1 - 0.4 * t)
+                q = c + Vector((s * 0.012 * t, r * math.sin(th), r * math.cos(th)))
+                head.append(sphere("horn%d_%d" % (s, k), 0.0062 * (1 - 0.55 * t), tuple(q), horn, segs=8, rings=6, outline=False))
+        else:
+            head.append(cylinder("horn%d" % s, 0.0055, 0.002, 0.022, (s * 0.022, -0.112, hz + 0.034), horn, segs=8,
+                                 rot=Matrix.Rotation(math.radians(-s * 35), 3, "Y")))
+    if p["patches"]:
+        # Black patches: flattened discs set into the body so only their caps show.
+        pt = m("patch", 0x2A2627)
+        for i, (x, y, z, r) in enumerate(((0.038, 0.015, z0 + 0.012, 0.028), (-0.036, -0.03, z0 + 0.006, 0.024), (0.0, 0.06, z0 + 0.034, 0.026),
+                                          (0.036, -0.062, z0 - 0.01, 0.018), (-0.03, 0.06, z0 - 0.004, 0.02))):
+            n = Vector((x, 0, z - z0)).normalized()
+            o.append(sphere("patch%d" % i, r, (x - n.x * 0.006, y, z - n.z * 0.006), pt, scale=(0.6 if abs(x) > 0.01 else 1.0, 1.0, 0.6 if abs(x) < 0.01 else 1.0), segs=12, rings=8, outline=False))
+        head.append(sphere("headPatch", 0.016, (0.017, -0.12, hz + 0.012), pt, scale=(0.7, 1.0, 0.9), segs=10, rings=6, outline=False))
+    # The tail, hanging from the rump to a tuft.
+    if lie:   # the tail lies along the ground beside her
+        o.append(cylinder("tail", 0.003, 0.0025, 0.06, (0.03, 0.1, 0.008), body, segs=6, rot=Matrix.Rotation(math.radians(80), 3, "Y")))
+        o.append(sphere("tuft", 0.007, (0.06, 0.1, 0.008), dark, scale=(1.6, 1, 1), segs=8, rings=5))
+    else:
+        o.append(cylinder("tail", 0.003, 0.0025, 0.07, (0, 0.096, z0 - 0.02), body, segs=6, rot=Matrix.Rotation(math.radians(10), 3, "X")))
+        o.append(sphere("tuft", 0.007, (0, 0.102, z0 - 0.055), dark, scale=(1, 1, 1.6), segs=8, rings=5))
+    if pose == "eat":
+        pivot = Vector((0, -0.07, hz))
+        bow = Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(38), 4, "X") @ Matrix.Translation(-pivot)
+        for part in head:
+            part.matrix_world = bow @ part.matrix_world
+    o += head
+    return group(o, rot_z=math.radians(18), scale=ANIMAL_SCALE, outline_factor=0.7)
+
+
+# Where the four tethering places put an animal's origin, in world units from the shed's origin (US-205 places them): in the
+# open courtyard in front of the shed, as village animals stand by day, each at her own manger.
+SHED_STALLS = [(x * BUILDING_SCALE, -0.04 * BUILDING_SCALE) for x in (-0.255, -0.085, 0.085, 0.255)]
+
+
+def model_shed(part):
+    """The cattle shed acre: a packed-earth courtyard with four mangers and tethering pegs in front, and at the back an open
+    shed (concrete floor, low brick walls, stall rails, a lean-to tin roof) with the feed room at its right end.
+    part 'done' or 'building' (pillars and a low wall, tin sheets and bricks waiting)."""
+    concrete, brick, brick_d = toon("concrete", CONCRETE), toon("brick", BRICK), toon("brickDark", BRICK_DARK)
+    o = [box("yard", (0.66, 0.66, 0.012), (0, 0, 0.006), toon("yardEarth", 0xCDB287), bevel=0.01),
+         box("floor", (0.62, 0.25, 0.03), (0, 0.2, 0.027), concrete, bevel=0.005)]
+    pillars = (-0.30, -0.10, 0.10, 0.17)
+    if part == "building":
+        o.append(box("backwall", (0.47, 0.03, 0.05), (-0.065, 0.31, 0.067), brick))
+        for i, x in enumerate(pillars):
+            o.append(box("pillar%d" % i, (0.026, 0.026, 0.13), (x, 0.088, 0.107), brick))
+        for i in range(5):   # tin sheets waiting in a pile
+            o.append(box("sheet%d" % i, (0.20, 0.12, 0.006), (0.18, -0.12 + i * 0.002, 0.016 + i * 0.008), toon("tin", TIN), rot_z=math.radians(3 * i - 6)))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("brick%d%d" % (i, j), (0.05, 0.025, 0.022), (-0.22 + j * 0.055, -0.12, 0.023 + i * 0.022), brick_d))
+        return group(o, scale=BUILDING_SCALE)
+    # The courtyard: a manger and a peg for each animal, a few dung pats.
+    import random
+    rnd = random.Random(12)
+    for i, (x, y) in enumerate(SHED_STALLS):
+        mx, my = x / BUILDING_SCALE + 0.06, -0.25   # under her head: she stands turned 18° to show her side
+        o.append(box("manger%d" % i, (0.11, 0.045, 0.04), (mx, my, 0.032), concrete, bevel=0.005))
+        o.append(box("mangerFill%d" % i, (0.095, 0.032, 0.006), (mx, my, 0.053), toon("chaff", 0xC9B26A), outline=False))
+        for k in range(3):
+            o.append(sphere("greens%d_%d" % (i, k), 0.008, (mx + rnd.uniform(-0.035, 0.035), my, 0.057), toon("fodderGreen", 0x6DB043), scale=(1.6, 0.8, 0.5), segs=6, rings=4, outline=False))
+        o.append(cylinder("peg%d" % i, 0.006, 0.005, 0.05, (mx + 0.065, my + 0.01, 0.037), toon("wood", WOOD), segs=6))
+    for i in range(4):
+        o.append(sphere("pat%d" % i, 0.012, (rnd.uniform(-0.28, 0.28), rnd.uniform(-0.12, 0.0), 0.013), toon("dung", 0x6A4A30), scale=(1.3, 1, 0.3), segs=8, rings=4, outline=False))
+    # The shed: low brick back and end walls with mortar lines, front pillars, bamboo stall rails, straw bedding.
+    o.append(box("backwall", (0.47, 0.03, 0.12), (-0.065, 0.31, 0.10), brick))
+    o.append(box("endwall", (0.03, 0.22, 0.12), (-0.305, 0.2, 0.10), brick))
+    for z in (0.07, 0.11, 0.15):
+        o.append(box("mortar%.3f" % z, (0.472, 0.032, 0.004), (-0.065, 0.31, z), brick_d, outline=False))
+    for i, x in enumerate(pillars):
+        o.append(box("pillar%d" % i, (0.026, 0.026, 0.215), (x, 0.088, 0.1495), brick))
+    for i, x in enumerate(pillars):
+        o.append(box("backpost%d" % i, (0.026, 0.026, 0.18), (x, 0.31, 0.132), brick))
+    bamboo = toon("bamboo", BAMBOO)
+    for i, x in enumerate((-0.185, -0.07, 0.045)):
+        for z in (0.07, 0.105):
+            o.append(cylinder("rail%d_%.2f" % (i, z), 0.0045, 0.0045, 0.2, (x, 0.2, z), bamboo, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+    for i in range(18):
+        o.append(cylinder("bedding%d" % i, 0.0025, 0.0025, 0.05, (rnd.uniform(-0.28, 0.15), rnd.uniform(0.12, 0.29), 0.044), toon("straw", STRAW), segs=4, outline=False,
+                          rot=Matrix.Rotation(math.radians(88), 3, Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)).normalized())))
+    # The feed room: lime-washed walls, a teal door, a grille window, a painted sign.
+    o.append(box("feedroom", (0.13, 0.25, 0.20), (0.245, 0.2, 0.142), toon("lime", 0xE9DCC4)))
+    o.append(box("feedskirt", (0.132, 0.252, 0.03), (0.245, 0.2, 0.057), toon("mud_dark", MUD_DARK), outline=False))
+    o.append(box("door", (0.065, 0.012, 0.12), (0.245, 0.0745, 0.102), toon("door", DOOR)))
+    o.append(box("doorframe", (0.08, 0.008, 0.13), (0.245, 0.0775, 0.107), toon("trim", TRIM), outline=False))
+    o.append(box("window", (0.012, 0.07, 0.05), (0.311, 0.22, 0.17), toon("wood_dark", WOOD_DARK)))
+    for i in (-1, 0, 1):
+        o.append(box("bar%d" % i, (0.014, 0.004, 0.05), (0.312, 0.22 + i * 0.018, 0.17), toon("iron", 0x6C7278), outline=False))
+    o.append(box("sign", (0.08, 0.008, 0.03), (0.245, 0.071, 0.2), toon("signBoard", 0xF2C94C), outline=False))
+    # The lean-to roof: galvanised tin, high at the open front, ribbed, one sheet gone rusty.
+    tilt = Matrix.Rotation(math.radians(-11), 3, "X")
+    o.append(box("roof", (0.70, 0.31, 0.012), (0, 0.2, 0.262), toon("tin", TIN), rot=tilt))
+    for i in range(17):
+        o.append(box("rib%d" % i, (0.006, 0.31, 0.006), (-0.33 + i * 0.04125, 0.2, 0.271), toon("tinRib", TIN_RIB), rot=tilt, outline=False))
+    o.append(box("rust", (0.12, 0.22, 0.004), (-0.18, 0.22, 0.2705), toon("rust", RUST), rot=tilt, outline=False))
+    # A blue water drum and a steel milk bucket by the feed room.
+    o.append(cylinder("drum", 0.035, 0.035, 0.09, (0.30, -0.02, 0.057), toon("drum", 0x2E6FBA), segs=16, smooth=True))
+    o.append(cylinder("drumrim", 0.037, 0.037, 0.008, (0.30, -0.02, 0.102), toon("drumDark", 0x24589A), segs=16, outline=False))
+    o.append(cylinder("bucket", 0.018, 0.014, 0.03, (0.30, -0.1, 0.027), toon("steel", 0xC9CDD2), segs=14, smooth=True))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def dome(name, r, h, loc, mat, segs=20, rings=12):
+    """The top half of a sphere, radius r, height h, its flat base at loc."""
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=segs, v_segments=rings, radius=r)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < -1e-6], context="VERTS")
+    bmesh.ops.scale(bm, vec=Vector((1, 1, h / r)), verts=bm.verts)
+    bmesh.ops.translate(bm, vec=Vector(loc), verts=bm.verts)
+    return obj_from_bm(name, bm, mat, smooth=True)
+
+
+def model_straw_stack(level):
+    """The straw stack (a bhusa kup): a brick base and a centre pole, the heap at three heights as stock grows; 'empty' just the base."""
+    o = [cylinder("base", 0.14, 0.145, 0.025, (0, 0, 0.0125), toon("brickDark", BRICK_DARK), segs=18),
+         cylinder("pole", 0.005, 0.005, 0.33, (0, 0, 0.165), toon("wood", WOOD), segs=6)]
+    straw, dark = toon("straw", STRAW), toon("strawDark", STRAW_DARK)
+    import random
+    rnd = random.Random(7)
+    if level == "empty":
+        for i in range(10):
+            a = rnd.uniform(0, math.tau)
+            o.append(cylinder("bit%d" % i, 0.003, 0.003, 0.05, (math.cos(a) * 0.08, math.sin(a) * 0.08, 0.03), straw, segs=4, outline=False,
+                              rot=Matrix.Rotation(math.radians(85), 3, Vector((-math.sin(a), math.cos(a), 0)))))
+        return group(o, scale=BUILDING_SCALE)
+    r, h = {"low": (0.12, 0.07), "mid": (0.13, 0.15), "high": (0.135, 0.25)}[level]
+    o.append(dome("heap", r, h, (0, 0, 0.025), straw))
+    o.append(cylinder("skirt", r * 1.02, r * 0.98, 0.03, (0, 0, 0.04), dark, segs=20, smooth=True, outline=False))
+    # Loose wisps over the surface so it reads as straw, not a dome.
+    for i in range(int(14 + 20 * h)):
+        a, t = rnd.uniform(0, math.tau), rnd.uniform(0.15, 0.9)
+        rr = r * math.sqrt(1 - t * t)
+        z = 0.025 + h * t
+        o.append(cylinder("wisp%d" % i, 0.0025, 0.002, 0.04, (math.cos(a) * rr, math.sin(a) * rr, z), dark if i % 3 else straw, segs=4, outline=False,
+                          rot=Matrix.Rotation(rnd.uniform(0.6, 1.4), 3, Vector((-math.sin(a), math.cos(a), 0)))))
+    if level == "high":   # a thatch cap tied at the top against the rain
+        o.append(cylinder("cap", 0.07, 0.01, 0.06, (0, 0, 0.025 + h + 0.015), toon("thatch_dark", THATCH_DARK), segs=14, smooth=True))
+        o.append(cylinder("tie", 0.035, 0.035, 0.008, (0, 0, 0.025 + h + 0.02), toon("rope", 0xB08A50), segs=14, outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_compost_pit(level):
+    """The compost pit beside the shed: a brick-lined pit, empty, half or heaped full of dung and straw; a spade when full."""
+    brick, dark = toon("brick", BRICK), toon("pitDark", 0x3A2818)
+    o = [box("rim", (0.30, 0.19, 0.025), (0, 0, 0.0125), brick, bevel=0.004),
+         box("hole", (0.26, 0.15, 0.004), (0, 0, 0.026), dark, outline=False)]
+    import random
+    rnd = random.Random(23)
+    if level > 0:
+        hgt = 0.02 if level == 1 else 0.06
+        o.append(sphere("heap", 0.12, (0, 0, 0.022), toon("compost", 0x4E3422), scale=(1.05, 0.6, hgt / 0.12), segs=18, rings=9))
+        clods = (toon("compost1", 0x3E2818), toon("dung", 0x6A4A30))
+        for i in range(10 + 12 * level):
+            x, y = rnd.uniform(-0.11, 0.11), rnd.uniform(-0.06, 0.06)
+            z = 0.022 + hgt * math.sqrt(max(0.0, 1 - (x / 0.126) ** 2 - (y / 0.072) ** 2))
+            o.append(sphere("clod%d" % i, rnd.uniform(0.008, 0.014), (x, y, z), clods[i % 2], scale=(1.2, 1, 0.6), segs=6, rings=4, outline=False))
+        for i in range(4 * level):
+            x, y = rnd.uniform(-0.09, 0.09), rnd.uniform(-0.05, 0.05)
+            o.append(cylinder("straw%d" % i, 0.0025, 0.0025, 0.045, (x, y, 0.03 + hgt * 0.7), toon("straw", STRAW), segs=4, outline=False,
+                              rot=Matrix.Rotation(1.3, 3, Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)).normalized())))
+    if level == 2:
+        o.append(cylinder("spade", 0.003, 0.003, 0.12, (0.17, 0.02, 0.06), toon("wood", WOOD), segs=6, rot=Matrix.Rotation(math.radians(-15), 3, "Y")))
+        o.append(box("blade", (0.03, 0.004, 0.035), (0.185, 0.02, 0.008), toon("iron", 0x7C8288)))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_sign_locked():
+    """A plot waiting for the Hamlet: a wooden board on a post with a brass padlock painted on."""
+    wood, board = toon("wood", WOOD), toon("lockedBoard", 0xD9CBB0)
+    brass = toon("brass", 0xE6B33A)
+    o = [box("post", (0.016, 0.016, 0.22), (0, 0, 0.11), wood),
+         box("board", (0.13, 0.012, 0.09), (0, -0.012, 0.17), board, bevel=0.004),
+         box("lock", (0.034, 0.008, 0.028), (0, -0.021, 0.16), brass, outline=False),
+         cylinder("shackle", 0.012, 0.012, 0.006, (0, -0.021, 0.18), toon("steel", 0x9AA0A6), segs=16, cap=False,
+                  rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False),
+         cylinder("keyhole", 0.0035, 0.0035, 0.004, (0, -0.0255, 0.161), toon("dark", 0x3A2A1A), segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False)]
+    return group(o, rot_z=math.radians(45), scale=BUILDING_SCALE)
+
+
+def crop_berseem(b, rnd, x, y, stage):
+    """Berseem (Egyptian clover): a dense low carpet of trifoliate leaves; ready, round white flower heads; cut, short stubble."""
+    green, deep, light = toon("berseem", 0x62B847), toon("berseemDeep", 0x4E9E3A), toon("berseemLight", 0x8ED061)
+    if stage == "stub":
+        for k in range(3):
+            a = rnd.uniform(0, math.tau)
+            b.cone(toon("stubble", 0x9DB25A), 0.003, 0.0025, 0.014, at(x + math.cos(a) * 0.012, y + math.sin(a) * 0.012, 0.012), segs=4)
+        b.sphere(light, 0.006, Matrix.Translation((x, y, 0.026)), scale=(1.3, 0.8, 0.4), segs=6, rings=3)
+        return
+    n, h = {"g1": (3, 0.022), "g2": (6, 0.036), "g3": (9, 0.05), "ready": (10, 0.056)}[stage]
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.4, 0.4)
+        stem = at(x, y, 0.012, tilt=rnd.uniform(0.2, 0.55), tilt_dir=a)
+        hh = h * rnd.uniform(0.8, 1.1)
+        b.cone(deep, 0.0025, 0.002, hh, stem, segs=3)
+        tip = stem @ Matrix.Translation((0, 0, hh))
+        for q in range(3):   # three leaflets round the tip
+            qa = q * math.tau / 3 + a
+            b.sphere(green if (k + q) % 2 else light, 0.0085, tip @ Matrix.Translation((math.cos(qa) * 0.007, math.sin(qa) * 0.007, 0)), scale=(1.3, 0.85, 0.35), segs=6, rings=4)
+        if stage == "ready" and k % 5 == 0:
+            b.sphere(toon("berseemFlower", 0xF6F1E2), 0.008, tip @ Matrix.Translation((0, 0, 0.012)), segs=8, rings=5)
+
+
+def crop_sorghum(b, rnd, x, y, stage):
+    """Fodder sorghum (jowar): tall cane-like stalks with long arching strap leaves, cut green at flowering; cut, stubs re-sprouting."""
+    leafc, deep, stalk = toon("sorghumLeaf", 0x5DA83C), toon("sorghumDeep", 0x3F8A32), toon("sorghumStalk", 0x7FB04A)
+    if stage == "stub":
+        for k in range(2):
+            sx, sy = x + rnd.uniform(-0.01, 0.01), y + rnd.uniform(-0.01, 0.01)
+            b.cone(toon("sorghumCut", 0xA9B866), 0.0055, 0.005, 0.022, Matrix.Translation((sx, sy, 0.012)), segs=6)
+            leaf(b, leafc, sx, sy, 0.03, 0.03, 0.01, rnd.uniform(0, math.tau), 0.7)
+        return
+    h, nl = {"g1": (0.0, 3), "g2": (0.08, 5), "g3": (0.16, 8), "ready": (0.18, 8)}[stage]
+    if stage == "g1":
+        for k in range(nl):
+            b.cone(leafc if k % 2 else deep, 0.008, 0.0, 0.045, at(x, y, 0.012, tilt=0.35, tilt_dir=k * math.tau / nl + rnd.uniform(-0.3, 0.3)), segs=3)
+        return
+    hh = h * rnd.uniform(0.88, 1.08)
+    lean = at(x, y, 0.012, tilt=rnd.uniform(0.0, 0.08), tilt_dir=rnd.uniform(0, math.tau))
+    b.cone(stalk, 0.008, 0.005, hh, lean, segs=6)
+    for k in range(nl):
+        t = 0.25 + 0.7 * k / nl
+        p = lean @ Vector((0, 0, hh * t))
+        a = k * 2.39996 + rnd.uniform(-0.3, 0.3)
+        leaf(b, leafc if k % 2 else deep, p.x, p.y, p.z, 0.08 * (1.1 - 0.4 * t) + 0.025, 0.026, a, rnd.uniform(0.1, 0.45))
+    if stage == "ready":
+        top = lean @ Vector((0, 0, hh))
+        b.sphere(toon("sorghumHead", 0xD8D49A), 0.011, Matrix.Translation(top + Vector((0, 0, 0.014))), scale=(0.8, 0.8, 1.8), segs=8, rings=5)
+
+
+def fodder_bundles(b, rnd, crop):
+    """Bundles of cut fodder lying where the day's cutting reached."""
+    mat = toon("cutFodder", 0x9BCB5A)
+    tie = toon("tie", 0xB4572E)
+    for i, x in enumerate((-0.3, 0.05, 0.32)):
+        m = Matrix.Translation((x, -0.02 + 0.03 * (i % 2), 0.035)) @ Matrix.Rotation(math.radians(90), 4, "Y") @ Matrix.Rotation(rnd.uniform(-0.4, 0.4), 4, "X")
+        b.sphere(mat, 0.03, m, scale=(1.0, 1.0, 2.4), segs=10, rings=6)
+        b.cone(tie, 0.031, 0.031, 0.01, m @ Matrix.Translation((0, 0, -0.005)), segs=10)
+
+
+CROPS.update({"berseem": crop_berseem, "sorghum": crop_sorghum})
+MATS.update({"berseem": (0x5FAE45, 0x5FAE45), "sorghum": (0x6AAE3E, 0x6AAE3E)})
+
+
+def icon_cattle(kind):
+    """The cattle icons: the animals, milk, straw, green fodder, cattle feed, and the two fodder crops."""
+    import random
+    rnd = random.Random(5)
+    o = []
+    if kind in ("buffalo", "cow"):
+        return model_animal(kind, "stand")
+    if kind == "milk":
+        # An aluminium milk can (the dairy's can) with a lid and side handles.
+        al, al_d = toon("alu", 0xD5D9DD), toon("aluDark", 0xA9AFB5)
+        o.append(cylinder("can", 0.07, 0.07, 0.15, (0, 0, 0.075), al, segs=24, smooth=True))
+        o.append(cylinder("shoulder", 0.07, 0.04, 0.04, (0, 0, 0.17), al, segs=24, smooth=True))
+        o.append(cylinder("neck", 0.04, 0.04, 0.03, (0, 0, 0.205), al, segs=24, smooth=True))
+        o.append(cylinder("lid", 0.046, 0.046, 0.016, (0, 0, 0.225), al_d, segs=24))
+        o.append(cylinder("knob", 0.012, 0.012, 0.014, (0, 0, 0.24), al_d, segs=12))
+        o.append(cylinder("band", 0.0715, 0.0715, 0.012, (0, 0, 0.06), al_d, segs=24, outline=False))
+        o.append(sphere("milk", 0.03, (0.06, -0.075, 0.02), toon("milkWhite", 0xFFFDF6), scale=(1.4, 1.0, 0.35), segs=14, rings=6))
+        for s in (-1, 1):
+            o.append(box("handle%d" % s, (0.012, 0.035, 0.012), (s * 0.078, 0, 0.15), al_d))
+        return turn(o, Matrix.Rotation(math.radians(20), 4, "Z"))
+    if kind in ("straw", "green_fodder"):
+        mats = (toon("straw", STRAW), toon("strawDark", STRAW_DARK)) if kind == "straw" else (toon("fodderG", 0x62B847), toon("fodderD", 0x4E9E3A))
+        b = Batch(kind)
+        for i in range(46):
+            a, r = rnd.uniform(0, math.tau), 0.045 * math.sqrt(rnd.uniform(0, 1))
+            b.cone(mats[i % 2], 0.0045, 0.003, 0.26 + rnd.uniform(-0.02, 0.02), Matrix.Translation((math.cos(a) * r, math.sin(a) * r, -0.13)), segs=4)
+        if kind == "green_fodder":
+            for i in range(10):   # leaves flaring out at the top of the bundle
+                a = i * math.tau / 10
+                leaf(b, mats[i % 2], math.cos(a) * 0.03, math.sin(a) * 0.03, 0.12, 0.08, 0.025, a, 0.9)
+        o += b.objects(outline_for=tuple(b.parts), thickness=OUTLINE * 0.5)
+        for z in (-0.06, 0.05):
+            o.append(cylinder("tie%.2f" % z, 0.05, 0.05, 0.016, (0, 0, z), toon("tie", 0xB4572E), segs=18))
+        return turn(o, Matrix.Rotation(math.radians(70), 4, "Y"))
+    if kind == "cattle_feed":
+        # A jute sack of cattle feed with a green printed band, a spill of pellets in front.
+        jute = toon("jute", 0xC9A46A)
+        o.append(sphere("sack", 0.09, (0, 0, 0.085), jute, scale=(1, 0.9, 1.1), segs=16, rings=10))
+        o.append(cylinder("neck", 0.03, 0.05, 0.06, (0, 0, 0.19), jute, segs=14, smooth=True))
+        o.append(cylinder("tie", 0.034, 0.034, 0.014, (0, 0, 0.18), toon("tie", 0xB4572E), segs=14))
+        o.append(cylinder("band", 0.093, 0.093, 0.035, (0, 0, 0.09), toon("feedBand", 0x2F9E5B), segs=20, outline=False))
+        for i in range(14):
+            o.append(cylinder("pellet%d" % i, 0.008, 0.008, 0.018, (rnd.uniform(-0.03, 0.12), rnd.uniform(-0.13, -0.08), 0.008), toon("pellet", 0x8C6A3A), segs=8,
+                              rot=Matrix.Rotation(math.radians(90), 3, Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)).normalized()), outline=False))
+        return o
+    b = Batch(kind)
+    if kind == "berseem":
+        # A sprig of clover: trifoliate leaves on short stems, two round white flower heads.
+        for k in range(7):
+            a = k * 2.39996
+            stem = at(0, 0, 0, tilt=0.35 + 0.15 * (k % 3), tilt_dir=a)
+            b.cone(toon("berseemDeep", 0x4E9E3A), 0.004, 0.003, 0.14, stem, segs=4)
+            tip = stem @ Matrix.Translation((0, 0, 0.14))
+            for q in range(3):
+                qa = q * math.tau / 3 + a
+                b.sphere(toon("berseem", 0x62B847) if q % 2 else toon("berseemLight", 0x8ED061), 0.024, tip @ Matrix.Translation((math.cos(qa) * 0.02, math.sin(qa) * 0.02, 0)), scale=(1.3, 0.85, 0.35), segs=10, rings=6)
+            if k in (2, 5):
+                b.sphere(toon("berseemFlower", 0xF6F1E2), 0.022, tip @ Matrix.Translation((0, 0, 0.03)), segs=12, rings=8)
+    else:
+        # A sorghum stalk with strap leaves and a cream panicle.
+        b.cone(toon("sorghumStalk", 0x7FB04A), 0.012, 0.008, 0.32, Matrix.Identity(4), segs=8)
+        for k in range(6):
+            t = 0.2 + 0.12 * k
+            leaf(b, toon("sorghumLeaf", 0x5DA83C) if k % 2 else toon("sorghumDeep", 0x3F8A32), 0, 0, 0.32 * t, 0.2, 0.035, k * 2.39996, 0.35)
+        b.sphere(toon("sorghumHead", 0xD8D49A), 0.025, Matrix.Translation((0, 0, 0.355)), scale=(0.8, 0.8, 1.9), segs=10, rings=7)
+    return b.objects(outline_for=tuple(b.parts), thickness=OUTLINE * 0.8)
+
+
+for _a in ANIMALS:
+    for _p in ("stand", "eat", "lie"):
+        SPRITES["animal_%s_%s" % (_a, _p)] = (lambda a=_a, p=_p: (lambda: model_animal(a, p)))()
+SPRITES["cattle_shed"] = lambda: model_shed("done")
+SPRITES["cattle_shed_building"] = lambda: model_shed("building")
+for _l in ("empty", "low", "mid", "high"):
+    SPRITES["straw_stack_" + _l] = (lambda l=_l: (lambda: model_straw_stack(l)))()
+for _l in range(3):
+    SPRITES["compost_pit_%d" % _l] = (lambda l=_l: (lambda: model_compost_pit(l)))()
+SPRITES["sign_locked"] = model_sign_locked
+for _c in ("berseem", "sorghum"):
+    for _st in STAGES + ("cut",):
+        SPRITES["crop_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_crop(c, st)))()
+for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), ("milk", "icon_good_milk"), ("straw", "icon_good_straw"),
+               ("green_fodder", "icon_good_green_fodder"), ("cattle_feed", "icon_good_cattle_feed"), ("berseem", "icon_good_berseem"),
+               ("sorghum", "icon_good_sorghum")):
+    ICONS[_n] = (lambda k=_k: (lambda: icon_cattle(k)))()
+    SPRITES[_n] = ICONS[_n]
 
 
 # ---------------------------------------------------------------- framing and render

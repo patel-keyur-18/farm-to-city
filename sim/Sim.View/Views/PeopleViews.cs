@@ -543,9 +543,9 @@ namespace Sim.View.Views
                 vm.OrderSales += sales;
                 vm.OrderInputs += inputs;
                 if (harvests + picks > 0)
-                    vm.Lines.Add(new LineVm(name, ctx.Strings.Get("away.collected", "n", ctx.Fmt.Integer(harvests + picks), "qty", ctx.Fmt.Kg(grams))));
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.collected", harvests + picks, "qty", ctx.Fmt.Kg(grams))));
                 if (sales > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Get("away.sold", "amount", ctx.Fmt.Coins(sales))));
-                if (sowings > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Get("away.sowed", "n", ctx.Fmt.Integer(sowings), "cost", ctx.Fmt.Coins(inputs))));
+                if (sowings > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.sowed", sowings, "cost", ctx.Fmt.Coins(inputs))));
             }
             var waits = new List<string>();
             foreach (SimEvent e in events)

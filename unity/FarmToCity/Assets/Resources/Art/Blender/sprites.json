@@ -2,6 +2,48 @@
  "pixelsPerUnit": 528,
  "sprites": [
   {
+   "w": 170,
+   "h": 176,
+   "pivotX": 0.55425,
+   "pivotY": 0.31721,
+   "name": "animal_buffalo_eat"
+  },
+  {
+   "w": 194,
+   "h": 156,
+   "pivotX": 0.48975,
+   "pivotY": 0.37756,
+   "name": "animal_buffalo_lie"
+  },
+  {
+   "w": 172,
+   "h": 176,
+   "pivotX": 0.55451,
+   "pivotY": 0.31721,
+   "name": "animal_buffalo_stand"
+  },
+  {
+   "w": 168,
+   "h": 182,
+   "pivotX": 0.56257,
+   "pivotY": 0.30845,
+   "name": "animal_cow_eat"
+  },
+  {
+   "w": 194,
+   "h": 154,
+   "pivotX": 0.48835,
+   "pivotY": 0.37643,
+   "name": "animal_cow_lie"
+  },
+  {
+   "w": 168,
+   "h": 182,
+   "pivotX": 0.56115,
+   "pivotY": 0.30845,
+   "name": "animal_cow_stand"
+  },
+  {
    "w": 324,
    "h": 216,
    "pivotX": 0.5,
@@ -105,6 +147,76 @@
    "pivotX": 0.5,
    "pivotY": 0.47496,
    "name": "bund_y"
+  },
+  {
+   "w": 586,
+   "h": 442,
+   "pivotX": 0.47941,
+   "pivotY": 0.36096,
+   "name": "cattle_shed"
+  },
+  {
+   "w": 562,
+   "h": 358,
+   "pivotX": 0.5,
+   "pivotY": 0.44467,
+   "name": "cattle_shed_building"
+  },
+  {
+   "w": 254,
+   "h": 172,
+   "pivotX": 0.5,
+   "pivotY": 0.46593,
+   "name": "compost_pit_0"
+  },
+  {
+   "w": 254,
+   "h": 172,
+   "pivotX": 0.5,
+   "pivotY": 0.46593,
+   "name": "compost_pit_1"
+  },
+  {
+   "w": 254,
+   "h": 172,
+   "pivotX": 0.5,
+   "pivotY": 0.46593,
+   "name": "compost_pit_2"
+  },
+  {
+   "w": 530,
+   "h": 314,
+   "pivotX": 0.49103,
+   "pivotY": 0.46094,
+   "name": "crop_berseem_cut"
+  },
+  {
+   "w": 504,
+   "h": 288,
+   "pivotX": 0.4996,
+   "pivotY": 0.47008,
+   "name": "crop_berseem_g1"
+  },
+  {
+   "w": 540,
+   "h": 308,
+   "pivotX": 0.5,
+   "pivotY": 0.48295,
+   "name": "crop_berseem_g2"
+  },
+  {
+   "w": 540,
+   "h": 316,
+   "pivotX": 0.5,
+   "pivotY": 0.47577,
+   "name": "crop_berseem_g3"
+  },
+  {
+   "w": 540,
+   "h": 322,
+   "pivotX": 0.5,
+   "pivotY": 0.46721,
+   "name": "crop_berseem_ready"
   },
   {
    "w": 510,
@@ -217,6 +329,41 @@
    "pivotX": 0.5,
    "pivotY": 0.45439,
    "name": "crop_rice_ready"
+  },
+  {
+   "w": 540,
+   "h": 356,
+   "pivotX": 0.48029,
+   "pivotY": 0.40785,
+   "name": "crop_sorghum_cut"
+  },
+  {
+   "w": 500,
+   "h": 298,
+   "pivotX": 0.49661,
+   "pivotY": 0.46289,
+   "name": "crop_sorghum_g1"
+  },
+  {
+   "w": 554,
+   "h": 334,
+   "pivotX": 0.48745,
+   "pivotY": 0.44762,
+   "name": "crop_sorghum_g2"
+  },
+  {
+   "w": 548,
+   "h": 358,
+   "pivotX": 0.50298,
+   "pivotY": 0.42816,
+   "name": "crop_sorghum_g3"
+  },
+  {
+   "w": 560,
+   "h": 366,
+   "pivotX": 0.48861,
+   "pivotY": 0.41934,
+   "name": "crop_sorghum_ready"
   },
   {
    "w": 496,
@@ -454,6 +601,20 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_animal_buffalo"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_animal_cow"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_basket"
   },
   {
@@ -517,7 +678,28 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_berseem"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_cattle_feed"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_coriander"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_green_fodder"
   },
   {
    "w": 256,
@@ -539,6 +721,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_mango"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_milk"
   },
   {
    "w": 256,
@@ -573,7 +762,21 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_sorghum"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_spinach"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_straw"
   },
   {
    "w": 256,
@@ -1231,7 +1434,42 @@
    "h": 180,
    "pivotX": 0.5,
    "pivotY": 0.21349,
+   "name": "sign_locked"
+  },
+  {
+   "w": 140,
+   "h": 180,
+   "pivotX": 0.5,
+   "pivotY": 0.21349,
    "name": "sign_sale"
+  },
+  {
+   "w": 228,
+   "h": 266,
+   "pivotX": 0.5,
+   "pivotY": 0.2771,
+   "name": "straw_stack_empty"
+  },
+  {
+   "w": 228,
+   "h": 266,
+   "pivotX": 0.5,
+   "pivotY": 0.2771,
+   "name": "straw_stack_high"
+  },
+  {
+   "w": 228,
+   "h": 266,
+   "pivotX": 0.5,
+   "pivotY": 0.2771,
+   "name": "straw_stack_low"
+  },
+  {
+   "w": 228,
+   "h": 266,
+   "pivotX": 0.5,
+   "pivotY": 0.2771,
+   "name": "straw_stack_mid"
   },
   {
    "w": 342,
