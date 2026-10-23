@@ -4,7 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Livestock; Crops; Storage and selling); Assets and wealth (Livestock); Offline play (notifications)
-- Amends: spec 002 (the yard: the shed, the straw stack and the compost pit); spec 003 §3.1–3.3 (fodder crops are cut, not harvested; straw from the wheat and rice harvests; Care demand from animals), §3.11 (milk as home use); spec 004 §3.5 (goods kept in their own place: straw stack, feed room, compost pit); spec 005 §3.1 (accounts 1750, 4020, 4030, 5020, 5030), §3.4 (report lines), §3.5 (net worth), §3.6 (a dairy loan), §3.9 (foreclosure seizes animals); spec 006 §3.8 (an "animals" order); spec 007 §3.5 (notification kinds), save schema 7; spec 008 (the shed sheet); spec 009 (letter chapters)
+- Amends: spec 002 (the cattle acre, ADR 0064: the shed, the straw stack and the compost pit); spec 003 §3.1–3.3 (fodder crops are cut, not harvested; straw from the wheat and rice harvests; Care demand from animals), §3.11 (milk as home use); spec 004 §3.5 (goods kept in their own place: straw stack, feed room, compost pit); spec 005 §3.1 (accounts 1750, 4020, 4030, 5020, 5030), §3.4 (report lines), §3.5 (net worth), §3.6 (a dairy loan), §3.9 (foreclosure seizes animals); spec 006 §3.8 (an "animals" order); spec 007 §3.5 (notification kinds), save schema 7; spec 008 (the shed sheet); spec 009 (letter chapters)
 - Related ADRs: 0056 (buffalo and cows), 0002 (the clocks, the 72-hour away cap), 0008 (per-season realism), 0009 (never stuck), 0028 and 0038 (loans secured by what they buy; selling collateral repays the bank first), 0032 (home use), 0034 (inputs in store are an asset; every coin amount follows the price index), 0040 (the yard), 0051 (compost), 0053 (the grazing commons)
 - Depends on specs: 001 (clock and passes), 003 (crops, Care, the household), 004 (store, input prices), 005 (ledger, loans), 006 (hands and orders), 007 (saves, notifications), 010 (the commons)
 
@@ -18,7 +18,7 @@ The player buys a buffalo or a cow, keeps her fed from their own land, and the v
 
 **In:**
 - Two animals: Murrah buffalo and crossbred cow, bought and sold at the village cattle fair.
-- One cattle shed for 4 animals in the yard, with a feed room and a straw stack. A compost pit in the yard.
+- One cattle shed for 4 animals on the inherited cattle acre beside the yard (ADR 0064), with a feed room and a straw stack. The farm's compost pit in its corner.
 - Daily feeding at 6:00, also while away: green fodder, straw, cattle feed; the grazing commons.
 - Green fodder crops (berseem, sorghum), cut daily and never stored.
 - Straw from wheat and rice harvests.
@@ -79,13 +79,13 @@ ADR 0056's per-game-day figures used 30 real days a game day; at 22.8 every amou
 
 | Rule | Behaviour | Bounds |
 | --- | --- | --- |
-| The shed | `BuildShed()` builds the cattle shed on the yard's south acre (tile 103), beside the house. `BuildingDef(cattle_shed).value` 40,000 (a brick floor, a tin roof, a manger and a feed room; the family builds it), capitalised to 1600 Buildings, a construction job of `buildHours` 24, depreciated over `usefulLifeSeasons` 60. Emits `ShedBuilt` | One shed in Phase 2 (`AlreadyBuilt`); `InsufficientFunds` |
+| The shed | `BuildShed()` builds the cattle shed on the cattle acre (tile 104, `home_d`, ADR 0064), the inherited barren acre beside the yard. `BuildingDef(cattle_shed).value` 40,000 (a brick floor, a tin roof, a manger and a feed room; the family builds it), capitalised to 1600 Buildings, a construction job of `buildHours` 24, depreciated over `usefulLifeSeasons` 60. Emits `ShedBuilt` | One shed in Phase 2 (`AlreadyBuilt`); `InsufficientFunds` |
 | Room | `BuildingDef.animals` (4) animals | |
 | Feed room | Part of the shed: holds cattle feed up to `feedRoomKg` 2,400 kg (4 game days for 4 buffalo in milk) | |
 | Straw stack | Beside the shed, built with it: straw up to `strawStackKg` 10,000 kg (about 18 game days for 4 buffalo) | |
-| Compost pit | Part of the inherited yard from the start (every farm has one): compost up to `BuildingDef(hut).compostPitKg` 8,000 kg | |
+| Compost pit | The farm's from the start (every farm has one), drawn in the cattle acre's far corner: compost up to `BuildingDef(hut).compostPitKg` 8,000 kg | |
 | Where goods live | A good with `GoodDef.place` (`feedRoom`, `strawStack`, `compostPit`) is stocked in that place and counts against its capacity, not the hut store's (§10 G5). Buying, average cost (1200 Inputs in store), spoilage and net worth work as for any input (spec 004 §3.4–3.5). `Buy` beyond a place's room is rejected with `PlaceFull`; buying cattle feed or straw needs the shed (`NoShed`) | |
-| Protected | The shed stands on the inherited yard, so it is never seized or used as collateral (ADR 0009) | |
+| Protected | The shed stands on the inherited cattle acre, so it is never seized or used as collateral (ADR 0009) | |
 
 ### 3.4 Buying and selling animals
 
@@ -228,11 +228,11 @@ animals-order := LOOK AFTER the shed [KEEP straw and feed for N days]
 | Report lines (spec 005 §3.4) | Farm income adds 4020 and 4030; farm costs add 5020 and 5030. The season report's *Why?* splits them out ("Your animals: milk 1,32,400, calves 5,000, feed −58,200, vet −1,800") |
 | Net worth (spec 005 §3.5) | Adds Σ livestock at book value. Straw, feed and compost in their places count as inputs in store |
 | The dairy loan | `BuyAnimal` takes an optional `Financing` (as `BuyParcel`, ADR 0028): a bank loan where the animal counts as collateral for that limit at `LenderDef.livestockLtv` (0.75: the bank wants a quarter down, as dairy loans do). Animals already owned count as bank collateral at the same rate |
-| Foreclosure (spec 005 §3.9) | Seizes animals after bought parcels and before produce, in id order, each at its sell price (§3.4). The shed and the compost pit are protected with the yard |
+| Foreclosure (spec 005 §3.9) | Seizes animals after bought parcels and before produce, in id order, each at its sell price (§3.4). The shed and the compost pit are protected with the cattle acre |
 
 ### 3.13 When cattle unlock (§10 G2)
 
-The shed can be built from the **Hamlet** era (spec 009's `EraUnlocked(hamlet)`). The `hamlet` letter adds a line, and a new chapter `cattle` opens with the first visit to the yard after the Hamlet: "A buffalo in the yard pays every morning. Build a shed, and grow her green fodder…" (action: the shed sheet). Before the Hamlet, tapping the yard's south acre shows "A cattle shed can go here once you're a Hamlet", and the Becoming a Hamlet progress sheet lists "A cattle shed: buffalo and cows" among its rewards.
+The shed can be built from the **Hamlet** era (spec 009's `EraUnlocked(hamlet)`). The `hamlet` letter adds a line, and a new chapter `cattle` opens with the first visit to the cattle acre after the Hamlet: "A buffalo in your cattle yard pays every morning. Build a shed, and grow her green fodder…" (action: the shed sheet). Before the Hamlet the cattle acre shows rough grass, the compost pit and a sign, and tapping it shows "Your cattle yard: a shed and animals can come here once you're a Hamlet", and the Becoming a Hamlet progress sheet lists "A cattle shed: buffalo and cows" among its rewards.
 
 ### 3.14 Notifications (amends spec 007 §3.5)
 
@@ -323,7 +323,7 @@ At the 6:00 hourly pass, system Agriculture, before the Market system's truck an
 ## 7. UI
 
 ```
-The yard: the shed (4 stalls, animals visible), the straw stack, the compost pit; tapping any opens the shed sheet.
+The cattle acre (ADR 0064), spread out like a village baada: the shed and feed room at the back, each animal at her own peg and manger in different places, a water trough, a neem tree with shade, the straw stack and the compost pit in their corners, a hedge and a gate; tapping the acre opens the shed sheet.
 
 Shed sheet                                                            [×]
 +---------------------------------------------------------------------+
@@ -395,7 +395,7 @@ Shed sheet                                                            [×]
 ## 10. Open questions (closed with the owner, 2026-10-22; ADR 0060)
 
 - **G1. The time scale.** **Closed (owner, 2026-10-22):** one game day = 22.8 real days (a quarter ÷ 4, ADR 0008), not ADR 0056's 30; content gives amounts per real day; about one calf a game year (§3.1, §3.2).
-- **G2. When cattle unlock.** **Closed (owner, 2026-10-22):** from the Hamlet; the `cattle` chapter on the first yard tap after it; a locked note on the yard's south acre before it; the Becoming a Hamlet sheet lists cattle as a reward (§3.13).
+- **G2. When cattle unlock.** **Closed (owner, 2026-10-22):** from the Hamlet; the `cattle` chapter on the first yard tap after it; a locked note on the cattle acre before it (ADR 0064); the Becoming a Hamlet sheet lists cattle as a reward (§3.13).
 - **G3. Green fodder.** **Closed (owner, 2026-10-22):** berseem (sown Winter, cut Winter–Spring) and multi-cut sorghum (sown Summer, cut Summer–Monsoon), cut daily from 6 h after sowing; the commons' share by season; green fodder bought from neighbours for any shortfall (on by default). Review for sense (Claude, same day, owner's "make everything make sense"): what the animals don't eat is sold standing at 1 coin a kg instead of being lost, the cut follows Weather like any crop, and a hand's fodder order rotates berseem and sorghum through the year (§3.7, §3.8b).
 - **G4. Straw.** **Closed (owner, 2026-10-22):** straw into the stack only once the shed exists; surplus left on the field (not sold, so crop income is unchanged); straw can be bought (§3.8).
 - **G5. Stocks and who refills them.** **Closed (owner, 2026-10-22):** the feed room 2.4 t (over the 72 h away cap for 4 buffalo), the stack 10 t, a compost pit in every yard; goods kept in their own place; the player fills, or the hand's animals order keeps them stocked; a low-feed warning at purchase and on the sheet (§3.3, §3.7, §3.11).
@@ -417,7 +417,7 @@ Shed sheet                                                            [×]
 ### Changes after approval (owner, 2026-10-22, ADR 0061)
 
 - **The dairy co-op has a building** in the village centre (place kind `dairy`, spec 010 §3.3). Tapping it shows the co-op's price a litre by fat ("Buffalo milk at 7% fat: 57.50 a litre · cow milk at 4%: 38.00"), what it collected this morning, and, once cattle unlock, **Your shed** and **The cattle fair** (the buy cards). Before the Hamlet it says "The co-op buys the village's milk every morning at 6:00. Once you're a Hamlet you can keep a buffalo or a cow."
-- **The `cattle` chapter** opens on the first tap of the yard or the dairy after the Hamlet, and its Show me goes to the dairy, then the shed.
+- **The `cattle` chapter** opens on the first tap of the cattle acre or the dairy after the Hamlet, and its Show me goes to the dairy, then the shed.
 
 ## 11. Cut first
 

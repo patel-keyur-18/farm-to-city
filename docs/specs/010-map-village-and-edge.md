@@ -71,7 +71,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 
 | Mark | What | Acres | For sale |
 | --- | --- | --- | --- |
-| `H`, `y`, `q` | The inherited farm, yard and labour quarters (`home_a`, `home_b`, `home_c`), protected | 9 | Never |
+| `H`, `y`, `q`, `c` | The inherited farm, yard, labour quarters and cattle acre (`home_a`, `home_b`, `home_c`, `home_d`, ADR 0064), protected | 10 | Never |
 | `f` | Today's neighbours' parcels, unchanged (`nw1` … `s4`) | 38 | Yes |
 | `s` | New neighbours' parcels for sale (§4: `r1`–`r5`, `w3`–`w6`, `s6`–`s9`) | 40 | Yes |
 | `n` | Neighbours' farms **not for sale yet** | 46 | No (Phase 2) |

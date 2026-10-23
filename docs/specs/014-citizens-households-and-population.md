@@ -199,7 +199,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 
 **New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48, `houseCapacity` 6, `housesPerAcre` 4, `rentPerSeason` 6,000); names with gender in `people.json`.
 
-**New state** (save schema 8): `Citizen` (id, name, gender, birthSeason, householdId, home, education, skill, traits, health, job, parents, spouse, story lines, diedAt), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
+**New state** (save schema 9, ADR 0064 took 8): `Citizen` (id, name, gender, birthSeason, householdId, home, education, skill, traits, health, job, parents, spouse, story lines, diedAt), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
 
 ## 5. Commands and events
 
@@ -262,7 +262,7 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | AC-6 | Births, marriages and deaths follow their chances (seeded, same seed same town); no child or adult under 60 dies | `PopulationTests.Flows` |
 | AC-7 | A household below 35 happiness for 2 closes, or 2 seasons behind on rent, leaves (50% a close); a hand's leaving ends his contract | `MigrationTests2.MovingOut` |
 | AC-8 | Households add their basket to the local market's demand each hour | `MarketTests.TownDemand` |
-| AC-9 | A schema-7 save's hands become citizens in households of one; it advances a season and round-trips | `MigrationTests.Schema7_Citizens` |
+| AC-9 | A schema-8 save's hands become citizens in households of one; it advances a season and round-trips | `MigrationTests.Schema8_Citizens` |
 | AC-10 | The golden replays are unchanged; a year of the bot gives the same hash in one chunk or many | `ReplayTests.*`, `CitizenTests.ChunkingInvariance` |
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |

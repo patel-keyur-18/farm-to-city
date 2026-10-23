@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; US-204 next. Spec 014 approved 2026-10-23 (ADR 0063); F11.1–F11.3 broken into stories (S13 39 points, 2 weeks; S14 16) |
+| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; ADR 0064 (the cattle acre, owner 2026-10-23) adds US-213, 52 points; US-213 and US-204 next. Spec 014 approved 2026-10-23 (ADR 0063); F11.1–F11.3 broken into stories (S13 39 points, 2 weeks; S14 16) |
 | Branch with latest work | `sprint/12-cattle-citizens` (from `main`, which has Sprint 11 / PR #16) |
 | Last updated | 2026-10-22 |
 

@@ -28,5 +28,5 @@ Spec 014 makes the town a place of real families. Its ten gaps were closed with 
 ## Consequences
 
 - Spec 014 approved; coded in Sprint 13 (F11.1–F11.3 broken into stories, ADR 0057).
-- Save schema 8 migrates hands into households of one.
+- Save schema 9 (ADR 0064 took 8) migrates hands into households of one.
 - New balance gates: population at the Village unlock, town happiness, households leaving, rent's share of income, every bot reaching 5 households.
