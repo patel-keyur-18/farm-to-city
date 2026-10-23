@@ -21,12 +21,12 @@
 | S10 | 4–10 Jan 2027 | 1 | Playtest fixes: the hand works every season, labourers till harvest (ADR 0048). | 6 | Spec 006 amendment (ADR 0048) | Yes: Development build |
 | S11 | 11–24 Jan 2027 (2 weeks, ADR 0057) | 2 | ADRs 0052–0057; specs 010 and 011 approved; the village map, the trader's truck, daily prices and supermarket orders built. | 35 | 010, 011 | Yes: the village map, the truck and orders |
 | S12 | 25 Jan – 7 Feb 2027 (2 weeks, as S11) | 2 | Spec 012 approved (ADR 0060) and built: buffalo and cows, the shed, fodder, straw, milk to the co-op; the village redrawn with the dairy co-op and a living valley (ADR 0061, 0062). Spec 014 written and approved. | 49 (re-pointed with spec 012 and ADRs 0061–0062) | 012, 014 | Yes: cattle |
-| S13 | 1–7 Feb 2027 | 2 | Citizens and the life clock; households, needs and happiness (F11.1, F11.2). | 16 | 016, 015 | Yes |
-| S14 | 8–14 Feb 2027 | 2 | Population flows and family trees (F11.3); founding a business and its books (F12.1). | 25 | 017, 013 | Yes |
-| S15 | 15–21 Feb 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
-| S16 | 22 Feb – 7 Mar 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3). | 26 | — | Yes |
-| S17 | 8–14 Mar 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
-| S18 | 15–21 Mar 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 12 | — | Yes: Phase 2 playtest build |
+| S13 | 8–21 Feb 2027 (2 weeks, as S12) | 2 | Citizens and the life clock, the family house, homes and people art; households, needs, happiness, work and food, your people on screen (F11.1, F11.2; spec 014, ADR 0063). | 39 | 016, 015 | Yes |
+| S14 | 22–28 Feb 2027 | 2 | Population flows and family trees, population balance (F11.3); founding a business and its books (F12.1). | 32 | 017, 013 | Yes |
+| S15 | 1–7 Mar 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
+| S16 | 8–21 Mar 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3). | 26 | — | Yes |
+| S17 | 22–28 Mar 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
+| S18 | 29 Mar – 4 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 12 | — | Yes: Phase 2 playtest build |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -564,7 +564,7 @@
 **Sprint end checklist**
 
 - [x] Spec 012 written, every gap closed with the owner, approved (ADR 0060); GDD, `CLAUDE.md` and the amended specs updated
-- [ ] Spec 014 written, every gap closed with the owner, approved; F11.1–F11.3 broken into stories and tasks
+- [x] Spec 014 written, every gap closed with the owner, approved (ADR 0063); F11.1–F11.3 broken into stories and tasks (55 points: S13 39, S14 16)
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [ ] Test checklist `docs/test-checklists/s12-cattle.md`; Development build
 - [ ] `STATUS.md`, feature files and this file updated
