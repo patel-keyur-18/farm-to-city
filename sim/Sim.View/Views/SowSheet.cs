@@ -116,7 +116,7 @@ namespace Sim.View.Views
             FertiliserDef fert = defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fertiliserId)];
             foreach (CropDef crop in defs.Farm.Crops)
             {
-                if (crop.Fodder) continue; // fodder gets its own card with cattle (spec 012 §3.8b, US-205)
+                if (crop.Fodder && !Sim.Core.Livestock.LivestockRules.Unlocked(sim)) continue; // fodder comes with cattle (spec 012 §3.8b)
                 CropDef c = crop;
                 bool sowable = c.SowSeasons[(int)season];
                 string name = ctx.Strings.Get(c.NameKey);
@@ -158,6 +158,7 @@ namespace Sim.View.Views
                 };
                 row.Sow = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sowCrop", "crop", name), row.CostText, ActionKind.Primary,
                     at => new Sow(at, tileId, c.Id, seed, fertiliserId), "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons));
+                if (c.Fodder) FodderView.Card(ctx, row, tile, c, fert); // cut daily for your animals: its own figures (spec 012 §3.8b)
                 // An ordered field sown with another crop: the player wins, and may change the order too (ADR 0039 §6).
                 Sim.Core.People.StandingOrder order = sim.State.People?.OrderFor(Sim.Core.People.OrderTargetKind.Field, tileId);
                 if (order != null && order.Crop >= 0 && order.Crop != defs.Farm.IndexOfCrop(c.Id)) // the hand's choice stays his

@@ -113,6 +113,7 @@ namespace Game.Presentation.Ui
             {
                 case null: return null;
                 case "hut": return SpriteBank.Rendered("hut") ?? SpriteBank.Hut;
+                case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
                 case "store": case "sack": return IconBank.Sack;
@@ -136,7 +137,7 @@ namespace Game.Presentation.Ui
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
-                case "potato": case "radish": case "wheat": case "rice": case "lentils": return SpriteBank.Crop(icon, CropStage.Growing3);
+                case "potato": case "radish": case "wheat": case "rice": case "lentils": case "berseem": case "sorghum": return SpriteBank.Crop(icon, CropStage.Growing3);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
                     if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");

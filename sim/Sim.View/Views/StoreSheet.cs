@@ -54,6 +54,7 @@ namespace Sim.View.Views
                 string name = s.Get(good.NameKey);
                 if (good.Kind != GoodKind.Produce)
                 {
+                    if (good.Place != GoodPlace.Store && Sim.Core.Livestock.LivestockRules.Shed(sim) != null) continue; // with the shed, straw, feed and compost show on its sheet (spec 012 §7)
                     inputs.Add(new LineVm(name, s.Get("store.input", "qty", ctx.Fmt.Quantity(good, m.Stock[g])), "input", g) { Icon = good.Id });
                     continue;
                 }

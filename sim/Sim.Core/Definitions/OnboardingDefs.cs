@@ -31,6 +31,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>The Store opened while the trader's truck is away and there is produce to sell (spec 011 §3.6b, ADR 0058).</summary>
         StoreTruckAway,
+
+        /// <summary>The cattle acre opened once cattle are unlocked (spec 012 §3.13).</summary>
+        CattleAcre,
     }
 
     /// <summary>A step's goal or a chapter's trigger: a kind and the parameters that kind uses (unused ones are empty).</summary>

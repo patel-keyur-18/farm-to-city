@@ -132,6 +132,8 @@ namespace Game.Presentation
         }
 
         /// <summary>The Sprint 7 sheets (ADR 0043 §4–§7).</summary>
+        private SheetRequest ShedSheetRequest() { return new SheetRequest("Tile", Sim.Config.Game.Livestock.Livestock.ShedTile); }
+
         private void ShowPanel(SheetRequest r, bool refreshOnly)
         {
             switch (r.Kind)
@@ -159,6 +161,12 @@ namespace Game.Presentation
                 case "Forecast": _sheet.Show(ForecastView.Sheet(_ctx), refreshOnly); break;
                 case "Alerts": _sheet.Show(Alerts.Sheet(_ctx), refreshOnly); break;
                 case "Orders": _sheet.Show(OrdersSheet.Build(_ctx), refreshOnly); break;
+                case "BuyAnimal": _sheet.Show(AnimalBuySheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case "AnimalLoan": _sheet.Show(AnimalLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case "Animal":
+                    if (global::Sim.Core.Livestock.LivestockRules.Find(Sim, r.Id) == null) { Return(ShedSheetRequest()); break; } // sold
+                    _sheet.Show(AnimalSheet.Build(_ctx, r.Id), refreshOnly);
+                    break;
             }
         }
 
@@ -176,8 +184,14 @@ namespace Game.Presentation
                 case "Store": case "People": case "Hand": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
-                case "BuyInput": Return(new SheetRequest("BuyInputs", 0)); return;
+                case "BuyInput":
+                    // Back where the purchase started: Buy inputs, the shed's Fill, a buy card, an alert.
+                    if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));
+                    return;
+                case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
             }
+            // The shed sheet stays open: building, buying from neighbours on or off, the hand's animals order (spec 012 §7).
+            if (r.Kind == "Tile" && Sim.Config.Game.Livestock != null && r.Id == Sim.Config.Game.Livestock.Livestock.ShedTile) return;
             if (commands[commands.Length - 1] is Spray || commands[commands.Length - 1] is HireLabourers) return; // the field sheet stays: see who's on it
             _sheet.Close();
         }

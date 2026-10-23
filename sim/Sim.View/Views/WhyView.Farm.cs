@@ -90,6 +90,10 @@ namespace Sim.View.Views
             Fixed supply = Sim.Core.People.PeopleRules.CareSupply(sim), demand = FarmRules.LabourDemand(sim);
             WhyVm vm = New(ctx, "why.care.title", ctx.Rating(sim.State.Farm.CareRatio));
             Row(vm, ctx, "why.care.need", Hours(ctx, demand));
+            // The animals' share of it (spec 012 §7): why Care fell after buying one.
+            Sim.Core.Livestock.LivestockState herd = sim.State.Livestock;
+            if (herd != null && herd.Animals.Count > 0)
+                Row(vm, ctx, "why.care.animals", Hours(ctx, Sim.Core.Livestock.LivestockRules.LabourDemand(sim)), "n", ctx.Fmt.Integer(herd.Animals.Count));
             Row(vm, ctx, "why.care.founder", Hours(ctx, FounderRules.FieldHours(sim)));
             Fixed hired = sim.State.People == null ? Fixed.Zero : Sim.Core.People.PeopleRules.HiredHours(sim);
             if (hired > Fixed.Zero) Row(vm, ctx, "why.care.hired", Hours(ctx, hired));

@@ -105,6 +105,11 @@ namespace Sim.Core.Saves
                     case OrderDelivered _: Milestone(wallUtc, e.SimTime, "firstOrderDelivered"); break;
                     case OrderPaid _: Milestone(wallUtc, e.SimTime, "firstOrderPaid"); break;
                     case EraUnlocked u: Milestone(wallUtc, e.SimTime, u.EraId + "Unlocked"); break; // hamletUnlocked (spec 009 §3.6)
+                    // The dairy (spec 012): the shed, the first animal, the first milk money, the first calf.
+                    case ShedBuilt _: Milestone(wallUtc, e.SimTime, "shedBuilt"); break;
+                    case AnimalBought _: Milestone(wallUtc, e.SimTime, "firstAnimal"); break;
+                    case MilkCollected m when m.Amount > 0: Milestone(wallUtc, e.SimTime, "firstMilk"); break;
+                    case CalfBorn _: Milestone(wallUtc, e.SimTime, "firstCalf"); break;
                 }
             }
         }

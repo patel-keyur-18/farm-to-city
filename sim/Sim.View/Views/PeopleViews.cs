@@ -70,6 +70,7 @@ namespace Sim.View.Views
         public static string Target(ViewContext ctx, OrderTargetKind kind, long target)
         {
             if (kind == OrderTargetKind.Field) return Field(ctx, (int)target);
+            if (kind == OrderTargetKind.Animals) return ctx.Strings.Get("order.shed");
             Tree tree = ctx.Sim.State.Farm.TreeIn(target);
             return tree == null ? ctx.Strings.Get("place.treeSlot") : ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Trees[tree.Def].NameKey);
         }
@@ -77,6 +78,9 @@ namespace Sim.View.Views
         /// <summary>"Keep wheat · sell at the market, not below 26" or "Pick · sell to the trader".</summary>
         public static string Order(ViewContext ctx, StandingOrder o)
         {
+            // The animals order (spec 012 §3.11) and a fodder field (§3.8b) sell nothing.
+            if (o.Kind == OrderTargetKind.Animals) return ctx.Strings.Get("order.lookAfter", "days", ctx.Strings.Plural("why.days", o.Days));
+            bool fodder = o.Kind == OrderTargetKind.Field && o.Crop >= 0 && ctx.Sim.Config.Game.Farm.Crops[o.Crop].Fodder;
             string sell = o.Sell == SellRule.Store ? ctx.Strings.Get("order.sellStore")
                 : o.Sell == SellRule.Trader ? ctx.Strings.Get("order.sellTrader")
                 : ctx.Strings.Get("order.sellOffer", "min", ctx.Fmt.Integer(o.MinPrice.RoundToLong()));
@@ -87,7 +91,7 @@ namespace Sim.View.Views
             // The hand's pick on the field now, when it isn't the order's crop (out of season, or his choice; ADR 0048).
             Crop now = o.Kind == OrderTargetKind.Field ? ctx.Sim.State.Farm.CropOn((int)o.Target) : null;
             if (now != null && now.Def != o.Crop) what += " " + ctx.Strings.Get("order.now", "crop", ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[now.Def].NameKey));
-            return what + " · " + sell + " · " + ctx.Strings.Get(o.Once ? "order.once" : "order.every");
+            return what + (fodder ? "" : " · " + sell) + " · " + ctx.Strings.Get(o.Once ? "order.once" : "order.every");
         }
 
         /// <summary>" with compost" for an order's fertiliser, nothing without one.</summary>
@@ -102,6 +106,7 @@ namespace Sim.View.Views
             if (o.Waiting != OrderWait.None) return ctx.Strings.Get("order.wait." + o.Waiting);
             if (o.LastAction == OrderAction.None) return null;
             string ago = ctx.Fmt.Duration(ctx.Now - o.LastAt);
+            if (o.LastAction == OrderAction.Bought) return ctx.Strings.Get("order.lastBought", "qty", ctx.Fmt.Kg(o.LastQuantity), "amount", ctx.Fmt.Coins(o.LastAmount), "ago", ago);
             return o.LastAction == OrderAction.Sowed ? ctx.Strings.Get("order.lastSowed", "ago", ago)
                 : ctx.Strings.Get(o.LastAction == OrderAction.Picked ? "order.lastPicked" : "order.lastHarvested", "qty", ctx.Fmt.Kg(o.LastQuantity), "ago", ago);
         }
@@ -288,6 +293,13 @@ namespace Sim.View.Views
                 vm.Lines.Add(line);
             }
             if (!any) vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.noOrders"), ctx.Strings.Get("hand.noOrdersHint")));
+            if (Sim.Core.Livestock.LivestockRules.Shed(sim) != null && sim.State.People.OrderFor(OrderTargetKind.Animals, 0) == null)
+            {
+                var shed = new LineVm(ctx.Strings.Get("order.shed"), ctx.Strings.Get("order.lookAfterOffer"));
+                shed.Action = ActionVm.Checked(ctx, "animalsOrder", ctx.Strings.Get("action.giveOrder"), null, ActionKind.Secondary,
+                    at => new SetStandingOrder(at, handId, OrderSpec.LookAfterAnimals(3)));
+                vm.Lines.Add(shed);
+            }
 
             if (h.Contract == ContractState.Lapsed)
                 vm.Actions.Add(ActionVm.Checked(ctx, "renew", ctx.Strings.Get("action.renew"), ctx.Fmt.Coins(h.Wage), ActionKind.Primary, at => new RenewContract(at, handId)));
@@ -423,6 +435,15 @@ namespace Sim.View.Views
                 return once ? spec.ThisSeasonOnly() : spec;
             }
 
+            if (crop != null && !auto && defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].Fodder)
+            {
+                // Fodder is cut for the animals every morning, never sold (spec 012 §3.8b): one way to set it.
+                var keep = new LineVm(ctx.Strings.Get("order.fodderKeep"), ctx.Strings.Get("order.fodderKeepWhy"));
+                keep.Action = ActionVm.Checked(ctx, "set:store", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Store, 0)));
+                vm.Lines.Add(keep);
+                AddClear(ctx, vm, h, existing, kind, target);
+                return vm;
+            }
             var store = new LineVm(ctx.Strings.Get("order.sellStore"), ctx.Strings.Get("order.sellStoreWhy"));
             store.Action = ActionVm.Checked(ctx, "set:store", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Store, 0)));
             vm.Lines.Add(store);

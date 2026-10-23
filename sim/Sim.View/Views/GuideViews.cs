@@ -132,9 +132,12 @@ namespace Sim.View.Views
         }
 
         /// <summary>A sheet the player opened (the <c>sheetVisited</c> goal): "Founder", "Store"...</summary>
-        public void SheetVisited(string kind, Simulation sim = null)
+        public void SheetVisited(string kind, Simulation sim = null, long id = -1)
         {
             _sheets.Add(kind);
+            // The cattle chapter opens on the first visit to the cattle acre once cattle unlock (spec 012 §3.13).
+            if (kind == "Tile" && sim?.Config.Game?.Onboarding != null && sim.Config.Game.Livestock != null && id == sim.Config.Game.Livestock.Livestock.ShedTile
+                && Sim.Core.Livestock.LivestockRules.Unlocked(sim)) EnqueueKind(sim, TriggerKind.CattleAcre);
             if (kind != "Store" || sim?.Config.Game?.Onboarding == null || MarketRules.TraderBuys(sim)) return;
             var goods = sim.Config.Game.Market.Goods;
             for (int g = 0; g < goods.Count; g++)
@@ -380,7 +383,7 @@ namespace Sim.View.Views
         {
             switch (action.Split(':')[0])
             {
-                case "bed": case "field": case "founder": case "store": case "alerts": case "report": case "people": case "money": case "progress": case "orders": return true;
+                case "bed": case "field": case "founder": case "store": case "alerts": case "report": case "people": case "money": case "progress": case "orders": case "shed": return true;
                 default: return false;
             }
         }
@@ -405,6 +408,7 @@ namespace Sim.View.Views
                 case "money": return new SheetRequest("Money", 0);
                 case "progress": return new SheetRequest("Progress", 0);
                 case "orders": return new SheetRequest("Orders", 0);
+                case "shed": return new SheetRequest("Tile", sim.Config.Game.Livestock.Livestock.ShedTile);
                 default: throw new ArgumentException("unknown letter action '" + action + "'");
             }
         }
@@ -523,6 +527,7 @@ namespace Sim.View.Views
             if (e.Current + 1 >= d.Eras.Count)
             {
                 vm.Subtitle = s.Get("progress.done");
+                Rewards(ctx, vm, e.Current);
                 return vm;
             }
             EraDef next = d.Eras[e.Current + 1];
@@ -535,7 +540,20 @@ namespace Sim.View.Views
                     "need", Percent(ctx, next.MeanCareAtLeast)), "era", 2));
             vm.Lines.Add(new LineVm(s.Get("progress.hut"), HutText(ctx), "era", 3));
             vm.Lines.Add(new LineVm(s.Get("progress.profit"), ProfitText(ctx), "era", 4));
+            Rewards(ctx, vm, e.Current + 1);
             return vm;
+        }
+
+        /// <summary>What an era brings (spec 012 §3.13): cattle with the Hamlet; once there, the way to the cattle yard.</summary>
+        private static void Rewards(ViewContext ctx, SheetVm vm, int era)
+        {
+            Simulation sim = ctx.Sim;
+            if (sim.Config.Game.Livestock == null || sim.Config.Game.Livestock.UnlockEra != era) return;
+            bool open = sim.State.Era.Current >= era;
+            vm.Lines.Add(LineVm.Header(ctx.Strings.Get(open ? "progress.unlocked" : "progress.rewards")));
+            var cattle = new LineVm(ctx.Strings.Get("progress.cattle"), null) { Icon = "animal_buffalo" };
+            if (open) cattle.Action = ActionVm.Open("shed", ctx.Strings.Get("progress.toYard"), new SheetRequest("Tile", sim.Config.Game.Livestock.Livestock.ShedTile));
+            vm.Lines.Add(cattle);
         }
 
         internal static string Percent(ViewContext ctx, Fixed f) { return ctx.Fmt.Integer(f.MulRatio(100, 1).RoundToLong()) + "%"; }

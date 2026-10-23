@@ -54,6 +54,11 @@ namespace Sim.Core.Tests
                 byte[] bytes = File.ReadAllBytes(file);
                 LoadResult r = SaveCodec.Read(bytes, config, MinSchema);
                 Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                // Through the save points too, which report the old schema so the app keeps the town as it was (owner, Sprint 12).
+                var store = new MemoryStore();
+                store.Files[SavePoints.Latest] = bytes;
+                LoadOutcome o = new SavePoints(store, Sim.Content.ContentLoader.LoadSaves(TestContent.ReadContent("saves.json")).Save).LoadNewestValid(config);
+                Assert.That((o.Error, o.Schema), Is.EqualTo((SaveError.None, r.Header.Schema)), name + " through the save points");
                 string pinPath = Path.ChangeExtension(file, ".json");
                 if (Update && r.Header.Schema == SaveCodec.SchemaVersion) Pin(pinPath, r.State);
                 Assert.That(File.Exists(pinPath), Is.True, name + " has its pinned facts");

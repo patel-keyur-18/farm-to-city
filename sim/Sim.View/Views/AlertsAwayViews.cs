@@ -78,10 +78,33 @@ namespace Sim.View.Views
             if (cap > 0 && used * 100 >= cap * ctx.Ui.StoreNearlyFullPercent)
                 list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.storeFull"), Action = ActionVm.Open("store", s.Get("action.open"), new SheetRequest("Store", 0)) });
 
+            // The shed (spec 012 §3.7): straw or feed running low, with Fill.
+            Sim.Core.Livestock.LivestockState herd = sim.State.Livestock;
+            if (herd != null && herd.Animals.Count > 0)
+            {
+                Sim.Core.Definitions.LivestockDefs ld = sim.Config.Game.Livestock;
+                foreach (int good in new[] { ld.Straw, ld.Feed })
+                {
+                    bool low = good == ld.Straw ? herd.StrawLow : herd.FeedLow;
+                    if (!low) continue;
+                    long days = Sim.Core.Livestock.LivestockRules.DaysLeft(sim, good);
+                    list.Add(new AlertVm
+                    {
+                        Level = AlertLevel.Decision,
+                        Text = s.Get("alert.feedLow", "feed", s.Get(sim.Config.Game.Market.Goods[good].NameKey), "days", s.Plural("why.days", days)),
+                        Action = ActionVm.Open("fill:" + good, s.Get("shed.fill"), new SheetRequest("BuyInput", good)),
+                    });
+                }
+            }
+
             // Information: ready to collect, a sick day.
             int ready = CollectAll.ReadyCount(sim);
             if (ready > 0) list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Plural("alert.ready", ready), Action = new ActionVm(CollectId, s.Get("alert.collect"), null, ActionKind.Primary, true, null, null) });
             if (f.SickToday) list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Get("alert.sick") });
+            if (herd != null)
+                foreach (Sim.Core.Livestock.Animal a in herd.Animals)
+                    if (a.SickDays > 0)
+                        list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Get("alert.animalSick", "name", a.Name), Action = ActionVm.Open("animal:" + a.Id, s.Get("action.open"), new SheetRequest("Animal", a.Id)) });
             return list;
         }
 
@@ -176,6 +199,8 @@ namespace Sim.View.Views
             var lapsed = new Dictionary<long, long>();
             var orderGood = new Dictionary<long, string>();
             long paid = 0, held = 0;
+            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0;
+            int calfCount = 0, vetCount = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -204,6 +229,10 @@ namespace Sim.View.Views
                         lapsed[ol.OrderId] = ol.Left;
                         break;
                     case MandiTripReturned r: vm.MandiSales += r.Net; break;
+                    case MilkCollected mc: milkMl += mc.Millilitres - mc.HomeMillilitres; milkPaid += mc.Amount; break;
+                    case AnimalsFed af: fodderBought += af.GreenBoughtAmount; fodderSold += af.GreenSoldAmount; break;
+                    case CalfBorn cb: calves += cb.Amount; calfCount++; break;
+                    case AnimalSick sk: vet += sk.Cost; vetCount++; break;
                     case DayLabourPaid d: vm.DayLabour += d.Amount; break;
                     case HomeUseEaten h: vm.HomeUse += h.Value; break;
                     case GoodsSpoiled g: vm.SpoiledGrams += Store.WeightGrams(sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(g.GoodId)], g.Quantity); break;
@@ -231,6 +260,11 @@ namespace Sim.View.Views
             Money(paid, "away.supermarketPaid", AwayRow.Orders, "coin");
             Money(vm.DayLabour, "away.dayLabour", AwayRow.DayLabour, "coin");
             Money(vm.HomeUse, "away.homeUse", AwayRow.HomeUse, "basket");
+            if (milkPaid > 0)
+                money.Add(new KeyValuePair<long, LineVm>(milkPaid, new LineVm(s.Get("away.milk", "milk", ctx.Fmt.Litres(milkMl)), ctx.Fmt.Coins(milkPaid), "away", (long)AwayRow.Dairy) { Icon = "milk" }));
+            if (calves > 0)
+                money.Add(new KeyValuePair<long, LineVm>(calves, new LineVm(s.Plural("away.calves", calfCount), ctx.Fmt.Coins(calves), "away", (long)AwayRow.Dairy) { Icon = "coin" }));
+            Money(fodderSold, "away.fodderSold", AwayRow.Dairy, "green_fodder");
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
             var rows = new List<LineVm>();
             vm.ReadyCount = CollectAll.ReadyCount(sim);
@@ -265,6 +299,8 @@ namespace Sim.View.Views
                 foreach (LineVm l in people.Lines)
                     if (l.Label != s.Get("away.dayLabour")) rows.Add(new LineVm(l.Label, l.Value, "away", (long)AwayRow.People) { Icon = "person_hand_m" });
 
+            if (fodderBought > 0) rows.Add(new LineVm(s.Get("away.fodderBought"), "−" + ctx.Fmt.Coins(fodderBought), "away", (long)AwayRow.Dairy) { Icon = "green_fodder" });
+            if (vetCount > 0) rows.Add(new LineVm(s.Plural("away.vet", vetCount), "−" + ctx.Fmt.Coins(vet), "away", (long)AwayRow.Dairy) { Icon = "coin" });
             if (vm.SpoiledGrams > 0) rows.Add(new LineVm(s.Get("away.spoiled"), ctx.Fmt.Kg(vm.SpoiledGrams), "away", (long)AwayRow.Spoiled));
             foreach (string p in pests) rows.Add(new LineVm(s.Get("away.pests"), p, "away", (long)AwayRow.Pests));
             if (vm.SickDays > 0) rows.Add(new LineVm(s.Get("away.sick"), s.Plural("why.days", vm.SickDays), "away", (long)AwayRow.Sick));

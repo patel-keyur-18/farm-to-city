@@ -5,6 +5,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
+using Sim.Core.Livestock;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Time;
@@ -32,7 +33,7 @@ namespace Sim.View.Views
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
-            if (tile.Terrain == Terrain.Cattle) return CattleAcre(ctx);
+            if (tile.Terrain == Terrain.Cattle) return ShedSheet.Build(ctx);
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
@@ -55,6 +56,21 @@ namespace Sim.View.Views
             string cropName = ctx.Strings.Get(def.NameKey);
             long grace = defs.Farm.Farm.ReadyGraceSeconds;
             vm.Icon = def.Id;
+            if (def.Fodder)
+            {
+                // Cut every morning for your animals (spec 012 §3.8b, §7): no harvest, no pests, no ready marker; Clear ends it.
+                FeedingReport fed = sim.State.Livestock.LastFeeding;
+                vm.Title = ctx.Strings.Get("fodder.title", "crop", cropName);
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("fodder.cutRow"), ctx.Strings.Get("fodder.cut", "kg", ctx.Fmt.Kg(FodderView.CutPerDay(sim, crop))), "fodderCut", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("fodder.morning"), ctx.Strings.Get("fodder.morningValue", "eaten", ctx.Fmt.Kg(fed.GreenOwn), "sold", ctx.Fmt.Kg(fed.GreenSold)), "fodderCut", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("fodder.till"), ctx.Strings.Get("season." + Calendar.SeasonAt(crop.ReadyAt - 1, sim.Clock).ToString().ToLowerInvariant())));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.care"), ctx.Rating(sim.State.Farm.CareRatio), "care", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.water"), ctx.Rating(crop.WaterRate), "water", tileId));
+                AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
+                vm.Actions.Add(ActionVm.Open("shed", ctx.Strings.Get("fodder.toShed"), new SheetRequest("Tile", LivestockRules.Defs(sim).Livestock.ShedTile)));
+                vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get("action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
+                return vm;
+            }
             if (crop.State == CropState.Growing)
             {
                 vm.Title = ctx.Strings.Get("field.growing", "crop", cropName);
@@ -207,13 +223,6 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "hut", Title = ctx.Strings.Get("yard.title"), Subtitle = ctx.Strings.Get("yard.subtitle") };
             vm.Actions.Add(ActionVm.Open("store", ctx.Strings.Get("action.openStore"), new SheetRequest("Store", 0)));
             return vm;
-        }
-
-        /// <summary>The cattle acre (ADR 0064): what it's for, and when it opens. The shed sheet comes with US-205.</summary>
-        private static SheetVm CattleAcre(ViewContext ctx)
-        {
-            bool open = Sim.Core.Livestock.LivestockRules.Unlocked(ctx.Sim);
-            return new SheetVm { Icon = "hut", Title = ctx.Strings.Get("cattleAcre.title"), Subtitle = ctx.Strings.Get(open ? "cattleAcre.open" : "cattleAcre.locked") };
         }
 
         /// <summary>The kitchen-garden bed sheet (spec 003 §3.13).</summary>

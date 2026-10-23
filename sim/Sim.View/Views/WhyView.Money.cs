@@ -160,14 +160,14 @@ namespace Sim.View.Views
         private static WhyVm NetWorth(ViewContext ctx, long id)
         {
             NetWorthSnapshot n = Reporting.NetWorth(ctx.Sim);
-            long total = n.Cash + n.Prepaid + n.OwedByBuyers + n.LandAtMarket + n.BuildingsAtBook + n.TreesAtBook + n.StoredGoods - n.LoanPrincipal - n.InterestPayable;
-            WhyVm vm = New(ctx, "why.netWorth.title", Money(ctx, total));
+            WhyVm vm = New(ctx, "why.netWorth.title", Money(ctx, n.Total));
             Row(vm, ctx, "why.netWorth.cash", Money(ctx, n.Cash));
             if (n.Prepaid != 0) Row(vm, ctx, "why.netWorth.prepaid", Money(ctx, n.Prepaid));
             if (n.OwedByBuyers != 0) Row(vm, ctx, "why.netWorth.owed", Money(ctx, n.OwedByBuyers));
             Row(vm, ctx, "why.netWorth.land", Money(ctx, n.LandAtMarket));
             Row(vm, ctx, "why.netWorth.buildings", Money(ctx, n.BuildingsAtBook));
             if (n.TreesAtBook != 0) Row(vm, ctx, "why.netWorth.trees", Money(ctx, n.TreesAtBook));
+            if (n.LivestockAtBook != 0) Row(vm, ctx, "why.netWorth.livestock", Money(ctx, n.LivestockAtBook));
             Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
             if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
             Row(vm, ctx, "why.netWorth.book", Money(ctx, n.BookEquity));
@@ -256,6 +256,7 @@ namespace Sim.View.Views
                 Row(vm, ctx, "why.netWorth.land", Money(ctx, n.LandAtMarket));
                 Row(vm, ctx, "why.netWorth.buildings", Money(ctx, n.BuildingsAtBook));
                 if (n.TreesAtBook != 0) Row(vm, ctx, "why.netWorth.trees", Money(ctx, n.TreesAtBook));
+            if (n.LivestockAtBook != 0) Row(vm, ctx, "why.netWorth.livestock", Money(ctx, n.LivestockAtBook));
                 Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
                 if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
                 vm.Footnote = ctx.Strings.Get("why.netWorth.lesson");
