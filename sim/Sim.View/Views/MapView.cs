@@ -72,6 +72,16 @@ namespace Sim.View.Views
         /// <summary>A neighbour's field: the season's crop drawn half-grown, or null for fallow (spec 010 §3.7; no sim state).</summary>
         public string NeighbourCrop { get; internal set; }
 
+        /// <summary>A neighbour's acre's look (ADR 0062); <see cref="NeighbourCrop"/> is set only for <see cref="NeighbourLand.Field"/>.</summary>
+        public NeighbourLand Neighbour { get; internal set; }
+
+        /// <summary>A stable draw 0..99 per acre, for where its props stand and which farmstead it is.</summary>
+        public int Draw { get; internal set; }
+
+        /// <summary>A tube-well room at the field's edge, or a haystack on fallow or ploughed land (neighbours' acres).</summary>
+        public bool TubeWell { get; internal set; }
+        public bool Haystack { get; internal set; }
+
         /// <summary>A road acre's links to the road acres beside it: 1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1 (and off the map's edge).</summary>
         public int RoadLinks { get; internal set; }
 
@@ -83,6 +93,26 @@ namespace Sim.View.Views
 
         /// <summary>The village place's id (content), for its hand-placed layout (ADR 0061).</summary>
         public string PlaceId { get; internal set; }
+    }
+
+    /// <summary>What a neighbour's acre looks like (ADR 0062): presentation only, fixed by its soil, fertility and a seeded draw.</summary>
+    public enum NeighbourLand
+    {
+        /// <summary>The season's crop (<see cref="TileVm.NeighbourCrop"/>) on tilled soil.</summary>
+        Field = 0,
+
+        /// <summary>Ploughed, waiting for the next sowing.</summary>
+        Ploughed = 1,
+        Fallow = 2,
+
+        /// <summary>Poor, sandy land gone to scrub, with a babul.</summary>
+        Scrub = 3,
+
+        /// <summary>A mango grove.</summary>
+        Grove = 4,
+
+        /// <summary>A neighbour's home among the fields: only on acres not for sale (ADR 0062 §2).</summary>
+        Farmstead = 5,
     }
 
     public enum TreeStage
@@ -303,7 +333,7 @@ namespace Sim.View.Views
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
                 if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
-                if (vm.Kind == TileKind.Unowned) vm.NeighbourCrop = NeighbourCrop(defs.Soils[t.Soil].Id, t.ParcelId, map.Season);
+                if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map.Width, defs.Map.Height, t.ParcelId, !pdef.ForSale, map.Season);
                 if (vm.Kind == TileKind.Road) vm.RoadLinks = RoadLinks(land, defs.Map, t.Id);
                 if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
@@ -418,6 +448,58 @@ namespace Sim.View.Views
             }
             if (!owned) return TileKind.Unowned;
             return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : t == Terrain.Cattle ? TileKind.Cattle : TileKind.Farm;
+        }
+
+        /// <summary>A stable draw 0..99 for an acre (a multiplicative hash: no RNG, no state).</summary>
+        public static int Draw(int tile)
+        {
+            uint h = (uint)(tile + 1) * 2654435761u;
+            h ^= h >> 15;
+            h *= 2246822519u;
+            h ^= h >> 13;
+            return (int)(h % 100u);
+        }
+
+        /// <summary>
+        /// A neighbour's acre (ADR 0062), from its soil, fertility and its draw: sandy land mostly scrub or fallow, weak land (fertility
+        /// under 45) half sown, good loam and clay sown, with sugarcane and a mango grove here and there; mustard in a third of
+        /// Winter's fields; good land between crops lies ploughed or fallow. Farmsteads only on acres not for sale, scattered so no two are side by side.
+        /// </summary>
+        public static NeighbourLand Look(int tile, int x, int y, int width, int height, string soil, float fertility, int parcel, bool notForSale, int season, out string crop)
+        {
+            int h = Draw(tile);
+            crop = null;
+            if (notForSale && LocalPeak(x, y, width, height)) return NeighbourLand.Farmstead;
+            bool sandy = soil == "sandy", weak = fertility < 0.45f;
+            if (sandy && h < 55 || !sandy && weak && h < 25) return NeighbourLand.Scrub;
+            if (sandy && h < 80 || !sandy && weak && h < 50) return NeighbourLand.Fallow;
+            if (!sandy && !weak && h < 7) return NeighbourLand.Grove;
+            crop = !sandy && !weak && h < 17 ? "sugarcane" : season == 3 && h % 3 == 0 ? "mustard" : NeighbourCrop(soil, parcel, season);
+            return crop != null ? NeighbourLand.Field : sandy || weak || h % 2 == 0 ? NeighbourLand.Fallow : NeighbourLand.Ploughed;
+        }
+
+        /// <summary>
+        /// An acre whose draw beats its four neighbours' (by id on a tie): an irregular scatter, never two side by side, about one acre in five.
+        /// </summary>
+        public static bool LocalPeak(int x, int y, int width, int height)
+        {
+            int id = y * width + x, h = Draw(id);
+            if (x > 0 && !Beats(h, id, id - 1)) return false;
+            if (x < width - 1 && !Beats(h, id, id + 1)) return false;
+            if (y > 0 && !Beats(h, id, id - width)) return false;
+            return y >= height - 1 || Beats(h, id, id + width);
+        }
+
+        private static bool Beats(int h, int id, int other) { int o = Draw(other); return h > o || h == o && id > other; }
+
+        private static void Neighbour(TileVm vm, int width, int height, int parcel, bool notForSale, int season)
+        {
+            vm.Draw = Draw(vm.Id);
+            vm.Neighbour = Look(vm.Id, vm.X, vm.Y, width, height, vm.SoilId, vm.Fertility, parcel, notForSale, season, out string crop);
+            vm.NeighbourCrop = crop;
+            bool good = vm.SoilId != "sandy" && vm.Fertility >= 0.45f;
+            vm.TubeWell = good && vm.Neighbour != NeighbourLand.Grove && vm.Neighbour != NeighbourLand.Farmstead && vm.Draw % 25 == 4;
+            vm.Haystack = (vm.Neighbour == NeighbourLand.Fallow || vm.Neighbour == NeighbourLand.Ploughed) && vm.Draw % 6 == 1;
         }
 
         /// <summary>

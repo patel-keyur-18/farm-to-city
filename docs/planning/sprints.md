@@ -539,7 +539,7 @@
 
 ## Sprint 12 · 25–31 Jan 2027 · Phase 2 (cattle; spec 014 written)
 
-- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); ADR 0064 the cattle acre (US-213) and US-204 done and approved; US-206 done (owner's review, ADR 0065); US-207 next
+- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); ADR 0064 the cattle acre (US-213) and US-204 done and approved; US-206 done and approved (ADR 0065; the dairy sheet restyled like the Orders and Store sheets); US-207 done (owner to review); US-205 next
 - **Branch:** `sprint/12-cattle-citizens`
 - **Goal:** Spec 012 approved and built: buffalo and cows in a shed, milk to the co-op every morning, fodder, straw and feed, playable on the iPhone. Spec 014 (citizens, households and population) written and approved; its code comes in Sprints 13–14.
 - **Points:** 49 (spec 012 re-pointed the ~15 estimate to 36; US-206 adds 8 (ADR 0061), US-207 5 (ADR 0062); runs 2 weeks as Sprint 11 did)
@@ -558,7 +558,7 @@
 | US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
 | US-205 | Cattle on screen | [F13.1](features/F13.1-livestock.md) | 8 | Must | To do |
 | US-206 | The village redrawn: a middle street, buildings from all sides, the dairy co-op (ADR 0061, 0065) | [F02.4](features/F02.4-village-map.md) | 8 | Must | Done |
-| US-207 | A living valley: varied neighbours' land, farmsteads, your land at a glance (ADR 0062) | [F02.4](features/F02.4-village-map.md) | 5 | Must | To do |
+| US-207 | A living valley: varied neighbours' land, farmsteads, your land at a glance (ADR 0062) | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done (owner to review) |
 
 **Order of work:** US-126 → US-199 → US-200 → US-201 → US-202 (the sim, each reviewed by the owner) → US-203 (balance) → US-204, US-206 and US-207 (art, the village redrawn, the valley) → US-205 (screens, Editor tour) → spec 014 written alongside, its gaps closed with the owner → the device build.
 
