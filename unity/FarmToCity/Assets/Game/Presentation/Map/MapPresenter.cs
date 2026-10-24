@@ -347,6 +347,12 @@ namespace Game.Presentation.Map
                         detail.sprite = SpriteBank.GrassDetail(tv.Id);
                         detail.color = _tint;
                         break;
+                    case TileKind.Farm when tv.Houses > 0:
+                        // A homestead acre (spec 014): grass and beaten earth round the houses, no furrows.
+                        ground.sprite = SpriteBank.Rendered("ground_village_" + ((tv.X + tv.Y) % 2)) ?? SpriteBank.Grass;
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
                     default:
                         ground.sprite = SpriteBank.SoilTile;
                         ground.color = _tint * SoilColour(tv);
@@ -411,6 +417,7 @@ namespace Game.Presentation.Map
             foreach (SpriteRenderer r in _buildings) r.color = _tint;
             foreach (SpriteRenderer r in _props) r.color = _tint;
             RefreshHandHuts(map, animate);
+            RefreshHouses(map, animate);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
             RefreshCattleAcre(map, animate);
@@ -536,6 +543,7 @@ namespace Game.Presentation.Map
             {
                 case PersonKind.Founder: return "person_founder";
                 case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
+                case PersonKind.Citizen: return "person_" + p.Look;
                 default: return p.Female ? "person_labourer_f" : "person_labourer_m";
             }
         }
@@ -599,6 +607,7 @@ namespace Game.Presentation.Map
             {
                 case PersonKind.Founder: return _hutWorld + new Vector2(-0.12f, -0.12f);
                 case PersonKind.Hand: return HutDoor(p.HomeHut, p.HomeTile);
+                case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }
         }

@@ -384,6 +384,18 @@ PEOPLE = {
     "labourer_m": dict(sex="m", skin=0x9C6444, top=0xF5F1E6, bottom=0xE9DFC8, accent=0x2E7DBF, wear="banyan", tool="hoe"),
     # Day labourer (woman): an orange-red saree with a yellow border, a blue blouse, a basket at the hip.
     "labourer_f": dict(sex="f", skin=0xB07650, top=0xE2582C, bottom=0xE2582C, accent=0xF2C94C, blouse=0x2E6FBA, wear="saree", tool="basket"),
+    # Your people (spec 014, US-212): a townsman in a sky-blue kurta and white pyjama with a maroon gamchha.
+    "town_m": dict(sex="m", skin=0xA8714C, top=0x86B9DA, bottom=0xF1E6CF, accent=0x9A3B3B, wear="kurta"),
+    # A townswoman: a leaf-green cotton saree with a pink border, a pink blouse, head uncovered, hair in a bun (approved art direction).
+    "town_f": dict(sex="f", skin=0xB37853, top=0x3E8E5A, bottom=0x3E8E5A, accent=0xE86A92, blouse=0xE86A92, wear="saree"),
+    # A boy: a yellow half-shirt and navy shorts, bare legs.
+    "boy": dict(sex="m", skin=0xB07A52, top=0xF2C14E, bottom=0x34477A, accent=0xF2C14E, wear="shorts", size=0.72),
+    # A girl: a pink frock with a white collar, two plaits with red ribbons.
+    "girl": dict(sex="f", skin=0xB37A55, top=0xE45D7B, bottom=0xE45D7B, accent=0xFFFFFF, blouse=0xE45D7B, wear="frock", plaits=True, size=0.72),
+    # An elder (man): a white kurta and dhoti-pyjama, white hair and moustache, a slight stoop and a walking stick.
+    "elder_m": dict(sex="m", skin=0x9E6A48, top=0xF3EFE6, bottom=0xF3EFE6, accent=0xC9B48A, wear="kurta", hair=0xD8D4CC, stoop=12, tool="stick"),
+    # An elder (woman): a cream saree with a maroon border, grey hair in a bun, head uncovered.
+    "elder_f": dict(sex="f", skin=0xA77150, top=0xEFE4CC, bottom=0xEFE4CC, accent=0x8E2A3F, blouse=0xC9B48A, wear="saree", hair=0xBDB6AC, stoop=8),
 }
 
 
@@ -394,7 +406,7 @@ def model_person(kind, facing, pose="stand"):
     def m(name, hexv):
         return toon(kind + "_" + name, hexv, soft=soft)
     skin, top, bottom, accent = m("skin", p["skin"]), m("top", p["top"]), m("bottom", p["bottom"]), m("accent", p["accent"])
-    dark, hair = m("dark", 0x1E1410), m("hair", HAIR)
+    dark, hair = m("dark", 0x1E1410), m("hair", p.get("hair", HAIR))
     o = []
     female = p["sex"] == "f"
     # Chappals.
@@ -405,6 +417,15 @@ def model_person(kind, facing, pose="stand"):
         o.append(cylinder("hem", 0.0315, 0.030, 0.008, (0, 0, 0.006), accent, segs=18, smooth=True, outline=False))
         for i in (-1, 0, 1):
             o.append(box("pleat%d" % i, (0.004, 0.004, 0.05), (i * 0.006, -0.026, 0.032), m("pleat", p["top"] - 0x101010 if p["top"] > 0x101010 else p["top"]), outline=False))
+    elif p["wear"] == "frock":
+        for s in (-1, 1):
+            o.append(cylinder("leg%d" % s, 0.0070, 0.0078, 0.040, (s * 0.009, 0, 0.022), skin, segs=10, smooth=True))
+        o.append(cylinder("skirt", 0.030, 0.019, 0.034, (0, 0, 0.056), bottom, segs=18, smooth=True))
+        o.append(cylinder("hem", 0.0305, 0.029, 0.006, (0, 0, 0.040), accent, segs=18, smooth=True, outline=False))
+    elif p["wear"] == "shorts":
+        for s in (-1, 1):
+            o.append(cylinder("leg%d" % s, 0.0072, 0.0080, 0.042, (s * 0.010, 0, 0.024), skin, segs=10, smooth=True))
+        o.append(cylinder("shorts", 0.024, 0.021, 0.022, (0, 0, 0.054), bottom, segs=16, smooth=True))
     else:
         leg = skin if p["wear"] in ("dhoti", "banyan") else bottom
         for s in (-1, 1):
@@ -421,7 +442,7 @@ def model_person(kind, facing, pose="stand"):
     o.append(sphere("shoulders", 0.022, (0, 0, 0.099), body, scale=(1.18, 0.82, 0.55), segs=16, rings=8))
     if p.get("vest"):
         o.append(cylinder("vest", 0.0205, 0.0228, 0.034, (0, 0.0005, 0.084), m("vest", p["vest"]), segs=16, smooth=True, outline=False))
-    if female:
+    if female and p["wear"] == "saree":
         # The pallu: from the right hip across the chest to the left shoulder, falling behind.
         o.append(box("pallu", (0.018, 0.006, 0.058), (0.004, -0.019, 0.082), top, rot=Matrix.Rotation(math.radians(-38), 3, "Y")))
         o.append(box("pallufall", (0.016, 0.006, 0.05), (-0.016, 0.018, 0.075), top))
@@ -431,8 +452,10 @@ def model_person(kind, facing, pose="stand"):
     # Arms: sleeve, forearm, hand.
     for s in (-1, 1):
         sleeve = body if p["wear"] != "banyan" else skin
+        if p["wear"] == "frock":
+            sleeve = body
         o.append(sphere("shoulderball%d" % s, 0.0085, (s * 0.025, 0, 0.097), sleeve, segs=10, rings=6))
-        if female or p["wear"] == "banyan":
+        if female or p["wear"] in ("banyan", "shorts"):
             o.append(cylinder("sleeve%d" % s, 0.0080, 0.0075, 0.014, (s * 0.027, 0, 0.088), sleeve, segs=10, smooth=True,
                               rot=Matrix.Rotation(math.radians(s * 10), 3, "Y")))
             o.append(cylinder("forearm%d" % s, 0.0066, 0.0058, 0.028, (s * 0.030, 0, 0.068), skin, segs=10, smooth=True,
@@ -458,14 +481,19 @@ def model_person(kind, facing, pose="stand"):
             o.append(sphere("blush%d" % s, 0.0048, (s * 0.018, -0.0245, hz - 0.009), m("blush", 0xD9826E), scale=(1, 0.4, 0.65), segs=8, rings=6, outline=False))
         o.append(sphere("mouth", 0.003, (0, -0.0292, hz - 0.0135), m("mouth", 0x7A2E26), scale=(1.4, 0.5, 0.6), segs=8, rings=4, outline=False))
         if not female:
-            o.append(sphere("moustache", 0.0045, (0, -0.0300, hz - 0.0095), hair, scale=(2.0, 0.55, 0.65), segs=8, rings=6, outline=False))
+            if p.get("size", 1.0) == 1.0:   # no moustache on a boy
+                o.append(sphere("moustache", 0.0045, (0, -0.0300, hz - 0.0095), hair, scale=(2.0, 0.55, 0.65), segs=8, rings=6, outline=False))
         else:
             o.append(sphere("bindi", 0.0022, (0, -0.0300, hz + 0.0135), m("bindi", 0xC0262D), segs=6, rings=4, outline=False))
     # Hair and headwear.
     o.append(sphere("hair", 0.0328, (0, 0.0045, hz + 0.0065), hair, scale=(1.0, 0.96, 0.82), segs=20, rings=12))
-    if female:
+    if p.get("plaits"):
+        for s in (-1, 1):
+            o.append(cylinder("plait%d" % s, 0.0055, 0.0045, 0.034, (s * 0.024, 0.016, hz - 0.030), hair, segs=8, smooth=True))
+            o.append(sphere("ribbon%d" % s, 0.0050, (s * 0.024, 0.016, hz - 0.049), m("ribbon", 0xD8283A), scale=(1.4, 0.8, 0.8), segs=8, rings=5, outline=False))
+    elif female:
         o.append(sphere("bun", 0.0125, (0, 0.031, hz - 0.002), hair, segs=12, rings=8))
-        for i, a in enumerate((-50, -15, 20, 55)):
+        for i, a in enumerate((-50, -15, 20, 55) if not p.get("stoop") else ()):
             x, z = math.sin(math.radians(a)) * 0.0125, math.cos(math.radians(a)) * 0.0125
             o.append(sphere("gajra%d" % i, 0.0032, (x, 0.033, hz - 0.002 + z * 0.6), m("jasmine", 0xFFF8E8), segs=6, rings=4, outline=False))
     elif p.get("head") == "pagdi":
@@ -511,8 +539,18 @@ def model_person(kind, facing, pose="stand"):
         o.append(box("hoeblade", (0.034, 0.02, 0.006), (0.0, foot.y - 0.004, 0.005), iron))
         rot = math.radians(30) if facing == "front" else math.radians(-115)
         return group(o, rot_z=rot, scale=PERSON_SCALE, outline_factor=0.7)
+    if p.get("stoop"):
+        # An elder's stoop: the upper body leans forward a little about the hips.
+        hip = Vector((0, 0, 0.062))
+        bend = Matrix.Translation(hip) @ Matrix.Rotation(math.radians(p["stoop"]), 4, "X") @ Matrix.Translation(-hip)
+        for part in o[upper:]:
+            part.matrix_world = bend @ part.matrix_world
     # Tools.
-    if p.get("tool") == "hoe":
+    if p.get("tool") == "stick":
+        palm = next(part for part in o if part.name == "palm1")
+        c = palm.matrix_world @ (sum((v.co for v in palm.data.vertices), Vector()) / len(palm.data.vertices))
+        o.append(cylinder("stick", 0.0030, 0.0030, c.z + 0.012, (c.x + 0.004, c.y - 0.008, (c.z + 0.012) / 2), m("wood", WOOD), segs=8))
+    elif p.get("tool") == "hoe":
         handle = cylinder("handle", 0.0028, 0.0028, 0.10, (0.020, 0.012, 0.105), m("wood", WOOD), segs=8,
                           rot=Matrix.Rotation(math.radians(58), 3, "X"))
         o.append(handle)
@@ -523,7 +561,7 @@ def model_person(kind, facing, pose="stand"):
         for i in range(3):
             o.append(sphere("veg%d" % i, 0.0062, (-0.035 + (i - 1) * 0.008, -0.004, 0.068), m("veg", (0xD94A3A, 0x4FB544, 0xE8C14A)[i]), segs=8, rings=6, outline=False))
     rot = math.radians(30) if facing == "front" else math.radians(-115)
-    return group(o, rot_z=rot, scale=PERSON_SCALE, outline_factor=0.7)
+    return group(o, rot_z=rot, scale=PERSON_SCALE * p.get("size", 1.0), outline_factor=0.7)
 
 
 SPRITES = {
@@ -2696,6 +2734,148 @@ SPRITES.update({"crop_mustard_g2": lambda: model_crop("mustard", "g3"), "crop_su
 
 
 # ---------------------------------------------------------------- framing and render
+
+# ---------------------------------------------------------------- your people's homes (spec 014, US-212)
+
+HOUSE_SCALE = 0.72       # times BUILDING_SCALE: up to four homes with their courtyards share an acre (previewed to the owner)
+
+
+def model_family_house(stage):
+    """A family house: a two-room pucca house, lime-washed over brick with an ochre dado, a flat roof with a parapet and a
+    terracotta-tiled verandah on two posts; in front a low courtyard wall (aangan) with a gate gap, a tulsi, a charpai and pots.
+    stage 'done' or 'building' (the plinth, half-raised brick walls, bamboo scaffolding, a brick stack and a sand heap)."""
+    o = []
+    w, d = 0.36, 0.20                       # the house, its front (door side) towards -y
+    cy = 0.07                               # the house sits at the back of its plot; the courtyard is in front
+    ay0, ay1 = -0.25, cy - d / 2            # the courtyard from the front wall to the house
+    lime, dado = toon("famLime", 0xF3E9D6), toon("famDado", 0xC9794A)
+    brick, plinth = toon("brick", 0xB5653E), toon("plinth", PLINTH)
+    yard = toon("aangan", 0xD8BF92)
+    o.append(box("yard", (w + 0.04, ay1 - ay0, 0.006), (0, (ay0 + ay1) / 2, 0.003), yard, outline=False))
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.035), (0, cy, 0.0175), plinth, bevel=0.005))
+    # The courtyard wall: three sides, a gap for the gate in the middle of the front.
+    wall = brick if stage == "building" else toon("yardWall", 0xE6D6B6)
+    cap = toon("wallCap", 0xB98A55)
+    for sx in (-1, 1):
+        o.append(box("sideWall%d" % sx, (0.018, ay1 - ay0, 0.05), (sx * (w / 2 + 0.01), (ay0 + ay1) / 2, 0.025), wall))
+        o.append(box("frontWall%d" % sx, (w / 2 - 0.045, 0.018, 0.05), (sx * (w / 4 + 0.032), ay0, 0.025), wall))
+        if stage == "done":
+            o.append(box("cap%d" % sx, (w / 2 - 0.04, 0.024, 0.008), (sx * (w / 4 + 0.032), ay0, 0.054), cap, outline=False))
+            o.append(box("gatePost%d" % sx, (0.022, 0.022, 0.075), (sx * 0.045, ay0, 0.0375), toon("famLime", 0xF3E9D6)))
+    if stage == "building":
+        # Half-raised brick walls on the plinth, bamboo poles round them, bricks and sand waiting.
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.08), (sx * (w / 2 - 0.01), cy, 0.075), brick))
+        o.append(box("wallBack", (w, 0.02, 0.10), (0, cy + d / 2 - 0.01, 0.085), brick))
+        o.append(box("wallFrontL", (0.12, 0.02, 0.06), (-0.11, cy - d / 2 + 0.01, 0.065), brick))
+        o.append(box("wallFrontR", (0.08, 0.02, 0.07), (0.13, cy - d / 2 + 0.01, 0.07), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, 0.0, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.2, (x, y, 0.1), bam, segs=6))
+        for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+            o.append(cylinder("rail%d" % int(y * 100), 0.003, 0.003, w + 0.04, (0, y, 0.15), bam, segs=6, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.10 + j * 0.055, -0.15, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.05, 0.035, (0.10, -0.15, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
+    # The house: walls with a dado, a flat roof and parapet, two doors and a window, a tiled verandah on two posts.
+    o.append(box("walls", (w, d, 0.15), (0, cy, 0.035 + 0.075), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.04), (0, cy, 0.055), dado, outline=False))
+    o.append(box("roof", (w + 0.012, d + 0.012, 0.016), (0, cy, 0.193), toon("roofSlab", 0xD8CDB8)))
+    o.append(box("parapet", (w + 0.016, d + 0.016, 0.022), (0, cy, 0.212), toon("famLimeShade", 0xE2D5BC)))
+    doorm = toon("famDoor", 0x2F6FA8)
+    for x in (-0.085, 0.085):                       # two rooms, a door each
+        o.append(box("door%d" % (x > 0), (0.055, 0.010, 0.10), (x, cy - d / 2 - 0.004, 0.085), doorm))
+    o.append(box("window", (0.045, 0.010, 0.04), (0.0, cy - d / 2 - 0.004, 0.12), toon("wood_dark", WOOD_DARK)))
+    back_details(o, w, d, 0.12, toon("wood_dark", WOOD_DARK))
+    for part in o[-3:]:
+        part.location.y += cy
+    # The verandah: a sloped tile roof over the front, on two wooden posts.
+    vy = cy - d / 2 - 0.045
+    for x in (-w / 2 + 0.02, w / 2 - 0.02):
+        o.append(cylinder("post%d" % (x > 0), 0.007, 0.007, 0.13, (x, vy - 0.02, 0.10), toon("wood", WOOD), segs=8))
+    o.append(box("veranda", (w + 0.03, 0.10, 0.012), (0, vy + 0.005, 0.172), toon("tile", TILE),
+                 rot=Matrix.Rotation(math.radians(-14), 3, "X")))
+    o.append(box("verandaFloor", (w, 0.08, 0.012), (0, vy + 0.01, 0.041), plinth, outline=False))
+    # In the courtyard: a tulsi, a charpai, pots by the door.
+    o.append(box("tulsiBase", (0.04, 0.04, 0.05), (-0.11, -0.13, 0.025), toon("famLime", 0xF3E9D6), bevel=0.004))
+    o.append(sphere("tulsi", 0.024, (-0.11, -0.13, 0.07), toon("tulsiLeaf", 0x3F8A3A), segs=10, rings=6))
+    frame, weave = toon("charpaiFrame", WOOD), toon("charpaiRope", 0xE3CFA0)
+    o.append(box("charpai", (0.12, 0.06, 0.008), (0.10, -0.13, 0.036), weave))
+    for x in (0.045, 0.155):
+        for y in (-0.155, -0.105):
+            o.append(box("cleg%d%d" % (x > 0.1, y > -0.13), (0.008, 0.008, 0.035), (x, y, 0.0175), frame, outline=False))
+    o.extend(matka("pot1", (0.16, cy - d / 2 - 0.075, 0.035)))
+    # A black water tank on the roof, and washing on a line across the courtyard.
+    o.append(cylinder("tank", 0.03, 0.03, 0.045, (-0.11, cy + 0.03, 0.245), toon("tank", 0x2E2E2E), segs=14))
+    for x in (-w / 2 + 0.01, w / 2 - 0.01):
+        o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.06, 0.045), toon("wood", WOOD), segs=6))
+    o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.06, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False,
+                      rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    for i, (x, c) in enumerate(((-0.07, 0xE2582C), (-0.02, 0xF2C94C), (0.04, 0x2E6FBA))):
+        o.append(box("cloth%d" % i, (0.04, 0.004, 0.035), (x, -0.06, 0.068), toon("cloth%d" % i, c), outline=False))
+    return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
+
+
+def portrait(kind):
+    """A card portrait: the villager from the shoulders up, framed as an icon."""
+    objs = model_person(kind, "front")
+    low = ("chappal", "skirt", "hem", "pleat", "leg", "kurtahem", "dhoti", "fold", "shorts", "stick", "handle", "blade", "basket", "veg")
+    keep = []
+    for o in objs:
+        if any(o.name.startswith(n) for n in low):
+            bpy.data.objects.remove(o, do_unlink=True)
+        else:
+            keep.append(o)
+    return keep
+
+
+def upright(tilt=0.15):
+    """facing_camera(), turned about the face's normal so the model's +y is the screen's up (faces and smiles read upright)."""
+    up = Vector((-0.3536, 0.3536, 0.8660))      # the camera's up in the world: Rz(45°) Rx(60°) (0, 1, 0)
+    m = facing_camera(tilt)
+    best = max(range(0, 360, 2), key=lambda a: (m @ Matrix.Rotation(math.radians(a), 4, "Z")).to_3x3() @ Vector((0, 1, 0)) @ up)
+    return m @ Matrix.Rotation(math.radians(best), 4, "Z")
+
+
+def icon_people(kind):
+    """Population: three villagers' heads and shoulders; happiness: a round marigold-yellow smiling face. Built facing +z, top +y."""
+    o = []
+    dark = toon("smileDark", 0x4A2A16)
+    if kind == "population":
+        for i, (x, y, sk, shirt) in enumerate(((-0.075, 0.015, 0xA86E4A, 0x86B9DA), (0.075, 0.015, 0xB37853, 0x3E8E5A), (0.0, -0.025, 0xB07A52, 0xF2C14E))):
+            z = 0.03 if i == 2 else 0.0               # the one in front is nearer
+            o.append(sphere("pbody%d" % i, 0.055, (x, y - 0.075, z - 0.01), toon("pshirt%d" % i, shirt), scale=(1.1, 0.75, 0.6), segs=16, rings=10))
+            o.append(sphere("phair%d" % i, 0.047, (x, y + 0.012, z - 0.012), toon("phair", 0x2B1D16), segs=16, rings=10))
+            o.append(sphere("face%d" % i, 0.043, (x, y, z), toon("pface%d" % i, sk), segs=16, rings=10))
+            for sx in (-1, 1):
+                o.append(sphere("peye%d%d" % (i, sx), 0.006, (x + sx * 0.015, y + 0.004, z + 0.04), dark, scale=(0.8, 1.2, 0.5), segs=8, rings=5, outline=False))
+            o.append(sphere("psmile%d" % i, 0.007, (x, y - 0.018, z + 0.04), toon("mouth", 0x7A2E26), scale=(1.8, 0.7, 0.5), segs=8, rings=5, outline=False))
+        return turn(o, upright())
+    face = toon("smile", 0xF6C744)
+    o.append(cylinder("disc", 0.10, 0.10, 0.03, (0, 0, 0), face, segs=32))
+    o.append(cylinder("discRim", 0.10, 0.10, 0.032, (0, 0, -0.004), toon("smileRim", 0xE0A21C), segs=32, outline=False))
+    for sx in (-1, 1):
+        o.append(sphere("eye%d" % sx, 0.013, (sx * 0.035, 0.028, 0.016), dark, scale=(0.8, 1.25, 0.4), segs=10, rings=6, outline=False))
+        o.append(sphere("cheek%d" % sx, 0.016, (sx * 0.062, -0.014, 0.015), toon("cheek", 0xF08A5D), scale=(1, 0.7, 0.3), segs=10, rings=6, outline=False))
+    for i in range(9):
+        a = math.radians(205 + i * 16.25)        # the lower arc: a smile
+        o.append(sphere("smile%d" % i, 0.008, (math.cos(a) * 0.05, math.sin(a) * 0.05 + 0.002, 0.016), dark, scale=(1, 1, 0.4), segs=8, rings=5, outline=False))
+    return turn(o, upright(0.3))
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["family_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("done"), d)))()
+    SPRITES["family_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("building"), d)))()
+for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f"):
+    ICONS["portrait_" + _k] = (lambda k=_k: (lambda: portrait(k)))()
+ICONS["icon_population"] = lambda: icon_people("population")
+ICONS["icon_happiness"] = lambda: icon_people("happiness")
+SPRITES.update(ICONS)
+TOWN_PEOPLE = ("town_m", "town_f", "boy", "girl", "elder_m", "elder_f")
+
 
 def frame_and_render(sc, cam, name, objs):
     """Fits the frame to the model, renders it, and returns the pivot (the world origin) in normalised image coordinates."""
