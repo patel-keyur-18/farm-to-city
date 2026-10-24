@@ -187,14 +187,14 @@
 
 ## In progress
 
-**Sprint 13** (`sprint/13-citizens`): the owner's two requests first (2026-10-24), each approved before the sprint's stories start:
-- **US-214:** a fodder stand's `ReadyAt` is the end of its last cut season (up to 2 seasons), and `PeopleRules.LabourUntil` took the latest `ReadyAt` of any growing crop, so with fodder sown labourers were paid for days instead of hours (10–30 × the cost). Options put to the owner.
-- **US-215:** the People sheet in the Store and Orders sheets' layout (pictured rows, big picture buttons). Layout put to the owner.
+**Sprint 13** (`sprint/13-citizens`):
+- **US-214 done and approved (2026-10-24, ADR 0066):** a fodder stand's `readyAt` is the end of its last cut season, and labourers were paid till the latest `readyAt`, so with fodder sown they cost 10–30 ×. `PeopleRules.LabourUntil` now skips fodder (cut each morning with the animals' work); fodder alone refuses hiring with the reason in words. Every gate passes.
+- **US-215 done and approved (2026-10-24, ADR 0066):** the People sheet in the Store's layout: a Care row, picture buttons (Hire labourers, Build a hut, Send word), pictured rows (labourers at work, hands with orders, applicants, huts); Hire labourers and Send word sheets. The owner checked it on the iPhone. Editor: the sheets were opened by reflection (Unity lost focus, so touch was not tested in the Editor). Note: in a time-travelled town "They go home at" shows the wall clock, not the HUD's game clock (left as is, owner's call).
+- **US-105 next.**
 
 ## Next up
 
-1. **Owner:** choose the fodder fix and the People sheet layout; then review both in the Editor captures.
-2. **Claude:** build both, Editor-test with touch, report; after the owner's approval, Sprint 13 in the order in `sprints.md` (US-105 first).
+1. **Claude:** Sprint 13 in the order in `sprints.md`: US-105 → US-106 → US-107 → US-108 → US-209 → US-208 and US-212 (layout previewed first) → US-210; specs 015 and 016 alongside.
 
 ## Owner action checklist (Phases 0–1)
 

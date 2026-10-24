@@ -573,7 +573,7 @@
 
 ## Sprint 13 · 8–21 Feb 2027 · Phase 2 (citizens; specs 015 and 016 written; 2 weeks, as S12)
 
-- **Status:** In progress. Before the sprint's stories, two owner requests (2026-10-24): fodder stands no longer keep labourers hired (US-214) and the People sheet redesigned like the Store and Orders sheets (US-215); the sprint's stories start once the owner approves both
+- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 next
 - **Branch:** `sprint/13-citizens`
 - **Goal:** Spec 014 built (ADR 0063): citizens and the life clock, the family house, homes and people art, household budgets, needs and happiness, work and food, your people on screen; save schema 9 with its migration and fixture. Specs 015 (full hiring and HR) and 016 (businesses and production) written and approved; their code comes later.
 - **Points:** 39 planned + the owner's two requests
@@ -582,8 +582,8 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-214 | Fodder stands don't keep labourers hired (owner, 2026-10-24) | [F06.1](features/F06.1-day-labourers.md) | 1 | Must | To do |
-| US-215 | The People sheet like the Store and Orders sheets (owner, 2026-10-24) | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
+| US-214 | Fodder stands don't keep labourers hired (owner, 2026-10-24) | [F06.1](features/F06.1-day-labourers.md) | 1 | Must | Done |
+| US-215 | The People sheet like the Store and Orders sheets (owner, 2026-10-24) | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
 | US-105 | Citizens: the model, Phase 1 hands as citizens, save schema 9 | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
 | US-106 | The life clock: ageing and retirement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 3 | Must | To do |
 | US-208 | The family house: build, rent, unlock and placement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
@@ -597,7 +597,7 @@
 
 **Sprint end checklist**
 
-- [ ] US-214 and US-215 approved by the owner
+- [x] US-214 and US-215 approved by the owner (2026-10-24)
 - [ ] Specs 015 and 016 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [ ] Save schema 9: migration, `saves/schema9` fixture, every older schema loads
