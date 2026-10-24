@@ -61,5 +61,61 @@ namespace Sim.Core.Tests
             Assert.That(r.State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()));
             Assert.That(r.State.Citizens.Population, Is.EqualTo(one.State.People.Hands.Count));
         }
+    
+        /// <summary>A hand's citizen made <paramref name="age"/> years old now.</summary>
+        private static Citizen AgedHand(Simulation sim, Hand h, int age)
+        {
+            Citizen c = sim.State.Citizens.OfHand(h.Id);
+            c.BornSeason = CitizenRules.SeasonOf(sim, sim.State.Clock.SimTime) - age;
+            return c;
+        }
+
+        private static long NextClose(Simulation sim) { return (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason; }
+
+        // AC-1: everyone ages a year at each season close; a hand turning 60 finishes his season and isn't renewed (CitizenRetired).
+        [Test]
+        public void Ageing_Retirement()
+        {
+            Simulation sim = Start();
+            Hand h = HireHand(sim);
+            Citizen c = AgedHand(sim, h, 58);
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That(CitizenRules.Age(sim, c), Is.EqualTo(59), "a year at the close");
+            Assert.That(P(sim).Hands.Single().Contract, Is.EqualTo(ContractState.Active), "renewed at 59");
+            sim.AdvanceTo(NextClose(sim) - 1);
+            Assert.That(CitizenRules.Age(sim, c), Is.EqualTo(59), "no birthday mid-season");
+            sim.DrainEvents();
+            sim.AdvanceTo(NextClose(sim));
+            Events.CitizenRetired e = sim.PendingEvents.OfType<Events.CitizenRetired>().Single();
+            Assert.That((e.HandId, e.Age, e.Name, e.WentHome), Is.EqualTo((h.Id, 60, h.Name, true)));
+            Assert.That(sim.PendingEvents.OfType<Events.ContractRenewed>(), Is.Empty, "not renewed");
+            Assert.That(P(sim).Hands, Is.Empty);
+            Assert.That(P(sim).Orders.Where(o => o.HandId == h.Id), Is.Empty);
+        }
+
+        // §3.13: a retired hand living alone goes home; his hut is free and a new hand can be hired into it.
+        [Test]
+        public void RetiredHandFreesHut()
+        {
+            Simulation sim = Start();
+            Hand h = HireHand(sim);
+            long hut = h.HutId;
+            AgedHand(sim, h, 59);
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That(sim.State.Citizens.Population, Is.EqualTo(0), "gone home to his village");
+            Assert.That(sim.State.Citizens.Citizens, Is.Empty, "nobody links to him");
+            Assert.That(PeopleRules.EmptyHut(sim).Id, Is.EqualTo(hut));
+            Hand next = HireHand(sim);
+            Assert.That(next.HutId, Is.EqualTo(hut));
+            Assert.That(sim.State.Citizens.OfHand(next.Id), Is.Not.Null);
+
+            // With his household in another home (his family's house, US-208), he stays on as its elder, retired.
+            Citizen c = AgedHand(sim, next, 59);
+            sim.State.Citizens.Household(c.HouseholdId).HomeId = 9_999;
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That((c.Living, c.Job, c.HandId), Is.EqualTo((true, CitizenJob.Retired, 0L)));
+            Assert.That(sim.State.Citizens.Population, Is.EqualTo(1));
+            Assert.That(PeopleRules.EmptyHut(sim).Id, Is.EqualTo(hut), "his hut is free");
+        }
     }
 }

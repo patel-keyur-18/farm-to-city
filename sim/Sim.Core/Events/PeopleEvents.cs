@@ -220,6 +220,31 @@ namespace Sim.Core.Events
         protected override string Describe() { return "HandLeft(hand=" + HandId + ")"; }
     }
 
+    /// <summary>A hand turned the retirement age (spec 014 §3.2): not renewed; gone home to his village, or staying with his family.</summary>
+    public sealed class CitizenRetired : SimEvent
+    {
+        public long CitizenId { get; }
+        public long HandId { get; }
+
+        /// <summary>Index into the names: he may already be gone from the town.</summary>
+        public int Name { get; }
+        public int Age { get; }
+
+        /// <summary>He lived alone in his hut and went home to his village (the hut is free).</summary>
+        public bool WentHome { get; }
+
+        public CitizenRetired(long simTime, long citizenId, long handId, int name, int age, bool wentHome) : base(simTime)
+        {
+            CitizenId = citizenId;
+            HandId = handId;
+            Name = name;
+            Age = age;
+            WentHome = wentHome;
+        }
+
+        protected override string Describe() { return "CitizenRetired(citizen=" + CitizenId + ", hand=" + HandId + ", age=" + Age + ", home=" + WentHome + ")"; }
+    }
+
     public sealed class HandDismissed : SimEvent
     {
         public long HandId { get; }

@@ -1,4 +1,5 @@
 using Sim.Core.Definitions;
+using Sim.Core.Events;
 using Sim.Core.Maths;
 
 namespace Sim.Core.People
@@ -96,6 +97,30 @@ namespace Sim.Core.People
             c.HandId = 0;
             Household x = s.Household(c.HouseholdId);
             if (x != null && x.HomeId == h.HutId) Leave(sim, x);
+        }
+
+        /// <summary>A hand under contract who is <c>retireAge</c> or older at this close (spec 014 §3.2); false without citizens.</summary>
+        internal static bool Retiring(Simulation sim, Hand h)
+        {
+            Citizen c = sim.State.Citizens?.OfHand(h.Id);
+            return c != null && Age(sim, c) >= sim.Config.Game.Population.RetireAge;
+        }
+
+        /// <summary>
+        /// The hand retires (spec 014 §3.2, §3.13): his contract isn't renewed and his orders end. Alone in his hut he goes home to his
+        /// village and the hut is free for a new hand; with his family in a family house he stays on as its elder. Emits CitizenRetired.
+        /// </summary>
+        internal static void Retire(Simulation sim, Hand h)
+        {
+            CitizensState s = sim.State.Citizens;
+            long t = sim.State.Clock.SimTime;
+            Citizen c = s.OfHand(h.Id);
+            int age = Age(sim, c);
+            bool home = s.Household(c.HouseholdId).HomeId == h.HutId;
+            c.Story.Add(new StoryLine(StoryKind.Retired, t, 0));
+            PeopleSystem.Leave(sim, h);
+            if (!home) c.Job = CitizenJob.Retired;
+            sim.Emit(new CitizenRetired(t, c.Id, h.Id, c.Name, age, home));
         }
 
         /// <summary>A household moves away: its members leave the town, kept only while a living citizen links to them (§3.3).</summary>

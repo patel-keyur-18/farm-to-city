@@ -316,8 +316,8 @@ namespace Sim.Core.People
         // ---- contracts (§3.6, §3.7) ----
 
         /// <summary>
-        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; an active one is
-        /// renewed at the re-asked wage (a loyal hand keeps theirs; an ambitious one asks 10% more) if cash allows, else it lapses.
+        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; a hand who has turned
+        /// <c>retireAge</c> retires (spec 014 §3.2); an active one is renewed at the re-asked wage (a loyal hand keeps theirs; an ambitious one asks 10% more) if cash allows, else it lapses.
         /// Then skill grows for every hand under an active contract.
         /// </summary>
         internal static void SettleContracts(Simulation sim)
@@ -332,6 +332,11 @@ namespace Sim.Core.People
                 {
                     Leave(sim, h);
                     sim.Emit(new HandLeft(t, h.Id));
+                    continue;
+                }
+                if (CitizenRules.Retiring(sim, h))
+                {
+                    CitizenRules.Retire(sim, h); // spec 014 §3.2: his season done, he isn't renewed
                     continue;
                 }
                 long wage = RenewalWage(sim, h);

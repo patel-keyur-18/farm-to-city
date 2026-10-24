@@ -535,6 +535,7 @@
   "event.ContractRenewed": "A hand's season was paid.",
   "event.ContractLapsed": "A hand's season couldn't be paid.",
   "event.HandLeft": "A hand left.",
+  "event.CitizenRetired": "A hand retired.",
   "event.HandDismissed": "A hand was let go.",
   "event.HandSkillGrew": "A hand grew more skilled.",
   "event.StandingOrderSet": "A hand was given an order.",
