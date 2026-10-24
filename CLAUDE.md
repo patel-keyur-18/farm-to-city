@@ -175,6 +175,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0063 | Spec 014: your people live on your land (huts, family houses from the Hamlet at 60,000, rent 6,000); a life-year a season, only elders die, gently; Engel budgets; needs layers 40/30/20/10; families fill empty houses, a hand's family's house is part of his pay; outside work at the day-labour rate on half the days; a bounded family tree; the town's food adds to local demand; every path achievable |
 | 0064 | The cattle acre: the founder inherits one barren acre beside the yard (tile 104, `home_d`), never farmed, sold or seized; the shed goes there from the Hamlet, drawn spread out like a village baada; map layouts never cramped, previewed to the owner first; save schema 8 |
 | 0065 | The village's shops and public buildings stand where their fronts face the camera (main street: council hall, grocer, tea stall; side lane: dealer, chemist, dairy co-op; the temple faces the pond); the dairy co-op on acre 108 by the farm's lane |
+| 0066 | Fodder stands never keep labourers hired (they're cut each morning with the animals' work; labourers come for a harvest); the People sheet in the Store's layout (picture buttons to hire, build a hut, send word; pictured rows; Hire and Send word sheets) |
 
 ## Current status
 

@@ -89,9 +89,13 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             SheetVm s = PeopleSheet.Build(ViewKit2.Context(sim));
-            Assert.That(s.Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "nothing growing to hire for (ADR 0049)");
-            Assert.That(s.Lines.Single(l => l.Action?.Id == "buildHut").Action.Opens.Value.Kind, Is.EqualTo("HutPlacement"));
-            Assert.That(s.Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
+            Assert.That(PeopleSheet.Hire(ViewKit2.Context(sim)).Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "nothing growing to hire for (ADR 0049)");
+            // US-215: the Store's layout, picture buttons for hiring, a hut and sending word.
+            List<ActionVm> buttons = s.Lines.Single(l => l.Buttons != null).Buttons;
+            Assert.That(buttons.Select(b => b.Id), Is.EqualTo(new[] { "hire", "buildHut", "word" }));
+            Assert.That(buttons.Select(b => b.Opens.Value.Kind), Is.EqualTo(new[] { "Hire", "HutPlacement", "Word" }));
+            Assert.That(buttons.All(b => b.Icon != null && b.Detail != null), Is.True);
+            Assert.That(PeopleSheet.Word(ViewKit2.Context(sim)).Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
 
             // Hut placement: the six inherited acres, the yard is not among them.
             List<HutPlaceVm> places = HutPlacement.Places(ViewKit2.Context(sim));
@@ -104,7 +108,9 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             Assert.That(HutPlacement.Places(ctx).Single(p => p.TileId == 119).Allowed, Is.True, "room for a second hut");
             s = PeopleSheet.Build(ctx);
-            Assert.That(s.Lines.Any(l => l.Action?.Id == "hand:" + h.Id), Is.True);
+            Assert.That(s.Lines.Single(l => l.Action?.Id == "hand:" + h.Id).Icon, Does.StartWith("person_hand_"));
+            Assert.That(s.Lines.Single(l => l.Action?.Id == "hand:" + h.Id).Note, Is.Not.Null, "the hand's orders");
+            Assert.That(s.Lines.Any(l => l.Icon == "hand_hut" && l.Action?.Id?.StartsWith("hut:") == true), Is.True, "the hut he lives in");
             Assert.That(FieldSheets.ForTile(ctx, 119).Lines.Any(l => l.Label.StartsWith("Hut place")), Is.True);
 
             // A field sheet offers the order; the order sheet steps crop, then sell rule.
@@ -235,18 +241,19 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             long t = sim.State.Clock.SimTime;
-            SheetVm people = PeopleSheet.Build(ViewKit2.Context(sim));
+            SheetVm people = PeopleSheet.Hire(ViewKit2.Context(sim));
             Assert.That(people.Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
             Assert.That(people.Lines.Any(l => l.Value == "Sow something first: they stay till its harvest"), Is.True);
             Ok(sim, new Sow(t, 86, "potato", SeedSource.Certified, "none"));
             Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 86).Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "not on the field");
             int free = PeopleRules.FreeNow(sim);
-            people = PeopleSheet.Build(ViewKit2.Context(sim));
+            people = PeopleSheet.Hire(ViewKit2.Context(sim));
             List<LineVm> hires = people.Lines.Where(l => l.Action?.Id?.StartsWith("hire:") == true).ToList();
             Assert.That(hires.Count, Is.EqualTo(free));
             Assert.That(hires[0].Label, Is.EqualTo("1 labourer till harvest"));
             Assert.That(sim.Execute(hires[0].Action.Create(t)).Accepted, Is.True);
-            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
+            Assert.That(PeopleSheet.Hire(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
+            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Icon == "person_labourer_m" && l.Note != null).Label, Is.EqualTo("1 labourer working"));
             Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Labourer).Patrol, Is.EqualTo(new[] { 86 }));
         }
 

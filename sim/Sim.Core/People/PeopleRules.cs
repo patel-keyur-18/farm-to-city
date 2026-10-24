@@ -74,11 +74,13 @@ namespace Sim.Core.People
 
         /// <summary>
         /// When labourers hired now go home: the last growing crop's readyAt rounded up to the hour (ADR 0049 §3); 0 if none grows.
+        /// A fodder stand never counts: it is cut each morning with the animals' work, not harvested (ADR 0066).
         /// </summary>
         public static long LabourUntil(Simulation sim)
         {
             long last = 0;
-            foreach (Crop c in sim.State.Farm.Crops) if (c.State == CropState.Growing && c.ReadyAt > last) last = c.ReadyAt;
+            foreach (Crop c in sim.State.Farm.Crops)
+                if (c.State == CropState.Growing && c.ReadyAt > last && !sim.Config.Game.Farm.Crops[c.Def].Fodder) last = c.ReadyAt;
             return last == 0 ? 0 : (last + 3599) / 3600 * 3600;
         }
 

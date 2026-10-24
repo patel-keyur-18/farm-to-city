@@ -24,6 +24,8 @@ namespace Sim.View.Tests
             foreach (GardenBed b in sim.State.Farm.Beds) yield return Named("bed " + b.Id, FieldSheets.ForBed(ctx, b.Id));
             yield return Named("store", StoreSheet.Build(ctx));
             yield return Named("people", PeopleSheet.Build(ctx));
+            yield return Named("hire", PeopleSheet.Hire(ctx));
+            yield return Named("word", PeopleSheet.Word(ctx));
             foreach (var h in sim.State.People.Hands) yield return Named("hand " + h.Id, HandSheet.Build(ctx, h.Id));
             yield return Named("forecast", ForecastView.Sheet(ctx));
             foreach (var extra in Panels.All(ctx)) yield return extra;

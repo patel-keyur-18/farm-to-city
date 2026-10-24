@@ -189,6 +189,7 @@ namespace Game.Presentation
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));
                     return;
                 case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
+                case "Hire": case "Word": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working, word out
             }
             // The shed sheet stays open: building, buying from neighbours on or off, the hand's animals order (spec 012 §7).
             if (r.Kind == "Tile" && Sim.Config.Game.Livestock != null && r.Id == Sim.Config.Game.Livestock.Livestock.ShedTile) return;

@@ -115,7 +115,8 @@ namespace Game.Presentation.Ui
                 case "hut": return SpriteBank.Rendered("hut") ?? SpriteBank.Hut;
                 case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
-                case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
+                case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
+                case "hand_hut": case "hand_hut_building": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
@@ -454,6 +455,7 @@ namespace Game.Presentation.Ui
             {
                 ActionVm action = a;
                 var b = new Button(() => { if (OnAction != null) OnAction(action); }) { text = "", name = "tile:" + a.Id };
+                b.SetEnabled(a.Enabled); // greyed, its reason in place of the detail (a hut with no room or cash)
                 b.style.flexGrow = 1; b.style.flexBasis = 0;
                 b.style.marginLeft = 0; b.style.marginRight = 16;
                 b.style.flexDirection = FlexDirection.Row;
@@ -479,9 +481,10 @@ namespace Game.Presentation.Ui
                 title.style.whiteSpace = WhiteSpace.Normal;
                 title.style.unityTextAlign = TextAnchor.MiddleLeft; // a Button centres its text by default
                 words.Add(title);
-                if (!string.IsNullOrEmpty(a.Detail))
+                string under = a.Enabled || a.DisabledReason == null ? a.Detail : a.DisabledReason;
+                if (!string.IsNullOrEmpty(under))
                 {
-                    Label detail = UiKit.Text(a.Detail, 28, UiKit.Wood, UiKit.Body);
+                    Label detail = UiKit.Text(under, 28, UiKit.Wood, UiKit.Body);
                     detail.pickingMode = PickingMode.Ignore;
                     detail.style.whiteSpace = WhiteSpace.Normal;
                     detail.style.unityTextAlign = TextAnchor.MiddleLeft;
@@ -730,7 +733,7 @@ namespace Game.Presentation.Ui
             foreach (LineVm l in vm.Lines)
             {
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
-                if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count);
+                if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);

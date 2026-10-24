@@ -131,7 +131,10 @@ namespace Sim.View.Views
         }
     }
 
-    /// <summary>The People sheet (ADR 0039 §8): day labourers, hands, applicants, huts and sending word. One row per choice.</summary>
+    /// <summary>
+    /// The People sheet (ADR 0039 §8, laid out like the Store by the owner's choice, US-215): picture buttons to hire labourers, build a
+    /// hut and send word; then pictured rows for the labourers at work, the hands, the people asking for work and the huts.
+    /// </summary>
     public static class PeopleSheet
     {
         public static SheetVm Build(ViewContext ctx)
@@ -139,113 +142,184 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             PeopleState p = sim.State.People;
             PeopleDefs defs = sim.Config.Game.People;
+            var s = ctx.Strings;
             var vm = new SheetVm
             {
-                Icon = "people", Title = ctx.Strings.Get("people.title"),
-                Subtitle = ctx.Strings.Get("people.subtitle", "population", ctx.Fmt.Integer(p.Population), "huts", ctx.Fmt.Integer(PeopleRules.HutCount(sim)),
+                Icon = "people", Title = s.Get("people.title"),
+                Subtitle = s.Get("people.subtitle", "population", ctx.Fmt.Integer(p.Population), "huts", ctx.Fmt.Integer(PeopleRules.HutCount(sim)),
                     "max", ctx.Fmt.Integer(defs.Hand.MaxHandHuts)),
             };
+            vm.Lines.Add(new LineVm(s.Get("people.care"), ctx.Rating(sim.State.Farm.CareRatio), "care"));
 
-            // Day labourers.
-            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.dayLabour")));
-            int free = PeopleRules.FreeNow(sim), working = 0;
-            foreach (Neighbour n in p.Roster) if (n.Hired) working++;
-            Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("people.freeToday"),
-                ctx.Strings.Get("people.freeTodayValue", "n", ctx.Fmt.Integer(free), "season", ctx.Strings.Get("season." + season.ToString().ToLowerInvariant())), "free"));
-            if (working > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.workingToday"), ctx.Strings.Get("people.workingTodayValue", "n", ctx.Fmt.Integer(working)), "free"));
-            // Hired till the crops growing now are in (ADR 0049 §3).
-            long until = PeopleRules.LabourUntil(sim);
-            if (until == 0 && free > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.noCrops"), ctx.Strings.Get("people.noCropsValue")));
-            string now = PeopleWords.CareWith(ctx, Fixed.Zero);
-            for (int k = 1; until > 0 && k <= free; k++)
+            // The hub's picture buttons, each saying what it opens.
+            int free = PeopleRules.FreeNow(sim);
+            long hutCost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[defs.HandHut].Value);
+            int huts = PeopleRules.HutCount(sim);
+            bool room = huts < defs.Hand.MaxHandHuts, cash = sim.State.Ledger.CanAfford(hutCost);
+            var buttons = new List<ActionVm>
             {
-                int count = k;
-                var line = new LineVm(ctx.Strings.Plural("people.hireN", count),
-                    ctx.Strings.Get("people.carePreview", "from", now, "to", PeopleWords.CareWith(ctx, defs.Pool.HoursPerDay.MulRatio(count, 1))), "hire", count);
-                line.Action = ActionVm.Checked(ctx, "hire:" + count, ctx.Strings.Get("action.hire"), ctx.Fmt.Coins(PeopleRules.LabourCost(sim, count, until)), ActionKind.Primary,
-                    at => new HireLabourers(at, count));
-                vm.Lines.Add(line);
-            }
+                Picture(ActionVm.Open("hire", s.Get("people.hireButton"), new SheetRequest("Hire", 0),
+                    free == 0 ? s.Get("people.hireButtonNone") : s.Plural("people.hireButtonFree", free)), "person_labourer_m"),
+                Picture(new ActionVm("buildHut", s.Get("people.hutButton"),
+                    room ? s.Get("people.hutButtonDetail", "cost", ctx.Fmt.Coins(hutCost), "built", ctx.Fmt.Integer(huts), "max", ctx.Fmt.Integer(defs.Hand.MaxHandHuts))
+                        : s.Get("people.hutButtonFull", "max", ctx.Fmt.Integer(defs.Hand.MaxHandHuts)),
+                    ActionKind.Open, room && cash, !room ? ctx.Reject(RejectReason.TooManyHuts) : !cash ? ctx.Reject(RejectReason.InsufficientFunds) : null, null,
+                    new SheetRequest("HutPlacement", 0)), "hand_hut"),
+                Picture(ActionVm.Open("word", s.Get("people.wordButton"), new SheetRequest("Word", 0),
+                    p.Post != null ? s.Get("people.wordButtonOut", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now)) : s.Get("people.wordButtonDetail")), "letter"),
+            };
+            vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
+
+            // Labourers at work today.
+            int working = 0;
+            long until = 0;
+            foreach (Neighbour n in p.Roster) if (n.Hired) { working++; if (n.Until > until) until = n.Until; }
+            if (working > 0)
+                vm.Lines.Add(new LineVm(s.Plural("people.workingN", working), s.Get("people.workingTill", "time", ForecastView.AtTime(ctx, until)), "free")
+                    { Icon = "person_labourer_m", Note = s.Get("people.workingNote") });
 
             // Hands.
-            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.hands")));
-            if (p.Hands.Count == 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("people.noHands"), ctx.Strings.Get(PeopleRules.HutCount(sim) == 0 ? "people.noHandsHut" : p.Applicants.Count > 0 ? "people.noHandsChoose" : "people.noHandsWait")));
+            vm.Lines.Add(LineVm.Header(s.Get("people.hands")));
+            if (p.Hands.Count == 0) vm.Lines.Add(new LineVm(s.Get("people.noHands"), s.Get(huts == 0 ? "people.noHandsHut" : p.Applicants.Count > 0 ? "people.noHandsChoose" : "people.noHandsWait")));
             foreach (Hand h in p.Hands)
             {
                 Hand hand = h;
                 int skill = (int)h.Skill.RoundToLong();
-                string value = h.Contract == ContractState.Lapsed ? ctx.Strings.Get("people.unpaid")
-                    : PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h));
-                var line = new LineVm(PeopleWords.Name(ctx, h.Name), value, h.Contract == ContractState.Lapsed ? "hand.lapse" : "hand.hours", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill) };
-                line.Action = h.Contract == ContractState.Lapsed
-                    ? ActionVm.Checked(ctx, "renew:" + h.Id, ctx.Strings.Get("action.renew"), ctx.Fmt.Coins(h.Wage), ActionKind.Primary, at => new RenewContract(at, hand.Id))
-                    : ActionVm.Open("hand:" + h.Id, ctx.Strings.Get("action.see"), new SheetRequest("Hand", h.Id));
+                bool lapsed = h.Contract == ContractState.Lapsed;
+                var targets = new List<string>();
+                foreach (StandingOrder o in p.Orders) if (o.HandId == h.Id) targets.Add(PeopleWords.Target(ctx, o.Kind, o.Target));
+                var line = new LineVm(PeopleWords.Name(ctx, h.Name), PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h)),
+                    lapsed ? "hand.lapse" : "hand.hours", h.Id)
+                {
+                    Stars = PeopleWords.Stars(ctx, skill, skill), Icon = HandIcon(ctx, h.Name),
+                    Note = lapsed ? s.Get("people.unpaid") : targets.Count == 0 ? s.Get("people.handNoOrders") : s.Get("people.handOrders", "list", string.Join(", ", targets)),
+                    NoteTone = lapsed ? Tone.Warn : Tone.Plain,
+                };
+                line.Action = lapsed
+                    ? ActionVm.Checked(ctx, "renew:" + h.Id, s.Get("action.renew"), ctx.Fmt.Coins(h.Wage), ActionKind.Primary, at => new RenewContract(at, hand.Id))
+                    : ActionVm.Open("hand:" + h.Id, s.Get("action.see"), new SheetRequest("Hand", h.Id));
                 vm.Lines.Add(line);
             }
 
             // Applicants.
-            if (PeopleRules.HutCount(sim) > 0)
+            if (huts > 0)
             {
-                vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.applicants")));
+                vm.Lines.Add(LineVm.Header(s.Get("people.applicants")));
                 if (p.Applicants.Count == 0)
-                    vm.Lines.Add(new LineVm(ctx.Strings.Get("people.nobody"), p.NextApplicantAt > ctx.Now
-                        ? ctx.Strings.Get("people.nextIn", "time", ctx.Fmt.Duration(p.NextApplicantAt - ctx.Now))
-                        : ctx.Strings.Get(PeopleRules.EmptyHut(sim) == null ? "people.waitHut" : "people.nextSoon")));
+                    vm.Lines.Add(new LineVm(s.Get("people.nobody"), p.NextApplicantAt > ctx.Now
+                        ? s.Get("people.nextIn", "time", ctx.Fmt.Duration(p.NextApplicantAt - ctx.Now))
+                        : s.Get(PeopleRules.EmptyHut(sim) == null ? "people.waitHut" : "people.nextSoon")));
                 foreach (Applicant a in p.Applicants)
                 {
                     Applicant ap = a;
                     PeopleRules.SkillRange(sim, a, out int lo, out int hi);
                     string traits = PeopleWords.Trait(ctx, a.Trait1) + " · " + (a.SecondTraitKnown ? PeopleWords.Trait(ctx, a.Trait2) : "?");
                     long wage = PeopleRules.AskedWage(sim, Fixed.FromInt(a.Skill), a.AboveMarket);
-                    var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits, "applicant", a.Id) { Stars = PeopleWords.Stars(ctx, lo, hi) };
-                    line.Action = ActionVm.Checked(ctx, "offer:" + a.Id, ctx.Strings.Get("action.offer"),
-                        ctx.Strings.Get("people.offerDetail", "wage", ctx.Fmt.Coins(wage), "now", ctx.Fmt.Coins(PeopleRules.RestOfSeason(sim, wage))), ActionKind.Primary,
+                    var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits, "applicant", a.Id)
+                        { Stars = PeopleWords.Stars(ctx, lo, hi), Icon = HandIcon(ctx, a.Name) };
+                    line.Action = ActionVm.Checked(ctx, "offer:" + a.Id, s.Get("action.offer"),
+                        s.Get("people.offerDetail", "wage", ctx.Fmt.Coins(wage), "now", ctx.Fmt.Coins(PeopleRules.RestOfSeason(sim, wage))), ActionKind.Primary,
                         at => new OfferContract(at, ap.Id));
                     vm.Lines.Add(line);
                     if (!a.SecondTraitKnown)
                     {
-                        var talk = new LineVm(ctx.Strings.Get("people.talkTo", "name", PeopleWords.Name(ctx, a.Name)), ctx.Strings.Get("people.talkWhy"));
-                        talk.Action = ActionVm.Checked(ctx, "interview:" + a.Id, ctx.Strings.Get("action.interview"), null, ActionKind.Secondary, at => new Interview(at, ap.Id));
+                        var talk = new LineVm(s.Get("people.talkTo", "name", PeopleWords.Name(ctx, a.Name)), s.Get("people.talkWhy"));
+                        talk.Action = ActionVm.Checked(ctx, "interview:" + a.Id, s.Get("action.interview"), null, ActionKind.Secondary, at => new Interview(at, ap.Id));
                         vm.Lines.Add(talk);
                     }
                 }
             }
 
             // Huts.
-            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.huts")));
-            foreach (Building b in sim.State.Land.Buildings)
+            if (huts > 0)
             {
-                if (!PeopleRules.IsHandHut(sim, b)) continue;
-                Hand who = p.Hands.Find(h => h.HutId == b.Id);
-                vm.Lines.Add(new LineVm(PeopleWords.Field(ctx, b.TileId),
-                    who == null ? ctx.Strings.Get("people.hutEmpty") : ctx.Strings.Get("people.hutLives", "name", PeopleWords.Name(ctx, who.Name))));
-            }
-            foreach (Construction c in p.Constructions)
-                vm.Lines.Add(new LineVm(PeopleWords.Field(ctx, c.TileId), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))));
-            long hutCost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[defs.HandHut].Value);
-            bool room = PeopleRules.HutCount(sim) < defs.Hand.MaxHandHuts;
-            bool cash = sim.State.Ledger.CanAfford(hutCost);
-            var build = new LineVm(ctx.Strings.Get("people.buildHut"), ctx.Strings.Get("people.buildHutWhy"), "hut");
-            build.Action = new ActionVm("buildHut", ctx.Strings.Get("action.place"), ctx.Fmt.Coins(hutCost), ActionKind.Open, room && cash,
-                !room ? ctx.Reject(RejectReason.TooManyHuts) : !cash ? ctx.Reject(RejectReason.InsufficientFunds) : null, null, new SheetRequest("HutPlacement", 0));
-            vm.Lines.Add(build);
-
-            // Sending word.
-            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("people.word")));
-            if (p.Post != null)
-                vm.Lines.Add(new LineVm(ctx.Strings.Get(p.Post.AboveMarket ? "people.postAbove" : "people.postMarket"),
-                    ctx.Strings.Get("people.postActive", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now)), "post"));
-            else
-                foreach (bool above in new[] { false, true })
+                vm.Lines.Add(LineVm.Header(s.Get("people.huts")));
+                int number = 0;
+                foreach (Building b in sim.State.Land.Buildings)
                 {
-                    bool am = above;
-                    var line = new LineVm(ctx.Strings.Get(am ? "people.postAbove" : "people.postMarket"), ctx.Strings.Get(am ? "people.postAboveWhy" : "people.postMarketWhy"), "post");
-                    line.Action = ActionVm.Checked(ctx, am ? "postAbove" : "postMarket", ctx.Strings.Get("action.post"),
-                        ctx.Fmt.Coins(MarketRules.Indexed(sim, defs.JobPost.Cost)), ActionKind.Secondary, at => new PostJob(at, am));
+                    if (!PeopleRules.IsHandHut(sim, b)) continue;
+                    Hand who = p.Hands.Find(h => h.HutId == b.Id);
+                    var line = new LineVm(s.Get("people.hutN", "n", ctx.Fmt.Integer(++number)),
+                        who == null ? s.Get("people.hutEmpty") : s.Get("people.hutLives", "name", PeopleWords.Name(ctx, who.Name))) { Icon = "hand_hut" };
+                    if (who == null) line.Note = s.Get("people.hutEmptyNote");
+                    else line.Action = ActionVm.Open("hut:" + b.Id, s.Get("action.see"), new SheetRequest("Hand", who.Id));
                     vm.Lines.Add(line);
                 }
+                foreach (Construction c in p.Constructions)
+                    vm.Lines.Add(new LineVm(s.Get("people.hutN", "n", ctx.Fmt.Integer(++number)), s.Get("people.hutBuilding"))
+                        { Icon = "hand_hut_building", Note = s.Get("people.hutReadyNote", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now)) });
+            }
             return vm;
+        }
+
+        /// <summary>Hire labourers (ADR 0049 §3, ADR 0066): one row per how many, each with its cost and Care before and after.</summary>
+        public static SheetVm Hire(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            PeopleState p = sim.State.People;
+            PeopleDefs defs = sim.Config.Game.People;
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "person_labourer_m", Title = s.Get("hire.title"), Subtitle = s.Get("hire.subtitle") };
+            int free = PeopleRules.FreeNow(sim), working = 0;
+            foreach (Neighbour n in p.Roster) if (n.Hired) working++;
+            Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
+            vm.Lines.Add(new LineVm(s.Get("people.freeToday"),
+                s.Get("people.freeTodayValue", "n", ctx.Fmt.Integer(free), "season", s.Get("season." + season.ToString().ToLowerInvariant())), "free"));
+            if (working > 0) vm.Lines.Add(new LineVm(s.Get("people.workingToday"), s.Get("people.workingTodayValue", "n", ctx.Fmt.Integer(working)), "free"));
+            long until = PeopleRules.LabourUntil(sim);
+            if (until == 0)
+            {
+                bool fodder = sim.State.Farm.Crops.Exists(c => c.State == CropState.Growing && sim.Config.Game.Farm.Crops[c.Def].Fodder);
+                vm.Lines.Add(fodder ? new LineVm(s.Get("hire.fodderOnly"), s.Get("hire.fodderOnlyValue")) : new LineVm(s.Get("people.noCrops"), s.Get("people.noCropsValue")));
+                return vm;
+            }
+            vm.Lines.Add(new LineVm(s.Get("hire.until"), ForecastView.AtTime(ctx, until), "hire", 1));
+            if (free == 0) vm.Lines.Add(new LineVm(s.Get("hire.noneFree"), s.Get("hire.noneFreeValue")));
+            string now = PeopleWords.CareWith(ctx, Fixed.Zero);
+            for (int k = 1; k <= free; k++)
+            {
+                int count = k;
+                var line = new LineVm(s.Plural("people.hireN", count),
+                    s.Get("people.carePreview", "from", now, "to", PeopleWords.CareWith(ctx, defs.Pool.HoursPerDay.MulRatio(count, 1))), "hire", count)
+                    { Icon = count % 2 == 1 ? "person_labourer_m" : "person_labourer_f" };
+                line.Action = ActionVm.Checked(ctx, "hire:" + count, s.Get("action.hire"), ctx.Fmt.Coins(PeopleRules.LabourCost(sim, count, until)), ActionKind.Primary,
+                    at => new HireLabourers(at, count));
+                vm.Lines.Add(line);
+            }
+            return vm;
+        }
+
+        /// <summary>Send word for a hand (spec 006 §3.7): at the usual wage or above it, or how long the word is out.</summary>
+        public static SheetVm Word(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            PeopleState p = sim.State.People;
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "letter", Title = s.Get("people.word"), Subtitle = s.Get("word.subtitle") };
+            if (p.Post != null)
+            {
+                vm.Lines.Add(new LineVm(s.Get(p.Post.AboveMarket ? "people.postAbove" : "people.postMarket"),
+                    s.Get("people.postActive", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now)), "post"));
+                return vm;
+            }
+            foreach (bool above in new[] { false, true })
+            {
+                bool am = above;
+                var line = new LineVm(s.Get(am ? "people.postAbove" : "people.postMarket"), s.Get(am ? "people.postAboveWhy" : "people.postMarketWhy"), "post")
+                    { Icon = am ? "person_hand_f" : "person_hand_m" };
+                line.Action = ActionVm.Checked(ctx, am ? "postAbove" : "postMarket", s.Get("action.post"),
+                    ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.People.JobPost.Cost)), ActionKind.Secondary, at => new PostJob(at, am));
+                vm.Lines.Add(line);
+            }
+            return vm;
+        }
+
+        private static string HandIcon(ViewContext ctx, int name) { return PeopleWords.Female(ctx, name) ? "person_hand_f" : "person_hand_m"; }
+
+        private static ActionVm Picture(ActionVm a, string icon)
+        {
+            a.Icon = icon;
+            return a;
         }
     }
 

@@ -187,6 +187,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.hire.until", ctx.Fmt.Duration(System.Math.Max(0, until - ctx.Now)));
             Text(vm, ctx, "why.hire.care");
             Text(vm, ctx, "why.hire.leave");
+            if (sim.State.Farm.Crops.Exists(c => c.State == Sim.Core.Farm.CropState.Growing && sim.Config.Game.Farm.Crops[c.Def].Fodder)) Text(vm, ctx, "why.hire.fodder");
             vm.Footnote = ctx.Strings.Get("why.care.lesson");
             return vm;
         }
