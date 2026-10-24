@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; ADR 0064 (the cattle acre, owner 2026-10-23) adds US-213, 52 points; US-213, US-204 and US-206 done and approved; US-207 done and approved; US-205 done (owner reviews on the device); the Development build and checklist `s12-cattle.md` next. Spec 014 approved 2026-10-23 (ADR 0063); F11.1–F11.3 broken into stories (S13 39 points, 2 weeks; S14 16) |
+| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; ADR 0064 (the cattle acre, owner 2026-10-23) adds US-213, 52 points; US-213, US-204 and US-206 done and approved; US-207 done and approved; US-205 done (owner reviews on the device); the Development build made by the owner (2026-10-23; checked: content identical to the repository, `UNITY_DEVELOPER_BUILD 1`, bundle id `com.keyurpatel.farmtocity` as before); device check with `s12-cattle.md` next. Spec 014 approved 2026-10-23 (ADR 0063); F11.1–F11.3 broken into stories (S13 39 points, 2 weeks; S14 16) |
 | Branch with latest work | `sprint/12-cattle-citizens` (from `main`, which has Sprint 11 / PR #16) |
 | Last updated | 2026-10-23 |
 
@@ -189,7 +189,7 @@
 
 ## Next up
 
-1. **Owner:** export the town from Settings in the old app, install the Sprint 12 Development build over it (never delete the app), and work through `docs/test-checklists/s12-cattle.md`; review US-205 there. Merge the Sprint 12 pull request after the device check.
+1. **Owner:** export the town from Settings in the old app, install the Sprint 12 Development build (already built, `Builds/iOS`) over it (never delete the app), and work through `docs/test-checklists/s12-cattle.md`; review US-205 there. Merge the Sprint 12 pull request after the device check.
 2. **Claude:** fix what the device check finds; then Sprint 13 (spec 014's code, F11.1–F11.3).
 
 ## Owner action checklist (Phases 0–1)
