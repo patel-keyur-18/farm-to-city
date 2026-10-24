@@ -2737,7 +2737,7 @@ SPRITES.update({"crop_mustard_g2": lambda: model_crop("mustard", "g3"), "crop_su
 
 # ---------------------------------------------------------------- your people's homes (spec 014, US-212)
 
-HOUSE_SCALE = 0.72       # times BUILDING_SCALE: up to four homes with their courtyards share an acre (previewed to the owner)
+HOUSE_SCALE = 0.70       # times BUILDING_SCALE: two homes with their courtyards and open ground between share an acre (owner, 2026-10-24)
 
 
 def model_family_house(stage):
@@ -2745,9 +2745,9 @@ def model_family_house(stage):
     terracotta-tiled verandah on two posts; in front a low courtyard wall (aangan) with a gate gap, a tulsi, a charpai and pots.
     stage 'done' or 'building' (the plinth, half-raised brick walls, bamboo scaffolding, a brick stack and a sand heap)."""
     o = []
-    w, d = 0.36, 0.20                       # the house, its front (door side) towards -y
-    cy = 0.07                               # the house sits at the back of its plot; the courtyard is in front
-    ay0, ay1 = -0.25, cy - d / 2            # the courtyard from the front wall to the house
+    w, d = 0.31, 0.18                       # the house, its front (door side) towards -y: compact, doors full height
+    cy = 0.06                               # the house sits at the back of its plot; the courtyard is in front
+    ay0, ay1 = -0.17, cy - d / 2            # a shallow courtyard from the front wall to the house
     lime, dado = toon("famLime", 0xF3E9D6), toon("famDado", 0xC9794A)
     brick, plinth = toon("brick", 0xB5653E), toon("plinth", PLINTH)
     yard = toon("aangan", 0xD8BF92)
@@ -2777,8 +2777,8 @@ def model_family_house(stage):
             o.append(cylinder("rail%d" % int(y * 100), 0.003, 0.003, w + 0.04, (0, y, 0.15), bam, segs=6, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
         for i in range(3):
             for j in range(2):
-                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.10 + j * 0.055, -0.15, 0.009 + i * 0.018), brick))
-        o.append(dome("sand", 0.05, 0.035, (0.10, -0.15, 0.006), toon("sand", 0xE2C98E)))
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.09 + j * 0.055, -0.12, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.045, 0.032, (0.09, -0.12, 0.006), toon("sand", 0xE2C98E)))
         return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
     # The house: walls with a dado, a flat roof and parapet, two doors and a window, a tiled verandah on two posts.
     o.append(box("walls", (w, d, 0.15), (0, cy, 0.035 + 0.075), lime))
@@ -2786,7 +2786,7 @@ def model_family_house(stage):
     o.append(box("roof", (w + 0.012, d + 0.012, 0.016), (0, cy, 0.193), toon("roofSlab", 0xD8CDB8)))
     o.append(box("parapet", (w + 0.016, d + 0.016, 0.022), (0, cy, 0.212), toon("famLimeShade", 0xE2D5BC)))
     doorm = toon("famDoor", 0x2F6FA8)
-    for x in (-0.085, 0.085):                       # two rooms, a door each
+    for x in (-0.075, 0.075):                       # two rooms, a door each
         o.append(box("door%d" % (x > 0), (0.055, 0.010, 0.10), (x, cy - d / 2 - 0.004, 0.085), doorm))
     o.append(box("window", (0.045, 0.010, 0.04), (0.0, cy - d / 2 - 0.004, 0.12), toon("wood_dark", WOOD_DARK)))
     back_details(o, w, d, 0.12, toon("wood_dark", WOOD_DARK))
@@ -2799,23 +2799,18 @@ def model_family_house(stage):
     o.append(box("veranda", (w + 0.03, 0.10, 0.012), (0, vy + 0.005, 0.172), toon("tile", TILE),
                  rot=Matrix.Rotation(math.radians(-14), 3, "X")))
     o.append(box("verandaFloor", (w, 0.08, 0.012), (0, vy + 0.01, 0.041), plinth, outline=False))
-    # In the courtyard: a tulsi, a charpai, pots by the door.
-    o.append(box("tulsiBase", (0.04, 0.04, 0.05), (-0.11, -0.13, 0.025), toon("famLime", 0xF3E9D6), bevel=0.004))
-    o.append(sphere("tulsi", 0.024, (-0.11, -0.13, 0.07), toon("tulsiLeaf", 0x3F8A3A), segs=10, rings=6))
-    frame, weave = toon("charpaiFrame", WOOD), toon("charpaiRope", 0xE3CFA0)
-    o.append(box("charpai", (0.12, 0.06, 0.008), (0.10, -0.13, 0.036), weave))
-    for x in (0.045, 0.155):
-        for y in (-0.155, -0.105):
-            o.append(box("cleg%d%d" % (x > 0.1, y > -0.13), (0.008, 0.008, 0.035), (x, y, 0.0175), frame, outline=False))
-    o.extend(matka("pot1", (0.16, cy - d / 2 - 0.075, 0.035)))
+    # In the courtyard: a tulsi and pots by the door (the charpai stands out on the open ground of the acre).
+    o.append(box("tulsiBase", (0.035, 0.035, 0.045), (-0.10, -0.13, 0.0225), toon("famLime", 0xF3E9D6), bevel=0.004))
+    o.append(sphere("tulsi", 0.022, (-0.10, -0.13, 0.064), toon("tulsiLeaf", 0x3F8A3A), segs=10, rings=6))
+    o.extend(matka("pot1", (0.12, -0.13, 0.006)))
     # A black water tank on the roof, and washing on a line across the courtyard.
     o.append(cylinder("tank", 0.03, 0.03, 0.045, (-0.11, cy + 0.03, 0.245), toon("tank", 0x2E2E2E), segs=14))
     for x in (-w / 2 + 0.01, w / 2 - 0.01):
-        o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.06, 0.045), toon("wood", WOOD), segs=6))
-    o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.06, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False,
+        o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.15, 0.045), toon("wood", WOOD), segs=6))
+    o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.15, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False,
                       rot=Matrix.Rotation(math.radians(90), 3, "Y")))
-    for i, (x, c) in enumerate(((-0.07, 0xE2582C), (-0.02, 0xF2C94C), (0.04, 0x2E6FBA))):
-        o.append(box("cloth%d" % i, (0.04, 0.004, 0.035), (x, -0.06, 0.068), toon("cloth%d" % i, c), outline=False))
+    for i, (x, c) in enumerate(((-0.03, 0xE2582C), (0.02, 0xF2C94C), (0.07, 0x2E6FBA))):
+        o.append(box("cloth%d" % i, (0.035, 0.004, 0.03), (x, -0.15, 0.07), toon("cloth%d" % i, c), outline=False))
     return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
 
 

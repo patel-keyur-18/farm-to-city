@@ -61,7 +61,7 @@
   "house": {
     "unlockEra": "hamlet",
     "capacity": 6,
-    "perAcre": 4,
+    "perAcre": 2,
     "rentPerSeason": 6000
   },
   "villages": ["sitapur", "rampur", "chandanpur", "keshavgarh", "devipur", "bhawanipur"]

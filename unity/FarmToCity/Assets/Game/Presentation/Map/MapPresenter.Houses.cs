@@ -20,10 +20,15 @@ namespace Game.Presentation.Map
         }
 
         // Front plots first (nearest the camera), doors towards the camera; a little irregular so a street of them looks built, not stamped.
-        private static readonly HousePlot[] HousePlots = { new HousePlot(-0.24f, -0.21f, "s"), new HousePlot(0.23f, 0.25f, "e") };
+        // Two homes sharing a wall (as village houses stand along a lane), set back so their courtyards open onto the acre's front.
+        private static readonly HousePlot[] HousePlots = { new HousePlot(-0.168f, 0.07f, "s"), new HousePlot(0.168f, 0.07f, "s") };
 
-        /// <summary>A shade tree in a homestead acre's open corner.</summary>
-        private static readonly Vector2 HomesteadTree = new Vector2(-0.30f, 0.31f);
+        /// <summary>The homestead's shared ground: a shade tree behind, a haystack at the side, a charpai on the open ground in front (nothing tall in front of the courtyards).</summary>
+        private static readonly VillagePiece[] HomesteadProps =
+        {
+            new VillagePiece("village_tree", -0.36f, 0.38f),
+            new VillagePiece("village_haystack", 0.40f, 0.30f), new VillagePiece("village_charpai", -0.16f, -0.36f),
+        };
 
         private readonly Dictionary<long, SpriteRenderer> _houses = new Dictionary<long, SpriteRenderer>();
         private readonly Dictionary<long, SpriteRenderer> _houseSites = new Dictionary<long, SpriteRenderer>();
@@ -48,22 +53,27 @@ namespace Game.Presentation.Map
             }
             foreach (long id in new List<long>(_houseSites.Keys)) if (!seen.Contains(id)) { Destroy(_houseSites[id].gameObject); _houseSites.Remove(id); }
 
-            // A tree on each homestead acre.
+            // The shared ground of each homestead acre.
             var acres = new HashSet<int>();
             foreach (TileVm t in map.Tiles) if (t.Kind == TileKind.Farm && t.Houses > 0) acres.Add(t.Id);
-            foreach (int tile in new List<int>(_homesteadTrees.Keys)) if (!acres.Contains(tile)) { Destroy(_homesteadTrees[tile].gameObject); _homesteadTrees.Remove(tile); }
+            foreach (int tile in new List<int>(_homesteadProps.Keys))
+                if (!acres.Contains(tile)) { foreach (SpriteRenderer r in _homesteadProps[tile]) Destroy(r.gameObject); _homesteadProps.Remove(tile); }
             foreach (int tile in acres)
             {
-                if (!_homesteadTrees.TryGetValue(tile, out SpriteRenderer tree))
+                if (!_homesteadProps.TryGetValue(tile, out List<SpriteRenderer> props))
                 {
-                    Vector3 at = OnTile(tile, HomesteadTree);
-                    _homesteadTrees[tile] = tree = NewRenderer("homesteadTree" + tile, SpriteBank.Rendered("village_tree"), at, Order(tile, _width, 45, at.y - TileCentre(tile).y));
+                    _homesteadProps[tile] = props = new List<SpriteRenderer>();
+                    foreach (VillagePiece piece in HomesteadProps)
+                    {
+                        Vector3 at = OnTile(tile, piece.At);
+                        props.Add(NewRenderer("homestead" + tile + piece.Sprite, SpriteBank.Rendered(piece.Sprite), at, Order(tile, _width, 45, at.y - TileCentre(tile).y)));
+                    }
                 }
-                tree.color = _tint;
+                foreach (SpriteRenderer r in props) r.color = _tint;
             }
         }
 
-        private readonly Dictionary<int, SpriteRenderer> _homesteadTrees = new Dictionary<int, SpriteRenderer>();
+        private readonly Dictionary<int, List<SpriteRenderer>> _homesteadProps = new Dictionary<int, List<SpriteRenderer>>();
 
         private void PlaceHouse(MapVm map, Dictionary<long, SpriteRenderer> set, long id, int tile, string sprite, Dictionary<int, int> used, bool animate)
         {

@@ -22,7 +22,7 @@ namespace Sim.Core.Tests
 
         private static long Houses(Simulation sim) { return sim.State.Land.Buildings.Count(b => HouseRules.IsHouse(sim, b)); }
 
-        // AC-2: from the Hamlet, on an owned acre with nothing growing: 60,000, 48 h, 4 an acre; the acre can't be sown while one stands;
+        // AC-2: from the Hamlet, on an owned acre with nothing growing: 60,000, 48 h, 2 an acre (ADR 0067); the acre can't be sown while one stands;
         // a free place in the labour quarters takes one too; refusals name what's wrong.
         [Test]
         public void Build_Limits()
@@ -42,15 +42,15 @@ namespace Sim.Core.Tests
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(60_000_00));
             Assert.That(sim.State.Ledger.Balance(Account.Buildings) - buildings, Is.EqualTo(60_000_00), "capitalised");
             Assert.That(sim.Execute(new Sow(t, HomeTile, "radish", Farm.SeedSource.Certified, "none")).Reason, Is.EqualTo(RejectReason.TileOccupied), "no farming under a house");
-            for (int i = 0; i < 3; i++) Ok(sim, new BuildFamilyHouse(t, HomeTile));
-            Assert.That(sim.Execute(new BuildFamilyHouse(t, HomeTile)).Reason, Is.EqualTo(RejectReason.NoRoom), "4 an acre");
+            Ok(sim, new BuildFamilyHouse(t, HomeTile));
+            Assert.That(sim.Execute(new BuildFamilyHouse(t, HomeTile)).Reason, Is.EqualTo(RejectReason.NoRoom), "2 an acre (ADR 0067)");
 
             sim.DrainEvents();
             sim.AdvanceTo(t + 48 * Hour - 1);
             Assert.That(Houses(sim), Is.EqualTo(0));
             sim.AdvanceTo(t + 48 * Hour);
-            Assert.That(Houses(sim), Is.EqualTo(4));
-            Assert.That(sim.PendingEvents.OfType<FamilyHouseBuilt>().Count(), Is.EqualTo(4));
+            Assert.That(Houses(sim), Is.EqualTo(2));
+            Assert.That(sim.PendingEvents.OfType<FamilyHouseBuilt>().Count(), Is.EqualTo(2));
             Assert.That(sim.State.Citizens.Constructions, Is.Empty);
             Assert.That(sim.Execute(new Sow(sim.State.Clock.SimTime, HomeTile, "radish", Farm.SeedSource.Certified, "none")).Reason, Is.EqualTo(RejectReason.TileOccupied));
 

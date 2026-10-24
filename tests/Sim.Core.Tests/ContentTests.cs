@@ -266,7 +266,7 @@ namespace Sim.Core.Tests
             Assert.That(g.Buildings[d.House].Id, Is.EqualTo("family_house"));
             Assert.That(g.Buildings[d.House].Value, Is.EqualTo(60_000_00));
             Assert.That(g.Buildings[d.House].BuildHours, Is.EqualTo(48));
-            Assert.That((d.HouseCapacity, d.HousesPerAcre, d.RentPerSeason, d.HouseUnlockEra), Is.EqualTo((6, 4, 6_000_00L, "hamlet")));
+            Assert.That((d.HouseCapacity, d.HousesPerAcre, d.RentPerSeason, d.HouseUnlockEra), Is.EqualTo((6, 2, 6_000_00L, "hamlet")));
             Assert.That(d.EngelCurve.Select(p => p.Income), Is.EqualTo(new[] { 0L, 8_000_00, 20_000_00, 60_000_00 }));
             Assert.That(d.Basket.Select(b => g.Market.Goods[b.Good].Id), Is.EqualTo(new[] { "radish", "wheat", "rice", "potato", "lentils", "spinach" }), "in good order");
             Assert.That((d.ApplicantAgeMin, d.ApplicantAgeMax, d.MigratedHandAgeMin, d.MigratedHandAgeMax), Is.EqualTo((20, 45, 22, 45)));
