@@ -539,7 +539,7 @@
 
 ## Sprint 12 · 25–31 Jan 2027 · Phase 2 (cattle; spec 014 written)
 
-- **Status:** In progress. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); ADR 0064 the cattle acre (US-213) and US-204 done and approved; US-206 done and approved (ADR 0065; the dairy sheet restyled like the Orders and Store sheets); US-207 done and approved; US-205 done (owner to review on the device); the Development build made (owner), device check next
+- **Status:** Done. The owner's device check on the iPhone 13 passed (2026-10-24); PR #17 merged to `main`. Spec 012 approved 2026-10-22 (ADR 0060); US-126 done and approved by the owner (2026-10-22); US-206 added (ADR 0061); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); ADR 0064 the cattle acre (US-213) and US-204 done and approved; US-206 done and approved (ADR 0065; the dairy sheet restyled like the Orders and Store sheets); US-207 done and approved; US-205 done (owner to review on the device); the Development build made (owner), device check next
 - **Branch:** `sprint/12-cattle-citizens`
 - **Goal:** Spec 012 approved and built: buffalo and cows in a shed, milk to the co-op every morning, fodder, straw and feed, playable on the iPhone. Spec 014 (citizens, households and population) written and approved; its code comes in Sprints 13–14.
 - **Points:** 49 (spec 012 re-pointed the ~15 estimate to 36; US-206 adds 8 (ADR 0061), US-207 5 (ADR 0062); runs 2 weeks as Sprint 11 did)
@@ -556,7 +556,7 @@
 | US-203 | Balance: a dairy bot and payback | [F13.1](features/F13.1-livestock.md) | 2 | Must | Done |
 | US-213 | The cattle acre (ADR 0064) | [F13.1](features/F13.1-livestock.md) | 3 | Must | Done |
 | US-204 | Cattle art in Blender | [F13.1](features/F13.1-livestock.md) | 5 | Must | Done |
-| US-205 | Cattle on screen | [F13.1](features/F13.1-livestock.md) | 8 | Must | Done (owner to review on the device) |
+| US-205 | Cattle on screen | [F13.1](features/F13.1-livestock.md) | 8 | Must | Done (passed the device check 2026-10-24) |
 | US-206 | The village redrawn: a middle street, buildings from all sides, the dairy co-op (ADR 0061, 0065) | [F02.4](features/F02.4-village-map.md) | 8 | Must | Done |
 | US-207 | A living valley: varied neighbours' land, farmsteads, your land at a glance (ADR 0062) | [F02.4](features/F02.4-village-map.md) | 5 | Must | Done |
 
@@ -567,7 +567,40 @@
 - [x] Spec 012 written, every gap closed with the owner, approved (ADR 0060); GDD, `CLAUDE.md` and the amended specs updated
 - [x] Spec 014 written, every gap closed with the owner, approved (ADR 0063); F11.1–F11.3 broken into stories and tasks (55 points: S13 39, S14 16)
 - [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [x] Test checklist `docs/test-checklists/s12-cattle.md`; Development build (made by the owner 2026-10-23, checked: content identical, `UNITY_DEVELOPER_BUILD`, same bundle id)
+- [x] Test checklist `docs/test-checklists/s12-cattle.md`; Development build (made by the owner 2026-10-23, checked: content identical, `UNITY_DEVELOPER_BUILD`, same bundle id); the owner's device check passed (2026-10-24)
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened with labels and the milestone; owner merges to `main`
+- [x] Pull request opened with labels and the milestone; owner merged it to `main` (PR #17)
 
+## Sprint 13 · 8–21 Feb 2027 · Phase 2 (citizens; specs 015 and 016 written; 2 weeks, as S12)
+
+- **Status:** In progress. Before the sprint's stories, two owner requests (2026-10-24): fodder stands no longer keep labourers hired (US-214) and the People sheet redesigned like the Store and Orders sheets (US-215); the sprint's stories start once the owner approves both
+- **Branch:** `sprint/13-citizens`
+- **Goal:** Spec 014 built (ADR 0063): citizens and the life clock, the family house, homes and people art, household budgets, needs and happiness, work and food, your people on screen; save schema 9 with its migration and fixture. Specs 015 (full hiring and HR) and 016 (businesses and production) written and approved; their code comes later.
+- **Points:** 39 planned + the owner's two requests
+- **Specs for the owner to review:** 015, 016
+- **Device build:** Yes: Development build
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-214 | Fodder stands don't keep labourers hired (owner, 2026-10-24) | [F06.1](features/F06.1-day-labourers.md) | 1 | Must | To do |
+| US-215 | The People sheet like the Store and Orders sheets (owner, 2026-10-24) | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | To do |
+| US-105 | Citizens: the model, Phase 1 hands as citizens, save schema 9 | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
+| US-106 | The life clock: ageing and retirement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 3 | Must | To do |
+| US-208 | The family house: build, rent, unlock and placement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
+| US-212 | Homes and people art in Blender | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
+| US-107 | Household budgets: Engel's law, food met, savings | [F11.2](features/F11.2-households-needs-and-happiness.md) | 3 | Must | To do |
+| US-108 | Needs and happiness | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | To do |
+| US-209 | Work and food: outside work, your labourers first, the town's food demand | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | To do |
+| US-210 | Your people on screen | [F11.2](features/F11.2-households-needs-and-happiness.md) | 8 | Must | To do |
+
+**Order of work:** US-214 and US-215 (approved by the owner first) → US-105 → US-106 → US-107 → US-108 → US-209 (the sim, each reviewed by the owner) → US-208 and US-212 (the family house and its art; the layout previewed to the owner first) → US-210 (screens, Editor tour) → specs 015 and 016 written alongside, their gaps closed with the owner one per message → the device build.
+
+**Sprint end checklist**
+
+- [ ] US-214 and US-215 approved by the owner
+- [ ] Specs 015 and 016 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [ ] Save schema 9: migration, `saves/schema9` fixture, every older schema loads
+- [ ] Test checklist in `docs/test-checklists/`; Development build
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request opened with labels and the milestone `Phase 2 · Hamlet & Village`; owner merges to `main`

@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 12 (ADR 0057): spec 012 approved 2026-10-22 (ADR 0060); US-126 and US-199–US-202 done and approved; US-203 done and approved (2026-10-23); US-206 (ADR 0061) and US-207 (ADR 0062: a living valley) added, 49 points; ADR 0064 (the cattle acre, owner 2026-10-23) adds US-213, 52 points; US-213, US-204 and US-206 done and approved; US-207 done and approved; US-205 done (owner reviews on the device); the Development build made by the owner (2026-10-23; checked: content identical to the repository, `UNITY_DEVELOPER_BUILD 1`, bundle id `com.keyurpatel.farmtocity` as before); device check with `s12-cattle.md` next. Spec 014 approved 2026-10-23 (ADR 0063); F11.1–F11.3 broken into stories (S13 39 points, 2 weeks; S14 16) |
-| Branch with latest work | `sprint/12-cattle-citizens` (from `main`, which has Sprint 11 / PR #16) |
-| Last updated | 2026-10-23 |
+| Sprint | Sprint 13 (`docs/planning/sprints.md`): spec 014's code (F11.1, F11.2), specs 015 and 016 written. First, two owner requests (2026-10-24): US-214 (fodder stands kept labourers hired) and US-215 (the People sheet redesigned); the sprint's stories start once the owner approves both. Sprint 12 done: device check passed on the iPhone 13 (2026-10-24), PR #17 merged |
+| Branch with latest work | `sprint/13-citizens` (from `main`, which has Sprint 12 / PR #17) |
+| Last updated | 2026-10-24 |
 
 ## Done so far
 
@@ -167,9 +167,7 @@
   - The Editor's town is the owner's Sprint 10 town migrated, advanced to Winter day 3 by the tests. Backups of the earlier states are in the session scratchpad only.
   - **Device review (owner, 2026-10-22; ADR 0059):** three changes, one story each. **US-196 done:** one row per supermarket order with its state on the same row (sow by, fresh with Deliver, part delivered, missed) and a green Delivered tag once filled; `LineVm.Note`, `NoteTone`, `Badge`. Editor tour with touch (`docs/art/s11-196-*.png`): closed orders at 02:46, the new orders at 6:00, Collect all, Deliver on radish (filled: Delivered) and coriander (1.5 of 4.5 kg). The clock and the radish and coriander sowings were set up by script. **US-197 done** (the owner chose the layout): how full, three picture buttons (Supermarket orders with a red count, Buy inputs, Mandi trip; `LineVm.Buttons`, `ActionVm.Icon`/`Count`), the owed row, **Sell to the trader** (truck, stall, a row per crop), **Seed and inputs**. Editor tour with touch (`docs/art/s11-197-*.png`): the Store from the HUD, scrolling, each picture button opening its sheet and Back, the Store at 00:59 (orders closed, truck away, Sell greyed). **US-198 done:** a hand's field order starts with the sow sheet (`OrderSheet.Crops`: the fertiliser chips, every crop card with Choose, "Let her choose" on that fertiliser, the order now and Remove; Arg `crop+fertiliser|how|min`); the order keeps the fertiliser, a changed order starts from its own, and the order's words say "with compost". Editor tour with touch (`docs/art/s11-198-*.png`): hired Geeta from People, tapped field 101, Give order, Compost (every figure changed), scrolled (rice out of season with Choose), Choose potato, Every season, Sell to the trader: the order was saved with compost and Geeta sowed potato with compost at once (cash −3,133, the card said 3,132); Change from the field sheet opened on Compost with the order now and Remove.
 
-## In progress
-
-**Sprint 12** (`sprint/12-cattle-citizens`, `docs/planning/sprints.md`):
+**Sprint 12** (`sprint/12-cattle-citizens`; PR #17 merged; the owner's device check on the iPhone 13 passed 2026-10-24):
 - **Spec 012 (cattle and fodder): approved 2026-10-22.** Gaps G1–G9 closed with the owner (ADR 0060): 22.8 real days a game day; cattle from the Hamlet; berseem and sorghum cut daily (spare fodder sold standing at 1 a kg, shortfall bought); straw from wheat and rice into the stack; the feed room, the straw stack and the compost pit as places; the co-op pays by fat at 6:00; automatic vaccination and vet; animals at cost, the dairy loan at 0.75; nothing dies. GDD, `CLAUDE.md` and specs 002–009's headers updated. F13.1 broken into US-126 and US-199–US-205 (36 points).
 - **US-126 done (sim only, no screen yet):** `content/livestock.json`, the `cattle_shed` building; `LivestockState`, `LivestockSystem` (the 6:00 pass: milk by the lactation curve, season, fed score, health and Care; the household's milk inside its food allowance; the co-op by fat), `LivestockRules`; `BuildShed` (Hamlet, 24 h, 40,000), `BuyAnimal`, `SellAnimal` (80% × health, her morning milk to the co-op first); dry days and calves sold (4030); accounts 1750, 4020, 4030, 5020, 5030 (late accounts hash only once used, so the goldens are unchanged); animals in the Care demand; save schema 7 with the schema-6 migration (its own replay base) and `saves/schema7.ftc`. 316 `Sim.Core` + 80 `Sim.View` tests pass; Unity compiles.
 - **US-199 done (sim only):** goods have a place (`GoodPlace`: the hut store, the feed room, the straw stack, the compost pit), each with its own room; `straw` and `cattle_feed`; compost lives in the pit; `Store.BuyInput` (`PlaceFull`, `NoShed`) shared by Buy; the 6:00 feeding (the commons' share, the fodder cut (0 until US-200), bought green fodder with `SetBuyGreenFodder`, straw and feed at average cost to 5020; the fed score, hunger and health); dung to the pit; wheat and rice straw to the stack; `FeedLow` (at purchase and after feeding, once until refilled) and its notification. Saves now load content that has gained goods or crops (they start empty). 322 + 80 tests pass.
@@ -187,10 +185,16 @@
 - **ADR 0062 (owner, 2026-10-22):** a living valley (neighbours' acres vary by soil, farmsteads only on not-for-sale acres, a hedge-and-wall boundary round your land): US-207 (5 points).
 - **Spec 014 drafted** (10 gaps). **G1 closed (ADR 0061):** the village is the town, its old families aren't counted ("Your people"). The owner also asked for the village centre to be redrawn naturally (a middle street, buildings from all sides facing their street, clusters) with a dairy co-op building: **US-206** (8 points) in Sprint 12, which now has 44 points and runs about 2 weeks.
 
+## In progress
+
+**Sprint 13** (`sprint/13-citizens`): the owner's two requests first (2026-10-24), each approved before the sprint's stories start:
+- **US-214:** a fodder stand's `ReadyAt` is the end of its last cut season (up to 2 seasons), and `PeopleRules.LabourUntil` took the latest `ReadyAt` of any growing crop, so with fodder sown labourers were paid for days instead of hours (10–30 × the cost). Options put to the owner.
+- **US-215:** the People sheet in the Store and Orders sheets' layout (pictured rows, big picture buttons). Layout put to the owner.
+
 ## Next up
 
-1. **Owner:** export the town from Settings in the old app, install the Sprint 12 Development build (already built, `Builds/iOS`) over it (never delete the app), and work through `docs/test-checklists/s12-cattle.md`; review US-205 there. Merge the Sprint 12 pull request after the device check.
-2. **Claude:** fix what the device check finds; then Sprint 13 (spec 014's code, F11.1–F11.3).
+1. **Owner:** choose the fodder fix and the People sheet layout; then review both in the Editor captures.
+2. **Claude:** build both, Editor-test with touch, report; after the owner's approval, Sprint 13 in the order in `sprints.md` (US-105 first).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -202,7 +206,8 @@
 | Sprints 4–8 | Install each sprint's build, work through its test checklist, and report the results |
 | Sprint 9 | Done (closed by the owner, PR #14 merged) |
 | Sprint 10 | Done (device check passed 2026-10-21); merge PR #15 |
-| Sprint 11 | Done: device check passed 2026-10-22. Check the follow-up build (ADR 0059's three sheets); merge the Sprint 11 PR |
+| Sprint 11 | Done: device check passed 2026-10-22; PR #16 merged |
+| Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 
 ## Open questions (with the owner)
 
