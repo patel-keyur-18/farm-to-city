@@ -29,6 +29,7 @@ namespace Sim.Core.Finance
         MilkSales = 4020,
         LivestockSales = 4030,
         DayLabourEarnings = 4100,
+        RentReceived = 4200,
         GainOnAssetSales = 4800,
         DebtWrittenOff = 4900,
 
@@ -65,14 +66,14 @@ namespace Sim.Core.Finance
             Account.Buildings, Account.AccumulatedDepreciation, Account.Trees, Account.Livestock,
             Account.MoneylenderLoans, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings,
-            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.GainOnAssetSales, Account.DebtWrittenOff,
+            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.GainOnAssetSales, Account.DebtWrittenOff,
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
             Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
             Account.TransportAndSelling,
         };
 
         /// <summary>
-        /// The save schema each account arrived in (spec 011: 1300 in schema 6; spec 012: the livestock accounts in 7); 0 for the rest.
+        /// The save schema each account arrived in (spec 011: 1300 in schema 6; spec 012: the livestock accounts in 7; spec 014: 4200 Rent received in 9); 0 for the rest.
         /// A late account hashes only once used, so the golden replays stay as they were, and an older save reads without it.
         /// </summary>
         internal static int SinceSchema(Account a)
@@ -81,6 +82,7 @@ namespace Sim.Core.Finance
             {
                 case Account.OwedByBuyers: return 6;
                 case Account.Livestock: case Account.MilkSales: case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return 7;
+                case Account.RentReceived: return 9;
                 default: return 0;
             }
         }

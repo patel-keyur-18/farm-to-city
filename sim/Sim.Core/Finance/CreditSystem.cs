@@ -287,6 +287,7 @@ namespace Sim.Core.Finance
                     TreeSlot slot = sim.State.Land.Slots.Find(s => s.Id == tree.SlotId);
                     if (slot != null && sim.State.Land.Tiles[slot.TileId].ParcelId == parcel.Id) FarmSystem.Dispose(sim, tree);
                 }
+                pot += People.HouseRules.Seize(sim, parcel.Id, period); // a family house goes with its land, at book value (spec 014 §3.13)
                 long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, parcel), defs.Land.QuickSaleFactor));
                 long basis = parcel.CostBasis, gain = value - basis;
                 ledger.Post(t, period, "ledger.parcelSeized", "parcel:" + defs.Map.Parcels[parcel.Id].Id,

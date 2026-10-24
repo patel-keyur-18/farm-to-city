@@ -158,7 +158,7 @@ namespace Sim.Core.People
             if (tileId < 0 || tileId >= sim.State.Land.Tiles.Count) return Commands.RejectReason.UnknownTile;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (tile.Terrain != Terrain.Quarters || !sim.State.Land.Parcels[tile.ParcelId].Protected) return Commands.RejectReason.NotQuarters;
-            if (HutsOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre) return Commands.RejectReason.NoRoom;
+            if (HutsOn(sim, tileId) + HouseRules.HousesOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre) return Commands.RejectReason.NoRoom; // a family house takes a place (spec 014)
             if (HutCount(sim) >= sim.Config.Game.People.Hand.MaxHandHuts) return Commands.RejectReason.TooManyHuts;
             return Commands.RejectReason.None;
         }

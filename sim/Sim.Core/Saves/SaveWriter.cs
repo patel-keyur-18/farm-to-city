@@ -17,6 +17,9 @@ namespace Sim.Core.Saves
 
         public bool Hashing { get { return false; } }
 
+        /// <summary>The schema being written: the current one, or an older one for migration tests (what it lacked is left out).</summary>
+        public int Schema { get; internal set; } = SaveCodec.SchemaVersion;
+
         public void WriteByte(byte b) { _w.Write(b); }
         public void WriteULong(ulong v) { _w.Write(v); }
         public void WriteLong(long v) { _w.Write(v); }

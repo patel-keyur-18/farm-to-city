@@ -27,6 +27,7 @@ namespace Sim.Core.Saves
             HireLabourers,
             DeliverOrder,
             BuildShed, BuyAnimal, SellAnimal, SetBuyGreenFodder,
+            BuildFamilyHouse,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -80,6 +81,7 @@ namespace Sim.Core.Saves
                 case HireLabourers c: At(c, Tag.HireLabourers); w.WriteInt(-1); w.WriteInt(c.Count); break; // the field slot of Sprint 10's first build, unused since ADR 0049
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
                 case BuildShed c: At(c, Tag.BuildShed); break;
+                case BuildFamilyHouse c: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
                 case BuyAnimal c:
                     At(c, Tag.BuyAnimal); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
@@ -163,6 +165,7 @@ namespace Sim.Core.Saves
                 case Tag.HireLabourers: r.ReadInt(); return new HireLabourers(at, r.ReadInt());
                 case Tag.BuildHandHut: return new BuildHandHut(at, r.ReadInt());
                 case Tag.BuildShed: return new BuildShed(at);
+                case Tag.BuildFamilyHouse: return new BuildFamilyHouse(at, r.ReadInt());
                 case Tag.BuyAnimal:
                 {
                     string kind = r.ReadString();

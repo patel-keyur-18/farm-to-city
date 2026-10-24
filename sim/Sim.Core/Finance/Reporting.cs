@@ -12,7 +12,7 @@ namespace Sim.Core.Finance
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,
             Account.Depreciation, Account.TransportAndSelling,
         };
-        private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.GainOnAssetSales, Account.DebtWrittenOff };
+        private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.GainOnAssetSales, Account.DebtWrittenOff }; // rent: not farming (spec 014)
         private static readonly Account[] Household = { Account.LivingCosts, Account.HealthCosts };
         private static readonly Account[] FinanceCosts = { Account.Interest, Account.PenaltyInterest };
         private static readonly Account[] Other = { Account.LossOnAssetSales };

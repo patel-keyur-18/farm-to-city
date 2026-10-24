@@ -573,7 +573,7 @@
 
 ## Sprint 13 · 8–21 Feb 2027 · Phase 2 (citizens; specs 015 and 016 written; 2 weeks, as S12)
 
-- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done and approved; US-106 done and approved; US-107 done and approved; US-108 done and approved; US-209 done (owner to review)
+- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done and approved; US-106 done and approved; US-107 done and approved; US-108 done and approved; US-209 done and approved; US-208 done (owner to review)
 - **Branch:** `sprint/13-citizens`
 - **Goal:** Spec 014 built (ADR 0063): citizens and the life clock, the family house, homes and people art, household budgets, needs and happiness, work and food, your people on screen; save schema 9 with its migration and fixture. Specs 015 (full hiring and HR) and 016 (businesses and production) written and approved; their code comes later.
 - **Points:** 39 planned + the owner's two requests
@@ -586,11 +586,11 @@
 | US-215 | The People sheet like the Store and Orders sheets (owner, 2026-10-24) | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
 | US-105 | Citizens: the model, Phase 1 hands as citizens, save schema 9 | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | Done |
 | US-106 | The life clock: ageing and retirement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 3 | Must | Done |
-| US-208 | The family house: build, rent, unlock and placement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
+| US-208 | The family house: build, rent, unlock and placement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | Done (owner to review; sim only) |
 | US-212 | Homes and people art in Blender | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
 | US-107 | Household budgets: Engel's law, food met, savings | [F11.2](features/F11.2-households-needs-and-happiness.md) | 3 | Must | Done |
 | US-108 | Needs and happiness | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | Done |
-| US-209 | Work and food: outside work, your labourers first, the town's food demand | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | Done (owner to review) |
+| US-209 | Work and food: outside work, your labourers first, the town's food demand | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | Done |
 | US-210 | Your people on screen | [F11.2](features/F11.2-households-needs-and-happiness.md) | 8 | Must | To do |
 
 **Order of work:** US-214 and US-215 (approved by the owner first) → US-105 → US-106 → US-107 → US-108 → US-209 (the sim, each reviewed by the owner) → US-208 and US-212 (the family house and its art; the layout previewed to the owner first) → US-210 (screens, Editor tour) → specs 015 and 016 written alongside, their gaps closed with the owner one per message → the device build.

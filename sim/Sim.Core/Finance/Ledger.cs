@@ -143,9 +143,18 @@ namespace Sim.Core.Finance
         internal void WriteTo(IStateWriter h)
         {
             h.WriteLong(NextEntryId);
-            if (!h.Hashing) h.WriteInt(_balances.Length); // a save is always the current schema // the chart of accounts is code: checked on load
+            int schema = h is Saves.SaveWriter sw ? sw.Schema : int.MaxValue; // an older schema (migration tests) lacks the later accounts
+            if (!h.Hashing)
+            {
+                int n = 0;
+                foreach (Account a in Accounts.All) if (Accounts.SinceSchema(a) <= schema) n++;
+                h.WriteInt(n); // the chart of accounts is code: checked on load
+            }
             for (int i = 0; i < _balances.Length; i++)
-                if (!h.Hashing || Accounts.SinceSchema(Accounts.All[i]) == 0 || _balances[i] != 0) h.WriteLong(_balances[i]); // late accounts hash only once used: the goldens stay as they were
+            {
+                int since = Accounts.SinceSchema(Accounts.All[i]);
+                if (h.Hashing ? since == 0 || _balances[i] != 0 : since <= schema) h.WriteLong(_balances[i]); // late accounts hash only once used: the goldens stay as they were
+            }
             h.WriteInt(_entries.Count);
             foreach (JournalEntry e in _entries)
             {

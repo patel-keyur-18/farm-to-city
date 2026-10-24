@@ -54,6 +54,7 @@ namespace Sim.Core
             if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity(), new FarmSystem.PestCheck(), new MarketSystem.MandiReturn() });
             if (config.Game?.People != null) handlers.Add(new PeopleSystem.HutBuild());
             if (config.Game?.Livestock != null) handlers.Add(new Livestock.LivestockSystem.ShedBuild());
+            if (config.Game?.Population != null && config.Game.People != null) handlers.Add(new People.HouseRules.Build());
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {

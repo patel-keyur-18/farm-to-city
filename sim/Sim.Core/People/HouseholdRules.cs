@@ -136,7 +136,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>
-        /// The season close (§3.12, after spec 005's settlement): health follows the season's food (down by the shortfall, up when fed),
+        /// The season close (§3.12, after spec 005's settlement): rent for the season that ended; health follows the season's food (down by the shortfall, up when fed),
         /// the season's saving is banked, then each household sets the new season's budget. Households in id order.
         /// </summary>
         internal static void Close(Simulation sim)
@@ -144,6 +144,7 @@ namespace Sim.Core.People
             CitizensState s = sim.State.Citizens;
             if (s == null) return;
             PopulationDefs p = sim.Config.Game.Population;
+            foreach (Household x in s.Households) HouseRules.CollectRent(sim, x); // first, for the season that ended (§3.12)
             foreach (Household x in s.Households)
             {
                 foreach (long id in x.Members)

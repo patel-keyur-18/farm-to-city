@@ -195,7 +195,7 @@ namespace Sim.Core.Saves
                 using (var gz = new GZipStream(ms, CompressionLevel.Fastest, leaveOpen: true))
                 using (var buffered = new BufferedStream(gz, 1 << 16))
                 {
-                    var w = new SaveWriter(buffered);
+                    var w = new SaveWriter(buffered) { Schema = schema };
                     w.WriteInt(ContentTables.Count);
                     for (int t = 0; t < ContentTables.Count; t++)
                     {

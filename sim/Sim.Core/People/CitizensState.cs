@@ -283,6 +283,10 @@ namespace Sim.Core.People
         /// <summary>When the next family may arrive at an empty house (§3.10), or 0 when none is due.</summary>
         public long NextFamilyAt { get; internal set; }
 
+        /// <summary>Family houses being built (§3.4), in id order; each becomes a building when its job ends.</summary>
+        public List<Construction> Constructions { get; internal set; } = new List<Construction>();
+        public long NextConstructionId { get; internal set; } = 1;
+
         /// <summary>A free family house offered to a hand living alone (§3.13): the hand, the house, when; 0 when none is open.</summary>
         public long OfferHandId { get; internal set; }
         public long OfferHouseId { get; internal set; }
@@ -311,6 +315,7 @@ namespace Sim.Core.People
             var c = (CitizensState)MemberwiseClone();
             c.Citizens = Citizens.ConvertAll(x => x.Clone());
             c.Households = Households.ConvertAll(x => x.Clone());
+            c.Constructions = Constructions.ConvertAll(x => x.Clone());
             return c;
         }
 
@@ -322,6 +327,9 @@ namespace Sim.Core.People
             foreach (Household x in Households) x.WriteTo(h);
             h.WriteLong(NextCitizenId);
             h.WriteLong(NextHouseholdId);
+            h.WriteInt(Constructions.Count);
+            foreach (Construction x in Constructions) x.WriteTo(h);
+            h.WriteLong(NextConstructionId);
             h.WriteLong(NextFamilyAt);
             h.WriteLong(OfferHandId);
             h.WriteLong(OfferHouseId);
@@ -337,6 +345,9 @@ namespace Sim.Core.People
             for (int i = 0; i < n; i++) s.Households.Add(People.Household.ReadFrom(r));
             s.NextCitizenId = r.ReadLong();
             s.NextHouseholdId = r.ReadLong();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Constructions.Add(Construction.ReadFrom(r));
+            s.NextConstructionId = r.ReadLong();
             s.NextFamilyAt = r.ReadLong();
             s.OfferHandId = r.ReadLong();
             s.OfferHouseId = r.ReadLong();

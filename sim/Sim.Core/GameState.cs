@@ -99,7 +99,7 @@ namespace Sim.Core
             // Spec 012, after everything else: content without a cattle shed (the golden replays' frozen content) hashes as before.
             if (Livestock != null) Livestock.WriteTo(h);
             // Spec 014, last: content without a family house (the golden replays' frozen content) hashes as before.
-            if (Citizens != null) Citizens.WriteTo(h);
+            if (Citizens != null && !(h is SaveWriter sw && sw.Schema < 9)) Citizens.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
