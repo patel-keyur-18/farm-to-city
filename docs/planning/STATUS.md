@@ -246,7 +246,7 @@ None.
   - Screen coordinates are the Retina screen (`Screen.width` about 2539 × 1349), twice the 1280 × 720 capture. Aim a map tap with the presenter's private `TileCentre(tile)` and `MapInput.WorldToScreen`.
   - After a recompile, `eval` can see stale objects: reach the live ones through `GameRoot` (`FindFirstObjectByType<GameRoot>()`, then its private `_input`, `_map`, `_sheet` fields by reflection), not `FindFirstObjectByType<MapInput>()`.
   - Capture with `capture_game_view --save_path Temp/cap/<name>.png` (lands in `Assets/Temp/cap/`), read each image, copy the keepers to `docs/art/`, and delete `Assets/Temp` and `Assets/Temp.meta` before committing.
-  - Back up `~/Library/Application Support/keyur-patel-18/Farm to City/Saves` before a test that migrates or changes the Editor's town.
+  - Back up `~/Library/Application Support/keyur-patel-18/Farm to City/Saves` before a test that migrates or changes the Editor's town. To restore: `editor_stop`, wait about 10 s (Unity writes a last save on leaving play mode, after the command returns), copy the backup back with `cp -Rp`, wait again and `diff -r` it against the backup.
 
 - The SessionStart hook installs the .NET 10 SDK in cloud sessions (US-003). It runs synchronously, so the session starts only once the SDK is ready. If it ever fails, install by hand with `apt-get install -y dotnet-sdk-10.0`.
 - **On the owner's Mac** the .NET 10 SDK is installed per user in `~/.dotnet` (not on the default PATH): run `export PATH=$HOME/.dotnet:$PATH` before `dotnet test`.
