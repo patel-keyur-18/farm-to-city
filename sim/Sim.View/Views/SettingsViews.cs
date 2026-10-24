@@ -306,6 +306,10 @@ namespace Sim.View.Views
                 string list = names.Count <= 1 ? string.Join("", names) : string.Join(", ", names.GetRange(0, names.Count - 1)) + " " + s.Get("list.and") + " " + names[names.Count - 1];
                 return (s.Plural("notify.OrdersPosted.title", names.Count, "goods", list), s.Get("notify.OrdersPosted.body"));
             }
+            if (n.Kind == NotifyKind.AnimalSick || n.Kind == NotifyKind.CalfBorn)
+                return (s.Get(k + ".title", "name", n.CropId ?? s.Get("animal.someone")), s.Get(k + ".body"));
+            if (n.Kind == NotifyKind.FeedLow)
+                return (s.Get("notify.FeedLow.title", "good", Names.Of(ctx, n.CropId)), s.Get("notify.FeedLow.body"));
             bool counted = n.Kind == NotifyKind.CropReady || n.Kind == NotifyKind.BedReady || n.Kind == NotifyKind.FruitRipe || n.Kind == NotifyKind.HandsWork;
             string count = ctx.Fmt.Integer(n.Count);
             string title = !counted ? s.Get(k + ".title")

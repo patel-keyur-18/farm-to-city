@@ -83,6 +83,13 @@ namespace Game.Services
         {
             LoadOutcome o = _points.LoadNewestValid(config, nowWallUtc + utcOffsetMinutes * 60L);
             if (o.KeptAs != null) File.WriteAllBytes(Path.Combine(Documents, o.KeptAs), _store.Read(o.KeptAs));
+            // A town from an older build is upgraded as it loads; its file as it was goes to Documents first (the Files app shows
+            // it), once per schema, so a week of play is never lost to an upgrade (owner, Sprint 12).
+            if (o.State != null && o.Schema < SaveCodec.SchemaVersion)
+            {
+                string copy = Path.Combine(Documents, "FarmToCity-before-update-schema" + o.Schema + Extension);
+                if (!File.Exists(copy)) File.WriteAllBytes(copy, _store.Read(o.File));
+            }
             if (o.State != null) LastSavedWallUtc = o.SavedAtWallUtc;
             _policy.Saved(nowWallUtc);
             return o;

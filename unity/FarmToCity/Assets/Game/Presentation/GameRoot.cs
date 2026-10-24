@@ -368,7 +368,7 @@ namespace Game.Presentation
                 request = new SheetRequest("Tile", request.Id);
             }
             if (request.Kind == "Settings") _townFiles = _saves.TownFiles().Count;
-            _guide.SheetVisited(request.Kind, Sim);
+            _guide.SheetVisited(request.Kind, Sim, request.Id);
             _ctx.LocalNow = DateTime.Now;
             _open = request;
             ShowCurrentSheet(refreshOnly: false);

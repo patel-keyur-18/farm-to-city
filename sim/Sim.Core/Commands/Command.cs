@@ -111,6 +111,16 @@ namespace Sim.Core.Commands
         OrderClosed,
         /// <summary>More than what's left of the order.</summary>
         OrderFilled,
+
+        // Spec 012 (cattle)
+        /// <summary>Before the era the shed unlocks in (the Hamlet).</summary>
+        EraLocked,
+        AlreadyBuilt,
+        NoShed,
+        ShedFull,
+        UnknownAnimal,
+        /// <summary>The feed room, the straw stack or the compost pit has no room.</summary>
+        PlaceFull,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -85,3 +85,87 @@ namespace Sim.Core.Saves
         }
     }
 }
+
+namespace Sim.Core.Saves
+{
+    /// <summary>
+    /// Save schema 8 (ADR 0064): the founder inherits the cattle acre. Every tile of an inherited parcel that a save holds as
+    /// something else takes its content terrain and parcel; a crop or tree on it is paid for as when the farm lane was taken
+    /// (spec 010 §3.4), its slots and the orders on it go; the parcel becomes owned and protected.
+    /// </summary>
+    public static class CattleAcreMigration
+    {
+        public const int Schema = 8;
+
+        /// <summary>True if the town changed.</summary>
+        internal static bool Apply(Simulation sim)
+        {
+            GameDefs defs = sim.Config.Game;
+            if (defs == null) return false;
+            LandState land = sim.State.Land;
+            long t = sim.State.Clock.SimTime;
+            bool changed = false;
+            foreach (int p in defs.Start.InheritedParcels)
+            {
+                foreach (int i in defs.Map.Parcels[p].Tiles)
+                {
+                    Tile tile = land.Tiles[i];
+                    if (tile.ParcelId == p && tile.Terrain == defs.Map.Tiles[i].Terrain) continue;
+                    Clear(sim, i, land.Parcels[tile.ParcelId].Owned);
+                    Tile fresh = LandSystem.NewTile(defs.Map, i);
+                    fresh.ParcelId = p;
+                    land.Tiles[i] = fresh;
+                    changed = true;
+                }
+                Parcel home = land.Parcels[p];
+                if (home.Owned) continue;
+                home.Protected = true;
+                home.CostBasis = LandRules.ParcelPrice(sim, home);
+                LandSystem.Acquire(sim, home, t);
+                // Inherited land enters the books at its value, as the opening entry put the rest (spec 005 §3.1).
+                sim.State.Ledger.Post(t, sim.Period, "ledger.cattleAcreInherited", "parcel:" + defs.Map.Parcels[p].Id,
+                    new Posting(Account.Land, home.CostBasis), new Posting(Account.OpeningEquity, -home.CostBasis));
+                changed = true;
+            }
+            if (changed) FarmSystem.Refresh(sim);
+            return changed;
+        }
+
+        private static void Clear(Simulation sim, int tileId, bool owned)
+        {
+            GameDefs defs = sim.Config.Game;
+            LandState land = sim.State.Land;
+            FarmSystem.Accrue(sim);
+            long crops = 0, trees = 0;
+            Crop crop = sim.State.Farm.CropOn(tileId);
+            if (crop != null)
+            {
+                CropDef def = defs.Farm.Crops[crop.Def];
+                if (def.OutputGood >= 0)
+                {
+                    long grams = crop.State == CropState.Ready ? crop.HarvestGrams : FarmRules.CycleGrams(sim.Clock, def, def.SeasonYieldPerAcre);
+                    crops = MarketRules.Value(sim, def.OutputGood, grams, MarketRules.Floor(sim, def.OutputGood));
+                }
+                if (crop.State == CropState.Growing) sim.CompleteJob(sim.State.Jobs.Find(crop.JobId));
+                if (crop.PestJobId != 0) sim.CompleteJob(sim.State.Jobs.Find(crop.PestJobId));
+                sim.State.Farm.Crops.Remove(crop);
+                LandSystem.SetOccupied(sim, tileId, false);
+            }
+            foreach (TreeSlot slot in land.Slots.FindAll(s => s.TileId == tileId))
+            {
+                Tree tree = sim.State.Farm.Trees.Find(x => x.SlotId == slot.Id);
+                if (tree != null)
+                {
+                    trees += tree.Cost;
+                    FarmSystem.Dispose(sim, tree); // writes the book value off; the payment below makes it good
+                }
+                sim.State.People?.Orders.RemoveAll(o => o.Kind == People.OrderTargetKind.Tree && o.Target == slot.Id);
+                land.Slots.Remove(slot);
+            }
+            sim.State.People?.Orders.RemoveAll(o => o.Kind == People.OrderTargetKind.Field && o.Target == tileId);
+            if (!owned || crops + trees == 0) return;
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.cattleAcre", "tile:" + tileId,
+                new Posting(Account.Cash, crops + trees), new Posting(Account.CropSales, -crops), new Posting(Account.GainOnAssetSales, -trees));
+        }
+    }
+}

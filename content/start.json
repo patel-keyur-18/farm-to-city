@@ -1,5 +1,5 @@
 {
-  "inheritedParcels": ["home_a", "home_b", "home_c"],
+  "inheritedParcels": ["home_a", "home_b", "home_c", "home_d"],
   "buildings": [
     { "building": "hut",  "tile": 87 },
     { "building": "well", "tile": 87 }

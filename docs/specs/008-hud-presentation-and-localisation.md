@@ -1,6 +1,6 @@
 # 008. HUD, presentation and localisation
 
-- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044)
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation

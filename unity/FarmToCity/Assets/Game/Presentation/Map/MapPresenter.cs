@@ -51,14 +51,14 @@ namespace Game.Presentation.Map
         // Where things sit inside a tile, in world units from the tile centre (y up).
         private static readonly Vector2[] EdgeSlots = { new Vector2(-0.36f, -0.02f), new Vector2(0.36f, -0.02f) }; // the acre's left and right corners
         // The 2-acre yard (ADR 0040). The back acre: the house, the well beside it, two trees. The front acre, where the door faces:
-        // the kitchen garden, the tulsi planter, a haystack, the woodpile and two more trees. Offsets are from each tile's centre.
+        // the kitchen garden, the tulsi planter, the woodpile and two more trees (the straw lives on the cattle acre, ADR 0064). Offsets are from each tile's centre.
         private static readonly Vector2 HutSpot = new Vector2(-0.04f, 0.04f), WellSpot = new Vector2(0.35f, 0.0f);
         private static readonly int[] YardTreeTile = { 0, 0, 1, 1 }; // which yard acre each of the 4 yard tree places is drawn on
         // The house acre: its left corner, and in front of the house beside the well (never behind the roof). The front acre: its
         // left corner, and its bottom corner clear of the beds and the woodpile.
         private static readonly Vector2[] YardSlots = { new Vector2(-0.42f, -0.04f), new Vector2(0.22f, -0.15f), new Vector2(-0.40f, 0.02f), new Vector2(-0.10f, -0.21f) };
         private static readonly Vector2[] BedSpots = { new Vector2(-0.16f, 0.06f), new Vector2(0.06f, -0.05f) };
-        private static readonly Vector2 TulsiSpot = new Vector2(0.10f, 0.15f), HaystackSpot = new Vector2(0.31f, -0.02f), WoodpileSpot = new Vector2(0.20f, -0.14f);
+        private static readonly Vector2 TulsiSpot = new Vector2(0.10f, 0.15f), WoodpileSpot = new Vector2(0.20f, -0.14f);
 
         /// <summary>The two hut places of the labour quarters (ADR 0040).</summary>
         // A hand's hut is a one-room hut: drawn at 75% so it reads smaller than the founder's house, and the two places sit apart along
@@ -191,25 +191,9 @@ namespace Game.Presentation.Map
                 crop.Marker = NewRenderer("mark" + t.Id, null, c + new Vector3(0.02f, 0.34f, 0), Order(t.Id, _width, 90));
                 _crops.Add(crop);
             }
-            foreach (TileVm t in map.Tiles)
-            {
-                if (t.Place == null) continue;
-                string name = t.Place == "house" ? "place_house_" + t.Variant : "place_" + t.Place;
-                _places[t.Id] = NewRenderer(name, SpriteBank.Rendered(name), TileCentre(t.Id), Order(t.Id, _width, 45));
-            }
+            BuildVillage(map);
             BuildEdge();
-            foreach (SlotVm s in map.Slots)
-            {
-                int i = Mathf.Min(s.Index, YardSlots.Length - 1);
-                Vector2 off = s.Yard ? YardSlots[i] : EdgeSlots[Mathf.Min(s.Index, EdgeSlots.Length - 1)];
-                int drawTile = s.Yard ? _yardTiles[Mathf.Min(YardTreeTile[i], _yardTiles.Count - 1)] : s.TileId;
-                Vector3 pos = TileCentre(drawTile) + (Vector3)off;
-                var spot = new Spot { Home = pos, Renderer = NewRenderer("slot" + s.Id, null, pos, Order(drawTile, _width, 50, off.y)) };
-                spot.Renderer.transform.localScale = Vector3.one * (s.Yard ? 0.62f : 0.5f);
-                spot.Marker = NewRenderer("slotMark" + s.Id, null, pos + new Vector3(0, s.Yard ? 0.5f : 0.42f, 0), Order(drawTile, _width, 92, off.y));
-                _slots[s.Id] = spot;
-                _slotWorld[s.Id] = pos;
-            }
+            foreach (SlotVm s in map.Slots) NewSlot(s);
             int bedIndex = 0;
             foreach (BedVm b in map.Beds)
             {
@@ -243,12 +227,28 @@ namespace Game.Presentation.Map
                 if (hut) _hutWorld = pos; else _wellWorld = pos;
             }
             BuildYardDressing(map);
+            BuildCattleAcre(map);
             _ring = NewRenderer("ring", SpriteBank.SelectionRing, Vector3.zero, 9000);
             _ring.gameObject.SetActive(false);
             _arrow = NewRenderer("guideArrow", SpriteBank.GuideArrow, Vector3.zero, 9500);
             _arrow.transform.localScale = Vector3.one * ArrowScale;
             _arrow.gameObject.SetActive(false);
             _built = true;
+        }
+
+        /// <summary>A tree place's spot: at the start, and for each new field-edge place when you buy land.</summary>
+        private Spot NewSlot(SlotVm s)
+        {
+            int i = Mathf.Min(s.Index, YardSlots.Length - 1);
+            Vector2 off = s.Yard ? YardSlots[i] : EdgeSlots[Mathf.Min(s.Index, EdgeSlots.Length - 1)];
+            int drawTile = s.Yard ? _yardTiles[Mathf.Min(YardTreeTile[i], _yardTiles.Count - 1)] : s.TileId;
+            Vector3 pos = TileCentre(drawTile) + (Vector3)off;
+            var spot = new Spot { Home = pos, Renderer = NewRenderer("slot" + s.Id, null, pos, Order(drawTile, _width, 50, off.y)) };
+            spot.Renderer.transform.localScale = Vector3.one * (s.Yard ? 0.62f : 0.5f);
+            spot.Marker = NewRenderer("slotMark" + s.Id, null, pos + new Vector3(0, s.Yard ? 0.5f : 0.42f, 0), Order(drawTile, _width, 92, off.y));
+            _slots[s.Id] = spot;
+            _slotWorld[s.Id] = pos;
+            return spot;
         }
 
         private static int EdgeOrder(int x, int y, int offset = 0) { return (x + y) * 100 + offset; }
@@ -266,6 +266,7 @@ namespace Game.Presentation.Map
                 float scale = 1f;
                 if (e.Kind == EdgeKind.Hill && e.X <= -2 && ((e.Y - e.X * 2) % 4 + 4) % 4 == 0) decor = "hill_" + ((e.Y + 30) % 3);
                 if (e.Kind == EdgeKind.Scrub) decor = "scrub";
+                if (e.Kind == EdgeKind.Farmstead) EdgeFarmstead(e, c);
                 if (e.Kind == EdgeKind.FarBank && (e.X + e.Y) % 3 == 0) { decor = "tree_mango_mature"; scale = 0.55f; }
                 if (decor != null)
                 {
@@ -295,7 +296,9 @@ namespace Game.Presentation.Map
                 if (e.Decor != null) e.Decor.color = _tint;
             }
             foreach (KeyValuePair<int, SpriteRenderer> p in _places) p.Value.color = _tint;
+            foreach (SpriteRenderer r in _villageProps) r.color = _tint;
             RefreshBunds(map);
+            RefreshValley(map);
 
             foreach (TileVm tv in map.Tiles)
             {
@@ -303,20 +306,8 @@ namespace Game.Presentation.Map
                 switch (tv.Kind)
                 {
                     case TileKind.Unowned:
-                        // A neighbour's field (spec 010 §3.7): tilled soil under the season's crop, or fallow grass; never greyed out.
-                        if (tv.NeighbourCrop != null)
-                        {
-                            ground.sprite = SpriteBank.SoilTile;
-                            ground.color = _tint * SoilColour(tv);
-                            detail.sprite = null;
-                        }
-                        else
-                        {
-                            ground.sprite = SpriteBank.Grass;
-                            ground.color = _tint;
-                            detail.sprite = SpriteBank.GrassDetail(tv.Id);
-                            detail.color = _tint;
-                        }
+                        // A neighbour's acre (spec 010 §3.7, ADR 0062): by its look, never greyed out.
+                        NeighbourGround(tv, ground, detail);
                         break;
                     case TileKind.Road:
                         ground.sprite = SpriteBank.Rendered("ground_road_" + tv.RoadLinks) ?? SpriteBank.Rendered("ground_road_3");
@@ -324,7 +315,7 @@ namespace Game.Presentation.Map
                         detail.sprite = null;
                         break;
                     case TileKind.Village:
-                        ground.sprite = SpriteBank.Sand; // beaten earth round the houses
+                        ground.sprite = VillageGround(tv); // worn grass, streets and yards (ADR 0061)
                         ground.color = _tint;
                         detail.sprite = null;
                         break;
@@ -342,6 +333,12 @@ namespace Game.Presentation.Map
                         // Beaten earth: the hands' compound.
                         ground.sprite = SpriteBank.Sand;
                         ground.color = _tint * new Color(0.95f, 0.86f, 0.70f, 1f);
+                        detail.sprite = null;
+                        break;
+                    case TileKind.Cattle:
+                        // Poor, sandy land under thin grass (ADR 0064); its pieces are MapPresenter.Cattle's.
+                        ground.sprite = SpriteBank.Rendered("ground_cattle") ?? SpriteBank.Grass;
+                        ground.color = _tint;
                         detail.sprite = null;
                         break;
                     case TileKind.Yard:
@@ -370,9 +367,21 @@ namespace Game.Presentation.Map
                 crop.Marker.color = Color.white;
             }
 
+            // Places come with land you buy and go with land you sell.
+            var slotIds = new HashSet<long>();
+            foreach (SlotVm s in map.Slots) slotIds.Add(s.Id);
+            var goneSlots = new List<long>();
+            foreach (KeyValuePair<long, Spot> kv in _slots) if (!slotIds.Contains(kv.Key)) goneSlots.Add(kv.Key);
+            foreach (long id in goneSlots)
+            {
+                Destroy(_slots[id].Renderer.gameObject);
+                Destroy(_slots[id].Marker.gameObject);
+                _slots.Remove(id);
+                _slotWorld.Remove(id);
+            }
             foreach (SlotVm s in map.Slots)
             {
-                Spot spot = _slots[s.Id];
+                if (!_slots.TryGetValue(s.Id, out Spot spot)) spot = NewSlot(s);
                 bool empty = s.Stage == TreeStage.Empty;
                 Sprite ts = empty ? (s.Owned ? SpriteBank.PlantingSpot : null) : SpriteBank.Tree(s.TreeId, s.Stage);
                 bool planted = spot.Empty && !empty && spot.Renderer.sprite != null;
@@ -404,12 +413,14 @@ namespace Game.Presentation.Map
             RefreshHandHuts(map, animate);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
+            RefreshCattleAcre(map, animate);
         }
 
         // ---- hands' huts, building sites and people (ADR 0039 §2, §8) ----
 
         /// <summary>
-        /// The yard's props and the fence (ADR 0040): a tulsi planter by the door, a haystack and a woodpile on the front acre, and a
+        /// The yard's props and the fence (ADR 0040): a tulsi planter by the door and a woodpile on the front acre (the straw lives on the
+        /// cattle acre, ADR 0064, so the yard keeps no haystack), and a
         /// low bamboo fence wherever the yard or the quarters meet land that isn't yours (open to your fields and between them).
         /// </summary>
         private void BuildYardDressing(MapVm map)
@@ -417,7 +428,6 @@ namespace Game.Presentation.Map
             if (_yardTiles.Count == 0) return;
             int front = _yardTiles[_yardTiles.Count - 1];
             Prop("tulsi", front, TulsiSpot, 46);
-            Prop("haystack", front, HaystackSpot, 46);
             Prop("woodpile", front, WoodpileSpot, 46);
             foreach (TileVm t in map.Tiles)
             {
@@ -430,40 +440,7 @@ namespace Game.Presentation.Map
             }
         }
 
-        private static bool Yours(TileKind k) { return k == TileKind.Farm || k == TileKind.Yard || k == TileKind.Quarters; }
-
-        /// <summary>
-        /// Your land's boundary (spec 010 §3.7): a field bund round the outside of your fields, redrawn when you buy or sell. The yard
-        /// and the quarters keep their fence.
-        /// </summary>
-        private void RefreshBunds(MapVm map)
-        {
-            int owned = 0;
-            foreach (TileVm t in map.Tiles) if (Yours(t.Kind)) owned = owned * 31 + t.Id + 1;
-            if (owned == _bundsFor) { foreach (SpriteRenderer b in _bunds) b.color = _tint; return; }
-            _bundsFor = owned;
-            foreach (SpriteRenderer b in _bunds) Destroy(b.gameObject);
-            _bunds.Clear();
-            foreach (TileVm t in map.Tiles)
-            {
-                if (t.Kind != TileKind.Farm) continue;
-                int x = t.Id % _width, y = t.Id / _width;
-                Bund(map, t.Id, x, y - 1, "bund_x", EdgeNE, 3);
-                Bund(map, t.Id, x + 1, y, "bund_y", EdgeSE, 87);
-                Bund(map, t.Id, x, y + 1, "bund_x", EdgeSW, 87);
-                Bund(map, t.Id, x - 1, y, "bund_y", EdgeNW, 3);
-            }
-        }
-
-        private void Bund(MapVm map, int tile, int nx, int ny, string sprite, Vector2 edge, int order)
-        {
-            bool inside = nx >= 0 && ny >= 0 && nx < _width && ny < _height;
-            if (inside && Yours(map.Tiles[ny * _width + nx].Kind)) return;
-            Vector3 pos = TileCentre(tile) + (Vector3)edge;
-            SpriteRenderer r = NewRenderer(sprite, SpriteBank.Rendered(sprite), pos, CropBase + Order(tile, _width, order, edge.y));
-            r.color = _tint;
-            _bunds.Add(r);
-        }
+        private static bool Yours(TileKind k) { return k == TileKind.Farm || k == TileKind.Yard || k == TileKind.Quarters || k == TileKind.Cattle; }
 
         private void Prop(string sprite, int tile, Vector2 off, int order)
         {
@@ -810,7 +787,7 @@ namespace Game.Presentation.Map
             float best = 0.24f;
             foreach (KeyValuePair<int, SpriteRenderer> kv in _places)
             {
-                float d = Vector2.Distance(w, (Vector2)TileCentre(kv.Key) + new Vector2(0, 0.16f));
+                float d = Vector2.Distance(w, (Vector2)kv.Value.transform.position + new Vector2(0, 0.12f)); // where it stands (ADR 0061)
                 if (d < best) { best = d; place = kv.Key; }
             }
             if (place >= 0) return new Hit(HitKind.Tile, place);

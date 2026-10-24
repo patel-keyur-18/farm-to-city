@@ -98,6 +98,36 @@ namespace Sim.Core.Tests
             Assert.That(median, Is.InRange(5.0, 9.0));
         }
 
+        // Spec 012 §9 (US-203): a buffalo's and a cow's payback over a lactation cycle, all feed bought and home-grown.
+        [Test]
+        public void Dairy()
+        {
+            Dairy.Result b = Tools.Balancer.Dairy.Cycle(LiveWith, "buffalo"), c = Tools.Balancer.Dairy.Cycle(LiveWith, "cow");
+            foreach (Dairy.Result r in new[] { b, c })
+                TestContext.Out.WriteLine(r.Kind + ": net " + (r.NetPerDay / 100).ToString("0") + " a day, home-grown " + (r.HomeNetPerDay / 100).ToString("0")
+                    + "; payback " + r.PaybackYears.ToString("0.00") + " years, home-grown " + r.HomePaybackYears.ToString("0.00") + "; milk " + r.Milk / 100 + ", feed " + r.Feed / 100 + ", vet " + r.Vet / 100);
+            double acre = 120_000.0 / 7.2 * 100; // an owner-operated acre's net a season (ADR 0033: land pays back in 7.2 seasons at 1,20,000)
+            TestContext.Out.WriteLine("buffalo a season vs an acre: " + (b.HomeNetPerDay * 4 / acre).ToString("0.00") + " (home-grown), " + (b.NetPerDay * 4 / acre).ToString("0.00") + " (bought)");
+            Assert.That(b.PaybackYears, Is.InRange(2.0, 3.5), "buffalo, all feed bought");
+            Assert.That(b.HomePaybackYears, Is.InRange(1.0, 2.0), "buffalo, home-grown green and straw");
+            Assert.That(c.HomePaybackYears / b.HomePaybackYears, Is.InRange(0.70, 0.90), "a cow pays back 10–30% faster per coin");
+            Assert.That(b.HomeNetPerDay * 4 / acre, Is.InRange(0.7, 1.5), "a buffalo nets about what an owner-operated acre does");
+        }
+
+        // Spec 012 §9 (US-203): the competent bot keeps buffalo after the Hamlet; the dairy stress bot (a full shed on the biggest loans,
+        // all feed bought) stays within 1.20 × and is never foreclosed in most seeds.
+        [Test]
+        public void Dairy_Bots()
+        {
+            int herd = 0;
+            Economy.RunBot(Live(), new FarmerBot(), 8, 1, sim => herd = sim.State.Livestock.Animals.Count);
+            TestContext.Out.WriteLine("competent bot's herd after 2 years: " + herd);
+            Assert.That(herd, Is.EqualTo(2), "two buffalo");
+            var r = Gate.Stress(Live(), 100, 8, new System.Func<Bot>[] { () => new DairyBot() });
+            TestContext.Out.WriteLine("dairy-max " + r[1].Ratio.ToString("0.000") + " × competent (" + r[0].MedianNetWorth.ToString("N0") + ")");
+            Assert.That(r[1].Ratio, Is.LessThanOrEqualTo(1.2));
+        }
+
         // Spec 011 §9 (US-194): the truck rarely fills and the supermarket's orders stay a bonus.
         [Test]
         public void TruckAndOrders()

@@ -71,7 +71,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 
 | Mark | What | Acres | For sale |
 | --- | --- | --- | --- |
-| `H`, `y`, `q` | The inherited farm, yard and labour quarters (`home_a`, `home_b`, `home_c`), protected | 9 | Never |
+| `H`, `y`, `q`, `c` | The inherited farm, yard, labour quarters and cattle acre (`home_a`, `home_b`, `home_c`, `home_d`, ADR 0064), protected | 10 | Never |
 | `f` | Today's neighbours' parcels, unchanged (`nw1` … `s4`) | 38 | Yes |
 | `s` | New neighbours' parcels for sale (§4: `r1`–`r5`, `w3`–`w6`, `s6`–`s9`) | 40 | Yes |
 | `n` | Neighbours' farms **not for sale yet** | 46 | No (Phase 2) |
@@ -90,7 +90,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 
 | Rule | Behaviour |
 | --- | --- |
-| Places | `MapDef.places`: a list of (`id`, `kind`, `tile`) on Village tiles. Kinds: `house`, `grocery`, `tea_stall`, `chemist`, `dealer`, `temple`, `council_hall`, `school_plot`, `banyan`, `pond`. Content only: places have no sim state in this spec |
+| Places | `MapDef.places`: a list of (`id`, `kind`, `tile`) on Village tiles. Kinds: `house`, `grocery`, `tea_stall`, `chemist`, `dealer`, `temple`, `council_hall`, `school_plot`, `banyan`, `pond`, `dairy` (the village dairy co-op; ADR 0061). Shops and public buildings stand where their fronts face the camera: the council hall, grocer and tea stall on the main street, the dealer, chemist and dairy on the side lane, the temple facing the pond (ADR 0065). Content only: places have no sim state in this spec. **Drawing (ADR 0061):** a street through the middle of the centre from the village lane to the fields, buildings rendered from all four sides and facing their street or lane, off-centre in clusters, packed earth and grass, an open square round the banyan, the pond with ghat steps and the temple on its bank, props between |
 | Tapping a place | Opens its sheet (§7). The chemist's sheet has **Buy medicine** (spec 003, the founder's), the dealer's has **Buy inputs** (spec 004). The others say what the place is and when it matters (the school plot: "The first school can be built here once the hamlet grows into a village"; the council hall: "The village council meets here once the hamlet becomes a village"). The existing ways in stay (Store → Buy inputs, the founder's Buy medicine). Buying costs no travel time or labour, as today |
 
 ### 3.4 Save schema 5: the migration
@@ -129,7 +129,7 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 | Look | Neighbours' farm tiles show a seasonal crop by their soil (wheat or potato in Winter, rice in the Monsoon, lentils or fallow in Summer, potato or radish in Spring), drawn with the farm's half-grown crop sprite (no growth stages). The view picks each parcel's crop from its id and the season, so it is stable and changes at the season change. It has no sim state (§10 G6) |
 | For sale | A small sign board on one tile of each parcel for sale. Tapping any tile of it opens the buy sheet (spec 002 §7) |
 | Not for sale | Tapping opens a card: "<Name>'s farm · not for sale". Shows the size and soil, no price. Names are fixed per parcel in content (`parcels[].owner`, a string key) |
-| Owned land | Unowned land is no longer desaturated (amends spec 008 §3.4); a neighbour's field lying fallow shows grass. The player's fields are marked by a field bund (*mendh*) round their outside edges, redrawn on a purchase or sale; the yard and the quarters keep their fence; the for-sale signs mark what can be bought |
+| Owned land | Unowned land is no longer desaturated (amends spec 008 §3.4); a neighbour's field lying fallow shows grass. The player's fields are marked by a field bund (*mendh*) round their outside edges, redrawn on a purchase or sale; the yard and the quarters keep their fence; the for-sale signs mark what can be bought. **ADR 0062:** a continuous mud wall and hedge round everything the player owns, with a gate at the lane, corner stones on owned acres and fresh dark bunds on the player's fields; neighbours' acres vary by soil and a fixed seeded draw (scrub, fallow, ploughed, mustard, sugarcane, a grove), with farmsteads and tube-well huts only on not-for-sale acres and at the edge |
 
 ### 3.8 Processing order
 

@@ -21,6 +21,7 @@ namespace Sim.Core.Maths
         Step = 15,
         Chapter = 16,
         Era = 17,
+        Animal = 18,
     }
 
     /// <summary>

@@ -163,16 +163,8 @@ namespace Sim.Core.Commands
             RejectReason r = MarketChecks.Good(sim, GoodId, Quantity, out int g);
             if (r != RejectReason.None) return CommandResult.Reject(r);
             if (MarketChecks.IsProduce(sim, g) || MarketChecks.IsSapling(sim, g)) return CommandResult.Reject(RejectReason.NotAnInput);
-            if (Quantity > Store.Fits(sim, g)) return CommandResult.Reject(RejectReason.StoreFull);
-            long cost = MarketRules.Value(sim, g, Quantity, MarketRules.InputPrice(sim, g));
-            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
-            if (cost > 0)
-                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.inputsBought", "buy:" + GoodId,
-                    new Posting(Account.InputsInStore, cost), new Posting(Account.Cash, -cost));
-            sim.State.Market.Stock[g] += Quantity;
-            sim.State.Market.StockCost[g] += cost;
-            sim.Emit(new InputsBought(sim.State.Clock.SimTime, GoodId, Quantity, cost));
-            return CommandResult.Ok;
+            r = Store.BuyInput(sim, g, Quantity, "buy:" + GoodId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
 }

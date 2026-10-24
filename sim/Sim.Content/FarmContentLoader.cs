@@ -38,9 +38,11 @@ namespace Sim.Content
                 JObject c = Object(tokens[i], p);
                 OnlyFields(c, p, "id", "nameKey", "outputGood", "seedGood", "sowSeasons", "growthMinutes", "seasonYieldPerAcre",
                     "seedPerAcrePerSeason", "moistureMin", "moistureMax", "labourPerAcrePerDay", "fertilityPerSeason", "canSaveSeed",
-                    "savedSeedLossPerSeason", "savedSeedFloor");
+                    "savedSeedLossPerSeason", "savedSeedFloor", "strawPerKg", "fodder");
                 string id = UniqueId(c, p, crops.ConvertAll(x => x.Id));
-                int output = GoodRef(c, p, "outputGood", market, GoodKind.Produce);
+                bool fodder = c["fodder"] != null;
+                if (fodder && c["outputGood"] != null) throw new ContentException(p + ".outputGood", "a fodder crop is cut for the animals, never harvested");
+                int output = fodder ? -1 : GoodRef(c, p, "outputGood", market, GoodKind.Produce);
                 int seed = GoodRef(c, p, "seedGood", market, GoodKind.Input);
                 bool[] seasons = Seasons(c, p, "sowSeasons");
                 int minutes = Int(Required(c, p, "growthMinutes"), p + ".growthMinutes");
@@ -61,7 +63,8 @@ namespace Sim.Content
                 }
                 crops.Add(new CropDef(id, String(Required(c, p, "nameKey"), p + ".nameKey"), output, seed, seasons, minutes, yield, seedKg,
                     mMin, mMax, Bounded(c, p, "labourPerAcrePerDay", "0", "24"), Bounded(c, p, "fertilityPerSeason", "-20", "20"),
-                    canSave, loss, floor));
+                    canSave, loss, floor) { StrawPerKg = c["strawPerKg"] == null ? Fixed.Zero : Bounded(c, p, "strawPerKg", "0", "5"),
+                    CutSeasons = fodder ? CutSeasons(c, p, seasons) : null });
             }
 
             garden = new List<GardenCropDef>();
@@ -271,6 +274,20 @@ namespace Sim.Content
             if (market.Goods[g].Kind != kind)
                 throw new ContentException(Join(path, name), "'" + market.Goods[g].Id + "' must be " + (kind == GoodKind.Produce ? "a produce" : "an input") + " good");
             return g;
+        }
+
+        /// <summary>A fodder crop's cut seasons (spec 012 §3.8b): at least one of its sowing seasons among them.</summary>
+        private static bool[] CutSeasons(JObject c, string p, bool[] sow)
+        {
+            string fp = Join(p, "fodder");
+            JObject f = Object(c["fodder"], fp);
+            OnlyFields(f, fp, "cutSeasons");
+            bool[] cut = Seasons(f, fp, "cutSeasons");
+            bool overlap = false;
+            for (int s = 0; s < cut.Length; s++) overlap |= sow[s] && cut[s];
+            if (!overlap) throw new ContentException(Join(fp, "cutSeasons"), "must include a sowing season");
+            if (c["canSaveSeed"] != null && Bool(c["canSaveSeed"], p + ".canSaveSeed")) throw new ContentException(p + ".canSaveSeed", "fodder seed isn't saved");
+            return cut;
         }
 
         /// <summary>A non-empty list of season ids as a bool per season.</summary>

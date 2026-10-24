@@ -174,11 +174,24 @@ namespace Sim.View.Views
             for (int g = 0; g < goods.Count; g++)
             {
                 if (goods[g].Kind == GoodKind.Produce || goods[g].Unit == GoodUnit.Each) continue;
+                // Straw and cattle feed need the shed's stack and feed room (spec 012 §3.3).
+                if ((goods[g].Place == GoodPlace.StrawStack || goods[g].Place == GoodPlace.FeedRoom) && Sim.Core.Livestock.LivestockRules.Shed(sim) == null) continue;
+                int seedOf = g;
+                if (!Sim.Core.Livestock.LivestockRules.Unlocked(sim) && FodderSeed(sim, seedOf)) continue; // fodder seed comes with cattle
                 int good = g;
                 vm.Lines.Add(new LineVm(s.Get(goods[g].NameKey), s.Get("inputs.priceValue", "price", Price(ctx, g), "cheapest", Cheapest(ctx, g)), "inputPrice", g)
-                { Icon = goods[g].Id, Action = ActionVm.Open("input:" + goods[g].Id, s.Get("inputs.buy"), new SheetRequest("BuyInput", good)) });
+                {
+                    Icon = goods[g].Id, Action = ActionVm.Open("input:" + goods[g].Id, s.Get("inputs.buy"), new SheetRequest("BuyInput", good)),
+                    Note = goods[g].Place == GoodPlace.Store ? null : s.Get("inputs.goesTo." + goods[g].Place),
+                });
             }
             return vm;
+        }
+
+        private static bool FodderSeed(Simulation sim, int g)
+        {
+            foreach (CropDef c in sim.Config.Game.Farm.Crops) if (c.Fodder && c.SeedGood == g) return true;
+            return false;
         }
 
         private static string Price(ViewContext ctx, int g)
@@ -210,10 +223,30 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             FarmDefs farm = sim.Config.Game.Farm;
             var list = new List<KeyValuePair<string, long>>();
+            GoodDef gd = sim.Config.Game.Market.Goods[g];
+            if (gd.Place == GoodPlace.StrawStack || gd.Place == GoodPlace.FeedRoom)
+            {
+                // The shed's feeds (spec 012 §7): fill the place, or enough for 2 or 4 days at today's need.
+                long room = Store.Fits(sim, g);
+                list.Add(new KeyValuePair<string, long>(ctx.Strings.Get("inputs.fillUp"), room));
+                long need = 0;
+                foreach (Sim.Core.Livestock.Animal a in sim.State.Livestock.Animals)
+                {
+                    var n = Sim.Core.Livestock.LivestockSystem.NeedOf(sim, a);
+                    need += gd.Place == GoodPlace.StrawStack ? n.Straw : n.Feed;
+                }
+                if (need > 0)
+                    foreach (int days in new[] { 2, 4 })
+                    {
+                        long q = System.Math.Min(room, need * days);
+                        if (q > 0 && q < room) list.Add(new KeyValuePair<string, long>(ctx.Strings.Plural("inputs.forDays", days), q));
+                    }
+                return list;
+            }
             foreach (CropDef c in farm.Crops)
                 if (c.SeedGood == g)
                 {
-                    long one = FarmRules.CycleGrams(sim.Clock, c, c.SeedPerAcrePerSeason);
+                    long one = FarmRules.SeedGrams(sim.Clock, c); // a fodder acre is sown once (spec 012 §3.8b)
                     foreach (int acres in new[] { 1, 2, 6 }) list.Add(new KeyValuePair<string, long>(ctx.Strings.Plural("inputs.sowAcres", acres), one * acres));
                     return list;
                 }
@@ -237,7 +270,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             GoodDef good = sim.Config.Game.Market.Goods[g];
             string id = good.Id;
-            var vm = new SheetVm { Icon = good.Id, Title = s.Get(good.NameKey), Subtitle = s.Get("inputs.inStore", "qty", ctx.Fmt.Quantity(good, sim.State.Market.InStore(g))) };
+            var vm = new SheetVm { Icon = good.Id, Title = s.Get(good.NameKey), Subtitle = s.Get(good.Place == GoodPlace.Store ? "inputs.inStore" : "inputs.inPlace." + good.Place, "qty", ctx.Fmt.Quantity(good, sim.State.Market.InStore(g))) };
             foreach (KeyValuePair<string, long> a in Amounts(ctx, g))
             {
                 long q = a.Value;

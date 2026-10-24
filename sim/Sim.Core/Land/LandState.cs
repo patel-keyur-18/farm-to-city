@@ -264,7 +264,8 @@ namespace Sim.Core.Land
                     if (tiles[i] == null) { tiles[i] = LandSystem.NewTile(map, i); tiles[i].ParcelId = p; }
             s.Tiles.AddRange(tiles);
             n = r.ReadCount();
-            if (n != map.Parcels.Count && !r.OldMap) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
+            // Schema 8 (ADR 0064) added the cattle acre's parcel: an older save has fewer, and the new one starts unowned.
+            if (n != map.Parcels.Count && !r.OldMap && !(r.Schema < Saves.CattleAcreMigration.Schema && n < map.Parcels.Count)) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
             var parcels = new Parcel[map.Parcels.Count];
             for (int i = 0; i < n; i++)
             {

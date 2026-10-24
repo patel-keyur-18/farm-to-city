@@ -50,7 +50,8 @@ namespace Sim.Core.People
 
         private static void Act(Simulation sim, Hand h, StandingOrder o)
         {
-            if (o.Kind == OrderTargetKind.Field ? Field(sim, h, o) : Tree(sim, h, o)) h.ActionsInHour++;
+            bool acted = o.Kind == OrderTargetKind.Field ? Field(sim, h, o) : o.Kind == OrderTargetKind.Tree ? Tree(sim, h, o) : Animals(sim, h, o);
+            if (acted) h.ActionsInHour++;
         }
 
         private static bool Field(Simulation sim, Hand h, StandingOrder o)
@@ -91,7 +92,7 @@ namespace Sim.Core.People
                     : r.Reason == RejectReason.NoSavedSeed ? OrderWait.NoSavedSeed : OrderWait.Paused);
                 return false;
             }
-            Done(sim, h, o, OrderAction.Sowed, defs.Market.Goods[crop.OutputGood].Id, 0, sim.State.Ledger.Cash - cash);
+            Done(sim, h, o, OrderAction.Sowed, crop.Fodder ? crop.Id : defs.Market.Goods[crop.OutputGood].Id, 0, sim.State.Ledger.Cash - cash);
             return true;
         }
 
@@ -108,11 +109,45 @@ namespace Sim.Core.People
             {
                 CropDef own = farm.Crops[o.Crop];
                 bool seed = o.Seed != SeedSource.Saved
-                    || (sim.State.Market.InStore(own.OutputGood) >= FarmRules.CycleGrams(sim.Clock, own, own.SeedPerAcrePerSeason) && sim.State.Farm.SavedSeedAgeOf(o.Crop) != null);
+                    || (!own.Fodder && sim.State.Market.InStore(own.OutputGood) >= FarmRules.CycleGrams(sim.Clock, own, own.SeedPerAcrePerSeason) && sim.State.Farm.SavedSeedAgeOf(o.Crop) != null);
                 if (seed && own.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]
                     && sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, own, o.Seed, fert))) return o.Crop;
+                if (own.Fodder)
+                {
+                    // A fodder order keeps green fodder all year (spec 012 §3.8b): the other fodder crop when it is the one in season.
+                    int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+                    for (int i = 0; i < farm.Crops.Count; i++)
+                        if (farm.Crops[i].Fodder && farm.Crops[i].SowSeasons[season]
+                            && sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, farm.Crops[i], SeedSource.Certified, fert))) return i;
+                }
             }
             return FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)o.Target], fert);
+        }
+
+        /// <summary>
+        /// The animals order (spec 012 §3.11): when the straw or the feed would last less than the order's days, he buys to fill that
+        /// place (straw from neighbours, feed from the dealer) at today's price, as far as cash allows; otherwise he waits for money.
+        /// </summary>
+        private static bool Animals(Simulation sim, Hand h, StandingOrder o)
+        {
+            LivestockDefs defs = Livestock.LivestockRules.Defs(sim);
+            if (Livestock.LivestockRules.Shed(sim) == null || sim.State.Livestock.Animals.Count == 0) return false;
+            bool acted = false, broke = false;
+            foreach (int good in new[] { defs.Straw, defs.Feed })
+            {
+                if (Livestock.LivestockRules.DaysLeft(sim, good) >= o.Days) continue;
+                long room = Store.Fits(sim, good);
+                Definitions.GoodDef g = sim.Config.Game.Market.Goods[good];
+                Maths.Fixed price = MarketRules.InputPrice(sim, good);
+                long q = System.Math.Min(room, Finance.Money.QuantityFor(sim.State.Ledger.Cash, price, g.UnitSize));
+                if (q <= 0) { broke = true; continue; }
+                long cash = sim.State.Ledger.Cash;
+                if (Store.BuyInput(sim, good, q, "order:animals") != RejectReason.None) { broke = true; continue; }
+                Done(sim, h, o, OrderAction.Bought, g.Id, q, cash - sim.State.Ledger.Cash);
+                acted = true;
+            }
+            if (broke && !acted) Wait(sim, o, OrderWait.InsufficientFunds);
+            return acted;
         }
 
         private static bool Tree(Simulation sim, Hand h, StandingOrder o)

@@ -24,6 +24,31 @@ namespace Sim.Core.Farm
             return (kgPerSeason * CycleShare(clock, crop)).MulRatio(1000, 1).RoundToLong();
         }
 
+        /// <summary>
+        /// When a fodder crop sown at <paramref name="t"/> stops being cut (spec 012 §3.8b): the end of the last of the cut seasons
+        /// that run on from the sowing season.
+        /// </summary>
+        public static long StandEnd(ClockDef clock, CropDef crop, long t)
+        {
+            long period = t / clock.SecondsPerSeason, end = period + 1;
+            while (end - period < 4 && crop.CutSeasons[(int)(end % 4)]) end++;
+            return end * clock.SecondsPerSeason;
+        }
+
+        /// <summary>Seed for one sowing, grams: a cycle's share, or a fodder field's whole acre (sown once).</summary>
+        public static long SeedGrams(ClockDef clock, CropDef crop)
+        {
+            return crop.Fodder ? crop.SeedPerAcrePerSeason.MulRatio(1000, 1).RoundToLong() : CycleGrams(clock, crop, crop.SeedPerAcrePerSeason);
+        }
+
+        /// <summary>Fertiliser for one sowing, grams: a cycle's share, or for the time a fodder field sown at <paramref name="t"/> stands.</summary>
+        public static long FertiliserGrams(ClockDef clock, CropDef crop, FertiliserDef fert, long t)
+        {
+            if (fert.Good < 0) return 0;
+            if (!crop.Fodder) return CycleGrams(clock, crop, fert.KgPerAcrePerSeason);
+            return fert.KgPerAcrePerSeason.MulRatio(StandEnd(clock, crop, t) - t, clock.SecondsPerSeason).MulRatio(1000, 1).RoundToLong();
+        }
+
         /// <summary>The piecewise water factor of spec 003 §3.5.</summary>
         public static Fixed WaterFactor(FarmDef farm, CropDef crop, Fixed m)
         {
@@ -69,9 +94,9 @@ namespace Sim.Core.Farm
             FarmDef farm = sim.Config.Game.Farm.Farm;
             long harvest = Yield(farm, crop.SeasonYieldPerAcre * CycleShare(sim.Clock, crop), LandRules.SoilFactor(sim, tile), WaterFactor(farm, crop, tile.Moisture),
                 Fixed.One, Fixed.One, Fixed.One, fert.YieldFactor, Fixed.One).Grams;
-            long seedGrams = CycleGrams(sim.Clock, crop, crop.SeedPerAcrePerSeason);
-            long fertGrams = fert.Good < 0 ? 0 : CycleGrams(sim.Clock, crop, fert.KgPerAcrePerSeason);
-            return new SowingEstimate(harvest, MarketRules.Value(sim, crop.OutputGood, harvest, MarketRules.Floor(sim, crop.OutputGood)),
+            long seedGrams = SeedGrams(sim.Clock, crop);
+            long fertGrams = FertiliserGrams(sim.Clock, crop, fert, sim.State.Clock.SimTime);
+            return new SowingEstimate(harvest, crop.Fodder ? 0 : MarketRules.Value(sim, crop.OutputGood, harvest, MarketRules.Floor(sim, crop.OutputGood)),
                 MarketRules.Value(sim, crop.SeedGood, seedGrams, MarketRules.InputPrice(sim, crop.SeedGood)),
                 fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good)), fertGrams);
         }
@@ -79,8 +104,8 @@ namespace Sim.Core.Farm
         /// <summary>What sowing one cycle would buy now: certified seed not in the store, and fertiliser not in the store (spec 003 §3.2).</summary>
         public static long SowingCost(Simulation sim, CropDef crop, SeedSource seed, FertiliserDef fert)
         {
-            long seedCost = seed == SeedSource.Certified ? Store.ShortfallCost(sim, crop.SeedGood, CycleGrams(sim.Clock, crop, crop.SeedPerAcrePerSeason)) : 0;
-            return seedCost + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, CycleGrams(sim.Clock, crop, fert.KgPerAcrePerSeason)));
+            long seedCost = seed == SeedSource.Certified ? Store.ShortfallCost(sim, crop.SeedGood, SeedGrams(sim.Clock, crop)) : 0;
+            return seedCost + (fert.Good < 0 ? 0 : Store.ShortfallCost(sim, fert.Good, FertiliserGrams(sim.Clock, crop, fert, sim.State.Clock.SimTime)));
         }
 
         /// <summary>
@@ -97,7 +122,8 @@ namespace Sim.Core.Farm
             for (int i = 0; i < farm.Crops.Count; i++)
             {
                 CropDef c = farm.Crops[i];
-                if (!c.SowSeasons[season] || !sim.State.Ledger.CanAfford(SowingCost(sim, c, SeedSource.Certified, fert))) continue;
+                // Fodder is never his own pick: its worth is the bought fodder it saves, which the sow sheet shows (spec 012 §3.8b).
+                if (c.Fodder || !c.SowSeasons[season] || !sim.State.Ledger.CanAfford(SowingCost(sim, c, SeedSource.Certified, fert))) continue;
                 SowingEstimate e = Estimate(sim, tile, c, fert);
                 // An open supermarket order he can fill counts at its price (spec 011 §3.3, AC-11).
                 long profit = Supermarket.HarvestValue(sim, c.OutputGood, e.HarvestGrams, sim.State.Clock.SimTime + c.GrowthSeconds) - e.Spend;

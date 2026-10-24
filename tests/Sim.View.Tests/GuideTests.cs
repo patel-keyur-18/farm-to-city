@@ -394,9 +394,11 @@ namespace Sim.View.Tests
             Simulation sim = ViewKit.NewGame(edit: (f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 200000") : j);
             ViewContext ctx = ViewKit2.Context(sim);
             SheetVm vm = ProgressSheet.Build(ctx);
-            Assert.That(vm.Lines.Select(l => l.Label + " = " + l.Value), Is.EqualTo(new[]
+            Assert.That(vm.Lines.Take(3).Select(l => l.Label + " = " + l.Value), Is.EqualTo(new[]
                 { "This season's harvested acres = 0 of 6", "A house for a hand = Not yet", "A season with farm profit = Not yet" }));
-            Assert.That(vm.Lines.All(l => l.WhyKey == "era"), Is.True);
+            Assert.That(vm.Lines.Take(3).All(l => l.WhyKey == "era"), Is.True);
+            // Spec 012 §3.13: the Hamlet's reward is listed.
+            Assert.That(vm.Lines.Skip(3).Select(l => l.Label), Is.EqualTo(new[] { "When you're a Hamlet", "A cattle shed: buffalo and cows" }));
 
             EraRules.OnHarvest(sim, 84, Fixed.Parse("0.9"));
             EraRules.OnHarvest(sim, 85, Fixed.Parse("1.1"));

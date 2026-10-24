@@ -73,6 +73,10 @@ namespace Sim.View.Views
             { "away", Away },
             // The Hamlet (spec 009 §3.6).
             { "era", EraWhy },
+            // The dairy co-op (spec 012, ADR 0061).
+            { "milkPrice", MilkPrice }, { "milkToday", MilkToday }, { "shedCost", ShedCost }, { "animalMilk", AnimalMilk }, { "animalFed", AnimalFed },
+            { "animalHealth", AnimalHealth }, { "animalMoney", AnimalMoney }, { "animalSell", AnimalSell }, { "animalBuy", AnimalBuy }, { "greenFodder", GreenFodder },
+            { "feedStock", FeedStock }, { "animalWork", AnimalWork }, { "fodderCut", FodderCut },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

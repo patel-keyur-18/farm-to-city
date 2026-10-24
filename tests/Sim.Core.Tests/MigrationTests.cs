@@ -54,6 +54,11 @@ namespace Sim.Core.Tests
                 byte[] bytes = File.ReadAllBytes(file);
                 LoadResult r = SaveCodec.Read(bytes, config, MinSchema);
                 Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                // Through the save points too, which report the old schema so the app keeps the town as it was (owner, Sprint 12).
+                var store = new MemoryStore();
+                store.Files[SavePoints.Latest] = bytes;
+                LoadOutcome o = new SavePoints(store, Sim.Content.ContentLoader.LoadSaves(TestContent.ReadContent("saves.json")).Save).LoadNewestValid(config);
+                Assert.That((o.Error, o.Schema), Is.EqualTo((SaveError.None, r.Header.Schema)), name + " through the save points");
                 string pinPath = Path.ChangeExtension(file, ".json");
                 if (Update && r.Header.Schema == SaveCodec.SchemaVersion) Pin(pinPath, r.State);
                 Assert.That(File.Exists(pinPath), Is.True, name + " has its pinned facts");
@@ -64,7 +69,19 @@ namespace Sim.Core.Tests
                     Assert.That("0x" + r.State.ComputeHash().ToString("X16"), Is.EqualTo(pin.Hash), name + ": the current schema loads exactly");
                 // After a migration the hash changes with the new fields; the old facts may not. Each migration step adds its
                 // own asserts here that the new fields hold their documented defaults.
-                Assert.That(Facts(r.State), Is.EqualTo(pin.Facts), name + ": plain facts");
+                SortedDictionary<string, long> facts = Facts(r.State);
+                if (r.Header.Schema < 8)
+                {
+                    // ADR 0064: the cattle acre is inherited, owned and protected, barren, with nothing on it; it is the one new parcel.
+                    int home = config.Game.Map.IndexOfParcel("home_d");
+                    Assert.That((r.State.Land.Parcels[home].Owned, r.State.Land.Parcels[home].Protected), Is.EqualTo((true, true)), name);
+                    Assert.That(r.State.Land.Tiles[104].Terrain, Is.EqualTo(Definitions.Terrain.Cattle), name);
+                    Assert.That(r.State.Farm.CropOn(104), Is.Null, name);
+                    Assert.That(r.State.Land.Slots.Any(s => s.TileId == 104), Is.False, name);
+                    Assert.That(r.State.Ledger.Balance(Finance.Account.Land), Is.EqualTo(r.State.Land.Parcels.Where(x => x.Owned).Sum(x => x.CostBasis)), name + ": land at cost");
+                    facts["parcelsOwned"] -= 1;
+                }
+                Assert.That(facts, Is.EqualTo(pin.Facts), name + ": plain facts");
                 if (r.Header.Schema < 4)
                 {
                     // ADR 0048 §4: a neighbour hired today stays to the daily pass they were paid to, on no field.
@@ -86,6 +103,16 @@ namespace Sim.Core.Tests
                     }
                 }
 
+                if (r.Header.Schema < 7)
+                {
+                    // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.
+                    Livestock.LivestockState l = r.State.Livestock;
+                    Assert.That(l.Animals, Is.Empty, name);
+                    Assert.That(l.ShedReadyAt, Is.EqualTo(0), name);
+                    Assert.That(l.BuyGreenFodder, Is.True, name);
+                    Assert.That(r.State.Ledger.Balance(Finance.Account.Livestock), Is.EqualTo(0), name);
+                }
+
                 Simulation sim = Simulation.FromState(config, r.State);
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
                 sim.DrainEvents();
@@ -93,6 +120,48 @@ namespace Sim.Core.Tests
                 Assert.That(again.Error, Is.EqualTo(SaveError.None), name + " after a day: " + again.Detail);
                 Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + ": a day later it round-trips");
             }
+        }
+
+        // ADR 0064: a schema-7 town that bought e1 and sowed tile 104 gets the cattle acre: the crop is paid for at the trader's
+        // floor and cleared, e1 keeps its other acres, the land stays at cost, and the town round-trips.
+        [Test]
+        public void Schema7_CattleAcre()
+        {
+            SimConfig config = SaveTests.Config();
+            Definitions.GameDefs defs = config.Game;
+            Simulation sim = Simulation.NewGame(config, new NewGame(42, TestSim.Wall0, 0));
+            int e1 = defs.Map.IndexOfParcel("e1"), home = defs.Map.IndexOfParcel("home_d");
+            // Undo the cattle acre to make the town as schema 7 left it: tile 104 a farm acre of e1, home_d not inherited.
+            Land.Parcel h = sim.State.Land.Parcels[home];
+            sim.State.Ledger.Post(0, sim.Period, "ledger.opening", "test", new Finance.Posting(Finance.Account.Land, -h.CostBasis), new Finance.Posting(Finance.Account.OpeningEquity, h.CostBasis));
+            h.Owned = false; h.Protected = false; h.CostBasis = 0;
+            Land.Tile old = Land.LandSystem.NewTile(defs.Map, 104);
+            old.Terrain = Definitions.Terrain.Farm;
+            old.ParcelId = e1;
+            sim.State.Land.Tiles[104] = old;
+            sim.State.Ledger.Post(0, sim.Period, "ledger.opening", "test", new Finance.Posting(Finance.Account.Cash, 10_00_000_00), new Finance.Posting(Finance.Account.OpeningEquity, -10_00_000_00));
+            Assert.That(sim.Execute(new BuyParcel(0, "e1")).Accepted, Is.True);
+            Assert.That(sim.Execute(new Sow(0, 104, "radish", Farm.SeedSource.Certified, "none")).Accepted, Is.True);
+            long cash = sim.State.Ledger.Cash;
+
+            LoadResult r = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 7), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Land.LandState land = r.State.Land;
+            Assert.That(land.Tiles[104].Terrain, Is.EqualTo(Definitions.Terrain.Cattle));
+            Assert.That(land.Tiles[104].ParcelId, Is.EqualTo(home));
+            Assert.That((land.Parcels[home].Owned, land.Parcels[home].Protected, land.Parcels[e1].Owned), Is.EqualTo((true, true, true)));
+            Assert.That(r.State.Farm.CropOn(104), Is.Null);
+            Simulation after = Simulation.FromState(config, r.State);
+            Definitions.CropDef radish = defs.Farm.Crops[defs.Farm.IndexOfCrop("radish")];
+            long paid = Market.MarketRules.Value(after, radish.OutputGood, Farm.FarmRules.CycleGrams(after.Clock, radish, radish.SeasonYieldPerAcre), Market.MarketRules.Floor(after, radish.OutputGood));
+            Assert.That(r.State.Ledger.Cash - cash, Is.EqualTo(paid));
+            Assert.That(r.State.Ledger.Balance(Finance.Account.Land), Is.EqualTo(land.Parcels.Where(x => x.Owned).Sum(x => x.CostBasis)), "land at cost");
+            Assert.That(r.State.Ledger.Reconcile(), Is.Null);
+            Assert.That(r.State.CommandLog.Entries, Is.Empty, "the migrated town is its own replay base");
+            after.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+            byte[] bytes = SaveCodec.Write(after.State, config, TestSim.Wall0);
+            LoadResult again = SaveCodec.Read(bytes, config, MinSchema);
+            Assert.That(SaveCodec.Write(again.State, config, TestSim.Wall0), Is.EqualTo(bytes));
         }
 
         // Spec 011 AC-14: every older fixture loads at schema 6 with the truck by its hour, its load the trader's counts, no
@@ -118,7 +187,31 @@ namespace Sim.Core.Tests
                 sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
                 LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
                 Assert.That(again.Error, Is.EqualTo(SaveError.None), name);
-                Assert.That(again.Header.Schema, Is.EqualTo(6));
+                Assert.That(again.Header.Schema, Is.EqualTo(SaveCodec.SchemaVersion));
+                Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + " round-trips");
+            }
+        }
+
+        // Spec 012 AC-16: every schema-6 or older fixture loads at schema 7 with no cattle, becomes its own replay base, advances a
+        // day and round-trips.
+        [Test]
+        public void Schema6_Livestock()
+        {
+            SimConfig config = SaveTests.Config();
+            string[] older = Directory.GetFiles(Dir, "*.ftc", SearchOption.AllDirectories).Where(f => SaveCodec.Read(File.ReadAllBytes(f), config, MinSchema).Header.Schema < 7).ToArray();
+            Assert.That(older.Length, Is.GreaterThanOrEqualTo(4), "schema 3 to 6 fixtures");
+            foreach (string file in older)
+            {
+                string name = Path.GetFileName(file);
+                LoadResult r = SaveCodec.Read(File.ReadAllBytes(file), config, MinSchema);
+                Assert.That(r.Error, Is.EqualTo(SaveError.None), name + ": " + r.Detail);
+                Assert.That(r.State.Livestock, Is.Not.Null, name);
+                Assert.That(r.State.Livestock.Animals, Is.Empty, name);
+                Assert.That(r.State.CommandLog.Base, Is.Not.Null, name + ": the migrated town is its own replay base");
+                Simulation sim = Simulation.FromState(config, r.State);
+                sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+                LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+                Assert.That(again.Error, Is.EqualTo(SaveError.None), name);
                 Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + " round-trips");
             }
         }

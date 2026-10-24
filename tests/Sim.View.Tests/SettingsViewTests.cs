@@ -137,7 +137,7 @@ namespace Sim.View.Tests
             Assert.That(NotificationText.For(ctx, mixed).Title, Is.EqualTo("2 fields are ready"));
             foreach (NotifyKind k in System.Enum.GetValues(typeof(NotifyKind)))
             {
-                (string title, string body) = NotificationText.For(ctx, N(k, 1, k == NotifyKind.CropReady || k == NotifyKind.HandsWork ? "wheat" : k == NotifyKind.BedReady ? "garden_radish" : k == NotifyKind.FruitRipe ? "mango" : null));
+                (string title, string body) = NotificationText.For(ctx, N(k, 1, k == NotifyKind.CropReady || k == NotifyKind.HandsWork ? "wheat" : k == NotifyKind.BedReady ? "garden_radish" : k == NotifyKind.FruitRipe ? "mango" : k == NotifyKind.FeedLow ? "straw" : null));
                 Assert.That(title, Does.Not.Contain("⟦").And.Not.Empty, k.ToString());
                 Assert.That(body, Does.Not.Contain("⟦").And.Not.Empty, k.ToString());
                 Assert.That(title + body, Does.Not.Match("[0-9]{3}"), "never a money amount: " + k);

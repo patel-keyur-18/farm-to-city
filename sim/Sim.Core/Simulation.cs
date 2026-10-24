@@ -46,11 +46,13 @@ namespace Sim.Core
                 AddSystem(new FounderSystem());
                 AddSystem(new FinanceSystem());
                 if (config.Game.People != null) AddSystem(new PeopleSystem());
+                if (config.Game.Livestock != null) AddSystem(new Livestock.LivestockSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
             if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity(), new FarmSystem.PestCheck(), new MarketSystem.MandiReturn() });
             if (config.Game?.People != null) handlers.Add(new PeopleSystem.HutBuild());
+            if (config.Game?.Livestock != null) handlers.Add(new Livestock.LivestockSystem.ShedBuild());
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {
@@ -83,6 +85,7 @@ namespace Sim.Core
                 if (config.Game.Credit != null) state.Credit = new CreditState { Score = config.Game.Credit.Score.StartScore, NoticeAnnounced = true };
                 FounderRules.PayFirstSeason(sim);
                 if (config.Game.People != null) PeopleSystem.Initialise(sim);
+                if (config.Game.Livestock != null) state.Livestock = new Livestock.LivestockState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

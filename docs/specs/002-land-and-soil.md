@@ -1,6 +1,6 @@
 # 002. Land and soil
 
-- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17. Amended by ADR 0032 (well acres, 2026-10-18); by spec 010 (ADR 0052, 0053: the 16 × 12 map, new terrain kinds, `forSale`, `NotForSale`, location factors by geography; Phase 2)
+- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17. Amended by ADR 0032 (well acres, 2026-10-18); by spec 010 (ADR 0052, 0053: the 16 × 12 map, new terrain kinds, `forSale`, `NotForSale`, location factors by geography; Phase 2); amended by spec 012 (ADR 0056, 0060; Phase 2): the yard holds the cattle shed and straw stack (tile 103, from the Hamlet) and a compost pit
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, Fruit trees, Irrigation ladder); Assets and wealth (Farmland, Liquidity); City building (land bought parcel by parcel); Data model (`Tile` / `Parcel`)

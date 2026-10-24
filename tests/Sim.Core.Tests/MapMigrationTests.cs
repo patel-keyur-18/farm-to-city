@@ -62,7 +62,7 @@ namespace Sim.Core.Tests
                 Tile t = land.Tiles[at];
                 Assert.That(t.Id, Is.EqualTo(at));
                 Assert.That(t.Terrain, Is.EqualTo(defs.Map.Tiles[at].Terrain), "terrain from the content (tile 45 becomes the farm lane)");
-                if (i == 45) continue; // the farm lane's acre: its crop was paid for and cleared
+                if (i == 45 || i == 30) continue; // the farm lane's acre and the cattle acre (ADR 0064): what stood there was paid for and cleared
                 Assert.That(new[] { t.Fertility.Raw, t.Moisture.Raw, t.VacantSince }, Is.EqualTo(pins.Tiles[i]), "old tile " + i);
             }
             for (int i = 0; i < 192; i++)
@@ -71,9 +71,9 @@ namespace Sim.Core.Tests
                 Assert.That((land.Tiles[i].Fertility, land.Tiles[i].Moisture), Is.EqualTo((defs.Map.Tiles[i].Fertility, defs.Map.Tiles[i].Moisture)), "new tile " + i);
                 Assert.That(land.Parcels[land.Tiles[i].ParcelId].Owned, Is.False, "new land starts unowned");
             }
-            Assert.That(r.State.Farm.Crops.Select(c => c.TileId), Is.EquivalentTo(pins.CropTiles.Where(t => t != 45).Select(MapMigration.Remap)));
+            Assert.That(r.State.Farm.Crops.Select(c => c.TileId), Is.EquivalentTo(pins.CropTiles.Where(t => t != 45 && t != 30).Select(MapMigration.Remap)));
             Assert.That(land.Buildings.Select(b => b.TileId), Is.EqualTo(pins.BuildingTiles.Select(MapMigration.Remap)));
-            Assert.That(land.Slots.Select(s => s.TileId), Is.EqualTo(pins.SlotTiles.Where(t => t != 45).Select(MapMigration.Remap)));
+            Assert.That(land.Slots.Select(s => s.TileId), Is.EqualTo(pins.SlotTiles.Where(t => t != 45 && t != 30).Select(MapMigration.Remap)));
 
             // It advances a game day and round-trips byte for byte.
             SimConfig config = SaveTests.Config();

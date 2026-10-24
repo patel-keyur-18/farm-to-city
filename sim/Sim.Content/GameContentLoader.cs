@@ -33,7 +33,10 @@ namespace Sim.Content
             PeopleDefs people = handHut < 0 ? null : LoadPeople(read("people.json"), handHut, buildings[handHut]);
             // The letter and the eras come with people (the Hamlet needs a hand's hut, spec 009 §4).
             OnboardingDefs onboarding = people == null ? null : LoadOnboarding(read("onboarding.json"), read("eras.json"));
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding);
+            // Cattle come with a cattle shed in the buildings (spec 012), after the people and eras they need (the Hamlet, the hand's order).
+            int shed = buildings.FindIndex(b => b.Id == LivestockDefs.ShedId);
+            LivestockDefs livestock = shed < 0 || people == null ? null : LoadLivestock(read("livestock.json"), shed, buildings, map, market, onboarding);
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)
@@ -134,7 +137,7 @@ namespace Sim.Content
                 l["roadTakeFactor"] == null ? Fixed.One : Bounded(l, lp, "roadTakeFactor", "1", "5"));
         }
 
-        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank" };
+        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank", "cattle" };
 
         private static bool IsVillageLand(Terrain t) { return t == Terrain.Road || t == Terrain.Village || t == Terrain.Commons || t == Terrain.Bank; }
 
@@ -230,7 +233,7 @@ namespace Sim.Content
                 string p = Index(root + ".buildings", i);
                 JObject b = Object(tokens[i], p);
                 OnlyFields(b, p, "id", "nameKey", "yardTreeSlots", "value", "usefulLifeSeasons", "storeCapacityKg", "restRecovery", "gardenBeds",
-                    "buildHours", "housesHands");
+                    "buildHours", "housesHands", "animals", "feedRoomKg", "strawStackKg", "compostPitKg");
                 string id = UniqueId(b, p, list.ConvertAll(x => x.Id));
                 int slots = Int(Required(b, p, "yardTreeSlots"), p + ".yardTreeSlots");
                 Range(slots, 0, 12, p + ".yardTreeSlots");
@@ -242,7 +245,11 @@ namespace Sim.Content
                     Money(Required(b, p, "value"), p + ".value"), life, store, Bounded(b, p, "restRecovery", "0", "1"),
                     BoundedInt(b, p, "gardenBeds", 0, 12),
                     b["buildHours"] == null ? 0 : BoundedInt(b, p, "buildHours", 0, 24 * 30),
-                    b["housesHands"] == null ? 0 : BoundedInt(b, p, "housesHands", 0, 20)));
+                    b["housesHands"] == null ? 0 : BoundedInt(b, p, "housesHands", 0, 20),
+                    b["animals"] == null ? 0 : BoundedInt(b, p, "animals", 0, 20),
+                    b["feedRoomKg"] == null ? 0 : BoundedInt(b, p, "feedRoomKg", 0, 100_000),
+                    b["strawStackKg"] == null ? 0 : BoundedInt(b, p, "strawStackKg", 0, 100_000),
+                    b["compostPitKg"] == null ? 0 : BoundedInt(b, p, "compostPitKg", 0, 100_000)));
             }
             return list;
         }
@@ -382,7 +389,7 @@ namespace Sim.Content
                 string p = Index(root + ".lenders", i);
                 JObject d = Object(tokens[i], p);
                 OnlyFields(d, p, "id", "nameKey", "baseRate", "rateSlopePer100", "refScore", "penaltyRate", "schedule", "minTerm", "maxTerm",
-                    "minAmount", "secured", "baseLimit", "collateralLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
+                    "minAmount", "secured", "baseLimit", "collateralLtv", "livestockLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
                     "restructureExtraSeasons", "eraCaps");
                 string id = UniqueId(d, p, lenders.ConvertAll(x => x.Id));
                 if (id != LenderDef.MoneylenderId && id != LenderDef.BankId)
@@ -417,7 +424,8 @@ namespace Sim.Content
                     Bounded(d, p, "penaltyRate", "0", "0.25"), schedule, minTerm, maxTerm, minAmount,
                     Bool(Required(d, p, "secured"), Join(p, "secured")), Money(Required(d, p, "baseLimit"), Join(p, "baseLimit")),
                     Bounded(d, p, "collateralLtv", "0", "1"), Bounded(d, p, "incomeMultiple", "0", "4"), minScore,
-                    Bool(Required(d, p, "scoreScaledLimit"), Join(p, "scoreScaledLimit")), grace, extra, eraCaps));
+                    Bool(Required(d, p, "scoreScaledLimit"), Join(p, "scoreScaledLimit")), grace, extra, eraCaps)
+                    { LivestockLtv = d["livestockLtv"] == null ? Fixed.Zero : Bounded(d, p, "livestockLtv", "0", "1") });
             }
             if (lenders.Count != 2 || lenders[0].Id != LenderDef.MoneylenderId || lenders[1].Id != LenderDef.BankId)
                 throw new ContentException(root + ".lenders", "expected the moneylender, then the cooperative bank");

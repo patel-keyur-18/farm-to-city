@@ -197,9 +197,10 @@ namespace Sim.Core.Market
         {
             Fixed index = r.ReadFixed();
             int goods = r.ReadCount();
-            if (goods != r.SavedCount(ContentTable.Good) || goods != r.Count(ContentTable.Good))
+            // Goods added to the content since the save start empty (spec 012's straw and cattle feed); none may be missing.
+            if (goods != r.SavedCount(ContentTable.Good) || goods > r.Count(ContentTable.Good))
                 throw new SaveContentException("the content has " + r.Count(ContentTable.Good) + " goods, the save " + goods);
-            var s = new MarketState(goods, unmetWindow) { PriceIndex = index };
+            var s = new MarketState(r.Count(ContentTable.Good), unmetWindow) { PriceIndex = index };
             foreach (long[] a in new[] { s.TraderBoughtToday, s.Stock, s.StockCost })
                 for (int g = 0; g < goods; g++) a[r.Slot(ContentTable.Good, g)] = r.ReadLong();
             int window = r.ReadInt();

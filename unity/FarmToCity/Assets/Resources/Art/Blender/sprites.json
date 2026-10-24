@@ -2,6 +2,48 @@
  "pixelsPerUnit": 528,
  "sprites": [
   {
+   "w": 152,
+   "h": 156,
+   "pivotX": 0.54953,
+   "pivotY": 0.33274,
+   "name": "animal_buffalo_eat"
+  },
+  {
+   "w": 170,
+   "h": 138,
+   "pivotX": 0.49075,
+   "pivotY": 0.38753,
+   "name": "animal_buffalo_lie"
+  },
+  {
+   "w": 152,
+   "h": 156,
+   "pivotX": 0.55041,
+   "pivotY": 0.33274,
+   "name": "animal_buffalo_stand"
+  },
+  {
+   "w": 150,
+   "h": 160,
+   "pivotX": 0.55718,
+   "pivotY": 0.32325,
+   "name": "animal_cow_eat"
+  },
+  {
+   "w": 170,
+   "h": 138,
+   "pivotX": 0.48946,
+   "pivotY": 0.38795,
+   "name": "animal_cow_lie"
+  },
+  {
+   "w": 150,
+   "h": 160,
+   "pivotX": 0.55595,
+   "pivotY": 0.32325,
+   "name": "animal_cow_stand"
+  },
+  {
    "w": 324,
    "h": 216,
    "pivotX": 0.5,
@@ -93,6 +135,20 @@
    "name": "bed_garden_spinach_ready"
   },
   {
+   "w": 352,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48813,
+   "name": "bund_worn_x"
+  },
+  {
+   "w": 352,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48813,
+   "name": "bund_worn_y"
+  },
+  {
    "w": 354,
    "h": 226,
    "pivotX": 0.5,
@@ -105,6 +161,97 @@
    "pivotX": 0.5,
    "pivotY": 0.47496,
    "name": "bund_y"
+  },
+  {
+   "w": 112,
+   "h": 94,
+   "pivotX": 0.47201,
+   "pivotY": 0.43981,
+   "name": "cattle_manger"
+  },
+  {
+   "w": 326,
+   "h": 268,
+   "pivotX": 0.5,
+   "pivotY": 0.36082,
+   "name": "cattle_shed"
+  },
+  {
+   "w": 288,
+   "h": 206,
+   "pivotX": 0.50498,
+   "pivotY": 0.43086,
+   "name": "cattle_shed_building"
+  },
+  {
+   "w": 220,
+   "h": 214,
+   "pivotX": 0.50435,
+   "pivotY": 0.29204,
+   "name": "chhappar"
+  },
+  {
+   "w": 190,
+   "h": 138,
+   "pivotX": 0.5,
+   "pivotY": 0.47218,
+   "name": "compost_pit_0"
+  },
+  {
+   "w": 190,
+   "h": 138,
+   "pivotX": 0.5,
+   "pivotY": 0.47218,
+   "name": "compost_pit_1"
+  },
+  {
+   "w": 190,
+   "h": 138,
+   "pivotX": 0.5,
+   "pivotY": 0.47218,
+   "name": "compost_pit_2"
+  },
+  {
+   "w": 92,
+   "h": 106,
+   "pivotX": 0.5,
+   "pivotY": 0.36668,
+   "name": "corner_stone"
+  },
+  {
+   "w": 530,
+   "h": 314,
+   "pivotX": 0.49103,
+   "pivotY": 0.46094,
+   "name": "crop_berseem_cut"
+  },
+  {
+   "w": 504,
+   "h": 288,
+   "pivotX": 0.4996,
+   "pivotY": 0.47008,
+   "name": "crop_berseem_g1"
+  },
+  {
+   "w": 540,
+   "h": 308,
+   "pivotX": 0.5,
+   "pivotY": 0.48295,
+   "name": "crop_berseem_g2"
+  },
+  {
+   "w": 540,
+   "h": 316,
+   "pivotX": 0.5,
+   "pivotY": 0.47577,
+   "name": "crop_berseem_g3"
+  },
+  {
+   "w": 540,
+   "h": 322,
+   "pivotX": 0.5,
+   "pivotY": 0.46721,
+   "name": "crop_berseem_ready"
   },
   {
    "w": 510,
@@ -133,6 +280,13 @@
    "pivotX": 0.5,
    "pivotY": 0.46109,
    "name": "crop_lentils_ready"
+  },
+  {
+   "w": 532,
+   "h": 346,
+   "pivotX": 0.5,
+   "pivotY": 0.44109,
+   "name": "crop_mustard_g2"
   },
   {
    "w": 534,
@@ -217,6 +371,48 @@
    "pivotX": 0.5,
    "pivotY": 0.45439,
    "name": "crop_rice_ready"
+  },
+  {
+   "w": 540,
+   "h": 356,
+   "pivotX": 0.48029,
+   "pivotY": 0.40785,
+   "name": "crop_sorghum_cut"
+  },
+  {
+   "w": 500,
+   "h": 298,
+   "pivotX": 0.49661,
+   "pivotY": 0.46289,
+   "name": "crop_sorghum_g1"
+  },
+  {
+   "w": 554,
+   "h": 334,
+   "pivotX": 0.48745,
+   "pivotY": 0.44762,
+   "name": "crop_sorghum_g2"
+  },
+  {
+   "w": 548,
+   "h": 358,
+   "pivotX": 0.50298,
+   "pivotY": 0.42816,
+   "name": "crop_sorghum_g3"
+  },
+  {
+   "w": 560,
+   "h": 366,
+   "pivotX": 0.48861,
+   "pivotY": 0.41934,
+   "name": "crop_sorghum_ready"
+  },
+  {
+   "w": 594,
+   "h": 400,
+   "pivotX": 0.49454,
+   "pivotY": 0.38389,
+   "name": "crop_sugarcane_g2"
   },
   {
    "w": 496,
@@ -335,6 +531,13 @@
    "h": 464,
    "pivotX": 0.5,
    "pivotY": 0.64285,
+   "name": "ground_cattle"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
    "name": "ground_commons"
   },
   {
@@ -391,7 +594,35 @@
    "h": 464,
    "pivotX": 0.5,
    "pivotY": 0.64285,
+   "name": "ground_scrub"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
    "name": "ground_soil"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_square"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_village_0"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_village_1"
   },
   {
    "w": 596,
@@ -422,6 +653,34 @@
    "name": "haystack"
   },
   {
+   "w": 338,
+   "h": 218,
+   "pivotX": 0.50058,
+   "pivotY": 0.46627,
+   "name": "hedge_gate_x"
+  },
+  {
+   "w": 338,
+   "h": 218,
+   "pivotX": 0.49852,
+   "pivotY": 0.46561,
+   "name": "hedge_gate_y"
+  },
+  {
+   "w": 338,
+   "h": 218,
+   "pivotX": 0.50037,
+   "pivotY": 0.46643,
+   "name": "hedge_x"
+  },
+  {
+   "w": 340,
+   "h": 218,
+   "pivotX": 0.49692,
+   "pivotY": 0.4659,
+   "name": "hedge_y"
+  },
+  {
    "w": 678,
    "h": 496,
    "pivotX": 0.5,
@@ -448,6 +707,20 @@
    "pivotX": 0.5,
    "pivotY": 0.30531,
    "name": "hut"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_animal_buffalo"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_animal_cow"
   },
   {
    "w": 256,
@@ -517,7 +790,28 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_berseem"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_cattle_feed"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_coriander"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_green_fodder"
   },
   {
    "w": 256,
@@ -539,6 +833,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_mango"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_milk"
   },
   {
    "w": 256,
@@ -573,7 +874,21 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_sorghum"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_spinach"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_straw"
   },
   {
    "w": 256,
@@ -1231,7 +1546,63 @@
    "h": 180,
    "pivotX": 0.5,
    "pivotY": 0.21349,
+   "name": "sign_locked"
+  },
+  {
+   "w": 140,
+   "h": 180,
+   "pivotX": 0.5,
+   "pivotY": 0.21349,
    "name": "sign_sale"
+  },
+  {
+   "w": 174,
+   "h": 198,
+   "pivotX": 0.5,
+   "pivotY": 0.30353,
+   "name": "straw_stack_empty"
+  },
+  {
+   "w": 174,
+   "h": 198,
+   "pivotX": 0.5,
+   "pivotY": 0.30353,
+   "name": "straw_stack_high"
+  },
+  {
+   "w": 174,
+   "h": 198,
+   "pivotX": 0.5,
+   "pivotY": 0.30353,
+   "name": "straw_stack_low"
+  },
+  {
+   "w": 174,
+   "h": 198,
+   "pivotX": 0.5,
+   "pivotY": 0.30353,
+   "name": "straw_stack_mid"
+  },
+  {
+   "w": 400,
+   "h": 234,
+   "pivotX": 0.5,
+   "pivotY": 0.49724,
+   "name": "street_x"
+  },
+  {
+   "w": 400,
+   "h": 234,
+   "pivotX": 0.5,
+   "pivotY": 0.49724,
+   "name": "street_y"
+  },
+  {
+   "w": 224,
+   "h": 212,
+   "pivotX": 0.44738,
+   "pivotY": 0.18501,
+   "name": "tree_babul"
   },
   {
    "w": 342,
@@ -1318,6 +1689,13 @@
    "name": "tree_mango_young"
   },
   {
+   "w": 232,
+   "h": 312,
+   "pivotX": 0.50478,
+   "pivotY": 0.26923,
+   "name": "tree_neem"
+  },
+  {
    "w": 278,
    "h": 384,
    "pivotX": 0.50014,
@@ -1367,6 +1745,13 @@
    "name": "truck_front"
   },
   {
+   "w": 268,
+   "h": 242,
+   "pivotX": 0.60337,
+   "pivotY": 0.46707,
+   "name": "tubewell"
+  },
+  {
    "w": 144,
    "h": 166,
    "pivotX": 0.5,
@@ -1386,6 +1771,356 @@
    "pivotX": 0.52003,
    "pivotY": 0.31406,
    "name": "van_front"
+  },
+  {
+   "w": 292,
+   "h": 334,
+   "pivotX": 0.48241,
+   "pivotY": 0.26589,
+   "name": "village_banyan"
+  },
+  {
+   "w": 152,
+   "h": 180,
+   "pivotX": 0.54953,
+   "pivotY": 0.42287,
+   "name": "village_buffalo"
+  },
+  {
+   "w": 158,
+   "h": 124,
+   "pivotX": 0.5,
+   "pivotY": 0.396,
+   "name": "village_charpai"
+  },
+  {
+   "w": 284,
+   "h": 260,
+   "pivotX": 0.49223,
+   "pivotY": 0.34736,
+   "name": "village_chemist_e"
+  },
+  {
+   "w": 284,
+   "h": 258,
+   "pivotX": 0.49223,
+   "pivotY": 0.3391,
+   "name": "village_chemist_n"
+  },
+  {
+   "w": 284,
+   "h": 260,
+   "pivotX": 0.50777,
+   "pivotY": 0.34736,
+   "name": "village_chemist_s"
+  },
+  {
+   "w": 284,
+   "h": 258,
+   "pivotX": 0.50777,
+   "pivotY": 0.3391,
+   "name": "village_chemist_w"
+  },
+  {
+   "w": 314,
+   "h": 326,
+   "pivotX": 0.49541,
+   "pivotY": 0.28915,
+   "name": "village_council_hall_e"
+  },
+  {
+   "w": 314,
+   "h": 312,
+   "pivotX": 0.49541,
+   "pivotY": 0.30423,
+   "name": "village_council_hall_n"
+  },
+  {
+   "w": 314,
+   "h": 276,
+   "pivotX": 0.50459,
+   "pivotY": 0.34325,
+   "name": "village_council_hall_s"
+  },
+  {
+   "w": 314,
+   "h": 286,
+   "pivotX": 0.50459,
+   "pivotY": 0.33267,
+   "name": "village_council_hall_w"
+  },
+  {
+   "w": 150,
+   "h": 184,
+   "pivotX": 0.55595,
+   "pivotY": 0.41344,
+   "name": "village_cow"
+  },
+  {
+   "w": 350,
+   "h": 298,
+   "pivotX": 0.42641,
+   "pivotY": 0.39179,
+   "name": "village_dairy_e"
+  },
+  {
+   "w": 370,
+   "h": 278,
+   "pivotX": 0.45693,
+   "pivotY": 0.32785,
+   "name": "village_dairy_n"
+  },
+  {
+   "w": 370,
+   "h": 298,
+   "pivotX": 0.54307,
+   "pivotY": 0.39179,
+   "name": "village_dairy_s"
+  },
+  {
+   "w": 350,
+   "h": 286,
+   "pivotX": 0.57359,
+   "pivotY": 0.3444,
+   "name": "village_dairy_w"
+  },
+  {
+   "w": 284,
+   "h": 260,
+   "pivotX": 0.49223,
+   "pivotY": 0.34736,
+   "name": "village_dealer_e"
+  },
+  {
+   "w": 288,
+   "h": 258,
+   "pivotX": 0.48671,
+   "pivotY": 0.3391,
+   "name": "village_dealer_n"
+  },
+  {
+   "w": 288,
+   "h": 260,
+   "pivotX": 0.51329,
+   "pivotY": 0.34736,
+   "name": "village_dealer_s"
+  },
+  {
+   "w": 284,
+   "h": 258,
+   "pivotX": 0.50777,
+   "pivotY": 0.3391,
+   "name": "village_dealer_w"
+  },
+  {
+   "w": 284,
+   "h": 260,
+   "pivotX": 0.49223,
+   "pivotY": 0.34736,
+   "name": "village_grocery_e"
+  },
+  {
+   "w": 284,
+   "h": 258,
+   "pivotX": 0.49223,
+   "pivotY": 0.3391,
+   "name": "village_grocery_n"
+  },
+  {
+   "w": 284,
+   "h": 260,
+   "pivotX": 0.50777,
+   "pivotY": 0.34736,
+   "name": "village_grocery_s"
+  },
+  {
+   "w": 284,
+   "h": 258,
+   "pivotX": 0.50777,
+   "pivotY": 0.3391,
+   "name": "village_grocery_w"
+  },
+  {
+   "w": 148,
+   "h": 158,
+   "pivotX": 0.55783,
+   "pivotY": 0.36267,
+   "name": "village_handpump"
+  },
+  {
+   "w": 160,
+   "h": 198,
+   "pivotX": 0.5,
+   "pivotY": 0.28212,
+   "name": "village_haystack"
+  },
+  {
+   "w": 308,
+   "h": 270,
+   "pivotX": 0.48718,
+   "pivotY": 0.35193,
+   "name": "village_house_0_e"
+  },
+  {
+   "w": 308,
+   "h": 260,
+   "pivotX": 0.48718,
+   "pivotY": 0.32447,
+   "name": "village_house_0_n"
+  },
+  {
+   "w": 308,
+   "h": 270,
+   "pivotX": 0.51282,
+   "pivotY": 0.35193,
+   "name": "village_house_0_s"
+  },
+  {
+   "w": 308,
+   "h": 260,
+   "pivotX": 0.51282,
+   "pivotY": 0.32447,
+   "name": "village_house_0_w"
+  },
+  {
+   "w": 310,
+   "h": 288,
+   "pivotX": 0.46137,
+   "pivotY": 0.34734,
+   "name": "village_house_1_e"
+  },
+  {
+   "w": 310,
+   "h": 268,
+   "pivotX": 0.46137,
+   "pivotY": 0.33111,
+   "name": "village_house_1_n"
+  },
+  {
+   "w": 310,
+   "h": 278,
+   "pivotX": 0.53863,
+   "pivotY": 0.35754,
+   "name": "village_house_1_s"
+  },
+  {
+   "w": 310,
+   "h": 268,
+   "pivotX": 0.53863,
+   "pivotY": 0.33111,
+   "name": "village_house_1_w"
+  },
+  {
+   "w": 328,
+   "h": 304,
+   "pivotX": 0.45415,
+   "pivotY": 0.34883,
+   "name": "village_house_2_e"
+  },
+  {
+   "w": 328,
+   "h": 290,
+   "pivotX": 0.45415,
+   "pivotY": 0.31674,
+   "name": "village_house_2_n"
+  },
+  {
+   "w": 328,
+   "h": 332,
+   "pivotX": 0.54585,
+   "pivotY": 0.31904,
+   "name": "village_house_2_s"
+  },
+  {
+   "w": 328,
+   "h": 312,
+   "pivotX": 0.54585,
+   "pivotY": 0.29236,
+   "name": "village_house_2_w"
+  },
+  {
+   "w": 264,
+   "h": 300,
+   "pivotX": 0.5136,
+   "pivotY": 0.18804,
+   "name": "village_peepal"
+  },
+  {
+   "w": 398,
+   "h": 240,
+   "pivotX": 0.5,
+   "pivotY": 0.49192,
+   "name": "village_pond"
+  },
+  {
+   "w": 232,
+   "h": 224,
+   "pivotX": 0.49688,
+   "pivotY": 0.31982,
+   "name": "village_tea_stall_e"
+  },
+  {
+   "w": 232,
+   "h": 200,
+   "pivotX": 0.49688,
+   "pivotY": 0.34746,
+   "name": "village_tea_stall_n"
+  },
+  {
+   "w": 232,
+   "h": 224,
+   "pivotX": 0.50312,
+   "pivotY": 0.31982,
+   "name": "village_tea_stall_s"
+  },
+  {
+   "w": 232,
+   "h": 200,
+   "pivotX": 0.50312,
+   "pivotY": 0.34746,
+   "name": "village_tea_stall_w"
+  },
+  {
+   "w": 250,
+   "h": 316,
+   "pivotX": 0.5,
+   "pivotY": 0.25184,
+   "name": "village_temple_e"
+  },
+  {
+   "w": 250,
+   "h": 314,
+   "pivotX": 0.5,
+   "pivotY": 0.25163,
+   "name": "village_temple_n"
+  },
+  {
+   "w": 250,
+   "h": 304,
+   "pivotX": 0.5,
+   "pivotY": 0.25983,
+   "name": "village_temple_s"
+  },
+  {
+   "w": 250,
+   "h": 304,
+   "pivotX": 0.5,
+   "pivotY": 0.25983,
+   "name": "village_temple_w"
+  },
+  {
+   "w": 182,
+   "h": 238,
+   "pivotX": 0.50632,
+   "pivotY": 0.28669,
+   "name": "village_tree"
+  },
+  {
+   "w": 124,
+   "h": 118,
+   "pivotX": 0.49884,
+   "pivotY": 0.47344,
+   "name": "water_trough"
   },
   {
    "w": 228,

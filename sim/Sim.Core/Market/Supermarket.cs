@@ -131,7 +131,7 @@ namespace Sim.Core.Market
             long window = (truck.LeaveHour - truck.ArriveHour + 24) % 24 * 3600L;
             var eligible = new List<int>();
             for (int i = 0; i < farm.Crops.Count; i++)
-                if (farm.Crops[i].SowSeasons[season] && farm.Crops[i].GrowthSeconds <= window) eligible.Add(i);
+                if (!farm.Crops[i].Fodder && farm.Crops[i].SowSeasons[season] && farm.Crops[i].GrowthSeconds <= window) eligible.Add(i); // fodder is never sold to a shop
             var pool = new List<int>(eligible);
             var posted = new List<SupermarketOrder>();
             for (int n = 0; n < def.PerDay && pool.Count > 0; n++)

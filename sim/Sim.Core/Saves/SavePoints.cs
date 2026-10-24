@@ -45,6 +45,9 @@ namespace Sim.Core.Saves
 
         /// <summary>The farm lane took the town's parcel <c>s5</c>, for the one-time card; else null.</summary>
         public RoadTake RoadTake { get; internal set; }
+
+        /// <summary>The loaded file's schema; below <see cref="SaveCodec.SchemaVersion"/> it was migrated as it loaded.</summary>
+        public int Schema { get; internal set; }
     }
 
     /// <summary>
@@ -124,7 +127,7 @@ namespace Sim.Core.Saves
             {
                 LoadResult r = SaveCodec.Read(_store.Read(c.Value), config, _def.MinSchema);
                 if (r.Ok)
-                    return new LoadOutcome { State = r.State, File = c.Value, Restored = c.Value != Latest, SavedAtWallUtc = r.Header.SavedAtWallUtc, MigratedMap = r.MigratedMap, RoadTake = r.RoadTake };
+                    return new LoadOutcome { State = r.State, File = c.Value, Restored = c.Value != Latest, SavedAtWallUtc = r.Header.SavedAtWallUtc, MigratedMap = r.MigratedMap, RoadTake = r.RoadTake, Schema = r.Header.Schema };
                 if (failed == null) failed = new LoadOutcome { File = c.Value, Error = r.Error, Detail = r.Detail };
                 if (r.Error != SaveError.CorruptSave) { failed = new LoadOutcome { File = c.Value, Error = r.Error, Detail = r.Detail }; break; }
             }

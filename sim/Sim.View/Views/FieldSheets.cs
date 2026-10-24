@@ -5,6 +5,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
+using Sim.Core.Livestock;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Time;
@@ -32,6 +33,7 @@ namespace Sim.View.Views
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
+            if (tile.Terrain == Terrain.Cattle) return ShedSheet.Build(ctx);
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
@@ -54,6 +56,21 @@ namespace Sim.View.Views
             string cropName = ctx.Strings.Get(def.NameKey);
             long grace = defs.Farm.Farm.ReadyGraceSeconds;
             vm.Icon = def.Id;
+            if (def.Fodder)
+            {
+                // Cut every morning for your animals (spec 012 §3.8b, §7): no harvest, no pests, no ready marker; Clear ends it.
+                FeedingReport fed = sim.State.Livestock.LastFeeding;
+                vm.Title = ctx.Strings.Get("fodder.title", "crop", cropName);
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("fodder.cutRow"), ctx.Strings.Get("fodder.cut", "kg", ctx.Fmt.Kg(FodderView.CutPerDay(sim, crop))), "fodderCut", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("fodder.morning"), ctx.Strings.Get("fodder.morningValue", "eaten", ctx.Fmt.Kg(fed.GreenOwn), "sold", ctx.Fmt.Kg(fed.GreenSold)), "fodderCut", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("fodder.till"), ctx.Strings.Get("season." + Calendar.SeasonAt(crop.ReadyAt - 1, sim.Clock).ToString().ToLowerInvariant())));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.care"), ctx.Rating(sim.State.Farm.CareRatio), "care", tileId));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("field.water"), ctx.Rating(crop.WaterRate), "water", tileId));
+                AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
+                vm.Actions.Add(ActionVm.Open("shed", ctx.Strings.Get("fodder.toShed"), new SheetRequest("Tile", LivestockRules.Defs(sim).Livestock.ShedTile)));
+                vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get("action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
+                return vm;
+            }
             if (crop.State == CropState.Growing)
             {
                 vm.Title = ctx.Strings.Get("field.growing", "crop", cropName);
@@ -131,7 +148,54 @@ namespace Sim.View.Views
                 vm.Actions.Add(ActionVm.Checked(ctx, "medicine", ctx.Strings.Get("place.chemist.buy"),
                     ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.MedicineCost)), ActionKind.Primary, at => new BuyMedicine(at)));
             if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
+            if (kind == "dairy") Dairy(ctx, vm);
             return vm;
+        }
+
+        /// <summary>
+        /// The dairy co-op (ADR 0061, US-206), laid out like the Orders and Store sheets (owner's US-206 review): a row per milk with
+        /// its picture, its price a litre by fat and, under it, your animals giving it (or when cattle come); what it collected from
+        /// you this morning; and a picture button to your cattle yard.
+        /// </summary>
+        private static void Dairy(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            var str = ctx.Strings;
+            LivestockDefs defs = sim.Config.Game.Livestock;
+            if (defs == null) return;
+            Sim.Core.Livestock.LivestockState s = sim.State.Livestock;
+            bool open = Sim.Core.Livestock.LivestockRules.Unlocked(sim);
+            vm.Icon = "milk"; // the co-op's milk can fills the header's picture like the Store's sack
+            for (int k = 0; k < defs.Animals.Count; k++)
+            {
+                AnimalDef a = defs.Animals[k];
+                long perLitre = (Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k) * Sim.Core.Maths.Fixed.FromInt(100)).RoundToLong();
+                int owned = 0, milking = 0;
+                foreach (Sim.Core.Livestock.Animal x in s.Animals)
+                {
+                    if (x.Kind != k) continue;
+                    owned++;
+                    if (x.Stage == Sim.Core.Livestock.AnimalStage.Milking) milking++;
+                }
+                var line = new LineVm(str.Get("dairy.milk", "animal", str.Get(a.NameKey)),
+                    str.Get("dairy.priceValue", "fat", ctx.Fmt.Decimal1(a.FatPercent), "amount", ctx.Fmt.Paise(perLitre)), "milkPrice", k) { Icon = "animal_" + a.Id };
+                line.Note = !open ? str.Get("dairy.locked") : owned == 0 ? str.Get("dairy.noneYet") : str.Get("dairy.yours", "n", ctx.Fmt.Integer(owned), "milking", ctx.Fmt.Integer(milking));
+                line.NoteTone = open && milking > 0 ? Tone.Good : Tone.Plain;
+                vm.Lines.Add(line);
+            }
+            if (open)
+                vm.Lines.Add(new LineVm(str.Get("dairy.today"), s.LastMilkMl > 0
+                    ? str.Get("dairy.collected", "milk", ctx.Fmt.Litres(s.LastMilkMl - s.LastHomeMl), "amount", ctx.Fmt.Coins(s.LastMilkAmount))
+                    : str.Get("dairy.nothingYet"), s.LastMilkMl > 0 ? "milkToday" : null, 0));
+            int acre = -1;
+            for (int i = 0; i < sim.State.Land.Tiles.Count && acre < 0; i++) if (sim.State.Land.Tiles[i].Terrain == Terrain.Cattle) acre = i;
+            if (acre < 0) return;
+            string detail = !open ? str.Get("dairy.yardLocked")
+                : s.Animals.Count > 0 ? str.Plural("dairy.yardAnimals", s.Animals.Count)
+                : Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? str.Get("dairy.yardBuy") : str.Get("dairy.yardBuild");
+            ActionVm yard = ActionVm.Open("cattleYard", str.Get("dairy.yourYard"), new SheetRequest("Tile", acre), detail);
+            yard.Icon = "animal_buffalo";
+            vm.Lines.Add(new LineVm(null, null) { Buttons = new System.Collections.Generic.List<ActionVm> { yard } });
         }
 
         /// <summary>The village's own land (spec 010): a road acre, the commons, the river bank. Never for sale, never priced.</summary>

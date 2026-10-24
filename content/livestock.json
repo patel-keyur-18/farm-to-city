@@ -1,0 +1,41 @@
+{
+  "livestock": {
+    "realDaysPerGameDay": 22.8,
+    "feedHour": 6,
+    "shedTile": 104,
+    "unlockEra": "hamlet",
+    "householdLitresPerDay": 1.5,
+    "greenFodderBuyPrice": 3,
+    "greenFodderSellPrice": 1,
+    "milkBasePerLitre": 12,
+    "milkPerFatPoint": 6.5,
+    "commonsShare": { "spring": 0.10, "summer": 0.05, "monsoon": 0.40, "winter": 0.10 },
+    "minMilkFactor": 0.30,
+    "hungryBelow": 0.70,
+    "hungerGraceDays": 2,
+    "hungerHealthLoss": 0.10,
+    "healthRecoveryPerDay": 0.05,
+    "minHealth": 0.50,
+    "feedWeights": { "green": 0.4, "straw": 0.2, "feed": 0.4 },
+    "lowDays": 2,
+    "diseaseChance": 0.01,
+    "unvaccinatedFactor": 3,
+    "sickHealthFactor": 2,
+    "sickHealthLoss": 0.10,
+    "vaccineCost": 300,
+    "vetVisitCost": 1500,
+    "lactationCurve": [ [0, 1.10], [3, 1.20], [13, 0.66] ],
+    "names": [ "Lakshmi", "Gauri", "Kamdhenu", "Nandini", "Ganga", "Radha", "Sundari", "Kali",
+               "Shyama", "Kapila", "Surbhi", "Bhuri", "Rani", "Chandni", "Moti", "Ganga Jal" ]
+  },
+  "animals": [
+    { "id": "buffalo", "nameKey": "animal.buffalo", "price": 100000, "milkPerDay": 8, "fatPercent": 7.0,
+      "seasonMilk": { "spring": 1.00, "summer": 1.00, "monsoon": 1.00, "winter": 1.00 }, "milkDays": 13, "dryDays": 5,
+      "ration": { "green": 27, "straw": 6, "feed": 5 }, "dryFeedFactor": 0.4, "labourHoursPerDay": 1.5,
+      "dungCompostKgPerDay": 9.5, "calfPrice": 5000, "sellShare": 0.80 },
+    { "id": "cow", "nameKey": "animal.cow", "price": 75000, "milkPerDay": 11, "fatPercent": 4.0,
+      "seasonMilk": { "spring": 1.00, "summer": 0.85, "monsoon": 1.00, "winter": 1.00 }, "milkDays": 13, "dryDays": 3,
+      "ration": { "green": 25, "straw": 5, "feed": 4.5 }, "dryFeedFactor": 0.4, "labourHoursPerDay": 1.5,
+      "dungCompostKgPerDay": 9.5, "calfPrice": 4000, "sellShare": 0.80 }
+  ]
+}

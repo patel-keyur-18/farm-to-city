@@ -15,6 +15,32 @@ namespace Sim.View.Tests
         private const long Hour = 3600, Day = 86400;
 
         [Test]
+        public void CattleAcre_ShedStocksAnimals()
+        {
+            // ADR 0064: before the Hamlet the acre is locked, with the compost pit only.
+            Simulation sim = ViewKit.NewGame();
+            CattleAcreVm acre = MapView.Build(ViewKit2.Context(sim)).Cattle;
+            Assert.That((acre.TileId, acre.Locked, acre.Shed, acre.Straw, acre.Compost, acre.Animals.Count), Is.EqualTo((104, true, 0, 0, 0, 0)));
+
+            // A Hamlet: the shed builds (1), then stands (2); animals take places 1, 2, 3, then the neem's shade (0).
+            sim.State.Era.Current = sim.Config.Game.Livestock.UnlockEra;
+            sim.State.Ledger.Post(0, sim.Period, "ledger.opening", "test", new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Cash, 10_00_000_00), new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.OpeningEquity, -10_00_000_00));
+            long t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new BuildShed(t)).Accepted, Is.True);
+            Assert.That(MapView.Build(ViewKit2.Context(sim)).Cattle.Shed, Is.EqualTo(1));
+            sim.AdvanceTo(t + 25 * 3600);
+            t = sim.State.Clock.SimTime;
+            foreach (string k in new[] { "buffalo", "cow", "buffalo", "cow" }) Assert.That(sim.Execute(new BuyAnimal(t, k)).Accepted, Is.True);
+            Assert.That(sim.Execute(new Buy(t, "straw", 5_000_000)).Accepted, Is.True); // half the stack's 10 t
+            acre = MapView.Build(ViewKit2.Context(sim)).Cattle;
+            Assert.That((acre.Locked, acre.Shed, acre.Straw), Is.EqualTo((false, 2, 2)));
+            Assert.That(acre.Animals.Select(a => (a.Kind, a.Place)), Is.EqualTo(new[] { ("buffalo", 1), ("cow", 2), ("buffalo", 3), ("cow", 0) }));
+            Assert.That(MapView.CattleAcre(sim, 22 * 3600).Animals.All(a => a.Pose == "lie"), Is.True, "lying at night");
+            Assert.That(MapView.CattleAcre(sim, 7 * 3600).Animals.All(a => a.Pose == "eat"), Is.True, "the morning feed");
+            Assert.That(MapView.CattleAcre(sim, 13 * 3600).Animals.Select(a => a.Pose).Distinct().Count(), Is.GreaterThan(1), "by day, turn by turn");
+        }
+
+        [Test]
         public void NewGame_TilesSlotsAndBuildings()
         {
             Simulation sim = ViewKit.NewGame();
@@ -24,12 +50,13 @@ namespace Sim.View.Tests
             Assert.That(map.Tiles.Count, Is.EqualTo(192));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Farm), Is.EqualTo(6));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(2));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(124), "neighbours' farms: 78 for sale, 46 not yet");
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(123), "neighbours' farms: 77 for sale, 46 not yet");
+            Assert.That(map.Tiles.Single(t => t.Kind == TileKind.Cattle).Id, Is.EqualTo(104), "the cattle acre (ADR 0064)");
             Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 86, 102 }));
             Assert.That(map.Tiles[87].Kind, Is.EqualTo(TileKind.Yard));
             Assert.That(map.Tiles[86].X, Is.EqualTo(6));
             Assert.That(map.Tiles[86].Y, Is.EqualTo(5));
-            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters).All(t => t.Protected), Is.True);
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters || t.Kind == TileKind.Cattle).All(t => t.Protected), Is.True);
             Assert.That(map.Buildings.Select(b => b.DefId), Is.EqualTo(new[] { "hut", "well" }));
             Assert.That(map.Slots.Count(s => s.Yard), Is.EqualTo(4));
             Assert.That(map.Slots.Count(s => !s.Yard), Is.EqualTo(12));
@@ -37,6 +64,11 @@ namespace Sim.View.Tests
             Assert.That(map.Slots.All(s => s.Owned), Is.True, "the inherited land's slots: drawn as planting spots and tappable");
             Assert.That(map.Beds.Count, Is.EqualTo(2));
             Assert.That(map.Slots.Where(s => s.TileId == 86).Select(s => s.Index), Is.EqualTo(new[] { 0, 1 }));
+            Assert.That(map.Slots.Any(s => s.TileId == 104), Is.False, "no trees on the cattle acre");
+
+            // ADR 0064: its sheet says what it's for and when it opens.
+            SheetVm cattle = FieldSheets.ForTile(ViewKit2.Context(sim), 104);
+            Assert.That((cattle.Title, cattle.Subtitle), Is.EqualTo(("Your cattle yard", "Poor, sandy ground kept for animals. A shed, buffalo and cows can come here once you're a Hamlet")));
         }
 
         [Test]

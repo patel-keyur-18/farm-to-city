@@ -49,12 +49,12 @@ namespace Sim.Core.Tests
 
             GameDefs defs = TestContent.Game();
             Assert.That(defs.Start.InheritedParcels.SelectMany(p => map.Parcels[p].Tiles).OrderBy(t => t),
-                Is.EqualTo(new[] { 84, 85, 86, 87, 100, 101, 102, 103, 119 }));
+                Is.EqualTo(new[] { 84, 85, 86, 87, 100, 101, 102, 103, 104, 119 }), "with the cattle acre (ADR 0064)");
             Assert.That(defs.Land.WellTiles, Is.EqualTo(new[] { 86, 102 }));
             Assert.That(map.Places.Count, Is.EqualTo(16));
             Assert.That(map.Places.All(p => map.Tiles[p.Tile].Terrain == Terrain.Village), Is.True);
             Assert.That(map.Places.Select(p => p.Kind).Distinct(), Is.EquivalentTo(new[]
-                { "house", "grocery", "tea_stall", "chemist", "dealer", "temple", "council_hall", "school_plot", "banyan", "pond" }));
+                { "house", "grocery", "tea_stall", "chemist", "dealer", "temple", "council_hall", "school_plot", "banyan", "pond", "dairy" }));
         }
 
         // Spec 010 AC-2: the Phase 1 farm sits unchanged at columns 2–9, rows 3–8 (saves/map-8x6.json is the Phase 1 map, frozen).
@@ -69,6 +69,7 @@ namespace Sim.Core.Tests
             {
                 TileDef t = map.Tiles[Remap(i)];
                 if (i == 45) { Assert.That(t.Terrain, Is.EqualTo(Terrain.Road), "the farm lane takes s5"); continue; }
+                if (i == 30) { Assert.That(t.Terrain, Is.EqualTo(Terrain.Cattle), "the cattle acre (ADR 0064)"); continue; }
                 JToken o = oldTiles[i];
                 Assert.That(t.Terrain.ToString().ToLowerInvariant(), Is.EqualTo((string)o["terrain"]), "tile " + i);
                 Assert.That(defs.Soils[t.Soil].Id, Is.EqualTo((string)o["soil"]), "tile " + i);
@@ -81,7 +82,7 @@ namespace Sim.Core.Tests
                 string id = (string)p["id"];
                 ParcelDef now = map.Parcels[map.IndexOfParcel(id)];
                 if (id == "s5") Assert.That(now.ForSale, Is.False, "s5 stays as the farm lane's road acre, so old saves load by id");
-                Assert.That(now.Tiles, Is.EqualTo(((JArray)p["tiles"]).Select(t => Remap((int)t))), id);
+                Assert.That(now.Tiles, Is.EqualTo(((JArray)p["tiles"]).Select(t => Remap((int)t)).Where(t => t != 104)), id + " (e1 gave the cattle acre, ADR 0064)");
             }
         }
 
@@ -93,7 +94,7 @@ namespace Sim.Core.Tests
             var inherited = new HashSet<int>(defs.Start.InheritedParcels);
             int acres = defs.Map.Parcels.Where((p, i) => p.ForSale && !inherited.Contains(i)).Sum(p => p.Tiles.Count);
             Assert.That(acres, Is.InRange(60, 80));
-            Assert.That(acres, Is.EqualTo(78), "spec 010 §3.2: 38 of today's acres and 40 new");
+            Assert.That(acres, Is.EqualTo(77), "spec 010 §3.2: 38 of today's acres and 40 new, less the cattle acre (ADR 0064)");
         }
 
         // Spec 010 AC-3b: 1.05 touching a road, the lane or the village, or on riverside row 2; 0.95 the far west strip; else 1.0.

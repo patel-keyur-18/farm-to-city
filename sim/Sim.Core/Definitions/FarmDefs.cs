@@ -29,6 +29,16 @@ namespace Sim.Core.Definitions
         public Fixed SavedSeedLossPerSeason { get; }
         public Fixed SavedSeedFloor { get; }
 
+        /// <summary>Straw a kg of harvest gives the straw stack (spec 012 §3.8; wheat 1.5, rice 1.2, else 0).</summary>
+        public Fixed StrawPerKg { get; internal set; }
+
+        /// <summary>
+        /// Green fodder (spec 012 §3.8b): cut every morning from <c>growthMinutes</c> after sowing, through its cut seasons, never
+        /// harvested or stored. Its <c>OutputGood</c> is −1 and <c>seedPerAcrePerSeason</c> is the seed for an acre, sown once.
+        /// </summary>
+        public bool Fodder { get { return CutSeasons != null; } }
+        public IReadOnlyList<bool> CutSeasons { get; internal set; }
+
         public CropDef(string id, string nameKey, int outputGood, int seedGood, IReadOnlyList<bool> sowSeasons, int growthMinutes,
             Fixed seasonYieldPerAcre, Fixed seedPerAcrePerSeason, Fixed moistureMin, Fixed moistureMax, Fixed labourPerAcrePerDay,
             Fixed fertilityPerSeason, bool canSaveSeed, Fixed savedSeedLossPerSeason, Fixed savedSeedFloor)

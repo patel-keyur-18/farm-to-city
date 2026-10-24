@@ -24,6 +24,9 @@ namespace Sim.View.Views
         Truck = 10,
         Orders = 11,
         Held = 12,
+
+        /// <summary>The dairy: milk paid by the co-op, calves sold, fodder bought or sold standing, vet visits (spec 012).</summary>
+        Dairy = 13,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

@@ -321,5 +321,30 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new ClearStandingOrder(t, h.Id, OrderTargetKind.Field, HomeTile)).Reason, Is.EqualTo(RejectReason.NoOrder));
             Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.PickTree(slot, SellRule.Store)));
         }
+        // Spec 012 AC-13: the animals order buys straw and feed to fill when under its days, and waits when there's no cash.
+        [Test]
+        public void AnimalsOrder()
+        {
+            Simulation sim = LivestockKit.WithShed();
+            Hand h = HireHand(sim);
+            long t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.LookAfterAnimals(5))).Reason, Is.EqualTo(RejectReason.InvalidArgument), "2–4 days");
+            LivestockKit.Buy(sim);
+            var defs = sim.Config.Game.Livestock;
+            sim.DrainEvents();
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.LookAfterAnimals(3)));
+            Assert.That(sim.State.Market.Stock[defs.Straw], Is.EqualTo(10_000_000), "the stack filled");
+            Assert.That(sim.State.Market.Stock[defs.Feed], Is.EqualTo(2_400_000), "the feed room filled");
+            Assert.That(sim.PendingEvents.OfType<OrderExecuted>().Count(e => e.Action == OrderAction.Bought), Is.EqualTo(2));
+
+            // A fortnight later, with no cash, he waits.
+            for (int d = 0; d < 20; d++) LivestockKit.ToMorning(sim);
+            CashTo(sim, 0);
+            sim.State.Market.Stock[defs.Feed] = 0;
+            sim.State.Market.StockCost[defs.Feed] = 0;
+            sim.DrainEvents();
+            sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
+            Assert.That(sim.PendingEvents.OfType<OrderWaiting>().Any(e => e.Reason == OrderWait.InsufficientFunds), Is.True);
+        }
     }
 }

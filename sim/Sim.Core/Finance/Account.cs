@@ -15,6 +15,7 @@ namespace Sim.Core.Finance
         Buildings = 1600,
         AccumulatedDepreciation = 1650,
         Trees = 1700,
+        Livestock = 1750,
 
         MoneylenderLoans = 2100,
         BankLoans = 2200,
@@ -25,12 +26,16 @@ namespace Sim.Core.Finance
 
         CropSales = 4000,
         FruitSales = 4010,
+        MilkSales = 4020,
+        LivestockSales = 4030,
         DayLabourEarnings = 4100,
         GainOnAssetSales = 4800,
         DebtWrittenOff = 4900,
 
         SeedsAndPlanting = 5000,
         FertiliserAndSpraying = 5010,
+        AnimalFeed = 5020,
+        VetAndBreeding = 5030,
         HiredLabour = 5100,
         LivingCosts = 5200,
         HealthCosts = 5250,
@@ -57,14 +62,28 @@ namespace Sim.Core.Finance
         public static readonly Account[] All =
         {
             Account.Cash, Account.PrepaidLivingCosts, Account.PrepaidWages, Account.PrepaidRent, Account.InputsInStore, Account.OwedByBuyers, Account.Land,
-            Account.Buildings, Account.AccumulatedDepreciation, Account.Trees,
+            Account.Buildings, Account.AccumulatedDepreciation, Account.Trees, Account.Livestock,
             Account.MoneylenderLoans, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings,
-            Account.CropSales, Account.FruitSales, Account.DayLabourEarnings, Account.GainOnAssetSales, Account.DebtWrittenOff,
-            Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
+            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.GainOnAssetSales, Account.DebtWrittenOff,
+            Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
             Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
             Account.TransportAndSelling,
         };
+
+        /// <summary>
+        /// The save schema each account arrived in (spec 011: 1300 in schema 6; spec 012: the livestock accounts in 7); 0 for the rest.
+        /// A late account hashes only once used, so the golden replays stay as they were, and an older save reads without it.
+        /// </summary>
+        internal static int SinceSchema(Account a)
+        {
+            switch (a)
+            {
+                case Account.OwedByBuyers: return 6;
+                case Account.Livestock: case Account.MilkSales: case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return 7;
+                default: return 0;
+            }
+        }
 
         /// <summary>The group is the id's thousands digit.</summary>
         public static AccountGroup GroupOf(Account a) { return (AccountGroup)((int)a / 1000); }

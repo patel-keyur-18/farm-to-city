@@ -30,7 +30,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | Era | Player role | Unlock condition (what the player has built) | Population | New systems |
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
-| 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, first processing (flour mill) |
+| 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, cattle (buffalo and cows, ADR 0060), first processing (flour mill) |
 | 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
@@ -118,9 +118,9 @@ Farming is the first business the player runs, so it introduces every core idea:
 - soil type (loam, clay, sandy)
 - drainage
 
-The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitchen garden) and the labour quarters for hands' huts, protected forever (ADR 0030, ADR 0040). The map grows by era (ADR 0052): Homestead to Village play on 16 × 12 acres, with the original 8 × 6 farm unchanged inside it, and Township, Town and City each add a ring. Natural terrain frames the map (hills, the river, scrub), and the camera stops at its edge. The player grows the farm by buying adjacent parcels; price depends on soil and location.
+The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitchen garden), the labour quarters for hands' huts and a barren cattle acre for the animals from the Hamlet (ADR 0064), protected forever (ADR 0030, ADR 0040). The map grows by era (ADR 0052): Homestead to Village play on 16 × 12 acres, with the original 8 × 6 farm unchanged inside it, and Township, Town and City each add a ring. Natural terrain frames the map (hills, the river, scrub), and the camera stops at its edge. The player grows the farm by buying adjacent parcels; price depends on soil and location.
 
-- **The village around the farm (ADR 0053).** North is the river side. The village centre (houses, grocery, tea stall, chemist, temple, council hall, the banyan and threshing floor, the pond and an empty school plot) lies east of the farm, and the grazing commons on the river bank in the north-west. The district road runs along the south edge, with the village lane and the farm lane leading off it. An acre a road passes through is a road acre (road and verges on half of it), never for sale. Land the player doesn't own is neighbours' farms: some are for sale (about 77 acres in Phase 2) and some are **not for sale yet**. The centre, the commons and the river bank are never for sale.
+- **The village around the farm (ADR 0053).** North is the river side. The village centre (houses, grocery, tea stall, chemist, temple, council hall, the banyan and threshing floor, the pond and an empty school plot) lies east of the farm, and the grazing commons on the river bank in the north-west. The district road runs along the south edge, with the village lane and the farm lane leading off it. A street runs through the middle of the centre, its buildings drawn from every side and facing their street, in clusters with courtyards, an open square round the banyan and the temple on the pond's bank; the village dairy co-op collects the milk there (ADR 0061). The village is the player's town: its places serve the player's citizens, while the families already living there stay neighbours and aren't counted in the population. An acre a road passes through is a road acre (road and verges on half of it), never for sale. Land the player doesn't own is neighbours' farms: some are for sale (about 77 acres in Phase 2) and some are **not for sale yet**. The centre, the commons and the river bank are never for sale.
 
 - **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
@@ -185,12 +185,12 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 
 **Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
 
-**Livestock (ADR 0056).** Phase 2 brings Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 70,000, about 11 L, a lower price and less milk in Summer), in a 4-animal cattle shed in the yard, bought at the village cattle fair (a bank dairy loan is possible). The village dairy co-op collects every morning and pays by quality, or milk feeds the household. One game day stands for about a real month of an animal's life.
+**Livestock (ADR 0056, ADR 0060, spec 012).** From the Hamlet, the player can build a 4-animal cattle shed on the cattle acre, a barren inherited acre beside the yard kept for the animals (ADR 0064), and buy Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 75,000, about 11 L, a lower price a litre and less milk in Summer) at the village cattle fair, with a bank dairy loan if needed. One game day stands for 22.8 real days of an animal's life (a season is a real quarter), so a buffalo gives about 182 L a game day. The village dairy co-op collects at 6:00 and pays by fat; the household drinks some as home use.
 
-- **Feed** is eaten automatically every morning, also while away: green fodder (berseem in Winter, sorghum in Summer and the Monsoon) cut and carried daily from a fodder field and never stored; straw, a new harvest by-product, on a straw stack in the yard; and bought cattle feed in the shed's feed room. The grazing commons lower the green-fodder need, most in the Monsoon.
-- **A shortfall** cuts milk, and several hungry days lower health (a vet costs money). No animal dies of hunger in Phase 2. A notification comes 2 days before any feed runs out.
-- **Dung becomes compost,** about 3–4 t an animal a year. About 10 game days in milk, 2–3 dry, then a calf (sold at the fair for now). A vaccination each season and a seeded disease risk. About 1.5 labour hours a day per animal, and an "animals" order for the hand.
-- Goats and poultry come later; no pigs. Vet bills and disease outbreaks are a real risk.
+- **Feed** is eaten automatically every morning at 6:00, also while away: green fodder (the grazing commons cover a share, most in the Monsoon; then berseem, sown in Winter and cut through Spring, or sorghum, sown in Summer and cut through the Monsoon; then bought from neighbours); straw, a by-product of wheat and rice, on a straw stack; and bought cattle feed in the shed's feed room. Green fodder is never stored; what the animals don't eat sells standing to neighbours cheaply.
+- **A shortfall** cuts milk, and several hungry days lower health. No animal dies in Phase 2. A notification comes 2 days before straw or feed runs out; the hand's "animals" order keeps them stocked.
+- **Dung becomes compost** in the yard's compost pit, about 3.5 t an animal a year. About 13 game days in milk and 3–5 dry, then a calf (sold at the fair for now). A vaccination each season, a seeded disease risk and the vet. 1.5 labour hours a day per animal from the Care pool.
+- Goats, poultry, raising calves and silage come later; no pigs.
 
 **Equipment ladder.** Hand tools, then an ox plough, then a tractor, then a harvester. Each machine has:
 
@@ -254,7 +254,7 @@ P_local    = P_regional × (Demand / Supply)^(1/e)
 
 **Regional trader.** The trader buys from the town at the regional price minus transport, and sells to it at the regional price plus transport, up to a daily capacity. From Phase 2 it comes as a truck from 6:00 to midnight, with its buying price set each morning and a total load on top of the per-crop limits (ADR 0054). This creates import and export decisions. Transport cost depends on the road link, which explains why a town on a highway gets better prices than a remote one.
 
-**Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
+**Household spending.** Each household, the founder's included, splits its income across food, housing, clothing, education, health, leisure and savings. As income rises, the share spent on food falls and the share spent on education and leisure rises (Engel's law). The town's households buy their food at the local market, so a growing town buys more of the founder's produce (spec 014). A poor town needs grocers, and a rich town wants restaurants and tuition centres. That is market segmentation, learned by watching.
 
 **Inflation.** There is mild inflation of 2–6% a year, driven by treasury spending and credit growth. Every coin amount (living costs, wages, land, buildings, services) is a year-0 price that follows the price index when charged; wages are fixed when a contract is signed or renewed, so they follow with a lag. Loans stay nominal, and price-controlled goods (chemical fertiliser) ignore it (ADR 0034). Cash under the mattress quietly loses value, which teaches why saving and investing differ.
 
@@ -341,6 +341,8 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 - **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
 - **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
 
+**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 4 an acre, rent 6,000 a season). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
+
 **Hiring starts in Homestead (ADR 0022)**
 
 | | Day labourer | Resident farm hand |
@@ -397,6 +399,8 @@ Happiness comes from layered household needs, and civic buildings meet them only
 2. **Security:** a stable job, healthcare, safety.
 3. **Belonging:** community hall, market square, festivals, places of worship and culture.
 4. **Growth:** education, library, sports, leisure, culture.
+
+In Phase 2 the weights are 40, 30, 20 and 10%, each layer counting fully only when the one below is at least 0.8 met; every row on the household card names what would raise it, or says what isn't possible yet (spec 014).
 
 **Civic buildings**
 

@@ -191,6 +191,9 @@ namespace Sim.Core.People
     {
         Field = 0,
         Tree = 1,
+
+        /// <summary>The hand looks after the shed: keeps straw and feed stocked (spec 012 §3.11). Target 0; one per farm.</summary>
+        Animals = 2,
     }
 
     public enum OrderAction
@@ -199,6 +202,9 @@ namespace Sim.Core.People
         Harvested = 1,
         Sowed = 2,
         Picked = 3,
+
+        /// <summary>Bought straw or cattle feed for the shed (spec 012 §3.11).</summary>
+        Bought = 4,
     }
 
     /// <summary>Why an order is waiting (spec 006 §3.8), emitted once per change.</summary>
@@ -229,6 +235,9 @@ namespace Sim.Core.People
 
         public SellRule Sell { get; internal set; }
         public Fixed MinPrice { get; internal set; }
+
+        /// <summary>An animals order's days of straw and feed to keep (spec 012 §3.11), held in <see cref="MinPrice"/>.</summary>
+        public int Days { get { return (int)MinPrice.FloorToLong(); } }
 
         /// <summary>This season only: cleared after its harvest or pick; otherwise it repeats every season (a standing order).</summary>
         public bool Once { get; internal set; }

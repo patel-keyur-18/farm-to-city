@@ -31,8 +31,8 @@ namespace Sim.View.Tests
 
         private static KeyValuePair<string, SheetVm> Named(string name, SheetVm s) { return new KeyValuePair<string, SheetVm>(name, s); }
 
-        /// <summary>A factor: a decimal number with no unit after it (5.30 /kg, 3.4 h, 70.7 kg, 6.3%, fertility 45.2 / 100 and +0.4 points are fine; 0.875 is not).</summary>
-        private static readonly Regex Factor = new Regex(@"\d\.\d+(?!\d|\s*(?:/kg|h\b|kg|%|L\b|Cr\b|M\b|/ 100|of 100|points?\b))|×");
+        /// <summary>A factor: a decimal number with no unit after it (5.30 /kg, 3.4 h, 70.7 kg, 6.3%, fertility 45.2 / 100, +0.4 points and a milk price of 57.50 coins are fine; 0.875 is not).</summary>
+        private static readonly Regex Factor = new Regex(@"\d\.\d+(?!\d|\s*(?:/kg|h\b|kg|%|L\b|Cr\b|M\b|/ 100|of 100|points?\b|coins?\b))|×");
 
         public static void AssertWords(string where, WhyVm why)
         {

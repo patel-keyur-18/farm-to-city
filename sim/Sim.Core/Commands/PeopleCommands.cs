@@ -269,6 +269,12 @@ namespace Sim.Core.Commands
         {
             return new OrderSpec(OrderTargetKind.Tree, slotId, null, SeedSource.Certified, null, sell, minPrice);
         }
+
+        /// <summary>LOOK AFTER the shed, KEEP straw and feed for <paramref name="days"/> game days (spec 012 §3.11; 2–4).</summary>
+        public static OrderSpec LookAfterAnimals(int days)
+        {
+            return new OrderSpec(OrderTargetKind.Animals, 0, null, SeedSource.Certified, null, SellRule.Store, Fixed.FromInt(days));
+        }
     }
 
     /// <summary>Gives a hand a standing order, replacing any order on that target (spec 006 §3.8).</summary>
@@ -300,6 +306,11 @@ namespace Sim.Core.Commands
                 if (Order.Seed == SeedSource.Saved && (crop < 0 || !defs.Farm.Crops[crop].CanSaveSeed)) return CommandResult.Reject(RejectReason.SeedCannotBeSaved);
                 fert = defs.Farm.IndexOfFertiliser(Order.FertiliserId);
                 if (fert < 0) return CommandResult.Reject(RejectReason.UnknownFertiliser);
+            }
+            else if (Order.Kind == OrderTargetKind.Animals)
+            {
+                if (Livestock.LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
+                if (Order.Target != 0 || Order.MinPrice < Fixed.FromInt(2) || Order.MinPrice > Fixed.FromInt(4)) return CommandResult.Reject(RejectReason.InvalidArgument);
             }
             else if (sim.State.Land.Slots.Find(x => x.Id == Order.Target) == null) return CommandResult.Reject(RejectReason.UnknownTarget);
             if (Order.Sell == SellRule.Offer && Order.MinPrice <= Fixed.Zero) return CommandResult.Reject(RejectReason.InvalidArgument);

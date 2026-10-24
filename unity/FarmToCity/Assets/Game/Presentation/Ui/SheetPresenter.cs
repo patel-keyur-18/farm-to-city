@@ -96,7 +96,7 @@ namespace Game.Presentation.Ui
             titles.Add(UiKit.Heading1(title, 52));
             if (!string.IsNullOrEmpty(subtitle)) titles.Add(UiKit.Text(subtitle, 30, UiKit.Wood, UiKit.Body));
             header.Add(titles);
-            var x = new Button(close) { text = "" };
+            var x = new Button(close) { text = "", name = "close" }; // named for the Editor's scripted touch (TouchDriver.TapNamed)
             x.style.width = 76; x.style.height = 76; x.style.backgroundColor = UiKit.Red;
             UiKit.Radius(x, 38);
             UiKit.Border(x, 4, UiKit.RedDark);
@@ -113,6 +113,7 @@ namespace Game.Presentation.Ui
             {
                 case null: return null;
                 case "hut": return SpriteBank.Rendered("hut") ?? SpriteBank.Hut;
+                case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": return SpriteBank.Rendered(icon + "_front");
                 case "store": case "sack": return IconBank.Sack;
@@ -125,7 +126,7 @@ namespace Game.Presentation.Ui
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
-                case "compost": case "fertiliser_chemical": case "spray": case "spinach": case "coriander":
+                case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander":
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
@@ -136,10 +137,11 @@ namespace Game.Presentation.Ui
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
-                case "potato": case "radish": case "wheat": case "rice": case "lentils": return SpriteBank.Crop(icon, CropStage.Growing3);
+                case "potato": case "radish": case "wheat": case "rice": case "lentils": case "berseem": case "sorghum": return SpriteBank.Crop(icon, CropStage.Growing3);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
-                    if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);
+                    if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");
+                    if (icon.StartsWith("animal_", StringComparison.Ordinal)) return IconBank.Good(icon);
                     return SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }

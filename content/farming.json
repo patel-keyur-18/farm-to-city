@@ -17,7 +17,7 @@
     { "id": "chemical", "good": "fertiliser_chemical", "kgPerAcrePerSeason": 150,  "yieldFactor": 1.25, "fertilityPerSeason": -3 }
   ],
   "pests": {
-    "baseRisk": { "radish": 0.03, "wheat": 0.06, "rice": 0.10, "potato": 0.10, "lentils": 0.05 },
+    "baseRisk": { "radish": 0.03, "wheat": 0.06, "rice": 0.10, "potato": 0.10, "lentils": 0.05, "berseem": 0, "sorghum": 0 },
     "monocultureStep": 0.5,
     "monocultureMaxRepeats": 2,
     "wetStep": 1.0,

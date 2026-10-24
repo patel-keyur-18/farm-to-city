@@ -11,6 +11,9 @@ namespace Sim.View.Views
         Field = 3,
         Scrub = 4,
         Road = 5,
+
+        /// <summary>A neighbour's farmstead on the near sides' scrub (ADR 0062 §2).</summary>
+        Farmstead = 6,
     }
 
     public readonly struct EdgeTile
@@ -49,7 +52,18 @@ namespace Sim.View.Views
             if (y < 0) return y >= -RiverWidth ? EdgeKind.River : Pattern(x, y) ? EdgeKind.FarBank : EdgeKind.Field;
             if (y == height - 1) return EdgeKind.Road; // the district road, on past the map's ends
             if (x < 0) return EdgeKind.Hill;
-            return Pattern(x, y) ? EdgeKind.Field : EdgeKind.Scrub;
+            if (Pattern(x, y)) return EdgeKind.Field;
+            return Peak(x, y) ? EdgeKind.Farmstead : EdgeKind.Scrub;
+        }
+
+        /// <summary>A scattered few of the near side's scrub tiles: draw over 60 and above the four tiles round it.</summary>
+        private static bool Peak(int x, int y)
+        {
+            int h = MapView.Draw((x + 64) * 211 + (y + 64));
+            if (h < 60) return false;
+            foreach ((int dx, int dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                if (MapView.Draw((x + dx + 64) * 211 + (y + dy + 64)) >= h) return false;
+            return true;
         }
 
         private static bool Pattern(int x, int y) { return (((x >> 1) + (y >> 1)) % 3 + 3) % 3 != 0; }

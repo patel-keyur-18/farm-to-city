@@ -97,6 +97,20 @@ namespace Sim.View.Tests
             Assert.That((temple.Title, temple.Actions.Count), Is.EqualTo(("The temple", 0)));
             Assert.That(FieldSheets.ForTile(ctx, Tile("school_plot")).Subtitle, Does.Contain("first school"));
 
+            // ADR 0061: the dairy co-op, on the side lane by the farm's lane: its price a litre by fat, and cattle with the Hamlet.
+            SheetVm dairy = FieldSheets.ForTile(ctx, Tile("dairy"));
+            Assert.That(dairy.Title, Is.EqualTo("The dairy co-op"));
+            // Laid out like the Orders sheet (owner's US-206 review): a pictured row per milk, then a picture button to the yard.
+            Assert.That(dairy.Lines.Take(2).Select(l => (l.Label, l.Icon, l.Note)), Is.EqualTo(new[] {
+                ("Buffalo milk", "animal_buffalo", "Cattle come with the Hamlet"), ("Cow milk", "animal_cow", "Cattle come with the Hamlet") }));
+            Assert.That(dairy.Lines[0].Value, Does.StartWith("7.0% fat · ").And.EndWith("a litre"));
+            ActionVm yard = dairy.Lines.Last().Buttons.Single();
+            Assert.That((dairy.Lines.Count, yard.Detail, yard.Opens.Value), Is.EqualTo((3, "Opens with the Hamlet", new SheetRequest("Tile", 104))), "the way to your cattle yard");
+            sim.State.Era.Current = sim.Config.Game.Livestock.UnlockEra;
+            dairy = FieldSheets.ForTile(ViewKit2.Context(sim), Tile("dairy"));
+            Assert.That((dairy.Lines[0].Note, dairy.Lines[2].Label, dairy.Lines[2].Value), Is.EqualTo(("You have none yet", "This morning from you", "Nothing yet: no animal in milk")));
+            Assert.That(dairy.Lines.Last().Buttons.Single().Detail, Is.EqualTo("Build a shed there"));
+
             SheetVm road = FieldSheets.ForTile(ctx, 176);
             Assert.That((road.Title, road.Lines.Count, road.Actions.Count), Is.EqualTo(("The road", 0, 0)), "the village's land: never priced");
             Assert.That(FieldSheets.ForTile(ctx, 0).Title, Is.EqualTo("The grazing commons"));
@@ -112,10 +126,46 @@ namespace Sim.View.Tests
 
             MapVm map = MapView.Build(ctx);
             Assert.That(map.Tiles.Where(t => t.ForSaleSign).All(t => sim.Config.Game.Map.Parcels[t.ParcelId].ForSale), Is.True, "signs only on land for sale");
-            Assert.That(map.Tiles.Count(t => t.ForSaleSign), Is.EqualTo(sim.Config.Game.Map.Parcels.Count(p => p.ForSale) - 3), "one sign a parcel for sale (not the inherited three)");
-            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Unowned).All(t => t.NeighbourCrop == null || t.NeighbourCrop == "potato" || t.NeighbourCrop == "radish"), Is.True, "Spring: potato or radish");
+            Assert.That(map.Tiles.Count(t => t.ForSaleSign), Is.EqualTo(sim.Config.Game.Map.Parcels.Count(p => p.ForSale) - 4), "one sign a parcel for sale (not the inherited four)");
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Unowned).All(t => t.NeighbourCrop == null || t.NeighbourCrop == "potato" || t.NeighbourCrop == "radish" || t.NeighbourCrop == "sugarcane"), Is.True, "Spring: potato or radish (sugarcane all year)");
             Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Village).Count(t => t.Place != null), Is.EqualTo(16));
             Assert.That(map.Tiles.Single(t => t.Id == 176).RoadLinks, Is.EqualTo(2 | 1), "the district road's west end runs on off the map");
+        }
+
+        // ADR 0062: neighbours' land varies by soil; farmsteads only on acres not for sale, never touching; stable season to season.
+        [Test]
+        public void Neighbours_VaryBySoil()
+        {
+            Simulation sim = ViewKit.NewGame();
+            var defs = sim.Config.Game;
+            var looks = new System.Collections.Generic.Dictionary<int, (NeighbourLand Land, string Crop)>();
+            foreach (var t in sim.State.Land.Tiles)
+            {
+                if (t.Terrain != Sim.Core.Definitions.Terrain.Farm || sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                var p = defs.Map.Parcels[t.ParcelId];
+                string soil = defs.Soils[t.Soil].Id;
+                float fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits));
+                NeighbourLand land = MapView.Look(t.Id, t.Id % 16, t.Id / 16, 16, 12, soil, fertility, t.ParcelId, !p.ForSale, 3, out string crop);
+                looks[t.Id] = (land, crop);
+                if (land == NeighbourLand.Farmstead) Assert.That(p.ForSale, Is.False, "a farmstead on land for sale: tile " + t.Id);
+                if (land == NeighbourLand.Scrub) Assert.That(soil == "sandy" || fertility < 0.45f, Is.True, "scrub only on poor land: tile " + t.Id);
+                if (land == NeighbourLand.Grove || crop == "sugarcane") Assert.That(soil != "sandy" && fertility >= 0.45f, Is.True, "groves and cane on good land: tile " + t.Id);
+                for (int season = 0; season < 4; season++)
+                {
+                    NeighbourLand other = MapView.Look(t.Id, t.Id % 16, t.Id / 16, 16, 12, soil, fertility, t.ParcelId, !p.ForSale, season, out _);
+                    bool fixedLook = land == NeighbourLand.Farmstead || land == NeighbourLand.Scrub || land == NeighbourLand.Grove;
+                    if (fixedLook) Assert.That(other, Is.EqualTo(land), "farmsteads, scrub and groves stay all year: tile " + t.Id);
+                }
+            }
+            foreach (var kv in looks.Where(l => l.Value.Land == NeighbourLand.Farmstead))
+                foreach (int n in new[] { kv.Key + 1, kv.Key - 1, kv.Key + 16, kv.Key - 16 })
+                    Assert.That(looks.TryGetValue(n, out var nb) && nb.Land == NeighbourLand.Farmstead, Is.False, "farmsteads never touch: " + kv.Key + ", " + n);
+            int Count(NeighbourLand l) { return looks.Count(x => x.Value.Land == l); }
+            TestContext.Out.WriteLine(string.Join(", ", System.Enum.GetValues(typeof(NeighbourLand)).Cast<NeighbourLand>().Select(l => l + " " + Count(l))));
+            Assert.That(Count(NeighbourLand.Farmstead), Is.InRange(4, 12), "a few farmsteads among the fields");
+            Assert.That(Count(NeighbourLand.Scrub), Is.InRange(8, 25), "poor land shows");
+            Assert.That(Count(NeighbourLand.Field), Is.GreaterThan(looks.Count / 2), "most of the valley is farmed");
+            Assert.That(looks.Values.Count(x => x.Crop == "mustard"), Is.GreaterThan(5), "mustard in Winter");
         }
     }
 }

@@ -166,7 +166,7 @@ namespace Sim.Core.Tests
         {
             // Tile 85 (inherited) also in w1.
             ContentException e = Error("map.json", j => j.Replace("\"tiles\": [82, 83]", "\"tiles\": [82, 83, 85]"));
-            Assert.That(e.FieldPath, Is.EqualTo("map.parcels[9].tiles[2]"));
+            Assert.That(e.FieldPath, Is.EqualTo("map.parcels[10].tiles[2]"));
             Assert.That(e.Message, Does.Contain("tile 85").And.Contain("two parcels"));
 
             // Tile 83 in no parcel.
@@ -186,9 +186,9 @@ namespace Sim.Core.Tests
             // Bounds and cross-file checks.
             Assert.That(Error("land.json", j => j.Replace("\"quickSaleFactor\": 0.80", "\"quickSaleFactor\": 1.5")).FieldPath,
                 Is.EqualTo("land.land.quickSaleFactor"));
-            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\"]", "[\"w1\"]")).FieldPath,
+            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\", \"home_d\"]", "[\"w1\"]")).FieldPath,
                 Is.EqualTo("start.inheritedParcels"));
-            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\"]", "[\"home_a\", \"home_a\"]")).FieldPath,
+            Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\", \"home_d\"]", "[\"home_a\", \"home_a\"]")).FieldPath,
                 Is.EqualTo("start.inheritedParcels[1]"));
             Assert.That(Error("start.json", j => j.Replace("\"tile\": 87 },\n    { \"building\": \"well\"", "\"tile\": 86 },\n    { \"building\": \"well\"")).FieldPath,
                 Is.EqualTo("start.buildings[0].tile"));
@@ -233,6 +233,27 @@ namespace Sim.Core.Tests
             // Without a hand's hut there are no people: the frozen golden content loads as before.
             GameDefs none = TestContent.Game((f, j) => f == "buildings.json" ? System.Text.RegularExpressions.Regex.Replace(j, ",\\s*\\{ \"id\": \"hand_hut\"[^}]*\\}", "") : j);
             Assert.That(none.People, Is.Null);
+        }
+        [Test]
+        public void Livestock()
+        {
+            GameDefs g = TestContent.Game();
+            LivestockDefs d = g.Livestock;
+            Assert.That(d, Is.Not.Null);
+            Assert.That(g.Buildings[d.Shed].Animals, Is.EqualTo(4));
+            Assert.That(g.Map.Tiles[d.Livestock.ShedTile].Terrain, Is.EqualTo(Terrain.Cattle), "the cattle acre (ADR 0064)");
+            Assert.That(g.Onboarding.Eras[d.UnlockEra].Id, Is.EqualTo("hamlet"));
+            foreach (AnimalDef a in d.Animals)
+            {
+                // Spec 012 §3.2: the curve's mean over the milk days is 1.00 ± 1%.
+                Sim.Core.Maths.Fixed sum = Sim.Core.Maths.Fixed.Zero;
+                for (int day = 0; day < a.MilkDays; day++) sum += Sim.Core.Livestock.LivestockRules.Lactation(d.Livestock, day);
+                double mean = double.Parse(sum.MulRatio(1, a.MilkDays).ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                Assert.That(mean, Is.EqualTo(1.0).Within(0.01), a.Id);
+            }
+            Assert.That((d.Livestock.GreenWeight + d.Livestock.StrawWeight + d.Livestock.FeedWeight - Sim.Core.Maths.Fixed.One).Raw, Is.InRange(-10, 10));
+            Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "livestock.json" ? j.Replace("\"shedTile\": 104", "\"shedTile\": 84") : j));
+            Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "livestock.json" ? j.Replace("\"green\": 0.4,", "\"green\": 0.5,") : j));
         }
     }
 }

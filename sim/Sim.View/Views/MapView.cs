@@ -21,6 +21,9 @@ namespace Sim.View.Views
         Village = 5,
         Commons = 6,
         Bank = 7,
+
+        /// <summary>The cattle acre (ADR 0064): the shed's place from the Hamlet.</summary>
+        Cattle = 8,
     }
 
     /// <summary>What stands on a field (spec 008 §3.4): vacant, growing in three stages, ready, or waiting past its grace.</summary>
@@ -69,6 +72,16 @@ namespace Sim.View.Views
         /// <summary>A neighbour's field: the season's crop drawn half-grown, or null for fallow (spec 010 §3.7; no sim state).</summary>
         public string NeighbourCrop { get; internal set; }
 
+        /// <summary>A neighbour's acre's look (ADR 0062); <see cref="NeighbourCrop"/> is set only for <see cref="NeighbourLand.Field"/>.</summary>
+        public NeighbourLand Neighbour { get; internal set; }
+
+        /// <summary>A stable draw 0..99 per acre, for where its props stand and which farmstead it is.</summary>
+        public int Draw { get; internal set; }
+
+        /// <summary>A tube-well room at the field's edge, or a haystack on fallow or ploughed land (neighbours' acres).</summary>
+        public bool TubeWell { get; internal set; }
+        public bool Haystack { get; internal set; }
+
         /// <summary>A road acre's links to the road acres beside it: 1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1 (and off the map's edge).</summary>
         public int RoadLinks { get; internal set; }
 
@@ -77,6 +90,29 @@ namespace Sim.View.Views
 
         /// <summary>Which look of its place: houses come in two (by tile).</summary>
         public int Variant { get; internal set; }
+
+        /// <summary>The village place's id (content), for its hand-placed layout (ADR 0061).</summary>
+        public string PlaceId { get; internal set; }
+    }
+
+    /// <summary>What a neighbour's acre looks like (ADR 0062): presentation only, fixed by its soil, fertility and a seeded draw.</summary>
+    public enum NeighbourLand
+    {
+        /// <summary>The season's crop (<see cref="TileVm.NeighbourCrop"/>) on tilled soil.</summary>
+        Field = 0,
+
+        /// <summary>Ploughed, waiting for the next sowing.</summary>
+        Ploughed = 1,
+        Fallow = 2,
+
+        /// <summary>Poor, sandy land gone to scrub, with a babul.</summary>
+        Scrub = 3,
+
+        /// <summary>A mango grove.</summary>
+        Grove = 4,
+
+        /// <summary>A neighbour's home among the fields: only on acres not for sale (ADR 0062 §2).</summary>
+        Farmstead = 5,
     }
 
     public enum TreeStage
@@ -164,6 +200,37 @@ namespace Sim.View.Views
     }
 
     /// <summary>Everything the map draws, built from the state: tiles, tree slots, garden beds and buildings (spec 008 §3.4).</summary>
+    /// <summary>What the cattle acre shows (ADR 0064): its shed, its stocks as heights, and each animal's place and pose.</summary>
+    public sealed class CattleAcreVm
+    {
+        public int TileId { get; internal set; }
+
+        /// <summary>Before the Hamlet: the padlock sign, no shed.</summary>
+        public bool Locked { get; internal set; }
+
+        /// <summary>0 no shed, 1 being built, 2 built.</summary>
+        public int Shed { get; internal set; }
+
+        /// <summary>The straw stack: 0 empty, 1 low, 2 mid, 3 high, by how full it is.</summary>
+        public int Straw { get; internal set; }
+
+        /// <summary>The compost pit: 0 empty, 1 half, 2 full.</summary>
+        public int Compost { get; internal set; }
+        public List<AnimalVm> Animals { get; } = new List<AnimalVm>();
+    }
+
+    public sealed class AnimalVm
+    {
+        public long Id { get; internal set; }
+        public string Kind { get; internal set; }
+
+        /// <summary>stand, eat or lie.</summary>
+        public string Pose { get; internal set; }
+
+        /// <summary>Her place on the acre, 0–3 (place 0 is the neem's shade, with no manger).</summary>
+        public int Place { get; internal set; }
+    }
+
     public sealed class MapVm
     {
         public int Width { get; internal set; }
@@ -189,6 +256,9 @@ namespace Sim.View.Views
         public List<int> TruckRoute { get; } = new List<int>();
         public bool TruckHere { get; internal set; }
         public bool VanHere { get; internal set; }
+
+        /// <summary>The cattle acre, or null when the map has none.</summary>
+        public CattleAcreVm Cattle { get; internal set; }
     }
 
     public static class MapView
@@ -247,7 +317,8 @@ namespace Sim.View.Views
             };
 
             var places = new Dictionary<int, string>();
-            foreach (PlaceDef p in defs.Map.Places) places[p.Tile] = p.Kind;
+            var placeIds = new Dictionary<int, string>();
+            foreach (PlaceDef p in defs.Map.Places) { places[p.Tile] = p.Kind; placeIds[p.Tile] = p.Id; }
             int yards = 0;
             foreach (Tile t in land.Tiles)
             {
@@ -262,9 +333,9 @@ namespace Sim.View.Views
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
                 if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
-                if (vm.Kind == TileKind.Unowned) vm.NeighbourCrop = NeighbourCrop(defs.Soils[t.Soil].Id, t.ParcelId, map.Season);
+                if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map.Width, defs.Map.Height, t.ParcelId, !pdef.ForSale, map.Season);
                 if (vm.Kind == TileKind.Road) vm.RoadLinks = RoadLinks(land, defs.Map, t.Id);
-                if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.Variant = (vm.X + vm.Y) % 2; }
+                if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
                 Crop crop = sim.State.Farm.CropOn(t.Id);
                 if (crop != null)
@@ -326,7 +397,44 @@ namespace Sim.View.Views
             foreach (Building b in land.Buildings)
                 map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
             AddPeople(ctx, map);
+            map.Cattle = CattleAcre(sim, map.SecondOfDay);
             return map;
+        }
+
+        /// <summary>
+        /// The cattle acre (ADR 0064). Animals take places 1, 2, 3, then the neem's shade (0), in id order. Poses: lying at night
+        /// (20:00–6:00) and when ill, eating in the morning feed (6:00–9:00), then turn by turn every 3 hours so the yard moves.
+        /// </summary>
+        public static CattleAcreVm CattleAcre(Simulation sim, long secondOfDay)
+        {
+            GameDefs defs = sim.Config.Game;
+            int tile = -1;
+            for (int i = 0; i < sim.State.Land.Tiles.Count && tile < 0; i++) if (sim.State.Land.Tiles[i].Terrain == Terrain.Cattle) tile = i;
+            if (tile < 0) return null;
+            var vm = new CattleAcreVm { TileId = tile, Compost = Level(sim, GoodPlace.CompostPit, 2) };
+            Sim.Core.Livestock.LivestockState s = sim.State.Livestock;
+            if (s == null) return vm;
+            vm.Locked = !Sim.Core.Livestock.LivestockRules.Unlocked(sim);
+            vm.Shed = Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? 2 : s.ShedReadyAt > 0 ? 1 : 0;
+            if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            int hour = (int)(secondOfDay / 3600);
+            int n = 0;
+            foreach (Sim.Core.Livestock.Animal a in s.Animals)
+            {
+                string pose = a.SickDays > 0 || hour >= 20 || hour < 6 ? "lie" : hour < 9 ? "eat" : new[] { "stand", "eat", "lie" }[(int)((a.Id + hour / 3) % 3)];
+                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = defs.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
+                n++;
+            }
+            return vm;
+        }
+
+        /// <summary>How full a place is in steps: 0 under 1% full, then 1..top in equal bands of what it holds.</summary>
+        internal static int Level(Simulation sim, GoodPlace place, int top)
+        {
+            long cap = Sim.Core.Market.Store.CapacityGrams(sim, place);
+            long used = Sim.Core.Market.Store.UsedGrams(sim, place);
+            if (cap <= 0 || used * 100 < cap) return 0;
+            return (int)System.Math.Min(top, 1 + used * top / cap);
         }
 
         private static TileKind Kind(Terrain t, bool owned)
@@ -339,7 +447,59 @@ namespace Sim.View.Views
                 case Terrain.Bank: return TileKind.Bank;
             }
             if (!owned) return TileKind.Unowned;
-            return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : TileKind.Farm;
+            return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : t == Terrain.Cattle ? TileKind.Cattle : TileKind.Farm;
+        }
+
+        /// <summary>A stable draw 0..99 for an acre (a multiplicative hash: no RNG, no state).</summary>
+        public static int Draw(int tile)
+        {
+            uint h = (uint)(tile + 1) * 2654435761u;
+            h ^= h >> 15;
+            h *= 2246822519u;
+            h ^= h >> 13;
+            return (int)(h % 100u);
+        }
+
+        /// <summary>
+        /// A neighbour's acre (ADR 0062), from its soil, fertility and its draw: sandy land mostly scrub or fallow, weak land (fertility
+        /// under 45) half sown, good loam and clay sown, with sugarcane and a mango grove here and there; mustard in a third of
+        /// Winter's fields; good land between crops lies ploughed or fallow. Farmsteads only on acres not for sale, scattered so no two are side by side.
+        /// </summary>
+        public static NeighbourLand Look(int tile, int x, int y, int width, int height, string soil, float fertility, int parcel, bool notForSale, int season, out string crop)
+        {
+            int h = Draw(tile);
+            crop = null;
+            if (notForSale && LocalPeak(x, y, width, height)) return NeighbourLand.Farmstead;
+            bool sandy = soil == "sandy", weak = fertility < 0.45f;
+            if (sandy && h < 55 || !sandy && weak && h < 25) return NeighbourLand.Scrub;
+            if (sandy && h < 80 || !sandy && weak && h < 50) return NeighbourLand.Fallow;
+            if (!sandy && !weak && h < 7) return NeighbourLand.Grove;
+            crop = !sandy && !weak && h < 17 ? "sugarcane" : season == 3 && h % 3 == 0 ? "mustard" : NeighbourCrop(soil, parcel, season);
+            return crop != null ? NeighbourLand.Field : sandy || weak || h % 2 == 0 ? NeighbourLand.Fallow : NeighbourLand.Ploughed;
+        }
+
+        /// <summary>
+        /// An acre whose draw beats its four neighbours' (by id on a tie): an irregular scatter, never two side by side, about one acre in five.
+        /// </summary>
+        public static bool LocalPeak(int x, int y, int width, int height)
+        {
+            int id = y * width + x, h = Draw(id);
+            if (x > 0 && !Beats(h, id, id - 1)) return false;
+            if (x < width - 1 && !Beats(h, id, id + 1)) return false;
+            if (y > 0 && !Beats(h, id, id - width)) return false;
+            return y >= height - 1 || Beats(h, id, id + width);
+        }
+
+        private static bool Beats(int h, int id, int other) { int o = Draw(other); return h > o || h == o && id > other; }
+
+        private static void Neighbour(TileVm vm, int width, int height, int parcel, bool notForSale, int season)
+        {
+            vm.Draw = Draw(vm.Id);
+            vm.Neighbour = Look(vm.Id, vm.X, vm.Y, width, height, vm.SoilId, vm.Fertility, parcel, notForSale, season, out string crop);
+            vm.NeighbourCrop = crop;
+            bool good = vm.SoilId != "sandy" && vm.Fertility >= 0.45f;
+            vm.TubeWell = good && vm.Neighbour != NeighbourLand.Grove && vm.Neighbour != NeighbourLand.Farmstead && vm.Draw % 25 == 4;
+            vm.Haystack = (vm.Neighbour == NeighbourLand.Fallow || vm.Neighbour == NeighbourLand.Ploughed) && vm.Draw % 6 == 1;
         }
 
         /// <summary>
