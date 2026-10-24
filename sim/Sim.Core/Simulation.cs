@@ -47,6 +47,7 @@ namespace Sim.Core
                 AddSystem(new FinanceSystem());
                 if (config.Game.People != null) AddSystem(new PeopleSystem());
                 if (config.Game.Livestock != null) AddSystem(new Livestock.LivestockSystem());
+                if (config.Game.Population != null && config.Game.People != null) AddSystem(new People.PopulationSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();

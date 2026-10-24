@@ -257,6 +257,27 @@ namespace Sim.View.Tests
             Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Labourer).Patrol, Is.EqualTo(new[] { 86 }));
         }
 
+        // Spec 014 §3.13 (AC-14): every needs row says what would help, or that it can't be changed yet; never a bare number.
+        [Test]
+        public void NeedsLevers()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            Household x = sim.State.Citizens.Household(sim.State.Citizens.OfHand(h.Id).HouseholdId);
+            List<LineVm> rows = NeedsView.Rows(ViewKit2.Context(sim), x);
+            Assert.That(rows.Count(r => r.IsHeader), Is.EqualTo(4), "the four layers");
+            Assert.That(rows.Where(r => !r.IsHeader).All(r => !string.IsNullOrEmpty(r.Note)), Is.True, "every need names its lever");
+            Assert.That(rows.Single(r => r.Label == "Steady work").Note, Is.EqualTo("1 of 1 adults work for you"));
+            Assert.That(rows.Single(r => r.Label == "School").Note, Does.Contain("the Village builds one"));
+            x.FoodMet = Sim.Core.Maths.Fixed.Parse("0.83");
+            sim.State.Citizens.OfHand(h.Id).Job = CitizenJob.Outside;
+            rows = NeedsView.Rows(ViewKit2.Context(sim), x);
+            Assert.That(rows.Single(r => r.Label == "Food").Note, Is.EqualTo("Their money buys 83% of the food they need: a better wage or a job here helps"));
+            Assert.That(rows.Single(r => r.Label == "Food").NoteTone, Is.EqualTo(Tone.Good), "0.83 is above the 0.8 gate");
+            Assert.That(rows.Single(r => r.Label == "Steady work").Note, Does.EndWith("give someone here a job (your hand)"));
+            Assert.That(rows.Single(r => r.Label == "Steady work").NoteTone, Is.EqualTo(Tone.Warn));
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {

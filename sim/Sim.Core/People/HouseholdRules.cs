@@ -121,6 +121,7 @@ namespace Sim.Core.People
                 x.Food += draw;
             }
             x.FoodMet = x.FoodNeed <= 0 || x.Food >= x.FoodNeed ? Fixed.One : Fixed.FromRatio(x.Food, x.FoodNeed);
+            HappinessRules.Update(sim, x); // the new budget shows at once, not at the next daily pass
         }
 
         /// <summary>A hand's household in a family house pays no rent: the house is part of his pay (§3.6).</summary>
