@@ -74,6 +74,7 @@ namespace Sim.Core.People
             Citizen c = NewAdult(sim, h.Name, ApplicantAge(sim, a), h.Trait1, h.Trait2, h.Skill);
             Hire(sim, c, h);
             HouseAlone(sim, c, h.HutId);
+            HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId)); // his first season's budget (§3.5)
         }
 
         private static void Hire(Simulation sim, Citizen c, Hand h)
@@ -178,6 +179,7 @@ namespace Sim.Core.People
                 Citizen c = NewAdult(sim, h.Name, Draw(sim, MigratedAgeKey, (ulong)h.Id, p.MigratedHandAgeMin, p.MigratedHandAgeMax), h.Trait1, h.Trait2, h.Skill);
                 Hire(sim, c, h);
                 HouseAlone(sim, c, h.HutId);
+                HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
             }
             return true;
         }

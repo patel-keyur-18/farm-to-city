@@ -73,6 +73,7 @@ namespace Sim.Core.Finance
             SettlementStats loans = sim.State.Credit == null ? null : CreditSystem.Settle(sim); // step 4: loan payments come first
             Farm.FounderSystem.SettleLiving(sim); // step 5
             if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
+            People.HouseholdRules.Close(sim); // spec 014 §3.12: households' health and the new season's budgets, on the wages just paid
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));
