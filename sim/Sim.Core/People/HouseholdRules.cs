@@ -58,11 +58,14 @@ namespace Sim.Core.People
         /// The season's income (§3.5): each hand's season wage (paid upfront, spec 006), less half sent home from a hut, plus the expected
         /// outside earnings of every other working-age adult.
         /// </summary>
-        public static long Income(Simulation sim, Household x)
+        public static long Income(Simulation sim, Household x) { return Income(sim, x, out _); }
+
+        private static long Income(Simulation sim, Household x, out long outside)
         {
             PopulationDefs p = sim.Config.Game.Population;
             bool hut = InHut(sim, x);
             long income = 0;
+            outside = 0;
             foreach (long id in x.Members)
             {
                 Citizen c = sim.State.Citizens.Citizen(id);
@@ -72,9 +75,9 @@ namespace Sim.Core.People
                     if (h == null || h.Contract != ContractState.Active) continue; // unpaid: nothing this season
                     income += hut ? h.Wage - Money.MulRate(h.Wage, p.RemitShare) : h.Wage;
                 }
-                else if (WorksOutside(sim, c)) income += OutsideSeasonPay(sim);
+                else if (WorksOutside(sim, c)) outside += OutsideSeasonPay(sim);
             }
-            return income;
+            return income + outside;
         }
 
         /// <summary>The food share for an income a person a season (§3.5): the Engel curve, piecewise linear, flat past its last point.</summary>
@@ -100,7 +103,8 @@ namespace Sim.Core.People
         public static void SetBudget(Simulation sim, Household x)
         {
             PopulationDefs p = sim.Config.Game.Population;
-            long income = Income(sim, x);
+            long income = Income(sim, x, out long outside);
+            x.OutsideExpected = outside;
             Fixed ae = AdultEquivalents(sim, x);
             long perPerson = ae == Fixed.Zero ? income : Money.MulRate(income, Fixed.One / ae);
             x.Income = income;
@@ -148,9 +152,63 @@ namespace Sim.Core.People
                     Fixed health = x.FoodMet < Fixed.One ? c.Health - p.HealthLossPerSeason * (Fixed.One - x.FoodMet) : c.Health + p.HealthGainPerSeason;
                     c.Health = health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
                 }
-                x.Savings += x.Saved;
+                // The season's saving, plus what outside work and labour paid beyond what the budget expected (or less).
+                x.Savings = System.Math.Max(0, x.Savings + x.Saved + x.Earned - x.OutsideExpected);
+                x.Earned = 0;
                 SetBudget(sim, x);
             }
+        }
+    
+        /// <summary>A day's outside pay for one adult (§3.6): the founder's day-labour rate × 8 h × index × the share of days with work.</summary>
+        public static long OutsideDayPay(Simulation sim)
+        {
+            return Money.MulRate(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.DayLabourWagePerHour * 8), sim.Config.Game.Population.OutsideDaysShare);
+        }
+
+        /// <summary>
+        /// The daily pass (§3.6): each adult without a town job is paid the expected share of a day's outside work, unless the founder
+        /// hired them as a labourer during the day (they were paid that wage instead).
+        /// </summary>
+        internal static void PayOutsideWork(Simulation sim)
+        {
+            long t = sim.State.Clock.SimTime, dayStart = t - ClockDef.SecondsPerDay, pay = OutsideDayPay(sim);
+            foreach (Household x in sim.State.Citizens.Households)
+                foreach (long id in x.Members)
+                {
+                    Citizen c = sim.State.Citizens.Citizen(id);
+                    if (!WorksOutside(sim, c) || c.LabourUntil > dayStart || c.LabouredUntil > dayStart) continue;
+                    x.Earned += pay;
+                }
+        }
+
+        /// <summary>
+        /// The town's food buying a game day in grams (§3.7): each household's basket by adult equivalents × food met (a household short
+        /// of money buys less), × real days a game day. Added to the local market's demand.
+        /// </summary>
+        public static long TownDemandPerDay(Simulation sim, int good)
+        {
+            CitizensState s = sim.State.Citizens;
+            if (s == null) return 0;
+            PopulationDefs p = sim.Config.Game.Population;
+            Fixed kg = Fixed.Zero;
+            foreach (BasketItem b in p.Basket) if (b.Good == good) kg = b.KgPerRealDay;
+            if (kg == Fixed.Zero) return 0;
+            Fixed eaters = Fixed.Zero;
+            foreach (Household x in s.Households) eaters += AdultEquivalents(sim, x) * x.FoodMet;
+            return (kg * p.RealDaysPerGameDay * eaters).MulRatio(1000, 1).RoundToLong();
+        }
+
+        /// <summary>The employment rate (§3.6): working-age adults with a job in town ÷ all working-age adults (outside work doesn't count).</summary>
+        public static Fixed EmploymentRate(Simulation sim)
+        {
+            int inTown = 0, adults = 0;
+            foreach (Household x in sim.State.Citizens.Households)
+            {
+                HappinessRules.Jobs(sim, x, out int i, out int a);
+                inTown += i;
+                adults += a;
+            }
+            return adults == 0 ? Fixed.Zero : Fixed.FromRatio(inTown, adults);
         }
     }
 }

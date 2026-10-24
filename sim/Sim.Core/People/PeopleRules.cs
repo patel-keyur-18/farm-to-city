@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Sim.Core.Definitions;
 using Sim.Core.Farm;
@@ -30,6 +31,7 @@ namespace Sim.Core.People
             if (s == null) return Fixed.Zero;
             int n = 0;
             foreach (Neighbour x in s.Roster) if (x.Hired) n++;
+            foreach (Citizen c in TownLabourers(sim)) if (c.Labouring(sim.State.Clock.SimTime)) n++;
             return sim.Config.Game.People.Pool.HoursPerDay.MulRatio(n, 1);
         }
 
@@ -92,12 +94,22 @@ namespace Sim.Core.People
             return (long)((BigInteger)wage * count * System.Math.Max(0, until - t) / Day);
         }
 
-        /// <summary>Labourers free today and not yet hired.</summary>
+        /// <summary>Labourers free today and not yet hired: the town's outside workers (spec 014 §3.6), then neighbours.</summary>
         public static int FreeNow(Simulation sim)
         {
             int n = 0;
+            foreach (Citizen c in TownLabourers(sim)) if (!c.Labouring(sim.State.Clock.SimTime)) n++;
             foreach (Neighbour x in sim.State.People.Roster) if (x.FreeToday && !x.Hired) n++;
             return n;
+        }
+
+        /// <summary>The town's adults who work outside (spec 014 §3.6), in citizen id order: hired as labourers before neighbours.</summary>
+        public static List<Citizen> TownLabourers(Simulation sim)
+        {
+            var list = new List<Citizen>();
+            if (sim.State.Citizens == null) return list;
+            foreach (Citizen c in sim.State.Citizens.Citizens) if (HouseholdRules.WorksOutside(sim, c)) list.Add(c);
+            return list;
         }
 
         /// <summary>The rest of the season's wage: wage × (seasonEnd − t) ÷ S, rounded down.</summary>

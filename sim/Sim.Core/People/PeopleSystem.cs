@@ -98,6 +98,12 @@ namespace Sim.Core.People
                 hired |= n.Hired;
                 done |= n.Hired && t >= n.Until;
             }
+            List<Citizen> town = PeopleRules.TownLabourers(sim);
+            foreach (Citizen c in town)
+            {
+                hired |= c.LabourUntil != 0;
+                done |= c.LabourUntil != 0 && t >= c.LabourUntil;
+            }
             if (!hired) return;
             foreach (Crop c in sim.State.Farm.Crops.ToArray())
             {
@@ -112,6 +118,13 @@ namespace Sim.Core.People
                 if (!n.Hired || t < n.Until) continue;
                 n.Tile = -1;
                 n.Until = 0;
+                count++;
+            }
+            foreach (Citizen c in town)
+            {
+                if (c.LabourUntil == 0 || t < c.LabourUntil) continue;
+                c.LabouredUntil = c.LabourUntil;
+                c.LabourUntil = 0;
                 count++;
             }
             FarmSystem.Refresh(sim);

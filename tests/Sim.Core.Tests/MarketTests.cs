@@ -28,6 +28,36 @@ namespace Sim.Core.Tests
         [Test]
         public void ChunkingInvariance() { FarmPlayTests.AssertChunkingInvariant(11); }
 
+        // Spec 014 AC-8 (§3.7): the town's households add their basket to the local market's demand, scaled by food met; a town
+        // of about 65 adult equivalents buys about 296 kg of wheat a game day, and more of the stall's lot sells locally.
+        [Test]
+        public void TownDemand()
+        {
+            Simulation Town(int adults)
+            {
+                Simulation s = TestSim.NewFarm(game: TestSim.Quiet(TestSim.NoTruck));
+                var ages = new int[adults];
+                for (int i = 0; i < adults; i++) ages[i] = 30;
+                if (adults > 0) PeopleKit.AddFamily(s, 0, ages).FoodMet = Fixed.One;
+                PutOnOffer(s, Good(s, "wheat"), 100_000);
+                return s;
+            }
+            Simulation none = Town(0), town = Town(65);
+            int wheat = Good(town, "wheat");
+            Assert.That(People.HouseholdRules.TownDemandPerDay(none, wheat), Is.EqualTo(0));
+            Assert.That(People.HouseholdRules.TownDemandPerDay(town, wheat), Is.EqualTo(296_400), "0.2 kg × 22.8 × 65");
+            Assert.That(People.HouseholdRules.TownDemandPerDay(town, Good(town, "mango")), Is.EqualTo(0), "not in the basket");
+            town.State.Citizens.Households[0].FoodMet = Fixed.Parse("0.5");
+            Assert.That(People.HouseholdRules.TownDemandPerDay(town, wheat), Is.EqualTo(148_200), "a household short of money buys less");
+            town.State.Citizens.Households[0].FoodMet = Fixed.One;
+            none.AdvanceTo(H);
+            town.AdvanceTo(H);
+            MarketSales a = none.DrainEvents().OfType<MarketSales>().Single(), b = town.DrainEvents().OfType<MarketSales>().Single();
+            Assert.That(b.LocalQuantity, Is.GreaterThan(a.LocalQuantity), "the town's buyers take more of the stall's lot");
+            Assert.That(town.State.Market.Price[wheat], Is.GreaterThanOrEqualTo(none.State.Market.Price[wheat]));
+            Assert.That(town.State.Market.Price[wheat], Is.LessThanOrEqualTo(MarketRules.Ceiling(town, wheat)), "never above the import ceiling");
+        }
+
         // Spec 004 AC-5: neutral when nothing is offered, across season changes and index steps.
         [Test]
         public void Neutral_WhenNothingOffered()

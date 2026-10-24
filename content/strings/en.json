@@ -1034,6 +1034,7 @@
   "why.marketPrice.floor": "It never stays far below what the trader pays",
   "why.marketPrice.ceiling": "Or far above what bringing it in costs",
   "why.marketPrice.offered": "What's on offer, yours included, pushes the price down.",
+  "why.marketPrice.town": "Your town buys about this much a day",
   "why.marketPrice.demand": "With nothing on offer, the price sits at the valley's.",
   "why.marketPrice.lesson": "Offer a little at a time: a glut sinks the price to the trader's.",
   "why.traderRoom.title": "The trader can still take",

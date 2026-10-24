@@ -89,6 +89,14 @@ namespace Sim.Core.People
         /// <summary>The home village they came from or went to (index into the villages), or −1.</summary>
         public int Village { get; internal set; } = -1;
 
+        /// <summary>Hired as a day labourer by the founder until this time (§3.6), or 0.</summary>
+        public long LabourUntil { get; internal set; }
+
+        /// <summary>When the last labour hire ended (0 never): that day's outside work isn't paid as well.</summary>
+        public long LabouredUntil { get; internal set; }
+
+        public bool Labouring(long t) { return LabourUntil > t; }
+
         public CitizenGone Gone { get; internal set; }
         public long GoneAt { get; internal set; }
 
@@ -121,6 +129,8 @@ namespace Sim.Core.People
             h.WriteLong(Mother);
             h.WriteLong(Spouse);
             h.WriteRef(ContentTable.Village, Village);
+            h.WriteLong(LabourUntil);
+            h.WriteLong(LabouredUntil);
             h.WriteInt((int)Gone);
             h.WriteLong(GoneAt);
             h.WriteInt(Story.Count);
@@ -139,7 +149,7 @@ namespace Sim.Core.People
                 Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Female = r.ReadBool(), BornSeason = r.ReadLong(), HouseholdId = r.ReadLong(),
                 Education = r.ReadInt(), Skill = r.ReadFixed(), Trait1 = r.ReadRef(ContentTable.Trait), Trait2 = r.ReadRef(ContentTable.Trait),
                 Health = r.ReadFixed(), Job = (CitizenJob)r.ReadInt(), HandId = r.ReadLong(), Father = r.ReadLong(), Mother = r.ReadLong(),
-                Spouse = r.ReadLong(), Village = r.ReadRef(ContentTable.Village), Gone = (CitizenGone)r.ReadInt(), GoneAt = r.ReadLong(),
+                Spouse = r.ReadLong(), Village = r.ReadRef(ContentTable.Village), LabourUntil = r.ReadLong(), LabouredUntil = r.ReadLong(), Gone = (CitizenGone)r.ReadInt(), GoneAt = r.ReadLong(),
             };
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) c.Story.Add(new StoryLine((StoryKind)r.ReadInt(), r.ReadLong(), r.ReadLong()));
@@ -171,6 +181,10 @@ namespace Sim.Core.People
         public long Schooling { get; internal set; }
         public long Leisure { get; internal set; }
         public long Saved { get; internal set; }
+
+        /// <summary>The outside pay the budget expects this season, and what outside work and day labour have paid so far (§3.6).</summary>
+        public long OutsideExpected { get; internal set; }
+        public long Earned { get; internal set; }
 
         /// <summary>Seasons of rent not paid (§3.4).</summary>
         public int RentBehind { get; internal set; }
@@ -212,6 +226,8 @@ namespace Sim.Core.People
             h.WriteLong(Schooling);
             h.WriteLong(Leisure);
             h.WriteLong(Saved);
+            h.WriteLong(OutsideExpected);
+            h.WriteLong(Earned);
             h.WriteInt(RentBehind);
             h.WriteFixed(Survival);
             h.WriteFixed(Security);
@@ -239,6 +255,8 @@ namespace Sim.Core.People
             x.Schooling = r.ReadLong();
             x.Leisure = r.ReadLong();
             x.Saved = r.ReadLong();
+            x.OutsideExpected = r.ReadLong();
+            x.Earned = r.ReadLong();
             x.RentBehind = r.ReadInt();
             x.Survival = r.ReadFixed();
             x.Security = r.ReadFixed();

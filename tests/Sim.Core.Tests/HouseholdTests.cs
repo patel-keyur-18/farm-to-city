@@ -89,5 +89,54 @@ namespace Sim.Core.Tests
             Assert.That(c.Health, Is.EqualTo(fell + Fixed.Parse("0.10") > Fixed.One ? Fixed.One : fell + Fixed.Parse("0.10")), "fed again, health recovers");
         }
 
+    
+        // AC-12: an adult without a town job earns the day-labour rate × 8 × 0.5 each daily pass; children and elders earn nothing;
+        // hired labourers are the town's outside workers first, their household paid the labourer's wage in place of that day's
+        // outside work; what was earned beyond the budget's expectation is saved at the close.
+        [Test]
+        public void OutsideWork_LabourersFirst()
+        {
+            Simulation sim = Start();
+            Hand h = HireHand(sim);
+            Household x = AddFamily(sim, h.HutId, 30);
+            Household y = AddFamily(sim, h.HutId, 12, 66); // a child and an elder
+            Citizen adult = sim.State.Citizens.Citizen(x.Members[0]);
+            Assert.That(HouseholdRules.OutsideDayPay(sim), Is.EqualTo(4_500_00), "1,125 an hour × 8 × 0.5");
+            Assert.That(HouseholdRules.OutsideSeasonPay(sim), Is.EqualTo(18_000_00), "4 days");
+            Assert.That(HouseholdRules.EmploymentRate(sim), Is.EqualTo(Fixed.FromRatio(1, 2)), "the hand of 2 working-age adults");
+
+            long t0 = (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason;
+            sim.AdvanceTo(t0);
+            Assert.That((x.Income, x.OutsideExpected, y.Income), Is.EqualTo((18_000_00L, 18_000_00L, 0L)), "the adult only");
+            long savings = x.Savings, saved = x.Saved;
+            long day1 = t0 + TestSim.Day;
+            sim.AdvanceTo(day1);
+            Assert.That((x.Earned, y.Earned), Is.EqualTo((4_500_00L, 0L)), "one adult's day; children and elders don't work");
+
+            // Sow, then hire one labourer: the town's adult comes, not a neighbour; the founder pays as always.
+            Assert.That(PeopleRules.FreeNow(sim), Is.EqualTo(P(sim).Roster.Count(n => n.FreeToday && !n.Hired) + 1), "the town's adult is free too");
+            Ok(sim, new Commands.Sow(day1, HomeTile, "radish", Farm.SeedSource.Certified, "none"));
+            long until = PeopleRules.LabourUntil(sim);
+            long cash = sim.State.Ledger.Cash, cost = PeopleRules.LabourCost(sim, 1, until);
+            Ok(sim, new Commands.HireLabourers(day1, 1));
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - cost));
+            Assert.That(adult.LabourUntil, Is.EqualTo(until));
+            Assert.That(P(sim).Roster.Any(n => n.Hired), Is.False, "no neighbour needed");
+            Assert.That(x.Earned, Is.EqualTo(4_500_00 + cost), "the labourer's wage to his household");
+            Assert.That(PeopleRules.DayLabourHours(sim), Is.EqualTo(Fixed.FromInt(8)));
+
+            // He goes home when the crops are in; that day's outside work isn't paid as well; the next day it is.
+            sim.AdvanceTo(until);
+            Assert.That(adult.LabourUntil, Is.EqualTo(0));
+            sim.AdvanceTo(day1 + TestSim.Day);
+            Assert.That(x.Earned, Is.EqualTo(4_500_00 + cost));
+            sim.AdvanceTo(day1 + 2 * TestSim.Day);
+            Assert.That(x.Earned, Is.EqualTo(9_000_00 + cost));
+
+            // At the close (after day 4's pay): 3 days outside + the wage, against the 4 days expected; the difference is saved.
+            sim.AdvanceTo(t0 + sim.Clock.SecondsPerSeason);
+            Assert.That(x.Earned, Is.EqualTo(0), "a new season");
+            Assert.That(x.Savings, Is.EqualTo(savings + saved + 13_500_00 + cost - 18_000_00));
+        }
     }
 }
