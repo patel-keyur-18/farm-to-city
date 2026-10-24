@@ -302,6 +302,7 @@ namespace Sim.Core.People
             };
             h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, prepay, t, (t / S + 1) * S, "hand:" + h.Id).Id;
             s.Hands.Add(h);
+            CitizenRules.HandHired(sim, h, a);
             s.Applicants.Remove(a);
             if (a.FromRosterId != 0) ReplaceNeighbour(sim, a.FromRosterId);
             s.Post = null; // a post lasts until a hand is hired
@@ -395,6 +396,7 @@ namespace Sim.Core.People
             PeopleState s = sim.State.People;
             FarmSystem.Accrue(sim);
             s.Hands.Remove(h);
+            CitizenRules.HandLeft(sim, h);
             s.Orders.RemoveAll(o => o.HandId == h.Id);
             FarmSystem.Refresh(sim);
             ScheduleApplicant(sim);

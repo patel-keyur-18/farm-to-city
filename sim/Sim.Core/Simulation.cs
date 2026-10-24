@@ -86,6 +86,7 @@ namespace Sim.Core
                 FounderRules.PayFirstSeason(sim);
                 if (config.Game.People != null) PeopleSystem.Initialise(sim);
                 if (config.Game.Livestock != null) state.Livestock = new Livestock.LivestockState();
+                if (config.Game.Population != null && config.Game.People != null) state.Citizens = new People.CitizensState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

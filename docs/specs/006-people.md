@@ -1,6 +1,6 @@
 # 006. People: day labourers, the resident hand and standing orders
 
-- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.8 (the hand fills supermarket orders first, sells held produce at 6:00, and his crop choice counts the order price); amended by spec 012 (ADR 0056, 0060; Phase 2): §3.8 (the animals order; a fodder order rotates berseem and sorghum); amended by ADR 0066 (2026-10-24): §3.2 (fodder stands don't keep labourers hired)
+- Status: Approved (2026-10-18), with the review answers in §10; amended by the Sprint 5 review (2026-10-19, ADR 0039); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.8 (the hand fills supermarket orders first, sells held produce at 6:00, and his crop choice counts the order price); amended by spec 012 (ADR 0056, 0060; Phase 2): §3.8 (the animals order; a fodder order rotates berseem and sorghum); amended by ADR 0066 (2026-10-24): §3.2 (fodder stands don't keep labourers hired); amended by spec 014 (US-105): an applicant has an age, a seeded draw of 20–45 (stream Citizens, by applicant id), and the gender of the name drawn; a hired hand becomes a citizen
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring starts in Homestead, Wages); Land, farming and livestock (Standing orders); Player journey and eras (Homestead, the Hamlet gate); Data model

@@ -255,6 +255,31 @@ namespace Sim.Core.Tests
             Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "livestock.json" ? j.Replace("\"shedTile\": 104", "\"shedTile\": 84") : j));
             Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "livestock.json" ? j.Replace("\"green\": 0.4,", "\"green\": 0.5,") : j));
         }
+
+        // Spec 014 §4: population.json loads with the family house; bad values name their field; without the house, no population.
+        [Test]
+        public void Population()
+        {
+            GameDefs g = TestContent.Game();
+            PopulationDefs d = g.Population;
+            Assert.That(d, Is.Not.Null);
+            Assert.That(g.Buildings[d.House].Id, Is.EqualTo("family_house"));
+            Assert.That(g.Buildings[d.House].Value, Is.EqualTo(60_000_00));
+            Assert.That(g.Buildings[d.House].BuildHours, Is.EqualTo(48));
+            Assert.That((d.HouseCapacity, d.HousesPerAcre, d.RentPerSeason, d.HouseUnlockEra), Is.EqualTo((6, 4, 6_000_00L, "hamlet")));
+            Assert.That(d.EngelCurve.Select(p => p.Income), Is.EqualTo(new[] { 0L, 8_000_00, 20_000_00, 60_000_00 }));
+            Assert.That(d.Basket.Select(b => g.Market.Goods[b.Good].Id), Is.EqualTo(new[] { "radish", "wheat", "rice", "potato", "lentils", "spinach" }), "in good order");
+            Assert.That((d.ApplicantAgeMin, d.ApplicantAgeMax, d.MigratedHandAgeMin, d.MigratedHandAgeMax), Is.EqualTo((20, 45, 22, 45)));
+            Assert.That(d.Villages, Has.Count.GreaterThan(0));
+
+            ContentException Bad(string from, string to) { return Assert.Throws<ContentException>(() => TestContent.Game((f, j) => f == "population.json" ? j.Replace(from, to) : j)); }
+            Assert.That(Bad("\"survivalWeight\": 0.40", "\"survivalWeight\": 0.50").FieldPath, Is.EqualTo("population.needs"));
+            Assert.That(Bad("[20000, 0.40]", "[20000, 0.60]").FieldPath, Is.EqualTo("population.budget.engelCurve[2]"), "Engel: the share never rises");
+            Assert.That(Bad("\"wheat\": 0.20", "\"straw\": 0.20").FieldPath, Is.EqualTo("population.basket.kgPerRealDay.straw"), "food only");
+            Assert.That(Bad("\"unlockEra\": \"hamlet\"", "\"unlockEra\": \"city\"").FieldPath, Is.EqualTo("population.house.unlockEra"));
+            Assert.That(Bad("\"capacity\": 6", "\"capacity\": 4").FieldPath, Is.EqualTo("population.house.capacity"), "the largest family fits");
+            GameDefs none = TestContent.Game((f, j) => f == "buildings.json" ? System.Text.RegularExpressions.Regex.Replace(j, ",\\s*\\{ \"id\": \"family_house\"[^}]*\\}", "") : j);
+            Assert.That(none.Population, Is.Null, "the golden replays' frozen content has no family house");
+        }
     }
 }
-

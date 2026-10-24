@@ -103,6 +103,23 @@ namespace Sim.Core.Tests
                     }
                 }
 
+                if (r.Header.Schema < 9)
+                {
+                    // Spec 014 §3.11 (AC-9): each hand a citizen, 22–45, in a household of one in his hut; nobody else.
+                    People.CitizensState c = r.State.Citizens;
+                    Simulation at = Simulation.FromState(config, r.State.Clone());
+                    Assert.That(c.Population, Is.EqualTo(r.State.People.Hands.Count), name);
+                    foreach (People.Hand h in r.State.People.Hands)
+                    {
+                        People.Citizen ci = c.OfHand(h.Id);
+                        Assert.That(ci.Female, Is.EqualTo(config.Game.People.Names[h.Name].Female), name);
+                        Assert.That(People.CitizenRules.Age(at, ci), Is.InRange(22, 45), name);
+                        Assert.That(c.Household(ci.HouseholdId).Members, Is.EqualTo(new[] { ci.Id }), name);
+                        Assert.That(c.Household(ci.HouseholdId).HomeId, Is.EqualTo(h.HutId), name);
+                    }
+                    Assert.That(r.State.CommandLog.Base, Is.Not.Null, name + ": the migrated town is its own replay base");
+                }
+
                 if (r.Header.Schema < 7)
                 {
                     // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.
@@ -120,6 +137,27 @@ namespace Sim.Core.Tests
                 Assert.That(again.Error, Is.EqualTo(SaveError.None), name + " after a day: " + again.Detail);
                 Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + ": a day later it round-trips");
             }
+        }
+
+        // Spec 014 AC-9: the schema-8 fixture's hands become citizens; the town advances a season (ageing, closes) and round-trips.
+        [Test]
+        public void Schema8_Citizens()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(8)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Assert.That(r.State.People.Hands, Is.Not.Empty, "the fixture has a hand");
+            Assert.That(r.State.Citizens.Population, Is.EqualTo(r.State.People.Hands.Count));
+            Simulation sim = Simulation.FromState(config, r.State);
+            People.Citizen c = sim.State.Citizens.Citizens[0];
+            int age = People.CitizenRules.Age(sim, c);
+            sim.AdvanceTo(r.State.Clock.SimTime + sim.Clock.SecondsPerSeason);
+            if (sim.State.Citizens.Citizen(c.Id) != null) Assert.That(People.CitizenRules.Age(sim, c), Is.EqualTo(age + 1), "a year a season");
+            byte[] bytes = SaveCodec.Write(sim.State, config, TestSim.Wall0);
+            LoadResult again = SaveCodec.Read(bytes, config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+            Assert.That(SaveCodec.Replay(again, config).State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "the history replays");
         }
 
         // ADR 0064: a schema-7 town that bought e1 and sowed tile 104 gets the cattle acre: the crop is paid for at the trader's
@@ -143,6 +181,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new BuyParcel(0, "e1")).Accepted, Is.True);
             Assert.That(sim.Execute(new Sow(0, 104, "radish", Farm.SeedSource.Certified, "none")).Accepted, Is.True);
             long cash = sim.State.Ledger.Cash;
+            sim.State.Citizens = null; // schema 7 had no citizens (spec 014)
 
             LoadResult r = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 7), config, MinSchema);
             Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);

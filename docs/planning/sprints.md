@@ -573,7 +573,7 @@
 
 ## Sprint 13 · 8–21 Feb 2027 · Phase 2 (citizens; specs 015 and 016 written; 2 weeks, as S12)
 
-- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 next
+- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done (owner to review)
 - **Branch:** `sprint/13-citizens`
 - **Goal:** Spec 014 built (ADR 0063): citizens and the life clock, the family house, homes and people art, household budgets, needs and happiness, work and food, your people on screen; save schema 9 with its migration and fixture. Specs 015 (full hiring and HR) and 016 (businesses and production) written and approved; their code comes later.
 - **Points:** 39 planned + the owner's two requests
@@ -584,7 +584,7 @@
 | --- | --- | --- | --- | --- | --- |
 | US-214 | Fodder stands don't keep labourers hired (owner, 2026-10-24) | [F06.1](features/F06.1-day-labourers.md) | 1 | Must | Done |
 | US-215 | The People sheet like the Store and Orders sheets (owner, 2026-10-24) | [F08.2](features/F08.2-hud-and-panels.md) | 3 | Must | Done |
-| US-105 | Citizens: the model, Phase 1 hands as citizens, save schema 9 | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
+| US-105 | Citizens: the model, Phase 1 hands as citizens, save schema 9 | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | Done (owner to review) |
 | US-106 | The life clock: ageing and retirement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 3 | Must | To do |
 | US-208 | The family house: build, rent, unlock and placement | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |
 | US-212 | Homes and people art in Blender | [F11.1](features/F11.1-citizens-and-life-clock.md) | 5 | Must | To do |

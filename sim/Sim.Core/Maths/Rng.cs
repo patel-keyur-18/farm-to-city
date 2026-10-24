@@ -19,6 +19,10 @@ namespace Sim.Core.Maths
         DailyPrice = 9,
         Orders = 10,
         Livestock = 11,
+        Citizens = 12,
+        Births = 13,
+        Deaths = 14,
+        Migration = 15,
     }
 
     /// <summary>

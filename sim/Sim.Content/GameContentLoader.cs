@@ -36,7 +36,10 @@ namespace Sim.Content
             // Cattle come with a cattle shed in the buildings (spec 012), after the people and eras they need (the Hamlet, the hand's order).
             int shed = buildings.FindIndex(b => b.Id == LivestockDefs.ShedId);
             LivestockDefs livestock = shed < 0 || people == null ? null : LoadLivestock(read("livestock.json"), shed, buildings, map, market, onboarding);
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock);
+            // Citizens come with a family house in the buildings (spec 014), after the people they grow from.
+            int house = buildings.FindIndex(b => b.Id == PopulationDefs.HouseId);
+            PopulationDefs population = house < 0 || people == null ? null : LoadPopulation(read("population.json"), house, market, onboarding);
+            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)
