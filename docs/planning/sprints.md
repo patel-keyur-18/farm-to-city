@@ -22,11 +22,11 @@
 | S11 | 11–24 Jan 2027 (2 weeks, ADR 0057) | 2 | ADRs 0052–0057; specs 010 and 011 approved; the village map, the trader's truck, daily prices and supermarket orders built. | 35 | 010, 011 | Yes: the village map, the truck and orders |
 | S12 | 25 Jan – 7 Feb 2027 (2 weeks, as S11) | 2 | Spec 012 approved (ADR 0060) and built: buffalo and cows, the shed, fodder, straw, milk to the co-op; the village redrawn with the dairy co-op and a living valley (ADR 0061, 0062). Spec 014 written and approved. | 52 (re-pointed with spec 012 and ADRs 0061–0062, 0064) | 012, 014 | Yes: cattle |
 | S13 | 8–21 Feb 2027 (2 weeks, as S12) | 2 | Citizens and the life clock, the family house, homes and people art; households, needs, happiness, work and food, your people on screen (F11.1, F11.2; spec 014, ADR 0063). | 39 | 016, 015 | Yes |
-| S14 | 22–28 Feb 2027 | 2 | Population flows and family trees, population balance (F11.3); founding a business and its books (F12.1). | 32 | 017, 013 | Yes |
-| S15 | 1–7 Mar 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
-| S16 | 8–21 Mar 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3). | 26 | — | Yes |
-| S17 | 22–28 Mar 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
-| S18 | 29 Mar – 4 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 12 | — | Yes: Phase 2 playtest build |
+| S14 | 22 Feb – 7 Mar 2027 (2 weeks, as S13) | 2 | Population flows and family trees, population balance (F11.3); founding a business (the flour mill) and its books (F12.1); save schema 10. | 33 | 017, 013 | Yes |
+| S15 | 8–14 Mar 2027 | 2 | Production chains: flour mill, bakery, dairy (F12.2); full hiring and HR (F11.4). | 21 | 018, 019 | Yes |
+| S16 | 15–28 Mar 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3). | 26 | — | Yes |
+| S17 | 29 Mar – 4 Apr 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
+| S18 | 5–11 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 12 | — | Yes: Phase 2 playtest build |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -604,3 +604,35 @@
 - [x] Test checklist `docs/test-checklists/s13-citizens.md`; Development build made by the owner; device check passed on the iPhone 13 (2026-10-25: frame time main p95 5.32 ms, GPU p95 6.54 ms, 60 fps, 0.08% over 25 ms)
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request opened with labels and the milestone `Phase 2 · Hamlet & Village` (PR #18); the owner merges it to `main`
+
+## Sprint 14 · 22 Feb – 7 Mar 2027 · Phase 2 (population flows, the flour mill; specs 017 and 013 written; 2 weeks, as S13)
+
+- **Status:** In progress (plan and 2 weeks approved by the owner, 2026-10-25)
+- **Branch:** `sprint/14-flows-and-mill`
+- **Goal:** Spec 014 finished (F11.3): families move in and out, a hand brings his family, births, marriages and gentle deaths, the bounded family tree, every bot reaches the Village's households. Spec 016's first part built (F12.1): found the flour mill on an owned acre, its own books, the overdraft and closing. Save schema 10 with its migration and fixture. Specs 017 (shops, customer choice and rivals) and 013 (irrigation, equipment, orchards and granary) written and approved; their code comes in Sprint 16.
+- **Points:** 33 (F11.3 16, F12.1 16, US-217 1)
+- **Specs for the owner to review:** 017, 013
+- **Device build:** Yes: Development build
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-217 | The citizen card's *Lives in* says "alone" for someone living alone (owner, 2026-10-25) | [F11.2](features/F11.2-households-needs-and-happiness.md) | 1 | Must | To do |
+| US-109 | Births, marriages and deaths | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 5 | Must | To do |
+| US-110 | Migration: families in and out, a hand's family, every path | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 5 | Must | To do |
+| US-111 | The family tree | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 3 | Should | To do |
+| US-211 | Balance: population bots and gates | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 3 | Must | To do |
+| US-115 | Found a business: the flour mill | [F12.1](features/F12.1-business-founding-and-books.md) | 8 | Must | To do |
+| US-116 | Business books | [F12.1](features/F12.1-business-founding-and-books.md) | 5 | Must | To do |
+| US-117 | Overdraft and failure | [F12.1](features/F12.1-business-founding-and-books.md) | 3 | Must | To do |
+
+**Order of work:** US-217 → US-109 → US-110 → US-111 → US-211 (the sim, each reviewed by the owner; the family card and away lines Editor-tested) → US-115 sim (schema 10) → US-116 → US-117 → the mill's art and layout (previewed to the owner first) → US-115 screens (Editor tour) → specs 017 and 013 written alongside, their gaps closed with the owner one per message → the device build.
+
+**Sprint end checklist**
+
+- [ ] Specs 017 and 013 written, every gap closed with the owner, approved (ADRs); GDD, `CLAUDE.md`, F12.3, F12.4, F13.2 and F13.3 updated with tasks
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [ ] Save schema 10: migration, `saves/schema10` fixture, every older schema loads
+- [ ] The mill's layout previewed to and approved by the owner
+- [ ] Test checklist `docs/test-checklists/s14-flows-mill.md`; Development build; the owner's device check
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
