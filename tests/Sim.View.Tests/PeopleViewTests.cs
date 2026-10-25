@@ -278,6 +278,86 @@ namespace Sim.View.Tests
             Assert.That(rows.Single(r => r.Label == "Steady work").NoteTone, Is.EqualTo(Tone.Warn));
         }
 
+        // Spec 014 §7, §3.13 (US-210): the Town tab, the household and citizen cards, placing a house, the HUD and the away lines.
+        [Test]
+        public void TownScreens()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            ulong hash = sim.State.ComputeHash();
+
+            SheetVm workers = PeopleSheet.Build(ctx), town = TownSheet.Build(ctx);
+            Assert.That(workers.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Workers", "Town" }));
+            Assert.That(workers.Tab, Is.EqualTo("tab:workers"));
+            Assert.That(town.Tab, Is.EqualTo("tab:town"));
+            Assert.That(town.Subtitle, Is.EqualTo("6 people in 2 households"), "the hand alone in his hut counts as a household (§3.13)");
+            Assert.That(town.Lines.Single(l => l.Label == "Work in town").Value, Is.EqualTo("1 of 3 adults"), "the hand; Manoj and Usha work outside");
+            Household family = sim.State.Citizens.Households.Single(x => x.Members.Count == 5);
+            LineVm row = town.Lines.Single(l => l.Label == "Manoj's family (5)");
+            Assert.That(row.Value, Does.StartWith("Family house 1 · income "));
+            Assert.That(row.Opens.Value.Kind, Is.EqualTo("Household"));
+            List<string> bySize = TownSheet.Build(ctx, TownSheet.BySize).Lines.Where(l => l.Opens.HasValue && l.Opens.Value.Kind == "Household").Select(l => l.Label).ToList();
+            Assert.That(bySize.First(), Is.EqualTo("Manoj's family (5)"), "the biggest first");
+            Assert.That(town.Lines.Single(l => l.Buttons != null).Buttons.Single().Label, Is.EqualTo("Build a family house"));
+
+            // The household card: the small tree, members, the budget pie, rent, needs.
+            SheetVm card = HouseholdSheet.Build(ctx, family.Id);
+            FamilyTreeVm tree = card.Lines.First(l => l.Tree != null).Tree;
+            Assert.That(tree.Generations.Select(g => g.Select(p => p.Text)), Is.EqualTo(new[]
+                { new[] { "Kamala (66)" }, new[] { "Manoj (38)", "Usha (35)" }, new[] { "Asha (9)", "Ravi (12)" }.Reverse().ToArray() }));
+            Assert.That(tree.Generations[1][1].SpouseOfPrevious, Is.True);
+            LineVm budget = card.Lines.Single(l => l.Label == "Budget");
+            Assert.That(budget.Pie.First().Label, Is.EqualTo("Food"));
+            Assert.That(budget.Pie.Sum(p => p.Percent), Is.InRange(97, 103), "rounded shares");
+            Assert.That(card.Lines.First(l => l.Label == "Rent").Value, Does.Match(@"^6,0\d0 coins a season · paid$"), "6,000 at today's prices");
+            Assert.That(card.Lines.Single(l => l.Label == "Happiness").WhyKey, Is.EqualTo("household.happiness"));
+            AssertWords(card);
+
+            // The citizen card: close family with links, the departed folded.
+            Citizen manoj = sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == "Manoj");
+            SheetVm me = CitizenSheet.Build(ctx, manoj.Id);
+            Assert.That(me.Lines.Single(l => l.Label == "Age").Value, Is.EqualTo("38 · adult"));
+            Assert.That(me.Lines.Where(l => l.Opens.HasValue && l.Opens.Value.Kind == "Citizen").Select(l => l.Value),
+                Is.EqualTo(new[] { "mother, 66", "wife, 35", "son, 12", "daughter, 9" }));
+            Assert.That(me.Lines.Single(l => l.Label == "1 who has passed away or moved").Opens.Value.Kind, Is.EqualTo("Departed"));
+            Assert.That(CitizenSheet.Departed(ctx, manoj.Id).Lines.Single().Value, Is.EqualTo("Passed away at 74"));
+            Assert.That(WhyView.Build(ctx, "citizen.age", manoj.Id).Rows[0].Label, Does.StartWith("People age a year each season"));
+            AssertWords(me);
+
+            // Placing a house: lit where it may go, refusals in words; an empty field offers it, the house acre is a homestead.
+            int acre = sim.State.Land.Buildings.Single(b => HouseRules.IsHouse(sim, b)).TileId;
+            List<HutPlaceVm> places = HousePlacement.Places(ctx);
+            Assert.That(places.Single(p => p.TileId == acre).Allowed, Is.True, "room for a second house");
+            Assert.That(places.Single(p => p.TileId == 86).Reason, Is.EqualTo("Something is growing here"));
+            Assert.That(FieldSheets.ForTile(ctx, Situations.HouseTile(sim)).Actions.Select(a => a.Label), Does.Contain("Build a family house"));
+            SheetVm homestead = FieldSheets.ForTile(ctx, acre);
+            Assert.That(homestead.Title, Is.EqualTo("Family houses"));
+            Assert.That(homestead.Actions.Select(a => a.Label), Does.Not.Contain("Sow"));
+            Assert.That(homestead.Lines.First().Value, Is.EqualTo("Manoj's family"));
+
+            HudVm hud = HudView.Build(ctx);
+            Assert.That(hud.HasTown && hud.Population == 6, Is.True);
+            Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "views never change the state");
+
+            // A second house fills the acre: "This acre has 2 houses".
+            Ok(sim, new BuildFamilyHouse(sim.State.Clock.SimTime, acre));
+            Assert.That(HousePlacement.ReasonFor(ViewKit2.Context(sim), acre), Is.EqualTo("This acre has 2 houses"));
+
+            // Away lines: the season's rent, a hand gone home, a family that left, gently and in words.
+            int raju = sim.Config.Game.People.Names.ToList().FindIndex(d => d.Id == "raju");
+            var events = new List<SimEvent>
+            {
+                new RentPaid(1, family.Id, 6_000_00), new CitizenRetired(2, 1, 1, raju, 60, true),
+                new HouseholdLeft(3, family.Id, 5, LeaveReason.LandTaken, manoj.Name),
+            };
+            List<LineVm> away = TownAway.Rows(ctx, events);
+            Assert.That(away.Select(l => l.Label + ": " + l.Value), Is.EqualTo(new[]
+                { "Your people: Raju (60) retired and went home", "Your people: Manoj's family left: the bank took the land" }));
+            Assert.That(TownAway.Rent(events, out int payers), Is.EqualTo(6_000_00));
+            Assert.That(payers, Is.EqualTo(1), "a money row on the card: \"Rent from 1 family\"");
+            Assert.That(card.Lines.Single(l => l.Label == "Budget").Value, Does.EndWith(budget.Pie.First().Percent + "%"), "the pie's food share as the row says");
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {

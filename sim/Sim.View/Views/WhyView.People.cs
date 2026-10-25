@@ -27,6 +27,9 @@ namespace Sim.View.Views
 
         /// <summary>The dairy: milk paid by the co-op, calves sold, fodder bought or sold standing, vet visits (spec 012).</summary>
         Dairy = 13,
+
+        /// <summary>Your people (spec 014 §7): a hand retired, a house built, rent paid or missed, a family left.</summary>
+        Town = 14,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

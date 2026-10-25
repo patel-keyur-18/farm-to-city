@@ -146,9 +146,10 @@ namespace Sim.View.Views
             var vm = new SheetVm
             {
                 Icon = "people", Title = s.Get("people.title"),
-                Subtitle = s.Get("people.subtitle", "population", ctx.Fmt.Integer(p.Population), "huts", ctx.Fmt.Integer(PeopleRules.HutCount(sim)),
+                Subtitle = s.Get("people.subtitle", "population", ctx.Fmt.Integer(sim.State.Citizens?.Population ?? p.Population), "huts", ctx.Fmt.Integer(PeopleRules.HutCount(sim)),
                     "max", ctx.Fmt.Integer(defs.Hand.MaxHandHuts)),
             };
+            TownSheet.Tabs(ctx, vm, "tab:workers");
             vm.Lines.Add(new LineVm(s.Get("people.care"), ctx.Rating(sim.State.Farm.CareRatio), "care"));
 
             // The hub's picture buttons, each saying what it opens.
@@ -339,6 +340,13 @@ namespace Sim.View.Views
             };
             vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.skill"), PeopleWords.Band(ctx, skill), "hand.skill", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill) });
             vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h)), "hand.hours", h.Id));
+            // Where he lives and with whom (spec 014 §7): his hut alone, sending half his wage home, or his family's house.
+            Citizen me = sim.State.Citizens?.OfHand(h.Id);
+            Household home = me == null ? null : sim.State.Citizens.Household(me.HouseholdId);
+            if (home != null)
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.home"), TownWords.Home(ctx, home.HomeId) + " · " + (home.Members.Count == 1
+                    ? ctx.Strings.Get("hand.homeAlone") : TownWords.Household(ctx, home)), "hand.home", h.Id)
+                    { Opens = new SheetRequest(home.Members.Count == 1 ? "Citizen" : "Household", home.Members.Count == 1 ? me.Id : home.Id) });
             foreach (int t in new[] { h.Trait1, h.Trait2 })
                 vm.Lines.Add(new LineVm(PeopleWords.Trait(ctx, t), ctx.Strings.Get(sim.Config.Game.People.Traits[t].NameKey + ".why")));
             if (h.Contract == ContractState.Active)

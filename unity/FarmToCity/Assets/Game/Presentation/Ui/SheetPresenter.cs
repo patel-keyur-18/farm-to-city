@@ -117,6 +117,8 @@ namespace Game.Presentation.Ui
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
                 case "hand_hut": case "hand_hut_building": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
+                case "family_house": case "family_house_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
+                case "population": case "happiness": return SpriteBank.Rendered("icon_" + icon);
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
@@ -143,6 +145,7 @@ namespace Game.Presentation.Ui
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
                     if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");
                     if (icon.StartsWith("animal_", StringComparison.Ordinal)) return IconBank.Good(icon);
+                    if (icon.StartsWith("portrait_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);
                     return SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }
@@ -351,6 +354,167 @@ namespace Game.Presentation.Ui
         }
 
         private VisualElement Row(LineVm line)
+        {
+            if (line.Tree != null) return FamilyTree(line.Tree);
+            if (line.Pie == null) return PlainRow(line);
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.Add(PlainRow(line));
+            box.Add(PieChart(line.Pie));
+            return box;
+        }
+
+        private static readonly System.Collections.Generic.Dictionary<string, Color> SliceColours = new System.Collections.Generic.Dictionary<string, Color>
+        {
+            { "food", Painter.Hex(0xE8A33C) }, { "rent", Painter.Hex(0x8A5A2B) }, { "clothing", Painter.Hex(0xC2577A) }, { "health", Painter.Hex(0x4FA3A5) },
+            { "schooling", Painter.Hex(0x5B7FC7) }, { "leisure", Painter.Hex(0x79C84A) }, { "saved", Painter.Hex(0xFFD968) },
+        };
+
+        /// <summary>A household's budget (spec 014 §7): a pie drawn with the vector painter, and its legend beside it.</summary>
+        private static VisualElement PieChart(System.Collections.Generic.List<PieSliceVm> slices)
+        {
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingTop = row.style.paddingBottom = 8;
+            var pie = new VisualElement { pickingMode = PickingMode.Ignore };
+            pie.style.width = 200; pie.style.height = 200; pie.style.flexShrink = 0;
+            pie.style.marginRight = 30;
+            pie.generateVisualContent += mgc =>
+            {
+                var p = mgc.painter2D;
+                Vector2 c = pie.contentRect.center;
+                float r = Mathf.Min(pie.contentRect.width, pie.contentRect.height) * 0.5f - 3f;
+                int total = 0;
+                foreach (PieSliceVm sl in slices) total += sl.Percent;
+                float at = -90f;
+                foreach (PieSliceVm sl in slices)
+                {
+                    float sweep = total == 0 ? 0 : 360f * sl.Percent / total;
+                    if (sweep <= 0f) continue;
+                    p.fillColor = SliceColours.TryGetValue(sl.Colour, out Color col) ? col : UiKit.Grey;
+                    p.BeginPath();
+                    p.MoveTo(c);
+                    p.Arc(c, r, at, at + sweep);
+                    p.ClosePath();
+                    p.Fill();
+                    at += sweep;
+                }
+                p.strokeColor = UiKit.Cream;
+                p.lineWidth = 3f;
+                p.BeginPath();
+                p.Arc(c, r, 0f, 360f);
+                p.Stroke();
+            };
+            row.Add(pie);
+            var legend = new VisualElement { pickingMode = PickingMode.Ignore };
+            legend.style.flexGrow = 1;
+            legend.style.flexDirection = FlexDirection.Row;
+            legend.style.flexWrap = Wrap.Wrap;
+            foreach (PieSliceVm sl in slices)
+            {
+                var item = new VisualElement { pickingMode = PickingMode.Ignore };
+                item.style.flexDirection = FlexDirection.Row;
+                item.style.alignItems = Align.Center;
+                item.style.width = Length.Percent(50);
+                item.style.marginBottom = 6;
+                var dot = new VisualElement { pickingMode = PickingMode.Ignore };
+                dot.style.width = 28; dot.style.height = 28; dot.style.marginRight = 12; dot.style.flexShrink = 0;
+                dot.style.backgroundColor = SliceColours.TryGetValue(sl.Colour, out Color col) ? col : UiKit.Grey;
+                UiKit.Radius(dot, 8);
+                item.Add(dot);
+                item.Add(UiKit.Text(sl.Label + " " + sl.Percent + "% · " + sl.Value, 28, UiKit.Ink, UiKit.Body));
+                legend.Add(item);
+            }
+            row.Add(legend);
+            return row;
+        }
+
+        /// <summary>
+        /// The household's own family (spec 014 §7): a row per generation, centred, a spouse joined by a line, a short stem between
+        /// generations; a tap on anyone opens their card.
+        /// </summary>
+        private VisualElement FamilyTree(FamilyTreeVm tree)
+        {
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.style.alignItems = Align.Center;
+            box.style.paddingTop = 10; box.style.paddingBottom = 10;
+            box.style.marginBottom = 6;
+            box.style.backgroundColor = UiKit.CreamDark;
+            UiKit.Radius(box, 26);
+            for (int g = 0; g < tree.Generations.Count; g++)
+            {
+                if (g > 0)
+                {
+                    var stem = new VisualElement { pickingMode = PickingMode.Ignore };
+                    stem.style.width = 5; stem.style.height = 26; stem.style.backgroundColor = UiKit.Wood;
+                    box.Add(stem);
+                }
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.justifyContent = Justify.Center;
+                foreach (TreePersonVm p in tree.Generations[g])
+                {
+                    if (p.SpouseOfPrevious)
+                    {
+                        var tie = new VisualElement { pickingMode = PickingMode.Ignore };
+                        tie.style.width = 40; tie.style.height = 5; tie.style.backgroundColor = UiKit.Wood;
+                        row.Add(tie);
+                    }
+                    else if (row.childCount > 0)
+                    {
+                        var gap = new VisualElement { pickingMode = PickingMode.Ignore };
+                        gap.style.width = 34;
+                        row.Add(gap);
+                    }
+                    long id = p.CitizenId;
+                    var person = new Button(() => { if (OnOpenRow != null) OnOpenRow(new SheetRequest("Citizen", id)); }) { text = "", name = "tree:" + id };
+                    person.style.flexDirection = FlexDirection.Row;
+                    person.style.alignItems = Align.Center;
+                    person.style.backgroundColor = UiKit.Cream;
+                    UiKit.Radius(person, 22);
+                    UiKit.Border(person, 3, UiKit.Sand);
+                    UiKit.Padding(person, 4, 14);
+                    person.style.marginLeft = person.style.marginRight = 0;
+                    Sprite face = Thumbnail(p.Icon);
+                    if (face != null)
+                    {
+                        VisualElement pic = UiKit.Icon(face, 64);
+                        pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                        pic.style.marginRight = 8;
+                        pic.pickingMode = PickingMode.Ignore;
+                        person.Add(pic);
+                    }
+                    Label name = UiKit.Text(p.Text, 30, UiKit.Ink, UiKit.Heading);
+                    name.pickingMode = PickingMode.Ignore;
+                    person.Add(name);
+                    row.Add(person);
+                }
+                box.Add(row);
+            }
+            return box;
+        }
+
+        /// <summary>Tabs over the rows (People: Workers and Town): the showing one filled, the other a plain button.</summary>
+        private VisualElement TabStrip(SheetVm vm)
+        {
+            var strip = new VisualElement { pickingMode = PickingMode.Ignore };
+            strip.style.flexDirection = FlexDirection.Row;
+            strip.style.marginTop = 10;
+            foreach (ActionVm t in vm.Tabs)
+            {
+                ActionVm tab = t;
+                bool on = t.Id == vm.Tab;
+                Button b = UiKit.MakeButton(t.Label, on ? ActionLook.Primary : ActionLook.Secondary, () => { if (!on && OnAction != null) OnAction(tab); });
+                b.name = t.Id;
+                b.style.flexGrow = 1; b.style.flexBasis = 0;
+                b.style.marginTop = 0; b.style.marginRight = 14;
+                strip.Add(b);
+            }
+            return strip;
+        }
+
+        private VisualElement PlainRow(LineVm line)
         {
             if (line.Buttons != null) return PictureButtons(line.Buttons);
             if (line.IsHeader)
@@ -729,9 +893,11 @@ namespace Game.Presentation.Ui
 
         public void Show(SheetVm vm, bool refresh = false)
         {
-            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle);
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab);
             foreach (LineVm l in vm.Lines)
             {
+                if (l.Pie != null) foreach (PieSliceVm p in l.Pie) key.Append('|').Append(p.Label).Append(p.Percent).Append(p.Value);
+                if (l.Tree != null) foreach (var g in l.Tree.Generations) foreach (TreePersonVm p in g) key.Append('|').Append(p.Text);
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
@@ -739,6 +905,7 @@ namespace Game.Presentation.Ui
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
+            if (vm.Tabs != null) sheet.Add(TabStrip(vm));
             var scroll = NewScroll();
             scroll.style.marginTop = 8;
             scroll.style.flexShrink = 1;

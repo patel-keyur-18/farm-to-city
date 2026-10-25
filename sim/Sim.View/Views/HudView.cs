@@ -44,6 +44,11 @@ namespace Sim.View.Views
         public int PeopleBadge { get; internal set; }
         public bool HasPeople { get; internal set; }
 
+        /// <summary>Your people (spec 014 §7): shown once someone lives on your land; how many and the town's happiness, 0–100.</summary>
+        public bool HasTown { get; internal set; }
+        public int Population { get; internal set; }
+        public int Happiness { get; internal set; }
+
         /// <summary>The supermarket's orders (spec 011 §7): shown once orders have begun; the badge counts open orders.</summary>
         public bool HasOrders { get; internal set; }
         public int OrdersBadge { get; internal set; }
@@ -81,6 +86,9 @@ namespace Sim.View.Views
                 CollectText = ctx.Strings.Plural("hud.collect", ready),
                 HasPeople = sim.State.People != null,
                 PeopleBadge = sim.State.People == null ? 0 : sim.State.People.Applicants.Count,
+                HasTown = sim.State.Citizens != null && sim.State.Citizens.Population > 0,
+                Population = sim.State.Citizens?.Population ?? 0,
+                Happiness = sim.State.Citizens == null ? 0 : (int)Sim.Core.People.HappinessRules.Town(sim).RoundToLong(),
                 HasOrders = Supermarket.Started(sim) || sim.State.Market.SupermarketOrders.Count > 0,
                 OrdersBadge = OrdersSheet.OpenCount(sim),
             };

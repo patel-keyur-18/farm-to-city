@@ -3,9 +3,12 @@ using System.Linq;
 using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Commands;
+using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Land;
+using Sim.Core.Maths;
+using Sim.Core.People;
 using Sim.Core.Time;
 using Sim.View.Views;
 
@@ -75,12 +78,56 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>
+        /// The Hamlet with a family house (spec 014 §7): the hand alone in his hut, and Manoj's family of five in the house (his mother,
+        /// his wife from another village, a son and a daughter) with his late father kept in the tree.
+        /// </summary>
+        public static Simulation Town()
+        {
+            Simulation sim = Ready();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "hamlet") sim.State.Era.Current = i;
+            Ok(sim, new BuildFamilyHouse(T(sim), HouseTile(sim)));
+            sim.AdvanceTo(T(sim) + 48 * Hour);
+            Building house = sim.State.Land.Buildings.Single(b => HouseRules.IsHouse(sim, b));
+            CitizensState town = sim.State.Citizens;
+            var x = new Household { Id = town.NextHouseholdId++, HomeId = house.Id };
+            Citizen Add(string name, int age, long father = 0, long mother = 0)
+            {
+                int n = sim.Config.Game.People.Names.ToList().FindIndex(d => d.Id == name);
+                var c = new Citizen { Id = town.NextCitizenId++, Name = n, Female = sim.Config.Game.People.Names[n].Female, BornSeason = CitizenRules.BornFor(sim, age),
+                    HouseholdId = x.Id, Health = Fixed.One, Father = father, Mother = mother, Skill = Fixed.FromInt(40), Village = 1 };
+                town.Citizens.Add(c);
+                return c;
+            }
+            Citizen grandfather = Add("mohan", 74), grandmother = Add("kamala", 66);
+            grandfather.Gone = CitizenGone.Died;
+            grandfather.GoneAt = T(sim);
+            grandfather.Spouse = grandmother.Id;
+            grandmother.Spouse = grandfather.Id;
+            Citizen manoj = Add("manoj", 38, grandfather.Id, grandmother.Id), sita = Add("usha", 35);
+            manoj.Spouse = sita.Id;
+            sita.Spouse = manoj.Id;
+            Citizen ravi = Add("ravi", 12, manoj.Id, sita.Id), asha = Add("asha", 9, manoj.Id, sita.Id);
+            foreach (Citizen c in new[] { manoj, sita, ravi, asha, grandmother }) x.Members.Add(c.Id);
+            town.Households.Add(x);
+            HouseholdRules.SetBudget(sim, x);
+            return sim;
+        }
+
+        /// <summary>An owned farm acre with nothing growing, for a family house.</summary>
+        public static int HouseTile(Simulation sim)
+        {
+            return sim.State.Land.Tiles.First(t => t.Terrain == Terrain.Farm && sim.State.Land.Parcels[t.ParcelId].Owned && sim.State.Farm.CropOn(t.Id) == null).Id;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
             yield return Growing();
             yield return Ready();
             yield return Later(out _);
+            yield return Town();
         }
     }
 }

@@ -148,7 +148,7 @@ namespace Sim.Core.People
                 PeopleSystem.Leave(sim, h);
                 sim.Emit(new HandLeft(sim.State.Clock.SimTime, h.Id));
             }
-            sim.Emit(new HouseholdLeft(sim.State.Clock.SimTime, x.Id, x.Members.Count, reason));
+            sim.Emit(new HouseholdLeft(sim.State.Clock.SimTime, x.Id, x.Members.Count, reason, sim.State.Citizens.Citizen(x.Members[0]).Name));
             if (sim.State.Citizens.Households.Contains(x)) CitizenRules.Leave(sim, x);
         }
     }

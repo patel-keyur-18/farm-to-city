@@ -681,24 +681,58 @@ namespace Game.Presentation.Map
         /// <summary>The placement ghost (ADR 0040): the hut, see-through, green where it can go and red where it can't.</summary>
         public void ShowGhost(int tile, bool allowed)
         {
+            int place = PlacesUsed(tile);
+            PlaceGhost(SpriteBank.Rendered("hand_hut") ?? SpriteBank.Hut, HandHutScale, HandHutWorld(tile, place < QuartersPlaces.Length ? place : 0), tile, allowed);
+        }
+
+        /// <summary>A family house's ghost (spec 014 §3.13) on the acre's next plot (<paramref name="n"/> houses there already), or the quarters' next place.</summary>
+        public void ShowHouseGhost(int tile, bool allowed, int n, bool quarters)
+        {
+            Vector3 pos = quarters ? HandHutWorld(tile, PlacesUsed(tile) + n) : OnTile(tile, HousePlots[Mathf.Clamp(n, 0, HousePlots.Length - 1)].At);
+            PlaceGhost(SpriteBank.Rendered("family_house_s") ?? SpriteBank.Hut, 1f, pos, tile, allowed);
+        }
+
+        private void PlaceGhost(Sprite sprite, float scale, Vector3 pos, int tile, bool allowed)
+        {
             if (_ghost == null)
             {
-                _ghost = NewRenderer("ghost", SpriteBank.Rendered("hand_hut") ?? SpriteBank.Hut, Vector3.zero, 9100);
-                _ghost.transform.localScale = Vector3.one * HandHutScale;
+                _ghost = NewRenderer("ghost", sprite, Vector3.zero, 9100);
                 _ghostRing = NewRenderer("ghostRing", SpriteBank.SelectionRing, Vector3.zero, 9099);
             }
+            _ghost.sprite = sprite;
+            _ghost.transform.localScale = Vector3.one * scale;
             _ghost.gameObject.SetActive(true);
             _ghostRing.gameObject.SetActive(true);
-            int place = PlacesUsed(tile);
-            _ghost.transform.position = HandHutWorld(tile, place < QuartersPlaces.Length ? place : 0);
+            _ghost.transform.position = pos;
             _ghostRing.transform.position = TileCentre(tile);
             Color c = allowed ? new Color(0.55f, 1f, 0.55f, 0.75f) : new Color(1f, 0.45f, 0.4f, 0.7f);
             _ghost.color = c;
             _ghostRing.color = c;
         }
 
+        private readonly List<SpriteRenderer> _lit = new List<SpriteRenderer>();
+
+        /// <summary>While placing: a soft green ring on every acre the building may go on (spec 014 §3.13).</summary>
+        public void LightPlaces(IEnumerable<int> tiles)
+        {
+            ClearLit();
+            foreach (int t in tiles)
+            {
+                SpriteRenderer r = NewRenderer("lit" + t, SpriteBank.TileFill, TileCentre(t), 9098);
+                r.color = new Color(0.55f, 1f, 0.45f, 0.8f);
+                _lit.Add(r);
+            }
+        }
+
+        private void ClearLit()
+        {
+            foreach (SpriteRenderer r in _lit) Destroy(r.gameObject);
+            _lit.Clear();
+        }
+
         public void HideGhost()
         {
+            ClearLit();
             if (_ghost == null) return;
             _ghost.gameObject.SetActive(false);
             _ghostRing.gameObject.SetActive(false);

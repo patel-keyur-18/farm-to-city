@@ -89,6 +89,7 @@ namespace Game.Presentation
                 OnStore = () => OpenSheet(new SheetRequest("Store", 0)),
                 OnCollect = CollectAll,
                 OnPeople = () => OpenSheet(new SheetRequest("People", 0)),
+                OnTown = () => OpenSheet(new SheetRequest("Town", 0)),
                 OnForecast = () => OpenSheet(new SheetRequest("Forecast", 0)),
                 OnMoney = () => OpenSheet(new SheetRequest("Money", 0)),
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
@@ -181,7 +182,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
                 case "BuyInput":

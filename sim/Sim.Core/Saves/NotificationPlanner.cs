@@ -30,6 +30,18 @@ namespace Sim.Core.Saves
 
         /// <summary>A calf was born and sold; CropId is the mother's name. Information.</summary>
         CalfBorn = 11,
+
+        /// <summary>A family house is finished (spec 014 §7). Information.</summary>
+        HouseBuilt = 12,
+
+        /// <summary>A household couldn't pay the season's rent; CropId is its first member's name key.</summary>
+        RentMissed = 13,
+
+        /// <summary>A household left the town; CropId is its first member's name key.</summary>
+        HouseholdLeft = 14,
+
+        /// <summary>A hand retired (and went home if he lived alone); CropId is his name key. Information.</summary>
+        HandRetired = 15,
     }
 
     public enum NotifyImportance
@@ -79,7 +91,8 @@ namespace Sim.Core.Saves
         public static NotifyImportance ImportanceOf(NotifyKind kind)
         {
             if (kind <= NotifyKind.ContractLapsed) return NotifyImportance.Urgent;
-            return kind == NotifyKind.HandsWork || kind == NotifyKind.AnimalSick || kind == NotifyKind.CalfBorn ? NotifyImportance.Information : NotifyImportance.NeedsYou;
+            return kind == NotifyKind.HandsWork || kind == NotifyKind.AnimalSick || kind == NotifyKind.CalfBorn || kind == NotifyKind.HouseBuilt || kind == NotifyKind.HandRetired
+                ? NotifyImportance.Information : NotifyImportance.NeedsYou;
         }
 
         public static List<PlannedNotification> Plan(Simulation sim, NotifyDef def, bool enabled, int utcOffsetMinutes)
@@ -127,12 +140,22 @@ namespace Sim.Core.Saves
                     case FeedLow f: items.Add(new AbsenceItem(at, NotifyKind.FeedLow, f.Good)); break;
                     case AnimalSick a: items.Add(new AbsenceItem(at, NotifyKind.AnimalSick, Livestock.LivestockRules.Find(sim, a.AnimalId)?.Name)); break;
                     case CalfBorn b: items.Add(new AbsenceItem(at, NotifyKind.CalfBorn, Livestock.LivestockRules.Find(sim, b.AnimalId)?.Name)); break;
+                    case Events.FamilyHouseBuilt _: items.Add(new AbsenceItem(at, NotifyKind.HouseBuilt, null)); break;
+                    case Events.RentMissed m: items.Add(new AbsenceItem(at, NotifyKind.RentMissed, NameKey(sim, sim.State.Citizens.Household(m.HouseholdId)?.Members[0] ?? 0))); break;
+                    case Events.HouseholdLeft l: items.Add(new AbsenceItem(at, NotifyKind.HouseholdLeft, sim.Config.Game.People.Names[l.Name].NameKey)); break;
+                    case Events.CitizenRetired r: items.Add(new AbsenceItem(at, NotifyKind.HandRetired, sim.Config.Game.People.Names[r.Name].NameKey)); break;
                     case OrderExecuted o:
                         if (o.Action == OrderAction.Harvested || o.Action == OrderAction.Picked) items.Add(new AbsenceItem(at, NotifyKind.HandsWork, o.GoodId));
                         break;
                 }
             }
             return items;
+        }
+
+        private static string NameKey(Simulation sim, long citizenId)
+        {
+            People.Citizen c = sim.State.Citizens?.Citizen(citizenId);
+            return c == null ? null : sim.Config.Game.People.Names[c.Name].NameKey;
         }
 
         /// <summary>True when a standing order harvests or picks the target later in the same absence: then it isn't "ready" for the player.</summary>

@@ -25,7 +25,8 @@ namespace Game.Presentation.Ui
         private bool _urgentShown, _held;
         private readonly VisualElement _weatherIcon, _storeFill, _timeCard, _cashPill, _storePill, _collectHolder;
         private Button _collect;
-        private readonly VisualElement _people, _badge, _orders, _ordersBadge;
+        private readonly VisualElement _people, _badge, _orders, _ordersBadge, _townPill;
+        private readonly Label _population, _happiness;
         private readonly Label _badgeText, _ordersBadgeText;
         private int _badgeShown = -1, _ordersShown = -1;
         private string _weatherId;
@@ -35,6 +36,9 @@ namespace Game.Presentation.Ui
 
         public Action OnStore { get; set; }
         public Action OnPeople { get; set; }
+
+        /// <summary>The Your people pill: the Town tab (spec 014 §7).</summary>
+        public Action OnTown { get; set; }
         public Action OnCollect { get; set; }
         public Action OnForecast { get; set; }
         public Action OnMoney { get; set; }
@@ -120,6 +124,25 @@ namespace Game.Presentation.Ui
             _storePill.RegisterCallback<ClickEvent>(_ => { if (OnStore != null) OnStore(); });
             _cashPill.RegisterCallback<ClickEvent>(_ => { if (OnMoney != null) OnMoney(); });
             right.Add(_storePill);
+
+            // Your people (spec 014 §7): how many live on your land and how happy the town is.
+            _townPill = UiKit.Pill();
+            _townPill.name = "Town";
+            _townPill.style.marginTop = 12;
+            _townPill.style.flexDirection = FlexDirection.Row;
+            _townPill.style.alignItems = Align.Center;
+            _townPill.Add(UiKit.Icon(SpriteBank.Rendered("icon_population"), 56));
+            _population = UiKit.Text("", 40, UiKit.Cream, UiKit.Heading);
+            _population.style.marginLeft = 8; _population.style.marginRight = 18;
+            _population.style.whiteSpace = WhiteSpace.NoWrap; // "71" once wrapped to "7" over "1"
+            _townPill.Add(_population);
+            _townPill.Add(UiKit.Icon(SpriteBank.Rendered("icon_happiness"), 56));
+            _happiness = UiKit.Text("", 40, UiKit.Cream, UiKit.Heading);
+            _happiness.style.marginLeft = 8;
+            _happiness.style.whiteSpace = WhiteSpace.NoWrap;
+            _townPill.Add(_happiness);
+            _townPill.RegisterCallback<ClickEvent>(_ => { if (OnTown != null) OnTown(); });
+            right.Add(_townPill);
             _layer.Add(right);
 
             // Above Collect all: the alerts button, shown only when something needs the player (ADR 0043 §4).
@@ -336,6 +359,9 @@ namespace Game.Presentation.Ui
             }
 
             _people.style.display = hud.HasPeople ? DisplayStyle.Flex : DisplayStyle.None;
+            _townPill.style.display = hud.HasTown ? DisplayStyle.Flex : DisplayStyle.None;
+            _population.text = hud.Population.ToString();
+            _happiness.text = hud.Happiness.ToString();
             if (_badgeShown != hud.PeopleBadge)
             {
                 bool popped = hud.PeopleBadge > _badgeShown && _badgeShown >= 0 && animate;

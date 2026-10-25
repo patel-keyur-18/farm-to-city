@@ -11,6 +11,7 @@ namespace Sim.View.Views
     /// </summary>
     public static class NeedsView
     {
+
         public static List<LineVm> Rows(ViewContext ctx, Household x)
         {
             Simulation sim = ctx.Sim;
@@ -18,35 +19,36 @@ namespace Sim.View.Views
             var rows = new List<LineVm>();
 
             rows.Add(LineVm.Header(s.Get("needs.survival")));
-            rows.Add(Row(ctx, "needs.food", x.FoodMet, x.FoodMet >= Fixed.One ? s.Get("needs.foodMet")
+            rows.Add(Row(ctx, x.Id, "needs.food", x.FoodMet, x.FoodMet >= Fixed.One ? s.Get("needs.foodMet")
                 : s.Get("needs.foodShort", "pct", ctx.Fmt.Percent(x.FoodMet))));
             int capacity = HappinessRules.Capacity(sim, x);
-            rows.Add(Row(ctx, "needs.shelter", HappinessRules.Shelter(sim, x), x.Members.Count <= capacity ? s.Get("needs.shelterMet")
+            rows.Add(Row(ctx, x.Id, "needs.shelter", HappinessRules.Shelter(sim, x), x.Members.Count <= capacity ? s.Get("needs.shelterMet")
                 : s.Get("needs.shelterShort", "n", ctx.Fmt.Integer(x.Members.Count), "cap", ctx.Fmt.Integer(capacity))));
-            rows.Add(Row(ctx, "needs.water", Fixed.One, s.Get("needs.waterMet")));
+            rows.Add(Row(ctx, x.Id, "needs.water", Fixed.One, s.Get("needs.waterMet")));
 
             rows.Add(LineVm.Header(s.Get("needs.security")));
             HappinessRules.Jobs(sim, x, out int inTown, out int adults);
             Fixed job = HappinessRules.Job(sim, x);
-            rows.Add(Row(ctx, "needs.job", job, adults == 0 ? s.Get("needs.jobNone")
+            rows.Add(Row(ctx, x.Id, "needs.job", job, adults == 0 ? s.Get("needs.jobNone")
                 : inTown == adults ? s.Get("needs.jobMet", "n", ctx.Fmt.Integer(inTown), "of", ctx.Fmt.Integer(adults))
                 : s.Get("needs.jobShort", "n", ctx.Fmt.Integer(inTown), "of", ctx.Fmt.Integer(adults))));
-            rows.Add(Row(ctx, "needs.healthCare", sim.Config.Game.Population.Chemist, s.Get("needs.healthCareNotYet")));
-            rows.Add(Row(ctx, "needs.rent", x.RentBehind == 0 ? Fixed.One : Fixed.Zero, x.RentBehind == 0 ? s.Get("needs.rentMet")
+            rows.Add(Row(ctx, x.Id, "needs.healthCare", sim.Config.Game.Population.Chemist, s.Get("needs.healthCareNotYet")));
+            rows.Add(Row(ctx, x.Id, "needs.rent", x.RentBehind == 0 ? Fixed.One : Fixed.Zero, x.RentBehind == 0 ? s.Get("needs.rentMet")
                 : s.Plural("needs.rentBehind", x.RentBehind)));
 
             rows.Add(LineVm.Header(s.Get("needs.belonging")));
-            rows.Add(Row(ctx, "needs.worship", sim.Config.Game.Population.Belonging, s.Get("needs.worshipNotYet")));
+            rows.Add(Row(ctx, x.Id, "needs.worship", sim.Config.Game.Population.Belonging, s.Get("needs.worshipNotYet")));
 
             rows.Add(LineVm.Header(s.Get("needs.growth")));
             rows.Add(new LineVm(s.Get("needs.school"), s.Get("needs.notCounted")) { Note = s.Get("needs.schoolNotYet") });
-            rows.Add(Row(ctx, "needs.leisure", x.Growth, x.Leisure > 0 ? s.Get("needs.leisureMet") : s.Get("needs.leisureShort")));
+            rows.Add(Row(ctx, x.Id, "needs.leisure", x.Leisure > 0 ? Fixed.One : Fixed.Zero, x.Leisure > 0 ? s.Get("needs.leisureMet") : s.Get("needs.leisureShort")));
             return rows;
         }
 
-        private static LineVm Row(ViewContext ctx, string key, Fixed met, string lever)
+        // Each need's Why? is the household's happiness, layer by layer.
+        private static LineVm Row(ViewContext ctx, long household, string key, Fixed met, string lever)
         {
-            return new LineVm(ctx.Strings.Get(key), ctx.Fmt.Percent(met)) { Note = lever, NoteTone = met >= Fixed.Parse("0.8") ? Tone.Good : Tone.Warn };
+            return new LineVm(ctx.Strings.Get(key), ctx.Fmt.Percent(met), "household.happiness", household) { Note = lever, NoteTone = met >= Fixed.Parse("0.8") ? Tone.Good : Tone.Warn };
         }
     }
 }

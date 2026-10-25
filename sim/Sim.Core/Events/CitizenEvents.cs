@@ -75,9 +75,13 @@ namespace Sim.Core.Events
         public int People { get; }
         public LeaveReason Reason { get; }
 
-        public HouseholdLeft(long simTime, long householdId, int people, LeaveReason reason) : base(simTime)
+        /// <summary>Its first member's name (index into the names): the household is gone from the town when the event is read.</summary>
+        public int Name { get; }
+
+        public HouseholdLeft(long simTime, long householdId, int people, LeaveReason reason, int name) : base(simTime)
         {
             HouseholdId = householdId;
+            Name = name;
             People = people;
             Reason = reason;
         }
