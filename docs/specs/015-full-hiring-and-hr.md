@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: In review (every gap closed with the owner, 2026-10-25)
+- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)

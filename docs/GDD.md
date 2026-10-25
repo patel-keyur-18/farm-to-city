@@ -393,6 +393,16 @@ Motivation comes from wage fairness, manager quality, working conditions, recogn
 
 **HR events.** A raise request, a resignation, a poaching offer, a conflict between two workers, sick leave, a family emergency, a workplace accident, a petition for better conditions. Each event offers choices with consequences.
 
+**Phase 2 hiring (spec 015, ADR 0069).**
+- **One board.** One hiring board covers every role: farm hand, miller, baker and dairyman. Your townspeople apply with their skill and traits known; migrants with a skill range and one trait.
+- **Knowing a candidate.** A free interview reveals the second trait. A reference check (300 coins, 12 h) narrows the skill and says how they left their last job.
+- **The offer.** You offer the asked wage, 10% less (often refused, and remembered) or 10% more.
+- **Output.** Output = skill × motivation × (1 − fatigue), neutral for a fair hire in a content home. Long days pay 1.5× for the extra hours and tire people. Citizens have a farming and a crafting skill.
+- **Training.** Courses add 10 skill for 6,000.
+- **Traits and events.** The four new traits (creative, frugal, sociable, perfectionist) arrive. HR events in Phase 2: a raise request, an offer from elsewhere, sick leave, a family emergency and a bad batch.
+- **Reputation.** Employer reputation moves with fair pay and treatment.
+- **Later.** Supervisors, benefits, managers and night shifts come in Phase 3.
+
 **Letting people go.** Firing costs severance and lowers the morale of colleagues. Fair treatment builds an **employer reputation** score, which decides the quality of future applicants.
 
 **Children go to school, not to work.** The game never allows child labour. Children attend school if one exists, and that education turns into a better workforce 10–15 life-years later (about 40–60 real days).

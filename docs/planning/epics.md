@@ -84,7 +84,7 @@
 | [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-105, US-106, US-208, US-212 | 18 |
 | [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-107, US-108, US-209, US-210 | 21 |
 | [F11.3](features/F11.3-population-flows-and-family-trees.md) | Population flows and family trees | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-109–US-111, US-211 | 16 |
-| [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (to write, ADR 0057) | Backlog | US-112–US-114 | 13 |
+| [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (approved, ADR 0069) | Backlog | US-112–US-114 | 13 |
 | [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-115–US-117 | 16 |
 | [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-118, US-119, US-216 | 11 |
 | [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-120–US-121 | 8 |
