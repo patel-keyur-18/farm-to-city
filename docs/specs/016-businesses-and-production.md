@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1–G9 closed; G10 in §10 to close with the owner)
+- Status: In review (every gap closed with the owner, 2026-10-25)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -22,7 +22,7 @@ The player founds a first business beside the farm, a village flour mill (atta c
 - The flour mill (Hamlet): grinding the area's grain for a fee (pisai) and milling wheat into atta to sell; bran as a by-product.
 - The bakery (Village): atta and bakery supplies into pav and rusk.
 - The dairy (Village): your animals' milk into paneer, curd and ghee (owner, 2026-10-25, §10 G1).
-- New goods: atta, bran, bakery supplies, pav, rusk, paneer, curd, ghee.
+- New goods: atta, bran, bakery supplies, pav (bread), rusk, paneer, curd, ghee.
 - A job at a business is a town job (spec 014 §3.6).
 
 **Out** (and where it goes instead):
@@ -114,25 +114,28 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | Business loan | The cooperative bank's small-business loan (like India's MUDRA loans), to the business: up to `businessLtv` of its building and equipment, at the bank's rate for your score (spec 005), equal principal over up to `termSeasons`; you guarantee it (§3.10). Example: a 1,00,000 mill, 60,000 borrowed, 40,000 + about 15,000 running cash put in | 0.6; 12 seasons |
 | Overdraft | The bank's overdraft for the business up to `overdraftLimit` × a season's costs, at `overdraftRate` a season on the balance at each close | 0.5; 4% |
 
-### 3.9 The bakery (Village; §10 G10)
+### 3.9 The bakery (Village; owner, 2026-10-25, §10 G10)
 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
-| Recipe | A batch: 10 kg atta + 2 kg bakery supplies → 40 pav (8 kg) or 6 kg rusk; 1 h a batch while open | |
-| Inputs | Atta from your mill first (internal sale at the market price), else the market; bakery supplies (sugar, oil, yeast) bought at their price | Supplies base 60 a kg |
-| Selling | Pav and rusk to the trader and to the local market; the town's households buy them from their leisure share (spec 014 §3.5) | Pav base 50, rusk base 90 a kg |
-| Power and wood | 15 coins a batch | |
+| Recipe | A batch: 10 kg atta + 1.5 kg bakery supplies (sugar, oil, yeast) → 13 kg of pav or bread, 1 h while open. Rusk is bread baked twice: 1.2 kg bread → 1 kg rusk, 1 h a 12 kg batch | |
+| Inputs | Atta from your mill first (an internal sale at the market price), else the market; bakery supplies bought at their price | Supplies base 100 a kg |
+| Fuel | Wood or gas, coins a batch | 100 |
+| Who buys | The village grocer and tea stall (neighbours) each morning at wholesale, up to a set amount; your town's families from their leisure share (spec 014 §3.5); rusk keeps, so the trader and supermarket orders take it too | Pav 100, rusk 110 a kg; the shops 25 kg pav and 10 kg rusk a real day |
+| Keeping | Pav 2 days, rusk 60 days | Spoilage in `goods.json` |
+| The margin, year-0 | About 700 a batch; sales, not the oven, set how much it earns | |
+| What it bakes | You set the day's mix (pav and rusk); unsold pav spoils | |
 
-### 3.9b The dairy (Village; owner, 2026-10-25; §10 G10)
+### 3.9b The dairy (Village; owner, 2026-10-25, §10 G1, G10)
 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
-| Milk in | Your animals' morning milk, up to a daily amount you set ("Keep up to 20 L a day for the dairy"), taken at the co-op's price that morning (an internal sale: the farm's Cr 4020 Milk sales); the rest still goes to the co-op at 6:00 (spec 012 §3.5). If you allow it, neighbours' milk at the co-op's price + 2 a litre | |
-| Recipes | Paneer: 5 L buffalo milk (6.5 L cow) → 1 kg, a 20 L batch in 1 h. Curd: 1 L → 1 kg, set overnight (a batch of up to 20 L). Ghee: 15 L buffalo milk (22 L cow) → 1 kg, a batch of 30 L in 2 h | Yields by fat (spec 012 §3.5) |
+| Milk in | Your animals' morning milk, up to a daily amount you set ("Keep up to 100 L a day for the dairy"), taken at the co-op's price that morning (an internal sale: the farm's Cr 4020 Milk sales); the rest still goes to the co-op at 6:00 (spec 012 §3.5). If you allow it, neighbours' milk at the co-op's price + 2 a litre | |
+| Recipes | Paneer: 5 L buffalo milk (6.5 L cow) → 1 kg, a 20 L batch in 1 h. Curd: 1 L → 1 kg, set overnight (up to 40 L a night). Ghee: 15 L buffalo milk (22 L cow) → 1 kg, a 30 L batch in 2 h | Yields by fat (spec 012 §3.5) |
 | Fuel and culture | Coins a batch | 20 |
+| Who buys | The village grocer and tea stall each morning at wholesale, up to a set amount; your town's families from their food and leisure shares; ghee keeps, so the trader and supermarket orders take it too | Paneer 320, curd 75, ghee 900 a kg; the shops 6 kg paneer and 15 kg curd a real day |
 | Keeping | Paneer 3 days in the freezer, curd 1 day, ghee 6 months | Spoilage in `goods.json` |
-| Selling | Paneer, curd and ghee to the trader and the local market; the town's households buy curd and paneer from their food and leisure shares | Paneer base 320, curd 75, ghee 900 a kg |
-| The margin, year-0 | Paneer about 30 a kg on milk at 57.50; curd about 15; ghee little at today's price but it keeps, so it can wait for a better one | |
+| The margin, year-0 | Paneer about 30 a kg on milk at 57.50; curd about 15; ghee little at today's price, but it keeps and can wait for a better one. Thin, as a real dairy's: it pays with a big herd or run by you | |
 
 ### 3.10 Overdraft, trouble and closing (§10 G9)
 
@@ -235,7 +238,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G7. Funding.** **Closed (owner, 2026-10-25):** your cash as owner's capital and the co-op bank's small-business loan (up to 60% of building and equipment, the bank's rate, up to 12 seasons, equal principal, your guarantee); at least the rest plus a season's running cash put in; investors and partner citizens in Phase 3 (§3.8).
 - **G8. Research and the plan.** **Closed (owner, 2026-10-25):** a free research sheet; a plan screen with the projected season, cash needed and payback, each with a *Why?*; saved and compared line by line with the actual results after 4 seasons, the differences in words (§3.3).
 - **G9. Overdraft and failure.** **Closed (owner, 2026-10-25):** an overdraft to half a season's running costs at 4% a season; past it, inputs stop (grinding goes on) and the unpaid worker leaves at the close; put cash in, take or restructure the loan, sell stock or close; closing sells stock to the trader and the building and equipment at 60% of book value, and what's still owed becomes your co-op bank loan (your guarantee); a missed business loan payment counts on your score; the farm carries on, and a business on the inherited acres is never seized (§3.8, §3.10).
-- **G10. The bakery and the dairy.** Pav and rusk from atta and bought supplies; paneer, curd and ghee from your own milk (§3.9, §3.9b); sold to the trader, the market and the town's food and leisure spending.
+- **G10. The bakery and the dairy.** **Closed (owner, 2026-10-25):** the bakery: 10 kg atta + 1.5 kg supplies → 13 kg pav or bread an hour, rusk baked twice (1.2 → 1); the dairy: paneer 5 L → 1 kg, curd 1 → 1, ghee 15 L → 1 kg from your own milk at the co-op's price; the village grocer and tea stall buy each morning at wholesale, your town's families from their food and leisure shares, and what keeps (rusk, ghee) goes to the trader and supermarket orders too (a crop trader doesn't buy fresh bread) (§3.9, §3.9b).
 
 ## 11. Cut first
 
