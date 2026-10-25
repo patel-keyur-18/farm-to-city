@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1–G6 closed; G7–G10 in §10 to close with the owner)
+- Status: Draft (G1–G7 closed; G8–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -110,8 +110,8 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
-| Own cash | The founder puts in at least the building and equipment's cost plus a season's running cash, less any loan | |
-| Business loan | The cooperative bank lends to the business, secured by its equipment and building at `businessLtv`, over `termSeasons`, at the bank's rate (spec 005); you guarantee it (§3.10) | 0.6; 12 seasons |
+| Own cash | You put in at least the building and equipment's cost less any loan, plus a season's running cash (the wage or, run by you, a season's power and repairs), as owner's capital | |
+| Business loan | The cooperative bank's small-business loan (like India's MUDRA loans), to the business: up to `businessLtv` of its building and equipment, at the bank's rate for your score (spec 005), equal principal over up to `termSeasons`; you guarantee it (§3.10). Example: a 1,00,000 mill, 60,000 borrowed, 40,000 + about 15,000 running cash put in | 0.6; 12 seasons |
 | Overdraft | The bank's overdraft for the business up to `overdraftLimit` × a season's costs, at `overdraftRate` a season on the balance at each close | 0.5; 4% |
 
 ### 3.9 The bakery (Village; §10 G10)
@@ -232,7 +232,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G4. Where it stands.** **Closed (owner, 2026-10-25):** any acre you own with nothing growing (none of the inherited acres touch a road, so a roadside rule would force a land purchase first); one business an acre, the acre out of farming and not for sale while it stands; the layout previewed to the owner first; location and passing trade are spec 017's, for shops (§3.3).
 - **G5. The mill's work.** **Closed (owner, 2026-10-25):** grinding for your town, the village and the hamlets around (about 300 people, 10,800 kg a season) at 4 a kg; your own wheat into atta and bran (about 4 a kg net); market wheat optional (1–2 a kg); 40 kg an hour, 8:00–18:00, power 1.20 a kg, yields 0.97 and 0.03. Calibration: wheat is 1,200 kg an acre in Winter only, and a village of 35 alone can't keep a miller, so the catchment carries the business, as a real chakki's does (§3.5).
 - **G6. Wheat in, atta out.** **Closed (owner, 2026-10-25):** your store first up to a daily amount at today's market price, the market only if allowed; atta to the trader (400 kg a day) and the local market, and in supermarket orders; bran to your cattle's feed room first, the rest sold (§3.5c).
-- **G7. Funding.** Own cash and a bank business loan at 0.6 of equipment and building; investors and partners in Phase 3.
+- **G7. Funding.** **Closed (owner, 2026-10-25):** your cash as owner's capital and the co-op bank's small-business loan (up to 60% of building and equipment, the bank's rate, up to 12 seasons, equal principal, your guarantee); at least the rest plus a season's running cash put in; investors and partner citizens in Phase 3 (§3.8).
 - **G8. Research and the plan.** A research sheet, a projected season, plan vs actual after 4 seasons.
 - **G9. Overdraft and failure.** Overdraft to half a season's costs at 4% a season; past it inputs stop and the worker leaves; closing at 60%; you guarantee what's left.
 - **G10. The bakery and the dairy.** Pav and rusk from atta and bought supplies; paneer, curd and ghee from your own milk (§3.9, §3.9b); sold to the trader, the market and the town's food and leisure spending.
