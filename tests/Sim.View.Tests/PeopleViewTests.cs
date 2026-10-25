@@ -430,6 +430,25 @@ namespace Sim.View.Tests
             Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.home", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family house, part of the pay")), Is.True);
         }
 
+        // Spec 014 §3.3, §7 (US-111): a bride who married in shows her home village; a hand living alone has family in theirs.
+        [Test]
+        public void FamilyTree_Words()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            CitizensState town = sim.State.Citizens;
+            Citizen manoj = town.Citizens.Single(c => PeopleWords.Name(ctx, c.Name) == "Manoj"), usha = town.Citizen(manoj.Spouse);
+            usha.Story.Add(new StoryLine(StoryKind.Married, ctx.Now, manoj.Id));
+            FamilyTreeVm tree = HouseholdSheet.Build(ctx, manoj.HouseholdId).Lines.First(l => l.Tree != null).Tree;
+            Assert.That(tree.Generations[1].Select(p => p.Text), Is.EqualTo(new[] { "Manoj (38)", "Usha (35, from Rampur)" }));
+            Assert.That(CitizenSheet.Build(ctx, manoj.Id).Lines.Single(l => l.Label == "Usha").Value, Is.EqualTo("wife, 35, from Rampur"));
+            Assert.That(CitizenSheet.Build(ctx, manoj.Id).Lines.Single(l => l.Label == "Asha").Value, Is.EqualTo("daughter, 9"), "born here");
+
+            Citizen hand = town.Citizens.Single(c => c.Living && c.Job == CitizenJob.Hand);
+            LineVm home = CitizenSheet.Build(ctx, hand.Id).Lines.Single(l => l.Label == "Their family lives in");
+            Assert.That(home.Value, Is.EqualTo(TownWords.Village(ctx, hand)));
+        }
+
         [Test]
         public void LivesAlone()
         {

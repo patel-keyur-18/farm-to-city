@@ -36,7 +36,9 @@ namespace Sim.Core.Tests
             Ok(sim, new DismissHand(sim.State.Clock.SimTime, h.Id));
             Assert.That(s.Population, Is.EqualTo(0));
             Assert.That(s.Households, Is.Empty);
-            Assert.That(s.Citizens, Is.Empty, "a lone hand who went home isn't kept: no living relative links to him");
+            Assert.That(s.Citizens.Single().Living, Is.False, "kept until the close (AC-13)");
+            sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason);
+            Assert.That(sim.State.Citizens.Citizens, Is.Empty, "a lone hand who went home isn't kept: no living relative links to him");
         }
 
         // AC-10: a year with a hand, in one advance or in odd chunks, gives the same hash; the town round-trips through a save.

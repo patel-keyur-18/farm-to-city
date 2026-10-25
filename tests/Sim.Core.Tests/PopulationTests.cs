@@ -162,5 +162,56 @@ namespace Sim.Core.Tests
                 }
             }
         }
+    
+        // AC-13: a departed citizen stays while a living spouse, child or grandchild (a daughter married away: a parent) links to them,
+        // and is dropped at the close after the last one goes; 20 years (80 life-years) of a Village-sized town (6 houses) keep under
+        // 1 departed a living citizen at every close, about 0.3 on average (measured, 4 seeds: worst 0.58–0.90).
+        [Test]
+        public void FamilyTree_Bounded()
+        {
+            foreach (ulong seed in new ulong[] { 11, 12, 13, 14 })
+            {
+                Simulation sim = Start(seed: seed);
+                CashTo(sim, 1_000_000_00);
+                Hamlet(sim);
+                long t = sim.State.Clock.SimTime;
+                for (int h = 0; h < 6; h++) Ok(sim, new Commands.BuildFamilyHouse(t, HomeTile + h / 2));
+                double sum = 0;
+                int closes = 0, flows = 0;
+                for (int k = 0; k < 80; k++)
+                {
+                    sim.AdvanceTo(NextClose(sim));
+                    var events = sim.DrainEvents();
+                    flows += events.OfType<CitizenDied>().Count() + events.OfType<CitizenBorn>().Count() + events.OfType<CitizenMarried>().Count();
+                    CitizensState town = sim.State.Citizens;
+                    int living = town.Population, departed = town.Citizens.Count - living;
+                    foreach (Citizen gone in town.Citizens.Where(c => !c.Living))
+                        Assert.That(town.Citizens.Any(c => c.Living && (c.Spouse == gone.Id || c.Father == gone.Id || c.Mother == gone.Id
+                            || town.Citizen(c.Father)?.Father == gone.Id || town.Citizen(c.Father)?.Mother == gone.Id
+                            || town.Citizen(c.Mother)?.Father == gone.Id || town.Citizen(c.Mother)?.Mother == gone.Id
+                            || gone.Gone == CitizenGone.MarriedAway && (c.Id == gone.Father || c.Id == gone.Mother))), Is.True, "seed " + seed + ", close " + k + ": nobody unlinked is kept");
+                    if (k < 8) continue; // the first families settling in
+                    Assert.That(departed, Is.LessThan(living), "seed " + seed + ", close " + k + ": under 1 departed a living citizen");
+                    sum += departed / (double)living;
+                    closes++;
+                }
+                Assert.That(sum / closes, Is.LessThan(0.5), "seed " + seed + ": about 0.3 on average");
+                Assert.That(flows, Is.GreaterThan(20), "seed " + seed + ": a town that lived");
+            }
+
+            // Dropped at the close after the last link goes: a widowed elder alone leaves with her husband's record.
+            Simulation b = Start();
+            Household x = AddFamily(b, House(b).Id, 78, 74);
+            Citizen him = Member(b, x, 0), her = Member(b, x, 1);
+            her.Female = true;
+            him.Spouse = her.Id;
+            her.Spouse = him.Id;
+            him.Gone = CitizenGone.Died;
+            x.Members.Remove(him.Id);
+            CitizenRules.Leave(b, x);
+            Assert.That(b.State.Citizens.Citizens, Does.Contain(him).And.Contain(her), "kept until the close");
+            b.AdvanceTo(NextClose(b));
+            Assert.That(b.State.Citizens.Citizens, Does.Not.Contain(him).And.Not.Contain(her), "dropped at the close after");
+        }
     }
 }

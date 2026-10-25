@@ -73,6 +73,16 @@ namespace Sim.View.Views
             return ctx.Strings.Get("town.nameAge", "name", Name(ctx, c), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)));
         }
 
+        /// <summary>A bride who married into the town (spec 014 §3.3, ADR 0070): her parents are unknown, her home village is shown.</summary>
+        public static bool MarriedIn(Citizen c) { return c.Village >= 0 && c.Father == 0 && c.Mother == 0 && c.Story.Exists(l => l.Kind == StoryKind.Married); }
+
+        /// <summary>"Usha (35, from Sitapur)" for a bride who married in, else "Usha (35)".</summary>
+        public static string NameAgeFrom(ViewContext ctx, Citizen c)
+        {
+            if (!MarriedIn(c)) return NameAge(ctx, c);
+            return ctx.Strings.Get("town.nameAgeFrom", "name", Name(ctx, c), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)), "village", Village(ctx, c));
+        }
+
         public static string Village(ViewContext ctx, Citizen c)
         {
             return c.Village < 0 ? null : ctx.Strings.Get("village." + ctx.Sim.Config.Game.Population.Villages[c.Village]);
@@ -404,10 +414,10 @@ namespace Sim.View.Views
                 while (tree.Generations.Count <= d) tree.Generations.Add(new List<TreePersonVm>());
                 List<TreePersonVm> row = tree.Generations[d];
                 if (row.Exists(p => p.CitizenId == c.Id)) continue;
-                row.Add(new TreePersonVm(TownWords.NameAge(ctx, c), TownWords.Portrait(ctx, c), c.Id));
+                row.Add(new TreePersonVm(TownWords.NameAgeFrom(ctx, c), TownWords.Portrait(ctx, c), c.Id));
                 Citizen spouse = members.Find(p => p.Id == c.Spouse);
                 if (spouse != null && !row.Exists(p => p.CitizenId == spouse.Id))
-                    row.Add(new TreePersonVm(TownWords.NameAge(ctx, spouse), TownWords.Portrait(ctx, spouse), spouse.Id) { SpouseOfPrevious = true });
+                    row.Add(new TreePersonVm(TownWords.NameAgeFrom(ctx, spouse), TownWords.Portrait(ctx, spouse), spouse.Id) { SpouseOfPrevious = true });
             }
             tree.Generations.RemoveAll(g => g.Count == 0);
             return tree;
@@ -459,9 +469,12 @@ namespace Sim.View.Views
             }
 
             List<KeyValuePair<string, Citizen>> family = Kin.Close(sim, c);
-            if (family.Count > 0)
+            Household own = c.Living ? sim.State.Citizens.Household(c.HouseholdId) : null;
+            bool away = c.Job == CitizenJob.Hand && own != null && HouseholdRules.InHut(sim, own); // §3.3: a hand's family stays home
+            if (family.Count > 0 || away)
             {
                 vm.Lines.Add(LineVm.Header(s.Get("citizen.family")));
+                if (away) vm.Lines.Add(new LineVm(s.Get("citizen.familyHome"), TownWords.Village(ctx, c) ?? s.Get("citizen.elsewhere"), "hand.home", c.HandId));
                 int departed = 0;
                 foreach (KeyValuePair<string, Citizen> k in family)
                 {
@@ -504,7 +517,9 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string where = k.HouseholdId == me.HouseholdId ? s.Get("kin.livesHere")
                 : s.Get("kin.livesIn", "home", TownWords.Home(ctx, ctx.Sim.State.Citizens.Household(k.HouseholdId)?.HomeId ?? 0));
-            var line = new LineVm(TownWords.Name(ctx, k), s.Get("kin.value", "relation", s.Get("kin." + relation), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, k))), "citizen.age", k.Id)
+            string value = s.Get("kin.value", "relation", s.Get("kin." + relation), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, k)));
+            if (TownWords.MarriedIn(k)) value = s.Get("kin.from", "value", value, "village", TownWords.Village(ctx, k));
+            var line = new LineVm(TownWords.Name(ctx, k), value, "citizen.age", k.Id)
                 { Icon = TownWords.Portrait(ctx, k), Note = TownWords.Job(ctx, k) + " · " + where, Opens = new SheetRequest("Citizen", k.Id) };
             line.Action = ActionVm.Open("citizen:" + k.Id, s.Get("action.see"), new SheetRequest("Citizen", k.Id));
             return line;

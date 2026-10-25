@@ -126,7 +126,7 @@ namespace Sim.Core.People
             sim.Emit(new CitizenRetired(t, c.Id, h.Id, c.Name, age, home));
         }
 
-        /// <summary>A household moves away: its members leave the town, kept only while a living citizen links to them (§3.3).</summary>
+        /// <summary>A household moves away: its members leave the town, kept until the close only while a living citizen links to them (§3.3).</summary>
         internal static void Leave(Simulation sim, Household x)
         {
             CitizensState s = sim.State.Citizens;
@@ -141,7 +141,6 @@ namespace Sim.Core.People
                 c.Story.Add(new StoryLine(StoryKind.Left, t, 0));
             }
             s.Households.Remove(x);
-            Prune(sim);
         }
 
         /// <summary>
