@@ -229,9 +229,8 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A mill grinding for the area (300 people) and milling the farm's own wheat, miller hired | Net profit 5,000–10,000 a season | The Village unlock (spec 018) |
-| The same mill run by you | About 35,000 a season, with your farm hours less | |
-| Payback of a mill | 6–12 seasons | Realistic for a village chakki |
+| A mill grinding for the area (300 people) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0072) | Net profit 0–8,000 a season, more with more of your own wheat | Measured at US-115: about 1,500 |
+| The same mill run by you | 25,000–35,000 a season, with your farm hours less; payback 3–6 seasons | Measured at US-115: about 29,600, payback about 4 |
 | Milling wheat bought at the market | 1–2 a kg | Teaches that margins are thin |
 | A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | |
 

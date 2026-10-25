@@ -224,7 +224,7 @@
 
 ## Next up
 
-1. **Owner:** review US-115's screens (and decide the mill's balance target, raised with the screens).
+1. **Owner:** review US-115's screens. (ADR 0072, owner 2026-10-25: the mill's targets kept realistic: hired 0–8,000 a season, run by you 25,000–35,000, payback 3–6; spec 016 §9 updated.)
 2. **Claude:** US-116 (business books: drawings, the Books tab, plan vs actual, net worth), US-117 (overdraft, the business loan, closing) and the mill's tuning; specs 017 and 013 alongside (gaps one per message).
 
 ## Owner action checklist (Phases 0–1)
