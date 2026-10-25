@@ -177,6 +177,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0065 | The village's shops and public buildings stand where their fronts face the camera (main street: council hall, grocer, tea stall; side lane: dealer, chemist, dairy co-op; the temple faces the pond); the dairy co-op on acre 108 by the farm's lane |
 | 0066 | Fodder stands never keep labourers hired (they're cut each morning with the animals' work; labourers come for a harvest); the People sheet in the Store's layout (picture buttons to hire, build a hut, send word; pictured rows; Hire and Send word sheets) |
 | 0067 | Two family houses an acre (was 4: cramped on the map), sharing a wall at the back of the acre with open ground in front; townspeople, children and elders with walk cycles, card portraits, population and happiness icons |
+| 0068 | Spec 016: each business keeps its own books (capital, drawings, equity in net worth; own wheat and milk at market price); the flour mill (Hamlet) grinds the area's grain (about 300 people, 4 a kg) and mills your wheat; the bakery and a dairy (paneer, curd, ghee) from the Village; a town hire or you run it; any owned acre; cash plus a guaranteed bank loan; research, plan, plan vs actual; overdraft, closing at 60% |
 
 ## Current status
 

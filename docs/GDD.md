@@ -268,8 +268,16 @@ Every business is a small company with its own books, staff and customers. The p
 
 | Era | Businesses |
 | --- | --- |
-| Hamlet | Farm stall, flour mill, dairy shed |
-| Village | Grocery, bakery, tea stall, tailor, carpenter, brick kiln |
+| Hamlet | Flour mill (atta chakki), farm stall; the cattle shed is part of the farm (spec 012) |
+| Village | Grocery, bakery, dairy (paneer, curd, ghee), tea stall, tailor, carpenter, brick kiln |
+
+**The first businesses (spec 016, ADR 0068).**
+- **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
+- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 300 people) and mills your own wheat into atta and bran.
+- **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk into paneer, curd and ghee. The village grocer and tea stall buy from both each morning.
+- **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
+- **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.
+- **Later.** Investors and partner citizens come in Phase 3.
 | Township | Restaurant, hardware store, private clinic, tuition centre, construction company, transport (tempo or truck) |
 | Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
 | City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |

@@ -573,7 +573,7 @@
 
 ## Sprint 13 · 8–21 Feb 2027 · Phase 2 (citizens; specs 015 and 016 written; 2 weeks, as S12)
 
-- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done and approved; US-106 done and approved; US-107 done and approved; US-108 done and approved; US-209 done and approved; US-208 done; US-212 done, layout approved (ADR 0067: 2 houses an acre); US-210 done
+- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done and approved; US-106 done and approved; US-107 done and approved; US-108 done and approved; US-209 done and approved; US-208 done; US-212 done, layout approved (ADR 0067: 2 houses an acre); US-210 done; spec 016 approved (ADR 0068, 2026-10-25: the mill, the bakery and a dairy, own books)
 - **Branch:** `sprint/13-citizens`
 - **Goal:** Spec 014 built (ADR 0063): citizens and the life clock, the family house, homes and people art, household budgets, needs and happiness, work and food, your people on screen; save schema 9 with its migration and fixture. Specs 015 (full hiring and HR) and 016 (businesses and production) written and approved; their code comes later.
 - **Points:** 39 planned + the owner's two requests
@@ -598,7 +598,7 @@
 **Sprint end checklist**
 
 - [x] US-214 and US-215 approved by the owner (2026-10-24)
-- [ ] Specs 015 and 016 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated
+- [ ] Specs 015 and 016 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated (016 done, ADR 0068; 015 next)
 - [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [x] Save schema 9: migration, `saves/schema9` fixture (checked current 2026-10-25), every older schema loads
 - [ ] Test checklist in `docs/test-checklists/` (`s13-citizens.md`, written); Development build (owner)

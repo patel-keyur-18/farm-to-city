@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: In review (every gap closed with the owner, 2026-10-25; the review made the time compression explicit, §3)
+- Status: Approved 2026-10-25 (ADR 0068); every gap closed with the owner; the final review made the time compression explicit (§3)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
