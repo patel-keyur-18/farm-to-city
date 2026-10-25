@@ -530,7 +530,8 @@ namespace Game.Presentation
             _placeBar = UiKit.Panel(30);
             _placeBar.style.position = Position.Absolute;
             _placeBar.style.bottom = 24;
-            _placeBar.style.left = Length.Percent(18); _placeBar.style.right = Length.Percent(18);
+            int side = _placingHouse ? 8 : 18; // the house's bar has a third button (a home loan, ADR 0071)
+            _placeBar.style.left = Length.Percent(side); _placeBar.style.right = Length.Percent(side);
             _placeBar.style.flexDirection = FlexDirection.Row;
             _placeBar.style.alignItems = Align.Center;
             UiKit.Padding(_placeBar, 10, 24);
@@ -549,6 +550,16 @@ namespace Game.Presentation
                 StopPlacing();
                 AfterCommands();
             }, build.Detail, build.Enabled));
+            if (_placingHouse)
+            {
+                // ADR 0071: build with the bank's home loan, choosing the term on its sheet.
+                ActionVm loan = HousePlacement.WithLoan(_ctx, tile);
+                _placeBar.Add(UiKit.MakeButton(loan.Label, ActionLook.Secondary, () =>
+                {
+                    StopPlacing();
+                    _safeRoot.schedule.Execute(() => OpenSheet(loan.Opens.Value)); // built on the next tick, so its buttons take touches
+                }, loan.Detail, loan.Enabled));
+            }
             _placeBar.Add(UiKit.MakeButton(_strings.Get("action.cancel"), ActionLook.Secondary, StopPlacing));
             _safeRoot.Add(_placeBar);
         }

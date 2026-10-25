@@ -180,6 +180,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0068 | Spec 016: each business keeps its own books (capital, drawings, equity in net worth; own wheat and milk at market price); the flour mill (Hamlet) grinds the area's grain (about 300 people, 4 a kg) and mills your wheat; the bakery and a dairy (paneer, curd, ghee) from the Village; a town hire or you run it; any owned acre; cash plus a guaranteed bank loan; research, plan, plan vs actual; overdraft, closing at 60% |
 | 0069 | Spec 015: one hiring board (farm hand, miller, baker, dairyman; townspeople known, migrants as ranges); interview and a 300-coin reference check; offer at the asked wage, 10% less or 10% more; output = skill × motivation × (1 − fatigue), neutral by default; long days at 1.5×; a crafting skill; courses +10 for 6,000; four more traits; five HR events; employer reputation |
 | 0070 | Marriage is patrilocal: a son's bride moves in (into a free family house if one stands empty), a daughter marries into her husband's village and is kept in the tree while a parent lives |
+| 0071 | The home loan: the bank counts family houses at 0.75 of their book value; measured, the competent bot has 5 households by day 16 on it (the saver day 33); spec 018 sets the Village from these; town happiness 65–85 until businesses; the random bot isn't measured for the town |
 
 ## Current status
 

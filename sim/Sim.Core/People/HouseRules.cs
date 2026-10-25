@@ -25,7 +25,7 @@ namespace Sim.Core.People
     {
         public const string Job = "house.build";
 
-        public static bool IsHouse(Simulation sim, Building b) { return b.Def == sim.Config.Game.Population.House; }
+        public static bool IsHouse(Simulation sim, Building b) { return sim.Config.Game.Population != null && b.Def == sim.Config.Game.Population.House; }
 
         /// <summary>Family houses on a tile, standing or being built.</summary>
         public static int HousesOn(Simulation sim, int tileId)

@@ -137,5 +137,33 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Land.Tiles[82].Occupied, Is.False);
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
         }
+    
+        // ADR 0071: the home loan. The bank counts family houses at houseLtv 0.75 of their book value (and the one being built), lends at
+        // most the house's cost, the down payment is the rest; the loan is an ordinary bank loan; the command log keeps its financing (written under its own tag).
+        [Test]
+        public void HomeLoan()
+        {
+            Simulation sim = CreditKit.NewSim(cash: 30_000);
+            Hamlet(sim);
+            int bank = sim.Config.Game.Credit.IndexOfLender("coop_bank");
+            long cost = Market.MarketRules.Indexed(sim, 60_000_00);
+            Assert.That(sim.Execute(new BuildFamilyHouse(sim.State.Clock.SimTime, HomeTile)).Reason, Is.EqualTo(RejectReason.InsufficientFunds), "30,000 isn't 60,000");
+            CreditLimit with = CreditRules.Limit(sim, bank, 0, 0, cost), without = CreditRules.Limit(sim, bank);
+            Assert.That(with.Houses, Is.EqualTo(cost));
+            Assert.That(with.RawLimit - without.RawLimit, Is.EqualTo(Money.MulRate(cost, Maths.Fixed.Parse("0.75"))), "0.75 of the house");
+            Assert.That(sim.Execute(new BuildFamilyHouse(sim.State.Clock.SimTime, HomeTile, new Financing("coop_bank", cost + Money.Coin, 8))).Reason, Is.EqualTo(RejectReason.InvalidAmount), "never more than it costs");
+
+            long cash = sim.State.Ledger.Cash;
+            Ok(sim, new BuildFamilyHouse(sim.State.Clock.SimTime, HomeTile, new Financing("coop_bank", 40_000_00, 8)));
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(cost - 40_000_00), "the down payment");
+            Loan loan = sim.State.Credit.Loans.Single(l => l.IsOpen && l.Lender == bank);
+            Assert.That(loan.Principal, Is.EqualTo(40_000_00));
+            Assert.That(CreditRules.Limit(sim, bank).Houses, Is.EqualTo(cost), "the house being built counts");
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+
+            Saves.LoadResult r = SaveTests.RoundTrip(sim);
+            Assert.That(r.State.CommandLog.Entries.Select(e => e.Command).OfType<BuildFamilyHouse>().Single().Financing.Amount, Is.EqualTo(40_000_00));
+            Assert.That(r.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
     }
 }

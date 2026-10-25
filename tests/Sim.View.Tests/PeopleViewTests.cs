@@ -449,6 +449,29 @@ namespace Sim.View.Tests
             Assert.That(home.Value, Is.EqualTo(TownWords.Village(ctx, hand)));
         }
 
+        // ADR 0071: a family house with the bank's home loan: the Build button stays open when the loan covers the shortfall; the
+        // placement offers "With a home loan"; its sheet has a row a term, each building with the loan.
+        [Test]
+        public void HomeLoan_Sheet()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            int tile = Situations.HouseTile(sim);
+            long cost = TownSheet.HouseCost(sim), loan = HouseLoanSheet.Loan(sim, cost);
+            Assert.That(loan, Is.GreaterThan(0), "the bank lends against the houses");
+            Assert.That(HousePlacement.WithLoan(ctx, tile).Enabled, Is.True);
+            SheetVm sheet = HouseLoanSheet.Build(ctx, tile);
+            Assert.That(sheet.Title, Is.EqualTo("Build with a home loan"));
+            LineVm row = sheet.Lines.First(l => l.Action != null);
+            Assert.That(row.Action.Label, Is.EqualTo("Build here"));
+            Assert.That(row.Action.Detail, Is.EqualTo(ctx.Fmt.Coins(cost - loan)), "the down payment");
+            AssertWords(sheet);
+            int loans = sim.State.Credit.Loans.Count;
+            Ok(sim, row.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(sim.State.Credit.Loans.Count, Is.EqualTo(loans + 1));
+            Assert.That(sim.State.Citizens.Constructions.Count, Is.EqualTo(1));
+        }
+
         [Test]
         public void LivesAlone()
         {

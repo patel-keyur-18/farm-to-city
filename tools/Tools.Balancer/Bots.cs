@@ -75,6 +75,7 @@ namespace Tools.Balancer
             Deliver(sim, t);
             if (!HoldsProduce(sim)) Sell(sim, t);
             Employ(sim, t);
+            Town.Build(sim, t, HomeReserve(sim), MayBorrow); // homes first (the Village), on the bank's home loan
             if (KeepsCattle) Cattle(sim, t);
             Sow(sim, t, BestCrop[Season(sim, t)]);
             Garden(sim, t);
@@ -118,7 +119,7 @@ namespace Tools.Balancer
             Fixed supply = FounderRules.LabourRate(sim) + FounderRules.MandiCut(sim) + PeopleRules.HiredHours(sim);
             foreach (int tile in AcresOf(sim))
             {
-                if (sim.State.Farm.CropOn(tile) != null) continue;
+                if (sim.State.Farm.CropOn(tile) != null || Town.Reserved(sim, tile)) continue;
                 if (FarmRules.LabourDemand(sim) + crop.LabourPerAcrePerDay > supply) break;
                 if (!Ok(sim, new Sow(t, tile, crop.Id, SeedSource.Certified, Fertiliser(sim, tile)))) break;
             }
@@ -184,6 +185,7 @@ namespace Tools.Balancer
                 foreach (int tile in AcresOf(sim))
                 {
                     Hand h = p.Hands[0];
+                    if (Town.Reserved(sim, tile)) continue; // kept clear for a family house
                     Fixed need = System.Linq.Enumerable.Contains(sim.Config.Game.Land.WellTiles, tile) ? labour + Fixed.One : labour;
                     if (need > left)
                     {
@@ -214,12 +216,21 @@ namespace Tools.Balancer
         protected virtual bool GrowsFodder { get { return true; } }
 
         /// <summary>The share of an animal's price it borrows from the bank when it can (0: buys with cash).</summary>
-        protected virtual Fixed DairyLoanShare { get { return Fixed.Parse("0.5"); } }
+        protected virtual Fixed DairyLoanShare { get { return Fixed.Parse("0.75"); } }
 
         /// <summary>
         /// Cash kept back before building or buying for the dairy: the next close's living costs and hands' wages, a season of
         /// bought feed for the herd after the purchase, and a margin, so the household is never left short at a close.
         /// </summary>
+        /// <summary>Cash kept back before building a family house: the next close's living costs and hands' wages.</summary>
+        private static long HomeReserve(Simulation sim)
+        {
+            DietPlanDef plan = sim.Config.Game.Farm.DietPlans[sim.State.Farm.Founder.DietPlan];
+            long wages = 0;
+            if (sim.State.People != null) foreach (Hand h in sim.State.People.Hands) wages += h.Wage;
+            return MarketRules.Indexed(sim, plan.CostPerSeason) + wages;
+        }
+
         private long Reserve(Simulation sim)
         {
             DietPlanDef plan = sim.Config.Game.Farm.DietPlans[sim.State.Farm.Founder.DietPlan];
@@ -598,6 +609,7 @@ namespace Tools.Balancer
         {
             for (int i = 0; i < 3; i++) sim.Execute(Gate.RandomCommand(sim, t, Rng.Next(sim.State.Seed, (RngStream)960, _n++, 0)));
             HarvestReady(sim, t);
+            Town.Build(sim, t, 30_000 * Money.Coin, false); // spec 014 §9: every bot builds homes after the Hamlet
         }
 
         private static void HarvestReady(Simulation sim, long t)
@@ -725,6 +737,84 @@ namespace Tools.Balancer
     }
 
     /// <summary>The inherited farm from the content's map, so bots work on any map size (spec 010).</summary>
+    /// <summary>
+    /// Homes for the town (spec 014 §9, US-211): after the Hamlet a bot builds family houses, one at a time with cash it can spare,
+    /// until 5 households live on its land (the Village's count, §3.13); on the labour quarters' free place first, then two to an
+    /// acre on the rain-fed acres before the fodder acre, which it stops sowing. A hand living alone who asks to bring his family: not now.
+    /// </summary>
+    public static class Town
+    {
+        public const int Households = 5;
+
+        private static int[] HouseAcres(GameDefs d)
+        {
+            int[] a = Home.Acres(d);
+            return new[] { a[a.Length - 2], a[a.Length - 3] };
+        }
+
+        /// <summary>Households, houses being built and empty houses (a family is coming).</summary>
+        public static int Homes(Simulation sim)
+        {
+            CitizensState town = sim.State.Citizens;
+            int n = town.Households.Count + town.Constructions.Count;
+            foreach (Sim.Core.Land.Building b in sim.State.Land.Buildings)
+                if (HouseRules.IsHouse(sim, b) && !town.Households.Exists(x => x.HomeId == b.Id)) n++;
+            return n;
+        }
+
+        private static bool Wanted(Simulation sim)
+        {
+            return sim.State.Citizens != null && HouseRules.Unlocked(sim) && Homes(sim) < Households;
+        }
+
+        /// <summary>The acre to keep clear for the next house, or −1: the first planned acre with room once the quarters are taken.</summary>
+        private static int NextAcre(Simulation sim)
+        {
+            int quarters = Home.Quarters(sim.Config.Game);
+            if (HouseRules.Place(sim, quarters) == RejectReason.None) return -1;
+            foreach (int tile in HouseAcres(sim.Config.Game))
+                if (HouseRules.HousesOn(sim, tile) < sim.Config.Game.Population.HousesPerAcre) return tile;
+            return -1;
+        }
+
+        /// <summary>An acre not to sow: one with a house, or the next one planned while more homes are wanted.</summary>
+        public static bool Reserved(Simulation sim, int tile)
+        {
+            if (sim.State.Citizens == null) return false;
+            if (HouseRules.HousesOn(sim, tile) > 0) return true;
+            return Wanted(sim) && tile == NextAcre(sim);
+        }
+
+        /// <summary>
+        /// Builds the next house when cash covers it (or its down payment) and the reserve; a bot that borrows takes the bank's home loan
+        /// over 8 seasons (ADR 0071: the rent, 10% of its cost a season, beats the interest).
+        /// </summary>
+        public static void Build(Simulation sim, long t, long reserve, bool borrow)
+        {
+            CitizensState town = sim.State.Citizens;
+            if (town == null || !HouseRules.Unlocked(sim)) return;
+            // Not now: the hand stays in his hut and a renting family takes the house, one household more for the same money
+            // (the rent equals the wage he would give up, §3.6).
+            if (town.OfferHandId != 0) sim.Execute(new AnswerFamilyRequest(t, town.OfferHandId, false));
+            if (!Wanted(sim) || town.Constructions.Count > 0) return;
+            int acre = NextAcre(sim);
+            PeopleState p = sim.State.People;
+            if (acre >= 0 && p?.OrderFor(OrderTargetKind.Field, acre) is StandingOrder o) sim.Execute(new ClearStandingOrder(t, o.HandId, OrderTargetKind.Field, acre));
+            long cost = MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value);
+            long loan = 0;
+            if (borrow && sim.State.Credit != null)
+            {
+                int bank = sim.Config.Game.Credit.IndexOfLender("coop_bank");
+                loan = System.Math.Min(cost, CreditRules.Limit(sim, bank, 0, 0, cost).Limit);
+                loan -= loan % (1_000 * Money.Coin);
+                if (loan < sim.Config.Game.Credit.Lenders[bank].MinAmount) loan = 0;
+            }
+            if (sim.State.Ledger.Cash < cost - loan + reserve) return;
+            int tile = acre >= 0 ? acre : Home.Quarters(sim.Config.Game);
+            sim.Execute(new BuildFamilyHouse(t, tile, loan > 0 ? new Financing("coop_bank", loan, 8) : null));
+        }
+    }
+
     public static class Home
     {
         public static int[] Acres(GameDefs defs)

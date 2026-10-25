@@ -83,6 +83,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | The family house | `BuildFamilyHouse(tile)` on an owned acre that isn't growing anything: `BuildingDef(family_house).value` 60,000 (a two-room pucca house), 48 h to build, houses `houseCapacity` people; an acre takes `housesPerAcre` houses and is no longer farmed while any stands; on the map two homes share a wall at the back of the acre, their courtyards opening onto open ground (ADR 0067). Also on the labour quarters' free places | 6 people; 2 an acre (ADR 0067; was 4) |
 | Rent | A household in a family house pays `rentPerSeason` × index at each season close (Dr Cash, Cr 4200 Rent received); a household that can't pay it falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays no rent: the house is part of his pay instead (§3.6) | 6,000 |
 | Moving up | A hand whose family house is free can "send for his family" (§3.10) | |
+| The home loan (ADR 0071) | `BuildFamilyHouse(tile, financing)`: the co-op bank lends up to the house's cost, counting family houses at `houseLtv` 0.75 of their book value in its limit (as the dairy loan counts animals); the rest is paid down. A house on inherited land is never seized: the bank carries that risk | 0.75 |
 | Overcrowding | More people than `houseCapacity` leaves shelter partly unmet (§3.8) | |
 
 **Why 60,000 and 6,000:** a two-room rural house costs about ₹3–5 lakh to build and rents for about ₹2,000 a month; the game keeps the founder's houses cheap as it does huts (family labour on the build) and keeps the rent in proportion, so a house pays back in about 10 seasons, like land (ADR 0028).
@@ -205,8 +206,8 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
-| `BuildFamilyHouse` | `tile` | `EraLocked`, `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds` | §3.4, §3.13 |
-| `AnswerFamilyRequest` | `handId`, `yes` | `UnknownHand`, `NoEmptyHouse` | §3.10 |
+| `BuildFamilyHouse` | `tile`, `financing` (optional, ADR 0071) | `EraLocked`, `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds`; with financing `InvalidAmount` (more than the cost) and the bank's checks | §3.4, §3.13 |
+| `AnswerFamilyRequest` | `handId`, `yes` | `NoOffer`, `NoEmptyHouse` | §3.10 |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
@@ -267,17 +268,19 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
 | AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild (a daughter who married away, while a parent lives: ADR 0070) and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
+| AC-15 | The home loan (ADR 0071): the bank counts family houses at 0.75 of their book value, lends at most the house's cost, the rest is paid down; the financing is kept in the command log | `HouseTests.HomeLoan`, `PeopleViewTests.HomeLoan_Sheet` |
 | AC-14 | Every row of §3.13: houses from the Hamlet; a free house offered to a hand alone first; a retired hand alone frees his hut; a dismissed hand's family stays as tenants; an acre with a house can't be sold; a seized house's household leaves; an elder alone behind on rent leaves; every needs row names its lever or says what isn't possible yet | `MigrationTests2.EveryPath`, `PeopleViewTests.NeedsLevers` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Population when the Village unlocks (spec 018) | 12–25 (5 households) | ADR 0028 pacing |
-| A cautious and a random bot reach 5 households | By the Village pacing | Every bot, not only the competent one |
-| Town happiness, competent bot | 70–85 | |
-| Households leaving a year, competent bot | Under 1 in 10 | |
-| Rent's share of the founder's income | Small | Under 15% |
+| Population when the Village unlocks (spec 018) | 12–25 (5 households) | Measured (US-211, ADR 0071): 16 at day 21 (10–20) |
+| 5 households | The competent bot by day 21 (ADR 0028 pacing, on the home loan); the cautious saver, which never borrows, by day 48 | Measured: day 16 (15–22); the saver day 33 (29–43). The random bot never reaches the Hamlet, so it isn't measured (ADR 0071) |
+| Town happiness, competent bot | 65–85 (ADR 0071: renters with outside work score about 68 by §3.8 until businesses bring town jobs) | Measured 69 (68–70) |
+| Households leaving a year, competent bot | Under 1 in 10 | Measured 0 |
+| Rent's share of the founder's income | Under 15% | Measured 12% (at most 14%) |
+| Departed a living citizen over 20 years (AC-13) | About 0.3 | Measured 0.27–0.33, worst 0.58–0.90 (a 6-house town; US-111) |
 | Town food demand vs the founder's grain | A town of 80 eats about 2 acres' grain a season | |
 
 ## 10. Open questions

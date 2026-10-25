@@ -421,17 +421,19 @@ namespace Sim.Core.Finance
             if (sim.State.Credit == null) return 0;
             CreditDefs defs = sim.Config.Game.Credit;
             long owed = 0;
-            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero;
+            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero, houseLtv = Fixed.Zero;
             foreach (Loan l in sim.State.Credit.Loans)
             {
                 if (!l.IsOpen || !defs.Lenders[l.Lender].Secured) continue;
                 owed += CreditRules.OwedNow(sim, l);
                 if (defs.Lenders[l.Lender].CollateralLtv > ltv) ltv = defs.Lenders[l.Lender].CollateralLtv;
                 if (defs.Lenders[l.Lender].LivestockLtv > animalLtv) animalLtv = defs.Lenders[l.Lender].LivestockLtv;
+                if (defs.Lenders[l.Lender].HouseLtv > houseLtv) houseLtv = defs.Lenders[l.Lender].HouseLtv;
             }
             if (owed == 0) return 0;
             // What stays behind the loans once this parcel or animal is sold (spec 005 §3.6, spec 012 §3.12).
-            long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv) + Money.MulRate(CreditRules.LivestockCollateral(sim, 0, animalId), animalLtv);
+            long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv) + Money.MulRate(CreditRules.LivestockCollateral(sim, 0, animalId), animalLtv)
+                + Money.MulRate(CreditRules.HouseCollateral(sim), houseLtv);
             return System.Math.Max(0, owed - supported);
         }
 

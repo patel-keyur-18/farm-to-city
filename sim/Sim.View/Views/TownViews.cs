@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
+using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.Core.Market;
 using Sim.Core.Maths;
@@ -273,7 +274,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             long cost = HouseCost(sim);
-            bool unlocked = HouseRules.Unlocked(sim), cash = sim.State.Ledger.CanAfford(cost);
+            bool unlocked = HouseRules.Unlocked(sim), cash = sim.State.Ledger.CanAfford(cost - HouseLoanSheet.Loan(sim, cost)); // a home loan may cover the rest (ADR 0071)
             string reason = !unlocked ? s.Get("town.houseLocked") : !cash ? ctx.Reject(RejectReason.InsufficientFunds) : null;
             var a = new ActionVm("buildHouse", s.Get("town.buildHouse"), s.Get("town.buildHouseDetail", "cost", ctx.Fmt.Coins(cost), "rent", ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason))),
                 ActionKind.Open, reason == null, reason, null, new SheetRequest("HousePlacement", 0));
@@ -542,16 +543,16 @@ namespace Sim.View.Views
             foreach (Tile t in sim.State.Land.Tiles)
             {
                 if (t.Terrain != Terrain.Farm && t.Terrain != Terrain.Quarters || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
-                CommandResult r = sim.Preview(new BuildFamilyHouse(ctx.Now, t.Id));
-                list.Add(new HutPlaceVm { TileId = t.Id, Allowed = r.Accepted, Reason = r.Accepted ? null : Reason(ctx, t.Id, r.Reason) });
+                RejectReason r = HouseRules.Place(sim, t.Id); // where it may stand; the money is the build buttons' (cash or a home loan)
+                list.Add(new HutPlaceVm { TileId = t.Id, Allowed = r == RejectReason.None, Reason = r == RejectReason.None ? null : Reason(ctx, t.Id, r) });
             }
             return list;
         }
 
         public static string ReasonFor(ViewContext ctx, int tileId)
         {
-            CommandResult r = ctx.Sim.Preview(new BuildFamilyHouse(ctx.Now, tileId));
-            return r.Accepted ? null : Reason(ctx, tileId, r.Reason);
+            RejectReason r = HouseRules.Place(ctx.Sim, tileId);
+            return r == RejectReason.None ? null : Reason(ctx, tileId, r);
         }
 
         /// <summary>The refusal in words: "Something is growing here", "This acre has 2 houses".</summary>
@@ -566,6 +567,64 @@ namespace Sim.View.Views
         public static ActionVm Confirm(ViewContext ctx, int tileId)
         {
             return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(TownSheet.HouseCost(ctx.Sim)), ActionKind.Primary, at => new BuildFamilyHouse(at, tileId));
+        }
+
+        /// <summary>"With a home loan": opens the loan's terms for this acre, greyed with the reason when the bank won't lend or the place won't do.</summary>
+        public static ActionVm WithLoan(ViewContext ctx, int tileId)
+        {
+            Simulation sim = ctx.Sim;
+            long cost = TownSheet.HouseCost(sim), loan = HouseLoanSheet.Loan(sim, cost);
+            string reason = ReasonFor(ctx, tileId);
+            if (reason == null && loan == 0) reason = ctx.Strings.Get("houseLoan.none");
+            if (reason == null && !sim.State.Ledger.CanAfford(cost - loan)) reason = ctx.Reject(RejectReason.InsufficientFunds);
+            return new ActionVm("houseLoan", ctx.Strings.Get("houseLoan.button"), ctx.Strings.Get("houseLoan.down", "amount", ctx.Fmt.Coins(cost - loan)),
+                ActionKind.Open, reason == null, reason, null, new SheetRequest("HouseLoan", tileId));
+        }
+    }
+
+    /// <summary>Building a family house with the bank's home loan (ADR 0071, as the dairy loan): what it lends, the down payment, one row per term.</summary>
+    public static class HouseLoanSheet
+    {
+        /// <summary>The most the bank lends toward a house (its limit with the house counted at houseLtv), in whole thousands; 0 below its minimum.</summary>
+        public static long Loan(Simulation sim, long cost)
+        {
+            if (sim.State.Credit == null) return 0;
+            int bank = LandLoanSheet.Bank(sim);
+            if (bank < 0 || sim.Config.Game.Credit.Lenders[bank].HouseLtv <= Fixed.Zero) return 0;
+            long loan = System.Math.Min(cost, CreditRules.Limit(sim, bank, 0, 0, cost).Limit) / (1000 * Money.Coin) * (1000 * Money.Coin);
+            return loan < sim.Config.Game.Credit.Lenders[bank].MinAmount ? 0 : loan;
+        }
+
+        public static SheetVm Build(ViewContext ctx, int tileId)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            long cost = TownSheet.HouseCost(sim), loan = Loan(sim, cost);
+            int bank = LandLoanSheet.Bank(sim);
+            var vm = new SheetVm
+            {
+                Icon = "family_house", Title = s.Get("houseLoan.title"),
+                Subtitle = s.Get("landLoan.subtitle", "price", ctx.Fmt.Coins(cost), "loan", ctx.Fmt.Coins(loan), "down", ctx.Fmt.Coins(cost - loan)),
+            };
+            vm.Lines.Add(new LineVm(s.Get("houseLoan.why"), null));
+            if (loan == 0)
+            {
+                vm.Lines.Add(new LineVm(s.Get("houseLoan.none"), null));
+                return vm;
+            }
+            LenderDef l = sim.Config.Game.Credit.Lenders[bank];
+            foreach (int term in BorrowSheet.Terms(l))
+            {
+                int tm = term;
+                LoanPlanVm plan = BorrowSheet.Plan(sim, bank, loan, term);
+                vm.Lines.Add(new LineVm(s.Plural("borrow.over", term), s.Get("borrow.termValue", "first", ctx.Fmt.Coins(plan.Payments[0]),
+                    "last", ctx.Fmt.Coins(plan.Payments[plan.Payments.Count - 1]), "interest", ctx.Fmt.Coins(plan.TotalInterest)), "borrow", bank * 1000 + term)
+                {
+                    Action = ActionVm.Checked(ctx, "houseLoan:" + term, s.Get("action.buildHere"), ctx.Fmt.Coins(cost - loan), ActionKind.Primary,
+                        at => new BuildFamilyHouse(at, tileId, new Financing(l.Id, loan, tm))),
+                });
+            }
+            return vm;
         }
     }
 
