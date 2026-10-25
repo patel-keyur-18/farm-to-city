@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1 closed; G2–G10 in §10 to close with the owner)
+- Status: Draft (G1, G2 closed; G3–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -225,7 +225,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 ## 10. Open questions
 
 - **G1. Which businesses in Phase 2.** **Closed (owner, 2026-10-25):** the flour mill (Hamlet) and the bakery (Village); the farm and market stalls with spec 017's shops. The owner asked that a dairy business come in this phase unless a later one plans it; none does, so the dairy (Village: paneer, curd, ghee from your own milk) is added (§3.1, §3.9b). Milk not kept for it still goes to the co-op.
-- **G2. Books.** Each business its own ledger; your investment at cost on your books, its equity in net worth; internal sales at today's market price. Recommendation: as written.
+- **G2. Books.** **Closed (owner, 2026-10-25):** each business has its own ledger, capital and drawings; your investment at cost on your books, each business at its equity in net worth; your own wheat and milk go to it at today's market price (a sale on the farm, a cost on the business) (§3.2).
 - **G3. Who runs it.** A hired townsperson until spec 015, or you yourself, with your farm hours.
 - **G4. Where it stands.** On an owned acre next to a road or lane (customers come to it), one business an acre, the acre out of farming; layout previewed first.
 - **G5. The mill's work.** Grinding fee 3 a kg for the town's wheat, own atta, 40 kg an hour, 1.20 power a kg, yields 0.97 and 0.03.
