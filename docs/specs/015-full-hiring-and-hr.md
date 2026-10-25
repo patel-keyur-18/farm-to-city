@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: Draft (G1, G2 closed; G3–G9 in §10 to close with the owner)
+- Status: Draft (G1–G6 closed; G7–G9 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)
@@ -33,7 +33,7 @@ Hiring and keeping people feels real: the player posts a job, weighs candidates 
 
 ## 3. Rules and formulas
 
-Every coin amount is a year-0 price that follows the price index (ADR 0034). **Neutral by default:** a worker at the market wage, normal hours and a content household has motivation 1 and no fatigue, so today's hands work exactly as in spec 006 (golden replays unchanged).
+Every coin amount is a year-0 price that follows the price index (ADR 0034). **Neutral by default:** a worker at the market wage, normal hours and a content household has motivation 1 and no fatigue, so today's hands work exactly as in spec 006. New applicants draw from ten traits, so the golden replays are regenerated once (a content change); existing hands keep theirs.
 
 ### 3.1 Roles and the hiring board (§10 G1)
 
@@ -81,11 +81,11 @@ Output = Skill factor × Motivation × (1 − Fatigue)
 
 | Factor | Formula | Bounds |
 | --- | --- | --- |
-| Motivation | 1 + 0.5 × (wage ÷ asked wage − 1) + 0.002 × (household happiness − 70), plus or minus the HR events' effects (§3.7) | 0.7–1.2 |
+| Motivation | 1 + fairness + home + the HR events' effects (§3.7). Fairness: +0.05 hired 10% above the asked wage; −0.10 hired 10% below it, until a renewal pays the asked wage; 0 otherwise (a loyal hand keeping his wage is content). Home: −0.003 for each point the household's happiness is below 60, else 0 | 0.7–1.2 |
 | Fatigue | Rises 0.05 a day worked over 8 hours a day (overtime), falls 0.10 a day at 8 or fewer; never above 0.5 | 0–0.5 |
 | Overtime | A business can stay open up to 12 hours a day: the hours over 8 are paid 1.5 × the hourly wage, and fatigue builds. A farm hand can be set to "long days" (10 h, same rule) | |
 
-A paid fair wage with a household at 70 or above gives motivation of at least 1. A hand alone in his hut is at about 84, so today's hands are unchanged.
+A fair hire with a household at 60 or above has motivation exactly 1, so today's hands (alone in a hut, about 84) work exactly as before.
 
 ### 3.5 Training (§10 G5)
 
@@ -104,7 +104,7 @@ A paid fair wage with a household at 70 or above gives motivation of at least 1.
 | Sociable | Every colleague at the same place +0.05 motivation; spec 017's shops sell more later |
 | Perfectionist | No spoiled batch (§3.7's bad batch) and 5% slower |
 
-They join spec 006's six, drawn evenly from all ten. Traits are paired so they never contradict (never hardworking with lazy, careless with perfectionist, frugal with creative is fine).
+They join spec 006's six, drawn evenly from all ten. A pair never contradicts: never hardworking with lazy, or careless with perfectionist (the second draw skips the first's opposite).
 
 ### 3.7 HR events (§10 G7)
 
@@ -199,7 +199,7 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 | AC-1 | A post brings applicants for its role every 12 ± 6 h; townspeople without a town job apply with known skill and traits | `HiringTests.Board_Applicants` |
 | AC-2 | A reference check costs 300, finishes after 12 h and narrows the skill to ±5 | `HiringTests.Reference` |
 | AC-3 | A low offer is accepted at 0.40, else a counter at the asked wage once; a high offer at 0.95 | `HiringTests.Negotiation` |
-| AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair-wage worker in a content home has motivation ≥ 1; spec 006's hands and the golden replays are unchanged | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
+| AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair hire in a content home has motivation exactly 1, so an existing hand works as before; the golden replays are regenerated once, because new applicants draw from ten traits | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
 | AC-5 | Long days raise output and fatigue; fatigue falls at normal hours; overtime pays 1.5× | `WorkerTests.Fatigue_Overtime` |
 | AC-6 | A course adds 10 skill after 2 days away, paid; the next renewal asks more | `WorkerTests.Course` |
 | AC-7 | The four traits act as §3.6; no contradictory pairs are drawn | `WorkerTests.Traits` |
@@ -219,10 +219,10 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 
 - **G1. Roles and the board.** **Closed (owner, 2026-10-25):** one board for farm hand, miller, baker and dairyman (30,000, 27,000, 30,000, 27,000 at skill 50); your townspeople without a town job apply with skill and traits known, migrants as now, regulars as now; a business worker from outside commutes and isn't a citizen; spec 016's stopgap ends in Sprint 15 (§3.1).
 - **G2. Knowing a candidate.** **Closed (owner, 2026-10-25):** the application shows the skill ±15 and one trait; a free interview the second trait; a reference check (300, 12 h) narrows the skill to ±5 and says how they left their last job ("was let go" when a trait is lazy or careless); townspeople are known (§3.2).
-- **G3. Negotiation.** Offer at the asked wage, 10% less or 10% more; acceptance 0.85 / 0.40 (then one counter) / 0.95; townspeople always at the asked wage.
-- **G4. Output.** Skill × motivation (wage fairness, the household's happiness) × (1 − fatigue); overtime to 12 h at 1.5×; neutral by default.
-- **G5. Training.** On the job +3, a course +10 for 6,000 and 2 days away; a trained worker asks more.
-- **G6. Four traits.** Creative, frugal, sociable, perfectionist with §3.6's effects; no contradictory pairs.
+- **G3. Negotiation.** **Closed (owner, 2026-10-25):** offer at the asked wage (0.85), 10% less (0.40, then one counter at the asked wage; a low hire is remembered in motivation and reputation) or 10% more (0.95); townspeople always accept at the asked wage or above, 0.6 below; regulars always (§3.3).
+- **G4. Output.** **Closed (owner, 2026-10-25):** skill × motivation (0.7–1.2: +0.05 hired above, −0.10 hired below until paid the asked wage, lower when the family is under 60, the events' effects) × (1 − fatigue: +0.05 a long day, −0.10 a normal one, at most 0.5); long days to 12 h with the extra hours at 1.5×; RoleFit 0.8 in the wrong skill, tools with spec 013; exactly neutral for a fair hire in a content home (§3.4).
+- **G5. Training.** **Closed (owner, 2026-10-25):** on the job +3 a season (×1.5 ambitious); a course +10 skill in the role for 6,000, 2 days away and paid; a trained worker asks more at renewal and draws more poaching offers. Example: a miller from skill 40 to 50 works about 5% faster and asks about 1,100 more a season (the owner was told about 900; the formula gives 25,920 → 27,000) (§3.5).
+- **G6. Four traits.** **Closed (owner, 2026-10-25):** creative (a business's goods sell 5% higher; no farm effect yet), frugal (−10% power, fuel and supplies; the household saves half its leisure), sociable (+0.05 motivation to colleagues; shops later), perfectionist (no bad batch, 5% slower); never hardworking with lazy or careless with perfectionist; all ten drawn evenly (§3.6).
 - **G7. HR events.** Raise request, poaching offer, sick leave, family emergency, a bad batch; at most one a worker a season; conflicts, accidents and petitions in Phase 3.
 - **G8. Employer reputation.** 0–100 from fair pay and fair treatment; affects acceptance and applicants.
 - **G9. What stays out.** Supervisors, benefits, managers, night shifts in Phase 3; education bonds with the school (spec 018).
