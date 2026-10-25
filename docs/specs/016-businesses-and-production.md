@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1–G3 closed; G4–G10 in §10 to close with the owner)
+- Status: Draft (G1–G4 closed; G5–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -64,7 +64,7 @@ Only types the era allows are offered; a type whose worker can't be found is off
 1. **Choose a type** (Menu → Businesses → Start a business): the types the era allows, each with what it does and what it costs.
 2. **Market research** (a sheet, nothing paid): the town's wheat a day and what the next village's chakki charges for grinding, the trader's atta and bran prices today, a miller's wage, and the competitor (the chakki in the next village, §3.7).
 3. **The plan:** hours open (default 8:00–18:00) and the grinding fee; the game projects a season's revenue, costs, net profit and payback from today's prices and the town's size. Saved, and compared with actual results after 4 seasons ("You planned 18,000 a season; it made 12,400: the town ground less wheat than planned").
-4. **Place it** on the map (§3.5): lit acres, refusals in words.
+4. **Place it** on the map: any acre you own with nothing growing, one business an acre (the whole acre, drawn as its work yard), lit as the family house's are, refusals in words ("Something is growing here", "A family house stands here"). The acre stops farming and can't be sold while it stands (`ParcelInUse`). Its layout is previewed to the owner before it's final (owner, 2026-10-25; §10 G4).
 5. **Fund it** (§3.8): cash put in, and a bank business loan if wanted.
 6. **The worker** (§3.6).
 7. **Build:** the shed and machine are built (24 h); it opens when built and staffed.
@@ -142,7 +142,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | What the player can do | Put cash in; take or restructure the business loan; sell the stock; close |
 | Closing | The worker leaves; stock is sold to the trader; the equipment and building sell at 60% of book value (or stay as an empty shed); loans and overdraft are repaid from that; what's still owed becomes your own debt (you guaranteed it), joining spec 005's loans; any cash left comes to you |
 | Credit | A business that misses a loan payment counts on your credit score as your own (spec 005 §3.7) |
-| Foreclosure | A business's equipment and building are seized after bought land and before produce (spec 005 §3.9 step 1) |
+| Foreclosure | A business on bought land is seized with that land (spec 005 §3.9 step 1); one on the inherited acres is protected with them (ADR 0009), as the family houses are |
 | Never stuck | Closing always frees the founder; the farm carries on (ADR 0009) |
 
 ### 3.11 Processing order
@@ -227,7 +227,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G1. Which businesses in Phase 2.** **Closed (owner, 2026-10-25):** the flour mill (Hamlet) and the bakery (Village); the farm and market stalls with spec 017's shops. The owner asked that a dairy business come in this phase unless a later one plans it; none does, so the dairy (Village: paneer, curd, ghee from your own milk) is added (§3.1, §3.9b). Milk not kept for it still goes to the co-op.
 - **G2. Books.** **Closed (owner, 2026-10-25):** each business has its own ledger, capital and drawings; your investment at cost on your books, each business at its equity in net worth; your own wheat and milk go to it at today's market price (a sale on the farm, a cost on the business) (§3.2).
 - **G3. Who runs it.** **Closed (owner, 2026-10-25):** the best-skilled adult in your town without a town job (else a daily worker from a neighbouring village) at a season wage paid upfront, until spec 015 brings full hiring; or you run it yourself, no wage, your hours there coming off your farm work; a business job is a town job (§3.6).
-- **G4. Where it stands.** On an owned acre next to a road or lane (customers come to it), one business an acre, the acre out of farming; layout previewed first.
+- **G4. Where it stands.** **Closed (owner, 2026-10-25):** any acre you own with nothing growing (none of the inherited acres touch a road, so a roadside rule would force a land purchase first); one business an acre, the acre out of farming and not for sale while it stands; the layout previewed to the owner first; location and passing trade are spec 017's, for shops (§3.3).
 - **G5. The mill's work.** Grinding fee 3 a kg for the town's wheat, own atta, 40 kg an hour, 1.20 power a kg, yields 0.97 and 0.03.
 - **G6. Wheat in, atta out.** The founder's store first at today's price, then the market if allowed; atta and bran to the trader and the local market; atta in supermarket orders.
 - **G7. Funding.** Own cash and a bank business loan at 0.6 of equipment and building; investors and partners in Phase 3.
