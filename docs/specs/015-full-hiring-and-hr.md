@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: Draft (G1–G6 closed; G7–G9 in §10 to close with the owner)
+- Status: In review (every gap closed with the owner, 2026-10-25)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)
@@ -77,7 +77,8 @@ Output = Skill factor × Motivation × (1 − Fatigue)
 ```
 
 - **Skill factor:** for a farm hand, spec 006's `productivityBase + productivityPerSkill × skill ÷ 100` times the trait factors. For a business worker, the same form on its rate.
-- **Tools and RoleFit:** 1 in Phase 2. Tools come with spec 013's equipment; RoleFit is 0.8 for the wrong skill (a farmer at the bakery).
+- **Two skills:** from Phase 2 a citizen has a farming skill and a crafting skill, each drawn as spec 006 draws farming (existing citizens get crafting drawn at the save migration). A role reads its own skill (§3.1), so nobody works in the wrong skill and RoleFit is 1; it returns with Phase 3's educated roles.
+- **Tools:** 1 in Phase 2; they come with spec 013's equipment.
 
 | Factor | Formula | Bounds |
 | --- | --- | --- |
@@ -108,7 +109,7 @@ They join spec 006's six, drawn evenly from all ten. A pair never contradicts: n
 
 ### 3.7 HR events (§10 G7)
 
-Events that need a decision wait for the player (ADR 0002): an alert, a card with choices, and no deadline while away. At most one event a worker a season, seeded (stream People).
+Events that need a decision wait for the player (ADR 0002): an alert, a card with choices, and no deadline while away; until it's answered the worker carries on as they are (an offer from elsewhere waits too). At most one event a worker a season, seeded (stream People).
 
 | Event | When | Choices | Consequences |
 | --- | --- | --- | --- |
@@ -125,7 +126,7 @@ Conflicts between workers, accidents and petitions come in Phase 3, when places 
 A score 0–100 (start 50) shown on the People sheet with its *Why?*.
 - **Up:** paying the asked wage or above at renewal (+1 a worker a season); paid sick leave and advances (+2, +3); severance paid when letting go after probation (+1).
 - **Down:** a hire below the asked wage (−2); a refused raise (−2); letting go in a worker's first season (−1); a lapse (−3).
-- **Effects:** applicants' acceptance ±10% at 80 or 20; above-market posts bring skill +5 more at 80; nothing below 20 but fewer applicants (×0.75 pace).
+- **Effects:** at 80 or above, acceptance +10% and above-market posts bring skill +5 more; at 20 or below, acceptance −10% and applicants come more slowly (×0.75 pace).
 
 ### 3.9 Letting go (§10 G9)
 
@@ -142,6 +143,7 @@ As spec 006: no severance in probation (the first season), then 10% of the seaso
 **`people.json`:** roles (id, wage, skill, housing), the reference check (cost, hours, range), the offer factors and chances, the motivation weights and bounds, fatigue rates and cap, overtime, courses (cost, days, gain), the four traits' effects and the incompatible pairs, event chances and effects, reputation steps and effects.
 
 **State (save schema 11):**
+- `Citizen`: a crafting skill (drawn for existing citizens at the migration, stream Citizens).
 - `Worker`: the role and place, the wage memory, motivation, fatigue, course end, the season's event.
 - `Applicant`: role, reference result, offer state.
 - `JobPost`: role and place.
@@ -205,7 +207,7 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 | AC-7 | The four traits act as §3.6; no contradictory pairs are drawn | `WorkerTests.Traits` |
 | AC-8 | Each HR event follows its chance, waits for the player, and applies its choice's effects | `HrEventTests.Choices` |
 | AC-9 | Reputation moves by §3.8's steps and changes acceptance and applicants as stated | `HrEventTests.Reputation` |
-| AC-10 | A schema-10 save loads into 11 (workers neutral, reputation 50) and round-trips | `MigrationTests.Schema10_Workers` |
+| AC-10 | A schema-10 save loads into 11 (workers neutral, reputation 50, a crafting skill drawn for each citizen) and round-trips | `MigrationTests.Schema10_Workers` |
 
 ## 9. Balancing hooks
 
@@ -220,12 +222,12 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 - **G1. Roles and the board.** **Closed (owner, 2026-10-25):** one board for farm hand, miller, baker and dairyman (30,000, 27,000, 30,000, 27,000 at skill 50); your townspeople without a town job apply with skill and traits known, migrants as now, regulars as now; a business worker from outside commutes and isn't a citizen; spec 016's stopgap ends in Sprint 15 (§3.1).
 - **G2. Knowing a candidate.** **Closed (owner, 2026-10-25):** the application shows the skill ±15 and one trait; a free interview the second trait; a reference check (300, 12 h) narrows the skill to ±5 and says how they left their last job ("was let go" when a trait is lazy or careless); townspeople are known (§3.2).
 - **G3. Negotiation.** **Closed (owner, 2026-10-25):** offer at the asked wage (0.85), 10% less (0.40, then one counter at the asked wage; a low hire is remembered in motivation and reputation) or 10% more (0.95); townspeople always accept at the asked wage or above, 0.6 below; regulars always (§3.3).
-- **G4. Output.** **Closed (owner, 2026-10-25):** skill × motivation (0.7–1.2: +0.05 hired above, −0.10 hired below until paid the asked wage, lower when the family is under 60, the events' effects) × (1 − fatigue: +0.05 a long day, −0.10 a normal one, at most 0.5); long days to 12 h with the extra hours at 1.5×; RoleFit 0.8 in the wrong skill, tools with spec 013; exactly neutral for a fair hire in a content home (§3.4).
+- **G4. Output.** **Closed (owner, 2026-10-25):** skill × motivation (0.7–1.2: +0.05 hired above, −0.10 hired below until paid the asked wage, lower when the family is under 60, the events' effects) × (1 − fatigue: +0.05 a long day, −0.10 a normal one, at most 0.5); long days to 12 h with the extra hours at 1.5×; tools with spec 013; exactly neutral for a fair hire in a content home (§3.4). Review (Claude, same day): citizens get a crafting skill beside farming and each role reads its own, so the "wrong skill at 0.8" never arises in Phase 2.
 - **G5. Training.** **Closed (owner, 2026-10-25):** on the job +3 a season (×1.5 ambitious); a course +10 skill in the role for 6,000, 2 days away and paid; a trained worker asks more at renewal and draws more poaching offers. Example: a miller from skill 40 to 50 works about 5% faster and asks about 1,100 more a season (the owner was told about 900; the formula gives 25,920 → 27,000) (§3.5).
 - **G6. Four traits.** **Closed (owner, 2026-10-25):** creative (a business's goods sell 5% higher; no farm effect yet), frugal (−10% power, fuel and supplies; the household saves half its leisure), sociable (+0.05 motivation to colleagues; shops later), perfectionist (no bad batch, 5% slower); never hardworking with lazy or careless with perfectionist; all ten drawn evenly (§3.6).
-- **G7. HR events.** Raise request, poaching offer, sick leave, family emergency, a bad batch; at most one a worker a season; conflicts, accidents and petitions in Phase 3.
-- **G8. Employer reputation.** 0–100 from fair pay and fair treatment; affects acceptance and applicants.
-- **G9. What stays out.** Supervisors, benefits, managers, night shifts in Phase 3; education bonds with the school (spec 018).
+- **G7. HR events.** **Closed (owner, 2026-10-25):** raise request, an offer from elsewhere (skill 60+, match +15% or let go), sick leave (paid or unpaid), family emergency (an advance of a quarter's wage), a bad batch (throw away or sell at half); at most one a worker a season; each waits for the player, the worker carrying on meanwhile; about 0–2 a season for 3 workers; conflicts, accidents and petitions in Phase 3 (§3.7).
+- **G8. Employer reputation.** **Closed (owner, 2026-10-25):** 0–100 (start 50) shown with its *Why?*; up with the asked wage or more at renewal (+1 a worker), paid sick leave (+2), an advance (+3), severance paid (+1); down with a low hire (−2), a refused raise (−2), letting go in probation (−1), a lapse (−3); at 80+ acceptance +10% and better above-market applicants, at 20− acceptance −10% and applicants slower (§3.8).
+- **G9. What stays out.** **Closed (owner, 2026-10-25):** supervisors and span of control, benefits and minimum wage policy (with the treasury), managers, night shifts in Phase 3; education bonds with the school (spec 018); a family house as part of a hand's pay already exists (§2).
 
 ## 11. Cut first
 
