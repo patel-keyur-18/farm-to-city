@@ -37,6 +37,21 @@ namespace Sim.View.Tests
                     yield return Named("departed " + c.Id, CitizenSheet.Departed(ctx, c.Id));
                 }
             }
+            if (sim.State.Businesses != null)
+            {
+                yield return Named("businesses", BusinessesSheet.Build(ctx));
+                for (int i = 0; i < sim.Config.Game.Businesses.Types.Count; i++)
+                {
+                    yield return Named("research " + i, BusinessResearchSheet.Build(ctx, i));
+                    yield return Named("plan " + i, BusinessPlanSheet.Build(ctx, i, false));
+                    yield return Named("plan self " + i, BusinessPlanSheet.Build(ctx, i, true));
+                }
+                foreach (var b in sim.State.Businesses.Businesses)
+                {
+                    yield return Named("business " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Today));
+                    yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
+                }
+            }
             yield return Named("forecast", ForecastView.Sheet(ctx));
             foreach (var extra in Panels.All(ctx)) yield return extra;
         }

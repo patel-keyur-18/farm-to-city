@@ -56,11 +56,23 @@ namespace Sim.Core.Business
         /// <summary>Whether the area brings its grain at this fee: no more than the next village's chakki's fee plus the tolerance (§3.7).</summary>
         public static bool AreaComes(Simulation sim, Business b) { return b.Fee <= Defs(sim).NextVillageFee + Defs(sim).FeeTolerance; }
 
+        /// <summary>The plan's season, line by line (§3.3), for the plan screen and its *Why?*s.</summary>
+        public sealed class Projection
+        {
+            public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Revenue, Costs, Profit, Cost, CashNeeded;
+        }
+
         /// <summary>
         /// The season ahead as planned (§3.3): the area's fees and your wheat's margin at today's prices, against the wage (or none when you
         /// run it), power, repairs and depreciation; a season's running cash is the wage or, run by you, the power and repairs.
         /// </summary>
         public static BusinessPlan Project(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee)
+        {
+            Projection p = Projected(sim, t, runYourself, ownPerDay, fee);
+            return new BusinessPlan { Revenue = p.Revenue, Costs = p.Costs, Profit = p.Profit, CashNeeded = p.CashNeeded, MadeAt = sim.State.Clock.SimTime };
+        }
+
+        public static Projection Projected(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee)
         {
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
@@ -76,10 +88,10 @@ namespace Sim.Core.Business
             long depreciation = MarketRules.Indexed(sim, t.BuildingValue) / t.BuildingLifeSeasons + MarketRules.Indexed(sim, t.EquipmentValue) / t.EquipmentLifeSeasons;
             long wage = runYourself ? 0 : Wage(sim, t);
             long revenue = fees + sales, costs = wheat + power + repairs + depreciation + wage;
-            return new BusinessPlan
+            return new Projection
             {
-                Revenue = revenue, Costs = costs, Profit = revenue - costs, MadeAt = sim.State.Clock.SimTime,
-                CashNeeded = Cost(sim, t) + (runYourself ? power + repairs : wage),
+                AreaGrams = area, OwnGrams = own, Fees = fees, Sales = sales, Wheat = wheat, Power = power, Repairs = repairs, Depreciation = depreciation, Wage = wage,
+                Revenue = revenue, Costs = costs, Profit = revenue - costs, Cost = Cost(sim, t), CashNeeded = Cost(sim, t) + (runYourself ? power + repairs : wage),
             };
         }
 

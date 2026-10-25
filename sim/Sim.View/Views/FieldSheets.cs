@@ -35,6 +35,8 @@ namespace Sim.View.Views
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
             if (tile.Terrain == Terrain.Cattle) return ShedSheet.Build(ctx);
             if (Sim.Core.People.HouseRules.HousesOn(sim, tileId) > 0) return HomesteadSheet.Build(ctx, tile); // a homestead acre is never sown
+            Sim.Core.Business.Business business = Sim.Core.Business.BusinessRules.On(sim, tileId);
+            if (business != null) return BusinessSheet.Build(ctx, business.Id); // spec 016 §7
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);

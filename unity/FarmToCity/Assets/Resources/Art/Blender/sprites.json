@@ -895,6 +895,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_atta"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_banana"
   },
   {
@@ -903,6 +910,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_berseem"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_bran"
   },
   {
    "w": 256,

@@ -121,6 +121,16 @@ namespace Sim.View.Tests
             return sim.State.Land.Tiles.First(t => t.Terrain == Terrain.Farm && sim.State.Land.Parcels[t.ParcelId].Owned && sim.State.Farm.CropOn(t.Id) == null).Id;
         }
 
+        /// <summary>The town with a flour mill founded on an empty acre (hired worker), built, and a working day gone by (spec 016).</summary>
+        public static Simulation Mill()
+        {
+            Simulation sim = Town();
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "flour_mill", tile, 150_000_00, false));
+            sim.AdvanceTo((T(sim) / 86_400 + 2) * 86_400 + 12 * 3600);
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -128,6 +138,7 @@ namespace Sim.View.Tests
             yield return Ready();
             yield return Later(out _);
             yield return Town();
+            yield return Mill();
         }
     }
 }

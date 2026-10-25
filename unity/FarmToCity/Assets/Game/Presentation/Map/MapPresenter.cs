@@ -694,6 +694,12 @@ namespace Game.Presentation.Map
             PlaceGhost(SpriteBank.Rendered("family_house_s") ?? SpriteBank.Hut, 1f, pos, tile, allowed);
         }
 
+        /// <summary>A business's ghost (spec 016 §3.3) where it will stand on the acre.</summary>
+        public void ShowBusinessGhost(int tile, bool allowed, string typeId)
+        {
+            PlaceGhost(SpriteBank.Rendered(typeId + "_s") ?? SpriteBank.Hut, 1f, OnTile(tile, MillAt), tile, allowed);
+        }
+
         private void PlaceGhost(Sprite sprite, float scale, Vector3 pos, int tile, bool allowed)
         {
             if (_ghost == null)

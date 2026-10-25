@@ -1294,6 +1294,15 @@ def icon_good(good):
         bowl(o, 0xF4F0E2, grain=0.008)
     elif good == "lentils":
         bowl(o, 0xE07A3A, grain=0.009, seed=5)
+    elif good == "atta":
+        # A steel paraat heaped with fine whole-wheat flour (spec 016).
+        o.append(cylinder("paraat", 0.12, 0.10, 0.03, (0, 0, 0.015), toon("steel", 0xC9CDD2), segs=24, smooth=True))
+        o.append(dome("heap", 0.10, 0.07, (0, 0, 0.028), toon("atta", 0xEADBBE)))
+    elif good == "bran":
+        # Chokar: coarse brown flakes in a jute sack's open mouth.
+        o.append(cylinder("sackBody", 0.09, 0.10, 0.12, (0, 0, 0.06), toon("sack", 0xC7A06A), segs=16, smooth=True))
+        o.append(dome("chokar", 0.088, 0.04, (0, 0, 0.12), toon("chokar", 0xA8743E)))
+        o.append(cylinder("rim", 0.092, 0.092, 0.012, (0, 0, 0.12), toon("jute", 0x9C7A4C), segs=16, outline=False))
     elif good == "potato":
         for i, (x, y, z) in enumerate(((-0.05, 0.0, 0.04), (0.05, 0.01, 0.04), (0.0, -0.02, 0.10))):
             o.append(sphere("potato%d" % i, 0.06, (x, y, z), toon("potato", 0xC59A5A), scale=(1.25, 1, 0.85), segs=14, rings=9))
@@ -1540,7 +1549,7 @@ for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", mod
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
-for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango"):
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran"):
     ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
 for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()

@@ -30,6 +30,7 @@ namespace Sim.View.Views
             Add("store", new SheetRequest("Store", 0), "sack");
             Add("money", new SheetRequest("Money", 0), "coin");
             if (ctx.Sim.State.People != null) Add("people", new SheetRequest("People", 0), "person_hand_f");
+            if (ctx.Sim.State.Businesses != null) Add("businesses", new SheetRequest("Businesses", 0), "flour_mill"); // spec 016 §3.3
             Add("land", new SheetRequest("Lands", 0), "sign");
             Add("you", new SheetRequest("Founder", 0), "person_founder");
             if (ctx.Sim.State.Guidance != null) Add("letter", new SheetRequest("Letter", 0), "letter");
