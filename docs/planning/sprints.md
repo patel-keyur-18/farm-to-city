@@ -607,7 +607,7 @@
 
 ## Sprint 14 · 22 Feb – 7 Mar 2027 · Phase 2 (population flows, the flour mill; specs 017 and 013 written; 2 weeks, as S13)
 
-- **Status:** In progress (plan and 2 weeks approved by the owner, 2026-10-25). US-217 done (owner to review)
+- **Status:** In progress (plan and 2 weeks approved by the owner, 2026-10-25). US-217 done and approved; US-109 done (owner to review; ADR 0070 marriage is patrilocal)
 - **Branch:** `sprint/14-flows-and-mill`
 - **Goal:** Spec 014 finished (F11.3): families move in and out, a hand brings his family, births, marriages and gentle deaths, the bounded family tree, every bot reaches the Village's households. Spec 016's first part built (F12.1): found the flour mill on an owned acre, its own books, the overdraft and closing. Save schema 10 with its migration and fixture. Specs 017 (shops, customer choice and rivals) and 013 (irrigation, equipment, orchards and granary) written and approved; their code comes in Sprint 16.
 - **Points:** 33 (F11.3 16, F12.1 16, US-217 1)
@@ -616,8 +616,8 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-217 | The citizen card's *Lives in* says "alone" for someone living alone (owner, 2026-10-25) | [F11.2](features/F11.2-households-needs-and-happiness.md) | 1 | Must | Done (owner to review) |
-| US-109 | Births, marriages and deaths | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 5 | Must | To do |
+| US-217 | The citizen card's *Lives in* says "alone" for someone living alone (owner, 2026-10-25) | [F11.2](features/F11.2-households-needs-and-happiness.md) | 1 | Must | Done |
+| US-109 | Births, marriages and deaths | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 5 | Must | Done (owner to review) |
 | US-110 | Migration: families in and out, a hand's family, every path | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 5 | Must | To do |
 | US-111 | The family tree | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 3 | Should | To do |
 | US-211 | Balance: population bots and gates | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 3 | Must | To do |

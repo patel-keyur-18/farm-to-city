@@ -339,6 +339,16 @@ namespace Sim.View.Views
                         rows.Add(Row(s.Get("away.town"), s.Get(r.WentHome ? "away.wentHome" : "away.retired", "name", PeopleWords.Name(ctx, r.Name), "age", ctx.Fmt.Integer(r.Age)),
                             PeopleWords.Female(ctx, r.Name) ? "portrait_elder_f" : "portrait_elder_m"));
                         break;
+                    case CitizenBorn b:
+                        rows.Add(Row(s.Get("away.town"), TownNews.Born(ctx, b.Name, b.Female, b.HouseholdId), b.Female ? "portrait_girl" : "portrait_boy"));
+                        break;
+                    case CitizenMarried m:
+                        rows.Add(Row(s.Get("away.town"), TownNews.Married(ctx, m.Name, m.MovedAway, m.SpouseId, m.Village, m.HomeHouseholdId == m.HouseholdId ? 0 : m.HomeHouseholdId),
+                            m.MovedAway ? "portrait_town_f" : "portrait_town_m"));
+                        break;
+                    case CitizenDied d:
+                        rows.Add(Row(s.Get("away.town"), TownNews.Died(ctx, d.CitizenId, d.Name, d.Female, d.Age), d.Female ? "portrait_elder_f" : "portrait_elder_m"));
+                        break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case RentMissed m:
                         Sim.Core.People.Household x = sim.State.Citizens.Household(m.HouseholdId);
@@ -397,7 +407,7 @@ namespace Sim.View.Views
             { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "LabourersHarvested", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
-            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.

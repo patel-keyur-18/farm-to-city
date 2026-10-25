@@ -24,6 +24,9 @@ namespace Sim.Core.People
         Here = 0,
         Died = 1,
         Left = 2,
+
+        /// <summary>A daughter who married into her husband's village (ADR 0070).</summary>
+        MarriedAway = 3,
     }
 
     /// <summary>What a story line on the citizen card tells (§3.3).</summary>
@@ -36,6 +39,8 @@ namespace Sim.Core.People
         Retired = 4,
         Died = 5,
         Left = 6,
+        Born = 7,
+        MarriedAway = 8,
     }
 
     /// <summary>One line of a citizen's story: what, when, and who else (a spouse, a child), or 0.</summary>

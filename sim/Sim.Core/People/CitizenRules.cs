@@ -143,8 +143,8 @@ namespace Sim.Core.People
         }
 
         /// <summary>
-        /// Drops the departed no living citizen links to as a spouse, child or grandchild (§3.3): never a count cap, so the tree
-        /// stays about two generations deep.
+        /// Drops the departed no living citizen links to as a spouse, child or grandchild (§3.3), or, for a daughter who married away,
+        /// as a parent (ADR 0070): never a count cap, so the tree stays about two generations deep.
         /// </summary>
         internal static void Prune(Simulation sim)
         {
@@ -154,6 +154,7 @@ namespace Sim.Core.People
 
         private static bool Linked(CitizensState s, Citizen gone)
         {
+            if (gone.Gone == CitizenGone.MarriedAway && (Alive(s, gone.Father) || Alive(s, gone.Mother))) return true;
             foreach (Citizen c in s.Citizens)
             {
                 if (!c.Living) continue;
@@ -164,6 +165,8 @@ namespace Sim.Core.People
             }
             return false;
         }
+
+        private static bool Alive(CitizensState s, long id) { return id != 0 && s.Citizen(id)?.Living == true; }
 
         /// <summary>
         /// Save schema 9 (§3.11): each hand of an older town becomes a citizen, age drawn 22–45, the gender his name has, a household of

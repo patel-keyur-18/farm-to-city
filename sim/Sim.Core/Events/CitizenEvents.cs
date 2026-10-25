@@ -88,4 +88,87 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "HouseholdLeft(household=" + HouseholdId + ", people=" + People + ", " + Reason + ")"; }
     }
+
+    /// <summary>A baby was born to a household (spec 014 §3.9).</summary>
+    public sealed class CitizenBorn : SimEvent
+    {
+        public long CitizenId { get; }
+        public int Name { get; }
+        public bool Female { get; }
+        public long HouseholdId { get; }
+        public long MotherId { get; }
+
+        public CitizenBorn(long simTime, long citizenId, int name, bool female, long householdId, long motherId) : base(simTime)
+        {
+            CitizenId = citizenId;
+            Name = name;
+            Female = female;
+            HouseholdId = householdId;
+            MotherId = motherId;
+        }
+
+        protected override string Describe() { return "CitizenBorn(citizen=" + CitizenId + ", household=" + HouseholdId + ")"; }
+    }
+
+    /// <summary>
+    /// A citizen married (spec 014 §3.9, ADR 0070): a son's bride moved in (<see cref="SpouseId"/>; into a free house when
+    /// <see cref="HomeHouseholdId"/> differs from <see cref="HouseholdId"/>), or a daughter moved to her husband's village.
+    /// </summary>
+    public sealed class CitizenMarried : SimEvent
+    {
+        public long CitizenId { get; }
+
+        /// <summary>Index into the names: a daughter who married away may be gone from the town when the event is read.</summary>
+        public int Name { get; }
+        public bool MovedAway { get; }
+        public long SpouseId { get; }
+
+        /// <summary>The bride's home village, or the one the daughter moved to.</summary>
+        public int Village { get; }
+
+        /// <summary>The parents' household, and the household the couple lives in.</summary>
+        public long HouseholdId { get; }
+        public long HomeHouseholdId { get; }
+
+        public CitizenMarried(long simTime, long citizenId, int name, bool movedAway, long spouseId, int village, long householdId, long homeHouseholdId) : base(simTime)
+        {
+            CitizenId = citizenId;
+            Name = name;
+            MovedAway = movedAway;
+            SpouseId = spouseId;
+            Village = village;
+            HouseholdId = householdId;
+            HomeHouseholdId = homeHouseholdId;
+        }
+
+        protected override string Describe()
+        {
+            return "CitizenMarried(citizen=" + CitizenId + ", away=" + MovedAway + ", spouse=" + SpouseId + ", home=" + HomeHouseholdId + ")";
+        }
+    }
+
+    /// <summary>An elder passed away peacefully (spec 014 §3.9); <see cref="HouseEmpty"/> when they lived alone.</summary>
+    public sealed class CitizenDied : SimEvent
+    {
+        public long CitizenId { get; }
+
+        /// <summary>Index into the names: they may be gone from the record when the event is read.</summary>
+        public int Name { get; }
+        public bool Female { get; }
+        public int Age { get; }
+        public long HouseholdId { get; }
+        public bool HouseEmpty { get; }
+
+        public CitizenDied(long simTime, long citizenId, int name, bool female, int age, long householdId, bool houseEmpty) : base(simTime)
+        {
+            CitizenId = citizenId;
+            Name = name;
+            Female = female;
+            Age = age;
+            HouseholdId = householdId;
+            HouseEmpty = houseEmpty;
+        }
+
+        protected override string Describe() { return "CitizenDied(citizen=" + CitizenId + ", age=" + Age + ", household=" + HouseholdId + ")"; }
+    }
 }

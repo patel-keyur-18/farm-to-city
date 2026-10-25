@@ -137,7 +137,8 @@ namespace Sim.Core.People
 
         /// <summary>
         /// The season close (§3.12, after spec 005's settlement): rent for the season that ended; health follows the season's food (down by the shortfall, up when fed),
-        /// the season's saving is banked, then each household sets the new season's budget. Households in id order.
+        /// the season's saving is banked; deaths, births and marriages; then each household sets the new season's budget, and the
+        /// departed nobody links to are dropped. Households in id order.
         /// </summary>
         internal static void Close(Simulation sim)
         {
@@ -156,8 +157,10 @@ namespace Sim.Core.People
                 // The season's saving, plus what outside work and labour paid beyond what the budget expected (or less).
                 x.Savings = System.Math.Max(0, x.Savings + x.Saved + x.Earned - x.OutsideExpected);
                 x.Earned = 0;
-                SetBudget(sim, x);
             }
+            PopulationRules.Close(sim);
+            foreach (Household x in s.Households) SetBudget(sim, x);
+            CitizenRules.Prune(sim);
         }
     
         /// <summary>A day's outside pay for one adult (§3.6): the founder's day-labour rate × 8 h × index × the share of days with work.</summary>

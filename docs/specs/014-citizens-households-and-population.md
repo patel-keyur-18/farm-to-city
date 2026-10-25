@@ -72,7 +72,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | Job | None, the founder's hand, "works outside" (§3.6), or later a business (spec 016) |
 | Story | Arrival, marriage, children, retirement, passing, kept as lines for the card |
 | Family (§10 G9) | Parents and spouse by id; children and siblings found from them. A spouse who married in shows "from Sitapur" (parents unknown); a Phase 1 hand shows "family in his home village" until his family moves in |
-| The departed | Someone who passed away or moved away is kept only while a citizen living in town is their spouse, child or grandchild; dropped at the season close when none is. At most two generations back from anyone alive, so it never grows without end (about 0.5 departed a living citizen; a town of 80 keeps about 40, about 4 KB) |
+| The departed | Someone who passed away or moved away is kept only while a citizen living in town is their spouse, child or grandchild (or, for a daughter who married away, a parent: ADR 0070); dropped at the season close when none is. At most two generations back from anyone alive, so it never grows without end (about 0.5 departed a living citizen; a town of 80 keeps about 40, about 4 KB) |
 
 ### 3.4 Households and homes (§10 G2)
 
@@ -153,7 +153,7 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | Births | At each season close, a household with a couple whose woman is 20–40 has a baby with chance `birthChance` × (room in the home ? 1 : 0.3) × (0.6 + 0.4 × happiness ÷ 100), fewer than `maxChildren` children. Seeded (stream Births). Emits `CitizenBorn` | 0.10; 3 |
-| Marriage | An adult child aged 22–30 marries with chance `marriageChance` a season; the spouse moves in from another village. If a family house is free the couple moves into it (a new household); otherwise they stay with the parents (crowding) | 0.25 |
+| Marriage (ADR 0070) | An unmarried adult child aged 22–30 living with a parent marries with chance `marriageChance` a season. Patrilocal, as in rural India: a son's bride moves in from another village (0–4 years younger); if a family house is free the couple moves into it (a new household), otherwise they stay with his parents (crowding). A daughter marries away to her husband's village ("Asha married and moved to her husband's village, Rampur") and is kept in the tree while a parent lives. Emits `CitizenMarried` | 0.25 |
 | Deaths | Only elders: at each season close, chance `deathBase × 2^((age − 60) ÷ deathDoubling)`, capped at 0.5, × (1.5 if health < 0.7). Seeded (stream Deaths). The household mourns (happiness −10 for a season). A widowed elder stays with family; an elder living alone leaves the house empty for a new family (§3.10); savings stay with the household; the departed stay in the family tree, greyed. Emits `CitizenDied` | 0.015; 8 years |
 | Tone (§10 G7) | Worded gently and without blame: "Kamla Devi (76), Manoj's mother, passed away peacefully. Her family mourns this season." On the away card and the Town tab only, as information: no sound, no push notification. Her *Why?*: "At 76, about 4% a season; health 0.9". A hand never dies under contract (he retires at 60) | |
 | Life expectancy | About 72 with these defaults (rural India about 70); healthcare raises it in Phase 3 | |
@@ -266,7 +266,7 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | AC-10 | The golden replays are unchanged; a year of the bot gives the same hash in one chunk or many | `ReplayTests.*`, `CitizenTests.ChunkingInvariance` |
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
-| AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
+| AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild (a daughter who married away, while a parent lives: ADR 0070) and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
 | AC-14 | Every row of §3.13: houses from the Hamlet; a free house offered to a hand alone first; a retired hand alone frees his hut; a dismissed hand's family stays as tenants; an acre with a house can't be sold; a seized house's household leaves; an elder alone behind on rent leaves; every needs row names its lever or says what isn't possible yet | `MigrationTests2.EveryPath`, `PeopleViewTests.NeedsLevers` |
 
 ## 9. Balancing hooks

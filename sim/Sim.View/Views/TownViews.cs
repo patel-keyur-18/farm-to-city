@@ -80,6 +80,65 @@ namespace Sim.View.Views
     }
 
     /// <summary>
+    /// Births, marriages and deaths in words (spec 014 §3.9, ADR 0070): gentle, as information, for the away card and the Town tab's
+    /// "This season". Never a push or a sound.
+    /// </summary>
+    public static class TownNews
+    {
+        /// <summary>"A baby girl, Asha, was born to Manoj's family".</summary>
+        public static string Born(ViewContext ctx, int name, bool female, long householdId)
+        {
+            Household x = ctx.Sim.State.Citizens.Household(householdId);
+            return ctx.Strings.Get(female ? "news.bornGirl" : "news.bornBoy", "name", PeopleWords.Name(ctx, name),
+                "family", x == null ? ctx.Strings.Get("away.aFamily") : TownWords.Household(ctx, x));
+        }
+
+        /// <summary>"Ravi married Sita from Sitapur" (and where they live, when they moved into a house of their own), or "Asha married and moved to Rampur".</summary>
+        public static string Married(ViewContext ctx, int name, bool movedAway, long spouseId, int village, long newHouseholdId)
+        {
+            var s = ctx.Strings;
+            string place = s.Get("village." + ctx.Sim.Config.Game.Population.Villages[village]);
+            if (movedAway) return s.Get("news.marriedAway", "name", PeopleWords.Name(ctx, name), "village", place);
+            Citizen spouse = ctx.Sim.State.Citizens.Citizen(spouseId);
+            Household home = newHouseholdId == 0 ? null : ctx.Sim.State.Citizens.Household(newHouseholdId);
+            return s.Get(home == null ? "news.married" : "news.marriedHouse", "name", PeopleWords.Name(ctx, name),
+                "spouse", spouse == null ? "" : TownWords.Name(ctx, spouse), "village", place, "home", home == null ? "" : TownWords.Home(ctx, home.HomeId));
+        }
+
+        /// <summary>"Kamla (77), Manoj's mother, passed away peacefully. Her family mourns this season."</summary>
+        public static string Died(ViewContext ctx, long citizenId, int name, bool female, int age)
+        {
+            var s = ctx.Strings;
+            Citizen child = ctx.Sim.State.Citizens.Citizens.Find(c => c.Living && (c.Father == citizenId || c.Mother == citizenId));
+            string who = PeopleWords.Name(ctx, name) + " (" + ctx.Fmt.Integer(age) + ")";
+            if (child != null) who = s.Get("news.relation", "who", who, "name", TownWords.Name(ctx, child), "relation", s.Get(female ? "kin.mother" : "kin.father"));
+            return s.Get(female ? "news.diedF" : "news.diedM", "who", who);
+        }
+
+        /// <summary>This season's births, marriages and deaths, from the story lines of those still on record (the Town tab).</summary>
+        public static List<string> ThisSeason(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            long season = CitizenRules.SeasonOf(sim, ctx.Now);
+            var lines = new List<string>();
+            foreach (Citizen c in sim.State.Citizens.Citizens)
+                foreach (StoryLine l in c.Story)
+                {
+                    if (CitizenRules.SeasonOf(sim, l.At) != season) continue;
+                    if (l.Kind == StoryKind.Born) lines.Add(Born(ctx, c.Name, c.Female, c.HouseholdId));
+                    else if (l.Kind == StoryKind.MarriedAway) lines.Add(Married(ctx, c.Name, true, 0, c.Village, 0));
+                    else if (l.Kind == StoryKind.Married && !c.Female)
+                    {
+                        Citizen bride = sim.State.Citizens.Citizen(l.Other);
+                        if (bride != null && bride.Village >= 0) lines.Add(Married(ctx, c.Name, false, bride.Id, bride.Village, 0));
+                    }
+                    else if (l.Kind == StoryKind.Died) lines.Add(Died(ctx, c.Id, c.Name, c.Female, CitizenRules.Age(sim, c)));
+                }
+            return lines;
+        }
+    }
+
+    /// <summary>
     /// Who is family to whom (spec 014 §7): parents, spouse, siblings, children and grandchildren, found from the parents' and spouse's
     /// ids. Never a whole-town tree.
     /// </summary>
@@ -169,6 +228,13 @@ namespace Sim.View.Views
             }
 
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
+
+            List<string> news = TownNews.ThisSeason(ctx);
+            if (news.Count > 0)
+            {
+                vm.Lines.Add(LineVm.Header(s.Get("town.thisSeason")));
+                foreach (string n in news) vm.Lines.Add(new LineVm(n, null) { Icon = "population" });
+            }
 
             // Households, then the empty houses and the ones being built.
             vm.Lines.Add(LineVm.Header(s.Get("town.householdsHeader")));
@@ -425,12 +491,12 @@ namespace Sim.View.Views
             return vm;
         }
 
-        /// <summary>"passed away at 70" or "moved to Rampur"; null while here.</summary>
+        /// <summary>"passed away at 70", "moved to Rampur" or "married, lives in Rampur"; null while here.</summary>
         private static string Gone(ViewContext ctx, Citizen c)
         {
             if (c.Living) return null;
-            return c.Gone == CitizenGone.Died ? ctx.Strings.Get("citizen.died", "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)))
-                : ctx.Strings.Get("citizen.left", "village", TownWords.Village(ctx, c) ?? ctx.Strings.Get("citizen.elsewhere"));
+            if (c.Gone == CitizenGone.Died) return ctx.Strings.Get("citizen.died", "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)));
+            return ctx.Strings.Get(c.Gone == CitizenGone.MarriedAway ? "citizen.marriedAway" : "citizen.left", "village", TownWords.Village(ctx, c) ?? ctx.Strings.Get("citizen.elsewhere"));
         }
 
         private static LineVm Relative(ViewContext ctx, Citizen me, string relation, Citizen k)

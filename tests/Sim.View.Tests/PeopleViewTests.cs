@@ -358,6 +358,42 @@ namespace Sim.View.Tests
             Assert.That(card.Lines.Single(l => l.Label == "Budget").Value, Does.EndWith(budget.Pie.First().Percent + "%"), "the pie's food share as the row says");
         }
 
+        // Spec 014 §3.9, ADR 0070: births, marriages and deaths in gentle words on the away card and the Town tab's "This season".
+        [Test]
+        public void Flows_InWords()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            CitizensState town = sim.State.Citizens;
+            Citizen Named(string n) => town.Citizens.Single(c => PeopleWords.Name(ctx, c.Name) == n);
+            Citizen mohan = Named("Mohan"), manoj = Named("Manoj"), asha = Named("Asha"), kamala = Named("Kamala");
+            Household family = town.Household(manoj.HouseholdId);
+            int village = sim.Config.Game.Population.Villages.ToList().IndexOf("rampur");
+            var events = new List<SimEvent>
+            {
+                new CitizenBorn(1, asha.Id, asha.Name, true, family.Id, asha.Mother),
+                new CitizenMarried(2, manoj.Id, manoj.Name, false, kamala.Id, village, family.Id, family.Id),
+                new CitizenMarried(3, asha.Id, asha.Name, true, 0, village, family.Id, family.Id),
+                new CitizenDied(4, mohan.Id, mohan.Name, false, 74, family.Id, false),
+            };
+            Assert.That(TownAway.Rows(ctx, events).Select(l => l.Value), Is.EqualTo(new[]
+            {
+                "A baby girl, Asha, was born to Manoj's family",
+                "Manoj married Kamala from Rampur",
+                "Asha married and moved to her husband's village, Rampur",
+                "Mohan (74), Manoj's father, passed away peacefully. His family mourns this season.",
+            }));
+
+            // The Town tab tells this season's story from the record.
+            asha.Story.Add(new StoryLine(StoryKind.Born, ctx.Now, 0));
+            mohan.Story.Add(new StoryLine(StoryKind.Died, ctx.Now, 0));
+            SheetVm tab = TownSheet.Build(ctx);
+            int at = tab.Lines.FindIndex(l => l.IsHeader && l.Label == "This season");
+            Assert.That(tab.Lines.Skip(at + 1).Take(2).Select(l => l.Label), Is.EqualTo(new[]
+                { "Mohan (74), Manoj's father, passed away peacefully. His family mourns this season.", "A baby girl, Asha, was born to Manoj's family" }));
+            Assert.That(CitizenSheet.Build(ctx, asha.Id).Lines.Any(l => l.Label == "Born here"), Is.True);
+        }
+
         [Test]
         public void LivesAlone()
         {

@@ -836,6 +836,7 @@ namespace Game.Presentation.Ui
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.flexWrap = Wrap.Wrap;
             buttons.style.marginTop = 8;
+            buttons.style.flexShrink = 0; // the list scrolls; the buttons stay whole inside the card
             if (vm.ReadyCount > 0) buttons.Add(UiKit.MakeButton(collectLabel, ActionLook.Primary, () => { veil.RemoveFromHierarchy(); collect(); }));
             if (vm.ReportPeriod >= 0) buttons.Add(UiKit.MakeButton(reportLabel, ActionLook.Secondary, () => { veil.RemoveFromHierarchy(); report(); }));
             buttons.Add(UiKit.MakeButton(closeLabel, vm.ReadyCount > 0 ? ActionLook.Secondary : ActionLook.Primary, () => veil.RemoveFromHierarchy()));

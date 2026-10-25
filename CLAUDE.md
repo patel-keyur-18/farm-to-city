@@ -179,6 +179,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0067 | Two family houses an acre (was 4: cramped on the map), sharing a wall at the back of the acre with open ground in front; townspeople, children and elders with walk cycles, card portraits, population and happiness icons |
 | 0068 | Spec 016: each business keeps its own books (capital, drawings, equity in net worth; own wheat and milk at market price); the flour mill (Hamlet) grinds the area's grain (about 300 people, 4 a kg) and mills your wheat; the bakery and a dairy (paneer, curd, ghee) from the Village; a town hire or you run it; any owned acre; cash plus a guaranteed bank loan; research, plan, plan vs actual; overdraft, closing at 60% |
 | 0069 | Spec 015: one hiring board (farm hand, miller, baker, dairyman; townspeople known, migrants as ranges); interview and a 300-coin reference check; offer at the asked wage, 10% less or 10% more; output = skill × motivation × (1 − fatigue), neutral by default; long days at 1.5×; a crafting skill; courses +10 for 6,000; four more traits; five HR events; employer reputation |
+| 0070 | Marriage is patrilocal: a son's bride moves in (into a free family house if one stands empty), a daughter marries into her husband's village and is kept in the tree while a parent lives |
 
 ## Current status
 
