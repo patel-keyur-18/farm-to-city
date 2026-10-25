@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1–G8 closed; G9–G10 in §10 to close with the owner)
+- Status: Draft (G1–G9 closed; G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -139,9 +139,9 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | Rule | Behaviour |
 | --- | --- |
 | Short of cash | A payment the business's cash can't cover draws on its overdraft, up to the limit (Cr Overdraft). Interest at each close |
-| Overdraft full | Inputs can't be bought (production of atta for sale stops; the town's grinding goes on), and at the close the wage isn't paid: the worker leaves. The business card and an alert say why and what to do |
+| Overdraft full | Inputs can't be bought (atta for sale stops; the area's grinding goes on, its fees paying the power), and at the close the wage isn't paid: the worker leaves. The business card and an alert say why and what to do |
 | What the player can do | Put cash in; take or restructure the business loan; sell the stock; close |
-| Closing | The worker leaves; stock is sold to the trader; the equipment and building sell at 60% of book value (or stay as an empty shed); loans and overdraft are repaid from that; what's still owed becomes your own debt (you guaranteed it), joining spec 005's loans; any cash left comes to you |
+| Closing | The worker leaves; stock is sold to the trader; the equipment and building sell at 60% of book value (or stay as an empty shed); loans and overdraft are repaid from that; what's still owed becomes your own co-op bank loan (you guaranteed it) over 4 seasons at the bank's rate, joining spec 005's loans; any cash left comes to you |
 | Credit | A business that misses a loan payment counts on your credit score as your own (spec 005 §3.7) |
 | Foreclosure | A business on bought land is seized with that land (spec 005 §3.9 step 1); one on the inherited acres is protected with them (ADR 0009), as the family houses are |
 | Never stuck | Closing always frees the founder; the farm carries on (ADR 0009) |
@@ -234,7 +234,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G6. Wheat in, atta out.** **Closed (owner, 2026-10-25):** your store first up to a daily amount at today's market price, the market only if allowed; atta to the trader (400 kg a day) and the local market, and in supermarket orders; bran to your cattle's feed room first, the rest sold (§3.5c).
 - **G7. Funding.** **Closed (owner, 2026-10-25):** your cash as owner's capital and the co-op bank's small-business loan (up to 60% of building and equipment, the bank's rate, up to 12 seasons, equal principal, your guarantee); at least the rest plus a season's running cash put in; investors and partner citizens in Phase 3 (§3.8).
 - **G8. Research and the plan.** **Closed (owner, 2026-10-25):** a free research sheet; a plan screen with the projected season, cash needed and payback, each with a *Why?*; saved and compared line by line with the actual results after 4 seasons, the differences in words (§3.3).
-- **G9. Overdraft and failure.** Overdraft to half a season's costs at 4% a season; past it inputs stop and the worker leaves; closing at 60%; you guarantee what's left.
+- **G9. Overdraft and failure.** **Closed (owner, 2026-10-25):** an overdraft to half a season's running costs at 4% a season; past it, inputs stop (grinding goes on) and the unpaid worker leaves at the close; put cash in, take or restructure the loan, sell stock or close; closing sells stock to the trader and the building and equipment at 60% of book value, and what's still owed becomes your co-op bank loan (your guarantee); a missed business loan payment counts on your score; the farm carries on, and a business on the inherited acres is never seized (§3.8, §3.10).
 - **G10. The bakery and the dairy.** Pav and rusk from atta and bought supplies; paneer, curd and ghee from your own milk (§3.9, §3.9b); sold to the trader, the market and the town's food and leisure spending.
 
 ## 11. Cut first
