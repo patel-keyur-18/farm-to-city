@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: Draft (gaps G1–G9 in §10 to close with the owner)
+- Status: Draft (G1, G2 closed; G3–G9 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)
@@ -58,7 +58,7 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). **N
 | --- | --- | --- |
 | The application | A migrant's skill as a range (±15) and the first trait | Free |
 | Interview | The second trait (spec 006) | Free, once |
-| Reference check | The skill narrowed to ±5, and how they left their last job ("left on good terms" or "was let go") | 300 coins and 12 hours' wait; once |
+| Reference check | The skill narrowed to ±5, and how they left their last job: "was let go" when either trait is lazy or careless, else "left on good terms" (so it hints at a hidden trait) | 300 coins and 12 hours' wait; once |
 
 ### 3.3 The offer and negotiation (§10 G3)
 
@@ -217,8 +217,8 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 
 ## 10. Open questions
 
-- **G1. Roles and the board.** One board for farm hand, miller, baker and dairyman; townspeople apply with known skill and traits, migrants as now; a business worker from outside commutes. Recommendation: as written.
-- **G2. Knowing a candidate.** Interview (second trait), reference check (300, 12 h, skill ±5, how they left).
+- **G1. Roles and the board.** **Closed (owner, 2026-10-25):** one board for farm hand, miller, baker and dairyman (30,000, 27,000, 30,000, 27,000 at skill 50); your townspeople without a town job apply with skill and traits known, migrants as now, regulars as now; a business worker from outside commutes and isn't a citizen; spec 016's stopgap ends in Sprint 15 (§3.1).
+- **G2. Knowing a candidate.** **Closed (owner, 2026-10-25):** the application shows the skill ±15 and one trait; a free interview the second trait; a reference check (300, 12 h) narrows the skill to ±5 and says how they left their last job ("was let go" when a trait is lazy or careless); townspeople are known (§3.2).
 - **G3. Negotiation.** Offer at the asked wage, 10% less or 10% more; acceptance 0.85 / 0.40 (then one counter) / 0.95; townspeople always at the asked wage.
 - **G4. Output.** Skill × motivation (wage fairness, the household's happiness) × (1 − fatigue); overtime to 12 h at 1.5×; neutral by default.
 - **G5. Training.** On the job +3, a course +10 for 6,000 and 2 days away; a trained worker asks more.
