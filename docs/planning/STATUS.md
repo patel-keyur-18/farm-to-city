@@ -210,7 +210,7 @@
 1. **Claude:** Sprint 14 planning, once PR #18 is merged. Per ADR 0057 and the feature files:
    - **Code:** F11.3 (US-109 births, marriages and deaths; US-110 migration, a hand's family card and housing in kind; US-111 the family tree; US-211 population bots and gates) and F12.1 (US-115 found a business (the flour mill), US-116 business books, US-117 overdraft and failure), with save schema 10.
    - **Specs to write and review:** 017 (shops, customer choice and rivals) and 013 (irrigation, equipment, orchards and granary).
-   - **Capacity:** about 40 points look like more than one 2-week sprint. Propose a split to the owner at planning (for example US-211 or US-111 to Sprint 15).
+   - **Capacity:** 32 points (F11.3 16, F12.1 16) plus two specs, close to Sprint 13's 39 over 2 weeks. Confirm the scope with the owner at planning.
 
 ## Owner action checklist (Phases 0–1)
 
