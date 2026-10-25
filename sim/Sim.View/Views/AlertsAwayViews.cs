@@ -265,6 +265,8 @@ namespace Sim.View.Views
             if (calves > 0)
                 money.Add(new KeyValuePair<long, LineVm>(calves, new LineVm(s.Plural("away.calves", calfCount), ctx.Fmt.Coins(calves), "away", (long)AwayRow.Dairy) { Icon = "coin" }));
             Money(fodderSold, "away.fodderSold", AwayRow.Dairy, "green_fodder");
+            long rent = TownAway.Rent(events, out int payers);
+            if (rent > 0) money.Add(new KeyValuePair<long, LineVm>(rent, new LineVm(s.Plural("away.rent", payers), ctx.Fmt.Coins(rent), "away", (long)AwayRow.Town) { Icon = "coin" }));
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
             var rows = new List<LineVm>();
             vm.ReadyCount = CollectAll.ReadyCount(sim);
@@ -299,6 +301,8 @@ namespace Sim.View.Views
                 foreach (LineVm l in people.Lines)
                     if (l.Label != s.Get("away.dayLabour")) rows.Add(new LineVm(l.Label, l.Value, "away", (long)AwayRow.People) { Icon = "person_hand_m" });
 
+            rows.AddRange(TownAway.Rows(ctx, events));
+
             if (fodderBought > 0) rows.Add(new LineVm(s.Get("away.fodderBought"), "−" + ctx.Fmt.Coins(fodderBought), "away", (long)AwayRow.Dairy) { Icon = "green_fodder" });
             if (vetCount > 0) rows.Add(new LineVm(s.Plural("away.vet", vetCount), "−" + ctx.Fmt.Coins(vet), "away", (long)AwayRow.Dairy) { Icon = "coin" });
             if (vm.SpoiledGrams > 0) rows.Add(new LineVm(s.Get("away.spoiled"), ctx.Fmt.Kg(vm.SpoiledGrams), "away", (long)AwayRow.Spoiled));
@@ -311,6 +315,52 @@ namespace Sim.View.Views
             int max = ctx.Ui.AwayRowsMax;
             for (int i = 0; i < rows.Count; i++) (i < max ? vm.Lines : vm.More).Add(rows[i]);
             return rows.Count == 0 ? null : vm;
+        }
+    }
+
+    /// <summary>
+    /// Your people's lines on the away card (spec 014 §3.9, §7): a hand gone home or retired, a family house finished, the season's rent,
+    /// rent missed, a family that left and why. Information only, worded gently.
+    /// </summary>
+    public static class TownAway
+    {
+        public static List<LineVm> Rows(ViewContext ctx, IReadOnlyList<SimEvent> events)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            var rows = new List<LineVm>();
+            if (sim.State.Citizens == null) return rows;
+            LineVm Row(string label, string value, string icon) { return new LineVm(label, value, "away", (long)AwayRow.Town) { Icon = icon }; }
+            foreach (SimEvent e in events)
+            {
+                switch (e)
+                {
+                    case CitizenRetired r:
+                        rows.Add(Row(s.Get("away.town"), s.Get(r.WentHome ? "away.wentHome" : "away.retired", "name", PeopleWords.Name(ctx, r.Name), "age", ctx.Fmt.Integer(r.Age)),
+                            PeopleWords.Female(ctx, r.Name) ? "portrait_elder_f" : "portrait_elder_m"));
+                        break;
+                    case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
+                    case RentMissed m:
+                        Sim.Core.People.Household x = sim.State.Citizens.Household(m.HouseholdId);
+                        rows.Add(Row(s.Get("away.town"), s.Get("away.rentMissed", "family", x == null ? s.Get("away.aFamily") : TownWords.Household(ctx, x),
+                            "behind", s.Plural("needs.rentBehind", m.Behind)), "family_house"));
+                        break;
+                    case HouseholdLeft l:
+                        rows.Add(Row(s.Get("away.town"), s.Get("away.left." + l.Reason, "family", l.People == 1 ? PeopleWords.Name(ctx, l.Name)
+                            : s.Get("town.family", "name", PeopleWords.Name(ctx, l.Name))), "family_house"));
+                        break;
+                }
+            }
+            return rows;
+        }
+
+        /// <summary>The season's rent collected while away (a money row on the card), and from how many families.</summary>
+        public static long Rent(IReadOnlyList<SimEvent> events, out int payers)
+        {
+            long rent = 0;
+            payers = 0;
+            foreach (SimEvent e in events) if (e is RentPaid p) { rent += p.Amount; payers++; }
+            return rent;
         }
     }
 
@@ -347,7 +397,7 @@ namespace Sim.View.Views
             { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "LabourersHarvested", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
-            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.

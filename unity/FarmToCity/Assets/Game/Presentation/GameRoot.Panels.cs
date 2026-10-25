@@ -89,6 +89,7 @@ namespace Game.Presentation
                 OnStore = () => OpenSheet(new SheetRequest("Store", 0)),
                 OnCollect = CollectAll,
                 OnPeople = () => OpenSheet(new SheetRequest("People", 0)),
+                OnTown = () => OpenSheet(new SheetRequest("Town", 0)),
                 OnForecast = () => OpenSheet(new SheetRequest("Forecast", 0)),
                 OnMoney = () => OpenSheet(new SheetRequest("Money", 0)),
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
@@ -181,7 +182,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
                 case "BuyInput":
@@ -189,6 +190,7 @@ namespace Game.Presentation
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));
                     return;
                 case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
+                case "Hire": case "Word": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working, word out
             }
             // The shed sheet stays open: building, buying from neighbours on or off, the hand's animals order (spec 012 §7).
             if (r.Kind == "Tile" && Sim.Config.Game.Livestock != null && r.Id == Sim.Config.Game.Livestock.Livestock.ShedTile) return;

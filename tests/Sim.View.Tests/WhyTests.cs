@@ -24,7 +24,19 @@ namespace Sim.View.Tests
             foreach (GardenBed b in sim.State.Farm.Beds) yield return Named("bed " + b.Id, FieldSheets.ForBed(ctx, b.Id));
             yield return Named("store", StoreSheet.Build(ctx));
             yield return Named("people", PeopleSheet.Build(ctx));
+            yield return Named("hire", PeopleSheet.Hire(ctx));
+            yield return Named("word", PeopleSheet.Word(ctx));
             foreach (var h in sim.State.People.Hands) yield return Named("hand " + h.Id, HandSheet.Build(ctx, h.Id));
+            if (sim.State.Citizens != null)
+            {
+                foreach (string sort in new[] { TownSheet.ByHappiness, TownSheet.BySize, TownSheet.ByJob }) yield return Named("town " + sort, TownSheet.Build(ctx, sort));
+                foreach (var x in sim.State.Citizens.Households) yield return Named("household " + x.Id, HouseholdSheet.Build(ctx, x.Id));
+                foreach (var c in sim.State.Citizens.Citizens)
+                {
+                    yield return Named("citizen " + c.Id, CitizenSheet.Build(ctx, c.Id));
+                    yield return Named("departed " + c.Id, CitizenSheet.Departed(ctx, c.Id));
+                }
+            }
             yield return Named("forecast", ForecastView.Sheet(ctx));
             foreach (var extra in Panels.All(ctx)) yield return extra;
         }
@@ -62,10 +74,10 @@ namespace Sim.View.Tests
                         checkedRows++;
                     }
                 }
-                foreach (string key in new[] { "cash", "store", "calendar" }) AssertWords("HUD " + key, WhyView.Build(ctx, key, 0));
+                foreach (string key in new[] { "cash", "store", "calendar", "townHappiness" }) AssertWords("HUD " + key, WhyView.Build(ctx, key, 0));
                 Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "building sheets and Why? sheets is read only (AC-1)");
             }
-            Assert.That(missing, Is.Empty, "rows with a number and no Why?");
+            Assert.That(missing, Is.Empty, "rows with a number and no Why?: " + string.Join(" | ", missing));
             Assert.That(checkedRows, Is.GreaterThan(100));
         }
 

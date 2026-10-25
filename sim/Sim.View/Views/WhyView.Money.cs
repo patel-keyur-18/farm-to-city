@@ -91,6 +91,8 @@ namespace Sim.View.Views
             Regional(ctx, vm, g);
             Row(vm, ctx, "why.marketPrice.floor", Price(ctx, MarketRules.Floor(sim, g)));
             Row(vm, ctx, "why.marketPrice.ceiling", Price(ctx, MarketRules.Ceiling(sim, g)));
+            long town = Sim.Core.People.HouseholdRules.TownDemandPerDay(sim, g);
+            if (town > 0) Row(vm, ctx, "why.marketPrice.town", ctx.Fmt.Kg(town)); // spec 014 §3.7: your people buy here too
             Text(vm, ctx, sim.State.Market.OnOffer(g) > 0 ? "why.marketPrice.offered" : "why.marketPrice.demand");
             vm.Footnote = ctx.Strings.Get("why.marketPrice.lesson");
             return vm;

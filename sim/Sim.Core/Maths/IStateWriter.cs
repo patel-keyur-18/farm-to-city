@@ -22,6 +22,7 @@ namespace Sim.Core.Maths
         Chapter = 16,
         Era = 17,
         Animal = 18,
+        Village = 19,
     }
 
     /// <summary>

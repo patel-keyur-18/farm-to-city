@@ -79,9 +79,12 @@ namespace Sim.View.Content
         /// <summary>Hours a day one reference acre needs (wheat): "tends about N acres" = hours ÷ this.</summary>
         public int ReferenceAcreHours { get; }
 
+        /// <summary>A household's happiness at or above this shows green on the Town tab, below it amber (spec 014 §7).</summary>
+        public int HappyAbove { get; }
+
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
-            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8)
+            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60)
         {
             SkillBands = new List<int>(skillBands ?? new[] { 35, 55, 75 }).AsReadOnly();
             SkillStarPoints = skillStarPoints;
@@ -96,6 +99,7 @@ namespace Sim.View.Content
             StoreNearlyFullPercent = storeNearlyFullPercent;
             AwayRowsMax = awayRowsMax;
             AwayCardMinHours = awayCardMinHours;
+            HappyAbove = happyAbove;
             RatingGoodPercent = ratingGoodPercent;
             RatingFairPercent = ratingFairPercent;
         }

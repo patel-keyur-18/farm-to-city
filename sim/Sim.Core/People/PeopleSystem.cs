@@ -98,6 +98,12 @@ namespace Sim.Core.People
                 hired |= n.Hired;
                 done |= n.Hired && t >= n.Until;
             }
+            List<Citizen> town = PeopleRules.TownLabourers(sim);
+            foreach (Citizen c in town)
+            {
+                hired |= c.LabourUntil != 0;
+                done |= c.LabourUntil != 0 && t >= c.LabourUntil;
+            }
             if (!hired) return;
             foreach (Crop c in sim.State.Farm.Crops.ToArray())
             {
@@ -112,6 +118,13 @@ namespace Sim.Core.People
                 if (!n.Hired || t < n.Until) continue;
                 n.Tile = -1;
                 n.Until = 0;
+                count++;
+            }
+            foreach (Citizen c in town)
+            {
+                if (c.LabourUntil == 0 || t < c.LabourUntil) continue;
+                c.LabouredUntil = c.LabourUntil;
+                c.LabourUntil = 0;
                 count++;
             }
             FarmSystem.Refresh(sim);
@@ -302,6 +315,7 @@ namespace Sim.Core.People
             };
             h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, prepay, t, (t / S + 1) * S, "hand:" + h.Id).Id;
             s.Hands.Add(h);
+            CitizenRules.HandHired(sim, h, a);
             s.Applicants.Remove(a);
             if (a.FromRosterId != 0) ReplaceNeighbour(sim, a.FromRosterId);
             s.Post = null; // a post lasts until a hand is hired
@@ -315,8 +329,8 @@ namespace Sim.Core.People
         // ---- contracts (§3.6, §3.7) ----
 
         /// <summary>
-        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; an active one is
-        /// renewed at the re-asked wage (a loyal hand keeps theirs; an ambitious one asks 10% more) if cash allows, else it lapses.
+        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; a hand who has turned
+        /// <c>retireAge</c> retires (spec 014 §3.2); an active one is renewed at the re-asked wage (a loyal hand keeps theirs; an ambitious one asks 10% more) if cash allows, else it lapses.
         /// Then skill grows for every hand under an active contract.
         /// </summary>
         internal static void SettleContracts(Simulation sim)
@@ -331,6 +345,11 @@ namespace Sim.Core.People
                 {
                     Leave(sim, h);
                     sim.Emit(new HandLeft(t, h.Id));
+                    continue;
+                }
+                if (CitizenRules.Retiring(sim, h))
+                {
+                    CitizenRules.Retire(sim, h); // spec 014 §3.2: his season done, he isn't renewed
                     continue;
                 }
                 long wage = RenewalWage(sim, h);
@@ -395,6 +414,7 @@ namespace Sim.Core.People
             PeopleState s = sim.State.People;
             FarmSystem.Accrue(sim);
             s.Hands.Remove(h);
+            CitizenRules.HandLeft(sim, h);
             s.Orders.RemoveAll(o => o.HandId == h.Id);
             FarmSystem.Refresh(sim);
             ScheduleApplicant(sim);

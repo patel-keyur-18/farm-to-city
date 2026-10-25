@@ -37,6 +37,23 @@ namespace Sim.Core.Tests
             Assert.That(differs, Is.True, "the pool changes from day to day");
         }
 
+        // ADR 0066: a fodder stand (cut daily till its last cut season ends) never keeps labourers hired; only crops with a harvest do.
+        [Test]
+        public void Hire_FodderDoesNotCount()
+        {
+            Simulation sim = LivestockKit.WithShed(Game(NoSpoilage));
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new Sow(t, HomeTile, "berseem", Farm.SeedSource.Certified, "none"));
+            Assert.That(sim.Execute(new HireLabourers(t, 1)).Reason, Is.EqualTo(RejectReason.NotGrowing), "fodder alone: nothing to harvest");
+            Ok(sim, new Sow(t, HomeTile + 1, "wheat", Farm.SeedSource.Certified, "none"));
+            long ready = sim.State.Farm.CropOn(HomeTile + 1).ReadyAt;
+            Assert.That(PeopleRules.LabourUntil(sim), Is.EqualTo((ready + 3599) / 3600 * 3600), "till the wheat is in, not the end of the berseem's stand");
+            long cash = sim.State.Ledger.Cash;
+            Ok(sim, new HireLabourers(t, 1));
+            Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(PeopleRules.LabourCost(sim, 1, PeopleRules.LabourUntil(sim))));
+            Assert.That(sim.State.Farm.CropOn(HomeTile).ReadyAt, Is.GreaterThan(ready + Day), "the stand outlasts the wheat by days");
+        }
+
         // Spec 006 AC-3 (ADR 0049 §3): wheat sown at 18:00 is the only crop and ready at midnight, so two labourers are paid to then.
         [Test]
         public void Hire_CostAndCare()

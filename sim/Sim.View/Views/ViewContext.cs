@@ -223,6 +223,12 @@ namespace Sim.View.Views
         /// <summary>A row of big picture buttons side by side instead of a label and value (the Store's shortcuts), or null.</summary>
         public System.Collections.Generic.List<ActionVm> Buttons { get; internal set; }
 
+        /// <summary>A pie drawn under the label (a household's budget), slices in order, or null.</summary>
+        public System.Collections.Generic.List<PieSliceVm> Pie { get; internal set; }
+
+        /// <summary>A small family tree drawn instead of a label and value (the household card), or null.</summary>
+        public FamilyTreeVm Tree { get; internal set; }
+
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
         public LineVm(string label, string value, string whyKey = null, long whyId = 0)
@@ -234,11 +240,59 @@ namespace Sim.View.Views
         }
     }
 
+    /// <summary>One slice of a pie: what it is ("Food"), its share in percent, its coins, and a colour key the presentation knows.</summary>
+    public sealed class PieSliceVm
+    {
+        public string Label { get; }
+        public int Percent { get; }
+        public string Value { get; }
+        public string Colour { get; }
+
+        public PieSliceVm(string label, int percent, string value, string colour)
+        {
+            Label = label;
+            Percent = percent;
+            Value = value;
+            Colour = colour;
+        }
+    }
+
+    /// <summary>A person on a small family tree: name and age ("Manoj (38)"), whether they married in, and the card a tap opens.</summary>
+    public sealed class TreePersonVm
+    {
+        public string Text { get; }
+        public string Icon { get; }
+        public long CitizenId { get; }
+
+        /// <summary>Joined to the person before them in the row as their spouse (drawn "──").</summary>
+        public bool SpouseOfPrevious { get; internal set; }
+
+        public TreePersonVm(string text, string icon, long citizenId)
+        {
+            Text = text;
+            Icon = icon;
+            CitizenId = citizenId;
+        }
+    }
+
+    /// <summary>A household's own family as rows by generation (spec 014 §7): elders above, the couple, the children below.</summary>
+    public sealed class FamilyTreeVm
+    {
+        public System.Collections.Generic.List<System.Collections.Generic.List<TreePersonVm>> Generations { get; } =
+            new System.Collections.Generic.List<System.Collections.Generic.List<TreePersonVm>>();
+    }
+
     /// <summary>A bottom sheet: title, subtitle, rows and buttons.</summary>
     public sealed class SheetVm
     {
         public string Title { get; internal set; }
         public string Subtitle { get; internal set; }
+
+        /// <summary>Tabs over the rows (People: Workers and Town), each opening its sheet in place; null for none.</summary>
+        public System.Collections.Generic.List<ActionVm> Tabs { get; internal set; }
+
+        /// <summary>The id of the tab showing.</summary>
+        public string Tab { get; internal set; }
 
         /// <summary>The picture beside the title: a sprite id the presentation knows (a crop, a tree, "hut", "land").</summary>
         public string Icon { get; internal set; }

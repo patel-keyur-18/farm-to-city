@@ -363,10 +363,14 @@ namespace Sim.Core.Definitions
         /// <summary>Buffalo, cows and the shed (spec 012), or null when the buildings have no cattle shed.</summary>
         public LivestockDefs Livestock { get; }
 
+        /// <summary>Citizens, households and the family house (spec 014), or null when the buildings have no family house.</summary>
+        public PopulationDefs Population { get; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
-            PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null)
+            PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)
         {
+            Population = population;
             Livestock = livestock;
             Onboarding = onboarding;
             People = people;

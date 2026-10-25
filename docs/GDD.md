@@ -268,8 +268,16 @@ Every business is a small company with its own books, staff and customers. The p
 
 | Era | Businesses |
 | --- | --- |
-| Hamlet | Farm stall, flour mill, dairy shed |
-| Village | Grocery, bakery, tea stall, tailor, carpenter, brick kiln |
+| Hamlet | Flour mill (atta chakki), farm stall; the cattle shed is part of the farm (spec 012) |
+| Village | Grocery, bakery, dairy (paneer, curd, ghee), tea stall, tailor, carpenter, brick kiln |
+
+**The first businesses (spec 016, ADR 0068).**
+- **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
+- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 300 people) and mills your own wheat into atta and bran.
+- **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk into paneer, curd and ghee. The village grocer and tea stall buy from both each morning.
+- **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
+- **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.
+- **Later.** Investors and partner citizens come in Phase 3.
 | Township | Restaurant, hardware store, private clinic, tuition centre, construction company, transport (tempo or truck) |
 | Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
 | City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |
@@ -341,7 +349,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 - **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
 - **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
 
-**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 4 an acre, rent 6,000 a season). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
+**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 2 an acre sharing a wall, rent 6,000 a season; ADR 0067). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
 
 **Hiring starts in Homestead (ADR 0022)**
 
@@ -384,6 +392,16 @@ Motivation comes from wage fairness, manager quality, working conditions, recogn
 **Benefits.** Meals, health cover, housing, bonuses and paid leave. Each has a cost and a morale effect.
 
 **HR events.** A raise request, a resignation, a poaching offer, a conflict between two workers, sick leave, a family emergency, a workplace accident, a petition for better conditions. Each event offers choices with consequences.
+
+**Phase 2 hiring (spec 015, ADR 0069).**
+- **One board.** One hiring board covers every role: farm hand, miller, baker and dairyman. Your townspeople apply with their skill and traits known; migrants with a skill range and one trait.
+- **Knowing a candidate.** A free interview reveals the second trait. A reference check (300 coins, 12 h) narrows the skill and says how they left their last job.
+- **The offer.** You offer the asked wage, 10% less (often refused, and remembered) or 10% more.
+- **Output.** Output = skill × motivation × (1 − fatigue), neutral for a fair hire in a content home. Long days pay 1.5× for the extra hours and tire people. Citizens have a farming and a crafting skill.
+- **Training.** Courses add 10 skill for 6,000.
+- **Traits and events.** The four new traits (creative, frugal, sociable, perfectionist) arrive. HR events in Phase 2: a raise request, an offer from elsewhere, sick leave, a family emergency and a bad batch.
+- **Reputation.** Employer reputation moves with fair pay and treatment.
+- **Later.** Supervisors, benefits, managers and night shifts come in Phase 3.
 
 **Letting people go.** Firing costs severance and lowers the morale of colleagues. Fair treatment builds an **employer reputation** score, which decides the quality of future applicants.
 

@@ -166,7 +166,7 @@ namespace Sim.View.Text
         public string Percent(Fixed fraction)
         {
             Fixed pct = fraction * Fixed.FromInt(100);
-            bool whole = Math.Abs(pct.RoundToLong()) >= 10 && AbsGreaterOrEqual(pct, 10);
+            bool whole = pct.Raw == 0 || Math.Abs(pct.RoundToLong()) >= 10 && AbsGreaterOrEqual(pct, 10); // nothing is "0%", not "0.0%"
             return Decimals(pct, whole ? 0 : 1, false) + "%";
         }
 

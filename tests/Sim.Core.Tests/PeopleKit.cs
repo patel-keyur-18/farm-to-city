@@ -96,6 +96,21 @@ namespace Sim.Core.Tests
             }
         }
 
+        /// <summary>A family (spec 014) living in <paramref name="homeId"/>: one citizen per age, no jobs, health 1, food met.</summary>
+        public static Household AddFamily(Simulation sim, long homeId, params int[] ages)
+        {
+            CitizensState s = sim.State.Citizens;
+            var x = new Household { Id = s.NextHouseholdId++, HomeId = homeId };
+            foreach (int age in ages)
+            {
+                var c = new Citizen { Id = s.NextCitizenId++, Name = 0, BornSeason = CitizenRules.BornFor(sim, age), HouseholdId = x.Id, Health = Maths.Fixed.One };
+                s.Citizens.Add(c);
+                x.Members.Add(c.Id);
+            }
+            s.Households.Add(x);
+            return x;
+        }
+
         public static T Last<T>(Simulation sim) where T : SimEvent { return sim.PendingEvents.OfType<T>().LastOrDefault(); }
     }
 }

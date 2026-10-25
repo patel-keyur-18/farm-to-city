@@ -34,6 +34,7 @@ namespace Sim.View.Views
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
             if (tile.Terrain == Terrain.Cattle) return ShedSheet.Build(ctx);
+            if (Sim.Core.People.HouseRules.HousesOn(sim, tileId) > 0) return HomesteadSheet.Build(ctx, tile); // a homestead acre is never sown
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
@@ -48,6 +49,8 @@ namespace Sim.View.Views
             {
                 AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
+                // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
+                if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
                 if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
                 return vm;
             }
@@ -339,6 +342,11 @@ namespace Sim.View.Views
             foreach (Sim.Core.People.Construction c in p.Constructions)
                 if (c.TileId == tile.Id)
                     vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now)), "hut"));
+            if (sim.State.Citizens != null)
+            {
+                HomesteadSheet.AddHouses(ctx, vm, tile.Id); // houses share the quarters' places (spec 014 §3.4)
+                n += Sim.Core.People.HouseRules.HousesOn(sim, tile.Id);
+            }
             while (n < places) vm.Lines.Add(new LineVm(ctx.Strings.Get("quarters.place", "n", ctx.Fmt.Integer(++n)), ctx.Strings.Get("quarters.free")));
             vm.Actions.Add(ActionVm.Open("buildHut", ctx.Strings.Get("people.buildHut"), new SheetRequest("HutPlacement", 0)));
             return vm;

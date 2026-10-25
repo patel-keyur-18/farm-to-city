@@ -220,5 +220,6 @@
   "ratingFairPercent": 80,
   "skillBands": [35, 55, 75],
   "skillStarPoints": 20,
-  "referenceAcreHours": 3
+  "referenceAcreHours": 3,
+  "happyAbove": 60
 }

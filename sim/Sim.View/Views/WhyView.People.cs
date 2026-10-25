@@ -27,6 +27,9 @@ namespace Sim.View.Views
 
         /// <summary>The dairy: milk paid by the co-op, calves sold, fodder bought or sold standing, vet visits (spec 012).</summary>
         Dairy = 13,
+
+        /// <summary>Your people (spec 014 §7): a hand retired, a house built, rent paid or missed, a family left.</summary>
+        Town = 14,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>
@@ -187,6 +190,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.hire.until", ctx.Fmt.Duration(System.Math.Max(0, until - ctx.Now)));
             Text(vm, ctx, "why.hire.care");
             Text(vm, ctx, "why.hire.leave");
+            if (sim.State.Farm.Crops.Exists(c => c.State == Sim.Core.Farm.CropState.Growing && sim.Config.Game.Farm.Crops[c.Def].Fodder)) Text(vm, ctx, "why.hire.fodder");
             vm.Footnote = ctx.Strings.Get("why.care.lesson");
             return vm;
         }

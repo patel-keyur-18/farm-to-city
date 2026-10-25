@@ -12,7 +12,8 @@ namespace Sim.Core.Commands
 {
     /// <summary>
     /// Hires labourers till the crops growing now are in (spec 006 §3.2, ADR 0049 §3): they stay until the last one's readyAt
-    /// rounded up to the hour, paid upfront pro rata (Dr 5100), harvesting each field without a hand's order as it ripens.
+    /// rounded up to the hour, paid upfront pro rata (Dr 5100), harvesting each field without a hand's order as it ripens. The town's
+    /// outside workers come first, then neighbours (spec 014 §3.6); the event lists the neighbours.
     /// </summary>
     public sealed class HireLabourers : TimedCommand
     {
@@ -32,9 +33,20 @@ namespace Sim.Core.Commands
             long t = sim.State.Clock.SimTime;
             FarmSystem.Accrue(sim);
             var ids = new List<long>();
+            // The town's outside workers first (spec 014 §3.6): their household earns the day wage in place of that day's outside work.
+            long each = PeopleRules.LabourCost(sim, 1, until);
+            int town = 0;
+            foreach (Citizen c in PeopleRules.TownLabourers(sim))
+            {
+                if (town == Count) break;
+                if (c.Labouring(t)) continue;
+                c.LabourUntil = until;
+                sim.State.Citizens.Household(c.HouseholdId).Earned += each;
+                town++;
+            }
             foreach (Neighbour n in sim.State.People.Roster)
             {
-                if (ids.Count == Count) break;
+                if (ids.Count + town == Count) break;
                 if (!n.FreeToday || n.Hired) continue;
                 n.Tile = -1;
                 n.Until = until;

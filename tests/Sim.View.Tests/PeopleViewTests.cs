@@ -89,9 +89,13 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             SheetVm s = PeopleSheet.Build(ViewKit2.Context(sim));
-            Assert.That(s.Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "nothing growing to hire for (ADR 0049)");
-            Assert.That(s.Lines.Single(l => l.Action?.Id == "buildHut").Action.Opens.Value.Kind, Is.EqualTo("HutPlacement"));
-            Assert.That(s.Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
+            Assert.That(PeopleSheet.Hire(ViewKit2.Context(sim)).Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("hire:")), Is.EqualTo(0), "nothing growing to hire for (ADR 0049)");
+            // US-215: the Store's layout, picture buttons for hiring, a hut and sending word.
+            List<ActionVm> buttons = s.Lines.Single(l => l.Buttons != null).Buttons;
+            Assert.That(buttons.Select(b => b.Id), Is.EqualTo(new[] { "hire", "buildHut", "word" }));
+            Assert.That(buttons.Select(b => b.Opens.Value.Kind), Is.EqualTo(new[] { "Hire", "HutPlacement", "Word" }));
+            Assert.That(buttons.All(b => b.Icon != null && b.Detail != null), Is.True);
+            Assert.That(PeopleSheet.Word(ViewKit2.Context(sim)).Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
 
             // Hut placement: the six inherited acres, the yard is not among them.
             List<HutPlaceVm> places = HutPlacement.Places(ViewKit2.Context(sim));
@@ -104,7 +108,9 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             Assert.That(HutPlacement.Places(ctx).Single(p => p.TileId == 119).Allowed, Is.True, "room for a second hut");
             s = PeopleSheet.Build(ctx);
-            Assert.That(s.Lines.Any(l => l.Action?.Id == "hand:" + h.Id), Is.True);
+            Assert.That(s.Lines.Single(l => l.Action?.Id == "hand:" + h.Id).Icon, Does.StartWith("person_hand_"));
+            Assert.That(s.Lines.Single(l => l.Action?.Id == "hand:" + h.Id).Note, Is.Not.Null, "the hand's orders");
+            Assert.That(s.Lines.Any(l => l.Icon == "hand_hut" && l.Action?.Id?.StartsWith("hut:") == true), Is.True, "the hut he lives in");
             Assert.That(FieldSheets.ForTile(ctx, 119).Lines.Any(l => l.Label.StartsWith("Hut place")), Is.True);
 
             // A field sheet offers the order; the order sheet steps crop, then sell rule.
@@ -235,19 +241,121 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             long t = sim.State.Clock.SimTime;
-            SheetVm people = PeopleSheet.Build(ViewKit2.Context(sim));
+            SheetVm people = PeopleSheet.Hire(ViewKit2.Context(sim));
             Assert.That(people.Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
             Assert.That(people.Lines.Any(l => l.Value == "Sow something first: they stay till its harvest"), Is.True);
             Ok(sim, new Sow(t, 86, "potato", SeedSource.Certified, "none"));
             Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 86).Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "not on the field");
             int free = PeopleRules.FreeNow(sim);
-            people = PeopleSheet.Build(ViewKit2.Context(sim));
+            people = PeopleSheet.Hire(ViewKit2.Context(sim));
             List<LineVm> hires = people.Lines.Where(l => l.Action?.Id?.StartsWith("hire:") == true).ToList();
             Assert.That(hires.Count, Is.EqualTo(free));
             Assert.That(hires[0].Label, Is.EqualTo("1 labourer till harvest"));
             Assert.That(sim.Execute(hires[0].Action.Create(t)).Accepted, Is.True);
-            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
+            Assert.That(PeopleSheet.Hire(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
+            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Icon == "person_labourer_m" && l.Note != null).Label, Is.EqualTo("1 labourer working"));
             Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Labourer).Patrol, Is.EqualTo(new[] { 86 }));
+        }
+
+        // Spec 014 §3.13 (AC-14): every needs row says what would help, or that it can't be changed yet; never a bare number.
+        [Test]
+        public void NeedsLevers()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            Household x = sim.State.Citizens.Household(sim.State.Citizens.OfHand(h.Id).HouseholdId);
+            List<LineVm> rows = NeedsView.Rows(ViewKit2.Context(sim), x);
+            Assert.That(rows.Count(r => r.IsHeader), Is.EqualTo(4), "the four layers");
+            Assert.That(rows.Where(r => !r.IsHeader).All(r => !string.IsNullOrEmpty(r.Note)), Is.True, "every need names its lever");
+            Assert.That(rows.Single(r => r.Label == "Steady work").Note, Is.EqualTo("1 of 1 adults work for you"));
+            Assert.That(rows.Single(r => r.Label == "School").Note, Does.Contain("the Village builds one"));
+            x.FoodMet = Sim.Core.Maths.Fixed.Parse("0.83");
+            sim.State.Citizens.OfHand(h.Id).Job = CitizenJob.Outside;
+            rows = NeedsView.Rows(ViewKit2.Context(sim), x);
+            Assert.That(rows.Single(r => r.Label == "Food").Note, Is.EqualTo("Their money buys 83% of the food they need: a better wage or a job here helps"));
+            Assert.That(rows.Single(r => r.Label == "Food").NoteTone, Is.EqualTo(Tone.Good), "0.83 is above the 0.8 gate");
+            Assert.That(rows.Single(r => r.Label == "Steady work").Note, Does.EndWith("give someone here a job (your hand)"));
+            Assert.That(rows.Single(r => r.Label == "Steady work").NoteTone, Is.EqualTo(Tone.Warn));
+        }
+
+        // Spec 014 §7, §3.13 (US-210): the Town tab, the household and citizen cards, placing a house, the HUD and the away lines.
+        [Test]
+        public void TownScreens()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            ulong hash = sim.State.ComputeHash();
+
+            SheetVm workers = PeopleSheet.Build(ctx), town = TownSheet.Build(ctx);
+            Assert.That(workers.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Workers", "Town" }));
+            Assert.That(workers.Tab, Is.EqualTo("tab:workers"));
+            Assert.That(town.Tab, Is.EqualTo("tab:town"));
+            Assert.That(town.Subtitle, Is.EqualTo("6 people in 2 households"), "the hand alone in his hut counts as a household (§3.13)");
+            Assert.That(town.Lines.Single(l => l.Label == "Work in town").Value, Is.EqualTo("1 of 3 adults"), "the hand; Manoj and Usha work outside");
+            Household family = sim.State.Citizens.Households.Single(x => x.Members.Count == 5);
+            LineVm row = town.Lines.Single(l => l.Label == "Manoj's family (5)");
+            Assert.That(row.Value, Does.StartWith("Family house 1 · income "));
+            Assert.That(row.Opens.Value.Kind, Is.EqualTo("Household"));
+            List<string> bySize = TownSheet.Build(ctx, TownSheet.BySize).Lines.Where(l => l.Opens.HasValue && l.Opens.Value.Kind == "Household").Select(l => l.Label).ToList();
+            Assert.That(bySize.First(), Is.EqualTo("Manoj's family (5)"), "the biggest first");
+            Assert.That(town.Lines.Single(l => l.Buttons != null).Buttons.Single().Label, Is.EqualTo("Build a family house"));
+
+            // The household card: the small tree, members, the budget pie, rent, needs.
+            SheetVm card = HouseholdSheet.Build(ctx, family.Id);
+            FamilyTreeVm tree = card.Lines.First(l => l.Tree != null).Tree;
+            Assert.That(tree.Generations.Select(g => g.Select(p => p.Text)), Is.EqualTo(new[]
+                { new[] { "Kamala (66)" }, new[] { "Manoj (38)", "Usha (35)" }, new[] { "Asha (9)", "Ravi (12)" }.Reverse().ToArray() }));
+            Assert.That(tree.Generations[1][1].SpouseOfPrevious, Is.True);
+            LineVm budget = card.Lines.Single(l => l.Label == "Budget");
+            Assert.That(budget.Pie.First().Label, Is.EqualTo("Food"));
+            Assert.That(budget.Pie.Sum(p => p.Percent), Is.InRange(97, 103), "rounded shares");
+            Assert.That(card.Lines.First(l => l.Label == "Rent").Value, Does.Match(@"^6,0\d0 coins a season · paid$"), "6,000 at today's prices");
+            Assert.That(card.Lines.Single(l => l.Label == "Happiness").WhyKey, Is.EqualTo("household.happiness"));
+            AssertWords(card);
+
+            // The citizen card: close family with links, the departed folded.
+            Citizen manoj = sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == "Manoj");
+            SheetVm me = CitizenSheet.Build(ctx, manoj.Id);
+            Assert.That(me.Lines.Single(l => l.Label == "Age").Value, Is.EqualTo("38 · adult"));
+            Assert.That(me.Lines.Where(l => l.Opens.HasValue && l.Opens.Value.Kind == "Citizen").Select(l => l.Value),
+                Is.EqualTo(new[] { "mother, 66", "wife, 35", "son, 12", "daughter, 9" }));
+            Assert.That(me.Lines.Single(l => l.Label == "1 who has passed away or moved").Opens.Value.Kind, Is.EqualTo("Departed"));
+            Assert.That(CitizenSheet.Departed(ctx, manoj.Id).Lines.Single().Value, Is.EqualTo("Passed away at 74"));
+            Assert.That(WhyView.Build(ctx, "citizen.age", manoj.Id).Rows[0].Label, Does.StartWith("People age a year each season"));
+            AssertWords(me);
+
+            // Placing a house: lit where it may go, refusals in words; an empty field offers it, the house acre is a homestead.
+            int acre = sim.State.Land.Buildings.Single(b => HouseRules.IsHouse(sim, b)).TileId;
+            List<HutPlaceVm> places = HousePlacement.Places(ctx);
+            Assert.That(places.Single(p => p.TileId == acre).Allowed, Is.True, "room for a second house");
+            Assert.That(places.Single(p => p.TileId == 86).Reason, Is.EqualTo("Something is growing here"));
+            Assert.That(FieldSheets.ForTile(ctx, Situations.HouseTile(sim)).Actions.Select(a => a.Label), Does.Contain("Build a family house"));
+            SheetVm homestead = FieldSheets.ForTile(ctx, acre);
+            Assert.That(homestead.Title, Is.EqualTo("Family houses"));
+            Assert.That(homestead.Actions.Select(a => a.Label), Does.Not.Contain("Sow"));
+            Assert.That(homestead.Lines.First().Value, Is.EqualTo("Manoj's family"));
+
+            HudVm hud = HudView.Build(ctx);
+            Assert.That(hud.HasTown && hud.Population == 6, Is.True);
+            Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "views never change the state");
+
+            // A second house fills the acre: "This acre has 2 houses".
+            Ok(sim, new BuildFamilyHouse(sim.State.Clock.SimTime, acre));
+            Assert.That(HousePlacement.ReasonFor(ViewKit2.Context(sim), acre), Is.EqualTo("This acre has 2 houses"));
+
+            // Away lines: the season's rent, a hand gone home, a family that left, gently and in words.
+            int raju = sim.Config.Game.People.Names.ToList().FindIndex(d => d.Id == "raju");
+            var events = new List<SimEvent>
+            {
+                new RentPaid(1, family.Id, 6_000_00), new CitizenRetired(2, 1, 1, raju, 60, true),
+                new HouseholdLeft(3, family.Id, 5, LeaveReason.LandTaken, manoj.Name),
+            };
+            List<LineVm> away = TownAway.Rows(ctx, events);
+            Assert.That(away.Select(l => l.Label + ": " + l.Value), Is.EqualTo(new[]
+                { "Your people: Raju (60) retired and went home", "Your people: Manoj's family left: the bank took the land" }));
+            Assert.That(TownAway.Rent(events, out int payers), Is.EqualTo(6_000_00));
+            Assert.That(payers, Is.EqualTo(1), "a money row on the card: \"Rent from 1 family\"");
+            Assert.That(card.Lines.Single(l => l.Label == "Budget").Value, Does.EndWith(budget.Pie.First().Percent + "%"), "the pie's food share as the row says");
         }
 
         [Test]

@@ -1,0 +1,68 @@
+{
+  "life": {
+    "lifeYearsPerSeason": 1,
+    "adultFrom": 18,
+    "elderFrom": 60,
+    "retireAge": 60,
+    "minHealth": 0.5,
+    "healthLossPerSeason": 0.20,
+    "healthGainPerSeason": 0.10,
+    "primaryEducationShare": 0.60,
+    "applicantAge": { "min": 20, "max": 45 },
+    "migratedHandAge": { "min": 22, "max": 45 }
+  },
+  "budget": {
+    "remitShare": 0.50,
+    "outsideDaysShare": 0.50,
+    "engelCurve": [[0, 0.65], [8000, 0.55], [20000, 0.40], [60000, 0.25]],
+    "clothingShare": 0.08,
+    "healthShare": 0.05,
+    "educationShare": 0.05,
+    "leisureOfRest": 0.50,
+    "foodBasketPerPerson": 4500,
+    "childEquivalent": 0.6,
+    "elderEquivalent": 0.8
+  },
+  "basket": {
+    "realDaysPerGameDay": 22.8,
+    "kgPerRealDay": { "wheat": 0.20, "rice": 0.20, "lentils": 0.05, "potato": 0.10, "radish": 0.075, "spinach": 0.075 }
+  },
+  "needs": {
+    "survivalWeight": 0.40,
+    "securityWeight": 0.30,
+    "belongingWeight": 0.20,
+    "growthWeight": 0.10,
+    "gate": 0.80,
+    "chemist": 0.50,
+    "belonging": 0.80,
+    "leisure": 0.30
+  },
+  "flows": {
+    "birthChance": 0.10,
+    "crowdedBirthFactor": 0.30,
+    "birthAge": { "min": 20, "max": 40 },
+    "maxChildren": 3,
+    "marriageChance": 0.25,
+    "marriageAge": { "min": 22, "max": 30 },
+    "deathBase": 0.015,
+    "deathDoublingYears": 8,
+    "deathCap": 0.50,
+    "poorHealthBelow": 0.70,
+    "poorHealthDeathFactor": 1.5,
+    "mourning": 10,
+    "familyEveryHours": 18,
+    "familyJitterHours": 6,
+    "familySize": { "min": 2, "max": 5 },
+    "leaveBelow": 35,
+    "leaveSeasons": 2,
+    "leaveChance": 0.50,
+    "rentBehindSeasons": 2
+  },
+  "house": {
+    "unlockEra": "hamlet",
+    "capacity": 6,
+    "perAcre": 2,
+    "rentPerSeason": 6000
+  },
+  "villages": ["sitapur", "rampur", "chandanpur", "keshavgarh", "devipur", "bhawanipur"]
+}

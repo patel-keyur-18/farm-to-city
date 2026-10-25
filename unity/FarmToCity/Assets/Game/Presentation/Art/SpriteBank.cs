@@ -135,6 +135,21 @@ namespace Game.Presentation.Art
             }
         }
 
+        /// <summary>An acre lit for placing (spec 014 §3.13): a soft filled diamond, inset so neighbouring lit acres stay apart.</summary>
+        public static Sprite TileFill
+        {
+            get
+            {
+                return Get("tileFill", () =>
+                {
+                    var p = new Painter(140, 74);
+                    Vector2[] d = { new Vector2(70, 63), new Vector2(118, 37), new Vector2(70, 11), new Vector2(22, 37) };
+                    p.OutlinedPolygon(d, new Color(1f, 1f, 1f, 0.45f), new Color(1f, 1f, 1f, 0.95f), 2.4f);
+                    return p.ToSprite(Ppu, new Vector2(0.5f, 0.5f));
+                });
+            }
+        }
+
         public static Sprite SelectionRing
         {
             get

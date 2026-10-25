@@ -191,7 +191,7 @@ namespace Sim.Core.Market
                 var input = new ClearingInput
                 {
                     Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = MarketRules.Ceiling(sim, g),
-                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g),
+                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + People.HouseholdRules.TownDemandPerDay(sim, g), // spec 014 §3.7
                     OtherSupplyPerDay = defs.Region.ValleySupplyPerDay(g) + defs.Region.ImportCapacityPerDay(g),
                     Eligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
                     TraderMayTake = !hasMin || m.MinPrice[g] <= floor,

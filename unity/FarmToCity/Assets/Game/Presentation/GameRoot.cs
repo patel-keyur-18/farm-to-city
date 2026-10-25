@@ -59,6 +59,7 @@ namespace Game.Presentation
 
         // Placing a hand's hut (ADR 0039 §2): the ghost's acre and the bar with Build here / Cancel.
         private int _ghostTile = -1;
+        private bool _placingHouse; // placing a family house (spec 014 §3.13), else a hand's hut
         private VisualElement _placeBar;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -381,6 +382,8 @@ namespace Game.Presentation
             switch (r.Kind)
             {
                 case "People": _sheet.Show(PeopleSheet.Build(_ctx), refreshOnly); break;
+                case "Hire": _sheet.Show(PeopleSheet.Hire(_ctx), refreshOnly); break;
+                case "Word": _sheet.Show(PeopleSheet.Word(_ctx), refreshOnly); break;
                 case "Hand":
                     if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left
                     _sheet.Show(HandSheet.Build(_ctx, r.Id), refreshOnly);
@@ -392,7 +395,15 @@ namespace Game.Presentation
                     if (OrderSheet.IsCropStep(kind, r.Arg) && PeopleWords.OrderHand(Sim, kind, r.Id) != null) _sheet.Show(OrderSheet.Crops(_ctx, r.Id, r.Arg), refreshOnly);
                     else _sheet.Show(OrderSheet.Build(_ctx, kind, r.Id, r.Arg), refreshOnly);
                     break;
-                case "HutPlacement": if (!refreshOnly) StartPlacing(); break;
+                case "HutPlacement": if (!refreshOnly) StartPlacing(false); break;
+                case "HousePlacement": if (!refreshOnly) StartPlacing(true); break;
+                case "Town": _sheet.Show(TownSheet.Build(_ctx, r.Arg), refreshOnly); break;
+                case "Household":
+                    if (Sim.State.Citizens?.Household(r.Id) == null) { _sheet.Close(); break; } // the family left
+                    _sheet.Show(HouseholdSheet.Build(_ctx, r.Id), refreshOnly);
+                    break;
+                case "Citizen": _sheet.Show(CitizenSheet.Build(_ctx, r.Id), refreshOnly); break;
+                case "Departed": _sheet.Show(CitizenSheet.Departed(_ctx, r.Id), refreshOnly); break;
                 case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
                 case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
                 case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
@@ -450,13 +461,16 @@ namespace Game.Presentation
                     _safeRoot.schedule.Execute(() => ShowLetter(id, reading: true));
                     return;
                 }
-                if (action.Opens.Value.Kind == "HutPlacement")
+                if (action.Opens.Value.Kind == "HutPlacement" || action.Opens.Value.Kind == "HousePlacement")
                 {
                     // Start on the next UI tick, outside this click: a bar built inside the handler never got its own clicks on touch.
+                    bool house = action.Opens.Value.Kind == "HousePlacement";
                     _sheet.Close();
-                    _safeRoot.schedule.Execute(StartPlacing);
+                    _safeRoot.schedule.Execute(() => StartPlacing(house));
                     return;
                 }
+                // A tab or a sort changes the sheet in place: nothing new to go back to.
+                if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
                 Push(action.Opens.Value);
                 return;
             }
@@ -490,13 +504,15 @@ namespace Game.Presentation
 
         // ---- placing a hand's hut (ADR 0039 §2) ----
 
-        private void StartPlacing()
+        private void StartPlacing(bool house)
         {
             _open = null;
             _map.ClearSelection();
-            List<HutPlaceVm> places = HutPlacement.Places(_ctx);
+            _placingHouse = house;
+            List<HutPlaceVm> places = house ? HousePlacement.Places(_ctx) : HutPlacement.Places(_ctx);
             HutPlaceVm first = places.Find(p => p.Allowed) ?? (places.Count > 0 ? places[0] : null);
             if (first == null) return;
+            if (house) _map.LightPlaces(places.FindAll(p => p.Allowed).ConvertAll(p => p.TileId));
             _input.Placing = w => { int tile = _map.Grid.Pick(w.x, w.y); if (tile >= 0) MoveGhost(tile); };
             MoveGhost(first.TileId);
             _input.Reveal(_map.WorldOf(new Hit(HitKind.Tile, first.TileId)));
@@ -504,10 +520,12 @@ namespace Game.Presentation
 
         private void MoveGhost(int tile)
         {
-            string reason = HutPlacement.ReasonFor(_ctx, tile);
+            string reason = _placingHouse ? HousePlacement.ReasonFor(_ctx, tile) : HutPlacement.ReasonFor(_ctx, tile);
             if (tile == _ghostTile && _placeBar != null) return;
             _ghostTile = tile;
-            _map.ShowGhost(tile, reason == null);
+            if (_placingHouse)
+                _map.ShowHouseGhost(tile, reason == null, global::Sim.Core.People.HouseRules.HousesOn(Sim, tile), Sim.State.Land.Tiles[tile].Terrain == global::Sim.Core.Definitions.Terrain.Quarters);
+            else _map.ShowGhost(tile, reason == null);
             if (_placeBar != null) _safeRoot.Remove(_placeBar);
             _placeBar = UiKit.Panel(30);
             _placeBar.style.position = Position.Absolute;
@@ -519,10 +537,10 @@ namespace Game.Presentation
             var text = new VisualElement { pickingMode = PickingMode.Ignore };
             text.style.flexGrow = 1;
             text.style.flexShrink = 1;
-            text.Add(UiKit.Heading1(_strings.Get("place.title"), 40));
-            text.Add(UiKit.Text(reason ?? _strings.Get("place.hint"), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
+            text.Add(UiKit.Heading1(_strings.Get(_placingHouse ? "place.houseTitle" : "place.title"), 40));
+            text.Add(UiKit.Text(reason ?? _strings.Get(_placingHouse ? "place.houseHint" : "place.hint"), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
             _placeBar.Add(text);
-            ActionVm build = HutPlacement.Confirm(_ctx, tile);
+            ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile) : HutPlacement.Confirm(_ctx, tile);
             _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
             {
                 Command c = build.Create(Sim.State.Clock.SimTime);

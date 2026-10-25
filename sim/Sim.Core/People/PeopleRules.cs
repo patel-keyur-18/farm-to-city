@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Sim.Core.Definitions;
 using Sim.Core.Farm;
@@ -30,6 +31,7 @@ namespace Sim.Core.People
             if (s == null) return Fixed.Zero;
             int n = 0;
             foreach (Neighbour x in s.Roster) if (x.Hired) n++;
+            foreach (Citizen c in TownLabourers(sim)) if (c.Labouring(sim.State.Clock.SimTime)) n++;
             return sim.Config.Game.People.Pool.HoursPerDay.MulRatio(n, 1);
         }
 
@@ -74,11 +76,13 @@ namespace Sim.Core.People
 
         /// <summary>
         /// When labourers hired now go home: the last growing crop's readyAt rounded up to the hour (ADR 0049 §3); 0 if none grows.
+        /// A fodder stand never counts: it is cut each morning with the animals' work, not harvested (ADR 0066).
         /// </summary>
         public static long LabourUntil(Simulation sim)
         {
             long last = 0;
-            foreach (Crop c in sim.State.Farm.Crops) if (c.State == CropState.Growing && c.ReadyAt > last) last = c.ReadyAt;
+            foreach (Crop c in sim.State.Farm.Crops)
+                if (c.State == CropState.Growing && c.ReadyAt > last && !sim.Config.Game.Farm.Crops[c.Def].Fodder) last = c.ReadyAt;
             return last == 0 ? 0 : (last + 3599) / 3600 * 3600;
         }
 
@@ -90,12 +94,22 @@ namespace Sim.Core.People
             return (long)((BigInteger)wage * count * System.Math.Max(0, until - t) / Day);
         }
 
-        /// <summary>Labourers free today and not yet hired.</summary>
+        /// <summary>Labourers free today and not yet hired: the town's outside workers (spec 014 §3.6), then neighbours.</summary>
         public static int FreeNow(Simulation sim)
         {
             int n = 0;
+            foreach (Citizen c in TownLabourers(sim)) if (!c.Labouring(sim.State.Clock.SimTime)) n++;
             foreach (Neighbour x in sim.State.People.Roster) if (x.FreeToday && !x.Hired) n++;
             return n;
+        }
+
+        /// <summary>The town's adults who work outside (spec 014 §3.6), in citizen id order: hired as labourers before neighbours.</summary>
+        public static List<Citizen> TownLabourers(Simulation sim)
+        {
+            var list = new List<Citizen>();
+            if (sim.State.Citizens == null) return list;
+            foreach (Citizen c in sim.State.Citizens.Citizens) if (HouseholdRules.WorksOutside(sim, c)) list.Add(c);
+            return list;
         }
 
         /// <summary>The rest of the season's wage: wage × (seasonEnd − t) ÷ S, rounded down.</summary>
@@ -144,7 +158,7 @@ namespace Sim.Core.People
             if (tileId < 0 || tileId >= sim.State.Land.Tiles.Count) return Commands.RejectReason.UnknownTile;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (tile.Terrain != Terrain.Quarters || !sim.State.Land.Parcels[tile.ParcelId].Protected) return Commands.RejectReason.NotQuarters;
-            if (HutsOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre) return Commands.RejectReason.NoRoom;
+            if (HutsOn(sim, tileId) + HouseRules.HousesOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre) return Commands.RejectReason.NoRoom; // a family house takes a place (spec 014)
             if (HutCount(sim) >= sim.Config.Game.People.Hand.MaxHandHuts) return Commands.RejectReason.TooManyHuts;
             return Commands.RejectReason.None;
         }

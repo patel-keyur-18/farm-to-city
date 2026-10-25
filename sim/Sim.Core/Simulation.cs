@@ -47,12 +47,14 @@ namespace Sim.Core
                 AddSystem(new FinanceSystem());
                 if (config.Game.People != null) AddSystem(new PeopleSystem());
                 if (config.Game.Livestock != null) AddSystem(new Livestock.LivestockSystem());
+                if (config.Game.Population != null && config.Game.People != null) AddSystem(new People.PopulationSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
             if (config.Game != null) handlers.AddRange(new IJobHandler[] { new FarmSystem.CropGrowth(), new FarmSystem.GardenGrowth(), new FarmSystem.TreeMaturity(), new FarmSystem.PestCheck(), new MarketSystem.MandiReturn() });
             if (config.Game?.People != null) handlers.Add(new PeopleSystem.HutBuild());
             if (config.Game?.Livestock != null) handlers.Add(new Livestock.LivestockSystem.ShedBuild());
+            if (config.Game?.Population != null && config.Game.People != null) handlers.Add(new People.HouseRules.Build());
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {
@@ -86,6 +88,7 @@ namespace Sim.Core
                 FounderRules.PayFirstSeason(sim);
                 if (config.Game.People != null) PeopleSystem.Initialise(sim);
                 if (config.Game.Livestock != null) state.Livestock = new Livestock.LivestockState();
+                if (config.Game.Population != null && config.Game.People != null) state.Citizens = new People.CitizensState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

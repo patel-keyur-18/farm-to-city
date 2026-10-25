@@ -40,6 +40,9 @@ namespace Sim.View.Views
     public sealed class TileVm
     {
         public int Id { get; internal set; }
+
+        /// <summary>Family houses on the acre, standing or being built (spec 014): it's drawn as a homestead, not a field.</summary>
+        public int Houses { get; internal set; }
         public int X { get; internal set; }
         public int Y { get; internal set; }
         public TileKind Kind { get; internal set; }
@@ -172,6 +175,9 @@ namespace Sim.View.Views
         Founder = 0,
         Hand = 1,
         Labourer = 2,
+
+        /// <summary>One of your people at home in a family house by day (spec 014, US-212): <see cref="PersonVm.Look"/> is their sprite.</summary>
+        Citizen = 3,
     }
 
     /// <summary>
@@ -197,6 +203,9 @@ namespace Sim.View.Views
         /// <summary>Where home is: a tile, and for a hand the building id of their hut (else 0).</summary>
         public int HomeTile { get; internal set; }
         public long HomeHut { get; internal set; }
+
+        /// <summary>A citizen's sprite kind (town_m, town_f, boy, girl, elder_m, elder_f), else null.</summary>
+        public string Look { get; internal set; }
     }
 
     /// <summary>Everything the map draws, built from the state: tiles, tree slots, garden beds and buildings (spec 008 §3.4).</summary>
@@ -240,6 +249,9 @@ namespace Sim.View.Views
         public List<BedVm> Beds { get; } = new List<BedVm>();
         public List<BuildingVm> Buildings { get; } = new List<BuildingVm>();
         public List<ConstructionVm> Constructions { get; } = new List<ConstructionVm>();
+
+        /// <summary>Family houses being built (spec 014), each with its progress.</summary>
+        public List<ConstructionVm> HouseSites { get; } = new List<ConstructionVm>();
         public List<PersonVm> People { get; } = new List<PersonVm>();
         public long SimTime { get; internal set; }
         public int Season { get; internal set; }
@@ -396,6 +408,7 @@ namespace Sim.View.Views
 
             foreach (Building b in land.Buildings)
                 map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
+            AddHouses(ctx, map);
             AddPeople(ctx, map);
             map.Cattle = CattleAcre(sim, map.SecondOfDay);
             return map;
@@ -527,6 +540,51 @@ namespace Sim.View.Views
             if (y + 1 < map.Height && land.Tiles[id + map.Width].Terrain == Terrain.Road) links |= 4;
             if (y - 1 >= 0 && land.Tiles[id - map.Width].Terrain == Terrain.Road) links |= 8;
             return links;
+        }
+
+        /// <summary>
+        /// Family houses (spec 014, US-212): each acre's count, the sites being built, and by day (7:00 to 19:00) one or two of each
+        /// family at home: a woman or an elder, and a child.
+        /// </summary>
+        private static void AddHouses(ViewContext ctx, MapVm map)
+        {
+            Simulation sim = ctx.Sim;
+            Sim.Core.People.CitizensState s = sim.State.Citizens;
+            if (s == null) return;
+            foreach (BuildingVm b in map.Buildings) if (b.DefId == Sim.Core.Definitions.PopulationDefs.HouseId) map.Tiles[b.TileId].Houses++;
+            long total = System.Math.Max(1, sim.Config.Game.Buildings[sim.Config.Game.Population.House].BuildHours * 3600L);
+            foreach (Sim.Core.People.Construction c in s.Constructions)
+            {
+                float progress = 1f - (c.ReadyAt - ctx.Now) / (float)total;
+                map.HouseSites.Add(new ConstructionVm { Id = c.Id, TileId = c.TileId, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
+                map.Tiles[c.TileId].Houses++;
+            }
+            if (map.SecondOfDay < 7 * 3600 || map.SecondOfDay >= 19 * 3600) return;
+            foreach (Sim.Core.People.Household x in s.Households)
+            {
+                if (!Sim.Core.People.HouseholdRules.InFamilyHouse(sim, x)) continue;
+                Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+                Sim.Core.People.Citizen grown = null, child = null;
+                foreach (long id in x.Members)
+                {
+                    Sim.Core.People.Citizen c = s.Citizen(id);
+                    if (c.Job == Sim.Core.People.CitizenJob.Hand) continue; // at work
+                    if (Sim.Core.People.HouseholdRules.IsChild(sim, c)) { if (child == null) child = c; }
+                    else if (grown == null && (c.Female || Sim.Core.People.HouseholdRules.IsElder(sim, c))) grown = c;
+                }
+                foreach (Sim.Core.People.Citizen c in new[] { grown, child })
+                    if (c != null)
+                        map.People.Add(new PersonVm { Key = "citizen:" + c.Id, Kind = PersonKind.Citizen, Female = c.Female, TileId = home.TileId, HomeTile = home.TileId,
+                            HomeHut = home.Id, Look = Look(sim, c) });
+            }
+        }
+
+        /// <summary>A citizen's sprite: a child, an elder, or a grown man or woman.</summary>
+        public static string Look(Simulation sim, Sim.Core.People.Citizen c)
+        {
+            if (Sim.Core.People.HouseholdRules.IsChild(sim, c)) return c.Female ? "girl" : "boy";
+            if (Sim.Core.People.HouseholdRules.IsElder(sim, c)) return c.Female ? "elder_f" : "elder_m";
+            return c.Female ? "town_f" : "town_m";
         }
 
         /// <summary>

@@ -5,6 +5,8 @@
     { "id": "hand_hut", "nameKey": "building.hand_hut", "yardTreeSlots": 0, "value": 15000, "usefulLifeSeasons": 60, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0,
       "buildHours": 24, "housesHands": 1 },
     { "id": "cattle_shed", "nameKey": "building.cattle_shed", "yardTreeSlots": 0, "value": 40000, "usefulLifeSeasons": 60, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0,
-      "buildHours": 24, "animals": 4, "feedRoomKg": 2400, "strawStackKg": 10000 }
+      "buildHours": 24, "animals": 4, "feedRoomKg": 2400, "strawStackKg": 10000 },
+    { "id": "family_house", "nameKey": "building.family_house", "yardTreeSlots": 0, "value": 60000, "usefulLifeSeasons": 120, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0,
+      "buildHours": 48 }
   ]
 }

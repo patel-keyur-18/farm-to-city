@@ -1,6 +1,6 @@
 # 014. Citizens, households and population
 
-- Status: Approved 2026-10-23 (ADR 0063)
+- Status: Approved 2026-10-23 (ADR 0063); amended by ADR 0067 (2026-10-24: 2 family houses an acre, the row-house layout) and the owner's §3.8 decision (the outside-work example scores 68)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
@@ -80,7 +80,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | --- | --- | --- |
 | A household | A family sharing a home: a couple, their children, sometimes an elder parent. Each citizen belongs to exactly one | |
 | A hand's hut | Houses one hand alone (spec 006): a household of one whose family stays in his home village; he sends half his wage home (`remitShare`) | 0.5 |
-| The family house | `BuildFamilyHouse(tile)` on an owned acre that isn't growing anything: `BuildingDef(family_house).value` 60,000 (a two-room pucca house), 48 h to build, houses `houseCapacity` people; an acre takes `housesPerAcre` houses and is no longer farmed while any stands. Also on the labour quarters' free places | 6 people; 4 an acre |
+| The family house | `BuildFamilyHouse(tile)` on an owned acre that isn't growing anything: `BuildingDef(family_house).value` 60,000 (a two-room pucca house), 48 h to build, houses `houseCapacity` people; an acre takes `housesPerAcre` houses and is no longer farmed while any stands; on the map two homes share a wall at the back of the acre, their courtyards opening onto open ground (ADR 0067). Also on the labour quarters' free places | 6 people; 2 an acre (ADR 0067; was 4) |
 | Rent | A household in a family house pays `rentPerSeason` × index at each season close (Dr Cash, Cr 4200 Rent received); a household that can't pay it falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays no rent: the house is part of his pay instead (§3.6) | 6,000 |
 | Moving up | A hand whose family house is free can "send for his family" (§3.10) | |
 | Overcrowding | More people than `houseCapacity` leaves shelter partly unmet (§3.8) | |
@@ -135,9 +135,9 @@ Each household's needs are scored 0–1 at each daily pass:
 | Layer | Weight | Needs in Phase 2 | Met when |
 | --- | --- | --- | --- |
 | Survival | 0.40 | Food, shelter, water | Food met (§3.5); members ≤ capacity (scaled down above it); water always met (the well and the pond) |
-| Security | 0.30 | A stable job, health care, rent paid | Share of working-age adults with a town job; the chemist in the village (0.5 until a clinic, Phase 3); rent not behind |
+| Security | 0.30 | A stable job, health care, rent paid | Share of working-age adults with a town job (met when nobody in the household is of working age); the chemist in the village (0.5 until a clinic, Phase 3); rent not behind |
 | Belonging | 0.20 | A place to meet and pray | The temple and the banyan square in the village centre: met (0.8; festivals later raise it) |
-| Growth | 0.10 | School, leisure | No school yet: 0 until spec 018; leisure budget > 0 gives 0.3 |
+| Growth | 0.10 | School, leisure | No school yet: not counted until spec 018 builds one (the layer is leisure alone until then); leisure budget > 0 gives 0.3 |
 
 ```
 met(survival) = the least of its needs (enough water doesn't make up for too little food); every other layer: the mean of its needs
@@ -146,7 +146,7 @@ happiness   = 100 × Σ weight × met × gate                    (0–100)
 town happiness = mean over citizens (each citizen takes their household's)
 ```
 
-A Phase 2 household with enough food, a home, a hand's job and rent paid scores about 40 + 30 × (1 + 0.5 + 1) ÷ 3 + 20 × 0.8 + 10 × 0.3 = **84**; one living on outside work only scores about 40 + 15 + 16 + 3 = **74**; one with a hand's job but short of food (food met 0.6, so security is gated at 0.75) scores 24 + 18.75 + 16 + 3 = **62** (rounded) with health falling.
+A Phase 2 household with enough food, a home, a hand's job and rent paid scores about 40 + 30 × (1 + 0.5 + 1) ÷ 3 + 20 × 0.8 + 10 × 0.3 = **84**; one living on outside work only scores about 40 + 15 + 10 + 3 = **68** (its security of 0.5 gates belonging at 0.625; corrected from 74 by the owner, 2026-10-24, keeping the rule); one with a hand's job but short of food (food met 0.6, so security is gated at 0.75) scores 24 + 18.75 + 16 + 3 = **62** (rounded) with health falling.
 
 ### 3.9 Births, marriages and deaths (§10 G3, G7)
 
@@ -183,7 +183,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 | Situation | Rule | Why |
 | --- | --- | --- |
 | When houses unlock | `BuildFamilyHouse` from the Hamlet (`unlockEra`), like the cattle shed; before it the Town tab says "Family houses come with the Hamlet" | The Hamlet's role is landowner; a Homestead has no money for houses |
-| Placing a house | "Build a family house" opens the map with the acres it can go on lit (owned, nothing growing, room for another house; the quarters' free places); an empty field's sheet also offers it. Refusals in words: "Something is growing here", "This acre has 4 houses" | Nobody has to guess where a house may go |
+| Placing a house | "Build a family house" opens the map with the acres it can go on lit (owned, nothing growing, room for another house; the quarters' free places); an empty field's sheet also offers it. Refusals in words: "Something is growing here", "This acre has 2 houses" | Nobody has to guess where a house may go |
 | A hand's family and a free house | A family house that is finished or falls empty is offered first to a hand living alone (a card: "Manoj asks to bring his family here": Yes / Not now). Strangers arrive only after "Not now", or 18 h after the offer while away. Replaces "at the next season close" in §3.10 | Families move in every 18 h, so a house would almost never still be free at a close and the player could never say yes |
 | Remittance | A hand's household stops sending half his wage home once his family lives in town | His family is here |
 | A hand retires | A retired hand living alone leaves for his home village (his hut is free for a new hand, `CitizenRetired`, "Ramu (60) has gone home to his village"). One whose family lives in your family house stays as an elder of that household | Otherwise a retired man would hold the hut for ever and the player could never hire again |
@@ -197,9 +197,9 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 
 ## 4. Data
 
-**New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48, `houseCapacity` 6, `housesPerAcre` 4, `rentPerSeason` 6,000); names with gender in `people.json`.
+**New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48); the house's rules in `population.json`'s `house` block (`unlockEra` hamlet, `capacity` 6, `perAcre` 4, `rentPerSeason` 6,000); home villages (`villages`, saved by id); names with gender in `people.json`.
 
-**New state** (save schema 9, ADR 0064 took 8): `Citizen` (id, name, gender, birthSeason, householdId, home, education, skill, traits, health, job, parents, spouse, story lines, diedAt), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
+**New state** (save schema 9, ADR 0064 took 8): `Citizen` (id, name, gender, the season they were 0 (`bornSeason`: age = seasons since × `lifeYearsPerSeason`), householdId, education, skill, traits, health, job and hand, parents, spouse, home village, gone (died or left) and when, story lines), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
 
 ## 5. Commands and events
 
@@ -255,10 +255,10 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
 | AC-1 | At each season close every citizen ages one year; a hand turning 60 isn't renewed and retires | `CitizenTests.Ageing_Retirement` |
-| AC-2 | A family house on an owned empty acre costs 60,000, builds in 48 h, holds 6, 4 an acre; the acre can't be sown while one stands | `HouseTests.Build_Limits` |
+| AC-2 | A family house on an owned empty acre costs 60,000, builds in 48 h, holds 6, 2 an acre (ADR 0067); the acre can't be sown while one stands | `HouseTests.Build_Limits` |
 | AC-3 | An empty house brings a family of 2–5 every 18 ± 6 h, live or away; they pay rent at the next close (4200) | `MigrationTests2.FamilyMovesIn` |
 | AC-4 | The budget follows the Engel curve; food met = budget ÷ need; savings cover a short season first | `HouseholdTests.Budget_Engel` |
-| AC-5 | Happiness follows the layers, weights and gate; the three examples in §3.8 score 84, 74 and 62 | `HappinessTests.Layers` |
+| AC-5 | Happiness follows the layers, weights and gate; the three examples in §3.8 score 84, 68 and 62 | `HappinessTests.Layers` |
 | AC-6 | Births, marriages and deaths follow their chances (seeded, same seed same town); no child or adult under 60 dies | `PopulationTests.Flows` |
 | AC-7 | A household below 35 happiness for 2 closes, or 2 seasons behind on rent, leaves (50% a close); a hand's leaving ends his contract | `MigrationTests2.MovingOut` |
 | AC-8 | Households add their basket to the local market's demand each hour | `MarketTests.TownDemand` |
@@ -283,10 +283,10 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 ## 10. Open questions
 
 - **G1. Who counts.** **Closed (owner, 2026-10-22; ADR 0061):** the village is the town and its places serve the citizens; the population is the people on the founder's land ("Your people"); the old families stay neighbours, not counted (the owner accepted the pushback: counting them would start the town at about 35 and pass the Homestead, Hamlet and Village thresholds at once).
-- **G2. Homes.** **Closed (owner, 2026-10-22):** a family house the founder builds (60,000, 48 h, 6 people, 4 an acre or the quarters' free places; the acre stops farming), rent 6,000 a season, a family 2 seasons behind leaves owing nothing; a hand's hut stays single (§3.4).
+- **G2. Homes.** **Closed (owner, 2026-10-22):** a family house the founder builds (60,000, 48 h, 6 people, 4 an acre (2 since ADR 0067, owner 2026-10-24: 4 were cramped on the map) or the quarters' free places; the acre stops farming), rent 6,000 a season, a family 2 seasons behind leaves owing nothing; a hand's hut stays single (§3.4).
 - **G3. The life clock and lifespans.** **Closed (owner, 2026-10-22):** 1 life-year a season (ADR 0002); child 0–17, adult 18–59, elder 60+; a hand retires at 60 after his season; births 0.10 a season for a couple (woman 20–40), at most 3, less when crowded or unhappy; deaths only for elders, 1.5% a year at 60 doubling every 8 years (about 72 years' expectancy) (§3.2, §3.9).
 - **G4. Engel's law and the budget.** **Closed (owner, 2026-10-22):** the budget set at each close from the season's income; the Engel curve [[0, 0.65], [8,000, 0.55], [20,000, 0.40], [60,000, 0.25]] by income a person; rent, clothing 8%, health 5%, education 5%, the rest half leisure, half savings; food need 4,500 an adult a season (child 0.6, elder 0.8); savings cover a short season first (§3.5).
-- **G5. Needs and happiness in Phase 2.** **Closed (owner, 2026-10-22):** survival 40% (the least of food, shelter, water), security 30% (town jobs, the chemist at 0.5, rent paid), belonging 20% (temple and square 0.8), growth 10% (no school yet; leisure 0.3); each layer gated by the one below at 0.8; the examples score 84, 74 and 62; nobody above about 90 until the school (§3.8).
+- **G5. Needs and happiness in Phase 2.** **Closed (owner, 2026-10-22):** survival 40% (the least of food, shelter, water), security 30% (town jobs, the chemist at 0.5, rent paid), belonging 20% (temple and square 0.8), growth 10% (no school yet; leisure 0.3); each layer gated by the one below at 0.8; the examples score 84, 68 and 62 (74 corrected to 68 by the owner, 2026-10-24: the rule kept); nobody above about 90 until the school (§3.8).
 - **G6. Migration.** **Closed (owner, 2026-10-23, with a change):** a family moves into an empty family house every 18 ± 6 h, live or away; a hand can bring his family into a free family house (Yes / Not now at a season close); a household below 35 happiness for 2 closes or 2 seasons behind on rent leaves (50% a close), and a hand's leaving ends his contract. The owner's change: the house is part of the hand's pay, so his cash wage is cut by its rent (6,000 × index) from his next renewal, a loyal hand's kept wage included; full wage again after they move out (§3.6, §3.10).
 - **G7. Death and tone.** **Closed (owner, 2026-10-23):** only elders die (§3.9's chances, about 72 years' expectancy; ×1.5 in poor health); worded gently ("passed away peacefully"), information only, no sound or push; a season's mourning (−10); no child or young adult deaths, no accidents and no funeral costs (the owner agreed with both pushbacks).
 - **G8. Work for everyone.** **Closed (owner, 2026-10-23):** adults 18–59 without a town job work outside at the founder's day-labour rate (9,000 a game day) on half the days, paid as the expected share daily (no daily roll, the owner accepted the pushback); the founder's day labourers come from the town first; the employment rate counts town jobs only (§3.6).

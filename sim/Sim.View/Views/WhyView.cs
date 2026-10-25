@@ -77,6 +77,10 @@ namespace Sim.View.Views
             { "milkPrice", MilkPrice }, { "milkToday", MilkToday }, { "shedCost", ShedCost }, { "animalMilk", AnimalMilk }, { "animalFed", AnimalFed },
             { "animalHealth", AnimalHealth }, { "animalMoney", AnimalMoney }, { "animalSell", AnimalSell }, { "animalBuy", AnimalBuy }, { "greenFodder", GreenFodder },
             { "feedStock", FeedStock }, { "animalWork", AnimalWork }, { "fodderCut", FodderCut },
+            // Your people (spec 014 §7).
+            { "townHappiness", TownHappiness }, { "employment", Employment }, { "household.income", HouseholdIncome }, { "household.budget", HouseholdBudget },
+            { "household.savings", HouseholdSavings }, { "household.rent", HouseholdRent }, { "household.happiness", HouseholdHappiness }, { "household.home", HouseholdHome },
+            { "citizen.age", CitizenAge }, { "citizen.health", CitizenHealth }, { "citizen.job", CitizenWork }, { "hand.home", HandHome },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>
