@@ -599,8 +599,8 @@
 
 - [x] US-214 and US-215 approved by the owner (2026-10-24)
 - [ ] Specs 015 and 016 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [ ] Save schema 9: migration, `saves/schema9` fixture, every older schema loads
-- [ ] Test checklist in `docs/test-checklists/`; Development build
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [x] Save schema 9: migration, `saves/schema9` fixture (checked current 2026-10-25), every older schema loads
+- [ ] Test checklist in `docs/test-checklists/` (`s13-citizens.md`, written); Development build (owner)
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request opened with labels and the milestone `Phase 2 · Hamlet & Village`; owner merges to `main`
