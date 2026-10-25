@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1–G5 closed; G6–G10 in §10 to close with the owner)
+- Status: Draft (G1–G6 closed; G7–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -88,7 +88,8 @@ Only types the era allows are offered; a type whose worker can't be found is off
 
 **(c) Atta to sell:** the mill buys wheat and sells atta and bran.
 - **Wheat in:** from the founder's store first, up to a daily amount the player sets ("Grind up to 200 kg a day of your wheat"), as an internal sale at today's market price (the farm's books: Cr 4000 Crop sales; the mill's: Dr Stock); then, if the player allows, from the local market at its price.
-- **Atta and bran out:** to the trader's truck at its buying price (atta base 32, bran base 15 a kg, regional like every good), and to the local market (atta joins the market with its own demand curve); atta can be in a supermarket order (spec 011).
+- **Atta out:** to the trader's truck at its morning price, up to 400 kg a day inside its 4-tonne load (spec 011, ADR 0054), and at the local market (atta joins it with its own demand curve, base 32 a kg, regional like every good); supermarket orders can ask for atta (spec 011 §3.5).
+- **Bran (chokar) out:** to your shed's feed room first if you keep cattle (it replaces cattle feed kg for kg, counted at the feed's price: the mill's Cr Sales, the farm's Dr Inputs in store), the rest to the trader (base 15 a kg). By-products have value (owner, 2026-10-25, §10 G6).
 - **The margin, at year-0 prices:** milling your own wheat (worth the trader's 23) into atta (the trader's 30) and bran adds about 5.5 a kg less 1.2 power; milling bought wheat at the market (25–27) adds 1–3. The lesson: processing pays most on your own harvest and needs volume.
 
 ### 3.6 The worker (§10 G3)
@@ -230,7 +231,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G3. Who runs it.** **Closed (owner, 2026-10-25):** the best-skilled adult in your town without a town job (else a daily worker from a neighbouring village) at a season wage paid upfront, until spec 015 brings full hiring; or you run it yourself, no wage, your hours there coming off your farm work; a business job is a town job (§3.6).
 - **G4. Where it stands.** **Closed (owner, 2026-10-25):** any acre you own with nothing growing (none of the inherited acres touch a road, so a roadside rule would force a land purchase first); one business an acre, the acre out of farming and not for sale while it stands; the layout previewed to the owner first; location and passing trade are spec 017's, for shops (§3.3).
 - **G5. The mill's work.** **Closed (owner, 2026-10-25):** grinding for your town, the village and the hamlets around (about 300 people, 10,800 kg a season) at 4 a kg; your own wheat into atta and bran (about 4 a kg net); market wheat optional (1–2 a kg); 40 kg an hour, 8:00–18:00, power 1.20 a kg, yields 0.97 and 0.03. Calibration: wheat is 1,200 kg an acre in Winter only, and a village of 35 alone can't keep a miller, so the catchment carries the business, as a real chakki's does (§3.5).
-- **G6. Wheat in, atta out.** The founder's store first at today's price, then the market if allowed; atta and bran to the trader and the local market; atta in supermarket orders.
+- **G6. Wheat in, atta out.** **Closed (owner, 2026-10-25):** your store first up to a daily amount at today's market price, the market only if allowed; atta to the trader (400 kg a day) and the local market, and in supermarket orders; bran to your cattle's feed room first, the rest sold (§3.5c).
 - **G7. Funding.** Own cash and a bank business loan at 0.6 of equipment and building; investors and partners in Phase 3.
 - **G8. Research and the plan.** A research sheet, a projected season, plan vs actual after 4 seasons.
 - **G9. Overdraft and failure.** Overdraft to half a season's costs at 4% a season; past it inputs stop and the worker leaves; closing at 60%; you guarantee what's left.
