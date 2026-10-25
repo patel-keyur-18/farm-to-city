@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (gaps G1–G10 in §10 to close with the owner)
+- Status: Draft (G1 closed; G2–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -21,7 +21,8 @@ The player founds a first business beside the farm, a village flour mill (atta c
 - Production: recipes (inputs, outputs, rate, power), hourly work while open, live or away.
 - The flour mill (Hamlet): grinding the town's wheat for a fee (pisai) and milling wheat into atta to sell; bran as a by-product.
 - The bakery (Village): atta and bakery supplies into pav and rusk.
-- New goods: atta, bran, bakery supplies, pav, rusk.
+- The dairy (Village): your animals' milk into paneer, curd and ghee (owner, 2026-10-25, §10 G1).
+- New goods: atta, bran, bakery supplies, pav, rusk, paneer, curd, ghee.
 - A job at a business is a town job (spec 014 §3.6).
 
 **Out** (and where it goes instead):
@@ -29,7 +30,7 @@ The player founds a first business beside the farm, a village flour mill (atta c
 - Full hiring (job posts for every role, interviews, probation, HR events): spec 015. Until then a business takes its worker as §3.6 says.
 - Investors and partner citizens, managers, valuation and selling a business, branches: Phase 3 (F12.6).
 - Invoices and payment terms between businesses: Phase 3 (F12.5).
-- A player dairy (paneer, ghee): Phase 3 with the sweet shop chain; milk stays with the co-op (ADR 0056, §10 G1).
+- A sweet shop (paneer and ghee into sweets): later, with spec 017's shops or Phase 3.
 - The town treasury: Phase 3 (F15.1).
 
 ## 3. Rules and formulas
@@ -42,6 +43,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | --- | --- | --- | --- | --- |
 | Flour mill (atta chakki) | Hamlet | A small shed (40,000, 80 seasons) and a 10 HP stone chakki (60,000, 40 seasons), ready in 24 h | 1 miller | Grinds 40 kg of wheat an hour while open |
 | Bakery | Village | A bakery shed (60,000, 80 seasons) and a wood-fired oven and mixer (50,000, 40 seasons), ready in 36 h | 1 baker | Bakes in batches (§3.9) |
+| Dairy | Village | A dairy room (40,000, 80 seasons) with a cream separator, a kadhai and burner, a paneer press and a chest freezer (45,000, 40 seasons), ready in 24 h | 1 dairyman | Makes paneer, curd and ghee in batches (§3.9b) |
 
 Only types the era allows are offered; a type whose worker can't be found is offered with the reason (§3.6).
 
@@ -119,6 +121,17 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | Inputs | Atta from your mill first (internal sale at the market price), else the market; bakery supplies (sugar, oil, yeast) bought at their price | Supplies base 60 a kg |
 | Selling | Pav and rusk to the trader and to the local market; the town's households buy them from their leisure share (spec 014 §3.5) | Pav base 50, rusk base 90 a kg |
 | Power and wood | 15 coins a batch | |
+
+### 3.9b The dairy (Village; owner, 2026-10-25; §10 G10)
+
+| Rule | Behaviour | Default |
+| --- | --- | --- |
+| Milk in | Your animals' morning milk, up to a daily amount you set ("Keep up to 20 L a day for the dairy"), taken at the co-op's price that morning (an internal sale: the farm's Cr 4020 Milk sales); the rest still goes to the co-op at 6:00 (spec 012 §3.5). If you allow it, neighbours' milk at the co-op's price + 2 a litre | |
+| Recipes | Paneer: 5 L buffalo milk (6.5 L cow) → 1 kg, a 20 L batch in 1 h. Curd: 1 L → 1 kg, set overnight (a batch of up to 20 L). Ghee: 15 L buffalo milk (22 L cow) → 1 kg, a batch of 30 L in 2 h | Yields by fat (spec 012 §3.5) |
+| Fuel and culture | Coins a batch | 20 |
+| Keeping | Paneer 3 days in the freezer, curd 1 day, ghee 6 months | Spoilage in `goods.json` |
+| Selling | Paneer, curd and ghee to the trader and the local market; the town's households buy curd and paneer from their food and leisure shares | Paneer base 320, curd 75, ghee 900 a kg |
+| The margin, year-0 | Paneer about 30 a kg on milk at 57.50; curd about 15; ghee little at today's price but it keeps, so it can wait for a better one | |
 
 ### 3.10 Overdraft, trouble and closing (§10 G9)
 
@@ -211,7 +224,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 
 ## 10. Open questions
 
-- **G1. Which businesses in Phase 2.** The flour mill (Hamlet) and the bakery (Village) here; no player dairy (milk stays with the co-op, ADR 0056), the farm and market stalls with spec 017's shops. Recommendation: as written.
+- **G1. Which businesses in Phase 2.** **Closed (owner, 2026-10-25):** the flour mill (Hamlet) and the bakery (Village); the farm and market stalls with spec 017's shops. The owner asked that a dairy business come in this phase unless a later one plans it; none does, so the dairy (Village: paneer, curd, ghee from your own milk) is added (§3.1, §3.9b). Milk not kept for it still goes to the co-op.
 - **G2. Books.** Each business its own ledger; your investment at cost on your books, its equity in net worth; internal sales at today's market price. Recommendation: as written.
 - **G3. Who runs it.** A hired townsperson until spec 015, or you yourself, with your farm hours.
 - **G4. Where it stands.** On an owned acre next to a road or lane (customers come to it), one business an acre, the acre out of farming; layout previewed first.
@@ -220,7 +233,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G7. Funding.** Own cash and a bank business loan at 0.6 of equipment and building; investors and partners in Phase 3.
 - **G8. Research and the plan.** A research sheet, a projected season, plan vs actual after 4 seasons.
 - **G9. Overdraft and failure.** Overdraft to half a season's costs at 4% a season; past it inputs stop and the worker leaves; closing at 60%; you guarantee what's left.
-- **G10. The bakery.** Pav and rusk from atta and bought supplies; sold to the trader, the market and the town's leisure spending.
+- **G10. The bakery and the dairy.** Pav and rusk from atta and bought supplies; paneer, curd and ghee from your own milk (§3.9, §3.9b); sold to the trader, the market and the town's food and leisure spending.
 
 ## 11. Cut first
 

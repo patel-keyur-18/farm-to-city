@@ -226,7 +226,7 @@
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**
 - The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3. For spec 016 or 018.
 - Phase 2's exit gate says "a week of play", but ADR 0028 puts the Village at 2–3 weeks in. For spec 018 (the Village unlock) and the Phase 2 gate.
-- F12.2 lists a dairy among the first processing chains; ADR 0056 has milk sold to the village co-op. For spec 016 (whether the player can found a dairy).
+- ~~F12.2 lists a dairy among the first processing chains; ADR 0056 has milk sold to the village co-op.~~ Settled (owner, 2026-10-25, spec 016 G1): a dairy business (Village) makes paneer, curd and ghee from your own milk; milk not kept for it still goes to the co-op.
 
 Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 findings and 5 implementation notes (ADR 0037), the gate (ADR 0035).
 
