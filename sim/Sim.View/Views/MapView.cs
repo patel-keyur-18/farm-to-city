@@ -43,6 +43,9 @@ namespace Sim.View.Views
 
         /// <summary>Family houses on the acre, standing or being built (spec 014): it's drawn as a homestead, not a field.</summary>
         public int Houses { get; internal set; }
+
+        /// <summary>A business stands here (spec 016): the acre is drawn as its work yard, not a field.</summary>
+        public bool Business { get; internal set; }
         public int X { get; internal set; }
         public int Y { get; internal set; }
         public TileKind Kind { get; internal set; }
@@ -178,6 +181,19 @@ namespace Sim.View.Views
 
         /// <summary>One of your people at home in a family house by day (spec 014, US-212): <see cref="PersonVm.Look"/> is their sprite.</summary>
         Citizen = 3,
+
+        /// <summary>Someone from the area waiting with their grain at your mill (spec 016 §7): <see cref="PersonVm.HomeHut"/> is the business, the key ends with their place in the queue.</summary>
+        Customer = 4,
+    }
+
+    /// <summary>A business on the map (spec 016 §7): its type, being built or open, and working now.</summary>
+    public sealed class BusinessVm
+    {
+        public long Id { get; internal set; }
+        public int TileId { get; internal set; }
+        public string TypeId { get; internal set; }
+        public bool Building { get; internal set; }
+        public bool Working { get; internal set; }
     }
 
     /// <summary>
@@ -252,6 +268,9 @@ namespace Sim.View.Views
 
         /// <summary>Family houses being built (spec 014), each with its progress.</summary>
         public List<ConstructionVm> HouseSites { get; } = new List<ConstructionVm>();
+
+        /// <summary>Businesses being built or open (spec 016), in id order.</summary>
+        public List<BusinessVm> Businesses { get; } = new List<BusinessVm>();
         public List<PersonVm> People { get; } = new List<PersonVm>();
         public long SimTime { get; internal set; }
         public int Season { get; internal set; }
@@ -409,6 +428,7 @@ namespace Sim.View.Views
             foreach (Building b in land.Buildings)
                 map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
             AddHouses(ctx, map);
+            AddBusinesses(ctx, map);
             AddPeople(ctx, map);
             map.Cattle = CattleAcre(sim, map.SecondOfDay);
             return map;
@@ -540,6 +560,30 @@ namespace Sim.View.Views
             if (y + 1 < map.Height && land.Tiles[id + map.Width].Terrain == Terrain.Road) links |= 4;
             if (y - 1 >= 0 && land.Tiles[id - map.Width].Terrain == Terrain.Road) links |= 8;
             return links;
+        }
+
+        /// <summary>
+        /// Businesses (spec 016 §7): each on its acre; while the mill grinds the area's grain, three people from the area wait in its
+        /// yard with their sacks.
+        /// </summary>
+        private static void AddBusinesses(ViewContext ctx, MapVm map)
+        {
+            Simulation sim = ctx.Sim;
+            if (sim.State.Businesses == null) return;
+            int hour = (int)(map.SecondOfDay / 3600);
+            foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+            {
+                if (b.Status == Sim.Core.Business.BusinessStatus.Closed) continue;
+                var t = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
+                bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(b, hour);
+                map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working });
+                map.Tiles[b.TileId].Business = true;
+                if (!working || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;
+                string[] looks = { "town_m", "town_f", "elder_m" };
+                for (int i = 0; i < looks.Length; i++)
+                    map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = looks[i], Female = looks[i] == "town_f",
+                        HomeTile = b.TileId, HomeHut = b.Id, TileId = b.TileId });
+            }
         }
 
         /// <summary>

@@ -2814,6 +2814,112 @@ def model_family_house(stage):
     return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
 
 
+MILL_SCALE = 0.92        # times BUILDING_SCALE: the chakki shed at the back of its acre, its yard open in front (spec 016 §7)
+
+
+def sack(name, loc, mat, rot=0.0):
+    """A filled jute sack lying on its side: a soft box, tied at one end."""
+    o = [box(name, (0.05, 0.032, 0.026), loc, mat, rot_z=rot, bevel=0.008)]
+    o.append(box(name + "Tie", (0.008, 0.02, 0.016), (loc[0] + 0.028 * math.cos(rot), loc[1] + 0.028 * math.sin(rot), loc[2]), toon("jute", 0x9C7A4C),
+                 rot_z=rot, outline=False))
+    return o
+
+
+def model_mill(stage):
+    """A village atta chakki (spec 016 §3.1): a lime-washed brick shed with a maroon band and a yellow signboard, its rolling
+    shutter up; inside, the stone chakki under its hopper, belt-driven by a blue electric motor, a steel flour tray at its spout;
+    outside, jute sacks waiting, a platform scale, a bench for people waiting their turn, and the electric pole that feeds it.
+    stage 'done' or 'building' (the plinth, half-raised walls, bamboo, bricks and the chakki in its crate)."""
+    o = []
+    w, d = 0.34, 0.22                        # the shed, its open front towards -y, at the back of the acre
+    cy = 0.08
+    lime, band = toon("millLime", 0xF1E7D2), toon("millBand", 0x8E2F2A)
+    brick, plinth = toon("brick", 0xB5653E), toon("plinth", PLINTH)
+    jute = toon("sack", 0xC7A06A)
+    yard_pad(o, w + 0.18, 0.22, -0.14)
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.035), (0, cy, 0.0175), plinth, bevel=0.005))
+    if stage == "building":
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.09), (sx * (w / 2 - 0.01), cy, 0.08), brick))
+        o.append(box("wallBack", (w, 0.02, 0.11), (0, cy + d / 2 - 0.01, 0.09), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        crate = toon("crate", 0xB98A55)
+        o.append(box("crate", (0.10, 0.08, 0.08), (0.12, -0.10, 0.04), crate, bevel=0.003))
+        for z in (0.02, 0.06):
+            o.append(box("slat%.2f" % z, (0.102, 0.082, 0.008), (0.12, -0.10, z), toon("crateDark", 0x8A6238), outline=False))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.12 + j * 0.055, -0.10, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.045, 0.032, (-0.02, -0.15, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+    # The shed: back and side walls, an open front with the shutter rolled up under a maroon band and the signboard.
+    h = 0.17
+    o.append(box("back", (w, 0.02, h), (0, cy + d / 2 - 0.01, 0.035 + h / 2), lime))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.02, d, h), (sx * (w / 2 - 0.01), cy, 0.035 + h / 2), lime))
+        o.append(box("pier%d" % sx, (0.04, 0.03, h), (sx * (w / 2 - 0.02), cy - d / 2 + 0.015, 0.035 + h / 2), lime))
+    o.append(box("bandFront", (w + 0.004, 0.03, 0.03), (0, cy - d / 2 + 0.015, 0.035 + h + 0.012), band, outline=False))
+    o.append(box("shutter", (w - 0.08, 0.035, 0.025), (0, cy - d / 2 + 0.01, 0.035 + h - 0.045), toon("shutter", 0x8C949A)))
+    o.append(box("floor", (w - 0.04, d - 0.03, 0.006), (0, cy + 0.01, 0.038), toon("concrete", CONCRETE), outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.05, 0.012), (0, cy - 0.01, 0.035 + h + 0.008), toon("tin", TIN), rot=Matrix.Rotation(math.radians(7), 3, "X")))
+    for i in range(9):
+        o.append(box("rib%d" % i, (0.005, d + 0.05, 0.004), (-w / 2 + 0.02 + i * 0.04, cy - 0.01, 0.035 + h + 0.015), toon("tinRib", TIN_RIB),
+                     rot=Matrix.Rotation(math.radians(7), 3, "X"), outline=False))
+    # The signboard on the fascia above the opening: yellow, a red stripe, a painted millstone.
+    o.append(box("sign", (0.22, 0.008, 0.05), (0, cy - d / 2 - 0.012, 0.035 + h - 0.005), toon("millSign", 0xF2C94C)))
+    o.append(box("signStripe", (0.22, 0.009, 0.01), (0, cy - d / 2 - 0.013, 0.035 + h - 0.024), toon("millSignRed", 0xC2412D), outline=False))
+    o.append(cylinder("signWheel", 0.014, 0.014, 0.004, (-0.08, cy - d / 2 - 0.017, 0.035 + h - 0.002), toon("stoneSign", STONE_DARK), segs=14,
+                      rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    # The chakki: a stone base, two millstones in their housing, a hopper above, a spout into a steel tray.
+    stone, stone_d = toon("stone", STONE), toon("stoneDark", STONE_DARK)
+    mx, my = -0.05, cy - 0.03                 # near the opening, so the chakki reads from outside
+    o.append(box("chakkiBase", (0.09, 0.09, 0.05), (mx, my, 0.065), stone_d, bevel=0.004))
+    o.append(cylinder("housing", 0.045, 0.045, 0.05, (mx, my, 0.115), toon("housing", 0xD9D4C8), segs=18, smooth=True))
+    o.append(cylinder("housingRim", 0.048, 0.048, 0.006, (mx, my, 0.14), toon("steelDark", 0x7E858B), segs=18, outline=False))
+    o.append(poly_mesh("hopper", [(mx - 0.035, my - 0.035, 0.20), (mx + 0.035, my - 0.035, 0.20), (mx + 0.035, my + 0.035, 0.20), (mx - 0.035, my + 0.035, 0.20),
+                                  (mx - 0.01, my - 0.01, 0.15), (mx + 0.01, my - 0.01, 0.15), (mx + 0.01, my + 0.01, 0.15), (mx - 0.01, my + 0.01, 0.15)],
+                       [(0, 1, 2, 3), (4, 7, 6, 5), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)], toon("tinHopper", 0xA9B1B6)))
+    o.append(box("spout", (0.02, 0.04, 0.012), (mx, my - 0.06, 0.085), toon("tinHopper", 0xA9B1B6), outline=False))
+    o.append(cylinder("tray", 0.03, 0.026, 0.018, (mx, my - 0.085, 0.048), toon("steel", 0xC9CDD2), segs=16))
+    o.append(cylinder("flour", 0.026, 0.026, 0.004, (mx, my - 0.085, 0.057), toon("flour", 0xF6EFDF), segs=16, outline=False))
+    # The motor and its flat belt to the chakki's pulley.
+    o.append(cylinder("motor", 0.025, 0.025, 0.06, (0.10, my + 0.02, 0.07), toon("motor", 0x2E6FBA), segs=14, smooth=True, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+    o.append(box("motorFoot", (0.07, 0.05, 0.012), (0.10, my + 0.02, 0.044), toon("steelDark", 0x7E858B)))
+    o.append(cylinder("pulley", 0.02, 0.02, 0.012, (mx + 0.05, my + 0.02, 0.07), toon("steelDark", 0x7E858B), segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+    for z in (0.052, 0.088):
+        o.append(box("belt%.3f" % z, (0.10, 0.006, 0.004), (0.025 + mx / 2 + 0.03, my + 0.02, z), toon("belt", 0x2B2B2B), outline=False))
+    # Sacks inside, along the back wall: grain waiting and atta ground.
+    for i, (x, y) in enumerate(((0.10, cy + 0.08), (0.135, cy + 0.075), (0.12, cy + 0.07))):
+        o.extend(sack("inSack%d" % i, (x, y, 0.055 + (0.025 if i == 2 else 0.0)), jute, rot=math.radians(10 * i)))
+    # Outside: farmers' sacks on the yard, a platform scale, a bench and the electric pole.
+    for i, (x, y, r) in enumerate(((-0.17, -0.10, 0.2), (-0.13, -0.13, -0.3), (-0.155, -0.12, 1.2))):
+        o.extend(sack("yardSack%d" % i, (x, y, 0.016 + (0.024 if i == 2 else 0.0)), jute, rot=r))
+    o.append(box("scale", (0.06, 0.05, 0.012), (0.12, -0.10, 0.006), toon("scaleBase", 0x4A4A4A)))
+    o.append(box("scaleTop", (0.065, 0.055, 0.004), (0.12, -0.10, 0.014), toon("steel", 0xC9CDD2), outline=False))
+    o.append(box("scalePost", (0.008, 0.008, 0.07), (0.15, -0.08, 0.045), toon("scaleBase", 0x4A4A4A)))
+    o.append(cylinder("scaleDial", 0.014, 0.014, 0.005, (0.15, -0.086, 0.08), toon("dial", 0xF7F4EC), segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+    wood = toon("wood", WOOD)
+    o.append(box("bench", (0.11, 0.03, 0.008), (0.02, -0.17, 0.035), wood))
+    for x in (-0.03, 0.07):
+        o.append(box("benchLeg%d" % (x > 0), (0.008, 0.025, 0.032), (x, -0.17, 0.016), toon("wood_dark", WOOD_DARK)))
+    o.append(cylinder("pole", 0.006, 0.007, 0.32, (0.22, cy + 0.02, 0.16), toon("pole", 0x8F877C), segs=8))
+    o.append(box("crossarm", (0.07, 0.008, 0.008), (0.22, cy + 0.02, 0.305), toon("pole", 0x8F877C)))
+    o.append(cylinder("wire", 0.0015, 0.0015, 0.08, (0.19, cy + 0.02, 0.26), toon("belt", 0x2B2B2B), segs=4, outline=False,
+                      rot=Matrix.Rotation(math.radians(55), 3, "Y")))
+    back_details(o, w, d, 0.13, toon("wood_dark", WOOD_DARK))
+    for part in o[-3:]:
+        part.location.y += cy
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["flour_mill_%s" % _f] = (lambda d=_deg: (lambda: refit(model_mill("done"), d)))()
+    SPRITES["flour_mill_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_mill("building"), d)))()
+
+
 def portrait(kind):
     """A card portrait: the villager from the shoulders up, framed as an icon."""
     objs = model_person(kind, "front")

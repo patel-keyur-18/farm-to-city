@@ -548,6 +548,62 @@
    "name": "fence_y"
   },
   {
+   "w": 390,
+   "h": 320,
+   "pivotX": 0.45638,
+   "pivotY": 0.38204,
+   "name": "flour_mill_building_e"
+  },
+  {
+   "w": 390,
+   "h": 276,
+   "pivotX": 0.45638,
+   "pivotY": 0.38695,
+   "name": "flour_mill_building_n"
+  },
+  {
+   "w": 390,
+   "h": 320,
+   "pivotX": 0.54362,
+   "pivotY": 0.38204,
+   "name": "flour_mill_building_s"
+  },
+  {
+   "w": 390,
+   "h": 276,
+   "pivotX": 0.54362,
+   "pivotY": 0.38695,
+   "name": "flour_mill_building_w"
+  },
+  {
+   "w": 386,
+   "h": 356,
+   "pivotX": 0.44983,
+   "pivotY": 0.34479,
+   "name": "flour_mill_e"
+  },
+  {
+   "w": 386,
+   "h": 300,
+   "pivotX": 0.44983,
+   "pivotY": 0.34098,
+   "name": "flour_mill_n"
+  },
+  {
+   "w": 386,
+   "h": 328,
+   "pivotX": 0.55017,
+   "pivotY": 0.37188,
+   "name": "flour_mill_s"
+  },
+  {
+   "w": 386,
+   "h": 270,
+   "pivotX": 0.55017,
+   "pivotY": 0.37786,
+   "name": "flour_mill_w"
+  },
+  {
    "w": 466,
    "h": 240,
    "pivotX": 0.48362,
