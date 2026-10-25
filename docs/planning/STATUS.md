@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 13 done: device check passed on the iPhone 13 (2026-10-25); PR #18 for the owner to merge. **Sprint 14 next** (to plan at its start in `sprints.md`) |
-| Branch with latest work | `sprint/13-citizens` (PR #18 to `main`); Sprint 14 branches from `main` once it's merged |
+| Sprint | **Sprint 14** (22 Feb – 7 Mar 2027, 2 weeks): population flows (F11.3), the flour mill and its books (F12.1), specs 017 and 013; plan approved 2026-10-25 |
+| Branch with latest work | `sprint/14-flows-and-mill` (from `main` after PR #18 merged) |
 | Last updated | 2026-10-25 |
 
 ## Done so far
@@ -185,9 +185,7 @@
 - **ADR 0062 (owner, 2026-10-22):** a living valley (neighbours' acres vary by soil, farmsteads only on not-for-sale acres, a hedge-and-wall boundary round your land): US-207 (5 points).
 - **Spec 014 drafted** (10 gaps). **G1 closed (ADR 0061):** the village is the town, its old families aren't counted ("Your people"). The owner also asked for the village centre to be redrawn naturally (a middle street, buildings from all sides facing their street, clusters) with a dairy co-op building: **US-206** (8 points) in Sprint 12, which now has 44 points and runs about 2 weeks.
 
-## In progress
-
-**Sprint 13** (`sprint/13-citizens`):
+**Sprint 13** (`sprint/13-citizens`; PR #18 merged; the owner's device check on the iPhone 13 passed 2026-10-25):
 - **US-214 done and approved (2026-10-24, ADR 0066):** a fodder stand's `readyAt` is the end of its last cut season, and labourers were paid till the latest `readyAt`, so with fodder sown they cost 10–30 ×. `PeopleRules.LabourUntil` now skips fodder (cut each morning with the animals' work); fodder alone refuses hiring with the reason in words. Every gate passes.
 - **US-215 done and approved (2026-10-24, ADR 0066):** the People sheet in the Store's layout: a Care row, picture buttons (Hire labourers, Build a hut, Send word), pictured rows (labourers at work, hands with orders, applicants, huts); Hire labourers and Send word sheets. The owner checked it on the iPhone. Editor: the sheets were opened by reflection (Unity lost focus, so touch was not tested in the Editor). Note: in a time-travelled town "They go home at" shows the wall clock, not the HUD's game clock (left as is, owner's call).
 - **US-105 done and approved (2026-10-24; sim only, nothing on screen yet):** `content/population.json` (`PopulationDefs`, `LoadPopulation`: the life clock, budget and Engel curve, basket, needs, flows, the house's rules, home villages), brought by the `family_house` building (60,000, 48 h); `Citizen`, `Household`, `CitizensState` (age = seasons since `BornSeason`); streams Citizens, Births, Deaths, Migration; the `Village` content table; a hired applicant becomes a citizen in a household of one in his hut (age = the applicant's seeded 20–45), a hand who leaves alone goes home and isn't kept; save schema 9 (`CitizenRules.Migrate`: each hand a citizen, 22–45, the migrated town its own replay base), fixture `saves/schema9`. Tests: `CitizenTests` (2), `ContentTests.Population`, `MigrationTests.Schema8_Citizens` and the schema < 9 checks in `EverySchemaLoads`; golden replays unchanged; 340 + 85 pass. Editor: Unity compiled; the Editor town loaded through schema 9 (Geeta, 33, primary, the hand; no console errors); saves restored from the backup.
@@ -205,12 +203,15 @@
 - **Spec 015 approved (2026-10-25, ADR 0069):** the nine gaps closed with the owner one per message: one hiring board (townspeople known, migrants as ranges, business migrants commute); interview and a reference check (300, 12 h); offer at the asked wage, 10% less or 10% more; output = skill × motivation × (1 − fatigue), neutral by default, long days at 1.5×; courses; four more traits; five HR events; employer reputation; supervisors, benefits and managers in Phase 3. The review added a crafting skill for business roles and noted the golden replays are regenerated once (ten traits). GDD, `CLAUDE.md`, F11.4 (S15) updated with tasks.
 - **Sprint 13 done (2026-10-25):** the owner's Development build passed every check in `docs/test-checklists/s13-citizens.md` on the iPhone 13: the town migrated to schema 9; the *Your people* pill on one line; the Town and Workers tabs; placing a family house on lit acres; the house built; the household card's pie; the citizen card; frame time main p95 5.32 ms, GPU p95 6.54 ms, 60 fps, 0.08% over 25 ms (PASS). PR #18 for the owner to merge.
 
+## In progress
+
+**Sprint 14** (`sprint/14-flows-and-mill`; plan approved by the owner 2026-10-25, 2 weeks; Sprints 15–18 a week later in the overview):
+- **US-217 done (owner to review):** `TownWords.LivesWith` gives "alone" for a household of one, used by both the citizen card and the hand card (the citizen card showed the person's own name). Test `PeopleViewTests.LivesAlone`. Editor by scripted touch: People → Geeta's See → *Lives in* opened her citizen card: "Hut 1 · alone" (`docs/art/s14-217-lives-alone.png`); nothing set up by script; saves restored and checked identical.
+
 ## Next up
 
-1. **Claude:** Sprint 14 planning, once PR #18 is merged. Per ADR 0057 and the feature files:
-   - **Code:** F11.3 (US-109 births, marriages and deaths; US-110 migration, a hand's family card and housing in kind; US-111 the family tree; US-211 population bots and gates) and F12.1 (US-115 found a business (the flour mill), US-116 business books, US-117 overdraft and failure), with save schema 10.
-   - **Specs to write and review:** 017 (shops, customer choice and rivals) and 013 (irrigation, equipment, orchards and granary).
-   - **Capacity:** 32 points (F11.3 16, F12.1 16) plus two specs, close to Sprint 13's 39 over 2 weeks. Confirm the scope with the owner at planning.
+1. **Owner:** review US-217.
+2. **Claude:** US-109 (births, marriages and deaths), then US-110, US-111, US-211; specs 017 and 013 alongside (gaps one per message).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -224,6 +225,7 @@
 | Sprint 10 | Done (device check passed 2026-10-21); merge PR #15 |
 | Sprint 11 | Done: device check passed 2026-10-22; PR #16 merged |
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
+| Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 
 ## Open questions (with the owner)
 

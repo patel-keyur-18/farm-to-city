@@ -344,8 +344,7 @@ namespace Sim.View.Views
             Citizen me = sim.State.Citizens?.OfHand(h.Id);
             Household home = me == null ? null : sim.State.Citizens.Household(me.HouseholdId);
             if (home != null)
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.home"), TownWords.Home(ctx, home.HomeId) + " · " + (home.Members.Count == 1
-                    ? ctx.Strings.Get("hand.homeAlone") : TownWords.Household(ctx, home)), "hand.home", h.Id)
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.home"), TownWords.Home(ctx, home.HomeId) + " · " + TownWords.LivesWith(ctx, home), "hand.home", h.Id)
                     { Opens = new SheetRequest(home.Members.Count == 1 ? "Citizen" : "Household", home.Members.Count == 1 ? me.Id : home.Id) });
             foreach (int t in new[] { h.Trait1, h.Trait2 })
                 vm.Lines.Add(new LineVm(PeopleWords.Trait(ctx, t), ctx.Strings.Get(sim.Config.Game.People.Traits[t].NameKey + ".why")));

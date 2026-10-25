@@ -21,6 +21,12 @@ namespace Sim.View.Views
             return x.Members.Count == 1 ? Name(ctx, head) : ctx.Strings.Get("town.family", "name", Name(ctx, head));
         }
 
+        /// <summary>Who a home's people are, for a *Lives in* row: "alone" for one person, else the household's name.</summary>
+        public static string LivesWith(ViewContext ctx, Household x)
+        {
+            return x.Members.Count == 1 ? ctx.Strings.Get("hand.homeAlone") : Household(ctx, x);
+        }
+
         /// <summary>"Hut 1" or "Family house 2": numbered as the People sheet numbers them, in building order.</summary>
         public static string Home(ViewContext ctx, long buildingId)
         {
@@ -361,7 +367,7 @@ namespace Sim.View.Views
             {
                 Household home = sim.State.Citizens.Household(c.HouseholdId);
                 if (home != null)
-                    vm.Lines.Add(new LineVm(s.Get("citizen.home"), TownWords.Home(ctx, home.HomeId) + " · " + TownWords.Household(ctx, home), "household.home", home.Id)
+                    vm.Lines.Add(new LineVm(s.Get("citizen.home"), TownWords.Home(ctx, home.HomeId) + " · " + TownWords.LivesWith(ctx, home), "household.home", home.Id)
                         { Opens = new SheetRequest("Household", home.Id) });
                 var job = new LineVm(s.Get("citizen.job"), TownWords.Job(ctx, c), c.Job == CitizenJob.Hand ? null : "citizen.job", c.Id);
                 if (c.Job == CitizenJob.Hand) job.Action = ActionVm.Open("hand:" + c.HandId, s.Get("action.see"), new SheetRequest("Hand", c.HandId));

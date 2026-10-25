@@ -359,6 +359,20 @@ namespace Sim.View.Tests
         }
 
         [Test]
+        public void LivesAlone()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            Citizen hand = sim.State.Citizens.Citizens.Single(c => c.Living && c.Job == CitizenJob.Hand);
+            Citizen manoj = sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == "Manoj");
+            string LivesIn(SheetVm s) => s.Lines.Single(l => l.Label == "Lives in").Value;
+
+            Assert.That(LivesIn(CitizenSheet.Build(ctx, hand.Id)), Is.EqualTo("Hut 1 · alone"), "not their own name (owner, 2026-10-25)");
+            Assert.That(LivesIn(HandSheet.Build(ctx, hand.HandId)), Is.EqualTo("Hut 1 · alone"));
+            Assert.That(LivesIn(CitizenSheet.Build(ctx, manoj.Id)), Is.EqualTo("Family house 1 · Manoj's family"));
+        }
+
+        [Test]
         public void Map_People_And_Construction()
         {
             Simulation sim = Rich();
