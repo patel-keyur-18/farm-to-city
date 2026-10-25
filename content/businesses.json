@@ -1,0 +1,26 @@
+{
+  "area": {
+    "catchmentPeople": 260,
+    "grainPerPersonPerRealDay": 0.40,
+    "nextVillageFee": 4,
+    "feeTolerance": 1
+  },
+  "funding": {
+    "businessLtv": 0.6,
+    "termSeasons": 12,
+    "overdraftLimit": 0.5,
+    "overdraftRate": 0.04,
+    "closingSaleShare": 0.6
+  },
+  "types": [
+    {
+      "id": "flour_mill", "nameKey": "business.flour_mill", "era": "hamlet",
+      "building": { "value": 40000, "lifeSeasons": 80 },
+      "equipment": { "value": 60000, "lifeSeasons": 40 },
+      "buildHours": 24, "worker": "miller", "wage": 27000,
+      "kgPerHour": 380, "powerPerKg": 1.20, "repairsShare": 0.02,
+      "openHour": 8, "closeHour": 18, "fee": 4, "ownPerDay": 200,
+      "input": "wheat", "outputs": { "atta": 0.97, "bran": 0.03 }
+    }
+  ]
+}

@@ -16,7 +16,7 @@ namespace Sim.Core.People
         /// <summary>An adult of working age with no job in town: works outside as a day labourer (§3.6).</summary>
         public static bool WorksOutside(Simulation sim, Citizen c)
         {
-            return c.Living && c.Job != CitizenJob.Hand && c.Job != CitizenJob.Retired && !IsChild(sim, c) && !IsElder(sim, c);
+            return c.Living && c.Job != CitizenJob.Hand && c.Job != CitizenJob.Business && c.Job != CitizenJob.Retired && !IsChild(sim, c) && !IsElder(sim, c);
         }
 
         /// <summary>Adult equivalents (§3.5): adult 1.0, child 0.6, elder 0.8.</summary>
@@ -74,6 +74,11 @@ namespace Sim.Core.People
                     Hand h = sim.State.People.Hand(c.HandId);
                     if (h == null || h.Contract != ContractState.Active) continue; // unpaid: nothing this season
                     income += hut ? h.Wage - Money.MulRate(h.Wage, p.RemitShare) : h.Wage;
+                }
+                else if (c.Job == CitizenJob.Business)
+                {
+                    Business.Business b = sim.State.Businesses?.Find(c.Employer);
+                    if (b != null) income += Business.BusinessRules.Wage(sim, Business.BusinessRules.TypeOf(sim, b)); // spec 016 §3.6
                 }
                 else if (WorksOutside(sim, c)) outside += OutsideSeasonPay(sim);
             }

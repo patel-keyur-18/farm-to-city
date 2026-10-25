@@ -36,7 +36,7 @@ namespace Sim.Core.People
                 Citizen c = sim.State.Citizens.Citizen(id);
                 if (HouseholdRules.IsChild(sim, c) || HouseholdRules.IsElder(sim, c)) continue;
                 adults++;
-                if (c.Job == CitizenJob.Hand) inTown++;
+                if (c.Job == CitizenJob.Hand || c.Job == CitizenJob.Business) inTown++; // a job at your business is a town job (spec 016 §3.6)
             }
         }
 

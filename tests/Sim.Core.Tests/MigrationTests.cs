@@ -124,6 +124,8 @@ namespace Sim.Core.Tests
                 {
                     // Spec 014 §3.6 (schema 10): no hand's wage has housing in kind yet; the town is its own replay base (families move in now).
                     Assert.That(r.State.People.Hands.All(h => h.HousingInKind == 0), Is.True, name);
+                    Assert.That(r.State.Businesses.Businesses, Is.Empty, name + ": no businesses yet (spec 016 AC-10)");
+                    Assert.That(r.State.Citizens.Citizens.All(c => c.Employer == 0), Is.True, name);
                     if (r.State.Citizens != null) Assert.That(r.State.CommandLog.Base, Is.Not.Null, name);
                 }
 
@@ -144,6 +146,21 @@ namespace Sim.Core.Tests
                 Assert.That(again.Error, Is.EqualTo(SaveError.None), name + " after a day: " + again.Detail);
                 Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), name + ": a day later it round-trips");
             }
+        }
+
+        // Spec 016 AC-10: a schema-9 save loads into schema 10 with no businesses, founds one, and round-trips.
+        [Test]
+        public void Schema9_Businesses()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(9)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Assert.That(r.State.Businesses.Businesses, Is.Empty);
+            Simulation sim = Simulation.FromState(config, r.State);
+            sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
         }
 
         // Spec 014 AC-9: the schema-8 fixture's hands become citizens; the town advances a season (ageing, closes) and round-trips.

@@ -39,7 +39,10 @@ namespace Sim.Content
             // Citizens come with a family house in the buildings (spec 014), after the people they grow from.
             int house = buildings.FindIndex(b => b.Id == PopulationDefs.HouseId);
             PopulationDefs population = house < 0 || people == null ? null : LoadPopulation(read("population.json"), house, market, onboarding);
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
+            var game = new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
+            // Businesses come with citizens (a worker is one, spec 016 §3.6).
+            if (population != null) game.Businesses = LoadBusinesses(read("businesses.json"), market, onboarding);
+            return game;
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)

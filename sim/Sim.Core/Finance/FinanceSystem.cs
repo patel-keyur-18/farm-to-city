@@ -74,6 +74,7 @@ namespace Sim.Core.Finance
             Farm.FounderSystem.SettleLiving(sim); // step 5
             if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
             People.HouseholdRules.Close(sim); // spec 014 §3.12: households' health and the new season's budgets, on the wages just paid
+            Business.BusinessRules.Close(sim, closing); // spec 016 §3.11: each business's repairs, depreciation and the new season's wage
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));

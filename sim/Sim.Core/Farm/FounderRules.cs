@@ -112,7 +112,7 @@ namespace Sim.Core.Farm
         /// </summary>
         public static Fixed LabourRate(Simulation sim)
         {
-            Fixed rate = sim.State.Farm.Founder.TodayHours * Nutrition(sim) - MandiCut(sim);
+            Fixed rate = sim.State.Farm.Founder.TodayHours * Nutrition(sim) - MandiCut(sim) - Business.BusinessRules.FounderHours(sim); // spec 016 §3.6: running a business yourself
             return rate > Fixed.Zero ? rate : Fixed.Zero;
         }
 

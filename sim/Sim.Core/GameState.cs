@@ -66,6 +66,9 @@ namespace Sim.Core
         /// <summary>Citizens and households (spec 014); null when the content has no family house.</summary>
         public CitizensState Citizens { get; internal set; }
 
+        /// <summary>The founder's businesses (spec 016); null when the content has none.</summary>
+        public Business.BusinessesState Businesses { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -100,6 +103,8 @@ namespace Sim.Core
             if (Livestock != null) Livestock.WriteTo(h);
             // Spec 014, last: content without a family house (the golden replays' frozen content) hashes as before.
             if (Citizens != null && !(h is SaveWriter sw && sw.Schema < 9)) Citizens.WriteTo(h);
+            // Spec 016, last: content without businesses hashes as before.
+            if (Businesses != null && !(h is SaveWriter bw && bw.Schema < 10)) Businesses.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -143,6 +148,7 @@ namespace Sim.Core
             }
             if (g.Livestock != null) s.Livestock = r.Schema >= 7 ? LivestockState.ReadFrom(r) : new LivestockState { LastFeeding = new FeedingReport() }; // schema 6: no cattle yet
             if (g.Population != null && r.Schema >= 9) s.Citizens = CitizensState.ReadFrom(r); // older towns: CitizenRules.Migrate after loading
+            if (g.Businesses != null) s.Businesses = r.Schema >= 10 ? Business.BusinessesState.ReadFrom(r) : new Business.BusinessesState(); // schema 9: none yet
             return s;
         }
 
@@ -175,6 +181,7 @@ namespace Sim.Core
                 Era = Era?.Clone(),
                 Livestock = Livestock?.Clone(),
                 Citizens = Citizens?.Clone(),
+                Businesses = Businesses?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

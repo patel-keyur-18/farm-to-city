@@ -29,6 +29,8 @@
     { "id": "sapling_banana", "nameKey": "good.sapling_banana", "kind": "input", "unit": "each", "basePrice": 60, "weightKg": 2 },
     { "id": "sapling_papaya", "nameKey": "good.sapling_papaya", "kind": "input", "unit": "each", "basePrice": 60, "weightKg": 2 },
     { "id": "sapling_guava",  "nameKey": "good.sapling_guava",  "kind": "input", "unit": "each", "basePrice": 180, "weightKg": 2 },
-    { "id": "sapling_mango",  "nameKey": "good.sapling_mango",  "kind": "input", "unit": "each", "basePrice": 350, "weightKg": 2 }
+    { "id": "sapling_mango",  "nameKey": "good.sapling_mango",  "kind": "input", "unit": "each", "basePrice": 350, "weightKg": 2 },
+    { "id": "atta",      "nameKey": "good.atta",      "kind": "produce", "unit": "kg", "basePrice": 32, "elasticity": 0.4, "spoilagePerDay": 0.01, "sales": "processed", "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "bran",      "nameKey": "good.bran",      "kind": "produce", "unit": "kg", "basePrice": 15, "elasticity": 0.6, "spoilagePerDay": 0.005, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 }
   ]
 }

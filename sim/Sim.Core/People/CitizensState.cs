@@ -16,6 +16,9 @@ namespace Sim.Core.People
         Outside = 2,
 
         Retired = 3,
+
+        /// <summary>Works at one of the founder's businesses: <see cref="Citizen.Employer"/> (spec 016 §3.6). A town job.</summary>
+        Business = 4,
     }
 
     /// <summary>Living in town, or kept in the family tree after leaving it (§3.3).</summary>
@@ -91,6 +94,9 @@ namespace Sim.Core.People
         public long Mother { get; internal set; }
         public long Spouse { get; internal set; }
 
+        /// <summary>The business they work at while <see cref="Job"/> is Business, else 0 (schema 10).</summary>
+        public long Employer { get; internal set; }
+
         /// <summary>The home village they came from or went to (index into the villages), or −1.</summary>
         public int Village { get; internal set; } = -1;
 
@@ -145,6 +151,7 @@ namespace Sim.Core.People
                 h.WriteLong(s.At);
                 h.WriteLong(s.Other);
             }
+            if (!(h is SaveWriter sw && sw.Schema < 10) && (!h.Hashing || Employer != 0)) h.WriteLong(Employer); // hashed only once used
         }
 
         internal static Citizen ReadFrom(SaveReader r)
@@ -158,6 +165,7 @@ namespace Sim.Core.People
             };
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) c.Story.Add(new StoryLine((StoryKind)r.ReadInt(), r.ReadLong(), r.ReadLong()));
+            if (r.Schema >= 10) c.Employer = r.ReadLong();
             return c;
         }
     }

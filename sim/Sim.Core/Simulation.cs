@@ -48,6 +48,7 @@ namespace Sim.Core
                 if (config.Game.People != null) AddSystem(new PeopleSystem());
                 if (config.Game.Livestock != null) AddSystem(new Livestock.LivestockSystem());
                 if (config.Game.Population != null && config.Game.People != null) AddSystem(new People.PopulationSystem());
+                if (config.Game.Businesses != null) AddSystem(new Business.BusinessSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
@@ -55,6 +56,7 @@ namespace Sim.Core
             if (config.Game?.People != null) handlers.Add(new PeopleSystem.HutBuild());
             if (config.Game?.Livestock != null) handlers.Add(new Livestock.LivestockSystem.ShedBuild());
             if (config.Game?.Population != null && config.Game.People != null) handlers.Add(new People.HouseRules.Build());
+            if (config.Game?.Businesses != null) handlers.Add(new Business.BusinessRules.Build());
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {
@@ -89,6 +91,7 @@ namespace Sim.Core
                 if (config.Game.People != null) PeopleSystem.Initialise(sim);
                 if (config.Game.Livestock != null) state.Livestock = new Livestock.LivestockState();
                 if (config.Game.Population != null && config.Game.People != null) state.Citizens = new People.CitizensState();
+                if (config.Game.Businesses != null) state.Businesses = new Business.BusinessesState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

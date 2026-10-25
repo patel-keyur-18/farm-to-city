@@ -30,6 +30,7 @@ namespace Sim.Core.Saves
             BuildFamilyHouse,
             AnswerFamilyRequest,
             BuildFamilyHouseLoan,
+            FoundBusiness, SetBusiness,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -89,6 +90,10 @@ namespace Sim.Core.Saves
                     w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons);
                     break;
                 case AnswerFamilyRequest c: At(c, Tag.AnswerFamilyRequest); w.WriteLong(c.HandId); w.WriteBool(c.Yes); break;
+                case FoundBusiness c: At(c, Tag.FoundBusiness); w.WriteString(c.TypeId); w.WriteInt(c.TileId); w.WriteLong(c.Capital); w.WriteBool(c.RunYourself); break;
+                case SetBusiness c:
+                    At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
+                    break;
                 case BuyAnimal c:
                     At(c, Tag.BuyAnimal); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
@@ -174,6 +179,8 @@ namespace Sim.Core.Saves
                 case Tag.BuildShed: return new BuildShed(at);
                 case Tag.BuildFamilyHouse: return new BuildFamilyHouse(at, r.ReadInt());
                 case Tag.AnswerFamilyRequest: return new AnswerFamilyRequest(at, r.ReadLong(), r.ReadBool());
+                case Tag.FoundBusiness: return new FoundBusiness(at, r.ReadString(), r.ReadInt(), r.ReadLong(), r.ReadBool());
+                case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));
                 case Tag.BuyAnimal:
                 {

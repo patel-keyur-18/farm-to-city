@@ -209,4 +209,57 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "FamilyMovedIn(household=" + HouseholdId + ", house=" + HouseId + ", people=" + People + ", hand=" + HandId + ")"; }
     }
+
+    /// <summary>A business was founded and is being built (spec 016 §3.3).</summary>
+    public sealed class BusinessFounded : SimEvent
+    {
+        public long BusinessId { get; }
+        public string TypeId { get; }
+        public int TileId { get; }
+        public long Capital { get; }
+
+        public BusinessFounded(long simTime, long businessId, string typeId, int tileId, long capital) : base(simTime)
+        {
+            BusinessId = businessId;
+            TypeId = typeId;
+            TileId = tileId;
+            Capital = capital;
+        }
+
+        protected override string Describe() { return "BusinessFounded(id=" + BusinessId + ", " + TypeId + ", tile=" + TileId + ", capital=" + Capital + ")"; }
+    }
+
+    /// <summary>A business is built and open, with its worker (spec 016 §3.3, §3.6).</summary>
+    public sealed class BusinessOpened : SimEvent
+    {
+        public long BusinessId { get; }
+        public Business.WorkerKind Worker { get; }
+        public long CitizenId { get; }
+
+        public BusinessOpened(long simTime, long businessId, Business.WorkerKind worker, long citizenId) : base(simTime)
+        {
+            BusinessId = businessId;
+            Worker = worker;
+            CitizenId = citizenId;
+        }
+
+        protected override string Describe() { return "BusinessOpened(id=" + BusinessId + ", " + Worker + ", citizen=" + CitizenId + ")"; }
+    }
+
+    /// <summary>An hour's work at a business (spec 016 §3.4): the area's grain ground and the founder's own input, grams.</summary>
+    public sealed class BusinessWorked : SimEvent
+    {
+        public long BusinessId { get; }
+        public long AreaGrams { get; }
+        public long OwnGrams { get; }
+
+        public BusinessWorked(long simTime, long businessId, long areaGrams, long ownGrams) : base(simTime)
+        {
+            BusinessId = businessId;
+            AreaGrams = areaGrams;
+            OwnGrams = ownGrams;
+        }
+
+        protected override string Describe() { return "BusinessWorked(id=" + BusinessId + ", area=" + AreaGrams + ", own=" + OwnGrams + ")"; }
+    }
 }
