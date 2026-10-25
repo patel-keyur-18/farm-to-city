@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1–G7 closed; G8–G10 in §10 to close with the owner)
+- Status: Draft (G1–G8 closed; G9–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -62,8 +62,8 @@ Only types the era allows are offered; a type whose worker can't be found is off
 ### 3.3 Founding flow (§10 G8)
 
 1. **Choose a type** (Menu → Businesses → Start a business): the types the era allows, each with what it does and what it costs.
-2. **Market research** (a sheet, nothing paid): the grain the area brings a day and what the next village's chakki charges for grinding, the trader's atta and bran prices today, a miller's wage, and the competitor (the chakki in the next village, §3.7).
-3. **The plan:** hours open (default 8:00–18:00) and the grinding fee; the game projects a season's revenue, costs, net profit and payback from today's prices and the town's size. Saved, and compared with actual results after 4 seasons ("You planned 18,000 a season; it made 12,400: the town ground less wheat than planned").
+2. **Market research** (a sheet, nothing paid): the grain the area brings a day, what the next village's chakki charges for grinding (the competitor, §3.7), the trader's atta and bran prices today, a miller's wage, and the wheat you hold.
+3. **The plan:** hours open (default 8:00–18:00), the grinding fee, how much of your own wheat to grind a day, a hired worker or you; the game projects a season's revenue, costs, net profit, cash needed and payback from today's prices and the area's size, each with a *Why?*. The plan is saved; after 4 seasons a *Plan vs actual* card compares each line and says in words why they differ ("The area brought less grain than planned: you were closed 2 days") (owner, 2026-10-25, §10 G8).
 4. **Place it** on the map: any acre you own with nothing growing, one business an acre (the whole acre, drawn as its work yard), lit as the family house's are, refusals in words ("Something is growing here", "A family house stands here"). The acre stops farming and can't be sold while it stands (`ParcelInUse`). Its layout is previewed to the owner before it's final (owner, 2026-10-25; §10 G4).
 5. **Fund it** (§3.8): cash put in, and a bank business loan if wanted.
 6. **The worker** (§3.6).
@@ -233,7 +233,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G5. The mill's work.** **Closed (owner, 2026-10-25):** grinding for your town, the village and the hamlets around (about 300 people, 10,800 kg a season) at 4 a kg; your own wheat into atta and bran (about 4 a kg net); market wheat optional (1–2 a kg); 40 kg an hour, 8:00–18:00, power 1.20 a kg, yields 0.97 and 0.03. Calibration: wheat is 1,200 kg an acre in Winter only, and a village of 35 alone can't keep a miller, so the catchment carries the business, as a real chakki's does (§3.5).
 - **G6. Wheat in, atta out.** **Closed (owner, 2026-10-25):** your store first up to a daily amount at today's market price, the market only if allowed; atta to the trader (400 kg a day) and the local market, and in supermarket orders; bran to your cattle's feed room first, the rest sold (§3.5c).
 - **G7. Funding.** **Closed (owner, 2026-10-25):** your cash as owner's capital and the co-op bank's small-business loan (up to 60% of building and equipment, the bank's rate, up to 12 seasons, equal principal, your guarantee); at least the rest plus a season's running cash put in; investors and partner citizens in Phase 3 (§3.8).
-- **G8. Research and the plan.** A research sheet, a projected season, plan vs actual after 4 seasons.
+- **G8. Research and the plan.** **Closed (owner, 2026-10-25):** a free research sheet; a plan screen with the projected season, cash needed and payback, each with a *Why?*; saved and compared line by line with the actual results after 4 seasons, the differences in words (§3.3).
 - **G9. Overdraft and failure.** Overdraft to half a season's costs at 4% a season; past it inputs stop and the worker leaves; closing at 60%; you guarantee what's left.
 - **G10. The bakery and the dairy.** Pav and rusk from atta and bought supplies; paneer, curd and ghee from your own milk (§3.9, §3.9b); sold to the trader, the market and the town's food and leisure spending.
 
