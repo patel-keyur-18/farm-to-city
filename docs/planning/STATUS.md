@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | Sprint 13 (`docs/planning/sprints.md`): spec 014's code (F11.1, F11.2), specs 015 and 016 written. First, two owner requests (2026-10-24): US-214 (fodder stands kept labourers hired) and US-215 (the People sheet redesigned); the sprint's stories start once the owner approves both. Sprint 12 done: device check passed on the iPhone 13 (2026-10-24), PR #17 merged |
-| Branch with latest work | `sprint/13-citizens` (from `main`, which has Sprint 12 / PR #17) |
-| Last updated | 2026-10-24 |
+| Sprint | Sprint 13 done: device check passed on the iPhone 13 (2026-10-25); PR #18 for the owner to merge. **Sprint 14 next** (to plan at its start in `sprints.md`) |
+| Branch with latest work | `sprint/13-citizens` (PR #18 to `main`); Sprint 14 branches from `main` once it's merged |
+| Last updated | 2026-10-25 |
 
 ## Done so far
 
@@ -203,11 +203,14 @@
 - **Test checklist and pull request (2026-10-25):** `docs/test-checklists/s13-citizens.md`; `saves/schema9` checked current; PR #18 opened with labels and the milestone (merge after spec 015).
 - **Spec 016 approved (2026-10-25, ADR 0068):** the ten gaps closed with the owner one per message: the mill (Hamlet), the bakery and a dairy (Village; the owner asked for the dairy now since no later phase plans it); own books; a town hire or you run it; any owned acre (no inherited acre touches a road); the mill grinds for the area (about 300 people, 4 a kg); own wheat in, atta to the trader and market, bran to the feed room; cash and a guaranteed bank loan; research, plan, plan vs actual; overdraft and closing. The final review stated every rate at the game's time compression. GDD, `CLAUDE.md`, F12.1 (S14) and F12.2 (S15, US-216 the dairy added) updated with tasks.
 - **Spec 015 approved (2026-10-25, ADR 0069):** the nine gaps closed with the owner one per message: one hiring board (townspeople known, migrants as ranges, business migrants commute); interview and a reference check (300, 12 h); offer at the asked wage, 10% less or 10% more; output = skill × motivation × (1 − fatigue), neutral by default, long days at 1.5×; courses; four more traits; five HR events; employer reputation; supervisors, benefits and managers in Phase 3. The review added a crafting skill for business roles and noted the golden replays are regenerated once (ten traits). GDD, `CLAUDE.md`, F11.4 (S15) updated with tasks.
-- **Sprint 13 is complete on Claude's side.** Left: the owner's Development build and device check (`docs/test-checklists/s13-citizens.md`), then merging PR #18.
+- **Sprint 13 done (2026-10-25):** the owner's Development build passed every check in `docs/test-checklists/s13-citizens.md` on the iPhone 13: the town migrated to schema 9; the *Your people* pill on one line; the Town and Workers tabs; placing a family house on lit acres; the house built; the household card's pie; the citizen card; frame time main p95 5.32 ms, GPU p95 6.54 ms, 60 fps, 0.08% over 25 ms (PASS). PR #18 for the owner to merge.
 
 ## Next up
 
-1. **Claude:** specs 015 (full hiring and HR) and 016 (businesses and production): write them, close their gaps with the owner one per message; then regenerate `saves/schema9` if its layout changed, the Development build, the test checklist and the Sprint 13 pull request.
+1. **Claude:** Sprint 14 planning, once PR #18 is merged. Per ADR 0057 and the feature files:
+   - **Code:** F11.3 (US-109 births, marriages and deaths; US-110 migration, a hand's family card and housing in kind; US-111 the family tree; US-211 population bots and gates) and F12.1 (US-115 found a business (the flour mill), US-116 business books, US-117 overdraft and failure), with save schema 10.
+   - **Specs to write and review:** 017 (shops, customer choice and rivals) and 013 (irrigation, equipment, orchards and granary).
+   - **Capacity:** about 40 points look like more than one 2-week sprint. Propose a split to the owner at planning (for example US-211 or US-111 to Sprint 15).
 
 ## Owner action checklist (Phases 0–1)
 

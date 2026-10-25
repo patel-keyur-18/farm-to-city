@@ -573,7 +573,7 @@
 
 ## Sprint 13 · 8–21 Feb 2027 · Phase 2 (citizens; specs 015 and 016 written; 2 weeks, as S12)
 
-- **Status:** In progress. The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done and approved; US-106 done and approved; US-107 done and approved; US-108 done and approved; US-209 done and approved; US-208 done; US-212 done, layout approved (ADR 0067: 2 houses an acre); US-210 done; spec 016 approved (ADR 0068, 2026-10-25: the mill, the bakery and a dairy, own books); spec 015 approved (ADR 0069, 2026-10-25: one hiring board, fair pay, output, HR events)
+- **Status:** Done (device check passed 2026-10-25; PR #18). The owner's two requests done and approved (2026-10-24, ADR 0066): fodder stands no longer keep labourers hired (US-214), the People sheet in the Store's layout (US-215, checked on the iPhone). US-105 done and approved; US-106 done and approved; US-107 done and approved; US-108 done and approved; US-209 done and approved; US-208 done; US-212 done, layout approved (ADR 0067: 2 houses an acre); US-210 done; spec 016 approved (ADR 0068, 2026-10-25: the mill, the bakery and a dairy, own books); spec 015 approved (ADR 0069, 2026-10-25: one hiring board, fair pay, output, HR events)
 - **Branch:** `sprint/13-citizens`
 - **Goal:** Spec 014 built (ADR 0063): citizens and the life clock, the family house, homes and people art, household budgets, needs and happiness, work and food, your people on screen; save schema 9 with its migration and fixture. Specs 015 (full hiring and HR) and 016 (businesses and production) written and approved; their code comes later.
 - **Points:** 39 planned + the owner's two requests
@@ -601,6 +601,6 @@
 - [x] Specs 015 and 016 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated (016: ADR 0068; 015: ADR 0069)
 - [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [x] Save schema 9: migration, `saves/schema9` fixture (checked current 2026-10-25), every older schema loads
-- [ ] Test checklist in `docs/test-checklists/` (`s13-citizens.md`, written); Development build (owner)
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request opened with labels and the milestone `Phase 2 · Hamlet & Village`; owner merges to `main`
+- [x] Test checklist `docs/test-checklists/s13-citizens.md`; Development build made by the owner; device check passed on the iPhone 13 (2026-10-25: frame time main p95 5.32 ms, GPU p95 6.54 ms, 60 fps, 0.08% over 25 ms)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request opened with labels and the milestone `Phase 2 · Hamlet & Village` (PR #18); the owner merges it to `main`
