@@ -120,6 +120,13 @@ namespace Sim.Core.Tests
                     Assert.That(r.State.CommandLog.Base, Is.Not.Null, name + ": the migrated town is its own replay base");
                 }
 
+                if (r.Header.Schema < 10)
+                {
+                    // Spec 014 §3.6 (schema 10): no hand's wage has housing in kind yet; the town is its own replay base (families move in now).
+                    Assert.That(r.State.People.Hands.All(h => h.HousingInKind == 0), Is.True, name);
+                    if (r.State.Citizens != null) Assert.That(r.State.CommandLog.Base, Is.Not.Null, name);
+                }
+
                 if (r.Header.Schema < 7)
                 {
                     // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.

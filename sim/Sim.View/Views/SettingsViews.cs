@@ -239,6 +239,28 @@ namespace Sim.View.Views
         }
 
         /// <summary>A regular asks to move in (spec 006 §3.3): a letter-style card that opens the People sheet.</summary>
+        /// <summary>
+        /// A hand living alone asks to bring their family into a free family house (spec 014 §3.13): what changes, Yes / Not now.
+        /// Null once the offer has closed.
+        /// </summary>
+        public static CardVm FamilyRequest(ViewContext ctx, long handId)
+        {
+            Sim.Core.People.CitizensState town = ctx.Sim.State.Citizens;
+            Sim.Core.People.Citizen me = town?.OfHand(handId);
+            if (me == null || town.OfferHandId != handId) return null;
+            var s = ctx.Strings;
+            string name = TownWords.Name(ctx, me);
+            var c = new CardVm
+            {
+                Title = s.Get(me.Female ? "card.familyTitleF" : "card.familyTitleM", "name", name),
+                Text = s.Get("card.familyText", "home", TownWords.Home(ctx, town.OfferHouseId), "name", name, "village", TownWords.Village(ctx, me) ?? s.Get("citizen.elsewhere"),
+                    "rent", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(ctx.Sim, ctx.Sim.Config.Game.Population.RentPerSeason))),
+            };
+            c.Buttons.Add(new CardButton(SettingsIds.Yes, s.Get("card.familyYes"), ActionKind.Primary));
+            c.Buttons.Add(new CardButton(SettingsIds.NotNow, s.Get("card.notNow"), ActionKind.Secondary));
+            return c;
+        }
+
         public static CardVm Regular(ViewContext ctx, long applicantId)
         {
             Sim.Core.People.Applicant a = ctx.Sim.State.People?.Applicant(applicantId);
@@ -308,7 +330,7 @@ namespace Sim.View.Views
             }
             if (n.Kind == NotifyKind.AnimalSick || n.Kind == NotifyKind.CalfBorn)
                 return (s.Get(k + ".title", "name", n.CropId ?? s.Get("animal.someone")), s.Get(k + ".body"));
-            if (n.Kind == NotifyKind.RentMissed || n.Kind == NotifyKind.HouseholdLeft || n.Kind == NotifyKind.HandRetired)
+            if (n.Kind == NotifyKind.RentMissed || n.Kind == NotifyKind.HouseholdLeft || n.Kind == NotifyKind.HandRetired || n.Kind == NotifyKind.FamilyMovedIn)
                 return (s.Get(k + ".title", "name", n.CropId == null ? s.Get("away.aFamily") : s.Get(n.CropId)), s.Get(k + ".body"));
             if (n.Kind == NotifyKind.FeedLow)
                 return (s.Get("notify.FeedLow.title", "good", Names.Of(ctx, n.CropId)), s.Get("notify.FeedLow.body"));

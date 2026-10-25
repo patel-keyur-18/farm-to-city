@@ -94,14 +94,16 @@ namespace Sim.Core.People
         }
     }
 
-    /// <summary>Population (spec 014 §3.12). Daily: outside work paid, then needs and happiness. The season close runs inside settlement (HouseholdRules.Close).</summary>
+    /// <summary>Population (spec 014 §3.12). Hourly: offers and families moving in. Daily: outside work paid, then needs and happiness. The season close runs inside settlement (HouseholdRules.Close).</summary>
     internal sealed class PopulationSystem : ISimSystem
     {
         public SystemOrder Order { get { return SystemOrder.Population; } }
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
-            if (pass != ItemClass.Daily || sim.State.Citizens == null) return;
+            if (sim.State.Citizens == null) return;
+            if (pass == ItemClass.Hourly) MigrationRules.Hourly(sim);
+            if (pass != ItemClass.Daily) return;
             HouseholdRules.PayOutsideWork(sim);
             HappinessRules.UpdateAll(sim);
         }

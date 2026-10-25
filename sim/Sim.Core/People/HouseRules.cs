@@ -15,6 +15,9 @@ namespace Sim.Core.People
         LandTaken = 0,
         Unhappy = 1,
         RentBehind = 2,
+
+        /// <summary>An elder living alone, behind on rent, gone to live with family (§3.13).</summary>
+        ToFamily = 3,
     }
 
     /// <summary>The family house (spec 014 §3.4, §3.13): where it may stand, building it, rent, and the land being taken.</summary>
@@ -138,6 +141,7 @@ namespace Sim.Core.People
         /// <summary>A household leaves (§3.10): a hand among them ends his contract (no severance; the season's unused wages come back).</summary>
         internal static void Evict(Simulation sim, Household x, LeaveReason reason)
         {
+            int people = x.Members.Count, name = sim.State.Citizens.Citizen(x.Members[0]).Name; // a hand alone in his hut is gone once he leaves
             foreach (long id in new List<long>(x.Members))
             {
                 Citizen c = sim.State.Citizens.Citizen(id);
@@ -148,7 +152,7 @@ namespace Sim.Core.People
                 PeopleSystem.Leave(sim, h);
                 sim.Emit(new HandLeft(sim.State.Clock.SimTime, h.Id));
             }
-            sim.Emit(new HouseholdLeft(sim.State.Clock.SimTime, x.Id, x.Members.Count, reason, sim.State.Citizens.Citizen(x.Members[0]).Name));
+            sim.Emit(new HouseholdLeft(sim.State.Clock.SimTime, x.Id, people, reason, name));
             if (sim.State.Citizens.Households.Contains(x)) CitizenRules.Leave(sim, x);
         }
     }

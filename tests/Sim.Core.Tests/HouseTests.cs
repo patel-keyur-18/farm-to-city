@@ -108,8 +108,12 @@ namespace Sim.Core.Tests
             Simulation sim = CreditKit.NewSim(cash: 1_000_000, freeBank: false);
             Assert.That(sim.Execute(new BuyParcel(0, "w1", new Financing("coop_bank", CreditKit.Coins(60_000), 8))).Accepted, Is.True);
             Assert.That(CreditKit.Take(sim, "moneylender", 20_000, 1).Accepted, Is.True);
-            Building bought = BuiltHouse(sim, 82);
-            Building inherited = BuiltHouse(sim, HomeTile);
+            Hamlet(sim);
+            Ok(sim, new BuildFamilyHouse(sim.State.Clock.SimTime, 82));
+            Ok(sim, new BuildFamilyHouse(sim.State.Clock.SimTime, HomeTile));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 48 * Hour); // both at once: no family moves in before ours (US-110)
+            Building bought = sim.State.Land.Buildings.Single(b => HouseRules.IsHouse(sim, b) && b.TileId == 82);
+            Building inherited = sim.State.Land.Buildings.Single(b => HouseRules.IsHouse(sim, b) && b.TileId == HomeTile);
             Household tenants = AddFamily(sim, bought.Id, 35, 33, 8);
             Household safe = AddFamily(sim, inherited.Id, 40);
             Assert.That(sim.Execute(new SellParcel(sim.State.Clock.SimTime, "w1")).Reason, Is.EqualTo(RejectReason.ParcelInUse), "no family is made homeless by a tap");

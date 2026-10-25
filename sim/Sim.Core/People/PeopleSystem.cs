@@ -352,7 +352,8 @@ namespace Sim.Core.People
                     CitizenRules.Retire(sim, h); // spec 014 §3.2: his season done, he isn't renewed
                     continue;
                 }
-                long wage = RenewalWage(sim, h);
+                long wage = RenewalWage(sim, h, out long housing);
+                h.HousingInKind = housing; // spec 014 §3.6: the family house is part of his pay from this renewal
                 if (sim.State.Ledger.CanAfford(wage))
                 {
                     h.Wage = wage;
@@ -383,14 +384,23 @@ namespace Sim.Core.People
             FarmSystem.Refresh(sim);
         }
 
-        /// <summary>The wage for the coming season: the asked wage for today's skill and price index, kept by a loyal hand.</summary>
-        internal static long RenewalWage(Simulation sim, Hand h)
+        /// <summary>
+        /// The cash wage for the coming season: the asked wage for today's skill and price index, kept by a loyal hand, less the family
+        /// house's rent while his family lives in one (<paramref name="housing"/>, spec 014 §3.6).
+        /// </summary>
+        internal static long RenewalWage(Simulation sim, Hand h, out long housing)
         {
             PeopleDefs p = sim.Config.Game.People;
-            if (PeopleRules.HasTrait(sim, h, x => x.KeepsWage)) return h.Wage;
-            long wage = PeopleRules.AskedWage(sim, h.Skill, false);
-            Fixed factor = p.Traits[h.Trait1].RenewalWageFactor * p.Traits[h.Trait2].RenewalWageFactor;
-            return factor == Fixed.One ? wage : Money.RoundToCoin(Money.MulRate(wage, factor));
+            long wage;
+            if (PeopleRules.HasTrait(sim, h, x => x.KeepsWage)) wage = h.Wage + h.HousingInKind;
+            else
+            {
+                wage = PeopleRules.AskedWage(sim, h.Skill, false);
+                Fixed factor = p.Traits[h.Trait1].RenewalWageFactor * p.Traits[h.Trait2].RenewalWageFactor;
+                if (factor != Fixed.One) wage = Money.RoundToCoin(Money.MulRate(wage, factor));
+            }
+            housing = System.Math.Min(wage, MigrationRules.HousingInKind(sim, h));
+            return wage - housing;
         }
 
         /// <summary>Lapsed hands wait lapseGraceDays of live time, then leave (never while the player is away).</summary>

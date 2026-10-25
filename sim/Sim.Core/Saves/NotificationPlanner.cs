@@ -42,6 +42,9 @@ namespace Sim.Core.Saves
 
         /// <summary>A hand retired (and went home if he lived alone); CropId is his name key. Information.</summary>
         HandRetired = 15,
+
+        /// <summary>A family moved into a family house (spec 014 §3.10); CropId is the man's (or the hand's) name key. Information.</summary>
+        FamilyMovedIn = 16,
     }
 
     public enum NotifyImportance
@@ -92,6 +95,7 @@ namespace Sim.Core.Saves
         {
             if (kind <= NotifyKind.ContractLapsed) return NotifyImportance.Urgent;
             return kind == NotifyKind.HandsWork || kind == NotifyKind.AnimalSick || kind == NotifyKind.CalfBorn || kind == NotifyKind.HouseBuilt || kind == NotifyKind.HandRetired
+                || kind == NotifyKind.FamilyMovedIn
                 ? NotifyImportance.Information : NotifyImportance.NeedsYou;
         }
 
@@ -144,6 +148,7 @@ namespace Sim.Core.Saves
                     case Events.RentMissed m: items.Add(new AbsenceItem(at, NotifyKind.RentMissed, NameKey(sim, sim.State.Citizens.Household(m.HouseholdId)?.Members[0] ?? 0))); break;
                     case Events.HouseholdLeft l: items.Add(new AbsenceItem(at, NotifyKind.HouseholdLeft, sim.Config.Game.People.Names[l.Name].NameKey)); break;
                     case Events.CitizenRetired r: items.Add(new AbsenceItem(at, NotifyKind.HandRetired, sim.Config.Game.People.Names[r.Name].NameKey)); break;
+                    case Events.FamilyMovedIn f: items.Add(new AbsenceItem(at, NotifyKind.FamilyMovedIn, sim.Config.Game.People.Names[f.Name].NameKey)); break;
                     case OrderExecuted o:
                         if (o.Action == OrderAction.Harvested || o.Action == OrderAction.Picked) items.Add(new AbsenceItem(at, NotifyKind.HandsWork, o.GoodId));
                         break;

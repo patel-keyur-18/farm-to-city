@@ -200,7 +200,7 @@ namespace Sim.View.Views
         /// </summary>
         public List<int> Patrol { get; } = new List<int>();
 
-        /// <summary>Where home is: a tile, and for a hand the building id of their hut (else 0).</summary>
+        /// <summary>Where home is: a tile, and the hut or family house they go home to (a building id, else 0).</summary>
         public int HomeTile { get; internal set; }
         public long HomeHut { get; internal set; }
 
@@ -655,11 +655,14 @@ namespace Sim.View.Views
                     patrol.Remove((int)last.Target);
                     patrol.Insert(0, (int)last.Target);
                 }
-                Building hut = sim.State.Land.Buildings.Find(b => b.Id == h.HutId);
+                // His hut, or the family house his family lives in (spec 014 §3.10).
+                Sim.Core.People.Citizen me = sim.State.Citizens?.OfHand(h.Id);
+                long homeId = h.HutId != 0 || me == null ? h.HutId : sim.State.Citizens.Household(me.HouseholdId)?.HomeId ?? 0;
+                Building hut = sim.State.Land.Buildings.Find(b => b.Id == homeId);
                 var vm = new PersonVm
                 {
                     Key = "hand:" + h.Id, Kind = PersonKind.Hand, Female = sim.Config.Game.People.Names[h.Name].Female, Working = working,
-                    HomeTile = hut != null ? hut.TileId : frontYard, HomeHut = h.HutId,
+                    HomeTile = hut != null ? hut.TileId : frontYard, HomeHut = homeId,
                 };
                 vm.Patrol.AddRange(patrol);
                 vm.TileId = patrol.Count > 0 ? patrol[0] : vm.HomeTile;

@@ -39,4 +39,19 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>A hand's answer to a free family house (spec 014 §3.13): yes brings his family, not now lets strangers come.</summary>
+    public sealed class AnswerFamilyRequest : TimedCommand
+    {
+        public long HandId { get; }
+        public bool Yes { get; }
+
+        public AnswerFamilyRequest(long at, long handId, bool yes) : base(at)
+        {
+            HandId = handId;
+            Yes = yes;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return MigrationRules.Answer(sim, HandId, Yes); }
+    }
 }

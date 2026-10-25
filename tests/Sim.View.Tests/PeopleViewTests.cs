@@ -394,6 +394,42 @@ namespace Sim.View.Tests
             Assert.That(CitizenSheet.Build(ctx, asha.Id).Lines.Any(l => l.Label == "Born here"), Is.True);
         }
 
+        // Spec 014 §3.6, §3.13 (US-110): a free house is offered to the hand living alone: the card says what changes, an alert
+        // answers Yes, the away card tells who moved in, and from the next renewal the wage's Why? shows the house as part of the pay.
+        [Test]
+        public void HandFamily_Card()
+        {
+            Simulation sim = Situations.Town();
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new BuildFamilyHouse(t, Situations.HouseTile(sim)));
+            sim.DrainEvents();
+            sim.AdvanceTo(t + 49 * Hour);
+            ViewContext ctx = ViewKit2.Context(sim);
+            FamilyRequest ask = sim.DrainEvents().OfType<FamilyRequest>().Single();
+            Citizen me = sim.State.Citizens.OfHand(ask.HandId);
+            string name = PeopleWords.Name(ctx, me.Name), her = me.Female ? "her" : "his";
+
+            CardVm card = Cards.FamilyRequest(ctx, ask.HandId);
+            Assert.That(card.Title, Is.EqualTo(name + " asks to bring " + her + " family here"));
+            Assert.That(card.Text, Does.StartWith("Family house 2 is free. " + name + "'s family would come from "));
+            Assert.That(card.Text, Does.Contain("the wage is 6,"));
+            Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Yes, bring them", "Not now" }));
+            AlertVm alert = Alerts.Build(ctx).Single(a => a.Text == card.Title);
+            Assert.That(alert.Action.Label, Is.EqualTo("Yes, bring them"));
+
+            Ok(sim, alert.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(Cards.FamilyRequest(ViewKit2.Context(sim), ask.HandId), Is.Null, "answered: no card");
+            List<LineVm> away = TownAway.Rows(ViewKit2.Context(sim), sim.DrainEvents().ToList());
+            Assert.That(away.Single().Value, Is.EqualTo(name + "'s family came to live in Family house 2"));
+            Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family's house becomes part of the pay at the next renewal: 6,")), Is.True, "before the renewal");
+
+            sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason);
+            WhyRowVm cut = WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Single(r => r.Label.EndsWith("for the family house"));
+            Hand h = sim.State.People.Hand(ask.HandId);
+            Assert.That(cut.Value, Is.EqualTo(ViewKit2.Context(sim).Fmt.Coins(h.Wage)), "in cash");
+            Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.home", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family house, part of the pay")), Is.True);
+        }
+
         [Test]
         public void LivesAlone()
         {

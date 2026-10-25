@@ -223,6 +223,11 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.handWage.title", Money(ctx, h.Wage));
             Text(vm, ctx, "why.handWage.paid");
             Text(vm, ctx, "why.handWage.market");
+            // Housing in kind (spec 014 §3.6): "30,000 − 6,000 for the family house = 24,000 in cash".
+            long house = MigrationRules.HousingInKind(ctx.Sim, h);
+            if (h.HousingInKind > 0)
+                Row(vm, ctx, "why.handWage.inKind", Money(ctx, h.Wage), "wage", Money(ctx, h.Wage + h.HousingInKind), "house", Money(ctx, h.HousingInKind));
+            else if (house > 0) Text(vm, ctx, "why.handWage.inKindNext", "house", Money(ctx, house));
             vm.Footnote = ctx.Strings.Get("why.handWage.lesson");
             return vm;
         }

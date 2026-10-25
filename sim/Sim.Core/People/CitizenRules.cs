@@ -86,7 +86,7 @@ namespace Sim.Core.People
 
         /// <summary>
         /// A hand leaves the job (spec 006). Living alone in his hut, he goes home to his village: his household leaves (§3.13). A hand whose
-        /// family lives in a family house stays on as a tenant (US-208 onward).
+        /// family lives in a family house stays on as a tenant, the household's budget set again without his wage.
         /// </summary>
         internal static void HandLeft(Simulation sim, Hand h)
         {
@@ -97,7 +97,9 @@ namespace Sim.Core.People
             c.Job = CitizenJob.None;
             c.HandId = 0;
             Household x = s.Household(c.HouseholdId);
-            if (x != null && x.HomeId == h.HutId) Leave(sim, x);
+            if (x == null) return;
+            if (x.HomeId == h.HutId) Leave(sim, x);
+            else HouseholdRules.SetBudget(sim, x); // tenants now (§3.13): no wage, rent from the next close
         }
 
         /// <summary>A hand under contract who is <c>retireAge</c> or older at this close (spec 014 §3.2); false without citizens.</summary>

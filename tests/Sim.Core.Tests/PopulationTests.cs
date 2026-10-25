@@ -133,6 +133,7 @@ namespace Sim.Core.Tests
                 Simulation sim = Start(seed: seed);
                 x = Family(sim, House(sim).Id);
                 if (spareHouse) House(sim);
+                sim.State.Citizens.NextFamilyAt = long.MaxValue; // no family moves in before the close (US-110)
                 sim.DrainEvents();
                 sim.AdvanceTo(NextClose(sim));
                 if (found(sim.PendingEvents)) return sim;

@@ -606,7 +606,7 @@ namespace Game.Presentation.Map
             switch (p.Kind)
             {
                 case PersonKind.Founder: return _hutWorld + new Vector2(-0.12f, -0.12f);
-                case PersonKind.Hand: return HutDoor(p.HomeHut, p.HomeTile);
+                case PersonKind.Hand: return _handHuts.ContainsKey(p.HomeHut) ? HutDoor(p.HomeHut, p.HomeTile) : HouseYard(p.HomeHut, p.HomeTile); // a hand whose family has a house
                 case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }

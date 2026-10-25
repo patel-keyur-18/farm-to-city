@@ -105,6 +105,15 @@ namespace Sim.View.Views
                 foreach (Sim.Core.Livestock.Animal a in herd.Animals)
                     if (a.SickDays > 0)
                         list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Get("alert.animalSick", "name", a.Name), Action = ActionVm.Open("animal:" + a.Id, s.Get("action.open"), new SheetRequest("Animal", a.Id)) });
+            // A free family house offered to a hand living alone (spec 014 §3.13): Yes from here, or the card.
+            if (sim.State.Citizens != null && sim.State.Citizens.OfferHandId != 0)
+            {
+                Sim.Core.People.Citizen asks = sim.State.Citizens.OfHand(sim.State.Citizens.OfferHandId);
+                long hand = sim.State.Citizens.OfferHandId;
+                if (asks != null)
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get(asks.Female ? "card.familyTitleF" : "card.familyTitleM", "name", TownWords.Name(ctx, asks)),
+                        Action = ActionVm.Checked(ctx, "family:" + hand, s.Get("card.familyYes"), null, ActionKind.Primary, at => new AnswerFamilyRequest(at, hand, true)) });
+            }
             return list;
         }
 
@@ -346,6 +355,10 @@ namespace Sim.View.Views
                         rows.Add(Row(s.Get("away.town"), TownNews.Married(ctx, m.Name, m.MovedAway, m.SpouseId, m.Village, m.HomeHouseholdId == m.HouseholdId ? 0 : m.HomeHouseholdId),
                             m.MovedAway ? "portrait_town_f" : "portrait_town_m"));
                         break;
+                    case FamilyMovedIn f:
+                        rows.Add(Row(s.Get("away.town"), s.Get(f.HandId != 0 ? "away.handFamilyIn" : "away.familyIn", "family", s.Get("town.family", "name", PeopleWords.Name(ctx, f.Name)),
+                            "n", ctx.Fmt.Integer(f.People), "home", TownWords.Home(ctx, f.HouseId)), "family_house"));
+                        break;
                     case CitizenDied d:
                         rows.Add(Row(s.Get("away.town"), TownNews.Died(ctx, d.CitizenId, d.Name, d.Female, d.Age), d.Female ? "portrait_elder_f" : "portrait_elder_m"));
                         break;
@@ -407,7 +420,7 @@ namespace Sim.View.Views
             { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "LabourersHarvested", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
-            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.

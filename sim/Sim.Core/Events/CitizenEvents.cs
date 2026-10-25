@@ -171,4 +171,42 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "CitizenDied(citizen=" + CitizenId + ", age=" + Age + ", household=" + HouseholdId + ")"; }
     }
+
+    /// <summary>A free family house is offered to a hand living alone (spec 014 §3.13): a card, Yes / Not now.</summary>
+    public sealed class FamilyRequest : SimEvent
+    {
+        public long HandId { get; }
+        public long HouseId { get; }
+
+        public FamilyRequest(long simTime, long handId, long houseId) : base(simTime)
+        {
+            HandId = handId;
+            HouseId = houseId;
+        }
+
+        protected override string Describe() { return "FamilyRequest(hand=" + HandId + ", house=" + HouseId + ")"; }
+    }
+
+    /// <summary>A family moved into a family house (spec 014 §3.10): strangers, or a hand's own family (<see cref="HandId"/> not 0).</summary>
+    public sealed class FamilyMovedIn : SimEvent
+    {
+        public long HouseholdId { get; }
+        public long HouseId { get; }
+        public int People { get; }
+
+        /// <summary>The man's name, or the hand's (index into the names).</summary>
+        public int Name { get; }
+        public long HandId { get; }
+
+        public FamilyMovedIn(long simTime, long householdId, long houseId, int people, int name, long handId) : base(simTime)
+        {
+            HouseholdId = householdId;
+            HouseId = houseId;
+            People = people;
+            Name = name;
+            HandId = handId;
+        }
+
+        protected override string Describe() { return "FamilyMovedIn(household=" + HouseholdId + ", house=" + HouseId + ", people=" + People + ", hand=" + HandId + ")"; }
+    }
 }

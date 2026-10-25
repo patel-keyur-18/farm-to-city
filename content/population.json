@@ -53,6 +53,7 @@
     "familyEveryHours": 18,
     "familyJitterHours": 6,
     "familySize": { "min": 2, "max": 5 },
+    "familyElderChance": 0.25,
     "leaveBelow": 35,
     "leaveSeasons": 2,
     "leaveChance": 0.50,

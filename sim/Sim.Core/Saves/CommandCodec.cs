@@ -28,6 +28,7 @@ namespace Sim.Core.Saves
             DeliverOrder,
             BuildShed, BuyAnimal, SellAnimal, SetBuyGreenFodder,
             BuildFamilyHouse,
+            AnswerFamilyRequest,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -82,6 +83,7 @@ namespace Sim.Core.Saves
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
                 case BuildShed c: At(c, Tag.BuildShed); break;
                 case BuildFamilyHouse c: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
+                case AnswerFamilyRequest c: At(c, Tag.AnswerFamilyRequest); w.WriteLong(c.HandId); w.WriteBool(c.Yes); break;
                 case BuyAnimal c:
                     At(c, Tag.BuyAnimal); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
@@ -166,6 +168,7 @@ namespace Sim.Core.Saves
                 case Tag.BuildHandHut: return new BuildHandHut(at, r.ReadInt());
                 case Tag.BuildShed: return new BuildShed(at);
                 case Tag.BuildFamilyHouse: return new BuildFamilyHouse(at, r.ReadInt());
+                case Tag.AnswerFamilyRequest: return new AnswerFamilyRequest(at, r.ReadLong(), r.ReadBool());
                 case Tag.BuyAnimal:
                 {
                     string kind = r.ReadString();

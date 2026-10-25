@@ -16,7 +16,7 @@ namespace Sim.Core.People
         private const ulong DeathRoll = 1, BirthRoll = 2, MarriageRoll = 3, GenderKey = 4, NameKey = 5, Trait1Key = 6, Trait2Key = 7,
             SpouseAgeKey = 8, VillageKey = 9, SkillKey = 10, EducationKey = 11;
 
-        private static ulong Roll(Simulation sim, RngStream stream, long id, ulong kind, long counter)
+        internal static ulong Roll(Simulation sim, RngStream stream, long id, ulong kind, long counter)
         {
             return Rng.Next(sim.State.Seed, stream, (ulong)id * 16 + kind, (ulong)counter);
         }
@@ -193,7 +193,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>A seeded name of the gender, one no living citizen has if any is left.</summary>
-        private static int Name(Simulation sim, RngStream stream, long id, bool female)
+        internal static int Name(Simulation sim, RngStream stream, long id, bool female)
         {
             IReadOnlyList<NameDef> names = sim.Config.Game.People.Names;
             var free = new List<int>();
@@ -208,7 +208,7 @@ namespace Sim.Core.People
             return from[(int)Rng.Below(Roll(sim, stream, id, NameKey, 0), (ulong)from.Count)];
         }
 
-        private static void Traits(Simulation sim, RngStream stream, Citizen c)
+        internal static void Traits(Simulation sim, RngStream stream, Citizen c)
         {
             int n = sim.Config.Game.People.Traits.Count;
             c.Trait1 = (int)Rng.Below(Roll(sim, stream, c.Id, Trait1Key, 0), (ulong)n);
@@ -217,7 +217,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>Members stay in ascending id order.</summary>
-        private static void InsertMember(Household x, long id)
+        internal static void InsertMember(Household x, long id)
         {
             int at = x.Members.BinarySearch(id);
             if (at < 0) x.Members.Insert(~at, id);
