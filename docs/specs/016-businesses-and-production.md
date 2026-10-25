@@ -19,7 +19,7 @@ The player founds a first business beside the farm, a village flour mill (atta c
 **In:**
 - The business framework: types in data, founding (research, plan, place, fund, staff, open), its own ledger and statements, owner's capital and drawings, overdraft, trouble and closing.
 - Production: recipes (inputs, outputs, rate, power), hourly work while open, live or away.
-- The flour mill (Hamlet): grinding the town's wheat for a fee (pisai) and milling wheat into atta to sell; bran as a by-product.
+- The flour mill (Hamlet): grinding the area's grain for a fee (pisai) and milling wheat into atta to sell; bran as a by-product.
 - The bakery (Village): atta and bakery supplies into pav and rusk.
 - The dairy (Village): your animals' milk into paneer, curd and ghee (owner, 2026-10-25, §10 G1).
 - New goods: atta, bran, bakery supplies, pav, rusk, paneer, curd, ghee.
