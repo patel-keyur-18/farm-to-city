@@ -1,6 +1,6 @@
 # 016. Businesses and production
 
-- Status: Draft (G1, G2 closed; G3–G10 in §10 to close with the owner)
+- Status: Draft (G1–G3 closed; G4–G10 in §10 to close with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (catalogue, founding flow, books, lifecycle and trouble, failure); Economy (goods tiers, production chains); Citizens and workforce (jobs); Learning layer (P&L, cash flow, balance sheet)
@@ -96,7 +96,7 @@ Only types the era allows are offered; a type whose worker can't be found is off
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | Who | Until spec 015: the town's best-skilled adult without a town job (spec 014 §3.6) is offered the job; if the town has nobody, a worker comes daily from a neighbouring village (not a citizen) | |
-| Wage | A season's wage paid upfront at each close (prepaid wages, as a hand's), from the business's cash | Miller 27,000; baker 30,000 |
+| Wage | A season's wage paid upfront at each close (prepaid wages, as a hand's), from the business's cash | Miller 27,000; baker 30,000; dairyman 27,000 |
 | You run it yourself | You can run it yourself: no wage, but your hours at the mill come off your farm hours (spec 003), so Care can fall | |
 | A town job | A citizen working at a business has a town job (spec 014: the employment rate, the job need) | |
 | Wages missed | A season's wage that can't be paid (no cash, overdraft full) isn't paid; the worker leaves at once (§3.10) | |
@@ -226,7 +226,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 
 - **G1. Which businesses in Phase 2.** **Closed (owner, 2026-10-25):** the flour mill (Hamlet) and the bakery (Village); the farm and market stalls with spec 017's shops. The owner asked that a dairy business come in this phase unless a later one plans it; none does, so the dairy (Village: paneer, curd, ghee from your own milk) is added (§3.1, §3.9b). Milk not kept for it still goes to the co-op.
 - **G2. Books.** **Closed (owner, 2026-10-25):** each business has its own ledger, capital and drawings; your investment at cost on your books, each business at its equity in net worth; your own wheat and milk go to it at today's market price (a sale on the farm, a cost on the business) (§3.2).
-- **G3. Who runs it.** A hired townsperson until spec 015, or you yourself, with your farm hours.
+- **G3. Who runs it.** **Closed (owner, 2026-10-25):** the best-skilled adult in your town without a town job (else a daily worker from a neighbouring village) at a season wage paid upfront, until spec 015 brings full hiring; or you run it yourself, no wage, your hours there coming off your farm work; a business job is a town job (§3.6).
 - **G4. Where it stands.** On an owned acre next to a road or lane (customers come to it), one business an acre, the acre out of farming; layout previewed first.
 - **G5. The mill's work.** Grinding fee 3 a kg for the town's wheat, own atta, 40 kg an hour, 1.20 power a kg, yields 0.97 and 0.03.
 - **G6. Wheat in, atta out.** The founder's store first at today's price, then the market if allowed; atta and bran to the trader and the local market; atta in supermarket orders.
