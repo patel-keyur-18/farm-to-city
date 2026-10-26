@@ -1,6 +1,6 @@
 # Proposal: a faster, livelier first day
 
-- Status: **Brainstorm, for the owner to choose from.** No code, no spec change, no ADR yet.
+- Status: **Decided (owner, 2026-10-26): Idea 2, new crops in every season, as an ad hoc phase after Phase 2.** The other ideas are set aside. The spec, ADR, feature, sprint and checklist drafts are in `docs/planning/adhoc/crop-ladder/`.
 - Date: 2026-10-26
 - Author: Claude
 - Reviewer: Keyur Patel
