@@ -229,7 +229,7 @@
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 
-- **The crop ladder** (owner, 2026-10-26): the start felt slow (a 15 h potato after the first session). From the brainstorm (`docs/planning/proposals/first-day-pacing.md`) the owner chose new crops in every season, as an ad hoc sprint after Phase 2's gate. Drafts in `docs/planning/adhoc/crop-ladder/` (spec, ADR, F02.5, Sprint 19 plan, checklist) with provisional numbers. **Owner:** answer the spec's gaps G1–G14 (one at a time) any time before the sprint. No code until then.
+- **The crop ladder** (owner, 2026-10-26): the start felt slow (a 15 h potato after the first session). From the brainstorm (`docs/planning/proposals/first-day-pacing.md`) the owner chose new crops in every season, as an ad hoc sprint after Phase 2's gate. Drafts in `docs/planning/adhoc/crop-ladder/` (spec, ADR, F02.5, Sprint 19 plan, checklist) with provisional numbers. All 14 spec gaps closed with the owner (2026-10-26); the spec and ADR are approved as a whole and promoted at the phase's start. No code until then.
 
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**
 - The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3. For spec 016 or 018.

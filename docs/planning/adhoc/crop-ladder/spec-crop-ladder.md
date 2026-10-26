@@ -1,8 +1,8 @@
 # NNN. The crop ladder: new crops in every season
 
-> **Draft for the owner's review.** The spec number is given when the ad hoc phase starts (after Phase 2's last spec). Move this file to `docs/specs/NNN-crop-ladder.md` on approval. The gaps to close are in §10.
+> **Draft.** The spec number is given when the ad hoc phase starts (after Phase 2's last spec). Move this file to `docs/specs/NNN-crop-ladder.md` on approval. Every gap in §10 is closed.
 
-- Status: Draft (in review)
+- Status: Gaps G1–G14 closed by the owner (2026-10-26); awaiting approval of the whole spec at the phase's start (US-L1)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Time and world simulation (Task clock, Seasons); Land, farming and livestock (Crops); UI/UX and screens (the sow sheet); Roadmap
@@ -53,8 +53,8 @@ Every rule of spec 003 applies to the new crops as written: cycle share and per-
 
 | Crop | One sowing (all factors 1) | At the regional price | Sowings in a season |
 | --- | --- | --- | --- |
-| Methi, 1 h | 18.8 kg | about 300 | 96 |
-| Okra, 4 h | 108.3 kg | about 1,520 | 24 |
+| Methi, 1 h | 17.2 kg | about 275 | 96 |
+| Okra, 4 h | 87.5 kg | about 1,225 | 24 |
 | Potato, 15 h | 1,093.8 kg | about 8,750 | 6.4 |
 
 A player who comes back late loses growing time on a short crop (the field sits ready), and a player who's away all day loses little on a long one. That's the choice the ladder offers.
@@ -89,16 +89,20 @@ These govern the content values in §4 and any later tuning (ADR 0027: values tu
 
 ### 3.4 The balance rule
 
-At the regional price, with every factor at 1 and certified seed, for an acre kept busy all season:
+Measured on two price bases, both with every factor at 1 (soil 0.875 on the floor basis, as on an inherited acre) and certified seed:
+
+1. **Regional:** for an acre kept busy all season, at the regional price.
+2. **Floor:** one sowing's profit per growing hour, at the trader's floor with the season's `seasonalFactor` for the crop and its seed. These are the figures the sow sheet and the hand use (spec 008 §3.7, ADR 0048).
 
 ```
 GM(crop)  = seasonYieldPerAcre × basePrice − seedPerAcrePerSeason × seedBasePrice
 Net(crop) = GM(crop) − labourPerAcrePerDay × ClockDef.DaysPerSeason × FounderDef.dayLabourWagePerHour
+PerHour(crop, season) = (BaseCycle × 0.875 × Floor(good, season) − seedCycle × seedPrice(season)) ÷ growthHours
 ```
 
 | Check | Rule |
 | --- | --- |
-| Never the leader | For every season a new crop is sown in: `GM(new) ≤ max GM(existing crops of that season)` and `Net(new) ≤ max Net(existing crops of that season)`. "Existing" means radish, wheat, rice, potato and lentils |
+| Never the leader | For every season a new crop is sown in: `GM(new) ≤ max GM`, `Net(new) ≤ max Net` and `PerHour(new, season) ≤ max PerHour(season)` over the existing crops of that season. "Existing" means radish, wheat, rice, potato and lentils |
 | Never a dud | `GM(new) ≥ 0.9 × min GM(existing)` (≥ 21,456), so no new crop is a trap for a player who sows it |
 | Its own niche | Each new crop is the best pick (by spec 003's sow-sheet profit at the floor, ADR 0048) for at least one realistic case: a 1 h return, a dry rain-fed acre, a light-labour season or low fertility. The balancer reports which (§9) |
 
@@ -106,14 +110,25 @@ With the §4 values:
 
 | Crop (acre, season) | Gross | Seed | GM | Labour at 1,125 an hour | Net | Season leader's GM / Net |
 | --- | --- | --- | --- | --- | --- | --- |
-| Methi | 28,800 | 3,000 | 25,800 | 13,500 | 12,300 | Spring and Winter: potato 42,000 / 26,250 |
+| Methi | 26,400 | 3,000 | 23,400 | 13,500 | 9,900 | Spring and Winter: potato 42,000 / 26,250 |
 | Amaranth | 28,000 | 750 | 27,250 | 13,500 | 13,750 | Summer and Monsoon: rice 32,400; Net lentils 14,840 / rice 14,400 |
-| Okra | 36,400 | 6,000 | 30,400 | 22,500 | 7,900 | Spring potato; Summer and Monsoon rice 32,400 |
+| Okra | 29,400 | 6,000 | 23,400 | 20,250 | 3,150 | Spring potato; Summer and Monsoon rice 32,400 |
 | Peas | 36,000 | 4,320 | 31,680 | 18,000 | 13,680 | Winter: potato 42,000 / 26,250 |
-| Maize | 29,000 | 2,000 | 27,000 | 13,500 | 13,500 | Spring potato; Monsoon rice 32,400 / 14,400 |
+| Maize | 25,000 | 2,000 | 23,000 | 13,500 | 9,500 | Spring potato; Monsoon rice 32,400 / 14,400 |
 | Mustard | 28,000 | 150 | 27,850 | 9,000 | 18,850 | Winter: potato 42,000 / 26,250 |
 
-For comparison (spec 003 §9): radish 25,600 / 12,100, wheat 28,785 / 15,285, rice 32,400 / 14,400, potato 42,000 / 26,250, lentils 23,840 / 14,840.
+For comparison (spec 003 §9): radish 25,600 / 12,100, wheat 28,785 / 15,285, rice 32,400 / 14,400, potato 42,000 / 26,250, lentils 23,840 / 14,840. Okra's Net with hired labour (3,150) sits in ADR 0033's band for a hired acre (2,000–5,000): vegetables pay the family that picks them.
+
+**On the floor basis** (coins per growing hour; leaders in bold):
+
+| Season | Existing crops | New crops |
+| --- | --- | --- |
+| Spring | **potato 178**, radish 176 | maize 176, methi 172, okra 171 |
+| Summer | **rice 288**, radish 214, lentils 200 | amaranth 207, okra 144 |
+| Monsoon | **rice 258**, radish 201 | amaranth 194, maize 165, okra 157 |
+| Winter | **potato 305**, wheat 270, lentils 211, radish 137 | mustard 234, peas 205, methi 148 |
+
+Spring is the tight season: potato is cheap at its rabi harvest (0.85) and its seed dear (1.10), so it earns only about as much an hour as radish. The first draft's yields put okra (227), maize (208) and methi (190) above it; the yields in §4 were lowered to keep them just under (owner, 2026-10-26: "not too profitable"). In Spring every crop now earns about the same an hour, so the choice is when you'll be back, your hands and your soil. On a dry rain-fed acre in Summer, where rice suffers for water, amaranth and okra can lead: that is their niche, and real.
 
 ### 3.5 For an average player
 
@@ -123,7 +138,9 @@ For comparison (spec 003 §9): radish 25,600 / 12,100, wheat 28,785 / 15,285, ri
 | Affordable from the first minute | One sowing's certified seed costs at most about 250 coins (okra); 20,000 coins start |
 | No trap | No new crop loses money at the floor price on an average acre (sow-sheet profit > 0 at fertility 45, moisture inside its band). Fast-spoiling crops say so on the sow sheet. The household eats the most perishable food first (spec 003 §3.11) |
 | Easy to compare | The sow sheet (§3.6) orders crops by growing time, says when each will be ready, and gives each sowing's earnings for each hour it grows, so a 1 h and a 15 h crop compare fairly |
-| Small harvests stay sellable | One acre's quick-green harvest (about 19 kg) is far below the trader's daily limit for that good, so it never gluts on its own |
+| Small harvests stay sellable | One acre's quick-green harvest (about 17 kg) is far below the trader's daily limit for that good, so it never gluts on its own |
+| No flood of notifications | A crop's "ready" notification is grouped with others within 30 minutes and never sent in quiet hours (spec 007 §3.5); a field under a hand's standing order sends none |
+| Not stale | Prices move daily and by season, greens spoil and vegetables need hands, so the best crop for an acre changes with the season, the day's price and how many people work for you |
 
 ### 3.6 The sow sheet and the crop-calendar card (amends spec 008 §3.7)
 
@@ -172,10 +189,10 @@ All values are placeholders the economy model tunes within §3.3 and §3.4 (ADR 
 | `outputGood`, `seedGood` | methi, seed_methi | amaranth, seed_amaranth | okra, seed_okra | peas, seed_peas | maize, seed_maize | mustard, seed_mustard |
 | `sowSeasons` | spring, winter | summer, monsoon | spring, summer, monsoon | winter | spring, monsoon | winter |
 | `growthMinutes` | 60 | 60 | 240 | 240 | 360 | 480 |
-| `seasonYieldPerAcre` (kg) | 1,800 | 2,000 | 2,600 | 1,800 | 1,450 | 500 |
+| `seasonYieldPerAcre` (kg) | 1,650 | 2,000 | 2,100 | 1,800 | 1,250 | 500 |
 | `seedPerAcrePerSeason` (kg) | 30 | 3 | 4 | 48 | 8 | 1.5 |
 | `moistureMin`, `moistureMax` | 35, 65 | 30, 75 | 40, 70 | 35, 60 | 40, 70 | 25, 55 |
-| `labourPerAcrePerDay` (h) | 3.0 | 3.0 | 5.0 | 4.0 | 3.0 | 2.0 |
+| `labourPerAcrePerDay` (h) | 3.0 | 3.0 | 4.5 | 4.0 | 3.0 | 2.0 |
 | `fertilityPerSeason` | −1 (restores) | 2 | 3 | −3 (restores) | 5 | 3 |
 | `canSaveSeed` | false | false | false | true | false | true |
 | `savedSeedLossPerSeason`, `savedSeedFloor` | — | — | — | 0.02, 0.90 | — | 0.02, 0.90 |
@@ -244,21 +261,21 @@ None new. `Sow`, `Harvest`, `Spray`, `ClearField`, selling and orders take the n
 
 ## 7. UI
 
-The sow sheet in Spring at 15:00, on a loam acre at fertility 45 and moisture 45. The figures are placeholders: the real ones come from spec 008 §3.7's formula at the floor.
+The sow sheet in Spring at 15:00, on a loam acre at fertility 45 and moisture 45, with §4's values (spec 008 §3.7's formula at the floor; potato 15 h).
 
 ```
 Sow on North acre (loam, fertility 45.0, moisture 45)                 Spring
 +--------------------------------------------------------------------------+
-| Methi       1 h   Ready at 16:00          good    Profit about 210       |
+| Methi       1 h   Ready at 16:00          good    Profit about 170       |
 |   Quick greens: small harvests every hour. Spoils fast once picked.      |
-|   About 210 an hour · 3.0 h a day · Soil 45.0 → 45.0        [Sow · 30]   |
+|   About 170 an hour · 3.0 h a day · Soil 45.0 → 45.0        [Sow · 30]   |
 | Radish      2 h   Ready at 17:00          good    Profit about 350       |
-| Okra        4 h   Ready at 19:00          good    Profit about 1,000     |
+| Okra        4 h   Ready at 19:00          good    Profit about 680       |
 |   Picked every other day: needs plenty of hands.                         |
-|   About 250 an hour · 5.0 h a day · Soil 45.0 → 44.9       [Sow · 250]   |
-| Maize       6 h   Ready at 21:00          good    Profit about 1,300     |
-| Potato     15 h   Ready tomorrow 06:00    good    Profit about 4,270     |
-|   About 280 an hour · 3.5 h a day · Soil 45.0 → 43.8      [Sow · from store] |
+|   About 170 an hour · 4.5 h a day · Soil 45.0 → 44.9       [Sow · 250]   |
+| Maize       6 h   Ready at 21:00          good    Profit about 1,060     |
+| Potato     15 h   Ready tomorrow 06:00    good    Profit about 2,670     |
+|   About 180 an hour · 3.5 h a day · Soil 45.0 → 44.2   [Sow · from store] |
 | Wheat · Winter only    Peas · Winter only    Rice · Summer, Monsoon  ... |
 | Free hours today: 3.4 of 7.2                                     [Why?]  |
 +--------------------------------------------------------------------------+
@@ -281,7 +298,7 @@ Sim tests are in `tests/Sim.Core.Tests`; view tests in `tests/Sim.View.Tests`.
 | AC-5 | Saved seed of peas and mustard can be sown and ages per spec 003 §3.9; methi, amaranth, okra and maize are rejected with `SeedCannotBeSaved` | `SeedTests.CropLadder_SavedSeed` |
 | AC-6 | A peas cycle raises fertility by exactly 3 × cycleShare and a methi cycle by 1 × cycleShare under reason `Lentils`; a maize cycle lowers it by 5 × cycleShare under `CropUse`; the *Why?* line reads "Legumes fed the soil this season" | `CropTests.CropLadder_Fertility`; `FarmViewTests.Fertility_LegumesLine` |
 | AC-7 | With eating from the store on and only mustard and maize in store, the daily pass eats maize and never mustard | `FounderTests.CropLadder_MustardNotEaten` |
-| AC-8 | From the loaded content, every new crop meets §3.4's three checks: not above its seasons' leader on GM and on Net, and at least 0.9 × the lowest existing GM | `GateTests.CropLadder_BalanceRule` |
+| AC-8 | From the loaded content, every new crop meets §3.4's checks in every season it's sown in: not above that season's leader on GM, Net or the floor's profit per growing hour, and at least 0.9 × the lowest existing GM | `GateTests.CropLadder_BalanceRule` |
 | AC-9 | The ladder bot (§9) ends at 0.90–1.20 × the competent bot's median net worth over 8 seasons and 100 seeds; the diversifier at most 1.20 × | `GateTests.CropLadder_Bots` |
 | AC-10 | No seed of the ladder bot's runs harvests more than a season's realistic output on any acre (the fresh-start check's over-cap count is 0) | `GateTests.CropLadder_NeverOverCap` |
 | AC-11 | In the Monsoon the supermarket's eligible crops are radish, rice, amaranth, okra and maize (crops of 18 h or less in season, `crops.json` order); the greens order still draws only spinach or coriander | `OrderTests.CropLadder_Eligible` |
@@ -307,25 +324,28 @@ Sim tests are in `tests/Sim.Core.Tests`; view tests in `tests/Sim.View.Tests`.
 | Prices on the rails (`BoundedPrices`) | None | 0% |
 | New crops in the hand's picks (competent bot with a hand, 8 seasons) | Some, not most (report only) | About 10–40% of his sowings |
 | Each new crop's niche (§3.4) | Reported by the balancer: the case where it's the best pick | One case each |
+| Spring's crops per growing hour at the floor | All within a few percent of potato (171–178 in §3.4) | No new crop above potato |
 
-## 10. Open questions (gaps to close with the owner)
+## 10. Open questions
 
-Each has a recommendation. They're numbered G1–G14 to answer one at a time.
+All fourteen gaps were closed with the owner one at a time on 2026-10-26.
 
 - **G1. The crop list. Closed (owner, 2026-10-26): option A, all six:** methi, amaranth, okra, green peas, maize and mustard. Mustard is cheap to draw (its middle stage exists, ADR 0062) and gives Winter a low-water, low-labour crop. Amaranth is the only realistic quick green for Summer and the Monsoon. Onion waits for the granary (F13.3). Amaranth, then mustard, are still first to cut if the sprint runs over (§11).
 - **G2. The game times. Closed (owner, 2026-10-26): option A,** banded by real days to the first harvest (§3.3): methi and amaranth 1 h, okra and green peas 4 h, maize 6 h, mustard 8 h. Strictly proportional times were rejected: okra and peas would sit beside radish, the 4 h rung would vanish, and the times would read oddly ("2 h 12 min"). The economy model may tune the times inside their bands without re-approval (ADR 0027).
 - **G3. The balance rule. Closed (owner, 2026-10-26): option A,** §3.4's three checks: never above a season's leader on GM or Net, never below 0.9 × the weakest existing GM, and a niche of its own, reported by the balancer. It keeps land payback (ADR 0033), the Hamlet pace and the hand's economics unchanged by construction; `GateTests.CropLadder_BalanceRule` checks it from content so later tuning can't break it silently. Rejected: a 10% allowance above the leader (every old gate would need re-tuning), GM only (a low-labour crop could lead once labour is counted), and no rule.
-- **G4. "About N an hour" on the sow sheet** (§3.6), a new figure. Without it, methi's "Profit about 210" reads as worse than potato's 4,270, though both earn about the same per hour. **Recommend: yes.** It's the figure that makes the ladder make sense to an average player.
-- **G5. The hand ignores labour when he picks** (ADR 0048: profit per growing second, seed and fertiliser only). Okra, the most labour-hungry crop, could be his pick on a dry Summer acre and lower Care. **Recommend: keep the rule.** The bots measure it: `PeopleStress` (absentee ≥ 0.80) and the hand's-picks report. Change the rule only if a gate fails. Counting labour would be a spec 006 change.
-- **G6. Saved seed:** peas and mustard yes; methi, amaranth, okra and maize no (§3.3). **Recommend: yes.**
-- **G7. Mustard isn't eaten at home**; maize is (makki ki roti). **Recommend: yes.**
-- **G8. "Legumes fed the soil"** for lentils, peas and methi (a wording change, saved value unchanged). **Recommend: yes.**
-- **G9. The season hint names at most 5 crops,** then "and N more". **Recommend: yes.** Winter would otherwise list 7.
-- **G10. Neighbours grow maize and mustard** on the map (Could, 1 point). **Recommend: yes, if the sprint has room.**
-- **G11. Names on screen.** Two options: English with the Hindi in the note line ("Okra" · "Bhindi: picked every other day…"), or Hindi first ("Bhindi (okra)"). **Recommend: English first.** It matches "Lentils" and "Wheat" today, and spec 009 explains village words on first use.
-- **G12. The kitchen garden stays as it is** (no methi bed). **Recommend: yes.** Adding beds would change the garden's season output rule (ADR 0031).
-- **G13. Which phase and milestone.** The repository has milestones for Phases 0–5 only, and `CLAUDE.md` allows only existing ones. **Recommend: run it as one sprint right after Phase 2's gate, under the `Phase 2 · Hamlet & Village` milestone** (it extends Phase 2's farm), and number the sprint next in line (S19 as planned today).
-- **G14. Saves:** no schema bump expected (§3.10). **Recommend: confirm with AC-13 at the start of the sprint.** Add a schema step only if the test shows a per-good field the remap doesn't fill.
+- **G4. The sow sheet compares crops fairly. Closed (owner, 2026-10-26): as recommended.** Rows in growing-time order, the ready time, "About N an hour" (profit ÷ growing hours, the hand's own measure, ADR 0048) with its *Why?*, and a note per crop (§3.6). Amends spec 008 §3.7.
+- **G5. The hand's choice. Closed (owner, 2026-10-26): keep the rule** (ADR 0048: profit per growing second, seed and fertiliser only). §3.4's floor check keeps every new crop at or below each season's leader, so his picks on a normal acre stay with the existing crops; on a dry Summer acre amaranth or okra may win, which is realistic. The bots measure it (`PeopleStress`, the hand's-picks report); counting labour would be a spec 006 change, raised only if a gate fails.
+- **G6. Saved seed. Closed (owner, 2026-10-26):** peas and mustard can be saved (0.02 a season, floor 0.90); methi and amaranth can't (cut before they flower); okra and maize can't (hybrid seed doesn't breed true).
+- **G7. Household food. Closed (owner, 2026-10-26):** mustard seed is not eaten at home (`edible: false`: its oil needs a press); maize is (makki ki roti).
+- **G8. Wording. Closed (owner, 2026-10-26):** "Legumes fed the soil this season" for lentils, peas and methi; the saved reason value is unchanged (§3.8).
+- **G9. The season hint. Closed (owner, 2026-10-26):** at most 5 crops in growing-time order, then "and N more" (§3.7).
+- **G10. Neighbours. Closed (owner, 2026-10-26):** some neighbours grow maize in Spring and the Monsoon and mustard in Winter (US-L7, Could: first to cut).
+- **G11. Names. Closed (owner, 2026-10-26):** English first, as for the existing crops ("Methi" is already the English name, so: Methi, Amaranth, Okra, Green peas, Maize, Mustard); the Hindi name opens the crop's note ("Bhindi: picked every other day…"), and spec 009 explains village words on first use.
+- **G12. The kitchen garden. Closed (owner, 2026-10-26):** unchanged; no methi or amaranth beds (ADR 0031's season output stays as it is).
+- **G13. Phase and milestone. Closed (owner, 2026-10-26):** one sprint right after Phase 2's gate, numbered next in line (S19 as planned today), under the existing `Phase 2 · Hamlet & Village` milestone (it extends Phase 2's farm; `CLAUDE.md` allows only existing milestones).
+- **G14. Saves. Closed (owner, 2026-10-26):** no schema bump expected; `MigrationTests.CropLadder_OldSaveLoads` runs on the sprint's first day, and a schema step with new-game defaults is added only if it finds a per-good field the id remap doesn't fill.
+
+**Also settled with the owner's closing guidance (2026-10-26):** "make sense, align with the game's core idea, not stale, achievable by an average player, not too profitable, as realistic as possible with the existing calculations". A final check found the first draft's okra, maize and methi out-earned potato per hour in Spring at the floor; their yields were lowered (methi 1,800 → 1,650, okra 2,600 → 2,100, maize 1,450 → 1,250 kg) and okra's labour set to 4.5 h, and §3.4 now checks the floor basis too (AC-8).
 
 ## 11. Cut first
 

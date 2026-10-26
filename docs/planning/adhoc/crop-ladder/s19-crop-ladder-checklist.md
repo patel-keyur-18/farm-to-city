@@ -41,9 +41,9 @@ The developer panel: hold the time card for 3 seconds (**+1 hour**, **+1 day**, 
 | 3 | US-L5 (AC-16) | Tap the **?** on okra's "About N an hour" | It explains: this sowing's profit over its hours; a shorter crop earns about as much an hour if you come back when it's ready | | |
 | 4 | US-L5 | Settings → text size 125%, open the sow sheet again | Every row readable; notes wrap, nothing cut off | | **Screenshot** |
 | 5 | US-L6 | Sow methi on one acre, okra on another, maize on a third | Each shows its first growth stage | | **Screenshot** |
-| 6 | US-L6, US-L2 | **+1 hour** | Methi ready (its ready look); harvest it: about 15–20 kg in the store | | **Screenshot** |
+| 6 | US-L6, US-L2 | **+1 hour** | Methi ready (its ready look); harvest it: about 13–17 kg in the store | | **Screenshot** |
 | 7 | US-L2 | Sell the methi to the trader | Sold at the trader's price; nothing refused | | |
-| 8 | US-L6 | **+1 hour** three times | Okra goes through its stages and is ready at about 4 h; harvest: about 90–110 kg | | **Screenshot** |
+| 8 | US-L6 | **+1 hour** three times | Okra goes through its stages and is ready at about 4 h; harvest: about 70–90 kg | | **Screenshot** |
 | 9 | US-L6 | **+1 hour** twice more | Maize ready at about 6 h; harvest | | |
 | 10 | US-L2 (AC-4) | Try to sow peas in Spring | Greyed: "Green peas: Winter only" | | |
 | 11 | US-L2 (AC-6) | **+1 day** until Winter; sow peas and mustard; harvest the peas; open the acre's fertility **?** | "Legumes fed the soil this season" | | **Screenshot** |

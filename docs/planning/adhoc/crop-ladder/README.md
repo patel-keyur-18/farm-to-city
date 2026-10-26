@@ -8,17 +8,17 @@ The owner's enhancement for a livelier start (2026-10-26), chosen from `docs/pla
 
 | Document | File | Status |
 | --- | --- | --- |
-| Spec (rules, data, ACs, gaps G1–G14) | [spec-crop-ladder.md](spec-crop-ladder.md) | Draft, for the owner's review |
-| ADR | [adr-crop-ladder.md](adr-crop-ladder.md) | Proposed |
+| Spec (rules, data, ACs, gaps G1–G14) | [spec-crop-ladder.md](spec-crop-ladder.md) | Every gap closed (2026-10-26); approved at the phase's start |
+| ADR | [adr-crop-ladder.md](adr-crop-ladder.md) | Proposed; accepted with the spec |
 | Feature F02.5 (7 stories, 23 points) | [F02.5-crop-ladder.md](F02.5-crop-ladder.md) | Backlog |
 | Sprint 19 (ad hoc) plan | [sprint-crop-ladder.md](sprint-crop-ladder.md) | Planned (draft) |
 | Device test checklist | [s19-crop-ladder-checklist.md](s19-crop-ladder-checklist.md) | Draft, finalised at the sprint's end |
 
-**Next step:** the owner answers the spec's gaps G1–G14, one at a time, each with Claude's recommendation. This can happen any time before the sprint.
+**Next step:** none until Phase 2's gate. All 14 gaps were closed with the owner on 2026-10-26 (spec §10). At the phase's start: promote the files (below), the owner approves the spec and ADR as a whole, then code.
 
 ## In one paragraph
 
-Six real Indian crops: methi, amaranth, okra, green peas, maize and mustard. Every season then has a crop for about 1, 2, 4, 6–8 and 15 hours, so a player can sow something that's ready when they'll be back. Every crop number is per acre per season (ADR 0008), so a short crop earns the same season's worth in smaller, more frequent harvests: no farm formula changes. A balance rule keeps every new crop below its season's existing leader (potato in Spring and Winter, rice in the Monsoon), and the balancer's gates must all hold. The sow sheet orders crops by growing time and shows each one's ready time and what it earns an hour.
+Six real Indian crops: methi, amaranth, okra, green peas, maize and mustard. Every season then has a crop for about 1, 2, 4, 6–8 and 15 hours, so a player can sow something that's ready when they'll be back. Every crop number is per acre per season (ADR 0008), so a short crop earns the same season's worth in smaller, more frequent harvests: no farm formula changes. A balance rule keeps every new crop at or below its season's existing leader (potato in Spring and Winter, rice in the Monsoon) on the regional price and on the trader's floor per growing hour, and the balancer's gates must all hold. The sow sheet orders crops by growing time and shows each one's ready time and what it earns an hour.
 
 ## Promotion checklist (US-L1.T2, at the start of the phase)
 

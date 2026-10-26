@@ -2,7 +2,7 @@
 
 > **Draft.** The number is given when the ad hoc phase starts, after Phase 2's last ADR (0072 is the latest on `sprint/14-flows-and-mill` today). Move this file to `docs/decisions/NNNN-crop-ladder.md` on approval.
 
-- Status: Proposed
+- Status: Proposed (every gap closed with the owner, 2026-10-26; accepted with the spec at the phase's start)
 - Date: 2026-10-26
 - Deciders: Keyur Patel
 - Related: ADR 0021 (crop calendar), 0008 (per-season realism), 0014 (yield), 0016 (balance rule), 0031 (seasonal input prices), 0033 (land payback), 0048 and 0050 (the hand's choice), 0055 and 0058 (rice and potato in 15 h; the long crop ≥ 12 h)
@@ -37,7 +37,7 @@
 
 2. **The ladder.** Every season then offers a crop on each rung: about **1 h, 2 h, 4 h, 6–8 h and 15 h**, so a player can pick a crop that is ready when they'll be back.
 3. **No formula changes.** Spec 003's rules apply to the new crops as they stand. Only content, the sow sheet's order and two lines of wording change.
-4. **The balance rule.** At the regional price with every factor at 1, no new crop beats the best existing crop of any season it's sown in. This applies both to the gross margin (output less seed) and to the net after labour at the day-labour wage. Potato stays the leader in Spring and Winter, and rice in the Monsoon. Each new crop wins only where it really fits: a quick return, a dry acre, a light-labour season or soil to rebuild.
+4. **The balance rule.** No new crop beats the best existing crop of any season it's sown in, on three measures: the gross margin (output less seed) and the net after labour at the day-labour wage, both at the regional price; and one sowing's profit per growing hour at the trader's floor with the season's prices (what the sow sheet and the hand see). No new crop falls below 0.9 × the weakest existing crop's margin. In Spring every crop earns about the same an hour (171–178). Potato stays the leader in Spring and Winter, and rice in the Monsoon. Each new crop wins only where it really fits: a quick return, a dry acre, a light-labour season or soil to rebuild.
 5. **Realism rules for the content.**
    - Game times follow real growing days by band: quick greens 1 h, vegetables picked at 45–75 days 4 h, grains and oilseeds 6–8 h. Rice and potato keep their 15 h (ADR 0055).
    - Season yields are at or below real yields, as with radish.
@@ -45,8 +45,9 @@
    - Seed costs 10% more in its sowing seasons (ADR 0031's pattern).
    - Produce is cheaper in its harvest season.
 6. **Legumes feed the soil.** Peas and methi restore fertility like lentils. The fertility reason `Lentils` is shown as "Legumes fed the soil" (the saved value is unchanged).
-7. **The sow sheet** lists this season's crops in order of growing time, each with its ready time ("ready at 16:40", "ready tomorrow 07:10"), then the crops of other seasons.
+7. **The sow sheet** lists this season's crops in order of growing time, each with its ready time ("ready at 16:40", "ready tomorrow 07:10") and "About N an hour" (profit ÷ growing hours), then the crops of other seasons.
 8. **Out:** onion (with the granary, F13.3), tomato, sugarcane and cotton (later phases); new kitchen-garden crops; maize straw and fodder; milling maize or pressing mustard.
+9. **Run as one sprint** right after Phase 2's gate, under the `Phase 2 · Hamlet & Village` milestone.
 
 ## Consequences
 

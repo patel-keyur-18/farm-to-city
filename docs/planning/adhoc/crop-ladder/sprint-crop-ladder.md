@@ -10,14 +10,14 @@
 
 ## Sprint 19 · 5–11 Apr 2027 · Ad hoc (the crop ladder)
 
-- **Status:** Planned (draft). Spec and ADR in review
+- **Status:** Planned (draft). Spec gaps G1–G14 closed with the owner (2026-10-26)
 - **Branch:** `sprint/19-crop-ladder`, from `main` after Phase 2's last pull request is merged
 - **Goal:** Every season has a crop for every return. Six real Indian crops, no formula changes, the sow sheet compares crops fairly, every balance gate holds.
 - **Points:** 23 (Must 22, Could 1)
 - **Specs for the owner to review:** the crop-ladder spec and ADR (gaps G1–G14), before any code (ADR 0019's rule: no code until the spec is approved)
 - **Device build:** Yes, a Development build on the iPhone 13 with `docs/test-checklists/s19-crop-ladder.md`
 - **Milestone and labels** (`CLAUDE.md`): the milestone per spec G13 (recommended `Phase 2 · Hamlet & Village`); `type:spec`, `type:adr`, `type:feature`, `type:balance`; `area:content`, `area:sim`, `area:ui`, `area:art`, `area:tooling`; `documentation`
-- Owner: answer G1–G14 (can be done any time before the sprint; the spec is ready now); approve the Blender previews (US-L6.T2); run the device checklist; merge the pull request.
+- Owner: approve the spec and ADR as a whole (gaps already closed); approve the Blender previews (US-L6.T2); run the device checklist; merge the pull request.
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -33,7 +33,7 @@
 
 | Day | Work | Owner stop |
 | --- | --- | --- |
-| 1 | US-L1: gaps closed (if not already), files numbered and moved, GDD. US-L2.T7 first: the old save loads with the new content (decides G14) | Approve spec and ADR |
+| 1 | US-L1: files numbered and moved, GDD. US-L2.T7 first: the old save loads with the new content (decides G14) | Approve spec and ADR |
 | 2 | US-L2: content and sim tests. US-L4: crop lists out of code | — |
 | 3 | US-L3: the balance rule, the two bots, every gate before and after; tune inside the rules | Only if a gate fails (US-L3.T6) |
 | 4 | US-L6: Blender renders and previews | Approve the previews |
@@ -43,7 +43,8 @@
 
 ### Definition of Ready (ADR 0025)
 
-- [ ] The spec and ADR approved; G1–G14 answered
+- [x] G1–G14 answered (2026-10-26)
+- [ ] The spec and ADR approved as a whole
 - [ ] Phase 2's gate passed and its last pull request merged (the sprint branches from `main`)
 - [ ] Each story's acceptance criteria name their tests (done in the feature file)
 
