@@ -312,7 +312,7 @@ Sim tests are in `tests/Sim.Core.Tests`; view tests in `tests/Sim.View.Tests`.
 
 Each has a recommendation. They're numbered G1–G14 to answer one at a time.
 
-- **G1. The crop list.** Six crops: methi, amaranth, okra, peas, maize and mustard. **Recommend: yes.** Mustard is the cheapest to draw (its middle stage exists, ADR 0062) and is the valley's Winter landmark. Onion waits for the granary. Cut amaranth first if the sprint runs over: radish still covers Summer's and the Monsoon's quick rung at 2 h.
+- **G1. The crop list. Closed (owner, 2026-10-26): option A, all six:** methi, amaranth, okra, green peas, maize and mustard. Mustard is cheap to draw (its middle stage exists, ADR 0062) and gives Winter a low-water, low-labour crop. Amaranth is the only realistic quick green for Summer and the Monsoon. Onion waits for the granary (F13.3). Amaranth, then mustard, are still first to cut if the sprint runs over (§11).
 - **G2. The game times** (1, 1, 4, 4, 6, 8 h) and the band rule of §3.3. **Recommend: yes.** The ladder needs a 4 h rung. Okra and peas are the real crops that fit it.
 - **G3. The balance rule** (§3.4): no new crop is ever a season's leader, and none is below 0.9 × the weakest existing crop. **Recommend: yes.** It's what keeps land payback (ADR 0033), the Hamlet pace and the hand's economics unchanged.
 - **G4. "About N an hour" on the sow sheet** (§3.6), a new figure. Without it, methi's "Profit about 210" reads as worse than potato's 4,270, though both earn about the same per hour. **Recommend: yes.** It's the figure that makes the ladder make sense to an average player.
