@@ -183,6 +183,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0071 | The home loan: the bank counts family houses at 0.75 of their book value; measured, the competent bot has 5 households by day 16 on it (the saver day 33); spec 018 sets the Village from these; town happiness 65–85 until businesses; the random bot isn't measured for the town |
 | 0072 | The flour mill's targets kept realistic: a hired miller leaves 0–8,000 a season (more with more of your own wheat); run by you 25,000–35,000, payback 3–6 seasons; the plan shows both |
 | 0073 | The mill's catchment 350 people plus your town (from US-117's bots: at 260 a hired mill lost money and running it yourself paid less than day labour): hired 5,000–10,000 a season, run by you 30,000–40,000, payback 3–4; the plan values your hours (supersedes 0072's ranges) |
+| 0074 | Spec 017: a vegetable stall, a tea stall and a sweet shop from the Village, on a rented square pitch (3,000 a season) or your own acre; customers share demand by an additive score (price, quality, stars, distance, wait); stars 0–5 moving a tenth a day; the village's grocer and tea stall never close; newcomers on a gap or rich prices; the mill chooses against the chakki the same way |
 
 ## Current status
 

@@ -229,7 +229,7 @@
 ## Next up
 
 1. **Owner:** US-117 approved (2026-10-27). Close spec 017's and 013's gaps.
-2. **Claude:** specs 017 (shops, customer choice, rivals) and 013 (irrigation, equipment, orchards, granary) are drafted (`docs/specs/017-…`, `013-…`), each with gaps G1–G8 and a recommendation; close them with the owner one per message (017 first), then approve both (ADRs, GDD, features F12.3, F12.4, F13.2, F13.3 with tasks); then the device build, test checklist and PR.
+2. **Claude:** spec 017 approved (ADR 0074, owner 2026-10-27: G1 added a sweet shop; G2–G8 as recommended; F12.3 and F12.4 have tasks; the sweet shop may raise F12.3's points at Sprint 16 planning). Spec 013 drafted with gaps G1–G8: close them one per message, approve (ADR, GDD, F13.2, F13.3 tasks); then the device build, test checklist and PR.
 
 ## Owner action checklist (Phases 0–1)
 

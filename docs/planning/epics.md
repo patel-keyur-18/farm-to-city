@@ -87,8 +87,8 @@
 | [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (approved, ADR 0069) | Backlog | US-112–US-114 | 13 |
 | [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-115–US-117 | 16 |
 | [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-118, US-119, US-216 | 11 |
-| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-120–US-121 | 8 |
-| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-122–US-122 | 5 |
+| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-120–US-121 | 8 |
+| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-122–US-122 | 5 |
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | To write at the start of Phase 3 | Backlog | US-123–US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | To write at the start of Phase 3 | Backlog | US-124–US-125 | 10 |
 | [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (to write, ADR 0057) | Backlog | US-126–US-126 | 5 |

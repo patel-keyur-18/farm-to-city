@@ -299,7 +299,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 **Operating levers:** price, quality, staffing, hours, stock policy, marketing, supplier choice, equipment upgrades, expansion and automation.
 
-**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money. Underpricing wins customers but kills margin. Overpricing invites a competitor.
+**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money. Underpricing wins customers but kills margin. Overpricing invites a competitor. In Phase 2 (spec 017, ADR 0074) each customer group shares its demand by an additive score (1 + price + quality + stars − distance − wait, each part shown in the *Why?*). The first shops, from the Village, are a vegetable stall selling your own produce, a tea stall and a sweet shop (rasgulla and atta laddoo from your paneer, atta and ghee), on a rented pitch in the village square or on your own acre; the mill's area customers choose between it and the next village's chakki the same way.
 
 **Books for every business**
 
@@ -309,7 +309,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 Each line has a *Why?* tap with a plain-language explanation and the numbers behind it.
 
-**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out.
+**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out. In Phase 2 the village's grocer and tea stall compete on fixed terms and never close; a newcomer may open on a gap or rich prices (a 50% chance a season, one of each kind) and closes after two weak seasons; buy-outs come in Phase 3 (ADR 0074).
 
 **Lifecycle and trouble.** New businesses usually lose money for their first 1–3 seasons. Trouble arrives as events: a supplier shortage, a key worker quitting, a health inspection, a price war, a road closure, a viral rush of customers.
 

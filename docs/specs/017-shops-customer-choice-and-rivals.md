@@ -1,6 +1,6 @@
 # 017. Shops, customer choice and rivals
 
-- Status: Draft (Sprint 14): gaps G1–G8 open with the owner, one per message (§10)
+- Status: Approved 2026-10-27 (ADR 0074); every gap closed with the owner, one per message; built in Sprint 16 (ADR 0057)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (founding flow step 4 location, operating levers, customer choice, competition); Economy (services priced by businesses, §Market scope); Citizens (household budgets)
@@ -10,14 +10,14 @@
 
 ## 1. Goal
 
-From the Village, the player opens shops that sell straight to people (a vegetable stall and a tea stall) beside the village's own shopkeepers, and watches customers choose between them on price, quality, distance, reputation and waiting time, so that pricing becomes a decision with visible consequences and a gap left open draws a rival.
+From the Village, the player opens shops that sell straight to people (a vegetable stall, a tea stall and a sweet shop) beside the village's own shopkeepers, and watches customers choose between them on price, quality, distance, reputation and waiting time, so that pricing becomes a decision with visible consequences and a gap left open draws a rival.
 
 **Lesson:** customers weigh more than price; underpricing wins customers but loses margin; reputation is earned slowly and lost fast; leaving a gap, or charging too much, invites a competitor; a shop's location sets how many people pass it.
 
 ## 2. Scope
 
 **In:**
-- Shops as business types (spec 016's framework: research, plan, place, fund, staff, books): the **vegetable stall** (sabzi stall: your produce and products sold retail) and the **tea stall** (chai and snacks, a service) (§10 G1).
+- Shops as business types (spec 016's framework: research, plan, place, fund, staff, books): the **vegetable stall** (sabzi stall: your produce and products sold retail), the **tea stall** (chai and snacks, a service) and the **sweet shop** (halwai: sweets made from your paneer, ghee and atta) (owner, 2026-10-27, §10 G1).
 - Where shops stand: a rented pitch in the village square, or your own acre beside a lane, each with a location score (§3.4, §10 G3).
 - Customer demand from your town's households and the village's families, by kind of shop (§3.2).
 - Customer choice: each customer group shares its demand between the shops of its kind by an attraction score of price, quality, distance, reputation and waiting time (§3.3).
@@ -26,7 +26,7 @@ From the Village, the player opens shops that sell straight to people (a vegetab
 - The mill's area grinding uses the same choice against the next village's chakki (§3.6).
 
 **Out** (and where it goes instead):
-- A grocery (kirana) shop of your own, a sweet shop, a clinic, tuition, transport: Phase 3 (F12.3 later stories).
+- A grocery (kirana) shop of your own, a clinic, tuition, transport: Phase 3 (F12.3 later stories).
 - Marketing budgets, loyalty, credit to customers (khata): Phase 3 (F12.5 invoices and payment terms).
 - Rivals merging or offering to buy you out: Phase 3 (F12.6 valuation and exit).
 - Price wars as events, health inspections, viral rushes: the event engine (F16.1).
@@ -42,8 +42,9 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | --- | --- | --- | --- | --- | --- |
 | Vegetable stall (sabzi stall) | Village | A handcart and a shade (8,000, 20 seasons) on a rented pitch, or a stall shed (15,000, 40 seasons) on your acre | 1 stallholder | Your produce from the store (radish, spinach, coriander, potato, fruit) and your products (atta, pav, paneer, curd) at a retail price you set | Up to 400 kg a real hour |
 | Tea stall (chai stall) | Village | A counter, stove and benches (12,000, 20 seasons) | 1 tea maker | Cups of chai (milk 0.06 L, tea and sugar 1.50 coins) and a snack (rusk or pav, 0.05 kg) | Up to 300 cups a real hour |
+| Sweet shop (halwai) | Village | A shop with a kadhai, a burner, a glass counter (25,000 building, 40 seasons; 20,000 equipment, 20 seasons) | 1 halwai (crafting skill, spec 015) | Two sweets made in batches: **rasgulla** (paneer 0.5 kg + sugar 0.5 kg → 1 kg) and **atta laddoo** (atta 0.45 kg + ghee 0.20 kg + sugar 0.35 kg → 1 kg); sweets keep 4 days (`spoilagePerDay` 0.15) | Up to 25 kg a real hour |
 
-Each shop sets its **price** (a few presets round the reference, as the mill's fee), its **quality** (§3.5: standard or good), its **hours** and, for the stall, which goods to put out. Its books, funding, worker, overdraft and closing are spec 016's.
+Each shop sets its **price** (a few presets round the reference, as the mill's fee), its **quality** (§3.5: standard or good), its **hours** and, for the stall, which goods to put out; the sweet shop also sets its daily batch of each sweet (made in the morning, as the bakery bakes). Its paneer, ghee and atta come from your dairy and mill at today's market price (an internal sale, spec 016 §3.2) or from the market at the import price, and sugar is bought as `sweet_supplies`. Its books, funding, worker, overdraft and closing are spec 016's.
 
 ### 3.2 Demand: who buys and how much
 
@@ -53,10 +54,11 @@ Two customer groups: **your town** (spec 014's households, from their budgets) a
 | --- | --- | --- |
 | Vegetables and fruit (retail) | `vegPerPerson` 0.20 kg × 22.8 = 4.6 kg, at the shops' prices | Town: inside the food budget (spec 014 §3.5); what they don't buy at a stall they buy at the local market as now |
 | Chai | `chaiPerPerson` 0.4 cups × 22.8 = 9 cups (adults only, about 70% of people) | Town: from the leisure budget; the village: a fixed habit |
+| Sweets | `sweetsPerPerson` 0.015 kg × 22.8 = 0.34 kg (everyone) | Town: from the leisure budget; the village: a fixed habit. Festivals (the event engine, later) multiply it |
 
 Demand is shared each hour across the hours the shops are usually open (8:00–20:00); an hour's demand not served (every shop closed or full) is lost (people make tea at home, buy at the weekly market).
 
-**Price response:** a group's total spend falls when prices rise above the reference: `quantity × (reference ÷ mean price)^elasticity`, elasticity vegetables 0.5, chai 0.8, computed as a Fixed power by table lookup (§4).
+**Price response:** a group's total spend falls when prices rise above the reference: `quantity × (reference ÷ mean price)^elasticity`, elasticity vegetables 0.5, chai 0.8, sweets 1.2, computed as a Fixed power by table lookup (§4).
 
 ### 3.3 Customer choice (§10 G2)
 
@@ -72,7 +74,7 @@ attraction = max(0.05,  1
 share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 ```
 
-- **Reference price:** vegetables: the good's local market price (spec 004) × `retailMarkup` 1.25; chai: 10 coins.
+- **Reference price:** vegetables: the good's local market price (spec 004) × `retailMarkup` 1.25; chai: 10 coins; rasgulla 240 and atta laddoo 280 coins a kg.
 - **Distance:** metres from the group's centre (the town: the middle of your houses; the village: the square) to the shop's tile, 100 m an acre, Manhattan, rounded down.
 - **Wait:** an hour's customers over the shop's capacity that hour: `wait = 10 × max(0, arrivals ÷ capacity − 0.8) ÷ 0.2` minutes, from last hour's figures (no loop within an hour).
 - A shop that runs out of a good serves no more of it that hour; the rest of its share goes to the others (§3.5 counts a stock-out).
@@ -87,7 +89,7 @@ share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 
 ### 3.5 Quality and reputation (§10 G4)
 
-- **Quality:** standard or good. Good costs more: vegetables: only produce harvested in the last 2 days goes out (older goes back to the store or the trader); chai: full-cream milk 0.08 L and fresh snacks (+1.20 coins a cup).
+- **Quality:** standard or good. Good costs more: vegetables: only produce harvested in the last 2 days goes out (older goes back to the store or the trader); chai: full-cream milk 0.08 L and fresh snacks (+1.20 coins a cup); sweets: pure ghee and fresh paneer only (no market vanaspati: +8% on the recipe's cost), and sweets older than 2 days withdrawn.
 - **Stars** (0–5, start 2.5): each closing hour (the shop's day) gets a **day score**: served share of its customers (1 − stock-out share) × 2 + quality (standard 1, good 1.5) + value (+1 at or below the reference, falling to 0 at 30% above) = 0–4.5, scaled to 0–5. Stars = 0.9 × stars + 0.1 × day score: about a season to move half way. A stock-out or a 20-minute queue costs more than a cheap price earns, as in life.
 
 ### 3.6 The mill and the next village's chakki
@@ -100,6 +102,7 @@ Spec 016 §3.5(b)'s rule (a fee more than 1 above the next village's loses all t
 | --- | --- |
 | **The village grocer** | Sells vegetables at the reference × 1.0, standard quality, 3 stars, open 7:00–21:00, never runs out (it buys from the trader). Never closes in Phase 2 |
 | **The village tea stall** | Chai at 10, standard, 3 stars, open 6:00–22:00, capacity 200 cups a real hour. Never closes in Phase 2 |
+| **The town's halwai** (off the map, as the next village's chakki) | Sweets at the reference, good quality, 4 stars, 1.5 km from the square, never runs out, never closes. Without your shop, the village buys its sweets there |
 | **A newcomer** | At each season close, for each kind of shop: if the last season's served demand was under 80% of demand (a gap), or the mean price was over the reference × 1.25 (rich margins), a newcomer opens on a free pitch with probability 0.5 (seeded, `rival` stream): reference price, standard, 2.5 stars, the village's hours. It closes when its season's share falls under 10% two seasons running. At most one newcomer of each kind. |
 | **Reaction** | Once a season, a rival whose share fell by more than a third lowers its price 5% (never under its cost); at its cost floor it stops. Rivals never raise prices above the reference |
 
@@ -111,7 +114,7 @@ Hourly pass, system Shops (after Market and Business): demand per group, attract
 
 ## 4. Data
 
-**New definitions:** `content/shops.json`: `villagePeople`, demand per kind (`vegPerPerson`, `chaiPerPerson`, adult share), elasticities and their power table, the attraction weights (`wPrice` 1.5, `wQuality` 0.25, `wStars` 0.30, `wDistance` 0.10 per 100 m, `wWait` 0.20 per 10 minutes), `retailMarkup`, `pitchRent`, the reputation weights, the rivals (grocer, tea stall: prices, hours, capacity, stars), newcomer rules (gap 0.8, margin 1.25, chance 0.5, exit share 0.1). `businesses.json`: the two shop types (spec 016's fields plus `kind`, `capacityPerHour`, `qualityCosts`). `map.json`: three `pitch` places round the banyan. Goods: tea and sugar as one input (`chai_supplies`, 1.50 a cup).
+**New definitions:** `content/shops.json`: `villagePeople`, demand per kind (`vegPerPerson`, `chaiPerPerson`, adult share), elasticities and their power table, the attraction weights (`wPrice` 1.5, `wQuality` 0.25, `wStars` 0.30, `wDistance` 0.10 per 100 m, `wWait` 0.20 per 10 minutes), `retailMarkup`, `pitchRent`, the reputation weights, the rivals (grocer, tea stall: prices, hours, capacity, stars), newcomer rules (gap 0.8, margin 1.25, chance 0.5, exit share 0.1). `businesses.json`: the three shop types (spec 016's fields plus `kind`, `capacityPerHour`, `qualityCosts`; the sweet shop's two recipes). Goods: `rasgulla`, `atta_laddoo` (spoilage 0.15 a day), `sweet_supplies` (sugar). `map.json`: three `pitch` places round the banyan. Goods: tea and sugar as one input (`chai_supplies`, 1.50 a cup).
 
 **New state** (save schema 11): on `Business`: price, quality, the goods put out, stars, last hour's arrivals and capacity, the season's customers and served. `ShopsState`: rivals (kind, place, price, quality, stars, open hours, opened at, low seasons), pitch tenants.
 
@@ -121,7 +124,7 @@ Hourly pass, system Shops (after Market and Business): demand per group, attract
 | --- | --- | --- | --- |
 | `FoundBusiness` (spec 016) | + `pitch` | `PitchTaken`, `EraLocked` | §3.4 |
 | `SetShop` | business, price, quality, hours, goods | `UnknownBusiness`, `InvalidArgument` | §3.1 |
-| `StockStall` | business, good, kg | `InsufficientStock` | Moves produce from your store to the stall at today's market price (an internal sale, as spec 016's own wheat) |
+| `SetStallGoods` | business, good, kg a day | `UnknownGood`, `NotProduce`, `InvalidArgument` | Each morning at 6:00 the stallholder takes up to that much of each good from your store at today's market price (an internal sale, as spec 016's own wheat: Cr Crop sales on the farm, Dr Stock on the stall); what isn't sold by the close of its day goes back at its cost |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
@@ -172,23 +175,25 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 | --- | --- | --- |
 | A tea stall on a pitch, hired, good quality, 10 coins | 5,000–12,000 a season (a hired mill's level, ADR 0073) | Measured by the business bot |
 | A vegetable stall selling your own produce | 10–20% more for your produce than the trader and market, less the wage | |
+| A sweet shop on your own paneer and ghee, hired halwai | 8,000–15,000 a season; the dairy's milk worth more as sweets than at the co-op | Measured by the business bot |
 | Share against the village shop at equal terms | About 50% on the square; 25–35% from an inherited acre | |
 | Newcomers in a game where the player opens nothing | 0–1 of each kind by the Township | |
 
-## 10. Open questions (closed one per message with the owner)
+## 10. Open questions (all closed with the owner, 2026-10-27)
 
-- **G1. Which shops in Phase 2.** Recommendation: the vegetable stall and the tea stall from the Village (both real village businesses, one goods and one service, small capital); a kirana, sweet shop and others in Phase 3.
-- **G2. How customers choose.** Recommendation: the additive attraction score (§3.3), one line a factor in the *Why?*, instead of a hidden logit.
-- **G3. Where shops stand.** Recommendation: rented pitches in the square (rent 3,000 a season) or your own acre with a distance cost; the square holds 3 pitches.
-- **G4. Quality and reputation.** Recommendation: two quality levels, stars from served share, quality and value, moving a tenth a day.
-- **G5. The village grocer and tea stall.** Recommendation: rivals with fixed terms that never close in Phase 2 (they're the village's own, ADR 0061).
-- **G6. Newcomers.** Recommendation: one per kind at most, on a gap or rich prices with a seeded 50% chance a season, closing after two seasons under 10%; buy-outs in Phase 3.
-- **G7. The mill.** Recommendation: customer choice against the next village's chakki (§3.6) instead of the cliff.
-- **G8. Selling your own produce.** Recommendation: the stall stocks from your store at today's market price as an internal sale (as spec 016's own wheat), so the farm's books show the sale and the stall's show the margin.
+- **G1. Which shops in Phase 2.** **Closed (owner, 2026-10-27):** the vegetable stall, the tea stall and the sweet shop (halwai: rasgulla from your paneer, atta laddoo from your atta and ghee), all from the Village; the town's halwai off the map is its rival; a kirana and others in Phase 3 (§3.1).
+- **G2. How customers choose.** **Closed (owner, 2026-10-27):** the additive attraction score (§3.3): 1 + price + quality + stars − distance − wait, floored at 0.05, each shop's share its score over the total; the *Why?* lists every part in words.
+- **G3. Where shops stand.** **Closed (owner, 2026-10-27):** one of 3 rented pitches round the banyan (3,000 a season to the council, paid upfront at the close; the sweet shop's small building stands on its pitch) or your own acre, no rent, with the distance cost; a newcomer can take a free pitch (§3.4). The pitches' layout is previewed to the owner before it's final (ADR 0064).
+- **G4. Quality and reputation.** **Closed (owner, 2026-10-27):** standard or good quality; stars 0–5 (start 2.5) from a day score of served share × 2 + quality + value for money, moving a tenth of the way a day (§3.5).
+- **G5. The village grocer and tea stall.** **Closed (owner, 2026-10-27):** rivals on fixed terms (the grocer's vegetables at the reference, the tea stall's chai at 10, standard, 3 stars), cutting 5% a season when they lose a third of their customers, never below cost, and never closing in Phase 2 (ADR 0061) (§3.7).
+- **G6. Newcomers.** **Closed (owner, 2026-10-27):** at each close, a gap (under 80% served) or rich prices (over 1.25 × the reference) opens a newcomer of that kind on a free pitch with a seeded 50% chance, at most one of each kind; it closes after two seasons under 10% share; buy-outs in Phase 3 (§3.7).
+- **G7. The mill.** **Closed (owner, 2026-10-27):** the area's grain chooses between your mill and the next village's chakki by the same score (§3.6), replacing spec 016's cliff; at the default fee the balance stays as ADR 0073 measured (rechecked by the bot when built).
+- **G8. Selling your own produce.** **Closed (owner, 2026-10-27):** an internal sale at today's market price, as spec 016's own wheat: the stallholder fills the stall each morning from your store up to the daily amount you set per good; the farm's books show the sale, the stall's its stock and margin (§5).
 
 ## 11. Cut first
 
-1. Newcomers (the village's shops only).
-2. Waiting time (capacity simply caps sales).
-3. Shops on your own acre (pitches only).
-4. The mill's choice (keep spec 016's cliff).
+1. The sweet shop's second sweet (rasgulla only).
+2. Newcomers (the village's shops only).
+3. Waiting time (capacity simply caps sales).
+4. Shops on your own acre (pitches only).
+5. The mill's choice (keep spec 016's cliff).
