@@ -164,6 +164,7 @@ namespace Game.Presentation
                 case "Orders": _sheet.Show(OrdersSheet.Build(_ctx), refreshOnly); break;
                 case "BuyAnimal": _sheet.Show(AnimalBuySheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "AnimalLoan": _sheet.Show(AnimalLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case "HouseLoan": _sheet.Show(HouseLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Animal":
                     if (global::Sim.Core.Livestock.LivestockRules.Find(Sim, r.Id) == null) { Return(ShedSheetRequest()); break; } // sold
                     _sheet.Show(AnimalSheet.Build(_ctx, r.Id), refreshOnly);
@@ -182,9 +183,11 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
+                case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
+                case "BusinessClose": Return(new SheetRequest("Businesses", 0)); return;
                 case "BuyInput":
                     // Back where the purchase started: Buy inputs, the shed's Fill, a buy card, an alert.
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));

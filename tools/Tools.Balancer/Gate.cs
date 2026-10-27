@@ -253,6 +253,142 @@ namespace Tools.Balancer
             return days.ToList();
         }
 
+        // ---- Spec 014 §9 (US-211): the town every bot builds ----
+
+        public sealed class TownResult
+        {
+            public string Bot;
+            public int Seeds, HamletRuns;
+
+            /// <summary>Per seed that reached the Hamlet: households at day 14 and 21, people at day 21.</summary>
+            public List<int> Households14 = new List<int>(), Households21 = new List<int>(), People21 = new List<int>();
+
+            /// <summary>Town happiness (mean of hourly samples from day 14), households leaving a household-year, rent ÷ the founder's income.</summary>
+            public List<double> Happiness = new List<double>(), LeavingPerYear = new List<double>(), RentShare = new List<double>();
+
+            /// <summary>The day 5 households first live on the founder's land, per seed that reached the Hamlet (NaN if never).</summary>
+            public List<double> Day5 = new List<double>();
+        }
+
+        /// <summary>Plays a bot for <paramref name="seasons"/> (8: two years, the Village by about day 21, ADR 0028) and measures its town.</summary>
+        public static TownResult Town(SimConfig config, Func<Bot> make, int seeds, int seasons = 8)
+        {
+            var rows = new TownResult[seeds];
+            string name = make().Name;
+            Parallel.For(0, seeds, i =>
+            {
+                var r = new TownResult();
+                bool hamlet = false;
+                int h14 = -1, h21 = -1, p21 = -1, left = 0;
+                double day5 = double.NaN;
+                double happy = 0, householdHours = 0;
+                int samples = 0;
+                long rent = 0;
+                Economy.Run run = Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    long t = sim.State.Clock.SimTime;
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        if (e is Sim.Core.Events.EraUnlocked u && u.EraId == "hamlet") hamlet = true;
+                        if (e is Sim.Core.Events.HouseholdLeft) left++;
+                        if (e is Sim.Core.Events.RentPaid rp) rent += rp.Amount;
+                    }
+                    var town = sim.State.Citizens;
+                    householdHours += town.Households.Count;
+                    if (double.IsNaN(day5) && town.Households.Count >= 5) day5 = t / 86400.0;
+                    if (h14 < 0 && t >= 14 * 86400) h14 = town.Households.Count;
+                    if (h21 < 0 && t >= 21 * 86400) { h21 = town.Households.Count; p21 = town.Population; }
+                    if (t >= 14 * 86400 && town.Population > 0) { happy += (double)Sim.Core.People.HappinessRules.Town(sim).Raw / 4294967296.0; samples++; }
+                });
+                long income = 0;
+                foreach (Sim.Core.Finance.SeasonReport rep in run.Sim.State.Finance.Reports)
+                    income += rep.Line("farmIncome").Amount + rep.Line("otherIncome").Amount;
+                lock (rows)
+                {
+                    rows[i] = r;
+                    if (!hamlet) return;
+                    r.HamletRuns = 1;
+                    r.Households14.Add(h14);
+                    r.Day5.Add(day5);
+                    r.Households21.Add(h21);
+                    r.People21.Add(p21);
+                    if (samples > 0) r.Happiness.Add(happy / samples);
+                    double years = householdHours / (16 * 24.0);
+                    r.LeavingPerYear.Add(years > 0 ? left / years : 0);
+                    r.RentShare.Add(income > 0 ? rent / (double)income : 0);
+                }
+            });
+            var all = new TownResult { Bot = name, Seeds = seeds };
+            foreach (TownResult r in rows)
+            {
+                all.HamletRuns += r.HamletRuns;
+                all.Households14.AddRange(r.Households14);
+                all.Households21.AddRange(r.Households21);
+                all.People21.AddRange(r.People21);
+                all.Happiness.AddRange(r.Happiness);
+                all.LeavingPerYear.AddRange(r.LeavingPerYear);
+                all.RentShare.AddRange(r.RentShare);
+                all.Day5.AddRange(r.Day5);
+            }
+            return all;
+        }
+
+        // ---- Spec 016 §9 (US-117, ADR 0072): the flour mill a bot founds ----
+
+        public sealed class MillResult
+        {
+            public string Bot;
+            public int Seeds, Founded, Closed, Foreclosed;
+
+            /// <summary>Per seed that founded one: the mill's mean net profit a full season, its payback in seasons (its cost ÷ that
+            /// profit; NaN when never), and the most closes in a row it ended overdrawn.</summary>
+            public List<double> Profit = new List<double>(), Payback = new List<double>();
+            public List<int> OverdrawnRun = new List<int>();
+
+            /// <summary>Your cash at the end of every run: never stuck (ADR 0009) means playing on, a foreclosure included.</summary>
+            public List<long> EndCash = new List<long>();
+        }
+
+        /// <summary>Plays a mill bot for <paramref name="seasons"/> and measures its mill's own books.</summary>
+        public static MillResult Mill(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        {
+            var all = new MillResult { Bot = make().Name, Seeds = seeds };
+            Parallel.For(0, seeds, i =>
+            {
+                int run = 0, worst = 0, foreclosed = 0;
+                Economy.Run r = Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        if (e is Sim.Core.Events.ForeclosureCompleted) foreclosed++;
+                        if (!(e is Sim.Core.Events.SeasonClosed)) continue;
+                        var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed);
+                        if (b == null) continue;
+                        run = Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0 ? run + 1 : 0;
+                        worst = Math.Max(worst, run);
+                    }
+                });
+                Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Count > 0 ? r.Sim.State.Businesses.Businesses[0] : null;
+                lock (all)
+                {
+                    all.EndCash.Add(r.Sim.State.Ledger.Cash);
+                    all.Foreclosed += foreclosed > 0 ? 1 : 0;
+                    if (mill == null) return;
+                    all.Founded++;
+                    if (mill.Status == Sim.Core.Business.BusinessStatus.Closed) all.Closed++;
+                    long founded = mill.FoundedAt / r.Sim.Clock.SecondsPerSeason;
+                    var full = mill.Reports.Where(x => x.Period > founded).ToList();
+                    if (full.Count == 0) return;
+                    double profit = full.Average(x => (double)Sim.Core.Business.BusinessBooks.NetProfit(x)) / Money.Coin;
+                    all.Profit.Add(profit);
+                    double cost = Sim.Core.Business.BusinessRules.Cost(r.Sim, Sim.Core.Business.BusinessRules.TypeOf(r.Sim, mill)) / (double)Money.Coin;
+                    all.Payback.Add(profit > 0 ? cost / profit : double.NaN);
+                    all.OverdrawnRun.Add(worst);
+                }
+            });
+            return all;
+        }
+
         // ---- US-098 (ADR 0045 §4): the Phase 1 health checks ----
 
         /// <summary>No cash, an empty store and no credit: the cautious saver (it never borrows) plays on; per seed, the first
@@ -452,6 +588,20 @@ namespace Tools.Balancer
                 + Math.Min(seeds, 100) + " seeds; day " + (hamlet.Count == 0 ? "-" : hamlet[hamlet.Count / 10].ToString("0.0", CultureInfo.InvariantCulture) + " / "
                 + hamlet[hamlet.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " / " + hamlet[hamlet.Count * 9 / 10].ToString("0.0", CultureInfo.InvariantCulture))
                 + " (10th / median / 90th percentile; target 7 ± 2)");
+            TownResult town = Town(config, () => new FarmerBot(), Math.Min(seeds, 20));
+            List<double> d5 = town.Day5.Where(d => !double.IsNaN(d)).OrderBy(d => d).ToList();
+            Console.WriteLine("  Town (spec 014 §9): 5 households by day " + (d5.Count == 0 ? "-" : d5[d5.Count / 2].ToString("0.0", CultureInfo.InvariantCulture))
+                + " (median of " + d5.Count + "; target 21), " + (town.People21.Count == 0 ? "-" : town.People21.OrderBy(x => x).ElementAt(town.People21.Count / 2).ToString())
+                + " people at day 21 (12–25)");
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new MillBot(false), () => new MillBot(true), () => new MillBot(false, true) })
+            {
+                MillResult m = Mill(config, make, Math.Min(seeds, 12));
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  Mill (spec 016 §9, ADR 0072) " + m.Bot + ": founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : C((long)pr[0] * Money.Coin) + " / " + C((long)pr[pr.Count / 2] * Money.Coin) + " / " + C((long)pr[pr.Count - 1] * Money.Coin))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", most closes overdrawn in a row " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed);
+            }
             int n = Math.Min(seeds, 100);
             Console.WriteLine("  Phase 1 stress bots (ADR 0045 §4), 2 years, " + n + " seeds (cautious at most 1.20 ×; random below competent):");
             foreach (StressResult s in Stress(config, n, 8, new Func<Bot>[] { () => new CautiousSaverBot(), () => new LeverageBot(), () => new RandomBot() }))

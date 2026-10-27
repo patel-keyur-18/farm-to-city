@@ -347,7 +347,7 @@ namespace Game.Presentation.Map
                         detail.sprite = SpriteBank.GrassDetail(tv.Id);
                         detail.color = _tint;
                         break;
-                    case TileKind.Farm when tv.Houses > 0:
+                    case TileKind.Farm when tv.Houses > 0 || tv.Business:
                         // A homestead acre (spec 014): grass and beaten earth round the houses, no furrows.
                         ground.sprite = SpriteBank.Rendered("ground_village_" + ((tv.X + tv.Y) % 2)) ?? SpriteBank.Grass;
                         ground.color = _tint;
@@ -418,6 +418,7 @@ namespace Game.Presentation.Map
             foreach (SpriteRenderer r in _props) r.color = _tint;
             RefreshHandHuts(map, animate);
             RefreshHouses(map, animate);
+            RefreshBusinesses(map, animate);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
             RefreshCattleAcre(map, animate);
@@ -543,7 +544,7 @@ namespace Game.Presentation.Map
             {
                 case PersonKind.Founder: return "person_founder";
                 case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
-                case PersonKind.Citizen: return "person_" + p.Look;
+                case PersonKind.Citizen: case PersonKind.Customer: return "person_" + p.Look;
                 default: return p.Female ? "person_labourer_f" : "person_labourer_m";
             }
         }
@@ -606,8 +607,9 @@ namespace Game.Presentation.Map
             switch (p.Kind)
             {
                 case PersonKind.Founder: return _hutWorld + new Vector2(-0.12f, -0.12f);
-                case PersonKind.Hand: return HutDoor(p.HomeHut, p.HomeTile);
+                case PersonKind.Hand: return _handHuts.ContainsKey(p.HomeHut) ? HutDoor(p.HomeHut, p.HomeTile) : HouseYard(p.HomeHut, p.HomeTile); // a hand whose family has a house
                 case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
+                case PersonKind.Customer: return MillQueue(p.HomeHut, p.HomeTile, p.Key[p.Key.Length - 1] - '0');
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }
         }
@@ -690,6 +692,12 @@ namespace Game.Presentation.Map
         {
             Vector3 pos = quarters ? HandHutWorld(tile, PlacesUsed(tile) + n) : OnTile(tile, HousePlots[Mathf.Clamp(n, 0, HousePlots.Length - 1)].At);
             PlaceGhost(SpriteBank.Rendered("family_house_s") ?? SpriteBank.Hut, 1f, pos, tile, allowed);
+        }
+
+        /// <summary>A business's ghost (spec 016 §3.3) where it will stand on the acre.</summary>
+        public void ShowBusinessGhost(int tile, bool allowed, string typeId)
+        {
+            PlaceGhost(SpriteBank.Rendered(typeId + "_s") ?? SpriteBank.Hut, 1f, OnTile(tile, MillAt), tile, allowed);
         }
 
         private void PlaceGhost(Sprite sprite, float scale, Vector3 pos, int tile, bool allowed)

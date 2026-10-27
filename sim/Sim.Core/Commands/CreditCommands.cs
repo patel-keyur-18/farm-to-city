@@ -61,7 +61,7 @@ namespace Sim.Core.Commands
             if (!loan.IsOpen) return CommandResult.Reject(RejectReason.LoanClosed);
             if (Amount <= 0) return CommandResult.Reject(RejectReason.InvalidAmount);
             long pay = System.Math.Min(Amount, CreditRules.OwedNow(sim, loan));
-            if (!sim.State.Ledger.CanAfford(pay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (!CreditSystem.LedgerOf(sim, loan).CanAfford(pay)) return CommandResult.Reject(RejectReason.InsufficientFunds); // a business loan from its own cash
             CreditSystem.Accrue(sim, loan, sim.Period);
             CreditSystem.Pay(sim, loan, pay, "ledger.loanPayment", out _, out _, out _);
             CreditSystem.CheckCure(sim);
@@ -95,7 +95,7 @@ namespace Sim.Core.Commands
             if (loan.ArrearsInterest > 0)
             {
                 // The interest arrears become principal: Dr Interest payable, Cr the loan account.
-                sim.State.Ledger.Post(t, sim.Period, "ledger.loanRestructured", "loan:" + loan.Id,
+                CreditSystem.LedgerOf(sim, loan).Post(t, sim.Period, "ledger.loanRestructured", "loan:" + loan.Id,
                     new Posting(Account.InterestPayable, loan.ArrearsInterest), new Posting(def.LoanAccount, -loan.ArrearsInterest));
                 loan.Principal += loan.ArrearsInterest;
                 loan.ArrearsInterest = 0;

@@ -24,6 +24,9 @@ namespace Sim.Core.Definitions
         None = 0,
         Crop = 1,
         Fruit = 2,
+
+        /// <summary>Made by a business (atta, bran: spec 016): sold from its own stock, never the founder's store.</summary>
+        Processed = 3,
     }
 
     /// <summary>Where a good is kept (spec 012 §3.3): the hut store, or a place of its own that counts against its own room.</summary>

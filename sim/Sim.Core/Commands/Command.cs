@@ -121,6 +121,15 @@ namespace Sim.Core.Commands
         UnknownAnimal,
         /// <summary>The feed room, the straw stack or the compost pit has no room.</summary>
         PlaceFull,
+
+        // Spec 014 §3.10
+        NoOffer,
+        NoEmptyHouse,
+
+        // Spec 016
+        UnknownBusiness,
+        CapitalTooLow,
+        BusinessClosed,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

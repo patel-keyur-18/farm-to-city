@@ -127,7 +127,7 @@ namespace Sim.Core.People
         public int Trait1 { get; internal set; }
         public int Trait2 { get; internal set; }
 
-        /// <summary>The <see cref="Land.Building"/> id of the hut they live in.</summary>
+        /// <summary>The <see cref="Land.Building"/> id of the hut they live in; 0 once their family lives in a family house (spec 014 §3.10).</summary>
         public long HutId { get; internal set; }
         public long HiredAt { get; internal set; }
 
@@ -146,6 +146,12 @@ namespace Sim.Core.People
         /// <summary>The sim hour (t ÷ 3600) of the hand's order actions so far and how many (ADR 0040: an order starts at once).</summary>
         public long ActionHour { get; internal set; }
         public int ActionsInHour { get; internal set; }
+
+        /// <summary>
+        /// The family house's rent taken off this season's wage as housing in kind (spec 014 §3.6, schema 10): <see cref="Wage"/> is
+        /// the cash; a loyal hand keeps Wage + this.
+        /// </summary>
+        public long HousingInKind { get; internal set; }
 
         internal Hand Clone() { return (Hand)MemberwiseClone(); }
 
@@ -166,17 +172,20 @@ namespace Sim.Core.People
             h.WriteLong(LapsedLiveSeconds);
             h.WriteLong(ActionHour);
             h.WriteInt(ActionsInHour);
+            if (!(h is Saves.SaveWriter sw && sw.Schema < 10) && (!h.Hashing || HousingInKind != 0)) h.WriteLong(HousingInKind); // hashed only once used
         }
 
         internal static Hand ReadFrom(SaveReader r)
         {
-            return new Hand
+            var hand = new Hand
             {
                 Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadFixed(), Trait1 = r.ReadRef(ContentTable.Trait),
                 Trait2 = r.ReadRef(ContentTable.Trait), HutId = r.ReadLong(), HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(), Wage = r.ReadLong(),
                 Contract = (ContractState)r.ReadInt(), PrepaymentId = r.ReadLong(), LapsedAt = r.ReadLong(), LapsedLiveSeconds = r.ReadLong(),
                 ActionHour = r.ReadLong(), ActionsInHour = r.ReadInt(),
             };
+            if (r.Schema >= 10) hand.HousingInKind = r.ReadLong();
+            return hand;
         }
     }
 

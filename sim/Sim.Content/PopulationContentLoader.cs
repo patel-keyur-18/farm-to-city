@@ -101,7 +101,7 @@ namespace Sim.Content
             string fp = root + ".flows";
             JObject f = Object(Required(o, root, "flows"), fp);
             OnlyFields(f, fp, "birthChance", "crowdedBirthFactor", "birthAge", "maxChildren", "marriageChance", "marriageAge", "deathBase", "deathDoublingYears",
-                "deathCap", "poorHealthBelow", "poorHealthDeathFactor", "mourning", "familyEveryHours", "familyJitterHours", "familySize", "leaveBelow", "leaveSeasons",
+                "deathCap", "poorHealthBelow", "poorHealthDeathFactor", "mourning", "familyEveryHours", "familyJitterHours", "familySize", "familyElderChance", "leaveBelow", "leaveSeasons",
                 "leaveChance", "rentBehindSeasons");
             d.BirthChance = Bounded(f, fp, "birthChance", "0", "1");
             d.CrowdedBirthFactor = Bounded(f, fp, "crowdedBirthFactor", "0", "1");
@@ -121,6 +121,7 @@ namespace Sim.Content
             d.FamilyJitterHours = BoundedInt(f, fp, "familyJitterHours", 0, d.FamilyEveryHours - 1);
             AgeRange(f, fp, "familySize", 2, 8, out int sMin, out int sMax);
             d.FamilySizeMin = sMin; d.FamilySizeMax = sMax;
+            d.FamilyElderChance = Bounded(f, fp, "familyElderChance", "0", "1");
             d.LeaveBelow = BoundedInt(f, fp, "leaveBelow", 0, 100);
             d.LeaveSeasons = BoundedInt(f, fp, "leaveSeasons", 1, 8);
             d.LeaveChance = Bounded(f, fp, "leaveChance", "0", "1");

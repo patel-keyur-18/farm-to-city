@@ -51,9 +51,23 @@ namespace Sim.View.Views
                 if (sim.State.Credit.PendingForeclosure)
                     list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0)) });
                 foreach (Loan l in sim.State.Credit.Loans)
-                    if (l.IsOpen && l.HasArrears)
+                    if (l.IsOpen && l.HasArrears && l.BusinessId != 0)
+                        list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.businessMissed", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, sim.State.Businesses.Find(l.BusinessId)))),
+                            Action = ActionVm.Open("business:" + l.BusinessId, s.Get("action.open"), new SheetRequest("Business", l.BusinessId)) });
+                    else if (l.IsOpen && l.HasArrears)
                         list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.missed", "lender", s.Get(sim.Config.Game.Credit.Lenders[l.Lender].NameKey)), Action = ActionVm.Open("repay:" + l.Id, s.Get("money.repay"), new SheetRequest("Repay", l.Id)) });
             }
+
+            // A business short of cash (spec 016 §3.10): its card says why and what to do.
+            if (sim.State.Businesses != null)
+                foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+                    if (Sim.Core.Business.BusinessBooks.Short(sim, b))
+                        list.Add(new AlertVm
+                        {
+                            Level = AlertLevel.Urgent,
+                            Text = s.Get(b.Worker == Sim.Core.Business.WorkerKind.None ? "alert.businessNoWorker" : "alert.businessShort", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, b))),
+                            Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id)),
+                        });
 
             // Decisions: pests, spoiling soon, the store nearly full.
             long grace = sim.Config.Game.Farm.Farm.ReadyGraceSeconds, warn = ctx.Ui.SpoilWarningHours * 3600L;
@@ -105,6 +119,15 @@ namespace Sim.View.Views
                 foreach (Sim.Core.Livestock.Animal a in herd.Animals)
                     if (a.SickDays > 0)
                         list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Get("alert.animalSick", "name", a.Name), Action = ActionVm.Open("animal:" + a.Id, s.Get("action.open"), new SheetRequest("Animal", a.Id)) });
+            // A free family house offered to a hand living alone (spec 014 §3.13): Yes from here, or the card.
+            if (sim.State.Citizens != null && sim.State.Citizens.OfferHandId != 0)
+            {
+                Sim.Core.People.Citizen asks = sim.State.Citizens.OfHand(sim.State.Citizens.OfferHandId);
+                long hand = sim.State.Citizens.OfferHandId;
+                if (asks != null)
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get(asks.Female ? "card.familyTitleF" : "card.familyTitleM", "name", TownWords.Name(ctx, asks)),
+                        Action = ActionVm.Checked(ctx, "family:" + hand, s.Get("card.familyYes"), null, ActionKind.Primary, at => new AnswerFamilyRequest(at, hand, true)) });
+            }
             return list;
         }
 
@@ -339,6 +362,20 @@ namespace Sim.View.Views
                         rows.Add(Row(s.Get("away.town"), s.Get(r.WentHome ? "away.wentHome" : "away.retired", "name", PeopleWords.Name(ctx, r.Name), "age", ctx.Fmt.Integer(r.Age)),
                             PeopleWords.Female(ctx, r.Name) ? "portrait_elder_f" : "portrait_elder_m"));
                         break;
+                    case CitizenBorn b:
+                        rows.Add(Row(s.Get("away.town"), TownNews.Born(ctx, b.Name, b.Female, b.HouseholdId), b.Female ? "portrait_girl" : "portrait_boy"));
+                        break;
+                    case CitizenMarried m:
+                        rows.Add(Row(s.Get("away.town"), TownNews.Married(ctx, m.Name, m.MovedAway, m.SpouseId, m.Village, m.HomeHouseholdId == m.HouseholdId ? 0 : m.HomeHouseholdId),
+                            m.MovedAway ? "portrait_town_f" : "portrait_town_m"));
+                        break;
+                    case FamilyMovedIn f:
+                        rows.Add(Row(s.Get("away.town"), s.Get(f.HandId != 0 ? "away.handFamilyIn" : "away.familyIn", "family", s.Get("town.family", "name", PeopleWords.Name(ctx, f.Name)),
+                            "n", ctx.Fmt.Integer(f.People), "home", TownWords.Home(ctx, f.HouseId)), "family_house"));
+                        break;
+                    case CitizenDied d:
+                        rows.Add(Row(s.Get("away.town"), TownNews.Died(ctx, d.CitizenId, d.Name, d.Female, d.Age), d.Female ? "portrait_elder_f" : "portrait_elder_m"));
+                        break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case RentMissed m:
                         Sim.Core.People.Household x = sim.State.Citizens.Household(m.HouseholdId);
@@ -397,7 +434,8 @@ namespace Sim.View.Views
             { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "LabourersHarvested", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
-            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away },
+            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.

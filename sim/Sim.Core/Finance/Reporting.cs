@@ -12,7 +12,7 @@ namespace Sim.Core.Finance
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,
             Account.Depreciation, Account.TransportAndSelling,
         };
-        private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.GainOnAssetSales, Account.DebtWrittenOff }; // rent: not farming (spec 014)
+        private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.GainOnAssetSales, Account.DebtWrittenOff, Account.BusinessDrawingsIncome }; // rent: not farming (spec 014)
         private static readonly Account[] Household = { Account.LivingCosts, Account.HealthCosts };
         private static readonly Account[] FinanceCosts = { Account.Interest, Account.PenaltyInterest };
         private static readonly Account[] Other = { Account.LossOnAssetSales };
@@ -33,6 +33,7 @@ namespace Sim.Core.Finance
                 BuildingsAtBook = l.Balance(Account.Buildings) + l.Balance(Account.AccumulatedDepreciation),
                 TreesAtBook = l.Balance(Account.Trees),
                 LivestockAtBook = l.Balance(Account.Livestock),
+                Businesses = Business.BusinessBooks.AtEquity(sim),
                 StoredGoods = Market.Store.Value(sim),
                 LoanPrincipal = -(l.Balance(Account.MoneylenderLoans) + l.Balance(Account.BankLoans)),
                 InterestPayable = -l.Balance(Account.InterestPayable) + CreditRules.AccruedUnposted(sim),

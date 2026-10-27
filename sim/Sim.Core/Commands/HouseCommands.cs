@@ -14,7 +14,14 @@ namespace Sim.Core.Commands
     {
         public int TileId { get; }
 
-        public BuildFamilyHouse(long at, int tileId) : base(at) { TileId = tileId; }
+        /// <summary>A home loan from the bank toward it (spec 014 §3.4, ADR 0071), or null to pay in cash.</summary>
+        public Financing Financing { get; }
+
+        public BuildFamilyHouse(long at, int tileId, Financing financing = null) : base(at)
+        {
+            TileId = tileId;
+            Financing = financing;
+        }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
@@ -22,7 +29,18 @@ namespace Sim.Core.Commands
             if (place != RejectReason.None) return CommandResult.Reject(place);
             Definitions.BuildingDef def = sim.Config.Game.Buildings[sim.Config.Game.Population.House];
             long cost = MarketRules.Indexed(sim, def.Value);
-            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            int lender = -1;
+            long loan = 0;
+            if (Financing != null)
+            {
+                // The home loan: no more than the house costs; the bank counts it at houseLtv (as the dairy loan counts an animal).
+                if (Financing.Amount > cost) return CommandResult.Reject(RejectReason.InvalidAmount);
+                RejectReason r = CreditRules.Check(sim, Financing.LenderId, Financing.Amount, Financing.TermSeasons, 0, out lender, 0, cost);
+                if (r != RejectReason.None) return CommandResult.Reject(r);
+                loan = Financing.Amount;
+            }
+            if (!sim.State.Ledger.CanAfford(cost - loan)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (Financing != null) CreditSystem.Create(sim, lender, loan, Financing.TermSeasons);
 
             long t = sim.State.Clock.SimTime;
             CitizensState s = sim.State.Citizens;
@@ -38,5 +56,20 @@ namespace Sim.Core.Commands
             sim.Emit(new FamilyHouseStarted(t, c.Id, TileId, cost, c.ReadyAt));
             return CommandResult.Ok;
         }
+    }
+
+    /// <summary>A hand's answer to a free family house (spec 014 §3.13): yes brings his family, not now lets strangers come.</summary>
+    public sealed class AnswerFamilyRequest : TimedCommand
+    {
+        public long HandId { get; }
+        public bool Yes { get; }
+
+        public AnswerFamilyRequest(long at, long handId, bool yes) : base(at)
+        {
+            HandId = handId;
+            Yes = yes;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return MigrationRules.Answer(sim, HandId, Yes); }
     }
 }

@@ -59,7 +59,7 @@ namespace Sim.Core.Finance
             Depreciate(sim, closing);
             if (sim.State.Credit != null) CreditSystem.AccrueAll(sim, closing); // step 2: interest to the boundary, in the closing season
             SeasonReport report = Reporting.Build(sim, closing);
-            CloseToRetainedEarnings(sim, closing);
+            CloseToRetainedEarnings(ledger, sim.State.Clock.SimTime, closing);
             string failure = ledger.Reconcile();
             if (failure != null)
             {
@@ -68,12 +68,14 @@ namespace Sim.Core.Finance
             }
             sim.State.Finance.Reports.Add(report);
             sim.State.Finance.SeasonOpeningCash = ledger.Cash;
+            Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
 
             // Settle and pay upfront (these entries belong to the new season).
             SettlementStats loans = sim.State.Credit == null ? null : CreditSystem.Settle(sim); // step 4: loan payments come first
             Farm.FounderSystem.SettleLiving(sim); // step 5
             if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
             People.HouseholdRules.Close(sim); // spec 014 §3.12: households' health and the new season's budgets, on the wages just paid
+            Business.BusinessRules.PayUpfront(sim, closing); // spec 016 §3.11: each business's new season's wage, after its loan payment
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));
@@ -98,9 +100,8 @@ namespace Sim.Core.Finance
         }
 
         /// <summary>Moves every income and expense balance to Retained earnings (one entry in the closing season).</summary>
-        private static void CloseToRetainedEarnings(Simulation sim, long closing)
+        internal static void CloseToRetainedEarnings(Ledger ledger, long now, long closing)
         {
-            Ledger ledger = sim.State.Ledger;
             var postings = new System.Collections.Generic.List<Posting>();
             long retained = 0;
             foreach (Account a in Accounts.All)
@@ -113,7 +114,7 @@ namespace Sim.Core.Finance
             }
             if (postings.Count == 0) return;
             postings.Add(new Posting(Account.RetainedEarnings, retained));
-            ledger.Post(sim.State.Clock.SimTime, closing, "ledger.closeSeason", null, postings.ToArray());
+            ledger.Post(now, closing, "ledger.closeSeason", null, postings.ToArray());
         }
     }
 }

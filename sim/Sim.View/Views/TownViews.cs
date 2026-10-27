@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
+using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.Core.Market;
 using Sim.Core.Maths;
@@ -19,6 +20,12 @@ namespace Sim.View.Views
         {
             Citizen head = ctx.Sim.State.Citizens.Citizen(x.Members[0]);
             return x.Members.Count == 1 ? Name(ctx, head) : ctx.Strings.Get("town.family", "name", Name(ctx, head));
+        }
+
+        /// <summary>Who a home's people are, for a *Lives in* row: "alone" for one person, else the household's name.</summary>
+        public static string LivesWith(ViewContext ctx, Household x)
+        {
+            return x.Members.Count == 1 ? ctx.Strings.Get("hand.homeAlone") : Household(ctx, x);
         }
 
         /// <summary>"Hut 1" or "Family house 2": numbered as the People sheet numbers them, in building order.</summary>
@@ -67,9 +74,78 @@ namespace Sim.View.Views
             return ctx.Strings.Get("town.nameAge", "name", Name(ctx, c), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)));
         }
 
+        /// <summary>A bride who married into the town (spec 014 §3.3, ADR 0070): her parents are unknown, her home village is shown.</summary>
+        public static bool MarriedIn(Citizen c) { return c.Village >= 0 && c.Father == 0 && c.Mother == 0 && c.Story.Exists(l => l.Kind == StoryKind.Married); }
+
+        /// <summary>"Usha (35, from Sitapur)" for a bride who married in, else "Usha (35)".</summary>
+        public static string NameAgeFrom(ViewContext ctx, Citizen c)
+        {
+            if (!MarriedIn(c)) return NameAge(ctx, c);
+            return ctx.Strings.Get("town.nameAgeFrom", "name", Name(ctx, c), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)), "village", Village(ctx, c));
+        }
+
         public static string Village(ViewContext ctx, Citizen c)
         {
             return c.Village < 0 ? null : ctx.Strings.Get("village." + ctx.Sim.Config.Game.Population.Villages[c.Village]);
+        }
+    }
+
+    /// <summary>
+    /// Births, marriages and deaths in words (spec 014 §3.9, ADR 0070): gentle, as information, for the away card and the Town tab's
+    /// "This season". Never a push or a sound.
+    /// </summary>
+    public static class TownNews
+    {
+        /// <summary>"A baby girl, Asha, was born to Manoj's family".</summary>
+        public static string Born(ViewContext ctx, int name, bool female, long householdId)
+        {
+            Household x = ctx.Sim.State.Citizens.Household(householdId);
+            return ctx.Strings.Get(female ? "news.bornGirl" : "news.bornBoy", "name", PeopleWords.Name(ctx, name),
+                "family", x == null ? ctx.Strings.Get("away.aFamily") : TownWords.Household(ctx, x));
+        }
+
+        /// <summary>"Ravi married Sita from Sitapur" (and where they live, when they moved into a house of their own), or "Asha married and moved to Rampur".</summary>
+        public static string Married(ViewContext ctx, int name, bool movedAway, long spouseId, int village, long newHouseholdId)
+        {
+            var s = ctx.Strings;
+            string place = s.Get("village." + ctx.Sim.Config.Game.Population.Villages[village]);
+            if (movedAway) return s.Get("news.marriedAway", "name", PeopleWords.Name(ctx, name), "village", place);
+            Citizen spouse = ctx.Sim.State.Citizens.Citizen(spouseId);
+            Household home = newHouseholdId == 0 ? null : ctx.Sim.State.Citizens.Household(newHouseholdId);
+            return s.Get(home == null ? "news.married" : "news.marriedHouse", "name", PeopleWords.Name(ctx, name),
+                "spouse", spouse == null ? "" : TownWords.Name(ctx, spouse), "village", place, "home", home == null ? "" : TownWords.Home(ctx, home.HomeId));
+        }
+
+        /// <summary>"Kamla (77), Manoj's mother, passed away peacefully. Her family mourns this season."</summary>
+        public static string Died(ViewContext ctx, long citizenId, int name, bool female, int age)
+        {
+            var s = ctx.Strings;
+            Citizen child = ctx.Sim.State.Citizens.Citizens.Find(c => c.Living && (c.Father == citizenId || c.Mother == citizenId));
+            string who = PeopleWords.Name(ctx, name) + " (" + ctx.Fmt.Integer(age) + ")";
+            if (child != null) who = s.Get("news.relation", "who", who, "name", TownWords.Name(ctx, child), "relation", s.Get(female ? "kin.mother" : "kin.father"));
+            return s.Get(female ? "news.diedF" : "news.diedM", "who", who);
+        }
+
+        /// <summary>This season's births, marriages and deaths, from the story lines of those still on record (the Town tab).</summary>
+        public static List<string> ThisSeason(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            long season = CitizenRules.SeasonOf(sim, ctx.Now);
+            var lines = new List<string>();
+            foreach (Citizen c in sim.State.Citizens.Citizens)
+                foreach (StoryLine l in c.Story)
+                {
+                    if (CitizenRules.SeasonOf(sim, l.At) != season) continue;
+                    if (l.Kind == StoryKind.Born) lines.Add(Born(ctx, c.Name, c.Female, c.HouseholdId));
+                    else if (l.Kind == StoryKind.MarriedAway) lines.Add(Married(ctx, c.Name, true, 0, c.Village, 0));
+                    else if (l.Kind == StoryKind.Married && !c.Female)
+                    {
+                        Citizen bride = sim.State.Citizens.Citizen(l.Other);
+                        if (bride != null && bride.Village >= 0) lines.Add(Married(ctx, c.Name, false, bride.Id, bride.Village, 0));
+                    }
+                    else if (l.Kind == StoryKind.Died) lines.Add(Died(ctx, c.Id, c.Name, c.Female, CitizenRules.Age(sim, c)));
+                }
+            return lines;
         }
     }
 
@@ -164,6 +240,13 @@ namespace Sim.View.Views
 
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
 
+            List<string> news = TownNews.ThisSeason(ctx);
+            if (news.Count > 0)
+            {
+                vm.Lines.Add(LineVm.Header(s.Get("town.thisSeason")));
+                foreach (string n in news) vm.Lines.Add(new LineVm(n, null) { Icon = "population" });
+            }
+
             // Households, then the empty houses and the ones being built.
             vm.Lines.Add(LineVm.Header(s.Get("town.householdsHeader")));
             if (households == 0) vm.Lines.Add(new LineVm(s.Get("town.nobody"), s.Get("town.nobodyValue")));
@@ -191,7 +274,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             long cost = HouseCost(sim);
-            bool unlocked = HouseRules.Unlocked(sim), cash = sim.State.Ledger.CanAfford(cost);
+            bool unlocked = HouseRules.Unlocked(sim), cash = sim.State.Ledger.CanAfford(cost - HouseLoanSheet.Loan(sim, cost)); // a home loan may cover the rest (ADR 0071)
             string reason = !unlocked ? s.Get("town.houseLocked") : !cash ? ctx.Reject(RejectReason.InsufficientFunds) : null;
             var a = new ActionVm("buildHouse", s.Get("town.buildHouse"), s.Get("town.buildHouseDetail", "cost", ctx.Fmt.Coins(cost), "rent", ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason))),
                 ActionKind.Open, reason == null, reason, null, new SheetRequest("HousePlacement", 0));
@@ -332,10 +415,10 @@ namespace Sim.View.Views
                 while (tree.Generations.Count <= d) tree.Generations.Add(new List<TreePersonVm>());
                 List<TreePersonVm> row = tree.Generations[d];
                 if (row.Exists(p => p.CitizenId == c.Id)) continue;
-                row.Add(new TreePersonVm(TownWords.NameAge(ctx, c), TownWords.Portrait(ctx, c), c.Id));
+                row.Add(new TreePersonVm(TownWords.NameAgeFrom(ctx, c), TownWords.Portrait(ctx, c), c.Id));
                 Citizen spouse = members.Find(p => p.Id == c.Spouse);
                 if (spouse != null && !row.Exists(p => p.CitizenId == spouse.Id))
-                    row.Add(new TreePersonVm(TownWords.NameAge(ctx, spouse), TownWords.Portrait(ctx, spouse), spouse.Id) { SpouseOfPrevious = true });
+                    row.Add(new TreePersonVm(TownWords.NameAgeFrom(ctx, spouse), TownWords.Portrait(ctx, spouse), spouse.Id) { SpouseOfPrevious = true });
             }
             tree.Generations.RemoveAll(g => g.Count == 0);
             return tree;
@@ -361,7 +444,7 @@ namespace Sim.View.Views
             {
                 Household home = sim.State.Citizens.Household(c.HouseholdId);
                 if (home != null)
-                    vm.Lines.Add(new LineVm(s.Get("citizen.home"), TownWords.Home(ctx, home.HomeId) + " · " + TownWords.Household(ctx, home), "household.home", home.Id)
+                    vm.Lines.Add(new LineVm(s.Get("citizen.home"), TownWords.Home(ctx, home.HomeId) + " · " + TownWords.LivesWith(ctx, home), "household.home", home.Id)
                         { Opens = new SheetRequest("Household", home.Id) });
                 var job = new LineVm(s.Get("citizen.job"), TownWords.Job(ctx, c), c.Job == CitizenJob.Hand ? null : "citizen.job", c.Id);
                 if (c.Job == CitizenJob.Hand) job.Action = ActionVm.Open("hand:" + c.HandId, s.Get("action.see"), new SheetRequest("Hand", c.HandId));
@@ -387,9 +470,12 @@ namespace Sim.View.Views
             }
 
             List<KeyValuePair<string, Citizen>> family = Kin.Close(sim, c);
-            if (family.Count > 0)
+            Household own = c.Living ? sim.State.Citizens.Household(c.HouseholdId) : null;
+            bool away = c.Job == CitizenJob.Hand && own != null && HouseholdRules.InHut(sim, own); // §3.3: a hand's family stays home
+            if (family.Count > 0 || away)
             {
                 vm.Lines.Add(LineVm.Header(s.Get("citizen.family")));
+                if (away) vm.Lines.Add(new LineVm(s.Get("citizen.familyHome"), TownWords.Village(ctx, c) ?? s.Get("citizen.elsewhere"), "hand.home", c.HandId));
                 int departed = 0;
                 foreach (KeyValuePair<string, Citizen> k in family)
                 {
@@ -419,12 +505,12 @@ namespace Sim.View.Views
             return vm;
         }
 
-        /// <summary>"passed away at 70" or "moved to Rampur"; null while here.</summary>
+        /// <summary>"passed away at 70", "moved to Rampur" or "married, lives in Rampur"; null while here.</summary>
         private static string Gone(ViewContext ctx, Citizen c)
         {
             if (c.Living) return null;
-            return c.Gone == CitizenGone.Died ? ctx.Strings.Get("citizen.died", "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)))
-                : ctx.Strings.Get("citizen.left", "village", TownWords.Village(ctx, c) ?? ctx.Strings.Get("citizen.elsewhere"));
+            if (c.Gone == CitizenGone.Died) return ctx.Strings.Get("citizen.died", "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, c)));
+            return ctx.Strings.Get(c.Gone == CitizenGone.MarriedAway ? "citizen.marriedAway" : "citizen.left", "village", TownWords.Village(ctx, c) ?? ctx.Strings.Get("citizen.elsewhere"));
         }
 
         private static LineVm Relative(ViewContext ctx, Citizen me, string relation, Citizen k)
@@ -432,7 +518,9 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string where = k.HouseholdId == me.HouseholdId ? s.Get("kin.livesHere")
                 : s.Get("kin.livesIn", "home", TownWords.Home(ctx, ctx.Sim.State.Citizens.Household(k.HouseholdId)?.HomeId ?? 0));
-            var line = new LineVm(TownWords.Name(ctx, k), s.Get("kin.value", "relation", s.Get("kin." + relation), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, k))), "citizen.age", k.Id)
+            string value = s.Get("kin.value", "relation", s.Get("kin." + relation), "age", ctx.Fmt.Integer(CitizenRules.Age(ctx.Sim, k)));
+            if (TownWords.MarriedIn(k)) value = s.Get("kin.from", "value", value, "village", TownWords.Village(ctx, k));
+            var line = new LineVm(TownWords.Name(ctx, k), value, "citizen.age", k.Id)
                 { Icon = TownWords.Portrait(ctx, k), Note = TownWords.Job(ctx, k) + " · " + where, Opens = new SheetRequest("Citizen", k.Id) };
             line.Action = ActionVm.Open("citizen:" + k.Id, s.Get("action.see"), new SheetRequest("Citizen", k.Id));
             return line;
@@ -455,16 +543,16 @@ namespace Sim.View.Views
             foreach (Tile t in sim.State.Land.Tiles)
             {
                 if (t.Terrain != Terrain.Farm && t.Terrain != Terrain.Quarters || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
-                CommandResult r = sim.Preview(new BuildFamilyHouse(ctx.Now, t.Id));
-                list.Add(new HutPlaceVm { TileId = t.Id, Allowed = r.Accepted, Reason = r.Accepted ? null : Reason(ctx, t.Id, r.Reason) });
+                RejectReason r = HouseRules.Place(sim, t.Id); // where it may stand; the money is the build buttons' (cash or a home loan)
+                list.Add(new HutPlaceVm { TileId = t.Id, Allowed = r == RejectReason.None, Reason = r == RejectReason.None ? null : Reason(ctx, t.Id, r) });
             }
             return list;
         }
 
         public static string ReasonFor(ViewContext ctx, int tileId)
         {
-            CommandResult r = ctx.Sim.Preview(new BuildFamilyHouse(ctx.Now, tileId));
-            return r.Accepted ? null : Reason(ctx, tileId, r.Reason);
+            RejectReason r = HouseRules.Place(ctx.Sim, tileId);
+            return r == RejectReason.None ? null : Reason(ctx, tileId, r);
         }
 
         /// <summary>The refusal in words: "Something is growing here", "This acre has 2 houses".</summary>
@@ -479,6 +567,64 @@ namespace Sim.View.Views
         public static ActionVm Confirm(ViewContext ctx, int tileId)
         {
             return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(TownSheet.HouseCost(ctx.Sim)), ActionKind.Primary, at => new BuildFamilyHouse(at, tileId));
+        }
+
+        /// <summary>"With a home loan": opens the loan's terms for this acre, greyed with the reason when the bank won't lend or the place won't do.</summary>
+        public static ActionVm WithLoan(ViewContext ctx, int tileId)
+        {
+            Simulation sim = ctx.Sim;
+            long cost = TownSheet.HouseCost(sim), loan = HouseLoanSheet.Loan(sim, cost);
+            string reason = ReasonFor(ctx, tileId);
+            if (reason == null && loan == 0) reason = ctx.Strings.Get("houseLoan.none");
+            if (reason == null && !sim.State.Ledger.CanAfford(cost - loan)) reason = ctx.Reject(RejectReason.InsufficientFunds);
+            return new ActionVm("houseLoan", ctx.Strings.Get("houseLoan.button"), ctx.Strings.Get("houseLoan.down", "amount", ctx.Fmt.Coins(cost - loan)),
+                ActionKind.Open, reason == null, reason, null, new SheetRequest("HouseLoan", tileId));
+        }
+    }
+
+    /// <summary>Building a family house with the bank's home loan (ADR 0071, as the dairy loan): what it lends, the down payment, one row per term.</summary>
+    public static class HouseLoanSheet
+    {
+        /// <summary>The most the bank lends toward a house (its limit with the house counted at houseLtv), in whole thousands; 0 below its minimum.</summary>
+        public static long Loan(Simulation sim, long cost)
+        {
+            if (sim.State.Credit == null) return 0;
+            int bank = LandLoanSheet.Bank(sim);
+            if (bank < 0 || sim.Config.Game.Credit.Lenders[bank].HouseLtv <= Fixed.Zero) return 0;
+            long loan = System.Math.Min(cost, CreditRules.Limit(sim, bank, 0, 0, cost).Limit) / (1000 * Money.Coin) * (1000 * Money.Coin);
+            return loan < sim.Config.Game.Credit.Lenders[bank].MinAmount ? 0 : loan;
+        }
+
+        public static SheetVm Build(ViewContext ctx, int tileId)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            long cost = TownSheet.HouseCost(sim), loan = Loan(sim, cost);
+            int bank = LandLoanSheet.Bank(sim);
+            var vm = new SheetVm
+            {
+                Icon = "family_house", Title = s.Get("houseLoan.title"),
+                Subtitle = s.Get("landLoan.subtitle", "price", ctx.Fmt.Coins(cost), "loan", ctx.Fmt.Coins(loan), "down", ctx.Fmt.Coins(cost - loan)),
+            };
+            vm.Lines.Add(new LineVm(s.Get("houseLoan.why"), null));
+            if (loan == 0)
+            {
+                vm.Lines.Add(new LineVm(s.Get("houseLoan.none"), null));
+                return vm;
+            }
+            LenderDef l = sim.Config.Game.Credit.Lenders[bank];
+            foreach (int term in BorrowSheet.Terms(l))
+            {
+                int tm = term;
+                LoanPlanVm plan = BorrowSheet.Plan(sim, bank, loan, term);
+                vm.Lines.Add(new LineVm(s.Plural("borrow.over", term), s.Get("borrow.termValue", "first", ctx.Fmt.Coins(plan.Payments[0]),
+                    "last", ctx.Fmt.Coins(plan.Payments[plan.Payments.Count - 1]), "interest", ctx.Fmt.Coins(plan.TotalInterest)), "borrow", bank * 1000 + term)
+                {
+                    Action = ActionVm.Checked(ctx, "houseLoan:" + term, s.Get("action.buildHere"), ctx.Fmt.Coins(cost - loan), ActionKind.Primary,
+                        at => new BuildFamilyHouse(at, tileId, new Financing(l.Id, loan, tm))),
+                });
+            }
+            return vm;
         }
     }
 

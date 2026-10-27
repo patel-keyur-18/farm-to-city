@@ -65,7 +65,7 @@ Only types the era allows are offered; a type whose worker can't be found is off
 
 1. **Choose a type** (Menu → Businesses → Start a business): the types the era allows, each with what it does and what it costs.
 2. **Market research** (a sheet, nothing paid): the grain the area brings a day, what the next village's chakki charges for grinding (the competitor, §3.7), the trader's atta and bran prices today, a miller's wage, and the wheat you hold.
-3. **The plan:** hours open (default 8:00–18:00), the grinding fee, how much of your own wheat to grind a day, a hired worker or you; the game projects a season's revenue, costs, net profit, cash needed and payback from today's prices and the area's size, each with a *Why?*. The plan is saved; after 4 seasons a *Plan vs actual* card compares each line and says in words why they differ ("The area brought less grain than planned: you were closed 2 days") (owner, 2026-10-25, §10 G8).
+3. **The plan:** hours open (default 8:00–18:00), the grinding fee, how much of your own wheat to grind a day, a hired worker or you; the game projects a season's revenue, costs, net profit, cash needed and payback from today's prices and the area's size, each with a *Why?*. The plan is saved; after 4 full seasons a *Plan vs actual* card compares each line (its average over the last 4 seasons) and says in words why they differ ("The area brought less grain than planned: you were closed 2 days") (owner, 2026-10-25, §10 G8).
 4. **Place it** on the map: any acre you own with nothing growing, one business an acre (the whole acre, drawn as its work yard), lit as the family house's are, refusals in words ("Something is growing here", "A family house stands here"). The acre stops farming and can't be sold while it stands (`ParcelInUse`). Its layout is previewed to the owner before it's final (owner, 2026-10-25; §10 G4).
 5. **Fund it** (§3.8): cash put in, and a bank business loan if wanted.
 6. **The worker** (§3.6).
@@ -86,7 +86,7 @@ Only types the era allows are offered; a type whose worker can't be found is off
 
 **(a) Yields:** 1 kg of wheat gives 0.97 kg of atta and 0.03 kg of bran (chokar). Whole-wheat chakki atta loses little.
 
-**(b) Grinding for the area (pisai; owner, 2026-10-25, §10 G5):** there's no chakki nearer than the next village, so your town, the village's families and the hamlets around it bring their own grain to be ground: `catchmentPeople` (default 260) plus your town's population, each bringing `grainPerPersonPerRealDay` (default 0.40 kg × 22.8: wheat, with maize, millet and gram in season), about 2,700 kg a real day and 10,900 a season for 300 people, inside the mill's 3,800 a real day when open 10 hours. It comes during open hours, spread over them, and pays the grinding fee (default 4 coins a kg × index; the next village's chakki charges the same), Cr Service income; power is the mill's (1.20 a kg). Grain not ground in a day (closed, or past the rate) goes to the next village's chakki and is lost to you. A fee more than 1 coin above that chakki's loses the area's grain to it (spec 017 adds customer choice). Your own household's grain is ground free. This grain is the customers' own: it doesn't pass through the market.
+**(b) Grinding for the area (pisai; owner, 2026-10-25, §10 G5):** there's no chakki nearer than the next village, so your town, the village's families and the hamlets around it bring their own grain to be ground: `catchmentPeople` (default 350, ADR 0073) plus your town's population, each bringing `grainPerPersonPerRealDay` (default 0.40 kg × 22.8: wheat, with maize, millet and gram in season), about 3,200 kg a real day and 12,800 a season for 350 people, inside the mill's 3,800 a real day when open 10 hours, with room for your own wheat. It comes during open hours, spread over them, and pays the grinding fee (default 4 coins a kg × index; the next village's chakki charges the same), Cr Service income; power is the mill's (1.20 a kg). Grain not ground in a day (closed, or past the rate) goes to the next village's chakki and is lost to you. A fee more than 1 coin above that chakki's loses the area's grain to it; **spec 017 §3.6 (ADR 0074) replaces this cliff with customer choice** between your mill and the chakki by price, quality, stars and distance, so each coin above takes a share instead of everything. Your own household's grain is ground free. This grain is the customers' own: it doesn't pass through the market.
 
 **(c) Atta to sell:** the mill buys wheat and sells atta and bran.
 - **Wheat in:** from the founder's store first, up to a daily amount the player sets ("Grind up to 200 kg a day of your wheat"), as an internal sale at today's market price (the farm's books: Cr 4000 Crop sales; the mill's: Dr Stock); then, if the player allows, from the local market at its price.
@@ -155,7 +155,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 
 ### 3.11 Processing order
 
-Hourly pass, system Business (after Market): each open business works in id order (§3.4); its sales join the market's hour. Seasonal: with spec 005's close, each business closes its books in id order, then pays wages, loan payments and overdraft interest from its own cash.
+Hourly pass, system Business (after Market): each open business works in id order (§3.4); its sales join the market's hour. Seasonal: with spec 005's close, each business closes its books in id order (repairs, depreciation, the overdraft's interest, its report, the close to retained earnings) before the loans are settled; its business loan's payment is then taken from its own cash (its overdraft first), and after the households' close it pays its worker the new season's wage upfront. Cash left pays the overdraft off, and money coming in during the season does the same.
 
 ## 4. Data
 
@@ -168,7 +168,7 @@ Hourly pass, system Business (after Market): each open business works in id orde
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
 | `FoundBusiness` | type, tile, capital, loan, hours, fee, worker | `EraLocked`, `NotOwned`, `TileOccupied`, `NoRoom`, `InsufficientFunds`, `CreditRefused`, `NoWorker` | §3.3 |
-| `PutCash`, `TakeCash` | business, amount | `UnknownBusiness`, `InsufficientFunds` | §3.2 |
+| `PutCash`, `TakeCash` | business, amount | `UnknownBusiness`, `BusinessClosed`, `InvalidArgument`, `InsufficientFunds` | §3.2 |
 | `SetBusinessHours`, `SetFee`, `SetOwnSupply` (wheat or milk a day), `SetBuyFromMarket`, `SetBakeMix` | business, value | `UnknownBusiness`, `InvalidArgument` | §3.4, §3.5, §3.9 |
 | `ChangeWorker` | business, worker | `NoWorker` | §3.6 |
 | `CloseBusiness` | business | `UnknownBusiness` | §3.10 |
@@ -224,16 +224,16 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | AC-12 | The bakery turns 10 kg atta + 1.5 kg supplies into 13 kg bread (rusk 1.2 → 1), at most 124 kg a real hour; the village shops buy each morning up to their amount a person, the town from its leisure share, rusk also to the trader | `ProductionTests.Bakery_Recipe_Buyers` |
 | AC-13 | The dairy takes your milk up to its daily amount at the co-op's price (the rest still to the co-op), makes paneer, curd and ghee by the yields, at most 190 L a real hour | `ProductionTests.Dairy_MilkIn_Recipes` |
 | AC-14 | Research and the plan show the projected season; after 4 seasons the plan-vs-actual card compares each line in words | `BusinessViewTests.Plan_VsActual` |
+| AC-15 | A business loan is the business's: at most 60% of its building and equipment, up to 12 seasons, its entries on its own books and paid from its own cash; your guarantee uses the bank's room | `BusinessTests.BusinessLoan` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A mill grinding for the area (300 people) and milling the farm's own wheat, miller hired | Net profit 5,000–10,000 a season | The Village unlock (spec 018) |
-| The same mill run by you | About 35,000 a season, with your farm hours less | |
-| Payback of a mill | 6–12 seasons | Realistic for a village chakki |
+| A mill grinding for the area (350 people plus your town) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0073) | Net profit 5,000–10,000 a season, on a business loan too | US-117's bot (8 seeds, 3 years): 6,400–8,000; on a loan 8,200–10,000 (at 260 people it lost 2,200–3,800, ADR 0073) |
+| The same mill run by you | 30,000–40,000 a season, with your farm hours less (about what they'd earn as day labour, shown in the plan); payback 3–4 seasons | US-117's bot: 33,700–37,400, payback 3.0–3.3 |
 | Milling wheat bought at the market | 1–2 a kg | Teaches that margins are thin |
-| A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | |
+| A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | US-117 (`GateTests.Mill`): every run plays on with cash; overdrawn at most 2 closes in a row; run by you while borrowing for houses and cattle, 1 of 8 runs foreclosed on the farm's loans (the competent bot: 0 of 8) |
 
 ## 10. Open questions
 
@@ -241,7 +241,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 - **G2. Books.** **Closed (owner, 2026-10-25):** each business has its own ledger, capital and drawings; your investment at cost on your books, each business at its equity in net worth; your own wheat and milk go to it at today's market price (a sale on the farm, a cost on the business) (§3.2).
 - **G3. Who runs it.** **Closed (owner, 2026-10-25):** the best-skilled adult in your town without a town job (else a daily worker from a neighbouring village) at a season wage paid upfront, until spec 015 brings full hiring; or you run it yourself, no wage, your hours there coming off your farm work; a business job is a town job (§3.6).
 - **G4. Where it stands.** **Closed (owner, 2026-10-25):** any acre you own with nothing growing (none of the inherited acres touch a road, so a roadside rule would force a land purchase first); one business an acre, the acre out of farming and not for sale while it stands; the layout previewed to the owner first; location and passing trade are spec 017's, for shops (§3.3).
-- **G5. The mill's work.** **Closed (owner, 2026-10-25):** grinding for your town, the village and the hamlets around (about 300 people, 10,800 kg a season) at 4 a kg; your own wheat into atta and bran (about 4 a kg net); market wheat optional (1–2 a kg); 40 kg an hour, 8:00–18:00, power 1.20 a kg, yields 0.97 and 0.03. Calibration: wheat is 1,200 kg an acre in Winter only, and a village of 35 alone can't keep a miller, so the catchment carries the business, as a real chakki's does (§3.5).
+- **G5. The mill's work.** **Closed (owner, 2026-10-25):** grinding for your town, the village and the hamlets around (about 300 people, 10,800 kg a season; 350 plus your town after ADR 0073) at 4 a kg; your own wheat into atta and bran (about 4 a kg net); market wheat optional (1–2 a kg); 40 kg an hour, 8:00–18:00, power 1.20 a kg, yields 0.97 and 0.03. Calibration: wheat is 1,200 kg an acre in Winter only, and a village of 35 alone can't keep a miller, so the catchment carries the business, as a real chakki's does (§3.5).
 - **G6. Wheat in, atta out.** **Closed (owner, 2026-10-25):** your store first up to a daily amount at today's market price, the market only if allowed; atta to the trader (400 kg a day) and the local market, and in supermarket orders; bran to your cattle's feed room first, the rest sold (§3.5c).
 - **G7. Funding.** **Closed (owner, 2026-10-25):** your cash as owner's capital and the co-op bank's small-business loan (up to 60% of building and equipment, the bank's rate, up to 12 seasons, equal principal, your guarantee); at least the rest plus a season's running cash put in; investors and partner citizens in Phase 3 (§3.8).
 - **G8. Research and the plan.** **Closed (owner, 2026-10-25):** a free research sheet; a plan screen with the projected season, cash needed and payback, each with a *Why?*; saved and compared line by line with the actual results after 4 seasons, the differences in words (§3.3).

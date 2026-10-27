@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Tools.Balancer;
@@ -204,6 +205,59 @@ namespace Sim.Core.Tests
             Assert.That(defaulter.DefaultedNotForeclosed, Is.Zero, "and every default is foreclosed");
             Assert.That(defaulter.MedianScoreAtEnd, Is.LessThanOrEqualTo(400));
         }
+    
+        private static double Median(System.Collections.Generic.IEnumerable<double> v)
+        {
+            var o = v.OrderBy(x => double.IsNaN(x) ? double.MaxValue : x).ToList();
+            return o[o.Count / 2];
+        }
+
+        // Spec 014 §9 (US-211, ADR 0071): after the Hamlet the competent bot builds family houses on the bank's home loan and has 5
+        // households by the Village pacing (day 21, ADR 0028; measured day 15–20), 12–25 people (10–20, median 16), town happiness
+        // 65–85 (a town of renters with outside work scores about 68 by §3.8 until businesses bring town jobs; measured 68–70),
+        // under 1 in 10 households leaving a year (0), rent under 15% of income (9–14%). The cautious saver, which never borrows,
+        // gets there by day 48 (measured 29–43). The random bot never reaches the Hamlet, so it isn't measured (ADR 0071).
+        [Test]
+        public void Town()
+        {
+            Gate.TownResult c = Gate.Town(Live(), () => new FarmerBot(), 20);
+            Gate.TownResult s = Gate.Town(Live(), () => new CautiousSaverBot(), 20, 12);
+            TestContext.Out.WriteLine("competent: 5 households day " + Median(c.Day5).ToString("0.0") + " (" + c.Day5.Min().ToString("0.0") + "–" + c.Day5.Max().ToString("0.0")
+                + "); people at day 21 " + Median(c.People21.Select(x => (double)x)) + " (" + c.People21.Min() + "–" + c.People21.Max() + "); happiness " + Median(c.Happiness).ToString("0")
+                + "; leaving a year " + c.LeavingPerYear.Max().ToString("0.00") + "; rent share " + Median(c.RentShare).ToString("0.000") + " (max " + c.RentShare.Max().ToString("0.000") + ")");
+            TestContext.Out.WriteLine("cautious: 5 households day " + Median(s.Day5).ToString("0.0") + " (latest " + s.Day5.Max().ToString("0.0") + ")");
+            Assert.That(c.HamletRuns, Is.EqualTo(20));
+            Assert.That(c.Day5.Count(d => !double.IsNaN(d) && d <= 21), Is.GreaterThanOrEqualTo(18), "5 households by the Village pacing (day 21)");
+            Assert.That(Median(c.People21.Select(x => (double)x)), Is.InRange(12, 25));
+            Assert.That(Median(c.Happiness), Is.InRange(65, 85));
+            Assert.That(c.LeavingPerYear.Max(), Is.LessThan(0.1));
+            Assert.That(c.RentShare.Max(), Is.LessThan(0.15));
+            Assert.That(s.Day5.Count(d => !double.IsNaN(d) && d <= 48), Is.GreaterThanOrEqualTo(18), "the cautious saver within 48 days");
+        }
+
+        // Spec 016 §9 (US-117, ADR 0072): a bot founds the flour mill in the Hamlet and runs it, hired, by itself, and on a business loan;
+        // never stuck, the overdraft never permanent, and its season profit inside ADR 0073's targets.
+        [Test]
+        public void Mill()
+        {
+            var results = new[] { () => new MillBot(false), () => new MillBot(true), (Func<Bot>)(() => new MillBot(false, true)) }.Select(make => Gate.Mill(Live(), make, 8)).ToList();
+            foreach (Gate.MillResult m in results)
+                TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
+                    + "; payback " + string.Join(", ", m.Payback.OrderBy(x => x).Select(x => x.ToString("0.0"))) + "; overdrawn runs " + string.Join(",", m.OverdrawnRun)
+                    + "; closed " + m.Closed + ", foreclosed " + m.Foreclosed);
+            foreach (Gate.MillResult m in results)
+            {
+                Assert.That(m.Founded, Is.EqualTo(m.Seeds), m.Bot + ": founded in every seed");
+                Assert.That(m.EndCash.All(c => c > 0), Is.True, m.Bot + ": never stuck: every run plays on with cash");
+                Assert.That(m.Foreclosed, Is.LessThanOrEqualTo(m.Seeds / 4), m.Bot + ": foreclosed in at most a quarter of runs (running it yourself costs the farm)");
+                Assert.That(m.OverdrawnRun.Max(), Is.LessThanOrEqualTo(2), m.Bot + ": the overdraft never permanent");
+            }
+            // ADR 0073's targets, on the median run.
+            double Mid(System.Collections.Generic.List<double> v) { return v.OrderBy(x => x).ElementAt(v.Count / 2); }
+            Assert.That(Mid(results[0].Profit), Is.InRange(5_000, 10_000), "hired");
+            Assert.That(Mid(results[1].Profit), Is.InRange(30_000, 40_000), "run by you");
+            Assert.That(Mid(results[1].Payback), Is.InRange(3.0, 4.0), "run by you, payback");
+            Assert.That(Mid(results[2].Profit), Is.InRange(5_000, 10_000), "hired, on a business loan");
+        }
     }
 }
-

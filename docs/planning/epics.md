@@ -83,17 +83,17 @@
 | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | Village: spec 018 (to write, ADR 0057); later eras at their phase's start | Backlog | US-102–US-104 | 7 |
 | [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-105, US-106, US-208, US-212 | 18 |
 | [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-107, US-108, US-209, US-210 | 21 |
-| [F11.3](features/F11.3-population-flows-and-family-trees.md) | Population flows and family trees | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-109–US-111, US-211 | 16 |
+| [F11.3](features/F11.3-population-flows-and-family-trees.md) | Population flows and family trees | E11 | 2 | Spec 014 (approved, ADR 0063) | Done | US-109–US-111, US-211 | 19 |
 | [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (approved, ADR 0069) | Backlog | US-112–US-114 | 13 |
-| [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-115–US-117 | 16 |
+| [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | Spec 016 (approved, ADR 0068) | Done | US-115–US-117 | 16 |
 | [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-118, US-119, US-216 | 11 |
-| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-120–US-121 | 8 |
-| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (to write, ADR 0057) | Backlog | US-122–US-122 | 5 |
+| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-120–US-121 | 8 |
+| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-122–US-122 | 5 |
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | To write at the start of Phase 3 | Backlog | US-123–US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | To write at the start of Phase 3 | Backlog | US-124–US-125 | 10 |
 | [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (to write, ADR 0057) | Backlog | US-126–US-126 | 5 |
-| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (to write, ADR 0057) | Backlog | US-127–US-128 | 8 |
-| [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (to write, ADR 0057) | Backlog | US-129–US-130 | 5 |
+| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-127–US-128 | 8 |
+| [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-129–US-130 | 5 |
 | [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (to write, ADR 0057) | Backlog | US-131–US-132 | 8 |
 | [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | Spec 018 (to write, ADR 0057) | Backlog | US-133–US-134 | 8 |
 | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | Personal finance hub and milestones | E14 | 2 | Spec 019 (to write, ADR 0057) | Backlog | US-135–US-136 | 7 |

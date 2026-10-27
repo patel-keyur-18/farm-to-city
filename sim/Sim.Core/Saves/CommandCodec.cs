@@ -28,6 +28,9 @@ namespace Sim.Core.Saves
             DeliverOrder,
             BuildShed, BuyAnimal, SellAnimal, SetBuyGreenFodder,
             BuildFamilyHouse,
+            AnswerFamilyRequest,
+            BuildFamilyHouseLoan,
+            FoundBusiness, SetBusiness, PutCash, TakeCash, CloseBusiness,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -81,7 +84,22 @@ namespace Sim.Core.Saves
                 case HireLabourers c: At(c, Tag.HireLabourers); w.WriteInt(-1); w.WriteInt(c.Count); break; // the field slot of Sprint 10's first build, unused since ADR 0049
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
                 case BuildShed c: At(c, Tag.BuildShed); break;
-                case BuildFamilyHouse c: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
+                case BuildFamilyHouse c when c.Financing == null: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
+                case BuildFamilyHouse c:
+                    At(c, Tag.BuildFamilyHouseLoan); w.WriteInt(c.TileId);
+                    w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons);
+                    break;
+                case AnswerFamilyRequest c: At(c, Tag.AnswerFamilyRequest); w.WriteLong(c.HandId); w.WriteBool(c.Yes); break;
+                case FoundBusiness c:
+                    At(c, Tag.FoundBusiness); w.WriteString(c.TypeId); w.WriteInt(c.TileId); w.WriteLong(c.Capital); w.WriteBool(c.RunYourself); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case CloseBusiness c: At(c, Tag.CloseBusiness); w.WriteLong(c.BusinessId); break;
+                case SetBusiness c:
+                    At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
+                    break;
+                case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
+                case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
                     At(c, Tag.BuyAnimal); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
@@ -166,6 +184,20 @@ namespace Sim.Core.Saves
                 case Tag.BuildHandHut: return new BuildHandHut(at, r.ReadInt());
                 case Tag.BuildShed: return new BuildShed(at);
                 case Tag.BuildFamilyHouse: return new BuildFamilyHouse(at, r.ReadInt());
+                case Tag.AnswerFamilyRequest: return new AnswerFamilyRequest(at, r.ReadLong(), r.ReadBool());
+                case Tag.FoundBusiness:
+                {
+                    string type = r.ReadString();
+                    int tile = r.ReadInt();
+                    long capital = r.ReadLong();
+                    bool self = r.ReadBool();
+                    return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                }
+                case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
+                case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
+                case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
+                case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
+                case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));
                 case Tag.BuyAnimal:
                 {
                     string kind = r.ReadString();

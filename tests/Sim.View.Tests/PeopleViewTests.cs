@@ -358,6 +358,134 @@ namespace Sim.View.Tests
             Assert.That(card.Lines.Single(l => l.Label == "Budget").Value, Does.EndWith(budget.Pie.First().Percent + "%"), "the pie's food share as the row says");
         }
 
+        // Spec 014 §3.9, ADR 0070: births, marriages and deaths in gentle words on the away card and the Town tab's "This season".
+        [Test]
+        public void Flows_InWords()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            CitizensState town = sim.State.Citizens;
+            Citizen Named(string n) => town.Citizens.Single(c => PeopleWords.Name(ctx, c.Name) == n);
+            Citizen mohan = Named("Mohan"), manoj = Named("Manoj"), asha = Named("Asha"), kamala = Named("Kamala");
+            Household family = town.Household(manoj.HouseholdId);
+            int village = sim.Config.Game.Population.Villages.ToList().IndexOf("rampur");
+            var events = new List<SimEvent>
+            {
+                new CitizenBorn(1, asha.Id, asha.Name, true, family.Id, asha.Mother),
+                new CitizenMarried(2, manoj.Id, manoj.Name, false, kamala.Id, village, family.Id, family.Id),
+                new CitizenMarried(3, asha.Id, asha.Name, true, 0, village, family.Id, family.Id),
+                new CitizenDied(4, mohan.Id, mohan.Name, false, 74, family.Id, false),
+            };
+            Assert.That(TownAway.Rows(ctx, events).Select(l => l.Value), Is.EqualTo(new[]
+            {
+                "A baby girl, Asha, was born to Manoj's family",
+                "Manoj married Kamala from Rampur",
+                "Asha married and moved to her husband's village, Rampur",
+                "Mohan (74), Manoj's father, passed away peacefully. His family mourns this season.",
+            }));
+
+            // The Town tab tells this season's story from the record.
+            asha.Story.Add(new StoryLine(StoryKind.Born, ctx.Now, 0));
+            mohan.Story.Add(new StoryLine(StoryKind.Died, ctx.Now, 0));
+            SheetVm tab = TownSheet.Build(ctx);
+            int at = tab.Lines.FindIndex(l => l.IsHeader && l.Label == "This season");
+            Assert.That(tab.Lines.Skip(at + 1).Take(2).Select(l => l.Label), Is.EqualTo(new[]
+                { "Mohan (74), Manoj's father, passed away peacefully. His family mourns this season.", "A baby girl, Asha, was born to Manoj's family" }));
+            Assert.That(CitizenSheet.Build(ctx, asha.Id).Lines.Any(l => l.Label == "Born here"), Is.True);
+        }
+
+        // Spec 014 §3.6, §3.13 (US-110): a free house is offered to the hand living alone: the card says what changes, an alert
+        // answers Yes, the away card tells who moved in, and from the next renewal the wage's Why? shows the house as part of the pay.
+        [Test]
+        public void HandFamily_Card()
+        {
+            Simulation sim = Situations.Town();
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new BuildFamilyHouse(t, Situations.HouseTile(sim)));
+            sim.DrainEvents();
+            sim.AdvanceTo(t + 49 * Hour);
+            ViewContext ctx = ViewKit2.Context(sim);
+            FamilyRequest ask = sim.DrainEvents().OfType<FamilyRequest>().Single();
+            Citizen me = sim.State.Citizens.OfHand(ask.HandId);
+            string name = PeopleWords.Name(ctx, me.Name), her = me.Female ? "her" : "his";
+
+            CardVm card = Cards.FamilyRequest(ctx, ask.HandId);
+            Assert.That(card.Title, Is.EqualTo(name + " asks to bring " + her + " family here"));
+            Assert.That(card.Text, Does.StartWith("Family house 2 is free. " + name + "'s family would come from "));
+            Assert.That(card.Text, Does.Contain("the wage is 6,"));
+            Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Yes, bring them", "Not now" }));
+            AlertVm alert = Alerts.Build(ctx).Single(a => a.Text == card.Title);
+            Assert.That(alert.Action.Label, Is.EqualTo("Yes, bring them"));
+
+            Ok(sim, alert.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(Cards.FamilyRequest(ViewKit2.Context(sim), ask.HandId), Is.Null, "answered: no card");
+            List<LineVm> away = TownAway.Rows(ViewKit2.Context(sim), sim.DrainEvents().ToList());
+            Assert.That(away.Single().Value, Is.EqualTo(name + "'s family came to live in Family house 2"));
+            Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family's house becomes part of the pay at the next renewal: 6,")), Is.True, "before the renewal");
+
+            sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason);
+            WhyRowVm cut = WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Single(r => r.Label.EndsWith("for the family house"));
+            Hand h = sim.State.People.Hand(ask.HandId);
+            Assert.That(cut.Value, Is.EqualTo(ViewKit2.Context(sim).Fmt.Coins(h.Wage)), "in cash");
+            Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.home", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family house, part of the pay")), Is.True);
+        }
+
+        // Spec 014 §3.3, §7 (US-111): a bride who married in shows her home village; a hand living alone has family in theirs.
+        [Test]
+        public void FamilyTree_Words()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            CitizensState town = sim.State.Citizens;
+            Citizen manoj = town.Citizens.Single(c => PeopleWords.Name(ctx, c.Name) == "Manoj"), usha = town.Citizen(manoj.Spouse);
+            usha.Story.Add(new StoryLine(StoryKind.Married, ctx.Now, manoj.Id));
+            FamilyTreeVm tree = HouseholdSheet.Build(ctx, manoj.HouseholdId).Lines.First(l => l.Tree != null).Tree;
+            Assert.That(tree.Generations[1].Select(p => p.Text), Is.EqualTo(new[] { "Manoj (38)", "Usha (35, from Rampur)" }));
+            Assert.That(CitizenSheet.Build(ctx, manoj.Id).Lines.Single(l => l.Label == "Usha").Value, Is.EqualTo("wife, 35, from Rampur"));
+            Assert.That(CitizenSheet.Build(ctx, manoj.Id).Lines.Single(l => l.Label == "Asha").Value, Is.EqualTo("daughter, 9"), "born here");
+
+            Citizen hand = town.Citizens.Single(c => c.Living && c.Job == CitizenJob.Hand);
+            LineVm home = CitizenSheet.Build(ctx, hand.Id).Lines.Single(l => l.Label == "Their family lives in");
+            Assert.That(home.Value, Is.EqualTo(TownWords.Village(ctx, hand)));
+        }
+
+        // ADR 0071: a family house with the bank's home loan: the Build button stays open when the loan covers the shortfall; the
+        // placement offers "With a home loan"; its sheet has a row a term, each building with the loan.
+        [Test]
+        public void HomeLoan_Sheet()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            int tile = Situations.HouseTile(sim);
+            long cost = TownSheet.HouseCost(sim), loan = HouseLoanSheet.Loan(sim, cost);
+            Assert.That(loan, Is.GreaterThan(0), "the bank lends against the houses");
+            Assert.That(HousePlacement.WithLoan(ctx, tile).Enabled, Is.True);
+            SheetVm sheet = HouseLoanSheet.Build(ctx, tile);
+            Assert.That(sheet.Title, Is.EqualTo("Build with a home loan"));
+            LineVm row = sheet.Lines.First(l => l.Action != null);
+            Assert.That(row.Action.Label, Is.EqualTo("Build here"));
+            Assert.That(row.Action.Detail, Is.EqualTo(ctx.Fmt.Coins(cost - loan)), "the down payment");
+            AssertWords(sheet);
+            int loans = sim.State.Credit.Loans.Count;
+            Ok(sim, row.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(sim.State.Credit.Loans.Count, Is.EqualTo(loans + 1));
+            Assert.That(sim.State.Citizens.Constructions.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LivesAlone()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            Citizen hand = sim.State.Citizens.Citizens.Single(c => c.Living && c.Job == CitizenJob.Hand);
+            Citizen manoj = sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == "Manoj");
+            string LivesIn(SheetVm s) => s.Lines.Single(l => l.Label == "Lives in").Value;
+
+            Assert.That(LivesIn(CitizenSheet.Build(ctx, hand.Id)), Is.EqualTo("Hut 1 · alone"), "not their own name (owner, 2026-10-25)");
+            Assert.That(LivesIn(HandSheet.Build(ctx, hand.HandId)), Is.EqualTo("Hut 1 · alone"));
+            Assert.That(LivesIn(CitizenSheet.Build(ctx, manoj.Id)), Is.EqualTo("Family house 1 · Manoj's family"));
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {

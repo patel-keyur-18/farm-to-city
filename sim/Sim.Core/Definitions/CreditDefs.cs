@@ -76,6 +76,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>The share of an animal's value a secured lender lends against (spec 012 §3.12; bank 0.75, a quarter down).</summary>
         public Fixed LivestockLtv { get; internal set; }
+
+        /// <summary>The share of family houses' book value the lender counts (the home loan, spec 014 §3.4, ADR 0071); 0 if it doesn't.</summary>
+        public Fixed HouseLtv { get; internal set; }
         public Fixed IncomeMultiple { get; }
         public int MinScore { get; }
 

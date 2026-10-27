@@ -84,6 +84,7 @@ namespace Sim.View.Views
             {
                 Row(vm, ctx, "why.householdRent.season", Money(ctx, MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason)));
                 Text(vm, ctx, "why.householdRent.how");
+                Text(vm, ctx, "why.householdRent.leave", "n", ctx.Fmt.Integer(sim.Config.Game.Population.RentBehindSeasons));
             }
             vm.Footnote = ctx.Strings.Get("why.householdRent.lesson");
             return vm;
@@ -111,6 +112,9 @@ namespace Sim.View.Views
             Row(vm, ctx, "needs.growth", Pct(ctx, x.Growth));
             Text(vm, ctx, "why.householdHappiness.weights", "a", Pct(ctx, p.SurvivalWeight), "b", Pct(ctx, p.SecurityWeight), "c", Pct(ctx, p.BelongingWeight), "d", Pct(ctx, p.GrowthWeight));
             Text(vm, ctx, "why.householdHappiness.gate", "gate", Pct(ctx, p.Gate));
+            // Moving out (§3.10): what keeps a family here, and how close this one is to leaving.
+            if (x.LowSeasons > 0) Row(vm, ctx, "why.householdHappiness.low", ctx.Strings.Get("why.householdHappiness.lowValue", "n", ctx.Fmt.Integer(x.LowSeasons), "of", ctx.Fmt.Integer(p.LeaveSeasons)), "below", ctx.Fmt.Integer(p.LeaveBelow));
+            Text(vm, ctx, "why.householdHappiness.leave", "below", ctx.Fmt.Integer(p.LeaveBelow), "n", ctx.Fmt.Integer(p.LeaveSeasons));
             vm.Footnote = ctx.Strings.Get("why.householdHappiness.lesson");
             return vm;
         }
@@ -158,7 +162,12 @@ namespace Sim.View.Views
             Household x = sim.State.Citizens.Household(me.HouseholdId);
             WhyVm vm = New(ctx, "why.handHome.title", TownWords.Home(ctx, x.HomeId));
             if (HouseholdRules.InHut(sim, x)) Row(vm, ctx, "why.handHome.remit", Pct(ctx, sim.Config.Game.Population.RemitShare), "village", TownWords.Village(ctx, me) ?? "");
-            else Text(vm, ctx, "why.handHome.family");
+            else
+            {
+                Text(vm, ctx, "why.handHome.family");
+                Hand h = sim.State.People.Hand(id);
+                if (h != null) Row(vm, ctx, "why.handHome.house", Money(ctx, MigrationRules.HousingInKind(sim, h)));
+            }
             return vm;
         }
     }

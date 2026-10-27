@@ -30,6 +30,7 @@ namespace Sim.View.Views
             Add("store", new SheetRequest("Store", 0), "sack");
             Add("money", new SheetRequest("Money", 0), "coin");
             if (ctx.Sim.State.People != null) Add("people", new SheetRequest("People", 0), "person_hand_f");
+            if (ctx.Sim.State.Businesses != null) Add("businesses", new SheetRequest("Businesses", 0), "flour_mill"); // spec 016 §3.3
             Add("land", new SheetRequest("Lands", 0), "sign");
             Add("you", new SheetRequest("Founder", 0), "person_founder");
             if (ctx.Sim.State.Guidance != null) Add("letter", new SheetRequest("Letter", 0), "letter");
@@ -75,6 +76,7 @@ namespace Sim.View.Views
             NetWorthSnapshot worth = Reporting.NetWorth(sim);
             vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth"));
             vm.Lines.Add(new LineVm(s.Get("money.landPart"), ctx.Fmt.Coins(worth.LandAtMarket), "netWorth"));
+            if (worth.Businesses > 0) vm.Lines.Add(new LineVm(s.Get("money.businessPart"), ctx.Fmt.Coins(worth.Businesses), "netWorth"));
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
             vm.Lines.Add(new LineVm(s.Get("money.soFar"), ctx.Fmt.Coins(SeasonSoFar(sim)), "seasonSoFar"));
 
@@ -97,6 +99,14 @@ namespace Sim.View.Views
                 any = true;
                 LenderDef l = sim.Config.Game.Credit.Lenders[loan.Lender];
                 string value = s.Get(loan.HasArrears ? "money.loanOverdue" : "money.loanValue", "owed", ctx.Fmt.Coins(CreditRules.OwedNow(sim, loan)), "next", ctx.Fmt.Coins(Repay.NextPayment(sim, loan)));
+                if (loan.BusinessId != 0)
+                {
+                    // A business's loan, paid from its own cash; yours only as its guarantor (spec 016 §3.8).
+                    var b = sim.State.Businesses.Find(loan.BusinessId);
+                    vm.Lines.Add(new LineVm(s.Get("money.businessLoan", "lender", s.Get(l.NameKey), "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, b))), value, "loan", loan.Id)
+                        { Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id)) });
+                    continue;
+                }
                 vm.Lines.Add(new LineVm(s.Get(l.NameKey), value, "loan", loan.Id) { Action = ActionVm.Open("repay:" + loan.Id, s.Get("money.repay"), new SheetRequest("Repay", loan.Id)) });
             }
             if (!any) vm.Lines.Add(new LineVm(s.Get("money.noLoans"), s.Get("money.noLoansNote")));

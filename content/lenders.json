@@ -13,7 +13,7 @@
       "id": "coop_bank", "nameKey": "lender.coop_bank",
       "baseRate": 0.025, "rateSlopePer100": 0.005, "refScore": 750, "penaltyRate": 0.015,
       "schedule": "equalPrincipal", "minTerm": 2, "maxTerm": 16, "minAmount": 10000,
-      "secured": true, "baseLimit": 0, "collateralLtv": 0.6, "livestockLtv": 0.75, "incomeMultiple": 1.0,
+      "secured": true, "baseLimit": 0, "collateralLtv": 0.6, "livestockLtv": 0.75, "houseLtv": 0.75, "incomeMultiple": 1.0,
       "minScore": 550, "scoreScaledLimit": true,
       "graceCloses": 2, "restructureExtraSeasons": 4,
       "eraCaps": { "homestead": 500000, "village": 2500000 }

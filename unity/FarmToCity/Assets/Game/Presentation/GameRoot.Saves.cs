@@ -138,6 +138,12 @@ namespace Game.Presentation
                     CardVm card = Cards.Regular(_ctx, r.ApplicantId);
                     if (card != null) ShowCard(card, id => { if (id == SettingsIds.SeePeople) OpenSheet(new SheetRequest("People", 0)); });
                 }
+                if (e is FamilyRequest f)
+                {
+                    // Spec 014 §3.13: a free house is offered to a hand living alone first; the card asks (null once it has lapsed).
+                    CardVm card = Cards.FamilyRequest(_ctx, f.HandId);
+                    if (card != null) ShowCard(card, id => Run(new Command[] { new AnswerFamilyRequest(Sim.State.Clock.SimTime, f.HandId, id == SettingsIds.Yes) }));
+                }
             }
             if (_playLog.Lines.Count != lines) WritePlayLog();
 

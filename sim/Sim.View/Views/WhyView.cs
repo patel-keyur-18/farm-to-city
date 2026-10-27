@@ -81,6 +81,16 @@ namespace Sim.View.Views
             { "townHappiness", TownHappiness }, { "employment", Employment }, { "household.income", HouseholdIncome }, { "household.budget", HouseholdBudget },
             { "household.savings", HouseholdSavings }, { "household.rent", HouseholdRent }, { "household.happiness", HouseholdHappiness }, { "household.home", HouseholdHome },
             { "citizen.age", CitizenAge }, { "citizen.health", CitizenHealth }, { "citizen.job", CitizenWork }, { "hand.home", HandHome },
+            // Businesses (spec 016 §7).
+            { "businessArea", BusinessArea }, { "businessFee", BusinessFee }, { "businessTrader", BusinessTrader }, { "businessWage", BusinessWage },
+            { "businessOwn", BusinessOwn }, { "businessWorker", BusinessWorker }, { "businessHours", BusinessHours }, { "businessMarket", BusinessMarket },
+            { "businessCash", BusinessCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
+            { "planCost", (c, i) => PlanLine(c, i, "cost") }, { "planFees", (c, i) => PlanLine(c, i, "fees") }, { "planSales", (c, i) => PlanLine(c, i, "sales") },
+            { "planWheat", (c, i) => PlanLine(c, i, "wheat") }, { "planPower", (c, i) => PlanLine(c, i, "power") }, { "planRepairs", (c, i) => PlanLine(c, i, "repairs") },
+            { "planDepreciation", (c, i) => PlanLine(c, i, "depreciation") }, { "planWage", (c, i) => PlanLine(c, i, "wage") },
+            { "planProfit", (c, i) => PlanLine(c, i, "profit") }, { "planCash", (c, i) => PlanLine(c, i, "cash") }, { "planPayback", (c, i) => PlanLine(c, i, "payback") },
+            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
+            { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

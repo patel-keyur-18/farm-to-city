@@ -72,7 +72,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | Job | None, the founder's hand, "works outside" (§3.6), or later a business (spec 016) |
 | Story | Arrival, marriage, children, retirement, passing, kept as lines for the card |
 | Family (§10 G9) | Parents and spouse by id; children and siblings found from them. A spouse who married in shows "from Sitapur" (parents unknown); a Phase 1 hand shows "family in his home village" until his family moves in |
-| The departed | Someone who passed away or moved away is kept only while a citizen living in town is their spouse, child or grandchild; dropped at the season close when none is. At most two generations back from anyone alive, so it never grows without end (about 0.5 departed a living citizen; a town of 80 keeps about 40, about 4 KB) |
+| The departed | Someone who passed away or moved away is kept only while a citizen living in town is their spouse, child or grandchild (or, for a daughter who married away, a parent: ADR 0070); dropped at the season close when none is. At most two generations back from anyone alive, so it never grows without end (about 0.5 departed a living citizen; a town of 80 keeps about 40, about 4 KB) |
 
 ### 3.4 Households and homes (§10 G2)
 
@@ -83,6 +83,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | The family house | `BuildFamilyHouse(tile)` on an owned acre that isn't growing anything: `BuildingDef(family_house).value` 60,000 (a two-room pucca house), 48 h to build, houses `houseCapacity` people; an acre takes `housesPerAcre` houses and is no longer farmed while any stands; on the map two homes share a wall at the back of the acre, their courtyards opening onto open ground (ADR 0067). Also on the labour quarters' free places | 6 people; 2 an acre (ADR 0067; was 4) |
 | Rent | A household in a family house pays `rentPerSeason` × index at each season close (Dr Cash, Cr 4200 Rent received); a household that can't pay it falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays no rent: the house is part of his pay instead (§3.6) | 6,000 |
 | Moving up | A hand whose family house is free can "send for his family" (§3.10) | |
+| The home loan (ADR 0071) | `BuildFamilyHouse(tile, financing)`: the co-op bank lends up to the house's cost, counting family houses at `houseLtv` 0.75 of their book value in its limit (as the dairy loan counts animals); the rest is paid down. A house on inherited land is never seized: the bank carries that risk | 0.75 |
 | Overcrowding | More people than `houseCapacity` leaves shelter partly unmet (§3.8) | |
 
 **Why 60,000 and 6,000:** a two-room rural house costs about ₹3–5 lakh to build and rents for about ₹2,000 a month; the game keeps the founder's houses cheap as it does huts (family labour on the build) and keeps the rent in proportion, so a house pays back in about 10 seasons, like land (ADR 0028).
@@ -153,7 +154,7 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | Births | At each season close, a household with a couple whose woman is 20–40 has a baby with chance `birthChance` × (room in the home ? 1 : 0.3) × (0.6 + 0.4 × happiness ÷ 100), fewer than `maxChildren` children. Seeded (stream Births). Emits `CitizenBorn` | 0.10; 3 |
-| Marriage | An adult child aged 22–30 marries with chance `marriageChance` a season; the spouse moves in from another village. If a family house is free the couple moves into it (a new household); otherwise they stay with the parents (crowding) | 0.25 |
+| Marriage (ADR 0070) | An unmarried adult child aged 22–30 living with a parent marries with chance `marriageChance` a season. Patrilocal, as in rural India: a son's bride moves in from another village (0–4 years younger); if a family house is free the couple moves into it (a new household), otherwise they stay with his parents (crowding). A daughter marries away to her husband's village ("Asha married and moved to her husband's village, Rampur") and is kept in the tree while a parent lives. Emits `CitizenMarried` | 0.25 |
 | Deaths | Only elders: at each season close, chance `deathBase × 2^((age − 60) ÷ deathDoubling)`, capped at 0.5, × (1.5 if health < 0.7). Seeded (stream Deaths). The household mourns (happiness −10 for a season). A widowed elder stays with family; an elder living alone leaves the house empty for a new family (§3.10); savings stay with the household; the departed stay in the family tree, greyed. Emits `CitizenDied` | 0.015; 8 years |
 | Tone (§10 G7) | Worded gently and without blame: "Kamla Devi (76), Manoj's mother, passed away peacefully. Her family mourns this season." On the away card and the Town tab only, as information: no sound, no push notification. Her *Why?*: "At 76, about 4% a season; health 0.9". A hand never dies under contract (he retires at 60) | |
 | Life expectancy | About 72 with these defaults (rural India about 70); healthcare raises it in Phase 3 | |
@@ -163,7 +164,7 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
-| A family moves in | While a family house stands empty, a family arrives every `familyEveryHours` ± seeded jitter: 2–5 people (a couple, 0–3 children, sometimes an elder), adults with skills and traits drawn as applicants (spec 006). They move in at once and pay rent from the next close. Live or away | 18 h ± 6 |
+| A family moves in | While a family house stands empty, a family arrives every `familyEveryHours` ± seeded jitter: 2–5 people (a couple, 0–3 children, sometimes (`familyElderChance` 0.25) a widowed elder), adults with skills and traits drawn as applicants (spec 006). They move in at once and pay rent from the next close. Live or away | 18 h ± 6 |
 | A hand's family | A hand under contract whose household is just him is offered a family house first when one is finished or falls empty (§3.13; a card: Yes / Not now); yes moves him and a seeded wife and 0–2 children into the house; his hut is free for another hand. The card says what changes: "From his next renewal his wage is 6,000 less: the house is part of his pay" (§3.6) | |
 | Moving out | A household whose happiness stays below `leaveBelow` for `leaveSeasons` season closes, or is 2 seasons behind on rent, leaves (seeded, 50% a close once eligible). A hand's household leaving ends his contract (spec 006 dismissal rules, no severance). Emits `HouseholdLeft` with the reason | 35; 2 |
 | Population | Citizens in the town; the HUD shows it with town happiness | |
@@ -184,7 +185,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 | --- | --- | --- |
 | When houses unlock | `BuildFamilyHouse` from the Hamlet (`unlockEra`), like the cattle shed; before it the Town tab says "Family houses come with the Hamlet" | The Hamlet's role is landowner; a Homestead has no money for houses |
 | Placing a house | "Build a family house" opens the map with the acres it can go on lit (owned, nothing growing, room for another house; the quarters' free places); an empty field's sheet also offers it. Refusals in words: "Something is growing here", "This acre has 2 houses" | Nobody has to guess where a house may go |
-| A hand's family and a free house | A family house that is finished or falls empty is offered first to a hand living alone (a card: "Manoj asks to bring his family here": Yes / Not now). Strangers arrive only after "Not now", or 18 h after the offer while away. Replaces "at the next season close" in §3.10 | Families move in every 18 h, so a house would almost never still be free at a close and the player could never say yes |
+| A hand's family and a free house | A family house that is finished or falls empty is offered first to a hand living alone (a card: "Manoj asks to bring his family here": Yes / Not now). Strangers arrive only after "Not now", or once the offer has stood 18 h unanswered (live or away; US-110). Replaces "at the next season close" in §3.10 | Families move in every 18 h, so a house would almost never still be free at a close and the player could never say yes |
 | Remittance | A hand's household stops sending half his wage home once his family lives in town | His family is here |
 | A hand retires | A retired hand living alone leaves for his home village (his hut is free for a new hand, `CitizenRetired`, "Ramu (60) has gone home to his village"). One whose family lives in your family house stays as an elder of that household | Otherwise a retired man would hold the hut for ever and the player could never hire again |
 | A hand leaves the job | Dismissed or not renewed, a hand whose family lives in a family house stays as a tenant: he works outside, the household pays rent from the next close, and his housing deduction ends. A household with nobody working for you pays rent | A home isn't lost with a job; the founder still gets the house's value |
@@ -197,7 +198,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 
 ## 4. Data
 
-**New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48); the house's rules in `population.json`'s `house` block (`unlockEra` hamlet, `capacity` 6, `perAcre` 4, `rentPerSeason` 6,000); home villages (`villages`, saved by id); names with gender in `people.json`.
+**New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `familyElderChance`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48); the house's rules in `population.json`'s `house` block (`unlockEra` hamlet, `capacity` 6, `perAcre` 4, `rentPerSeason` 6,000); home villages (`villages`, saved by id); names with gender in `people.json`.
 
 **New state** (save schema 9, ADR 0064 took 8): `Citizen` (id, name, gender, the season they were 0 (`bornSeason`: age = seasons since × `lifeYearsPerSeason`), householdId, education, skill, traits, health, job and hand, parents, spouse, home village, gone (died or left) and when, story lines), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
 
@@ -205,8 +206,8 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
-| `BuildFamilyHouse` | `tile` | `EraLocked`, `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds` | §3.4, §3.13 |
-| `AnswerFamilyRequest` | `handId`, `yes` | `UnknownHand`, `NoEmptyHouse` | §3.10 |
+| `BuildFamilyHouse` | `tile`, `financing` (optional, ADR 0071) | `EraLocked`, `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds`; with financing `InvalidAmount` (more than the cost) and the bank's checks | §3.4, §3.13 |
+| `AnswerFamilyRequest` | `handId`, `yes` | `NoOffer`, `NoEmptyHouse` | §3.10 |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
@@ -266,18 +267,20 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | AC-10 | The golden replays are unchanged; a year of the bot gives the same hash in one chunk or many | `ReplayTests.*`, `CitizenTests.ChunkingInvariance` |
 | AC-11 | A hand whose family lives in a family house asks 6,000 × index less cash at his next renewal (a loyal hand's kept wage too), pays no rent, and asks his full wage again at the renewal after they move out; never mid-season | `MigrationTests2.HandFamily_HousingInKind` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
-| AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
+| AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild (a daughter who married away, while a parent lives: ADR 0070) and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
+| AC-15 | The home loan (ADR 0071): the bank counts family houses at 0.75 of their book value, lends at most the house's cost, the rest is paid down; the financing is kept in the command log | `HouseTests.HomeLoan`, `PeopleViewTests.HomeLoan_Sheet` |
 | AC-14 | Every row of §3.13: houses from the Hamlet; a free house offered to a hand alone first; a retired hand alone frees his hut; a dismissed hand's family stays as tenants; an acre with a house can't be sold; a seized house's household leaves; an elder alone behind on rent leaves; every needs row names its lever or says what isn't possible yet | `MigrationTests2.EveryPath`, `PeopleViewTests.NeedsLevers` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Population when the Village unlocks (spec 018) | 12–25 (5 households) | ADR 0028 pacing |
-| A cautious and a random bot reach 5 households | By the Village pacing | Every bot, not only the competent one |
-| Town happiness, competent bot | 70–85 | |
-| Households leaving a year, competent bot | Under 1 in 10 | |
-| Rent's share of the founder's income | Small | Under 15% |
+| Population when the Village unlocks (spec 018) | 12–25 (5 households) | Measured (US-211, ADR 0071): 16 at day 21 (10–20) |
+| 5 households | The competent bot by day 21 (ADR 0028 pacing, on the home loan); the cautious saver, which never borrows, by day 48 | Measured: day 16 (15–22); the saver day 33 (29–43). The random bot never reaches the Hamlet, so it isn't measured (ADR 0071) |
+| Town happiness, competent bot | 65–85 (ADR 0071: renters with outside work score about 68 by §3.8 until businesses bring town jobs) | Measured 69 (68–70) |
+| Households leaving a year, competent bot | Under 1 in 10 | Measured 0 |
+| Rent's share of the founder's income | Under 15% | Measured 12% (at most 14%) |
+| Departed a living citizen over 20 years (AC-13) | About 0.3 | Measured 0.27–0.33, worst 0.58–0.90 (a 6-house town; US-111) |
 | Town food demand vs the founder's grain | A town of 80 eats about 2 acres' grain a season | |
 
 ## 10. Open questions

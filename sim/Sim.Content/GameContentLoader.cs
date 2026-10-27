@@ -39,7 +39,10 @@ namespace Sim.Content
             // Citizens come with a family house in the buildings (spec 014), after the people they grow from.
             int house = buildings.FindIndex(b => b.Id == PopulationDefs.HouseId);
             PopulationDefs population = house < 0 || people == null ? null : LoadPopulation(read("population.json"), house, market, onboarding);
-            return new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
+            var game = new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
+            // Businesses come with citizens (a worker is one, spec 016 §3.6).
+            if (population != null) game.Businesses = LoadBusinesses(read("businesses.json"), market, onboarding);
+            return game;
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)
@@ -392,7 +395,7 @@ namespace Sim.Content
                 string p = Index(root + ".lenders", i);
                 JObject d = Object(tokens[i], p);
                 OnlyFields(d, p, "id", "nameKey", "baseRate", "rateSlopePer100", "refScore", "penaltyRate", "schedule", "minTerm", "maxTerm",
-                    "minAmount", "secured", "baseLimit", "collateralLtv", "livestockLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
+                    "minAmount", "secured", "baseLimit", "collateralLtv", "livestockLtv", "houseLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
                     "restructureExtraSeasons", "eraCaps");
                 string id = UniqueId(d, p, lenders.ConvertAll(x => x.Id));
                 if (id != LenderDef.MoneylenderId && id != LenderDef.BankId)
@@ -428,7 +431,10 @@ namespace Sim.Content
                     Bool(Required(d, p, "secured"), Join(p, "secured")), Money(Required(d, p, "baseLimit"), Join(p, "baseLimit")),
                     Bounded(d, p, "collateralLtv", "0", "1"), Bounded(d, p, "incomeMultiple", "0", "4"), minScore,
                     Bool(Required(d, p, "scoreScaledLimit"), Join(p, "scoreScaledLimit")), grace, extra, eraCaps)
-                    { LivestockLtv = d["livestockLtv"] == null ? Fixed.Zero : Bounded(d, p, "livestockLtv", "0", "1") });
+                    {
+                        LivestockLtv = d["livestockLtv"] == null ? Fixed.Zero : Bounded(d, p, "livestockLtv", "0", "1"),
+                        HouseLtv = d["houseLtv"] == null ? Fixed.Zero : Bounded(d, p, "houseLtv", "0", "1"),
+                    });
             }
             if (lenders.Count != 2 || lenders[0].Id != LenderDef.MoneylenderId || lenders[1].Id != LenderDef.BankId)
                 throw new ContentException(root + ".lenders", "expected the moneylender, then the cooperative bank");

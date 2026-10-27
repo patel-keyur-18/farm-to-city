@@ -21,10 +21,19 @@ namespace Sim.Core.Finance
     /// </summary>
     internal static class CreditSystem
     {
+        /// <summary>The books a loan's entries go to: a business's for its business loan, else yours.</summary>
+        internal static Ledger LedgerOf(Simulation sim, Loan loan)
+        {
+            return loan.BusinessId == 0 ? sim.State.Ledger : sim.State.Businesses.Find(loan.BusinessId).Ledger;
+        }
+
         // ---- taking a loan ----
 
-        /// <summary>Creates the loan and pays the amount into Cash. The caller has checked <see cref="CreditRules.Check"/>.</summary>
-        internal static Loan Create(Simulation sim, int lender, long amount, int term)
+        /// <summary>
+        /// Creates the loan and pays the amount into Cash: yours, or the business's for a business loan. The caller has checked
+        /// <see cref="CreditRules.Check"/> (or the business loan's own rules).
+        /// </summary>
+        internal static Loan Create(Simulation sim, int lender, long amount, int term, long businessId = 0)
         {
             CreditDefs defs = sim.Config.Game.Credit;
             CreditState credit = sim.State.Credit;
@@ -35,9 +44,9 @@ namespace Sim.Core.Finance
                 Id = credit.NextLoanId++, Lender = lender, OriginalPrincipal = amount, Principal = amount,
                 Rate = CreditRules.Rate(def, credit.Score), PenaltyRate = def.PenaltyRate, Schedule = def.Schedule, Term = term,
                 TakenAt = t, Remaining = term, InstalmentBase = amount / term, FirstClosePartial = t % sim.Clock.SecondsPerSeason != 0,
-                SegmentStart = t, State = LoanState.Active,
+                SegmentStart = t, State = LoanState.Active, BusinessId = businessId,
             };
-            sim.State.Ledger.Post(t, sim.Period, "ledger.loanTaken", "loan:" + loan.Id,
+            LedgerOf(sim, loan).Post(t, sim.Period, "ledger.loanTaken", "loan:" + loan.Id,
                 new Posting(Account.Cash, amount), new Posting(def.LoanAccount, -amount));
             credit.Loans.Add(loan);
             credit.LoanSeenThisSeason = true;
@@ -59,7 +68,7 @@ namespace Sim.Core.Finance
             if (interest > 0) postings.Add(new Posting(Account.Interest, interest));
             if (penalty > 0) postings.Add(new Posting(Account.PenaltyInterest, penalty));
             postings.Add(new Posting(Account.InterestPayable, -(interest + penalty)));
-            sim.State.Ledger.Post(now, period, "ledger.interest", "loan:" + loan.Id, postings.ToArray());
+            LedgerOf(sim, loan).Post(now, period, "ledger.interest", "loan:" + loan.Id, postings.ToArray());
             loan.InterestAccrued += interest + penalty;
         }
 
@@ -76,7 +85,8 @@ namespace Sim.Core.Finance
         /// </summary>
         internal static long Pay(Simulation sim, Loan loan, long amount, string key, out long interest, out long arrears, out long principal)
         {
-            long take = System.Math.Min(amount, sim.State.Ledger.Cash);
+            Ledger ledger = LedgerOf(sim, loan);
+            long take = System.Math.Min(amount, ledger.Cash);
             long left = take;
             interest = arrears = principal = 0;
             long fromArrearsInterest = System.Math.Min(left, loan.ArrearsInterest);
@@ -99,7 +109,7 @@ namespace Sim.Core.Finance
                 if (interest > 0) postings.Add(new Posting(Account.InterestPayable, interest));
                 if (principal > 0) postings.Add(new Posting(sim.Config.Game.Credit.Lenders[loan.Lender].LoanAccount, principal));
                 postings.Add(new Posting(Account.Cash, -take));
-                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, key, "loan:" + loan.Id, postings.ToArray());
+                ledger.Post(sim.State.Clock.SimTime, sim.Period, key, "loan:" + loan.Id, postings.ToArray());
                 sim.Emit(new LoanRepayment(sim.State.Clock.SimTime, loan.Id, interest, arrears, principal - arrears));
             }
             if (!loan.HasArrears) loan.ArrearsCloses = 0;
@@ -137,6 +147,7 @@ namespace Sim.Core.Finance
                 loan.ArrearsInterest = dueInterest;
                 loan.InterestAccrued = 0;
                 loan.ArrearsPrincipal += scheduled; // due now; what is paid comes off below
+                if (loan.BusinessId != 0) Business.BusinessBooks.Draw(sim, sim.State.Businesses.Find(loan.BusinessId), due); // its overdraft first (spec 016 §3.10)
                 long paid = Pay(sim, loan, due, "ledger.loanPayment", out long i, out long a, out long p);
                 stats.InterestPaid += i;
                 stats.PrincipalPaid += p;
@@ -260,13 +271,28 @@ namespace Sim.Core.Finance
             GameDefs defs = sim.Config.Game;
             long t = sim.State.Clock.SimTime;
             long period = sim.Period;
+
+            // 0. A business on bought land, or whose own loan has defaulted, is closed (spec 016 §3.10): its stock and equipment sold,
+            // its debts repaid, what's still owed becoming your guaranteed loan; what it hands back joins the pot.
+            long pot = 0;
+            if (sim.State.Businesses != null)
+                foreach (Business.Business b in sim.State.Businesses.Businesses.ToArray())
+                {
+                    if (b.Status == Business.BusinessStatus.Closed) continue;
+                    Loan own = b.LoanId == 0 ? null : credit.Find(b.LoanId);
+                    bool bought = !sim.State.Land.Parcels[sim.State.Land.Tiles[b.TileId].ParcelId].Protected;
+                    if (!bought && (own == null || own.State != LoanState.Defaulted)) continue;
+                    long before = ledger.Cash;
+                    Business.BusinessBooks.CloseDown(sim, b);
+                    pot += ledger.Cash - before;
+                }
+
             AccrueAll(sim, period);
             long debt = 0;
-            foreach (Loan l in credit.Loans) if (l.IsOpen) debt += l.Principal + l.ArrearsInterest + l.InterestAccrued;
+            foreach (Loan l in credit.Loans) if (l.IsOpen && l.BusinessId == 0) debt += l.Principal + l.ArrearsInterest + l.InterestAccrued;
 
             // 1. Bought parcels, in id order, with their crops and trees.
             var parcels = new List<string>();
-            long pot = 0;
             FarmSystem.Accrue(sim);
             foreach (Parcel parcel in sim.State.Land.Parcels)
             {
@@ -353,9 +379,10 @@ namespace Sim.Core.Finance
 
             // 3. Repay: the secured lender first, then the others in proportion to what each is owed.
             long raised = pot;
+            // A standing business's loan is its own debt, on its own books: not foreclosed with yours.
             foreach (Loan l in credit.Loans)
-                if (l.IsOpen && defs.Credit.Lenders[l.Lender].Secured) pot -= Pay(sim, l, pot, "ledger.foreclosurePayment", out _, out _, out _) ;
-            var unsecured = credit.Loans.FindAll(l => l.IsOpen && !defs.Credit.Lenders[l.Lender].Secured);
+                if (l.IsOpen && l.BusinessId == 0 && defs.Credit.Lenders[l.Lender].Secured) pot -= Pay(sim, l, pot, "ledger.foreclosurePayment", out _, out _, out _) ;
+            var unsecured = credit.Loans.FindAll(l => l.IsOpen && l.BusinessId == 0 && !defs.Credit.Lenders[l.Lender].Secured);
             long totalOwed = 0;
             foreach (Loan l in unsecured) totalOwed += l.Principal + l.ArrearsInterest + l.InterestAccrued;
             if (totalOwed > 0 && pot > 0)
@@ -377,7 +404,7 @@ namespace Sim.Core.Finance
             long writtenOff = 0;
             foreach (Loan l in credit.Loans)
             {
-                if (!l.IsOpen) continue;
+                if (!l.IsOpen || l.BusinessId != 0) continue;
                 long interest = l.ArrearsInterest + l.InterestAccrued, principal = l.Principal, total = interest + principal;
                 if (total > 0)
                 {
@@ -421,17 +448,19 @@ namespace Sim.Core.Finance
             if (sim.State.Credit == null) return 0;
             CreditDefs defs = sim.Config.Game.Credit;
             long owed = 0;
-            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero;
+            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero, houseLtv = Fixed.Zero;
             foreach (Loan l in sim.State.Credit.Loans)
             {
-                if (!l.IsOpen || !defs.Lenders[l.Lender].Secured) continue;
+                if (!l.IsOpen || l.BusinessId != 0 || !defs.Lenders[l.Lender].Secured) continue; // a business loan is secured on the business
                 owed += CreditRules.OwedNow(sim, l);
                 if (defs.Lenders[l.Lender].CollateralLtv > ltv) ltv = defs.Lenders[l.Lender].CollateralLtv;
                 if (defs.Lenders[l.Lender].LivestockLtv > animalLtv) animalLtv = defs.Lenders[l.Lender].LivestockLtv;
+                if (defs.Lenders[l.Lender].HouseLtv > houseLtv) houseLtv = defs.Lenders[l.Lender].HouseLtv;
             }
             if (owed == 0) return 0;
             // What stays behind the loans once this parcel or animal is sold (spec 005 §3.6, spec 012 §3.12).
-            long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv) + Money.MulRate(CreditRules.LivestockCollateral(sim, 0, animalId), animalLtv);
+            long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv) + Money.MulRate(CreditRules.LivestockCollateral(sim, 0, animalId), animalLtv)
+                + Money.MulRate(CreditRules.HouseCollateral(sim), houseLtv);
             return System.Math.Max(0, owed - supported);
         }
 
@@ -443,7 +472,7 @@ namespace Sim.Core.Finance
             foreach (Loan l in sim.State.Credit.Loans)
             {
                 if (left <= 0) break;
-                if (!l.IsOpen || !defs.Lenders[l.Lender].Secured) continue;
+                if (!l.IsOpen || l.BusinessId != 0 || !defs.Lenders[l.Lender].Secured) continue;
                 Accrue(sim, l, sim.Period);
                 left -= Pay(sim, l, left, "ledger.loanPayment", out _, out _, out _);
             }

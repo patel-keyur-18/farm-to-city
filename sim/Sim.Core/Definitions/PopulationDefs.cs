@@ -97,6 +97,9 @@ namespace Sim.Core.Definitions
         public int FamilyJitterHours { get; internal set; }
         public int FamilySizeMin { get; internal set; }
         public int FamilySizeMax { get; internal set; }
+
+        /// <summary>The chance a family moving in brings an elder (a widowed parent).</summary>
+        public Fixed FamilyElderChance { get; internal set; }
         public int LeaveBelow { get; internal set; }
         public int LeaveSeasons { get; internal set; }
         public Fixed LeaveChance { get; internal set; }

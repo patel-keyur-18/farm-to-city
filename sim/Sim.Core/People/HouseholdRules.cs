@@ -16,7 +16,7 @@ namespace Sim.Core.People
         /// <summary>An adult of working age with no job in town: works outside as a day labourer (§3.6).</summary>
         public static bool WorksOutside(Simulation sim, Citizen c)
         {
-            return c.Living && c.Job != CitizenJob.Hand && c.Job != CitizenJob.Retired && !IsChild(sim, c) && !IsElder(sim, c);
+            return c.Living && c.Job != CitizenJob.Hand && c.Job != CitizenJob.Business && c.Job != CitizenJob.Retired && !IsChild(sim, c) && !IsElder(sim, c);
         }
 
         /// <summary>Adult equivalents (§3.5): adult 1.0, child 0.6, elder 0.8.</summary>
@@ -74,6 +74,11 @@ namespace Sim.Core.People
                     Hand h = sim.State.People.Hand(c.HandId);
                     if (h == null || h.Contract != ContractState.Active) continue; // unpaid: nothing this season
                     income += hut ? h.Wage - Money.MulRate(h.Wage, p.RemitShare) : h.Wage;
+                }
+                else if (c.Job == CitizenJob.Business)
+                {
+                    Business.Business b = sim.State.Businesses?.Find(c.Employer);
+                    if (b != null) income += Business.BusinessRules.Wage(sim, Business.BusinessRules.TypeOf(sim, b)); // spec 016 §3.6
                 }
                 else if (WorksOutside(sim, c)) outside += OutsideSeasonPay(sim);
             }
@@ -137,7 +142,9 @@ namespace Sim.Core.People
 
         /// <summary>
         /// The season close (§3.12, after spec 005's settlement): rent for the season that ended; health follows the season's food (down by the shortfall, up when fed),
-        /// the season's saving is banked, then each household sets the new season's budget. Households in id order.
+        /// the season's saving is banked; deaths, births and marriages; then each household sets the new season's budget, those who
+        /// stay unhappy or behind on rent may leave, and the
+        /// departed nobody links to are dropped. Households in id order.
         /// </summary>
         internal static void Close(Simulation sim)
         {
@@ -156,8 +163,11 @@ namespace Sim.Core.People
                 // The season's saving, plus what outside work and labour paid beyond what the budget expected (or less).
                 x.Savings = System.Math.Max(0, x.Savings + x.Saved + x.Earned - x.OutsideExpected);
                 x.Earned = 0;
-                SetBudget(sim, x);
             }
+            PopulationRules.Close(sim);
+            foreach (Household x in s.Households) SetBudget(sim, x);
+            MigrationRules.MoveOut(sim);
+            CitizenRules.Prune(sim);
         }
     
         /// <summary>A day's outside pay for one adult (§3.6): the founder's day-labour rate × 8 h × index × the share of days with work.</summary>

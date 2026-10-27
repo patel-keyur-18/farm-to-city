@@ -366,6 +366,9 @@ namespace Sim.Core.Definitions
         /// <summary>Citizens, households and the family house (spec 014), or null when the buildings have no family house.</summary>
         public PopulationDefs Population { get; }
 
+        /// <summary>Businesses (spec 016), with population content (a business's worker is a citizen); null without.</summary>
+        public BusinessDefs Businesses { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

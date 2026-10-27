@@ -167,7 +167,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Where trees go:**
   - yard slots around the house (about 4, with more for bigger houses)
   - field-edge slots (about 2 per acre), which don't take field area but slightly shade the next crop
-  - whole-acre orchards come in Phase 2
+  - whole-acre orchards come in Phase 2 (spec 013, ADR 0075): mango 40 trees an acre, guava 100, banana and papaya 400, with a short crop between young trees at half yield until they bear
 - **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
 - **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 
@@ -183,7 +183,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Crop rotation.** Repeating a crop drains its nutrient. Lentils restore soil, and leaving a field fallow for a season restores fertility.
 - **Pests and disease.** Each crop cycle rolls a seeded risk. Risk rises with monoculture and wet weather, and falls with rotation and spraying, which costs money. Outbreaks are signalled during growth so the player can respond. Ignoring the risk can wipe out a field, but severe outbreaks never strike while the player is away.
 
-**Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
+**Irrigation ladder.** Rain-fed, then a well and buckets, then a pump on the well, a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending. In Phase 2 (spec 013, ADR 0075): the pump (Hamlet) ends bucket labour and waters 4 acres; a canal channel (Hamlet) waters an acre except in Summer, when the canal is shut, for a fee each season; drip (Village, half subsidised on 2 acres) holds each crop's ideal moisture on pumped water; a borewell (Village) waters 6 more acres.
 
 **Livestock (ADR 0056, ADR 0060, spec 012).** From the Hamlet, the player can build a 4-animal cattle shed on the cattle acre, a barren inherited acre beside the yard kept for the animals (ADR 0064), and buy Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 75,000, about 11 L, a lower price a litre and less milk in Summer) at the village cattle fair, with a bank dairy loan if needed. One game day stands for 22.8 real days of an animal's life (a season is a real quarter), so a buffalo gives about 182 L a game day. The village dairy co-op collects at 6:00 and pays by fat; the household drinks some as home use.
 
@@ -199,11 +199,11 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - depreciation
 - a resale value
 
-Players can buy, lease, or hire a machine for a day from a neighbour.
+Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2 (spec 013, ADR 0075): an ox plough with a pair of bullocks in the cattle shed (Hamlet) and a tractor (Village) cover a number of acres, cut their labour and raise the Tools factor; a combine harvester is hired by the acre at harvest. Skipped maintenance raises the chance of a breakdown (24 h out and a repair).
 
 **Storage and selling**
 
-- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
+- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage: the granary holds 10,000 kg of grains, pulses, atta and seed at a fifth of their spoilage (spec 013, ADR 0075).
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
 - **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
 - **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, up to a daily limit per crop. **The trader's truck (ADR 0054)** of about 4 t arrives at 6:00 and leaves when full or at midnight; its price is set at 6:00 and held all day, and while it is away selling to the trader is refused. The player's stall pauses from midnight to 6:00. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
@@ -273,7 +273,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 **The first businesses (spec 016, ADR 0068).**
 - **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
-- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 300 people) and mills your own wheat into atta and bran.
+- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 350 people besides your town, ADR 0073) and mills your own wheat into atta and bran.
 - **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk into paneer, curd and ghee. The village grocer and tea stall buy from both each morning.
 - **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
 - **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.
@@ -299,7 +299,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 **Operating levers:** price, quality, staffing, hours, stock policy, marketing, supplier choice, equipment upgrades, expansion and automation.
 
-**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money. Underpricing wins customers but kills margin. Overpricing invites a competitor.
+**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money. Underpricing wins customers but kills margin. Overpricing invites a competitor. In Phase 2 (spec 017, ADR 0074) each customer group shares its demand by an additive score (1 + price + quality + stars − distance − wait, each part shown in the *Why?*). The first shops, from the Village, are a vegetable stall selling your own produce, a tea stall and a sweet shop (rasgulla and atta laddoo from your paneer, atta and ghee), on a rented pitch in the village square or on your own acre; the mill's area customers choose between it and the next village's chakki the same way.
 
 **Books for every business**
 
@@ -309,7 +309,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 Each line has a *Why?* tap with a plain-language explanation and the numbers behind it.
 
-**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out.
+**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out. In Phase 2 the village's grocer and tea stall compete on fixed terms and never close; a newcomer may open on a gap or rich prices (a 50% chance a season, one of each kind) and closes after two weak seasons; buy-outs come in Phase 3 (ADR 0074).
 
 **Lifecycle and trouble.** New businesses usually lose money for their first 1–3 seasons. Trouble arrives as events: a supplier shortage, a key worker quitting, a health inspection, a price war, a road closure, a viral rush of customers.
 
@@ -349,7 +349,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 - **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
 - **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
 
-**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 2 an acre sharing a wall, rent 6,000 a season; ADR 0067). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
+**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 2 an acre sharing a wall, rent 6,000 a season; ADR 0067), with cash or a home loan from the bank (three quarters of the houses' value, ADR 0071). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; couples have children; a son's bride moves in and a daughter marries into her husband's village (ADR 0070); only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
 
 **Hiring starts in Homestead (ADR 0022)**
 

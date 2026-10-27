@@ -33,7 +33,7 @@ The player inherits two neglected acres, learns that every acre is different (so
 - Hut store capacity and spoilage: 004 goods, market and storage.
 - The hand's hut and other construction: 006 people (hand's hut), and later building specs.
 - Land value from services, zoning and appreciation as the town grows: Phase 3 (F15.3). In Phase 1 a parcel's price depends only on its soil, drainage, fertility and location.
-- Irrigation beyond the well, droughts and floods: Phase 2 (irrigation) and the Events spec.
+- Irrigation beyond the well: spec 013 (ADR 0075: a pump on the well, canal channels, drip, a borewell; their floors join §3.2 step 4). Droughts and floods: the Events spec.
 - Leasing land: not in Phase 1 (ADR 0028).
 - The map screen and overlays: 008 HUD. This spec defines what the field panel and the buy sheet show.
 

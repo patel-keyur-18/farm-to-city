@@ -13,6 +13,9 @@ namespace Sim.Core.Finance
 
         /// <summary>The animals the lender lends against, at their fair value (spec 012 §3.12).</summary>
         public long Livestock { get; internal set; }
+
+        /// <summary>Family houses at their book value (the home loan, spec 014 §3.4, ADR 0071).</summary>
+        public long Houses { get; internal set; }
         public long AverageFarmProfit { get; internal set; }
         public bool ScoreTooLow { get; internal set; }
         public Fixed ScoreFactor { get; internal set; }
@@ -43,7 +46,20 @@ namespace Sim.Core.Finance
             foreach (Parcel p in sim.State.Land.Parcels)
                 if (p.Owned && !p.Protected && p.Id != excludeParcel) sum += LandRules.ParcelPrice(sim, p);
             foreach (Building b in sim.State.Land.Buildings)
-                if (!sim.State.Land.Parcels[sim.State.Land.Tiles[b.TileId].ParcelId].Protected) sum += b.Cost - b.Depreciated;
+                if (!People.HouseRules.IsHouse(sim, b) && !sim.State.Land.Parcels[sim.State.Land.Tiles[b.TileId].ParcelId].Protected) sum += b.Cost - b.Depreciated;
+            return sum;
+        }
+
+        /// <summary>
+        /// Σ family houses at book value, plus <paramref name="extra"/> (a house being built): the home loan counts them wherever they
+        /// stand (spec 014 §3.4, ADR 0071); one on inherited land is never seized, so the bank carries that risk.
+        /// </summary>
+        public static long HouseCollateral(Simulation sim, long extra = 0)
+        {
+            long sum = extra;
+            if (sim.State.Citizens == null) return sum;
+            foreach (Building b in sim.State.Land.Buildings) if (People.HouseRules.IsHouse(sim, b)) sum += b.Cost - b.Depreciated;
+            foreach (People.Construction c in sim.State.Citizens.Constructions) sum += c.Cost;
             return sum;
         }
 
@@ -85,7 +101,7 @@ namespace Sim.Core.Finance
         /// <c>limit = max(0, min(eraCap, (base + ltv × collateral + incomeMultiple × avgIncome) × scoreFactor) − owed)</c>, rounded down
         /// to a whole 100 coins (spec 005 §3.6). <paramref name="extraCollateral"/> is the parcel a land-purchase loan buys (ADR 0028).
         /// </summary>
-        public static CreditLimit Limit(Simulation sim, int lender, long extraCollateral = 0, long extraLivestock = 0)
+        public static CreditLimit Limit(Simulation sim, int lender, long extraCollateral = 0, long extraLivestock = 0, long extraHouse = 0)
         {
             CreditDefs credit = sim.Config.Game.Credit;
             LenderDef def = credit.Lenders[lender];
@@ -94,6 +110,7 @@ namespace Sim.Core.Finance
             {
                 Collateral = def.Secured ? Collateral(sim, extraCollateral) : 0,
                 Livestock = def.Secured ? LivestockCollateral(sim, extraLivestock) : 0,
+                Houses = def.Secured && def.HouseLtv > Fixed.Zero ? HouseCollateral(sim, extraHouse) : 0,
                 AverageFarmProfit = AverageFarmProfit(sim),
                 EraCap = def.EraCaps[LenderDef.HomesteadEra], // the Village cap joins with the era unlock (F09.4)
                 Owed = Owed(sim, lender),
@@ -101,7 +118,7 @@ namespace Sim.Core.Finance
             if (score < def.MinScore) { r.ScoreTooLow = true; r.ScoreFactor = Fixed.Zero; return r; }
             r.ScoreFactor = !def.ScoreScaledLimit || credit.Score.FullScore <= def.MinScore ? Fixed.One
                 : Fixed.Parse("0.5") + Fixed.Parse("0.5") * Min1(Fixed.FromInt(score - def.MinScore) / Fixed.FromInt(credit.Score.FullScore - def.MinScore));
-            r.RawLimit = def.BaseLimit + Money.MulRate(r.Collateral, def.CollateralLtv) + Money.MulRate(r.Livestock, def.LivestockLtv)
+            r.RawLimit = def.BaseLimit + Money.MulRate(r.Collateral, def.CollateralLtv) + Money.MulRate(r.Livestock, def.LivestockLtv) + Money.MulRate(r.Houses, def.HouseLtv)
                 + Money.MulRate(r.AverageFarmProfit, def.IncomeMultiple);
             long scaled = Money.MulRate(r.RawLimit, r.ScoreFactor);
             long room = System.Math.Min(r.EraCap, scaled) - r.Owed;
@@ -115,7 +132,7 @@ namespace Sim.Core.Finance
         /// Whether a loan could be taken (shared by TakeLoan and the financing of BuyParcel): the rejection reason, or None.
         /// <paramref name="lender"/> is the lender's index, or −1 for an unknown lender.
         /// </summary>
-        internal static RejectReason Check(Simulation sim, string lenderId, long amount, int term, long extraCollateral, out int lender, long extraLivestock = 0)
+        internal static RejectReason Check(Simulation sim, string lenderId, long amount, int term, long extraCollateral, out int lender, long extraLivestock = 0, long extraHouse = 0)
         {
             lender = -1;
             CreditDefs credit = sim.Config.Game == null ? null : sim.Config.Game.Credit;
@@ -126,7 +143,7 @@ namespace Sim.Core.Finance
             if (amount <= 0 || amount % Money.Coin != 0) return RejectReason.InvalidAmount;
             if (amount < def.MinAmount) return RejectReason.BelowMinimum;
             if (term < def.MinTerm || term > def.MaxTerm) return RejectReason.InvalidTerm;
-            CreditLimit limit = Limit(sim, lender, extraCollateral, extraLivestock);
+            CreditLimit limit = Limit(sim, lender, extraCollateral, extraLivestock, extraHouse);
             if (limit.ScoreTooLow) return RejectReason.ScoreTooLow;
             if (amount > limit.Limit) return RejectReason.OverLimit;
             return RejectReason.None;
@@ -163,7 +180,7 @@ namespace Sim.Core.Finance
             long sum = 0, now = sim.State.Clock.SimTime;
             foreach (Loan l in sim.State.Credit.Loans)
             {
-                if (!l.IsOpen) continue;
+                if (!l.IsOpen || l.BusinessId != 0) continue; // a business loan's interest is on its books
                 AccruedSince(sim, l, now, out long i, out long p);
                 sum += i + p;
             }

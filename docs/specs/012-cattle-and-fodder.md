@@ -35,7 +35,7 @@ The player buys a buffalo or a cow, keeps her fed from their own land, and the v
 - Silage and chaff cutters: Phase 3 with the equipment ladder (spec 013 / F13.2).
 - Raising calves into heifers, growing the herd from your own calves, breed improvement: later (Phase 3).
 - Ageing and culling of animals: later. Animals don't age in Phase 2.
-- Bullocks for ploughing: the equipment ladder (spec 013).
+- Bullocks for ploughing: the equipment ladder (spec 013, ADR 0075): a pair takes 2 of the shed's 4 places, fed like cattle, no milk.
 - A dairy business (processing milk, a milk round): spec 016 (open conflict noted in `STATUS.md`).
 - More than one shed: Phase 3.
 

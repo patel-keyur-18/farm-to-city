@@ -53,8 +53,8 @@ namespace Sim.Content
                 {
                     elasticity = Bounded(g, p, "elasticity", "0.1", "3");
                     string s = String(Required(g, p, "sales"), p + ".sales");
-                    sales = s == "crop" ? SalesKind.Crop : s == "fruit" ? SalesKind.Fruit
-                        : throw new ContentException(p + ".sales", "expected crop or fruit");
+                    sales = s == "crop" ? SalesKind.Crop : s == "fruit" ? SalesKind.Fruit : s == "processed" ? SalesKind.Processed
+                        : throw new ContentException(p + ".sales", "expected crop, fruit or processed");
                 }
                 else
                 {

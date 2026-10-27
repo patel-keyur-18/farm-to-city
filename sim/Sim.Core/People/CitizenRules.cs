@@ -86,7 +86,7 @@ namespace Sim.Core.People
 
         /// <summary>
         /// A hand leaves the job (spec 006). Living alone in his hut, he goes home to his village: his household leaves (§3.13). A hand whose
-        /// family lives in a family house stays on as a tenant (US-208 onward).
+        /// family lives in a family house stays on as a tenant, the household's budget set again without his wage.
         /// </summary>
         internal static void HandLeft(Simulation sim, Hand h)
         {
@@ -97,7 +97,9 @@ namespace Sim.Core.People
             c.Job = CitizenJob.None;
             c.HandId = 0;
             Household x = s.Household(c.HouseholdId);
-            if (x != null && x.HomeId == h.HutId) Leave(sim, x);
+            if (x == null) return;
+            if (x.HomeId == h.HutId) Leave(sim, x);
+            else HouseholdRules.SetBudget(sim, x); // tenants now (§3.13): no wage, rent from the next close
         }
 
         /// <summary>A hand under contract who is <c>retireAge</c> or older at this close (spec 014 §3.2); false without citizens.</summary>
@@ -124,7 +126,7 @@ namespace Sim.Core.People
             sim.Emit(new CitizenRetired(t, c.Id, h.Id, c.Name, age, home));
         }
 
-        /// <summary>A household moves away: its members leave the town, kept only while a living citizen links to them (§3.3).</summary>
+        /// <summary>A household moves away: its members leave the town, kept until the close only while a living citizen links to them (§3.3).</summary>
         internal static void Leave(Simulation sim, Household x)
         {
             CitizensState s = sim.State.Citizens;
@@ -139,12 +141,11 @@ namespace Sim.Core.People
                 c.Story.Add(new StoryLine(StoryKind.Left, t, 0));
             }
             s.Households.Remove(x);
-            Prune(sim);
         }
 
         /// <summary>
-        /// Drops the departed no living citizen links to as a spouse, child or grandchild (§3.3): never a count cap, so the tree
-        /// stays about two generations deep.
+        /// Drops the departed no living citizen links to as a spouse, child or grandchild (§3.3), or, for a daughter who married away,
+        /// as a parent (ADR 0070): never a count cap, so the tree stays about two generations deep.
         /// </summary>
         internal static void Prune(Simulation sim)
         {
@@ -154,6 +155,7 @@ namespace Sim.Core.People
 
         private static bool Linked(CitizensState s, Citizen gone)
         {
+            if (gone.Gone == CitizenGone.MarriedAway && (Alive(s, gone.Father) || Alive(s, gone.Mother))) return true;
             foreach (Citizen c in s.Citizens)
             {
                 if (!c.Living) continue;
@@ -164,6 +166,8 @@ namespace Sim.Core.People
             }
             return false;
         }
+
+        private static bool Alive(CitizensState s, long id) { return id != 0 && s.Citizen(id)?.Living == true; }
 
         /// <summary>
         /// Save schema 9 (§3.11): each hand of an older town becomes a citizen, age drawn 22–45, the gender his name has, a household of

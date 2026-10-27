@@ -226,6 +226,12 @@ namespace Sim.Core.Market
         {
             MarketState m = sim.State.Market;
             Maths.Fixed regional = MarketRules.RegionalPrice(sim, g);
+            if (m.LastRegional[g] == Maths.Fixed.Zero)
+            {
+                // A good new to an older save (spec 016's atta and bran) starts at its regional price, as at a new game.
+                m.Price[g] = regional;
+                m.LastRegional[g] = regional;
+            }
             if (regional != m.LastRegional[g])
             {
                 m.Price[g] = m.Price[g].MulRatio(regional.Raw, m.LastRegional[g].Raw);
