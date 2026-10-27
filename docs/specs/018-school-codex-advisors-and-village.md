@@ -1,6 +1,6 @@
 # 018. The school and literacy, the Codex, advisors and the Village unlock
 
-- Status: Draft (gaps G1–G8 open, §10)
+- Status: In review (G1–G8 closed with the owner, 2026-10-27, §10)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Player journey and eras (Village); Community and civic services (literacy versus skills, education); Learning layer (advisors, the Concept Codex)
@@ -43,16 +43,16 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 | Where | The school plot in the village centre (tile 94); one school in Phase 2 | |
 | When | From the Hamlet (it is part of the Village gate, §3.6) | |
 | Build | Two classrooms, a verandah and a playground, funded by the founder from cash or a co-op bank loan (as the home loan, ADR 0071; never seized: the plot is the village's) | 90,000 building, 15,000 benches, slates and books; 48 h |
-| Teacher | **G2 open.** Recommended: once built and given to the district, the district posts a teacher and pays the wage (a government primary school, as in a real village); the founder pays upkeep | Upkeep 2,000 a season |
+| Teacher | Once built and given to the district, the district posts a teacher and pays the wage (a government primary school, as in a real village; G2); the founder pays upkeep | Upkeep 2,000 a season |
 | Seats | One teacher for up to 30 pupils (the Right to Education norm); a second teacher when over 30 (Phase 2 rarely gets there) | 30 a teacher |
 | Pupils | Every child aged 6–9 in the town goes (free, so attendance is full); four life-years of primary (ADR 0011: about 16 real days) | Ages 6–9 |
-| Adult classes | **G3 open.** An evening class of up to 15 adults; literate after 1 season (ADR 0011); the founder pays the teacher's extra hours | 3,000 a class a season |
+| Adult classes | An evening class of up to 15 adults, started by the founder; literate at the season's close (ADR 0011, G3); the founder pays the teacher's extra hours | 3,000 a class a season |
 
 ### 3.2 Literacy (§10 G3, G4)
 
 - **Literate:** a citizen who finished primary school, finished an adult class, or arrived literate (spec 014 draws 60% primary, 40% none for incoming adults).
 - **Literacy rate:** literate citizens aged 7+ ÷ all citizens aged 7+ (whole percent, rounded down). Shown on the Town tab with its *Why?*; it gates the Township (40%, Phase 3).
-- **What it changes in Phase 2 (G4 open).** Recommended: a literate adult's outside work earns 10% more (real rural wage premia for literacy are 10–20%), and the growth need counts the school (below). No skill change: skills come from work and courses (spec 015).
+- **What it changes in Phase 2 (G4).** A literate adult's outside work earns `literatePremium` 10% more (real rural wage premia for literacy are 10–20%; about 1,900 a season an adult today), and the growth need counts the school (below). No skill change: skills come from work and courses (spec 015).
 - **Growth need:** a household with a child of school age counts *School* met (1.0) once the school is open; with no children it counts as met when the school is open (the town has one). Until then spec 014's "No school yet" row stays.
 
 ### 3.3 The Concept Codex (§10 G5)
@@ -73,20 +73,20 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 ### 3.4 Advisors (§10 G6)
 
 - **Three in Phase 2:** the farm advisor (soil, crops, weather), the accountant (margins, cash flow, loans, assets) and the people lead (hiring, motivation, training). The town planner comes with the treasury (Phase 3).
-- **Who (G6 open).** Recommended: people of the village, drawn and named, each with a portrait: an old farmer neighbour, the co-op bank's secretary, a retired school headmaster.
+- **Who (G6).** People of the village, drawn and named, each with a portrait: an old farmer neighbour, the co-op bank's secretary, a retired school headmaster.
 - **When they speak:** one line on the season report (the most useful of their notes, ranked); one line on an alert whose cause they know ("Your mill's overdraft is near its limit: put cash in before the wage is due."); a *Why?* row may quote them. They warn and explain; they never act or press a choice.
 - **How often:** at most one advisor line a sheet; a warning on the same topic at most once a game day; none in the first session.
 
 ### 3.5 Conflicts settled (§10 G7, G8)
 
-- **The treasury (G7 open).** The GDD gives the Village "the treasury"; F15.1 is Phase 3. Recommended: the treasury opens with the Township (Phase 3); the Village era row lists larger co-op loans (the bank's cap rises from 5,00,000 to 25,00,000, `lenders.json` already) and the Village businesses and shops instead.
-- **The Phase 2 exit gate (G8 open).** The roadmap says "a week of play"; ADR 0028 puts the Village at 2–3 weeks. Recommended: the gate is "the Village reached in 2–3 weeks by a competent player using credit (4–6 weeks saving), and players can explain profit versus cash".
+- **The treasury (G7).** The GDD gave the Village "the treasury"; F15.1 is Phase 3. The treasury opens with the Township (Phase 3), with taxes; the Village era row lists larger co-op loans (the bank's cap rises from 5,00,000 to 25,00,000, `lenders.json` already) and the Village businesses and shops instead.
+- **The Phase 2 exit gate (G8).** The roadmap said "a week of play"; ADR 0028 puts the Village at 2–3 weeks. The gate is: the Village reached in 2–3 weeks by a competent player using credit (4–6 weeks saving), the owner's playtest from the Hamlet to the Village, and players can explain profit versus cash.
 
 ### 3.6 The Village unlock (US-102; §10 G1)
 
 The GDD's gate is 5 households, a market stall, 1 business profitable for 2 seasons, and a primary school. A market stall comes *with* the Village (spec 017), so it can't be part of its gate.
 
-| Condition | Recommended (G1) | Measured |
+| Condition | Gate (G1, closed) | Measured |
 | --- | --- | --- |
 | Households | 5 households on your land (spec 014 §3.13 counts a hand alone in his hut) | Competent bot day 16 (15–22), saver day 33 (ADR 0071) |
 | A business | A business with a profitable season twice (not necessarily in a row): spec 016's "profitable season" (net profit > 0 on its own P&L) | To measure: the mill bot (ADR 0073: a hired mill 6,400–8,000 a season) |
@@ -164,7 +164,7 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 | AC-2 | Children aged 6–9 attend; after 4 life-years of school a child is literate; an adult class makes its adults literate in a season | `SchoolTests.Literacy` |
 | AC-3 | The literacy rate counts citizens aged 7+, rounded down, with its *Why?* | `SchoolTests.Rate`, `TownViewTests.Literacy` |
 | AC-4 | The growth need counts the school once open | `HappinessTests.School` |
-| AC-5 | (G4) A literate adult's outside work earns the premium | `HouseholdTests.LiteracyPremium` |
+| AC-5 | A literate adult's outside work earns 10% more | `HouseholdTests.LiteracyPremium` |
 | AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay | `CodexTests.Triggers` |
 | AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session | `AdvisorTests.Caps` |
 | AC-8 | The Village unlocks once when its three conditions hold; the progress view shows each | `EraTests.Village` |
@@ -183,14 +183,14 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 
 ## 10. Open questions
 
-- **G1. The Village gate.** 5 households, a business profitable for 2 seasons, the school; drop the market stall (stalls come with the Village); the school buildable from the Hamlet (the school plot's line now says "once the hamlet grows into a village").
-- **G2. Who pays the teacher.** (a) The district posts and pays a teacher once the founder gives the building (recommended: a government primary school, the founder pays upkeep); (b) the founder pays a teacher's wage (about 33,000 a season); (c) low fees from the households' education share, the founder tops up the rest.
-- **G3. Adult literacy classes.** A class of up to 15, one season, 3,000 a season paid by the founder; or free with the district's teacher.
-- **G4. What literacy changes in Phase 2.** +10% on outside work for a literate adult (recommended), or nothing until the Township's gate.
-- **G5. The Codex set and its moment.** About 24 Phase 2 cards (§3.3), each found after its result, a toast and Menu → Codex.
-- **G6. Advisors.** Three village people with portraits (an old farmer, the co-op bank's secretary, a retired headmaster), one line a sheet and a topic a day, never acting.
-- **G7. The treasury's era.** The Township (Phase 3), with the Village listing larger co-op loans instead.
-- **G8. The Phase 2 exit gate.** The Village in 2–3 weeks with credit (4–6 saving), and players explain profit versus cash.
+- **G1. The Village gate.** **Closed (owner, 2026-10-27):** 5 households, a business with 2 profitable seasons (not necessarily in a row), and the primary school built and open; the market stall dropped (stalls come with the Village, spec 017); the school buildable from the Hamlet (the school plot's line changes to say so); 2–3 weeks with credit, 4–6 saving (§3.6).
+- **G2. Who pays the teacher.** **Closed (owner, 2026-10-27):** the founder builds the school and gives it to the district (1,05,000, or a co-op loan); the district posts a teacher and pays the wage, as a government primary school; the founder pays upkeep, 2,000 a season (§3.1).
+- **G3. Adult literacy classes.** **Closed (owner, 2026-10-27):** the founder starts an evening class of up to 15 adults for a season and pays the teacher's extra hours, 3,000 a season; everyone in it is literate at the close (§3.1).
+- **G4. What literacy changes in Phase 2.** **Closed (owner, 2026-10-27):** a literate adult's outside work earns 10% more (rural India's literacy premium is 10–20%): about 1,900 a season an adult at today's rate (an adult earns about 19,000 a season outside), so a class of 3 pays the town back in under a season; no skill change (skills come from work and courses, spec 015) (§3.2). The question put to the owner said about 450 a season; corrected here.
+- **G5. The Codex set and its moment.** **Closed (owner, 2026-10-27):** about 24 Phase 2 cards in six groups (§3.3), each found the first time its idea is met, after the result; a toast that opens the card and Menu → Codex (unfound cards hidden); never a sheet over play, never in the first session.
+- **G6. Advisors.** **Closed (owner, 2026-10-27):** three people of the village, named, with Blender portraits: an old farmer neighbour (farm), the co-op bank's secretary (accountant), a retired headmaster (people lead); one line on the season report and on an alert whose cause they know; at most one line a sheet, a topic once a game day, none in the first session; they never act (§3.4).
+- **G7. The treasury's era.** **Closed (owner, 2026-10-27):** the treasury opens with the Township (Phase 3), with taxes; the GDD's Village row lists what Phase 2 opens instead: the co-op bank's larger loans (cap 5,00,000 → 25,00,000), the bakery and the dairy, shops on the pitches, drip, the borewell and the tractor (§3.5).
+- **G8. The Phase 2 exit gate.** **Closed (owner, 2026-10-27):** the competent bot reaches the Village in 14–21 days using credit, the cautious saver in 28–42; the owner's Phase 2 playtest plays from the Hamlet to the Village, and players can explain profit versus cash; the roadmap's "a week of play" is replaced (§3.5).
 
 ## 11. Cut first
 
