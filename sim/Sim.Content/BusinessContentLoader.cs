@@ -26,12 +26,14 @@ namespace Sim.Content
 
             string fp = root + ".funding";
             JObject f = Object(Required(o, root, "funding"), fp);
-            OnlyFields(f, fp, "businessLtv", "termSeasons", "overdraftLimit", "overdraftRate", "closingSaleShare");
+            OnlyFields(f, fp, "businessLtv", "termSeasons", "overdraftLimit", "overdraftRate", "closingSaleShare", "lender", "guaranteeTermSeasons");
             d.BusinessLtv = Bounded(f, fp, "businessLtv", "0", "1");
             d.TermSeasons = BoundedInt(f, fp, "termSeasons", 1, 40);
             d.OverdraftLimit = Bounded(f, fp, "overdraftLimit", "0", "4");
             d.OverdraftRate = Bounded(f, fp, "overdraftRate", "0", "0.5");
             d.ClosingSaleShare = Bounded(f, fp, "closingSaleShare", "0", "1");
+            d.LenderId = String(Required(f, fp, "lender"), fp + ".lender");
+            d.GuaranteeTermSeasons = BoundedInt(f, fp, "guaranteeTermSeasons", 1, 40);
 
             List<JToken> tokens = NonEmptyArray(o, root, "types");
             var types = new List<BusinessTypeDef>();

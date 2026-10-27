@@ -51,9 +51,23 @@ namespace Sim.View.Views
                 if (sim.State.Credit.PendingForeclosure)
                     list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0)) });
                 foreach (Loan l in sim.State.Credit.Loans)
-                    if (l.IsOpen && l.HasArrears)
+                    if (l.IsOpen && l.HasArrears && l.BusinessId != 0)
+                        list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.businessMissed", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, sim.State.Businesses.Find(l.BusinessId)))),
+                            Action = ActionVm.Open("business:" + l.BusinessId, s.Get("action.open"), new SheetRequest("Business", l.BusinessId)) });
+                    else if (l.IsOpen && l.HasArrears)
                         list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.missed", "lender", s.Get(sim.Config.Game.Credit.Lenders[l.Lender].NameKey)), Action = ActionVm.Open("repay:" + l.Id, s.Get("money.repay"), new SheetRequest("Repay", l.Id)) });
             }
+
+            // A business short of cash (spec 016 §3.10): its card says why and what to do.
+            if (sim.State.Businesses != null)
+                foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+                    if (Sim.Core.Business.BusinessBooks.Short(sim, b))
+                        list.Add(new AlertVm
+                        {
+                            Level = AlertLevel.Urgent,
+                            Text = s.Get(b.Worker == Sim.Core.Business.WorkerKind.None ? "alert.businessNoWorker" : "alert.businessShort", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, b))),
+                            Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id)),
+                        });
 
             // Decisions: pests, spoiling soon, the store nearly full.
             long grace = sim.Config.Game.Farm.Farm.ReadyGraceSeconds, warn = ctx.Ui.SpoilWarningHours * 3600L;
@@ -421,7 +435,7 @@ namespace Sim.View.Views
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away },
-            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "BusinessWorked", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.

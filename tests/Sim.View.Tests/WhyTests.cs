@@ -45,6 +45,7 @@ namespace Sim.View.Tests
                     yield return Named("research " + i, BusinessResearchSheet.Build(ctx, i));
                     yield return Named("plan " + i, BusinessPlanSheet.Build(ctx, i, false));
                     yield return Named("plan self " + i, BusinessPlanSheet.Build(ctx, i, true));
+                    yield return Named("plan loan " + i, BusinessPlanSheet.Build(ctx, i, false, true));
                 }
                 foreach (var b in sim.State.Businesses.Businesses)
                 {
@@ -53,6 +54,7 @@ namespace Sim.View.Tests
                     yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
                     yield return Named("put cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Put));
                     yield return Named("take cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take));
+                    yield return Named("close " + b.Id, BusinessCloseSheet.Build(ctx, b.Id));
                     for (int back = 1; back <= b.Reports.Count; back++)
                         yield return Named("business report " + b.Id + " " + back, BusinessReportSheet.Build(ctx, b.Id, back.ToString(System.Globalization.CultureInfo.InvariantCulture)));
                 }

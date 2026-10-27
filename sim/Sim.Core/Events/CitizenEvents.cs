@@ -262,4 +262,40 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "BusinessWorked(id=" + BusinessId + ", area=" + AreaGrams + ", own=" + OwnGrams + ")"; }
     }
+
+    /// <summary>A business couldn't pay its worker's wage at the close, even on its overdraft: the worker left (spec 016 §3.10).</summary>
+    public sealed class WagesMissed : SimEvent
+    {
+        public long BusinessId { get; }
+        public long Wage { get; }
+
+        public WagesMissed(long simTime, long businessId, long wage) : base(simTime)
+        {
+            BusinessId = businessId;
+            Wage = wage;
+        }
+
+        protected override string Describe() { return "WagesMissed(id=" + BusinessId + ", wage=" + Wage + ")"; }
+    }
+
+    /// <summary>
+    /// A business closed (spec 016 §3.10): what came back to you, and what it still owed that became your loan (you guaranteed it).
+    /// </summary>
+    public sealed class BusinessClosed : SimEvent
+    {
+        public long BusinessId { get; }
+        public string TypeId { get; }
+        public long ToYou { get; }
+        public long Guaranteed { get; }
+
+        public BusinessClosed(long simTime, long businessId, string typeId, long toYou, long guaranteed) : base(simTime)
+        {
+            BusinessId = businessId;
+            TypeId = typeId;
+            ToYou = toYou;
+            Guaranteed = guaranteed;
+        }
+
+        protected override string Describe() { return "BusinessClosed(id=" + BusinessId + ", " + TypeId + ", toYou=" + ToYou + ", guaranteed=" + Guaranteed + ")"; }
+    }
 }

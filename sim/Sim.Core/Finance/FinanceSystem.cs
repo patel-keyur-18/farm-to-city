@@ -68,13 +68,14 @@ namespace Sim.Core.Finance
             }
             sim.State.Finance.Reports.Add(report);
             sim.State.Finance.SeasonOpeningCash = ledger.Cash;
+            Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
 
             // Settle and pay upfront (these entries belong to the new season).
             SettlementStats loans = sim.State.Credit == null ? null : CreditSystem.Settle(sim); // step 4: loan payments come first
             Farm.FounderSystem.SettleLiving(sim); // step 5
             if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
             People.HouseholdRules.Close(sim); // spec 014 §3.12: households' health and the new season's budgets, on the wages just paid
-            Business.BusinessRules.Close(sim, closing); // spec 016 §3.11: each business's repairs, depreciation and the new season's wage
+            Business.BusinessRules.PayUpfront(sim, closing); // spec 016 §3.11: each business's new season's wage, after its loan payment
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));

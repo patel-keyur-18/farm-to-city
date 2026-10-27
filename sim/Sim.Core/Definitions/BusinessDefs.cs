@@ -75,6 +75,10 @@ namespace Sim.Core.Definitions
         public Fixed OverdraftRate { get; internal set; }
         public Fixed ClosingSaleShare { get; internal set; }
 
+        /// <summary>The lender of business loans and overdrafts (§3.8), and the term of the loan you take on when a closed business still owes (§3.10).</summary>
+        public string LenderId { get; internal set; }
+        public int GuaranteeTermSeasons { get; internal set; }
+
         public int IndexOfType(string id)
         {
             for (int i = 0; i < Types.Count; i++) if (Types[i].Id == id) return i;

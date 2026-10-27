@@ -62,8 +62,8 @@ namespace Game.Presentation
         private enum PlaceKind { Hut, House, Business }
 
         private PlaceKind _placing; // a hand's hut, a family house (spec 014 §3.13) or a business (spec 016 §3.3)
-        private int _placeType;     // the business type being placed, and whether you run it
-        private bool _placeSelf;
+        private int _placeType;     // the business type being placed, and its plan ("hire" or "self", ":loan" when it borrows)
+        private string _placeArg;
 
         private bool _placingHouse { get { return _placing == PlaceKind.House; } }
         private VisualElement _placeBar;
@@ -403,10 +403,11 @@ namespace Game.Presentation
                     break;
                 case "HutPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Hut); break;
                 case "HousePlacement": if (!refreshOnly) StartPlacing(PlaceKind.House); break;
-                case "BusinessPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Business, (int)r.Id, r.Arg == "self"); break;
+                case "BusinessPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Business, (int)r.Id, r.Arg); break;
                 case "Businesses": _sheet.Show(BusinessesSheet.Build(_ctx), refreshOnly); break;
                 case "BusinessResearch": _sheet.Show(BusinessResearchSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
-                case "BusinessPlan": _sheet.Show(BusinessPlanSheet.Build(_ctx, (int)r.Id, r.Arg == "self"), refreshOnly); break;
+                case "BusinessPlan": _sheet.Show(BusinessPlanSheet.Build(_ctx, (int)r.Id, BusinessWords.Self(r.Arg), BusinessWords.Loan(r.Arg)), refreshOnly); break;
+                case "BusinessClose": _sheet.Show(BusinessCloseSheet.Build(_ctx, r.Id), refreshOnly); break;
                 case "Business": _sheet.Show(BusinessSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
                 case "BusinessReport": _sheet.Show(BusinessReportSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
                 case "BusinessCash": _sheet.Show(BusinessCashSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
@@ -480,7 +481,7 @@ namespace Game.Presentation
                     SheetRequest place = action.Opens.Value;
                     PlaceKind kind = place.Kind == "HousePlacement" ? PlaceKind.House : place.Kind == "BusinessPlacement" ? PlaceKind.Business : PlaceKind.Hut;
                     _sheet.Close();
-                    _safeRoot.schedule.Execute(() => StartPlacing(kind, (int)place.Id, place.Arg == "self"));
+                    _safeRoot.schedule.Execute(() => StartPlacing(kind, (int)place.Id, place.Arg));
                     return;
                 }
                 // A tab or a sort changes the sheet in place: nothing new to go back to.
@@ -518,13 +519,13 @@ namespace Game.Presentation
 
         // ---- placing a hand's hut (ADR 0039 §2) ----
 
-        private void StartPlacing(PlaceKind kind, int type = 0, bool self = false)
+        private void StartPlacing(PlaceKind kind, int type = 0, string arg = null)
         {
             _open = null;
             _map.ClearSelection();
             _placing = kind;
             _placeType = type;
-            _placeSelf = self;
+            _placeArg = arg;
             List<HutPlaceVm> places = kind == PlaceKind.House ? HousePlacement.Places(_ctx) : kind == PlaceKind.Business ? BusinessPlacement.Places(_ctx) : HutPlacement.Places(_ctx);
             HutPlaceVm first = places.Find(p => p.Allowed) ?? (places.Count > 0 ? places[0] : null);
             if (first == null) return;
@@ -560,7 +561,7 @@ namespace Game.Presentation
             text.Add(UiKit.Text(reason ?? _strings.Get(what + (what == "place." ? "hint" : "Hint")), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
             _placeBar.Add(text);
             ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile)
-                : _placing == PlaceKind.Business ? BusinessPlacement.Confirm(_ctx, tile, _placeType, _placeSelf) : HutPlacement.Confirm(_ctx, tile);
+                : _placing == PlaceKind.Business ? BusinessPlacement.Confirm(_ctx, tile, _placeType, BusinessWords.Self(_placeArg), BusinessWords.Loan(_placeArg)) : HutPlacement.Confirm(_ctx, tile);
             _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
             {
                 Command c = build.Create(Sim.State.Clock.SimTime);

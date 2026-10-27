@@ -13,15 +13,19 @@ namespace Sim.Core.Commands
         public long Capital { get; }
         public bool RunYourself { get; }
 
-        public FoundBusiness(long at, string typeId, int tileId, long capital, bool runYourself) : base(at)
+        /// <summary>A business loan from the co-op bank (spec 016 §3.8), or null.</summary>
+        public Financing Financing { get; }
+
+        public FoundBusiness(long at, string typeId, int tileId, long capital, bool runYourself, Financing financing = null) : base(at)
         {
             TypeId = typeId;
             TileId = tileId;
             Capital = capital;
             RunYourself = runYourself;
+            Financing = financing;
         }
 
-        protected override CommandResult ApplyAt(Simulation sim) { return BusinessRules.Found(sim, TypeId, TileId, Capital, RunYourself); }
+        protected override CommandResult ApplyAt(Simulation sim) { return BusinessRules.Found(sim, TypeId, TileId, Capital, RunYourself, Financing); }
     }
 
     /// <summary>A business's settings (spec 016 §3.4, §3.5): open hours, the fee, your own input a day, buying at the market.</summary>
@@ -88,5 +92,22 @@ namespace Sim.Core.Commands
         }
 
         protected override CommandResult ApplyAt(Simulation sim) { return BusinessBooks.TakeCash(sim, BusinessId, Amount); }
+    }
+
+    /// <summary>Closes a business (spec 016 §3.10): everything sold, its debts repaid, what it still owes your loan, the rest to you.</summary>
+    public sealed class CloseBusiness : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public CloseBusiness(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
+            BusinessBooks.CloseDown(sim, b);
+            return CommandResult.Ok;
+        }
     }
 }

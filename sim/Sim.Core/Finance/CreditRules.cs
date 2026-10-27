@@ -180,7 +180,7 @@ namespace Sim.Core.Finance
             long sum = 0, now = sim.State.Clock.SimTime;
             foreach (Loan l in sim.State.Credit.Loans)
             {
-                if (!l.IsOpen) continue;
+                if (!l.IsOpen || l.BusinessId != 0) continue; // a business loan's interest is on its books
                 AccruedSince(sim, l, now, out long i, out long p);
                 sum += i + p;
             }

@@ -53,6 +53,9 @@ namespace Sim.Core.Finance
         public bool Restructured { get; internal set; }
         public LoanState State { get; internal set; }
 
+        /// <summary>The business the loan was made to (its entries go to that business's books, spec 016 §3.8), or 0 for yours.</summary>
+        public long BusinessId { get; internal set; }
+
         public bool IsOpen { get { return State == LoanState.Active || State == LoanState.Defaulted; } }
         public bool HasArrears { get { return ArrearsPrincipal > 0 || ArrearsInterest > 0; } }
 
@@ -79,11 +82,12 @@ namespace Sim.Core.Finance
             h.WriteLong(SegmentStart);
             h.WriteBool(Restructured);
             h.WriteInt((int)State);
+            if (h.Hashing ? BusinessId != 0 : !(h is SaveWriter sw && sw.Schema < 10)) h.WriteLong(BusinessId); // hashed only once used: the goldens stay
         }
 
         internal static Loan ReadFrom(SaveReader r)
         {
-            return new Loan
+            var loan = new Loan
             {
                 Id = r.ReadLong(), Lender = r.ReadRef(ContentTable.Lender), OriginalPrincipal = r.ReadLong(), Principal = r.ReadLong(),
                 Rate = r.ReadFixed(), PenaltyRate = r.ReadFixed(), Schedule = (LoanSchedule)r.ReadInt(), Term = r.ReadInt(), TakenAt = r.ReadLong(),
@@ -91,6 +95,8 @@ namespace Sim.Core.Finance
                 ArrearsInterest = r.ReadLong(), InterestAccrued = r.ReadLong(), ArrearsCloses = r.ReadInt(), SegmentStart = r.ReadLong(),
                 Restructured = r.ReadBool(), State = (LoanState)r.ReadInt(),
             };
+            if (r.Schema >= 10) loan.BusinessId = r.ReadLong();
+            return loan;
         }
     }
 

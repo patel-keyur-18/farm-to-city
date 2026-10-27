@@ -23,7 +23,7 @@ namespace Sim.View.Views
             "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth",
         };
 
-        private static readonly int[] PlanLines = { Fees, Sales, Goods, Wages, Power, Repairs, Depreciation, Profit };
+        private static readonly int[] PlanLines = { Fees, Sales, Goods, Wages, Power, Repairs, Depreciation, Interest, Profit };
 
         /// <summary>A line's *Why?* id: the business, how many seasons back (0 = this season so far), the line.</summary>
         public static long WhyId(Business b, int back, int line) { return b.Id * 100_000 + back * 100 + line; }
@@ -166,7 +166,7 @@ namespace Sim.View.Views
             foreach (int line in PlanLines)
             {
                 long plan = Planned(b.Plan, line), actual = Average(b, line);
-                if (line == Wages && plan == 0 && actual == 0) continue;
+                if ((line == Wages || line == Interest) && plan == 0 && actual == 0) continue;
                 var l = new LineVm(Label(ctx, b, line), s.Get("books.pvaValue", "actual", Value(ctx, line, actual), "plan", Value(ctx, line, plan)), "booksPlan", WhyId(b, 0, line))
                 { Note = Reason(ctx, b, line) };
                 if (line == Profit) l.NoteTone = actual >= plan ? Tone.Good : Tone.Warn;
@@ -185,6 +185,7 @@ namespace Sim.View.Views
                 case Power: return p.Power;
                 case Repairs: return p.Repairs;
                 case Depreciation: return p.Depreciation;
+                case Interest: return p.Interest;
                 default: return p.Profit;
             }
         }
@@ -308,6 +309,46 @@ namespace Sim.View.Views
                 });
             }
             if (amounts.Count == 0) vm.Lines.Add(new LineVm(s.Get(put ? "cashIn.none" : "cashOut.none"), ctx.Fmt.Coins(have), put ? "cash" : "businessCash", put ? 0 : id));
+            return vm;
+        }
+    }
+
+    /// <summary>
+    /// Closing a business (spec 016 §3.10), before you do: its stock to the trader, the building and equipment at 60% of book value,
+    /// its debts repaid, and what comes to you or becomes your loan.
+    /// </summary>
+    public static class BusinessCloseSheet
+    {
+        /// <summary>What closing now would raise and repay: stock, the sale, cash, debts; the net (to you when positive, your loan when not).</summary>
+        public static void Figures(Simulation sim, Business b, out long stock, out long sale, out long debts, out long net)
+        {
+            stock = 0;
+            for (int g = 0; g < b.Stock.Length; g++)
+                if (b.Stock[g] > 0) stock += Sim.Core.Market.MarketRules.Value(sim, g, b.Stock[g], Sim.Core.Market.MarketRules.Floor(sim, g));
+            long book = b.Ledger.Balance(Account.Buildings) + b.Ledger.Balance(Account.Equipment) + b.Ledger.Balance(Account.AccumulatedDepreciation);
+            sale = Money.RoundToCoin(Money.MulRate(book, BusinessRules.Defs(sim).ClosingSaleShare));
+            Loan loan = BusinessBooks.LoanOf(sim, b);
+            debts = BusinessBooks.Overdrawn(b) + (loan != null && loan.IsOpen ? CreditRules.OwedNow(sim, loan) : 0);
+            net = b.Ledger.Cash + stock + sale - debts;
+        }
+
+        public static SheetVm Build(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            Business b = sim.State.Businesses?.Find(id);
+            if (b == null || b.Status == BusinessStatus.Closed) return new SheetVm { Icon = "flour_mill", Title = ctx.Reject(RejectReason.BusinessClosed) };
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            Figures(sim, b, out long stock, out long sale, out long debts, out long net);
+            var vm = new SheetVm { Icon = t.Id, Title = s.Get("close.title", "name", BusinessWords.InSentence(ctx, t)), Subtitle = s.Get("close.subtitle") };
+            vm.Lines.Add(new LineVm(s.Get("close.cash"), ctx.Fmt.Coins(b.Ledger.Cash), "businessClose", id));
+            vm.Lines.Add(new LineVm(s.Get("close.stock"), ctx.Fmt.Coins(stock), "businessClose", id));
+            vm.Lines.Add(new LineVm(s.Get("close.sale", "pct", ctx.Fmt.Percent(BusinessRules.Defs(sim).ClosingSaleShare)), ctx.Fmt.Coins(sale), "businessClose", id));
+            if (debts > 0) vm.Lines.Add(new LineVm(s.Get("close.debts"), "−" + ctx.Fmt.Coins(debts), "businessClose", id));
+            vm.Lines.Add(net >= 0
+                ? new LineVm(s.Get("close.toYou"), ctx.Fmt.Coins(net), "businessClose", id) { NoteTone = Tone.Good }
+                : new LineVm(s.Get("close.yourLoan", "seasons", ctx.Fmt.Integer(BusinessRules.Defs(sim).GuaranteeTermSeasons)), ctx.Fmt.Coins(-net), "businessClose", id) { NoteTone = Tone.Warn });
+            vm.Actions.Add(ActionVm.Checked(ctx, "closeBusiness", s.Get("close.button", "name", BusinessWords.InSentence(ctx, t)), null, ActionKind.Danger, at => new CloseBusiness(at, id)));
             return vm;
         }
     }

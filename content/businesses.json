@@ -10,7 +10,9 @@
     "termSeasons": 12,
     "overdraftLimit": 0.5,
     "overdraftRate": 0.04,
-    "closingSaleShare": 0.6
+    "closingSaleShare": 0.6,
+    "lender": "coop_bank",
+    "guaranteeTermSeasons": 4
   },
   "types": [
     {

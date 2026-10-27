@@ -183,6 +183,131 @@ namespace Sim.Core.Tests
             Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
         }
 
+        // §3.8: a business loan is the business's: up to 60% of its building and equipment, its entries on the business's books, paid
+        // from its cash at each close; your guarantee shows on your credit (the bank's room), not in your own books.
+        [Test]
+        public void BusinessLoan()
+        {
+            Simulation sim = Start();
+            Hamlet(sim);
+            CashTo(sim, 500_000_00);
+            long t = sim.State.Clock.SimTime;
+            var mill = sim.Config.Game.Businesses.Types[0];
+            long max = BusinessBooks.MaxLoan(sim, mill), need = BusinessRules.Projected(sim, mill, false, mill.OwnPerDay, mill.Fee).CashNeeded;
+            Assert.That(max, Is.EqualTo(MarketRules.Indexed(sim, 100_000_00) * 6 / 10 / 1000_00 * 1000_00), "60% of the building and equipment");
+            Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max + 1000_00, 12))).Reason, Is.EqualTo(RejectReason.OverLimit));
+            Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 13))).Reason, Is.EqualTo(RejectReason.InvalidTerm));
+            Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, need - max, false, new Financing("moneylender", max, 4))).Reason, Is.EqualTo(RejectReason.UnknownLender));
+            Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, need - max - 100_00, false, new Financing("coop_bank", max, 12))).Reason, Is.EqualTo(RejectReason.CapitalTooLow));
+            long bankBefore = sim.State.Ledger.Balance(Account.BankLoans), worth = Reporting.NetWorth(sim).Total;
+            Ok(sim, new FoundBusiness(t, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Business.Business b = sim.State.Businesses.Businesses.Last();
+            Loan loan = BusinessBooks.LoanOf(sim, b);
+            Assert.That((loan.BusinessId, loan.Principal, loan.Term), Is.EqualTo((b.Id, max, 12)));
+            Assert.That(b.Ledger.Balance(Account.BankLoans), Is.EqualTo(-max), "on the business's books");
+            Assert.That(sim.State.Ledger.Balance(Account.BankLoans), Is.EqualTo(bankBefore), "not on yours");
+            Assert.That(Reporting.NetWorth(sim).Total, Is.EqualTo(worth), "your net worth: the business at its equity (the loan inside it)");
+            Assert.That(CreditRules.Owed(sim, loan.Lender), Is.EqualTo(max), "your guarantee uses the bank's room");
+
+            sim.AdvanceTo(NextClose(sim) + 1);
+            sim.AdvanceTo(NextClose(sim) + 1); // a full season's instalment
+            Assert.That(loan.Principal, Is.EqualTo(max - (12 - loan.Remaining) * (max / 12)), "equal-principal instalments, paid by the business");
+            Assert.That(loan.Remaining, Is.LessThan(12));
+            Assert.That(b.Reports.Last().Balance(Account.Interest), Is.GreaterThan(0), "its interest in its own P&L");
+            Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
+        }
+
+        // AC-6: a short business uses its overdraft to the limit (half a season's running costs, 4% a season on what's drawn); past it,
+        // inputs stop, and at the close the unpaid worker leaves; cash put in pays the overdraft off and a worker is taken on again.
+        [Test]
+        public void Overdraft_Trouble()
+        {
+            Simulation sim = Start();
+            Business.Business b = Mill(sim);
+            sim.AdvanceTo(b.ReadyAt);
+            var mill = BusinessRules.TypeOf(sim, b);
+            BusinessRules.Projection p = BusinessRules.Projected(sim, mill, false, 0, Fixed.Zero);
+            Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, 8, 18, Fixed.Zero, 0, false)); // grinding for nothing: only power goes out
+            Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, b.Ledger.Cash));
+            long limit = BusinessBooks.OverdraftLimit(sim, b);
+            Assert.That(limit, Is.EqualTo((p.Costs - p.Depreciation) / 2 / 100_00 * 100_00).Within(100_00), "half a season's running costs");
+            Assert.That(BusinessBooks.Short(sim, b), Is.False);
+
+            sim.AdvanceTo(System.Math.Min(NextClose(sim) - 3600, sim.State.Clock.SimTime + 3 * 86_400));
+            Assert.That(BusinessBooks.Overdrawn(b), Is.GreaterThan(0).And.LessThanOrEqualTo(limit), "drawn, never past the limit");
+
+            // Drive it to the limit, then the close.
+            while (!BusinessBooks.Short(sim, b) && sim.State.Clock.SimTime < NextClose(sim) - 3600) sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
+            long drawn = BusinessBooks.Overdrawn(b);
+            sim.DrainEvents();
+            sim.AdvanceTo(NextClose(sim) + 1);
+            var events = sim.DrainEvents();
+            Assert.That(b.Reports.Last().Balance(Account.Interest), Is.EqualTo(Money.MulRate(drawn, Fixed.Parse("0.04"))).Within(Money.MulRate(limit, Fixed.Parse("0.04"))), "4% a season on what's drawn");
+            Assert.That(events.OfType<WagesMissed>().Count(), Is.EqualTo(1), "the wage couldn't be paid");
+            Assert.That(b.Worker, Is.EqualTo(WorkerKind.None), "the worker left");
+            Assert.That(BusinessBooks.Short(sim, b), Is.True);
+
+            CashTo(sim, 500_000_00);
+            Ok(sim, new PutCash(sim.State.Clock.SimTime, b.Id, 100_000_00));
+            Assert.That(BusinessBooks.Overdrawn(b), Is.EqualTo(0), "cash put in pays the overdraft off first");
+            Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.None), "a worker again, paid upfront");
+            Assert.That(BusinessBooks.Short(sim, b), Is.False);
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        // AC-7: closing sells stock and equipment (60% of book value), repays the business's debts, and moves what's still owed to you
+        // as your own bank loan over 4 seasons; what's left comes to you, your capital not returned is a loss; foreclosure closes a
+        // business whose own loan has defaulted, and one on bought land.
+        [Test]
+        public void Closing_Guarantee()
+        {
+            Simulation sim = Start();
+            Hamlet(sim);
+            CashTo(sim, 500_000_00);
+            var mill = sim.Config.Game.Businesses.Types[0];
+            long max = BusinessBooks.MaxLoan(sim, mill), need = BusinessRules.Projected(sim, mill, false, mill.OwnPerDay, mill.Fee).CashNeeded;
+            Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Business.Business b = sim.State.Businesses.Businesses.Last();
+            sim.AdvanceTo(b.ReadyAt + 86_400);
+            Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, b.Ledger.Cash));
+            long book = b.Ledger.Balance(Account.Buildings) + b.Ledger.Balance(Account.Equipment) + b.Ledger.Balance(Account.AccumulatedDepreciation);
+            sim.DrainEvents();
+            Ok(sim, new CloseBusiness(sim.State.Clock.SimTime, b.Id));
+            BusinessClosed closed = sim.DrainEvents().OfType<BusinessClosed>().Single();
+            Assert.That(b.Status, Is.EqualTo(BusinessStatus.Closed));
+            Assert.That(sim.State.Land.Tiles[HomeTile].Occupied, Is.False, "the acre is free");
+            Assert.That(BusinessBooks.LoanOf(sim, b).State, Is.EqualTo(LoanState.Repaid), "its loan repaid");
+            Assert.That(b.Ledger.Balance(Account.LossOnAssetSales), Is.EqualTo(book - Money.RoundToCoin(Money.MulRate(book, Fixed.Parse("0.6")))).Within(100), "40% of book lost");
+            Assert.That(closed.Guaranteed, Is.GreaterThan(0), "60% of the equipment didn't cover the loan");
+            Loan yours = sim.State.Credit.Loans.Last();
+            Assert.That((yours.BusinessId, yours.Principal, yours.Term), Is.EqualTo((0L, closed.Guaranteed, 4)), "what's still owed is your loan, over 4 seasons");
+            Assert.That(sim.State.Ledger.Balance(Account.InvestmentInBusinesses), Is.EqualTo(0));
+            Assert.That(sim.Execute(new CloseBusiness(sim.State.Clock.SimTime, b.Id)).Reason, Is.EqualTo(RejectReason.BusinessClosed));
+            Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
+
+            // A mill without debts: its cash and 60% of its book come back to you.
+            Simulation clean = Start();
+            Business.Business m = Mill(clean);
+            clean.AdvanceTo(m.ReadyAt);
+            long cash = clean.State.Ledger.Cash, inMill = m.Ledger.Cash;
+            long mBook = m.Ledger.Balance(Account.Buildings) + m.Ledger.Balance(Account.Equipment);
+            Ok(clean, new CloseBusiness(clean.State.Clock.SimTime, m.Id));
+            Assert.That(clean.State.Ledger.Cash - cash, Is.EqualTo(inMill + Money.RoundToCoin(Money.MulRate(mBook, Fixed.Parse("0.6")))));
+            Assert.That(clean.State.Ledger.Balance(Account.LossOnAssetSales), Is.GreaterThan(0), "your capital not returned");
+
+            // Foreclosure closes a business whose loan has defaulted, on inherited land too; your guarantee joins your debts.
+            Simulation fore = Start();
+            Hamlet(fore);
+            CashTo(fore, 500_000_00);
+            Ok(fore, new FoundBusiness(fore.State.Clock.SimTime, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Business.Business f = fore.State.Businesses.Businesses.Last();
+            BusinessBooks.LoanOf(fore, f).State = LoanState.Defaulted;
+            CreditSystem.Foreclose(fore);
+            Assert.That(f.Status, Is.EqualTo(BusinessStatus.Closed));
+            Assert.That(fore.State.Credit.Loans.All(l => !l.IsOpen), Is.True, "every loan settled or written off");
+            Assert.That((fore.State.Ledger.Reconcile(), f.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
+        }
+
         // AC-9: the same seed and commands give the same town with a business, in one chunk or many, live or away.
         [Test]
         public void ChunkingInvariance()

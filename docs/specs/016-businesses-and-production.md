@@ -155,7 +155,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 
 ### 3.11 Processing order
 
-Hourly pass, system Business (after Market): each open business works in id order (§3.4); its sales join the market's hour. Seasonal: with spec 005's close, each business closes its books in id order, then pays wages, loan payments and overdraft interest from its own cash.
+Hourly pass, system Business (after Market): each open business works in id order (§3.4); its sales join the market's hour. Seasonal: with spec 005's close, each business closes its books in id order (repairs, depreciation, the overdraft's interest, its report, the close to retained earnings) before the loans are settled; its business loan's payment is then taken from its own cash (its overdraft first), and after the households' close it pays its worker the new season's wage upfront. Cash left pays the overdraft off, and money coming in during the season does the same.
 
 ## 4. Data
 
@@ -224,15 +224,16 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | AC-12 | The bakery turns 10 kg atta + 1.5 kg supplies into 13 kg bread (rusk 1.2 → 1), at most 124 kg a real hour; the village shops buy each morning up to their amount a person, the town from its leisure share, rusk also to the trader | `ProductionTests.Bakery_Recipe_Buyers` |
 | AC-13 | The dairy takes your milk up to its daily amount at the co-op's price (the rest still to the co-op), makes paneer, curd and ghee by the yields, at most 190 L a real hour | `ProductionTests.Dairy_MilkIn_Recipes` |
 | AC-14 | Research and the plan show the projected season; after 4 seasons the plan-vs-actual card compares each line in words | `BusinessViewTests.Plan_VsActual` |
+| AC-15 | A business loan is the business's: at most 60% of its building and equipment, up to 12 seasons, its entries on its own books and paid from its own cash; your guarantee uses the bank's room | `BusinessTests.BusinessLoan` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A mill grinding for the area (300 people) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0072) | Net profit 0–8,000 a season, more with more of your own wheat | Measured at US-115: about 1,500 |
-| The same mill run by you | 25,000–35,000 a season, with your farm hours less; payback 3–6 seasons | Measured at US-115: about 29,600, payback about 4 |
+| A mill grinding for the area (300 people) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0072) | Net profit 0–8,000 a season, more with more of your own wheat | Measured at US-115: about 1,500 (the plan). US-117's bot (8 seeds, 3 years): −3,800 to −2,200 a season, the bot's own wheat only from its first Winter; with a business loan −2,100 to 0 |
+| The same mill run by you | 25,000–35,000 a season, with your farm hours less; payback 3–6 seasons | Measured at US-115: about 29,600, payback about 4. US-117's bot: 25,800–29,400, payback 3.8–4.3; the plan values your 8 hours a day at about 37,000 a season as day labour |
 | Milling wheat bought at the market | 1–2 a kg | Teaches that margins are thin |
-| A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | |
+| A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | US-117 (`GateTests.Mill`): every run plays on with cash; overdrawn at most 2 closes in a row; run by you while borrowing for houses and cattle, 2 of 8 runs foreclosed on the farm's loans (the competent bot: 0 of 8) |
 
 ## 10. Open questions
 

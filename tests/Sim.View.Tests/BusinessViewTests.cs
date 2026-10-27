@@ -33,6 +33,7 @@ namespace Sim.View.Tests
             Assert.That(plan.Lines.Single(l => l.Label == "Profit").Value, Is.EqualTo(ctx.Fmt.Coins(p.Profit)));
             Assert.That(plan.Lines.Single(l => l.Label == "Cash to put in").Value, Is.EqualTo(ctx.Fmt.Coins(p.CashNeeded)));
             Assert.That(BusinessPlanSheet.Build(ctx, 0, true).Lines.Any(l => l.Label.StartsWith("The miller")), Is.False, "no wage when you run it");
+            Assert.That(BusinessPlanSheet.Build(ctx, 0, true).Lines.Single(l => l.Label == "Your hours there").Value, Does.Match(@"^\d+ h a day: about .+ a season as day labour$"), "what your hours are worth");
             ActionVm place = plan.Actions.Single();
             Assert.That(place.Opens.Value.Kind, Is.EqualTo("BusinessPlacement"));
 
@@ -104,6 +105,55 @@ namespace Sim.View.Tests
                 }
             BusinessReport last = b.Reports.Last();
             Assert.That(sheets[1].Lines.Single(l => l.Label == "Cash at the end").Value, Is.EqualTo(ctx.Fmt.Coins(last.Closing)));
+        }
+
+        // §3.8, §3.10 (US-117): a plan with a business loan; the card's overdraft and loan; a short business's alert and note; closing
+        // from its sheet, the figures in words.
+        [Test]
+        public void Loan_Trouble_Closing()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            var mill = sim.Config.Game.Businesses.Types[0];
+            SheetVm plan = BusinessPlanSheet.Build(ctx, 0, false, true);
+            long loan = BusinessBooks.MaxLoan(sim, mill);
+            BusinessRules.Projection p = BusinessRules.Projected(sim, mill, false, mill.OwnPerDay, mill.Fee, loan);
+            Assert.That(plan.Lines.Single(l => l.Label == "How you pay for it").Value, Is.EqualTo("A business loan of " + ctx.Fmt.Coins(loan)));
+            Assert.That(plan.Lines.Single(l => l.Label == "Cash to put in").Value, Is.EqualTo(ctx.Fmt.Coins(p.CashNeeded - loan)), "the loan pays for part");
+            Assert.That(plan.Lines.Single(l => l.Label == "Interest on the loan").Value, Is.EqualTo("−" + ctx.Fmt.Coins(p.Interest)));
+            Assert.That(plan.Actions.Single().Opens.Value.Arg, Is.EqualTo("hire:loan"));
+            Assert.That(BusinessPlanSheet.Build(ctx, 0, false).Lines.Single(l => l.Label == "How you pay for it").Action.Opens.Value.Arg, Is.EqualTo("hire:loan"));
+
+            int tile = BusinessPlacement.Places(ctx).First(x => x.Allowed).TileId;
+            Ok(sim, BusinessPlacement.Confirm(ctx, tile, 0, false, true).Create(sim.State.Clock.SimTime));
+            Business b = sim.State.Businesses.Businesses.Single();
+            Assert.That(BusinessBooks.LoanOf(sim, b).Principal, Is.EqualTo(loan));
+            sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 2) * 86_400 + 12 * 3600);
+            ctx = ViewKit2.Context(sim);
+            SheetVm card = BusinessSheet.Build(ctx, b.Id);
+            Assert.That(card.Lines.Single(l => l.Label == "Overdraft").Value, Is.EqualTo("0 coins of " + ctx.Fmt.Coins(BusinessBooks.OverdraftLimit(sim, b))));
+            Assert.That(card.Lines.Single(l => l.Label == "Business loan").Value, Does.StartWith("Owes "));
+            Assert.That(MoneySheet.Build(ctx).Lines.Any(l => l.Label == "Cooperative bank, for the flour mill"), Is.True, "your guarantee, on Money and loans");
+
+            // Short: no worker. The alert and the card say what to do.
+            b.GetType().GetProperty("Worker").SetValue(b, WorkerKind.None);
+            ctx = ViewKit2.Context(sim);
+            Assert.That(Alerts.Build(ctx).Any(a => a.Text == "The flour mill has no worker: the wage went unpaid" && a.Action.Opens.Value.Kind == "Business"), Is.True);
+            Assert.That(BusinessSheet.Build(ctx, b.Id).Lines.Single(l => l.Label == "The mill's cash").Note, Does.StartWith("No worker"));
+            Assert.That(BusinessSheet.Build(ctx, b.Id).Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Nobody: the wage went unpaid"));
+
+            SheetVm settings = BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings);
+            Assert.That(settings.Lines.Single(l => l.Label == "Close the flour mill").Action.Opens.Value.Kind, Is.EqualTo("BusinessClose"));
+            SheetVm close = BusinessCloseSheet.Build(ctx, b.Id);
+            BusinessCloseSheet.Figures(sim, b, out _, out long sale, out long debts, out long net);
+            Assert.That(close.Lines.Single(l => l.Label == "Building and equipment, at 60% of book value").Value, Is.EqualTo(ctx.Fmt.Coins(sale)));
+            Assert.That(close.Lines.Single(l => l.Label == "Its overdraft and loan, repaid").Value, Is.EqualTo("−" + ctx.Fmt.Coins(debts)));
+            Assert.That(close.Lines.Any(l => l.Label == (net >= 0 ? "Comes to you" : "Still owed: your bank loan over 4 seasons")), Is.True);
+            long before = sim.State.Ledger.Cash;
+            Ok(sim, close.Actions.Single().Create(sim.State.Clock.SimTime));
+            Assert.That(b.Status, Is.EqualTo(BusinessStatus.Closed));
+            if (net >= 0) Assert.That(sim.State.Ledger.Cash - before, Is.EqualTo(net).Within(100), "what the sheet said came to you");
+            Assert.That(BusinessesSheet.Build(ViewKit2.Context(sim)).Lines.Any(l => l.Label == "None open"), Is.True);
         }
     }
 }

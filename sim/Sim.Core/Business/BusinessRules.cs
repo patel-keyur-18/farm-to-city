@@ -59,24 +59,25 @@ namespace Sim.Core.Business
         /// <summary>The plan's season, line by line (§3.3), for the plan screen and its *Why?*s.</summary>
         public sealed class Projection
         {
-            public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Revenue, Costs, Profit, Cost, CashNeeded;
+            public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Interest, Loan, Revenue, Costs, Profit, Cost, CashNeeded;
         }
 
         /// <summary>
         /// The season ahead as planned (§3.3): the area's fees and your wheat's margin at today's prices, against the wage (or none when you
         /// run it), power, repairs and depreciation; a season's running cash is the wage or, run by you, the power and repairs.
         /// </summary>
-        public static BusinessPlan Project(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee)
+        public static BusinessPlan Project(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0)
         {
-            Projection p = Projected(sim, t, runYourself, ownPerDay, fee);
+            Projection p = Projected(sim, t, runYourself, ownPerDay, fee, loan);
             return new BusinessPlan
             {
                 Revenue = p.Revenue, Costs = p.Costs, Profit = p.Profit, CashNeeded = p.CashNeeded, MadeAt = sim.State.Clock.SimTime, AreaGrams = p.AreaGrams, OwnGrams = p.OwnGrams,
-                Fees = p.Fees, Sales = p.Sales, Input = p.Wheat, Power = p.Power, Repairs = p.Repairs, Depreciation = p.Depreciation, Wage = p.Wage,
+                Fees = p.Fees, Sales = p.Sales, Input = p.Wheat, Power = p.Power, Repairs = p.Repairs, Depreciation = p.Depreciation, Wage = p.Wage, Interest = p.Interest,
             };
         }
 
-        public static Projection Projected(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee)
+        /// <param name="loan">A business loan taken (§3.8): its first season's interest is a cost, and it pays for that much of the cash needed.</param>
+        public static Projection Projected(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0)
         {
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
@@ -91,11 +92,14 @@ namespace Sim.Core.Business
             long repairs = Money.MulRate(MarketRules.Indexed(sim, t.EquipmentValue), t.RepairsShare);
             long depreciation = MarketRules.Indexed(sim, t.BuildingValue) / t.BuildingLifeSeasons + MarketRules.Indexed(sim, t.EquipmentValue) / t.EquipmentLifeSeasons;
             long wage = runYourself ? 0 : Wage(sim, t);
-            long revenue = fees + sales, costs = wheat + power + repairs + depreciation + wage;
+            long interest = loan <= 0 || sim.State.Credit == null ? 0
+                : Money.MulRate(loan, CreditRules.Rate(sim.Config.Game.Credit.Lenders[sim.Config.Game.Credit.IndexOfLender(Defs(sim).LenderId)], sim.State.Credit.Score));
+            long revenue = fees + sales, costs = wheat + power + repairs + depreciation + wage + interest;
             return new Projection
             {
                 AreaGrams = area, OwnGrams = own, Fees = fees, Sales = sales, Wheat = wheat, Power = power, Repairs = repairs, Depreciation = depreciation, Wage = wage,
-                Revenue = revenue, Costs = costs, Profit = revenue - costs, Cost = Cost(sim, t), CashNeeded = Cost(sim, t) + (runYourself ? power + repairs : wage),
+                Interest = interest, Loan = loan, Revenue = revenue, Costs = costs, Profit = revenue - costs, Cost = Cost(sim, t),
+                CashNeeded = Cost(sim, t) + (runYourself ? power + repairs : wage),
             };
         }
 
@@ -111,7 +115,7 @@ namespace Sim.Core.Business
 
         // ---- founding (§3.3) ----
 
-        internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself)
+        internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself, Financing financing = null)
         {
             BusinessDefs d = Defs(sim);
             int type = d == null ? -1 : d.IndexOfType(typeId);
@@ -120,8 +124,15 @@ namespace Sim.Core.Business
             if (!Unlocked(sim, t)) return CommandResult.Reject(RejectReason.EraLocked);
             RejectReason place = Place(sim, tileId);
             if (place != RejectReason.None) return CommandResult.Reject(place);
-            BusinessPlan plan = Project(sim, t, runYourself, t.OwnPerDay, t.Fee);
-            if (capital < plan.CashNeeded) return CommandResult.Reject(RejectReason.CapitalTooLow);
+            long loan = financing == null ? 0 : financing.Amount;
+            BusinessPlan plan = Project(sim, t, runYourself, t.OwnPerDay, t.Fee, loan);
+            int lender = -1;
+            if (financing != null)
+            {
+                RejectReason r = BusinessBooks.CheckLoan(sim, t, financing, out lender);
+                if (r != RejectReason.None) return CommandResult.Reject(r);
+            }
+            if (capital + loan < plan.CashNeeded) return CommandResult.Reject(RejectReason.CapitalTooLow);
             if (!sim.State.Ledger.CanAfford(capital)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             long now = sim.State.Clock.SimTime;
@@ -136,10 +147,11 @@ namespace Sim.Core.Business
             string reference = "business:" + b.Id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, capital), new Posting(Account.Cash, -capital));
             b.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.Cash, capital), new Posting(Account.OwnersCapital, -capital));
+            s.Businesses.Add(b);
+            if (financing != null) b.LoanId = CreditSystem.Create(sim, lender, loan, financing.TermSeasons, b.Id).Id; // to the business, your guarantee (§3.8)
             long building = MarketRules.Indexed(sim, t.BuildingValue), equipment = MarketRules.Indexed(sim, t.EquipmentValue);
             b.Ledger.Post(now, sim.Period, "ledger.businessBuilt", reference,
                 new Posting(Account.Buildings, building), new Posting(Account.Equipment, equipment), new Posting(Account.Cash, -building - equipment));
-            s.Businesses.Add(b);
             LandSystem.SetOccupied(sim, tileId, true);
             sim.State.People?.Orders.RemoveAll(o => o.Kind == OrderTargetKind.Field && o.Target == tileId);
             sim.ScheduleJob(Job, b.Id, b.ReadyAt);
@@ -159,8 +171,7 @@ namespace Sim.Core.Business
                 sim.CompleteJob(job);
                 if (b == null || b.Status != BusinessStatus.Building) return;
                 b.Status = BusinessStatus.Open;
-                if (b.Worker == WorkerKind.None) Staff(sim, b);
-                if (b.Worker != WorkerKind.Founder) PayWage(sim, b, People.PeopleRules.RestOfSeason(sim, Wage(sim, TypeOf(sim, b))));
+                if (b.Worker == WorkerKind.None) Restaff(sim, b);
                 sim.Emit(new BusinessOpened(sim.State.Clock.SimTime, b.Id, b.Worker, b.WorkerCitizen));
             }
         }
@@ -198,6 +209,36 @@ namespace Sim.Core.Business
             b.Worker = WorkerKind.None;
             b.WorkerCitizen = 0;
             Staff(sim, b);
+        }
+
+        /// <summary>
+        /// With no worker, one is taken on when the rest of the season's wage can be paid upfront, on the overdraft if need be (§3.6,
+        /// §3.10): at opening, and when you put cash in after a worker left unpaid.
+        /// </summary>
+        internal static void Restaff(Simulation sim, Business b)
+        {
+            if (b.Status != BusinessStatus.Open || b.Worker != WorkerKind.None) return;
+            long wage = People.PeopleRules.RestOfSeason(sim, Wage(sim, TypeOf(sim, b)));
+            if (!BusinessBooks.Draw(sim, b, wage)) return;
+            Staff(sim, b);
+            PayWage(sim, b, wage);
+        }
+
+        /// <summary>The worker leaves: a townsperson goes back to outside work (their household's budget follows).</summary>
+        internal static void LoseWorker(Simulation sim, Business b)
+        {
+            if (b.Worker == WorkerKind.Citizen)
+            {
+                Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
+                if (c != null && c.Job == CitizenJob.Business && c.Employer == b.Id)
+                {
+                    c.Job = CitizenJob.None;
+                    c.Employer = 0;
+                    HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
+                }
+            }
+            if (b.Worker != WorkerKind.Founder) b.Worker = WorkerKind.None;
+            b.WorkerCitizen = 0;
         }
 
         private static void PayWage(Simulation sim, Business b, long wage)
@@ -241,6 +282,7 @@ namespace Sim.Core.Business
             {
                 area = System.Math.Min(capacity, AreaGramsPerDay(sim) / (t.CloseHour - t.OpenHour));
                 long fees = Money.Value(area, b.Fee * index, 1000);
+                if (PowerCost(sim, b, area) > fees + BusinessBooks.CanSpend(sim, b)) area = fees = 0; // a fee below the power's, with no cash left (§3.10)
                 if (fees > 0) b.Ledger.Post(now, sim.Period, "ledger.grindingFees", reference, new Posting(Account.Cash, fees), new Posting(Account.ServiceIncome, -fees));
                 Power(sim, b, area);
                 b.AreaToday += area;
@@ -255,6 +297,7 @@ namespace Sim.Core.Business
             if (own > 0)
             {
                 long value = MarketRules.Value(sim, t.Input, own, MarketRules.Floor(sim, t.Input));
+                BusinessBooks.Draw(sim, b, value + PowerCost(sim, b, own));
                 Store.Take(sim, t.Input, own);
                 if (value > 0)
                 {
@@ -275,28 +318,34 @@ namespace Sim.Core.Business
                 if (bought > 0)
                 {
                     long value = MarketRules.Value(sim, t.Input, bought, price);
+                    BusinessBooks.Draw(sim, b, value + PowerCost(sim, b, bought));
                     b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     Grind(sim, b, bought, value);
                     b.OwnSeason += bought;
                 }
             }
             Sell(sim, b);
+            BusinessBooks.Sweep(sim, b);
             if (area > 0 || own > 0) sim.Emit(new BusinessWorked(now, b.Id, area, own));
         }
 
-        /// <summary>How much of <paramref name="grams"/> the business's cash pays for at <paramref name="price"/> (no overdraft until US-117).</summary>
+        /// <summary>How much of <paramref name="grams"/> its cash and overdraft pay for at <paramref name="price"/>: past the limit, inputs stop (§3.10).</summary>
         private static long Affordable(Simulation sim, Business b, int good, long grams, Fixed price)
         {
             if (grams <= 0) return 0;
             long unit = MarketRules.Value(sim, good, 1000, price + sim.State.Market.PriceIndex * TypeOf(sim, b).PowerPerKg);
             if (unit <= 0) return grams;
-            long can = b.Ledger.Cash <= 0 ? 0 : (long)((System.Numerics.BigInteger)b.Ledger.Cash * 1000 / unit);
+            long spend = BusinessBooks.CanSpend(sim, b);
+            long can = spend <= 0 ? 0 : (long)((System.Numerics.BigInteger)spend * 1000 / unit);
             return System.Math.Min(grams, can);
         }
 
+        private static long PowerCost(Simulation sim, Business b, long grams) { return Money.Value(grams, TypeOf(sim, b).PowerPerKg * sim.State.Market.PriceIndex, 1000); }
+
         private static void Power(Simulation sim, Business b, long grams)
         {
-            long cost = Money.Value(grams, TypeOf(sim, b).PowerPerKg * sim.State.Market.PriceIndex, 1000);
+            long cost = PowerCost(sim, b, grams);
+            BusinessBooks.Draw(sim, b, cost);
             if (cost > 0) b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.power", "business:" + b.Id, new Posting(Account.Power, cost), new Posting(Account.Cash, -cost));
         }
 
@@ -354,7 +403,7 @@ namespace Sim.Core.Business
             }
         }
 
-        private static void Sold(Simulation sim, Business b, int good, long grams, long amount)
+        internal static void Sold(Simulation sim, Business b, int good, long grams, long amount)
         {
             long cost = (long)((System.Numerics.BigInteger)b.StockCost[good] * grams / b.Stock[good]);
             b.Stock[good] -= grams;
@@ -380,10 +429,11 @@ namespace Sim.Core.Business
         // ---- the season close (§3.2, §3.11) ----
 
         /// <summary>
-        /// Each business closes its season with the founder's (in id order, spec 016 §3.2): repairs and depreciation for the season that
-        /// ended, its report and the close to retained earnings, then the new season's wage paid upfront from its cash.
+        /// Each business closes its books with the founder's (in id order, spec 016 §3.2, §3.11), before the loans are settled: repairs
+        /// (on its overdraft if need be; past the limit they wait), depreciation and the overdraft's interest for the season that ended,
+        /// then its report and the close to retained earnings.
         /// </summary>
-        internal static void Close(Simulation sim, long closing)
+        internal static void CloseBooks(Simulation sim, long closing)
         {
             if (sim.State.Businesses == null) return;
             foreach (Business b in sim.State.Businesses.Businesses)
@@ -394,7 +444,9 @@ namespace Sim.Core.Business
                 string reference = "business:" + b.Id;
                 if (b.Status == BusinessStatus.Open)
                 {
-                    long repairs = System.Math.Min(Money.MulRate(MarketRules.Indexed(sim, t.EquipmentValue), t.RepairsShare), b.Ledger.Cash); // US-117: the overdraft
+                    long repairs = Money.MulRate(MarketRules.Indexed(sim, t.EquipmentValue), t.RepairsShare);
+                    BusinessBooks.Draw(sim, b, repairs, closing);
+                    repairs = System.Math.Min(repairs, b.Ledger.Cash);
                     if (repairs > 0) b.Ledger.Post(now, closing, "ledger.repairs", reference, new Posting(Account.Repairs, repairs), new Posting(Account.Cash, -repairs));
                     long building = b.Ledger.Balance(Account.Buildings), equipment = b.Ledger.Balance(Account.Equipment);
                     long depreciation = System.Math.Min(building / t.BuildingLifeSeasons + equipment / t.EquipmentLifeSeasons,
@@ -402,8 +454,33 @@ namespace Sim.Core.Business
                     if (depreciation > 0)
                         b.Ledger.Post(now, closing, "ledger.depreciation", reference, new Posting(Account.Depreciation, depreciation), new Posting(Account.AccumulatedDepreciation, -depreciation));
                 }
+                long interest = Money.MulRate(BusinessBooks.Overdrawn(b), Defs(sim).OverdraftRate);
+                if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
                 BusinessBooks.CloseSeason(sim, b, closing);
-                if (b.Status == BusinessStatus.Open && b.Worker != WorkerKind.Founder) PayWage(sim, b, System.Math.Min(Wage(sim, t), b.Ledger.Cash)); // US-117: unpaid, the worker leaves
+            }
+        }
+
+        /// <summary>
+        /// After the loans are settled: each open business pays its worker the new season's wage upfront, on its overdraft if need be;
+        /// past the limit the wage goes unpaid and the worker leaves (§3.10). Cash left pays the overdraft off.
+        /// </summary>
+        internal static void PayUpfront(Simulation sim, long closing)
+        {
+            if (sim.State.Businesses == null) return;
+            foreach (Business b in sim.State.Businesses.Businesses)
+            {
+                if (b.Status == BusinessStatus.Closed) continue;
+                if (b.Status == BusinessStatus.Open && b.Worker != WorkerKind.Founder && b.Worker != WorkerKind.None)
+                {
+                    long wage = Wage(sim, TypeOf(sim, b));
+                    if (BusinessBooks.Draw(sim, b, wage)) PayWage(sim, b, wage);
+                    else
+                    {
+                        LoseWorker(sim, b);
+                        sim.Emit(new WagesMissed(sim.State.Clock.SimTime, b.Id, wage));
+                    }
+                }
+                BusinessBooks.Sweep(sim, b);
                 b.Ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);
             }
         }

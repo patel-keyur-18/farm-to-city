@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Tools.Balancer;
@@ -232,6 +233,25 @@ namespace Sim.Core.Tests
             Assert.That(c.LeavingPerYear.Max(), Is.LessThan(0.1));
             Assert.That(c.RentShare.Max(), Is.LessThan(0.15));
             Assert.That(s.Day5.Count(d => !double.IsNaN(d) && d <= 48), Is.GreaterThanOrEqualTo(18), "the cautious saver within 48 days");
+        }
+
+        // Spec 016 §9 (US-117, ADR 0072): a bot founds the flour mill in the Hamlet and runs it, hired, by itself, and on a business loan;
+        // never stuck and the overdraft never permanent. Its season profit is printed against ADR 0072's targets (the owner's call, S14).
+        [Test]
+        public void Mill()
+        {
+            var results = new[] { () => new MillBot(false), () => new MillBot(true), (Func<Bot>)(() => new MillBot(false, true)) }.Select(make => Gate.Mill(Live(), make, 8)).ToList();
+            foreach (Gate.MillResult m in results)
+                TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
+                    + "; payback " + string.Join(", ", m.Payback.OrderBy(x => x).Select(x => x.ToString("0.0"))) + "; overdrawn runs " + string.Join(",", m.OverdrawnRun)
+                    + "; closed " + m.Closed + ", foreclosed " + m.Foreclosed);
+            foreach (Gate.MillResult m in results)
+            {
+                Assert.That(m.Founded, Is.EqualTo(m.Seeds), m.Bot + ": founded in every seed");
+                Assert.That(m.EndCash.All(c => c > 0), Is.True, m.Bot + ": never stuck: every run plays on with cash");
+                Assert.That(m.Foreclosed, Is.LessThanOrEqualTo(m.Seeds / 4), m.Bot + ": foreclosed in at most a quarter of runs (running it yourself costs the farm)");
+                Assert.That(m.OverdrawnRun.Max(), Is.LessThanOrEqualTo(2), m.Bot + ": the overdraft never permanent");
+            }
         }
     }
 }

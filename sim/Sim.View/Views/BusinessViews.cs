@@ -32,12 +32,22 @@ namespace Sim.View.Views
                 case WorkerKind.Citizen:
                     Citizen c = ctx.Sim.State.Citizens.Citizen(b.WorkerCitizen);
                     return c == null ? s.Get("business.workerNone") : s.Get("business.workerCitizen", "name", TownWords.Name(ctx, c), "role", s.Get("business.role." + t.Worker));
-                default: return s.Get("business.workerNone");
+                default: return s.Get(b.Status == BusinessStatus.Open ? "business.workerLeft" : "business.workerNone"); // open with nobody: the wage went unpaid
             }
         }
 
-        /// <summary>The plan's id for a *Why?*: the type, and whether you run it.</summary>
-        public static long PlanId(int type, bool self) { return type * 2 + (self ? 1 : 0); }
+        /// <summary>The plan's id for a *Why?*: the type, whether you run it, whether it borrows.</summary>
+        public static long PlanId(int type, bool self, bool loan = false) { return type * 4 + (self ? 1 : 0) + (loan ? 2 : 0); }
+
+        /// <summary>A plan's sheet argument: "hire" or "self", with ":loan" when it takes a business loan.</summary>
+        public static string PlanArg(bool self, bool loan) { return (self ? "self" : "hire") + (loan ? ":loan" : ""); }
+
+        public static bool Self(string arg) { return arg != null && arg.StartsWith("self", System.StringComparison.Ordinal); }
+
+        public static bool Loan(string arg) { return arg != null && arg.EndsWith(":loan", System.StringComparison.Ordinal); }
+
+        /// <summary>The business loan a plan takes: the most it can be (§3.8), or 0.</summary>
+        public static long LoanFor(Simulation sim, BusinessTypeDef t, bool loan) { return loan ? BusinessBooks.MaxLoan(sim, t) : 0; }
     }
 
     /// <summary>Menu → Businesses (spec 016 §7): yours, one row each, and a picture button to start each type the era allows.</summary>
@@ -73,7 +83,7 @@ namespace Sim.View.Views
                 line.Action = ActionVm.Open("business:" + b.Id, s.Get("action.see"), new SheetRequest("Business", b.Id));
                 vm.Lines.Add(line);
             }
-            if (n == 0) vm.Lines.Add(new LineVm(s.Get("businesses.none"), s.Get("businesses.noneNote")));
+            if (n == 0) vm.Lines.Add(new LineVm(s.Get(sim.State.Businesses.Businesses.Count > 0 ? "businesses.noneOpen" : "businesses.none"), s.Get("businesses.noneNote")));
             return vm;
         }
     }
@@ -110,17 +120,24 @@ namespace Sim.View.Views
     /// </summary>
     public static class BusinessPlanSheet
     {
-        public static SheetVm Build(ViewContext ctx, int type, bool self)
+        public static SheetVm Build(ViewContext ctx, int type, bool self, bool loan = false)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
-            BusinessRules.Projection p = BusinessRules.Projected(sim, t, self, t.OwnPerDay, t.Fee);
-            long id = BusinessWords.PlanId(type, self);
+            long borrow = BusinessWords.LoanFor(sim, t, loan);
+            BusinessRules.Projection p = BusinessRules.Projected(sim, t, self, t.OwnPerDay, t.Fee, borrow);
+            long id = BusinessWords.PlanId(type, self, loan);
             var vm = new SheetVm { Icon = t.Id, Title = s.Get("plan.title", "name", BusinessWords.InSentence(ctx, t)), Subtitle = s.Get("plan.subtitle") };
             var who = new LineVm(s.Get("plan.who"), s.Get(self ? "plan.whoYou" : "plan.whoHire", "role", s.Get("business.role." + t.Worker)));
-            who.Action = ActionVm.Open("who", s.Get("plan.change"), new SheetRequest("BusinessPlan", type, self ? "hire" : "self"));
+            who.Action = ActionVm.Open("who", s.Get("plan.change"), new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(!self, loan)));
             vm.Lines.Add(who);
+            // How it's paid for (§3.8): your cash, or a co-op bank business loan for 60% of the building and equipment.
+            var funding = new LineVm(s.Get("plan.funding"), loan ? s.Get("plan.fundingLoan", "amount", ctx.Fmt.Coins(borrow)) : s.Get("plan.fundingCash"), "planLoan", id);
+            string refused = loan ? null : LoanRefused(ctx, t);
+            funding.Action = new ActionVm("funding", s.Get("plan.change"), null, ActionKind.Open, refused == null, refused, null,
+                new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(self, !loan)));
+            vm.Lines.Add(funding);
             vm.Lines.Add(LineVm.Header(s.Get("plan.season")));
             vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
             vm.Lines.Add(new LineVm(s.Get("plan.sales"), ctx.Fmt.Coins(p.Sales), "planSales", id));
@@ -129,14 +146,42 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("plan.repairs"), "−" + ctx.Fmt.Coins(p.Repairs), "planRepairs", id));
             vm.Lines.Add(new LineVm(s.Get("plan.depreciation"), "−" + ctx.Fmt.Coins(p.Depreciation), "planDepreciation", id));
             if (!self) vm.Lines.Add(new LineVm(s.Get("plan.wage", "role", s.Get("business.role." + t.Worker)), "−" + ctx.Fmt.Coins(p.Wage), "planWage", id));
+            if (loan) vm.Lines.Add(new LineVm(s.Get("plan.interest"), "−" + ctx.Fmt.Coins(p.Interest), "planInterest", id));
+            if (self)
+            {
+                // What your hours there are worth elsewhere: the farm work or day labour they replace (spec 016 §6, run it yourself).
+                HoursOff(sim, t, out int hours, out long value);
+                vm.Lines.Add(new LineVm(s.Get("plan.hours"), s.Get("plan.hoursValue", "hours", ctx.Fmt.Integer(hours), "value", ctx.Fmt.Coins(value)), "planHours", id));
+            }
             vm.Lines.Add(new LineVm(s.Get("plan.profit"), ctx.Fmt.Coins(p.Profit), "planProfit", id) { NoteTone = p.Profit > 0 ? Tone.Good : Tone.Warn });
             vm.Lines.Add(LineVm.Header(s.Get("plan.money")));
-            vm.Lines.Add(new LineVm(s.Get("plan.cash"), ctx.Fmt.Coins(p.CashNeeded), "planCash", id));
+            if (loan) vm.Lines.Add(new LineVm(s.Get("plan.loan"), s.Get("plan.loanValue", "amount", ctx.Fmt.Coins(borrow), "seasons", ctx.Fmt.Integer(BusinessRules.Defs(sim).TermSeasons)), "planLoan", id));
+            long cash = p.CashNeeded - borrow;
+            vm.Lines.Add(new LineVm(s.Get("plan.cash"), ctx.Fmt.Coins(cash), "planCash", id));
             vm.Lines.Add(new LineVm(s.Get("plan.payback"), Payback(ctx, p), "planPayback", id));
-            bool can = sim.State.Ledger.CanAfford(p.CashNeeded);
-            vm.Actions.Add(new ActionVm("place", s.Get("plan.place"), s.Get("plan.placeDetail", "cash", ctx.Fmt.Coins(p.CashNeeded)), ActionKind.Open, can,
-                can ? null : s.Get("plan.short", "cash", ctx.Fmt.Coins(p.CashNeeded)), null, new SheetRequest("BusinessPlacement", type, self ? "self" : "hire")));
+            bool can = sim.State.Ledger.CanAfford(cash);
+            vm.Actions.Add(new ActionVm("place", s.Get("plan.place"), s.Get("plan.placeDetail", "cash", ctx.Fmt.Coins(cash)), ActionKind.Open, can,
+                can ? null : s.Get("plan.short", "cash", ctx.Fmt.Coins(cash)), null, new SheetRequest("BusinessPlacement", type, BusinessWords.PlanArg(self, loan))));
             return vm;
+        }
+
+        /// <summary>The hours a day you'd work there (its day, up to yours) and what they'd earn a season as day labour.</summary>
+        public static void HoursOff(Simulation sim, BusinessTypeDef t, out int hours, out long value)
+        {
+            hours = System.Math.Min(t.CloseHour - t.OpenHour, (int)sim.State.Farm.Founder.TodayHours.RoundToLong());
+            value = Sim.Core.Finance.Money.MulRate(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.DayLabourWagePerHour), Fixed.FromInt(hours * sim.Clock.DaysPerSeason));
+        }
+
+        /// <summary>Why a business loan can't be had now, in words, or null.</summary>
+        internal static string LoanRefused(ViewContext ctx, BusinessTypeDef t)
+        {
+            Simulation sim = ctx.Sim;
+            if (sim.State.Credit == null) return ctx.Reject(RejectReason.UnknownLender);
+            BusinessDefs d = BusinessRules.Defs(sim);
+            int lender = sim.Config.Game.Credit.IndexOfLender(d.LenderId);
+            var f = new Financing(d.LenderId, BusinessBooks.MaxLoan(sim, t), d.TermSeasons);
+            if (lender < 0 || sim.State.Credit.Score < sim.Config.Game.Credit.Lenders[lender].MinScore) return ctx.Reject(RejectReason.ScoreTooLow);
+            return f.Amount < sim.Config.Game.Credit.Lenders[lender].MinAmount ? ctx.Reject(RejectReason.BelowMinimum) : null;
         }
 
         internal static string Payback(ViewContext ctx, BusinessRules.Projection p)
@@ -178,14 +223,18 @@ namespace Sim.View.Views
             return ctx.Reject(r);
         }
 
-        /// <summary>Build here: founds the business with the plan's cash put in.</summary>
-        public static ActionVm Confirm(ViewContext ctx, int tileId, int type, bool self)
+        /// <summary>Build here: founds the business with the plan's cash put in, and its business loan if the plan takes one.</summary>
+        public static ActionVm Confirm(ViewContext ctx, int tileId, int type, bool self, bool loan = false)
         {
             Simulation sim = ctx.Sim;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
-            long capital = BusinessRules.Projected(sim, t, self, t.OwnPerDay, t.Fee).CashNeeded;
-            string id = t.Id;
-            return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(capital), ActionKind.Primary, at => new FoundBusiness(at, id, tileId, capital, self));
+            BusinessDefs d = BusinessRules.Defs(sim);
+            long borrow = BusinessWords.LoanFor(sim, t, loan);
+            long capital = BusinessRules.Projected(sim, t, self, t.OwnPerDay, t.Fee, borrow).CashNeeded - borrow;
+            string id = t.Id, lender = d.LenderId;
+            int term = d.TermSeasons;
+            return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(capital), ActionKind.Primary,
+                at => new FoundBusiness(at, id, tileId, capital, self, loan ? new Financing(lender, borrow, term) : null));
         }
     }
 
@@ -242,7 +291,25 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(g.NameKey)), ctx.Fmt.Kg(b.Stock[o.Good]), "businessTrader", o.Good) { Icon = g.Id });
             }
             vm.Lines.Add(new LineVm(s.Get("business.worker"), BusinessWords.Worker(ctx, b), "businessWorker", b.Id) { Icon = b.Worker == WorkerKind.Founder ? "person_founder" : "person_hand_m" });
-            vm.Lines.Add(new LineVm(s.Get("business.cash"), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Icon = "coin" });
+            var cash = new LineVm(s.Get("business.cash"), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Icon = "coin" };
+            if (BusinessBooks.Short(sim, b))
+            {
+                cash.Note = s.Get(b.Worker == WorkerKind.None ? "business.shortWorker" : "business.shortCash");
+                cash.NoteTone = Tone.Warn;
+            }
+            vm.Lines.Add(cash);
+            if (b.Status != BusinessStatus.Open) return;
+            vm.Lines.Add(new LineVm(s.Get("business.overdraft"), s.Get("business.overdraftValue", "used", ctx.Fmt.Coins(BusinessBooks.Overdrawn(b)),
+                "limit", ctx.Fmt.Coins(BusinessBooks.OverdraftLimit(sim, b))), "businessOverdraft", b.Id) { Icon = "coin" });
+            Sim.Core.Finance.Loan loan = BusinessBooks.LoanOf(sim, b);
+            if (loan == null || !loan.IsOpen) return;
+            long loanId = loan.Id;
+            string value = s.Get(loan.HasArrears ? "money.loanOverdue" : "money.loanValue", "owed", ctx.Fmt.Coins(Sim.Core.Finance.CreditRules.OwedNow(sim, loan)),
+                "next", ctx.Fmt.Coins(Repay.NextPayment(sim, loan)));
+            var row = new LineVm(s.Get("business.loan"), value, "loan", loan.Id) { Icon = "coin" };
+            if (loan.HasArrears && !loan.Restructured)
+                row.Action = ActionVm.Checked(ctx, "restructure", s.Get("business.restructure"), null, ActionKind.Secondary, at => new RestructureLoan(at, loanId));
+            vm.Lines.Add(row);
         }
 
         // The choices each setting cycles through (spec 016 §3.4, §3.5): the village's usual day, a morning, a long day; fees round the
@@ -290,6 +357,8 @@ namespace Sim.View.Views
                 { Action = ActionVm.Open("putCash", s.Get("business.putCash"), new SheetRequest("BusinessCash", id, BusinessCashSheet.Put)) });
             vm.Lines.Add(new LineVm(s.Get("business.cash"), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", id)
                 { Action = ActionVm.Open("takeCash", s.Get("business.takeCash"), new SheetRequest("BusinessCash", id, BusinessCashSheet.Take)) });
+            vm.Lines.Add(new LineVm(s.Get("business.closeRow", "name", BusinessWords.InSentence(ctx, t)), null)
+                { Action = ActionVm.Open("closeBusiness", s.Get("business.closeButton"), new SheetRequest("BusinessClose", id)) });
         }
     }
 }

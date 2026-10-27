@@ -14,9 +14,9 @@ namespace Sim.View.Views
         /// <summary>The plan's type and who runs it, from <see cref="BusinessWords.PlanId"/>.</summary>
         private static BusinessRules.Projection PlanOf(ViewContext ctx, long id, out BusinessTypeDef t, out bool self)
         {
-            t = BusinessRules.Defs(ctx.Sim).Types[(int)(id / 2)];
+            t = BusinessRules.Defs(ctx.Sim).Types[(int)(id / 4)];
             self = id % 2 == 1;
-            return BusinessRules.Projected(ctx.Sim, t, self, t.OwnPerDay, t.Fee);
+            return BusinessRules.Projected(ctx.Sim, t, self, t.OwnPerDay, t.Fee, BusinessWords.LoanFor(ctx.Sim, t, id % 4 >= 2));
         }
 
         private static WhyVm BusinessArea(ViewContext ctx, long id)
@@ -121,12 +121,14 @@ namespace Sim.View.Views
             BusinessRules.Projection p = PlanOf(ctx, id, out BusinessTypeDef t, out bool self);
             Fixed index = ctx.Sim.State.Market.PriceIndex;
             int days = ctx.Sim.Clock.DaysPerSeason;
-            long value = line == "fees" ? p.Fees : line == "sales" ? p.Sales : line == "wheat" ? p.Wheat : line == "power" ? p.Power : line == "repairs" ? p.Repairs
+            long value = line == "loan" ? (p.Loan > 0 ? p.Loan : BusinessBooks.MaxLoan(ctx.Sim, t)) : line == "interest" ? p.Interest : line == "cash" ? p.CashNeeded - p.Loan : line == "fees" ? p.Fees : line == "sales" ? p.Sales : line == "wheat" ? p.Wheat : line == "power" ? p.Power : line == "repairs" ? p.Repairs
                 : line == "depreciation" ? p.Depreciation : line == "wage" ? p.Wage : line == "profit" ? p.Profit : line == "cost" ? p.Cost : p.CashNeeded;
             WhyVm vm = New(ctx, "why.plan." + line + ".title", line == "payback" ? BusinessPlanSheet.Payback(ctx, p) : ctx.Fmt.Coins(value), "role", ctx.Strings.Get("business.role." + t.Worker));
             Text(vm, ctx, "why.plan." + line, "days", ctx.Fmt.Integer(days), "area", ctx.Fmt.Kg(p.AreaGrams / days), "own", ctx.Fmt.Kg(p.OwnGrams / days),
                 "fee", ctx.Fmt.PricePerKg(t.Fee * index), "power", ctx.Fmt.PricePerKg(t.PowerPerKg * index), "share", ctx.Fmt.Percent(t.RepairsShare),
-                "cost", ctx.Fmt.Coins(p.Cost), "profit", ctx.Fmt.Coins(p.Profit), "role", ctx.Strings.Get("business.role." + t.Worker));
+                "cost", ctx.Fmt.Coins(p.Cost), "profit", ctx.Fmt.Coins(p.Profit), "role", ctx.Strings.Get("business.role." + t.Worker),
+                "loan", ctx.Fmt.Coins(p.Loan), "ltv", ctx.Fmt.Percent(BusinessRules.Defs(ctx.Sim).BusinessLtv), "seasons", ctx.Fmt.Integer(BusinessRules.Defs(ctx.Sim).TermSeasons),
+                "rate", ctx.Fmt.Percent(p.Loan > 0 ? Fixed.FromRatio(p.Interest, p.Loan) : Fixed.Zero));
             if (line == "profit" || line == "payback") vm.Footnote = ctx.Strings.Get("why.plan.lesson");
             return vm;
         }
@@ -192,6 +194,51 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.booksPlan.actual", Money(ctx, actual), "n", ctx.Fmt.Integer(need));
             vm.Rows.Add(new WhyRowVm(BusinessBooksSheet.Reason(ctx, b, line), null));
             vm.Footnote = ctx.Strings.Get("why.booksPlan.lesson");
+            return vm;
+        }
+
+        /// <summary>The overdraft (spec 016 §3.8, §3.10): what's drawn, its limit and why, its interest, what happens past it.</summary>
+        private static WhyVm BusinessOverdraft(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Business b = BusinessOf(ctx, id);
+            BusinessDefs d = BusinessRules.Defs(sim);
+            long limit = BusinessBooks.OverdraftLimit(sim, b);
+            WhyVm vm = New(ctx, "why.businessOverdraft.title", ctx.Fmt.Coins(BusinessBooks.Overdrawn(b)));
+            Row(vm, ctx, "why.businessOverdraft.limit", ctx.Fmt.Coins(limit), "pct", ctx.Fmt.Percent(d.OverdraftLimit));
+            Row(vm, ctx, "why.businessOverdraft.rate", ctx.Fmt.Percent(d.OverdraftRate));
+            Text(vm, ctx, "why.businessOverdraft.draws");
+            Text(vm, ctx, "why.businessOverdraft.past");
+            vm.Footnote = ctx.Strings.Get("why.businessOverdraft.lesson");
+            return vm;
+        }
+
+        /// <summary>Closing a business (spec 016 §3.10): each figure and where the money goes.</summary>
+        private static WhyVm BusinessClose(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Business b = BusinessOf(ctx, id);
+            BusinessDefs d = BusinessRules.Defs(sim);
+            BusinessCloseSheet.Figures(sim, b, out long stock, out long sale, out long debts, out long net);
+            WhyVm vm = New(ctx, net >= 0 ? "why.businessClose.toYou" : "why.businessClose.yourLoan", ctx.Fmt.Coins(System.Math.Abs(net)));
+            Text(vm, ctx, "why.businessClose.stock");
+            Text(vm, ctx, "why.businessClose.sale", "pct", ctx.Fmt.Percent(d.ClosingSaleShare));
+            Text(vm, ctx, "why.businessClose.debts", "seasons", ctx.Fmt.Integer(d.GuaranteeTermSeasons));
+            Text(vm, ctx, "why.businessClose.worker");
+            vm.Footnote = ctx.Strings.Get("why.businessClose.lesson");
+            return vm;
+        }
+
+        /// <summary>Running it yourself (spec 016 §3.6, §6): the hours it takes off your farm, and what they'd earn as day labour.</summary>
+        private static WhyVm PlanHours(ViewContext ctx, long id)
+        {
+            PlanOf(ctx, id, out BusinessTypeDef t, out bool _);
+            BusinessPlanSheet.HoursOff(ctx.Sim, t, out int hours, out long value);
+            WhyVm vm = New(ctx, "why.planHours.title", ctx.Fmt.Coins(value));
+            Row(vm, ctx, "why.planHours.hours", ctx.Strings.Get("plan.hoursShort", "hours", ctx.Fmt.Integer(hours)));
+            Row(vm, ctx, "why.planHours.wage", ctx.Fmt.Coins(MarketRules.Indexed(ctx.Sim, ctx.Sim.Config.Game.Farm.Founder.DayLabourWagePerHour)));
+            Text(vm, ctx, "why.planHours.farm");
+            vm.Footnote = ctx.Strings.Get("why.planHours.lesson");
             return vm;
         }
     }

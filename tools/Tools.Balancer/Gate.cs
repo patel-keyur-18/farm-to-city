@@ -333,6 +333,62 @@ namespace Tools.Balancer
             return all;
         }
 
+        // ---- Spec 016 §9 (US-117, ADR 0072): the flour mill a bot founds ----
+
+        public sealed class MillResult
+        {
+            public string Bot;
+            public int Seeds, Founded, Closed, Foreclosed;
+
+            /// <summary>Per seed that founded one: the mill's mean net profit a full season, its payback in seasons (its cost ÷ that
+            /// profit; NaN when never), and the most closes in a row it ended overdrawn.</summary>
+            public List<double> Profit = new List<double>(), Payback = new List<double>();
+            public List<int> OverdrawnRun = new List<int>();
+
+            /// <summary>Your cash at the end of every run: never stuck (ADR 0009) means playing on, a foreclosure included.</summary>
+            public List<long> EndCash = new List<long>();
+        }
+
+        /// <summary>Plays a mill bot for <paramref name="seasons"/> and measures its mill's own books.</summary>
+        public static MillResult Mill(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        {
+            var all = new MillResult { Bot = make().Name, Seeds = seeds };
+            Parallel.For(0, seeds, i =>
+            {
+                int run = 0, worst = 0, foreclosed = 0;
+                Economy.Run r = Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        if (e is Sim.Core.Events.ForeclosureCompleted) foreclosed++;
+                        if (!(e is Sim.Core.Events.SeasonClosed)) continue;
+                        var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed);
+                        if (b == null) continue;
+                        run = Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0 ? run + 1 : 0;
+                        worst = Math.Max(worst, run);
+                    }
+                });
+                Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Count > 0 ? r.Sim.State.Businesses.Businesses[0] : null;
+                lock (all)
+                {
+                    all.EndCash.Add(r.Sim.State.Ledger.Cash);
+                    all.Foreclosed += foreclosed > 0 ? 1 : 0;
+                    if (mill == null) return;
+                    all.Founded++;
+                    if (mill.Status == Sim.Core.Business.BusinessStatus.Closed) all.Closed++;
+                    long founded = mill.FoundedAt / r.Sim.Clock.SecondsPerSeason;
+                    var full = mill.Reports.Where(x => x.Period > founded).ToList();
+                    if (full.Count == 0) return;
+                    double profit = full.Average(x => (double)Sim.Core.Business.BusinessBooks.NetProfit(x)) / Money.Coin;
+                    all.Profit.Add(profit);
+                    double cost = Sim.Core.Business.BusinessRules.Cost(r.Sim, Sim.Core.Business.BusinessRules.TypeOf(r.Sim, mill)) / (double)Money.Coin;
+                    all.Payback.Add(profit > 0 ? cost / profit : double.NaN);
+                    all.OverdrawnRun.Add(worst);
+                }
+            });
+            return all;
+        }
+
         // ---- US-098 (ADR 0045 §4): the Phase 1 health checks ----
 
         /// <summary>No cash, an empty store and no credit: the cautious saver (it never borrows) plays on; per seed, the first
@@ -537,6 +593,15 @@ namespace Tools.Balancer
             Console.WriteLine("  Town (spec 014 §9): 5 households by day " + (d5.Count == 0 ? "-" : d5[d5.Count / 2].ToString("0.0", CultureInfo.InvariantCulture))
                 + " (median of " + d5.Count + "; target 21), " + (town.People21.Count == 0 ? "-" : town.People21.OrderBy(x => x).ElementAt(town.People21.Count / 2).ToString())
                 + " people at day 21 (12–25)");
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new MillBot(false), () => new MillBot(true), () => new MillBot(false, true) })
+            {
+                MillResult m = Mill(config, make, Math.Min(seeds, 12));
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  Mill (spec 016 §9, ADR 0072) " + m.Bot + ": founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : C((long)pr[0] * Money.Coin) + " / " + C((long)pr[pr.Count / 2] * Money.Coin) + " / " + C((long)pr[pr.Count - 1] * Money.Coin))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", most closes overdrawn in a row " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed);
+            }
             int n = Math.Min(seeds, 100);
             Console.WriteLine("  Phase 1 stress bots (ADR 0045 §4), 2 years, " + n + " seeds (cautious at most 1.20 ×; random below competent):");
             foreach (StressResult s in Stress(config, n, 8, new Func<Bot>[] { () => new CautiousSaverBot(), () => new LeverageBot(), () => new RandomBot() }))

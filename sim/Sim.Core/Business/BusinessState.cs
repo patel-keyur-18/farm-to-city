@@ -42,11 +42,14 @@ namespace Sim.Core.Business
         public long Depreciation { get; internal set; }
         public long Wage { get; internal set; }
 
+        /// <summary>The business loan's interest a season, when it borrowed (§3.8).</summary>
+        public long Interest { get; internal set; }
+
         internal BusinessPlan Clone() { return (BusinessPlan)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
         {
-            foreach (long v in new[] { Revenue, Costs, Profit, CashNeeded, MadeAt, AreaGrams, OwnGrams, Fees, Sales, Input, Power, Repairs, Depreciation, Wage }) h.WriteLong(v);
+            foreach (long v in new[] { Revenue, Costs, Profit, CashNeeded, MadeAt, AreaGrams, OwnGrams, Fees, Sales, Input, Power, Repairs, Depreciation, Wage, Interest }) h.WriteLong(v);
         }
 
         internal static BusinessPlan ReadFrom(SaveReader r)
@@ -54,7 +57,7 @@ namespace Sim.Core.Business
             return new BusinessPlan
             {
                 Revenue = r.ReadLong(), Costs = r.ReadLong(), Profit = r.ReadLong(), CashNeeded = r.ReadLong(), MadeAt = r.ReadLong(), AreaGrams = r.ReadLong(), OwnGrams = r.ReadLong(),
-                Fees = r.ReadLong(), Sales = r.ReadLong(), Input = r.ReadLong(), Power = r.ReadLong(), Repairs = r.ReadLong(), Depreciation = r.ReadLong(), Wage = r.ReadLong(),
+                Fees = r.ReadLong(), Sales = r.ReadLong(), Input = r.ReadLong(), Power = r.ReadLong(), Repairs = r.ReadLong(), Depreciation = r.ReadLong(), Wage = r.ReadLong(), Interest = r.ReadLong(),
             };
         }
     }
