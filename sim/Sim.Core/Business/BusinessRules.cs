@@ -81,8 +81,9 @@ namespace Sim.Core.Business
         {
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
-            long area = System.Math.Min(AreaGramsPerDay(sim), t.GramsPerHour * (t.CloseHour - t.OpenHour)) * days;
-            long own = System.Math.Min(ownPerDay, t.GramsPerHour * (t.CloseHour - t.OpenHour)) * days;
+            long day = t.GramsPerHour * (t.CloseHour - t.OpenHour), areaDay = System.Math.Min(AreaGramsPerDay(sim), day);
+            long area = areaDay * days;
+            long own = System.Math.Min(ownPerDay, day - areaDay) * days; // your wheat fills what the area leaves (§3.5)
             long fees = Money.Value(area, fee * index, 1000);
             long wheat = MarketRules.Value(sim, t.Input, own, MarketRules.Floor(sim, t.Input));
             long sales = 0;

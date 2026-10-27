@@ -25,7 +25,7 @@ namespace Sim.View.Tests
             Assert.That(list.Lines.Any(l => l.Label == "None yet"), Is.True);
 
             SheetVm research = BusinessResearchSheet.Build(ctx, 0);
-            Assert.That(research.Lines.Single(l => l.Label == "Grain the area brings a day").Value, Does.StartWith("about 2,"));
+            Assert.That(research.Lines.Single(l => l.Label == "Grain the area brings a day").Value, Does.StartWith("about 3,"));
             Assert.That(research.Lines.Single(l => l.Label == "Atta at the trader today").Value, Does.Contain("/kg"));
             SheetVm plan = BusinessPlanSheet.Build(ctx, 0, false);
             Assert.That(plan.Lines.Single(l => l.Label == "Who runs it").Value, Is.EqualTo("A hired miller"));

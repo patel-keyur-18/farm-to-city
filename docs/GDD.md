@@ -273,7 +273,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 **The first businesses (spec 016, ADR 0068).**
 - **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
-- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 300 people) and mills your own wheat into atta and bran.
+- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 350 people besides your town, ADR 0073) and mills your own wheat into atta and bran.
 - **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk into paneer, curd and ghee. The village grocer and tea stall buy from both each morning.
 - **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
 - **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.

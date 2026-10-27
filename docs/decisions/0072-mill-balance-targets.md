@@ -1,6 +1,6 @@
 # 0072. The flour mill's balance targets: realistic, hired or run by you
 
-- Status: Accepted
+- Status: Accepted; its target ranges superseded by ADR 0073
 - Date: 2026-10-25
 - Deciders: Keyur Patel
 - Amends: spec 016 §9

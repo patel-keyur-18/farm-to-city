@@ -1,6 +1,6 @@
 {
   "area": {
-    "catchmentPeople": 260,
+    "catchmentPeople": 350,
     "grainPerPersonPerRealDay": 0.40,
     "nextVillageFee": 4,
     "feeTolerance": 1

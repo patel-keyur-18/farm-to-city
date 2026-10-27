@@ -236,7 +236,7 @@ namespace Sim.Core.Tests
         }
 
         // Spec 016 §9 (US-117, ADR 0072): a bot founds the flour mill in the Hamlet and runs it, hired, by itself, and on a business loan;
-        // never stuck and the overdraft never permanent. Its season profit is printed against ADR 0072's targets (the owner's call, S14).
+        // never stuck, the overdraft never permanent, and its season profit inside ADR 0073's targets.
         [Test]
         public void Mill()
         {
@@ -252,6 +252,12 @@ namespace Sim.Core.Tests
                 Assert.That(m.Foreclosed, Is.LessThanOrEqualTo(m.Seeds / 4), m.Bot + ": foreclosed in at most a quarter of runs (running it yourself costs the farm)");
                 Assert.That(m.OverdrawnRun.Max(), Is.LessThanOrEqualTo(2), m.Bot + ": the overdraft never permanent");
             }
+            // ADR 0073's targets, on the median run.
+            double Mid(System.Collections.Generic.List<double> v) { return v.OrderBy(x => x).ElementAt(v.Count / 2); }
+            Assert.That(Mid(results[0].Profit), Is.InRange(5_000, 10_000), "hired");
+            Assert.That(Mid(results[1].Profit), Is.InRange(30_000, 40_000), "run by you");
+            Assert.That(Mid(results[1].Payback), Is.InRange(3.0, 4.0), "run by you, payback");
+            Assert.That(Mid(results[2].Profit), Is.InRange(5_000, 10_000), "hired, on a business loan");
         }
     }
 }
