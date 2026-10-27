@@ -660,7 +660,7 @@
 
 **Sprint end checklist**
 
-- [ ] Specs 018 and 019 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated; F14.1–F14.4 and US-102 broken into tasks
+- [ ] Specs 018 and 019 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated; F14.1–F14.4 and US-102 broken into tasks (018 approved 2026-10-27, ADR 0077)
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [ ] Save schema 11: migration, `saves/schema11` fixture, every older schema loads
 - [ ] The bakery's and the dairy's layouts previewed to and approved by the owner

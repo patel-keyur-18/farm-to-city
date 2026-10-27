@@ -31,7 +31,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
 | 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, cattle (buffalo and cows, ADR 0060), first processing (flour mill) |
-| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
+| 3. Village | Village head | 5 households, a business with 2 profitable seasons, the primary school built and open (funded by the founder from the Hamlet; ADR 0011, 0077) | 15–80 | The bakery and the dairy, shops on the pitches, drip, the borewell and the tractor, larger cooperative-bank loans (ADR 0077) |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
 | 6. City | Mayor and tycoon | Population 3,000, a college, a hospital, a power plant | 3,000–20,000 | Districts, trade with other cities, shares in businesses, specialisation |
@@ -49,7 +49,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 - This is never an energy bar. It changes background output only, never blocks a tap, and can't be bought.
 - The founder splits labour between their own fields and day labour for neighbours. The base capacity tends about 2–3 acres, so growing beyond that is the reason to hire.
 
-**Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Village era there is also a *town treasury*, funded by taxes and spent on public services. Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
+**Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Township era there is also a *town treasury*, funded by taxes and spent on public services (ADR 0077). Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
 
 **Town identity.** Cumulative choices give the town tags such as Agri-hub, Merchant town, Industrial town, Education town or Green town. Each tag unlocks unique buildings and small bonuses, so two playthroughs end in different cities.
 
@@ -438,7 +438,7 @@ In Phase 2 the weights are 40, 30, 20 and 10%, each layer counting fully only wh
 - **Literacy** (the share of residents aged 7+ who can read) comes quickly. A child becomes literate after 4 life-years of primary school, about 16 real days. Adult literacy classes at the school take about 1 season. Migrants also arrive with some education.
 - **Skilled graduates** come slowly (below).
 
-The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan. The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
+The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan, on the village's school plot from the Hamlet; the founder gives it to the district, which posts and pays the teacher, and pays its upkeep. Adult literacy classes are the founder's choice (3,000 a season for up to 15), and a literate adult earns 10% more outside (ADR 0077, spec 018). The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
 
 **Education as a long-term investment.** A school's skilled payoff comes 10–15 life-years later (about 40–60 real days), as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
 
@@ -497,7 +497,7 @@ The player can buy materials, produce them, or own the construction company. A s
 
 ## Governance and public finance
 
-From the Village era the player also runs the town treasury. Public money pays for public goods, and every tax and policy has winners, losers and a lag.
+From the Township era the player also runs the town treasury (ADR 0077). Public money pays for public goods, and every tax and policy has winners, losers and a lag.
 
 **Revenue**
 
@@ -658,7 +658,7 @@ Entries are written in a warm, slightly poetic voice, and they become the emotio
 
 The game teaches in three steps: the player decides, sees the result, and only then gets the concept named. A lesson the player felt lands harder than one they read.
 
-**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision.
+**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision. Phase 2 has the first three, people of the village with portraits (an old farmer neighbour, the co-op bank's secretary, a retired headmaster): one line on the season report and on an alert whose cause they know, at most one a sheet and a topic a day; the town planner comes with the treasury (ADR 0077).
 
 - **Farm advisor:** soil, crops, weather risk.
 - **Accountant:** margins, cash flow, loans, assets.
@@ -677,7 +677,7 @@ The game teaches in three steps: the player decides, sees the result, and only t
 | Town report | Each season | Services, happiness, budget against actual |
 | Year-end review | Yearly | Best decision, costliest mistake, what to try next |
 
-**Concept Codex.** About 40 concept cards unlock the first time the player meets each idea in play. Every card has a plain definition, the player's own numbers as the example, and a one-line real-world link. Launch set:
+**Concept Codex.** About 40 concept cards unlock the first time the player meets each idea in play. Phase 2 has about 24, found after their result, announced by a toast and kept in Menu → Codex (ADR 0077, spec 018). Every card has a plain definition, the player's own numbers as the example, and a one-line real-world link. Launch set:
 
 - **Business:** gross margin, break-even, fixed versus variable cost, unit economics, pricing power, competition and market entry, forecast versus actual.
 - **Money:** cash flow versus profit, working capital, interest and compounding, inflation, credit score, leverage, liquidity, emergency fund.
@@ -1119,7 +1119,7 @@ flowchart TB
 
     P0 -->|"Gate: no money loops; 2,000 agents at 60 fps; replays match on iPhone"| P1
     P1 -->|"Gate: a reason to return each day, the Hamlet in about a week, nothing broke (ADR 0047)"| P2
-    P2 -->|"Gate: a week of play; players can explain profit versus cash"| P3
+    P2 -->|"Gate: the Village in 2–3 weeks; players can explain profit versus cash"| P3
     P3 -->|"Gate: 4 weeks of play; the balancer finds no exploits"| P4
     P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
 ```
@@ -1128,7 +1128,7 @@ flowchart TB
 | --- | --- | --- |
 | 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Part A, on the owner's solo playtest week (ADR 0047): a reason to return on at least 4 of days 2–7, notification returns at sensible times, the Hamlet on day 5–9, no blocker, the release candidate and CI passing. Part B, before Launch at the latest: fresh players come back on day 2 and day 3 unprompted (2 of 3) |
-| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
+| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | The Village in 2–3 weeks using credit (4–6 saving) for the balancer's bots; the owner's playtest from the Hamlet to the Village; players can explain profit versus cash (ADR 0077) |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
 | 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
 | 5 · Polish | Localisation, accessibility, Blender art pipeline; store release only if the owner decides | Owner's call |

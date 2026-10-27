@@ -231,10 +231,12 @@
 - **Bug found and fixed:** an empty field's sheet (and a homestead acre's) greyed *Build a family house* ("not enough coins") when cash covered the home loan's down payment but not the price; the placement bar offered the loan. `HomesteadSheet.BuildHere` now offers *Build a family house · with a home loan: you pay X now*, opening the loan sheet (ADR 0071). Test `PeopleViewTests.HomeLoan_Sheet` (failed before, passes); checked by touch (`docs/art/s15-fix-field-loan-*.png`).
 - **Seen, not changed:** a hand whose wage couldn't be paid at a close (cash spent on the shed just before it) left within two days and town happiness fell 84 → 57: existing renewal rules (ADR 0039). A season letter queued behind sheets showed a season late after a whole season of dev time travel (the 72 h away cap can't skip a 96 h season, so not reachable in play).
 
+- **Plan approved (owner, 2026-10-27; ADR 0076).** **Spec 018 approved (2026-10-27, ADR 0077):** eight gaps closed one per message (the Village gate without the market stall; the school from the Hamlet, the district paying the teacher; adult classes 3,000 for 14+; literate adults +10% outside; ~24 Codex cards by toast; three village advisors, capped; the treasury with the Township; the Phase 2 gate at 2–3 weeks). On approval the owner asked that nothing be stale and everything be realistic and achievable: the spec was re-read and fixed (the school's cost against two seasons' profit, the loan within the bank's room, pupils 6–13 and classes 14+, the goals named at the Hamlet). GDD (era table, treasury, school, advisors, Codex, roadmap gate), spec 014's school row, `CLAUDE.md`, F14.1, F14.2, US-102 updated.
+
 ## Next up
 
-1. **Owner:** approve the Sprint 15 plan in `sprints.md` (ADR 0076: 2 weeks, 37 points, save schema 11 now and 12 in Sprint 16, the developer panel's Next era).
-2. **Claude (after approval):** draft specs 018 and 019 and close their gaps with the owner one per message, alongside US-218 → US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
+1. **Owner:** spec 019's gaps, one per message.
+2. **Claude:** draft spec 019 and close its gaps with the owner one per message, alongside US-218 → US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -256,8 +258,8 @@
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**
-- The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3. For spec 016 or 018.
-- Phase 2's exit gate says "a week of play", but ADR 0028 puts the Village at 2–3 weeks in. For spec 018 (the Village unlock) and the Phase 2 gate.
+- ~~The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3.~~ Settled (owner, 2026-10-27, spec 018 G7, ADR 0077): the treasury comes with the Township.
+- ~~Phase 2's exit gate says "a week of play", but ADR 0028 puts the Village at 2–3 weeks in.~~ Settled (owner, 2026-10-27, spec 018 G8, ADR 0077): the Village in 2–3 weeks with credit, the playtest from the Hamlet to the Village.
 - ~~F12.2 lists a dairy among the first processing chains; ADR 0056 has milk sold to the village co-op.~~ Settled (owner, 2026-10-25, spec 016 G1): a dairy business (Village) makes paneer, curd and ghee from your own milk; milk not kept for it still goes to the co-op.
 
 Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 0036), 3 findings and 5 implementation notes (ADR 0037), the gate (ADR 0035).

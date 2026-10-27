@@ -194,7 +194,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 | A widowed elder alone | Pays rent from savings; behind 2 seasons, leaves for family elsewhere ("Kamla has gone to live with her son in Rampur") | Never evicted harshly, never a house stuck for ever |
 | Counting households | A household is any family living on your land, a hand alone in his hut included, so the Village era's "5 households" (spec 018) is 2 hands' huts and 3 family houses: about 1,80,000 coins | Reachable in the Village pacing (2–3 weeks, ADR 0028) |
 | Raising happiness | Every lever is shown on the household card's needs *Why?* with what to do: "Give someone here a job (your hand)", "Build another house (7 people live in a house for 6)", "Food: their income buys 83% of what they need" | The player always sees what would help |
-| What can't be changed yet | Rows that the player can't move yet say so: "No school yet (the Village builds one)", "Health care: the chemist (a clinic comes with the Township)" | Never a red number with no way to fix it |
+| What can't be changed yet | Rows that the player can't move yet say so: "No school yet: build one on the school plot" (spec 018: from the Hamlet; the row read "the Village builds one" until Sprint 17), "Health care: the chemist (a clinic comes with the Township)" | Never a red number with no way to fix it |
 
 ## 4. Data
 
