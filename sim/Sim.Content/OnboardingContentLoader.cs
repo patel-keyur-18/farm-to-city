@@ -12,7 +12,7 @@ namespace Sim.Content
         public static readonly string[] OnboardingEvents =
         {
             "GardenPicked", "SoldToTrader", "MarketSales", "MandiTripReturned", "AwayAdvanceCompleted", "CropHarvested",
-            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked", "OrdersPosted",
+            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "OrdersPosted",
         };
 
         /// <summary>The commands a <c>rejection</c> trigger can name.</summary>
@@ -84,13 +84,20 @@ namespace Sim.Content
             {
                 string p = Index(er + ".eras", i);
                 JObject x = Object(eraTokens[i], p);
-                OnlyFields(x, p, "id", "conditions");
+                OnlyFields(x, p, "id", "conditions", "manual");
                 string id = UniqueId(x, p, eraIds);
                 eraIds.Add(id);
                 if (i == 0)
                 {
                     if (x["conditions"] != null) throw new ContentException(Join(p, "conditions"), "the first era is the start and has no conditions");
                     eras.Add(new EraDef(id, 0, Fixed.Zero, 0, 0));
+                    continue;
+                }
+                if (x["manual"] != null)
+                {
+                    if (!Bool(x["manual"], Join(p, "manual"))) throw new ContentException(Join(p, "manual"), "leave it out instead of false");
+                    if (x["conditions"] != null) throw new ContentException(Join(p, "conditions"), "a manual era has no conditions yet");
+                    eras.Add(new EraDef(id, 0, Fixed.Zero, 0, 0, true));
                     continue;
                 }
                 string cp = Join(p, "conditions");

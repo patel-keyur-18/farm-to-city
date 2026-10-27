@@ -24,6 +24,9 @@ namespace Game.Presentation.DevTools
             public Func<Simulation> Sim;
             public Action<long, AdvanceMode> Advance;
             public Action Snapshot, Restore;
+
+            /// <summary>Moves to the next era (ADR 0076); returns what happened, for the result line.</summary>
+            public Func<string> NextEra;
             public Func<string> Status;
             public Action<bool> Visibility;
         }
@@ -70,6 +73,8 @@ namespace Game.Presentation.DevTools
                 Btn("Away +1 hour", () => host.Advance(3600, AdvanceMode.Away)),
                 Btn("Away +1 day", () => host.Advance(86400, AdvanceMode.Away)),
                 Btn("Away cap (72 h)", () => host.Advance(host.Sim().Clock.AwayCapSeconds, AdvanceMode.Away))));
+            scroll.Add(Section("Era (ADR 0076: Snapshot first)"));
+            scroll.Add(ButtonRow(Btn("Next era", () => _result.text = host.NextEra())));
             scroll.Add(Section("Snapshot (in memory)"));
             scroll.Add(ButtonRow(Btn("Snapshot", () => host.Snapshot()), Btn("Restore", () => host.Restore())));
             scroll.Add(Section("Determinism (ADR 0035)"));

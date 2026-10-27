@@ -235,9 +235,12 @@
 
 - **Spec 019 approved (2026-10-27, ADR 0078):** eight gaps closed one per message (your books as three statements like the mill's; each line against the same season last year; the hub inside Money and loans, redesigned in the Store/People layout (owner); a co-op savings deposit at 1.5% a season; passive income = rent, interest, hired businesses; five milestones, no rewards; *Your year*; *Your people* on the report). Re-read: "first lakh saved" now nets off debt. GDD, `CLAUDE.md`, F14.3 and F14.4 updated (re-pointed: Sprint 18 12 → 18 points, its length decided at its planning).
 
+- **US-218 done (owner to review): the developer panel's Next era** (ADR 0076). `DebugNextEra` (dev commands only, saved and replayed: `CommandCodec`, `ReplayJson`); `EraRules.Unlock` shared with the gate; `eras.json` has the Village as `"manual": true` (no gate until spec 018 is built in Sprint 17: never unlocked by the check, and the progress sheet says "Your farm is a Hamlet."). The celebration banner per era ("A Village!" · "Five households, a business that pays, a school"). **Bug found and fixed:** the `hamlet` letter page fired on any `EraUnlocked`, so the Village opened the Hamlet's page; chapters now name `EraUnlocked(hamlet)`. Tests `DebugTests.NextEra` (release refuses; Homestead → Hamlet → Village; the Village never unlocks by itself through a close; the last era refused; saves round-trip), `GuideTests.EraChapter_OwnEraOnly`. **Editor, scripted touch:** held the time card (developer panel) → Next era → "A Village!" banner, the panel's "Era: village" (`docs/art/s15-218-next-era-village.png`); found the Hamlet page bug, fixed, re-checked. Nothing set up by script. Saves restored and checked identical.
+
 ## Next up
 
-1. **Claude:** US-218 → US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
+1. **Owner:** review US-218.
+2. **Claude (after review):** US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
 
 ## Owner action checklist (Phases 0–1)
 

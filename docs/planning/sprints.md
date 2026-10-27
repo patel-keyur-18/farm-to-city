@@ -648,7 +648,7 @@
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-218 | The developer panel's Next era (ADR 0076) | [F08.4](features/F08.4-developer-panel-unity.md) | 1 | Must | To do |
+| US-218 | The developer panel's Next era (ADR 0076) | [F08.4](features/F08.4-developer-panel-unity.md) | 1 | Must | Done (owner to review) |
 | US-118 | Recipes | [F12.2](features/F12.2-production-chains.md) | 5 | Must | To do |
 | US-119 | The bakery | [F12.2](features/F12.2-production-chains.md) | 5 | Must | To do |
 | US-216 | The dairy: paneer, curd and ghee | [F12.2](features/F12.2-production-chains.md) | 5 | Must | To do |

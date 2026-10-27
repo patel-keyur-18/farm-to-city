@@ -31,6 +31,7 @@ namespace Sim.Core.Saves
             AnswerFamilyRequest,
             BuildFamilyHouseLoan,
             FoundBusiness, SetBusiness, PutCash, TakeCash, CloseBusiness,
+            DebugNextEra,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -43,6 +44,7 @@ namespace Sim.Core.Saves
                 case AdvanceTo c: T(Tag.AdvanceTo); w.WriteLong(c.Target); w.WriteInt((int)c.Mode); break;
                 case Sync c: T(Tag.Sync); w.WriteLong(c.NowWallUtc); break;
                 case DebugAdvance c: T(Tag.DebugAdvance); w.WriteLong(c.Seconds); w.WriteInt((int)c.Mode); break;
+                case DebugNextEra _: T(Tag.DebugNextEra); break;
                 case LiveRun c: T(Tag.LiveRun); w.WriteLong(c.FromWallUtc); w.WriteLong(c.ToWallUtc); w.WriteLong(c.SimSeconds); break;
                 case BuyParcel c:
                     At(c, Tag.BuyParcel); w.WriteString(c.ParcelId); w.WriteBool(c.Financing != null);
@@ -131,6 +133,7 @@ namespace Sim.Core.Saves
             if (tag == Tag.AdvanceTo) return new AdvanceTo(r.ReadLong(), (AdvanceMode)r.ReadInt());
             if (tag == Tag.Sync) return new Sync(r.ReadLong());
             if (tag == Tag.DebugAdvance) return new DebugAdvance(r.ReadLong(), (AdvanceMode)r.ReadInt());
+            if (tag == Tag.DebugNextEra) return new DebugNextEra();
             if (tag == Tag.LiveRun) return new LiveRun(r.ReadLong(), r.ReadLong(), r.ReadLong());
             long at = r.ReadLong();
             switch (tag)

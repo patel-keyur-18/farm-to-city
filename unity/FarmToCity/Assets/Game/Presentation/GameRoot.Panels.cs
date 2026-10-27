@@ -116,8 +116,14 @@ namespace Game.Presentation
                 Sim = () => Sim,
                 Advance = (s, mode) => { Sim.Execute(new DebugAdvance(s, mode)); AfterCommands(); },
                 Snapshot = () => _snapshot = Sim.State.Clone(),
+                NextEra = () =>
+                {
+                    CommandResult r = Sim.Execute(new DebugNextEra());
+                    AfterCommands();
+                    return r.Accepted ? "Era: " + Sim.Config.Game.Onboarding.Eras[Sim.State.Era.Current].Id : "Next era: " + r.Reason;
+                },
                 Restore = RestoreSnapshot,
-                Status = () => "snapshot " + (_snapshot == null ? "none" : "saved"),
+                Status = () => "snapshot " + (_snapshot == null ? "none" : "saved") + " · era " + (Sim.State.Era == null ? "none" : Sim.Config.Game.Onboarding.Eras[Sim.State.Era.Current].Id),
                 Visibility = v => _hud.SetVisible(v),
             });
             _hud.OnTimeHeld = () => _dev.Open();

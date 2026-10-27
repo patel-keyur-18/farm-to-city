@@ -34,7 +34,7 @@ namespace Game.Presentation
             int lines = _playLog.Lines.Count;
             _playLog.Guidance(WallNow(), Sim.State.Clock.SimTime, Sim.State.Guidance, Sim.Config.Game.Onboarding);
             if (_playLog.Lines.Count != lines) WritePlayLog();
-            foreach (SimEvent e in events) if (e is EraUnlocked) Celebrate();
+            foreach (SimEvent e in events) if (e is EraUnlocked u) Celebrate(u.EraId);
             // Next tick: cards and the away card queued this tick go first, and the page waits for them (spec 009 §3.1).
             _safeRoot.schedule.Execute(MaybeOpenLetter);
             UpdateNudge();
@@ -159,7 +159,7 @@ namespace Game.Presentation
         // ---- the Hamlet (spec 009 §3.6) ----
 
         /// <summary>The map's light warms and a banner drops in; the hamlet page opens after it.</summary>
-        private void Celebrate()
+        private void Celebrate(string era)
         {
             _celebrating = true;
             _sounds.Harvest();
@@ -178,10 +178,10 @@ namespace Game.Presentation
             banner.style.backgroundColor = UiKit.WoodBar;
             UiKit.Border(banner, 5, UiKit.Gold);
             UiKit.Padding(banner, 18, 48);
-            Label head = UiKit.Heading1(_strings.Get("hamlet.banner"), 64, UiKit.Gold);
+            Label head = UiKit.Heading1(_strings.Get(era + ".banner"), 64, UiKit.Gold);
             head.style.unityTextAlign = TextAnchor.MiddleCenter;
             banner.Add(head);
-            Label sub = UiKit.Text(_strings.Get("hamlet.bannerSub"), 32, UiKit.Cream, UiKit.Body);
+            Label sub = UiKit.Text(_strings.Get(era + ".bannerSub"), 32, UiKit.Cream, UiKit.Body);
             sub.style.unityTextAlign = TextAnchor.MiddleCenter;
             banner.Add(sub);
             row.Add(banner);

@@ -128,9 +128,16 @@ namespace Sim.Core.Definitions
         public int HandHutsAtLeast { get; }
         public int ProfitableSeasonsAtLeast { get; }
 
-        public EraDef(string id, int acresHarvestedInSeason, Fixed meanCareAtLeast, int handHutsAtLeast, int profitableSeasonsAtLeast)
+        /// <summary>
+        /// An era whose gate isn't built yet (the Village until Sprint 17, ADR 0076): never unlocked by the check, only by the
+        /// developer panel's Next era.
+        /// </summary>
+        public bool Manual { get; }
+
+        public EraDef(string id, int acresHarvestedInSeason, Fixed meanCareAtLeast, int handHutsAtLeast, int profitableSeasonsAtLeast, bool manual = false)
         {
             Id = id;
+            Manual = manual;
             AcresHarvestedInSeason = acresHarvestedInSeason;
             MeanCareAtLeast = meanCareAtLeast;
             HandHutsAtLeast = handHutsAtLeast;

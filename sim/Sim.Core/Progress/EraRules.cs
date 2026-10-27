@@ -57,10 +57,20 @@ namespace Sim.Core.Progress
             var eras = sim.Config.Game.Onboarding.Eras;
             if (e.Current + 1 >= eras.Count) return;
             EraDef next = eras[e.Current + 1];
-            if (!Met(sim, next, period)) return;
+            if (next.Manual || !Met(sim, next, period)) return;
+            Unlock(sim);
+        }
+
+        /// <summary>Moves to the next era (once its gate is met, or by the developer panel); false at the last era or without eras.</summary>
+        internal static bool Unlock(Simulation sim)
+        {
+            EraState e = sim.State.Era;
+            var eras = sim.Config.Game.Onboarding?.Eras;
+            if (e == null || eras == null || e.Current + 1 >= eras.Count) return false;
             e.Current++;
             e.UnlockedAt = sim.State.Clock.SimTime;
-            sim.Emit(new EraUnlocked(sim.State.Clock.SimTime, next.Id));
+            sim.Emit(new EraUnlocked(sim.State.Clock.SimTime, eras[e.Current].Id));
+            return true;
         }
 
         /// <summary>True when every condition of <paramref name="era"/> holds for season <paramref name="period"/>.</summary>
