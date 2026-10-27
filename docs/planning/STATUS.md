@@ -228,8 +228,8 @@
 
 ## Next up
 
-1. **Owner:** review US-117 (the loan, overdraft, trouble and closing; `docs/art/s14-117-*.png`). The mill's balance is settled (ADR 0073).
-2. **Claude:** specs 017 (shops, customer choice, rivals) and 013 (irrigation, equipment, orchards, granary), their gaps closed with the owner one per message; then the device build, test checklist and PR.
+1. **Owner:** US-117 approved (2026-10-27). Close spec 017's and 013's gaps.
+2. **Claude:** specs 017 (shops, customer choice, rivals) and 013 (irrigation, equipment, orchards, granary) are drafted (`docs/specs/017-…`, `013-…`), each with gaps G1–G8 and a recommendation; close them with the owner one per message (017 first), then approve both (ADRs, GDD, features F12.3, F12.4, F13.2, F13.3 with tasks); then the device build, test checklist and PR.
 
 ## Owner action checklist (Phases 0–1)
 
