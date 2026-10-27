@@ -26,7 +26,7 @@
 | S15 | 8–21 Mar 2027 (2 weeks, ADR 0076) | 2 | Production chains: the bakery and the dairy (F12.2); full hiring and HR (F11.4); save schema 11; the developer panel's Next era. | 37 | 018, 019 | Yes |
 | S16 | 22 Mar – 4 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 12 (ADR 0076). | 37 (re-pointed, ADR 0076) | — | Yes |
 | S17 | 5–11 Apr 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
-| S18 | 12–18 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 12 | — | Yes: Phase 2 playtest build |
+| S18 | 12–18 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -660,7 +660,7 @@
 
 **Sprint end checklist**
 
-- [ ] Specs 018 and 019 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated; F14.1–F14.4 and US-102 broken into tasks (018 approved 2026-10-27, ADR 0077)
+- [x] Specs 018 and 019 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated; F14.1–F14.4 and US-102 broken into tasks (018 approved 2026-10-27, ADR 0077; 019 approved 2026-10-27, ADR 0078)
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [ ] Save schema 11: migration, `saves/schema11` fixture, every older schema loads
 - [ ] The bakery's and the dairy's layouts previewed to and approved by the owner

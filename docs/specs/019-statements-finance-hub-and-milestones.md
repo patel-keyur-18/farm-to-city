@@ -1,6 +1,6 @@
 # 019. Your statements, the finance hub and wealth milestones
 
-- Status: In review (G1–G8 closed with the owner, 2026-10-27, §10; re-read for stale or unreachable rules)
+- Status: Approved (2026-10-27, ADR 0078; G1–G8 closed with the owner, §10)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, the personal finance screen, wealth milestones, asset classes); Learning layer (reports every player can read)

@@ -233,10 +233,11 @@
 
 - **Plan approved (owner, 2026-10-27; ADR 0076).** **Spec 018 approved (2026-10-27, ADR 0077):** eight gaps closed one per message (the Village gate without the market stall; the school from the Hamlet, the district paying the teacher; adult classes 3,000 for 14+; literate adults +10% outside; ~24 Codex cards by toast; three village advisors, capped; the treasury with the Township; the Phase 2 gate at 2–3 weeks). On approval the owner asked that nothing be stale and everything be realistic and achievable: the spec was re-read and fixed (the school's cost against two seasons' profit, the loan within the bank's room, pupils 6–13 and classes 14+, the goals named at the Hamlet). GDD (era table, treasury, school, advisors, Codex, roadmap gate), spec 014's school row, `CLAUDE.md`, F14.1, F14.2, US-102 updated.
 
+- **Spec 019 approved (2026-10-27, ADR 0078):** eight gaps closed one per message (your books as three statements like the mill's; each line against the same season last year; the hub inside Money and loans, redesigned in the Store/People layout (owner); a co-op savings deposit at 1.5% a season; passive income = rent, interest, hired businesses; five milestones, no rewards; *Your year*; *Your people* on the report). Re-read: "first lakh saved" now nets off debt. GDD, `CLAUDE.md`, F14.3 and F14.4 updated (re-pointed: Sprint 18 12 → 18 points, its length decided at its planning).
+
 ## Next up
 
-1. **Owner:** spec 019's gaps, one per message.
-2. **Claude:** draft spec 019 and close its gaps with the owner one per message, alongside US-218 → US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
+1. **Claude:** US-218 → US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
 
 ## Owner action checklist (Phases 0–1)
 

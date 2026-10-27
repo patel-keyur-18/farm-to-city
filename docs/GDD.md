@@ -554,7 +554,7 @@ The player's real score is **net worth**: everything they own minus everything t
 | Asset | Value over time | Income | Liquidity | Lesson |
 | --- | --- | --- | --- | --- |
 | Cash | Loses value to inflation | None | Instant | Keep an emergency fund, not a hoard |
-| Savings deposit | Grows at bank interest | Interest | 1 day | Compounding |
+| Savings deposit | Grows at bank interest (Phase 2: the co-op bank, 1.5% a season, never collateral; ADR 0078) | Interest | Any time | Compounding |
 | Farmland | Appreciates as the town grows | Crop profit or lease rent | Slow sale at a discount | Land as a long-term store of value |
 | Buildings | Depreciate; maintenance slows it | Rent or business use | Slow | Upkeep is a real cost |
 | Equipment and vehicles | Depreciate fast | Through productivity | Medium | Buy or lease? |
@@ -598,7 +598,7 @@ Each lender has a credit limit set by collateral, credit score and recent income
 
 **Diversification.** One crop, one business or one customer is fragile. Events hit specific sectors, and a spread of assets smooths the shocks.
 
-**Personal finance screen**
+**Personal finance screen** (Phase 2: inside Money and loans, redesigned in the Store and People layout; spec 019, ADR 0078)
 
 - net worth trend
 - an asset allocation pie chart
@@ -606,9 +606,9 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - the debt-to-asset ratio
 - an emergency fund measured in seasons of costs covered
 
-**Wealth milestones** mark progress without telling players what to do. At rupee scale (ADR 0008):
+**Wealth milestones** mark progress without telling players what to do: a toast and a list, never a reward (ADR 0078). At rupee scale (ADR 0008):
 
-- first 1 lakh coins of cash savings
+- first 1 lakh coins of savings (cash and deposit, less what you owe)
 - net worth double the inherited estate
 - first rental income
 - debt-free
