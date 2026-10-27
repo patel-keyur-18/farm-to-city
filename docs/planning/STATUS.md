@@ -7,7 +7,7 @@
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
 | Sprint | **Sprint 14** (22 Feb – 7 Mar 2027, 2 weeks): population flows (F11.3), the flour mill and its books (F12.1), specs 017 and 013; plan approved 2026-10-25 |
 | Branch with latest work | `sprint/14-flows-and-mill` (from `main` after PR #18 merged) |
-| Last updated | 2026-10-25 |
+| Last updated | 2026-10-27 |
 
 ## Done so far
 
@@ -228,8 +228,8 @@
 
 ## Next up
 
-1. **Owner:** US-117 approved (2026-10-27). Close spec 017's and 013's gaps.
-2. **Claude:** specs 017 (ADR 0074) and 013 (ADR 0075) approved 2026-10-27, every gap closed with the owner (017 G1 added a sweet shop, 013 G1 a pump on the well; the rest as recommended); F12.3, F12.4, F13.2, F13.3 have tasks (their points may rise at Sprint 16 planning). Now: the Development build for the iPhone 13, `docs/test-checklists/s14-flows-mill.md`, the Sprint 14 PR (labels, milestone *Phase 2 · Hamlet & Village*, project FarmToCity, In Progress).
+1. **Owner:** install the Sprint 14 Development build and run `docs/test-checklists/s14-flows-mill.md` (export your town first; it upgrades schema 9 to 10); report blockers, screenshots and the frame time; merge the Sprint 14 pull request to `main`.
+2. **Claude (Sprint 15, after the merge):** plan Sprint 15 from `sprints.md` (production chains: the bakery and the dairy, F12.2; full hiring and HR, F11.4) with specs 018 and 019 to write; recheck F12.3's and F13.2's points (ADR 0074 added a sweet shop, ADR 0075 a pump) at Sprint 16 planning.
 
 ## Owner action checklist (Phases 0–1)
 
