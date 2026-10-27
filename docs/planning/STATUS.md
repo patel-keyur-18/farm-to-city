@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 14** (22 Feb – 7 Mar 2027, 2 weeks): population flows (F11.3), the flour mill and its books (F12.1), specs 017 and 013; plan approved 2026-10-25 |
-| Branch with latest work | `sprint/14-flows-and-mill` (from `main` after PR #18 merged) |
+| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan awaiting the owner's approval |
+| Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
 | Last updated | 2026-10-27 |
 
 ## Done so far
@@ -233,8 +233,8 @@
 
 ## Next up
 
-1. **Owner:** install the Sprint 14 Development build and run `docs/test-checklists/s14-flows-mill.md` (export your town first; it upgrades schema 9 to 10); report blockers, screenshots and the frame time; merge the Sprint 14 pull request to `main`.
-2. **Claude (Sprint 15, after the merge):** plan Sprint 15 from `sprints.md` (production chains: the bakery and the dairy, F12.2; full hiring and HR, F11.4) with specs 018 and 019 to write; recheck F12.3's and F13.2's points (ADR 0074 added a sweet shop, ADR 0075 a pump) at Sprint 16 planning.
+1. **Owner:** approve the Sprint 15 plan in `sprints.md` (ADR 0076: 2 weeks, 37 points, save schema 11 now and 12 in Sprint 16, the developer panel's Next era).
+2. **Claude (after approval):** draft specs 018 and 019 and close their gaps with the owner one per message, alongside US-218 → US-118 → US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -249,6 +249,7 @@
 | Sprint 11 | Done: device check passed 2026-10-22; PR #16 merged |
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
+| Sprint 14 | Done: device check passed; PR #19 merged |
 
 ## Open questions (with the owner)
 

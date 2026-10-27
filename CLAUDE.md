@@ -185,6 +185,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0073 | The mill's catchment 350 people plus your town (from US-117's bots: at 260 a hired mill lost money and running it yourself paid less than day labour): hired 5,000–10,000 a season, run by you 30,000–40,000, payback 3–4; the plan values your hours (supersedes 0072's ranges) |
 | 0074 | Spec 017: a vegetable stall, a tea stall and a sweet shop from the Village, on a rented square pitch (3,000 a season) or your own acre; customers share demand by an additive score (price, quality, stars, distance, wait); stars 0–5 moving a tenth a day; the village's grocer and tea stall never close; newcomers on a gap or rich prices; the mill chooses against the chakki the same way |
 | 0075 | Spec 013: the irrigation ladder (buckets, a pump on the well for 4 acres, canal channels dry in Summer, drip half subsidised on 2 acres, a borewell for 6 more); an ox plough with bullocks in the shed (Hamlet) and a tractor (Village) to buy, lease or hire, a harvester hired by the acre; breakdowns 0.5% or 4% a day; whole-acre orchards at real densities with half-yield intercrops; a dry-goods granary (10 t, a fifth of the spoilage) |
+| 0076 | Sprint 15 plan: 2 weeks (36 points + Next era); save schema 11 in Sprint 15 (workers, posts, reputation, crafting skill, the bakery's and dairy's settings), 12 in Sprint 16 (shops, farm); a developer-panel Next era (Development builds only); Sprint 16 re-pointed to 37 |
 
 ## Current status
 

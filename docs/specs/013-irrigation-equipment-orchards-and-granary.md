@@ -92,7 +92,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 **New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; `wellDripAcres`; the borewell), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (trees an acre, labour young and bearing, the intercrop share). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor), `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
 
-**New state** (save schema 11 with spec 017): per tile, irrigation (none, canal, drip); `Machine` (id, kind, owned or leased, bought at, book value, maintained, broken until); hired days (kind, day); `Orchard` on a tile (tree, trees, planted at, batches, intercrop); the granary's goods (a store place, spec 012's mechanism).
+**New state** (save schema 12 with spec 017, ADR 0076): per tile, irrigation (none, canal, drip); `Machine` (id, kind, owned or leased, bought at, book value, maintained, broken until); hired days (kind, day); `Orchard` on a tile (tree, trees, planted at, batches, intercrop); the granary's goods (a store place, spec 012's mechanism).
 
 ## 5. Commands and events
 
@@ -150,7 +150,7 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 | AC-6 | An orchard bears by spec 003's rules on every tree; intercrops grow at half until the first fruit | `OrchardTests.Bearing_Intercrop` |
 | AC-7 | The granary takes dry goods first and spoils them at a fifth of the rate | `GranaryTests.Capacity_Spoilage` |
 | AC-8 | Same seed and commands give the same farm, in one chunk or many | `EquipmentTests.ChunkingInvariance` |
-| AC-9 | A schema-10 save loads into 11 with rain-fed acres, hand tools and no granary | `MigrationTests.Schema10_Farm` |
+| AC-9 | A schema-11 save loads into 12 with rain-fed acres, hand tools and no granary | `MigrationTests.Schema11_Farm` |
 
 ## 9. Balancing hooks
 

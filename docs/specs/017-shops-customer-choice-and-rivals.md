@@ -116,7 +116,7 @@ Hourly pass, system Shops (after Market and Business): demand per group, attract
 
 **New definitions:** `content/shops.json`: `villagePeople`, demand per kind (`vegPerPerson`, `chaiPerPerson`, adult share), elasticities and their power table, the attraction weights (`wPrice` 1.5, `wQuality` 0.25, `wStars` 0.30, `wDistance` 0.10 per 100 m, `wWait` 0.20 per 10 minutes), `retailMarkup`, `pitchRent`, the reputation weights, the rivals (grocer, tea stall: prices, hours, capacity, stars), newcomer rules (gap 0.8, margin 1.25, chance 0.5, exit share 0.1). `businesses.json`: the three shop types (spec 016's fields plus `kind`, `capacityPerHour`, `qualityCosts`; the sweet shop's two recipes). Goods: `rasgulla`, `atta_laddoo` (spoilage 0.15 a day), `sweet_supplies` (sugar). `map.json`: three `pitch` places round the banyan. Goods: tea and sugar as one input (`chai_supplies`, 1.50 a cup).
 
-**New state** (save schema 11): on `Business`: price, quality, the goods put out, stars, last hour's arrivals and capacity, the season's customers and served. `ShopsState`: rivals (kind, place, price, quality, stars, open hours, opened at, low seasons), pitch tenants.
+**New state** (save schema 12, ADR 0076): on `Business`: price, quality, the goods put out, stars, last hour's arrivals and capacity, the season's customers and served. `ShopsState`: rivals (kind, place, price, quality, stars, open hours, opened at, low seasons), pitch tenants.
 
 ## 5. Commands and events
 
@@ -166,7 +166,7 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 | AC-5 | The mill loses area grain smoothly as its fee rises above the chakki's | `ShopTests.Mill_Choice` |
 | AC-6 | A pitch's rent is paid at the close; a taken pitch is refused | `ShopTests.Pitch` |
 | AC-7 | Same seed and commands give the same shares, in one chunk or many, live or away | `ShopTests.ChunkingInvariance` |
-| AC-8 | A schema-10 save loads into 11 with the village's rivals and no player shops | `MigrationTests.Schema10_Shops` |
+| AC-8 | A schema-11 save loads into 12 with the village's rivals and no player shops | `MigrationTests.Schema11_Shops` |
 | AC-9 | Every share and star has a *Why?* in words | `WhyTests.EveryNumberHasWhy` |
 
 ## 9. Balancing hooks
