@@ -130,5 +130,69 @@ namespace Sim.View.Views
             if (line == "profit" || line == "payback") vm.Footnote = ctx.Strings.Get("why.plan.lesson");
             return vm;
         }
+
+        /// <summary>A line of a business's books (US-116): what it counts, the figures behind it, the statement's lesson.</summary>
+        private static WhyVm BooksLine(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Business b = BusinessBooksSheet.BusinessOf(ctx, id, out int back, out int line);
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            Sim.Core.Business.BusinessReport r = BusinessBooksSheet.ReportOf(ctx, b, back);
+            long Amount(int l) { return BusinessBooksSheet.Amount(r, l); }
+            Fixed index = sim.State.Market.PriceIndex;
+            string when = back == 0 ? ctx.Strings.Get("why.books.now") : ReportSheet.PeriodName(ctx, r.Period);
+            WhyVm vm = New(ctx, "why.books.title", Money(ctx, Amount(line)), "line", BusinessBooksSheet.Label(ctx, b, line), "period", when);
+            Text(vm, ctx, "why.books." + BusinessBooksSheet.Names[line], "area", ctx.Fmt.Kg(r.AreaGrams), "own", ctx.Fmt.Kg(r.OwnGrams), "kg", ctx.Fmt.Kg(r.AreaGrams + r.OwnGrams),
+                "fee", ctx.Fmt.PricePerKg(b.Fee * index), "power", ctx.Fmt.PricePerKg(t.PowerPerKg * index), "share", ctx.Fmt.Percent(t.RepairsShare),
+                "building", Money(ctx, MarketRules.Indexed(sim, t.BuildingValue)), "buildingLife", ctx.Fmt.Integer(t.BuildingLifeSeasons),
+                "equipment", Money(ctx, MarketRules.Indexed(sim, t.EquipmentValue)), "equipmentLife", ctx.Fmt.Integer(t.EquipmentLifeSeasons),
+                "role", ctx.Strings.Get("business.role." + t.Worker));
+            if (line == BusinessBooksSheet.Margin || line == BusinessBooksSheet.Profit)
+            {
+                Row(vm, ctx, "why.books.rowIncome", Money(ctx, Amount(BusinessBooksSheet.Fees) + Amount(BusinessBooksSheet.Sales)));
+                Row(vm, ctx, "why.books.rowGoods", "−" + Money(ctx, Amount(BusinessBooksSheet.Goods)));
+                if (line == BusinessBooksSheet.Profit)
+                    Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, Amount(BusinessBooksSheet.Wages) + Amount(BusinessBooksSheet.Power) + Amount(BusinessBooksSheet.Repairs)
+                        + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest)));
+            }
+            if (line >= BusinessBooksSheet.CashStart && line <= BusinessBooksSheet.CashEnd)
+            {
+                Row(vm, ctx, "why.books.rowStart", Money(ctx, r.Opening));
+                Row(vm, ctx, "why.books.rowIn", Money(ctx, r.Inflows));
+                Row(vm, ctx, "why.books.rowOut", "−" + Money(ctx, r.Outflows));
+                vm.Footnote = ctx.Strings.Get("why.books.cashLesson");
+            }
+            else if (line >= BusinessBooksSheet.Cash)
+            {
+                Row(vm, ctx, "why.books.rowOwns", Money(ctx, Amount(BusinessBooksSheet.Cash) + Amount(BusinessBooksSheet.Stock) + Amount(BusinessBooksSheet.Fixed)));
+                Row(vm, ctx, "why.books.rowOwes", "−" + Money(ctx, Amount(BusinessBooksSheet.Debts)));
+                Row(vm, ctx, "why.books.rowCapital", Money(ctx, Amount(BusinessBooksSheet.Capital)));
+                Row(vm, ctx, "why.books.rowKept", Money(ctx, Amount(BusinessBooksSheet.Kept)));
+                vm.Footnote = ctx.Strings.Get("why.books.balanceLesson");
+            }
+            else vm.Footnote = ctx.Strings.Get("why.books.pnlLesson");
+            return vm;
+        }
+
+        /// <summary>Plan vs actual (US-116, AC-14): a line's plan and its average over the last 4 seasons, and why they differ.</summary>
+        private static WhyVm BooksPlan(ViewContext ctx, long id)
+        {
+            Business b = BusinessBooksSheet.BusinessOf(ctx, id, out int _, out int line);
+            int full = BusinessBooksSheet.FullSeasons(ctx.Sim, b), need = Sim.Core.Business.BusinessBooks.KeptReports;
+            if (full < need)
+            {
+                WhyVm wait = New(ctx, "why.booksPlan.waitTitle", ctx.Strings.Get("books.pvaSoFar", "n", ctx.Fmt.Integer(full), "of", ctx.Fmt.Integer(need)));
+                Text(wait, ctx, "why.booksPlan.wait", "n", ctx.Fmt.Integer(need));
+                wait.Footnote = ctx.Strings.Get("why.booksPlan.lesson");
+                return wait;
+            }
+            long actual = BusinessBooksSheet.Average(b, line), plan = BusinessBooksSheet.Planned(b.Plan, line);
+            WhyVm vm = New(ctx, "why.booksPlan.title", Money(ctx, actual), "line", BusinessBooksSheet.Label(ctx, b, line));
+            Row(vm, ctx, "why.booksPlan.plan", Money(ctx, plan));
+            Row(vm, ctx, "why.booksPlan.actual", Money(ctx, actual), "n", ctx.Fmt.Integer(need));
+            vm.Rows.Add(new WhyRowVm(BusinessBooksSheet.Reason(ctx, b, line), null));
+            vm.Footnote = ctx.Strings.Get("why.booksPlan.lesson");
+            return vm;
+        }
     }
 }

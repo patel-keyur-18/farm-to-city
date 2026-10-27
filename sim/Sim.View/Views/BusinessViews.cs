@@ -192,7 +192,7 @@ namespace Sim.View.Views
     /// <summary>A business's card (spec 016 §7): Today (status, the area's grinding, your wheat, stock, the worker, cash) and Settings.</summary>
     public static class BusinessSheet
     {
-        public const string Today = "today", Settings = "settings";
+        public const string Today = "today", Books = "books", Settings = "settings";
 
         public static string StatusText(ViewContext ctx, Business b)
         {
@@ -216,9 +216,11 @@ namespace Sim.View.Views
             vm.Tabs = new List<ActionVm>
             {
                 ActionVm.Open("tab:" + Today, s.Get("business.tabToday"), new SheetRequest("Business", id, Today)),
+                ActionVm.Open("tab:" + Books, s.Get("business.tabBooks"), new SheetRequest("Business", id, Books)),
                 ActionVm.Open("tab:" + Settings, s.Get("business.tabSettings"), new SheetRequest("Business", id, Settings)),
             };
             if (tab == Settings) AddSettings(ctx, vm, b, t);
+            else if (tab == Books) BusinessBooksSheet.AddBooks(ctx, vm, b);
             else AddToday(ctx, vm, b, t);
             return vm;
         }
@@ -282,6 +284,12 @@ namespace Sim.View.Views
             buy.Action = ActionVm.Checked(ctx, "market", s.Get(market ? "business.stopMarket" : "business.startMarket"), null, ActionKind.Secondary,
                 at => new SetBusiness(at, id, open, close, fee, ownNow, !market));
             vm.Lines.Add(buy);
+
+            // Cash in and out (§3.2): your cash into the business, or its cash out to you.
+            vm.Lines.Add(new LineVm(s.Get("business.yourCash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash")
+                { Action = ActionVm.Open("putCash", s.Get("business.putCash"), new SheetRequest("BusinessCash", id, BusinessCashSheet.Put)) });
+            vm.Lines.Add(new LineVm(s.Get("business.cash"), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", id)
+                { Action = ActionVm.Open("takeCash", s.Get("business.takeCash"), new SheetRequest("BusinessCash", id, BusinessCashSheet.Take)) });
         }
     }
 }

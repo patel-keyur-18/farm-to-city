@@ -30,7 +30,7 @@ namespace Sim.Core.Saves
             BuildFamilyHouse,
             AnswerFamilyRequest,
             BuildFamilyHouseLoan,
-            FoundBusiness, SetBusiness,
+            FoundBusiness, SetBusiness, PutCash, TakeCash,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -94,6 +94,8 @@ namespace Sim.Core.Saves
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
                     break;
+                case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
+                case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
                     At(c, Tag.BuyAnimal); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
@@ -181,6 +183,8 @@ namespace Sim.Core.Saves
                 case Tag.AnswerFamilyRequest: return new AnswerFamilyRequest(at, r.ReadLong(), r.ReadBool());
                 case Tag.FoundBusiness: return new FoundBusiness(at, r.ReadString(), r.ReadInt(), r.ReadLong(), r.ReadBool());
                 case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
+                case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
+                case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));
                 case Tag.BuyAnimal:
                 {

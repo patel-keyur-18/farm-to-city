@@ -622,7 +622,7 @@
 | US-111 | The family tree | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 3 | Should | Done |
 | US-211 | Balance: population bots and gates; the home loan (ADR 0071) | [F11.3](features/F11.3-population-flows-and-family-trees.md) | 6 | Must | Done (owner to review) |
 | US-115 | Found a business: the flour mill | [F12.1](features/F12.1-business-founding-and-books.md) | 8 | Must | To do |
-| US-116 | Business books | [F12.1](features/F12.1-business-founding-and-books.md) | 5 | Must | To do |
+| US-116 | Business books | [F12.1](features/F12.1-business-founding-and-books.md) | 5 | Must | Done (owner to review) |
 | US-117 | Overdraft and failure | [F12.1](features/F12.1-business-founding-and-books.md) | 3 | Must | To do |
 
 **Order of work:** US-217 → US-109 → US-110 → US-111 → US-211 (the sim, each reviewed by the owner; the family card and away lines Editor-tested) → US-115 sim (schema 10) → US-116 → US-117 → the mill's art and layout (previewed to the owner first) → US-115 screens (Editor tour) → specs 017 and 013 written alongside, their gaps closed with the owner one per message → the device build.

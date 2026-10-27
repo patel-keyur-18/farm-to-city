@@ -170,6 +170,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.netWorth.buildings", Money(ctx, n.BuildingsAtBook));
             if (n.TreesAtBook != 0) Row(vm, ctx, "why.netWorth.trees", Money(ctx, n.TreesAtBook));
             if (n.LivestockAtBook != 0) Row(vm, ctx, "why.netWorth.livestock", Money(ctx, n.LivestockAtBook));
+            if (n.Businesses != 0) Row(vm, ctx, "why.netWorth.businesses", Money(ctx, n.Businesses));
             Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
             if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
             Row(vm, ctx, "why.netWorth.book", Money(ctx, n.BookEquity));

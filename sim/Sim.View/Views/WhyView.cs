@@ -84,7 +84,7 @@ namespace Sim.View.Views
             // Businesses (spec 016 §7).
             { "businessArea", BusinessArea }, { "businessFee", BusinessFee }, { "businessTrader", BusinessTrader }, { "businessWage", BusinessWage },
             { "businessOwn", BusinessOwn }, { "businessWorker", BusinessWorker }, { "businessHours", BusinessHours }, { "businessMarket", BusinessMarket },
-            { "businessCash", BusinessCash },
+            { "businessCash", BusinessCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
             { "planCost", (c, i) => PlanLine(c, i, "cost") }, { "planFees", (c, i) => PlanLine(c, i, "fees") }, { "planSales", (c, i) => PlanLine(c, i, "sales") },
             { "planWheat", (c, i) => PlanLine(c, i, "wheat") }, { "planPower", (c, i) => PlanLine(c, i, "power") }, { "planRepairs", (c, i) => PlanLine(c, i, "repairs") },
             { "planDepreciation", (c, i) => PlanLine(c, i, "depreciation") }, { "planWage", (c, i) => PlanLine(c, i, "wage") },

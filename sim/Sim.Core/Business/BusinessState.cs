@@ -22,7 +22,7 @@ namespace Sim.Core.Business
         Founder = 3,
     }
 
-    /// <summary>What the founder planned when founding (spec 016 §3.3): a season's projected figures, compared after 4 seasons.</summary>
+    /// <summary>What the founder planned when founding (spec 016 §3.3): a season's projected figures, line by line, compared after 4 seasons.</summary>
     public sealed class BusinessPlan
     {
         public long Revenue { get; internal set; }
@@ -31,20 +31,82 @@ namespace Sim.Core.Business
         public long CashNeeded { get; internal set; }
         public long MadeAt { get; internal set; }
 
+        /// <summary>The lines behind the totals (plan vs actual, US-116): grams ground for the area and of your own input, and each amount.</summary>
+        public long AreaGrams { get; internal set; }
+        public long OwnGrams { get; internal set; }
+        public long Fees { get; internal set; }
+        public long Sales { get; internal set; }
+        public long Input { get; internal set; }
+        public long Power { get; internal set; }
+        public long Repairs { get; internal set; }
+        public long Depreciation { get; internal set; }
+        public long Wage { get; internal set; }
+
         internal BusinessPlan Clone() { return (BusinessPlan)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
         {
-            h.WriteLong(Revenue);
-            h.WriteLong(Costs);
-            h.WriteLong(Profit);
-            h.WriteLong(CashNeeded);
-            h.WriteLong(MadeAt);
+            foreach (long v in new[] { Revenue, Costs, Profit, CashNeeded, MadeAt, AreaGrams, OwnGrams, Fees, Sales, Input, Power, Repairs, Depreciation, Wage }) h.WriteLong(v);
         }
 
         internal static BusinessPlan ReadFrom(SaveReader r)
         {
-            return new BusinessPlan { Revenue = r.ReadLong(), Costs = r.ReadLong(), Profit = r.ReadLong(), CashNeeded = r.ReadLong(), MadeAt = r.ReadLong() };
+            return new BusinessPlan
+            {
+                Revenue = r.ReadLong(), Costs = r.ReadLong(), Profit = r.ReadLong(), CashNeeded = r.ReadLong(), MadeAt = r.ReadLong(), AreaGrams = r.ReadLong(), OwnGrams = r.ReadLong(),
+                Fees = r.ReadLong(), Sales = r.ReadLong(), Input = r.ReadLong(), Power = r.ReadLong(), Repairs = r.ReadLong(), Depreciation = r.ReadLong(), Wage = r.ReadLong(),
+            };
+        }
+    }
+
+    /// <summary>
+    /// A business's closed season (spec 016 §3.2): every account's balance before the close (the P&amp;L and the balance sheet), the cash
+    /// flow, and what it ground. Immutable.
+    /// </summary>
+    public sealed class BusinessReport
+    {
+        public long Period { get; internal set; }
+        public IReadOnlyList<KeyValuePair<Account, long>> Balances { get; internal set; }
+        public long Opening { get; internal set; }
+        public long Inflows { get; internal set; }
+        public long Outflows { get; internal set; }
+        public long Closing { get { return Opening + Inflows - Outflows; } }
+        public long AreaGrams { get; internal set; }
+        public long OwnGrams { get; internal set; }
+
+        public long Balance(Account a)
+        {
+            foreach (KeyValuePair<Account, long> kv in Balances)
+                if (kv.Key == a) return kv.Value;
+            return 0;
+        }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Period);
+            h.WriteInt(Balances.Count);
+            foreach (KeyValuePair<Account, long> kv in Balances)
+            {
+                h.WriteInt((int)kv.Key);
+                h.WriteLong(kv.Value);
+            }
+            foreach (long v in new[] { Opening, Inflows, Outflows, AreaGrams, OwnGrams }) h.WriteLong(v);
+        }
+
+        internal static BusinessReport ReadFrom(SaveReader r)
+        {
+            long period = r.ReadLong();
+            var balances = new List<KeyValuePair<Account, long>>();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++)
+            {
+                var a = (Account)r.ReadInt();
+                balances.Add(new KeyValuePair<Account, long>(a, r.ReadLong()));
+            }
+            return new BusinessReport
+            {
+                Period = period, Balances = balances.AsReadOnly(), Opening = r.ReadLong(), Inflows = r.ReadLong(), Outflows = r.ReadLong(), AreaGrams = r.ReadLong(), OwnGrams = r.ReadLong(),
+            };
         }
     }
 
@@ -92,6 +154,14 @@ namespace Sim.Core.Business
 
         public BusinessPlan Plan { get; internal set; } = new BusinessPlan();
 
+        /// <summary>Cash at the start of this season, and this season's grams ground for the area and of your own (the books, US-116).</summary>
+        public long SeasonOpeningCash { get; internal set; }
+        public long AreaSeason { get; internal set; }
+        public long OwnSeason { get; internal set; }
+
+        /// <summary>The last closed seasons' reports, oldest first, at most <see cref="BusinessBooks.KeptReports"/>.</summary>
+        public List<BusinessReport> Reports { get; internal set; } = new List<BusinessReport>();
+
         internal Business Clone()
         {
             var c = (Business)MemberwiseClone();
@@ -99,6 +169,7 @@ namespace Sim.Core.Business
             c.Stock = (long[])Stock.Clone();
             c.StockCost = (long[])StockCost.Clone();
             c.Plan = Plan.Clone();
+            c.Reports = new List<BusinessReport>(Reports); // reports are immutable
             return c;
         }
 
@@ -129,6 +200,11 @@ namespace Sim.Core.Business
             h.WriteLong(AreaToday);
             h.WriteLong(LoanId);
             Plan.WriteTo(h);
+            h.WriteLong(SeasonOpeningCash);
+            h.WriteLong(AreaSeason);
+            h.WriteLong(OwnSeason);
+            h.WriteInt(Reports.Count);
+            foreach (BusinessReport report in Reports) report.WriteTo(h);
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -152,6 +228,11 @@ namespace Sim.Core.Business
             b.AreaToday = r.ReadLong();
             b.LoanId = r.ReadLong();
             b.Plan = BusinessPlan.ReadFrom(r);
+            b.SeasonOpeningCash = r.ReadLong();
+            b.AreaSeason = r.ReadLong();
+            b.OwnSeason = r.ReadLong();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) b.Reports.Add(BusinessReport.ReadFrom(r));
             return b;
         }
     }

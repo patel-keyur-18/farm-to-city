@@ -113,8 +113,74 @@ namespace Sim.Core.Tests
             Fixed four = Fixed.FromInt(4) * Farm.FounderRules.Nutrition(sim);
             Assert.That(before - Farm.FounderRules.LabourRate(sim), Is.EqualTo(four < cut ? four : cut), "4 hours open, 4 hours off the farm");
             sim.AdvanceTo(NextClose(sim) + 3600);
-            Assert.That(b.Ledger.Balance(Account.HiredLabour), Is.EqualTo(0), "no wage");
-            Assert.That(b.Ledger.Balance(Account.ServiceIncome), Is.LessThan(0), "it ground for the area");
+            Assert.That(b.Ledger.Balance(Account.HiredLabour) + b.Reports.Last().Balance(Account.HiredLabour), Is.EqualTo(0), "no wage");
+            Assert.That(b.Reports.Last().Balance(Account.ServiceIncome), Is.LessThan(0), "it ground for the area");
+        }
+
+        // AC-4: each business closes its season with the founder's: repairs, depreciation, its own P&L, cash flow and balance sheet, profit to
+        // its retained earnings; the next season's wage paid upfront at the close. Run by you, a full season makes a profit.
+        [Test]
+        public void SeasonClose()
+        {
+            Simulation sim = Start();
+            Business.Business b = Mill(sim, runYourself: true, capital: 120_000_00);
+            GiveWheat(sim, 12_000_000);
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That(b.Reports.Count, Is.EqualTo(1), "the founding season closes too");
+            sim.AdvanceTo(NextClose(sim));
+            BusinessReport r = b.Reports.Last();
+            Assert.That(r.Period, Is.EqualTo(sim.Period - 1));
+            Assert.That(BusinessBooks.NetProfit(r), Is.GreaterThan(0), "a profitable season, run by you");
+            Assert.That(r.Balance(Account.Depreciation), Is.EqualTo(MarketRules.Indexed(sim, 40_000_00) / 80 + MarketRules.Indexed(sim, 60_000_00) / 40).Within(2));
+            Assert.That(r.Balance(Account.Repairs), Is.GreaterThan(0));
+            Assert.That(r.OwnGrams, Is.EqualTo(200_000L * sim.Clock.DaysPerSeason), "200 kg of your wheat a day");
+            Assert.That(r.Closing, Is.EqualTo(r.Balance(Account.Cash)), "start + in − out = the cash at the close");
+            Assert.That(r.Opening, Is.EqualTo(b.Reports[0].Closing), "a season starts with the last one's cash");
+            Assert.That(b.Ledger.NetIncome, Is.EqualTo(0), "income and costs closed to retained earnings");
+            Assert.That(-b.Ledger.Balance(Account.RetainedEarnings), Is.EqualTo(b.Reports.Sum(x => BusinessBooks.NetProfit(x))));
+            Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
+
+            Simulation hired = Start();
+            Business.Business h = Mill(hired);
+            hired.AdvanceTo(NextClose(hired));
+            Assert.That(h.Ledger.Balance(Account.HiredLabour), Is.EqualTo(MarketRules.Indexed(hired, 27_000_00)), "the new season's wage, paid upfront at the close");
+            Assert.That(h.Reports.Last().Balance(Account.HiredLabour), Is.GreaterThan(0), "the first season's wage in its own P&L");
+        }
+
+        // AC-5 and §3.2: net worth shows a business at its equity (never below 0) in place of 1800 at cost; cash in and out moves it between
+        // your books and the business's without changing your net worth; drawings past your capital are income (4300).
+        [Test]
+        public void NetWorth()
+        {
+            Simulation sim = Start();
+            Hamlet(sim);
+            CashTo(sim, 500_000_00);
+            long t = sim.State.Clock.SimTime, before = Reporting.NetWorth(sim).Total;
+            Ok(sim, new FoundBusiness(t, "flour_mill", HomeTile, 150_000_00, false));
+            Business.Business b = sim.State.Businesses.Businesses.Last();
+            Assert.That(Reporting.NetWorth(sim).Businesses, Is.EqualTo(150_000_00), "its equity: cash and the building at cost");
+            Assert.That(Reporting.NetWorth(sim).Total, Is.EqualTo(before), "founding moves your money, it doesn't make or lose any");
+
+            Assert.That(sim.Execute(new PutCash(t, 99, 10_000_00)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
+            Assert.That(sim.Execute(new PutCash(t, b.Id, 0)).Reason, Is.EqualTo(RejectReason.InvalidArgument));
+            Assert.That(sim.Execute(new TakeCash(t, b.Id, b.Ledger.Cash + 1)).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
+            Ok(sim, new PutCash(t, b.Id, 10_000_00));
+            Assert.That(sim.State.Ledger.Balance(Account.InvestmentInBusinesses), Is.EqualTo(160_000_00));
+            Ok(sim, new TakeCash(t, b.Id, 30_000_00));
+            Assert.That(sim.State.Ledger.Balance(Account.InvestmentInBusinesses), Is.EqualTo(130_000_00), "your capital back first");
+            Assert.That(Reporting.NetWorth(sim).Total, Is.EqualTo(before));
+
+            // A business with more cash than your capital in it (profits): drawings past the capital are your income.
+            b.Ledger.Post(t, sim.Period, "ledger.sales", null, new Posting(Account.Cash, 200_000_00), new Posting(Account.Sales, -200_000_00));
+            Ok(sim, new TakeCash(t, b.Id, 140_000_00));
+            Assert.That(sim.State.Ledger.Balance(Account.InvestmentInBusinesses), Is.EqualTo(0));
+            Assert.That(sim.State.Ledger.Balance(Account.BusinessDrawingsIncome), Is.EqualTo(-10_000_00));
+
+            // Owing more than it owns: counted at 0, never below.
+            b.Ledger.Post(t, sim.Period, "ledger.repairs", null, new Posting(Account.Repairs, 400_000_00), new Posting(Account.Overdraft, -400_000_00));
+            Assert.That(BusinessBooks.Equity(b), Is.LessThan(0));
+            Assert.That(Reporting.NetWorth(sim).Businesses, Is.EqualTo(0));
+            Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
         }
 
         // AC-9: the same seed and commands give the same town with a business, in one chunk or many, live or away.

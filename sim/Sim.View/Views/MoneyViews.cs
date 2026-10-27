@@ -76,6 +76,7 @@ namespace Sim.View.Views
             NetWorthSnapshot worth = Reporting.NetWorth(sim);
             vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth"));
             vm.Lines.Add(new LineVm(s.Get("money.landPart"), ctx.Fmt.Coins(worth.LandAtMarket), "netWorth"));
+            if (worth.Businesses > 0) vm.Lines.Add(new LineVm(s.Get("money.businessPart"), ctx.Fmt.Coins(worth.Businesses), "netWorth"));
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
             vm.Lines.Add(new LineVm(s.Get("money.soFar"), ctx.Fmt.Coins(SeasonSoFar(sim)), "seasonSoFar"));
 

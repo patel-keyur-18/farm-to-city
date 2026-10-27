@@ -45,7 +45,7 @@ namespace Sim.View.Tests
             sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 2) * 86_400 + 12 * 3600);
             SheetVm card = BusinessSheet.Build(ViewKit2.Context(sim), b.Id);
             Assert.That(card.Subtitle, Is.EqualTo("Open now · until 18:00"));
-            Assert.That(card.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Today", "Settings" }));
+            Assert.That(card.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Today", "Books", "Settings" }));
             Assert.That(card.Lines.Single(l => l.Label == "Ground for the area today").Value, Does.Contain("in fees"));
             Assert.That(card.Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Manoj (miller)").Or.EqualTo("Usha (miller)"), "the town's best-skilled adult");
 
@@ -55,6 +55,55 @@ namespace Sim.View.Tests
             Ok(sim, hours.Action.Create(sim.State.Clock.SimTime));
             Assert.That((b.OpenHour, b.CloseHour), Is.EqualTo((8, 14)));
             Assert.That(BusinessSheet.Build(ViewKit2.Context(sim), b.Id, BusinessSheet.Settings).Lines.Single(l => l.Label == "Open").Value, Is.EqualTo("8:00–14:00"));
+        }
+
+        // AC-14 and §3.2 (US-116): the Books tab's statements, a past season's report, cash in and out, and after 4 full seasons the plan
+        // against the actual, line by line, with why they differ in words; every number with a Why?.
+        [Test]
+        public void Plan_VsActual()
+        {
+            Simulation sim = Situations.Mill();
+            Business b = sim.State.Businesses.Businesses.Single();
+            SheetVm books = BusinessSheet.Build(ViewKit2.Context(sim), b.Id, BusinessSheet.Books);
+            Assert.That(books.Lines.Where(l => l.IsHeader).Select(l => l.Label), Is.EqualTo(new[]
+                { "Profit and loss, this season so far", "Cash, this season so far", "What it owns and owes now", "Plan vs actual, a season" }));
+            Assert.That(books.Lines.Single(l => l.Label == "After 4 full seasons").Value, Is.EqualTo("0 of 4 so far"));
+            Assert.That(books.Lines.Single(l => l.Label == "Its worth to you").Value, Is.EqualTo(ViewKit2.Context(sim).Fmt.Coins(BusinessBooks.Equity(b))));
+
+            // Cash out to you, back to its books.
+            SheetVm take = BusinessCashSheet.Build(ViewKit2.Context(sim), b.Id, BusinessCashSheet.Take);
+            long cash = b.Ledger.Cash;
+            Ok(sim, take.Lines.First().Action.Create(sim.State.Clock.SimTime));
+            Assert.That(b.Ledger.Cash, Is.EqualTo(cash - 5_000_00));
+            Assert.That(take.Lines.First().Value, Is.EqualTo("Your capital back"));
+            Ok(sim, BusinessCashSheet.Build(ViewKit2.Context(sim), b.Id, BusinessCashSheet.Put).Lines.First().Action.Create(sim.State.Clock.SimTime));
+            Assert.That(b.Ledger.Cash, Is.EqualTo(cash));
+
+            long season = sim.Clock.SecondsPerSeason;
+            sim.AdvanceTo((sim.State.Clock.SimTime / season + 5) * season + 3600);
+            ViewContext ctx = ViewKit2.Context(sim);
+            books = BusinessSheet.Build(ctx, b.Id, BusinessSheet.Books);
+            Assert.That(books.Lines.Count(l => l.Opens == null && l.Action?.Opens?.Kind == "BusinessReport"), Is.EqualTo(4), "the last 4 seasons, each opens its report");
+            LineVm fees = books.Lines.Last(l => l.Label == "Grinding fees");
+            Assert.That(fees.Value, Does.Contain(" · plan "));
+            Assert.That(fees.Note, Is.Not.Null.And.Not.Empty);
+            LineVm wages = books.Lines.Last(l => l.Label == "Wages");
+            Assert.That(wages.Note, Is.EqualTo("Prices have moved since the plan").Or.EqualTo("As planned"));
+            Assert.That(books.Lines.Last(l => l.Label == "Atta and bran sold").Note, Is.EqualTo("None of your wheat was milled: none in store, or set to 0 a day"), "this town has no wheat");
+            LineVm profit = books.Lines.Last(l => l.Label == "Net profit");
+            Assert.That(profit.Note, Does.Match("As planned|more than planned, most of it from|less than planned, most of it from"));
+            Assert.That(BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take).Subtitle, Does.Contain("keep"), "what the next close needs");
+
+            var sheets = new[] { books, BusinessReportSheet.Build(ctx, b.Id, "1"), BusinessReportSheet.Build(ctx, b.Id, "4") };
+            Assert.That(sheets[1].Title, Does.StartWith("Flour mill: "));
+            foreach (SheetVm sheet in sheets)
+                foreach (LineVm l in sheet.Lines.Where(l => !l.IsHeader))
+                {
+                    Assert.That(WhyView.Has(l.WhyKey), Is.True, sheet.Title + ": " + l.Label);
+                    WhyTests.AssertWords(sheet.Title + ": " + l.Label, WhyView.Build(ctx, l.WhyKey, l.WhyId));
+                }
+            BusinessReport last = b.Reports.Last();
+            Assert.That(sheets[1].Lines.Single(l => l.Label == "Cash at the end").Value, Is.EqualTo(ctx.Fmt.Coins(last.Closing)));
         }
     }
 }

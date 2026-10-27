@@ -65,7 +65,7 @@ Only types the era allows are offered; a type whose worker can't be found is off
 
 1. **Choose a type** (Menu → Businesses → Start a business): the types the era allows, each with what it does and what it costs.
 2. **Market research** (a sheet, nothing paid): the grain the area brings a day, what the next village's chakki charges for grinding (the competitor, §3.7), the trader's atta and bran prices today, a miller's wage, and the wheat you hold.
-3. **The plan:** hours open (default 8:00–18:00), the grinding fee, how much of your own wheat to grind a day, a hired worker or you; the game projects a season's revenue, costs, net profit, cash needed and payback from today's prices and the area's size, each with a *Why?*. The plan is saved; after 4 seasons a *Plan vs actual* card compares each line and says in words why they differ ("The area brought less grain than planned: you were closed 2 days") (owner, 2026-10-25, §10 G8).
+3. **The plan:** hours open (default 8:00–18:00), the grinding fee, how much of your own wheat to grind a day, a hired worker or you; the game projects a season's revenue, costs, net profit, cash needed and payback from today's prices and the area's size, each with a *Why?*. The plan is saved; after 4 full seasons a *Plan vs actual* card compares each line (its average over the last 4 seasons) and says in words why they differ ("The area brought less grain than planned: you were closed 2 days") (owner, 2026-10-25, §10 G8).
 4. **Place it** on the map: any acre you own with nothing growing, one business an acre (the whole acre, drawn as its work yard), lit as the family house's are, refusals in words ("Something is growing here", "A family house stands here"). The acre stops farming and can't be sold while it stands (`ParcelInUse`). Its layout is previewed to the owner before it's final (owner, 2026-10-25; §10 G4).
 5. **Fund it** (§3.8): cash put in, and a bank business loan if wanted.
 6. **The worker** (§3.6).
@@ -168,7 +168,7 @@ Hourly pass, system Business (after Market): each open business works in id orde
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
 | `FoundBusiness` | type, tile, capital, loan, hours, fee, worker | `EraLocked`, `NotOwned`, `TileOccupied`, `NoRoom`, `InsufficientFunds`, `CreditRefused`, `NoWorker` | §3.3 |
-| `PutCash`, `TakeCash` | business, amount | `UnknownBusiness`, `InsufficientFunds` | §3.2 |
+| `PutCash`, `TakeCash` | business, amount | `UnknownBusiness`, `BusinessClosed`, `InvalidArgument`, `InsufficientFunds` | §3.2 |
 | `SetBusinessHours`, `SetFee`, `SetOwnSupply` (wheat or milk a day), `SetBuyFromMarket`, `SetBakeMix` | business, value | `UnknownBusiness`, `InvalidArgument` | §3.4, §3.5, §3.9 |
 | `ChangeWorker` | business, worker | `NoWorker` | §3.6 |
 | `CloseBusiness` | business | `UnknownBusiness` | §3.10 |

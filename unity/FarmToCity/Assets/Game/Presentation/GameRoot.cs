@@ -408,6 +408,8 @@ namespace Game.Presentation
                 case "BusinessResearch": _sheet.Show(BusinessResearchSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "BusinessPlan": _sheet.Show(BusinessPlanSheet.Build(_ctx, (int)r.Id, r.Arg == "self"), refreshOnly); break;
                 case "Business": _sheet.Show(BusinessSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
+                case "BusinessReport": _sheet.Show(BusinessReportSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
+                case "BusinessCash": _sheet.Show(BusinessCashSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
                 case "Town": _sheet.Show(TownSheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case "Household":
                     if (Sim.State.Citizens?.Household(r.Id) == null) { _sheet.Close(); break; } // the family left

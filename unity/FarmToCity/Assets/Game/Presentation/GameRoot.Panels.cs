@@ -186,6 +186,7 @@ namespace Game.Presentation
                 case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
+                case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
                 case "BuyInput":
                     // Back where the purchase started: Buy inputs, the shed's Fill, a buy card, an alert.
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));

@@ -59,4 +59,34 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>Puts more of your cash into a business (spec 016 §3.2): the same entries as founding.</summary>
+    public sealed class PutCash : TimedCommand
+    {
+        public long BusinessId { get; }
+        public long Amount { get; }
+
+        public PutCash(long at, long businessId, long amount) : base(at)
+        {
+            BusinessId = businessId;
+            Amount = amount;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return BusinessBooks.PutCash(sim, BusinessId, Amount); }
+    }
+
+    /// <summary>Takes cash out of a business (drawings, spec 016 §3.2): your capital back first, the rest your income.</summary>
+    public sealed class TakeCash : TimedCommand
+    {
+        public long BusinessId { get; }
+        public long Amount { get; }
+
+        public TakeCash(long at, long businessId, long amount) : base(at)
+        {
+            BusinessId = businessId;
+            Amount = amount;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return BusinessBooks.TakeCash(sim, BusinessId, Amount); }
+    }
 }
