@@ -1,6 +1,6 @@
 # 013. Irrigation, equipment, orchards and granary
 
-- Status: Draft (Sprint 14): gaps G1–G8 open with the owner, one per message (§10)
+- Status: Approved 2026-10-27 (ADR 0075); every gap closed with the owner, one per message; built in Sprint 16 (ADR 0057)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Farming (irrigation ladder, equipment ladder, fruit trees: whole-acre orchards; storage and selling: the granary); Finance (depreciation, buy or lease, capital versus operating spending)
@@ -12,12 +12,12 @@
 
 The player turns a farm of rain-fed acres and hand tools into a capital-backed farm: a canal channel and drip lines that steady the water, an ox plough and a tractor bought, leased or hired by the day, a whole acre of mango or guava, and a granary that lets grain wait for a better price, each a choice between paying now and paying as you go.
 
-**Lesson:** capital spending versus operating spending; depreciation and resale value; buy, lease or hire depends on how much you use it; maintenance skipped is a breakdown later; a long-term asset (an orchard) costs years of crops before it pays; storage turns time into price.
+**Lesson:** capital spending versus operating spending (buckets cost your hours, a pump costs power, a canal a fee, drip a lot up front); depreciation and resale value; buy, lease or hire depends on how much you use it; maintenance skipped is a breakdown later; a long-term asset (an orchard) costs years of crops before it pays; storage turns time into price.
 
 ## 2. Scope
 
 **In:**
-- The irrigation ladder per acre: rain-fed, the well and buckets (as now), a canal channel, drip (§3.1).
+- The irrigation ladder per acre: rain-fed, the well and buckets (as now), a pump on the well, a canal channel, drip (owner, 2026-10-27, §3.1).
 - The equipment ladder: hand tools (as now), an ox plough with a pair of bullocks, a tractor; bought, leased a season or hired a day; maintenance, breakdowns, depreciation, resale; a combine harvester hired by the acre at harvest (§3.2).
 - Whole-acre orchards of mango, guava, banana or papaya (§3.3).
 - The granary (§3.4).
@@ -38,10 +38,11 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | --- | --- | --- | --- | --- | --- |
 | Rain-fed | Start | — | — | Weather and soil only | — |
 | Well and buckets | Start (the 2 well acres) | — | Your bucket labour (spec 003 §3.6) | Floor 30 | 1–2.4 h a day an acre in dry weather |
+| **Pump on the well** | Hamlet | An electric pump and pipes, 15,000, depreciated over 40 seasons | Power 250 a season an acre watered | Floor 40 on up to `wellPumpAcres` 4 acres (the 2 well acres and 2 next to them, chosen by the player) | None (no buckets) |
 | **Canal channel** | Hamlet | 6,000 an acre (a lined field channel from the minor canal along the river side; an acre must border a channelled acre or the canal) | Water fee 400 a season an acre (the irrigation department), paid at the close | Floor 45 in Monsoon, Winter and Spring; **dry in Summer** (the canal is closed for repairs, as Indian canals are in May–June) | None |
 | **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Power 300 a season an acre, maintenance 1% of cost a season | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +5% (fertigation) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
 
-- Drip draws from the well: the well feeds drip on up to `wellDripAcres` 4 acres; a **borewell** (30,000, 60 seasons) feeds 6 more (§10 G2).
+- **Water sources:** the pump and drip run on pumped water: the well's pump waters `wellPumpAcres` 4 acres, by flooding or by drip (drip needs the pump's pressure); a **borewell** with its own pump (Village, 30,000, 60 seasons) waters 6 more (§10 G2). The canal is its own source along its channels.
 - An irrigated acre's water factor rarely falls below 1 except in the Summer canal closure; that steadiness is what the player buys (§9).
 - A channel or drip line is a building on the acre: capitalised (Dr Buildings), depreciated (spec 005 §3.3), sold with the acre at book value, seized with bought land.
 
@@ -97,6 +98,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
+| `InstallPump`, `SetPumpAcres` | (tiles) | `EraLocked`, `TooManyAcres`, `InsufficientFunds` | §3.1 |
 | `BuildChannel` | tile | `NotOwned`, `NotAdjacent`, `EraLocked`, `InsufficientFunds` | §3.1 |
 | `LayDrip` | tile | `NoWaterSource`, `EraLocked`, `InsufficientFunds` | §3.1 |
 | `BuyMachine`, `LeaseMachine`, `HireMachine` | kind (+ financing) | `EraLocked`, `NoShedRoom` (bullocks), `InsufficientFunds`, `CreditRefused` | §3.2 |
@@ -115,6 +117,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 | Decision | Immediate cost | Delayed effect | Side effects | Reversibility |
 | --- | --- | --- | --- | --- |
+| A pump on the well | 15,000 | No bucket labour; 4 acres at moisture 40 or more all year | Power each season | Permanent |
 | Canal channel on an acre | 6,000 | Steadier water most of the year; a fee each season | No bucket labour | Permanent (sold with the acre) |
 | Drip on an acre | 20,000–40,000 | Water at the crop's need all year, +5% with fertiliser | Power and upkeep | Permanent |
 | Buy a tractor | 6,00,000 or a loan | Labour −35%, Tools 1.06, no trolley hire | Diesel, maintenance, breakdowns | Sell at 80% of book |
@@ -139,7 +142,7 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
-| AC-1 | A canal acre stays at or above 45 moisture except in Summer; its fee is paid at the close | `IrrigationTests.Canal` |
+| AC-1 | A canal acre stays at or above 45 moisture except in Summer; its fee is paid at the close; the pump holds its 4 acres at 40 with no bucket labour | `IrrigationTests.Canal`, `IrrigationTests.Pump` |
 | AC-2 | A drip acre holds the crop's band all year; beyond the well's 4 acres it needs a borewell | `IrrigationTests.Drip_Source` |
 | AC-3 | A machine cuts labour and raises Tools on the acres it covers, the best one applying | `EquipmentTests.Coverage` |
 | AC-4 | Skipped maintenance raises breakdowns; a broken machine covers nothing for 24 h and costs its repair | `EquipmentTests.Breakdowns` |
@@ -159,16 +162,16 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 | A mango orchard against crops on the same acre | Behind for about 6 seasons, ahead within 12 | |
 | Wheat stored from Winter to Summer in the granary | Earns more than its spoilage and the granary's cost a season on 5+ tonnes | |
 
-## 10. Open questions (closed one per message with the owner)
+## 10. Open questions (all closed with the owner, 2026-10-27)
 
-- **G1. The irrigation ladder.** Recommendation: rain-fed, well and buckets, a canal channel (Hamlet, dry in Summer) and drip (Village), as the GDD's ladder, per acre.
-- **G2. Water for drip.** Recommendation: the well feeds drip on 4 acres, a borewell 6 more; no water budget beyond that in Phase 2.
-- **G3. Which machines.** Recommendation: an ox plough (Hamlet) and a tractor (Village) to buy, lease or hire; the combine harvester hired by the acre only.
-- **G4. Bullocks.** Recommendation: the ox plough's bullocks are animals in the cattle shed (2 of its 4 places), fed like cattle, no milk.
-- **G5. Breakdowns.** Recommendation: a small daily chance (higher when maintenance is skipped), 24 h out and 5% of the price to repair; never a loss beyond that.
-- **G6. Orchards.** Recommendation: whole acres of mango (40 trees), guava (100), banana and papaya (400), by spec 003's tree rules.
-- **G7. Intercropping.** Recommendation: a short crop between the young trees at half the yield until the first fruit (the real practice that carries an orchard's cash flow).
-- **G8. The granary.** Recommendation: one on the yard from the Hamlet, 10,000 kg of grains and pulses at a fifth of the spoilage; cold storage in Phase 3.
+- **G1. The irrigation ladder.** **Closed (owner, 2026-10-27):** rain-fed; the well and buckets; a pump on the well (Hamlet, 15,000: no bucket labour, 4 acres at 40); a canal channel (Hamlet, 6,000 an acre and a 400 fee a season, dry in Summer); drip (Village, 40,000 an acre, half subsidised on 2 acres, on pumped water) (§3.1).
+- **G2. Pumped water.** **Closed (owner, 2026-10-27):** the well's pump waters 4 acres by flooding or drip; a borewell with its own pump (Village, 30,000, 60 seasons) 6 more; the canal any acre along its channels; no water budget or water table in Phase 2 (§3.1).
+- **G3. Which machines.** **Closed (owner, 2026-10-27):** an ox plough (Hamlet) to buy or hire, a tractor (Village) to buy, lease or hire, and the combine harvester hired by the acre at harvest; buying a harvester in Phase 3 (§3.2).
+- **G4. Bullocks.** **Closed (owner, 2026-10-27):** the pair live in the cattle shed (2 of its 4 places), fed like cattle (green fodder, straw, feed), their dung to compost, 1 h a day of care, no milk; the plough needs the shed (Hamlet, spec 012) (§3.2).
+- **G5. Breakdowns.** **Closed (owner, 2026-10-27):** maintenance paid at each close (on by default); a seeded daily chance of 0.5% maintained or 4% skipped; broken, 24 h out and 5% of the price to repair; nothing worse; leased and hired machines never break on you (§3.2).
+- **G6. Orchards.** **Closed (owner, 2026-10-27):** whole acres of mango (40 trees), guava (100), banana and papaya (400), real densities and spec 003's tree rules per tree; the balancer checks the glut a large planting causes (§3.3, §9).
+- **G7. Intercropping.** **Closed (owner, 2026-10-27):** until the first fruit, a short crop (radish, spinach, coriander, lentils) grows between the rows at half the acre's yield and labour; it stops when the trees bear (§3.3).
+- **G8. The granary.** **Closed (owner, 2026-10-27):** one pucca granary on the yard from the Hamlet (45,000), 10,000 kg of grains, pulses, atta and seed, filled before the hut store, at a fifth of the spoilage; potato, vegetables, fruit and milk need cold storage (Phase 3); its place previewed to the owner (§3.4).
 
 ## 11. Cut first
 

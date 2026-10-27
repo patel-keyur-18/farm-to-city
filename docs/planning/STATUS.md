@@ -229,7 +229,7 @@
 ## Next up
 
 1. **Owner:** US-117 approved (2026-10-27). Close spec 017's and 013's gaps.
-2. **Claude:** spec 017 approved (ADR 0074, owner 2026-10-27: G1 added a sweet shop; G2–G8 as recommended; F12.3 and F12.4 have tasks; the sweet shop may raise F12.3's points at Sprint 16 planning). Spec 013 drafted with gaps G1–G8: close them one per message, approve (ADR, GDD, F13.2, F13.3 tasks); then the device build, test checklist and PR.
+2. **Claude:** specs 017 (ADR 0074) and 013 (ADR 0075) approved 2026-10-27, every gap closed with the owner (017 G1 added a sweet shop, 013 G1 a pump on the well; the rest as recommended); F12.3, F12.4, F13.2, F13.3 have tasks (their points may rise at Sprint 16 planning). Now: the Development build for the iPhone 13, `docs/test-checklists/s14-flows-mill.md`, the Sprint 14 PR (labels, milestone *Phase 2 · Hamlet & Village*, project FarmToCity, In Progress).
 
 ## Owner action checklist (Phases 0–1)
 

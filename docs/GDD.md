@@ -167,7 +167,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Where trees go:**
   - yard slots around the house (about 4, with more for bigger houses)
   - field-edge slots (about 2 per acre), which don't take field area but slightly shade the next crop
-  - whole-acre orchards come in Phase 2
+  - whole-acre orchards come in Phase 2 (spec 013, ADR 0075): mango 40 trees an acre, guava 100, banana and papaya 400, with a short crop between young trees at half yield until they bear
 - **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
 - **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 
@@ -183,7 +183,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Crop rotation.** Repeating a crop drains its nutrient. Lentils restore soil, and leaving a field fallow for a season restores fertility.
 - **Pests and disease.** Each crop cycle rolls a seeded risk. Risk rises with monoculture and wet weather, and falls with rotation and spraying, which costs money. Outbreaks are signalled during growth so the player can respond. Ignoring the risk can wipe out a field, but severe outbreaks never strike while the player is away.
 
-**Irrigation ladder.** Rain-fed, then a well and buckets, then a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending.
+**Irrigation ladder.** Rain-fed, then a well and buckets, then a pump on the well, a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending. In Phase 2 (spec 013, ADR 0075): the pump (Hamlet) ends bucket labour and waters 4 acres; a canal channel (Hamlet) waters an acre except in Summer, when the canal is shut, for a fee each season; drip (Village, half subsidised on 2 acres) holds each crop's ideal moisture on pumped water; a borewell (Village) waters 6 more acres.
 
 **Livestock (ADR 0056, ADR 0060, spec 012).** From the Hamlet, the player can build a 4-animal cattle shed on the cattle acre, a barren inherited acre beside the yard kept for the animals (ADR 0064), and buy Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 75,000, about 11 L, a lower price a litre and less milk in Summer) at the village cattle fair, with a bank dairy loan if needed. One game day stands for 22.8 real days of an animal's life (a season is a real quarter), so a buffalo gives about 182 L a game day. The village dairy co-op collects at 6:00 and pays by fat; the household drinks some as home use.
 
@@ -199,11 +199,11 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - depreciation
 - a resale value
 
-Players can buy, lease, or hire a machine for a day from a neighbour.
+Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2 (spec 013, ADR 0075): an ox plough with a pair of bullocks in the cattle shed (Hamlet) and a tractor (Village) cover a number of acres, cut their labour and raise the Tools factor; a combine harvester is hired by the acre at harvest. Skipped maintenance raises the chance of a breakdown (24 h out and a repair).
 
 **Storage and selling**
 
-- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage.
+- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage: the granary holds 10,000 kg of grains, pulses, atta and seed at a fifth of their spoilage (spec 013, ADR 0075).
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
 - **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
 - **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, up to a daily limit per crop. **The trader's truck (ADR 0054)** of about 4 t arrives at 6:00 and leaves when full or at midnight; its price is set at 6:00 and held all day, and while it is away selling to the trader is refused. The player's stall pauses from midnight to 6:00. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.

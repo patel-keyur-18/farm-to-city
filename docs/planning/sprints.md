@@ -629,7 +629,7 @@
 
 **Sprint end checklist**
 
-- [ ] Specs 017 and 013 written, every gap closed with the owner, approved (ADRs); GDD, `CLAUDE.md`, F12.3, F12.4, F13.2 and F13.3 updated with tasks
+- [x] Specs 017 and 013 written, every gap closed with the owner, approved (ADR 0074, 0075); GDD, `CLAUDE.md`, F12.3, F12.4, F13.2 and F13.3 updated with tasks
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [ ] Save schema 10: migration, `saves/schema10` fixture, every older schema loads
 - [ ] The mill's layout previewed to and approved by the owner

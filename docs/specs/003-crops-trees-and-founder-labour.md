@@ -96,7 +96,7 @@ The product is taken left to right in `Fixed`, rounded at each step, then capped
 | Care | Time-weighted mean of the care ratio over the growth (§3.6) | 0–`careCap` (1.1) |
 | Seed | Certified 1.00; saved seed of age a seasons: `max(CropDef.savedSeedFloor, 1 − CropDef.savedSeedLossPerSeason × a)` (§3.9) | 0.80–1 |
 | Weather | Time-weighted mean of `FarmDef.weatherYieldFactor[w]` over the growth (§3.7) | data |
-| Tools | `FarmDef.toolsFactor`, 1.00 in Phase 1 (hand tools; the equipment ladder is Phase 2) | 1 |
+| Tools | `FarmDef.toolsFactor`, 1.00 with hand tools; spec 013 (ADR 0075): the best machine covering the acre (ox plough 1.03, tractor 1.06) | 1–1.06 |
 | Fertiliser | `FertiliserDef.yieldFactor`: none 1.00, compost 1.05, chemical 1.25 | |
 | CropHealth | 1.00, or the outbreak result (§3.8) | 0–1 |
 
