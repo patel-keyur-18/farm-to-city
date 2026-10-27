@@ -639,7 +639,7 @@
 
 ## Sprint 15 · 8–21 Mar 2027 · Phase 2 (the bakery and the dairy, full hiring and HR; specs 018 and 019 written; 2 weeks, ADR 0076)
 
-- **Status:** Planned (awaiting the owner's approval of this plan). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
+- **Status:** In progress (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
 - **Branch:** `sprint/15-chains-and-hr`
 - **Goal:** Spec 016's production chains built (F12.2): recipes, the bakery (pav and rusk from your atta) and the dairy (paneer, curd and ghee from your milk), each with its art, screens and buyers. Spec 015 built (F11.4): one hiring board for every role, interviews, references and negotiation, output from skill, motivation and fatigue, courses and four traits, HR events and employer reputation. Save schema 11 with its migration and fixture (ADR 0076). The developer panel's Next era. Specs 018 (school, literacy, Codex, advisors, the Village unlock) and 019 (statements, the finance hub, milestones) written and approved; their code comes in Sprints 17 and 18.
 - **Points:** 37 (F12.2 15, F11.4 21, US-218 1)
