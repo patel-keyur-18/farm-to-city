@@ -129,6 +129,12 @@ namespace Sim.Core.Tests
                     if (r.State.Citizens != null) Assert.That(r.State.CommandLog.Base, Is.Not.Null, name);
                 }
 
+                if (r.Header.Schema < 11)
+                {
+                    // Spec 016 §3.9c (schema 11): no business has a day's mix or anything made today yet.
+                    Assert.That(r.State.Businesses.Businesses.All(x => x.Mix.All(v => v == 0) && x.MadeToday.All(v => v == 0)), Is.True, name);
+                }
+
                 if (r.Header.Schema < 7)
                 {
                     // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.
@@ -160,6 +166,27 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
+
+        // Spec 016 §3.9c (ADR 0076): a mill saved at schema 10 loads into 11 with its stock and no mix, works on and round-trips.
+        [Test]
+        public void Schema10_Mix()
+        {
+            SimConfig config = SaveTests.Config();
+            Simulation s = CreditKit.NewSim(cash: 500_000);
+            BusinessTests.Hamlet(s);
+            Commands.CommandResult found = s.Execute(new Commands.FoundBusiness(s.State.Clock.SimTime, "flour_mill", PeopleKit.HomeTile, 150_000_00, false));
+            Assert.That(found.Accepted, Is.True, found.ToString());
+            s.AdvanceTo(s.State.Clock.SimTime + 2 * TestSim.Day);
+            LoadResult r = SaveCodec.Read(SaveCodec.Write(s.State, config, TestSim.Wall0, 0, SaveCodec.DefaultMaxLogEntries, 10), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Business.Business b = r.State.Businesses.Businesses.Single();
+            Assert.That(b.Stock, Is.EqualTo(s.State.Businesses.Businesses[0].Stock));
+            Assert.That(b.Mix.All(v => v == 0), Is.True);
+            Simulation sim = Simulation.FromState(config, r.State);
+            sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
         }
 

@@ -371,7 +371,11 @@ namespace Tools.Balancer
                 Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Count > 0 ? r.Sim.State.Businesses.Businesses[0] : null;
                 lock (all)
                 {
-                    all.EndCash.Add(r.Sim.State.Ledger.Cash);
+                    // Cash you can reach: your own and the open businesses' (Take out moves it to you), not inputs or stock bought.
+                    long reach = r.Sim.State.Ledger.Cash;
+                    foreach (Sim.Core.Business.Business x in r.Sim.State.Businesses?.Businesses ?? new System.Collections.Generic.List<Sim.Core.Business.Business>())
+                        if (x.Status != Sim.Core.Business.BusinessStatus.Closed) reach += Math.Max(0, x.Ledger.Cash - Sim.Core.Business.BusinessBooks.Overdrawn(x));
+                    all.EndCash.Add(reach);
                     all.Foreclosed += foreclosed > 0 ? 1 : 0;
                     if (mill == null) return;
                     all.Founded++;

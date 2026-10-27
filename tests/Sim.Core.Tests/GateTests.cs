@@ -244,7 +244,7 @@ namespace Sim.Core.Tests
             foreach (Gate.MillResult m in results)
                 TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
                     + "; payback " + string.Join(", ", m.Payback.OrderBy(x => x).Select(x => x.ToString("0.0"))) + "; overdrawn runs " + string.Join(",", m.OverdrawnRun)
-                    + "; closed " + m.Closed + ", foreclosed " + m.Foreclosed);
+                    + "; closed " + m.Closed + ", foreclosed " + m.Foreclosed + "; end cash " + string.Join(", ", m.EndCash.Select(c => (c / 100).ToString())));
             foreach (Gate.MillResult m in results)
             {
                 Assert.That(m.Founded, Is.EqualTo(m.Seeds), m.Bot + ": founded in every seed");

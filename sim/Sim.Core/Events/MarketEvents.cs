@@ -34,6 +34,9 @@ namespace Sim.Core.Events
         Store = 0,
         Field = 1,
         Tree = 2,
+
+        /// <summary>A business's stock (spec 016 §3.9c): fresh goods left after the morning round, milk not made up.</summary>
+        Business = 3,
     }
 
     /// <summary>Goods spoiled at the daily pass (spec 004 §5), for the report and While you were away.</summary>

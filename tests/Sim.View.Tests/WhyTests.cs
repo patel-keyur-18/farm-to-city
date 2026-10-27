@@ -42,6 +42,7 @@ namespace Sim.View.Tests
                 yield return Named("businesses", BusinessesSheet.Build(ctx));
                 for (int i = 0; i < sim.Config.Game.Businesses.Types.Count; i++)
                 {
+                    if (sim.Config.Game.Businesses.Types[i].ByRecipe) continue; // the bakery's and dairy's screens: US-119, US-216 (remove this line then)
                     yield return Named("research " + i, BusinessResearchSheet.Build(ctx, i));
                     yield return Named("plan " + i, BusinessPlanSheet.Build(ctx, i, false));
                     yield return Named("plan self " + i, BusinessPlanSheet.Build(ctx, i, true));

@@ -141,6 +141,16 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | Keeping | Paneer 3 days in the freezer, curd 1 day, ghee 6 months | Spoilage in `goods.json` |
 | The margin, year-0 | Paneer about 30 a kg on milk at 57.50; curd about 15; ghee little at today's price, but it keeps and can wait for a better one. Thin, as a real dairy's: it pays with a big herd or run by you | |
 
+### 3.9c Recipes, the day's mix and the morning round (owner, 2026-10-27, US-118)
+
+| Rule | Behaviour |
+| --- | --- |
+| The day's mix | The bakery and the dairy each have a daily mix: a kg-a-day target for each product (pav and rusk; paneer, curd and ghee), set in Settings with Change presets; the dairy's rows also show the litres each takes. Each open hour the worker makes toward the mix, up to the rate (kg of inputs a real hour) |
+| Milk | The dairy keeps up to its milk a day (§3.9b) at the 6:00 milking; buffalo milk goes to paneer and ghee first (more paneer a litre), cow milk to curd first; milk not made up that day spoils |
+| The morning round | At 6:00 (with the trader's truck and the co-op) the village grocer and tea stall collect what was made since the last round, each product up to its amount a person × the people (the area's plus your town's: your townspeople buy through the village shops, no budget line of their own) × 22.8, at that morning's wholesale price (the good's price, following the index and the day's move). Then rusk and ghee go to the trader. Pav, curd and raw milk left after the round spoil; paneer loses half a day; rusk and ghee keep |
+| Atta | The bakery's atta comes from your mill first (before it sells to the trader; an internal sale at the trader's price), else the market at its import price |
+| Deferred | Supermarket orders asking for rusk or ghee: with spec 017's shops (Sprint 16) |
+
 ### 3.10 Overdraft, trouble and closing (§10 G9)
 
 | Rule | Behaviour |

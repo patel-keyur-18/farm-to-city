@@ -64,6 +64,33 @@ namespace Sim.Core.Commands
         }
     }
 
+    /// <summary>The day's mix (spec 016 §3.9c): grams a day to make of one of a bakery's or dairy's products.</summary>
+    public sealed class SetMix : TimedCommand
+    {
+        public long BusinessId { get; }
+        public string Good { get; }
+        public long GramsPerDay { get; }
+
+        public SetMix(long at, long businessId, string good, long gramsPerDay) : base(at)
+        {
+            BusinessId = businessId;
+            Good = good;
+            GramsPerDay = gramsPerDay;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
+            int g = sim.Config.Game.Market.IndexOf(Good);
+            if (g < 0 || !Business.BusinessRules.TypeOf(sim, b).Makes(g) || GramsPerDay < 0 || GramsPerDay > 100_000_000)
+                return CommandResult.Reject(RejectReason.InvalidArgument);
+            b.Mix[g] = GramsPerDay;
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>Puts more of your cash into a business (spec 016 §3.2): the same entries as founding.</summary>
     public sealed class PutCash : TimedCommand
     {

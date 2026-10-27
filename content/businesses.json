@@ -23,6 +23,36 @@
       "kgPerHour": 380, "powerPerKg": 1.20, "repairsShare": 0.02,
       "openHour": 8, "closeHour": 18, "fee": 4, "ownPerDay": 200,
       "input": "wheat", "outputs": { "atta": 0.97, "bran": 0.03 }
+    },
+    {
+      "id": "bakery", "nameKey": "business.bakery", "era": "village",
+      "building": { "value": 60000, "lifeSeasons": 80 },
+      "equipment": { "value": 50000, "lifeSeasons": 40 },
+      "buildHours": 36, "worker": "baker", "wage": 30000,
+      "kgPerHour": 95, "powerPerKg": 0, "repairsShare": 0.02,
+      "openHour": 8, "closeHour": 18,
+      "recipes": [
+        { "id": "pav",  "inputs": { "atta": 10 }, "output": "pav",  "outputKg": 13, "fuel": 100, "supplies": 150 },
+        { "id": "rusk", "inputs": { "pav": 12 },  "output": "rusk", "outputKg": 10, "fuel": 100 }
+      ],
+      "shops": { "pav": 0.03, "rusk": 0.01 }
+    },
+    {
+      "id": "dairy", "nameKey": "business.dairy", "era": "village",
+      "building": { "value": 40000, "lifeSeasons": 80 },
+      "equipment": { "value": 45000, "lifeSeasons": 40 },
+      "buildHours": 24, "worker": "dairyman", "wage": 27000,
+      "kgPerHour": 190, "powerPerKg": 0, "repairsShare": 0.02,
+      "openHour": 8, "closeHour": 18, "ownPerDay": 100, "takesMilk": true,
+      "recipes": [
+        { "id": "paneer_buffalo", "inputs": { "milk_buffalo": 10 }, "output": "paneer", "outputKg": 2,    "fuel": 20 },
+        { "id": "paneer_cow",     "inputs": { "milk_cow": 13 },     "output": "paneer", "outputKg": 2,    "fuel": 20 },
+        { "id": "curd_cow",       "inputs": { "milk_cow": 10 },     "output": "curd",   "outputKg": 10,   "fuel": 20 },
+        { "id": "curd_buffalo",   "inputs": { "milk_buffalo": 10 }, "output": "curd",   "outputKg": 10,   "fuel": 20 },
+        { "id": "ghee_buffalo",   "inputs": { "milk_buffalo": 15 }, "output": "ghee",   "outputKg": 1,    "fuel": 20 },
+        { "id": "ghee_cow",       "inputs": { "milk_cow": 22 },     "output": "ghee",   "outputKg": 1,    "fuel": 20 }
+      ],
+      "shops": { "paneer": 0.005, "curd": 0.03 }
     }
   ]
 }

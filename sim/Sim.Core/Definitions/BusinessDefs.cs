@@ -16,7 +16,27 @@ namespace Sim.Core.Definitions
         }
     }
 
-    /// <summary>A business type from <c>content/businesses.json</c> (spec 016 §3.1). Phase 2 has the flour mill; the bakery and dairy join in F12.2.</summary>
+    /// <summary>
+    /// A recipe (spec 016 §3.9, §3.9c): a batch's inputs (goods, grams) into one product, with fuel (expensed as power and fuel)
+    /// and supplies (part of the product's cost), coins a batch at year-0 prices. Made in any amount, pro rata to the batch.
+    /// </summary>
+    public sealed class RecipeDef
+    {
+        public string Id { get; internal set; }
+        public IReadOnlyList<KeyValuePair<int, long>> Inputs { get; internal set; }
+        public int Output { get; internal set; }
+        public long OutputGrams { get; internal set; }
+        public Fixed Fuel { get; internal set; }
+        public Fixed Supplies { get; internal set; }
+
+        /// <summary>Grams of inputs a batch, all together (what counts against the rate).</summary>
+        public long InputGrams
+        {
+            get { long n = 0; foreach (KeyValuePair<int, long> kv in Inputs) n += kv.Value; return n; }
+        }
+    }
+
+    /// <summary>A business type from <c>content/businesses.json</c> (spec 016 §3.1): the flour mill (Hamlet), the bakery and the dairy (Village).</summary>
     public sealed class BusinessTypeDef
     {
         public string Id { get; internal set; }
@@ -52,8 +72,30 @@ namespace Sim.Core.Definitions
         /// <summary>The founder's own input a day by default, in grams.</summary>
         public long OwnPerDay { get; internal set; }
 
-        public int Input { get; internal set; }
-        public IReadOnlyList<BusinessOutput> Outputs { get; internal set; }
+        /// <summary>The mill's input and its yields (spec 016 §3.5a); −1 and empty for a type that works by recipes.</summary>
+        public int Input { get; internal set; } = -1;
+        public IReadOnlyList<BusinessOutput> Outputs { get; internal set; } = new BusinessOutput[0];
+
+        /// <summary>The recipes, in the order the worker makes them (§3.9c): a product's recipes in order of preference (buffalo milk first for paneer).</summary>
+        public IReadOnlyList<RecipeDef> Recipes { get; internal set; } = new RecipeDef[0];
+
+        /// <summary>The goods it makes by recipe, each once, in recipe order.</summary>
+        public IReadOnlyList<int> Products { get; internal set; } = new int[0];
+
+        /// <summary>What the village shops buy at the morning round (§3.9c), kg a person a day of life, by good.</summary>
+        public IReadOnlyList<KeyValuePair<int, Fixed>> Shops { get; internal set; } = new KeyValuePair<int, Fixed>[0];
+
+        /// <summary>Whether it keeps your animals' milk at the 6:00 milking, up to its milk a day (the dairy, §3.9b).</summary>
+        public bool TakesMilk { get; internal set; }
+
+        public bool ByRecipe { get { return Recipes.Count > 0; } }
+
+        /// <summary>Whether it makes <paramref name="good"/> by a recipe.</summary>
+        public bool Makes(int good)
+        {
+            foreach (int p in Products) if (p == good) return true;
+            return false;
+        }
     }
 
     /// <summary>Businesses (spec 016 §4): the types, the area a mill serves, funding and closing.</summary>

@@ -268,6 +268,12 @@ namespace Sim.Core.Livestock
             var home = new long[animals.Count];
             long homeValue = 0, homeMl = 0;
             if (household) homeValue = HouseholdMilk(sim, animals, ml, home, System.Math.Min(ClockDef.SecondsPerDay, t - since), out homeMl);
+            if (household) // your dairy keeps its milk a day before the co-op (spec 016 §3.9b): still your milk sales
+            {
+                var left = new long[defs.Animals.Count];
+                for (int i = 0; i < animals.Count; i++) left[animals[i].Kind] += ml[i] - home[i];
+                Business.BusinessRules.MilkIn(sim, left);
+            }
 
             long total = 0, totalMl = 0;
             for (int i = 0; i < animals.Count; i++)

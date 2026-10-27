@@ -32,6 +32,7 @@ namespace Sim.Core.Saves
             BuildFamilyHouseLoan,
             FoundBusiness, SetBusiness, PutCash, TakeCash, CloseBusiness,
             DebugNextEra,
+            SetMix,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -97,6 +98,7 @@ namespace Sim.Core.Saves
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
                 case CloseBusiness c: At(c, Tag.CloseBusiness); w.WriteLong(c.BusinessId); break;
+                case SetMix c: At(c, Tag.SetMix); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
                     break;
@@ -197,6 +199,7 @@ namespace Sim.Core.Saves
                     return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
                 }
                 case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
+                case Tag.SetMix: return new SetMix(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());

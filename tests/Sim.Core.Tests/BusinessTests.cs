@@ -50,7 +50,8 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.EraLocked), "the Hamlet's");
             Hamlet(sim);
             CashTo(sim, 500_000_00);
-            Assert.That(sim.Execute(new FoundBusiness(t, "bakery", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
+            Assert.That(sim.Execute(new FoundBusiness(t, "bakery", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.EraLocked), "the Village's");
+            Assert.That(sim.Execute(new FoundBusiness(t, "sweet_shop", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", QuartersTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed));
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 50_000_00, false)).Reason, Is.EqualTo(RejectReason.CapitalTooLow), "the building, equipment and a season's wage");
             Ok(sim, new Sow(t, HomeTile + 1, "radish", Farm.SeedSource.Certified, "none"));
