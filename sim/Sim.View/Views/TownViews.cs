@@ -662,11 +662,18 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), s.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))) { Icon = "family_house_building" });
         }
 
-        /// <summary>Build a family house on this acre (an empty field's sheet and the homestead's): the cost, or the sim's reason.</summary>
+        /// <summary>
+        /// Build a family house on this acre (an empty field's sheet and the homestead's): the cost, or the sim's reason; short of
+        /// the price but not the down payment, "With a home loan" in its place (ADR 0071, as the placement bar).
+        /// </summary>
         internal static ActionVm BuildHere(ViewContext ctx, int tileId)
         {
-            return ActionVm.Checked(ctx, "buildHouse", ctx.Strings.Get("town.buildHouse"), ctx.Fmt.Coins(TownSheet.HouseCost(ctx.Sim)), ActionKind.Secondary,
+            ActionVm cash = ActionVm.Checked(ctx, "buildHouse", ctx.Strings.Get("town.buildHouse"), ctx.Fmt.Coins(TownSheet.HouseCost(ctx.Sim)), ActionKind.Secondary,
                 at => new BuildFamilyHouse(at, tileId));
+            if (cash.Enabled) return cash;
+            ActionVm loan = HousePlacement.WithLoan(ctx, tileId);
+            if (!loan.Enabled) return cash;
+            return new ActionVm(loan.Id, cash.Label, ctx.Strings.Get("houseLoan.fieldDetail", "amount", loan.Detail), ActionKind.Secondary, true, null, null, loan.Opens);
         }
     }
 }

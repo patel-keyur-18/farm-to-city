@@ -1796,6 +1796,7 @@
   "houseLoan.title": "Build with a home loan",
   "houseLoan.button": "With a home loan",
   "houseLoan.down": "you pay {amount} now",
+  "houseLoan.fieldDetail": "with a home loan: {amount}",
   "houseLoan.why": "The bank counts your family houses at three quarters of their worth, beside your farm's profit. The rent (about a tenth of the cost a season) pays more than the interest.",
   "houseLoan.none": "The bank won't lend toward a house just now: see Money and loans.",
   "why.shed.title": "A cattle shed",

@@ -460,6 +460,14 @@ namespace Sim.View.Tests
             long cost = TownSheet.HouseCost(sim), loan = HouseLoanSheet.Loan(sim, cost);
             Assert.That(loan, Is.GreaterThan(0), "the bank lends against the houses");
             Assert.That(HousePlacement.WithLoan(ctx, tile).Enabled, Is.True);
+            // An empty field's sheet with cash for the down payment but not the price offers the loan, not a greyed button.
+            long burn = sim.State.Ledger.Balance(Sim.Core.Finance.Account.Cash) - (cost - loan);
+            sim.State.Ledger.Post(0, sim.Period, "test.burn", "test", new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.SeedsAndPlanting, burn), new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Cash, -burn));
+            ActionVm build = FieldSheets.ForTile(ctx, tile).Actions.Single(a => a.Id == "buildHouse" || a.Id == "houseLoan");
+            Assert.That(build.Id, Is.EqualTo("houseLoan"));
+            Assert.That(build.Enabled, Is.True);
+            Assert.That(build.Label, Is.EqualTo("Build a family house"));
+            Assert.That(build.Detail, Is.EqualTo("with a home loan: you pay " + ctx.Fmt.Coins(cost - loan) + " now"));
             SheetVm sheet = HouseLoanSheet.Build(ctx, tile);
             Assert.That(sheet.Title, Is.EqualTo("Build with a home loan"));
             LineVm row = sheet.Lines.First(l => l.Action != null);
