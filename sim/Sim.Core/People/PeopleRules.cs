@@ -15,13 +15,28 @@ namespace Sim.Core.People
         private const long Day = ClockDef.SecondsPerDay;
 
         /// <summary>
-        /// HandHours = hoursPerDay × (productivityBase + productivityPerSkill × skill ÷ 100) × Π traitHoursFactor (spec 006 §3.1).
+        /// HandHours = hours × (productivityBase + productivityPerSkill × skill ÷ 100) × Π traitHoursFactor (spec 006 §3.1), × motivation ×
+        /// (1 − fatigue) (spec 015 §3.4); hours are hoursPerDay, or longDayHours more on long days; 0 while away on a course.
         /// </summary>
         public static Fixed HandHours(Simulation sim, Hand h)
         {
+            if (h.CourseUntil != 0) return Fixed.Zero;
             PeopleDefs p = sim.Config.Game.People;
-            Fixed hours = p.Hand.HoursPerDay * (p.Hand.ProductivityBase + p.Hand.ProductivityPerSkill * h.Skill.MulRatio(1, 100));
-            return hours * p.Traits[h.Trait1].HoursFactor * p.Traits[h.Trait2].HoursFactor;
+            Fixed day = h.LongDays ? p.Hand.HoursPerDay + Fixed.FromInt(p.Work.LongDayHours) : p.Hand.HoursPerDay;
+            Fixed hours = day * (p.Hand.ProductivityBase + p.Hand.ProductivityPerSkill * h.Skill.MulRatio(1, 100));
+            hours = hours * p.Traits[h.Trait1].HoursFactor * p.Traits[h.Trait2].HoursFactor;
+            Fixed condition = WorkRules.Condition(sim, h);
+            return condition == Fixed.One ? hours : hours * condition; // neutral: exactly spec 006's hours
+        }
+
+        /// <summary>A second trait from <paramref name="roll"/> (spec 015 §3.6): evenly among those that don't clash with the first.</summary>
+        internal static int SecondTrait(Simulation sim, ulong roll, int first)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            int n = 0;
+            for (int i = 0; i < p.Traits.Count; i++) if (!p.Clash(first, i)) n++;
+            int k = (int)Rng.Below(roll, (ulong)n);
+            for (int i = 0; ; i++) if (!p.Clash(first, i) && k-- == 0) return i;
         }
 
         /// <summary>Labourers' hours a day while they're hired.</summary>

@@ -47,14 +47,34 @@
     "townLowAccept": 0.60,
     "reputationStart": 50
   },
+  "work": {
+    "motivationMin": 0.70,
+    "motivationMax": 1.20,
+    "fairAbove": 0.05,
+    "fairBelow": 0.10,
+    "homeBelow": 60,
+    "homePerPoint": 0.003,
+    "fatigueUp": 0.05,
+    "fatigueDown": 0.10,
+    "fatigueMax": 0.50,
+    "longDayHours": 2,
+    "overtimeFactor": 1.5,
+    "courseCost": 6000,
+    "courseDays": 2,
+    "courseGain": 10
+  },
   "huts": { "placesPerAcre": 2 },
   "traits": [
-    { "id": "hardworking", "nameKey": "trait.hardworking", "hoursFactor": 1.10 },
+    { "id": "hardworking", "nameKey": "trait.hardworking", "hoursFactor": 1.10, "opposite": "lazy" },
     { "id": "lazy",        "nameKey": "trait.lazy",        "hoursFactor": 0.85 },
     { "id": "loyal",       "nameKey": "trait.loyal",       "keepsWage": true },
     { "id": "ambitious",   "nameKey": "trait.ambitious",   "skillGainFactor": 1.5, "renewalWageFactor": 1.10 },
-    { "id": "careless",    "nameKey": "trait.careless",    "careless": true },
-    { "id": "steady",      "nameKey": "trait.steady" }
+    { "id": "careless",    "nameKey": "trait.careless",    "careless": true, "opposite": "perfectionist" },
+    { "id": "steady",      "nameKey": "trait.steady" },
+    { "id": "creative",    "nameKey": "trait.creative",    "saleFactor": 1.05 },
+    { "id": "frugal",      "nameKey": "trait.frugal",      "costFactor": 0.90, "savesLeisure": true },
+    { "id": "sociable",    "nameKey": "trait.sociable",    "colleagueMotivation": 0.05 },
+    { "id": "perfectionist", "nameKey": "trait.perfectionist", "hoursFactor": 0.95, "noBadBatch": true }
   ],
   "names": [
     { "id": "ramesh",   "gender": "m" }, { "id": "sunita",  "gender": "f" },

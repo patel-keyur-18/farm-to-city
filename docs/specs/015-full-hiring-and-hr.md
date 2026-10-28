@@ -68,7 +68,8 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). **N
 | Offer | At the asked wage, 10% below it, or 10% above it | |
 | Answer | Accepts with `acceptChance` (0.85) at the asked wage, 0.95 above it, 0.40 below it. A refusal of a low offer becomes a counter at the asked wage, once; any other refusal ends it (the applicant leaves). Regulars always accept (ADR 0041) | Seeded, stream Applicants |
 | Townspeople | Always accept at the asked wage or above (they live here); 0.6 below it | |
-| Wage memory | A worker hired below their asked wage remembers it: motivation is lower (§3.4) until a renewal pays the asked wage | |
+| Wage memory | A worker hired below their asked wage remembers it: motivation is lower (§3.4) until a raise or a renewal pays the asked wage | |
+| Renewal (ADR 0081) | A contract renews at its current wage. When the asked wage for the worker's skill has risen above it (on the job, a course, or hired low), they may ask for a raise (§3.7); a loyal worker never asks | |
 
 ### 3.4 Output: skill, motivation, fatigue (§10 G4)
 
@@ -201,7 +202,7 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 | AC-1 | A post brings applicants for its role every 12 ± 6 h; townspeople without a town job apply with known skill and traits | `HiringTests.Board_Applicants` |
 | AC-2 | A reference check costs 300, finishes after 12 h and narrows the skill to ±5 | `HiringTests.Reference` |
 | AC-3 | A low offer is accepted at 0.40, else a counter at the asked wage once; a high offer at 0.95 | `HiringTests.Negotiation` |
-| AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair hire in a content home has motivation exactly 1, so an existing hand works as before; the golden replays are regenerated once, because new applicants draw from ten traits | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
+| AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair hire in a content home has motivation exactly 1, so an existing hand works as before; the golden replays are unchanged (their content has no people) | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
 | AC-5 | Long days raise output and fatigue; fatigue falls at normal hours; overtime pays 1.5× | `WorkerTests.Fatigue_Overtime` |
 | AC-6 | A course adds 10 skill after 2 days away, paid; the next renewal asks more | `WorkerTests.Course` |
 | AC-7 | The four traits act as §3.6; no contradictory pairs are drawn | `WorkerTests.Traits` |
@@ -237,8 +238,21 @@ Choices made while building where the spec was silent, each to keep it realistic
 - **Roles' data:** the farm hand's wage stays in `people.json` (`hand.marketWage`) and each business role's wage and skill in `businesses.json` (`worker`, `workerSkill`, `wage`), so no wage is written twice; `people.json` gains `hiring` (the reference, offer factors and chances, reputation's start).
 - **A migrant farm hand** still needs an empty hut; your townspeople need none (their family house counts).
 - **Letting a business's worker go** (§3.9 named it, no command did): `LetWorkerGo` from the business's card, with a confirm; the season's wage was paid upfront from the business and isn't refunded; severance 10% after the first season. With nobody working, **Run it** (`RunBusinessYourself`) or hire again.
-- **Renewal:** a worker is renewed at each close at the asked wage for their skill (a loyal one keeps theirs, an ambitious one asks 10% more), which clears a low hire's memory, as spec 006 renews hands. So after a close only a loyal worker (who keeps their wage) is ever paid below what they'd ask, and §3.7's raise request has almost nobody to come from. To settle with the owner before US-114.
+- **Renewal:** a worker was renewed at each close at the asked wage for their skill, so §3.7's raise request had almost nobody to come from. **Settled (owner, 2026-10-28, ADR 0081):** a contract renews at its current wage, and a worker whose asked wage has risen asks for a raise (US-114).
 - **Not yet in play:** reputation is stored (50) but moves with US-114; motivation and output with US-113.
+
+**Accepted (owner, 2026-10-28, ADR 0081).** Also from that review: every citizen's farming skill is drawn at birth (children no longer grow up at 0).
+
+### US-113 build notes (2026-10-28, for the owner's review)
+
+- **A business worker's skill factor is measured against a skill-50 worker** (the market wage's skill): output ÷ (0.70 + 0.50 × 0.5). So a typical hire works at the business's rate, and the rates, the plan and ADR 0073/0079/0080's targets stay a typical hire's; skill 70 works 5% faster, skill 30 5% slower; tiredness and motivation come on top. The literal form (no division) would have made every typical hire 5% slower than the rate and moved all three businesses' targets. A farm hand's hours are spec 006's exactly, as before.
+- **A business's long day is its open hours, not a separate switch.** Spec 016 already lets you set the hours (8–18, 8–14, or a long day). Hours past the village's usual 8:00–18:00 are overtime: each paid at time and a half of the worker's hourly wage (the season's wage over 4 days × 10 usual hours) as it's worked, from the business's cash; past its overdraft, the hour isn't worked. The worker tires on such days. The long-day choice is now **7–19** (12 hours, §3.4's cap; it was 6–20, 14 hours), and `SetBusiness` refuses more than 12. A farm hand's long days are a switch on their card (10 hours), each day's overtime paid each morning upfront; short of cash, they stop with a note on the away card.
+- **The business's usual day is 10 hours, not §3.4's 8:** the village's mill, bakery and dairy keep 8:00–18:00 (with a meal break), and their wages are for that day. Counting overtime from 8 hours would have made every business tire its worker from day one, against "neutral by default".
+- **Courses:** paid by whoever employs them (you for a hand, the business for its worker), refused while away on one. While away, a hand's orders wait and a business stands idle, wages still paid.
+- **The trait sentences are in words** ("a little keener", "a tenth less"): the numbers live in the output's *Why?*, which shows each part (skill and traits, fair pay, their home, colleagues, motivation, tiredness) against a typical worker.
+- **Frugal at home:** a household with a frugal adult saves half its leisure money.
+- **The golden replays didn't change:** their frozen content has no people, so drawing from ten traits touches none of them. AC-4's `ReplayTests.*` pass unchanged.
+- **Not yet in play:** HR events' effects on motivation (US-114); the bad batch the perfectionist avoids (US-114).
 
 ## 11. Cut first
 

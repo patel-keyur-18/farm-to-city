@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -74,7 +74,16 @@ namespace Sim.View.Content
             Range(awayHours, 0, 72, root + ".awayCardMinHours");
             int happy = Int(Required(o, root, "happyAbove"), root + ".happyAbove");
             Range(happy, 1, 100, root + ".happyAbove");
-            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy);
+            var output = new List<int>();
+            List<JToken> ot = Array(Required(o, root, "outputBands"), root + ".outputBands");
+            if (ot.Count != 4) throw new ContentException(root + ".outputBands", "expected 4 output thresholds");
+            for (int i = 0; i < 4; i++)
+            {
+                int b = Int(ot[i], Index(root + ".outputBands", i));
+                Range(b, i == 0 ? 1 : output[i - 1] + 1, 200, Index(root + ".outputBands", i));
+                output.Add(b);
+            }
+            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output);
         }
 
         private static List<JToken> NonEmptyArray(JObject o, string path, string name)

@@ -221,5 +221,6 @@
   "skillBands": [35, 55, 75],
   "skillStarPoints": 20,
   "referenceAcreHours": 3,
-  "happyAbove": 60
+  "happyAbove": 60,
+  "outputBands": [70, 85, 97, 110]
 }

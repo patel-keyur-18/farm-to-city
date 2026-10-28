@@ -313,7 +313,7 @@ namespace Sim.View.Views
             if (b.Status == BusinessStatus.Building) return s.Get("business.building", "time", ctx.Fmt.Duration(b.ReadyAt - ctx.Now));
             if (b.Status == BusinessStatus.Closed) return s.Get("business.closed");
             int hour = (int)(ctx.Now % 86_400 / 3600);
-            if (BusinessRules.OpenAt(b, hour)) return s.Get("business.openNow", "close", b.CloseHour + ":00");
+            if (BusinessRules.OpenAt(ctx.Sim, b, hour)) return s.Get("business.openNow", "close", b.CloseHour + ":00");
             return s.Get("business.shutNow", "open", b.OpenHour + ":00");
         }
 
@@ -387,6 +387,8 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             vm.Lines.Add(WorkerLine(ctx, b));
+            Worker hired = BusinessRules.HiredWorker(sim, b);
+            if (hired != null && b.Status == BusinessStatus.Open) vm.Lines.Add(StaffView.Output(ctx, b.Id, hired));
             if (b.Worker == WorkerKind.None)
             {
                 long id = b.Id;
@@ -442,7 +444,7 @@ namespace Sim.View.Views
 
         // The choices each setting cycles through (spec 016 §3.4, §3.5): the village's usual day, a morning, a long day; fees round the
         // next village's; your wheat a day.
-        private static readonly int[][] HourPresets = { new[] { 8, 18 }, new[] { 8, 14 }, new[] { 6, 20 } };
+        private static readonly int[][] HourPresets = { new[] { 8, 18 }, new[] { 8, 14 }, new[] { 7, 19 } };
         private static readonly int[] FeePresets = { 4, 3, 5 };
         private static readonly long[] OwnPresets = { 200_000, 400_000, 0, 100_000 };
 

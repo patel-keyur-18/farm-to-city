@@ -315,9 +315,7 @@ namespace Sim.Core.Tests
             Assert.That(Mid(results[0].Profit), Is.InRange(5_000, 10_000), "hired");
             Assert.That(Mid(results[1].Profit), Is.InRange(30_000, 40_000), "run by you");
             Assert.That(Mid(results[1].Payback), Is.InRange(3.0, 4.0), "run by you, payback");
-            // US-112: a hire's wage follows their skill (spec 015 §3.3) but output follows it only from US-113, so a less skilled, cheaper
-            // hire grinds as fast for now (median 10,744). Tightened back to ADR 0073's 10,000 with US-113.
-            Assert.That(Mid(results[2].Profit), Is.InRange(5_000, 11_000), "hired, on a business loan");
+            Assert.That(Mid(results[2].Profit), Is.InRange(5_000, 10_000), "hired, on a business loan");
         }
     }
 }

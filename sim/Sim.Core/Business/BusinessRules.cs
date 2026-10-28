@@ -446,8 +446,58 @@ namespace Sim.Core.Business
                 }
         }
 
-        /// <summary>Whether the business works in the hour of day <paramref name="hour"/>: open then and staffed.</summary>
-        public static bool OpenAt(Business b, int hour) { return b.Worker != WorkerKind.None && hour >= b.OpenHour && hour < b.CloseHour; }
+        /// <summary>Whether the business works in the hour of day <paramref name="hour"/>: open then and staffed (its worker not away on a course).</summary>
+        public static bool OpenAt(Simulation sim, Business b, int hour)
+        {
+            if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
+            Worker w = HiredWorker(sim, b);
+            return w == null || w.CourseUntil == 0;
+        }
+
+        /// <summary>Whether <paramref name="hour"/> is past the village's usual day (the type's hours): a hired worker's overtime (spec 015 §3.4).</summary>
+        public static bool Overtime(Simulation sim, Business b, int hour)
+        {
+            BusinessTypeDef t = TypeOf(sim, b);
+            return hour < t.OpenHour || hour >= t.CloseHour;
+        }
+
+        /// <summary>Hours a day it's open past the village's usual day: a long day for its worker.</summary>
+        public static int LongHours(Simulation sim, Business b)
+        {
+            int n = 0;
+            for (int h = b.OpenHour; h < b.CloseHour; h++) if (Overtime(sim, b, h)) n++;
+            return n;
+        }
+
+        /// <summary>The business's hired worker, or null when nobody is hired or you run it yourself.</summary>
+        public static Worker HiredWorker(Simulation sim, Business b) { return b.Worker == WorkerKind.Founder ? null : sim.State.People?.WorkerAt(b.Id); }
+
+        /// <summary>The rate an hour (spec 015 §3.4): its grams an hour × its worker's share (a skill-50 worker's is 1); yours as rated when you run it.</summary>
+        public static long Capacity(Simulation sim, Business b)
+        {
+            BusinessTypeDef t = TypeOf(sim, b);
+            Worker w = HiredWorker(sim, b);
+            return w == null ? t.GramsPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(t.GramsPerHour, 1).RoundToLong();
+        }
+
+        /// <summary>The product of the worker's two traits' <paramref name="factor"/> (creative's sale, frugal's costs); 1 when you run it.</summary>
+        private static Fixed TraitFactor(Simulation sim, Business b, System.Func<TraitDef, Fixed> factor)
+        {
+            Worker w = HiredWorker(sim, b);
+            if (w == null) return Fixed.One;
+            var traits = sim.Config.Game.People.Traits;
+            return factor(traits[w.Trait1]) * factor(traits[w.Trait2]);
+        }
+
+        /// <summary>A sale's price: 5% more when a creative worker made it (spec 015 §3.6).</summary>
+        private static long SalePrice(Simulation sim, Business b, long amount)
+        {
+            Fixed f = TraitFactor(sim, b, x => x.SaleFactor);
+            return f == Fixed.One ? amount : Money.MulRate(amount, f);
+        }
+
+        /// <summary>Power, fuel and supplies: 10% less with a frugal worker (spec 015 §3.6).</summary>
+        private static Fixed CostFactor(Simulation sim, Business b) { return TraitFactor(sim, b, x => x.CostFactor); }
 
         private static void Work(Simulation sim, Business b)
         {
@@ -461,7 +511,9 @@ namespace Sim.Core.Business
             }
             int hour = (int)(start % Day / Hour);
             KeepStaffed(sim, b);
-            if (!OpenAt(b, hour)) return;
+            if (!OpenAt(sim, b, hour)) return;
+            Worker hired = HiredWorker(sim, b);
+            if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
             if (t.ByRecipe)
             {
                 long used = Make(sim, b, t);
@@ -469,7 +521,7 @@ namespace Sim.Core.Business
                 if (used > 0) sim.Emit(new BusinessWorked(sim.State.Clock.SimTime, b.Id, 0, used));
                 return;
             }
-            long capacity = t.GramsPerHour, now = sim.State.Clock.SimTime;
+            long capacity = Capacity(sim, b), now = sim.State.Clock.SimTime;
             Fixed index = sim.State.Market.PriceIndex;
             string reference = "business:" + b.Id;
 
@@ -537,7 +589,7 @@ namespace Sim.Core.Business
             return System.Math.Min(grams, can);
         }
 
-        private static long PowerCost(Simulation sim, Business b, long grams) { return Money.Value(grams, TypeOf(sim, b).PowerPerKg * sim.State.Market.PriceIndex, 1000); }
+        private static long PowerCost(Simulation sim, Business b, long grams) { return Money.Value(grams, TypeOf(sim, b).PowerPerKg * sim.State.Market.PriceIndex * CostFactor(sim, b), 1000); }
 
         private static void Power(Simulation sim, Business b, long grams)
         {
@@ -595,7 +647,7 @@ namespace Sim.Core.Business
                 if (b.Stock[g] <= 0 || !MarketRules.TraderBuys(sim)) continue;
                 long sell = System.Math.Min(b.Stock[g], MarketRules.TraderCapacityLeft(sim, g));
                 if (sell <= 0) continue;
-                long amount = MarketRules.Value(sim, g, sell, MarketRules.Floor(sim, g));
+                long amount = SalePrice(sim, b, MarketRules.Value(sim, g, sell, MarketRules.Floor(sim, g)));
                 Sold(sim, b, g, sell, amount);
                 Store.CountTraderPurchase(sim, g, sell);
             }
@@ -610,7 +662,7 @@ namespace Sim.Core.Business
         /// </summary>
         private static long Make(Simulation sim, Business b, BusinessTypeDef t)
         {
-            long capacity = t.GramsPerHour, used = 0;
+            long capacity = Capacity(sim, b), used = 0;
             foreach (RecipeDef r in t.Recipes)
             {
                 long want = b.Mix[r.Output] - b.MadeToday[r.Output];
@@ -640,7 +692,7 @@ namespace Sim.Core.Business
         /// <summary>What <paramref name="q"/> grams of the product cost in cash now: inputs to buy, fuel and supplies.</summary>
         private static long BatchCost(Simulation sim, Business b, RecipeDef r, long q)
         {
-            long cost = Money.Value(q, (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex, r.OutputGrams);
+            long cost = Money.Value(q, (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex * CostFactor(sim, b), r.OutputGrams);
             foreach (KeyValuePair<int, long> kv in r.Inputs)
             {
                 long buy = Need(kv.Value, q, r.OutputGrams) - b.Stock[kv.Key];
@@ -672,7 +724,7 @@ namespace Sim.Core.Business
                 used += need;
                 if (b.MadeToday[g] > 0) b.MadeToday[g] = System.Math.Max(0, b.MadeToday[g] - need); // pav made into rusk is made again for the shops
             }
-            Fixed index = sim.State.Market.PriceIndex;
+            Fixed index = sim.State.Market.PriceIndex * CostFactor(sim, b);
             long fuel = Money.Value(q, r.Fuel * index, r.OutputGrams), supplies = Money.Value(q, r.Supplies * index, r.OutputGrams);
             BusinessBooks.Draw(sim, b, fuel + supplies);
             if (fuel > 0) b.Ledger.Post(now, sim.Period, "ledger.fuel", reference, new Posting(Account.Power, fuel), new Posting(Account.Cash, -fuel));
@@ -697,14 +749,14 @@ namespace Sim.Core.Business
                 foreach (int p in t.Products)
                 {
                     long q = System.Math.Min(b.Stock[p], ShopGramsPerDay(sim, t, p));
-                    if (q > 0) Sold(sim, b, p, q, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p)));
+                    if (q > 0) Sold(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p))));
                 }
                 foreach (int p in t.Products)
                 {
                     if (b.Stock[p] <= 0 || !MarketRules.TraderBuys(sim)) continue;
                     long q = System.Math.Min(b.Stock[p], MarketRules.TraderCapacityLeft(sim, p));
                     if (q <= 0) continue;
-                    Sold(sim, b, p, q, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p)));
+                    Sold(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p))));
                     Store.CountTraderPurchase(sim, p, q);
                 }
                 System.Array.Clear(b.MadeToday, 0, b.MadeToday.Length);

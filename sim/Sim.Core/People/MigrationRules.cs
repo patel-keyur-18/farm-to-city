@@ -125,7 +125,7 @@ namespace Sim.Core.People
             {
                 Id = id, Name = PopulationRules.Name(sim, RngStream.Migration, id, female), Female = female, BornSeason = CitizenRules.BornFor(sim, age),
                 HouseholdId = x.Id, Health = Fixed.One, Village = village,
-                Skill = adult ? Fixed.FromInt(Between(sim, id, SkillKey, ForCitizen, people.Hand.SkillMin, people.Hand.SkillMax)) : Fixed.Zero, Crafting = CitizenRules.DrawCrafting(sim, id),
+                Skill = adult ? Fixed.FromInt(Between(sim, id, SkillKey, ForCitizen, people.Hand.SkillMin, people.Hand.SkillMax)) : CitizenRules.DrawFarming(sim, id), Crafting = CitizenRules.DrawCrafting(sim, id),
                 Education = adult && Rng.Chance(PopulationRules.Roll(sim, RngStream.Migration, id, EducationKey, ForCitizen), p.PrimaryEducationShare) ? 1 : 0,
             };
             PopulationRules.Traits(sim, RngStream.Migration, c);

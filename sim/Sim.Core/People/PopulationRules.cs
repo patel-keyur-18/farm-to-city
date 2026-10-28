@@ -99,6 +99,7 @@ namespace Sim.Core.People
                     {
                         Id = childId, Name = Name(sim, RngStream.Births, childId, female), Female = female, BornSeason = season, HouseholdId = x.Id,
                         Health = Fixed.One, Father = father.Id, Mother = woman.Id, Village = -1, Crafting = CitizenRules.DrawCrafting(sim, childId),
+                        Skill = CitizenRules.DrawFarming(sim, childId),
                     };
                     Traits(sim, RngStream.Births, child);
                     child.Story.Add(new StoryLine(StoryKind.Born, t, 0));
@@ -212,8 +213,7 @@ namespace Sim.Core.People
         {
             int n = sim.Config.Game.People.Traits.Count;
             c.Trait1 = (int)Rng.Below(Roll(sim, stream, c.Id, Trait1Key, 0), (ulong)n);
-            c.Trait2 = (int)Rng.Below(Roll(sim, stream, c.Id, Trait2Key, 0), (ulong)(n - 1));
-            if (c.Trait2 >= c.Trait1) c.Trait2++;
+            c.Trait2 = PeopleRules.SecondTrait(sim, Roll(sim, stream, c.Id, Trait2Key, 0), c.Trait1);
         }
 
         /// <summary>Members stay in ascending id order.</summary>

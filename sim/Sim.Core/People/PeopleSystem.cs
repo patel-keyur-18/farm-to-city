@@ -55,7 +55,11 @@ namespace Sim.Core.People
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
-            if (pass == ItemClass.Daily) NewDay(sim);
+            if (pass == ItemClass.Daily)
+            {
+                NewDay(sim);
+                WorkRules.Daily(sim);
+            }
             if (pass != ItemClass.Hourly) return;
             HiringRules.Expire(sim);
             if (!sim.State.Clock.IsAway)
@@ -67,6 +71,7 @@ namespace Sim.Core.People
                 HiringRules.BusinessArrivals(sim);
             }
             HiringRules.References(sim);
+            WorkRules.Courses(sim);
             Release(sim);
             Orders.Run(sim);
         }
@@ -224,8 +229,7 @@ namespace Sim.Core.People
             ulong seed = sim.State.Seed;
             int skill = p.Hand.SkillMin + bonus + (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 1), (ulong)(p.Hand.SkillMax - p.Hand.SkillMin + 1));
             int t1 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 2), (ulong)p.Traits.Count);
-            int t2 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 3), (ulong)(p.Traits.Count - 1));
-            if (t2 >= t1) t2++;
+            int t2 = PeopleRules.SecondTrait(sim, Rng.Next(seed, RngStream.Applicants, (ulong)id, 3), t1);
             int name = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 4), (ulong)p.Names.Count);
             s.Applicants.Add(new Applicant
             {
@@ -255,8 +259,7 @@ namespace Sim.Core.People
                 n.AskedToMoveIn = true;
                 long id = s.NextApplicantId++;
                 int skill = p.Hand.SkillMin + (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 1), (ulong)(p.Hand.SkillMax - p.Hand.SkillMin + 1));
-                int t2 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 3), (ulong)(p.Traits.Count - 1));
-                if (t2 >= n.Trait) t2++;
+                int t2 = PeopleRules.SecondTrait(sim, Rng.Next(seed, RngStream.Applicants, (ulong)id, 3), n.Trait);
                 s.Applicants.Add(new Applicant
                 {
                     Id = id, Name = n.Name, Skill = skill, Trait1 = n.Trait, Trait2 = t2, SecondTraitKnown = true, SkillKnown = true,

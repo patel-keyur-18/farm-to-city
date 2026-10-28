@@ -138,6 +138,8 @@ namespace Sim.Core.Commands
         AlreadyChecked,
         /// <summary>Nobody works there to let go.</summary>
         NoWorker,
+        /// <summary>Already away on a course.</summary>
+        OnCourse,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "people";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "labourPool", "hand", "jobPost", "hiring", "huts", "traits", "names");
+            OnlyFields(o, root, "labourPool", "hand", "jobPost", "hiring", "work", "huts", "traits", "names");
             if (hut.HousesHands < 1) throw new ContentException("buildings.hand_hut.housesHands", "a hand's hut must house at least one hand");
 
             string lp = root + ".labourPool";
@@ -93,6 +93,28 @@ namespace Sim.Content
             };
             if (hiring.ReferenceCost < 0) throw new ContentException(Join(gp, "referenceCost"), "must not be negative");
 
+            string wp = root + ".work";
+            JObject wj = Object(Required(o, root, "work"), wp);
+            OnlyFields(wj, wp, "motivationMin", "motivationMax", "fairAbove", "fairBelow", "homeBelow", "homePerPoint", "fatigueUp", "fatigueDown",
+                "fatigueMax", "longDayHours", "overtimeFactor", "courseCost", "courseDays", "courseGain");
+            var work = new WorkDef
+            {
+                MotivationMin = Bounded(wj, wp, "motivationMin", "0", "1"),
+                MotivationMax = Bounded(wj, wp, "motivationMax", "1", "2"),
+                FairAbove = Bounded(wj, wp, "fairAbove", "0", "0.5"),
+                FairBelow = Bounded(wj, wp, "fairBelow", "0", "0.5"),
+                HomeBelow = BoundedInt(wj, wp, "homeBelow", 0, 100),
+                HomePerPoint = Bounded(wj, wp, "homePerPoint", "0", "0.05"),
+                FatigueUp = Bounded(wj, wp, "fatigueUp", "0", "1"),
+                FatigueDown = Bounded(wj, wp, "fatigueDown", "0", "1"),
+                FatigueMax = Bounded(wj, wp, "fatigueMax", "0", "0.9"),
+                LongDayHours = BoundedInt(wj, wp, "longDayHours", 0, 6),
+                OvertimeFactor = Bounded(wj, wp, "overtimeFactor", "1", "3"),
+                CourseCost = Money(Required(wj, wp, "courseCost"), Join(wp, "courseCost")),
+                CourseDays = BoundedInt(wj, wp, "courseDays", 1, 30),
+                CourseGain = BoundedInt(wj, wp, "courseGain", 0, 50),
+            };
+
             string up = root + ".huts";
             JObject u = Object(Required(o, root, "huts"), up);
             OnlyFields(u, up, "placesPerAcre");
@@ -104,14 +126,31 @@ namespace Sim.Content
             {
                 string p = Index(root + ".traits", i);
                 JObject t = Object(tt[i], p);
-                OnlyFields(t, p, "id", "nameKey", "hoursFactor", "keepsWage", "skillGainFactor", "renewalWageFactor", "careless");
+                OnlyFields(t, p, "id", "nameKey", "hoursFactor", "keepsWage", "skillGainFactor", "renewalWageFactor", "careless", "saleFactor", "costFactor",
+                    "savesLeisure", "colleagueMotivation", "noBadBatch", "opposite");
                 string id = UniqueId(t, p, traits.ConvertAll(x => x.Id));
                 traits.Add(new TraitDef(id, String(Required(t, p, "nameKey"), Join(p, "nameKey")),
                     OptionalFactor(t, p, "hoursFactor"), t["keepsWage"] != null && Bool(t["keepsWage"], Join(p, "keepsWage")),
                     OptionalFactor(t, p, "skillGainFactor"), OptionalFactor(t, p, "renewalWageFactor"),
-                    t["careless"] != null && Bool(t["careless"], Join(p, "careless"))));
+                    t["careless"] != null && Bool(t["careless"], Join(p, "careless")))
+                {
+                    SaleFactor = OptionalFactor(t, p, "saleFactor"),
+                    CostFactor = OptionalFactor(t, p, "costFactor"),
+                    SavesLeisure = t["savesLeisure"] != null && Bool(t["savesLeisure"], Join(p, "savesLeisure")),
+                    ColleagueMotivation = t["colleagueMotivation"] == null ? Fixed.Zero : Bounded(t, p, "colleagueMotivation", "0", "0.5"),
+                    NoBadBatch = t["noBadBatch"] != null && Bool(t["noBadBatch"], Join(p, "noBadBatch")),
+                });
             }
             if (traits.Count < 2) throw new ContentException(root + ".traits", "needs at least 2 traits (an applicant has 2 distinct ones)");
+            for (int i = 0; i < tt.Count; i++)
+            {
+                JToken op = ((JObject)tt[i])["opposite"];
+                if (op == null) continue;
+                string path = Join(Index(root + ".traits", i), "opposite");
+                int at = traits.FindIndex(x => x.Id == String(op, path));
+                if (at < 0 || at == i) throw new ContentException(path, "must name another trait");
+                traits[i].Opposite = at;
+            }
 
             var names = new List<NameDef>();
             List<JToken> nt = NonEmptyArray(o, root, "names");
@@ -126,7 +165,7 @@ namespace Sim.Content
                 names.Add(new NameDef(id, "name." + id, g == "f"));
             }
             if (names.Count < roster) throw new ContentException(root + ".names", "needs at least rosterSize names");
-            return new PeopleDefs(pool, hand, post, hiring, traits, names, places, handHut);
+            return new PeopleDefs(pool, hand, post, hiring, work, traits, names, places, handHut);
         }
 
         private static Fixed OptionalFactor(JObject o, string path, string name)

@@ -208,6 +208,58 @@ namespace Sim.View.Views
             return vm;
         }
 
+        private static WhyVm StaffOutput(ViewContext ctx, long id) { return Output(ctx, HandOf(ctx, id)); }
+
+        private static WhyVm StaffOutputAt(ViewContext ctx, long id) { return Output(ctx, ctx.Sim.State.People.WorkerAt(id)); }
+
+        /// <summary>Output = skill × motivation × (1 − tiredness) (spec 015 §3.4), each against a typical worker's, in words.</summary>
+        private static WhyVm Output(ViewContext ctx, IStaff w)
+        {
+            Simulation sim = ctx.Sim;
+            Fixed relative = WorkRules.RelativeOutput(sim, w);
+            WhyVm vm = New(ctx, "why.staffOutput.title", ctx.Strings.Get("staff.output." + StaffView.Band(ctx, relative)), "name", Name(ctx, w));
+            if (w.CourseUntil != 0)
+            {
+                Text(vm, ctx, "why.staffOutput.course", "time", ctx.Fmt.Duration(w.CourseUntil - ctx.Now), "gain", ctx.Fmt.Integer(sim.Config.Game.People.Work.CourseGain));
+                return vm;
+            }
+            HandDef h = sim.Config.Game.People.Hand;
+            Fixed typical = h.ProductivityBase + h.ProductivityPerSkill * Fixed.FromInt(50).MulRatio(1, 100);
+            Row(vm, ctx, "why.staffOutput.skill", Effect(ctx, WorkRules.SkillFactor(sim, w) / typical), "band", PeopleWords.Band(ctx, (int)w.Skill.RoundToLong()));
+            Row(vm, ctx, "why.staffOutput.fair", Effect(ctx, Fixed.One + WorkRules.Fairness(sim, w)));
+            Household home = WorkRules.HomeOf(sim, w);
+            if (home != null) Row(vm, ctx, "why.staffOutput.home", Effect(ctx, Fixed.One + WorkRules.Home(sim, w)), "happiness", ctx.Fmt.Integer(home.Happiness.RoundToLong()));
+            Fixed colleagues = WorkRules.Colleagues(sim, w);
+            if (colleagues != Fixed.Zero) Row(vm, ctx, "why.staffOutput.colleagues", Effect(ctx, Fixed.One + colleagues));
+            Row(vm, ctx, "why.staffOutput.motivation", Effect(ctx, WorkRules.Motivation(sim, w)));
+            Row(vm, ctx, "why.staffOutput.fatigue", Tired(ctx, w));
+            Row(vm, ctx, "why.staffOutput.total", Effect(ctx, relative));
+            Text(vm, ctx, "why.staffOutput.formula");
+            vm.Footnote = ctx.Strings.Get("why.staffOutput.lesson");
+            return vm;
+        }
+
+        /// <summary>"Rested", or tiredness's effect on their work ("15% less").</summary>
+        private static string Tired(ViewContext ctx, IStaff w) { return w.Fatigue == Fixed.Zero ? ctx.Strings.Get("staff.rested") : Effect(ctx, Fixed.One - w.Fatigue); }
+
+        private static string WholePct(ViewContext ctx, Fixed share) { return ctx.Fmt.Integer((share * Fixed.FromInt(100)).RoundToLong()) + "%"; }
+
+        private static string Name(ViewContext ctx, IStaff w) { return PeopleWords.Name(ctx, w is Hand h ? h.Name : ((Worker)w).Name); }
+
+        /// <summary>A hand's long days: the overtime a day, and what tiredness does (spec 015 §3.4).</summary>
+        private static WhyVm StaffLongDays(ViewContext ctx, long id)
+        {
+            Hand h = HandOf(ctx, id);
+            var work = ctx.Sim.Config.Game.People.Work;
+            int normal = (int)ctx.Sim.Config.Game.People.Hand.HoursPerDay.RoundToLong();
+            WhyVm vm = New(ctx, "why.staffLongDays.title", ctx.Strings.Get("staff.longDaysOff", "hours", ctx.Fmt.Integer(h.LongDays ? normal + work.LongDayHours : normal)));
+            Text(vm, ctx, "why.staffLongDays.pay", "hours", ctx.Fmt.Integer(work.LongDayHours), "amount", Money(ctx, WorkRules.OvertimeDay(ctx.Sim, h)));
+            Text(vm, ctx, "why.staffLongDays.tired", "up", WholePct(ctx, work.FatigueUp), "down", WholePct(ctx, work.FatigueDown), "max", WholePct(ctx, work.FatigueMax));
+            Row(vm, ctx, "why.staffLongDays.now", Tired(ctx, h));
+            vm.Footnote = ctx.Strings.Get("why.staffLongDays.lesson");
+            return vm;
+        }
+
         private static WhyVm HandHours(ViewContext ctx, long id)
         {
             Hand h = HandOf(ctx, id);

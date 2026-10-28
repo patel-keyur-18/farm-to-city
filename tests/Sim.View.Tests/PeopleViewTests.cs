@@ -84,6 +84,47 @@ namespace Sim.View.Tests
             AssertWords(PeopleSheet.Build(ctx));
         }
 
+        // Spec 015 §7 (US-113): a worker's output in words and stars with its Why?; a hand's long days; Send on a course; the same
+        // output row on a business's card.
+        [Test]
+        public void WorkerCard()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            h.Trait1 = h.Trait2 = sim.Config.Game.People.IndexOfTrait("steady");
+            h.Skill = Fixed.FromInt(50);
+            ViewContext ctx = ViewKit2.Context(sim);
+            SheetVm card = HandSheet.Build(ctx, h.Id);
+            LineVm output = card.Lines.Single(l => l.Label == "Output");
+            Assert.That((output.Value, output.Stars), Is.EqualTo(("Works well", (StarsVm?)new StarsVm(4, 0))), "a typical, fairly paid hand");
+            Assert.That((output.Action.Label, output.Action.Detail, output.Action.Enabled), Is.EqualTo(("Send on a course", "6,000 coins · +10 skill · 2 days away", true)));
+            WhyVm why = WhyView.Build(ctx, output.WhyKey, output.WhyId);
+            Assert.That(why.Title, Is.EqualTo(PeopleWords.Name(ctx, h.Name) + "'s output"));
+            Assert.That(why.Rows.Select(r => r.Label), Is.SupersetOf(new[] { "Skill (Capable) and traits", "Fair pay", "Motivation, all told", "Tiredness", "Against a typical worker" }));
+            Assert.That(why.Rows.Single(r => r.Label == "Against a typical worker").Value, Is.EqualTo("no change"));
+
+            LineVm longDays = card.Lines.Single(l => l.Label == "Long days");
+            Assert.That((longDays.Value, longDays.Action.Label), Is.EqualTo(("8 hours a day", "Start")));
+            Ok(sim, longDays.Action.Create(sim.State.Clock.SimTime));
+            ctx = ViewKit2.Context(sim);
+            longDays = HandSheet.Build(ctx, h.Id).Lines.Single(l => l.Label == "Long days");
+            Assert.That(longDays.Value, Does.StartWith("10 hours a day · ").And.EndWith(" a day extra"));
+            Assert.That(longDays.Action.Label, Is.EqualTo("Stop"));
+            Assert.That(WhyView.Build(ctx, longDays.WhyKey, longDays.WhyId).Rows[0].Label, Does.Contain("time and a half"));
+
+            Ok(sim, new SendOnCourse(sim.State.Clock.SimTime, 0, h.Id));
+            output = HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Output");
+            Assert.That(output.Value, Is.EqualTo("Away on a course · back in 2 d"));
+            Assert.That(output.Action.Enabled, Is.False, "already away");
+            Assert.That(HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Long days").Value, Does.StartWith("On, paused"));
+            Assert.That(HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Work").Value, Is.EqualTo("Away on a course"));
+
+            Simulation mill = Situations.Mill();
+            var b = mill.State.Businesses.Businesses.Last();
+            SheetVm business = BusinessSheet.Build(ViewKit2.Context(mill), b.Id);
+            Assert.That(business.Lines.Single(l => l.Label == "Output").WhyKey, Is.EqualTo("staffOutputAt"));
+        }
+
         [Test]
         public void PeopleSheet_ThroughHiring()
         {

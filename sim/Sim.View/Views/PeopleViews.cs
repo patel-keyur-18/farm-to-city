@@ -48,6 +48,12 @@ namespace Sim.View.Views
             return ctx.Strings.Get("people.tends", "acres", acres);
         }
 
+        /// <summary>What a hand gets through a day: "Tends about 3 acres", or away on a course.</summary>
+        public static string Work(ViewContext ctx, Hand h)
+        {
+            return h.CourseUntil != 0 ? ctx.Strings.Get("staff.awayOnCourse") : Tends(ctx, PeopleRules.HandHours(ctx.Sim, h));
+        }
+
         public static string Name(ViewContext ctx, int name) { return ctx.Strings.Get(ctx.Sim.Config.Game.People.Names[name].NameKey); }
 
         public static bool Female(ViewContext ctx, int name) { return ctx.Sim.Config.Game.People.Names[name].Female; }
@@ -190,7 +196,7 @@ namespace Sim.View.Views
                 bool lapsed = h.Contract == ContractState.Lapsed;
                 var targets = new List<string>();
                 foreach (StandingOrder o in p.Orders) if (o.HandId == h.Id) targets.Add(PeopleWords.Target(ctx, o.Kind, o.Target));
-                var line = new LineVm(PeopleWords.Name(ctx, h.Name), PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h)),
+                var line = new LineVm(PeopleWords.Name(ctx, h.Name), PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Work(ctx, h),
                     lapsed ? "hand.lapse" : "hand.hours", h.Id)
                 {
                     Stars = PeopleWords.Stars(ctx, skill, skill), Icon = HandIcon(ctx, h.Name),
@@ -277,6 +283,59 @@ namespace Sim.View.Views
     }
 
     /// <summary>One hand (spec 006 §7, ADR 0039 §8): skill, work, traits, contract, orders; Renew or Let go.</summary>
+    /// <summary>
+    /// A worker's output and training (spec 015 §7) on the hand's card and a business's: output in words and stars with its Why?
+    /// (skill, motivation, tiredness), or away on a course; Send on a course on the row.
+    /// </summary>
+    public static class StaffView
+    {
+        /// <summary>The output row for a farm hand (place 0) or a business's worker (place = the business's id).</summary>
+        public static LineVm Output(ViewContext ctx, long place, IStaff w)
+        {
+            var s = ctx.Strings;
+            string why = place == 0 ? "staffOutput" : "staffOutputAt";
+            long whyId = place == 0 ? w.Id : place;
+            LineVm line;
+            if (w.CourseUntil != 0)
+                line = new LineVm(s.Get("staff.output"), s.Get("staff.onCourse", "time", ctx.Fmt.Duration(w.CourseUntil - ctx.Now)), why, whyId);
+            else
+            {
+                int band = Band(ctx, WorkRules.RelativeOutput(ctx.Sim, w));
+                line = new LineVm(s.Get("staff.output"), s.Get("staff.output." + band), why, whyId) { Stars = new StarsVm(band + 1, 0) };
+            }
+            long id = w.Id;
+            var work = ctx.Sim.Config.Game.People.Work;
+            line.Action = ActionVm.Checked(ctx, "course", s.Get("staff.course"), s.Get("staff.courseDetail", "cost", ctx.Fmt.Coins(WorkRules.CourseCost(ctx.Sim)),
+                "gain", ctx.Fmt.Integer(work.CourseGain), "days", ctx.Fmt.Integer(work.CourseDays)), ActionKind.Secondary, at => new SendOnCourse(at, place, id));
+            return line;
+        }
+
+        /// <summary>0 "Barely working" to 4 "Works very well": output against a typical worker's by ui.json's bands.</summary>
+        public static int Band(ViewContext ctx, Fixed relative)
+        {
+            long pct = (relative * Fixed.FromInt(100)).RoundToLong();
+            int i = 0;
+            while (i < 4 && pct >= ctx.Ui.OutputBands[i]) i++;
+            return i;
+        }
+
+        /// <summary>A hand's long days (spec 015 §3.4): their day and its overtime, with Start or Stop.</summary>
+        public static LineVm LongDays(ViewContext ctx, Hand h)
+        {
+            var s = ctx.Strings;
+            var p = ctx.Sim.Config.Game.People;
+            long id = h.Id, pay = WorkRules.OvertimeDay(ctx.Sim, h);
+            int normal = (int)p.Hand.HoursPerDay.RoundToLong();
+            var line = new LineVm(s.Get("staff.longDays"), h.LongDays && h.CourseUntil != 0 ? s.Get("staff.longDaysPaused")
+                : h.LongDays ? s.Get("staff.longDaysOn", "hours", ctx.Fmt.Integer(normal + p.Work.LongDayHours), "amount", ctx.Fmt.Coins(pay))
+                : s.Get("staff.longDaysOff", "hours", ctx.Fmt.Integer(normal)), "staffLongDays", h.Id);
+            line.Action = h.LongDays
+                ? ActionVm.Checked(ctx, "longDaysOff", s.Get("action.stop"), null, ActionKind.Secondary, at => new SetLongDays(at, id, false))
+                : ActionVm.Checked(ctx, "longDaysOn", s.Get("action.start"), s.Get("staff.aDay", "amount", ctx.Fmt.Coins(pay)), ActionKind.Secondary, at => new SetLongDays(at, id, true));
+            return line;
+        }
+    }
+
     public static class HandSheet
     {
         public static SheetVm Build(ViewContext ctx, long handId)
@@ -291,7 +350,12 @@ namespace Sim.View.Views
                 Subtitle = ctx.Strings.Get("hand.subtitle", "time", ctx.Fmt.Duration(ctx.Now - h.HiredAt)),
             };
             vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.skill"), PeopleWords.Band(ctx, skill), "hand.skill", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill) });
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Tends(ctx, PeopleRules.HandHours(sim, h)), "hand.hours", h.Id));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Work(ctx, h), "hand.hours", h.Id));
+            if (h.Contract == ContractState.Active)
+            {
+                vm.Lines.Add(StaffView.Output(ctx, 0, h));
+                vm.Lines.Add(StaffView.LongDays(ctx, h));
+            }
             // Where he lives and with whom (spec 014 §7): his hut alone, sending half his wage home, or his family's house.
             Citizen me = sim.State.Citizens?.OfHand(h.Id);
             Household home = me == null ? null : sim.State.Citizens.Household(me.HouseholdId);
@@ -613,11 +677,21 @@ namespace Sim.View.Views
                 if (e is ContractRenewed r) vm.Lines.Add(new LineVm(HandName(ctx, r.HandId), ctx.Strings.Get("away.renewed", "amount", ctx.Fmt.Coins(r.Paid))));
                 if (e is ContractLapsed l) vm.Lines.Add(new LineVm(HandName(ctx, l.HandId), ctx.Strings.Get("away.lapsed", "amount", ctx.Fmt.Coins(l.Needed))));
                 if (e is HandLeft) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.formerHand"), ctx.Strings.Get("away.left")));
+                if (e is CourseFinished cf)
+                    vm.Lines.Add(new LineVm(StaffName(ctx, cf.Place, cf.WorkerId), ctx.Strings.Get("away.course", "skill", PeopleWords.Band(ctx, (int)cf.Skill.RoundToLong()))));
+                if (e is LongDaysStopped ls) vm.Lines.Add(new LineVm(StaffName(ctx, ls.Place, ls.WorkerId), ctx.Strings.Get("away.longDaysStopped")));
             }
             foreach (string w in waits) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.order"), w));
             if (vm.DayLabourPaid > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.dayLabour"), ctx.Fmt.Coins(vm.DayLabourPaid)));
             if (vm.Lines.Count > ctx.Ui.AwayRowsMax) vm.Lines.RemoveRange(ctx.Ui.AwayRowsMax, vm.Lines.Count - ctx.Ui.AwayRowsMax);
             return vm.Lines.Count == 0 ? null : vm;
+        }
+
+        private static string StaffName(ViewContext ctx, long place, long id)
+        {
+            if (place == 0) return HandName(ctx, id);
+            Worker w = ctx.Sim.State.People.WorkerAt(place);
+            return w == null || w.Id != id ? ctx.Strings.Get("away.formerWorker") : PeopleWords.Name(ctx, w.Name);
         }
 
         private static string HandName(ViewContext ctx, long handId)

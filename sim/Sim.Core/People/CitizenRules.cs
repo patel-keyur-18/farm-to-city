@@ -8,7 +8,7 @@ namespace Sim.Core.People
     public static class CitizenRules
     {
         // Keys of the Citizens stream: one per kind of draw, the counter is the citizen, applicant or hand id.
-        private const ulong ApplicantAgeKey = 1, EducationKey = 2, VillageKey = 3, MigratedAgeKey = 4, CraftingKey = 5;
+        private const ulong ApplicantAgeKey = 1, EducationKey = 2, VillageKey = 3, MigratedAgeKey = 4, CraftingKey = 5, FarmingKey = 6;
 
         /// <summary>The season index of a time (t ÷ S).</summary>
         public static long SeasonOf(Simulation sim, long t) { return t / sim.Clock.SecondsPerSeason; }
@@ -61,10 +61,18 @@ namespace Sim.Core.People
         /// A citizen's crafting skill (spec 015 §3.4): drawn as farming is, skillMin–skillMax, from their id (stream Citizens), for every
         /// citizen, children too (it counts once they're grown), and for those already living at the schema-11 migration.
         /// </summary>
-        internal static Fixed DrawCrafting(Simulation sim, long id)
+        internal static Fixed DrawCrafting(Simulation sim, long id) { return DrawSkill(sim, CraftingKey, id); }
+
+        /// <summary>
+        /// A child's farming skill (ADR 0081): drawn at birth as an adult's is, so a grown child applies as a hand like anyone else; for
+        /// those at 0 at the schema-11 migration too.
+        /// </summary>
+        internal static Fixed DrawFarming(Simulation sim, long id) { return DrawSkill(sim, FarmingKey, id); }
+
+        private static Fixed DrawSkill(Simulation sim, ulong key, long id)
         {
             HandDef h = sim.Config.Game.People.Hand;
-            return Fixed.FromInt(h.SkillMin + (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.Citizens, CraftingKey, (ulong)id), (ulong)(h.SkillMax - h.SkillMin + 1)));
+            return Fixed.FromInt(h.SkillMin + (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.Citizens, key, (ulong)id), (ulong)(h.SkillMax - h.SkillMin + 1)));
         }
 
         /// <summary>A household of one in a hand's hut (§3.4): his family stays in his home village for now.</summary>

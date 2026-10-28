@@ -143,7 +143,7 @@ namespace Sim.Core.People
     }
 
     /// <summary>A resident hand and their season contract (spec 006 §3.6). One contract per hand while they stay.</summary>
-    public sealed class Hand
+    public sealed class Hand : IStaff
     {
         public long Id { get; internal set; }
         public int Name { get; internal set; }
@@ -182,6 +182,15 @@ namespace Sim.Core.People
         /// <summary>The wage memory (spec 015 §3.3, schema 11): +1 hired 10% above the asked wage, −1 below it until a renewal pays it, else 0.</summary>
         public int Fairness { get; internal set; }
 
+        /// <summary>Fatigue 0–fatigueMax (spec 015 §3.4, schema 11): up after a long day, down after a normal one.</summary>
+        public Fixed Fatigue { get; internal set; }
+
+        /// <summary>Works long days: 2 hours more, paid at 1.5× (spec 015 §3.4).</summary>
+        public bool LongDays { get; internal set; }
+
+        /// <summary>When their course ends, or 0 when not on one (spec 015 §3.5): away, no work, wage still paid.</summary>
+        public long CourseUntil { get; internal set; }
+
         internal Hand Clone() { return (Hand)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -203,6 +212,12 @@ namespace Sim.Core.People
             h.WriteInt(ActionsInHour);
             if (!(h is Saves.SaveWriter sw && sw.Schema < 10) && (!h.Hashing || HousingInKind != 0)) h.WriteLong(HousingInKind); // hashed only once used
             if (!(h is Saves.SaveWriter sw11 && sw11.Schema < 11) && (!h.Hashing || Fairness != 0)) h.WriteInt(Fairness);
+            if (!(h is Saves.SaveWriter sw12 && sw12.Schema < 11) && (!h.Hashing || Fatigue != Fixed.Zero || LongDays || CourseUntil != 0))
+            {
+                h.WriteFixed(Fatigue);
+                h.WriteBool(LongDays);
+                h.WriteLong(CourseUntil);
+            }
         }
 
         internal static Hand ReadFrom(SaveReader r)
@@ -215,7 +230,13 @@ namespace Sim.Core.People
                 ActionHour = r.ReadLong(), ActionsInHour = r.ReadInt(),
             };
             if (r.Schema >= 10) hand.HousingInKind = r.ReadLong();
-            if (r.Schema >= 11) hand.Fairness = r.ReadInt();
+            if (r.Schema >= 11)
+            {
+                hand.Fairness = r.ReadInt();
+                hand.Fatigue = r.ReadFixed();
+                hand.LongDays = r.ReadBool();
+                hand.CourseUntil = r.ReadLong();
+            }
             return hand;
         }
     }
@@ -377,7 +398,7 @@ namespace Sim.Core.People
     /// Someone you hired to work at a business (spec 015 §3.1, schema 11): one of your townspeople, or a worker who commutes from a
     /// neighbouring village (not a citizen). Paid a season upfront from the business's cash.
     /// </summary>
-    public sealed class Worker
+    public sealed class Worker : IStaff
     {
         public long Id { get; internal set; }
 
@@ -401,6 +422,10 @@ namespace Sim.Core.People
         /// <summary>Season closes passed; 0 is the probation season.</summary>
         public int SeasonsWorked { get; internal set; }
 
+        /// <summary>As <see cref="Hand.Fatigue"/> and <see cref="Hand.CourseUntil"/>; their long days are the business's hours past its usual day.</summary>
+        public Fixed Fatigue { get; internal set; }
+        public long CourseUntil { get; internal set; }
+
         internal Worker Clone() { return (Worker)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -416,6 +441,8 @@ namespace Sim.Core.People
             h.WriteInt(Fairness);
             h.WriteLong(HiredAt);
             h.WriteInt(SeasonsWorked);
+            h.WriteFixed(Fatigue);
+            h.WriteLong(CourseUntil);
         }
 
         internal static Worker ReadFrom(SaveReader r)
@@ -424,7 +451,7 @@ namespace Sim.Core.People
             {
                 Id = r.ReadLong(), Place = r.ReadLong(), CitizenId = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadFixed(),
                 Trait1 = r.ReadRef(ContentTable.Trait), Trait2 = r.ReadRef(ContentTable.Trait), Wage = r.ReadLong(), Fairness = r.ReadInt(),
-                HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(),
+                HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(), Fatigue = r.ReadFixed(), CourseUntil = r.ReadLong(),
             };
         }
     }

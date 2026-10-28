@@ -575,7 +575,7 @@ namespace Sim.View.Views
             {
                 if (b.Status == Sim.Core.Business.BusinessStatus.Closed) continue;
                 var t = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
-                bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(b, hour);
+                bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(sim, b, hour);
                 map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working });
                 map.Tiles[b.TileId].Business = true;
                 if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;

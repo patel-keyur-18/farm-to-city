@@ -198,9 +198,10 @@ namespace Sim.Core.Tests
             SimConfig config = SaveTests.Config();
             Simulation s = CreditKit.NewSim(cash: 900_000);
             BusinessTests.Hamlet(s);
-            People.Household x = PeopleKit.AddFamily(s, 0, 40);
-            People.Citizen c = s.State.Citizens.Citizen(x.Members[0]);
+            People.Household x = PeopleKit.AddFamily(s, 0, 40, 6);
+            People.Citizen c = s.State.Citizens.Citizen(x.Members[0]), child = s.State.Citizens.Citizen(x.Members[1]);
             c.Skill = Maths.Fixed.FromInt(45);
+            child.Skill = Maths.Fixed.Zero; // born before ADR 0081 drew a child's farming skill
             long t = s.State.Clock.SimTime;
             Assert.That(s.Execute(new Commands.FoundBusiness(t, "flour_mill", PeopleKit.HomeTile, 150_000_00, false)).Accepted, Is.True);
             Assert.That(s.Execute(new Commands.FoundBusiness(t, "flour_mill", PeopleKit.HomeTile + 1, 150_000_00, false)).Accepted, Is.True);
@@ -219,6 +220,8 @@ namespace Sim.Core.Tests
             Assert.That(p.Reputation, Is.EqualTo(50));
             foreach (People.Citizen k in r.State.Citizens.Citizens)
                 Assert.That(k.Crafting, Is.EqualTo(People.CitizenRules.DrawCrafting(sim, k.Id)), "drawn for every citizen");
+            Assert.That(r.State.Citizens.Citizen(child.Id).Skill, Is.EqualTo(People.CitizenRules.DrawFarming(sim, child.Id)), "a child's farming skill drawn (ADR 0081)");
+            Assert.That(r.State.Citizens.Citizen(c.Id).Skill, Is.EqualTo(Maths.Fixed.FromInt(45)), "an adult's kept");
             People.Citizen usha = r.State.Citizens.Citizen(c.Id);
             Assert.That(usha.Crafting, Is.InRange(Maths.Fixed.FromInt(20), Maths.Fixed.FromInt(70)));
             People.Worker w = p.WorkerAt(mill.Id), commuter = p.WorkerAt(other.Id);

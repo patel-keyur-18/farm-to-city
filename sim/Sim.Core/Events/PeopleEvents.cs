@@ -447,4 +447,36 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "OrderCompleted(hand=" + HandId + ", " + Kind + "=" + Target + ")"; }
     }
+
+    /// <summary>A worker came back from a course with their skill up (spec 015 §3.5). Place 0 is a farm hand.</summary>
+    public sealed class CourseFinished : SimEvent
+    {
+        public long Place { get; }
+        public long WorkerId { get; }
+        public Maths.Fixed Skill { get; }
+
+        public CourseFinished(long simTime, long place, long workerId, Maths.Fixed skill) : base(simTime)
+        {
+            Place = place;
+            WorkerId = workerId;
+            Skill = skill;
+        }
+
+        protected override string Describe() { return "CourseFinished(place=" + Place + ", worker=" + WorkerId + ", skill=" + Skill + ")"; }
+    }
+
+    /// <summary>Long days stopped because tomorrow's overtime couldn't be paid, or the hand's contract lapsed (spec 015 §3.4).</summary>
+    public sealed class LongDaysStopped : SimEvent
+    {
+        public long Place { get; }
+        public long WorkerId { get; }
+
+        public LongDaysStopped(long simTime, long place, long workerId) : base(simTime)
+        {
+            Place = place;
+            WorkerId = workerId;
+        }
+
+        protected override string Describe() { return "LongDaysStopped(place=" + Place + ", worker=" + WorkerId + ")"; }
+    }
 }

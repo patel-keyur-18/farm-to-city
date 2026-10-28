@@ -82,10 +82,18 @@ namespace Sim.View.Content
         /// <summary>A household's happiness at or above this shows green on the Town tab, below it amber (spec 014 §7).</summary>
         public int HappyAbove { get; }
 
+        /// <summary>
+        /// A worker's output as a percentage of a typical (skill-50) worker's where "Works slowly", "Works steadily", "Works well" and
+        /// "Works very well" begin (below the first: "Barely working"), one star each (spec 015 §7).
+        /// </summary>
+        public IReadOnlyList<int> OutputBands { get; }
+
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
-            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60)
+            int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60,
+            IReadOnlyList<int> outputBands = null)
         {
+            OutputBands = new List<int>(outputBands ?? new[] { 70, 85, 97, 110 }).AsReadOnly();
             SkillBands = new List<int>(skillBands ?? new[] { 35, 55, 75 }).AsReadOnly();
             SkillStarPoints = skillStarPoints;
             ReferenceAcreHours = referenceAcreHours;

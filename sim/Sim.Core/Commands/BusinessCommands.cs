@@ -53,7 +53,9 @@ namespace Sim.Core.Commands
             Business.Business b = sim.State.Businesses?.Find(BusinessId);
             if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
-            if (OpenHour < 0 || CloseHour > 24 || OpenHour >= CloseHour || Fee < Maths.Fixed.Zero || Fee > Maths.Fixed.FromInt(100) || OwnPerDay < 0)
+            var t = BusinessRules.TypeOf(sim, b);
+            if (OpenHour < 0 || CloseHour > 24 || OpenHour >= CloseHour || Fee < Maths.Fixed.Zero || Fee > Maths.Fixed.FromInt(100) || OwnPerDay < 0
+                || CloseHour - OpenHour > t.CloseHour - t.OpenHour + sim.Config.Game.People.Work.LongDayHours) // a long day at most (spec 015 §3.4)
                 return CommandResult.Reject(RejectReason.InvalidArgument);
             b.OpenHour = OpenHour;
             b.CloseHour = CloseHour;

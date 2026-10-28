@@ -65,7 +65,7 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | Field | Rule |
 | --- | --- |
 | Identity | Seeded name by gender from `people.json` names (men and women in equal numbers, ADR 0039 art direction), gender, birth season, household, home |
-| Skills (0–100) | Farming (spec 006's skill) for Phase 2; the GDD's other skills arrive with the jobs that use them (specs 015–016). Children 0; adults by migration draw |
+| Skills (0–100) | Farming (spec 006's skill) for Phase 2; the GDD's other skills arrive with the jobs that use them (specs 015–016). Children drawn at birth like an adult's (ADR 0081); adults by migration draw |
 | Traits | Two, as spec 006 (hardworking, lazy, loyal, ambitious, careless, steady) |
 | Education | None or primary for adults, drawn at arrival (60% primary, 40% none); children "not in school yet" until spec 018 |
 | Health | 0.5–1.0: falls when food isn't met, recovers when it is (as the founder's, spec 003 §3.11, slower) |

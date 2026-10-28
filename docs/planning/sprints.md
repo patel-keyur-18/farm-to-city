@@ -663,8 +663,8 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 | US-118 | Recipes | [F12.2](features/F12.2-production-chains.md) | 5 | Must | Done (approved) |
 | US-119 | The bakery | [F12.2](features/F12.2-production-chains.md) | 5 | Must | Done (ADR 0079) |
 | US-216 | The dairy: paneer, curd and ghee | [F12.2](features/F12.2-production-chains.md) | 5 | Must | Done (ADR 0080) |
-| US-112 | Hiring board | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | In review |
-| US-113 | Productivity and training | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | To do |
+| US-112 | Hiring board | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
+| US-113 | Productivity and training | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | In review |
 | US-114 | HR events | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Should | To do |
 
 **Order of work:** specs 018 and 019 drafted first, their gaps closed with the owner one per message alongside the code → US-218 (Next era, so the Village businesses can be reached) → US-118 recipes (sim) → US-119 and US-216 sim → the bakery's and the dairy's art and layouts (previewed to the owner first) → their screens (Editor tours) → US-112 (save schema 11 holding the workers and the bakery's and dairy's settings; the Hire screen) → US-113 (golden replays regenerated once) → US-114 → balance with the bots (spec 015 §9, spec 016 §9) → the whole checklist in the Editor → the device build.

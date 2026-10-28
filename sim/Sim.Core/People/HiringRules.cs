@@ -321,7 +321,11 @@ namespace Sim.Core.People
             PeopleState s = sim.State.People;
             if (s == null || sim.State.Citizens == null) return false;
             s.Reputation = sim.Config.Game.People.Hiring.ReputationStart;
-            foreach (Citizen c in sim.State.Citizens.Citizens) c.Crafting = CitizenRules.DrawCrafting(sim, c.Id);
+            foreach (Citizen c in sim.State.Citizens.Citizens)
+            {
+                c.Crafting = CitizenRules.DrawCrafting(sim, c.Id);
+                if (c.Skill == Fixed.Zero) c.Skill = CitizenRules.DrawFarming(sim, c.Id); // a child's, drawn at birth from now (ADR 0081)
+            }
             if (sim.State.Businesses == null) return true;
             PeopleDefs p = sim.Config.Game.People;
             foreach (Business.Business b in sim.State.Businesses.Businesses)
@@ -346,8 +350,7 @@ namespace Sim.Core.People
                     w.Name = (int)Rng.Below(Rng.Next(seed, RngStream.People, key, 100), (ulong)p.Names.Count);
                     w.Skill = Fixed.FromInt(50);
                     w.Trait1 = (int)Rng.Below(Rng.Next(seed, RngStream.People, key, 101), (ulong)p.Traits.Count);
-                    w.Trait2 = (int)Rng.Below(Rng.Next(seed, RngStream.People, key, 102), (ulong)(p.Traits.Count - 1));
-                    if (w.Trait2 >= w.Trait1) w.Trait2++;
+                    w.Trait2 = PeopleRules.SecondTrait(sim, Rng.Next(seed, RngStream.People, key, 102), w.Trait1);
                 }
                 s.Workers.Add(w);
             }

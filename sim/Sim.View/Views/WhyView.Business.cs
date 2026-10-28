@@ -93,6 +93,8 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.businessHours.title", BusinessWords.Hours(ctx, b.OpenHour, b.CloseHour));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.businessHours.area", t));
             Text(vm, ctx, b.Worker == WorkerKind.Founder ? BusinessWords.Key(ctx, "why.businessHours.you", t) : "why.businessHours.worker");
+            Sim.Core.People.Worker w = BusinessRules.HiredWorker(ctx.Sim, b);
+            if (w != null) Row(vm, ctx, "why.businessHours.overtime", Money(ctx, Sim.Core.People.WorkRules.OvertimeHour(ctx.Sim, w)));
             return vm;
         }
 

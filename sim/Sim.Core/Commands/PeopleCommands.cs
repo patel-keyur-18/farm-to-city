@@ -420,4 +420,56 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>
+    /// Sends a farm hand (place 0) or a business's worker on a course (spec 015 §3.5): courseCost now, from your cash or the business's;
+    /// away courseDays (no work, wage still paid), then +courseGain skill in their role.
+    /// </summary>
+    public sealed class SendOnCourse : TimedCommand
+    {
+        public long Place { get; }
+        public long WorkerId { get; }
+
+        public SendOnCourse(long at, long place, long workerId) : base(at) { Place = place; WorkerId = workerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            IStaff w = WorkRules.Find(sim, Place, WorkerId);
+            if (w == null) return CommandResult.Reject(Place == 0 ? RejectReason.NoHand : RejectReason.NoWorker);
+            if (w.CourseUntil != 0) return CommandResult.Reject(RejectReason.OnCourse);
+            long cost = WorkRules.CourseCost(sim);
+            if (!WorkRules.CanPay(sim, w, cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            FarmSystem.Accrue(sim);
+            WorkRules.Pay(sim, w, cost, "ledger.course");
+            WorkRules.SetCourse(w, sim.State.Clock.SimTime + sim.Config.Game.People.Work.CourseDays * ClockDef.SecondsPerDay);
+            FarmSystem.Refresh(sim);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Long days on or off for a farm hand (spec 015 §3.4): 2 hours more a day at 1.5× their hourly wage, today's paid now and each
+    /// day's upfront; fatigue builds while they last. A business's long days are its open hours (<see cref="SetBusiness"/>).
+    /// </summary>
+    public sealed class SetLongDays : TimedCommand
+    {
+        public long HandId { get; }
+        public bool On { get; }
+
+        public SetLongDays(long at, long handId, bool on) : base(at) { HandId = handId; On = on; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Hand h = WorkRules.Find(sim, 0, HandId) as Hand;
+            if (h == null) return CommandResult.Reject(RejectReason.NoHand);
+            if (h.LongDays == On) return CommandResult.Ok;
+            long pay = On ? WorkRules.OvertimeDay(sim, h) : 0;
+            if (!sim.State.Ledger.CanAfford(pay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            FarmSystem.Accrue(sim);
+            WorkRules.Pay(sim, h, pay, "ledger.overtime");
+            h.LongDays = On;
+            FarmSystem.Refresh(sim);
+            return CommandResult.Ok;
+        }
+    }
 }

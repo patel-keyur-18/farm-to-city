@@ -34,6 +34,7 @@ namespace Sim.Core.Saves
             DebugNextEra,
             SetMix,
             PostJobAt, CheckReference, OfferAt, LetWorkerGo, RunBusinessYourself,
+            SendOnCourse, SetLongDays,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -116,6 +117,8 @@ namespace Sim.Core.Saves
                 case CheckReference c: At(c, Tag.CheckReference); w.WriteLong(c.ApplicantId); break;
                 case LetWorkerGo c: At(c, Tag.LetWorkerGo); w.WriteLong(c.BusinessId); break;
                 case RunBusinessYourself c: At(c, Tag.RunBusinessYourself); w.WriteLong(c.BusinessId); break;
+                case SendOnCourse c: At(c, Tag.SendOnCourse); w.WriteLong(c.Place); w.WriteLong(c.WorkerId); break;
+                case SetLongDays c: At(c, Tag.SetLongDays); w.WriteLong(c.HandId); w.WriteBool(c.On); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c when c.Level == OfferLevel.Asked: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
@@ -226,6 +229,8 @@ namespace Sim.Core.Saves
                 case Tag.OfferAt: return new OfferContract(at, r.ReadLong(), (OfferLevel)r.ReadInt());
                 case Tag.LetWorkerGo: return new LetWorkerGo(at, r.ReadLong());
                 case Tag.RunBusinessYourself: return new RunBusinessYourself(at, r.ReadLong());
+                case Tag.SendOnCourse: return new SendOnCourse(at, r.ReadLong(), r.ReadLong());
+                case Tag.SetLongDays: return new SetLongDays(at, r.ReadLong(), r.ReadBool());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());
                 case Tag.SetStandingOrder:
