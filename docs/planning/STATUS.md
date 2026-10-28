@@ -265,6 +265,8 @@
 
 ## Open questions (with the owner)
 
+- **Owner requests pending after Sprint 15 (2026-10-28):** US-219 (townspeople at work on your fields, as paid hands with housing as part of pay), US-220 (townspeople seen at work as labourers), US-221 (the season earned and spent: amends spec 019), US-222 (the weather on the map). Listed in `sprints.md`; plan them into a sprint when Sprint 15 is done.
+
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**

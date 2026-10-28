@@ -637,6 +637,17 @@
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #19)
 
+## Owner requests pending after Sprint 15 (raised 2026-10-28)
+
+The owner takes these up once Sprint 15 is done; they're planned into a sprint then. Each story keeps its pushbacks.
+
+| ID | Story | Feature | Points | Note |
+| --- | --- | --- | --- | --- |
+| US-219 | Your townspeople at work on your fields | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | US-112 (this sprint) already lets you hire a townsperson as a hand with orders; unpaid work for housing would be bonded labour, so this adds housing as part of pay |
+| US-220 | Your townspeople seen at work as labourers | [F06.1](features/F06.1-day-labourers.md) | 2 | Presentation gap |
+| US-221 | Your season, earned and spent | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Amends spec 019 (Sprint 18's statements and hub) rather than building it twice |
+| US-222 | The weather on the map | [F08.6](features/F08.6-living-weather.md) | 5 | Look previewed first; reduced motion; frame time on the iPhone 13 |
+
 ## Sprint 15 · 8–21 Mar 2027 · Phase 2 (the bakery and the dairy, full hiring and HR; specs 018 and 019 written; 2 weeks, ADR 0076)
 
 - **Status:** In progress (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
