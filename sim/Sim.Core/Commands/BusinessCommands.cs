@@ -4,7 +4,7 @@ namespace Sim.Core.Commands
 {
     /// <summary>
     /// Founds a business on an acre you own (spec 016 §3.3): the capital moves from your cash into its books, it buys its building and
-    /// equipment, and it opens when built (24 h for the mill), run by the town's best worker or by you.
+    /// equipment, and it opens when built (24 h for the mill), run by you or by a worker you hire on the board (spec 015).
     /// </summary>
     public sealed class FoundBusiness : TimedCommand
     {
@@ -134,6 +134,58 @@ namespace Sim.Core.Commands
             if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
             BusinessBooks.CloseDown(sim, b);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Lets a business's worker go (spec 015 §3.9): they keep the season's pay; after their first season, severance of 10% of the
+    /// wage from the business's cash. When you run it yourself, you stop. Either way it waits for a hire, or for you.
+    /// </summary>
+    public sealed class LetWorkerGo : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public LetWorkerGo(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Worker == WorkerKind.None) return CommandResult.Reject(RejectReason.NoWorker);
+            People.Worker w = sim.State.People?.WorkerAt(b.Id);
+            long severance = 0;
+            if (w != null && w.SeasonsWorked > 0)
+            {
+                severance = System.Math.Min(Finance.Money.MulRate(w.Wage, sim.Config.Game.People.Hand.SeveranceShare), BusinessBooks.CanSpend(sim, b));
+                if (severance > 0 && BusinessBooks.Draw(sim, b, severance))
+                    b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.severance", "business:" + b.Id,
+                        new Finance.Posting(Finance.Account.HiredLabour, severance), new Finance.Posting(Finance.Account.Cash, -severance));
+            }
+            Farm.FarmSystem.Accrue(sim);
+            BusinessRules.LoseWorker(sim, b);
+            b.Worker = WorkerKind.None;
+            Farm.FarmSystem.Refresh(sim); // your hours back on the farm
+            if (w != null) sim.Emit(new Events.WorkerLeft(sim.State.Clock.SimTime, b.Id, w.Id, severance));
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>You run a business with nobody hired yourself (spec 016 §3.6): no wage, its hours come off your farm work.</summary>
+    public sealed class RunBusinessYourself : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public RunBusinessYourself(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Worker != WorkerKind.None) return CommandResult.Reject(RejectReason.AlreadyStaffed);
+            Farm.FarmSystem.Accrue(sim);
+            b.Worker = WorkerKind.Founder;
+            Farm.FarmSystem.Refresh(sim);
             return CommandResult.Ok;
         }
     }

@@ -199,10 +199,13 @@ namespace Game.Presentation
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));
                     return;
                 case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
-                case "Hire": case "Word": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working, word out
+                case "Hire": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working
+                case "Word": return; // the board stays: the post, a reference asked, a talk
+                case "JobOffer": Return(new SheetRequest("Word", r.Arg == null ? 0 : long.Parse(r.Arg, System.Globalization.CultureInfo.InvariantCulture))); return; // back to the job's tab: hired, countered or gone
             }
             // The shed sheet stays open: building, buying from neighbours on or off, the hand's animals order (spec 012 §7).
             if (r.Kind == "Tile" && Sim.Config.Game.Livestock != null && r.Id == Sim.Config.Game.Livestock.Livestock.ShedTile) return;
+            if (r.Kind == "Tile" && Sim.State.Businesses != null && Sim.State.Businesses.Businesses.Exists(x => x.TileId == r.Id)) return; // a business's card stays: its worker, its settings
             if (commands[commands.Length - 1] is Spray || commands[commands.Length - 1] is HireLabourers) return; // the field sheet stays: see who's on it
             _sheet.Close();
         }

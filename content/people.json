@@ -36,6 +36,17 @@
     "aboveMarketSkillBonus": 10,
     "aboveMarketAccept": 0.95
   },
+  "hiring": {
+    "referenceCost": 300,
+    "referenceHours": 12,
+    "referenceHalfWidth": 5,
+    "lowFactor": 0.90,
+    "highFactor": 1.10,
+    "lowAccept": 0.40,
+    "highAccept": 0.95,
+    "townLowAccept": 0.60,
+    "reputationStart": 50
+  },
   "huts": { "placesPerAcre": 2 },
   "traits": [
     { "id": "hardworking", "nameKey": "trait.hardworking", "hoursFactor": 1.10 },

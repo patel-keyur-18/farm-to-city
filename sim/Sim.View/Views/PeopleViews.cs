@@ -167,7 +167,8 @@ namespace Sim.View.Views
                     ActionKind.Open, room && cash, !room ? ctx.Reject(RejectReason.TooManyHuts) : !cash ? ctx.Reject(RejectReason.InsufficientFunds) : null, null,
                     new SheetRequest("HutPlacement", 0)), "hand_hut"),
                 Picture(ActionVm.Open("word", s.Get("people.wordButton"), new SheetRequest("Word", 0),
-                    p.Post != null ? s.Get("people.wordButtonOut", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now)) : s.Get("people.wordButtonDetail")), "letter"),
+                    p.Applicants.Count > 0 ? s.Plural("people.wordButtonAsking", p.Applicants.Count)
+                        : p.Posts.Count > 0 ? s.Plural("people.wordButtonPosts", p.Posts.Count) : s.Get("people.wordButtonDetail")), "letter"),
             };
             vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
 
@@ -202,34 +203,10 @@ namespace Sim.View.Views
                 vm.Lines.Add(line);
             }
 
-            // Applicants.
-            if (huts > 0)
-            {
-                vm.Lines.Add(LineVm.Header(s.Get("people.applicants")));
-                if (p.Applicants.Count == 0)
-                    vm.Lines.Add(new LineVm(s.Get("people.nobody"), p.NextApplicantAt > ctx.Now
-                        ? s.Get("people.nextIn", "time", ctx.Fmt.Duration(p.NextApplicantAt - ctx.Now))
-                        : s.Get(PeopleRules.EmptyHut(sim) == null ? "people.waitHut" : "people.nextSoon")));
-                foreach (Applicant a in p.Applicants)
-                {
-                    Applicant ap = a;
-                    PeopleRules.SkillRange(sim, a, out int lo, out int hi);
-                    string traits = PeopleWords.Trait(ctx, a.Trait1) + " · " + (a.SecondTraitKnown ? PeopleWords.Trait(ctx, a.Trait2) : "?");
-                    long wage = PeopleRules.AskedWage(sim, Fixed.FromInt(a.Skill), a.AboveMarket);
-                    var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits, "applicant", a.Id)
-                        { Stars = PeopleWords.Stars(ctx, lo, hi), Icon = HandIcon(ctx, a.Name) };
-                    line.Action = ActionVm.Checked(ctx, "offer:" + a.Id, s.Get("action.offer"),
-                        s.Get("people.offerDetail", "wage", ctx.Fmt.Coins(wage), "now", ctx.Fmt.Coins(PeopleRules.RestOfSeason(sim, wage))), ActionKind.Primary,
-                        at => new OfferContract(at, ap.Id));
-                    vm.Lines.Add(line);
-                    if (!a.SecondTraitKnown)
-                    {
-                        var talk = new LineVm(s.Get("people.talkTo", "name", PeopleWords.Name(ctx, a.Name)), s.Get("people.talkWhy"));
-                        talk.Action = ActionVm.Checked(ctx, "interview:" + a.Id, s.Get("action.interview"), null, ActionKind.Secondary, at => new Interview(at, ap.Id));
-                        vm.Lines.Add(talk);
-                    }
-                }
-            }
+            // Who's asking for work: chosen on the hiring board (spec 015 §7).
+            if (p.Applicants.Count > 0)
+                vm.Lines.Add(new LineVm(s.Get("people.applicants"), s.Plural("people.askingN", p.Applicants.Count), "applicant")
+                    { Icon = "letter", Action = ActionVm.Open("board", s.Get("action.see"), new SheetRequest("Word", p.Applicants[0].Place)) });
 
             // Huts.
             if (huts > 0)
@@ -285,31 +262,6 @@ namespace Sim.View.Views
                     { Icon = count % 2 == 1 ? "person_labourer_m" : "person_labourer_f" };
                 line.Action = ActionVm.Checked(ctx, "hire:" + count, s.Get("action.hire"), ctx.Fmt.Coins(PeopleRules.LabourCost(sim, count, until)), ActionKind.Primary,
                     at => new HireLabourers(at, count));
-                vm.Lines.Add(line);
-            }
-            return vm;
-        }
-
-        /// <summary>Send word for a hand (spec 006 §3.7): at the usual wage or above it, or how long the word is out.</summary>
-        public static SheetVm Word(ViewContext ctx)
-        {
-            Simulation sim = ctx.Sim;
-            PeopleState p = sim.State.People;
-            var s = ctx.Strings;
-            var vm = new SheetVm { Icon = "letter", Title = s.Get("people.word"), Subtitle = s.Get("word.subtitle") };
-            if (p.Post != null)
-            {
-                vm.Lines.Add(new LineVm(s.Get(p.Post.AboveMarket ? "people.postAbove" : "people.postMarket"),
-                    s.Get("people.postActive", "time", ctx.Fmt.Duration(p.Post.ExpiresAt - ctx.Now)), "post"));
-                return vm;
-            }
-            foreach (bool above in new[] { false, true })
-            {
-                bool am = above;
-                var line = new LineVm(s.Get(am ? "people.postAbove" : "people.postMarket"), s.Get(am ? "people.postAboveWhy" : "people.postMarketWhy"), "post")
-                    { Icon = am ? "person_hand_f" : "person_hand_m" };
-                line.Action = ActionVm.Checked(ctx, am ? "postAbove" : "postMarket", s.Get("action.post"),
-                    ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.People.JobPost.Cost)), ActionKind.Secondary, at => new PostJob(at, am));
                 vm.Lines.Add(line);
             }
             return vm;

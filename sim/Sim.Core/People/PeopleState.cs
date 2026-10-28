@@ -82,6 +82,19 @@ namespace Sim.Core.People
         /// <summary>The roster id of a regular, else 0.</summary>
         public long FromRosterId { get; internal set; }
 
+        /// <summary>Where the job is (spec 015 §3.1, schema 11): 0 your fields (a farm hand), else a business's id.</summary>
+        public long Place { get; internal set; }
+
+        /// <summary>One of your townspeople (known exactly, spec 015 §3.1), else 0.</summary>
+        public long CitizenId { get; internal set; }
+
+        /// <summary>When the reference check comes back (spec 015 §3.2), 0 if none was asked; done once <see cref="ReferenceDone"/>.</summary>
+        public long ReferenceAt { get; internal set; }
+        public bool ReferenceDone { get; internal set; }
+
+        /// <summary>Refused a low offer and asked for the asked wage instead (spec 015 §3.3): the next offer at it is accepted.</summary>
+        public bool Countered { get; internal set; }
+
         internal Applicant Clone() { return (Applicant)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -97,16 +110,29 @@ namespace Sim.Core.People
             h.WriteLong(ArrivedAt);
             h.WriteLong(WaitedLiveSeconds);
             h.WriteLong(FromRosterId);
+            if (h is SaveWriter sw && sw.Schema < 11) return;
+            h.WriteLong(Place);
+            h.WriteLong(CitizenId);
+            h.WriteLong(ReferenceAt);
+            h.WriteBool(ReferenceDone);
+            h.WriteBool(Countered);
         }
 
         internal static Applicant ReadFrom(SaveReader r)
         {
-            return new Applicant
+            var a = new Applicant
             {
                 Id = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadInt(), Trait1 = r.ReadRef(ContentTable.Trait),
                 Trait2 = r.ReadRef(ContentTable.Trait), SecondTraitKnown = r.ReadBool(), SkillKnown = r.ReadBool(), AboveMarket = r.ReadBool(),
                 ArrivedAt = r.ReadLong(), WaitedLiveSeconds = r.ReadLong(), FromRosterId = r.ReadLong(),
             };
+            if (r.Schema < 11) return a;
+            a.Place = r.ReadLong();
+            a.CitizenId = r.ReadLong();
+            a.ReferenceAt = r.ReadLong();
+            a.ReferenceDone = r.ReadBool();
+            a.Countered = r.ReadBool();
+            return a;
         }
     }
 
@@ -153,6 +179,9 @@ namespace Sim.Core.People
         /// </summary>
         public long HousingInKind { get; internal set; }
 
+        /// <summary>The wage memory (spec 015 §3.3, schema 11): +1 hired 10% above the asked wage, −1 below it until a renewal pays it, else 0.</summary>
+        public int Fairness { get; internal set; }
+
         internal Hand Clone() { return (Hand)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -173,6 +202,7 @@ namespace Sim.Core.People
             h.WriteLong(ActionHour);
             h.WriteInt(ActionsInHour);
             if (!(h is Saves.SaveWriter sw && sw.Schema < 10) && (!h.Hashing || HousingInKind != 0)) h.WriteLong(HousingInKind); // hashed only once used
+            if (!(h is Saves.SaveWriter sw11 && sw11.Schema < 11) && (!h.Hashing || Fairness != 0)) h.WriteInt(Fairness);
         }
 
         internal static Hand ReadFrom(SaveReader r)
@@ -185,6 +215,7 @@ namespace Sim.Core.People
                 ActionHour = r.ReadLong(), ActionsInHour = r.ReadInt(),
             };
             if (r.Schema >= 10) hand.HousingInKind = r.ReadLong();
+            if (r.Schema >= 11) hand.Fairness = r.ReadInt();
             return hand;
         }
     }
@@ -327,14 +358,75 @@ namespace Sim.Core.People
         }
     }
 
-    /// <summary>A posted job (spec 006 §3.5); at most one.</summary>
+    /// <summary>A posted job (spec 006 §3.5, spec 015 §3.1): at most one a place.</summary>
     public sealed class JobPost
     {
+        /// <summary>0 your fields (a farm hand), else a business's id.</summary>
+        public long Place { get; internal set; }
         public bool AboveMarket { get; internal set; }
         public long PostedAt { get; internal set; }
         public long ExpiresAt { get; internal set; }
 
+        /// <summary>A business post's next applicant (a farm hand's is <see cref="PeopleState.NextApplicantAt"/>), 0 when none is due.</summary>
+        public long NextApplicantAt { get; internal set; }
+
         internal JobPost Clone() { return (JobPost)MemberwiseClone(); }
+    }
+
+    /// <summary>
+    /// Someone you hired to work at a business (spec 015 §3.1, schema 11): one of your townspeople, or a worker who commutes from a
+    /// neighbouring village (not a citizen). Paid a season upfront from the business's cash.
+    /// </summary>
+    public sealed class Worker
+    {
+        public long Id { get; internal set; }
+
+        /// <summary>The business's id.</summary>
+        public long Place { get; internal set; }
+
+        /// <summary>The townsperson, or 0 for a commuter.</summary>
+        public long CitizenId { get; internal set; }
+        public int Name { get; internal set; }
+
+        /// <summary>The role's skill (crafting, or farming for a dairyman) 0–100, the live record while they work here.</summary>
+        public Fixed Skill { get; internal set; }
+        public int Trait1 { get; internal set; }
+        public int Trait2 { get; internal set; }
+        public long Wage { get; internal set; }
+
+        /// <summary>The wage memory, as <see cref="Hand.Fairness"/>.</summary>
+        public int Fairness { get; internal set; }
+        public long HiredAt { get; internal set; }
+
+        /// <summary>Season closes passed; 0 is the probation season.</summary>
+        public int SeasonsWorked { get; internal set; }
+
+        internal Worker Clone() { return (Worker)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Id);
+            h.WriteLong(Place);
+            h.WriteLong(CitizenId);
+            h.WriteRef(ContentTable.Name, Name);
+            h.WriteFixed(Skill);
+            h.WriteRef(ContentTable.Trait, Trait1);
+            h.WriteRef(ContentTable.Trait, Trait2);
+            h.WriteLong(Wage);
+            h.WriteInt(Fairness);
+            h.WriteLong(HiredAt);
+            h.WriteInt(SeasonsWorked);
+        }
+
+        internal static Worker ReadFrom(SaveReader r)
+        {
+            return new Worker
+            {
+                Id = r.ReadLong(), Place = r.ReadLong(), CitizenId = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadFixed(),
+                Trait1 = r.ReadRef(ContentTable.Trait), Trait2 = r.ReadRef(ContentTable.Trait), Wage = r.ReadLong(), Fairness = r.ReadInt(),
+                HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(),
+            };
+        }
     }
 
     /// <summary>The people part of the game state (spec 006 §4). Every list is kept in id order.</summary>
@@ -345,7 +437,32 @@ namespace Sim.Core.People
         public List<Hand> Hands { get; } = new List<Hand>();
         public List<StandingOrder> Orders { get; } = new List<StandingOrder>();
         public List<Construction> Constructions { get; } = new List<Construction>();
-        public JobPost Post { get; internal set; }
+
+        /// <summary>Open posts in place order (spec 015 §3.1).</summary>
+        public List<JobPost> Posts { get; } = new List<JobPost>();
+
+        /// <summary>Your businesses' hired workers, in id order (schema 11).</summary>
+        public List<Worker> Workers { get; } = new List<Worker>();
+        public long NextWorkerId { get; internal set; } = 1;
+
+        /// <summary>Employer reputation 0–100 (spec 015 §3.8).</summary>
+        public int Reputation { get; internal set; } = 50;
+
+        /// <summary>The farm hand's post, or null.</summary>
+        public JobPost Post { get { return PostAt(0); } }
+
+        public JobPost PostAt(long place) { return Posts.Find(x => x.Place == place); }
+
+        public Worker WorkerAt(long place) { return Workers.Find(x => x.Place == place); }
+
+        /// <summary>Applicants for a place, in id order.</summary>
+        public List<Applicant> ApplicantsFor(long place) { return Applicants.FindAll(x => x.Place == place); }
+
+        /// <summary>
+        /// Those from outside waiting for a place (migrants and regulars): at most maxApplicants of them, and as many of your
+        /// townspeople besides, so strangers never crowd your own people out (spec 015 §3.1).
+        /// </summary>
+        public int OutsidersFor(long place) { return Applicants.FindAll(x => x.Place == place && x.CitizenId == 0).Count; }
 
         /// <summary>When the next applicant arrives, or 0 when none is due (no empty hut, or the queue is full).</summary>
         public long NextApplicantAt { get; internal set; }
@@ -366,9 +483,11 @@ namespace Sim.Core.People
         {
             var c = new PeopleState
             {
-                Post = Post?.Clone(), NextApplicantAt = NextApplicantAt, NextApplicantId = NextApplicantId, NextHandId = NextHandId,
-                NextConstructionId = NextConstructionId,
+                NextApplicantAt = NextApplicantAt, NextApplicantId = NextApplicantId, NextHandId = NextHandId,
+                NextConstructionId = NextConstructionId, NextWorkerId = NextWorkerId, Reputation = Reputation,
             };
+            foreach (JobPost x in Posts) c.Posts.Add(x.Clone());
+            foreach (Worker w in Workers) c.Workers.Add(w.Clone());
             foreach (Neighbour n in Roster) c.Roster.Add(n.Clone());
             foreach (Applicant a in Applicants) c.Applicants.Add(a.Clone());
             foreach (Hand h in Hands) c.Hands.Add(h.Clone());
@@ -389,17 +508,40 @@ namespace Sim.Core.People
             foreach (StandingOrder o in Orders) o.WriteTo(h);
             h.WriteInt(Constructions.Count);
             foreach (Construction k in Constructions) k.WriteTo(h);
-            h.WriteBool(Post != null);
-            if (Post != null)
+            bool v11 = !(h is SaveWriter sw && sw.Schema < 11);
+            if (!v11 || (h.Hashing && Posts.TrueForAll(x => x.Place == 0)))
             {
-                h.WriteBool(Post.AboveMarket);
-                h.WriteLong(Post.PostedAt);
-                h.WriteLong(Post.ExpiresAt);
+                // Schema 10's single post (and the hash before business posts, so golden replays are unchanged).
+                JobPost post = Post;
+                h.WriteBool(post != null);
+                if (post != null)
+                {
+                    h.WriteBool(post.AboveMarket);
+                    h.WriteLong(post.PostedAt);
+                    h.WriteLong(post.ExpiresAt);
+                }
+            }
+            else
+            {
+                h.WriteInt(Posts.Count);
+                foreach (JobPost x in Posts)
+                {
+                    h.WriteLong(x.Place);
+                    h.WriteBool(x.AboveMarket);
+                    h.WriteLong(x.PostedAt);
+                    h.WriteLong(x.ExpiresAt);
+                    h.WriteLong(x.NextApplicantAt);
+                }
             }
             h.WriteLong(NextApplicantAt);
             h.WriteLong(NextApplicantId);
             h.WriteLong(NextHandId);
             h.WriteLong(NextConstructionId);
+            if (!v11 || (h.Hashing && Workers.Count == 0 && NextWorkerId == 1 && Reputation == 50)) return; // hashed only once used
+            h.WriteInt(Workers.Count);
+            foreach (Worker w in Workers) w.WriteTo(h);
+            h.WriteLong(NextWorkerId);
+            h.WriteInt(Reputation);
         }
 
         internal static PeopleState ReadFrom(SaveReader r, long now)
@@ -415,11 +557,25 @@ namespace Sim.Core.People
             for (int i = 0; i < n; i++) s.Orders.Add(StandingOrder.ReadFrom(r));
             n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Constructions.Add(Construction.ReadFrom(r));
-            if (r.ReadBool()) s.Post = new JobPost { AboveMarket = r.ReadBool(), PostedAt = r.ReadLong(), ExpiresAt = r.ReadLong() };
+            if (r.Schema < 11)
+            {
+                if (r.ReadBool()) s.Posts.Add(new JobPost { AboveMarket = r.ReadBool(), PostedAt = r.ReadLong(), ExpiresAt = r.ReadLong() });
+            }
+            else
+            {
+                n = r.ReadCount();
+                for (int i = 0; i < n; i++)
+                    s.Posts.Add(new JobPost { Place = r.ReadLong(), AboveMarket = r.ReadBool(), PostedAt = r.ReadLong(), ExpiresAt = r.ReadLong(), NextApplicantAt = r.ReadLong() });
+            }
             s.NextApplicantAt = r.ReadLong();
             s.NextApplicantId = r.ReadLong();
             s.NextHandId = r.ReadLong();
             s.NextConstructionId = r.ReadLong();
+            if (r.Schema < 11) return s; // workers come from the businesses' old ones (CitizenRules.MigrateWorkers)
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Workers.Add(Worker.ReadFrom(r));
+            s.NextWorkerId = r.ReadLong();
+            s.Reputation = r.ReadInt();
             return s;
         }
     }

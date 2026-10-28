@@ -33,6 +33,7 @@ namespace Sim.Core.Saves
             FoundBusiness, SetBusiness, PutCash, TakeCash, CloseBusiness,
             DebugNextEra,
             SetMix,
+            PostJobAt, CheckReference, OfferAt, LetWorkerGo, RunBusinessYourself,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -110,9 +111,14 @@ namespace Sim.Core.Saves
                     break;
                 case SellAnimal c: At(c, Tag.SellAnimal); w.WriteLong(c.AnimalId); break;
                 case SetBuyGreenFodder c: At(c, Tag.SetBuyGreenFodder); w.WriteBool(c.On); break;
-                case PostJob c: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
+                case PostJob c when c.Place == 0: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
+                case PostJob c: At(c, Tag.PostJobAt); w.WriteLong(c.Place); w.WriteBool(c.AboveMarket); break;
+                case CheckReference c: At(c, Tag.CheckReference); w.WriteLong(c.ApplicantId); break;
+                case LetWorkerGo c: At(c, Tag.LetWorkerGo); w.WriteLong(c.BusinessId); break;
+                case RunBusinessYourself c: At(c, Tag.RunBusinessYourself); w.WriteLong(c.BusinessId); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
-                case OfferContract c: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
+                case OfferContract c when c.Level == OfferLevel.Asked: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
+                case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
                 case RenewContract c: At(c, Tag.RenewContract); w.WriteLong(c.HandId); break;
                 case DismissHand c: At(c, Tag.DismissHand); w.WriteLong(c.HandId); break;
                 case SetStandingOrder c:
@@ -215,6 +221,11 @@ namespace Sim.Core.Saves
                 case Tag.PostJob: return new PostJob(at, r.ReadBool());
                 case Tag.Interview: return new Interview(at, r.ReadLong());
                 case Tag.OfferContract: return new OfferContract(at, r.ReadLong());
+                case Tag.PostJobAt: return new PostJob(at, r.ReadLong(), r.ReadBool());
+                case Tag.CheckReference: return new CheckReference(at, r.ReadLong());
+                case Tag.OfferAt: return new OfferContract(at, r.ReadLong(), (OfferLevel)r.ReadInt());
+                case Tag.LetWorkerGo: return new LetWorkerGo(at, r.ReadLong());
+                case Tag.RunBusinessYourself: return new RunBusinessYourself(at, r.ReadLong());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());
                 case Tag.SetStandingOrder:

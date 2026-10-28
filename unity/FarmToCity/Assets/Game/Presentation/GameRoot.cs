@@ -389,7 +389,11 @@ namespace Game.Presentation
             {
                 case "People": _sheet.Show(PeopleSheet.Build(_ctx), refreshOnly); break;
                 case "Hire": _sheet.Show(PeopleSheet.Hire(_ctx), refreshOnly); break;
-                case "Word": _sheet.Show(PeopleSheet.Word(_ctx), refreshOnly); break;
+                case "Word": _sheet.Show(HiringBoard.Build(_ctx, r.Id), refreshOnly); break;
+                case "JobOffer":
+                    if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
+                    _sheet.Show(HiringBoard.Offer(_ctx, r.Id), refreshOnly);
+                    break;
                 case "Hand":
                     if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left
                     _sheet.Show(HandSheet.Build(_ctx, r.Id), refreshOnly);

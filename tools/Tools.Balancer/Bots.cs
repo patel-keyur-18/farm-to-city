@@ -162,12 +162,14 @@ namespace Tools.Balancer
                 Ok(sim, new BuildHandHut(t, Home.Quarters(sim.Config.Game))); // the labour quarters (ADR 0040)
             }
             if (p.Post == null && p.Hands.Count == 0 && PeopleRules.HutCount(sim) > 0 && !_posted) _posted = Ok(sim, new PostJob(t, PostAboveMarket));
-            if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0 && ReadyToHire(sim))
+            // A hand from outside, into the hut (Phase 1's play; the board's townspeople are left to the business bots).
+            List<Applicant> outside = p.Applicants.FindAll(a => a.Place == 0 && a.CitizenId == 0);
+            if (PeopleRules.EmptyHut(sim) != null && outside.Count > 0 && ReadyToHire(sim))
             {
-                foreach (Applicant a in p.Applicants.ToArray()) if (!a.SecondTraitKnown) Ok(sim, new Interview(t, a.Id));
+                foreach (Applicant a in outside) if (!a.SecondTraitKnown) Ok(sim, new Interview(t, a.Id));
                 Applicant best = null;
-                foreach (Applicant a in p.Applicants) if (Acceptable(sim, a) && (best == null || Expected(sim, a) > Expected(sim, best))) best = a;
-                if (best != null && (p.Applicants.Count >= 2 || t - best.ArrivedAt >= ClockDef.SecondsPerDay))
+                foreach (Applicant a in outside) if (Acceptable(sim, a) && (best == null || Expected(sim, a) > Expected(sim, best))) best = a;
+                if (best != null && (outside.Count >= 2 || t - best.ArrivedAt >= ClockDef.SecondsPerDay))
                 {
                     Borrow(sim, t, PeopleRules.RestOfSeason(sim, PeopleRules.AskedWage(sim, Fixed.FromInt(best.Skill), best.AboveMarket)) + 20_000 * Money.Coin);
                     Ok(sim, new OfferContract(t, best.Id));
@@ -989,6 +991,7 @@ namespace Tools.Balancer
                 long milk = Sim.Core.Business.BusinessRules.MilkFor(bt, b.Mix);
                 if (b.OwnPerDay != milk || b.BuyFromMarket == OwnMilkOnly) Ok(sim, new SetBusiness(t, b.Id, b.OpenHour, b.CloseHour, b.Fee, milk, !OwnMilkOnly));
             }
+            if (!_self) Hire(sim, t, b);
             // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
             bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
             if (Sim.Core.Business.BusinessBooks.Short(sim, b) || (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0))
@@ -1006,6 +1009,27 @@ namespace Tools.Balancer
                 long spare = (b.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
                 if (spare > 0) Ok(sim, new TakeCash(t, b.Id, spare));
             }
+        }
+
+        /// <summary>
+        /// Nobody working (spec 015): word sent at the usual wage; a townsperson hired at once at what they ask, the most skilled;
+        /// else the best migrant by what they seem, once two ask or one has waited a day.
+        /// </summary>
+        private static void Hire(Simulation sim, long t, Sim.Core.Business.Business b)
+        {
+            if (b.Status == Sim.Core.Business.BusinessStatus.Closed || HiringRules.BusinessPlace(sim, b.Id) != RejectReason.None) return;
+            PeopleState p = sim.State.People;
+            if (p.PostAt(b.Id) == null && p.ApplicantsFor(b.Id).Count == 0 && sim.State.Ledger.CanAfford(MarketRules.Indexed(sim, sim.Config.Game.People.JobPost.Cost)))
+                Ok(sim, new PostJob(t, b.Id, false));
+            List<Applicant> list = p.ApplicantsFor(b.Id);
+            Applicant best = list.Find(a => a.CitizenId != 0);
+            if (best == null)
+            {
+                foreach (Applicant a in list) if (best == null || a.Skill > best.Skill) best = a;
+                if (best == null || (list.Count < 2 && t - best.ArrivedAt < ClockDef.SecondsPerDay)) return;
+            }
+            if (Sim.Core.Business.BusinessBooks.CanSpend(sim, b) < PeopleRules.RestOfSeason(sim, HiringRules.OfferWage(sim, best, OfferLevel.Asked))) return;
+            Ok(sim, new OfferContract(t, best.Id));
         }
 
         private void Found(Simulation sim, long t, int i)

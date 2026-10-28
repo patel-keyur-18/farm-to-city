@@ -57,20 +57,16 @@ namespace Sim.Core.People
         {
             if (pass == ItemClass.Daily) NewDay(sim);
             if (pass != ItemClass.Hourly) return;
-            PeopleState s = sim.State.People;
-            long t = sim.State.Clock.SimTime;
-            if (s.Post != null && t >= s.Post.ExpiresAt)
-            {
-                s.Post = null;
-                sim.Emit(new JobPostExpired(t));
-            }
+            HiringRules.Expire(sim);
             if (!sim.State.Clock.IsAway)
             {
                 Grace(sim);
                 WaitingApplicants(sim);
                 Regulars(sim);
                 Arrivals(sim);
+                HiringRules.BusinessArrivals(sim);
             }
+            HiringRules.References(sim);
             Release(sim);
             Orders.Run(sim);
         }
@@ -190,7 +186,7 @@ namespace Sim.Core.People
         internal static void ScheduleApplicant(Simulation sim)
         {
             PeopleState s = sim.State.People;
-            if (PeopleRules.EmptyHut(sim) == null || s.Applicants.Count >= sim.Config.Game.People.Hand.MaxApplicants)
+            if (PeopleRules.EmptyHut(sim) == null || s.OutsidersFor(0) >= sim.Config.Game.People.Hand.MaxApplicants)
             {
                 s.NextApplicantAt = 0;
                 return;
@@ -208,23 +204,22 @@ namespace Sim.Core.People
                 if (s.NextApplicantAt == 0) ScheduleApplicant(sim);
                 return;
             }
-            if (PeopleRules.EmptyHut(sim) == null || s.Applicants.Count >= sim.Config.Game.People.Hand.MaxApplicants)
+            if (PeopleRules.EmptyHut(sim) == null || s.OutsidersFor(0) >= sim.Config.Game.People.Hand.MaxApplicants)
             {
                 s.NextApplicantAt = 0;
                 return;
             }
-            Arrive(sim);
+            Arrive(sim, 0, s.Post != null && s.Post.AboveMarket);
             s.NextApplicantAt = 0;
             ScheduleApplicant(sim);
         }
 
-        /// <summary>A seeded profile (stream Applicants, key = applicant id): skill, two distinct traits, a name.</summary>
-        private static void Arrive(Simulation sim)
+        /// <summary>A seeded profile (stream Applicants, key = applicant id): skill (in the place's role), two distinct traits, a name.</summary>
+        internal static void Arrive(Simulation sim, long place, bool above)
         {
             PeopleDefs p = sim.Config.Game.People;
             PeopleState s = sim.State.People;
             long id = s.NextApplicantId++;
-            bool above = s.Post != null && s.Post.AboveMarket;
             int bonus = above ? p.JobPost.AboveMarketSkillBonus : 0;
             ulong seed = sim.State.Seed;
             int skill = p.Hand.SkillMin + bonus + (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 1), (ulong)(p.Hand.SkillMax - p.Hand.SkillMin + 1));
@@ -235,6 +230,7 @@ namespace Sim.Core.People
             s.Applicants.Add(new Applicant
             {
                 Id = id, Name = name, Skill = System.Math.Min(100, skill), Trait1 = t1, Trait2 = t2, AboveMarket = above, ArrivedAt = sim.State.Clock.SimTime,
+                Place = place,
             });
             sim.Emit(new ApplicantArrived(sim.State.Clock.SimTime, id));
         }
@@ -302,23 +298,28 @@ namespace Sim.Core.People
             if (left && s.NextApplicantAt == 0) ScheduleApplicant(sim);
         }
 
-        /// <summary>Takes the applicant on: into the first empty hut, the rest of the season prepaid (spec 006 §3.6).</summary>
+        /// <summary>
+        /// Takes the applicant on, the rest of the season prepaid (spec 006 §3.6): a migrant into the first empty hut; one of your
+        /// townspeople stays in their own home (spec 015 §3.1), their exact farming skill kept.
+        /// </summary>
         internal static Hand Hire(Simulation sim, Applicant a, long wage, long prepay)
         {
             PeopleState s = sim.State.People;
             long t = sim.State.Clock.SimTime, S = sim.Clock.SecondsPerSeason;
             FarmSystem.Accrue(sim);
+            Citizen town = a.CitizenId == 0 ? null : sim.State.Citizens.Citizen(a.CitizenId);
             var h = new Hand
             {
-                Id = s.NextHandId++, Name = a.Name, Skill = Fixed.FromInt(a.Skill), Trait1 = a.Trait1, Trait2 = a.Trait2,
-                HutId = PeopleRules.EmptyHut(sim).Id, HiredAt = t, Wage = wage, Contract = ContractState.Active,
+                Id = s.NextHandId++, Name = a.Name, Skill = town?.Skill ?? Fixed.FromInt(a.Skill), Trait1 = a.Trait1, Trait2 = a.Trait2,
+                HutId = town == null ? PeopleRules.EmptyHut(sim).Id : 0, HiredAt = t, Wage = wage, Contract = ContractState.Active,
             };
             h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, prepay, t, (t / S + 1) * S, "hand:" + h.Id).Id;
             s.Hands.Add(h);
-            CitizenRules.HandHired(sim, h, a);
+            if (town == null) CitizenRules.HandHired(sim, h, a);
+            else CitizenRules.TownHandHired(sim, h, town);
             s.Applicants.Remove(a);
             if (a.FromRosterId != 0) ReplaceNeighbour(sim, a.FromRosterId);
-            s.Post = null; // a post lasts until a hand is hired
+            s.Posts.RemoveAll(x => x.Place == 0); // a post lasts until a hand is hired
             FarmSystem.Refresh(sim);
             sim.Emit(new HandHired(t, a.Id, h.Id, wage, prepay));
             s.NextApplicantAt = 0;
@@ -356,6 +357,7 @@ namespace Sim.Core.People
                 h.HousingInKind = housing; // spec 014 §3.6: the family house is part of his pay from this renewal
                 if (sim.State.Ledger.CanAfford(wage))
                 {
+                    if (!PeopleRules.HasTrait(sim, h, x => x.KeepsWage)) h.Fairness = 0; // the asked wage paid (spec 015 §3.3)
                     h.Wage = wage;
                     h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, wage, t, t + S, "hand:" + h.Id).Id;
                     sim.Emit(new ObligationPaid(t, "Wages", "hand:" + h.Id, wage));

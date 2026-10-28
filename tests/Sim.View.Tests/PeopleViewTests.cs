@@ -95,7 +95,7 @@ namespace Sim.View.Tests
             Assert.That(buttons.Select(b => b.Id), Is.EqualTo(new[] { "hire", "buildHut", "word" }));
             Assert.That(buttons.Select(b => b.Opens.Value.Kind), Is.EqualTo(new[] { "Hire", "HutPlacement", "Word" }));
             Assert.That(buttons.All(b => b.Icon != null && b.Detail != null), Is.True);
-            Assert.That(PeopleSheet.Word(ViewKit2.Context(sim)).Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
+            Assert.That(HiringBoard.Build(ViewKit2.Context(sim), 0).Lines.Any(l => l.Action?.Id == "postMarket:0"), Is.True, "the board: a hand's post");
 
             // Hut placement: the six inherited acres, the yard is not among them.
             List<HutPlaceVm> places = HutPlacement.Places(ViewKit2.Context(sim));

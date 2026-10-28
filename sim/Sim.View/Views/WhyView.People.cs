@@ -274,6 +274,44 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>A job's usual wage (spec 015 §3.1): the role's market wage at skill 50 and today's prices; the asked wage follows skill.</summary>
+        private static WhyVm JobUsual(ViewContext ctx, long place)
+        {
+            WhyVm vm = New(ctx, "why.jobUsual.title", Money(ctx, HiringRules.AskedWage(ctx.Sim, place, Fixed.FromInt(50), false)), "role", HiringBoard.Role(ctx, place));
+            Text(vm, ctx, place == 0 ? "why.jobUsual.hand" : "why.jobUsual.business");
+            Text(vm, ctx, HiringRules.Farms(ctx.Sim, place) ? "why.jobUsual.farming" : "why.jobUsual.crafting");
+            Text(vm, ctx, "why.jobUsual.skill");
+            return vm;
+        }
+
+        /// <summary>An offer's wage (spec 015 §3.3): the asked wage from the skill, and what each offer does.</summary>
+        private static WhyVm JobWage(ViewContext ctx, long id)
+        {
+            Applicant a = ctx.Sim.State.People.Applicant(id);
+            if (a == null) return New(ctx, "reject.UnknownApplicant", null);
+            long asked = HiringRules.OfferWage(ctx.Sim, a, OfferLevel.Asked);
+            WhyVm vm = New(ctx, "why.jobWage.title", Money(ctx, asked), "name", PeopleWords.Name(ctx, a.Name));
+            Row(vm, ctx, "why.jobWage.usual", Money(ctx, HiringRules.AskedWage(ctx.Sim, a.Place, Fixed.FromInt(50), false)));
+            PeopleRules.SkillRange(ctx.Sim, a, out int lo, out int hi);
+            Row(vm, ctx, "why.jobWage.theirSkill", PeopleWords.Range(ctx, lo, hi), "name", PeopleWords.Name(ctx, a.Name));
+            Text(vm, ctx, "why.jobWage.skill");
+            if (a.AboveMarket) Text(vm, ctx, "why.jobWage.above");
+            Text(vm, ctx, a.CitizenId != 0 ? "why.jobWage.town" : "why.jobWage.migrant");
+            Text(vm, ctx, "why.jobWage.low");
+            Text(vm, ctx, "why.jobWage.high");
+            vm.Footnote = ctx.Strings.Get("why.jobWage.lesson");
+            return vm;
+        }
+
+        private static WhyVm JobReference(ViewContext ctx, long id)
+        {
+            WhyVm vm = New(ctx, "why.jobReference.title", null);
+            Text(vm, ctx, "why.jobReference.what");
+            Text(vm, ctx, "why.jobReference.terms");
+            vm.Footnote = ctx.Strings.Get("why.jobReference.lesson");
+            return vm;
+        }
+
         private static WhyVm Post(ViewContext ctx, long id)
         {
             WhyVm vm = New(ctx, "why.post.title", null);

@@ -25,6 +25,7 @@ namespace Sim.Core.Tests
             Village(sim);
             CashTo(sim, 1_000_000_00);
             Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, type, tile, capital, false));
+            BusinessTests.Staff(sim, sim.State.Businesses.Businesses.Last());
             Business.Business b = sim.State.Businesses.Businesses.Last();
             sim.AdvanceTo(b.ReadyAt + 1);
             return b;
@@ -115,6 +116,7 @@ namespace Sim.Core.Tests
             Simulation s = CreditKit.NewSim(cash: 1_000_000, seed: 9); // a save holds only real commands (no test cash)
             Village(s);
             Ok(s, new FoundBusiness(s.State.Clock.SimTime, "bakery", HomeTile, 200_000_00, false));
+            BusinessTests.Staff(s, s.State.Businesses.Businesses.Last());
             Business.Business bk = s.State.Businesses.Businesses.Last();
             s.AdvanceTo(bk.ReadyAt + 1);
             Ok(s, new SetMix(s.State.Clock.SimTime, bk.Id, "rusk", 12_000));

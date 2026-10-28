@@ -26,12 +26,25 @@ namespace Sim.Core.Tests
         internal static long NextClose(Simulation sim) { return (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason; }
 
         /// <summary>A rich Hamlet town with a flour mill founded on <see cref="PeopleKit.HomeTile"/> (capital 1,50,000), not yet built.</summary>
-        internal static Business.Business Mill(Simulation sim, bool runYourself = false, long capital = 150_000_00)
+        internal static Business.Business Mill(Simulation sim, bool runYourself = false, long capital = 150_000_00, bool hire = true)
         {
             Hamlet(sim);
             CashTo(sim, 500_000_00);
             Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile, capital, runYourself));
-            return sim.State.Businesses.Businesses.Last();
+            Business.Business b = sim.State.Businesses.Businesses.Last();
+            if (!runYourself && hire) Staff(sim, b);
+            return b;
+        }
+
+        /// <summary>
+        /// A worker hired at once, as the board would (spec 015 §3.1): a commuter at skill 50 and the role's market wage, the rest of the
+        /// season paid from the business's cash. Spec 016's tests predate the board; spec 015's own are in <see cref="HiringTests"/>.
+        /// </summary>
+        internal static void Staff(Simulation sim, Business.Business b)
+        {
+            int steady = sim.Config.Game.People.IndexOfTrait("steady");
+            var a = new Applicant { Id = sim.State.People.NextApplicantId++, Skill = 50, Trait1 = steady, Trait2 = steady, Place = b.Id };
+            HiringRules.HireWorker(sim, a, HiringRules.OfferWage(sim, a, OfferLevel.Asked), 0);
         }
 
         internal static void GiveWheat(Simulation sim, long grams)
@@ -72,8 +85,9 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.NoRoom), "one business an acre");
             Assert.That(b.Status, Is.EqualTo(BusinessStatus.Building));
             sim.AdvanceTo(b.ReadyAt);
-            Assert.That(b.Status, Is.EqualTo(BusinessStatus.Open));
-            Assert.That(b.Worker, Is.EqualTo(WorkerKind.Neighbour), "nobody in town: a daily worker from a neighbouring village");
+            Assert.That((b.Status, b.Worker), Is.EqualTo((BusinessStatus.Open, WorkerKind.None)), "open, waiting for a hire from the board (spec 015)");
+            Staff(sim, b);
+            Assert.That(b.Worker, Is.EqualTo(WorkerKind.Neighbour), "a worker from a neighbouring village");
             Assert.That(b.Ledger.Balance(Account.HiredLabour), Is.EqualTo(PeopleRules.RestOfSeason(sim, MarketRules.Indexed(sim, 27_000_00))).Within(100), "the rest of the season's wage, upfront");
         }
 
@@ -251,6 +265,8 @@ namespace Sim.Core.Tests
             CashTo(sim, 500_000_00);
             Ok(sim, new PutCash(sim.State.Clock.SimTime, b.Id, 100_000_00));
             Assert.That(BusinessBooks.Overdrawn(b), Is.EqualTo(0), "cash put in pays the overdraft off first");
+            Assert.That(b.Worker, Is.EqualTo(WorkerKind.None), "nobody comes by themselves (spec 015): hire from the board");
+            Staff(sim, b);
             Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.None), "a worker again, paid upfront");
             Assert.That(BusinessBooks.Short(sim, b), Is.False);
             Assert.That(b.Ledger.Reconcile(), Is.Null);
@@ -268,6 +284,7 @@ namespace Sim.Core.Tests
             var mill = sim.Config.Game.Businesses.Types[0];
             long max = BusinessBooks.MaxLoan(sim, mill), need = BusinessRules.Projected(sim, mill, false, mill.OwnPerDay, mill.Fee).CashNeeded;
             Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Staff(sim, sim.State.Businesses.Businesses.Last());
             Business.Business b = sim.State.Businesses.Businesses.Last();
             sim.AdvanceTo(b.ReadyAt + 86_400);
             Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, b.Ledger.Cash));
@@ -301,6 +318,7 @@ namespace Sim.Core.Tests
             Hamlet(fore);
             CashTo(fore, 500_000_00);
             Ok(fore, new FoundBusiness(fore.State.Clock.SimTime, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Staff(fore, fore.State.Businesses.Businesses.Last());
             Business.Business f = fore.State.Businesses.Businesses.Last();
             BusinessBooks.LoanOf(fore, f).State = LoanState.Defaulted;
             CreditSystem.Foreclose(fore);
@@ -332,6 +350,7 @@ namespace Sim.Core.Tests
             Simulation s = CreditKit.NewSim(cash: 500_000);
             Hamlet(s);
             Ok(s, new FoundBusiness(s.State.Clock.SimTime, "flour_mill", HomeTile, 150_000_00, false));
+            Staff(s, s.State.Businesses.Businesses.Last());
             s.AdvanceTo(s.State.Clock.SimTime + 3 * 86_400);
             LoadResult r = SaveTests.RoundTrip(s);
             Assert.That(r.Error, Is.EqualTo(SaveError.None));
@@ -429,6 +448,7 @@ namespace Sim.Core.Tests
 
             // With your mill open, its atta comes at the trader's price, and the plan counts it so.
             Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile + 1, 150_000_00, false));
+            BusinessTests.Staff(sim, sim.State.Businesses.Businesses.Last());
             Assert.That(BusinessRules.InputPrice(sim, atta), Is.EqualTo(MarketRules.Floor(sim, atta)), "your mill's atta at the trader's price");
         }
 

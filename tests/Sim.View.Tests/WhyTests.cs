@@ -25,7 +25,8 @@ namespace Sim.View.Tests
             yield return Named("store", StoreSheet.Build(ctx));
             yield return Named("people", PeopleSheet.Build(ctx));
             yield return Named("hire", PeopleSheet.Hire(ctx));
-            yield return Named("word", PeopleSheet.Word(ctx));
+            foreach (long place in HiringBoard.Places(sim)) yield return Named("board " + place, HiringBoard.Build(ctx, place));
+            foreach (var a in sim.State.People.Applicants) yield return Named("offer " + a.Id, HiringBoard.Offer(ctx, a.Id));
             foreach (var h in sim.State.People.Hands) yield return Named("hand " + h.Id, HandSheet.Build(ctx, h.Id));
             if (sim.State.Citizens != null)
             {

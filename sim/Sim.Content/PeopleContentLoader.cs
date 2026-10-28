@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "people";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "labourPool", "hand", "jobPost", "huts", "traits", "names");
+            OnlyFields(o, root, "labourPool", "hand", "jobPost", "hiring", "huts", "traits", "names");
             if (hut.HousesHands < 1) throw new ContentException("buildings.hand_hut.housesHands", "a hand's hut must house at least one hand");
 
             string lp = root + ".labourPool";
@@ -76,6 +76,23 @@ namespace Sim.Content
             };
             if (post.Cost <= 0) throw new ContentException(Join(jp, "cost"), "must be more than 0");
 
+            string gp = root + ".hiring";
+            JObject hj = Object(Required(o, root, "hiring"), gp);
+            OnlyFields(hj, gp, "referenceCost", "referenceHours", "referenceHalfWidth", "lowFactor", "highFactor", "lowAccept", "highAccept", "townLowAccept", "reputationStart");
+            var hiring = new HiringDef
+            {
+                ReferenceCost = Money(Required(hj, gp, "referenceCost"), Join(gp, "referenceCost")),
+                ReferenceHours = BoundedInt(hj, gp, "referenceHours", 1, 72),
+                ReferenceHalfWidth = BoundedInt(hj, gp, "referenceHalfWidth", 0, 50),
+                LowFactor = Bounded(hj, gp, "lowFactor", "0.5", "1"),
+                HighFactor = Bounded(hj, gp, "highFactor", "1", "2"),
+                LowAccept = Bounded(hj, gp, "lowAccept", "0", "1"),
+                HighAccept = Bounded(hj, gp, "highAccept", "0", "1"),
+                TownLowAccept = Bounded(hj, gp, "townLowAccept", "0", "1"),
+                ReputationStart = BoundedInt(hj, gp, "reputationStart", 0, 100),
+            };
+            if (hiring.ReferenceCost < 0) throw new ContentException(Join(gp, "referenceCost"), "must not be negative");
+
             string up = root + ".huts";
             JObject u = Object(Required(o, root, "huts"), up);
             OnlyFields(u, up, "placesPerAcre");
@@ -109,7 +126,7 @@ namespace Sim.Content
                 names.Add(new NameDef(id, "name." + id, g == "f"));
             }
             if (names.Count < roster) throw new ContentException(root + ".names", "needs at least rosterSize names");
-            return new PeopleDefs(pool, hand, post, traits, names, places, handHut);
+            return new PeopleDefs(pool, hand, post, hiring, traits, names, places, handHut);
         }
 
         private static Fixed OptionalFactor(JObject o, string path, string name)

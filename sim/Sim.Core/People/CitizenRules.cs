@@ -8,7 +8,7 @@ namespace Sim.Core.People
     public static class CitizenRules
     {
         // Keys of the Citizens stream: one per kind of draw, the counter is the citizen, applicant or hand id.
-        private const ulong ApplicantAgeKey = 1, EducationKey = 2, VillageKey = 3, MigratedAgeKey = 4;
+        private const ulong ApplicantAgeKey = 1, EducationKey = 2, VillageKey = 3, MigratedAgeKey = 4, CraftingKey = 5;
 
         /// <summary>The season index of a time (t ÷ S).</summary>
         public static long SeasonOf(Simulation sim, long t) { return t / sim.Clock.SecondsPerSeason; }
@@ -49,12 +49,22 @@ namespace Sim.Core.People
             {
                 Id = id, Name = name, Female = sim.Config.Game.People.Names[name].Female, BornSeason = BornFor(sim, age),
                 Education = Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Citizens, EducationKey, (ulong)id), p.PrimaryEducationShare) ? 1 : 0,
-                Skill = skill, Trait1 = trait1, Trait2 = trait2, Health = Fixed.One,
+                Skill = skill, Crafting = DrawCrafting(sim, id), Trait1 = trait1, Trait2 = trait2, Health = Fixed.One,
                 Village = Draw(sim, VillageKey, (ulong)id, 0, p.Villages.Count - 1),
             };
             c.Story.Add(new StoryLine(StoryKind.Arrived, sim.State.Clock.SimTime, 0));
             s.Citizens.Add(c);
             return c;
+        }
+
+        /// <summary>
+        /// A citizen's crafting skill (spec 015 §3.4): drawn as farming is, skillMin–skillMax, from their id (stream Citizens), for every
+        /// citizen, children too (it counts once they're grown), and for those already living at the schema-11 migration.
+        /// </summary>
+        internal static Fixed DrawCrafting(Simulation sim, long id)
+        {
+            HandDef h = sim.Config.Game.People.Hand;
+            return Fixed.FromInt(h.SkillMin + (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.Citizens, CraftingKey, (ulong)id), (ulong)(h.SkillMax - h.SkillMin + 1)));
         }
 
         /// <summary>A household of one in a hand's hut (§3.4): his family stays in his home village for now.</summary>
@@ -77,6 +87,13 @@ namespace Sim.Core.People
             HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId)); // his first season's budget (§3.5)
         }
 
+        /// <summary>One of your townspeople becomes your hand (spec 015 §3.1): they stay in their home, their household's budget gets the wage.</summary>
+        internal static void TownHandHired(Simulation sim, Hand h, Citizen c)
+        {
+            Hire(sim, c, h);
+            HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
+        }
+
         private static void Hire(Simulation sim, Citizen c, Hand h)
         {
             c.Job = CitizenJob.Hand;
@@ -96,6 +113,7 @@ namespace Sim.Core.People
             if (c == null) return;
             c.Job = CitizenJob.None;
             c.HandId = 0;
+            c.Skill = h.Skill; // the skill he grew stays his
             Household x = s.Household(c.HouseholdId);
             if (x == null) return;
             if (x.HomeId == h.HutId) Leave(sim, x);

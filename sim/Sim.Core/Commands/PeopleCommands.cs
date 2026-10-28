@@ -91,18 +91,38 @@ namespace Sim.Core.Commands
         }
     }
 
-    /// <summary>Sends word for a hand (spec 006 §3.5): applicants come twice as often; above market, better and surer ones.</summary>
+    /// <summary>
+    /// Posts a job on the hiring board (spec 006 §3.5, spec 015 §3.1): for a hand (place 0) or a business's worker (its id). Your
+    /// townspeople without a town job apply at once; migrants come at the post's pace, above the market better and surer ones.
+    /// </summary>
     public sealed class PostJob : TimedCommand
     {
+        public long Place { get; }
         public bool AboveMarket { get; }
 
-        public PostJob(long at, bool aboveMarket) : base(at) { AboveMarket = aboveMarket; }
+        public PostJob(long at, bool aboveMarket) : this(at, 0, aboveMarket) { }
+
+        public PostJob(long at, long place, bool aboveMarket) : base(at)
+        {
+            Place = place;
+            AboveMarket = aboveMarket;
+        }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
             PeopleState s = sim.State.People;
-            if (s == null || (PeopleRules.EmptyHut(sim) == null && s.Constructions.Count == 0)) return CommandResult.Reject(RejectReason.NoHut);
-            if (s.Post != null) return CommandResult.Reject(RejectReason.AlreadyPosted);
+            if (s == null) return CommandResult.Reject(RejectReason.NoHut);
+            if (Place == 0)
+            {
+                if (PeopleRules.EmptyHut(sim) == null && s.Constructions.Count == 0 && HiringRules.TownCandidates(sim, 0).Count == 0)
+                    return CommandResult.Reject(RejectReason.NoHut);
+            }
+            else
+            {
+                RejectReason r = HiringRules.BusinessPlace(sim, Place);
+                if (r != RejectReason.None) return CommandResult.Reject(r);
+            }
+            if (s.PostAt(Place) != null) return CommandResult.Reject(RejectReason.AlreadyPosted);
             JobPostDef def = sim.Config.Game.People.JobPost;
             long cost = MarketRules.Indexed(sim, def.Cost);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
@@ -110,9 +130,35 @@ namespace Sim.Core.Commands
             long t = sim.State.Clock.SimTime;
             sim.State.Ledger.Post(t, sim.Period, "ledger.jobPost", "people",
                 new Posting(Account.TransportAndSelling, cost), new Posting(Account.Cash, -cost));
-            s.Post = new JobPost { AboveMarket = AboveMarket, PostedAt = t, ExpiresAt = t + def.Days * ClockDef.SecondsPerDay };
-            PeopleSystem.ScheduleApplicant(sim);
-            sim.Emit(new JobPosted(t, AboveMarket, cost, s.Post.ExpiresAt));
+            var post = new JobPost { Place = Place, AboveMarket = AboveMarket, PostedAt = t, ExpiresAt = t + def.Days * ClockDef.SecondsPerDay };
+            HiringRules.AddPost(s, post);
+            sim.Emit(new JobPosted(t, AboveMarket, cost, post.ExpiresAt, Place));
+            HiringRules.TownApply(sim, Place);
+            if (Place == 0) PeopleSystem.ScheduleApplicant(sim);
+            else HiringRules.BusinessArrivals(sim);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Asks a migrant applicant's last employer (spec 015 §3.2): 300 coins, back in 12 hours, the skill to ±5 and how they left.</summary>
+    public sealed class CheckReference : TimedCommand
+    {
+        public long ApplicantId { get; }
+
+        public CheckReference(long at, long applicantId) : base(at) { ApplicantId = applicantId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Applicant a = sim.State.People?.Applicant(ApplicantId);
+            if (a == null) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            if (a.SkillKnown || a.ReferenceAt != 0) return CommandResult.Reject(RejectReason.AlreadyChecked);
+            HiringDef h = sim.Config.Game.People.Hiring;
+            long cost = MarketRules.Indexed(sim, h.ReferenceCost);
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            long t = sim.State.Clock.SimTime;
+            if (cost > 0)
+                sim.State.Ledger.Post(t, sim.Period, "ledger.reference", "people", new Posting(Account.TransportAndSelling, cost), new Posting(Account.Cash, -cost));
+            a.ReferenceAt = t + h.ReferenceHours * 3600L;
             return CommandResult.Ok;
         }
     }
@@ -136,36 +182,40 @@ namespace Sim.Core.Commands
     }
 
     /// <summary>
-    /// Offers the season contract at the asked wage (spec 006 §3.5, §3.6). Accepted (seeded) → the hand moves in and the rest of
-    /// the season is prepaid; declined → the applicant leaves. Cash is checked first: a short offer is rejected and they wait.
+    /// Offers the season contract (spec 006 §3.5, spec 015 §3.3): at the asked wage, 10% less or 10% more. Taken (seeded) → hired,
+    /// the rest of the season prepaid (a hand's from your cash, a worker's from the business's); a low offer refused the first time
+    /// becomes a counter at the asked wage; any other refusal and they leave. Cash is checked first: a short offer is rejected and they wait.
     /// </summary>
     public sealed class OfferContract : TimedCommand
     {
         public long ApplicantId { get; }
+        public OfferLevel Level { get; }
 
-        public OfferContract(long at, long applicantId) : base(at) { ApplicantId = applicantId; }
+        public OfferContract(long at, long applicantId, OfferLevel level = OfferLevel.Asked) : base(at)
+        {
+            ApplicantId = applicantId;
+            Level = level;
+        }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
-            PeopleState s = sim.State.People;
-            Applicant a = s?.Applicant(ApplicantId);
+            Applicant a = sim.State.People?.Applicant(ApplicantId);
             if (a == null) return CommandResult.Reject(RejectReason.UnknownApplicant);
-            if (PeopleRules.EmptyHut(sim) == null) return CommandResult.Reject(RejectReason.NoEmptyHut);
-            long wage = PeopleRules.AskedWage(sim, Fixed.FromInt(a.Skill), a.AboveMarket);
+            long wage = HiringRules.OfferWage(sim, a, Level);
             long prepay = PeopleRules.RestOfSeason(sim, wage);
-            if (!sim.State.Ledger.CanAfford(prepay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
-
-            JobPostDef post = sim.Config.Game.People.JobPost;
-            Fixed chance = a.AboveMarket ? post.AboveMarketAccept : sim.Config.Game.People.Hand.AcceptChance;
-            // A regular asked to come, so they always accept (ADR 0041).
-            if (a.FromRosterId == 0 && !Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Applicants, (ulong)a.Id, 5), chance))
+            if (a.Place == 0)
             {
-                s.Applicants.Remove(a);
-                sim.Emit(new OfferDeclined(sim.State.Clock.SimTime, a.Id));
-                PeopleSystem.ScheduleApplicant(sim);
-                return CommandResult.Ok;
+                if (a.CitizenId == 0 && PeopleRules.EmptyHut(sim) == null) return CommandResult.Reject(RejectReason.NoEmptyHut);
+                if (!sim.State.Ledger.CanAfford(prepay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
             }
-            PeopleSystem.Hire(sim, a, wage, prepay);
+            else
+            {
+                RejectReason r = HiringRules.BusinessPlace(sim, a.Place);
+                if (r != RejectReason.None) return CommandResult.Reject(r);
+                if (Business.BusinessBooks.CanSpend(sim, sim.State.Businesses.Find(a.Place)) < prepay) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            }
+            if (a.CitizenId != 0 && !HouseholdRules.WorksOutside(sim, sim.State.Citizens.Citizen(a.CitizenId))) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            HiringRules.Offer(sim, a, Level, wage);
             return CommandResult.Ok;
         }
     }

@@ -41,7 +41,7 @@ namespace Sim.Content
             {
                 string p = Index(root + ".types", i);
                 JObject t = Object(tokens[i], p);
-                OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "wage", "kgPerHour", "powerPerKg", "repairsShare",
+                OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "workerSkill", "wage", "kgPerHour", "powerPerKg", "repairsShare",
                     "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
@@ -55,6 +55,9 @@ namespace Sim.Content
                 x.EquipmentLifeSeasons = BoundedInt(q, p + ".equipment", "lifeSeasons", 1, 400);
                 x.BuildHours = BoundedInt(t, p, "buildHours", 1, 240);
                 x.Worker = String(Required(t, p, "worker"), p + ".worker");
+                string skill = t["workerSkill"] == null ? "crafting" : String(t["workerSkill"], p + ".workerSkill");
+                if (skill != "crafting" && skill != "farming") throw new ContentException(p + ".workerSkill", "expected crafting or farming");
+                x.WorkerFarms = skill == "farming";
                 x.Wage = Money(Required(t, p, "wage"), p + ".wage");
                 x.GramsPerHour = (Bounded(t, p, "kgPerHour", "1", "10000") * Fixed.FromInt(1000)).RoundToLong();
                 x.PowerPerKg = Bounded(t, p, "powerPerKg", "0", "100");

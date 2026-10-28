@@ -20,20 +20,15 @@ namespace Sim.View.Views
 
         public static string Hours(ViewContext ctx, int open, int close) { return ctx.Strings.Get("business.hoursValue", "open", open + ":00", "close", close + ":00"); }
 
-        /// <summary>"Manoj (miller)", "A worker from a neighbouring village", "You".</summary>
+        /// <summary>"Manoj (miller)", "You", "Nobody yet".</summary>
         public static string Worker(ViewContext ctx, Business b)
         {
             var s = ctx.Strings;
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
-            switch (b.Worker)
-            {
-                case WorkerKind.Founder: return s.Get("business.workerYou");
-                case WorkerKind.Neighbour: return s.Get("business.workerNeighbour");
-                case WorkerKind.Citizen:
-                    Citizen c = ctx.Sim.State.Citizens.Citizen(b.WorkerCitizen);
-                    return c == null ? s.Get("business.workerNone") : s.Get("business.workerCitizen", "name", TownWords.Name(ctx, c), "role", s.Get("business.role." + t.Worker));
-                default: return s.Get(b.Status == BusinessStatus.Open ? "business.workerLeft" : "business.workerNone"); // open with nobody: the wage went unpaid
-            }
+            if (b.Worker == WorkerKind.Founder) return s.Get("business.workerYou");
+            Worker w = ctx.Sim.State.People?.WorkerAt(b.Id);
+            if (w != null) return s.Get("business.workerCitizen", "name", PeopleWords.Name(ctx, w.Name), "role", s.Get("business.role." + t.Worker));
+            return s.Get("business.workerNone");
         }
 
         /// <summary>A type's own wording where it has one ("business.cash.bakery"), else the shared one.</summary>
@@ -391,11 +386,17 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
-            vm.Lines.Add(new LineVm(s.Get("business.worker"), BusinessWords.Worker(ctx, b), "businessWorker", b.Id) { Icon = b.Worker == WorkerKind.Founder ? "person_founder" : "person_hand_m" });
-            var cash = new LineVm(s.Get(BusinessWords.Key(ctx, "business.cash", t)), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Icon = "coin" };
-            if (BusinessBooks.Short(sim, b))
+            vm.Lines.Add(WorkerLine(ctx, b));
+            if (b.Worker == WorkerKind.None)
             {
-                cash.Note = s.Get(b.Worker == WorkerKind.None ? "business.shortWorker" : BusinessWords.Key(ctx, "business.shortCash", t));
+                long id = b.Id;
+                vm.Lines.Add(new LineVm(s.Get("business.runYourself"), s.Get("business.runYourselfWhy"), "businessWorker", b.Id)
+                    { Icon = "person_founder", Action = ActionVm.Checked(ctx, "runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, at => new RunBusinessYourself(at, id)) });
+            }
+            var cash = new LineVm(s.Get(BusinessWords.Key(ctx, "business.cash", t)), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Icon = "coin" };
+            if (BusinessBooks.Short(sim, b) && b.Worker != WorkerKind.None) // with nobody working, the worker's row says so
+            {
+                cash.Note = s.Get(BusinessWords.Key(ctx, "business.shortCash", t));
                 cash.NoteTone = Tone.Warn;
             }
             vm.Lines.Add(cash);
@@ -411,6 +412,32 @@ namespace Sim.View.Views
             if (loan.HasArrears && !loan.Restructured)
                 row.Action = ActionVm.Checked(ctx, "restructure", s.Get("business.restructure"), null, ActionKind.Secondary, at => new RestructureLoan(at, loanId));
             vm.Lines.Add(row);
+        }
+
+        /// <summary>Who works here (spec 015 §7): a hire's name and skill with Let go; you, or nobody, with Hire on the board.</summary>
+        private static LineVm WorkerLine(ViewContext ctx, Business b)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            long id = b.Id;
+            Worker w = sim.State.People?.WorkerAt(b.Id);
+            var line = new LineVm(s.Get("business.worker"), BusinessWords.Worker(ctx, b), "businessWorker", b.Id)
+                { Icon = b.Worker == WorkerKind.Founder ? "person_founder" : w != null && PeopleWords.Female(ctx, w.Name) ? "person_hand_f" : "person_hand_m" };
+            if (w == null)
+            {
+                if (b.Worker == WorkerKind.None) { line.Note = s.Get("business.needsWorker"); line.NoteTone = Tone.Warn; }
+                line.Action = ActionVm.Open("hireWorker", s.Get("business.workerHire"), new SheetRequest("Word", b.Id));
+                return line;
+            }
+            int skill = (int)w.Skill.RoundToLong();
+            line.Stars = PeopleWords.Stars(ctx, skill, skill);
+            line.Note = PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Trait(ctx, w.Trait1) + " · " + PeopleWords.Trait(ctx, w.Trait2);
+            long severance = w.SeasonsWorked > 0 ? Sim.Core.Finance.Money.MulRate(w.Wage, sim.Config.Game.People.Hand.SeveranceShare) : 0;
+            line.Action = ActionVm.Checked(ctx, "letGo", s.Get("action.letGo"),
+                severance > 0 ? s.Get("business.letGoSeverance", "amount", ctx.Fmt.Coins(severance)) : s.Get("business.letGoDetail"), ActionKind.Danger, at => new LetWorkerGo(at, id));
+            line.Action.Confirm = new ConfirmVm(s.Get("business.letGoQ", "name", PeopleWords.Name(ctx, w.Name)), s.Get("action.letGo"), s.Get("hand.keep"),
+                at => new Command[] { new LetWorkerGo(at, id) }, noSends: false) { YesIsDanger = true };
+            return line;
         }
 
         // The choices each setting cycles through (spec 016 §3.4, §3.5): the village's usual day, a morning, a long day; fees round the

@@ -229,6 +229,17 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 - **G8. Employer reputation.** **Closed (owner, 2026-10-25):** 0–100 (start 50) shown with its *Why?*; up with the asked wage or more at renewal (+1 a worker), paid sick leave (+2), an advance (+3), severance paid (+1); down with a low hire (−2), a refused raise (−2), letting go in probation (−1), a lapse (−3); at 80+ acceptance +10% and better above-market applicants, at 20− acceptance −10% and applicants slower (§3.8).
 - **G9. What stays out.** **Closed (owner, 2026-10-25):** supervisors and span of control, benefits and minimum wage policy (with the treasury), managers, night shifts in Phase 3; education bonds with the school (spec 018); a family house as part of a hand's pay already exists (§2).
 
+### US-112 build notes (2026-10-28, for the owner's review)
+
+Choices made while building where the spec was silent, each to keep it realistic and clear on screen:
+- **When townspeople apply:** the moment you send word (they live here), the most skilled in the job's skill first, listed above migrants. Townspeople and people from outside each have up to `maxApplicants` (3) waiting, so neither crowds the other out. Townspeople answering an above-usual post are offered its wage.
+- **Pace:** a business's post brings a migrant every 12 ± 6 h at the usual wage, twice as fast above it (AC-1); a farm hand's post keeps spec 006's pace (walk-ins every 12 ± 6 h, a post twice as often).
+- **Roles' data:** the farm hand's wage stays in `people.json` (`hand.marketWage`) and each business role's wage and skill in `businesses.json` (`worker`, `workerSkill`, `wage`), so no wage is written twice; `people.json` gains `hiring` (the reference, offer factors and chances, reputation's start).
+- **A migrant farm hand** still needs an empty hut; your townspeople need none (their family house counts).
+- **Letting a business's worker go** (§3.9 named it, no command did): `LetWorkerGo` from the business's card, with a confirm; the season's wage was paid upfront from the business and isn't refunded; severance 10% after the first season. With nobody working, **Run it** (`RunBusinessYourself`) or hire again.
+- **Renewal:** a worker is renewed at each close at the asked wage for their skill (a loyal one keeps theirs, an ambitious one asks 10% more), which clears a low hire's memory, as spec 006 renews hands. So after a close only a loyal worker (who keeps their wage) is ever paid below what they'd ask, and §3.7's raise request has almost nobody to come from. To settle with the owner before US-114.
+- **Not yet in play:** reputation is stored (50) but moves with US-114; motivation and output with US-113.
+
 ## 11. Cut first
 
 1. Reference checks (interview only).

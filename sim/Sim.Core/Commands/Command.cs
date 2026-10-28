@@ -130,6 +130,14 @@ namespace Sim.Core.Commands
         UnknownBusiness,
         CapitalTooLow,
         BusinessClosed,
+
+        // Spec 015
+        /// <summary>The business already has someone hired: let them go first.</summary>
+        AlreadyStaffed,
+        /// <summary>The reference is asked, or the person is known (a townsperson, a regular).</summary>
+        AlreadyChecked,
+        /// <summary>Nobody works there to let go.</summary>
+        NoWorker,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

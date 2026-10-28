@@ -28,7 +28,6 @@ namespace Sim.Core.Business
             string reference = "business:" + id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, amount), new Posting(Account.Cash, -amount));
             b.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.Cash, amount), new Posting(Account.OwnersCapital, -amount));
-            BusinessRules.Restaff(sim, b); // a worker who left unpaid is replaced once the wage can be paid (§3.10)
             Sweep(sim, b);
             return CommandResult.Ok;
         }

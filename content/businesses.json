@@ -19,7 +19,7 @@
       "id": "flour_mill", "nameKey": "business.flour_mill", "era": "hamlet",
       "building": { "value": 40000, "lifeSeasons": 80 },
       "equipment": { "value": 60000, "lifeSeasons": 40 },
-      "buildHours": 24, "worker": "miller", "wage": 27000,
+      "buildHours": 24, "worker": "miller", "workerSkill": "crafting", "wage": 27000,
       "kgPerHour": 380, "powerPerKg": 1.20, "repairsShare": 0.02,
       "openHour": 8, "closeHour": 18, "fee": 4, "ownPerDay": 200,
       "input": "wheat", "outputs": { "atta": 0.97, "bran": 0.03 }
@@ -28,7 +28,7 @@
       "id": "bakery", "nameKey": "business.bakery", "era": "village",
       "building": { "value": 60000, "lifeSeasons": 80 },
       "equipment": { "value": 50000, "lifeSeasons": 40 },
-      "buildHours": 36, "worker": "baker", "wage": 30000,
+      "buildHours": 36, "worker": "baker", "workerSkill": "crafting", "wage": 30000,
       "kgPerHour": 95, "powerPerKg": 0, "repairsShare": 0.02,
       "openHour": 8, "closeHour": 18,
       "recipes": [
@@ -41,7 +41,7 @@
       "id": "dairy", "nameKey": "business.dairy", "era": "village",
       "building": { "value": 40000, "lifeSeasons": 80 },
       "equipment": { "value": 45000, "lifeSeasons": 40 },
-      "buildHours": 24, "worker": "dairyman", "wage": 27000,
+      "buildHours": 24, "worker": "dairyman", "workerSkill": "farming", "wage": 27000,
       "kgPerHour": 190, "powerPerKg": 0, "repairsShare": 0.02,
       "openHour": 8, "closeHour": 18, "takesMilk": true, "neighbourMilkPremium": 2,
       "recipes": [

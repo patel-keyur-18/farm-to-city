@@ -69,6 +69,8 @@ namespace Sim.View.Views
             { "hire", Hire }, { "hand.skill", HandSkill }, { "hand.hours", HandHours }, { "hand.wage", HandWage },
             { "hand.lapse", HandLapse }, { "hand.prepaid", HandPrepaid }, { "hut", Hut }, { "applicant", Applicant },
             { "orderMin", OrderMin }, { "order", Order }, { "post", Post }, { "free", FreeLabourers },
+            // The hiring board (spec 015).
+            { "jobUsual", JobUsual }, { "jobWage", JobWage }, { "jobReference", JobReference },
             // The away card (spec 008 §3.9).
             { "away", Away },
             // The Hamlet (spec 009 §3.6).

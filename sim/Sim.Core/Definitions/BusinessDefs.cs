@@ -53,6 +53,9 @@ namespace Sim.Core.Definitions
         /// <summary>The worker's role ("miller"): strings <c>business.role.&lt;id&gt;</c>.</summary>
         public string Worker { get; internal set; }
 
+        /// <summary>The skill the role reads (spec 015 §3.4): crafting (miller, baker) or farming (dairyman).</summary>
+        public bool WorkerFarms { get; internal set; }
+
         /// <summary>A season's wage at year-0 prices (spec 016 §3.6).</summary>
         public long Wage { get; internal set; }
 

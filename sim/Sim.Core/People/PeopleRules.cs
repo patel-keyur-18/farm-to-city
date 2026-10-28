@@ -57,16 +57,22 @@ namespace Sim.Core.People
         /// </summary>
         public static long AskedWage(Simulation sim, Fixed skill, bool aboveMarket)
         {
+            return AskedWage(sim, sim.Config.Game.People.Hand.MarketWage, skill, aboveMarket);
+        }
+
+        /// <summary>The same for a role whose market wage (year-0, skill 50) is <paramref name="marketWage"/> (spec 015 §3.3).</summary>
+        public static long AskedWage(Simulation sim, long marketWage, Fixed skill, bool aboveMarket)
+        {
             HandDef h = sim.Config.Game.People.Hand;
             Fixed factor = h.WageBase + h.WagePerSkill * skill.MulRatio(1, 100);
             if (aboveMarket) factor = factor * sim.Config.Game.People.JobPost.AboveMarketFactor;
-            return Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(h.MarketWage, factor)));
+            return Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(marketWage, factor)));
         }
 
         /// <summary>The shown skill range: skill ± skillRangeHalfWidth, clamped to 0–100 (a regular's is exact).</summary>
         public static void SkillRange(Simulation sim, Applicant a, out int low, out int high)
         {
-            int w = a.SkillKnown ? 0 : sim.Config.Game.People.Hand.SkillRangeHalfWidth;
+            int w = HiringRules.RangeHalfWidth(sim, a);
             low = System.Math.Max(0, a.Skill - w);
             high = System.Math.Min(100, a.Skill + w);
         }

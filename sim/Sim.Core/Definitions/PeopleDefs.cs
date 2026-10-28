@@ -64,6 +64,20 @@ namespace Sim.Core.Definitions
         public Fixed AboveMarketAccept { get; internal set; }
     }
 
+    /// <summary>The hiring board (spec 015 §3.2, §3.3, §3.8): the reference check, the offer and its chances, the starting reputation.</summary>
+    public sealed class HiringDef
+    {
+        public long ReferenceCost { get; internal set; }
+        public int ReferenceHours { get; internal set; }
+        public int ReferenceHalfWidth { get; internal set; }
+        public Fixed LowFactor { get; internal set; }
+        public Fixed HighFactor { get; internal set; }
+        public Fixed LowAccept { get; internal set; }
+        public Fixed HighAccept { get; internal set; }
+        public Fixed TownLowAccept { get; internal set; }
+        public int ReputationStart { get; internal set; }
+    }
+
     /// <summary>A trait (spec 006 §3.7). Factors are 1 when the trait has no such effect.</summary>
     public sealed class TraitDef
     {
@@ -113,6 +127,7 @@ namespace Sim.Core.Definitions
         public LabourPoolDef Pool { get; }
         public HandDef Hand { get; }
         public JobPostDef JobPost { get; }
+        public HiringDef Hiring { get; }
         public IReadOnlyList<TraitDef> Traits { get; }
         public IReadOnlyList<NameDef> Names { get; }
 
@@ -122,12 +137,13 @@ namespace Sim.Core.Definitions
         /// <summary>Index of the hand's hut in <see cref="GameDefs.Buildings"/>.</summary>
         public int HandHut { get; }
 
-        public PeopleDefs(LabourPoolDef pool, HandDef hand, JobPostDef jobPost, IReadOnlyList<TraitDef> traits, IReadOnlyList<NameDef> names,
+        public PeopleDefs(LabourPoolDef pool, HandDef hand, JobPostDef jobPost, HiringDef hiring, IReadOnlyList<TraitDef> traits, IReadOnlyList<NameDef> names,
             int hutPlacesPerAcre, int handHut)
         {
             Pool = pool;
             Hand = hand;
             JobPost = jobPost;
+            Hiring = hiring;
             Traits = new List<TraitDef>(traits).AsReadOnly();
             Names = new List<NameDef>(names).AsReadOnly();
             HutPlacesPerAcre = hutPlacesPerAcre;

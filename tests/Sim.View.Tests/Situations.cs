@@ -127,7 +127,44 @@ namespace Sim.View.Tests
             Simulation sim = Town();
             int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
             Ok(sim, new FoundBusiness(T(sim), "flour_mill", tile, 150_000_00, false));
+            Hire(sim);
             sim.AdvanceTo((T(sim) / 86_400 + 2) * 86_400 + 12 * 3600);
+            return sim;
+        }
+
+        /// <summary>
+        /// The newest business's worker from the board (spec 015): word sent, the most skilled townsperson hired at what they ask; with
+        /// nobody in town, a commuter at skill 50 (as spec 016's stopgap took them).
+        /// </summary>
+        private static void Hire(Simulation sim)
+        {
+            var b = sim.State.Businesses.Businesses.Last();
+            Ok(sim, new PostJob(T(sim), b.Id, false));
+            Applicant a = sim.State.People.ApplicantsFor(b.Id).FirstOrDefault(x => x.CitizenId != 0);
+            if (a != null)
+            {
+                Ok(sim, new OfferContract(T(sim), a.Id));
+                return;
+            }
+            int steady = sim.Config.Game.People.IndexOfTrait("steady");
+            var commuter = new Applicant { Id = sim.State.People.NextApplicantId++, Skill = 50, Trait1 = steady, Trait2 = steady, Place = b.Id };
+            HiringRules.HireWorker(sim, commuter, HiringRules.OfferWage(sim, commuter, OfferLevel.Asked), 0);
+        }
+
+        /// <summary>
+        /// The hiring board busy (spec 015 §7): the mill's worker let go and word sent for another (townspeople asking, then a migrant
+        /// a reference was asked about), and word out for a farm hand.
+        /// </summary>
+        public static Simulation Board()
+        {
+            Simulation sim = Mill();
+            var mill = sim.State.Businesses.Businesses[0];
+            Ok(sim, new LetWorkerGo(T(sim), mill.Id));
+            Ok(sim, new PostJob(T(sim), mill.Id, true));
+            sim.AdvanceTo(T(sim) + 20 * Hour);
+            Applicant migrant = sim.State.People.ApplicantsFor(mill.Id).FirstOrDefault(x => x.CitizenId == 0);
+            if (migrant != null) Ok(sim, new CheckReference(T(sim), migrant.Id));
+            sim.Execute(new PostJob(T(sim), 0, false));
             return sim;
         }
 
@@ -139,6 +176,7 @@ namespace Sim.View.Tests
             for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
             int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
             Ok(sim, new FoundBusiness(T(sim), "bakery", tile, 200_000_00, false));
+            Hire(sim);
             sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 12 * 3600);
             return sim;
         }
@@ -153,6 +191,7 @@ namespace Sim.View.Tests
             Ok(sim, new BuyAnimal(T(sim), "cow"));
             int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
             Ok(sim, new FoundBusiness(T(sim), "dairy", tile, 300_000_00, false));
+            Hire(sim);
             sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 12 * 3600);
             return sim;
         }
@@ -167,6 +206,7 @@ namespace Sim.View.Tests
             yield return Mill();
             yield return Bakery();
             yield return Dairy();
+            yield return Board();
         }
     }
 }

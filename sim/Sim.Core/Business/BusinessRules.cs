@@ -324,16 +324,6 @@ namespace Sim.Core.Business
             return batch.MulRatio(1000, r.OutputGrams);
         }
 
-        /// <summary>The town's best-skilled adult without a town job (spec 016 §3.6), lowest id on a tie; null if none.</summary>
-        public static Citizen BestWorker(Simulation sim)
-        {
-            Citizen best = null;
-            if (sim.State.Citizens == null) return null;
-            foreach (Citizen c in sim.State.Citizens.Citizens)
-                if (HouseholdRules.WorksOutside(sim, c) && (best == null || c.Skill > best.Skill)) best = c;
-            return best;
-        }
-
         // ---- founding (§3.3) ----
 
         internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself, Financing financing = null)
@@ -381,7 +371,7 @@ namespace Sim.Core.Business
             return CommandResult.Ok;
         }
 
-        /// <summary>Built (§3.3 step 7): the worker starts and is paid the rest of the season from the business's cash; it opens.</summary>
+        /// <summary>Built (§3.3 step 7): it opens, run by you or by whoever you hired on the board (spec 015 §3.1); with nobody it waits for a hire.</summary>
         internal sealed class Build : IJobHandler
         {
             public string JobType { get { return Job; } }
@@ -393,62 +383,35 @@ namespace Sim.Core.Business
                 sim.CompleteJob(job);
                 if (b == null || b.Status != BusinessStatus.Building) return;
                 b.Status = BusinessStatus.Open;
-                if (b.Worker == WorkerKind.None) Restaff(sim, b);
                 sim.Emit(new BusinessOpened(sim.State.Clock.SimTime, b.Id, b.Worker, b.WorkerCitizen));
             }
         }
 
-        /// <summary>The town's best-skilled adult without a town job takes the job; else a daily worker from a neighbouring village.</summary>
-        internal static void Staff(Simulation sim, Business b)
-        {
-            Citizen c = BestWorker(sim);
-            if (c == null)
-            {
-                b.Worker = WorkerKind.Neighbour;
-                return;
-            }
-            b.Worker = WorkerKind.Citizen;
-            b.WorkerCitizen = c.Id;
-            c.Job = CitizenJob.Business;
-            c.Employer = b.Id;
-            c.Story.Add(new StoryLine(StoryKind.Hired, sim.State.Clock.SimTime, 0));
-            HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId)); // a wage now (spec 014 §3.5)
-        }
-
-        /// <summary>A worker who has gone, or turned elder (and retires), is replaced at once by the next best, or a neighbour.</summary>
+        /// <summary>
+        /// A townsperson worker who has gone from the town, or turned elder (and retires), leaves the job (spec 015 §3.9): the business
+        /// waits for a hire or for you.
+        /// </summary>
         private static void KeepStaffed(Simulation sim, Business b)
         {
             if (b.Worker != WorkerKind.Citizen) return;
             Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
             bool working = c != null && c.Living && c.Job == CitizenJob.Business && c.Employer == b.Id;
             if (working && !HouseholdRules.IsElder(sim, c)) return;
+            long worker = sim.State.People.WorkerAt(b.Id)?.Id ?? 0;
+            LoseWorker(sim, b);
             if (working)
             {
                 c.Job = CitizenJob.Retired;
-                c.Employer = 0;
                 c.Story.Add(new StoryLine(StoryKind.Retired, sim.State.Clock.SimTime, 0));
+                HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
             }
-            b.Worker = WorkerKind.None;
-            b.WorkerCitizen = 0;
-            Staff(sim, b);
-        }
-
-        /// <summary>
-        /// With no worker, one is taken on when the rest of the season's wage can be paid upfront, on the overdraft if need be (§3.6,
-        /// §3.10): at opening, and when you put cash in after a worker left unpaid.
-        /// </summary>
-        internal static void Restaff(Simulation sim, Business b)
-        {
-            if (b.Status != BusinessStatus.Open || b.Worker != WorkerKind.None) return;
-            long wage = People.PeopleRules.RestOfSeason(sim, Wage(sim, TypeOf(sim, b)));
-            if (!BusinessBooks.Draw(sim, b, wage)) return;
-            Staff(sim, b);
-            PayWage(sim, b, wage);
+            sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
         }
 
         /// <summary>The worker leaves: a townsperson goes back to outside work (their household's budget follows).</summary>
         internal static void LoseWorker(Simulation sim, Business b)
         {
+            HiringRules.WorkerGone(sim, b);
             if (b.Worker == WorkerKind.Citizen)
             {
                 Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
@@ -463,7 +426,7 @@ namespace Sim.Core.Business
             b.WorkerCitizen = 0;
         }
 
-        private static void PayWage(Simulation sim, Business b, long wage)
+        internal static void PayWage(Simulation sim, Business b, long wage)
         {
             if (wage <= 0) return;
             b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.wages", "business:" + b.Id, new Posting(Account.HiredLabour, wage), new Posting(Account.Cash, -wage));
@@ -915,10 +878,15 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
             {
                 if (b.Status == BusinessStatus.Closed) continue;
-                if (b.Status == BusinessStatus.Open && b.Worker != WorkerKind.Founder && b.Worker != WorkerKind.None)
+                Worker w = sim.State.People?.WorkerAt(b.Id);
+                if (b.Status == BusinessStatus.Open && w != null)
                 {
-                    long wage = Wage(sim, TypeOf(sim, b));
-                    if (BusinessBooks.Draw(sim, b, wage)) PayWage(sim, b, wage);
+                    long wage = HiringRules.RenewalWage(sim, w);
+                    if (BusinessBooks.Draw(sim, b, wage))
+                    {
+                        PayWage(sim, b, wage);
+                        HiringRules.Renewed(sim, w, wage);
+                    }
                     else
                     {
                         LoseWorker(sim, b);

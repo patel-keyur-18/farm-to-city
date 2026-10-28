@@ -190,6 +190,50 @@ namespace Sim.Core.Tests
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
         }
 
+        // Spec 015 AC-10: a schema-10 save loads into 11 (a crafting skill drawn for each citizen, reputation 50, spec 016's stopgap workers
+        // hired and neutral: a townsperson with her skill and traits, a commuter at skill 50), works on and round-trips.
+        [Test]
+        public void Schema10_Workers()
+        {
+            SimConfig config = SaveTests.Config();
+            Simulation s = CreditKit.NewSim(cash: 900_000);
+            BusinessTests.Hamlet(s);
+            People.Household x = PeopleKit.AddFamily(s, 0, 40);
+            People.Citizen c = s.State.Citizens.Citizen(x.Members[0]);
+            c.Skill = Maths.Fixed.FromInt(45);
+            long t = s.State.Clock.SimTime;
+            Assert.That(s.Execute(new Commands.FoundBusiness(t, "flour_mill", PeopleKit.HomeTile, 150_000_00, false)).Accepted, Is.True);
+            Assert.That(s.Execute(new Commands.FoundBusiness(t, "flour_mill", PeopleKit.HomeTile + 1, 150_000_00, false)).Accepted, Is.True);
+            s.AdvanceTo(t + 2 * TestSim.Day);
+            Business.Business mill = s.State.Businesses.Businesses[0], other = s.State.Businesses.Businesses[1];
+            // As spec 016's stopgap left them: the town's best adult at the first, a commuter at the second.
+            mill.Worker = Business.WorkerKind.Citizen;
+            mill.WorkerCitizen = c.Id;
+            c.Job = People.CitizenJob.Business;
+            c.Employer = mill.Id;
+            other.Worker = Business.WorkerKind.Neighbour;
+            LoadResult r = SaveCodec.Read(SaveCodec.Write(s.State, config, TestSim.Wall0, 0, SaveCodec.DefaultMaxLogEntries, 10), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Simulation sim = Simulation.FromState(config, r.State);
+            People.PeopleState p = r.State.People;
+            Assert.That(p.Reputation, Is.EqualTo(50));
+            foreach (People.Citizen k in r.State.Citizens.Citizens)
+                Assert.That(k.Crafting, Is.EqualTo(People.CitizenRules.DrawCrafting(sim, k.Id)), "drawn for every citizen");
+            People.Citizen usha = r.State.Citizens.Citizen(c.Id);
+            Assert.That(usha.Crafting, Is.InRange(Maths.Fixed.FromInt(20), Maths.Fixed.FromInt(70)));
+            People.Worker w = p.WorkerAt(mill.Id), commuter = p.WorkerAt(other.Id);
+            long wage = Market.MarketRules.Indexed(sim, 27_000_00);
+            Assert.That((w.CitizenId, w.Skill, w.Wage, w.Fairness, w.SeasonsWorked), Is.EqualTo((c.Id, usha.Crafting, wage, 0, 0)), "a miller's skill is crafting");
+            Assert.That((commuter.CitizenId, commuter.Skill, commuter.Wage), Is.EqualTo((0L, Maths.Fixed.FromInt(50), wage)));
+            Assert.That(commuter.Trait1, Is.Not.EqualTo(commuter.Trait2));
+            Assert.That(r.State.CommandLog.Base, Is.Not.Null, "the migrated town is its own replay base");
+
+            sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
+
         // Spec 014 AC-9: the schema-8 fixture's hands become citizens; the town advances a season (ageing, closes) and round-trips.
         [Test]
         public void Schema8_Citizens()

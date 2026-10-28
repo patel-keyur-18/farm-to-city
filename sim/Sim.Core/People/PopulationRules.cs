@@ -98,7 +98,7 @@ namespace Sim.Core.People
                     var child = new Citizen
                     {
                         Id = childId, Name = Name(sim, RngStream.Births, childId, female), Female = female, BornSeason = season, HouseholdId = x.Id,
-                        Health = Fixed.One, Father = father.Id, Mother = woman.Id, Village = -1,
+                        Health = Fixed.One, Father = father.Id, Mother = woman.Id, Village = -1, Crafting = CitizenRules.DrawCrafting(sim, childId),
                     };
                     Traits(sim, RngStream.Births, child);
                     child.Story.Add(new StoryLine(StoryKind.Born, t, 0));
@@ -157,7 +157,7 @@ namespace Sim.Core.People
                 Id = id, Name = Name(sim, RngStream.Births, id, true), Female = true, BornSeason = CitizenRules.BornFor(sim, brideAge), Health = Fixed.One,
                 Spouse = son.Id, Village = village, Skill = Fixed.FromInt(sim.Config.Game.People.Hand.SkillMin + (int)Rng.Below(Roll(sim, RngStream.Births, id, SkillKey, 0),
                     (ulong)(sim.Config.Game.People.Hand.SkillMax - sim.Config.Game.People.Hand.SkillMin + 1))),
-                Education = Rng.Chance(Roll(sim, RngStream.Births, id, EducationKey, 0), p.PrimaryEducationShare) ? 1 : 0,
+                Education = Rng.Chance(Roll(sim, RngStream.Births, id, EducationKey, 0), p.PrimaryEducationShare) ? 1 : 0, Crafting = CitizenRules.DrawCrafting(sim, id),
             };
             Traits(sim, RngStream.Births, bride);
             son.Spouse = id;
