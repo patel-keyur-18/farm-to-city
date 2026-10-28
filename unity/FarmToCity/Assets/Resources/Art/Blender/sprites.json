@@ -499,6 +499,62 @@
    "name": "crop_wheat_ready"
   },
   {
+   "w": 390,
+   "h": 320,
+   "pivotX": 0.45638,
+   "pivotY": 0.38204,
+   "name": "dairy_building_e"
+  },
+  {
+   "w": 390,
+   "h": 276,
+   "pivotX": 0.45638,
+   "pivotY": 0.38695,
+   "name": "dairy_building_n"
+  },
+  {
+   "w": 390,
+   "h": 320,
+   "pivotX": 0.54362,
+   "pivotY": 0.38204,
+   "name": "dairy_building_s"
+  },
+  {
+   "w": 390,
+   "h": 276,
+   "pivotX": 0.54362,
+   "pivotY": 0.38695,
+   "name": "dairy_building_w"
+  },
+  {
+   "w": 386,
+   "h": 328,
+   "pivotX": 0.44983,
+   "pivotY": 0.37188,
+   "name": "dairy_e"
+  },
+  {
+   "w": 386,
+   "h": 276,
+   "pivotX": 0.44983,
+   "pivotY": 0.3703,
+   "name": "dairy_n"
+  },
+  {
+   "w": 386,
+   "h": 328,
+   "pivotX": 0.55017,
+   "pivotY": 0.37188,
+   "name": "dairy_s"
+  },
+  {
+   "w": 386,
+   "h": 276,
+   "pivotX": 0.55017,
+   "pivotY": 0.3703,
+   "name": "dairy_w"
+  },
+  {
    "w": 596,
    "h": 332,
    "pivotX": 0.5,
@@ -993,6 +1049,20 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_curd"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_ghee"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_green_fodder"
   },
   {
@@ -1022,6 +1092,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_milk"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_paneer"
   },
   {
    "w": 256,

@@ -1318,6 +1318,21 @@ def icon_good(good):
                          rot=Matrix.Rotation(math.radians(-12), 3, "X")))
             o.append(box("crumb%d" % i, (0.13, 0.024, 0.05), (0, (i - 2) * 0.03 - 0.001, 0.04), toon("ruskIn", 0xE5B877), outline=False,
                          rot=Matrix.Rotation(math.radians(-12), 3, "X")))
+    elif good == "paneer":
+        # A fresh block of paneer on a steel plate, one cube cut from it.
+        o.append(cylinder("plate", 0.13, 0.12, 0.012, (0, 0, 0.006), toon("steel", 0xC9CDD2), segs=24, smooth=True))
+        o.append(box("block", (0.15, 0.11, 0.06), (-0.015, 0.0, 0.042), toon("paneer", 0xFAF5E6), bevel=0.008))
+        o.append(box("cube", (0.04, 0.04, 0.04), (0.085, -0.04, 0.032), toon("paneer", 0xFAF5E6), bevel=0.006, rot_z=0.4))
+    elif good == "curd":
+        # Dahi set in a clay pot (handi), its thick white top showing.
+        o.append(cylinder("pot", 0.10, 0.075, 0.11, (0, 0, 0.055), toon("clayPot", 0xB4572E), segs=20, smooth=True))
+        o.append(cylinder("rim", 0.105, 0.105, 0.014, (0, 0, 0.11), toon("clayRim", 0x9C4A26), segs=20, smooth=True, cap=False))
+        o.append(cylinder("dahi", 0.098, 0.098, 0.004, (0, 0, 0.112), toon("curd", 0xFBF6E9), segs=20, outline=False))
+    elif good == "ghee":
+        # Ghee in a brass lota-shaped jar, golden, with a spoon of it on top.
+        o.append(sphere("jar", 0.085, (0, 0, 0.08), toon("brass", 0xD9A93A), scale=(1, 1, 0.95), segs=18, rings=12))
+        o.append(cylinder("neck", 0.05, 0.06, 0.04, (0, 0, 0.17), toon("brass", 0xD9A93A), segs=18, smooth=True))
+        o.append(cylinder("gheeTop", 0.052, 0.052, 0.006, (0, 0, 0.19), toon("ghee", 0xF2CF5B), segs=18, outline=False))
     elif good == "potato":
         for i, (x, y, z) in enumerate(((-0.05, 0.0, 0.04), (0.05, 0.01, 0.04), (0.0, -0.02, 0.10))):
             o.append(sphere("potato%d" % i, 0.06, (x, y, z), toon("potato", 0xC59A5A), scale=(1.25, 1, 0.85), segs=14, rings=9))
@@ -1564,7 +1579,7 @@ for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", mod
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
-for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk"):
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee"):
     ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
 for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
@@ -3065,6 +3080,101 @@ def model_bakery(stage):
     for part in o[-3:]:
         part.location.y += cy
     return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+def model_dairy_shop(stage):
+    """A village dairy (spec 016 §3.9b): a lime-washed room with a saffron band and a signboard with a painted milk can, its shutter
+    up; at its front a steel-topped counter with clay pots of curd setting and a slab of paneer; inside, an iron kadhai on a gas
+    burner with its red cylinder, a steel cream separator on its stand and a white chest freezer; outside, aluminium milk cans and a
+    wooden paneer press with its stone weight. stage 'done' or 'building' (the plinth, half-raised walls, the freezer in its crate)."""
+    o = []
+    w, d = 0.34, 0.22
+    cy = 0.08
+    lime, band = toon("dairyLime", 0xF4EEDF), toon("dairySaffron", SAFFRON)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    al, ald = toon("alu", 0xD5D9DD), toon("aluDark", 0xA9AFB5)
+    steel = toon("steel", 0xC9CDD2)
+    yard_pad(o, w + 0.18, 0.22, -0.14)
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.035), (0, cy, 0.0175), plinth, bevel=0.005))
+    if stage == "building":
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.09), (sx * (w / 2 - 0.01), cy, 0.08), brick))
+        o.append(box("wallBack", (w, 0.02, 0.11), (0, cy + d / 2 - 0.01, 0.09), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        crate = toon("crate", 0xB98A55)
+        o.append(box("crate", (0.11, 0.07, 0.07), (0.11, -0.10, 0.035), crate, bevel=0.003))
+        for z in (0.02, 0.05):
+            o.append(box("slat%.2f" % z, (0.112, 0.072, 0.008), (0.11, -0.10, z), toon("crateDark", 0x8A6238), outline=False))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.13 + j * 0.055, -0.10, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.045, 0.032, (-0.03, -0.15, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+    h = 0.17
+    o.append(box("back", (w, 0.02, h), (0, cy + d / 2 - 0.01, 0.035 + h / 2), lime))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.02, d, h), (sx * (w / 2 - 0.01), cy, 0.035 + h / 2), lime))
+        o.append(box("pier%d" % sx, (0.04, 0.03, h), (sx * (w / 2 - 0.02), cy - d / 2 + 0.015, 0.035 + h / 2), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.035), (0, cy, 0.055), toon("dairyDado", 0x7FB3C8), outline=False))
+    o.append(box("bandFront", (w + 0.004, 0.03, 0.03), (0, cy - d / 2 + 0.015, 0.035 + h + 0.012), band, outline=False))
+    o.append(box("shutter", (w - 0.08, 0.035, 0.025), (0, cy - d / 2 + 0.01, 0.035 + h - 0.045), toon("shutter", 0x8C949A)))
+    o.append(box("floor", (w - 0.04, d - 0.03, 0.006), (0, cy + 0.01, 0.038), toon("tileFloor", 0xE9E4D8), outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.05, 0.012), (0, cy - 0.01, 0.035 + h + 0.008), toon("tin", TIN), rot=Matrix.Rotation(math.radians(7), 3, "X")))
+    for i in range(9):
+        o.append(box("rib%d" % i, (0.005, d + 0.05, 0.004), (-w / 2 + 0.02 + i * 0.04, cy - 0.01, 0.035 + h + 0.015), toon("tinRib", TIN_RIB),
+                     rot=Matrix.Rotation(math.radians(7), 3, "X"), outline=False))
+    # The signboard on the band: white, a saffron stripe, a painted blue milk can.
+    o.append(box("sign", (0.22, 0.008, 0.04), (0.0, cy - d / 2 - 0.012, 0.035 + h + 0.03), toon("boardWhite", 0xF7F4EC)))
+    o.append(box("signStripe", (0.22, 0.009, 0.008), (0.0, cy - d / 2 - 0.013, 0.035 + h + 0.016), band, outline=False))
+    o.append(cylinder("signCan", 0.011, 0.011, 0.026, (-0.075, cy - d / 2 - 0.017, 0.035 + h + 0.032), toon("signBlue", 0x2E6FBA), segs=10,
+                      rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    # Inside: the kadhai on its burner and the red gas cylinder; the cream separator; the chest freezer.
+    kx, ky = -0.11, cy - 0.04                 # near the opening, left of the counter, so it reads from outside
+    o.append(box("burner", (0.07, 0.07, 0.03), (kx, ky, 0.056), toon("iron", 0x4A4A4A)))
+    o.append(cylinder("kadhai", 0.05, 0.03, 0.03, (kx, ky, 0.085), toon("kadhai", 0x3A3A3A), segs=18, smooth=True))
+    o.append(cylinder("milkIn", 0.045, 0.045, 0.004, (kx, ky, 0.098), toon("milkTop", 0xFBF6E9), segs=18, outline=False))
+    o.append(cylinder("gas", 0.018, 0.018, 0.07, (kx - 0.075, ky + 0.03, 0.075), toon("gasRed", 0xC2412D), segs=12, smooth=True))
+    sx0, sy0 = 0.02, cy + 0.06
+    o.append(cylinder("sepStand", 0.012, 0.02, 0.06, (sx0, sy0, 0.07), ald, segs=10))
+    o.append(cylinder("sepBowl", 0.03, 0.012, 0.04, (sx0, sy0, 0.12), steel, segs=16, smooth=True, rot=Matrix.Rotation(math.radians(180), 3, "X")))
+    o.append(cylinder("sepTop", 0.034, 0.034, 0.012, (sx0, sy0, 0.145), steel, segs=16, smooth=True))
+    o.append(box("freezer", (0.10, 0.07, 0.075), (w / 2 - 0.07, cy + 0.04, 0.076), toon("freezer", 0xF2F4F5), bevel=0.006))
+    o.append(box("freezerLid", (0.102, 0.072, 0.008), (w / 2 - 0.07, cy + 0.04, 0.116), toon("freezerLid", 0xDDE3E6), outline=False))
+    # The counter at the front: a steel top, clay pots of curd, a slab of paneer on a tray.
+    cx0, cy0 = 0.03, cy - d / 2 - 0.035
+    o.append(box("counter", (0.18, 0.06, 0.05), (cx0, cy0, 0.06), toon("caseWood", 0x7A4A2A), bevel=0.003))
+    o.append(box("counterTop", (0.185, 0.065, 0.006), (cx0, cy0, 0.088), steel, outline=False))
+    clay, curd = toon("clayPot", 0xB4572E), toon("curd", 0xFBF6E9)
+    for i, x in enumerate((cx0 - 0.065, cx0 - 0.035, cx0 - 0.005)):
+        o.append(cylinder("pot%d" % i, 0.014, 0.011, 0.022, (x, cy0, 0.102), clay, segs=12, smooth=True))
+        o.append(cylinder("potCurd%d" % i, 0.0125, 0.0125, 0.003, (x, cy0, 0.113), curd, segs=12, outline=False))
+    o.append(box("paneerTray", (0.06, 0.045, 0.004), (cx0 + 0.055, cy0, 0.093), steel, outline=False))
+    o.append(box("paneer", (0.045, 0.032, 0.018), (cx0 + 0.055, cy0, 0.104), toon("paneer", 0xFAF5E6), bevel=0.003))
+    o.append(box("gheeTin", (0.02, 0.02, 0.03), (cx0 + 0.075, cy0 + 0.018, 0.106), toon("gheeTin", 0xE8B730)))
+    # Outside: milk cans by the door, and the paneer press with its stone weight.
+    for i, (x, y) in enumerate(((-0.18, -0.09), (-0.15, -0.12), (-0.19, -0.135))):
+        o.append(cylinder("can%d" % i, 0.018, 0.018, 0.045, (x, y, 0.0275), al, segs=12, smooth=True))
+        o.append(cylinder("lid%d" % i, 0.012, 0.012, 0.012, (x, y, 0.056), ald, segs=10))
+    px, py = 0.22, -0.17
+    wood = toon("wood", WOOD)
+    o.append(box("pressBase", (0.07, 0.05, 0.02), (px, py, 0.02), wood))
+    for x in (px - 0.03, px + 0.03):
+        o.append(box("pressPost%d" % (x > px), (0.008, 0.008, 0.07), (x, py, 0.055), toon("wood_dark", WOOD_DARK)))
+    o.append(box("pressCloth", (0.045, 0.035, 0.02), (px, py, 0.04), toon("muslin", 0xF1EBDD)))
+    o.append(box("pressBoard", (0.05, 0.04, 0.006), (px, py, 0.053), wood, outline=False))
+    o.append(sphere("pressStone", 0.018, (px, py, 0.068), toon("stone", STONE), scale=(1.2, 1, 0.7), segs=10, rings=6))
+    back_details(o, w, d, 0.13, toon("wood_dark", WOOD_DARK))
+    for part in o[-3:]:
+        part.location.y += cy
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["dairy_%s" % _f] = (lambda d=_deg: (lambda: refit(model_dairy_shop("done"), d)))()
+    SPRITES["dairy_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_dairy_shop("building"), d)))()
 
 
 for _f, _deg in FACINGS.items():
