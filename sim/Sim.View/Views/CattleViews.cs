@@ -52,9 +52,13 @@ namespace Sim.View.Views
             }
 
             var vm = new SheetVm { Icon = "cattle_shed", Title = s.Get("shed.title"), Subtitle = s.Get("shed.stalls", "n", ctx.Fmt.Integer(st.Animals.Count), "of", ctx.Fmt.Integer(shedDef.Animals)) };
-            vm.Lines.Add(new LineVm(s.Get("shed.milkToday"), st.LastMilkMl > 0
-                ? s.Get("shed.milkTodayValue", "milk", ctx.Fmt.Litres(st.LastMilkMl), "amount", ctx.Fmt.Coins(st.LastMilkAmount))
-                : s.Get("dairy.nothingYet"), st.LastMilkMl > 0 ? "milkToday" : null, 0));
+            Sim.Core.Business.Business dairy = ctx.Sim.State.Businesses?.Businesses.Find(x => x.Status == Sim.Core.Business.BusinessStatus.Open
+                && Sim.Core.Business.BusinessRules.TypeOf(ctx.Sim, x).TakesMilk);
+            var milk = new LineVm(s.Get("shed.milkToday"), st.LastMilkMl > 0
+                ? s.Get(dairy == null ? "shed.milkTodayValue" : "shed.milkTodayValueDairy", "milk", ctx.Fmt.Litres(st.LastMilkMl), "amount", ctx.Fmt.Coins(st.LastMilkAmount))
+                : s.Get("dairy.nothingYet"), st.LastMilkMl > 0 ? "milkToday" : null, 0);
+            if (dairy != null) milk.Note = s.Get("shed.toYourDairy", "milk", ctx.Fmt.Litres(dairy.OwnPerDay)); // spec 016 §3.9b
+            vm.Lines.Add(milk);
 
             vm.Lines.Add(LineVm.Header(s.Get("shed.animals")));
             foreach (Animal a in st.Animals) vm.Lines.Add(AnimalRow(ctx, a));

@@ -16,7 +16,7 @@ namespace Sim.View.Views
         {
             t = BusinessRules.Defs(ctx.Sim).Types[(int)(id / 4)];
             self = id % 2 == 1;
-            return BusinessRules.Projected(ctx.Sim, t, self, t.OwnPerDay, t.Fee, BusinessWords.LoanFor(ctx.Sim, t, id % 4 >= 2));
+            return BusinessRules.Projected(ctx.Sim, t, self, BusinessRules.DefaultOwnPerDay(ctx.Sim, t), t.Fee, BusinessWords.LoanFor(ctx.Sim, t, id % 4 >= 2));
         }
 
         private static WhyVm BusinessArea(ViewContext ctx, long id)
@@ -101,7 +101,8 @@ namespace Sim.View.Views
             Business b = BusinessOf(ctx, id);
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
             int input = t.ByRecipe ? BusinessRules.BoughtInputs(t)[0] : t.Input;
-            WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.businessMarket.title", t), ctx.Fmt.PricePerKg(MarketRules.Ceiling(ctx.Sim, input)));
+            WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.businessMarket.title", t),
+                t.TakesMilk ? ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(ctx.Sim, t)) : ctx.Fmt.PricePerKg(MarketRules.Ceiling(ctx.Sim, input)));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.businessMarket.price", t));
             vm.Footnote = ctx.Strings.Get(BusinessWords.Key(ctx, "why.businessMarket.lesson", t));
             return vm;
@@ -262,7 +263,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.recipeShops.people", ctx.Fmt.Integer(BusinessRules.AreaPeople(sim)));
             Row(vm, ctx, "why.recipeShops.price", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, good)));
             Text(vm, ctx, "why.recipeShops.round");
-            vm.Footnote = ctx.Strings.Get("why.recipeShops.lesson");
+            vm.Footnote = ctx.Strings.Get(BusinessWords.Key(ctx, "why.recipeShops.lesson", t));
             return vm;
         }
 
@@ -290,7 +291,7 @@ namespace Sim.View.Views
             RecipeDef r = BusinessRules.First(t, good);
             WhyVm vm = New(ctx, "why.recipeMade.title", ctx.Fmt.Kg(b.MadeToday[good]), "good", ctx.Strings.Get(sim.Config.Game.Market.Goods[good].NameKey));
             Row(vm, ctx, "why.recipeMade.mix", ctx.Fmt.Kg(b.Mix[good]));
-            Row(vm, ctx, "why.recipeMade.rate", ctx.Fmt.Kg(t.GramsPerHour));
+            Row(vm, ctx, BusinessWords.Key(ctx, "why.recipeMade.rate", t), t.TakesMilk ? ctx.Fmt.Litres(t.GramsPerHour) : ctx.Fmt.Kg(t.GramsPerHour));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.recipeMade.recipe." + sim.Config.Game.Market.Goods[good].Id, t), "batch", ctx.Fmt.Kg(r.OutputGrams));
             Text(vm, ctx, "why.recipeMade.round");
             return vm;
@@ -322,7 +323,53 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.recipeMix.shops", ctx.Fmt.Kg(BusinessRules.ShopGramsPerDay(sim, t, good)));
             if (trader > 0) Row(vm, ctx, "why.recipeMix.trader", ctx.Fmt.Kg(trader));
             Text(vm, ctx, trader > 0 ? "why.recipeMix.keeps" : "why.recipeMix.fresh");
+            if (!BusinessRules.Pays(sim, t, good))
+                Text(vm, ctx, "why.recipeMix.loses", "cost", ctx.Fmt.PricePerKg(BusinessRules.UnitCost(sim, t, good)), "price", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, good)));
             vm.Footnote = ctx.Strings.Get("why.recipeMix.lesson");
+            return vm;
+        }
+
+        /// <summary>Your herd's milk a day of one kind (§3.9b): what they give, what the house drinks, the co-op's price either way.</summary>
+        private static WhyVm DairyMilk(ViewContext ctx, long kind)
+        {
+            Simulation sim = ctx.Sim;
+            int k = (int)kind;
+            var def = sim.Config.Game.Livestock.Animals[k];
+            WhyVm vm = New(ctx, "why.dairyMilk.title", ctx.Fmt.Litres(BusinessRules.HerdMilk(sim)[k]), "kind", ctx.Strings.Get(def.NameKey));
+            Row(vm, ctx, "why.dairyMilk.price", ctx.Fmt.PricePerLitre(Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k)));
+            Text(vm, ctx, "why.dairyMilk.herd");
+            Text(vm, ctx, "why.dairyMilk.books");
+            vm.Footnote = ctx.Strings.Get("why.dairyMilk.lesson");
+            return vm;
+        }
+
+        /// <summary>Neighbours' milk (§3.9b): the co-op's price and the dairy's premium a litre.</summary>
+        private static WhyVm DairyNeighbours(ViewContext ctx, long type)
+        {
+            Simulation sim = ctx.Sim;
+            BusinessTypeDef t = BusinessRules.Defs(sim).Types[(int)type];
+            int k = BusinessRules.NeighbourMilkKind(sim);
+            WhyVm vm = New(ctx, "why.dairyNeighbours.title", ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(sim, t)));
+            Row(vm, ctx, "why.dairyNeighbours.coop", ctx.Fmt.PricePerLitre(Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k)));
+            Row(vm, ctx, "why.dairyNeighbours.premium", ctx.Fmt.PricePerLitre(t.NeighbourMilkPremium * sim.State.Market.PriceIndex));
+            Text(vm, ctx, "why.dairyNeighbours.why");
+            vm.Footnote = ctx.Strings.Get("why.dairyNeighbours.lesson");
+            return vm;
+        }
+
+        /// <summary>The dairy's milk a day (§3.9b): what its mix needs, yours first, then neighbours'.</summary>
+        private static WhyVm DairyMilkADay(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Business b = BusinessOf(ctx, id);
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            long herd = 0;
+            foreach (long ml in BusinessRules.HerdMilk(sim)) herd += ml;
+            WhyVm vm = New(ctx, "why.dairyMilkADay.title", ctx.Fmt.Litres(b.OwnPerDay));
+            Row(vm, ctx, "why.dairyMilkADay.need", ctx.Fmt.Litres(BusinessRules.MilkFor(t, b.Mix)));
+            Row(vm, ctx, "why.dairyMilkADay.herd", ctx.Fmt.Litres(herd));
+            Text(vm, ctx, b.BuyFromMarket ? "why.dairyMilkADay.neighbours" : "why.dairyMilkADay.yoursOnly");
+            Text(vm, ctx, "why.dairyMilkADay.spoils");
             return vm;
         }
 

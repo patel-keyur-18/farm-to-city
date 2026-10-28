@@ -42,7 +42,7 @@ namespace Sim.Content
                 string p = Index(root + ".types", i);
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "wage", "kgPerHour", "powerPerKg", "repairsShare",
-                    "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk");
+                    "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
                 x.Era = -1;
@@ -64,6 +64,7 @@ namespace Sim.Content
                 x.Fee = t["fee"] == null ? Fixed.Zero : Bounded(t, p, "fee", "0", "100");
                 x.OwnPerDay = t["ownPerDay"] == null ? 0 : (Bounded(t, p, "ownPerDay", "0", "100000") * Fixed.FromInt(1000)).RoundToLong();
                 x.TakesMilk = t["takesMilk"] != null && Bool(t["takesMilk"], p + ".takesMilk");
+                x.NeighbourMilkPremium = t["neighbourMilkPremium"] == null ? Fixed.Zero : Bounded(t, p, "neighbourMilkPremium", "0", "100");
                 if (t["recipes"] != null)
                 {
                     if (t["input"] != null || t["outputs"] != null) throw new ContentException(p + ".recipes", "a type works by recipes or by an input and outputs, not both");

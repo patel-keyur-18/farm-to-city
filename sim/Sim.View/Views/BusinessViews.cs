@@ -134,6 +134,19 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("research.yours", "good", s.Get(sim.Config.Game.Market.Goods[t.Input].NameKey).ToLowerInvariant()), ctx.Fmt.Kg(sim.State.Market.Stock[t.Input]), "store", 0) { Icon = "sack" });
         }
 
+        /// <summary>The dairy's milk (§3.9b): your herd's a day by kind at the co-op's price, and neighbours' at the premium.</summary>
+        private static void AddMilkResearch(ViewContext ctx, SheetVm vm, BusinessTypeDef t, int type)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            long[] herd = BusinessRules.HerdMilk(sim);
+            var kinds = sim.Config.Game.Livestock.Animals;
+            for (int k = 0; k < kinds.Count; k++)
+                vm.Lines.Add(new LineVm(s.Get("research.herdMilk", "kind", s.Get(kinds[k].NameKey).ToLowerInvariant()), s.Get("research.milkValue", "milk", ctx.Fmt.Litres(herd[k]),
+                    "price", ctx.Fmt.PricePerLitre(Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k))), "dairyMilk", k) { Icon = "milk" });
+            vm.Lines.Add(new LineVm(s.Get("research.neighbourMilk"), ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(sim, t)), "dairyNeighbours", type) { Icon = "milk" });
+        }
+
         /// <summary>
         /// A bakery's or dairy's research (spec 016 §3.9c): the people the village shops serve, what the shops would buy of each product
         /// a day and at what price, what the trader takes of what keeps, what its inputs cost, a worker's wage.
@@ -147,6 +160,7 @@ namespace Sim.View.Views
                 "businessPeople", type) { Icon = "population" });
             foreach (int p in t.Products)
             {
+                if (BusinessRules.ShopGramsPerDay(sim, t, p) <= 0) continue; // the shops don't buy it (ghee): only the trader
                 GoodDef g = sim.Config.Game.Market.Goods[p];
                 vm.Lines.Add(new LineVm(s.Get("research.shops", "good", BusinessWords.Good(ctx, p)), s.Get("research.shopsValue", "kg", ctx.Fmt.Kg(BusinessRules.ShopGramsPerDay(sim, t, p)),
                     "price", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, p))), "recipeShops", BusinessWords.GoodId(type, p)) { Icon = g.Id });
@@ -158,9 +172,11 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(s.Get("research.traderTakes", "good", BusinessWords.Good(ctx, p)), s.Get("research.shopsValue",
                     "kg", ctx.Fmt.Kg(sim.Config.Game.Market.Region.TraderBuyPerDay(p)), "price", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, p))), "businessTrader", p) { Icon = g.Id });
             }
-            foreach (int g in BusinessRules.BoughtInputs(t))
-                vm.Lines.Add(new LineVm(s.Get("research.input", "good", s.Get(sim.Config.Game.Market.Goods[g].NameKey)), ctx.Fmt.PricePerKg(BusinessRules.InputPrice(sim, g)),
-                    "recipeInput", g) { Icon = sim.Config.Game.Market.Goods[g].Id });
+            if (t.TakesMilk) AddMilkResearch(ctx, vm, t, type);
+            else
+                foreach (int g in BusinessRules.BoughtInputs(t))
+                    vm.Lines.Add(new LineVm(s.Get("research.input", "good", s.Get(sim.Config.Game.Market.Goods[g].NameKey)), ctx.Fmt.PricePerKg(BusinessRules.InputPrice(sim, g)),
+                        "recipeInput", g) { Icon = sim.Config.Game.Market.Goods[g].Id });
             vm.Lines.Add(new LineVm(s.Get("research.wage", "role", s.Get("business.role." + t.Worker)), s.Get("research.wageValue", "wage", ctx.Fmt.Coins(BusinessRules.Wage(sim, t))), "businessWage", type)
                 { Icon = "person_hand_m" });
         }
@@ -178,7 +194,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
             long borrow = BusinessWords.LoanFor(sim, t, loan);
-            BusinessRules.Projection p = BusinessRules.Projected(sim, t, self, t.OwnPerDay, t.Fee, borrow);
+            BusinessRules.Projection p = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t), t.Fee, borrow);
             long id = BusinessWords.PlanId(type, self, loan);
             var vm = new SheetVm { Icon = t.Id, Title = s.Get("plan.title", "name", BusinessWords.InSentence(ctx, t)), Subtitle = s.Get("plan.subtitle") };
             var who = new LineVm(s.Get("plan.who"), s.Get(self ? "plan.whoYou" : "plan.whoHire", "role", s.Get("business.role." + t.Worker)));
@@ -193,7 +209,8 @@ namespace Sim.View.Views
             vm.Lines.Add(LineVm.Header(s.Get("plan.season")));
             if (!t.ByRecipe) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.sales", t)), ctx.Fmt.Coins(p.Sales), "planSales", id));
-            vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", ctx.Fmt.Kg(t.OwnPerDay)), "−" + ctx.Fmt.Coins(p.Wheat), "planWheat", id));
+            vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", t.TakesMilk ? ctx.Fmt.Litres(BusinessRules.DefaultOwnPerDay(sim, t)) : ctx.Fmt.Kg(t.OwnPerDay)),
+                "−" + ctx.Fmt.Coins(p.Wheat), "planWheat", id));
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.power", t)), "−" + ctx.Fmt.Coins(p.Power), "planPower", id));
             vm.Lines.Add(new LineVm(s.Get("plan.repairs"), "−" + ctx.Fmt.Coins(p.Repairs), "planRepairs", id));
             vm.Lines.Add(new LineVm(s.Get("plan.depreciation"), "−" + ctx.Fmt.Coins(p.Depreciation), "planDepreciation", id));
@@ -282,7 +299,7 @@ namespace Sim.View.Views
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
             BusinessDefs d = BusinessRules.Defs(sim);
             long borrow = BusinessWords.LoanFor(sim, t, loan);
-            long capital = BusinessRules.Projected(sim, t, self, t.OwnPerDay, t.Fee, borrow).CashNeeded - borrow;
+            long capital = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t), t.Fee, borrow).CashNeeded - borrow;
             string id = t.Id, lender = d.LenderId;
             int term = d.TermSeasons;
             return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(capital), ActionKind.Primary,
@@ -365,8 +382,8 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(sim.Config.Game.Market.Goods[p].NameKey)), ctx.Fmt.Kg(b.Stock[p]), "recipeStock", BusinessWords.GoodId(b.Id, p))
                     { Icon = sim.Config.Game.Market.Goods[p].Id });
             foreach (int g in BusinessRules.BoughtInputs(t))
-                vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(sim.Config.Game.Market.Goods[g].NameKey)), ctx.Fmt.Kg(b.Stock[g]), "recipeInput", g)
-                    { Icon = sim.Config.Game.Market.Goods[g].Id });
+                vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(sim.Config.Game.Market.Goods[g].NameKey)), ctx.Fmt.Quantity(sim.Config.Game.Market.Goods[g], b.Stock[g]),
+                    t.TakesMilk ? "dairyMilk" : "recipeInput", t.TakesMilk ? BusinessRules.MilkKind(sim, g) : g) { Icon = t.TakesMilk ? "milk" : sim.Config.Game.Market.Goods[g].Id });
         }
 
         /// <summary>Who works there, its cash, overdraft and business loan.</summary>
@@ -421,6 +438,7 @@ namespace Sim.View.Views
             if (t.ByRecipe)
             {
                 AddMix(ctx, vm, b, t);
+                if (t.TakesMilk) AddMilkADay(ctx, vm, b, t);
                 if (BusinessRules.BoughtInputs(t).Count > 0) AddMarket(ctx, vm, b, t);
             }
             else AddMillSettings(ctx, vm, b, t);
@@ -481,22 +499,49 @@ namespace Sim.View.Views
                 int at0 = presets.IndexOf(b.Mix[p]);
                 long next = presets[(at0 + 1) % presets.Count];
                 string good = sim.Config.Game.Market.Goods[p].Id;
-                var line = new LineVm(s.Get("business.mixDay", "good", s.Get(sim.Config.Game.Market.Goods[p].NameKey)), ctx.Fmt.Kg(b.Mix[p]), "recipeMix", BusinessWords.GoodId(id, p))
+                string value = ctx.Fmt.Kg(b.Mix[p]);
+                if (t.TakesMilk && b.Mix[p] > 0) value = s.Get("business.mixMilk", "kg", value, "milk", ctx.Fmt.Litres(BusinessRules.MilkFor(t, Only(b.Mix, p))));
+                var line = new LineVm(s.Get("business.mixDay", "good", s.Get(sim.Config.Game.Market.Goods[p].NameKey)), value, "recipeMix", BusinessWords.GoodId(id, p))
                     { Icon = good };
                 line.Action = ActionVm.Checked(ctx, "mix:" + good, s.Get("business.change"), ctx.Fmt.Kg(next), ActionKind.Secondary, at => new SetMix(at, id, good, next));
                 vm.Lines.Add(line);
             }
         }
 
+        /// <summary>The dairy's milk a day (§3.9b): what the mix needs, half, a quarter; your milk first, then neighbours' if allowed.</summary>
+        private static void AddMilkADay(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        {
+            var s = ctx.Strings;
+            long id = b.Id, need = BusinessRules.MilkFor(t, b.Mix);
+            var presets = new List<long>();
+            foreach (long v in new[] { need, need / 2, need / 4 }) if (v > 0 && !presets.Contains(v)) presets.Add(v);
+            if (presets.Count == 0) presets.Add(0);
+            int at0 = presets.IndexOf(b.OwnPerDay);
+            long next = presets[(at0 + 1) % presets.Count];
+            Fixed fee = b.Fee;
+            bool market = b.BuyFromMarket;
+            int open = b.OpenHour, close = b.CloseHour;
+            var line = new LineVm(s.Get("business.milkADay"), ctx.Fmt.Litres(b.OwnPerDay), "dairyMilkADay", id) { Icon = "milk" };
+            line.Action = ActionVm.Checked(ctx, "milkADay", s.Get("business.change"), ctx.Fmt.Litres(next), ActionKind.Secondary,
+                at => new SetBusiness(at, id, open, close, fee, next, market));
+            vm.Lines.Add(line);
+        }
+
         /// <summary>A product's mix choices: what the shops buy, plus what the trader takes if he takes it, half the shops', none.</summary>
         public static List<long> MixPresets(Simulation sim, BusinessTypeDef t, int good)
         {
             long shops = BusinessRules.ShopGramsPerDay(sim, t, good), trader = sim.Config.Game.Market.Region.TraderBuyPerDay(good);
-            var list = new List<long> { shops };
-            if (trader > 0) list.Add(shops + trader);
-            if (shops / 2 > 0) list.Add(shops / 2);
-            list.Add(0);
+            var list = new List<long>();
+            foreach (long v in new[] { shops, shops + trader, shops / 2, 0L }) if (!list.Contains(v)) list.Add(v);
             return list;
+        }
+
+        /// <summary>The mix with only <paramref name="good"/>'s amount: what one product's row needs.</summary>
+        private static long[] Only(long[] mix, int good)
+        {
+            var one = new long[mix.Length];
+            one[good] = mix[good];
+            return one;
         }
 
         private static void AddCash(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)

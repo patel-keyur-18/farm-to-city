@@ -251,7 +251,12 @@ namespace Sim.Core.Livestock
             LivestockState s = sim.State.Livestock;
             LivestockDefs defs = LivestockRules.Defs(sim);
             long t = sim.State.Clock.SimTime;
-            if (animals.Count == 0) { ResetCare(s); return; }
+            if (animals.Count == 0)
+            {
+                ResetCare(s);
+                if (household) Business.BusinessRules.MilkIn(sim, new long[defs.Animals.Count]); // no herd: your dairy still buys neighbours' milk
+                return;
+            }
             FarmSystem.Accrue(sim);
             Season season = Calendar.SeasonAt(t - 1, sim.Clock);
             Fixed care = LivestockRules.CareFactor(sim);

@@ -264,6 +264,35 @@ namespace Sim.Core.Tests
             Assert.That(Mid(results[2].Profit), Is.InRange(15_000, 25_000), "hired, on a business loan");
         }
 
+        // Spec 016 §9 (US-216, ADR 0080): a bot founds the dairy (from the Hamlet: the Village gate is spec 018's) with a buffalo and a cow
+        // and runs it, hired and by itself, on its own and neighbours' milk; never stuck, the overdraft never permanent, and its season
+        // profit inside ADR 0080's targets. On your herd's milk alone it loses: a village dairy runs on the village's milk.
+        [Test]
+        public void DairyBusiness()
+        {
+            var config = LiveWith(Gate.DairyInHamlet);
+            var results = new[] { () => new BusinessBot(false, false, "dairy"), () => new BusinessBot(true, false, "dairy"), (Func<Bot>)(() => new BusinessBot(false, false, "dairy") { OwnMilkOnly = true }) }
+                .Select(make => Gate.Business(config, make, 8, "dairy", 16)).ToList();
+            foreach (Gate.MillResult m in results)
+                TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
+                    + "; payback " + string.Join(", ", m.Payback.OrderBy(x => x).Select(x => x.ToString("0.0"))) + "; overdrawn runs " + string.Join(",", m.OverdrawnRun)
+                    + "; closed " + m.Closed + ", foreclosed " + m.Foreclosed + "; end cash " + string.Join(", ", m.EndCash.Select(c => (c / 100).ToString())));
+            foreach (Gate.MillResult m in results)
+            {
+                Assert.That(m.Founded, Is.EqualTo(m.Seeds), m.Bot + ": founded in every seed");
+                Assert.That(m.EndCash.All(c => c > 0), Is.True, m.Bot + ": never stuck: every run plays on with cash");
+                Assert.That(m.OverdrawnRun.Max(), Is.LessThanOrEqualTo(3), m.Bot + ": the overdraft never permanent");
+            }
+            Assert.That(results[0].Foreclosed + results[2].Foreclosed, Is.Zero, "hired, the farm keeps its founder");
+            Assert.That(results[1].Foreclosed, Is.LessThanOrEqualTo(results[1].Seeds / 2), "run by you, with a herd and 6 acres, the farm loses your hours: at most half the runs (ADR 0080)");
+            double Mid(System.Collections.Generic.List<double> v) { return v.OrderBy(x => x).ElementAt(v.Count / 2); }
+            Assert.That(Mid(results[0].Profit), Is.InRange(10_000, 20_000), "hired");
+            Assert.That(Mid(results[0].Payback), Is.InRange(5.0, 9.0), "hired, payback");
+            Assert.That(Mid(results[1].Profit), Is.InRange(35_000, 50_000), "run by you");
+            Assert.That(Mid(results[1].Payback), Is.InRange(2.0, 4.0), "run by you, payback");
+            Assert.That(Mid(results[2].Profit), Is.LessThan(0), "on your own herd's milk alone it loses");
+        }
+
         // Spec 016 §9 (US-117, ADR 0072): a bot founds the flour mill in the Hamlet and runs it, hired, by itself, and on a business loan;
         // never stuck, the overdraft never permanent, and its season profit inside ADR 0073's targets.
         [Test]

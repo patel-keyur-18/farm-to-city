@@ -88,6 +88,9 @@ namespace Sim.Core.Definitions
         /// <summary>Whether it keeps your animals' milk at the 6:00 milking, up to its milk a day (the dairy, §3.9b).</summary>
         public bool TakesMilk { get; internal set; }
 
+        /// <summary>What the dairy pays neighbours above the co-op's price a litre for their milk, when it buys it (§3.9b; coins, year-0).</summary>
+        public Fixed NeighbourMilkPremium { get; internal set; }
+
         public bool ByRecipe { get { return Recipes.Count > 0; } }
 
         /// <summary>Whether it makes <paramref name="good"/> by a recipe.</summary>

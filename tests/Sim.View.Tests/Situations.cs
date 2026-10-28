@@ -143,6 +143,20 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The bakery's town with a cattle shed (a buffalo and a cow) and a dairy, a morning round gone by (spec 016 §3.9b).</summary>
+        public static Simulation Dairy()
+        {
+            Simulation sim = Bakery();
+            Ok(sim, new BuildShed(T(sim)));
+            sim.AdvanceTo(T(sim) + 25 * Hour);
+            Ok(sim, new BuyAnimal(T(sim), "buffalo"));
+            Ok(sim, new BuyAnimal(T(sim), "cow"));
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "dairy", tile, 300_000_00, false));
+            sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 12 * 3600);
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -152,6 +166,7 @@ namespace Sim.View.Tests
             yield return Town();
             yield return Mill();
             yield return Bakery();
+            yield return Dairy();
         }
     }
 }

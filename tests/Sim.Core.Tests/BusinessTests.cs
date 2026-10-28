@@ -432,6 +432,79 @@ namespace Sim.Core.Tests
             Assert.That(BusinessRules.InputPrice(sim, atta), Is.EqualTo(MarketRules.Floor(sim, atta)), "your mill's atta at the trader's price");
         }
 
+        // AC-13: the dairy keeps your milk at 6:00 up to its milk a day at the co-op's price (your farm's milk sales either way; the rest
+        // to the co-op), buffalo milk to paneer first and cow milk to curd first, by the yields, at most 190 L a real hour; with
+        // neighbours' milk allowed it fills the day's amount at the co-op's price and the premium.
+        [Test]
+        public void Dairy_MilkIn_Recipes()
+        {
+            Simulation sim = Start();
+            RecipeTests.Village(sim);
+            CashTo(sim, 1_000_000_00);
+            Ok(sim, new BuildShed(sim.State.Clock.SimTime));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 25 * 3600);
+            Ok(sim, new BuyAnimal(sim.State.Clock.SimTime, "buffalo"));
+            Ok(sim, new BuyAnimal(sim.State.Clock.SimTime, "cow"));
+            Business.Business b = RecipeTests.Found(sim, "dairy", HomeTile + 1);
+            var t = BusinessRules.TypeOf(sim, b);
+            int buf = sim.Config.Game.Market.IndexOf("milk_buffalo"), cow = sim.Config.Game.Market.IndexOf("milk_cow");
+            int paneer = sim.Config.Game.Market.IndexOf("paneer"), curd = sim.Config.Game.Market.IndexOf("curd"), ghee = sim.Config.Game.Market.IndexOf("ghee");
+            Assert.That(b.OwnPerDay, Is.EqualTo(BusinessRules.MilkFor(t, b.Mix)), "it starts keeping what its mix needs");
+            Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, b.OpenHour, b.CloseHour, b.Fee, 150_000, false)); // your milk only, 150 L
+
+            long day = sim.State.Clock.SimTime / 86_400 + 1;
+            sim.AdvanceTo(day * 86_400 + 5 * 3600);
+            long fromFarm0 = Paid(b, "ledger.boughtFromFarm");
+            sim.AdvanceTo(day * 86_400 + 6 * 3600 + 1);
+            long keptBuf = b.Stock[buf], keptCow = b.Stock[cow], herd = sim.State.Livestock.LastMilkMl - sim.State.Livestock.LastHomeMl;
+            Assert.That(keptBuf + keptCow, Is.EqualTo(System.Math.Min(150_000, herd)), "your milk up to its milk a day");
+            Assert.That(keptBuf, Is.GreaterThan(0), "buffalo milk first");
+            long price = Finance.Money.Value(keptBuf, Livestock.LivestockRules.MilkPrice(sim, 0), 1000) + Finance.Money.Value(keptCow, Livestock.LivestockRules.MilkPrice(sim, 1), 1000);
+            Assert.That(Paid(b, "ledger.boughtFromFarm") - fromFarm0, Is.EqualTo(price).Within(1), "at the co-op's price");
+
+            sim.DrainEvents();
+            sim.AdvanceTo(day * 86_400 + 19 * 3600);
+            var worked = sim.DrainEvents().OfType<BusinessWorked>().Where(w => w.BusinessId == b.Id).ToList();
+            Assert.That(worked.All(w => w.OwnGrams <= 190_000), Is.True, "190 L a real hour at most");
+            // Buffalo milk to paneer, cow milk to curd, buffalo milk left to ghee (15 L a kilo).
+            long paneerKg = System.Math.Min(b.Mix[paneer], keptBuf * 2 / 10);
+            Assert.That(b.MadeToday[paneer], Is.EqualTo(paneerKg).Within(100), "5 L of buffalo milk a kilo of paneer, first");
+            Assert.That(b.MadeToday[curd], Is.EqualTo(System.Math.Min(b.Mix[curd], keptCow)).Within(100), "a litre of cow milk a kilo of curd");
+            Assert.That(b.MadeToday[ghee], Is.EqualTo(System.Math.Min(b.Mix[ghee], (keptBuf - paneerKg * 5) / 15)).Within(100), "the buffalo milk left to ghee");
+
+            // Neighbours' milk fills the day's amount after yours, at the co-op's price and the premium.
+            Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, b.OpenHour, b.CloseHour, b.Fee, 600_000, true));
+            long fromNeighbours0 = Paid(b, "ledger.boughtFromNeighbours");
+            sim.AdvanceTo((day + 1) * 86_400 + 6 * 3600 + 1);
+            long own = b.Stock[buf] + b.Stock[cow];
+            Assert.That(own, Is.EqualTo(600_000), "filled to its milk a day");
+            long bought = Paid(b, "ledger.boughtFromNeighbours") - fromNeighbours0;
+            Assert.That(bought, Is.GreaterThan(0));
+            Assert.That(BusinessRules.NeighbourMilkPrice(sim, t), Is.EqualTo(Livestock.LivestockRules.MilkPrice(sim, 0) + Fixed.FromInt(2) * sim.State.Market.PriceIndex));
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        // §3.9b: with no herd at all (no shed), the dairy still buys its milk a day from neighbours at 6:00 and makes paneer and curd.
+        [Test]
+        public void Dairy_NoHerd_NeighboursMilk()
+        {
+            Simulation sim = Start();
+            Business.Business b = RecipeTests.Found(sim, "dairy", HomeTile + 1);
+            Assert.That(sim.State.Livestock.Animals, Is.Empty);
+            int buf = sim.Config.Game.Market.IndexOf("milk_buffalo"), paneer = sim.Config.Game.Market.IndexOf("paneer");
+            long day = sim.State.Clock.SimTime / 86_400 + 1;
+            sim.AdvanceTo(day * 86_400 + 6 * 3600 + 1);
+            Assert.That(b.Stock[buf], Is.EqualTo(b.OwnPerDay), "neighbours' buffalo milk, the whole day's amount");
+            sim.AdvanceTo(day * 86_400 + 19 * 3600);
+            Assert.That(b.MadeToday[paneer], Is.GreaterThan(0));
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        private static long Paid(Business.Business b, string key)
+        {
+            return b.Ledger.Entries.Where(e => e.DescriptionKey == key).Sum(e => e.Postings.Where(p => p.Account == Account.BusinessStock).Sum(p => p.Amount));
+        }
+
         private static long SuppliesPaid(Business.Business b)
         {
             return b.Ledger.Entries.Where(e => e.DescriptionKey == "ledger.supplies").Sum(e => e.Postings.Where(p => p.Account == Account.BusinessStock).Sum(p => p.Amount));

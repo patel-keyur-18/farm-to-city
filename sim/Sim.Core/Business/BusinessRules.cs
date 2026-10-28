@@ -79,7 +79,7 @@ namespace Sim.Core.Business
         /// <param name="loan">A business loan taken (§3.8): its first season's interest is a cost, and it pays for that much of the cash needed.</param>
         public static Projection Projected(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0, long[] mix = null)
         {
-            if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t));
+            if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t), ownPerDay);
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
             long day = t.GramsPerHour * (t.CloseHour - t.OpenHour), areaDay = System.Math.Min(AreaGramsPerDay(sim), day);
@@ -109,24 +109,29 @@ namespace Sim.Core.Business
         /// A recipe type's season ahead (§3.9c): the day's mix sold to the shops (and the trader for what keeps), its inputs at what
         /// they'd cost (<see cref="InputPrice"/>) less what it makes itself, with the supplies; fuel; against the wage, repairs and wear.
         /// </summary>
-        private static Projection ProjectedByRecipe(Simulation sim, BusinessTypeDef t, bool runYourself, long loan, long[] mix)
+        private static Projection ProjectedByRecipe(Simulation sim, BusinessTypeDef t, bool runYourself, long loan, long[] mix, long milkPerDay)
         {
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
             var made = new long[mix.Length];
-            foreach (int p in t.Products) made[p] += mix[p];
-            foreach (RecipeDef r in t.Recipes) // a product made into another (pav into rusk) is made as well
-                if (First(t, r.Output) == r)
-                    foreach (KeyValuePair<int, long> kv in r.Inputs)
-                        if (t.Makes(kv.Key)) made[kv.Key] += Need(kv.Value, mix[r.Output], r.OutputGrams);
-            long sales = 0, inputs = 0, fuel = 0, total = 0;
+            long milkCost = 0;
+            if (t.TakesMilk) made = DairyDay(sim, t, mix, milkPerDay, true, out milkCost); // made as far as the milk goes
+            else
+            {
+                foreach (int p in t.Products) made[p] += mix[p];
+                foreach (RecipeDef r in t.Recipes) // a product made into another (pav into rusk) is made as well
+                    if (First(t, r.Output) == r)
+                        foreach (KeyValuePair<int, long> kv in r.Inputs)
+                            if (t.Makes(kv.Key)) made[kv.Key] += Need(kv.Value, mix[r.Output], r.OutputGrams);
+            }
+            long sales = 0, inputs = milkCost * days, fuel = 0, total = 0;
             foreach (int p in t.Products)
             {
-                long sold = System.Math.Min(mix[p], ShopGramsPerDay(sim, t, p) + sim.Config.Game.Market.Region.TraderBuyPerDay(p));
+                long sold = System.Math.Min(t.TakesMilk ? made[p] : mix[p], ShopGramsPerDay(sim, t, p) + sim.Config.Game.Market.Region.TraderBuyPerDay(p));
                 sales += MarketRules.Value(sim, p, sold * days, MarketRules.Floor(sim, p));
                 RecipeDef r = First(t, p);
                 foreach (KeyValuePair<int, long> kv in r.Inputs)
-                    if (!t.Makes(kv.Key)) inputs += MarketRules.Value(sim, kv.Key, Need(kv.Value, made[p], r.OutputGrams) * days, InputPrice(sim, kv.Key));
+                    if (!t.Makes(kv.Key) && !t.TakesMilk) inputs += MarketRules.Value(sim, kv.Key, Need(kv.Value, made[p], r.OutputGrams) * days, InputPrice(sim, kv.Key));
                 fuel += Money.Value(made[p] * days, r.Fuel * index, r.OutputGrams);
                 inputs += Money.Value(made[p] * days, r.Supplies * index, r.OutputGrams); // supplies go into the goods' cost, as in its books
                 total += made[p] * days;
@@ -137,10 +142,12 @@ namespace Sim.Core.Business
             long interest = loan <= 0 || sim.State.Credit == null ? 0
                 : Money.MulRate(loan, CreditRules.Rate(sim.Config.Game.Credit.Lenders[sim.Config.Game.Credit.IndexOfLender(Defs(sim).LenderId)], sim.State.Credit.Score));
             long costs = inputs + fuel + repairs + depreciation + wage + interest;
+            // Working capital: a day's inputs and fuel, bought before the next 6:00 round pays for them (§3.8, owner 2026-10-28).
+            long aDay = (inputs + fuel + days - 1) / days;
             return new Projection
             {
                 OwnGrams = total, Sales = sales, Wheat = inputs, Power = fuel, Repairs = repairs, Depreciation = depreciation, Wage = wage, Interest = interest, Loan = loan,
-                Revenue = sales, Costs = costs, Profit = sales - costs, Cost = Cost(sim, t), CashNeeded = Cost(sim, t) + (runYourself ? fuel + repairs : wage),
+                Revenue = sales, Costs = costs, Profit = sales - costs, Cost = Cost(sim, t), CashNeeded = Cost(sim, t) + (runYourself ? fuel + repairs : wage) + aDay,
             };
         }
 
@@ -150,6 +157,8 @@ namespace Sim.Core.Business
         /// </summary>
         public static Fixed InputPrice(Simulation sim, int good)
         {
+            int kind = MilkKind(sim, good);
+            if (kind >= 0) return Livestock.LivestockRules.MilkPrice(sim, kind); // your milk, at the co-op's price
             if (sim.State.Businesses != null)
                 foreach (Business b in sim.State.Businesses.Businesses)
                 {
@@ -157,6 +166,103 @@ namespace Sim.Core.Business
                     foreach (BusinessOutput o in TypeOf(sim, b).Outputs) if (o.Good == good) return MarketRules.Floor(sim, good);
                 }
             return MarketRules.Ceiling(sim, good);
+        }
+
+        /// <summary>The livestock kind whose milk <paramref name="good"/> is, or −1.</summary>
+        public static int MilkKind(Simulation sim, int good)
+        {
+            var kinds = sim.Config.Game.Livestock?.Animals;
+            if (kinds == null) return -1;
+            for (int k = 0; k < kinds.Count; k++) if (sim.Config.Game.Market.IndexOf("milk_" + kinds[k].Id) == good) return k;
+            return -1;
+        }
+
+        /// <summary>The milk neighbours sell the dairy (§3.9b): the village's dearest, buffalo milk.</summary>
+        public static int NeighbourMilkKind(Simulation sim)
+        {
+            var kinds = sim.Config.Game.Livestock.Animals;
+            int best = 0;
+            for (int k = 1; k < kinds.Count; k++) if (Livestock.LivestockRules.MilkPrice(sim, k) > Livestock.LivestockRules.MilkPrice(sim, best)) best = k;
+            return best;
+        }
+
+        /// <summary>A litre of neighbours' milk: the co-op's price that morning and the dairy's premium (§3.9b).</summary>
+        public static Fixed NeighbourMilkPrice(Simulation sim, BusinessTypeDef t)
+        {
+            return Livestock.LivestockRules.MilkPrice(sim, NeighbourMilkKind(sim)) + t.NeighbourMilkPremium * sim.State.Market.PriceIndex;
+        }
+
+        /// <summary>The herd's milk a real day by kind (ml), less what the household drinks (the dearest milk first): the plan's estimate.</summary>
+        public static long[] HerdMilk(Simulation sim)
+        {
+            var kinds = sim.Config.Game.Livestock?.Animals;
+            var ml = new long[kinds?.Count ?? 0];
+            if (kinds == null || sim.State.Livestock == null) return ml;
+            Time.Season season = Time.Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+            foreach (Livestock.Animal a in sim.State.Livestock.Animals)
+                ml[a.Kind] += (Livestock.LivestockRules.BaseMilkMl(sim, a, season) * a.Health).RoundToLong();
+            long home = (Livestock.LivestockRules.PerGameDay(sim, Livestock.LivestockRules.Defs(sim).Livestock.HouseholdLitresPerDay) * Fixed.FromInt(1000)).RoundToLong();
+            var order = new List<int>();
+            for (int k = 0; k < kinds.Count; k++) order.Add(k);
+            order.Sort((x, y) => { int c = Livestock.LivestockRules.MilkPrice(sim, y).CompareTo(Livestock.LivestockRules.MilkPrice(sim, x)); return c != 0 ? c : x.CompareTo(y); });
+            foreach (int k in order)
+            {
+                long q = System.Math.Min(home, ml[k]);
+                ml[k] -= q;
+                home -= q;
+            }
+            return ml;
+        }
+
+        /// <summary>The milk the day's mix needs (ml), by each product's first recipe.</summary>
+        public static long MilkFor(BusinessTypeDef t, long[] mix)
+        {
+            long n = 0;
+            foreach (int p in t.Products)
+            {
+                RecipeDef r = First(t, p);
+                foreach (KeyValuePair<int, long> kv in r.Inputs) if (!t.Makes(kv.Key)) n += Need(kv.Value, mix[p], r.OutputGrams);
+            }
+            return n;
+        }
+
+        /// <summary>A new business's own input a day: the dairy takes the milk its starting mix needs; the mill its type's wheat a day.</summary>
+        public static long DefaultOwnPerDay(Simulation sim, BusinessTypeDef t) { return t.TakesMilk ? MilkFor(t, DefaultMix(sim, t)) : t.OwnPerDay; }
+
+        /// <summary>
+        /// A day at the dairy as the plan sees it (§3.9b, §3.9c): the milk in at 6:00 (your herd's up to the day's amount, then
+        /// neighbours' if allowed), each recipe in order toward the mix within the day's rate. Returns what's made; the milk's cost.
+        /// </summary>
+        private static long[] DairyDay(Simulation sim, BusinessTypeDef t, long[] mix, long perDay, bool neighbours, out long milkCost)
+        {
+            var kinds = sim.Config.Game.Livestock.Animals;
+            var stock = new long[mix.Length];
+            long room = perDay, capacity = t.GramsPerHour * (t.CloseHour - t.OpenHour);
+            long[] herd = HerdMilk(sim);
+            milkCost = 0;
+            for (int k = 0; k < kinds.Count && room > 0; k++)
+            {
+                long q = System.Math.Min(room, herd[k]);
+                stock[sim.Config.Game.Market.IndexOf("milk_" + kinds[k].Id)] += q;
+                milkCost += Money.Value(q, Livestock.LivestockRules.MilkPrice(sim, k), 1000);
+                room -= q;
+            }
+            if (neighbours && room > 0)
+            {
+                stock[sim.Config.Game.Market.IndexOf("milk_" + kinds[NeighbourMilkKind(sim)].Id)] += room;
+                milkCost += Money.Value(room, NeighbourMilkPrice(sim, t), 1000);
+            }
+            var made = new long[mix.Length];
+            foreach (RecipeDef r in t.Recipes)
+            {
+                long q = System.Math.Min(mix[r.Output] - made[r.Output], (long)((System.Numerics.BigInteger)capacity * r.OutputGrams / r.InputGrams));
+                foreach (KeyValuePair<int, long> kv in r.Inputs) q = System.Math.Min(q, (long)((System.Numerics.BigInteger)stock[kv.Key] * r.OutputGrams / kv.Value));
+                if (q <= 0) continue;
+                made[r.Output] += q;
+                foreach (KeyValuePair<int, long> kv in r.Inputs) stock[kv.Key] -= Need(kv.Value, q, r.OutputGrams);
+                capacity -= RecipeInputs(r, q);
+            }
+            return made;
         }
 
         /// <summary>The goods a recipe type buys in (atta for the bakery), in recipe order, each once.</summary>
@@ -198,8 +304,24 @@ namespace Sim.Core.Business
         public static long[] DefaultMix(Simulation sim, BusinessTypeDef t)
         {
             var mix = new long[sim.Config.Game.Market.Goods.Count];
-            foreach (int p in t.Products) mix[p] = ShopGramsPerDay(sim, t, p) + sim.Config.Game.Market.Region.TraderBuyPerDay(p);
+            foreach (int p in t.Products) mix[p] = ShopGramsPerDay(sim, t, p) + (Pays(sim, t, p) ? sim.Config.Game.Market.Region.TraderBuyPerDay(p) : 0);
             return mix;
+        }
+
+        /// <summary>
+        /// Whether a product sells for more than it costs to make at today's prices (owner, 2026-10-28, ADR 0080): ghee from whole milk
+        /// doesn't, so the starting mix leaves the trader's ghee out.
+        /// </summary>
+        public static bool Pays(Simulation sim, BusinessTypeDef t, int product) { return MarketRules.Floor(sim, product) > UnitCost(sim, t, product); }
+
+        /// <summary>A kg (or litre) of a good to this business at today's prices: bought inputs at what they cost, made ones by their recipe.</summary>
+        public static Fixed UnitCost(Simulation sim, BusinessTypeDef t, int good)
+        {
+            RecipeDef r = First(t, good);
+            if (r == null) return t.TakesMilk && MilkKind(sim, good) >= 0 ? NeighbourMilkPrice(sim, t) : InputPrice(sim, good); // the dairy's next litre is neighbours'
+            Fixed batch = (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex;
+            foreach (KeyValuePair<int, long> kv in r.Inputs) batch += UnitCost(sim, t, kv.Key).MulRatio(kv.Value, 1000);
+            return batch.MulRatio(1000, r.OutputGrams);
         }
 
         /// <summary>The town's best-skilled adult without a town job (spec 016 §3.6), lowest id on a tie; null if none.</summary>
@@ -224,7 +346,7 @@ namespace Sim.Core.Business
             RejectReason place = Place(sim, tileId);
             if (place != RejectReason.None) return CommandResult.Reject(place);
             long loan = financing == null ? 0 : financing.Amount;
-            BusinessPlan plan = Project(sim, t, runYourself, t.OwnPerDay, t.Fee, loan);
+            BusinessPlan plan = Project(sim, t, runYourself, DefaultOwnPerDay(sim, t), t.Fee, loan);
             int lender = -1;
             if (financing != null)
             {
@@ -240,9 +362,9 @@ namespace Sim.Core.Business
             var b = new Business
             {
                 Id = s.NextId++, Type = type, TileId = tileId, Status = BusinessStatus.Building, FoundedAt = now, ReadyAt = now + t.BuildHours * Hour,
-                OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = t.OwnPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
+                OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = DefaultOwnPerDay(sim, t), Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
-                Mix = DefaultMix(sim, t), MadeToday = new long[goods], BuyFromMarket = t.ByRecipe && !t.TakesMilk, // the bakery buys atta your mill can't give
+                Mix = DefaultMix(sim, t), MadeToday = new long[goods], BuyFromMarket = t.ByRecipe, // the bakery buys atta your mill can't give; the dairy, neighbours' milk
             };
             string reference = "business:" + b.Id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, capital), new Posting(Account.Cash, -capital));
@@ -532,7 +654,7 @@ namespace Sim.Core.Business
                 if (want <= 0 || capacity <= 0) continue;
                 long q = System.Math.Min(want, (long)((System.Numerics.BigInteger)capacity * r.OutputGrams / r.InputGrams));
                 foreach (KeyValuePair<int, long> kv in r.Inputs)
-                    if (!b.BuyFromMarket || t.Makes(kv.Key)) q = System.Math.Min(q, (long)((System.Numerics.BigInteger)b.Stock[kv.Key] * r.OutputGrams / kv.Value));
+                    if (!b.BuyFromMarket || t.TakesMilk || t.Makes(kv.Key)) q = System.Math.Min(q, (long)((System.Numerics.BigInteger)b.Stock[kv.Key] * r.OutputGrams / kv.Value));
                 for (int pass = 0; pass < 2 && q > 0; pass++) // as far as the money goes (a smaller batch buys no more)
                 {
                     long cost = BatchCost(sim, b, r, q), spend = BusinessBooks.CanSpend(sim, b);
@@ -694,7 +816,7 @@ namespace Sim.Core.Business
                     Fixed price = Livestock.LivestockRules.MilkPrice(sim, k);
                     long q = System.Math.Min(room, available[k] - taken[k]);
                     long value = Money.Value(q, price, 1000);
-                    if (q > 0 && value > BusinessBooks.CanSpend(sim, b)) q = 0; // short of cash: the co-op takes it
+                    if (q > 0 && value > BusinessBooks.CanSpend(sim, b)) q = Money.QuantityFor(System.Math.Max(0, BusinessBooks.CanSpend(sim, b)), price, 1000); // as far as its cash goes; the co-op takes the rest
                     if (q <= 0) continue;
                     value = Money.Value(q, price, 1000);
                     BusinessBooks.Draw(sim, b, value);
@@ -704,8 +826,26 @@ namespace Sim.Core.Business
                     taken[k] += q;
                     room -= q;
                 }
+                if (b.BuyFromMarket && room > 0) Neighbours(sim, b, room);
             }
             return taken;
+        }
+
+        /// <summary>Neighbours' milk to fill the day's amount (§3.9b), at the co-op's price and the premium, as far as its cash goes.</summary>
+        private static void Neighbours(Simulation sim, Business b, long ml)
+        {
+            BusinessTypeDef t = TypeOf(sim, b);
+            int good = sim.Config.Game.Market.IndexOf("milk_" + sim.Config.Game.Livestock.Animals[NeighbourMilkKind(sim)].Id);
+            Fixed price = NeighbourMilkPrice(sim, t);
+            long spend = BusinessBooks.CanSpend(sim, b);
+            long value = Money.Value(ml, price, 1000);
+            if (value > spend) ml = Money.QuantityFor(System.Math.Max(0, spend), price, 1000);
+            value = Money.Value(ml, price, 1000);
+            if (ml <= 0 || value <= 0) return;
+            BusinessBooks.Draw(sim, b, value);
+            b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromNeighbours", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
+            b.Stock[good] += ml;
+            b.StockCost[good] += value;
         }
 
         internal static void Sold(Simulation sim, Business b, int good, long grams, long amount)

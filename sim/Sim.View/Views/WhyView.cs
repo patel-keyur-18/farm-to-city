@@ -92,7 +92,8 @@ namespace Sim.View.Views
             { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
             { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
-            { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix },
+            { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
+            { "dairyMilkADay", DairyMilkADay },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

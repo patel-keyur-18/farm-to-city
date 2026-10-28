@@ -189,6 +189,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0077 | Spec 018: the Village gate is 5 households, a business with 2 profitable seasons and the school (no market stall); the school on its plot from the Hamlet (1,05,000; the district pays the teacher, 2,000 upkeep); adult classes 3,000 (14+); literate adults earn 10% more outside; ~24 Codex cards by toast; three village advisors, capped; the treasury with the Township; Phase 2 gate: the Village in 2–3 weeks |
 | 0078 | Spec 019: your season report as three statements like the mill's Books, each line beside the same season last year; the hub inside Money and loans redesigned in the Store/People layout (trend, pie, debt to assets, emergency fund, passive income); a co-op savings deposit at 1.5% a season, never collateral; five milestones, no rewards; Your year after Winter; Your people on the report |
 | 0079 | The bakery: the shops buy 0.01 kg of pav a person a day (about a pav every 3 days); the starting mix and the plan add the trader's rusk; the plan prices atta as it would really cost; targets hired 15,000–25,000 a season (payback 5–8), run by you 45,000–60,000 |
+| 0080 | The dairy: neighbours' milk on by default (co-op price + 2); paneer 380 and the trader takes 60 kg a day; the starting mix leaves out what loses (ghee from whole milk); a day's inputs as working capital; targets hired 10,000–20,000 a season, run by you 35,000–50,000 |
 
 ## Current status
 

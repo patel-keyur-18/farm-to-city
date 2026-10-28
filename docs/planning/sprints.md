@@ -651,7 +651,7 @@
 | US-218 | The developer panel's Next era (ADR 0076) | [F08.4](features/F08.4-developer-panel-unity.md) | 1 | Must | Done (approved) |
 | US-118 | Recipes | [F12.2](features/F12.2-production-chains.md) | 5 | Must | Done (approved) |
 | US-119 | The bakery | [F12.2](features/F12.2-production-chains.md) | 5 | Must | Done (ADR 0079) |
-| US-216 | The dairy: paneer, curd and ghee | [F12.2](features/F12.2-production-chains.md) | 5 | Must | To do |
+| US-216 | The dairy: paneer, curd and ghee | [F12.2](features/F12.2-production-chains.md) | 5 | Must | In review (ADR 0080) |
 | US-112 | Hiring board | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | To do |
 | US-113 | Productivity and training | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | To do |
 | US-114 | HR events | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Should | To do |

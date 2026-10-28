@@ -43,13 +43,13 @@
       "equipment": { "value": 45000, "lifeSeasons": 40 },
       "buildHours": 24, "worker": "dairyman", "wage": 27000,
       "kgPerHour": 190, "powerPerKg": 0, "repairsShare": 0.02,
-      "openHour": 8, "closeHour": 18, "ownPerDay": 100, "takesMilk": true,
+      "openHour": 8, "closeHour": 18, "takesMilk": true, "neighbourMilkPremium": 2,
       "recipes": [
         { "id": "paneer_buffalo", "inputs": { "milk_buffalo": 10 }, "output": "paneer", "outputKg": 2,    "fuel": 20 },
-        { "id": "paneer_cow",     "inputs": { "milk_cow": 13 },     "output": "paneer", "outputKg": 2,    "fuel": 20 },
         { "id": "curd_cow",       "inputs": { "milk_cow": 10 },     "output": "curd",   "outputKg": 10,   "fuel": 20 },
-        { "id": "curd_buffalo",   "inputs": { "milk_buffalo": 10 }, "output": "curd",   "outputKg": 10,   "fuel": 20 },
         { "id": "ghee_buffalo",   "inputs": { "milk_buffalo": 15 }, "output": "ghee",   "outputKg": 1,    "fuel": 20 },
+        { "id": "curd_buffalo",   "inputs": { "milk_buffalo": 10 }, "output": "curd",   "outputKg": 10,   "fuel": 20 },
+        { "id": "paneer_cow",     "inputs": { "milk_cow": 13 },     "output": "paneer", "outputKg": 2,    "fuel": 20 },
         { "id": "ghee_cow",       "inputs": { "milk_cow": 22 },     "output": "ghee",   "outputKg": 1,    "fuel": 20 }
       ],
       "shops": { "paneer": 0.005, "curd": 0.03 }

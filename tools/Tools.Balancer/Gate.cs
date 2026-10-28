@@ -362,10 +362,14 @@ namespace Tools.Balancer
         /// Spec 016 §9 (US-119): the bakery measured from the Hamlet, because the Village's own gate comes with spec 018 (Sprint 17);
         /// the content is edited only in its era.
         /// </summary>
-        public static string BakeryInHamlet(string file, string json)
+        public static string BakeryInHamlet(string file, string json) { return InHamlet("bakery", file, json); }
+
+        public static string DairyInHamlet(string file, string json) { return InHamlet("dairy", file, json); }
+
+        private static string InHamlet(string type, string file, string json)
         {
-            return file == "businesses.json" ? json.Replace("\"id\": \"bakery\", \"nameKey\": \"business.bakery\", \"era\": \"village\"",
-                "\"id\": \"bakery\", \"nameKey\": \"business.bakery\", \"era\": \"hamlet\"") : json;
+            return file == "businesses.json" ? json.Replace("\"id\": \"" + type + "\", \"nameKey\": \"business." + type + "\", \"era\": \"village\"",
+                "\"id\": \"" + type + "\", \"nameKey\": \"business." + type + "\", \"era\": \"hamlet\"") : json;
         }
 
         /// <summary>Plays a business bot for <paramref name="seasons"/> and measures the own books of its business of <paramref name="type"/>.</summary>
@@ -415,6 +419,36 @@ namespace Tools.Balancer
         }
 
         /// <summary>The bakery's bots (US-119): hired with no mill, hired beside your mill, run by you; the shops' pav amount optionally tried.</summary>
+        /// <summary>The dairy's bots (US-216): hired, run by you, and hired on your own milk only (no neighbours').</summary>
+        public static int PrintDairy(ConfigFor configFor, int seeds, string paneerPrice = null, string paneerTrader = null, string gheeTrader = null)
+        {
+            SimConfig config = configFor((f, j) =>
+            {
+                j = DairyInHamlet(f, j);
+                if (paneerPrice != null && f == "goods.json") j = System.Text.RegularExpressions.Regex.Replace(j, "(\"id\": \"paneer\",[^}]*\"basePrice\": )320", "${1}" + paneerPrice);
+                if (f == "region.json")
+                {
+                    if (paneerTrader != null) j = System.Text.RegularExpressions.Regex.Replace(j, "(\"traderBuyPerDay\"[^}]*\"paneer\": )0", "${1}" + paneerTrader);
+                    if (gheeTrader != null) j = System.Text.RegularExpressions.Regex.Replace(j, "(\"traderBuyPerDay\"[^}]*\"ghee\": )20", "${1}" + gheeTrader);
+                }
+                return j;
+            });
+            if (paneerPrice != null) Console.WriteLine("  paneer " + paneerPrice + ", the trader's paneer " + paneerTrader + " kg and ghee " + gheeTrader + " kg a day");
+            Console.WriteLine("Dairy (spec 016 §9, US-216), " + seeds + " seeds, 16 seasons");
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new BusinessBot(false, false, "dairy"), () => new BusinessBot(true, false, "dairy"),
+                () => new BusinessBot(false, false, "dairy") { OwnMilkOnly = true }, () => new BusinessBot(true, false, "dairy") { OwnMilkOnly = true } })
+            {
+                MillResult m = Business(config, make, seeds, "dairy", 16);
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  " + m.Bot.PadRight(26) + "founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : K(pr[0]) + " / " + K(pr[pr.Count / 2]) + " / " + K(pr[pr.Count - 1]))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", overdrawn run " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed
+                    + ", end cash min " + K(m.EndCash.Min() / (double)Money.Coin));
+            }
+            return 0;
+        }
+
         public static int PrintBakery(ConfigFor configFor, int seeds, string pav)
         {
             SimConfig config = configFor((f, j) =>

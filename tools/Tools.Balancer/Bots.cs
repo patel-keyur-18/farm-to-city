@@ -887,12 +887,15 @@ namespace Tools.Balancer
             _types = types;
         }
 
+        /// <summary>The dairy works only your herd's milk (neighbours' milk stopped).</summary>
+        public bool OwnMilkOnly { get; set; }
+
         public override string Name
         {
             get
             {
                 string what = string.Join("+", _types.Select(x => x == "flour_mill" ? "mill" : x));
-                return what + (_self ? "-yours" : "-hired") + (_borrow ? "-loan" : "");
+                return what + (_self ? "-yours" : "-hired") + (_borrow ? "-loan" : "") + (OwnMilkOnly ? "-own-milk" : "");
             }
         }
 
@@ -948,7 +951,7 @@ namespace Tools.Balancer
             if (i < 0) return reserve;
             var type = Type(sim, _types[i]);
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
-            return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, type.OwnPerDay, type.Fee, loan).CashNeeded - loan;
+            return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
         }
 
         protected override bool KeepsClear(Simulation sim, int tile)
@@ -970,14 +973,21 @@ namespace Tools.Balancer
             }
         }
 
-        private static void Manage(Simulation sim, long t, Sim.Core.Business.Business b)
+        private void Manage(Simulation sim, long t, Sim.Core.Business.Business b)
         {
-            // The day's mix: what the shops buy, and for what keeps, what the trader takes as well (it pays: rusk's margin is positive).
+            // The day's mix: what the shops buy, and for what keeps, what the trader takes as well when it pays (rusk does; ghee from whole milk doesn't).
             var bt = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
             foreach (int p in bt.Products)
             {
-                long want = Sim.Core.Business.BusinessRules.ShopGramsPerDay(sim, bt, p) + sim.Config.Game.Market.Region.TraderBuyPerDay(p);
+                long want = Sim.Core.Business.BusinessRules.ShopGramsPerDay(sim, bt, p)
+                    + (Sim.Core.Business.BusinessRules.Pays(sim, bt, p) ? sim.Config.Game.Market.Region.TraderBuyPerDay(p) : 0);
                 if (b.Status == Sim.Core.Business.BusinessStatus.Open && b.Mix[p] != want) Ok(sim, new SetMix(t, b.Id, sim.Config.Game.Market.Goods[p].Id, want));
+            }
+            // The dairy's milk a day follows its mix; neighbours' milk unless it works its own only.
+            if (bt.TakesMilk && b.Status == Sim.Core.Business.BusinessStatus.Open)
+            {
+                long milk = Sim.Core.Business.BusinessRules.MilkFor(bt, b.Mix);
+                if (b.OwnPerDay != milk || b.BuyFromMarket == OwnMilkOnly) Ok(sim, new SetBusiness(t, b.Id, b.OpenHour, b.CloseHour, b.Fee, milk, !OwnMilkOnly));
             }
             // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
             bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
@@ -1007,7 +1017,7 @@ namespace Tools.Balancer
             if (p?.OrderFor(OrderTargetKind.Field, acre) is StandingOrder o) Ok(sim, new ClearStandingOrder(t, o.HandId, OrderTargetKind.Field, acre));
             if (Sim.Core.Business.BusinessRules.Place(sim, acre) != RejectReason.None) return;
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
-            long need = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, type.OwnPerDay, type.Fee, loan).CashNeeded - loan;
+            long need = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
             if (sim.State.Ledger.Cash < need + 30_000 * Money.Coin) return;
             Ok(sim, new FoundBusiness(t, type.Id, acre, need, _self, loan > 0 ? new Financing(defs.LenderId, loan, defs.TermSeasons) : null));
         }

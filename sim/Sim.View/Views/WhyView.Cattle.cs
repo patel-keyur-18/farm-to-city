@@ -71,8 +71,8 @@ namespace Sim.View.Views
             Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
             Row(vm, ctx, "why.animalMilk.mean", ctx.Fmt.Litres((LivestockRules.PerGameDay(sim, d.MilkPerDay) * Fixed.FromInt(1000)).RoundToLong()),
                 "perDay", ctx.Fmt.Decimal1(d.MilkPerDay), "days", ctx.Fmt.Decimal1(defs.Livestock.RealDaysPerGameDay));
-            Row(vm, ctx, "why.animalMilk.curve", ctx.Fmt.Factor(LivestockRules.Lactation(defs.Livestock, a.StageDay)), "day", ctx.Fmt.Integer(a.StageDay + 1));
-            if (d.SeasonMilk[(int)season] != Fixed.One) Row(vm, ctx, "why.animalMilk.season", ctx.Fmt.Factor(d.SeasonMilk[(int)season]));
+            Row(vm, ctx, "why.animalMilk.curve", Effect(ctx, LivestockRules.Lactation(defs.Livestock, a.StageDay)), "day", ctx.Fmt.Integer(a.StageDay + 1));
+            if (d.SeasonMilk[(int)season] != Fixed.One) Row(vm, ctx, "why.animalMilk.season", Effect(ctx, d.SeasonMilk[(int)season]));
             Row(vm, ctx, "why.animalMilk.fed", Pct(ctx, LivestockRules.FedFactor(sim, a)));
             Row(vm, ctx, "why.animalMilk.health", Pct(ctx, a.Health));
             Row(vm, ctx, "why.animalMilk.care", Pct(ctx, LivestockRules.CareFactor(sim)));
@@ -280,10 +280,10 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.fodder.title", ctx.Fmt.Kg(FodderView.CutPerDay(sim, c)), "crop", ctx.Strings.Get(def.NameKey).ToLowerInvariant());
             Row(vm, ctx, "why.fodder.base", ctx.Fmt.Kg((def.SeasonYieldPerAcre * Fixed.FromInt(1000)).RoundToLong()));
             Row(vm, ctx, "why.fodder.days", ctx.Fmt.Integer(sim.Clock.SecondsPerSeason / ClockDef.SecondsPerDay));
-            Row(vm, ctx, "why.yield.soil", ctx.Fmt.Factor(c.SoilFactor));
-            Row(vm, ctx, "why.fodder.water", ctx.Fmt.Factor(c.WaterRate));
-            Row(vm, ctx, "why.fodder.care", ctx.Fmt.Factor(sim.State.Farm.CareRatio > Fixed.One ? Fixed.One : sim.State.Farm.CareRatio));
-            Row(vm, ctx, "why.fodder.fertiliser", ctx.Fmt.Factor(sim.Config.Game.Farm.Fertilisers[c.Fertiliser].YieldFactor));
+            Row(vm, ctx, "why.yield.soil", Effect(ctx, c.SoilFactor));
+            Row(vm, ctx, "why.fodder.water", Effect(ctx, c.WaterRate));
+            Row(vm, ctx, "why.fodder.care", Effect(ctx, sim.State.Farm.CareRatio > Fixed.One ? Fixed.One : sim.State.Farm.CareRatio));
+            Row(vm, ctx, "why.fodder.fertiliser", Effect(ctx, sim.Config.Game.Farm.Fertilisers[c.Fertiliser].YieldFactor));
             FeedingReport f = sim.State.Livestock.LastFeeding;
             Row(vm, ctx, "why.fodder.eaten", ctx.Fmt.Kg(f.GreenOwn));
             Row(vm, ctx, "why.fodder.sold", ctx.Fmt.Kg(f.GreenSold) + " · " + Money(ctx, f.GreenSoldAmount));
