@@ -2929,6 +2929,134 @@ for _f, _deg in FACINGS.items():
     SPRITES["flour_mill_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_mill("building"), d)))()
 
 
+def pav_tray(o, name, x, y, z, mat_tray, mat_pav, cols=4, rows=2):
+    """A steel baking tray of pav: soft golden buns baked touching, in rows (ladi pav)."""
+    o.append(box(name, (0.012 + cols * 0.016, 0.012 + rows * 0.016, 0.004), (x, y, z), mat_tray, outline=False))
+    for i in range(cols):
+        for j in range(rows):
+            o.append(sphere("%s_%d%d" % (name, i, j), 0.009, (x + (i - (cols - 1) / 2) * 0.016, y + (j - (rows - 1) / 2) * 0.016, z + 0.006),
+                            mat_pav, scale=(1, 1, 0.7), segs=8, rings=5, outline=False))
+
+
+def model_bakery(stage):
+    """A village bakery (spec 016 §3.9): a lime-washed brick shed with a green band and a signboard with a painted loaf, its
+    shutter up; inside, the wood-fired brick oven glowing at its mouth and its chimney through the roof, the kneading table with
+    dough and a tray of pav, a steel rack of trays along the wall; outside, firewood stacked by the wall, atta sacks, and the
+    pav-wala's bicycle with its tin box. stage 'done' or 'building' (the plinth, half-raised walls, the oven's first courses)."""
+    o = []
+    w, d = 0.36, 0.24                        # the shed, its open front towards -y, at the back of the acre
+    cy = 0.08
+    lime, band = toon("bakeLime", 0xF4E6C4), toon("bakeBand", 0x2F6B4F)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    sackm = toon("attaSack", 0xEDE6D6)
+    ox, oy = -0.09, cy + 0.03                # the oven, inside on the left, its mouth to the front
+    yard_pad(o, w + 0.18, 0.22, -0.14)
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.035), (0, cy, 0.0175), plinth, bevel=0.005))
+    if stage == "building":
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.09), (sx * (w / 2 - 0.01), cy, 0.08), brick))
+        o.append(box("wallBack", (w, 0.02, 0.11), (0, cy + d / 2 - 0.01, 0.09), brick))
+        o.append(box("ovenCourses", (0.12, 0.12, 0.05), (ox, oy, 0.06), toon("brickDark", BRICK_DARK), bevel=0.003))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (0.08 + j * 0.055, -0.10, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.045, 0.032, (-0.12, -0.13, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+    # The shed: back and side walls, an open front with the shutter rolled up under the band and the signboard.
+    h = 0.17
+    o.append(box("back", (w, 0.02, h), (0, cy + d / 2 - 0.01, 0.035 + h / 2), lime))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.02, d, h), (sx * (w / 2 - 0.01), cy, 0.035 + h / 2), lime))
+        o.append(box("pier%d" % sx, (0.04, 0.03, h), (sx * (w / 2 - 0.02), cy - d / 2 + 0.015, 0.035 + h / 2), lime))
+    o.append(box("bandFront", (w + 0.004, 0.03, 0.03), (0, cy - d / 2 + 0.015, 0.035 + h + 0.012), band, outline=False))
+    o.append(box("shutter", (w - 0.08, 0.035, 0.025), (0, cy - d / 2 + 0.01, 0.035 + h - 0.045), toon("shutter", 0x8C949A)))
+    o.append(box("floor", (w - 0.04, d - 0.03, 0.006), (0, cy + 0.01, 0.038), toon("concrete", CONCRETE), outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.05, 0.012), (0, cy - 0.01, 0.035 + h + 0.008), toon("tin", TIN), rot=Matrix.Rotation(math.radians(7), 3, "X")))
+    for i in range(9):
+        o.append(box("rib%d" % i, (0.005, d + 0.05, 0.004), (-w / 2 + 0.02 + i * 0.04, cy - 0.01, 0.035 + h + 0.015), toon("tinRib", TIN_RIB),
+                     rot=Matrix.Rotation(math.radians(7), 3, "X"), outline=False))
+    # The signboard: cream, a green stripe, a painted brown loaf.
+    o.append(box("sign", (0.22, 0.008, 0.04), (0.02, cy - d / 2 - 0.012, 0.035 + h + 0.03), toon("bakeSign", 0xFBF3DF)))
+    o.append(box("signStripe", (0.22, 0.009, 0.008), (0.02, cy - d / 2 - 0.013, 0.035 + h + 0.016), band, outline=False))
+    o.append(sphere("signLoaf", 0.014, (-0.06, cy - d / 2 - 0.017, 0.035 + h + 0.034), toon("crust", 0xC07A35), scale=(1.4, 0.3, 0.8), segs=10, rings=6, outline=False))
+    # The oven (bhatti): a brick block with an arched mouth glowing orange, its chimney up through the roof.
+    o.append(box("oven", (0.13, 0.13, 0.10), (ox, oy, 0.088), brick, bevel=0.006))
+    o.append(box("ovenTop", (0.14, 0.14, 0.012), (ox, oy, 0.144), toon("brickDark", BRICK_DARK)))
+    o.append(box("ovenMouth", (0.05, 0.006, 0.035), (ox, oy - 0.066, 0.075), toon("ovenDark", 0x2A1A12), outline=False))
+    o.append(cylinder("ovenArch", 0.025, 0.025, 0.006, (ox, oy - 0.066, 0.092), toon("ovenDark", 0x2A1A12), segs=12,
+                      rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    o.append(box("ovenGlow", (0.036, 0.007, 0.018), (ox, oy - 0.067, 0.068), toon("glow", 0xF39A2B), outline=False))
+    o.append(box("peel", (0.006, 0.12, 0.004), (ox + 0.08, oy - 0.07, 0.07), toon("wood", WOOD), rot=Matrix.Rotation(math.radians(-25), 3, "X")))
+    o.append(box("chimney", (0.04, 0.04, 0.17), (ox - 0.02, oy + 0.03, 0.235), brick))
+    o.append(box("chimneyCap", (0.05, 0.05, 0.01), (ox - 0.02, oy + 0.03, 0.325), toon("brickDark", BRICK_DARK)))
+    # The kneading table with dough and a tray of pav, near the opening so the work reads from outside.
+    wood, steel = toon("wood", WOOD), toon("steel", 0xC9CDD2)
+    pav = toon("pav", 0xD99A4E)
+    tx, ty = 0.07, cy - 0.05
+    o.append(box("table", (0.13, 0.07, 0.008), (tx, ty, 0.09), wood))
+    for lx in (-0.055, 0.055):
+        for ly in (-0.025, 0.025):
+            o.append(box("tleg%d%d" % (lx > 0, ly > 0), (0.008, 0.008, 0.05), (tx + lx, ty + ly, 0.063), toon("wood_dark", WOOD_DARK)))
+    o.append(sphere("dough", 0.022, (tx - 0.035, ty, 0.1), toon("dough", 0xF5ECD8), scale=(1.2, 1, 0.55), segs=10, rings=6))
+    pav_tray(o, "tableTray", tx + 0.03, ty, 0.096, steel, pav)
+    # The showcase under the eave, where the village buys: a wooden base, a glass case of pav and rusk, jars of rusk on top.
+    sx_, sy_ = 0.05, cy - d / 2 - 0.035
+    o.append(box("caseBase", (0.17, 0.06, 0.05), (sx_, sy_, 0.06), toon("caseWood", 0x7A4A2A), bevel=0.003))
+    o.append(box("caseGlass", (0.17, 0.06, 0.045), (sx_, sy_, 0.1075), toon("glass", 0xD6EEF2)))
+    o.append(box("caseTop", (0.175, 0.065, 0.004), (sx_, sy_, 0.132), toon("caseWood", 0x7A4A2A), outline=False))
+    pav_tray(o, "caseTray", sx_ - 0.04, sy_ - 0.031, 0.096, steel, pav, cols=4, rows=1)
+    rusk = toon("rusk", 0xC98B45)
+    for i in range(4):
+        o.append(box("caseRusk%d" % i, (0.012, 0.004, 0.022), (sx_ + 0.03 + i * 0.014, sy_ - 0.031, 0.104), rusk, outline=False))
+    for i, x in enumerate((sx_ - 0.05, sx_ + 0.0, sx_ + 0.05)):
+        o.append(cylinder("jar%d" % i, 0.016, 0.016, 0.04, (x, sy_, 0.154), toon("glass", 0xD6EEF2), segs=12, smooth=True))
+        o.append(cylinder("jarRusk%d" % i, 0.014, 0.014, 0.024, (x, sy_, 0.147), rusk if i != 1 else pav, segs=12, outline=False))
+        o.append(cylinder("jarLid%d" % i, 0.017, 0.017, 0.008, (x, sy_, 0.178), toon("jarLid", 0xC2412D), segs=12))
+    # A steel rack of trays along the right wall.
+    rx, ry = w / 2 - 0.05, cy + 0.04
+    for lx in (-0.025, 0.025):
+        for ly in (-0.05, 0.05):
+            o.append(box("rackLeg%d%d" % (lx > 0, ly > 0), (0.005, 0.005, 0.15), (rx + lx, ry + ly, 0.115), steel, outline=False))
+    for k, z in enumerate((0.07, 0.11, 0.15)):
+        o.append(box("rackShelf%d" % k, (0.06, 0.11, 0.004), (rx, ry, z), toon("steelDark", 0x7E858B), outline=False))
+        pav_tray(o, "rackTray%d" % k, rx, ry, z + 0.003, steel, pav, cols=2, rows=4)
+    # Outside: firewood stacked along the left wall, atta sacks by the door, the pav-wala's bicycle on the yard.
+    log, end = toon("log", 0x8A5A34), toon("logend", 0xD9B07A)
+    for row in range(3):
+        for i in range(4 - row):
+            y = cy - 0.06 + (i - (3 - row) / 2) * 0.034
+            o.append(cylinder("log%d%d" % (row, i), 0.015, 0.015, 0.10, (-w / 2 - 0.05, y, 0.016 + row * 0.027), log, segs=8,
+                              rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+            o.append(cylinder("logEnd%d%d" % (row, i), 0.013, 0.013, 0.002, (-w / 2 - 0.101, y, 0.016 + row * 0.027), end, segs=8,
+                              rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    for i, (x, y, r) in enumerate(((0.19, -0.10, 0.3), (0.23, -0.125, -0.2))):
+        o.extend(sack("attaSack%d" % i, (x, y, 0.016), sackm, rot=r))
+    bx, by = -0.07, -0.21                   # the bicycle, side-on along x, on its stand
+    rubber, frame = toon("tyre", 0x2B2B2B), toon("cycle", 0x2A3F6B)
+    for i, x in enumerate((bx - 0.045, bx + 0.045)):
+        o.append(cylinder("wheel%d" % i, 0.032, 0.032, 0.006, (x, by, 0.034), rubber, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+        o.append(cylinder("hub%d" % i, 0.024, 0.024, 0.007, (x, by, 0.034), toon("rim", 0xC9CDD2), segs=18, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    o.append(box("bar", (0.09, 0.006, 0.006), (bx, by, 0.06), frame, outline=False))
+    o.append(box("down", (0.006, 0.006, 0.05), (bx + 0.01, by, 0.045), frame, rot=Matrix.Rotation(math.radians(30), 3, "Y"), outline=False))
+    o.append(box("seat", (0.018, 0.01, 0.006), (bx - 0.02, by, 0.072), toon("seat", 0x3A2A22)))
+    o.append(box("handle", (0.006, 0.03, 0.006), (bx + 0.045, by, 0.078), frame))
+    o.append(box("carrierBox", (0.05, 0.04, 0.03), (bx - 0.045, by, 0.085), toon("tinBox", 0xA9B1B6)))
+    o.append(box("carrierLid", (0.052, 0.042, 0.004), (bx - 0.045, by, 0.101), toon("tinBoxLid", 0xC2412D), outline=False))
+    back_details(o, w, d, 0.13, toon("wood_dark", WOOD_DARK))
+    for part in o[-3:]:
+        part.location.y += cy
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["bakery_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("done"), d)))()
+    SPRITES["bakery_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("building"), d)))()
+
+
 def portrait(kind):
     """A card portrait: the villager from the shoulders up, framed as an icon."""
     objs = model_person(kind, "front")

@@ -564,7 +564,7 @@ namespace Sim.View.Views
 
         /// <summary>
         /// Businesses (spec 016 §7): each on its acre; while the mill grinds the area's grain, three people from the area wait in its
-        /// yard with their sacks.
+        /// yard with their sacks (the bakery and the dairy sell at the morning round, so nobody waits at theirs).
         /// </summary>
         private static void AddBusinesses(ViewContext ctx, MapVm map)
         {
@@ -578,7 +578,7 @@ namespace Sim.View.Views
                 bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(b, hour);
                 map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working });
                 map.Tiles[b.TileId].Business = true;
-                if (!working || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;
+                if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;
                 string[] looks = { "town_m", "town_f", "elder_m" };
                 for (int i = 0; i < looks.Length; i++)
                     map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = looks[i], Female = looks[i] == "town_f",

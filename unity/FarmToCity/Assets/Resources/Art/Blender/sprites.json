@@ -44,6 +44,62 @@
    "name": "animal_cow_stand"
   },
   {
+   "w": 400,
+   "h": 326,
+   "pivotX": 0.46187,
+   "pivotY": 0.38151,
+   "name": "bakery_building_e"
+  },
+  {
+   "w": 400,
+   "h": 284,
+   "pivotX": 0.46187,
+   "pivotY": 0.39013,
+   "name": "bakery_building_n"
+  },
+  {
+   "w": 400,
+   "h": 326,
+   "pivotX": 0.53813,
+   "pivotY": 0.38151,
+   "name": "bakery_building_s"
+  },
+  {
+   "w": 400,
+   "h": 284,
+   "pivotX": 0.53813,
+   "pivotY": 0.39013,
+   "name": "bakery_building_w"
+  },
+  {
+   "w": 396,
+   "h": 334,
+   "pivotX": 0.45551,
+   "pivotY": 0.37078,
+   "name": "bakery_e"
+  },
+  {
+   "w": 396,
+   "h": 284,
+   "pivotX": 0.45551,
+   "pivotY": 0.37086,
+   "name": "bakery_n"
+  },
+  {
+   "w": 396,
+   "h": 356,
+   "pivotX": 0.54449,
+   "pivotY": 0.34914,
+   "name": "bakery_s"
+  },
+  {
+   "w": 396,
+   "h": 288,
+   "pivotX": 0.54449,
+   "pivotY": 0.36724,
+   "name": "bakery_w"
+  },
+  {
    "w": 324,
    "h": 216,
    "pivotX": 0.5,
