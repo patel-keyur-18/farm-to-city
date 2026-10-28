@@ -987,7 +987,9 @@ namespace Tools.Balancer
                 put = (put + Money.Coin - 1) / Money.Coin * Money.Coin;
                 if (put > 0 && sim.State.Ledger.Cash >= put + 10_000 * Money.Coin) Ok(sim, new PutCash(t, b.Id, put));
             }
-            if (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(b) == 0)
+            // Your cash running low (loan payments come at the close): draw what the business can spare, as an owner would.
+            bool low = sim.State.Ledger.Cash < 20_000 * Money.Coin;
+            if ((seasonStart || low) && Sim.Core.Business.BusinessBooks.Overdrawn(b) == 0)
             {
                 var type = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
                 long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;

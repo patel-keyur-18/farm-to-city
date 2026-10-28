@@ -124,7 +124,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | Rate | One oven, about 10 batches a working day: 130 kg of bread, so 124 kg a real hour while open | |
 | Inputs | Atta from your mill first (an internal sale at the market price), else the market; bakery supplies bought at their price | Supplies base 100 a kg |
 | Fuel | Wood or gas, coins a batch | 100 |
-| Who buys | The village grocer and tea stall (neighbours) each morning at wholesale, for the area (§3.5b's people) up to a set amount a person; your town's families from their leisure share (spec 014 §3.5); rusk keeps, so the trader and supermarket orders take it too | Pav 100, rusk 110 a kg; the shops 0.03 kg pav and 0.01 kg rusk a person a day of life |
+| Who buys | The village grocer and tea stall (neighbours) each morning at wholesale, for the area (§3.5b's people) up to a set amount a person; your town's families from their leisure share (spec 014 §3.5); rusk keeps, so the trader and supermarket orders take it too | Pav 100, rusk 110 a kg; the shops 0.01 kg pav and 0.01 kg rusk a person a day of life (ADR 0079) |
 | Keeping | Pav 2 days, rusk 60 days | Spoilage in `goods.json` |
 | The margin, year-0 | About 700 a batch; sales, not the oven, set how much it earns | |
 | What it bakes | You set the day's mix (pav and rusk); unsold pav spoils | |
@@ -145,7 +145,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 
 | Rule | Behaviour |
 | --- | --- |
-| The day's mix | The bakery and the dairy each have a daily mix: a kg-a-day target for each product (pav and rusk; paneer, curd and ghee), set in Settings with Change presets; the dairy's rows also show the litres each takes. Each open hour the worker makes toward the mix, up to the rate (kg of inputs a real hour) |
+| The day's mix | The bakery and the dairy each have a daily mix: a kg-a-day target for each product (pav and rusk; paneer, curd and ghee), set in Settings with Change presets; the dairy's rows also show the litres each takes. Each open hour the worker makes toward the mix, up to the rate (kg of inputs a real hour). A new business starts with what the shops buy and, for what keeps, what the trader takes as well; the plan counts the same (ADR 0079) |
 | Milk | The dairy keeps up to its milk a day (§3.9b) at the 6:00 milking; buffalo milk goes to paneer and ghee first (more paneer a litre), cow milk to curd first; milk not made up that day spoils |
 | The morning round | At 6:00 (with the trader's truck and the co-op) the village grocer and tea stall collect what was made since the last round, each product up to its amount a person × the people (the area's plus your town's: your townspeople buy through the village shops, no budget line of their own) × 22.8, at that morning's wholesale price (the good's price, following the index and the day's move). Then rusk and ghee go to the trader. Pav, curd and raw milk left after the round spoil; paneer loses half a day; rusk and ghee keep |
 | Atta | The bakery's atta comes from your mill first (before it sells to the trader; an internal sale at the trader's price), else the market at its import price |
@@ -244,6 +244,8 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | A mill grinding for the area (350 people plus your town) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0073) | Net profit 5,000–10,000 a season, on a business loan too | US-117's bot (8 seeds, 3 years): 6,400–8,000; on a loan 8,200–10,000 (at 260 people it lost 2,200–3,800, ADR 0073) |
 | The same mill run by you | 30,000–40,000 a season, with your farm hours less (about what they'd earn as day labour, shown in the plan); payback 3–4 seasons | US-117's bot: 33,700–37,400, payback 3.0–3.3 |
 | Milling wheat bought at the market | 1–2 a kg | Teaches that margins are thin |
+| A bakery (the shops 0.01 kg of pav a person a day, rusk to the trader), baker hired (ADR 0079) | Net profit 15,000–25,000 a season, payback 5–8 seasons, on a business loan too | US-119's bot (8 seeds, 16 seasons): 19,800, payback 6.5; on a loan 19,500 |
+| The same bakery run by you | 45,000–60,000 a season, payback 2–3 seasons | US-119's bot: 53,700, payback 2.4; 2 of 8 runs foreclosed on the farm's loans |
 | A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | US-117 (`GateTests.Mill`): every run plays on with cash; overdrawn at most 2 closes in a row; run by you while borrowing for houses and cattle, 1 of 8 runs foreclosed on the farm's loans (the competent bot: 0 of 8) |
 
 ## 10. Open questions

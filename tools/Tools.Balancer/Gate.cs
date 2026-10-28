@@ -424,9 +424,10 @@ namespace Tools.Balancer
             });
             Console.WriteLine("Bakery (spec 016 §9, US-119), " + seeds + " seeds, 16 seasons" + (pav == null ? "" : ", the shops' pav " + pav + " kg a person a day"));
             foreach (Func<Bot> make in new Func<Bot>[] { () => new BusinessBot(false, false, "bakery"), () => new BusinessBot(false, false, "flour_mill", "bakery"),
-                () => new BusinessBot(true, false, "bakery"), () => new BusinessBot(false, true, "bakery") })
+                () => new BusinessBot(true, false, "bakery"), () => new BusinessBot(false, true, "bakery"), () => new MillBot(true) })
             {
-                MillResult m = Business(config, make, seeds, "bakery", 16);
+                string type = make() is MillBot ? "flour_mill" : "bakery";
+                MillResult m = Business(config, make, seeds, type, 16);
                 List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
                 Console.WriteLine("  " + m.Bot.PadRight(26) + "founded " + m.Founded + " of " + m.Seeds + ", profit a season "
                     + (pr.Count == 0 ? "-" : K(pr[0]) + " / " + K(pr[pr.Count / 2]) + " / " + K(pr[pr.Count - 1]))

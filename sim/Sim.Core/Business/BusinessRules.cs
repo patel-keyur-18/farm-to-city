@@ -191,11 +191,14 @@ namespace Sim.Core.Business
             return 0;
         }
 
-        /// <summary>The day's mix a new business starts with (§3.9c): what the shops will buy each morning; nothing else.</summary>
+        /// <summary>
+        /// The day's mix a new business starts with, and the plan's (§3.9c, owner 2026-10-28): what the shops will buy each morning, and
+        /// for what keeps, what the trader takes as well.
+        /// </summary>
         public static long[] DefaultMix(Simulation sim, BusinessTypeDef t)
         {
             var mix = new long[sim.Config.Game.Market.Goods.Count];
-            foreach (int p in t.Products) mix[p] = ShopGramsPerDay(sim, t, p);
+            foreach (int p in t.Products) mix[p] = ShopGramsPerDay(sim, t, p) + sim.Config.Game.Market.Region.TraderBuyPerDay(p);
             return mix;
         }
 

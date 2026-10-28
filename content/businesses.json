@@ -35,7 +35,7 @@
         { "id": "pav",  "inputs": { "atta": 10 }, "output": "pav",  "outputKg": 13, "fuel": 100, "supplies": 150 },
         { "id": "rusk", "inputs": { "pav": 12 },  "output": "rusk", "outputKg": 10, "fuel": 100 }
       ],
-      "shops": { "pav": 0.03, "rusk": 0.01 }
+      "shops": { "pav": 0.01, "rusk": 0.01 }
     },
     {
       "id": "dairy", "nameKey": "business.dairy", "era": "village",

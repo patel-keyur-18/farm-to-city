@@ -44,9 +44,10 @@ namespace Sim.Core.Tests
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             int pav = sim.Config.Game.Market.IndexOf("pav"), rusk = sim.Config.Game.Market.IndexOf("rusk"), atta = sim.Config.Game.Market.IndexOf("atta");
             long shopPav = BusinessRules.ShopGramsPerDay(sim, t, pav), shopRusk = BusinessRules.ShopGramsPerDay(sim, t, rusk);
-            Assert.That(shopPav, Is.EqualTo(Round(0.03 * 22.8 * BusinessRules.AreaPeople(sim) * 1000)));
+            Assert.That(shopPav, Is.EqualTo(Round(0.01 * 22.8 * BusinessRules.AreaPeople(sim) * 1000)));
             Assert.That(b.Mix[pav], Is.EqualTo(shopPav), "the default mix is what the shops buy");
-            Assert.That(b.Mix[rusk], Is.EqualTo(shopRusk));
+            Assert.That(b.Mix[rusk], Is.EqualTo(shopRusk + sim.Config.Game.Market.Region.TraderBuyPerDay(rusk)), "and for what keeps, what the trader takes");
+            Ok(sim, new SetMix(sim.State.Clock.SimTime, b.Id, "rusk", shopRusk)); // the shops' rusk only, for the round below
             Ok(sim, new SetMix(sim.State.Clock.SimTime, b.Id, "pav", shopPav + 50_000)); // 50 kg more than the shops take
 
             sim.AdvanceTo(NextDayAt(sim, 0));
