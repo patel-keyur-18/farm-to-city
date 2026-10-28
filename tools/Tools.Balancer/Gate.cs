@@ -347,10 +347,29 @@ namespace Tools.Balancer
 
             /// <summary>Your cash at the end of every run: never stuck (ADR 0009) means playing on, a foreclosure included.</summary>
             public List<long> EndCash = new List<long>();
+
+            /// <summary>Your town's people at the end of each run (the shops' customers include them).</summary>
+            public List<int> EndPeople = new List<int>();
+
+            /// <summary>Per seed that founded one: full seasons measured.</summary>
+            public List<int> FullSeasons = new List<int>();
         }
 
         /// <summary>Plays a mill bot for <paramref name="seasons"/> and measures its mill's own books.</summary>
-        public static MillResult Mill(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        public static MillResult Mill(SimConfig config, Func<Bot> make, int seeds, int seasons = 12) { return Business(config, make, seeds, "flour_mill", seasons); }
+
+        /// <summary>
+        /// Spec 016 §9 (US-119): the bakery measured from the Hamlet, because the Village's own gate comes with spec 018 (Sprint 17);
+        /// the content is edited only in its era.
+        /// </summary>
+        public static string BakeryInHamlet(string file, string json)
+        {
+            return file == "businesses.json" ? json.Replace("\"id\": \"bakery\", \"nameKey\": \"business.bakery\", \"era\": \"village\"",
+                "\"id\": \"bakery\", \"nameKey\": \"business.bakery\", \"era\": \"hamlet\"") : json;
+        }
+
+        /// <summary>Plays a business bot for <paramref name="seasons"/> and measures the own books of its business of <paramref name="type"/>.</summary>
+        public static MillResult Business(SimConfig config, Func<Bot> make, int seeds, string type, int seasons = 12)
         {
             var all = new MillResult { Bot = make().Name, Seeds = seeds };
             Parallel.For(0, seeds, i =>
@@ -362,13 +381,13 @@ namespace Tools.Balancer
                     {
                         if (e is Sim.Core.Events.ForeclosureCompleted) foreclosed++;
                         if (!(e is Sim.Core.Events.SeasonClosed)) continue;
-                        var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed);
+                        var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed && Sim.Core.Business.BusinessRules.TypeOf(sim, x).Id == type);
                         if (b == null) continue;
                         run = Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0 ? run + 1 : 0;
                         worst = Math.Max(worst, run);
                     }
                 });
-                Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Count > 0 ? r.Sim.State.Businesses.Businesses[0] : null;
+                Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Find(x => Sim.Core.Business.BusinessRules.TypeOf(r.Sim, x).Id == type);
                 lock (all)
                 {
                     // Cash you can reach: your own and the open businesses' (Take out moves it to you), not inputs or stock bought.
@@ -376,6 +395,7 @@ namespace Tools.Balancer
                     foreach (Sim.Core.Business.Business x in r.Sim.State.Businesses?.Businesses ?? new System.Collections.Generic.List<Sim.Core.Business.Business>())
                         if (x.Status != Sim.Core.Business.BusinessStatus.Closed) reach += Math.Max(0, x.Ledger.Cash - Sim.Core.Business.BusinessBooks.Overdrawn(x));
                     all.EndCash.Add(reach);
+                    all.EndPeople.Add(r.Sim.State.Citizens?.Population ?? 0);
                     all.Foreclosed += foreclosed > 0 ? 1 : 0;
                     if (mill == null) return;
                     all.Founded++;
@@ -383,6 +403,7 @@ namespace Tools.Balancer
                     long founded = mill.FoundedAt / r.Sim.Clock.SecondsPerSeason;
                     var full = mill.Reports.Where(x => x.Period > founded).ToList();
                     if (full.Count == 0) return;
+                    all.FullSeasons.Add(full.Count);
                     double profit = full.Average(x => (double)Sim.Core.Business.BusinessBooks.NetProfit(x)) / Money.Coin;
                     all.Profit.Add(profit);
                     double cost = Sim.Core.Business.BusinessRules.Cost(r.Sim, Sim.Core.Business.BusinessRules.TypeOf(r.Sim, mill)) / (double)Money.Coin;
@@ -392,6 +413,32 @@ namespace Tools.Balancer
             });
             return all;
         }
+
+        /// <summary>The bakery's bots (US-119): hired with no mill, hired beside your mill, run by you; the shops' pav amount optionally tried.</summary>
+        public static int PrintBakery(ConfigFor configFor, int seeds, string pav)
+        {
+            SimConfig config = configFor((f, j) =>
+            {
+                j = BakeryInHamlet(f, j);
+                return pav != null && f == "businesses.json" ? j.Replace("\"shops\": { \"pav\": 0.03,", "\"shops\": { \"pav\": " + pav + ",") : j;
+            });
+            Console.WriteLine("Bakery (spec 016 §9, US-119), " + seeds + " seeds, 16 seasons" + (pav == null ? "" : ", the shops' pav " + pav + " kg a person a day"));
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new BusinessBot(false, false, "bakery"), () => new BusinessBot(false, false, "flour_mill", "bakery"),
+                () => new BusinessBot(true, false, "bakery"), () => new BusinessBot(false, true, "bakery") })
+            {
+                MillResult m = Business(config, make, seeds, "bakery", 16);
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  " + m.Bot.PadRight(26) + "founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : K(pr[0]) + " / " + K(pr[pr.Count / 2]) + " / " + K(pr[pr.Count - 1]))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", overdrawn run " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed
+                    + ", end cash min " + K(m.EndCash.Min() / (double)Money.Coin) + ", town " + m.EndPeople.OrderBy(x => x).ElementAt(m.EndPeople.Count / 2)
+                    + " people, " + (m.FullSeasons.Count == 0 ? 0 : m.FullSeasons.OrderBy(x => x).ElementAt(m.FullSeasons.Count / 2)) + " full seasons (medians)");
+            }
+            return 0;
+        }
+
+        private static string K(double coins) { return coins.ToString("N0", CultureInfo.InvariantCulture); }
 
         // ---- US-098 (ADR 0045 §4): the Phase 1 health checks ----
 

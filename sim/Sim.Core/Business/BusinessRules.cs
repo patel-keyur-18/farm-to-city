@@ -106,8 +106,8 @@ namespace Sim.Core.Business
         }
 
         /// <summary>
-        /// A recipe type's season ahead (§3.9c): the day's mix sold to the shops (and the trader for what keeps), its inputs at the
-        /// trader's price (your own atta and milk) less what it makes itself, fuel and supplies, against the wage, repairs and wear.
+        /// A recipe type's season ahead (§3.9c): the day's mix sold to the shops (and the trader for what keeps), its inputs at what
+        /// they'd cost (<see cref="InputPrice"/>) less what it makes itself, with the supplies; fuel; against the wage, repairs and wear.
         /// </summary>
         private static Projection ProjectedByRecipe(Simulation sim, BusinessTypeDef t, bool runYourself, long loan, long[] mix)
         {
@@ -126,8 +126,9 @@ namespace Sim.Core.Business
                 sales += MarketRules.Value(sim, p, sold * days, MarketRules.Floor(sim, p));
                 RecipeDef r = First(t, p);
                 foreach (KeyValuePair<int, long> kv in r.Inputs)
-                    if (!t.Makes(kv.Key)) inputs += MarketRules.Value(sim, kv.Key, Need(kv.Value, made[p], r.OutputGrams) * days, MarketRules.Floor(sim, kv.Key));
-                fuel += Money.Value(made[p] * days, (r.Fuel + r.Supplies) * index, r.OutputGrams);
+                    if (!t.Makes(kv.Key)) inputs += MarketRules.Value(sim, kv.Key, Need(kv.Value, made[p], r.OutputGrams) * days, InputPrice(sim, kv.Key));
+                fuel += Money.Value(made[p] * days, r.Fuel * index, r.OutputGrams);
+                inputs += Money.Value(made[p] * days, r.Supplies * index, r.OutputGrams); // supplies go into the goods' cost, as in its books
                 total += made[p] * days;
             }
             long repairs = Money.MulRate(MarketRules.Indexed(sim, t.EquipmentValue), t.RepairsShare);
@@ -141,6 +142,31 @@ namespace Sim.Core.Business
                 OwnGrams = total, Sales = sales, Wheat = inputs, Power = fuel, Repairs = repairs, Depreciation = depreciation, Wage = wage, Interest = interest, Loan = loan,
                 Revenue = sales, Costs = costs, Profit = sales - costs, Cost = Cost(sim, t), CashNeeded = Cost(sim, t) + (runYourself ? fuel + repairs : wage),
             };
+        }
+
+        /// <summary>
+        /// What a recipe's input costs a kg (§3.9c): the trader's price when a business of yours makes it (your mill's atta), else the
+        /// market's import price.
+        /// </summary>
+        public static Fixed InputPrice(Simulation sim, int good)
+        {
+            if (sim.State.Businesses != null)
+                foreach (Business b in sim.State.Businesses.Businesses)
+                {
+                    if (b.Status == BusinessStatus.Closed) continue;
+                    foreach (BusinessOutput o in TypeOf(sim, b).Outputs) if (o.Good == good) return MarketRules.Floor(sim, good);
+                }
+            return MarketRules.Ceiling(sim, good);
+        }
+
+        /// <summary>The goods a recipe type buys in (atta for the bakery), in recipe order, each once.</summary>
+        public static List<int> BoughtInputs(BusinessTypeDef t)
+        {
+            var list = new List<int>();
+            foreach (RecipeDef r in t.Recipes)
+                foreach (KeyValuePair<int, long> kv in r.Inputs)
+                    if (!t.Makes(kv.Key) && !list.Contains(kv.Key)) list.Add(kv.Key);
+            return list;
         }
 
         /// <summary>A product's first recipe (the preferred one), or null.</summary>

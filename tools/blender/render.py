@@ -1303,6 +1303,21 @@ def icon_good(good):
         o.append(cylinder("sackBody", 0.09, 0.10, 0.12, (0, 0, 0.06), toon("sack", 0xC7A06A), segs=16, smooth=True))
         o.append(dome("chokar", 0.088, 0.04, (0, 0, 0.12), toon("chokar", 0xA8743E)))
         o.append(cylinder("rim", 0.092, 0.092, 0.012, (0, 0, 0.12), toon("jute", 0x9C7A4C), segs=16, outline=False))
+    elif good == "pav":
+        # Ladi pav: soft golden buns baked touching, on a steel tray (spec 016 §3.9).
+        o.append(box("tray", (0.25, 0.18, 0.012), (0, 0, 0.006), toon("steel", 0xC9CDD2), bevel=0.004))
+        for i in range(3):
+            for j in range(2):
+                o.append(sphere("bun%d%d" % (i, j), 0.045, ((i - 1) * 0.075, (j - 0.5) * 0.075, 0.045), toon("pav", 0xD99A4E), scale=(1, 1, 0.75), segs=14, rings=8))
+                o.append(sphere("top%d%d" % (i, j), 0.03, ((i - 1) * 0.075, (j - 0.5) * 0.075 - 0.005, 0.072), toon("pavTop", 0xB8742F), scale=(1, 1, 0.35),
+                                segs=10, rings=5, outline=False))
+    elif good == "rusk":
+        # Rusk: twice-baked slices, crisp and golden, stacked against each other.
+        for i in range(5):
+            o.append(box("slice%d" % i, (0.15, 0.022, 0.07), (0, (i - 2) * 0.03, 0.04), toon("rusk", 0xC98B45), bevel=0.008,
+                         rot=Matrix.Rotation(math.radians(-12), 3, "X")))
+            o.append(box("crumb%d" % i, (0.13, 0.024, 0.05), (0, (i - 2) * 0.03 - 0.001, 0.04), toon("ruskIn", 0xE5B877), outline=False,
+                         rot=Matrix.Rotation(math.radians(-12), 3, "X")))
     elif good == "potato":
         for i, (x, y, z) in enumerate(((-0.05, 0.0, 0.04), (0.05, 0.01, 0.04), (0.0, -0.02, 0.10))):
             o.append(sphere("potato%d" % i, 0.06, (x, y, z), toon("potato", 0xC59A5A), scale=(1.25, 1, 0.85), segs=14, rings=9))
@@ -1549,7 +1564,7 @@ for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", mod
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
-for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran"):
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk"):
     ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
 for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()

@@ -81,7 +81,7 @@ namespace Sim.View.Views
         public static string Label(ViewContext ctx, Business b, int line)
         {
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
-            return ctx.Strings.Get("books." + Names[line], "good", ctx.Strings.Get(ctx.Sim.Config.Game.Market.Goods[t.Input].NameKey).ToLowerInvariant());
+            return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe ? "" : BusinessWords.Good(ctx, t.Input));
         }
 
         private static bool IsCost(int line) { return line == Goods || (line >= Wages && line <= Interest) || line == CashOut || line == Debts; }
@@ -101,8 +101,9 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.pnlNow" : "books.pnl")));
+            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe; // a bakery or dairy charges no fees
             foreach (int line in new[] { Fees, Sales, Goods, Margin })
-                Add(ctx, vm, b, r, back, line);
+                if (line != Fees || !recipe) Add(ctx, vm, b, r, back, line);
             if (Amount(r, Wages) != 0 || b.Worker != WorkerKind.Founder) Add(ctx, vm, b, r, back, Wages);
             foreach (int line in new[] { Power, Repairs, Depreciation })
                 Add(ctx, vm, b, r, back, line);
@@ -163,8 +164,10 @@ namespace Sim.View.Views
                     s.Get("books.pvaSoFar", "n", ctx.Fmt.Integer(full), "of", ctx.Fmt.Integer(BusinessBooks.KeptReports)), "booksPlan", WhyId(b, 0, Profit)));
                 return;
             }
+            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe;
             foreach (int line in PlanLines)
             {
+                if (line == Fees && recipe) continue;
                 long plan = Planned(b.Plan, line), actual = Average(b, line);
                 if ((line == Wages || line == Interest) && plan == 0 && actual == 0) continue;
                 var l = new LineVm(Label(ctx, b, line), s.Get("books.pvaValue", "actual", Value(ctx, line, actual), "plan", Value(ctx, line, plan)), "booksPlan", WhyId(b, 0, line))
@@ -216,7 +219,7 @@ namespace Sim.View.Views
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
             long plan = Planned(p, line), actual = Average(b, line);
             long area = AverageGrams(b, true), own = AverageGrams(b, false);
-            string Kg(string key, long kg, long planned) { return s.Get(key, "kg", ctx.Fmt.Kg(kg), "plan", ctx.Fmt.Kg(planned)); }
+            string Kg(string key, long kg, long planned) { return s.Get(BusinessWords.Key(ctx, key, t), "kg", ctx.Fmt.Kg(kg), "plan", ctx.Fmt.Kg(planned)); }
             string Prices() { return s.Get(Near(actual, plan) ? "books.why.asPlanned" : "books.why.prices"); }
             switch (line)
             {
@@ -227,7 +230,7 @@ namespace Sim.View.Views
                     if (b.CloseHour - b.OpenHour < t.CloseHour - t.OpenHour) return Kg("books.why.fewerHours", area, p.AreaGrams);
                     return Kg("books.why.lessGrain", area, p.AreaGrams);
                 case Sales: case Goods:
-                    if (own == 0 && p.OwnGrams > 0) return s.Get("books.why.noOwn");
+                    if (own == 0 && p.OwnGrams > 0) return s.Get(BusinessWords.Key(ctx, "books.why.noOwn", t));
                     return Near(own, p.OwnGrams) ? Prices() : Kg("books.why.ownKg", own, p.OwnGrams);
                 case Power:
                     return Near(area + own, p.AreaGrams + p.OwnGrams) ? Prices() : Kg("books.why.groundKg", area + own, p.AreaGrams + p.OwnGrams);
@@ -238,11 +241,11 @@ namespace Sim.View.Views
                 case Profit:
                     if (Near(actual, plan)) return s.Get("books.why.asPlanned");
                     // The line that moved profit most the same way: income above plan or costs below it raise it.
-                    int most = Fees;
+                    int most = t.ByRecipe ? Sales : Fees;
                     long biggest = 0;
                     foreach (int l in PlanLines)
                     {
-                        if (l == Profit) continue;
+                        if (l == Profit || (l == Fees && t.ByRecipe)) continue;
                         long effect = (Average(b, l) - Planned(p, l)) * (IsCost(l) ? -1 : 1);
                         if ((effect > 0) == (actual > plan) && System.Math.Abs(effect) > biggest) { biggest = System.Math.Abs(effect); most = l; }
                     }

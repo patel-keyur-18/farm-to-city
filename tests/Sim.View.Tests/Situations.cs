@@ -131,6 +131,18 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The Village with the mill and a bakery beside it (hired baker), built, a morning round gone by (spec 016 §3.9c).</summary>
+        public static Simulation Bakery()
+        {
+            Simulation sim = Mill();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "bakery", tile, 200_000_00, false));
+            sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 12 * 3600);
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -139,6 +151,7 @@ namespace Sim.View.Tests
             yield return Later(out _);
             yield return Town();
             yield return Mill();
+            yield return Bakery();
         }
     }
 }

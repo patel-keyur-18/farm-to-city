@@ -1035,6 +1035,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_pav"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_potato"
   },
   {
@@ -1050,6 +1057,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_rice"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_rusk"
   },
   {
    "w": 256,

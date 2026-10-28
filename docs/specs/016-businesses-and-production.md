@@ -150,6 +150,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | The morning round | At 6:00 (with the trader's truck and the co-op) the village grocer and tea stall collect what was made since the last round, each product up to its amount a person × the people (the area's plus your town's: your townspeople buy through the village shops, no budget line of their own) × 22.8, at that morning's wholesale price (the good's price, following the index and the day's move). Then rusk and ghee go to the trader. Pav, curd and raw milk left after the round spoil; paneer loses half a day; rusk and ghee keep |
 | Atta | The bakery's atta comes from your mill first (before it sells to the trader; an internal sale at the trader's price), else the market at its import price |
 | Deferred | Supermarket orders asking for rusk or ghee: with spec 017's shops (Sprint 16) |
+| The plan (US-119) | A bakery's or dairy's plan sells the day's mix to the shops (and what keeps to the trader), and prices its bought inputs as they'd really cost: atta at the trader's price when a mill of yours stands, else the market's import price; supplies count with the goods' cost (as in its books), firewood on its own line. Research shows the people the shops serve, what they'd buy of each product a day and at what price, what the trader would take, and what atta costs |
 
 ### 3.10 Overdraft, trouble and closing (§10 G9)
 

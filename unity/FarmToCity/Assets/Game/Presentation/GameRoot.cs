@@ -557,7 +557,8 @@ namespace Game.Presentation
             text.style.flexGrow = 1;
             text.style.flexShrink = 1;
             string what = _placingHouse ? "place.house" : _placing == PlaceKind.Business ? "place.business" : "place.";
-            text.Add(UiKit.Heading1(_strings.Get(what + (what == "place." ? "title" : "Title")), 40));
+            text.Add(UiKit.Heading1(_strings.Get(what + (what == "place." ? "title" : "Title"), "name",
+                _placing == PlaceKind.Business ? BusinessWords.InSentence(_ctx, Sim.Config.Game.Businesses.Types[_placeType]) : ""), 40));
             text.Add(UiKit.Text(reason ?? _strings.Get(what + (what == "place." ? "hint" : "Hint")), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
             _placeBar.Add(text);
             ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile)

@@ -385,5 +385,56 @@ namespace Sim.Core.Tests
             Assert.That(b.OwnToday, Is.EqualTo(200_000), "your own wheat still");
             Assert.That(b.Ledger.Reconcile(), Is.Null);
         }
+
+        // AC-12: the bakery turns 10 kg atta (+ 1.5 kg of supplies, bought as 150 coins) into 13 kg of pav, and 12 kg of pav into 10 kg
+        // of rusk, at most 95 kg of inputs (about 124 kg of bread) a real hour; at 6:00 the village shops buy each up to their amount a
+        // person for the area's people and your town's; then the trader takes rusk; with no mill of yours the plan prices atta at the
+        // market's import price, with one at the trader's.
+        [Test]
+        public void Bakery_Recipe_Buyers()
+        {
+            Simulation sim = Start();
+            int atta = sim.Config.Game.Market.IndexOf("atta"), pav = sim.Config.Game.Market.IndexOf("pav"), rusk = sim.Config.Game.Market.IndexOf("rusk");
+            Assert.That(BusinessRules.InputPrice(sim, atta), Is.EqualTo(MarketRules.Ceiling(sim, atta)), "no mill: atta at the market's import price");
+            Business.Business b = RecipeTests.Found(sim, "bakery");
+            var t = BusinessRules.TypeOf(sim, b);
+            Assert.That(BusinessRules.AreaPeople(sim), Is.EqualTo(BusinessRules.Defs(sim).CatchmentPeople + sim.State.Citizens.Population), "the area's people and your town's");
+            long shopPav = BusinessRules.ShopGramsPerDay(sim, t, pav), shopRusk = BusinessRules.ShopGramsPerDay(sim, t, rusk);
+            long trader = sim.Config.Game.Market.Region.TraderBuyPerDay(rusk);
+            Assert.That(trader, Is.GreaterThan(0), "rusk keeps, so the trader takes it");
+            Ok(sim, new SetMix(sim.State.Clock.SimTime, b.Id, "rusk", shopRusk + trader));
+
+            long day = sim.State.Clock.SimTime / 86_400 + 1;
+            sim.AdvanceTo(day * 86_400 + 7 * 3600);
+            sim.DrainEvents();
+            long supplies0 = SuppliesPaid(b);
+            sim.AdvanceTo(day * 86_400 + 19 * 3600);
+            var worked = sim.DrainEvents().OfType<BusinessWorked>().Where(w => w.BusinessId == b.Id).ToList();
+            Assert.That(worked.All(w => w.OwnGrams <= 95_000), Is.True, "95 kg of inputs a real hour at most");
+            long ruskMade = b.MadeToday[rusk], pavIntoRusk = ruskMade * 12 / 10, pavMade = b.MadeToday[pav] + pavIntoRusk;
+            Assert.That(ruskMade, Is.EqualTo(shopRusk + trader));
+            Assert.That(b.MadeToday[pav], Is.EqualTo(shopPav));
+            long attaUsed = worked.Sum(w => w.OwnGrams) - pavIntoRusk;
+            Assert.That(attaUsed, Is.EqualTo(pavMade * 10 / 13).Within(worked.Count * 2), "10 kg of atta to 13 kg of pav (rounded up a batch at a time)");
+            Assert.That(SuppliesPaid(b) - supplies0, Is.EqualTo(Finance.Money.Value(pavMade, Fixed.FromInt(150) * sim.State.Market.PriceIndex, 13_000)).Within(worked.Count * 2),
+                "1.5 kg of supplies (150 coins) a 13 kg batch");
+            Assert.That(worked.Max(w => w.OwnGrams) * 13 / 10, Is.LessThanOrEqualTo(124_000), "about 124 kg of bread a real hour at most");
+
+            // The round at 6:00: the shops first, then the trader's truck takes the rusk left.
+            sim.AdvanceTo((day + 1) * 86_400 + 6 * 3600 + 1);
+            Assert.That(sim.State.Market.TraderBoughtToday[rusk], Is.EqualTo(trader), "the trader takes the rusk the shops don't");
+            Assert.That(sim.State.Market.TraderBoughtToday[pav], Is.Zero, "a crop trader doesn't buy fresh bread");
+            Assert.That(b.Stock[pav] + b.Stock[rusk], Is.Zero, "all of it sold");
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+
+            // With your mill open, its atta comes at the trader's price, and the plan counts it so.
+            Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile + 1, 150_000_00, false));
+            Assert.That(BusinessRules.InputPrice(sim, atta), Is.EqualTo(MarketRules.Floor(sim, atta)), "your mill's atta at the trader's price");
+        }
+
+        private static long SuppliesPaid(Business.Business b)
+        {
+            return b.Ledger.Entries.Where(e => e.DescriptionKey == "ledger.supplies").Sum(e => e.Postings.Where(p => p.Account == Account.BusinessStock).Sum(p => p.Amount));
+        }
     }
 }

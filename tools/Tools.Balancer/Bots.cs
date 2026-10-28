@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
@@ -869,88 +870,137 @@ namespace Tools.Balancer
     }
 
     /// <summary>
-    /// Spec 016 §9 (US-117): the competent founder who, once the Hamlet comes, keeps the last inherited acre clear and founds a flour
-    /// mill on it, run by a hired miller or by the founder, with or without a business loan. A mill short of cash gets cash put in; at
-    /// each season's start, cash beyond a season's running costs and a margin comes out to the founder.
+    /// Spec 016 §9 (US-117, US-119): the competent founder who keeps the last inherited acres clear and founds businesses on them as
+    /// their era comes, one after another (the flour mill, then the bakery beside it), run by hired workers or by the founder, with or
+    /// without a business loan. A business short of cash gets cash put in; at each season's start, cash beyond a season's running
+    /// costs and a margin comes out to the founder.
     /// </summary>
-    public sealed class MillBot : FarmerBot
+    public class BusinessBot : FarmerBot
     {
         private readonly bool _self, _borrow;
+        private readonly string[] _types;
 
-        public MillBot(bool runsIt, bool borrows = false)
+        public BusinessBot(bool runsIt, bool borrows, params string[] types)
         {
             _self = runsIt;
             _borrow = borrows;
+            _types = types;
         }
 
-        public override string Name { get { return (_self ? "mill-yours" : "mill-hired") + (_borrow ? "-loan" : ""); } }
+        public override string Name
+        {
+            get
+            {
+                string what = string.Join("+", _types.Select(x => x == "flour_mill" ? "mill" : x));
+                return what + (_self ? "-yours" : "-hired") + (_borrow ? "-loan" : "");
+            }
+        }
 
-        /// <summary>The rain-fed acre before the two kept for family houses (the last is the fodder acre).</summary>
-        private static int Acre(Simulation sim) { int[] a = AcresOf(sim); return a[a.Length - 4]; }
+        private static Sim.Core.Definitions.BusinessTypeDef Type(Simulation sim, string id)
+        {
+            return Sim.Core.Business.BusinessRules.Defs(sim).Types.First(x => x.Id == id);
+        }
+
+        /// <summary>The rain-fed acres before the two kept for family houses (the last is the fodder acre): the first business's, then the next's.</summary>
+        private static int Acre(Simulation sim, int i) { int[] a = AcresOf(sim); return a[a.Length - 4 - i]; }
+
+        private static Sim.Core.Business.Business Of(Simulation sim, string id)
+        {
+            return sim.State.Businesses?.Businesses.Find(b => b.Status != Sim.Core.Business.BusinessStatus.Closed && Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == id);
+        }
+
+        /// <summary>The next business to found: the first of the list not standing whose era has come, once those before it stand.</summary>
+        private int Next(Simulation sim)
+        {
+            if (sim.State.Businesses == null) return -1;
+            for (int i = 0; i < _types.Length; i++)
+            {
+                if (Of(sim, _types[i]) != null) continue;
+                return Sim.Core.Business.BusinessRules.Unlocked(sim, Type(sim, _types[i])) ? i : -1;
+            }
+            return -1;
+        }
+
+        private bool Mills(Simulation sim)
+        {
+            return _types.Contains("flour_mill") && sim.State.Businesses != null && Sim.Core.Business.BusinessRules.Unlocked(sim, Type(sim, "flour_mill"));
+        }
 
         /// <summary>Wheat in Winter once the Hamlet allows a mill: its own wheat to mill.</summary>
         protected override string CropFor(Simulation sim, int season)
         {
-            bool mill = sim.State.Businesses != null && Sim.Core.Business.BusinessRules.Unlocked(sim, Sim.Core.Business.BusinessRules.Defs(sim).Types[0]);
-            return season == 3 && mill ? "wheat" : base.CropFor(sim, season);
+            return season == 3 && Mills(sim) ? "wheat" : base.CropFor(sim, season);
         }
 
         /// <summary>Its own wheat for the mill: a year's daily amount kept back from selling (wheat comes in Winter only).</summary>
         protected override long Kept(Simulation sim, int good)
         {
-            Sim.Core.Business.Business mill = Mill(sim);
+            Sim.Core.Business.Business mill = sim.State.Businesses == null ? null : Of(sim, "flour_mill");
             if (mill == null || good != Sim.Core.Business.BusinessRules.TypeOf(sim, mill).Input) return 0;
             return mill.OwnPerDay * sim.Clock.DaysPerSeason * 4;
         }
 
-        /// <summary>The mill first: until it's founded, its cash is kept back from building houses.</summary>
+        /// <summary>The next business first: until it's founded, its cash is kept back from building houses.</summary>
         protected override long HomeReserve(Simulation sim)
         {
             long reserve = base.HomeReserve(sim);
-            if (sim.State.Businesses == null || Mill(sim) != null) return reserve;
-            var type = Sim.Core.Business.BusinessRules.Defs(sim).Types[0];
-            if (!Sim.Core.Business.BusinessRules.Unlocked(sim, type)) return reserve;
+            int i = Next(sim);
+            if (i < 0) return reserve;
+            var type = Type(sim, _types[i]);
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
             return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, type.OwnPerDay, type.Fee, loan).CashNeeded - loan;
         }
 
-        private static Sim.Core.Business.Business Mill(Simulation sim) { return sim.State.Businesses?.Businesses.Find(b => b.Status != Sim.Core.Business.BusinessStatus.Closed); }
-
         protected override bool KeepsClear(Simulation sim, int tile)
         {
-            return tile == Acre(sim) && Mill(sim) == null && sim.State.Businesses != null
-                && Sim.Core.Business.BusinessRules.Unlocked(sim, Sim.Core.Business.BusinessRules.Defs(sim).Types[0]);
+            int i = Next(sim);
+            return i >= 0 && tile == Acre(sim, i);
         }
 
         public override void Play(Simulation sim, long t)
         {
             base.Play(sim, t);
             if (sim.State.Businesses == null) return;
-            Sim.Core.Business.Business mill = Mill(sim);
-            if (mill == null) { Found(sim, t); return; }
-            // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
-            bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
-            if (Sim.Core.Business.BusinessBooks.Short(sim, mill) || (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(mill) > 0))
+            int next = Next(sim);
+            if (next >= 0) Found(sim, t, next);
+            foreach (string id in _types)
             {
-                long put = Sim.Core.Business.BusinessBooks.Overdrawn(mill) + (mill.Worker == Sim.Core.Business.WorkerKind.None ? MarketRules.Indexed(sim, Sim.Core.Business.BusinessRules.TypeOf(sim, mill).Wage) : 0);
-                put = (put + Money.Coin - 1) / Money.Coin * Money.Coin;
-                if (put > 0 && sim.State.Ledger.Cash >= put + 10_000 * Money.Coin) Ok(sim, new PutCash(t, mill.Id, put));
-            }
-            if (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(mill) == 0)
-            {
-                var type = Sim.Core.Business.BusinessRules.TypeOf(sim, mill);
-                long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;
-                long spare = (mill.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
-                if (spare > 0) Ok(sim, new TakeCash(t, mill.Id, spare));
+                Sim.Core.Business.Business b = Of(sim, id);
+                if (b != null) Manage(sim, t, b);
             }
         }
 
-        private void Found(Simulation sim, long t)
+        private static void Manage(Simulation sim, long t, Sim.Core.Business.Business b)
+        {
+            // The day's mix: what the shops buy, and for what keeps, what the trader takes as well (it pays: rusk's margin is positive).
+            var bt = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
+            foreach (int p in bt.Products)
+            {
+                long want = Sim.Core.Business.BusinessRules.ShopGramsPerDay(sim, bt, p) + sim.Config.Game.Market.Region.TraderBuyPerDay(p);
+                if (b.Status == Sim.Core.Business.BusinessStatus.Open && b.Mix[p] != want) Ok(sim, new SetMix(t, b.Id, sim.Config.Game.Market.Goods[p].Id, want));
+            }
+            // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
+            bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
+            if (Sim.Core.Business.BusinessBooks.Short(sim, b) || (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0))
+            {
+                long put = Sim.Core.Business.BusinessBooks.Overdrawn(b) + (b.Worker == Sim.Core.Business.WorkerKind.None ? MarketRules.Indexed(sim, Sim.Core.Business.BusinessRules.TypeOf(sim, b).Wage) : 0);
+                put = (put + Money.Coin - 1) / Money.Coin * Money.Coin;
+                if (put > 0 && sim.State.Ledger.Cash >= put + 10_000 * Money.Coin) Ok(sim, new PutCash(t, b.Id, put));
+            }
+            if (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(b) == 0)
+            {
+                var type = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
+                long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;
+                long spare = (b.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
+                if (spare > 0) Ok(sim, new TakeCash(t, b.Id, spare));
+            }
+        }
+
+        private void Found(Simulation sim, long t, int i)
         {
             var defs = Sim.Core.Business.BusinessRules.Defs(sim);
-            var type = defs.Types[0];
-            if (!Sim.Core.Business.BusinessRules.Unlocked(sim, type)) return;
-            int acre = Acre(sim);
+            var type = Type(sim, _types[i]);
+            int acre = Acre(sim, i);
             PeopleState p = sim.State.People;
             if (p?.OrderFor(OrderTargetKind.Field, acre) is StandingOrder o) Ok(sim, new ClearStandingOrder(t, o.HandId, OrderTargetKind.Field, acre));
             if (Sim.Core.Business.BusinessRules.Place(sim, acre) != RejectReason.None) return;
@@ -959,5 +1009,11 @@ namespace Tools.Balancer
             if (sim.State.Ledger.Cash < need + 30_000 * Money.Coin) return;
             Ok(sim, new FoundBusiness(t, type.Id, acre, need, _self, loan > 0 ? new Financing(defs.LenderId, loan, defs.TermSeasons) : null));
         }
+    }
+
+    /// <summary>Spec 016 §9 (US-117): the flour mill alone, from the Hamlet.</summary>
+    public sealed class MillBot : BusinessBot
+    {
+        public MillBot(bool runsIt, bool borrows = false) : base(runsIt, borrows, "flour_mill") { }
     }
 }

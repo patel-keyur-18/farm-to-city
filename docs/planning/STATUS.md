@@ -7,7 +7,7 @@
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
 | Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan awaiting the owner's approval |
 | Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
-| Last updated | 2026-10-27 |
+| Last updated | 2026-10-28 |
 
 ## Done so far
 
@@ -241,8 +241,8 @@
 
 ## Next up
 
-1. **Owner:** go-ahead for the rest of Sprint 15 (asked 2026-10-27).
-2. **Claude (after review):** US-119 and US-216 (art and layouts previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
+1. **Owner:** review US-119 (the bakery: art approved 2026-10-28; screens, test and Editor tour done) and choose the shops' pav a person a day (bot numbers in the review message: 0.03 now, 0.01 or 0.02 offered).
+2. **Claude (after review):** set the pav amount, `GateTests.Bakery` and ADR 0079 with the bakery's targets → US-216 the dairy (art and layout previewed first) → US-112 → US-113 → US-114, as `sprints.md`'s order of work.
 
 ## Owner action checklist (Phases 0–1)
 
