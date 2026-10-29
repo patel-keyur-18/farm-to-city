@@ -49,6 +49,7 @@ namespace Sim.View.Tests
             sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 2) * 86_400 + 12 * 3600);
             SheetVm card = BusinessSheet.Build(ViewKit2.Context(sim), b.Id);
             Assert.That(card.Lines.Single(l => l.Label == "Who works here").Note, Does.StartWith("Nobody works here: hire someone on the board"), "spec 015: the stopgap is gone");
+            Assert.That(card.Subtitle, Is.EqualTo("Closed · nobody works here"), "at noon, in its hours: shut for want of a worker, not till 8:00");
             Assert.That(card.Lines.Single(l => l.Label == "Who works here").Action.Opens.Value, Is.EqualTo(new SheetRequest("Word", b.Id)));
             Assert.That(card.Lines.Single(l => l.Label == "Run it yourself").Action.Enabled, Is.True);
             Ok(sim, new PostJob(sim.State.Clock.SimTime, b.Id, false));

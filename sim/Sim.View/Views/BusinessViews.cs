@@ -314,6 +314,7 @@ namespace Sim.View.Views
             if (b.Status == BusinessStatus.Closed) return s.Get("business.closed");
             int hour = (int)(ctx.Now % 86_400 / 3600);
             if (BusinessRules.OpenAt(ctx.Sim, b, hour)) return s.Get("business.openNow", "close", b.CloseHour + ":00");
+            if (!BusinessRules.Staffed(ctx.Sim, b)) return s.Get(b.Worker == WorkerKind.None ? "business.shutNoWorker" : "business.shutAway");
             return s.Get("business.shutNow", "open", b.OpenHour + ":00");
         }
 

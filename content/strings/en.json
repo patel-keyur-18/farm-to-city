@@ -2196,6 +2196,8 @@
   "business.closed": "Closed",
   "business.openNow": "Open now · until {close}",
   "business.shutNow": "Closed now · opens at {open}",
+  "business.shutNoWorker": "Closed · nobody works here",
+  "business.shutAway": "Closed · its worker is away",
   "business.tabToday": "Today",
   "business.tabSettings": "Settings",
   "business.tabBooks": "Books",
