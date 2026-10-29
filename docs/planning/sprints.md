@@ -639,7 +639,7 @@
 
 ## Owner requests pending after Sprint 15 (raised 2026-10-28)
 
-The owner takes these up once Sprint 15 is done; they're planned into a sprint then. Each story keeps its pushbacks.
+The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're built in Sprint 15 itself, on the same branch and PR #20, before the device check, so one build covers both.** Each story keeps its pushbacks.
 
 | ID | Story | Feature | Points | Note |
 | --- | --- | --- | --- | --- |
@@ -676,6 +676,6 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 - [x] Save schema 11: migration, `saves/schema11` fixture, every older schema loads
 - [x] The bakery's and the dairy's layouts previewed to and approved by the owner
 - [x] Balance: spec 015 §9 and spec 016 §9 measured with the bots; targets recorded in an ADR, contradictions flagged to the owner (ADR 0082: a refused raise loses the worker, a day away, the dairy's bounds widened; `GateTests.Hr`)
-- [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check (checklist and Editor pass done, Development build made 2026-10-29; the device check waits for the owner)
+- [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check (checklist and Editor pass done; the 2026-10-29 build is superseded: one new Development build after US-219 to US-222, then the owner's device check)
 - [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #20 opened 2026-10-29)

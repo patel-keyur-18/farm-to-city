@@ -253,8 +253,8 @@
 
 ## Next up
 
-1. **Owner:** install the Sprint 15 Development build and run `docs/test-checklists/s15-chains-hr.md` on the iPhone 13 (export your town first; schema 10 → 11); report; merge PR #20.
-2. **Claude (after the device check):** fix what the device check finds; then plan Sprint 16 with the owner (Sprint 16 is re-pointed to 37 in ADR 0076; the owner's requests US-219 to US-222 wait to be planned in).
+1. **Claude (owner, 2026-10-29): build US-219 to US-222 in Sprint 15, on this branch and in PR #20** (`sprints.md`, "Owner requests pending after Sprint 15"). Gaps go to the owner first, one per message; US-221's change to spec 019 needs the owner's approval, and US-222's look must be previewed and approved before code. One story at a time, each Editor-tested by scripted touch, with a stop for review after each. Then add the new checks to `s15-chains-hr.md` and make **one new Development build** (the 2026-10-29 build is out of date). Update PR #20 and re-check its labels.
+2. **Owner:** after that, one device check covering Sprint 15 and US-219 to US-222 on the iPhone 13 (export the town first; schema 10 → 11 or later); report; merge PR #20.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -270,7 +270,7 @@
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
-| Sprint 15 | Install the Development build, run `s15-chains-hr.md`, report; merge the PR |
+| Sprint 15 | After US-219 to US-222: install the new Development build, run `s15-chains-hr.md`, report; merge PR #20 |
 
 ## Open questions (with the owner)
 
