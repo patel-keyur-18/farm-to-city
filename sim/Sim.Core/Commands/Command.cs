@@ -140,6 +140,10 @@ namespace Sim.Core.Commands
         NoWorker,
         /// <summary>Already away on a course.</summary>
         OnCourse,
+        /// <summary>No such HR event waiting (answered already, or the worker has gone).</summary>
+        UnknownEvent,
+        /// <summary>Off sick: back in a day or two.</summary>
+        OffSick,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

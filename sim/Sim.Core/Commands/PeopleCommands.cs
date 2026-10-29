@@ -277,6 +277,7 @@ namespace Sim.Core.Commands
                     sim.State.Ledger.Post(t, sim.Period, "ledger.severance", "hand:" + h.Id,
                         new Posting(Account.HiredLabour, severance), new Posting(Account.Cash, -severance));
             }
+            HrRules.Repute(sim, h.SeasonsWorked == 0 ? sim.Config.Game.People.Reputation.ProbationLetGo : severance > 0 ? sim.Config.Game.People.Reputation.Severance : 0);
             PeopleSystem.Leave(sim, h);
             sim.Emit(new HandDismissed(t, h.Id, refund, severance));
             return CommandResult.Ok;
@@ -437,6 +438,7 @@ namespace Sim.Core.Commands
             IStaff w = WorkRules.Find(sim, Place, WorkerId);
             if (w == null) return CommandResult.Reject(Place == 0 ? RejectReason.NoHand : RejectReason.NoWorker);
             if (w.CourseUntil != 0) return CommandResult.Reject(RejectReason.OnCourse);
+            if (w.Hr.SickUntil != 0) return CommandResult.Reject(RejectReason.OffSick);
             long cost = WorkRules.CourseCost(sim);
             if (!WorkRules.CanPay(sim, w, cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
             FarmSystem.Accrue(sim);
@@ -463,6 +465,8 @@ namespace Sim.Core.Commands
             Hand h = WorkRules.Find(sim, 0, HandId) as Hand;
             if (h == null) return CommandResult.Reject(RejectReason.NoHand);
             if (h.LongDays == On) return CommandResult.Ok;
+            if (On && h.CourseUntil != 0) return CommandResult.Reject(RejectReason.OnCourse);
+            if (On && h.Hr.SickUntil != 0) return CommandResult.Reject(RejectReason.OffSick);
             long pay = On ? WorkRules.OvertimeDay(sim, h) : 0;
             if (!sim.State.Ledger.CanAfford(pay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
             FarmSystem.Accrue(sim);
@@ -471,5 +475,19 @@ namespace Sim.Core.Commands
             FarmSystem.Refresh(sim);
             return CommandResult.Ok;
         }
+    }
+
+    /// <summary>
+    /// Answers a waiting HR event (spec 015 §3.7): choice 0 pays the raise, matches the offer, pays the sick leave, gives the advance or
+    /// throws the bad batch away; choice 1 says not now, lets them go, leaves it unpaid, says no or sells the batch cheap.
+    /// </summary>
+    public sealed class AnswerHrEvent : TimedCommand
+    {
+        public long EventId { get; }
+        public int Choice { get; }
+
+        public AnswerHrEvent(long at, long eventId, int choice) : base(at) { EventId = eventId; Choice = choice; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return HrRules.Answer(sim, EventId, Choice); }
     }
 }

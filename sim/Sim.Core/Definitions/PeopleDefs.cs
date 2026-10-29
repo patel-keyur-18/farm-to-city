@@ -102,6 +102,53 @@ namespace Sim.Core.Definitions
         public int CourseGain { get; internal set; }
     }
 
+    /// <summary>HR events (spec 015 §3.7): chances a season, the choices' terms and their effects on motivation.</summary>
+    public sealed class HrDef
+    {
+        public Fixed RaiseChance { get; internal set; }
+
+        /// <summary>Paid less than what they'd ask by more than this share: underpaid (they ask for a raise; a renewal isn't fair).</summary>
+        public Fixed RaiseGap { get; internal set; }
+        public Fixed PoachChance { get; internal set; }
+        public int PoachSkill { get; internal set; }
+        public int PoachUnderpaidFactor { get; internal set; }
+        public int PoachRefusedFactor { get; internal set; }
+        public Fixed PoachMatch { get; internal set; }
+        public Fixed SickChance { get; internal set; }
+        public Fixed SickTiredAbove { get; internal set; }
+        public int SickTiredFactor { get; internal set; }
+        public int SickDays { get; internal set; }
+        public Fixed EmergencyChance { get; internal set; }
+        public Fixed AdvanceShare { get; internal set; }
+        public Fixed BadBatchChance { get; internal set; }
+        public Fixed BadBatchSellShare { get; internal set; }
+        public Fixed RaiseRefusedMood { get; internal set; }
+        public Fixed MatchedMood { get; internal set; }
+        public Fixed SickPaidMood { get; internal set; }
+        public Fixed SickUnpaidMood { get; internal set; }
+        public Fixed AdvanceMood { get; internal set; }
+        public Fixed NoAdvanceMood { get; internal set; }
+    }
+
+    /// <summary>Employer reputation (spec 015 §3.8): its steps and, at the high and low marks, its effects.</summary>
+    public sealed class ReputationDef
+    {
+        public int FairRenewal { get; internal set; }
+        public int SickPaid { get; internal set; }
+        public int Advance { get; internal set; }
+        public int Severance { get; internal set; }
+        public int LowHire { get; internal set; }
+        public int RaiseRefused { get; internal set; }
+        public int ProbationLetGo { get; internal set; }
+        public int Lapse { get; internal set; }
+        public int BadBatchSold { get; internal set; }
+        public int High { get; internal set; }
+        public int Low { get; internal set; }
+        public Fixed AcceptShift { get; internal set; }
+        public int HighSkillBonus { get; internal set; }
+        public Fixed LowPace { get; internal set; }
+    }
+
     /// <summary>A trait (spec 006 §3.7, spec 015 §3.6). Factors are 1 when the trait has no such effect.</summary>
     public sealed class TraitDef
     {
@@ -171,6 +218,8 @@ namespace Sim.Core.Definitions
         public JobPostDef JobPost { get; }
         public HiringDef Hiring { get; }
         public WorkDef Work { get; }
+        public HrDef Hr { get; internal set; }
+        public ReputationDef Reputation { get; internal set; }
         public IReadOnlyList<TraitDef> Traits { get; }
         public IReadOnlyList<NameDef> Names { get; }
 

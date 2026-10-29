@@ -217,10 +217,17 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             Fixed relative = WorkRules.RelativeOutput(sim, w);
-            WhyVm vm = New(ctx, "why.staffOutput.title", ctx.Strings.Get("staff.output." + StaffView.Band(ctx, relative)), "name", Name(ctx, w));
+            string words = w.CourseUntil != 0 ? ctx.Strings.Get("staff.awayOnCourse") : w.Hr.SickUntil != 0 ? ctx.Strings.Get("staff.offSick")
+                : ctx.Strings.Get("staff.output." + StaffView.Band(ctx, relative));
+            WhyVm vm = New(ctx, "why.staffOutput.title", words, "name", Name(ctx, w));
             if (w.CourseUntil != 0)
             {
                 Text(vm, ctx, "why.staffOutput.course", "time", ctx.Fmt.Duration(w.CourseUntil - ctx.Now), "gain", ctx.Fmt.Integer(sim.Config.Game.People.Work.CourseGain));
+                return vm;
+            }
+            if (w.Hr.SickUntil != 0)
+            {
+                Text(vm, ctx, "why.staffOutput.sick", "time", ctx.Fmt.Duration(w.Hr.SickUntil - ctx.Now));
                 return vm;
             }
             HandDef h = sim.Config.Game.People.Hand;
@@ -231,6 +238,8 @@ namespace Sim.View.Views
             if (home != null) Row(vm, ctx, "why.staffOutput.home", Effect(ctx, Fixed.One + WorkRules.Home(sim, w)), "happiness", ctx.Fmt.Integer(home.Happiness.RoundToLong()));
             Fixed colleagues = WorkRules.Colleagues(sim, w);
             if (colleagues != Fixed.Zero) Row(vm, ctx, "why.staffOutput.colleagues", Effect(ctx, Fixed.One + colleagues));
+            Fixed mood = HrRules.Mood(sim, w);
+            if (mood != Fixed.Zero) Row(vm, ctx, w.Hr.RaiseRefusals > 0 && HrRules.Underpaid(sim, w) ? "why.staffOutput.raiseRefused" : "why.staffOutput.mood", Effect(ctx, Fixed.One + mood));
             Row(vm, ctx, "why.staffOutput.motivation", Effect(ctx, WorkRules.Motivation(sim, w)));
             Row(vm, ctx, "why.staffOutput.fatigue", Tired(ctx, w));
             Row(vm, ctx, "why.staffOutput.total", Effect(ctx, relative));
@@ -243,6 +252,22 @@ namespace Sim.View.Views
         private static string Tired(ViewContext ctx, IStaff w) { return w.Fatigue == Fixed.Zero ? ctx.Strings.Get("staff.rested") : Effect(ctx, Fixed.One - w.Fatigue); }
 
         private static string WholePct(ViewContext ctx, Fixed share) { return ctx.Fmt.Integer((share * Fixed.FromInt(100)).RoundToLong()) + "%"; }
+
+        /// <summary>Employer reputation (spec 015 §3.8): what moves it and what it does now.</summary>
+        private static WhyVm ReputationWhy(ViewContext ctx, long id)
+        {
+            var d = ctx.Sim.Config.Game.People.Reputation;
+            int r = ctx.Sim.State.People.Reputation;
+            WhyVm vm = New(ctx, "why.reputation.title", StaffView.Reputation(ctx));
+            Text(vm, ctx, "why.reputation.up", "renewal", Signed(d.FairRenewal), "sick", Signed(d.SickPaid), "advance", Signed(d.Advance), "severance", Signed(d.Severance));
+            Text(vm, ctx, "why.reputation.down", "low", Signed(d.LowHire), "raise", Signed(d.RaiseRefused), "probation", Signed(d.ProbationLetGo), "lapse", Signed(d.Lapse),
+                "batch", Signed(d.BadBatchSold));
+            Text(vm, ctx, r >= d.High ? "why.reputation.high" : r <= d.Low ? "why.reputation.low" : "why.reputation.middle", "high", ctx.Fmt.Integer(d.High), "low", ctx.Fmt.Integer(d.Low));
+            vm.Footnote = ctx.Strings.Get("why.reputation.lesson");
+            return vm;
+        }
+
+        private static string Signed(int n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + System.Math.Abs(n); }
 
         private static string Name(ViewContext ctx, IStaff w) { return PeopleWords.Name(ctx, w is Hand h ? h.Name : ((Worker)w).Name); }
 

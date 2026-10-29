@@ -72,6 +72,7 @@ namespace Sim.View.Views
             // The hiring board (spec 015).
             { "jobUsual", JobUsual }, { "jobWage", JobWage }, { "jobReference", JobReference },
             { "staffOutput", StaffOutput }, { "staffOutputAt", StaffOutputAt }, { "staffLongDays", StaffLongDays },
+            { "reputation", ReputationWhy },
             // The away card (spec 008 §3.9).
             { "away", Away },
             // The Hamlet (spec 009 §3.6).

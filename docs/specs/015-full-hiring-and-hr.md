@@ -254,6 +254,23 @@ Choices made while building where the spec was silent, each to keep it realistic
 - **The golden replays didn't change:** their frozen content has no people, so drawing from ten traits touches none of them. AC-4's `ReplayTests.*` pass unchanged.
 - **Not yet in play:** HR events' effects on motivation (US-114); the bad batch the perfectionist avoids (US-114).
 
+**Accepted (owner, 2026-10-29).**
+
+### US-114 build notes (2026-10-29, for the owner's review)
+
+- **Renewal (ADR 0081) is in:** a contract renews at its current wage; an advance is repaid from it; a worker who took an offer from elsewhere leaves at the close instead.
+- **"Underpaid" means more than 5% below what they'd ask** (`hrEvents.raiseGap`). A season's skill growth alone (+3, about 1.2% on the wage) doesn't make a raise request or count against a fair renewal; a course, a few seasons' growth, inflation or a low hire does. Without this, nearly every worker asked for a small raise nearly every close (against §9's "not a nag"), and a fair employer never earned the +1 for a fair renewal.
+- **An offer from elsewhere is 15% above what their skill is worth** (the asked wage), and only comes when that's above what you pay. Matching it pays it. Taken literally as "+15% on your wage", a matched worker got another +15% at the next offer, compounding without limit (seen in a bot run: three matches in six seasons).
+- **Sick leave starts at once** (2 days off, no work, the business idle); the choice is only whether those days are paid. "The worker carries on" can't hold for someone who's ill.
+- **A bad batch comes with a business's first batch of the day** (the mill's first grinding of your wheat, a recipe's first batch), before anything is sold: the mill sells its atta to the truck every hour, so at any other moment there would rarely be a batch to spoil. It sets aside up to a day's mix (an hour's grinding at the mill) of the product it holds most of.
+- **A dairy takes no milk on a day nobody can work it** (its dairyman sick or on a course): the co-op takes it. Before, a sick dairyman's two days of neighbours' milk spoiled (a bot season lost 1,09,014).
+- **Each event shows as a card when it happens and as an alert until answered** (the alert opens a sheet with the two choices); the card says what yes costs now and from whose cash; a notification while away ("Geeta needs a word with you").
+- **Reputation** shows on the People sheet in words and its score ("Fair (52)") with its *Why?*. A lapse is a hand's unpaid renewal or a business's missed wages. Selling a bad batch cheap counts −2 as §3.7 says.
+- **The bots answer as a fair employer:** yes to everything, except a hand's raise, offer or advance when paying it would eat into the season's reserve.
+- **Random draws use their own stream** (`HrEvents`), not People, so no existing draw moves.
+- **Balance flags (for the balance step and the owner):** the bakery hired on a business loan now medians about 13,500 a season (ADR 0079: 15,000–25,000) and the hired bakery's payback 8.3 seasons (5–8), mostly from raises paid and offers matched; the gate bounds are 13,000 and 8.5 until decided. The competent bot's second buffalo comes at about 10 seasons, not 8 (the check is now "keeps buffalo", as spec 012 §9 says).
+- **Worth a look:** with a 4-day season, "2 days" of sick leave or a course is half a season's work, and unpaid sick leave gives back half the season's wage. A day might be more in proportion.
+
 ## 11. Cut first
 
 1. Reference checks (interview only).

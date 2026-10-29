@@ -59,6 +59,7 @@ namespace Sim.Core.People
             {
                 NewDay(sim);
                 WorkRules.Daily(sim);
+                HrRules.Daily(sim);
             }
             if (pass != ItemClass.Hourly) return;
             HiringRules.Expire(sim);
@@ -72,6 +73,7 @@ namespace Sim.Core.People
             }
             HiringRules.References(sim);
             WorkRules.Courses(sim);
+            HrRules.Recover(sim);
             Release(sim);
             Orders.Run(sim);
         }
@@ -225,7 +227,7 @@ namespace Sim.Core.People
             PeopleDefs p = sim.Config.Game.People;
             PeopleState s = sim.State.People;
             long id = s.NextApplicantId++;
-            int bonus = above ? p.JobPost.AboveMarketSkillBonus : 0;
+            int bonus = above ? p.JobPost.AboveMarketSkillBonus + (s.Reputation >= p.Reputation.High ? p.Reputation.HighSkillBonus : 0) : 0;
             ulong seed = sim.State.Seed;
             int skill = p.Hand.SkillMin + bonus + (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 1), (ulong)(p.Hand.SkillMax - p.Hand.SkillMin + 1));
             int t1 = (int)Rng.Below(Rng.Next(seed, RngStream.Applicants, (ulong)id, 2), (ulong)p.Traits.Count);
@@ -333,9 +335,10 @@ namespace Sim.Core.People
         // ---- contracts (§3.6, §3.7) ----
 
         /// <summary>
-        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; a hand who has turned
-        /// <c>retireAge</c> retires (spec 014 §3.2); an active one is renewed at the re-asked wage (a loyal hand keeps theirs; an ambitious one asks 10% more) if cash allows, else it lapses.
-        /// Then skill grows for every hand under an active contract.
+        /// Settlement step 6 (spec 005 §3.4), in hand id order: a contract still lapsed from the last close ends; a hand who took an offer
+        /// from elsewhere leaves; a hand who has turned <c>retireAge</c> retires (spec 014 §3.2); an active one is renewed at their current
+        /// wage (ADR 0081), less an advance being repaid, if cash allows, else it lapses. Then skill grows for every hand under an active
+        /// contract, and each may ask for a raise or get an offer from elsewhere (spec 015 §3.7).
         /// </summary>
         internal static void SettleContracts(Simulation sim)
         {
@@ -345,7 +348,7 @@ namespace Sim.Core.People
             FarmSystem.Accrue(sim);
             foreach (Hand h in new List<Hand>(s.Hands))
             {
-                if (h.Contract == ContractState.Lapsed)
+                if (h.Contract == ContractState.Lapsed || h.Hr.Leaving)
                 {
                     Leave(sim, h);
                     sim.Emit(new HandLeft(t, h.Id));
@@ -358,11 +361,12 @@ namespace Sim.Core.People
                 }
                 long wage = RenewalWage(sim, h, out long housing);
                 h.HousingInKind = housing; // spec 014 §3.6: the family house is part of his pay from this renewal
-                if (sim.State.Ledger.CanAfford(wage))
+                if (sim.State.Ledger.CanAfford(wage - h.Hr.Advance))
                 {
-                    if (!PeopleRules.HasTrait(sim, h, x => x.KeepsWage)) h.Fairness = 0; // the asked wage paid (spec 015 §3.3)
+                    HrRules.RepayAdvance(sim, h, sim.State.Ledger, "hand:" + h.Id);
                     h.Wage = wage;
                     h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, wage, t, t + S, "hand:" + h.Id).Id;
+                    HrRules.Renewed(sim, h);
                     sim.Emit(new ObligationPaid(t, "Wages", "hand:" + h.Id, wage));
                     sim.Emit(new ContractRenewed(t, h.Id, wage, wage));
                 }
@@ -375,6 +379,7 @@ namespace Sim.Core.People
                     h.LapsedLiveSeconds = 0;
                     sim.Emit(new ObligationUnpaid(t, "Wages", "hand:" + h.Id, wage));
                     sim.Emit(new ContractLapsed(t, h.Id, wage, sim.State.Ledger.Cash));
+                    HrRules.Repute(sim, p.Reputation.Lapse);
                 }
             }
             foreach (Hand h in s.Hands)
@@ -386,24 +391,17 @@ namespace Sim.Core.People
                 h.Skill = skill > Fixed.FromInt(100) ? Fixed.FromInt(100) : skill;
                 sim.Emit(new HandSkillGrew(t, h.Id, h.Skill));
             }
+            foreach (Hand h in s.Hands) if (h.Contract == ContractState.Active) HrRules.Draw(sim, h);
             FarmSystem.Refresh(sim);
         }
 
         /// <summary>
-        /// The cash wage for the coming season: the asked wage for today's skill and price index, kept by a loyal hand, less the family
+        /// The cash wage for the coming season: the current wage (ADR 0081: a raise is asked for, not given by itself), less the family
         /// house's rent while his family lives in one (<paramref name="housing"/>, spec 014 §3.6).
         /// </summary>
         internal static long RenewalWage(Simulation sim, Hand h, out long housing)
         {
-            PeopleDefs p = sim.Config.Game.People;
-            long wage;
-            if (PeopleRules.HasTrait(sim, h, x => x.KeepsWage)) wage = h.Wage + h.HousingInKind;
-            else
-            {
-                wage = PeopleRules.AskedWage(sim, h.Skill, false);
-                Fixed factor = p.Traits[h.Trait1].RenewalWageFactor * p.Traits[h.Trait2].RenewalWageFactor;
-                if (factor != Fixed.One) wage = Money.RoundToCoin(Money.MulRate(wage, factor));
-            }
+            long wage = h.Wage + h.HousingInKind;
             housing = System.Math.Min(wage, MigrationRules.HousingInKind(sim, h));
             return wage - housing;
         }
@@ -428,6 +426,7 @@ namespace Sim.Core.People
         {
             PeopleState s = sim.State.People;
             FarmSystem.Accrue(sim);
+            HrRules.Gone(sim, h);
             s.Hands.Remove(h);
             CitizenRules.HandLeft(sim, h);
             s.Orders.RemoveAll(o => o.HandId == h.Id);

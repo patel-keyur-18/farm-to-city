@@ -451,7 +451,7 @@ namespace Sim.Core.Business
         {
             if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
             Worker w = HiredWorker(sim, b);
-            return w == null || w.CourseUntil == 0;
+            return w == null || !WorkRules.Away(w);
         }
 
         /// <summary>Whether <paramref name="hour"/> is past the village's usual day (the type's hours): a hired worker's overtime (spec 015 §3.4).</summary>
@@ -467,6 +467,14 @@ namespace Sim.Core.Business
             int n = 0;
             for (int h = b.OpenHour; h < b.CloseHour; h++) if (Overtime(sim, b, h)) n++;
             return n;
+        }
+
+        /// <summary>Someone works it today: you, or a hired worker not away on a course or sick leave.</summary>
+        public static bool Staffed(Simulation sim, Business b)
+        {
+            if (b.Worker == WorkerKind.None) return false;
+            Worker w = HiredWorker(sim, b);
+            return w == null || !WorkRules.Away(w);
         }
 
         /// <summary>The business's hired worker, or null when nobody is hired or you run it yourself.</summary>
@@ -516,7 +524,10 @@ namespace Sim.Core.Business
             if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
             if (t.ByRecipe)
             {
+                long made = 0;
+                foreach (int p in t.Products) made += b.MadeToday[p];
                 long used = Make(sim, b, t);
+                if (made == 0 && used > 0) HrRules.FirstBatch(sim, b);
                 BusinessBooks.Sweep(sim, b);
                 if (used > 0) sim.Emit(new BusinessWorked(sim.State.Clock.SimTime, b.Id, 0, used));
                 return;
@@ -573,6 +584,7 @@ namespace Sim.Core.Business
                     b.OwnSeason += bought;
                 }
             }
+            if (own > 0 && b.OwnToday == own) HrRules.FirstBatch(sim, b); // the day's first grinding of your wheat
             Sell(sim, b);
             BusinessBooks.Sweep(sim, b);
             if (area > 0 || own > 0) sim.Emit(new BusinessWorked(now, b.Id, area, own));
@@ -821,7 +833,7 @@ namespace Sim.Core.Business
             var kinds = sim.Config.Game.Livestock.Animals;
             foreach (Business b in sim.State.Businesses.Businesses)
             {
-                if (b.Status != BusinessStatus.Open || !TypeOf(sim, b).TakesMilk) continue;
+                if (b.Status != BusinessStatus.Open || !TypeOf(sim, b).TakesMilk || !Staffed(sim, b)) continue; // nobody to work it today: the co-op takes it
                 long room = b.OwnPerDay;
                 for (int k = 0; k < kinds.Count; k++)
                 {
@@ -931,18 +943,26 @@ namespace Sim.Core.Business
             {
                 if (b.Status == BusinessStatus.Closed) continue;
                 Worker w = sim.State.People?.WorkerAt(b.Id);
-                if (b.Status == BusinessStatus.Open && w != null)
+                if (b.Status == BusinessStatus.Open && w != null && w.Hr.Leaving)
                 {
-                    long wage = HiringRules.RenewalWage(sim, w);
-                    if (BusinessBooks.Draw(sim, b, wage))
+                    LoseWorker(sim, b); // took an offer from elsewhere (spec 015 §3.7): no severance
+                    sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, w.Id, 0));
+                }
+                else if (b.Status == BusinessStatus.Open && w != null)
+                {
+                    long wage = w.Wage;
+                    if (BusinessBooks.CanSpend(sim, b) >= wage - w.Hr.Advance)
                     {
+                        HrRules.RepayAdvance(sim, w, b.Ledger, "business:" + b.Id);
+                        BusinessBooks.Draw(sim, b, wage);
                         PayWage(sim, b, wage);
-                        HiringRules.Renewed(sim, w, wage);
+                        HiringRules.Renewed(sim, w);
                     }
                     else
                     {
                         LoseWorker(sim, b);
                         sim.Emit(new WagesMissed(sim.State.Clock.SimTime, b.Id, wage));
+                        HrRules.Repute(sim, sim.Config.Game.People.Reputation.Lapse);
                     }
                 }
                 BusinessBooks.Sweep(sim, b);

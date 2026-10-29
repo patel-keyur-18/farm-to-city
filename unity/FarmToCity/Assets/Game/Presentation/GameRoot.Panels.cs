@@ -201,6 +201,7 @@ namespace Game.Presentation
                 case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
                 case "Hire": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working
                 case "Word": return; // the board stays: the post, a reference asked, a talk
+                case "HrEvent": if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: back to the alerts it came from
                 case "JobOffer": Return(new SheetRequest("Word", r.Arg == null ? 0 : long.Parse(r.Arg, System.Globalization.CultureInfo.InvariantCulture))); return; // back to the job's tab: hired, countered or gone
             }
             // The shed sheet stays open: building, buying from neighbours on or off, the hand's animals order (spec 012 §7).

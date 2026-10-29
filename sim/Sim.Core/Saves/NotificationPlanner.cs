@@ -45,6 +45,9 @@ namespace Sim.Core.Saves
 
         /// <summary>A family moved into a family house (spec 014 §3.10); CropId is the man's (or the hand's) name key. Information.</summary>
         FamilyMovedIn = 16,
+
+        /// <summary>An HR event waits for the player (spec 015 §3.7); CropId is the worker's name key.</summary>
+        HrEvent = 17,
     }
 
     public enum NotifyImportance
@@ -149,6 +152,11 @@ namespace Sim.Core.Saves
                     case Events.HouseholdLeft l: items.Add(new AbsenceItem(at, NotifyKind.HouseholdLeft, sim.Config.Game.People.Names[l.Name].NameKey)); break;
                     case Events.CitizenRetired r: items.Add(new AbsenceItem(at, NotifyKind.HandRetired, sim.Config.Game.People.Names[r.Name].NameKey)); break;
                     case Events.FamilyMovedIn f: items.Add(new AbsenceItem(at, NotifyKind.FamilyMovedIn, sim.Config.Game.People.Names[f.Name].NameKey)); break;
+                    case HrEventRaised h:
+                        IStaff w = WorkRules.Find(sim, h.Place, h.WorkerId);
+                        int name = w is Hand hand ? hand.Name : w is Worker k ? k.Name : -1;
+                        items.Add(new AbsenceItem(at, NotifyKind.HrEvent, name < 0 ? null : sim.Config.Game.People.Names[name].NameKey));
+                        break;
                     case OrderExecuted o:
                         if (o.Action == OrderAction.Harvested || o.Action == OrderAction.Picked) items.Add(new AbsenceItem(at, NotifyKind.HandsWork, o.GoodId));
                         break;

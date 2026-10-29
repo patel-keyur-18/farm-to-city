@@ -330,7 +330,7 @@ namespace Sim.View.Views
             }
             if (n.Kind == NotifyKind.AnimalSick || n.Kind == NotifyKind.CalfBorn)
                 return (s.Get(k + ".title", "name", n.CropId ?? s.Get("animal.someone")), s.Get(k + ".body"));
-            if (n.Kind == NotifyKind.RentMissed || n.Kind == NotifyKind.HouseholdLeft || n.Kind == NotifyKind.HandRetired || n.Kind == NotifyKind.FamilyMovedIn)
+            if (n.Kind == NotifyKind.RentMissed || n.Kind == NotifyKind.HouseholdLeft || n.Kind == NotifyKind.HandRetired || n.Kind == NotifyKind.FamilyMovedIn || n.Kind == NotifyKind.HrEvent)
                 return (s.Get(k + ".title", "name", n.CropId == null ? s.Get("away.aFamily") : s.Get(n.CropId)), s.Get(k + ".body"));
             if (n.Kind == NotifyKind.FeedLow)
                 return (s.Get("notify.FeedLow.title", "good", Names.Of(ctx, n.CropId)), s.Get("notify.FeedLow.body"));

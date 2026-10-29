@@ -479,4 +479,54 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "LongDaysStopped(place=" + Place + ", worker=" + WorkerId + ")"; }
     }
+
+    /// <summary>An HR event waits for the player (spec 015 §3.7): an alert, a card and a notification.</summary>
+    public sealed class HrEventRaised : SimEvent
+    {
+        public long EventId { get; }
+        public People.HrEventKind Kind { get; }
+        public long Place { get; }
+        public long WorkerId { get; }
+
+        public HrEventRaised(long simTime, long eventId, People.HrEventKind kind, long place, long workerId) : base(simTime)
+        {
+            EventId = eventId;
+            Kind = kind;
+            Place = place;
+            WorkerId = workerId;
+        }
+
+        protected override string Describe() { return "HrEventRaised(" + EventId + ", " + Kind + ", place=" + Place + ", worker=" + WorkerId + ")"; }
+    }
+
+    public sealed class HrEventAnswered : SimEvent
+    {
+        public long EventId { get; }
+        public People.HrEventKind Kind { get; }
+        public int Choice { get; }
+
+        public HrEventAnswered(long simTime, long eventId, People.HrEventKind kind, int choice) : base(simTime)
+        {
+            EventId = eventId;
+            Kind = kind;
+            Choice = choice;
+        }
+
+        protected override string Describe() { return "HrEventAnswered(" + EventId + ", " + Kind + ", choice=" + Choice + ")"; }
+    }
+
+    /// <summary>Employer reputation moved (spec 015 §3.8).</summary>
+    public sealed class ReputationChanged : SimEvent
+    {
+        public int Score { get; }
+        public int Delta { get; }
+
+        public ReputationChanged(long simTime, int score, int delta) : base(simTime)
+        {
+            Score = score;
+            Delta = delta;
+        }
+
+        protected override string Describe() { return "ReputationChanged(" + Score + ", " + Delta + ")"; }
+    }
 }

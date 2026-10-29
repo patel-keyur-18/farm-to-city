@@ -191,7 +191,15 @@ namespace Sim.Core.People
         /// <summary>When their course ends, or 0 when not on one (spec 015 §3.5): away, no work, wage still paid.</summary>
         public long CourseUntil { get; internal set; }
 
-        internal Hand Clone() { return (Hand)MemberwiseClone(); }
+        /// <summary>What HR events left behind (spec 015 §3.7).</summary>
+        public HrState Hr { get; internal set; } = new HrState();
+
+        internal Hand Clone()
+        {
+            var c = (Hand)MemberwiseClone();
+            c.Hr = Hr.Clone();
+            return c;
+        }
 
         internal void WriteTo(IStateWriter h)
         {
@@ -218,6 +226,7 @@ namespace Sim.Core.People
                 h.WriteBool(LongDays);
                 h.WriteLong(CourseUntil);
             }
+            if (!(h is Saves.SaveWriter sw13 && sw13.Schema < 11) && (!h.Hashing || Hr.Used)) Hr.WriteTo(h);
         }
 
         internal static Hand ReadFrom(SaveReader r)
@@ -236,6 +245,7 @@ namespace Sim.Core.People
                 hand.Fatigue = r.ReadFixed();
                 hand.LongDays = r.ReadBool();
                 hand.CourseUntil = r.ReadLong();
+                hand.Hr = HrState.ReadFrom(r);
             }
             return hand;
         }
@@ -425,8 +435,14 @@ namespace Sim.Core.People
         /// <summary>As <see cref="Hand.Fatigue"/> and <see cref="Hand.CourseUntil"/>; their long days are the business's hours past its usual day.</summary>
         public Fixed Fatigue { get; internal set; }
         public long CourseUntil { get; internal set; }
+        public HrState Hr { get; internal set; } = new HrState();
 
-        internal Worker Clone() { return (Worker)MemberwiseClone(); }
+        internal Worker Clone()
+        {
+            var c = (Worker)MemberwiseClone();
+            c.Hr = Hr.Clone();
+            return c;
+        }
 
         internal void WriteTo(IStateWriter h)
         {
@@ -443,16 +459,131 @@ namespace Sim.Core.People
             h.WriteInt(SeasonsWorked);
             h.WriteFixed(Fatigue);
             h.WriteLong(CourseUntil);
+            Hr.WriteTo(h);
         }
 
         internal static Worker ReadFrom(SaveReader r)
         {
-            return new Worker
+            var w = new Worker
             {
                 Id = r.ReadLong(), Place = r.ReadLong(), CitizenId = r.ReadLong(), Name = r.ReadRef(ContentTable.Name), Skill = r.ReadFixed(),
                 Trait1 = r.ReadRef(ContentTable.Trait), Trait2 = r.ReadRef(ContentTable.Trait), Wage = r.ReadLong(), Fairness = r.ReadInt(),
                 HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(), Fatigue = r.ReadFixed(), CourseUntil = r.ReadLong(),
             };
+            w.Hr = HrState.ReadFrom(r);
+            return w;
+        }
+    }
+
+    /// <summary>
+    /// A worker's HR record (spec 015 §3.7, schema 11), the same for a farm hand and a business's worker: a mood an event left for a
+    /// season, raises refused, the season of their last event, sick leave, an advance to repay, and an offer from elsewhere taken.
+    /// </summary>
+    public sealed class HrState
+    {
+        /// <summary>Added to motivation through <see cref="MoodSeason"/> (a season index).</summary>
+        public Fixed Mood { get; internal set; }
+        public long MoodSeason { get; internal set; }
+
+        /// <summary>Raise requests refused since they were last paid what they ask.</summary>
+        public int RaiseRefusals { get; internal set; }
+
+        /// <summary>The season index + 1 of their last event (0: none yet): at most one a season.</summary>
+        public long EventSeason { get; internal set; }
+
+        /// <summary>When their sick leave ends, or 0.</summary>
+        public long SickUntil { get; internal set; }
+
+        /// <summary>An advance on their wage, repaid from the next renewal.</summary>
+        public long Advance { get; internal set; }
+
+        /// <summary>They took an offer from elsewhere and leave at the season's close.</summary>
+        public bool Leaving { get; internal set; }
+
+        internal bool Used { get { return Mood != Fixed.Zero || MoodSeason != 0 || RaiseRefusals != 0 || EventSeason != 0 || SickUntil != 0 || Advance != 0 || Leaving; } }
+
+        internal HrState Clone() { return (HrState)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteFixed(Mood);
+            h.WriteLong(MoodSeason);
+            h.WriteInt(RaiseRefusals);
+            h.WriteLong(EventSeason);
+            h.WriteLong(SickUntil);
+            h.WriteLong(Advance);
+            h.WriteBool(Leaving);
+        }
+
+        internal static HrState ReadFrom(SaveReader r)
+        {
+            return new HrState
+            {
+                Mood = r.ReadFixed(), MoodSeason = r.ReadLong(), RaiseRefusals = r.ReadInt(), EventSeason = r.ReadLong(), SickUntil = r.ReadLong(),
+                Advance = r.ReadLong(), Leaving = r.ReadBool(),
+            };
+        }
+    }
+
+    public enum HrEventKind
+    {
+        RaiseRequest = 0,
+        Poaching = 1,
+        SickLeave = 2,
+        FamilyEmergency = 3,
+        BadBatch = 4,
+    }
+
+    /// <summary>
+    /// An HR event waiting for the player (spec 015 §3.7): no deadline, the worker carrying on meanwhile. Amount is the wage asked, the
+    /// offer from elsewhere, the sick days' wage, the advance, or what the bad batch would fetch sold cheap; a bad batch holds its goods.
+    /// </summary>
+    public sealed class HrEvent
+    {
+        public long Id { get; internal set; }
+        public HrEventKind Kind { get; internal set; }
+
+        /// <summary>0 for a farm hand, else the business's id.</summary>
+        public long Place { get; internal set; }
+
+        /// <summary>The hand's or the business worker's id.</summary>
+        public long WorkerId { get; internal set; }
+        public long At { get; internal set; }
+        public long Amount { get; internal set; }
+
+        /// <summary>A bad batch's good (by index), grams and cost, set aside from the business's stock.</summary>
+        public int Good { get; internal set; } = -1;
+        public long Grams { get; internal set; }
+        public long Cost { get; internal set; }
+
+        internal HrEvent Clone() { return (HrEvent)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Id);
+            h.WriteInt((int)Kind);
+            h.WriteLong(Place);
+            h.WriteLong(WorkerId);
+            h.WriteLong(At);
+            h.WriteLong(Amount);
+            h.WriteBool(Good >= 0);
+            if (Good < 0) return;
+            h.WriteRef(ContentTable.Good, Good);
+            h.WriteLong(Grams);
+            h.WriteLong(Cost);
+        }
+
+        internal static HrEvent ReadFrom(SaveReader r)
+        {
+            var e = new HrEvent
+            {
+                Id = r.ReadLong(), Kind = (HrEventKind)r.ReadInt(), Place = r.ReadLong(), WorkerId = r.ReadLong(), At = r.ReadLong(), Amount = r.ReadLong(),
+            };
+            if (!r.ReadBool()) return e;
+            e.Good = r.ReadRef(ContentTable.Good);
+            e.Grams = r.ReadLong();
+            e.Cost = r.ReadLong();
+            return e;
         }
     }
 
@@ -474,6 +605,10 @@ namespace Sim.Core.People
 
         /// <summary>Employer reputation 0–100 (spec 015 §3.8).</summary>
         public int Reputation { get; internal set; } = 50;
+
+        /// <summary>HR events waiting for the player, in id order (spec 015 §3.7).</summary>
+        public List<HrEvent> HrEvents { get; } = new List<HrEvent>();
+        public long NextHrEventId { get; internal set; } = 1;
 
         /// <summary>The farm hand's post, or null.</summary>
         public JobPost Post { get { return PostAt(0); } }
@@ -511,8 +646,9 @@ namespace Sim.Core.People
             var c = new PeopleState
             {
                 NextApplicantAt = NextApplicantAt, NextApplicantId = NextApplicantId, NextHandId = NextHandId,
-                NextConstructionId = NextConstructionId, NextWorkerId = NextWorkerId, Reputation = Reputation,
+                NextConstructionId = NextConstructionId, NextWorkerId = NextWorkerId, Reputation = Reputation, NextHrEventId = NextHrEventId,
             };
+            foreach (HrEvent e in HrEvents) c.HrEvents.Add(e.Clone());
             foreach (JobPost x in Posts) c.Posts.Add(x.Clone());
             foreach (Worker w in Workers) c.Workers.Add(w.Clone());
             foreach (Neighbour n in Roster) c.Roster.Add(n.Clone());
@@ -564,11 +700,14 @@ namespace Sim.Core.People
             h.WriteLong(NextApplicantId);
             h.WriteLong(NextHandId);
             h.WriteLong(NextConstructionId);
-            if (!v11 || (h.Hashing && Workers.Count == 0 && NextWorkerId == 1 && Reputation == 50)) return; // hashed only once used
+            if (!v11 || (h.Hashing && Workers.Count == 0 && NextWorkerId == 1 && Reputation == 50 && NextHrEventId == 1)) return; // hashed only once used
             h.WriteInt(Workers.Count);
             foreach (Worker w in Workers) w.WriteTo(h);
             h.WriteLong(NextWorkerId);
             h.WriteInt(Reputation);
+            h.WriteInt(HrEvents.Count);
+            foreach (HrEvent e in HrEvents) e.WriteTo(h);
+            h.WriteLong(NextHrEventId);
         }
 
         internal static PeopleState ReadFrom(SaveReader r, long now)
@@ -603,6 +742,9 @@ namespace Sim.Core.People
             for (int i = 0; i < n; i++) s.Workers.Add(Worker.ReadFrom(r));
             s.NextWorkerId = r.ReadLong();
             s.Reputation = r.ReadInt();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.HrEvents.Add(HrEvent.ReadFrom(r));
+            s.NextHrEventId = r.ReadLong();
             return s;
         }
     }

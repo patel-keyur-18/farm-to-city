@@ -164,6 +164,8 @@ namespace Sim.Core.Commands
                     b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.severance", "business:" + b.Id,
                         new Finance.Posting(Finance.Account.HiredLabour, severance), new Finance.Posting(Finance.Account.Cash, -severance));
             }
+            if (w != null)
+                People.HrRules.Repute(sim, w.SeasonsWorked == 0 ? sim.Config.Game.People.Reputation.ProbationLetGo : severance > 0 ? sim.Config.Game.People.Reputation.Severance : 0);
             Farm.FarmSystem.Accrue(sim);
             BusinessRules.LoseWorker(sim, b);
             b.Worker = WorkerKind.None;

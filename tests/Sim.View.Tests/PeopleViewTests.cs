@@ -125,6 +125,39 @@ namespace Sim.View.Tests
             Assert.That(business.Lines.Single(l => l.Label == "Output").WhyKey, Is.EqualTo("staffOutputAt"));
         }
 
+        // Spec 015 §7 (US-114): an HR event as a card, an alert and a sheet with its two choices; reputation on the People sheet.
+        [Test]
+        public void HrEventCard()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            h.Skill = h.Skill + Fixed.FromInt(20);
+            PeopleState p = sim.State.People;
+            var e = new HrEvent { Id = p.NextHrEventId++, Kind = HrEventKind.RaiseRequest, Place = 0, WorkerId = h.Id, At = sim.State.Clock.SimTime, Amount = HrRules.Asked(sim, h) };
+            p.HrEvents.Add(e);
+            ViewContext ctx = ViewKit2.Context(sim);
+            string name = PeopleWords.Name(ctx, h.Name);
+            CardVm card = HrEventSheet.Card(ctx, e.Id);
+            Assert.That(card.Title, Is.EqualTo(name + " asks for a raise"));
+            Assert.That(card.Text, Does.StartWith(name + " asks for " + ctx.Fmt.Coins(e.Amount) + " a season; you pay " + ctx.Fmt.Coins(h.Wage) + ". Their skill has grown"));
+            Assert.That(card.Text, Does.EndWith("Saying yes costs " + ctx.Fmt.Coins(HrRules.CostNow(sim, e)) + " now, from your cash."));
+            Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Pay " + ctx.Fmt.Coins(e.Amount) + " from now", "Not now" }));
+            AlertVm alert = Alerts.Build(ctx).Single(x => x.Text == card.Title);
+            Assert.That((alert.Level, alert.Action.Label, alert.Action.Opens.Value.Kind), Is.EqualTo((AlertLevel.Decision, "Answer", "HrEvent")));
+            SheetVm sheet = HrEventSheet.Build(ctx, e.Id);
+            Assert.That(sheet.Actions.Select(x => x.Label), Is.EqualTo(card.Buttons.Select(b => b.Label)));
+            Assert.That(sheet.Actions[0].Detail, Is.EqualTo(ctx.Fmt.Coins(HrRules.CostNow(sim, e)) + " now"));
+
+            LineVm rep = PeopleSheet.Build(ctx).Lines.Single(l => l.Label == "Your name as an employer");
+            Assert.That(rep.Value, Is.EqualTo("Fair (50)"));
+            Assert.That(WhyView.Build(ctx, rep.WhyKey, rep.WhyId).Rows.Count, Is.GreaterThanOrEqualTo(3));
+
+            Ok(sim, sheet.Actions[0].Create(sim.State.Clock.SimTime));
+            Assert.That(p.HrEvents, Is.Empty);
+            Assert.That(h.Wage, Is.EqualTo(e.Amount));
+            Assert.That(HrEventSheet.Card(ViewKit2.Context(sim), e.Id), Is.Null, "answered");
+        }
+
         [Test]
         public void PeopleSheet_ThroughHiring()
         {

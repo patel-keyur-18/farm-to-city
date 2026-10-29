@@ -69,16 +69,19 @@ namespace Sim.Core.People
         /// <summary>
         /// The chance an offer is taken (spec 015 §3.3): regulars always (ADR 0041); a townsperson always at the asked wage or more, 0.6
         /// below it; after a counter, the asked wage or more is taken; else 0.85 at the asked wage (0.95 through an above-market post),
-        /// 0.95 above it, 0.40 below it.
+        /// 0.95 above it, 0.40 below it; ±0.10 at a reputation of 80 or more, 20 or less.
         /// </summary>
         public static Fixed AcceptChance(Simulation sim, Applicant a, OfferLevel level)
         {
             PeopleDefs p = sim.Config.Game.People;
             if (a.FromRosterId != 0) return Fixed.One;
-            if (level == OfferLevel.Low) return a.CitizenId != 0 ? p.Hiring.TownLowAccept : p.Hiring.LowAccept;
-            if (a.CitizenId != 0 || a.Countered) return Fixed.One;
-            if (level == OfferLevel.High) return p.Hiring.HighAccept;
-            return a.AboveMarket ? p.JobPost.AboveMarketAccept : p.Hand.AcceptChance;
+            Fixed chance;
+            if (level == OfferLevel.Low) chance = a.CitizenId != 0 ? p.Hiring.TownLowAccept : p.Hiring.LowAccept;
+            else if (a.CitizenId != 0 || a.Countered) return Fixed.One;
+            else if (level == OfferLevel.High) chance = p.Hiring.HighAccept;
+            else chance = a.AboveMarket ? p.JobPost.AboveMarketAccept : p.Hand.AcceptChance;
+            chance += HrRules.AcceptShift(sim); // employer reputation (spec 015 §3.8)
+            return chance > Fixed.One ? Fixed.One : chance < Fixed.Zero ? Fixed.Zero : chance;
         }
 
         /// <summary>The shown skill range: exact for townspeople and regulars, ±5 once a reference is back, else ±15 (spec 015 §3.2).</summary>
@@ -226,6 +229,7 @@ namespace Sim.Core.People
                 return;
             }
             int fairness = level == OfferLevel.Low ? -1 : level == OfferLevel.High ? 1 : 0;
+            if (fairness < 0) HrRules.Repute(sim, sim.Config.Game.People.Reputation.LowHire);
             Withdraw(s, a.CitizenId);
             if (a.Place == 0)
             {
@@ -278,6 +282,7 @@ namespace Sim.Core.People
             PeopleState s = sim.State.People;
             Worker w = s?.WorkerAt(b.Id);
             if (w == null) return;
+            HrRules.Gone(sim, w);
             s.Workers.Remove(w);
             Citizen c = w.CitizenId == 0 ? null : sim.State.Citizens?.Citizen(w.CitizenId);
             if (c == null) return;
@@ -285,30 +290,16 @@ namespace Sim.Core.People
             else c.Crafting = w.Skill;
         }
 
-        /// <summary>
-        /// The new season's wage (spec 015 §3.3, §3.5): the asked wage for today's skill and price index, kept by a loyal worker; an
-        /// ambitious one asks 10% more. Paying the asked wage clears a low hire's memory.
-        /// </summary>
-        internal static long RenewalWage(Simulation sim, Worker w)
+        /// <summary>Paid for the new season at their current wage (ADR 0081): skill grown on the job (spec 015 §3.5), then a raise request or an offer may come.</summary>
+        internal static void Renewed(Simulation sim, Worker w)
         {
             PeopleDefs p = sim.Config.Game.People;
             var traits = p.Traits;
-            if (traits[w.Trait1].KeepsWage || traits[w.Trait2].KeepsWage) return w.Wage;
-            long wage = AskedWage(sim, w.Place, w.Skill, false);
-            Fixed factor = traits[w.Trait1].RenewalWageFactor * traits[w.Trait2].RenewalWageFactor;
-            return factor == Fixed.One ? wage : Money.RoundToCoin(Money.MulRate(wage, factor));
-        }
-
-        /// <summary>Paid for the new season: the wage set, the memory cleared unless they kept their own, skill grown on the job (spec 015 §3.5).</summary>
-        internal static void Renewed(Simulation sim, Worker w, long wage)
-        {
-            PeopleDefs p = sim.Config.Game.People;
-            var traits = p.Traits;
-            if (!traits[w.Trait1].KeepsWage && !traits[w.Trait2].KeepsWage) w.Fairness = 0;
-            w.Wage = wage;
+            HrRules.Renewed(sim, w);
             w.SeasonsWorked++;
             Fixed skill = w.Skill + p.Hand.SkillGainPerSeason * traits[w.Trait1].SkillGainFactor * traits[w.Trait2].SkillGainFactor;
             w.Skill = skill > Fixed.FromInt(100) ? Fixed.FromInt(100) : skill;
+            HrRules.Draw(sim, w);
         }
 
         /// <summary>

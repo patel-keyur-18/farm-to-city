@@ -20,7 +20,7 @@ namespace Sim.Core.People
         /// </summary>
         public static Fixed HandHours(Simulation sim, Hand h)
         {
-            if (h.CourseUntil != 0) return Fixed.Zero;
+            if (WorkRules.Away(h)) return Fixed.Zero;
             PeopleDefs p = sim.Config.Game.People;
             Fixed day = h.LongDays ? p.Hand.HoursPerDay + Fixed.FromInt(p.Work.LongDayHours) : p.Hand.HoursPerDay;
             Fixed hours = day * (p.Hand.ProductivityBase + p.Hand.ProductivityPerSkill * h.Skill.MulRatio(1, 100));
@@ -192,7 +192,7 @@ namespace Sim.Core.People
 
         /// <summary>
         /// Seconds until the next applicant (spec 006 §3.5): applicantEveryHours ± up to applicantJitterHours, both × rateFactor
-        /// while a job is posted. Seeded by the applicant's id (stream Applicants, draw 0).
+        /// while a job is posted, ÷ 0.75 at reputation 20 or below. Seeded by the applicant's id (stream Applicants, draw 0).
         /// </summary>
         internal static long ApplicantInterval(Simulation sim, long applicantId, bool posted)
         {
@@ -201,7 +201,10 @@ namespace Sim.Core.People
             long baseSec = factor.MulRatio(p.Hand.ApplicantEveryHours * 3600L, 1).RoundToLong();
             long jitter = factor.MulRatio(p.Hand.ApplicantJitterHours * 3600L, 1).RoundToLong();
             ulong r = Rng.Next(sim.State.Seed, RngStream.Applicants, (ulong)applicantId, 0);
-            return baseSec - jitter + (long)Rng.Below(r, (ulong)(2 * jitter + 1));
+            long wait = baseSec - jitter + (long)Rng.Below(r, (ulong)(2 * jitter + 1));
+            ReputationDef rep = p.Reputation;
+            if (sim.State.People.Reputation > rep.Low) return wait;
+            return (Fixed.FromInt(wait) / rep.LowPace).RoundToLong(); // a poor employer's name: applicants come more slowly (spec 015 §3.8)
         }
     }
 }

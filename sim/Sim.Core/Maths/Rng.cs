@@ -23,6 +23,9 @@ namespace Sim.Core.Maths
         Births = 13,
         Deaths = 14,
         Migration = 15,
+
+        /// <summary>HR events (spec 015 §3.7): key = the worker (a hand's id, or a business worker's id + 2^32), counter = day × 8 + kind.</summary>
+        HrEvents = 16,
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ namespace Sim.View.Views
         /// <summary>What a hand gets through a day: "Tends about 3 acres", or away on a course.</summary>
         public static string Work(ViewContext ctx, Hand h)
         {
-            return h.CourseUntil != 0 ? ctx.Strings.Get("staff.awayOnCourse") : Tends(ctx, PeopleRules.HandHours(ctx.Sim, h));
+            return h.CourseUntil != 0 ? ctx.Strings.Get("staff.awayOnCourse") : h.Hr.SickUntil != 0 ? ctx.Strings.Get("staff.offSick") : Tends(ctx, PeopleRules.HandHours(ctx.Sim, h));
         }
 
         public static string Name(ViewContext ctx, int name) { return ctx.Strings.Get(ctx.Sim.Config.Game.People.Names[name].NameKey); }
@@ -157,6 +157,7 @@ namespace Sim.View.Views
             };
             TownSheet.Tabs(ctx, vm, "tab:workers");
             vm.Lines.Add(new LineVm(s.Get("people.care"), ctx.Rating(sim.State.Farm.CareRatio), "care"));
+            vm.Lines.Add(new LineVm(s.Get("people.reputation"), StaffView.Reputation(ctx), "reputation"));
 
             // The hub's picture buttons, each saying what it opens.
             int free = PeopleRules.FreeNow(sim);
@@ -298,6 +299,8 @@ namespace Sim.View.Views
             LineVm line;
             if (w.CourseUntil != 0)
                 line = new LineVm(s.Get("staff.output"), s.Get("staff.onCourse", "time", ctx.Fmt.Duration(w.CourseUntil - ctx.Now)), why, whyId);
+            else if (w.Hr.SickUntil != 0)
+                line = new LineVm(s.Get("staff.output"), s.Get("staff.sick", "time", ctx.Fmt.Duration(w.Hr.SickUntil - ctx.Now)), why, whyId);
             else
             {
                 int band = Band(ctx, WorkRules.RelativeOutput(ctx.Sim, w));
@@ -308,6 +311,14 @@ namespace Sim.View.Views
             line.Action = ActionVm.Checked(ctx, "course", s.Get("staff.course"), s.Get("staff.courseDetail", "cost", ctx.Fmt.Coins(WorkRules.CourseCost(ctx.Sim)),
                 "gain", ctx.Fmt.Integer(work.CourseGain), "days", ctx.Fmt.Integer(work.CourseDays)), ActionKind.Secondary, at => new SendOnCourse(at, place, id));
             return line;
+        }
+
+        /// <summary>Employer reputation in words and its score: "Fair (52)" (spec 015 §3.8).</summary>
+        public static string Reputation(ViewContext ctx)
+        {
+            int r = ctx.Sim.State.People.Reputation;
+            var d = ctx.Sim.Config.Game.People.Reputation;
+            return ctx.Strings.Get(r >= d.High ? "reputation.good" : r <= d.Low ? "reputation.poor" : "reputation.fair", "score", ctx.Fmt.Integer(r));
         }
 
         /// <summary>0 "Barely working" to 4 "Works very well": output against a typical worker's by ui.json's bands.</summary>
@@ -326,7 +337,7 @@ namespace Sim.View.Views
             var p = ctx.Sim.Config.Game.People;
             long id = h.Id, pay = WorkRules.OvertimeDay(ctx.Sim, h);
             int normal = (int)p.Hand.HoursPerDay.RoundToLong();
-            var line = new LineVm(s.Get("staff.longDays"), h.LongDays && h.CourseUntil != 0 ? s.Get("staff.longDaysPaused")
+            var line = new LineVm(s.Get("staff.longDays"), h.LongDays && WorkRules.Away(h) ? s.Get("staff.longDaysPaused")
                 : h.LongDays ? s.Get("staff.longDaysOn", "hours", ctx.Fmt.Integer(normal + p.Work.LongDayHours), "amount", ctx.Fmt.Coins(pay))
                 : s.Get("staff.longDaysOff", "hours", ctx.Fmt.Integer(normal)), "staffLongDays", h.Id);
             line.Action = h.LongDays

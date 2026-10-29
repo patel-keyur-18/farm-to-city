@@ -19,6 +19,7 @@ namespace Sim.Core.People
         int Fairness { get; }
         Fixed Fatigue { get; }
         long CourseUntil { get; }
+        HrState Hr { get; }
     }
 
     /// <summary>
@@ -83,11 +84,11 @@ namespace Sim.Core.People
             return sum;
         }
 
-        /// <summary>Motivation = 1 + fairness + home + colleagues, within motivationMin–motivationMax (spec 015 §3.4).</summary>
+        /// <summary>Motivation = 1 + fairness + home + colleagues + HR events' moods, within motivationMin–motivationMax (spec 015 §3.4).</summary>
         public static Fixed Motivation(Simulation sim, IStaff w)
         {
             WorkDef d = sim.Config.Game.People.Work;
-            Fixed m = Fixed.One + Fairness(sim, w) + Home(sim, w) + Colleagues(sim, w);
+            Fixed m = Fixed.One + Fairness(sim, w) + Home(sim, w) + Colleagues(sim, w) + HrRules.Mood(sim, w);
             return m < d.MotivationMin ? d.MotivationMin : m > d.MotivationMax ? d.MotivationMax : m;
         }
 
@@ -97,8 +98,11 @@ namespace Sim.Core.People
         /// <summary>Output = skill factor × motivation × (1 − fatigue) (spec 015 §3.4); 0 while away on a course.</summary>
         public static Fixed Output(Simulation sim, IStaff w)
         {
-            return w.CourseUntil != 0 ? Fixed.Zero : SkillFactor(sim, w) * Condition(sim, w);
+            return Away(w) ? Fixed.Zero : SkillFactor(sim, w) * Condition(sim, w);
         }
+
+        /// <summary>Away on a course or on sick leave: no work.</summary>
+        public static bool Away(IStaff w) { return w.CourseUntil != 0 || w.Hr.SickUntil != 0; }
 
         /// <summary>The household of a hand (in his hut or his family's house) or of a townsperson at a business; null for a commuter.</summary>
         public static Household HomeOf(Simulation sim, IStaff w)
@@ -182,14 +186,14 @@ namespace Sim.Core.People
             FarmSystem.Accrue(sim);
             foreach (Hand h in s.Hands)
             {
-                h.Fatigue = Tire(sim, h.Fatigue, h.LongDays && h.Contract == ContractState.Active && h.CourseUntil == 0);
-                if (h.LongDays && (h.Contract != ContractState.Active || (h.CourseUntil == 0 && !Pay(sim, h, OvertimeDay(sim, h), "ledger.overtime")))) // away on a course: no long day to pay
+                h.Fatigue = Tire(sim, h.Fatigue, h.LongDays && h.Contract == ContractState.Active && !Away(h));
+                if (h.LongDays && (h.Contract != ContractState.Active || (!Away(h) && !Pay(sim, h, OvertimeDay(sim, h), "ledger.overtime")))) // away on a course: no long day to pay
                 {
                     h.LongDays = false;
                     sim.Emit(new LongDaysStopped(sim.State.Clock.SimTime, 0, h.Id));
                 }
             }
-            foreach (Worker w in s.Workers) w.Fatigue = Tire(sim, w.Fatigue, LongDays(sim, w) && w.CourseUntil == 0);
+            foreach (Worker w in s.Workers) w.Fatigue = Tire(sim, w.Fatigue, LongDays(sim, w) && !Away(w));
             FarmSystem.Refresh(sim);
         }
 

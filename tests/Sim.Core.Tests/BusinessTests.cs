@@ -518,6 +518,13 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(day * 86_400 + 19 * 3600);
             Assert.That(b.MadeToday[paneer], Is.GreaterThan(0));
             Assert.That(b.Ledger.Reconcile(), Is.Null);
+
+            // US-114: with its dairyman away (sick leave or a course), nobody can work the milk, so none is taken that morning.
+            Worker w = BusinessRules.HiredWorker(sim, b);
+            w.Hr.SickUntil = (day + 2) * 86_400 + 12 * 3600;
+            long milk = Paid(b, "ledger.boughtFromNeighbours");
+            sim.AdvanceTo((day + 1) * 86_400 + 6 * 3600 + 1);
+            Assert.That(Paid(b, "ledger.boughtFromNeighbours"), Is.EqualTo(milk), "no milk bought for a day nobody works");
         }
 
         private static long Paid(Business.Business b, string key)

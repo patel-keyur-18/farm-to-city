@@ -150,10 +150,24 @@ namespace Tools.Balancer
         /// cash is short), a market-wage post, interviews, an offer to the best applicant once two wait or one has waited a
         /// day, renewal within the grace, and orders on the inherited acres each season.
         /// </summary>
+        /// <summary>
+        /// HR events (spec 015 §3.7), as a fair employer: pay the raise, match the offer, paid sick leave, the advance, throw a bad batch
+        /// away; the other choice when the first can't be paid, or (for a hand, from your cash) would eat into the season's reserve.
+        /// </summary>
+        protected virtual void AnswerHr(Simulation sim, long t)
+        {
+            foreach (HrEvent e in sim.State.People.HrEvents.ToArray())
+            {
+                bool prudent = e.Place != 0 || sim.State.Ledger.Cash - HrRules.CostNow(sim, e) >= Reserve(sim);
+                if (!prudent || !sim.Execute(new AnswerHrEvent(t, e.Id, 0)).Accepted) sim.Execute(new AnswerHrEvent(t, e.Id, 1));
+            }
+        }
+
         protected virtual void Employ(Simulation sim, long t)
         {
             PeopleState p = sim.State.People;
             if (p == null) return;
+            AnswerHr(sim, t);
             long S = sim.Clock.SecondsPerSeason;
             if (PeopleRules.HutCount(sim) == 0 && t >= S - ClockDef.SecondsPerDay / 2 && ReadyToHire(sim))
             {

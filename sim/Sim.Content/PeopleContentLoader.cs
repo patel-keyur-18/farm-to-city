@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "people";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "labourPool", "hand", "jobPost", "hiring", "work", "huts", "traits", "names");
+            OnlyFields(o, root, "labourPool", "hand", "jobPost", "hiring", "work", "hrEvents", "reputation", "huts", "traits", "names");
             if (hut.HousesHands < 1) throw new ContentException("buildings.hand_hut.housesHands", "a hand's hut must house at least one hand");
 
             string lp = root + ".labourPool";
@@ -165,7 +165,59 @@ namespace Sim.Content
                 names.Add(new NameDef(id, "name." + id, g == "f"));
             }
             if (names.Count < roster) throw new ContentException(root + ".names", "needs at least rosterSize names");
-            return new PeopleDefs(pool, hand, post, hiring, work, traits, names, places, handHut);
+            string ep = root + ".hrEvents";
+            JObject ej = Object(Required(o, root, "hrEvents"), ep);
+            OnlyFields(ej, ep, "raiseChance", "raiseGap", "poachChance", "poachSkill", "poachUnderpaidFactor", "poachRefusedFactor", "poachMatch", "sickChance", "sickTiredAbove",
+                "sickTiredFactor", "sickDays", "emergencyChance", "advanceShare", "badBatchChance", "badBatchSellShare", "raiseRefusedMood", "matchedMood", "sickPaidMood",
+                "sickUnpaidMood", "advanceMood", "noAdvanceMood");
+            var hr = new HrDef
+            {
+                RaiseChance = Bounded(ej, ep, "raiseChance", "0", "1"),
+                RaiseGap = Bounded(ej, ep, "raiseGap", "0", "0.5"),
+                PoachChance = Bounded(ej, ep, "poachChance", "0", "1"),
+                PoachSkill = BoundedInt(ej, ep, "poachSkill", 0, 100),
+                PoachUnderpaidFactor = BoundedInt(ej, ep, "poachUnderpaidFactor", 1, 10),
+                PoachRefusedFactor = BoundedInt(ej, ep, "poachRefusedFactor", 1, 10),
+                PoachMatch = Bounded(ej, ep, "poachMatch", "0", "1"),
+                SickChance = Bounded(ej, ep, "sickChance", "0", "1"),
+                SickTiredAbove = Bounded(ej, ep, "sickTiredAbove", "0", "1"),
+                SickTiredFactor = BoundedInt(ej, ep, "sickTiredFactor", 1, 10),
+                SickDays = BoundedInt(ej, ep, "sickDays", 1, 10),
+                EmergencyChance = Bounded(ej, ep, "emergencyChance", "0", "1"),
+                AdvanceShare = Bounded(ej, ep, "advanceShare", "0", "1"),
+                BadBatchChance = Bounded(ej, ep, "badBatchChance", "0", "1"),
+                BadBatchSellShare = Bounded(ej, ep, "badBatchSellShare", "0", "1"),
+                RaiseRefusedMood = Bounded(ej, ep, "raiseRefusedMood", "-0.5", "0"),
+                MatchedMood = Bounded(ej, ep, "matchedMood", "0", "0.5"),
+                SickPaidMood = Bounded(ej, ep, "sickPaidMood", "0", "0.5"),
+                SickUnpaidMood = Bounded(ej, ep, "sickUnpaidMood", "-0.5", "0"),
+                AdvanceMood = Bounded(ej, ep, "advanceMood", "0", "0.5"),
+                NoAdvanceMood = Bounded(ej, ep, "noAdvanceMood", "-0.5", "0"),
+            };
+
+            string rp = root + ".reputation";
+            JObject rj = Object(Required(o, root, "reputation"), rp);
+            OnlyFields(rj, rp, "fairRenewal", "sickPaid", "advance", "severance", "lowHire", "raiseRefused", "probationLetGo", "lapse", "badBatchSold", "high", "low",
+                "acceptShift", "highSkillBonus", "lowPace");
+            var rep = new ReputationDef
+            {
+                FairRenewal = BoundedInt(rj, rp, "fairRenewal", 0, 20),
+                SickPaid = BoundedInt(rj, rp, "sickPaid", 0, 20),
+                Advance = BoundedInt(rj, rp, "advance", 0, 20),
+                Severance = BoundedInt(rj, rp, "severance", 0, 20),
+                LowHire = BoundedInt(rj, rp, "lowHire", -20, 0),
+                RaiseRefused = BoundedInt(rj, rp, "raiseRefused", -20, 0),
+                ProbationLetGo = BoundedInt(rj, rp, "probationLetGo", -20, 0),
+                Lapse = BoundedInt(rj, rp, "lapse", -20, 0),
+                BadBatchSold = BoundedInt(rj, rp, "badBatchSold", -20, 0),
+                High = BoundedInt(rj, rp, "high", 0, 100),
+                Low = BoundedInt(rj, rp, "low", 0, 100),
+                AcceptShift = Bounded(rj, rp, "acceptShift", "0", "0.5"),
+                HighSkillBonus = BoundedInt(rj, rp, "highSkillBonus", 0, 50),
+                LowPace = Bounded(rj, rp, "lowPace", "0.1", "1"),
+            };
+            if (rep.Low >= rep.High) throw new ContentException(Join(rp, "low"), "must be below high");
+            return new PeopleDefs(pool, hand, post, hiring, work, traits, names, places, handHut) { Hr = hr, Reputation = rep };
         }
 
         private static Fixed OptionalFactor(JObject o, string path, string name)
