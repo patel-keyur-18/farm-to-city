@@ -253,7 +253,7 @@
 
 ## Next up
 
-1. **Owner:** install the Sprint 15 Development build and run `docs/test-checklists/s15-chains-hr.md` on the iPhone 13 (export your town first; schema 10 → 11); report; merge the pull request.
+1. **Owner:** install the Sprint 15 Development build and run `docs/test-checklists/s15-chains-hr.md` on the iPhone 13 (export your town first; schema 10 → 11); report; merge PR #20.
 2. **Claude (after the device check):** fix what the device check finds; then plan Sprint 16 with the owner (Sprint 16 is re-pointed to 37 in ADR 0076; the owner's requests US-219 to US-222 wait to be planned in).
 
 ## Owner action checklist (Phases 0–1)

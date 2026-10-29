@@ -678,4 +678,4 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 - [x] Balance: spec 015 §9 and spec 016 §9 measured with the bots; targets recorded in an ADR, contradictions flagged to the owner (ADR 0082: a refused raise loses the worker, a day away, the dairy's bounds widened; `GateTests.Hr`)
 - [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check (checklist and Editor pass done, Development build made 2026-10-29; the device check waits for the owner)
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
+- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #20 opened 2026-10-29)
