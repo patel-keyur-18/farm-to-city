@@ -152,15 +152,12 @@ namespace Tools.Balancer
         /// </summary>
         /// <summary>
         /// HR events (spec 015 §3.7), as a fair employer: pay the raise, match the offer, paid sick leave, the advance, throw a bad batch
-        /// away; the other choice when the first can't be paid, or (for a hand, from your cash) would eat into the season's reserve.
+        /// away; the other choice only when the first can't be paid (a refused raise loses the worker at the close).
         /// </summary>
         protected virtual void AnswerHr(Simulation sim, long t)
         {
             foreach (HrEvent e in sim.State.People.HrEvents.ToArray())
-            {
-                bool prudent = e.Place != 0 || sim.State.Ledger.Cash - HrRules.CostNow(sim, e) >= Reserve(sim);
-                if (!prudent || !sim.Execute(new AnswerHrEvent(t, e.Id, 0)).Accepted) sim.Execute(new AnswerHrEvent(t, e.Id, 1));
-            }
+                if (!sim.Execute(new AnswerHrEvent(t, e.Id, 0)).Accepted) sim.Execute(new AnswerHrEvent(t, e.Id, 1));
         }
 
         protected virtual void Employ(Simulation sim, long t)
@@ -186,7 +183,7 @@ namespace Tools.Balancer
                 if (best != null && (outside.Count >= 2 || t - best.ArrivedAt >= ClockDef.SecondsPerDay))
                 {
                     Borrow(sim, t, PeopleRules.RestOfSeason(sim, PeopleRules.AskedWage(sim, Fixed.FromInt(best.Skill), best.AboveMarket)) + 20_000 * Money.Coin);
-                    Ok(sim, new OfferContract(t, best.Id));
+                    Ok(sim, new OfferContract(t, best.Id, OfferAt));
                 }
             }
             foreach (Hand h in p.Hands.ToArray())
@@ -220,6 +217,9 @@ namespace Tools.Balancer
         private int _orderSeason = -1;
 
         protected virtual bool PostAboveMarket { get { return false; } }
+
+        /// <summary>The level of a hand's offer: the asked wage.</summary>
+        protected virtual OfferLevel OfferAt { get { return OfferLevel.Asked; } }
 
         // ---- Cattle (spec 012 §9): after the Hamlet, a shed and two buffalo, a fodder acre, feed kept stocked ----
 
@@ -618,6 +618,22 @@ namespace Tools.Balancer
             long hut = PeopleRules.HutCount(sim) > 0 ? 0 : g.Buildings[g.People.HandHut].Value;
             long living = g.Farm.DietPlans[g.Farm.IndexOfDietPlan("basic")].CostPerSeason;
             return sim.State.Ledger.Cash >= MarketRules.Indexed(sim, hut + g.People.Hand.MarketWage + living);
+        }
+    }
+
+    /// <summary>
+    /// Spec 015 §9: the competent founder who hires every hand 10% low and says no to every HR event (no raise, unpaid sick
+    /// leave, no advance, lets an offer from elsewhere take them).
+    /// </summary>
+    public sealed class LowPayBot : FarmerBot
+    {
+        public override string Name { get { return "low-pay"; } }
+
+        protected override OfferLevel OfferAt { get { return OfferLevel.Low; } }
+
+        protected override void AnswerHr(Simulation sim, long t)
+        {
+            foreach (HrEvent e in sim.State.People.HrEvents.ToArray()) sim.Execute(new AnswerHrEvent(t, e.Id, 1));
         }
     }
 

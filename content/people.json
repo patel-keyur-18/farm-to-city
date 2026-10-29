@@ -60,7 +60,7 @@
     "longDayHours": 2,
     "overtimeFactor": 1.5,
     "courseCost": 6000,
-    "courseDays": 2,
+    "courseDays": 1,
     "courseGain": 10
   },
   "hrEvents": {
@@ -74,7 +74,7 @@
     "sickChance": 0.02,
     "sickTiredAbove": 0.30,
     "sickTiredFactor": 2,
-    "sickDays": 2,
+    "sickDays": 1,
     "emergencyChance": 0.02,
     "advanceShare": 0.25,
     "badBatchChance": 0.03,

@@ -348,7 +348,7 @@ namespace Sim.Core.People
             FarmSystem.Accrue(sim);
             foreach (Hand h in new List<Hand>(s.Hands))
             {
-                if (h.Contract == ContractState.Lapsed || h.Hr.Leaving)
+                if (h.Contract == ContractState.Lapsed || HrRules.Leaves(sim, h))
                 {
                     Leave(sim, h);
                     sim.Emit(new HandLeft(t, h.Id));

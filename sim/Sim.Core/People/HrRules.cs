@@ -70,6 +70,9 @@ namespace Sim.Core.People
             return Asked(sim, w) > Money.MulRate(Paid(w), Fixed.One + sim.Config.Game.People.Hr.RaiseGap);
         }
 
+        /// <summary>At a close: took an offer from elsewhere, or was refused a raise and is still underpaid (they look elsewhere at the contract's end).</summary>
+        public static bool Leaves(Simulation sim, IStaff w) { return w.Hr.Leaving || (w.Hr.RaiseRefusals > 0 && Underpaid(sim, w)); }
+
         /// <summary>
         /// The wage memory after a renewal or a raise (spec 015 §3.3): paid what they ask clears a low hire's memory; paid less, a high
         /// hire's goes.

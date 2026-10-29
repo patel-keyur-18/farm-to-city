@@ -33,6 +33,7 @@ namespace Tools.Balancer
             if (named) args = args[1..];
             if (mode == "dairy") return Gate.PrintDairy(edit => Config(content, edit), args.Length > 0 ? int.Parse(args[0]) : 12,
                 args.Length > 1 ? args[1] : null, args.Length > 2 ? args[2] : null, args.Length > 3 ? args[3] : null);
+            if (mode == "hr") return Gate.PrintHr(edit => Config(content, edit), args.Length > 0 ? int.Parse(args[0]) : 8, args.Length > 1 ? int.Parse(args[1]) : 12);
             if (mode == "bakery") return Gate.PrintBakery(edit => Config(content, edit), args.Length > 0 ? int.Parse(args[0]) : 12, args.Length > 1 ? args[1] : null);
             int years = args.Length > 0 ? int.Parse(args[0]) : mode == "economy" ? 15 : 100;
             ulong seed = args.Length > 1 ? ulong.Parse(args[1]) : 1;

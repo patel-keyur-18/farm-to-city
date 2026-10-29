@@ -191,6 +191,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0079 | The bakery: the shops buy 0.01 kg of pav a person a day (about a pav every 3 days); the starting mix and the plan add the trader's rusk; the plan prices atta as it would really cost; targets hired 15,000–25,000 a season (payback 5–8), run by you 45,000–60,000 |
 | 0080 | The dairy: neighbours' milk on by default (co-op price + 2); paneer 380 and the trader takes 60 kg a day; the starting mix leaves out what loses (ghee from whole milk); a day's inputs as working capital; targets hired 10,000–20,000 a season, run by you 35,000–50,000 |
 | 0081 | US-112 review: a contract renews at its current wage and a worker whose skill has grown asks for a raise (US-114); every citizen's farming skill drawn at birth; the hiring board's build notes accepted |
+| 0082 | Sprint 15 balance: a worker refused a raise and still underpaid leaves at the next close (any skill); sick leave and a course a day; bots answer HR as a fair employer; the bakery holds ADR 0079's targets; the dairy's hired payback 5–10 and founder-run foreclosures ≤ 10 of 16 |
 
 ## Current status
 

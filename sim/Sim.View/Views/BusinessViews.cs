@@ -431,6 +431,7 @@ namespace Sim.View.Views
                 line.Action = ActionVm.Open("hireWorker", s.Get("business.workerHire"), new SheetRequest("Word", b.Id));
                 return line;
             }
+            if (HrRules.Leaves(sim, w)) { line.Note = s.Get("staff.leaving"); line.NoteTone = Tone.Warn; }
             int skill = (int)w.Skill.RoundToLong();
             line.Stars = PeopleWords.Stars(ctx, skill, skill);
             line.Note = PeopleWords.Band(ctx, skill) + " · " + PeopleWords.Trait(ctx, w.Trait1) + " · " + PeopleWords.Trait(ctx, w.Trait2);

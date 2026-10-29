@@ -138,7 +138,7 @@ namespace Sim.Core.Tests
             return sim.DrainEvents().OfType<T>().ToList();
         }
 
-        // AC-6: a course adds 10 skill after 2 days away, paid; while away they don't work; the next renewal asks more.
+        // AC-6: a course adds 10 skill after courseDays (1) away, paid; while away they don't work; the next renewal asks more.
         [Test]
         public void Course()
         {
@@ -150,7 +150,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - 6_000 * Coin));
             Assert.That(PeopleRules.HandHours(sim, h), Is.EqualTo(Fixed.Zero), "away");
             Assert.That(sim.Execute(new SendOnCourse(t, 0, h.Id)).Reason, Is.EqualTo(RejectReason.OnCourse));
-            var done = Events<CourseFinished>(sim, () => sim.AdvanceTo(t + 2 * Day));
+            var done = Events<CourseFinished>(sim, () => sim.AdvanceTo(t + sim.Config.Game.People.Work.CourseDays * Day));
             Assert.That(done, Has.Count.EqualTo(1));
             Assert.That(h.Skill, Is.EqualTo(skill + Fixed.FromInt(10)));
             Assert.That(h.CourseUntil, Is.EqualTo(0L));

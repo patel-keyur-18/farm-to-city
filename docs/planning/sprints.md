@@ -665,7 +665,7 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 | US-216 | The dairy: paneer, curd and ghee | [F12.2](features/F12.2-production-chains.md) | 5 | Must | Done (ADR 0080) |
 | US-112 | Hiring board | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
 | US-113 | Productivity and training | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
-| US-114 | HR events | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Should | In review |
+| US-114 | HR events | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Should | Done (ADR 0082) |
 
 **Order of work:** specs 018 and 019 drafted first, their gaps closed with the owner one per message alongside the code → US-218 (Next era, so the Village businesses can be reached) → US-118 recipes (sim) → US-119 and US-216 sim → the bakery's and the dairy's art and layouts (previewed to the owner first) → their screens (Editor tours) → US-112 (save schema 11 holding the workers and the bakery's and dairy's settings; the Hire screen) → US-113 (golden replays regenerated once) → US-114 → balance with the bots (spec 015 §9, spec 016 §9) → the whole checklist in the Editor → the device build.
 
@@ -675,7 +675,7 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
 - [ ] Save schema 11: migration, `saves/schema11` fixture, every older schema loads
 - [ ] The bakery's and the dairy's layouts previewed to and approved by the owner
-- [ ] Balance: spec 015 §9 and spec 016 §9 measured with the bots; targets recorded in an ADR, contradictions flagged to the owner
+- [x] Balance: spec 015 §9 and spec 016 §9 measured with the bots; targets recorded in an ADR, contradictions flagged to the owner (ADR 0082: a refused raise loses the worker, a day away, the dairy's bounds widened; `GateTests.Hr`)
 - [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`

@@ -244,10 +244,10 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | A mill grinding for the area (350 people plus your town) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0073) | Net profit 5,000–10,000 a season, on a business loan too | US-117's bot (8 seeds, 3 years): 6,400–8,000; on a loan 8,200–10,000 (at 260 people it lost 2,200–3,800, ADR 0073) |
 | The same mill run by you | 30,000–40,000 a season, with your farm hours less (about what they'd earn as day labour, shown in the plan); payback 3–4 seasons | US-117's bot: 33,700–37,400, payback 3.0–3.3 |
 | Milling wheat bought at the market | 1–2 a kg | Teaches that margins are thin |
-| A bakery (the shops 0.01 kg of pav a person a day, rusk to the trader), baker hired (ADR 0079) | Net profit 15,000–25,000 a season, payback 5–8 seasons, on a business loan too | US-119's bot (8 seeds, 16 seasons): 19,800, payback 6.5; on a loan 19,500 |
+| A bakery (the shops 0.01 kg of pav a person a day, rusk to the trader), baker hired (ADR 0079) | Net profit 15,000–25,000 a season, payback 5–8 seasons, on a business loan too | US-119's bot (8 seeds, 16 seasons): 19,800, payback 6.5; on a loan 19,500; with HR (16 seeds, ADR 0082): 18,200, payback 7.1; on a loan 18,800 |
 | The same bakery run by you | 45,000–60,000 a season, payback 2–3 seasons | US-119's bot: 53,700, payback 2.4; 0 of 12 runs foreclosed (with a day's working capital, ADR 0080) |
-| A dairy on your and neighbours' milk, dairyman hired (ADR 0080) | 10,000–20,000 a season, payback 5–9 seasons | US-216's bot (8 seeds, 16 seasons): 14,700, payback 6.6 |
-| The same dairy run by you | 35,000–50,000, payback 2–4 seasons; the farm foreclosed in at most half the runs (your hours) | US-216's bot: 41,000, payback 3.7; 4 of 8 foreclosed |
+| A dairy on your and neighbours' milk, dairyman hired (ADR 0080, 0082) | 10,000–20,000 a season, payback 5–10 seasons (fair pay's cost, ADR 0082) | US-216's bot (8 seeds, 16 seasons): 14,700, payback 6.6; with HR (16 seeds, ADR 0082): 12,100, payback 9.4 |
+| The same dairy run by you | 35,000–50,000, payback 2–4 seasons; the farm foreclosed in at most 10 of 16 runs (your hours; ADR 0082) | US-216's bot: 41,000, payback 3.7; 4 of 8 foreclosed; with HR: 43,300, 9 of 16 |
 | A dairy on your herd's milk alone | A loss: a village dairy runs on the village's milk | US-216's bot: −17,000 hired |
 | A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | US-117 (`GateTests.Mill`): every run plays on with cash; overdrawn at most 2 closes in a row; run by you while borrowing for houses and cattle, 1 of 8 runs foreclosed on the farm's loans (the competent bot: 0 of 8) |
 

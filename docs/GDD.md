@@ -398,8 +398,8 @@ Motivation comes from wage fairness, manager quality, working conditions, recogn
 - **Knowing a candidate.** A free interview reveals the second trait. A reference check (300 coins, 12 h) narrows the skill and says how they left their last job.
 - **The offer.** You offer the asked wage, 10% less (often refused, and remembered) or 10% more.
 - **Output.** Output = skill × motivation × (1 − fatigue), neutral for a fair hire in a content home. Long days pay 1.5× for the extra hours and tire people. Citizens have a farming and a crafting skill.
-- **Training.** Courses add 10 skill for 6,000.
-- **Traits and events.** The four new traits (creative, frugal, sociable, perfectionist) arrive. HR events in Phase 2: a raise request, an offer from elsewhere, sick leave, a family emergency and a bad batch.
+- **Training.** Courses add 10 skill for 6,000, a day away.
+- **Traits and events.** The four new traits (creative, frugal, sociable, perfectionist) arrive. HR events in Phase 2: a raise request, an offer from elsewhere, sick leave, a family emergency and a bad batch. A contract renews at its current wage; a worker refused a raise and still underpaid leaves at the next close (ADR 0082). Sick leave and a course take a day.
 - **Reputation.** Employer reputation moves with fair pay and treatment.
 - **Later.** Supervisors, benefits, managers and night shifts come in Phase 3.
 

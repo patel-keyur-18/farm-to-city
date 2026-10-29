@@ -94,7 +94,7 @@ A fair hire with a household at 60 or above has motivation exactly 1, so today's
 | Way | Effect | Cost |
 | --- | --- | --- |
 | On the job | +3 skill a season (spec 006), ×1.5 ambitious | Nothing |
-| A course | +10 skill, in the worker's role skill | 6,000 coins; the worker is away 2 days (no work, wage still paid) |
+| A course | +10 skill, in the worker's role skill | 6,000 coins; the worker is away 1 day (no work, wage still paid; ADR 0082) |
 | Worth more | A trained worker asks more at the next renewal (the asked wage follows skill) and draws more poaching offers (§3.7) | |
 
 ### 3.6 Four more traits (§10 G6)
@@ -114,9 +114,9 @@ Events that need a decision wait for the player (ADR 0002): an alert, a card wit
 
 | Event | When | Choices | Consequences |
 | --- | --- | --- | --- |
-| Raise request | At a close, a worker paid below their asked wage (skill grew, or hired low) asks, 50% a close | Pay the asked wage from now / Not now | Yes: wage and motivation up. No: motivation −0.1 a season until paid; asked twice and refused, they look elsewhere (a poaching offer is likelier) |
+| Raise request | At a close, a worker paid below their asked wage (skill grew, or hired low) asks, 50% a close | Pay the asked wage from now / Not now | Yes: wage and motivation up. No: motivation −0.1 for the rest of the season, and still underpaid at the next close they leave instead of renewing, whatever their skill (ADR 0082) |
 | Poaching offer | A worker of skill 60+ gets an offer from the next village (5% a season, ×2 if under-paid) | Match it (+15% wage) / Let them go | Match: they stay, motivation +0.05. Let go: they leave at the close, no severance, the job opens on the board |
-| Sick leave | 2% a worker a season (×2 if fatigue is over 0.3) | Paid leave (2 days off, wage as usual) / Unpaid | Paid: reputation +2, motivation +0.05. Unpaid: the days' wage refunded, motivation −0.1 |
+| Sick leave | 2% a worker a season (×2 if fatigue is over 0.3) | Paid leave (1 day off, wage as usual; ADR 0082) / Unpaid | Paid: reputation +2, motivation +0.05. Unpaid: the days' wage refunded, motivation −0.1 |
 | Family emergency | 2% a worker a season | An advance of a quarter's wage (paid back from the next renewal) / No | Yes: reputation +3, motivation +0.1 for a season. No: motivation −0.1 |
 | A bad batch | 3% a business a season (never with a perfectionist) | Throw it away / Sell it cheap | Throw: the batch's inputs lost. Sell: half its value, reputation −2 |
 
@@ -174,7 +174,7 @@ As spec 006: no severance in probation (the first season), then 10% of the seaso
 | --- | --- | --- | --- | --- |
 | Hire below the asked wage | Saves 10% | Lower motivation, a raise request, poaching | Reputation −2 | Pay the asked wage at renewal |
 | Check a reference | 300, 12 h | A surer hire | | — |
-| Send on a course | 6,000, 2 days away | +10 skill: more output | Asks more at renewal; poaching likelier | — |
+| Send on a course | 6,000, 1 day away | +10 skill: more output | Asks more at renewal; poaching likelier | — |
 | Long days | 1.5 × wage for the extra hours | More output now | Fatigue; sick leave likelier | Turn off |
 | Match a poaching offer | +15% wage | Keeps a skilled worker | | — |
 
@@ -204,7 +204,7 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 | AC-3 | A low offer is accepted at 0.40, else a counter at the asked wage once; a high offer at 0.95 | `HiringTests.Negotiation` |
 | AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair hire in a content home has motivation exactly 1, so an existing hand works as before; the golden replays are unchanged (their content has no people) | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
 | AC-5 | Long days raise output and fatigue; fatigue falls at normal hours; overtime pays 1.5× | `WorkerTests.Fatigue_Overtime` |
-| AC-6 | A course adds 10 skill after 2 days away, paid; the next renewal asks more | `WorkerTests.Course` |
+| AC-6 | A course adds 10 skill after a day away (ADR 0082), paid; the next renewal asks more | `WorkerTests.Course` |
 | AC-7 | The four traits act as §3.6; no contradictory pairs are drawn | `WorkerTests.Traits` |
 | AC-8 | Each HR event follows its chance, waits for the player, and applies its choice's effects | `HrEventTests.Choices` |
 | AC-9 | Reputation moves by §3.8's steps and changes acceptance and applicants as stated | `HrEventTests.Reputation` |
@@ -214,9 +214,9 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A competent bot paying fair wages | Motivation 1.0–1.1, output as Phase 1 | No farm-profit change over 2% |
-| A bot hiring everyone 10% low | Saves 10% of wages and loses more than that in output and quits within 2 seasons | The lesson holds |
-| HR events | 0–2 a season for a town of 3 workers | Not a nag |
+| A competent bot paying fair wages | Motivation 1.0–1.1, output as Phase 1 | No farm-profit change over 2%. `GateTests.Hr` (16 seeds, 12 seasons, ADR 0082): motivation 1.000, farm profit 5,61,247 vs Phase 1's output 5,64,114 (−0.5%) |
+| A bot hiring everyone 10% low | Saves 10% of wages and loses more than that in output and quits within 2 seasons | The lesson holds. `GateTests.Hr`: wages −21%, farm profit −3.7% against the fair bot, hands gone after 2.6 seasons (median) |
+| HR events | 0–2 a season for a town of 3 workers | Not a nag. `GateTests.Hr`: 0.19 a worker a season (0.56 for 3) |
 
 ## 10. Open questions
 
@@ -224,7 +224,7 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 - **G2. Knowing a candidate.** **Closed (owner, 2026-10-25):** the application shows the skill ±15 and one trait; a free interview the second trait; a reference check (300, 12 h) narrows the skill to ±5 and says how they left their last job ("was let go" when a trait is lazy or careless); townspeople are known (§3.2).
 - **G3. Negotiation.** **Closed (owner, 2026-10-25):** offer at the asked wage (0.85), 10% less (0.40, then one counter at the asked wage; a low hire is remembered in motivation and reputation) or 10% more (0.95); townspeople always accept at the asked wage or above, 0.6 below; regulars always (§3.3).
 - **G4. Output.** **Closed (owner, 2026-10-25):** skill × motivation (0.7–1.2: +0.05 hired above, −0.10 hired below until paid the asked wage, lower when the family is under 60, the events' effects) × (1 − fatigue: +0.05 a long day, −0.10 a normal one, at most 0.5); long days to 12 h with the extra hours at 1.5×; tools with spec 013; exactly neutral for a fair hire in a content home (§3.4). Review (Claude, same day): citizens get a crafting skill beside farming and each role reads its own, so the "wrong skill at 0.8" never arises in Phase 2.
-- **G5. Training.** **Closed (owner, 2026-10-25):** on the job +3 a season (×1.5 ambitious); a course +10 skill in the role for 6,000, 2 days away and paid; a trained worker asks more at renewal and draws more poaching offers. Example: a miller from skill 40 to 50 works about 5% faster and asks about 1,100 more a season (the owner was told about 900; the formula gives 25,920 → 27,000) (§3.5).
+- **G5. Training.** **Closed (owner, 2026-10-25):** on the job +3 a season (×1.5 ambitious); a course +10 skill in the role for 6,000, 2 days away and paid (1 day since ADR 0082); a trained worker asks more at renewal and draws more poaching offers. Example: a miller from skill 40 to 50 works about 5% faster and asks about 1,100 more a season (the owner was told about 900; the formula gives 25,920 → 27,000) (§3.5).
 - **G6. Four traits.** **Closed (owner, 2026-10-25):** creative (a business's goods sell 5% higher; no farm effect yet), frugal (−10% power, fuel and supplies; the household saves half its leisure), sociable (+0.05 motivation to colleagues; shops later), perfectionist (no bad batch, 5% slower); never hardworking with lazy or careless with perfectionist; all ten drawn evenly (§3.6).
 - **G7. HR events.** **Closed (owner, 2026-10-25):** raise request, an offer from elsewhere (skill 60+, match +15% or let go), sick leave (paid or unpaid), family emergency (an advance of a quarter's wage), a bad batch (throw away or sell at half); at most one a worker a season; each waits for the player, the worker carrying on meanwhile; about 0–2 a season for 3 workers; conflicts, accidents and petitions in Phase 3 (§3.7).
 - **G8. Employer reputation.** **Closed (owner, 2026-10-25):** 0–100 (start 50) shown with its *Why?*; up with the asked wage or more at renewal (+1 a worker), paid sick leave (+2), an advance (+3), severance paid (+1); down with a low hire (−2), a refused raise (−2), letting go in probation (−1), a lapse (−3); at 80+ acceptance +10% and better above-market applicants, at 20− acceptance −10% and applicants slower (§3.8).
@@ -261,15 +261,15 @@ Choices made while building where the spec was silent, each to keep it realistic
 - **Renewal (ADR 0081) is in:** a contract renews at its current wage; an advance is repaid from it; a worker who took an offer from elsewhere leaves at the close instead.
 - **"Underpaid" means more than 5% below what they'd ask** (`hrEvents.raiseGap`). A season's skill growth alone (+3, about 1.2% on the wage) doesn't make a raise request or count against a fair renewal; a course, a few seasons' growth, inflation or a low hire does. Without this, nearly every worker asked for a small raise nearly every close (against §9's "not a nag"), and a fair employer never earned the +1 for a fair renewal.
 - **An offer from elsewhere is 15% above what their skill is worth** (the asked wage), and only comes when that's above what you pay. Matching it pays it. Taken literally as "+15% on your wage", a matched worker got another +15% at the next offer, compounding without limit (seen in a bot run: three matches in six seasons).
-- **Sick leave starts at once** (2 days off, no work, the business idle); the choice is only whether those days are paid. "The worker carries on" can't hold for someone who's ill.
+- **Sick leave starts at once** (a day off since ADR 0082, no work, the business idle); the choice is only whether those days are paid. "The worker carries on" can't hold for someone who's ill.
 - **A bad batch comes with a business's first batch of the day** (the mill's first grinding of your wheat, a recipe's first batch), before anything is sold: the mill sells its atta to the truck every hour, so at any other moment there would rarely be a batch to spoil. It sets aside up to a day's mix (an hour's grinding at the mill) of the product it holds most of.
 - **A dairy takes no milk on a day nobody can work it** (its dairyman sick or on a course): the co-op takes it. Before, a sick dairyman's two days of neighbours' milk spoiled (a bot season lost 1,09,014).
 - **Each event shows as a card when it happens and as an alert until answered** (the alert opens a sheet with the two choices); the card says what yes costs now and from whose cash; a notification while away ("Geeta needs a word with you").
 - **Reputation** shows on the People sheet in words and its score ("Fair (52)") with its *Why?*. A lapse is a hand's unpaid renewal or a business's missed wages. Selling a bad batch cheap counts −2 as §3.7 says.
-- **The bots answer as a fair employer:** yes to everything, except a hand's raise, offer or advance when paying it would eat into the season's reserve.
+- **The bots answer as a fair employer:** yes to everything they can pay (ADR 0082).
 - **Random draws use their own stream** (`HrEvents`), not People, so no existing draw moves.
-- **Balance flags (for the balance step and the owner):** the bakery hired on a business loan now medians about 13,500 a season (ADR 0079: 15,000–25,000) and the hired bakery's payback 8.3 seasons (5–8), mostly from raises paid and offers matched; the gate bounds are 13,000 and 8.5 until decided. The competent bot's second buffalo comes at about 10 seasons, not 8 (the check is now "keeps buffalo", as spec 012 §9 says).
-- **Worth a look:** with a 4-day season, "2 days" of sick leave or a course is half a season's work, and unpaid sick leave gives back half the season's wage. A day might be more in proportion.
+- **Balance flags (settled, ADR 0082):** on 16 seeds the bakery is inside ADR 0079's targets (hired 18,240 a season, payback 7.1; on a loan 18,849); the 13,500 seen at US-114 was 8 seeds and the bot refusing raises.
+- **Settled at the balance step (owner, 2026-10-29, ADR 0082):** sick leave and a course take 1 day, not 2 (half a season was out of proportion); a refused raise loses the worker at the next close; the bots answer as a fair employer; the bakery holds ADR 0079's targets and the dairy's are widened.
 
 ## 11. Cut first
 

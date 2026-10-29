@@ -309,7 +309,7 @@ namespace Sim.View.Views
             long id = w.Id;
             var work = ctx.Sim.Config.Game.People.Work;
             line.Action = ActionVm.Checked(ctx, "course", s.Get("staff.course"), s.Get("staff.courseDetail", "cost", ctx.Fmt.Coins(WorkRules.CourseCost(ctx.Sim)),
-                "gain", ctx.Fmt.Integer(work.CourseGain), "days", ctx.Fmt.Integer(work.CourseDays)), ActionKind.Secondary, at => new SendOnCourse(at, place, id));
+                "gain", ctx.Fmt.Integer(work.CourseGain), "days", s.Plural("why.days", work.CourseDays)), ActionKind.Secondary, at => new SendOnCourse(at, place, id));
             return line;
         }
 
@@ -378,7 +378,9 @@ namespace Sim.View.Views
             if (h.Contract == ContractState.Active)
             {
                 long left = Sim.Core.Finance.Accrual.RefundIfClosed(sim, h.PrepaymentId);
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractPaid", "wage", ctx.Fmt.Coins(h.Wage)), "hand.wage", h.Id));
+                var contract = new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractPaid", "wage", ctx.Fmt.Coins(h.Wage)), "hand.wage", h.Id);
+                if (HrRules.Leaves(sim, h)) { contract.Note = ctx.Strings.Get("staff.leaving"); contract.NoteTone = Tone.Warn; }
+                vm.Lines.Add(contract);
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.prepaid"), ctx.Fmt.Coins(left), "hand.prepaid", h.Id));
             }
             else

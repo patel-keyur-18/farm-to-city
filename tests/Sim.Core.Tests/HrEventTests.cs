@@ -72,19 +72,19 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new AnswerHrEvent(sim.State.Clock.SimTime, raise.Id, 0)).Reason, Is.EqualTo(RejectReason.UnknownEvent));
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
 
-            // Refused twice: −0.1 motivation while still paid less, −2 reputation each time.
+            // Refused (ADR 0082): −0.1 motivation for the rest of the season, −2 reputation, and still underpaid at the next close they
+            // leave instead of renewing.
             sim = Only("raiseChance", "1");
             h = SteadyHand(sim);
             h.Skill = h.Skill + Fixed.FromInt(20);
             int rep = P(sim).Reputation;
-            for (int i = 0; i < 2; i++)
-            {
-                ToClose(sim);
-                Ok(sim, new AnswerHrEvent(sim.State.Clock.SimTime, Single(sim, HrEventKind.RaiseRequest).Id, 1));
-            }
-            Assert.That(h.Hr.RaiseRefusals, Is.EqualTo(2));
+            ToClose(sim);
+            Ok(sim, new AnswerHrEvent(sim.State.Clock.SimTime, Single(sim, HrEventKind.RaiseRequest).Id, 1));
+            Assert.That((h.Hr.RaiseRefusals, HrRules.Leaves(sim, h)), Is.EqualTo((1, true)));
             Assert.That(WorkRules.Motivation(sim, h), Is.EqualTo(Fixed.One + sim.Config.Game.People.Hr.RaiseRefusedMood));
-            Assert.That(P(sim).Reputation, Is.EqualTo(rep - 4), "no fair renewal while they're underpaid, −2 a refusal");
+            Assert.That(P(sim).Reputation, Is.EqualTo(rep - 2), "no fair renewal while they're underpaid, −2 for the refusal");
+            ToClose(sim);
+            Assert.That(P(sim).Hands, Is.Empty, "gone at the next close");
 
             // An offer from elsewhere: let go, they leave at the next close without severance; matched, +15% and a keener worker.
             sim = Only("poachChance", "1");
@@ -109,7 +109,7 @@ namespace Sim.Core.Tests
             Assert.That(h.Wage, Is.EqualTo(offer.Amount));
             Assert.That(WorkRules.Motivation(sim, h), Is.EqualTo(Fixed.One + sim.Config.Game.People.Hr.MatchedMood), "matched: keener");
 
-            // Sick leave: off at once for 2 days; paid, +2 reputation; unpaid, the days' wage back.
+            // Sick leave: off at once for sickDays (1); paid, +2 reputation; unpaid, the days' wage back.
             foreach (int choice in new[] { 0, 1 })
             {
                 sim = Only("sickChance", "1"); // a quarter a day
@@ -119,13 +119,14 @@ namespace Sim.Core.Tests
                 Assert.That(PeopleRules.HandHours(sim, h), Is.EqualTo(Fixed.Zero), "off sick");
                 Assert.That(sim.Execute(new SendOnCourse(sim.State.Clock.SimTime, 0, h.Id)).Reason, Is.EqualTo(RejectReason.OffSick));
                 Assert.That(sim.Execute(new SetLongDays(sim.State.Clock.SimTime, h.Id, true)).Reason, Is.EqualTo(RejectReason.OffSick));
-                Assert.That(sick.Amount, Is.EqualTo(h.Wage * 2 / 4), "two of the season's four days");
+                int days = sim.Config.Game.People.Hr.SickDays;
+                Assert.That(sick.Amount, Is.EqualTo(h.Wage * days / 4), "those days of the season's four");
                 long before = sim.State.Ledger.Cash;
                 rep = P(sim).Reputation;
                 Ok(sim, new AnswerHrEvent(sim.State.Clock.SimTime, sick.Id, choice));
                 if (choice == 0) Assert.That((P(sim).Reputation, sim.State.Ledger.Cash), Is.EqualTo((rep + 2, before)));
                 else Assert.That(sim.State.Ledger.Cash, Is.EqualTo(before + sick.Amount), "unpaid: the days' wage back");
-                sim.AdvanceTo(sick.At + 2 * Day + Hour);
+                sim.AdvanceTo(sick.At + days * Day + Hour);
                 Assert.That(PeopleRules.HandHours(sim, h), Is.GreaterThan(Fixed.Zero), "back at work");
                 Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
             }
@@ -163,6 +164,18 @@ namespace Sim.Core.Tests
                 else Assert.That(b.Ledger.Entries.Last(e => e.DescriptionKey == "ledger.badBatch").Postings.Single(p => p.Account == Account.CostOfGoodsSold).Amount, Is.EqualTo(batch.Cost));
                 Assert.That(b.Ledger.Reconcile(), Is.Null);
             }
+
+            // A business's worker refused a raise leaves at the next close too: the business has nobody (ADR 0082).
+            Simulation r = Only("raiseChance", "1");
+            Business.Business at = BusinessTests.Mill(r);
+            r.AdvanceTo(at.ReadyAt);
+            Worker miller = P(r).WorkerAt(at.Id);
+            miller.Skill = miller.Skill + Fixed.FromInt(20);
+            miller.Trait1 = miller.Trait2 = r.Config.Game.People.IndexOfTrait("steady"); // a loyal worker never asks
+            ToClose(r);
+            Ok(r, new AnswerHrEvent(r.State.Clock.SimTime, Single(r, HrEventKind.RaiseRequest).Id, 1));
+            ToClose(r);
+            Assert.That(P(r).WorkerAt(at.Id), Is.Null, "gone at the close");
 
             // Never a bad batch with a perfectionist.
             Simulation q = Only("badBatchChance", "1");

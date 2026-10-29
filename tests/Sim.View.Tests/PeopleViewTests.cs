@@ -97,7 +97,7 @@ namespace Sim.View.Tests
             SheetVm card = HandSheet.Build(ctx, h.Id);
             LineVm output = card.Lines.Single(l => l.Label == "Output");
             Assert.That((output.Value, output.Stars), Is.EqualTo(("Works well", (StarsVm?)new StarsVm(4, 0))), "a typical, fairly paid hand");
-            Assert.That((output.Action.Label, output.Action.Detail, output.Action.Enabled), Is.EqualTo(("Send on a course", "6,000 coins · +10 skill · 2 days away", true)));
+            Assert.That((output.Action.Label, output.Action.Detail, output.Action.Enabled), Is.EqualTo(("Send on a course", "6,000 coins · +10 skill · 1 day away", true)));
             WhyVm why = WhyView.Build(ctx, output.WhyKey, output.WhyId);
             Assert.That(why.Title, Is.EqualTo(PeopleWords.Name(ctx, h.Name) + "'s output"));
             Assert.That(why.Rows.Select(r => r.Label), Is.SupersetOf(new[] { "Skill (Capable) and traits", "Fair pay", "Motivation, all told", "Tiredness", "Against a typical worker" }));
@@ -114,7 +114,7 @@ namespace Sim.View.Tests
 
             Ok(sim, new SendOnCourse(sim.State.Clock.SimTime, 0, h.Id));
             output = HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Output");
-            Assert.That(output.Value, Is.EqualTo("Away on a course · back in 2 d"));
+            Assert.That(output.Value, Is.EqualTo("Away on a course · back in 1 d"));
             Assert.That(output.Action.Enabled, Is.False, "already away");
             Assert.That(HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Long days").Value, Does.StartWith("On, paused"));
             Assert.That(HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Work").Value, Is.EqualTo("Away on a course"));

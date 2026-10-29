@@ -943,7 +943,7 @@ namespace Sim.Core.Business
             {
                 if (b.Status == BusinessStatus.Closed) continue;
                 Worker w = sim.State.People?.WorkerAt(b.Id);
-                if (b.Status == BusinessStatus.Open && w != null && w.Hr.Leaving)
+                if (b.Status == BusinessStatus.Open && w != null && HrRules.Leaves(sim, w))
                 {
                     LoseWorker(sim, b); // took an offer from elsewhere (spec 015 §3.7): no severance
                     sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, w.Id, 0));

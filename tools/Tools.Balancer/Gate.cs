@@ -338,7 +338,8 @@ namespace Tools.Balancer
         public sealed class MillResult
         {
             public string Bot;
-            public int Seeds, Founded, Closed, Foreclosed;
+            public int Seeds, Founded, Closed, Foreclosed, WorkersLeft, HandsLeft;
+            public Dictionary<string, int> Answers = new Dictionary<string, int>();
 
             /// <summary>Per seed that founded one: the mill's mean net profit a full season, its payback in seasons (its cost ÷ that
             /// profit; NaN when never), and the most closes in a row it ended overdrawn.</summary>
@@ -384,6 +385,13 @@ namespace Tools.Balancer
                     foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
                     {
                         if (e is Sim.Core.Events.ForeclosureCompleted) foreclosed++;
+                        if (e is Sim.Core.Events.WorkerLeft || e is Sim.Core.Events.HandLeft || e is Sim.Core.Events.HrEventAnswered)
+                            lock (all)
+                            {
+                                if (e is Sim.Core.Events.WorkerLeft) all.WorkersLeft++;
+                                if (e is Sim.Core.Events.HandLeft) all.HandsLeft++;
+                                if (e is Sim.Core.Events.HrEventAnswered a) { string k = a.Kind + ":" + a.Choice; all.Answers[k] = (all.Answers.TryGetValue(k, out int n) ? n : 0) + 1; }
+                            }
                         if (!(e is Sim.Core.Events.SeasonClosed)) continue;
                         var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed && Sim.Core.Business.BusinessRules.TypeOf(sim, x).Id == type);
                         if (b == null) continue;
@@ -616,6 +624,108 @@ namespace Tools.Balancer
             }
             a.MedianScoreAtEnd = Median(runs.Select(r => (double)r.Sim.State.Credit.Score));
             return a;
+        }
+
+        // ---- Spec 015 §9: HR ----
+
+        public sealed class HrResult
+        {
+            public string Bot;
+            public List<double> Motivation = new List<double>(), Condition = new List<double>(), FarmProfit = new List<double>(), Wages = new List<double>(),
+                EventsPerWorkerSeason = new List<double>(), SeasonsToQuit = new List<double>(),
+                Fair = new List<double>(), Home = new List<double>(), Mood = new List<double>(), Fatigue = new List<double>();
+            public int Hands, Quits;
+            public Dictionary<Sim.Core.People.HrEventKind, int> Kinds = new Dictionary<Sim.Core.People.HrEventKind, int>();
+        }
+
+        /// <summary>
+        /// A farm bot's hands for <paramref name="seasons"/>: motivation and motivation × (1 − fatigue) per hand-hour under contract, HR
+        /// events per worker-season, the farm's profit (year-0 prices) and wages over the run, and how long each hand who left had stayed.
+        /// </summary>
+        public static HrResult Hr(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        {
+            var all = new HrResult { Bot = make().Name };
+            Parallel.For(0, seeds, i =>
+            {
+                double m = 0, c = 0, hours = 0, fair = 0, home = 0, mood = 0, tired = 0;
+                int events = 0, hands = 0;
+                var hired = new Dictionary<long, long>();
+                var stayed = new List<double>();
+                var kinds = new Dictionary<Sim.Core.People.HrEventKind, int>();
+                Economy.Run r = Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.People.Hand h in sim.State.People?.Hands ?? new List<Sim.Core.People.Hand>())
+                    {
+                        if (h.Contract != Sim.Core.People.ContractState.Active || Sim.Core.People.WorkRules.Away(h)) continue;
+                        m += Economy.ToDouble(Sim.Core.People.WorkRules.Motivation(sim, h));
+                        c += Economy.ToDouble(Sim.Core.People.WorkRules.Condition(sim, h));
+                        fair += Economy.ToDouble(Sim.Core.People.WorkRules.Fairness(sim, h));
+                        home += Economy.ToDouble(Sim.Core.People.WorkRules.Home(sim, h));
+                        mood += Economy.ToDouble(Sim.Core.People.HrRules.Mood(sim, h));
+                        tired += Economy.ToDouble(h.Fatigue);
+                        hours++;
+                    }
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        if (e is Sim.Core.Events.HandHired hh) { hired[hh.HandId] = e.SimTime; hands++; }
+                        if (e is Sim.Core.Events.HandLeft hl && hired.TryGetValue(hl.HandId, out long at)) stayed.Add((e.SimTime - at) / (double)sim.Clock.SecondsPerSeason);
+                        if (e is Sim.Core.Events.HrEventRaised x && x.Place == 0)
+                        {
+                            events++;
+                            kinds[x.Kind] = kinds.TryGetValue(x.Kind, out int n) ? n + 1 : 1;
+                        }
+                    }
+                });
+                lock (all)
+                {
+                    double workerSeasons = hours * 3600 / r.Sim.Clock.SecondsPerSeason;
+                    if (hours > 0)
+                    {
+                        all.Motivation.Add(m / hours);
+                        all.Condition.Add(c / hours);
+                        all.Fair.Add(fair / hours);
+                        all.Home.Add(home / hours);
+                        all.Mood.Add(mood / hours);
+                        all.Fatigue.Add(tired / hours);
+                        all.EventsPerWorkerSeason.Add(events / workerSeasons);
+                    }
+                    all.FarmProfit.Add(r.Seasons.Sum(x => x.RealFarmProfit));
+                    all.Wages.Add(r.Seasons.Sum(x => Economy.Real(x.Report.ByAccount.Where(k => k.Key == Account.HiredLabour).Sum(k => Math.Abs(k.Value)), x.Index)));
+                    all.Hands += hands;
+                    all.Quits += stayed.Count;
+                    all.SeasonsToQuit.AddRange(stayed);
+                    foreach (var k in kinds) all.Kinds[k.Key] = (all.Kinds.TryGetValue(k.Key, out int n) ? n : 0) + k.Value;
+                }
+            });
+            return all;
+        }
+
+        /// <summary>Phase 1's output for spec 015 §9's baseline: motivation fixed at 1, no fatigue, and of the HR events only raise requests (Phase 1's wages followed skill).</summary>
+        public static string Phase1Output(string file, string json)
+        {
+            if (file != "people.json") return json;
+            json = System.Text.RegularExpressions.Regex.Replace(json, "\"(motivationMin|motivationMax)\": [0-9.]+", "\"$1\": 1.00");
+            return System.Text.RegularExpressions.Regex.Replace(json, "\"(poachChance|sickChance|emergencyChance|badBatchChance|fatigueUp)\": [0-9.]+", "\"$1\": 0");
+        }
+
+        /// <summary>Spec 015 §9 printed: the fair bot with output neutral and only raise requests (Phase 1, where wages followed skill), the fair bot, the 10%-low bot.</summary>
+        public static int PrintHr(ConfigFor configFor, int seeds, int seasons)
+        {
+            SimConfig live = configFor(null);
+            SimConfig neutral = configFor(Phase1Output);
+            string C(double v) { return v.ToString("N0", CultureInfo.InvariantCulture); }
+            string F(double v) { return v.ToString("0.000", CultureInfo.InvariantCulture); }
+            foreach (var (name, config, make) in new (string, SimConfig, Func<Bot>)[] {
+                ("phase 1", neutral, () => new FarmerBot()), ("fair", live, () => new FarmerBot()), ("low-pay", live, () => new LowPayBot()) })
+            {
+                HrResult r = Hr(config, make, seeds, seasons);
+                Console.WriteLine(name + ": motivation " + F(Median(r.Motivation)) + " (" + F(r.Motivation.DefaultIfEmpty().Min()) + "–" + F(r.Motivation.DefaultIfEmpty().Max())
+                    + ") [fair " + F(Median(r.Fair)) + ", home " + F(Median(r.Home)) + ", mood " + F(Median(r.Mood)) + ", fatigue " + F(Median(r.Fatigue)) + "], × (1 − fatigue) " + F(Median(r.Condition)) + "; farm profit over the run " + C(Median(r.FarmProfit)) + "; wages " + C(Median(r.Wages))
+                    + "; HR events a worker-season " + F(Median(r.EventsPerWorkerSeason)) + " (max " + F(r.EventsPerWorkerSeason.DefaultIfEmpty().Max()) + ")"
+                    + "; hands hired " + r.Hands + ", left " + r.Quits + " (seasons stayed median " + F(Median(r.SeasonsToQuit)) + ")"
+                    + "; events " + string.Join(", ", r.Kinds.OrderBy(k => k.Key).Select(k => k.Key + " " + k.Value)));
+            }
+            return 0;
         }
 
         private static double Median(IEnumerable<double> values)
