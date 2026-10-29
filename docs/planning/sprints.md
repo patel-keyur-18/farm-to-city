@@ -650,7 +650,7 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 
 ## Sprint 15 · 8–21 Mar 2027 · Phase 2 (the bakery and the dairy, full hiring and HR; specs 018 and 019 written; 2 weeks, ADR 0076)
 
-- **Status:** In progress (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
+- **Status:** Built; awaiting the owner's device check (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
 - **Branch:** `sprint/15-chains-and-hr`
 - **Goal:** Spec 016's production chains built (F12.2): recipes, the bakery (pav and rusk from your atta) and the dairy (paneer, curd and ghee from your milk), each with its art, screens and buyers. Spec 015 built (F11.4): one hiring board for every role, interviews, references and negotiation, output from skill, motivation and fatigue, courses and four traits, HR events and employer reputation. Save schema 11 with its migration and fixture (ADR 0076). The developer panel's Next era. Specs 018 (school, literacy, Codex, advisors, the Village unlock) and 019 (statements, the finance hub, milestones) written and approved; their code comes in Sprints 17 and 18.
 - **Points:** 37 (F12.2 15, F11.4 21, US-218 1)
@@ -672,10 +672,10 @@ The owner takes these up once Sprint 15 is done; they're planned into a sprint t
 **Sprint end checklist**
 
 - [x] Specs 018 and 019 written, every gap closed with the owner, approved; GDD and `CLAUDE.md` updated; F14.1–F14.4 and US-102 broken into tasks (018 approved 2026-10-27, ADR 0077; 019 approved 2026-10-27, ADR 0078)
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [ ] Save schema 11: migration, `saves/schema11` fixture, every older schema loads
-- [ ] The bakery's and the dairy's layouts previewed to and approved by the owner
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [x] Save schema 11: migration, `saves/schema11` fixture, every older schema loads
+- [x] The bakery's and the dairy's layouts previewed to and approved by the owner
 - [x] Balance: spec 015 §9 and spec 016 §9 measured with the bots; targets recorded in an ADR, contradictions flagged to the owner (ADR 0082: a refused raise loses the worker, a day away, the dairy's bounds widened; `GateTests.Hr`)
-- [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check
-- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check (checklist and Editor pass done, Development build made 2026-10-29; the device check waits for the owner)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
