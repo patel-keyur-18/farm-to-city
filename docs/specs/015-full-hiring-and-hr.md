@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner
+- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner. Amended 2026-10-29 by the owner's request US-219 (ADR 0083, G10: offering work from a citizen's card)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)
@@ -51,6 +51,8 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). **N
   - Regulars (spec 006 §3.3), as now.
 - **Pace:** applicants come every 12 ± 6 h while a post is open (twice as fast above the market). Walk-ins for a farm hand still come while a hut stands empty (spec 006).
 - **Spec 016's stopgap ends:** from Sprint 15 a business's worker is hired here, or you run it yourself.
+- **Offering work from the card (§10 G10, ADR 0083):** an adult 18–59 of your town who works outside has **Offer work as a hand** on their citizen card: the board's offer (asked wage, 10% less or 10% more, answered by §3.3's townspeople's rule) with no post fee, interview or reference check (you know them). The offer shows the house as part of the pay when their household lives in your family house: "30,000 a season. From next season: 24,000 cash + the house (6,000)" (spec 014 §3.6). The button says why when it can't be offered (works in town, too young, retired). Business jobs stay on the board.
+- **Never work for housing alone:** unpaid work in return for a home would be bonded labour (abolished by the Bonded Labour System (Abolition) Act, 1976). A deduction for housing the employer provides is lawful (Payment of Wages Act 1936 s.7(2)(d); Code on Wages 2019 s.18) and always shown.
 
 ### 3.2 Knowing a candidate (§10 G2)
 
@@ -157,6 +159,7 @@ As spec 006: no severance in probation (the first season), then 10% of the seaso
 | `PostJob` | role, place, aboveMarket | `NoHousing` (farm hand), `UnknownBusiness`, `AlreadyPosted` | §3.1 |
 | `CheckReference` | applicant | `AlreadyChecked`, `InsufficientFunds` | §3.2 |
 | `OfferContract` | applicant, offer (asked / low / high) | spec 006's | §3.3 |
+| `OfferTownsperson` | citizen, offer (asked / low / high) | `NotAWorker` (under 18, retired, works in town), `InsufficientFunds` | §3.1: an applicant for the farm hand made and offered at once, no post fee |
 | `SendOnCourse` | worker | `Busy`, `InsufficientFunds` | §3.5 |
 | `SetLongDays` | worker or business, on | | §3.4 |
 | `AnswerHrEvent` | event, choice | `UnknownEvent` | §3.7 |
@@ -209,6 +212,7 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 | AC-8 | Each HR event follows its chance, waits for the player, and applies its choice's effects | `HrEventTests.Choices` |
 | AC-9 | Reputation moves by §3.8's steps and changes acceptance and applicants as stated | `HrEventTests.Reputation` |
 | AC-10 | A schema-10 save loads into 11 (workers neutral, reputation 50, a crafting skill drawn for each citizen) and round-trips | `MigrationTests.Schema10_Workers` |
+| AC-11 | A townsperson who works outside can be offered work as a hand from their card with no post fee; accepts at the asked wage or above; refused with a reason when under 18, retired or working in town; the offer shows the house as part of the pay | `HiringTests.Townsperson_FromCard` |
 
 ## 9. Balancing hooks
 
@@ -229,6 +233,8 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 - **G7. HR events.** **Closed (owner, 2026-10-25):** raise request, an offer from elsewhere (skill 60+, match +15% or let go), sick leave (paid or unpaid), family emergency (an advance of a quarter's wage), a bad batch (throw away or sell at half); at most one a worker a season; each waits for the player, the worker carrying on meanwhile; about 0–2 a season for 3 workers; conflicts, accidents and petitions in Phase 3 (§3.7).
 - **G8. Employer reputation.** **Closed (owner, 2026-10-25):** 0–100 (start 50) shown with its *Why?*; up with the asked wage or more at renewal (+1 a worker), paid sick leave (+2), an advance (+3), severance paid (+1); down with a low hire (−2), a refused raise (−2), letting go in probation (−1), a lapse (−3); at 80+ acceptance +10% and better above-market applicants, at 20− acceptance −10% and applicants slower (§3.8).
 - **G9. What stays out.** **Closed (owner, 2026-10-25):** supervisors and span of control, benefits and minimum wage policy (with the treasury), managers, night shifts in Phase 3; education bonds with the school (spec 018); a family house as part of a hand's pay already exists (§2).
+
+- **G10. Your townspeople on your fields** (US-219, owner, 2026-10-29, ADR 0083). **Closed:** offer work as a hand from a citizen's card (no post fee, the board's offer and answers, the housing line); the house is part of the pay from the first renewal and counted once a house (spec 014 §3.6); long days stay §3.4's; never unpaid work for housing (§3.1).
 
 ### US-112 build notes (2026-10-28, for the owner's review)
 

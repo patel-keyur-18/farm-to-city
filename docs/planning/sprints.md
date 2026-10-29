@@ -23,8 +23,8 @@
 | S12 | 25 Jan – 7 Feb 2027 (2 weeks, as S11) | 2 | Spec 012 approved (ADR 0060) and built: buffalo and cows, the shed, fodder, straw, milk to the co-op; the village redrawn with the dairy co-op and a living valley (ADR 0061, 0062). Spec 014 written and approved. | 52 (re-pointed with spec 012 and ADRs 0061–0062, 0064) | 012, 014 | Yes: cattle |
 | S13 | 8–21 Feb 2027 (2 weeks, as S12) | 2 | Citizens and the life clock, the family house, homes and people art; households, needs, happiness, work and food, your people on screen (F11.1, F11.2; spec 014, ADR 0063). | 39 | 016, 015 | Yes |
 | S14 | 22 Feb – 7 Mar 2027 (2 weeks, as S13) | 2 | Population flows and family trees, population balance (F11.3); founding a business (the flour mill) and its books (F12.1); save schema 10. | 33 | 017, 013 | Yes |
-| S15 | 8–21 Mar 2027 (2 weeks, ADR 0076) | 2 | Production chains: the bakery and the dairy (F12.2); full hiring and HR (F11.4); save schema 11; the developer panel's Next era. | 37 | 018, 019 | Yes |
-| S16 | 22 Mar – 4 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 12 (ADR 0076). | 37 (re-pointed, ADR 0076) | — | Yes |
+| S15 | 8–21 Mar 2027 (2 weeks, ADR 0076) | 2 | Production chains: the bakery and the dairy (F12.2); full hiring and HR (F11.4); save schema 11; the developer panel's Next era; the owner's requests US-219 to US-222 (ADR 0083, save schema 12). | 55 | 018, 019 | Yes |
+| S16 | 22 Mar – 4 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 13 (ADR 0076, 0083). | 37 (re-pointed, ADR 0076) | — | Yes |
 | S17 | 5–11 Apr 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
 | S18 | 12–18 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
 
@@ -639,21 +639,21 @@
 
 ## Owner requests pending after Sprint 15 (raised 2026-10-28)
 
-The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're built in Sprint 15 itself, on the same branch and PR #20, before the device check, so one build covers both.** Each story keeps its pushbacks.
+The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're built in Sprint 15 itself, on the same branch and PR #20, before the device check, so one build covers both.** Each story keeps its pushbacks. **Planned into Sprint 15 (2026-10-29, ADR 0083: 18 gaps closed with the owner, re-pointed 3 + 2 + 7 + 6 = 18).**
 
 | ID | Story | Feature | Points | Note |
 | --- | --- | --- | --- | --- |
-| US-219 | Your townspeople at work on your fields | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | US-112 (this sprint) already lets you hire a townsperson as a hand with orders; unpaid work for housing would be bonded labour, so this adds housing as part of pay |
+| US-219 | Your townspeople at work on your fields | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | US-112 (this sprint) already lets you hire a townsperson as a hand with orders; unpaid work for housing would be bonded labour, so this adds housing as part of pay |
 | US-220 | Your townspeople seen at work as labourers | [F06.1](features/F06.1-day-labourers.md) | 2 | Presentation gap |
-| US-221 | Your season, earned and spent | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Amends spec 019 (Sprint 18's statements and hub) rather than building it twice |
-| US-222 | The weather on the map | [F08.6](features/F08.6-living-weather.md) | 5 | Look previewed first; reduced motion; frame time on the iPhone 13 |
+| US-221 | Your season, earned and spent | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Amends spec 019 (Sprint 18's statements and hub) rather than building it twice |
+| US-222 | The weather on the map | [F08.6](features/F08.6-living-weather.md) | 6 | Look previewed first; reduced motion; frame time on the iPhone 13 |
 
 ## Sprint 15 · 8–21 Mar 2027 · Phase 2 (the bakery and the dairy, full hiring and HR; specs 018 and 019 written; 2 weeks, ADR 0076)
 
 - **Status:** Built; awaiting the owner's device check (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
 - **Branch:** `sprint/15-chains-and-hr`
 - **Goal:** Spec 016's production chains built (F12.2): recipes, the bakery (pav and rusk from your atta) and the dairy (paneer, curd and ghee from your milk), each with its art, screens and buyers. Spec 015 built (F11.4): one hiring board for every role, interviews, references and negotiation, output from skill, motivation and fatigue, courses and four traits, HR events and employer reputation. Save schema 11 with its migration and fixture (ADR 0076). The developer panel's Next era. Specs 018 (school, literacy, Codex, advisors, the Village unlock) and 019 (statements, the finance hub, milestones) written and approved; their code comes in Sprints 17 and 18.
-- **Points:** 37 (F12.2 15, F11.4 21, US-218 1)
+- **Points:** 55 (F12.2 15, F11.4 21, US-218 1; the owner's requests 18, ADR 0083: US-219 3, US-220 2, US-221 7, US-222 6)
 - **Specs for the owner to review:** 018, 019
 - **Device build:** Yes: Development build
 
@@ -666,8 +666,12 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-112 | Hiring board | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
 | US-113 | Productivity and training | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
 | US-114 | HR events | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Should | Done (ADR 0082) |
+| US-219 | Your townspeople at work on your fields (owner request, ADR 0083) | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | To do |
+| US-220 | Your townspeople seen at work as labourers (owner request, ADR 0083) | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
+| US-221 | Your season, earned and spent (owner request; spec 019 amended, ADR 0083; save schema 12) | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Must | To do (spec 019 re-approval first) |
+| US-222 | The weather on the map (owner request, ADR 0083) | [F08.6](features/F08.6-living-weather.md) | 6 | Should | To do (the look previewed and approved first) |
 
-**Order of work:** specs 018 and 019 drafted first, their gaps closed with the owner one per message alongside the code → US-218 (Next era, so the Village businesses can be reached) → US-118 recipes (sim) → US-119 and US-216 sim → the bakery's and the dairy's art and layouts (previewed to the owner first) → their screens (Editor tours) → US-112 (save schema 11 holding the workers and the bakery's and dairy's settings; the Hire screen) → US-113 (golden replays regenerated once) → US-114 → balance with the bots (spec 015 §9, spec 016 §9) → the whole checklist in the Editor → the device build.
+**Order of work:** specs 018 and 019 drafted first, their gaps closed with the owner one per message alongside the code → US-218 (Next era, so the Village businesses can be reached) → US-118 recipes (sim) → US-119 and US-216 sim → the bakery's and the dairy's art and layouts (previewed to the owner first) → their screens (Editor tours) → US-112 (save schema 11 holding the workers and the bakery's and dairy's settings; the Hire screen) → US-113 (golden replays regenerated once) → US-114 → balance with the bots (spec 015 §9, spec 016 §9) → the whole checklist in the Editor → the device build. **Then the owner's requests (ADR 0083):** specs 008, 014, 015 and 019 amended and approved → US-219 → US-220 → US-221 (save schema 12) → the weather look previewed and approved → US-222 → their checks added to `s15-chains-hr.md` and run in the Editor → one new Development build (the 2026-10-29 build superseded) → the owner's device check.
 
 **Sprint end checklist**
 
@@ -678,4 +682,5 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Balance: spec 015 §9 and spec 016 §9 measured with the bots; targets recorded in an ADR, contradictions flagged to the owner (ADR 0082: a refused raise loses the worker, a day away, the dairy's bounds widened; `GateTests.Hr`)
 - [ ] Test checklist `docs/test-checklists/s15-chains-hr.md`, every non-device check run in the Editor; Development build; the owner's device check (checklist and Editor pass done; the 2026-10-29 build is superseded: one new Development build after US-219 to US-222, then the owner's device check)
 - [x] `STATUS.md`, feature files and this file updated
+- [ ] The owner's requests US-219 to US-222 (ADR 0083): gaps closed with the owner (18, done), specs 008, 014, 015 and 019 amended and approved, each story Editor-tested by scripted touch and reviewed; save schema 12 with migration and `saves/schema12`; the weather look approved before code
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #20 opened 2026-10-29)

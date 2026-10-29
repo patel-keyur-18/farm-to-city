@@ -1,6 +1,6 @@
 # 008. HUD, presentation and localisation
 
-- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows; amended by ADR 0083 (2026-10-29): the working day on the map, the weather on the map and its sound, the developer panel's *Weather look*
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation
@@ -98,6 +98,9 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Selection | Tap a tile, slot, bed or building: it bounces (§3.12) and its sheet opens |
 | Placement | The hand's hut: a ghost preview follows the finger over yard tiles, green where `BuildHandHut` would be accepted and red with the rejection reason otherwise (F08.1 US-079.T4) |
 | Day and night | A tint by the sim hour, from `UiDef.dayTint`, interpolated between hours: night 0.55 blue, dawn and dusk warm, day white (`content/ui.json`) |
+| People's day (ADR 0083) | The founder, hands and labourers go round the fields from 7:00 to 19:00 and are home outside it (the founder at the house door, a hand at his hut or family house, a townsperson labourer at their family house); neighbours' labourers walk in from the west edge in the morning and out in the evening. Presentation only: the sim's hours, Care and pay don't change |
+| Weather (ADR 0083, US-222) | The current spell's weather drawn over the whole map, one weather for the valley, held for the whole spell (a spell is a world day, spec 001 §3) and eased in over a few seconds at a change; the night tint darkens it. Sun: bright warm light, crisp shadows. Cloudy: softer light, drifting cloud shadows. Rain: falling streaks, darker ground. Heavy rain: denser, greyer streaks and splashes. Storm: a dark sky, gusting trees and crops, a soft lightning glow. Heatwave: warm haze and shimmer. Frost: pale rime on fields and roofs, cold light. Fields, crops and people stay readable through every one. The look is the one the owner approved in the preview (`docs/art/s15-222-weather-*.png`); its numbers (streak counts and cap, opacities, glow timing, ease time) live in `content/ui.json` (`weatherLook`) |
+| No flashing; reduced motion (ADR 0083) | For everyone: the lightning glow rises over at least 0.3 s, fades over about 1 s, comes at most once in 15–25 s and never more than 3 times in a second (WCAG 2.3.1). Reduced motion on: still, lighter rain streaks; still cloud shadows; no gusts, shimmer or glow; a weather change still fades |
 | Season palette | The ground tint × the season tint (US-024's check: a warm valley tint, green Spring, golden Summer, lush Monsoon, hazy Winter) |
 
 ### 3.5 Sheets (content from specs 002–007)
@@ -295,11 +298,11 @@ All motion is code-driven tweens on transforms and UI Toolkit styles (ADR 0017);
 | Sound | on · off | on |
 | Haptics | on · off | on (a light tap on harvest and sale) |
 
-Settings live in the settings file beside the save (spec 007), never in the town. iOS's *Reduce Motion* and the light haptic tap come from one small iOS plugin (`Assets/Plugins/iOS`). Feedback sounds (Could, F08.5; ADR 0043 §10), from Kenney's CC0 packs, logged in `ASSETS_LICENSES.md`, one per event and never stacking, only for what happens in the town (ADR 0044 §2: no sound for a button tap or a sheet): sowing and planting (the rustle, lower), harvest (a pop and rustle), coins in (a jingle, pitch rising in three steps with the amount), coins out (a clink), something ready (a chime), an urgent alert (a two-note bell).
+Settings live in the settings file beside the save (spec 007), never in the town. iOS's *Reduce Motion* and the light haptic tap come from one small iOS plugin (`Assets/Plugins/iOS`). Feedback sounds (Could, F08.5; ADR 0043 §10), from Kenney's CC0 packs, logged in `ASSETS_LICENSES.md`, one per event and never stacking, only for what happens in the town (ADR 0044 §2: no sound for a button tap or a sheet): sowing and planting (the rustle, lower), harvest (a pop and rustle), coins in (a jingle, pitch rising in three steps with the amount), coins out (a clink), something ready (a chime), an urgent alert (a two-note bell). **Weather (ADR 0083):** a soft rain loop in rain and heavy rain, and distant thunder now and then in a storm (1–3 s after a glow), behind the Sound switch, fading in and out with the weather; CC0 sources only, logged in `ASSETS_LICENSES.md`.
 
 ### 3.14 The developer panel (ADR 0017, spec 001 §7)
 
-Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035). The number-format and motion switches and the loan button left the panel in Sprint 7: Settings and Money and loans have them (ADR 0043). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end.
+Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035). The number-format and motion switches and the loan button left the panel in Sprint 7: Settings and Money and loans have them (ADR 0043). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end. **Weather look ▸** (ADR 0083): picks the weather the map draws, for tours and frame-time checks; look only (no command, no state), reset on leaving play.
 
 ## 4. Data
 
@@ -400,6 +403,10 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 | AC-15 | Building every sheet, the HUD and the away card in a set of seeded Phase 1 situations, every row whose value contains a digit has a *Why?* source that builds, and no *Why?* row shows a factor (a number with three decimals or a bare multiplier) | `WhyTests.EveryNumberHasWhy` |
 | AC-16 | The forecast view merges hours into runs: the HUD line is the current run and the next with their end times; the sheet's runs cover exactly 72 hours, days 2–3 marked likely; times read today, tomorrow or the weekday from a given local now | `ForecastViewTests.Runs` |
 | AC-17 | The Money and loans, founder, good, Buy inputs and mandi sheets list one row per choice with the command it sends; a borrow amount is never below the minimum loan or above the limit; each term row's total interest equals the sum of its schedule's interest | `PanelTests.Choices` |
+| AC-18 | People are on the fields from 7:00 to 19:00 and home outside it; a neighbour labourer heads for the west edge in the evening | `MapViewTests.WorkingDay` |
+| AC-19 | The map's weather look is the current spell's (or the developer panel's pick), eased over `weatherLook` seconds; with reduced motion no layer moves and there is no glow | `WeatherLookTests.FollowsSpell`, `WeatherLookTests.ReducedMotion_Still` |
+| AC-20 | The lightning glow's timing from `ui.json` never exceeds 3 flashes a second, rises over ≥ 0.3 s and repeats no sooner than 15 s | `WeatherLookTests.Lightning_NoFlash` |
+| AC-21 | With the whole map in storm at night and in heavy rain, main-thread p95 ≤ 8.3 ms, about 60 fps, under 1% dropped on the iPhone 13 | Device checklist (`s15-chains-hr.md`) |
 
 ## 9. Balancing hooks
 
@@ -509,6 +516,13 @@ The owner's device run passed apart from seven points, all settled in ADR 0044:
 
 1. **Veils** (cards, letter pages, *Why?*, the away card, the developer panel) cover the whole screen, past the safe area (`UiKit.Veil`); what they hold stays centred in the safe area.
 2. ***While you were away*** shows only after `awayCardMinHours` (8) or at the cap (§3.9, AC-8): the house eats every day, so before this almost every return brought a card.
+
+### Sprint 15 owner requests (2026-10-29, ADR 0083)
+
+1. **People's day:** everyone on the fields 7:00–19:00, home outside it (§3.4).
+2. **The weather on the map:** the look previewed and approved first, held for the whole spell (frost too: a spell is a world day), darker ground only while it rains; no flashing for anyone; reduced motion still (§3.4).
+3. **Weather sound:** a rain loop and distant thunder behind the Sound switch (amends ADR 0044 §2) (§3.13).
+4. **Weather look ▸** on the developer panel, look only; frame time measured in the heaviest weathers on the device (§3.14, AC-21).
 
 ## 11. Cut first
 

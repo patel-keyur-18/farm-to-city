@@ -113,7 +113,7 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 - `content/eras.json`: the Village's gate (households, business seasons, school).
 - `content/ui.json`: advisor caps (a line a sheet, a topic a day).
 
-**New state** (save schema 13 in Sprint 17; ADR 0076 numbers schemas by sprint):
+**New state** (save schema 14 in Sprint 17; ADR 0076 numbers schemas by sprint, ADR 0083 shifted them by one):
 - `Citizen`: literate (bool), schooling years, in an adult class until.
 - `CitizensState`: the school (status, built at, ready at, teachers), adult classes.
 - `GuidanceState`: Codex cards found (ids, found at), advisor topics last spoken.
@@ -169,7 +169,7 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 | AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session | `AdvisorTests.Caps` |
 | AC-8 | The Village unlocks once when its three conditions hold; the progress view shows each | `EraTests.Village` |
 | AC-9 | The competent bot reaches the Village in 14–21 days, the cautious saver in 28–42 | `GateTests.Village` |
-| AC-10 | A schema-12 save loads into 13 with no school, literacy from spec 014's education, no cards found | `MigrationTests.Schema12_School` |
+| AC-10 | A schema-13 save loads into 14 with no school, literacy from spec 014's education, no cards found | `MigrationTests.Schema13_School` |
 
 ## 9. Balancing hooks
 
