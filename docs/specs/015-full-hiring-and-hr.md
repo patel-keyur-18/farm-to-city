@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner. Amended 2026-10-29 by the owner's request US-219 (ADR 0083, G10: offering work from a citizen's card)
+- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner. Amended 2026-10-29 by the owner's request US-219 (ADR 0083, G10: offering work from a citizen's card); approved 2026-10-30
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)

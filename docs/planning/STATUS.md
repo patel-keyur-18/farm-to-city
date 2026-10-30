@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs amended, awaiting approval** |
+| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 in progress** |
 | Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
 | Last updated | 2026-10-29 |
 
@@ -253,9 +253,8 @@
 
 ## Next up
 
-1. **Owner:** approve the amended specs (ADR 0083): spec 019 §3.9 *Your season* (re-approval, US-221), spec 015 §3.1 and AC-11 (US-219), spec 014 §3.6 and AC-16–AC-17 (US-219, US-220), spec 008 §3.4, §3.13, §3.14 and AC-18–AC-21 (US-220, US-222).
-2. **Claude (owner, 2026-10-29): build US-219 to US-222 in Sprint 15, on this branch and in PR #20**, one story at a time with a stop for review after each: US-219 → US-220 → US-221 (save schema 12) → the weather look previewed (an interactive page) and approved → US-222. Each Editor-tested by scripted touch (back up the Editor saves first; restore and diff at the end). Then add the new checks to `s15-chains-hr.md`, run the non-device ones in the Editor, make **one new Development build** (delete `Builds/iOS` first; the 2026-10-29 build is out of date), the unsigned Xcode compile check, update PR #20 and re-check its labels.
-3. **Owner:** after that, one device check covering Sprint 15 and US-219 to US-222 on the iPhone 13 (export the town first; schema 10 → 12); report; merge PR #20.
+1. **Claude (owner, 2026-10-29): build US-219 to US-222 in Sprint 15, on this branch and in PR #20**, one story at a time with a stop for review after each: US-219 → US-220 → US-221 (save schema 12) → the weather look previewed (an interactive page) and approved → US-222. Each Editor-tested by scripted touch (back up the Editor saves first; restore and diff at the end). Then add the new checks to `s15-chains-hr.md`, run the non-device ones in the Editor, make **one new Development build** (delete `Builds/iOS` first; the 2026-10-29 build is out of date), the unsigned Xcode compile check, update PR #20 and re-check its labels.
+2. **Owner:** after that, one device check covering Sprint 15 and US-219 to US-222 on the iPhone 13 (export the town first; schema 10 → 12); report; merge PR #20.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -271,11 +270,11 @@
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
-| Sprint 15 | Approve the amended specs (ADR 0083) and later the weather look; after US-219 to US-222: install the new Development build, run `s15-chains-hr.md`, report; merge PR #20 |
+| Sprint 15 | Approve the weather look (US-222); after US-219 to US-222: install the new Development build, run `s15-chains-hr.md`, report; merge PR #20 |
 
 ## Open questions (with the owner)
 
-- **The owner's requests US-219 to US-222 (2026-10-29):** planned into Sprint 15 (55 points), all 18 gaps closed with the owner (ADR 0083). Waiting on: the amended specs' approval (019 re-approval, 008, 014, 015), then the weather look's approval before US-222's code.
+- **The owner's requests US-219 to US-222 (2026-10-29):** planned into Sprint 15 (55 points), all 18 gaps closed with the owner (ADR 0083). Specs 008, 014, 015 and 019 approved (2026-10-30); the weather look's approval is still needed before US-222's code.
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 

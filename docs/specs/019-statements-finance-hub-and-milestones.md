@@ -1,6 +1,6 @@
 # 019. Your statements, the finance hub and wealth milestones
 
-- Status: Approved (2026-10-27, ADR 0078; G1–G8 closed with the owner, §10). **Amended 2026-10-29 (ADR 0083, G9–G14): Money and loans opens on *This season*; awaiting the owner's re-approval**
+- Status: Approved (2026-10-27, ADR 0078; G1–G8 closed with the owner, §10). Amended 2026-10-29 (ADR 0083, G9–G14): Money and loans opens on *This season*; **re-approved by the owner 2026-10-30**
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, the personal finance screen, wealth milestones, asset classes); Learning layer (reports every player can read)
@@ -103,7 +103,7 @@ Money and loans opens on the **This season** tab, a switch at its top: **This se
 | **Spent** | Seed and planting; fertiliser and sprays; each hand's wage by name; day labourers; feed; the vet; the family's living; health; rent you pay; interest; selling costs (commission, transport); wear on buildings and machines | The ledger's expense accounts as costs are used up (G10); a hand's wage by the `hand:` reference of its accrual |
 | **Profit this season** | Earned − spent: the season report's *what's left*, so it matches the report at the close; its *Why?* names the farm's own profit (the Hamlet gate's) inside it | |
 | **Why your cash moved differently** | Paid ahead (wages and living for the rest of the season, inputs into the store); wear (a cost, no cash); paid back on loans ("paying back what you borrowed, not a cost"); borrowed; bought and still yours, one row each: buildings, animals, trees, land, machines, put into your businesses ("You still own it: it's in *Your wealth*, not a cost"); sold. Cash at the season's start + profit + these = cash now | The ledger's cash postings to prepaid, asset and loan accounts (G10, G14) |
-| **Next season, already due** (this season only) | Each hand's renewal by name (the wage less the house, spec 014 §3.6); each loan's payment as interest and principal; the family's living; rent you pay; all at today's prices (the *Why?*: "the close's price index may add a little"). Then "Cash now covers it", or in amber "Short by 8,400: Ravi's renewal would lapse" | What the close would take if nothing changed (G12). A business's worker is paid by the business; seed and feed are bought as you go: neither is counted |
+| **Next season, already due** (this season only) | Each hand's renewal by name (the wage less the house, spec 014 §3.6); each loan's payment as interest and principal; the family's living; rent you pay; all at today's prices (the *Why?*: "the close's price index may add a little"). Then "Cash now covers it", or in amber "Short by 8,400: Ravi's renewal would lapse. Sell from the store, or borrow on *Your wealth*", opening the Store | What the close would take if nothing changed (G12). A business's worker is paid by the business; seed and feed are bought as you go: neither is counted |
 
 *Last season* shows the same blocks, finished, without *next season due*, and ends with **See the season report** (spec 005's report until US-137 makes it *Your books*). The same season a year earlier stays with *Your books* (G2).
 
@@ -234,6 +234,7 @@ Your books: this season so far and past seasons, each opening three tabs as the 
 - **G12. Next season, already due.** **Closed:** each hand's renewal by name, loan payments as interest and principal, the family's living and rent you pay, at today's prices, with the cover line; no business worker, no seed or feed (§3.9).
 - **G13. Which seasons.** **Closed:** a *This season* | *Last season* switch; last season ends with the season report; the same season last year stays with *Your books* (§3.9).
 - **G14. Things you bought.** **Closed:** rows per kind under *why your cash moved differently*, never under *spent*, with loan principal beside them (§3.9).
+- **Clarity (owner, 2026-10-30: "everything makes sense and achievable by an average player"):** the cover line names its levers (sell from the store, borrow) and opens the Store.
 
 ## 11. Cut first
 

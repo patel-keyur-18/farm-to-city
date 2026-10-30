@@ -60,6 +60,12 @@ Claude also withdrew one of its own pushbacks. Frost "at 3 pm" isn't unrealistic
 17. **Wet ground (G17).** Darker ground is part of the rain look and eases back when the spell changes. Nothing lingers. Showing each field's real soil moisture on the map would be its own story, not planned.
 18. **Frame time (G18).** The developer panel gets a look-only **Weather look ▸** picker (Development builds only). It sets what the map draws, not the sim's weather: no command, no state, and it resets on leaving play. Frame time is measured in every weather in the Editor, then on the iPhone 13 in storm at night and in heavy rain with the whole map showing. The pass line is the usual one: main-thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. The number of rain streaks is capped in `ui.json`.
 
+## Approval and clarity (owner, 2026-10-30)
+
+The owner approved the amended specs 008, 014, 015 and 019, asking that everything makes sense to and is achievable by an average player. Two lines were added for that:
+- Outside 7:00–19:00 the People sheet's hand and labourer rows say "Home for the night · back at 7:00" (spec 008 §3.4), so an empty farm at night never looks like work stopped.
+- *Next season, already due*'s amber line names its levers ("Sell from the store, or borrow on *Your wealth*") and opens the Store (spec 019 §3.9).
+
 ## Consequences
 
 - Sprint 15 grows from 37 to **55 points**: US-219 3, US-220 2, US-221 7, US-222 6 (owner, 2026-10-29).

@@ -1,6 +1,6 @@
 # 014. Citizens, households and population
 
-- Status: Approved 2026-10-23 (ADR 0063); amended by ADR 0067 (2026-10-24: 2 family houses an acre, the row-house layout) and the owner's §3.8 decision (the outside-work example scores 68); amended by ADR 0083 (2026-10-29, G11–G12: housing in kind for a tenant hired as a hand, your labourers on screen)
+- Status: Approved 2026-10-23 (ADR 0063); amended by ADR 0067 (2026-10-24: 2 family houses an acre, the row-house layout) and the owner's §3.8 decision (the outside-work example scores 68); amended by ADR 0083 (2026-10-29, G11–G12: housing in kind for a tenant hired as a hand, your labourers on screen; approved 2026-10-30)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
