@@ -79,6 +79,8 @@ namespace Game.Presentation.DevTools
             scroll.Add(ButtonRow(Btn("Snapshot", () => host.Snapshot()), Btn("Restore", () => host.Restore())));
             scroll.Add(Section("Determinism (ADR 0035)"));
             scroll.Add(ButtonRow(Btn("Golden replays", RunGoldens)));
+            scroll.Add(Section("Weather look (ADR 0083: look only, no command, reset on leaving play)"));
+            scroll.Add(ButtonRow(Btn("Weather look ▸", NextWeatherLook)));
             scroll.Add(Section("Performance (ADR 0047)"));
             scroll.Add(ButtonRow(Btn("Measure frame time (20 s)", MeasureFrames)));
 
@@ -93,6 +95,21 @@ namespace Game.Presentation.DevTools
             parent.Add(_countdown);
 
             panel.Add(ButtonRow(Btn("Close", Close, ActionLook.Secondary)));
+        }
+
+        /// <summary>
+        /// Steps what the map draws through the weathers and back to the sim's own (spec 008 §3.14): for tours and frame-time checks. It changes
+        /// only the look, never the sim's weather, crops or forecast.
+        /// </summary>
+        private void NextWeatherLook()
+        {
+            var types = _host.Sim().Config.Weather.Types;
+            int at = -1;
+            for (int i = 0; i < types.Count; i++) if (types[i].Id == Map.WeatherPresenter.DevOverride) at = i;
+            Map.WeatherPresenter.DevOverride = at + 1 < types.Count ? types[at + 1].Id : null;
+            _result.text = Map.WeatherPresenter.DevOverride == null
+                ? "Weather look: the sim's own (" + _host.Sim().CurrentWeather.Id + ")"
+                : "Weather look: " + Map.WeatherPresenter.DevOverride + " (look only; the sim's weather is " + _host.Sim().CurrentWeather.Id + ")";
         }
 
         private static Label Section(string text)

@@ -41,6 +41,7 @@ namespace Game.Presentation
         private Camera _camera;
         private Tweens _tweens;
         private MapPresenter _map;
+        private WeatherPresenter _weather;
         private MapInput _input;
         private HudPresenter _hud;
         private SheetPresenter _sheet;
@@ -144,6 +145,10 @@ namespace Game.Presentation
 
             _sounds = new Sounds(gameObject);
             ApplyLookAndSound();
+            // The weather on the map (ADR 0083, US-222): the sim's spell, reduced motion and Sound as Settings has them, night from the day tint.
+            if (_ui.WeatherLook != null)
+                _weather = WeatherPresenter.Create(transform, _camera, _map, _ui.WeatherLook, () => Sim.CurrentWeather.Id, () => _tweens.ReducedMotion,
+                    () => _sounds.Enabled, () => _ui.TintAt(_mapVm.SecondOfDay).R);
             BuildUi();
         }
 

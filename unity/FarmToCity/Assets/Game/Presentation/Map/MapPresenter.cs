@@ -138,6 +138,51 @@ namespace Game.Presentation.Map
 
         public IsoGrid Grid { get { return _grid; } }
 
+        /// <summary>The storm's wind now, from the weather (−1 to 1 times its gust; 0 when still): trees lean, crops ripple (ADR 0083, US-222).</summary>
+        public float Gust { get; set; }
+        private bool _swaying;
+
+        /// <summary>Everything the map draws, valley edge included: where the weather's ground layers (rime, cloud shadows) lie.</summary>
+        public Bounds WorldBounds()
+        {
+            var b = new Bounds(TileCentre(0), Vector3.zero);
+            foreach (EdgeSpot e in _edge) b.Encapsulate(e.Ground.bounds);
+            foreach (Spot s in _crops) if (s.Renderer != null) b.Encapsulate(s.Renderer.bounds);
+            return b;
+        }
+
+        /// <summary>The material map sprites draw with (the 2D renderer's default), for the weather's particles.</summary>
+        public Material SpriteMaterial() { return _ring.sharedMaterial; }
+
+        /// <summary>
+        /// Gusts (spec 008 §3.4): each tree leans from its base by up to 4° and each crop's rows ripple a little, every one a little out of
+        /// step; set back upright when the wind drops.
+        /// </summary>
+        private void Sway()
+        {
+            if (Gust == 0f && !_swaying) return;
+            _swaying = Gust != 0f;
+            float t = Time.unscaledTime;
+            int i = 0;
+            foreach (KeyValuePair<long, Spot> kv in _slots)
+            {
+                Transform tr = kv.Value.Renderer.transform;
+                float lean = Gust * 4f * (0.8f + 0.2f * Mathf.Sin(t * 3f + i++ * 1.7f));
+                tr.localRotation = Quaternion.Euler(0, 0, -lean);
+            }
+            _swayers.RemoveAll(x => x == null); // a valley acre redrawn since
+            foreach (Transform tr in _swayers) { float lean = Gust * 4f * (0.8f + 0.2f * Mathf.Sin(t * 3f + i++ * 1.3f)); tr.localRotation = Quaternion.Euler(0, 0, -lean); }
+            foreach (Spot s in _crops)
+            {
+                if (s.Renderer == null) continue;
+                float ripple = 1f - Mathf.Abs(Gust) * 0.12f * (0.5f + 0.5f * Mathf.Sin(t * 4f + i++ * 0.9f));
+                s.Renderer.transform.localScale = new Vector3(1f, ripple, 1f);
+            }
+        }
+
+        /// <summary>The valley's and village's own trees (neem, mango, babul), leaning with the farm's.</summary>
+        private readonly List<Transform> _swayers = new List<Transform>();
+
         public static MapPresenter Create(Transform parent, Tweens tweens, UiDef ui)
         {
             var go = new GameObject("Map");
@@ -272,6 +317,7 @@ namespace Game.Presentation.Map
                 if (decor != null)
                 {
                     v.Decor = NewRenderer("edgeDecor", SpriteBank.Rendered(decor), c, EdgeOrder(e.X, e.Y, 50));
+                    if (decor.StartsWith("tree", System.StringComparison.Ordinal)) _swayers.Add(v.Decor.transform);
                     v.Decor.transform.localScale = Vector3.one * scale;
                 }
                 _edge.Add(v);
@@ -804,6 +850,7 @@ namespace Game.Presentation.Map
             if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
             AnimateVehicles();
+            Sway();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }

@@ -40,6 +40,7 @@ If anything looks wrong with your town after the update, stop and report it befo
   - **A family emergency.** They ask for an advance on their wage.
   - **A bad batch** at a business. Throw it away, or sell it cheap.
   - A contract now renews at the wage the worker is already on.
+- **The weather on the map (US-222, ADR 0083).** Each weather is drawn over the whole farm, as you approved in the preview: sun, cloudy (drifting cloud shadows), rain, heavy rain (splashes, mist), storm (wind-driven rain, trees leaning in gusts, a soft glow of lightning now and then), heatwave (warm haze) and frost (pale rime). A change of weather fades over 3 seconds. With **Sound** on: a rain loop and distant thunder. With **Reduced motion** on: the rain stands still and there's no glow. The developer panel's **Weather look ▸** shows any weather for checking (look only: the sim's weather doesn't change).
 - **Your name as an employer:** the People sheet shows it, for example "Fair (50)", with a *Why?*. Fair pay raises it, and people then accept your offers more readily.
 
 **Your questions:**
@@ -47,6 +48,7 @@ If anything looks wrong with your town after the update, stop and report it befo
 2. Does the Output *Why?* explain why a worker does well or badly?
 3. Are the HR cards clear about what each choice costs?
 4. Do the bakery and the dairy look right on their acres?
+5. Does the weather look like the preview, and is the rain and thunder mix right on the phone's speaker?
 
 ## Checks
 
@@ -82,11 +84,16 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 24 | US-116 | The bakery's **Books** | Profit and loss, cash and what it owns and owes, each line with **?** | | |
 | 25 | Restore | **Restore** | Your town is back as it was at the Snapshot | | |
 | 26 | Frame time | Pinch out so the whole map shows. Developer panel → **Measure frame time (20 s)**; don't touch the screen | Main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write the numbers in Notes | | **Numbers** |
-| 27 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | | |
+| 27 | US-222 | Developer panel → **Weather look ▸**, then **Close**. Repeat for each weather (the line under the status names it) | Sun, cloudy, rain, heavy rain, heatwave, frost, storm drawn over the whole map, each fading in over about 3 s. Fields, crops and people readable in every one; the top and bottom bars unchanged | | **Screenshot** of storm and frost |
+| 28 | US-222, spec 008 AC-21 | Storm look **at night** (after 21:00; **+1 hour** if needed). Pinch out so the whole map shows. **Measure frame time (20 s)**. Then the same in heavy rain | Each: main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write both in Notes | | **Numbers** |
+| 29 | US-222 | Storm look, **Sound** on, watch for a minute | A rain loop; a soft glow every 15–25 s that rises and fades (never a flash); distant thunder 1–3 s after it; trees leaning in the gusts | | Is the mix right? |
+| 30 | US-222 | Settings → **Reduced motion** on, storm look | The rain stands still and lighter; no glow, no gusts; thunder still plays with Sound on. Then turn **Reduced motion** back off | | |
+| 31 | US-222 | **Weather look ▸** until it says "the sim's own", then leave the app and come back | The map shows the time card's weather again; nothing about your town changed | | |
+| 32 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | | |
 
 ## Report
 
 - **Blockers:** anything that stops play, or anything wrong with your town after the update. Mark it **BLOCKER** and say what you did.
-- **Screenshots:** for checks 1, 2, 3, 7, 8, 12, 13, 15, 16, 18 and 20, and for 22 if a card came.
-- **Numbers:** the frame-time results from check 26.
-- **Answers:** to the four questions above.
+- **Screenshots:** for checks 1, 2, 3, 7, 8, 12, 13, 15, 16, 18, 20 and 27, and for 22 if a card came.
+- **Numbers:** the frame-time results from checks 26 and 28.
+- **Answers:** to the five questions above.

@@ -71,6 +71,11 @@ The owner approved the amended specs 008, 014, 015 and 019, asking that everythi
 - The tabs read *Your season* | *Your wealth* and the switch *This season* | *Last season*, so two buttons never both say "This season" (spec 019 §10, US-221 build notes).
 - Golden replay **005** was re-pinned with 003 and 004: schema 12 also keeps each season's first ledger entry, which is in every game's hash. All three were first shown to hold with the new state left out of the hash.
 
+## Implementation notes (US-222, 2026-10-30)
+
+- The owner approved the preview's look as it was (2026-10-30). The game renders in linear colour, so each pale or dark layer's alpha is converted to look as the preview did; the colour, saturation and brightness need URP post-processing on the map camera (the cost to watch on the iPhone 13).
+- Heat shimmer is a swaying haze, not a screen distortion (a distortion would copy the screen every frame in every weather). The weather sounds are our own, synthesized and dedicated CC0.
+
 ## Consequences
 
 - Sprint 15 grows from 37 to **55 points**: US-219 3, US-220 2, US-221 7, US-222 6 (owner, 2026-10-29).

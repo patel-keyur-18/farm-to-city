@@ -62,6 +62,7 @@ namespace Game.Presentation.Map
                     Vector3 pos = OnTile(t.Id, pieces[i].At);
                     float offY = pos.y - TileCentre(t.Id).y;
                     SpriteRenderer r = NewRenderer(pieces[i].Sprite, SpriteBank.Rendered(pieces[i].Sprite), pos, Order(t.Id, _width, 45, offY));
+                    if (pieces[i].Sprite.Contains("tree")) _swayers.Add(r.transform);
                     if (i == 0) _places[t.Id] = r; else _villageProps.Add(r);
                 }
             }
