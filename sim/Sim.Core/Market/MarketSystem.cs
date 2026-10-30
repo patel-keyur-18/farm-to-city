@@ -133,6 +133,7 @@ namespace Sim.Core.Market
                 {
                     long v = MarketRules.Value(sim, load.Key, load.Value, MarketRules.RegionalPrice(sim, load.Key));
                     if (Store.SalesAccount(sim, load.Key) == Finance.Account.FruitSales) fruit += v; else crop += v;
+                    sim.State.Finance.Sales.Add(sim, load.Key, Finance.SoldTo.Mandi, v); // gross: the commission is a selling cost
                 }
                 long gross = crop + fruit;
                 long commission = Finance.Money.MulRate(gross, sim.Config.Game.Market.Mandi.CommissionRate);
@@ -211,6 +212,8 @@ namespace Sim.Core.Market
                 if (amount > 0)
                     sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.marketSales", "market:" + defs.Goods[g].Id,
                         new Finance.Posting(Finance.Account.Cash, amount), new Finance.Posting(Store.SalesAccount(sim, g), -amount));
+                sim.State.Finance.Sales.Add(sim, g, Finance.SoldTo.Market, local);
+                sim.State.Finance.Sales.Add(sim, g, Finance.SoldTo.Trader, trader);
                 sim.Emit(new Events.MarketSales(sim.State.Clock.SimTime, defs.Goods[g].Id, r.Sold, r.Price, r.ToTrader, floor, amount));
                 if (r.ToTrader > 0) Store.CountTraderPurchase(sim, g, r.ToTrader);
             }

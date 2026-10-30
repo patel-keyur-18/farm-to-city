@@ -500,7 +500,7 @@ namespace Game.Presentation
                     return;
                 }
                 // A tab or a sort changes the sheet in place: nothing new to go back to.
-                if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
+                if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("switch:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
                 Push(action.Opens.Value);
                 return;
             }

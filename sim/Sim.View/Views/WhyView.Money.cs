@@ -230,18 +230,53 @@ namespace Sim.View.Views
             return vm;
         }
 
-        /// <summary>This season so far (the open income and expense accounts).</summary>
-        private static WhyVm SeasonSoFar(ViewContext ctx, long id)
+        /// <summary>
+        /// A *Your season* line (spec 019 §3.9): id = <see cref="MoneySheet.WhyId"/>. A line lists what its *Why?* holds; the totals show
+        /// how they're made, and the cash line reconciles: cash at the start + profit + every *why your cash moved* line = cash now.
+        /// </summary>
+        private static WhyVm SeasonWhy(ViewContext ctx, long id)
         {
-            Ledger ledger = ctx.Sim.State.Ledger;
-            long income = -(ledger.Balance(Account.CropSales) + ledger.Balance(Account.FruitSales));
-            long costs = ledger.Balance(Account.SeedsAndPlanting) + ledger.Balance(Account.FertiliserAndSpraying) + ledger.Balance(Account.HiredLabour)
-                + ledger.Balance(Account.Depreciation) + ledger.Balance(Account.TransportAndSelling);
-            WhyVm vm = New(ctx, "why.seasonSoFar.title", Money(ctx, income - costs));
-            Row(vm, ctx, "report.farmIncome", Money(ctx, income));
-            Row(vm, ctx, "report.farmCosts", "−" + Money(ctx, costs));
-            Text(vm, ctx, "why.seasonSoFar.close");
-            vm.Footnote = ctx.Strings.Get("why.seasonSoFar.lesson");
+            bool last = id >= 1_000_000;
+            int block = (int)(id % 1_000_000 / 10_000), line = (int)(id % 10_000);
+            SeasonVm season = SeasonBook.Build(ctx, last);
+            var s = ctx.Strings;
+            if (block == MoneySheet.Totals)
+            {
+                if (line == MoneySheet.ProfitLine)
+                {
+                    WhyVm p = New(ctx, last ? "season.profitLast" : "season.profit", MoneySheet.Signed(ctx, season.Profit));
+                    Row(p, ctx, "season.earned", Money(ctx, season.EarnedTotal));
+                    Row(p, ctx, "season.spent", "−" + Money(ctx, season.SpentTotal));
+                    Row(p, ctx, "season.farmProfit", MoneySheet.Signed(ctx, season.FarmProfit));
+                    Text(p, ctx, "season.profit.why");
+                    p.Footnote = s.Get("season.profit.lesson");
+                    return p;
+                }
+                if (line == MoneySheet.CashLine)
+                {
+                    WhyVm c = New(ctx, "season.cashLine", Money(ctx, season.CashEnd));
+                    Row(c, ctx, "season.cashStart", Money(ctx, season.CashStart));
+                    Row(c, ctx, last ? "season.profitLast" : "season.profit", MoneySheet.Signed(ctx, season.Profit));
+                    foreach (SeasonLineVm m in season.Moved) c.Rows.Add(new WhyRowVm(m.Label, MoneySheet.Signed(ctx, m.Amount)));
+                    Row(c, ctx, last ? "season.cashEndLast" : "season.cashNow", Money(ctx, season.CashEnd));
+                    c.Footnote = s.Get("season.cash.lesson");
+                    return c;
+                }
+                WhyVm d = New(ctx, "season.dueTotal", Money(ctx, season.DueTotal));
+                foreach (SeasonLineVm l in season.Due) d.Rows.Add(new WhyRowVm(l.Label, Money(ctx, l.Amount)));
+                Row(d, ctx, "money.cash", Money(ctx, ctx.Sim.State.Ledger.Cash));
+                long owed = ctx.Sim.State.Ledger.Balance(Account.OwedByBuyers);
+                if (owed > 0) Row(d, ctx, "season.due.owed", Money(ctx, owed)); // coming at 6:00, maybe before the close, maybe after: not counted
+                Text(d, ctx, "season.due.why");
+                d.Footnote = s.Get("season.due.lesson");
+                return d;
+            }
+            List<SeasonLineVm> lines = block == MoneySheet.EarnedBlock ? season.Earned : block == MoneySheet.SpentBlock ? season.Spent : block == MoneySheet.MovedBlock ? season.Moved : season.Due;
+            if (line >= lines.Count) return new WhyVm { Title = s.Get("money.title"), Value = "" }; // the season moved on under an open sheet
+            SeasonLineVm x = lines[line];
+            WhyVm vm = new WhyVm { Title = x.Label, Value = block == MoneySheet.MovedBlock ? MoneySheet.Signed(ctx, x.Amount) : Money(ctx, x.Amount) };
+            vm.Rows.AddRange(x.Why);
+            if (!string.IsNullOrEmpty(x.WhyText)) vm.Rows.Add(new WhyRowVm(x.WhyText, null));
             return vm;
         }
 

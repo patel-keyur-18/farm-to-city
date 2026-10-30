@@ -4,7 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, the personal finance screen, wealth milestones, asset classes); Learning layer (reports every player can read)
-- Related ADRs: 0083 (*This season*, built in Sprint 15), 0008 (rupee-scale coins), 0009 (credit from day one), 0032 (P&L grouping, home use), 0034 (inputs in store are an asset; the price index), 0038 (foreclosure), 0044 (net worth kept, land on its own row), 0068 (each business's own books), 0076 (schemas by sprint), 0077 (the Village; the Codex)
+- Related ADRs: 0083 (*Your season*, built in Sprint 15), 0008 (rupee-scale coins), 0009 (credit from day one), 0032 (P&L grouping, home use), 0034 (inputs in store are an asset; the price index), 0038 (foreclosure), 0044 (net worth kept, land on its own row), 0068 (each business's own books), 0076 (schemas by sprint), 0077 (the Village; the Codex)
 - Depends on specs: 005 (the ledger, credit, the season report), 008 (sheets and *Why?*), 016 (business books, net worth's businesses), 018 (the Codex, advisors)
 
 ## 1. Goal
@@ -235,6 +235,14 @@ Your books: this season so far and past seasons, each opening three tabs as the 
 - **G13. Which seasons.** **Closed:** a *This season* | *Last season* switch; last season ends with the season report; the same season last year stays with *Your books* (§3.9).
 - **G14. Things you bought.** **Closed:** rows per kind under *why your cash moved differently*, never under *spent*, with loan principal beside them (§3.9).
 - **Clarity (owner, 2026-10-30: "everything makes sense and achievable by an average player"):** the cover line names its levers (sell from the store, borrow) and opens the Store.
+- **US-221 build notes (2026-10-30, for the owner's review):**
+  - **Names on screen.** The tabs read **Your season** | **Your wealth**, and the switch under them **This season** | **Last season**: two buttons both saying "This season" on one screen read as a mistake. The switch is slimmer than the tabs so it reads as part of the tab above; both change the sheet in place.
+  - **Where each season's entries start.** State keeps the ledger's first entry of this season and of the last (`FinanceState.SeasonStartEntry`, `LastSeasonStartEntry`, schema 12). A sale at the exact boundary hour is counted in the season the report closes, as the books already did; filtering the entries by period would have counted it twice.
+  - **The sales record** (`FinanceState.Sales`, `SoldTo`: trader, mandi, market, orders, your businesses, neighbours for green fodder sold standing, the lender for produce seized at a foreclosure) is written at every place a crop or fruit sale is posted. Home use isn't in it: it has its own line, *Your family ate from the store*, from the home-use total the report already keeps. Each good's *Why?* lists where it sold; the mandi sentence ("before its commission") shows only when it sold there.
+  - **A migrated town's first season** shows **Other sales** for what it sold before the record began (its *Why?* says so), so the block still adds up to the books. It's gone from the next season.
+  - **Spent follows the books**: wages and living are counted once a day, so early in a season *Spent* is small and *Paid ahead* is large, and they swap as the days go. That's the lesson the screen teaches.
+  - **Next season, already due:** a bullet loan's row says "interest" until its last close, then "interest and principal". *Rent you pay* has no source yet (nothing posts to 5300 until spec 017's pitch in Sprint 16), so it never shows. The due total's *Why?* lists the supermarket's payment coming at 6:00 but doesn't count it, because it may come after the close.
+  - **Golden replays 003, 004 and 005** were shown to hold with the record and the season-start entries left out of the hash, then re-pinned once with them in (005 too: the season-start entries are in every game's hash). The old Money and loans line *This season so far* (farm only) is gone: *Your season* replaces it.
 
 ## 11. Cut first
 

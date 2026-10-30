@@ -169,6 +169,46 @@ namespace Sim.Core.Tests
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
         }
 
+        // Spec 019 AC-16: the schema-11 fixture loads into 12 with an empty sales record and the season's first entry found, is its own
+        // replay base, fills the record from the next sale, rolls it at the close, and round-trips.
+        [Test]
+        public void Schema11_Sales()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(11)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Finance.FinanceState f = r.State.Finance;
+            Assert.That(f.Sales.This.Concat(f.Sales.Last), Is.Empty);
+            Simulation sim = Simulation.FromState(config, r.State);
+            Finance.JournalEntry first = r.State.Ledger.Entries.First(e => e.Id == f.SeasonStartEntry);
+            Assert.That(first.Period, Is.EqualTo(sim.Period), "this season starts at its first entry");
+            Assert.That(r.State.Ledger.Entries.Where(e => e.Id < f.SeasonStartEntry).All(e => e.Period < sim.Period), Is.True);
+            Assert.That(r.State.Ledger.Entries.First(e => e.Id == f.LastSeasonStartEntry).Period, Is.EqualTo(sim.Period - 1));
+            Assert.That(r.State.CommandLog.Base, Is.Not.Null, "the migrated town is its own replay base");
+
+            Definitions.MarketDefs goods = config.Game.Market;
+            int g = Enumerable.Range(0, goods.Goods.Count).First(i => goods.Goods[i].Kind == Definitions.GoodKind.Produce && r.State.Market.Stock[i] - r.State.Market.Offered[i] > 0);
+            long q = System.Math.Min(1000, r.State.Market.Stock[g] - r.State.Market.Offered[g]);
+            long cash = r.State.Ledger.Cash;
+            CommandResult sold = sim.Execute(new SellToTrader(sim.State.Clock.SimTime, goods.Goods[g].Id, q));
+            Assert.That(sold.Accepted, Is.True, sold.ToString());
+            Finance.Sale sale = f.Sales.This.Single();
+            Assert.That((sale.Good, sale.To, sale.Amount), Is.EqualTo((goods.Goods[g].Id, Finance.SoldTo.Trader, r.State.Ledger.Cash - cash)));
+
+            byte[] bytes = SaveCodec.Write(sim.State, config, TestSim.Wall0);
+            LoadResult again = SaveCodec.Read(bytes, config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+            Assert.That(SaveCodec.Replay(again, config).State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "the history replays");
+
+            long next = (sim.Period + 1) * sim.Clock.SecondsPerSeason;
+            sim.AdvanceTo(next);
+            Assert.That(f.Sales.Last.Any(x => x.Good == sale.Good && x.To == Finance.SoldTo.Trader && x.Amount >= sale.Amount), Is.True, "rolled at the close");
+            Assert.That(f.LastSeasonStartEntry, Is.EqualTo(first.Id));
+            again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
+
         // Spec 016 §3.9c (ADR 0076): a mill saved at schema 10 loads into 11 with its stock and no mix, works on and round-trips.
         [Test]
         public void Schema10_Mix()

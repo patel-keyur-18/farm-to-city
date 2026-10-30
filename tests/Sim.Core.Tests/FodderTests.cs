@@ -39,6 +39,7 @@ namespace Sim.Core.Tests
             Assert.That(r.GreenSoldAmount, Is.EqualTo(Money.Value(r.GreenSold, Maths.Fixed.One, 1000)), "1 coin a kg");
             long sold = -sim.State.Ledger.Entries.Where(e => e.DescriptionKey == "ledger.fodderSold").SelectMany(e => e.Postings).Where(p => p.Account == Account.CropSales).Sum(p => p.Amount);
             Assert.That(sold, Is.EqualTo(r.GreenSoldAmount), "booked as crop sales");
+            Assert.That(sim.State.Finance.Sales.This.Single(x => x.To == SoldTo.Neighbours).Amount, Is.EqualTo(sold), "in the sales record as green fodder (spec 019 §3.9)");
             Assert.That(StoreTotal(sim) - stored, Is.LessThan(r.GreenSold), "never in the store (only the compost and nothing else moves)");
 
             // With a buffalo, the cut feeds her first and only the rest is sold.

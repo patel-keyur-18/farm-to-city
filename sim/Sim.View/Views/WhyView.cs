@@ -57,7 +57,7 @@ namespace Sim.View.Views
             { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
-            { "seasonSoFar", SeasonSoFar },
+            { "season", SeasonWhy },
             // The truck and supermarket orders (spec 011).
             { "orderPrice", OrderPrice }, { "owed", Owed }, { "truck", Truck },
             // Time and weather (spec 001).

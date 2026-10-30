@@ -408,7 +408,7 @@ namespace Sim.View.Views
                     var reports = sim.State.Finance.Reports;
                     return reports.Count == 0 ? (SheetRequest?)new SheetRequest("Money", 0) : new SheetRequest("Report", reports[reports.Count - 1].Period);
                 case "people": return new SheetRequest("People", 0);
-                case "money": return new SheetRequest("Money", 0);
+                case "money": return new SheetRequest("Money", 0, MoneySheet.Wealth); // the borrowing letter: the lenders are on Your wealth
                 case "progress": return new SheetRequest("Progress", 0);
                 case "orders": return new SheetRequest("Orders", 0);
                 case "shed": return new SheetRequest("Tile", sim.Config.Game.Livestock.Livestock.ShedTile);

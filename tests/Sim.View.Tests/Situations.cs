@@ -231,6 +231,8 @@ namespace Sim.View.Tests
             yield return N("menu", MenuSheet.Build(ctx));
             yield return N("lands", LandsSheet.Build(ctx));
             yield return N("money", MoneySheet.Build(ctx));
+            yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
+            yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));
             foreach (var r in sim.State.Finance.Reports) yield return N("report " + r.Period, ReportSheet.Build(ctx, r.Period));
             for (int i = 0; i < sim.Config.Game.Credit.Lenders.Count; i++)
             {

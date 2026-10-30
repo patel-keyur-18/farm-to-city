@@ -294,6 +294,10 @@ namespace Sim.View.Views
         /// <summary>The id of the tab showing.</summary>
         public string Tab { get; internal set; }
 
+        /// <summary>A second, smaller strip under the tabs (Money and loans: This season | Last season), or null; and the one showing.</summary>
+        public System.Collections.Generic.List<ActionVm> Switch { get; internal set; }
+        public string SwitchOn { get; internal set; }
+
         /// <summary>The picture beside the title: a sprite id the presentation knows (a crop, a tree, "hut", "land").</summary>
         public string Icon { get; internal set; }
         public System.Collections.Generic.List<LineVm> Lines { get; } = new System.Collections.Generic.List<LineVm>();

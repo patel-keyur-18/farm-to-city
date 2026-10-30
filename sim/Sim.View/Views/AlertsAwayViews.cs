@@ -49,7 +49,7 @@ namespace Sim.View.Views
             if (sim.State.Credit != null)
             {
                 if (sim.State.Credit.PendingForeclosure)
-                    list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0)) });
+                    list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0, MoneySheet.Wealth)) });
                 foreach (Loan l in sim.State.Credit.Loans)
                     if (l.IsOpen && l.HasArrears && l.BusinessId != 0)
                         list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.businessMissed", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, sim.State.Businesses.Find(l.BusinessId)))),

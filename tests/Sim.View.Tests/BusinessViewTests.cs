@@ -144,7 +144,7 @@ namespace Sim.View.Tests
             SheetVm card = BusinessSheet.Build(ctx, b.Id);
             Assert.That(card.Lines.Single(l => l.Label == "Overdraft").Value, Is.EqualTo("0 coins of " + ctx.Fmt.Coins(BusinessBooks.OverdraftLimit(sim, b))));
             Assert.That(card.Lines.Single(l => l.Label == "Business loan").Value, Does.StartWith("Owes "));
-            Assert.That(MoneySheet.Build(ctx).Lines.Any(l => l.Label == "Cooperative bank, for the flour mill"), Is.True, "your guarantee, on Money and loans");
+            Assert.That(MoneySheet.Build(ctx, MoneySheet.Wealth).Lines.Any(l => l.Label == "Cooperative bank, for the flour mill"), Is.True, "your guarantee, on Money and loans");
 
             // Nobody working: the alert and the card say what to do.
             Assert.That(b.Worker, Is.EqualTo(WorkerKind.None), "nobody hired from the board yet");

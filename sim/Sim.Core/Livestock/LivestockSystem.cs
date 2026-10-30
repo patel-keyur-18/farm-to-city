@@ -188,6 +188,9 @@ namespace Sim.Core.Livestock
             return q;
         }
 
+        /// <summary>Green fodder's name in the sales record (spec 019 §3.9): it's sold standing, never a good in the store.</summary>
+        public const string GreenFodder = "green_fodder";
+
         /// <summary>What the fodder fields cut beyond the animals' need is sold standing to neighbours (§3.7): Dr Cash, Cr 4000.</summary>
         private static void SellStanding(Simulation sim, FeedingReport report, long grams)
         {
@@ -196,6 +199,7 @@ namespace Sim.Core.Livestock
             long amount = Money.Value(grams, price, 1000);
             if (amount > 0)
                 sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.fodderSold", "shed", new Posting(Account.Cash, amount), new Posting(Account.CropSales, -amount));
+            sim.State.Finance.Sales.Add(GreenFodder, SoldTo.Neighbours, amount);
             report.GreenSold = grams;
             report.GreenSoldAmount = amount;
         }

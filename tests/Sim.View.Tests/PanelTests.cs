@@ -59,7 +59,7 @@ namespace Sim.View.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
             Assert.That(sim.Execute(Cmd<RepayLoan>(repay.Lines[1].Action, sim)).Accepted, Is.True);
             Assert.That(loan.IsOpen, Is.False, "repaid in full");
-            SheetVm money = MoneySheet.Build(ctx);
+            SheetVm money = MoneySheet.Build(ctx, MoneySheet.Wealth);
             Assert.That(money.Lines.Any(l => l.Action != null && l.Action.Id == "repay:" + loan.Id), Is.False);
             Assert.That(money.Lines.Select(l => l.Label), Does.Contain("No loans"));
 

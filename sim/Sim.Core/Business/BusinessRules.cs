@@ -562,6 +562,7 @@ namespace Sim.Core.Business
                 if (value > 0)
                 {
                     sim.State.Ledger.Post(now, sim.Period, "ledger.soldToBusiness", reference, new Posting(Account.Cash, value), new Posting(Account.CropSales, -value));
+                    sim.State.Finance.Sales.Add(sim, t.Input, SoldTo.Business, value);
                     b.Ledger.Post(now, sim.Period, "ledger.boughtFromFarm", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                 }
                 Grind(sim, b, own, value);

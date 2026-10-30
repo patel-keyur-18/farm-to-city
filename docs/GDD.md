@@ -598,7 +598,7 @@ Each lender has a credit limit set by collateral, credit score and recent income
 
 **Diversification.** One crop, one business or one customer is fragile. Events hit specific sectors, and a spread of assets smooths the shocks.
 
-**Your season** (Phase 2, ADR 0083). Money and loans opens on *This season*: what you earned and spent line by line (each crop by name, each hand's wage by name), the profit, why your cash moved differently (paid ahead, loans repaid, things you bought and still own), and what's already due at the next close. Last season is one tap away; land and net worth are on the *Your wealth* tab.
+**Your season** (Phase 2, ADR 0083). Money and loans opens on *Your season*: what you earned and spent line by line (each crop by name, each hand's wage by name), the profit, why your cash moved differently (paid ahead, loans repaid, things you bought and still own), and what's already due at the next close. Last season is one tap away; land and net worth are on the *Your wealth* tab.
 
 **Personal finance screen** (Phase 2: the *Your wealth* tab of Money and loans, redesigned in the Store and People layout; spec 019, ADR 0078)
 

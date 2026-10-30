@@ -66,6 +66,11 @@ The owner approved the amended specs 008, 014, 015 and 019, asking that everythi
 - Outside 7:00–19:00 the People sheet's hand and labourer rows say "Home for the night · back at 7:00" (spec 008 §3.4), so an empty farm at night never looks like work stopped.
 - *Next season, already due*'s amber line names its levers ("Sell from the store, or borrow on *Your wealth*") and opens the Store (spec 019 §3.9).
 
+## Implementation notes (US-221, 2026-10-30)
+
+- The tabs read *Your season* | *Your wealth* and the switch *This season* | *Last season*, so two buttons never both say "This season" (spec 019 §10, US-221 build notes).
+- Golden replay **005** was re-pinned with 003 and 004: schema 12 also keeps each season's first ledger entry, which is in every game's hash. All three were first shown to hold with the new state left out of the hash.
+
 ## Consequences
 
 - Sprint 15 grows from 37 to **55 points**: US-219 3, US-220 2, US-221 7, US-222 6 (owner, 2026-10-29).

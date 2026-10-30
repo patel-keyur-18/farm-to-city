@@ -102,12 +102,15 @@ namespace Sim.Core.Tests
             long day = sim.State.Clock.SimTime / 86_400 + 1;
             sim.AdvanceTo(day * 86_400 + 8 * 3600);
             long sales = sim.State.Ledger.Balance(Account.CropSales), cash = sim.State.Ledger.Cash;
+            long Recorded() { return sim.State.Finance.Sales.This.Where(x => x.Good == "wheat" && x.To == SoldTo.Business).Sum(x => x.Amount); }
+            long recorded = Recorded();
             int wheat = sim.Config.Game.Market.IndexOf("wheat");
             Fixed price = MarketRules.Floor(sim, wheat);
             sim.AdvanceTo(day * 86_400 + 18 * 3600);
             long value = MarketRules.Value(sim, wheat, 200_000, price);
             Assert.That(b.OwnToday, Is.EqualTo(200_000), "200 kg a day by default");
             Assert.That(sales - sim.State.Ledger.Balance(Account.CropSales), Is.EqualTo(value).Within(value / 50), "Crop sales on the farm (prices move a little in a day)");
+            Assert.That(Recorded() - recorded, Is.EqualTo(value).Within(value / 50), "in the sales record (spec 019 §3.9)");
             Assert.That(sim.State.Ledger.Cash - cash, Is.EqualTo(value).Within(value / 50));
             Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
         }
