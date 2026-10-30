@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 in progress** |
+| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 done, awaiting the owner's review** |
 | Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
 | Last updated | 2026-10-29 |
 
@@ -204,6 +204,9 @@
 - **Sprint 13 done (2026-10-25):** the owner's Development build passed every check in `docs/test-checklists/s13-citizens.md` on the iPhone 13: the town migrated to schema 9; the *Your people* pill on one line; the Town and Workers tabs; placing a family house on lit acres; the house built; the household card's pie; the citizen card; frame time main p95 5.32 ms, GPU p95 6.54 ms, 60 fps, 0.08% over 25 ms (PASS). PR #18 for the owner to merge.
 
 ## In progress
+
+**Sprint 15, the owner's requests (ADR 0083):**
+- **US-219 done (2026-10-30), awaiting the owner's review: your townspeople at work on your fields.** `OfferTownsperson(citizenId, level)` and *Offer work as a hand* on a citizen's card (adults who work outside; no post fee; the board's offer); a tenant hired mid-season pays that season's rent with his full cash wage, the house part of his pay from his first renewal (`SetBudget(keepRent)`); the house counted once (`MigrationRules.HousedBy`: the household's first hand); the offer rows and the hand card's *Housing* row say it. Tests `MigrationTests2.HandFamily_HireSeason`, `HandFamily_HousingOnce`, `HiringTests.Townsperson_FromCard`, `PeopleViewTests.OfferFromCard`, `BackIn_NeverNegative` (the two housing tests shown to fail without their fixes); 399 + 100 tests pass. Editor by scripted touch: People → Town → Arjun's family → Arjun → Offer work as a hand → the offer → hired; his hand card; the close (rent paid 6,337, his wage 24,758 + the house 6,420); Radha's offer ("already part of Arjun's pay") and hire; a child's card; a course's countdown (`docs/art/s15-219-*.png`). Set up by script: 4,00,000 test coins, a family house on acre 84, dev time travel (+1 day, 6 times) for the family to arrive and for the close. Fixed on the way: the hire toast for townspeople, the negative course countdown, the greyed button on children's cards. Saves restored and checked identical.
 
 **Sprint 14** (`sprint/14-flows-and-mill`; plan approved by the owner 2026-10-25, 2 weeks; Sprints 15–18 a week later in the overview):
 - **US-217 done and approved (2026-10-25):** `TownWords.LivesWith` gives "alone" for a household of one, used by both the citizen card and the hand card (the citizen card showed the person's own name). Test `PeopleViewTests.LivesAlone`. Editor by scripted touch: People → Geeta's See → *Lives in* opened her citizen card: "Hut 1 · alone" (`docs/art/s14-217-lives-alone.png`); nothing set up by script; saves restored and checked identical.

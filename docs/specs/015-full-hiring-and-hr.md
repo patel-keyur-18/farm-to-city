@@ -277,6 +277,13 @@ Choices made while building where the spec was silent, each to keep it realistic
 - **Balance flags (settled, ADR 0082):** on 16 seeds the bakery is inside ADR 0079's targets (hired 18,240 a season, payback 7.1; on a loan 18,849); the 13,500 seen at US-114 was 8 seeds and the bot refusing raises.
 - **Settled at the balance step (owner, 2026-10-29, ADR 0082):** sick leave and a course take 1 day, not 2 (half a season was out of proportion); a refused raise loses the worker at the next close; the bots answer as a fair employer; the bakery holds ADR 0079's targets and the dairy's are widened.
 
+### US-219 build notes (2026-10-30, for the owner's review)
+
+- **The button shows only when it can be used.** ADR 0083 §3 had a greyed button saying why for anyone else. In the Editor a baby's card read "Too young to work" three times (subtitle, Work line, button), so the button is left off: the Work line beside it already says why (too young, retired, a job in town).
+- **The words:** "From next season: 24,758 coins in cash + the house (worth 6,420 coins)", on every offer row, at the board's offers too; a second adult from the same house reads "The house is already part of Arjun's pay: all of this is cash". The hand card has a *Housing* row: part of the pay (from the next renewal), or counted in another hand's pay.
+- **Found in the Editor and fixed (both from earlier stories):** a townsperson hired (from the board or the card) got the toast "Your farm hand moved in!": now "Radha works your fields now!". Someone away on a course or off sick showed "back in −1 min 33 s" for up to an hour, because they're back at the next hourly pass: the countdown now runs to that hour.
+- **Rent in the season he's hired:** the household's rent already owed stands (`SetBudget(keepRent)`); a hand bringing his family into a free house keeps spec 014's rule (no rent from the move, the house in his pay from his next renewal).
+
 ## 11. Cut first
 
 1. Reference checks (interview only).
