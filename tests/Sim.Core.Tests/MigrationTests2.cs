@@ -129,6 +129,71 @@ namespace Sim.Core.Tests
             Assert.That(r.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
         }
 
+        /// <summary>A family of two adults renting a finished family house, through one close so their rent is set; then into the season.</summary>
+        private static Household Tenants(Simulation sim)
+        {
+            long ready = StartHouse(sim);
+            sim.AdvanceTo(ready);
+            Building house = sim.State.Land.Buildings.Last(b => HouseRules.IsHouse(sim, b));
+            Household x = AddFamily(sim, house.Id, 30, 28);
+            sim.AdvanceTo(NextClose(sim) + 6 * Hour);
+            Assert.That(x.Rent, Is.GreaterThan(0), "tenants owe rent");
+            return x;
+        }
+
+        // Spec 014 AC-16 (ADR 0083 §1): a tenant hired mid-season pays that season's rent and gets his full cash wage; the house is part
+        // of his pay from his first renewal, and the household pays no rent after it.
+        [Test]
+        public void HandFamily_HireSeason()
+        {
+            Simulation sim = Start();
+            Household x = Tenants(sim);
+            long owed = x.Rent;
+            Citizen ravi = sim.State.Citizens.Citizen(x.Members[0]);
+            Ok(sim, new OfferTownsperson(sim.State.Clock.SimTime, ravi.Id, OfferLevel.Asked));
+            Hand h = P(sim).Hand(ravi.HandId);
+            long asked = h.Wage;
+            Assert.That((h.HutId, h.HousingInKind, x.Rent), Is.EqualTo((0L, 0L, owed)), "at home; full cash wage; this season's rent still owed");
+
+            sim.DrainEvents();
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That(sim.DrainEvents().OfType<RentPaid>().Single(e => e.HouseholdId == x.Id).Amount, Is.EqualTo(owed), "the season he was hired in");
+            long house = MarketRules.Indexed(sim, 6_000_00);
+            Assert.That((h.HousingInKind, h.Wage), Is.EqualTo((house, asked - house)), "from his first renewal");
+            Assert.That(x.Rent, Is.EqualTo(0L));
+
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That(sim.DrainEvents().OfType<RentPaid>().Where(e => e.HouseholdId == x.Id), Is.Empty, "the house is part of his pay");
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+
+        // Spec 014 AC-16 (ADR 0083 §2): two hands from one house: the house comes off the first hand's wage only; when he goes, the next
+        // hand takes it into his pay at his next renewal.
+        [Test]
+        public void HandFamily_HousingOnce()
+        {
+            Simulation sim = Start();
+            Household x = Tenants(sim);
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new OfferTownsperson(t, x.Members[0], OfferLevel.Asked));
+            Ok(sim, new OfferTownsperson(t, x.Members[1], OfferLevel.Asked));
+            Hand first = P(sim).Hand(sim.State.Citizens.Citizen(x.Members[0]).HandId), second = P(sim).Hand(sim.State.Citizens.Citizen(x.Members[1]).HandId);
+            Assert.That(first.Id, Is.LessThan(second.Id));
+            long secondWage = second.Wage;
+
+            sim.AdvanceTo(NextClose(sim));
+            long house = MarketRules.Indexed(sim, 6_000_00);
+            Assert.That((first.HousingInKind, second.HousingInKind), Is.EqualTo((house, 0L)), "one house, one rent");
+            Assert.That(second.Wage, Is.EqualTo(secondWage), "his full wage in cash");
+            Assert.That(MigrationRules.HousedBy(sim, x)?.Id, Is.EqualTo(first.Id), "the card names whose pay the house is in");
+
+            Ok(sim, new DismissHand(sim.State.Clock.SimTime, first.Id));
+            sim.AdvanceTo(NextClose(sim));
+            Assert.That(second.HousingInKind, Is.EqualTo(house), "the next hand takes the house into his pay at his renewal");
+            Assert.That(second.Wage, Is.EqualTo(secondWage - house));
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+
         // AC-7: below 35 at 2 closes in a row, or 2 seasons behind on rent, a household leaves with chance 0.5 a close (never sooner);
         // a hand's household leaving ends his contract.
         [Test]

@@ -35,6 +35,7 @@ namespace Sim.Core.Saves
             SetMix,
             PostJobAt, CheckReference, OfferAt, LetWorkerGo, RunBusinessYourself,
             SendOnCourse, SetLongDays, AnswerHrEvent,
+            OfferTownsperson,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -125,6 +126,7 @@ namespace Sim.Core.Saves
                 case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
                 case RenewContract c: At(c, Tag.RenewContract); w.WriteLong(c.HandId); break;
                 case DismissHand c: At(c, Tag.DismissHand); w.WriteLong(c.HandId); break;
+                case OfferTownsperson c: At(c, Tag.OfferTownsperson); w.WriteLong(c.CitizenId); w.WriteInt((int)c.Level); break;
                 case SetStandingOrder c:
                 {
                     At(c, Tag.SetStandingOrder); w.WriteLong(c.HandId);
@@ -235,6 +237,7 @@ namespace Sim.Core.Saves
                 case Tag.AnswerHrEvent: return new AnswerHrEvent(at, r.ReadLong(), r.ReadInt());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());
+                case Tag.OfferTownsperson: return new OfferTownsperson(at, r.ReadLong(), (OfferLevel)r.ReadInt());
                 case Tag.SetStandingOrder:
                 {
                     long hand = r.ReadLong();

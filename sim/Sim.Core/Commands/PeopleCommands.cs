@@ -186,6 +186,39 @@ namespace Sim.Core.Commands
     /// the rest of the season prepaid (a hand's from your cash, a worker's from the business's); a low offer refused the first time
     /// becomes a counter at the asked wage; any other refusal and they leave. Cash is checked first: a short offer is rejected and they wait.
     /// </summary>
+    /// <summary>
+    /// Offers one of your townspeople work as a farm hand from their card (spec 015 §3.1, ADR 0083 §3): no post or fee, the board's
+    /// offer and answers; they live at home.
+    /// </summary>
+    public sealed class OfferTownsperson : TimedCommand
+    {
+        public long CitizenId { get; }
+        public OfferLevel Level { get; }
+
+        public OfferTownsperson(long at, long citizenId, OfferLevel level = OfferLevel.Asked) : base(at)
+        {
+            CitizenId = citizenId;
+            Level = level;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            PeopleState s = sim.State.People;
+            Citizen c = s == null ? null : sim.State.Citizens?.Citizen(CitizenId);
+            if (c == null || !HouseholdRules.WorksOutside(sim, c)) return CommandResult.Reject(RejectReason.NotAWorker);
+            Applicant a = s.Applicants.Find(x => x.CitizenId == c.Id && x.Place == 0) ?? HiringRules.TownApplicant(sim, c, 0);
+            long wage = HiringRules.OfferWage(sim, a, Level);
+            if (!sim.State.Ledger.CanAfford(PeopleRules.RestOfSeason(sim, wage))) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (a.Id == 0)
+            {
+                a.Id = s.NextApplicantId++;
+                s.Applicants.Add(a);
+            }
+            HiringRules.Offer(sim, a, Level, wage);
+            return CommandResult.Ok;
+        }
+    }
+
     public sealed class OfferContract : TimedCommand
     {
         public long ApplicantId { get; }

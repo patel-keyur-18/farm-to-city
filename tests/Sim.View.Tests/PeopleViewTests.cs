@@ -568,6 +568,47 @@ namespace Sim.View.Tests
             Assert.That(LivesIn(CitizenSheet.Build(ctx, manoj.Id)), Is.EqualTo("Family house 1 · Manoj's family"));
         }
 
+        // Spec 015 AC-11, ADR 0083 §1–3: Offer work as a hand on a townsperson's card (none for a child or an elder); the offer
+        // says the house becomes part of the pay; once one hand has it, the next one's offer and card say his wage is all cash.
+        [Test]
+        public void OfferFromCard()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            Citizen Named(string n) => sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == n);
+            ActionVm Offer(Citizen c) => CitizenSheet.Build(ctx, c.Id).Lines.Single(l => l.Label == "Work").Action;
+            Citizen manoj = Named("Manoj"), usha = Named("Usha"), ravi = Named("Ravi"), kamala = Named("Kamala");
+
+            Assert.That((Offer(manoj).Label, Offer(manoj).Enabled), Is.EqualTo(("Offer work as a hand", true)));
+            Assert.That((Offer(ravi), Offer(kamala)), Is.EqualTo(((ActionVm)null, (ActionVm)null)), "the Work line already says why (too young, retired)");
+
+            SheetVm offer = HiringBoard.TownOffer(ctx, manoj.Id);
+            LineVm asked = offer.Lines.First(l => l.Action != null && l.Action.Kind == ActionKind.Primary);
+            long wage = HiringRules.OfferWage(sim, HiringRules.TownApplicant(sim, manoj, 0), OfferLevel.Asked);
+            long house = Sim.Core.Market.MarketRules.Indexed(sim, 6_000_00);
+            Assert.That(asked.Note, Does.EndWith("From next season: " + ctx.Fmt.Coins(wage - house) + " in cash + the house (worth " + ctx.Fmt.Coins(house) + ")"));
+            Ok(sim, asked.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(manoj.Job, Is.EqualTo(CitizenJob.Hand));
+            Assert.That(HandSheet.Build(ctx, manoj.HandId).Lines.Single(l => l.Label == "Housing").Value, Does.StartWith("Family house, part of the pay from the next renewal"));
+
+            Assert.That(HiringBoard.TownOffer(ctx, usha.Id).Lines.First(l => l.Action != null).Note, Does.EndWith("The house is already part of Manoj's pay: all of this is cash"));
+            Ok(sim, new OfferTownsperson(sim.State.Clock.SimTime, usha.Id));
+            Assert.That(HandSheet.Build(ctx, usha.HandId).Lines.Single(l => l.Label == "Housing").Value, Is.EqualTo("Family house, counted in Manoj's pay: this wage is all cash"));
+        }
+
+        // Editor review (2026-10-30): someone away on a course is back at the first hourly pass after it ends, so the countdown runs to
+        // that hour and is never negative ("back in −1 min 33 s" was seen).
+        [Test]
+        public void BackIn_NeverNegative()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            long hour = (ctx.Now / 3600 + 1) * 3600;
+            Assert.That(StaffView.BackIn(ctx, hour - 3600 + 60), Is.EqualTo(hour - ctx.Now), "ended this hour: back at the next pass");
+            Assert.That(StaffView.BackIn(ctx, hour - 7200), Is.EqualTo(0L));
+            Assert.That(StaffView.BackIn(ctx, hour + 3600), Is.EqualTo(hour + 3600 - ctx.Now));
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {

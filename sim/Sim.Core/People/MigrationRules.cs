@@ -20,13 +20,31 @@ namespace Sim.Core.People
 
         private const long Hour = 3600;
 
-        /// <summary>The house's rent taken off a hand's wage while his household lives in a family house (§3.6), else 0.</summary>
+        /// <summary>
+        /// The house's rent taken off a hand's wage while his household lives in a family house (§3.6), else 0. Once a house (ADR 0083
+        /// §2): only the household's first hand (by id) has it in his pay.
+        /// </summary>
         public static long HousingInKind(Simulation sim, Hand h)
         {
             Citizen c = sim.State.Citizens?.OfHand(h.Id);
             Household x = c == null ? null : sim.State.Citizens.Household(c.HouseholdId);
-            Building home = x == null ? null : sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
-            return home != null && HouseRules.IsHouse(sim, home) ? MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason) : 0;
+            return x != null && HousedBy(sim, x) == h ? MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason) : 0;
+        }
+
+        /// <summary>The hand whose pay the household's family house is part of: its first hand by id; null if none or not in a house.</summary>
+        public static Hand HousedBy(Simulation sim, Household x)
+        {
+            Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            if (home == null || !HouseRules.IsHouse(sim, home)) return null;
+            Hand first = null;
+            foreach (long id in x.Members)
+            {
+                Citizen m = sim.State.Citizens.Citizen(id);
+                if (m.Job != CitizenJob.Hand) continue;
+                Hand h = sim.State.People.Hand(m.HandId);
+                if (h != null && (first == null || h.Id < first.Id)) first = h;
+            }
+            return first;
         }
 
         /// <summary>A hand under contract whose household is just him in his hut (§3.13), first by id; null if none.</summary>

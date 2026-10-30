@@ -99,7 +99,8 @@ namespace Sim.Core.People
         internal static void TownHandHired(Simulation sim, Hand h, Citizen c)
         {
             Hire(sim, c, h);
-            HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
+            // This season's rent stands and his wage is all cash; the house is part of his pay from his first renewal (ADR 0083 §1).
+            HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId), keepRent: true);
         }
 
         private static void Hire(Simulation sim, Citizen c, Hand h)

@@ -290,6 +290,16 @@ namespace Sim.View.Views
     /// </summary>
     public static class StaffView
     {
+        /// <summary>
+        /// Time until someone away (a course, sick leave) is back: the sim brings them back at the first hourly pass at or after
+        /// <paramref name="until"/>, so count to that hour, never below zero.
+        /// </summary>
+        public static long BackIn(ViewContext ctx, long until)
+        {
+            const long Hour = 3600;
+            return System.Math.Max(0, (until + Hour - 1) / Hour * Hour - ctx.Now);
+        }
+
         /// <summary>The output row for a farm hand (place 0) or a business's worker (place = the business's id).</summary>
         public static LineVm Output(ViewContext ctx, long place, IStaff w)
         {
@@ -298,9 +308,9 @@ namespace Sim.View.Views
             long whyId = place == 0 ? w.Id : place;
             LineVm line;
             if (w.CourseUntil != 0)
-                line = new LineVm(s.Get("staff.output"), s.Get("staff.onCourse", "time", ctx.Fmt.Duration(w.CourseUntil - ctx.Now)), why, whyId);
+                line = new LineVm(s.Get("staff.output"), s.Get("staff.onCourse", "time", ctx.Fmt.Duration(StaffView.BackIn(ctx, w.CourseUntil))), why, whyId);
             else if (w.Hr.SickUntil != 0)
-                line = new LineVm(s.Get("staff.output"), s.Get("staff.sick", "time", ctx.Fmt.Duration(w.Hr.SickUntil - ctx.Now)), why, whyId);
+                line = new LineVm(s.Get("staff.output"), s.Get("staff.sick", "time", ctx.Fmt.Duration(StaffView.BackIn(ctx, w.Hr.SickUntil))), why, whyId);
             else
             {
                 int band = Band(ctx, WorkRules.RelativeOutput(ctx.Sim, w));
@@ -373,6 +383,15 @@ namespace Sim.View.Views
             if (home != null)
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.home"), TownWords.Home(ctx, home.HomeId) + " · " + TownWords.LivesWith(ctx, home), "hand.home", h.Id)
                     { Opens = new SheetRequest(home.Members.Count == 1 ? "Citizen" : "Household", home.Members.Count == 1 ? me.Id : home.Id) });
+            // The family house as part of the pay, once a house (spec 014 §3.6, ADR 0083 §2).
+            Hand housed = home == null ? null : MigrationRules.HousedBy(sim, home);
+            if (housed != null)
+            {
+                long rent = MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason);
+                string value = housed != h ? ctx.Strings.Get("hand.housingOther", "name", PeopleWords.Name(ctx, housed.Name))
+                    : ctx.Strings.Get(h.HousingInKind > 0 ? "hand.housingInPay" : "hand.housingNext", "house", ctx.Fmt.Coins(h.HousingInKind > 0 ? h.HousingInKind : rent));
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.housing"), value, "hand.wage", h.Id));
+            }
             foreach (int t in new[] { h.Trait1, h.Trait2 })
                 vm.Lines.Add(new LineVm(PeopleWords.Trait(ctx, t), ctx.Strings.Get(sim.Config.Game.People.Traits[t].NameKey + ".why")));
             if (h.Contract == ContractState.Active)

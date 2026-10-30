@@ -431,6 +431,16 @@ namespace Sim.View.Views
     /// </summary>
     public static class CitizenSheet
     {
+        /// <summary>
+        /// Offer work as a hand (ADR 0083 §3), only for an adult who works outside: for anyone else the Work line beside it already says
+        /// why not (too young, retired, a job in town), so a greyed button would only repeat it (Editor review, 2026-10-30).
+        /// </summary>
+        private static ActionVm OfferWork(ViewContext ctx, Citizen c)
+        {
+            if (!HouseholdRules.WorksOutside(ctx.Sim, c)) return null;
+            return ActionVm.Open("offerWork:" + c.Id, ctx.Strings.Get("citizen.offerWork"), new SheetRequest("TownOffer", c.Id));
+        }
+
         public static SheetVm Build(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;
@@ -448,6 +458,7 @@ namespace Sim.View.Views
                         { Opens = new SheetRequest("Household", home.Id) });
                 var job = new LineVm(s.Get("citizen.job"), TownWords.Job(ctx, c), c.Job == CitizenJob.Hand ? null : "citizen.job", c.Id);
                 if (c.Job == CitizenJob.Hand) job.Action = ActionVm.Open("hand:" + c.HandId, s.Get("action.see"), new SheetRequest("Hand", c.HandId));
+                else job.Action = OfferWork(ctx, c);
                 vm.Lines.Add(job);
             }
             string from = TownWords.Village(ctx, c);

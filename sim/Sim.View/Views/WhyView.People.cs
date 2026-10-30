@@ -222,12 +222,12 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.staffOutput.title", words, "name", Name(ctx, w));
             if (w.CourseUntil != 0)
             {
-                Text(vm, ctx, "why.staffOutput.course", "time", ctx.Fmt.Duration(w.CourseUntil - ctx.Now), "gain", ctx.Fmt.Integer(sim.Config.Game.People.Work.CourseGain));
+                Text(vm, ctx, "why.staffOutput.course", "time", ctx.Fmt.Duration(StaffView.BackIn(ctx, w.CourseUntil)), "gain", ctx.Fmt.Integer(sim.Config.Game.People.Work.CourseGain));
                 return vm;
             }
             if (w.Hr.SickUntil != 0)
             {
-                Text(vm, ctx, "why.staffOutput.sick", "time", ctx.Fmt.Duration(w.Hr.SickUntil - ctx.Now));
+                Text(vm, ctx, "why.staffOutput.sick", "time", ctx.Fmt.Duration(StaffView.BackIn(ctx, w.Hr.SickUntil)));
                 return vm;
             }
             HandDef h = sim.Config.Game.People.Hand;

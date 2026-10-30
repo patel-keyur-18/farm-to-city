@@ -281,7 +281,13 @@ namespace Game.Presentation
                     case FounderSick _: Toast(_strings.Get("toast.sick")); break;
                     case ApplicantArrived _: Toast(_strings.Get("toast.applicant")); break;
                     case HandHutBuilt _: Toast(_strings.Get("toast.hutBuilt")); break;
-                    case HandHired _: Toast(_strings.Get("toast.handHired")); break;
+                    case HandHired hh:
+                        // One of your townspeople stays at home (ADR 0083): nobody moved in.
+                        Hand hired = Sim.State.People.Hand(hh.HandId);
+                        Toast(hired != null && hired.HutId == 0
+                            ? _strings.Get("toast.townHandHired", "name", _strings.Get(Sim.Config.Game.People.Names[hired.Name].NameKey))
+                            : _strings.Get("toast.handHired"));
+                        break;
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                 }
@@ -398,6 +404,7 @@ namespace Game.Presentation
                     if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
                     _sheet.Show(HiringBoard.Offer(_ctx, r.Id), refreshOnly);
                     break;
+                case "TownOffer": _sheet.Show(HiringBoard.TownOffer(_ctx, r.Id), refreshOnly); break; // offering work from a card (ADR 0083)
                 case "Hand":
                     if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left
                     _sheet.Show(HandSheet.Build(_ctx, r.Id), refreshOnly);

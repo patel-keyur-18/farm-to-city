@@ -133,14 +133,21 @@ namespace Sim.Core.People
             foreach (Citizen c in TownCandidates(sim, place))
             {
                 if (room-- <= 0) break;
-                long id = s.NextApplicantId++;
-                s.Applicants.Add(new Applicant
-                {
-                    Id = id, Name = c.Name, Skill = SkillFor(sim, c, place), Trait1 = c.Trait1, Trait2 = c.Trait2, SecondTraitKnown = true, SkillKnown = true,
-                    ArrivedAt = sim.State.Clock.SimTime, Place = place, CitizenId = c.Id, AboveMarket = s.PostAt(place)?.AboveMarket ?? false,
-                });
-                sim.Emit(new ApplicantArrived(sim.State.Clock.SimTime, id));
+                Applicant a = TownApplicant(sim, c, place);
+                a.Id = s.NextApplicantId++;
+                s.Applicants.Add(a);
+                sim.Emit(new ApplicantArrived(sim.State.Clock.SimTime, a.Id));
             }
+        }
+
+        /// <summary>A townsperson as an applicant for <paramref name="place"/> (not yet listed, id 0): known exactly, at the place's post's wage.</summary>
+        public static Applicant TownApplicant(Simulation sim, Citizen c, long place)
+        {
+            return new Applicant
+            {
+                Name = c.Name, Skill = SkillFor(sim, c, place), Trait1 = c.Trait1, Trait2 = c.Trait2, SecondTraitKnown = true, SkillKnown = true,
+                ArrivedAt = sim.State.Clock.SimTime, Place = place, CitizenId = c.Id, AboveMarket = sim.State.People.PostAt(place)?.AboveMarket ?? false,
+            };
         }
 
         /// <summary>

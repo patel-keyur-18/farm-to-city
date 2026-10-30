@@ -166,6 +166,24 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             Applicant a = sim.State.People.Applicant(applicantId);
             if (a == null) return new SheetVm { Icon = "letter", Title = s.Get("reject.UnknownApplicant") };
+            return Offer(ctx, a, (t, l) => new OfferContract(t, applicantId, l));
+        }
+
+        /// <summary>Offering work as a hand from a townsperson's card (ADR 0083 §3): the board's offer, no post, sent as <see cref="OfferTownsperson"/>.</summary>
+        public static SheetVm TownOffer(ViewContext ctx, long citizenId)
+        {
+            Simulation sim = ctx.Sim;
+            Citizen c = sim.State.Citizens?.Citizen(citizenId);
+            if (c == null || !HouseholdRules.WorksOutside(sim, c)) return new SheetVm { Icon = "letter", Title = ctx.Reject(RejectReason.NotAWorker) };
+            Applicant a = sim.State.People.Applicants.Find(x => x.CitizenId == c.Id && x.Place == 0) ?? HiringRules.TownApplicant(sim, c, 0);
+            return Offer(ctx, a, (t, l) => new OfferTownsperson(t, citizenId, l));
+        }
+
+        private static SheetVm Offer(ViewContext ctx, Applicant a, System.Func<long, OfferLevel, Command> send)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            string house = Housing(ctx, a);
             var vm = new SheetVm
             {
                 Icon = PeopleWords.Female(ctx, a.Name) ? "person_hand_f" : "person_hand_m", Title = s.Get("board.offerTitle", "name", PeopleWords.Name(ctx, a.Name)),
@@ -181,12 +199,35 @@ namespace Sim.View.Views
                 string at = level == OfferLevel.Asked ? "board.atAsked" : level == OfferLevel.Low ? "board.atLow" : "board.atHigh";
                 string note = level == OfferLevel.Asked ? "board.noteAsked" : level == OfferLevel.Low ? "board.noteLow" : "board.noteHigh";
                 var line = new LineVm(s.Get(at, "wage", ctx.Fmt.Coins(wage)), Chance(ctx, HiringRules.AcceptChance(sim, a, level)), "jobWage", a.Id) { Note = s.Get(note) };
+                if (house != null) line.Note += ". " + (house.Length == 0 ? HouseInPay(ctx, wage) : house);
                 line.Action = ActionVm.Checked(ctx, "offer" + level + ":" + a.Id, s.Get("action.offer"),
                     s.Get(business ? "board.nowBusiness" : "board.now", "now", ctx.Fmt.Coins(PeopleRules.RestOfSeason(sim, wage))), level == OfferLevel.Asked ? ActionKind.Primary : ActionKind.Secondary,
-                    t => new OfferContract(t, applicantId, l));
+                    t => send(t, l));
                 vm.Lines.Add(line);
             }
             return vm;
+        }
+
+        /// <summary>
+        /// The house as part of a townsperson's pay (spec 014 §3.6, ADR 0083): null when it doesn't apply (a migrant, a business job, not
+        /// in a family house); empty when the house would be part of this hand's pay (see <see cref="HouseInPay"/>); else the sentence
+        /// that it's already in another hand's pay.
+        /// </summary>
+        private static string Housing(ViewContext ctx, Applicant a)
+        {
+            Simulation sim = ctx.Sim;
+            if (a.Place != 0 || a.CitizenId == 0) return null;
+            Household x = sim.State.Citizens.Household(sim.State.Citizens.Citizen(a.CitizenId).HouseholdId);
+            if (x == null || !HouseholdRules.InFamilyHouse(sim, x)) return null;
+            Hand other = MigrationRules.HousedBy(sim, x);
+            return other == null ? "" : ctx.Strings.Get("board.houseInOthersPay", "name", PeopleWords.Name(ctx, other.Name));
+        }
+
+        /// <summary>"From next season: 24,000 cash + the house (6,000)".</summary>
+        private static string HouseInPay(ViewContext ctx, long wage)
+        {
+            long house = MarketRules.Indexed(ctx.Sim, ctx.Sim.Config.Game.Population.RentPerSeason);
+            return ctx.Strings.Get("board.houseInPay", "cash", ctx.Fmt.Coins(System.Math.Max(0, wage - house)), "house", ctx.Fmt.Coins(house));
         }
 
         /// <summary>A chance in words, never a number (ADR 0039 §7): certain, very likely, likely, maybe.</summary>

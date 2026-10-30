@@ -89,6 +89,36 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new PostJob(sim.State.Clock.SimTime, mill.Id, false)).Reason, Is.EqualTo(RejectReason.AlreadyStaffed));
         }
 
+        // AC-11 (ADR 0083 §3): a townsperson who works outside is offered work as a hand from their card: no post, no fee, accepted at
+        // the asked wage, living at home; refused with a reason for a child, someone with a town job, or short of cash.
+        [Test]
+        public void Townsperson_FromCard()
+        {
+            Simulation sim = Start();
+            Household x = Townsfolk(sim);
+            Household kids = AddFamily(sim, x.HomeId, 12);
+            long t = sim.State.Clock.SimTime;
+            Assert.That(P(sim).Posts, Is.Empty);
+            Citizen b = sim.State.Citizens.Citizen(x.Members[1]);
+            long cash = sim.State.Ledger.Cash;
+            Applicant asked = HiringRules.TownApplicant(sim, b, 0);
+            long wage = HiringRules.OfferWage(sim, asked, OfferLevel.Asked);
+
+            Ok(sim, new OfferTownsperson(t, b.Id, OfferLevel.Asked));
+            Hand h = P(sim).Hand(b.HandId);
+            Assert.That((h.Wage, h.HutId, h.Skill), Is.EqualTo((wage, 0L, Fixed.FromInt(55))), "the asked wage for their farming skill, at home");
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - PeopleRules.RestOfSeason(sim, wage)), "no post fee: only the season's wage");
+            Assert.That(P(sim).Applicants.Any(a => a.CitizenId == b.Id), Is.False);
+            Assert.That(sim.Execute(new OfferTownsperson(t, b.Id, OfferLevel.Asked)).Reason, Is.EqualTo(RejectReason.NotAWorker), "already your hand");
+            Assert.That(sim.Execute(new OfferTownsperson(t, kids.Members[0], OfferLevel.Asked)).Reason, Is.EqualTo(RejectReason.NotAWorker), "a child");
+            Assert.That(sim.Execute(new OfferTownsperson(t, 999, OfferLevel.Asked)).Reason, Is.EqualTo(RejectReason.NotAWorker));
+
+            CashTo(sim, 100);
+            Assert.That(sim.Execute(new OfferTownsperson(t, x.Members[0], OfferLevel.Asked)).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
+            Assert.That(P(sim).Applicants, Is.Empty, "a refused command leaves no applicant behind");
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+
         // §3.1: strangers never crowd your own people out: with three migrants already asking for the hut, word sent still brings your
         // townspeople, and they need no hut.
         [Test]

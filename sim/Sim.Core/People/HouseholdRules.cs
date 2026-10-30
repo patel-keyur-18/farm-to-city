@@ -104,8 +104,9 @@ namespace Sim.Core.People
         /// Sets the season's budget (§3.5): income ÷ adult equivalents gives the food share; food, rent, clothing 8%, health 5%,
         /// education 5%, the rest half leisure and half to be saved (banked at the close). Short of what eating enough costs, savings
         /// make up the food first.
+        /// With <paramref name="keepRent"/> the season's rent already owed stands (a tenant hired as a hand mid-season, ADR 0083 §1).
         /// </summary>
-        public static void SetBudget(Simulation sim, Household x)
+        public static void SetBudget(Simulation sim, Household x, bool keepRent = false)
         {
             PopulationDefs p = sim.Config.Game.Population;
             long income = Income(sim, x, out long outside);
@@ -115,7 +116,7 @@ namespace Sim.Core.People
             x.Income = income;
             x.Food = Money.MulRate(income, FoodShare(sim, perPerson));
             x.FoodNeed = Money.MulRate(MarketRules.Indexed(sim, p.FoodBasketPerPerson), ae);
-            x.Rent = InFamilyHouse(sim, x) && !HasHand(sim, x) ? MarketRules.Indexed(sim, p.RentPerSeason) : 0;
+            if (!keepRent) x.Rent = InFamilyHouse(sim, x) && !HasHand(sim, x) ? MarketRules.Indexed(sim, p.RentPerSeason) : 0;
             x.Clothing = Money.MulRate(income, p.ClothingShare);
             x.HealthCare = Money.MulRate(income, p.HealthShare);
             x.Schooling = Money.MulRate(income, p.EducationShare);

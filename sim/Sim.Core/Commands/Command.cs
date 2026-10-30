@@ -144,6 +144,8 @@ namespace Sim.Core.Commands
         UnknownEvent,
         /// <summary>Off sick: back in a day or two.</summary>
         OffSick,
+        /// <summary>Not someone you can offer work: under 18, retired, or already working in town (ADR 0083).</summary>
+        NotAWorker,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
