@@ -80,6 +80,7 @@ namespace Game.Presentation.Map
             public int WorkTile = -1; // the field being worked, or −1 at home
             public float WorkStart = -1f, WorkFor;
             public bool Leaving;
+            public Vector3? LeaveTo; // a labourer's way out: the west edge for a neighbour, their house for your people; else off to the west
             public float Phase;
         }
 
@@ -545,7 +546,7 @@ namespace Game.Presentation.Map
                 case PersonKind.Founder: return "person_founder";
                 case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
                 case PersonKind.Citizen: case PersonKind.Customer: return "person_" + p.Look;
-                default: return p.Female ? "person_labourer_f" : "person_labourer_m";
+                default: return p.Look != null ? "person_" + p.Look : p.Female ? "person_labourer_f" : "person_labourer_m"; // your townspeople as themselves (ADR 0083)
             }
         }
 
@@ -564,13 +565,16 @@ namespace Game.Presentation.Map
                     v.Body = NewRenderer("person:" + p.Key, SpriteBank.Rendered(v.Sprite + "_front"), start, 0);
                     v.Shadow = NewRenderer("personShadow:" + p.Key, SpriteBank.ContactShadow, start, 0);
                     v.Shadow.transform.localScale = new Vector3(0.11f, 0.11f, 1f);
-                    // A day labourer walks in from the west edge of the valley; everyone else is simply there.
-                    v.Pos = animate && p.Kind == PersonKind.Labourer ? TileCentre(_width * (p.TileId / _width)) + new Vector3(-1.2f, -0.6f, 0) : start;
+                    // A neighbour hired for the day walks in from the west edge of the valley, one of your people from their house (ADR
+                    // 0083 §5); everyone else is simply there.
+                    bool town = p.Kind == PersonKind.Labourer && p.HomeHut != 0;
+                    v.Pos = animate && p.Kind == PersonKind.Labourer ? (town ? home : WestEdge(p.TileId)) : start;
                     v.Target = start;
                     if (p.Patrol.Count > 0) { v.WorkTile = p.Patrol[0]; v.PointsLeft = 2; }
                     _people[p.Key] = v;
                 }
                 v.Home = home;
+                v.LeaveTo = p.Kind != PersonKind.Labourer ? (Vector3?)null : p.HomeHut != 0 ? home : WestEdge(p.TileId);
                 v.Leaving = false;
                 bool changed = !SamePatrol(v.Patrol, p.Patrol);
                 v.Patrol.Clear();
@@ -591,9 +595,12 @@ namespace Game.Presentation.Map
                 {
                     kv.Value.Leaving = true;
                     kv.Value.WorkTile = -1;
-                    kv.Value.Target = kv.Value.Pos + new Vector3(-2.5f, -1.25f, 0); // off to the west, then gone
+                    kv.Value.Target = kv.Value.LeaveTo ?? kv.Value.Pos + new Vector3(-2.5f, -1.25f, 0); // then gone
                 }
         }
+
+        /// <summary>Just past the valley's west edge on <paramref name="tile"/>'s row: where neighbours hired for the day come and go.</summary>
+        private Vector3 WestEdge(int tile) { return TileCentre(_width * (tile / _width)) + new Vector3(-1.2f, -0.6f, 0); }
 
         private static bool SamePatrol(List<int> a, List<int> b)
         {
@@ -610,6 +617,7 @@ namespace Game.Presentation.Map
                 case PersonKind.Hand: return _handHuts.ContainsKey(p.HomeHut) ? HutDoor(p.HomeHut, p.HomeTile) : HouseYard(p.HomeHut, p.HomeTile); // a hand whose family has a house
                 case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
                 case PersonKind.Customer: return MillQueue(p.HomeHut, p.HomeTile, p.Key[p.Key.Length - 1] - '0');
+                case PersonKind.Labourer when p.HomeHut != 0: return HouseYard(p.HomeHut, p.HomeTile); // one of your people: their house
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }
         }

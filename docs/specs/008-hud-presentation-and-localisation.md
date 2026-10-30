@@ -524,6 +524,8 @@ The owner's device run passed apart from seven points, all settled in ADR 0044:
 3. **Weather sound:** a rain loop and distant thunder behind the Sound switch (amends ADR 0044 §2) (§3.13).
 4. **Weather look ▸** on the developer panel, look only; frame time measured in the heaviest weathers on the device (§3.14, AC-21).
 
+**US-220 build notes (2026-10-30):** the working day is one rule (`MapView.WorkingHours`, 7:00–19:00) for the founder, hands, labourers and the townspeople at home. Found in the Editor and fixed: a hand whose order had acted in the last hour walked out to that field at night (the order's field was put back on the cleared patrol); a "pop" tween on a construction site destroyed in the same moment threw every frame and froze every tween on screen (toasts, cards) until the scene changed: `Tweens` now drops a tween whose object is gone.
+
 ## 11. Cut first
 
 1. Feedback sounds and haptics.

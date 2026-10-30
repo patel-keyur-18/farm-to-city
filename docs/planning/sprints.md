@@ -666,8 +666,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-112 | Hiring board | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
 | US-113 | Productivity and training | [F11.4](features/F11.4-full-hiring-and-hr.md) | 8 | Must | Done |
 | US-114 | HR events | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Should | Done (ADR 0082) |
-| US-219 | Your townspeople at work on your fields (owner request, ADR 0083) | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | Done (awaiting the owner's review) |
-| US-220 | Your townspeople seen at work as labourers (owner request, ADR 0083) | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | To do |
+| US-219 | Your townspeople at work on your fields (owner request, ADR 0083) | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | Done (approved) |
+| US-220 | Your townspeople seen at work as labourers (owner request, ADR 0083) | [F06.1](features/F06.1-day-labourers.md) | 2 | Should | Done (awaiting the owner's review) |
 | US-221 | Your season, earned and spent (owner request; spec 019 amended, ADR 0083; save schema 12) | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Must | To do (spec 019 re-approval first) |
 | US-222 | The weather on the map (owner request, ADR 0083) | [F08.6](features/F08.6-living-weather.md) | 6 | Should | To do (the look previewed and approved first) |
 

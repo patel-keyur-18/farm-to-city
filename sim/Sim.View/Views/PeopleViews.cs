@@ -179,13 +179,28 @@ namespace Sim.View.Views
             };
             vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
 
-            // Labourers at work today.
+            // Labourers at work: your townspeople by name (ADR 0083 §6), then the neighbours together; out of working hours, home for the night.
+            bool night = !MapView.WorkingHours(ctx.Now % 86400);
+            long morning = ctx.Now / 86400 * 86400 + 7 * 3600 + (ctx.Now % 86400 >= 7 * 3600 ? 86400 : 0); // the next 7:00
+            string Night(long hiredUntil) => s.Get(hiredUntil > morning ? "people.nightNote" : "people.nightOff"); // back only if still hired
+            var town = new List<Citizen>();
+            foreach (Citizen c in PeopleRules.TownLabourers(sim)) if (c.Labouring(ctx.Now)) town.Add(c);
             int working = 0;
             long until = 0;
             foreach (Neighbour n in p.Roster) if (n.Hired) { working++; if (n.Until > until) until = n.Until; }
+            if (town.Count + working > 0) vm.Lines.Add(LineVm.Header(s.Plural("people.labourersN", town.Count + working)));
+            foreach (Citizen c in town)
+            {
+                long home = sim.State.Citizens.Household(c.HouseholdId)?.HomeId ?? 0;
+                vm.Lines.Add(new LineVm(TownWords.Name(ctx, c), s.Get("people.workingTill", "time", ForecastView.AtTime(ctx, c.LabourUntil)), "free")
+                {
+                    Icon = TownWords.Portrait(ctx, c), Note = night ? Night(c.LabourUntil) : TownWords.Home(ctx, home),
+                    Action = ActionVm.Open("citizen:" + c.Id, s.Get("action.see"), new SheetRequest("Citizen", c.Id)),
+                });
+            }
             if (working > 0)
-                vm.Lines.Add(new LineVm(s.Plural("people.workingN", working), s.Get("people.workingTill", "time", ForecastView.AtTime(ctx, until)), "free")
-                    { Icon = "person_labourer_m", Note = s.Get("people.workingNote") });
+                vm.Lines.Add(new LineVm(s.Plural("people.neighboursN", working), s.Get("people.workingTill", "time", ForecastView.AtTime(ctx, until)), "free")
+                    { Icon = "person_labourer_m", Note = night ? Night(until) : s.Get("people.workingNote") });
 
             // Hands.
             vm.Lines.Add(LineVm.Header(s.Get("people.hands")));
@@ -201,7 +216,8 @@ namespace Sim.View.Views
                     lapsed ? "hand.lapse" : "hand.hours", h.Id)
                 {
                     Stars = PeopleWords.Stars(ctx, skill, skill), Icon = HandIcon(ctx, h.Name),
-                    Note = lapsed ? s.Get("people.unpaid") : targets.Count == 0 ? s.Get("people.handNoOrders") : s.Get("people.handOrders", "list", string.Join(", ", targets)),
+                    Note = lapsed ? s.Get("people.unpaid") : (night ? s.Get("people.nightNote") + " · " : "")
+                        + (targets.Count == 0 ? s.Get("people.handNoOrders") : s.Get("people.handOrders", "list", string.Join(", ", targets))),
                     NoteTone = lapsed ? Tone.Warn : Tone.Plain,
                 };
                 line.Action = lapsed

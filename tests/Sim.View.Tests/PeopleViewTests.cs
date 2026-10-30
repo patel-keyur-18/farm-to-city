@@ -24,6 +24,13 @@ namespace Sim.View.Tests
 
         private static void Ok(Simulation sim, Command c) { Assert.That(sim.Execute(c).Accepted, Is.True, c.GetType().Name); }
 
+        /// <summary>On to 10:00 if it's outside the map's working day (ADR 0083 §5: people are home at night).</summary>
+        private static void Daytime(Simulation sim)
+        {
+            long t = sim.State.Clock.SimTime;
+            if (!MapView.WorkingHours(t % Day)) sim.AdvanceTo(t / Day * Day + (t % Day >= 19 * Hour ? Day : 0) + 10 * Hour);
+        }
+
         /// <summary>A hut on field 18, then a hand (the first applicant who accepts).</summary>
         private static Hand Hire(Simulation sim)
         {
@@ -286,6 +293,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             Hand h = Hire(sim);
+            Daytime(sim);
             long t = sim.State.Clock.SimTime;
             Ok(sim, new Sow(t, 85, "radish", SeedSource.Certified, "none"));
             Ok(sim, new Sow(t, 86, "radish", SeedSource.Certified, "none"));
@@ -314,6 +322,7 @@ namespace Sim.View.Tests
         public void PeopleSheet_HiresTillCropsIn()
         {
             Simulation sim = Rich();
+            Daytime(sim);
             long t = sim.State.Clock.SimTime;
             SheetVm people = PeopleSheet.Hire(ViewKit2.Context(sim));
             Assert.That(people.Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
@@ -327,7 +336,7 @@ namespace Sim.View.Tests
             Assert.That(hires[0].Label, Is.EqualTo("1 labourer till harvest"));
             Assert.That(sim.Execute(hires[0].Action.Create(t)).Accepted, Is.True);
             Assert.That(PeopleSheet.Hire(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
-            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Icon == "person_labourer_m" && l.Note != null).Label, Is.EqualTo("1 labourer working"));
+            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Icon == "person_labourer_m" && l.Note != null).Label, Is.EqualTo("1 from a nearby village"));
             Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Labourer).Patrol, Is.EqualTo(new[] { 86 }));
         }
 
@@ -609,6 +618,32 @@ namespace Sim.View.Tests
             Assert.That(StaffView.BackIn(ctx, hour + 3600), Is.EqualTo(hour + 3600 - ctx.Now));
         }
 
+        // Spec 014 AC-17, ADR 0083 §6 and the clarity line (owner, 2026-10-30): the People sheet counts your townspeople at work and names
+        // each (their house, opening their card), the neighbours on one row; out of working hours, everyone is home for the night.
+        [Test]
+        public void TownLabourers_Named()
+        {
+            Simulation sim = MapViewTests.Hired(10);
+            ViewContext ctx = ViewKit2.Context(sim);
+            SheetVm day = PeopleSheet.Build(ctx);
+            Assert.That(day.Lines.Any(l => l.IsHeader && l.Label == "3 labourers at work"), Is.True, "your townspeople counted");
+            LineVm manoj = day.Lines.Single(l => l.Label == "Manoj"), usha = day.Lines.Single(l => l.Label == "Usha");
+            Assert.That((manoj.Note, manoj.Action.Opens?.Kind), Is.EqualTo(("Family house 1", "Citizen")));
+            Assert.That(usha.Value, Does.StartWith("Till "));
+            Assert.That(day.Lines.Single(l => l.Label == "1 from a nearby village").Note, Is.EqualTo("They harvest ripe fields with no hand's order, then go home"));
+
+            sim = MapViewTests.Hired(21);
+            ctx = ViewKit2.Context(sim);
+            Citizen m = sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == "Manoj");
+            long morning = ctx.Now / Day * Day + Day + 7 * Hour;
+            string expected = m.LabourUntil > morning ? "Home for the night · back at 7:00" : "Home for the night"; // back only if still hired
+            SheetVm night = PeopleSheet.Build(ctx);
+            Assert.That(night.Lines.Single(l => l.Label == "Manoj").Note, Is.EqualTo(expected));
+            Assert.That(night.Lines.Single(l => l.Label == "1 from a nearby village").Note, Is.EqualTo(expected));
+            string hand = PeopleWords.Name(ViewKit2.Context(sim), sim.State.People.Hands[0].Name);
+            Assert.That(night.Lines.Single(l => l.Label == hand).Note, Does.StartWith("Home for the night · back at 7:00 · "));
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {
@@ -619,7 +654,7 @@ namespace Sim.View.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 12 * Hour);
             MapVm map = MapView.Build(ViewKit2.Context(sim));
             Assert.That(map.People.Count(p => p.Kind == PersonKind.Founder), Is.EqualTo(1));
-            Assert.That(map.People.Count(p => p.Kind == PersonKind.Labourer), Is.EqualTo(PeopleRules.DayLabourHours(sim) > Fixed.Zero ? 2 : 0));
+            Assert.That(map.People.Count(p => p.Kind == PersonKind.Labourer), Is.EqualTo(PeopleRules.DayLabourHours(sim) > Fixed.Zero && MapView.WorkingHours(map.SecondOfDay) ? 2 : 0), "home at night (ADR 0083 §5)");
             Assert.That(map.Constructions.Single().Progress, Is.EqualTo(0.5f).Within(0.05f));
             ulong hash = sim.State.ComputeHash();
             ViewContext ctx = ViewKit2.Context(sim);

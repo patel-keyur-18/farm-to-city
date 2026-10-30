@@ -603,7 +603,7 @@ namespace Sim.View.Views
                 map.HouseSites.Add(new ConstructionVm { Id = c.Id, TileId = c.TileId, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
                 map.Tiles[c.TileId].Houses++;
             }
-            if (map.SecondOfDay < 7 * 3600 || map.SecondOfDay >= 19 * 3600) return;
+            if (!WorkingHours(map.SecondOfDay)) return;
             foreach (Sim.Core.People.Household x in s.Households)
             {
                 if (!Sim.Core.People.HouseholdRules.InFamilyHouse(sim, x)) continue;
@@ -612,7 +612,7 @@ namespace Sim.View.Views
                 foreach (long id in x.Members)
                 {
                     Sim.Core.People.Citizen c = s.Citizen(id);
-                    if (c.Job == Sim.Core.People.CitizenJob.Hand) continue; // at work
+                    if (c.Job == Sim.Core.People.CitizenJob.Hand || c.Labouring(ctx.Now)) continue; // at work
                     if (Sim.Core.People.HouseholdRules.IsChild(sim, c)) { if (child == null) child = c; }
                     else if (grown == null && (c.Female || Sim.Core.People.HouseholdRules.IsElder(sim, c))) grown = c;
                 }
@@ -622,6 +622,9 @@ namespace Sim.View.Views
                             HomeHut = home.Id, Look = Look(sim, c) });
             }
         }
+
+        /// <summary>The village's working day on the map, 7:00 to 19:00 (ADR 0083 §5): people are on the fields, or at home outside it.</summary>
+        public static bool WorkingHours(long secondOfDay) { return secondOfDay >= 7 * 3600 && secondOfDay < 19 * 3600; }
 
         /// <summary>A citizen's sprite: a child, an elder, or a grown man or woman.</summary>
         public static string Look(Simulation sim, Sim.Core.People.Citizen c)
@@ -652,9 +655,11 @@ namespace Sim.View.Views
             var free = new List<int>(growing);
             if (p != null) foreach (Sim.Core.People.StandingOrder o in p.Orders) if (o.Kind == Sim.Core.People.OrderTargetKind.Field) free.Remove((int)o.Target);
 
-            // The founder tends the growing fields nobody else looks after; home is the house door.
-            var founder = new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = free.Count > 0 ? free[0] : yard, HomeTile = yard };
-            founder.Patrol.AddRange(free);
+            // The founder tends the growing fields nobody else looks after; home is the house door. Out of working hours everyone is home
+            // (ADR 0083 §5): an empty patrol, and day labourers aren't drawn (neighbours walk out west, your people home).
+            bool day = WorkingHours(map.SecondOfDay);
+            var founder = new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = free.Count > 0 && day ? free[0] : yard, HomeTile = yard };
+            if (day) founder.Patrol.AddRange(free);
             map.People.Add(founder);
             if (p == null) return;
             foreach (Sim.Core.People.Construction c in p.Constructions)
@@ -692,8 +697,8 @@ namespace Sim.View.Views
                 // His hours tend every growing field, so after his own he walks round the rest (ADR 0048 §2); home only when nothing
                 // grows or while unpaid.
                 foreach (int tile in growing) if (!patrol.Contains(tile)) patrol.Add(tile);
-                if (h.Contract != Sim.Core.People.ContractState.Active) patrol.Clear();
-                if (working && last.Kind == Sim.Core.People.OrderTargetKind.Field)
+                if (h.Contract != Sim.Core.People.ContractState.Active || !day) patrol.Clear();
+                if (day && working && last.Kind == Sim.Core.People.OrderTargetKind.Field)
                 {
                     // The field they just worked comes first, so they walk straight there.
                     patrol.Remove((int)last.Target);
@@ -713,12 +718,27 @@ namespace Sim.View.Views
                 map.People.Add(vm);
                 k++;
             }
+            if (!day) return;
+            List<int> fields = free.Count > 0 ? free : growing;
+            // Your townspeople hired as labourers (spec 014 §3.6, ADR 0083 §6): drawn as themselves, from their family house.
+            if (sim.State.Citizens != null)
+                foreach (Sim.Core.People.Citizen c in Sim.Core.People.PeopleRules.TownLabourers(sim))
+                {
+                    if (!c.Labouring(ctx.Now)) continue;
+                    Building house = sim.State.Land.Buildings.Find(b => b.Id == sim.State.Citizens.Household(c.HouseholdId)?.HomeId);
+                    if (house == null) continue;
+                    var vm = new PersonVm { Key = "labourer:town:" + c.Id, Kind = PersonKind.Labourer, Female = c.Female, Look = Look(sim, c), HomeTile = house.TileId, HomeHut = house.Id };
+                    for (int i = 0; i < fields.Count; i++) vm.Patrol.Add(fields[(i + k) % fields.Count]);
+                    vm.TileId = vm.Patrol.Count > 0 ? vm.Patrol[0] : vm.HomeTile;
+                    map.People.Add(vm);
+                    k++;
+                }
             foreach (Sim.Core.People.Neighbour n in p.Roster)
             {
                 if (!n.Hired) continue;
                 var vm = new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, HomeTile = frontYard };
                 // Labourers tend the growing fields too, each starting at a different one.
-                List<int> theirs = free.Count > 0 ? free : growing;
+                List<int> theirs = fields;
                 for (int i = 0; i < theirs.Count; i++) vm.Patrol.Add(theirs[(i + k) % theirs.Count]);
                 vm.TileId = vm.Patrol.Count > 0 ? vm.Patrol[0] : frontYard;
                 map.People.Add(vm);
