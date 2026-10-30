@@ -91,6 +91,9 @@ namespace Sim.View.Views
             foreach (JournalEntry e in sim.State.Ledger.Entries)
             {
                 if (e.Id < from || e.Id >= to || e.DescriptionKey == "ledger.closeSeason" || e.DescriptionKey == "ledger.opening") continue;
+                // An entry moving neither cash nor profit (the cattle acre inherited by migration: land against opening equity) can't
+                // explain a gap between them; its lines would only cancel out.
+                if (!MovesCashOrProfit(e)) continue;
                 foreach (Posting p in e.Postings)
                 {
                     AccountGroup g = Accounts.GroupOf(p.Account);
@@ -118,6 +121,16 @@ namespace Sim.View.Views
                 if (moved.TryGetValue(key, out long v) && v != 0) vm.Moved.Add(MovedLine(ctx, key, v));
             if (!last) Due(ctx, vm);
             return vm;
+        }
+
+        private static bool MovesCashOrProfit(JournalEntry e)
+        {
+            foreach (Posting p in e.Postings)
+            {
+                AccountGroup g = Accounts.GroupOf(p.Account);
+                if (p.Account == Account.Cash || g == AccountGroup.Income || g == AccountGroup.Expenses) return true;
+            }
+            return false;
         }
 
         private static void Add(Dictionary<string, long> d, string key, long v) { d[key] = (d.TryGetValue(key, out long x) ? x : 0) + v; }

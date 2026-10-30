@@ -110,6 +110,11 @@ namespace Sim.View.Tests
             Assert.That(s.CashStart + s.Profit + Moved(s), Is.EqualTo(sim.State.Ledger.Cash));
             Assert.That(WhyView.Build(c, "season", MoneySheet.WhyId(false, MoneySheet.MovedBlock, s.Moved.FindIndex(l => l.Key == "boughtBuildings"))).Rows.Last().Label,
                 Does.StartWith("You still own it: it's in Your wealth, not a cost"));
+            // Land entering the books with no cash and no profit (the cattle acre a migrated town inherits) adds no cancelling lines.
+            int lines = s.Moved.Count;
+            sim.State.Ledger.Post(T(sim), sim.Period, "ledger.cattleAcreInherited", "parcel:home_d",
+                new Posting(Account.Land, 85_932 * 100), new Posting(Account.OpeningEquity, -85_932 * 100));
+            Assert.That(SeasonBook.Build(ViewKit2.Context(sim), false).Moved, Has.Count.EqualTo(lines), "nothing to explain");
             WhyVm cash = WhyView.Build(c, "season", MoneySheet.WhyId(false, MoneySheet.Totals, MoneySheet.CashLine));
             Assert.That(cash.Rows.Select(r => r.Label), Is.SupersetOf(new[] { "At the season's start", "Profit this season", "Paid back on loans: not a cost", "Cash now" }));
         }

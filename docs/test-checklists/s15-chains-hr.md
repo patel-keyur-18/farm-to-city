@@ -9,11 +9,12 @@
 
 1. In the **old** app, go to Menu → Settings → **Export**. A copy of your town goes to the Files app (On My iPhone → Farm to City). Keep it until this build is checked.
 2. **Install over the old app. Don't delete the app first**: deleting it deletes your town.
-3. This build upgrades your town as it loads (save schema 10 to 11):
+3. This build upgrades your town as it loads (save schema 10 or 11 to 12):
    - Your fields, cash, people, houses, orders, loans, trees, animals and flour mill stay as they were.
    - Your hands and your mill's worker start neutral, and your name as an employer starts at 50.
    - Every townsperson gets a crafting skill, and anyone without a farming skill gets one.
-   - The first time it loads, the app also saves your town as it was before the update in the Files app, as `FarmToCity-before-update-schema10.ftc`.
+   - Money and loans starts a record of what you sell. What you sold this season before the update shows as one line, **Other sales**; from next season every crop has its own line.
+   - The first time it loads, the app also saves your town as it was before the update in the Files app, as `FarmToCity-before-update-schema10.ftc` (or `…schema11.ftc` if you installed the 29 October build).
 
 If anything looks wrong with your town after the update, stop and report it before playing on. Either copy can bring it back.
 
@@ -41,6 +42,9 @@ If anything looks wrong with your town after the update, stop and report it befo
   - **A bad batch** at a business. Throw it away, or sell it cheap.
   - A contract now renews at the wage the worker is already on.
 - **The weather on the map (US-222, ADR 0083).** Each weather is drawn over the whole farm, as you approved in the preview: sun, cloudy (drifting cloud shadows), rain, heavy rain (splashes, mist), storm (wind-driven rain, trees leaning in gusts, a soft glow of lightning now and then), heatwave (warm haze) and frost (pale rime). A change of weather fades over 3 seconds. With **Sound** on: a rain loop and distant thunder. With **Reduced motion** on: the rain stands still and there's no glow. The developer panel's **Weather look ▸** shows any weather for checking (look only: the sim's weather doesn't change).
+- **Your townspeople as hands (US-219, ADR 0083).** A townsperson aged 18–59 who works outside can be offered work as a hand from their own card. Their family house becomes part of their pay from their first renewal (never unpaid work for housing).
+- **Your labourers on the map (US-220).** Townspeople you hire as day labourers walk from their house to your fields at 7:00 and home at 19:00, drawn as themselves. The People sheet names each one. Everyone on the map now keeps the same working day, 7:00–19:00.
+- **Money and loans opens on *Your season* (US-221, spec 019 amended).** What you earned (each crop by name, and where it sold), what you spent (each hand by name), your profit, why your cash moved differently from your profit, and what's already due next season. *Last season* shows the season before. Your balance sheet and land are on the *Your wealth* tab.
 - **Your name as an employer:** the People sheet shows it, for example "Fair (50)", with a *Why?*. Fair pay raises it, and people then accept your offers more readily.
 
 **Your questions:**
@@ -49,11 +53,13 @@ If anything looks wrong with your town after the update, stop and report it befo
 3. Are the HR cards clear about what each choice costs?
 4. Do the bakery and the dairy look right on their acres?
 5. Does the weather look like the preview, and is the rain and thunder mix right on the phone's speaker?
+6. Does *Your season* show where every coin went, and is the line *Why your cash moved differently* clear?
 
 ## Checks
 
 **The developer panel:** hold the time card for 3 seconds. It has **+1 hour**, **+1 day**, **+1 season**, **Away cap (72 h)**, **Next era**, and **Snapshot** / **Restore**.
 - Take a **Snapshot** before check 14. **Restore** puts your town back exactly as it was then.
+- **Times after time travel:** "till …" and "until …" times are your phone's clock, while the time card shows the town's. After **+1 hour** they differ by the hours you added (a developer-panel effect only; without time travel they agree).
 - Checks 14–25 need the Village. If your town is earlier, **Next era** moves it on: tap it until the panel says "Era: village".
 
 | # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
@@ -89,11 +95,19 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 29 | US-222 | Storm look, **Sound** on, watch for a minute | A rain loop; a soft glow every 15–25 s that rises and fades (never a flash); distant thunder 1–3 s after it; trees leaning in the gusts | | Is the mix right? |
 | 30 | US-222 | Settings → **Reduced motion** on, storm look | The rain stands still and lighter; no glow, no gusts; thunder still plays with Sound on. Then turn **Reduced motion** back off | | |
 | 31 | US-222 | **Weather look ▸** until it says "the sim's own", then leave the app and come back | The map shows the time card's weather again; nothing about your town changed | | |
-| 32 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | | |
+| 32 | US-219, spec 015 AC-11 | People → the **Town** tab → a household → someone aged 18–59 whose *Work* says "Works outside, about half the days" → **Offer work as a hand** | The offer sheet, each offer with the line "From next season: … coins in cash + the house (worth … coins)". Hire one: the toast "… works your fields now!"; their hand card's *Housing* row says the house is part of the pay from the next renewal | | **Screenshot** |
+| 33 | US-219 | A child's (or an elder's) card, and a second adult from the same house | No offer button for the child or elder (the *Work* line says why, for example "Too young to work"). The second adult's offer reads "The house is already part of …'s pay: all of this is cash" | | |
+| 34 | US-220, spec 014 AC-17 | With a crop growing, People → hire labourers. Then **+1 hour** until after 7:00 | Your townspeople walk from their houses to the fields, drawn as themselves (not also at home). People names each one, with their house and till when | | **Screenshot** |
+| 35 | US-220 | **+1 hour** until after 19:00 | Everyone walks home: your hands, the founder, your labourers to their houses, neighbours' labourers out by the west edge | | |
+| 36 | US-221, spec 019 AC-11 | Tap the cash on the top bar | Money and loans opens on *Your season* → *This season*: Earned, Spent, Profit, *Why your cash moved differently*, *Next season, already due*; every line has **?** | | **Screenshot** |
+| 37 | US-221, AC-12 | The *Your cash* line ("… at the start → … now") and its **?** | Cash at the start + profit + each line of *Why your cash moved differently* equals the cash now and the cash on the top bar (within a coin or two: each line is rounded to the coin). Each crop sold has its own line, and its **?** says where it sold (after the update, earlier sales show as *Other sales*) | | |
+| 38 | US-221, AC-14, AC-15 | *Next season, already due*, then **+1 season** and the *Last season* switch | Due shows only what's committed (loans, living costs, each hand's renewal). *Last season*'s profit equals the season report's | | **Screenshot** |
+| 39 | US-221 | The *Your wealth* tab | Your balance sheet, land, Borrow and Repay as before | | |
+| 40 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | | |
 
 ## Report
 
 - **Blockers:** anything that stops play, or anything wrong with your town after the update. Mark it **BLOCKER** and say what you did.
-- **Screenshots:** for checks 1, 2, 3, 7, 8, 12, 13, 15, 16, 18, 20 and 27, and for 22 if a card came.
+- **Screenshots:** for checks 1, 2, 3, 7, 8, 12, 13, 15, 16, 18, 20, 27, 32, 34, 36 and 38, and for 22 if a card came.
 - **Numbers:** the frame-time results from checks 26 and 28.
-- **Answers:** to the five questions above.
+- **Answers:** to the six questions above.
