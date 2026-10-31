@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
-| Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
+| Sprint | **Sprint 15b** (the crop ladder, ad hoc, before Sprint 16; 22–28 Mar 2027): spec 020 and ADR 0084 in review, no code yet. Sprint 15 is done and merged (PR #20). **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
+| Branch with latest work | `sprint/15b-crop-ladder` (from `main` after PR #20 merged): the crop ladder. `sprint/16-shops-and-farm` holds Sprint 16's approved plan, not started |
 | Last updated | 2026-10-31 |
 
 ## Done so far
@@ -265,10 +265,9 @@
 
 ## Next up
 
-1. **Owner:** merge PR #20.
-2. **Claude:** Sprint 16: the plan's gaps with the owner, then its stories.
-
-Where it stands (2026-10-31): Sprint 15 is finished; the device check passed checks 1–40 (check 41, for US-223, is new and not yet run on the device). PR #20 is ready for the owner to merge.
+1. **Sprint 15b, the crop ladder, step 1 (2026-10-31):** the drafts are promoted (spec 020, ADR 0084, F02.5, US-224 to US-230, checklist) on `sprint/15b-crop-ladder`, checked against the code after Sprint 15 and re-measured on current content (spec 020 §3.10, §9). Bringing the owner G15 to G20 one per message: G15 (saves) asked; then the whole spec and ADR for approval. **No game code before that.**
+2. **Then step 2:** build US-225 to US-230 one story at a time, stopping for review after each. Back up the Editor saves first.
+3. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for what the crops change (schema numbers, spec 020 G15 and G18; its dates are now 29 Mar – 11 Apr 2027), and start with the granary's layout preview.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -284,13 +283,16 @@ Where it stands (2026-10-31): Sprint 15 is finished; the device check passed che
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
-| Sprint 15 | Device check passed 2026-10-31; merge PR #20 |
+| Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
+| Sprint 15b | Close G15–G20; approve spec 020 and ADR 0084; approve the Blender previews; device check; merge |
 
 ## Open questions (with the owner)
 
 - **The owner's requests US-219 to US-222 (2026-10-29):** planned into Sprint 15 (55 points), all 18 gaps closed with the owner (ADR 0083). Specs 008, 014, 015 and 019 approved (2026-10-30); the weather look approved and all four stories approved (2026-10-30). Open: the weather's post-processing cost on the iPhone 13 (checklist row 28; fallback: drop the saturation change).
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
+
+- **The crop ladder** (owner, 2026-10-26; timing changed 2026-10-31): the start felt slow (a 15 h potato after the first session). From the brainstorm (`docs/planning/proposals/first-day-pacing.md`) the owner chose new crops in every season. It now runs as Sprint 15b, before Sprint 16. G1–G14 closed 2026-10-26; the spec and ADR are not yet approved as a whole. No code until then.
 
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**
 - ~~The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3.~~ Settled (owner, 2026-10-27, spec 018 G7, ADR 0077): the treasury comes with the Township.
@@ -307,7 +309,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-None.
+Sprint 15b: spec 020 and ADR 0084 in review, with G15–G20 open. `GDD.md`, `CLAUDE.md`'s ADR table and the amendment notes in specs 003, 008 and 009 wait for the approval (US-224.T3, T4). No game code or content has changed.
 
 ## Environment notes
 

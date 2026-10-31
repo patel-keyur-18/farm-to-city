@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 0 | Pre-production | E00, E20 (start) | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13) |
 | 1 | Vertical slice: Homestead to Hamlet unlock | E01–E10 | Part A (owner's solo week, ADR 0047): a reason to return each day, the Hamlet on day 5–9, no blocker, RC and CI pass. Part B (US-185, before Launch): fresh players back on day 2 and day 3 unprompted |
-| 2 | Hamlet and Village | E11–E14, plus F02.4 and F04.3 (the owner's enhancements, ADR 0052–0057) | A week of play; players can explain profit versus cash |
+| 2 | Hamlet and Village | E11–E14, plus F02.4, F02.5 and F04.3 (the owner's enhancements, ADR 0052–0057, 0084) | A week of play; players can explain profit versus cash |
 | 3 | Township | E15–E16 | 4 weeks of play; the balancer finds no exploits |
 | 4 | Town and City | E17–E18 | 20,000 population at 60 fps on the reference phone |
 | 5 | Polish | E19 | Owner's call |
@@ -19,7 +19,7 @@
 | --- | --- | --- | --- | --- | --- |
 | E00 | Delivery foundations | 0 | Everything needed before Phase 1 coding: build and CI, the Phase 1 specs, the economy model, the Unity project, the performance spike and the art style check. | [F00.1](features/F00.1-repository-build-and-ci.md), [F00.2](features/F00.2-phase-1-feature-specs.md), [F00.3](features/F00.3-economy-model.md), [F00.4](features/F00.4-unity-project-and-bootstrap.md), [F00.5](features/F00.5-performance-spike.md), [F00.6](features/F00.6-art-style-check.md) | 63 |
 | E01 | Time and world | 1 | The real-time clock, calendar, scheduler, weather, forecast, away rules and developer time travel (spec 001). | [F01.1](features/F01.1-sim-foundations.md), [F01.2](features/F01.2-calendar-and-scheduler.md), [F01.3](features/F01.3-weather-and-forecast.md), [F01.4](features/F01.4-live-and-away-time.md), [F01.5](features/F01.5-developer-time-travel-sim.md) | 31 |
-| E02 | Land and farming | 1 | Land and soil, crops with seasonal sowing windows, the yield formula, inputs, pests, the kitchen garden and fruit trees. | [F02.1](features/F02.1-land-and-soil.md), [F02.2](features/F02.2-crops-and-yield.md), [F02.3](features/F02.3-fruit-trees.md), [F02.4](features/F02.4-village-map.md) (Phase 2) | 55 |
+| E02 | Land and farming | 1 | Land and soil, crops with seasonal sowing windows, the yield formula, inputs, pests, the kitchen garden and fruit trees. | [F02.1](features/F02.1-land-and-soil.md), [F02.2](features/F02.2-crops-and-yield.md), [F02.3](features/F02.3-fruit-trees.md), [F02.4](features/F02.4-village-map.md), [F02.5](features/F02.5-crop-ladder.md) (Phase 2) | 55 |
 | E03 | Founder household | 1 | The founder as the first worker: labour, diet, rest, health and day labour (ADR 0010). | [F03.1](features/F03.1-founder-labour-and-routine.md) | 11 |
 | E04 | Market and storage | 1 | Tradeable goods, the hourly market, the regional trader, the mandi trip, buying inputs, the hut store and spoilage. | [F04.1](features/F04.1-goods-market-and-regional-trader.md), [F04.2](features/F04.2-hut-store-and-spoilage.md), [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) (Phase 2) | 38 |
 | E05 | Money and credit | 1 | The ledger with accrual accounting, seasonal P&L, net worth, lenders, credit score and foreclosure. | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md), [F05.2](features/F05.2-credit-and-foreclosure.md) | 23 |
@@ -58,6 +58,7 @@
 | [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-042–US-046, US-177 | 20 |
 | [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-047–US-049 | 7 |
 | [F02.4](features/F02.4-village-map.md) | The village map | E02 | 2 | [Spec 010](../specs/010-map-village-and-edge.md) (approved) | Ready | US-188–US-191 | 18 |
+| [F02.5](features/F02.5-crop-ladder.md) | The crop ladder | E02 | 2 | [Spec 020](../specs/020-crop-ladder.md) (in review) | In review | US-224–US-230 | 23 |
 | [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-050–US-053 | 11 |
 | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-054–US-056, US-178–US-181 | 17 |
 | [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-057–US-058 | 4 |
