@@ -400,8 +400,9 @@ The draft expected 10–40% of his sowings: it's lower, and in Spring most of it
 **Does it break the money, and does it make sense? Measured 2026-10-31 (six crops, 4 orders; a throwaway copy):**
 
 The books hold. With strict checks on, each new crop was forced onto every acre the bot could tend, 30 seeds × 8 seasons, sold through the trader, market, mandi and orders:
-- Every season closed reconciled to the coin. Account 1200 equalled the inputs at cost every season. Sales in the record plus home use equalled farm income, wherever no milk was sold. Saves round-tripped. Nothing went over its season's cap.
-- One real sowing of every crop matched the sow sheet's sum: seed cash equalled its Spend (potato came from the store), and the sale was 8–14% above the estimate, as for the old crops, because care and the weather beat the estimate's soil at factor 1.
+- Every season closed reconciled to the coin. Account 1200 equalled the inputs at cost every season. Saves round-tripped. Nothing went over its season's cap.
+- Sales in the record plus home use equalled farm income exactly in the methi, amaranth and okra runs. The competent, peas, maize and mustard runs differ in some seasons, by up to 46,161. They're the runs with money left for cattle, so it reads as milk income, but it isn't yet checked line by line: US-226's `CropLadder_ExactLedger` does that.
+- One real sowing of each new crop matched the sow sheet: seed cash equalled its Spend, and the sale came in 9–14% above the estimate (old crops −1% to 12%). The estimate takes Care at 1, and Care can reach 1.10.
 
 The game's value holds over a whole game, but not every season:
 
