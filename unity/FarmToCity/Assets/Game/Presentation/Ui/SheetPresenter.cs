@@ -128,7 +128,6 @@ namespace Game.Presentation.Ui
                 case "orders": return IconBank.Orders;
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
-                case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
                 case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran": case "pav": case "rusk": case "paneer": case "curd": case "ghee":
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
@@ -140,13 +139,12 @@ namespace Game.Presentation.Ui
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
-                case "potato": case "radish": case "wheat": case "rice": case "lentils": case "berseem": case "sorghum": return SpriteBank.Crop(icon, CropStage.Growing3);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
                     if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");
-                    if (icon.StartsWith("animal_", StringComparison.Ordinal)) return IconBank.Good(icon);
+                    if (icon.StartsWith("animal_", StringComparison.Ordinal) || icon.StartsWith("seed_", StringComparison.Ordinal)) return IconBank.Good(icon);
                     if (icon.StartsWith("portrait_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);
-                    return SpriteBank.Bed(icon, CropStage.Growing3);
+                    return SpriteBank.Crop(icon, CropStage.Growing3) ?? SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }
 

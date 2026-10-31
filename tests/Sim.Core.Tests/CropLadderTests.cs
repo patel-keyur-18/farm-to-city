@@ -51,6 +51,19 @@ namespace Sim.Core.Tests
             foreach (string id in Ladder.NewCrops) Assert.That(game.Farm.IndexOfCrop(id), Is.GreaterThanOrEqualTo(0), id);
         }
 
+        // Spec 020 AC-18: every crop's art is found by its name alone, so a new crop needs no code.
+        [Test]
+        public void EveryCropHasSprites()
+        {
+            string file = Path.Combine(TestContent.RepoRoot, "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender", "sprites.json");
+            using JsonDocument sprites = JsonDocument.Parse(File.ReadAllText(file));
+            var names = sprites.RootElement.GetProperty("sprites").EnumerateArray().Select(s => s.GetProperty("name").GetString()).ToHashSet();
+            var missing = TestContent.Game().Farm.Crops
+                .SelectMany(c => new[] { "crop_" + c.Id + "_g1", "crop_" + c.Id + "_g2", "crop_" + c.Id + "_g3", "crop_" + c.Id + "_ready", "icon_good_" + c.Id })
+                .Where(n => !names.Contains(n)).ToList();
+            Assert.That(missing, Is.Empty);
+        }
+
         // Spec 020 AC-2: a sowable field crop on every rung of every season.
         [Test]
         public void CropLadder_EverySeason()
