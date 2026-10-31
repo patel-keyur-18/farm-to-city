@@ -184,6 +184,9 @@ namespace Sim.View.Views
 
         /// <summary>Someone from the area waiting with their grain at your mill (spec 016 §7): <see cref="PersonVm.HomeHut"/> is the business, the key ends with their place in the queue.</summary>
         Customer = 4,
+
+        /// <summary>A business's hired worker while it's open (spec 016 AC-16): <see cref="PersonVm.Look"/> is a townsperson's sprite, null for someone from outside.</summary>
+        Worker = 5,
     }
 
     /// <summary>A business on the map (spec 016 §7): its type, being built or open, and working now.</summary>
@@ -563,8 +566,9 @@ namespace Sim.View.Views
         }
 
         /// <summary>
-        /// Businesses (spec 016 §7): each on its acre; while the mill grinds the area's grain, three people from the area wait in its
-        /// yard with their sacks (the bakery and the dairy sell at the morning round, so nobody waits at theirs).
+        /// Businesses (spec 016 §7): each on its acre, with its hired worker there while it's open (AC-16); while the mill grinds the
+        /// area's grain, three people from the area wait in its yard with their sacks (the bakery and the dairy sell at the morning round,
+        /// so nobody waits at theirs).
         /// </summary>
         private static void AddBusinesses(ViewContext ctx, MapVm map)
         {
@@ -578,12 +582,27 @@ namespace Sim.View.Views
                 bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(sim, b, hour);
                 map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working });
                 map.Tiles[b.TileId].Business = true;
+                if (working) AddWorker(sim, b, map);
                 if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;
                 string[] looks = { "town_m", "town_f", "elder_m" };
                 for (int i = 0; i < looks.Length; i++)
                     map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = looks[i], Female = looks[i] == "town_f",
                         HomeTile = b.TileId, HomeHut = b.Id, TileId = b.TileId });
             }
+        }
+
+        /// <summary>The hired worker at their work: a townsperson as themselves, from their house; someone from outside walks in from the edge.</summary>
+        private static void AddWorker(Simulation sim, Sim.Core.Business.Business b, MapVm map)
+        {
+            Sim.Core.People.Worker w = Sim.Core.Business.BusinessRules.HiredWorker(sim, b);
+            if (w == null) return;
+            var vm = new PersonVm { Key = "worker:" + w.Id, Kind = PersonKind.Worker, Female = sim.Config.Game.People.Names[w.Name].Female, TileId = b.TileId, HomeTile = b.TileId };
+            Sim.Core.People.Citizen c = sim.State.Citizens?.Citizen(b.WorkerCitizen);
+            Building home = c == null ? null : sim.State.Land.Buildings.Find(x => x.Id == sim.State.Citizens.Household(c.HouseholdId)?.HomeId);
+            if (c != null) vm.Look = Look(sim, c);
+            if (home != null) { vm.HomeTile = home.TileId; vm.HomeHut = home.Id; }
+            vm.Patrol.Add(b.TileId);
+            map.People.Add(vm);
         }
 
         /// <summary>
@@ -612,7 +631,7 @@ namespace Sim.View.Views
                 foreach (long id in x.Members)
                 {
                     Sim.Core.People.Citizen c = s.Citizen(id);
-                    if (c.Job == Sim.Core.People.CitizenJob.Hand || c.Labouring(ctx.Now)) continue; // at work
+                    if (c.Job == Sim.Core.People.CitizenJob.Hand || c.Job == Sim.Core.People.CitizenJob.Business || c.Labouring(ctx.Now)) continue; // at work
                     if (Sim.Core.People.HouseholdRules.IsChild(sim, c)) { if (child == null) child = c; }
                     else if (grown == null && (c.Female || Sim.Core.People.HouseholdRules.IsElder(sim, c))) grown = c;
                 }
@@ -660,6 +679,18 @@ namespace Sim.View.Views
             bool day = WorkingHours(map.SecondOfDay);
             var founder = new PersonVm { Key = "founder", Kind = PersonKind.Founder, TileId = free.Count > 0 && day ? free[0] : yard, HomeTile = yard };
             if (day) founder.Patrol.AddRange(free);
+            // A business you run yourself takes your hours while it's open (spec 016 AC-11, AC-16): that's where you are.
+            var running = new List<int>();
+            if (sim.State.Businesses != null)
+                foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+                    if (b.Status == Sim.Core.Business.BusinessStatus.Open && b.Worker == Sim.Core.Business.WorkerKind.Founder
+                        && Sim.Core.Business.BusinessRules.OpenAt(sim, b, (int)(map.SecondOfDay / 3600))) running.Add(b.TileId);
+            if (running.Count > 0)
+            {
+                founder.Patrol.Clear();
+                founder.Patrol.AddRange(running);
+                founder.TileId = running[0];
+            }
             map.People.Add(founder);
             if (p == null) return;
             foreach (Sim.Core.People.Construction c in p.Constructions)

@@ -3,7 +3,7 @@
 - **Build:** the head of branch `sprint/15-chains-and-hr` (the commit is in the pull request)
 - **Device:** iPhone 13, iOS version: ____
 - **Tested by / date:** Keyur, 2026-10-31
-- **Result:** the owner passed every check except 14–25. Those need the Village and wait until the owner reaches it by normal play, which becomes possible with the Village gate in Sprint 17 (US-102).
+- **Result:** the owner passed checks 1–40 and reported one change (a business's worker wasn't seen at it), built as US-223. Check 41 covers it.
 - **How to install:** see `how-to-build-ios.md`. This is **a Development build**, so it has the developer panel. Delete `unity/FarmToCity/Builds/iOS` before building (this avoids the macOS 27 crash).
 
 ## Before you install: keep your town safe
@@ -78,18 +78,18 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 11 | US-113 | **+1 day** | They're back, with 10 more skill on their card | Pass | |
 | 12 | US-114 | Hire a hand who isn't *Loyal* (a loyal worker never asks) at **10% less**, then **+1 season** (twice if no card comes) | A card: "… asks for a raise", with what it costs now and from whose cash | Pass | **Screenshot** |
 | 13 | US-114, ADR 0082 | **Not now**, then open the hand's card | The *Contract* row: "Leaving at the season's end". Output **?**: −10% for low pay and −10% for the refused raise. **+1 season**: they've gone | Pass | **Screenshot** |
-| 14 | US-218 | **Snapshot**. Then **Next era** until "Era: village" | The Village era. Menu → **Businesses** lists *Start a bakery* and *Start a dairy* | Deferred | |
-| 15 | US-119 | **Start a bakery** → research → **Make a plan** | The shops' pav and the trader's rusk, the atta's price, a baker's wage, the cost; each with **?** | Deferred | **Screenshot** |
-| 16 | US-119 | **Choose the acre** → a lit acre → **Build here**, then **+1 day** | The bakery on its acre; its card says "Closed · nobody works here" until you hire, with **Hire** under *Who works here* | Deferred | **Screenshot** |
-| 17 | US-112 | The bakery's card → **Hire** → **Send word**, then **+1 day** and **Offer** | The board on the *Baker* tab. Once hired, the card says *Open now* in its hours | Deferred | |
-| 18 | US-118, US-119 | **+1 day**, then the bakery's **Today** in the afternoon | The day's pav and rusk made from atta, each with **?** (the recipe). The shops and the trader collect them at 6:00 next morning: **Books** then shows them sold | Deferred | **Screenshot** |
-| 19 | US-119 | **Settings** → *Pav a day* → **Change** | Half as much pav a day; the card stays open | Deferred | |
-| 20 | US-216 | **Start a dairy** → plan → acre → **Build here**, then **+1 day** | The dairy on its acre; the plan and the card show *Buy neighbours' milk* (on) | Deferred | **Screenshot** |
-| 21 | US-216 | The dairy's **Today**, after a day with a dairyman | Paneer, curd and ghee batches from milk; your herd's milk used first | Deferred | |
-| 22 | US-114 | Play on with **+1 day** / **+1 season**. If an HR card comes (sick, emergency, offer, bad batch) | The card says what happened, what *yes* costs now and from whose cash. Answer it: the bell's row goes | Deferred | **Screenshot** if one comes |
-| 23 | US-114 | A card you didn't answer: tap the bell | The event's row; **Answer** opens a sheet with the same two choices | Deferred | |
-| 24 | US-116 | The bakery's **Books** | Profit and loss, cash and what it owns and owes, each line with **?** | Deferred | |
-| 25 | Restore | **Restore** | Your town is back as it was at the Snapshot | Deferred | |
+| 14 | US-218 | **Snapshot**. Then **Next era** until "Era: village" | The Village era. Menu → **Businesses** lists *Start a bakery* and *Start a dairy* | Pass | |
+| 15 | US-119 | **Start a bakery** → research → **Make a plan** | The shops' pav and the trader's rusk, the atta's price, a baker's wage, the cost; each with **?** | Pass | **Screenshot** |
+| 16 | US-119 | **Choose the acre** → a lit acre → **Build here**, then **+1 day** | The bakery on its acre; its card says "Closed · nobody works here" until you hire, with **Hire** under *Who works here* | Pass | **Screenshot** |
+| 17 | US-112 | The bakery's card → **Hire** → **Send word**, then **+1 day** and **Offer** | The board on the *Baker* tab. Once hired, the card says *Open now* in its hours | Pass | |
+| 18 | US-118, US-119 | **+1 day**, then the bakery's **Today** in the afternoon | The day's pav and rusk made from atta, each with **?** (the recipe). The shops and the trader collect them at 6:00 next morning: **Books** then shows them sold | Pass | **Screenshot** |
+| 19 | US-119 | **Settings** → *Pav a day* → **Change** | Half as much pav a day; the card stays open | Pass | |
+| 20 | US-216 | **Start a dairy** → plan → acre → **Build here**, then **+1 day** | The dairy on its acre; the plan and the card show *Buy neighbours' milk* (on) | Pass | **Screenshot** |
+| 21 | US-216 | The dairy's **Today**, after a day with a dairyman | Paneer, curd and ghee batches from milk; your herd's milk used first | Pass | |
+| 22 | US-114 | Play on with **+1 day** / **+1 season**. If an HR card comes (sick, emergency, offer, bad batch) | The card says what happened, what *yes* costs now and from whose cash. Answer it: the bell's row goes | Pass | **Screenshot** if one comes |
+| 23 | US-114 | A card you didn't answer: tap the bell | The event's row; **Answer** opens a sheet with the same two choices | Pass | |
+| 24 | US-116 | The bakery's **Books** | Profit and loss, cash and what it owns and owes, each line with **?** | Pass | |
+| 25 | Restore | **Restore** | Your town is back as it was at the Snapshot | Pass | |
 | 26 | Frame time | Pinch out so the whole map shows. Developer panel → **Measure frame time (20 s)**; don't touch the screen | Main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write the numbers in Notes | Pass | Passed per the owner; numbers not reported |
 | 27 | US-222 | Developer panel → **Weather look ▸**, then **Close**. Repeat for each weather (the line under the status names it) | Sun, cloudy, rain, heavy rain, heatwave, frost, storm drawn over the whole map, each fading in over about 3 s. Fields, crops and people readable in every one; the top and bottom bars unchanged | Pass | **Screenshot** of storm and frost |
 | 28 | US-222, spec 008 AC-21 | Storm look **at night** (after 21:00; **+1 hour** if needed). Pinch out so the whole map shows. **Measure frame time (20 s)**. Then the same in heavy rain | Each: main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write both in Notes | Pass | Passed per the owner; numbers not reported |
@@ -105,6 +105,7 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 38 | US-221, AC-14, AC-15 | *Next season, already due*, then **+1 season** and the *Last season* switch | Due shows only what's committed (loans, living costs, each hand's renewal). *Last season*'s profit equals the season report's | Pass | **Screenshot** |
 | 39 | US-221 | The *Your wealth* tab | Your balance sheet, land, Borrow and Repay as before | Pass | |
 | 40 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | Pass | |
+| 41 | US-223, spec 016 AC-16 | With a business open (8:00–18:00), look at its acre: one with a hired worker, one you run with **Run it**. Then **+1 hour** past closing | The worker moves about in front of it, as themselves if from your town; run by you, you're there instead of on the fields. After closing they leave | | Added after the device check; not yet run on the device |
 
 ## Report
 

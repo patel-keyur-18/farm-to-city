@@ -17,17 +17,23 @@ namespace Game.Presentation.Map
         /// <summary>Where people wait their turn: in the yard before the shed, a little apart (the first nearest the door).</summary>
         private static readonly Vector2[] MillQueueAt = { new Vector2(-0.04f, -0.10f), new Vector2(-0.16f, -0.18f), new Vector2(-0.28f, -0.26f) };
 
+        /// <summary>Where whoever works a business moves about: before its front, clear of the queue (spec 016 AC-16).</summary>
+        private static readonly Vector2[] BusinessWorkAt = { new Vector2(0.10f, -0.12f), new Vector2(0.18f, -0.06f), new Vector2(0.24f, -0.14f) };
+
         private static readonly VillagePiece[] MillProps = { new VillagePiece("village_tree", -0.38f, 0.36f) };
 
+        private readonly HashSet<int> _businessTiles = new HashSet<int>();
         private readonly Dictionary<long, SpriteRenderer> _businesses = new Dictionary<long, SpriteRenderer>();
         private readonly Dictionary<long, List<SpriteRenderer>> _businessProps = new Dictionary<long, List<SpriteRenderer>>();
 
         private void RefreshBusinesses(MapVm map, bool animate)
         {
             var seen = new HashSet<long>();
+            _businessTiles.Clear();
             foreach (BusinessVm b in map.Businesses)
             {
                 seen.Add(b.Id);
+                _businessTiles.Add(b.TileId);
                 string name = b.TypeId + (b.Building ? "_building_s" : "_s");
                 Vector3 pos = OnTile(b.TileId, MillAt);
                 int order = Order(b.TileId, _width, 45, pos.y - TileCentre(b.TileId).y);

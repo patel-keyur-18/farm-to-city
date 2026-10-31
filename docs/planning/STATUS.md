@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 except checks 14–25 (need the Village, deferred to normal play after Sprint 17)** |
+| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
 | Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
 | Last updated | 2026-10-31 |
 
@@ -206,6 +206,7 @@
 ## In progress
 
 **Sprint 15, the owner's requests (ADR 0083):**
+- **US-223 done (2026-10-31, the owner's one change from the device check): whoever works a business is seen there** (spec 016 AC-16). `PersonKind.Worker` while a business is open: a townsperson as themselves, from their house and not also at home; someone from outside from the valley's edge; you, instead of on the fields, when you run it. The work frame holds a hoe, so at a business people walk between spots and stand (a tool-free frame would need Blender). Test `BusinessViewTests.WorkerOnMap`. Editor: the bakery's **Run it** by scripted touch and the map captured with all three kinds on their acres, at 20:24 and 08:25; the worker first stood in the mill's queue, so the spots moved. Set up by script: test coins, a family house, Next era, three businesses, the mill's and dairy's hires, dev time travel. Saves restored and checked identical. The Village's gate is still Sprint 17: the Village can only be reached by **Next era** until then.
 - **End of sprint (2026-10-30, owner: "go ahead with final checks and update PR"):** US-222 approved. `s15-chains-hr.md` gains rows 32–39 (US-219: offer from a citizen's card, the housing line, a child's card and a second adult; US-220: your labourers named, at work 7:00–19:00, home at night; US-221: *Your season*, the cash line adding up, next season due, *Last season*, *Your wealth*), the schema 10/11 → 12 upgrade note, question 6 and a note that "till"/"until" times are the phone's clock and drift from the time card after dev time travel (older behaviour, the forecast too). **All of rows 32–39 run in the Editor by scripted touch** (People → Town → Arjun's family → Arjun → *Offer work as a hand* → hired, the hand card's Housing row; Radha's offer "already part of Arjun's pay"; Raju's card with no button; *Hire labourers* at 07:00 and the map, then 19:14 home; Money and loans by the cash pill, both switches and *Your wealth*); set up by script: 4,00,000 test coins, a family house on acre 84, dev time travel (6 days, then 7 h and 12 h). Rows 27–31 ran in the US-222 tour the same day. **Found and fixed:** a migrated town's *Last season* showed "Land bought −85,932" and "Other changes +85,932" from the schema 8 cattle acre's opening entry (no cash, no profit): `SeasonBook` now leaves out entries moving neither, asserted in `MoneyViewTests.Season_Reconciles` (fails without the fix). 400 sim and 112 view tests pass. Saves restored and checked identical. **One new Development build** (`BuildCli.IosDevelopment` from the open Editor after deleting `Builds/iOS`; Build Succeeded, the one console error the CLI's 5 s eval timeout), superseding 2026-10-29's; unsigned Xcode Release compile check (`CODE_SIGNING_ALLOWED=NO`): BUILD SUCCEEDED.
 - **US-222 approved (owner, 2026-10-30: "go ahead with final checks and update PR").**
 - **US-222 done (2026-10-30): the weather on the map.** The preview (an interactive page over Editor captures, iPhone 13 frame, the 7 weathers by day and night and reduced motion; stills `docs/art/s15-222-weather-*.png`) **approved by the owner as it was**. `ui.json` `weatherLook` (`WeatherLookDef`, loader refusing a glow rise under 0.3 s or glows under a second apart); `WeatherLook` (Sim.View: follows the spell or the developer panel's pick, eases over 3 s, lightning every 15–25 s with thunder 1–3 s after, gusts, reduced motion still); `WeatherPresenter` (a URP Color Adjustments volume for colour, saturation and brightness, post-processing on the map camera; screen sprites for the wash, mist, haze and glow; particle rain and splashes; ground-fixed cloud shadows and rime; trees leaning in gusts, crops rippling; alphas converted for linear colour so it looks as the preview did); our own synthesized CC0 rain loop and thunder (`tools/audio/weather_sounds.py`) behind Sound; the developer panel's **Weather look ▸** (look only, cleared when play starts). Tests `WeatherLookTests.FollowsSpell`, `ReducedMotion_Still`, `Lightning_NoFlash` (a mutation making the glow jump to its peak fails it). Editor by scripted touch: the developer panel opened by holding the time strip, **Weather look ▸** through all 7 weathers at 20:23 and at 08:31 (captures `docs/art/s15-222-editor-*.png`), Reduced motion turned on and off in Settings (rain frozen, no glow, trees upright); set by script: 12 hours of dev time travel, the storm pick for the re-check, the glow, lean and sound probes, the frame-time runs (baseline and each weather: 60 fps, main p95 1.1–1.4 ms; the Editor's GPU reading is about 43 ms even with the weather off). Found and fixed on the tour: the linear-colour wash (heatwave and frost washed out), rime far too big, rain invisible in a storm, trees leaning 0.1° (the gust wasn't scaled). Device rows 27–31 added to `s15-chains-hr.md`. Saves restored and checked identical; the reduced-motion preference left unset as before.
@@ -264,11 +265,10 @@
 
 ## Next up
 
-1. **Owner:** merge PR #20 (device check 2026-10-31: every check passed except 14–25, deferred).
-2. **Claude, after the merge:** Sprint 16 from `main`.
-3. **Owner, after Sprint 17:** reach the Village by normal play (the gate is US-102), then run checks 14–25 of `s15-chains-hr.md` (the bakery, the dairy, their hiring and books, HR cards).
+1. **Owner:** merge PR #20.
+2. **Claude:** Sprint 16: the plan's gaps with the owner, then its stories.
 
-Where it stands (2026-10-30): US-219 to US-222 approved and built; the checklist's rows 27–39 run in the Editor; one new Development build made (the 2026-10-29 one is superseded); PR #20 updated. **The owner's device check (2026-10-31) passed all but checks 14–25, which wait for the Village by normal play; the owner merges PR #20.** After the merge, Sprint 16 (ADR 0076: save schema 13 now, as later schemas shift by one).
+Where it stands (2026-10-31): Sprint 15 is finished; the device check passed checks 1–40 (check 41, for US-223, is new and not yet run on the device). PR #20 is ready for the owner to merge.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -284,7 +284,7 @@ Where it stands (2026-10-30): US-219 to US-222 approved and built; the checklist
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
-| Sprint 15 | Device check done 2026-10-31 except checks 14–25 (the Village, after Sprint 17); merge PR #20 |
+| Sprint 15 | Device check passed 2026-10-31; merge PR #20 |
 
 ## Open questions (with the owner)
 

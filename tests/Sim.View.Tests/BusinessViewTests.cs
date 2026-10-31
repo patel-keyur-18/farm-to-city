@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Business;
 using Sim.Core.Commands;
+using Sim.Core.People;
 using Sim.View.Views;
 
 namespace Sim.View.Tests
@@ -10,6 +11,40 @@ namespace Sim.View.Tests
     /// <summary>Spec 016 §3.3, §7 (US-115): the Businesses sheet, research, the plan, placement and the business card.</summary>
     public class BusinessViewTests
     {
+        private static MapVm MapAt(Simulation sim, int hour)
+        {
+            sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 1) * 86_400 + hour * 3600);
+            return MapView.Build(ViewKit2.Context(sim));
+        }
+
+        // AC-16: whoever works a business is seen there while it's open: the hired worker as themselves, not also at home, gone when it
+        // shuts; run by you, you're there instead of on the fields.
+        [Test]
+        public void WorkerOnMap()
+        {
+            Simulation sim = Situations.Mill();
+            Business b = sim.State.Businesses.Businesses.Single();
+            Worker w = BusinessRules.HiredWorker(sim, b);
+            Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
+            Assert.That(c, Is.Not.Null, "a townsperson was hired");
+
+            MapVm day = MapAt(sim, 12);
+            PersonVm seen = day.People.Single(p => p.Key == "worker:" + w.Id);
+            Assert.That((seen.Kind, seen.TileId, seen.Look), Is.EqualTo((PersonKind.Worker, b.TileId, MapView.Look(sim, c))));
+            Assert.That(seen.Patrol, Is.EqualTo(new[] { b.TileId }));
+            Assert.That(seen.HomeHut, Is.EqualTo(sim.State.Citizens.Household(c.HouseholdId).HomeId), "they walk from their house");
+            Assert.That(day.People.Any(p => p.Key == "citizen:" + c.Id), Is.False, "not also at home");
+            Assert.That(day.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Does.Not.Contain(b.TileId));
+            Assert.That(MapAt(sim, 20).People.Any(p => p.Kind == PersonKind.Worker), Is.False, "shut for the night");
+
+            Assert.That(sim.Execute(new LetWorkerGo(sim.State.Clock.SimTime, b.Id)).Accepted, Is.True);
+            Assert.That(MapAt(sim, 12).People.Any(p => p.Kind == PersonKind.Worker), Is.False, "nobody there, nobody drawn");
+            Assert.That(sim.Execute(new RunBusinessYourself(sim.State.Clock.SimTime, b.Id)).Accepted, Is.True);
+            PersonVm me = MapAt(sim, 12).People.Single(p => p.Kind == PersonKind.Founder);
+            Assert.That((me.TileId, me.Patrol.Single()), Is.EqualTo((b.TileId, b.TileId)), "run by you: you're there");
+            Assert.That(MapAt(sim, 20).People.Single(p => p.Kind == PersonKind.Founder).Patrol, Does.Not.Contain(b.TileId));
+        }
+
         private static void Ok(Simulation sim, Command c) { Assert.That(sim.Execute(c).Accepted, Is.True, c.GetType().Name + " " + sim.Preview(c).Reason); }
 
         // AC-14 (the plan shown; compared after 4 seasons in US-116): from the Menu to an open mill, every step in words.

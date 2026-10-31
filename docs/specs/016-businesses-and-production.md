@@ -236,6 +236,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | AC-13 | The dairy takes your milk up to its daily amount at the co-op's price (the rest still to the co-op), makes paneer, curd and ghee by the yields, at most 190 L a real hour | `ProductionTests.Dairy_MilkIn_Recipes` |
 | AC-14 | Research and the plan show the projected season; after 4 seasons the plan-vs-actual card compares each line in words | `BusinessViewTests.Plan_VsActual` |
 | AC-15 | A business loan is the business's: at most 60% of its building and equipment, up to 12 seasons, its entries on its own books and paid from its own cash; your guarantee uses the bank's room | `BusinessTests.BusinessLoan` |
+| AC-16 | Whoever works a business is seen at it while it's open: a hired worker on its acre (a townsperson as themselves, from their house, not also at home; someone from outside from the valley's edge), and you when you run it, instead of on the fields; nobody once it shuts or with nobody hired | `BusinessViewTests.WorkerOnMap` |
 
 ## 9. Balancing hooks
 

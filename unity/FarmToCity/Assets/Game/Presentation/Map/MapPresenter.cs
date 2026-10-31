@@ -592,6 +592,7 @@ namespace Game.Presentation.Map
                 case PersonKind.Founder: return "person_founder";
                 case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
                 case PersonKind.Citizen: case PersonKind.Customer: return "person_" + p.Look;
+                case PersonKind.Worker when p.Look == null: return p.Female ? "person_hand_f" : "person_hand_m"; // as their card shows them
                 default: return p.Look != null ? "person_" + p.Look : p.Female ? "person_labourer_f" : "person_labourer_m"; // your townspeople as themselves (ADR 0083)
             }
         }
@@ -604,6 +605,7 @@ namespace Game.Presentation.Map
                 if (p.TileId < 0) continue;
                 seen.Add(p.Key);
                 Vector3 home = HomeOf(p);
+                bool comes = p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker;
                 if (!_people.TryGetValue(p.Key, out PersonView v))
                 {
                     v = new PersonView { Sprite = PersonSprite(p), Phase = Random.value * 6f };
@@ -612,15 +614,15 @@ namespace Game.Presentation.Map
                     v.Shadow = NewRenderer("personShadow:" + p.Key, SpriteBank.ContactShadow, start, 0);
                     v.Shadow.transform.localScale = new Vector3(0.11f, 0.11f, 1f);
                     // A neighbour hired for the day walks in from the west edge of the valley, one of your people from their house (ADR
-                    // 0083 §5); everyone else is simply there.
-                    bool town = p.Kind == PersonKind.Labourer && p.HomeHut != 0;
-                    v.Pos = animate && p.Kind == PersonKind.Labourer ? (town ? home : WestEdge(p.TileId)) : start;
+                    // 0083 §5), a business's worker the same; everyone else is simply there.
+                    bool town = comes && p.HomeHut != 0;
+                    v.Pos = animate && comes ? (town ? home : WestEdge(p.TileId)) : start;
                     v.Target = start;
                     if (p.Patrol.Count > 0) { v.WorkTile = p.Patrol[0]; v.PointsLeft = 2; }
                     _people[p.Key] = v;
                 }
                 v.Home = home;
-                v.LeaveTo = p.Kind != PersonKind.Labourer ? (Vector3?)null : p.HomeHut != 0 ? home : WestEdge(p.TileId);
+                v.LeaveTo = !comes ? (Vector3?)null : p.HomeHut != 0 ? home : WestEdge(p.TileId);
                 v.Leaving = false;
                 bool changed = !SamePatrol(v.Patrol, p.Patrol);
                 v.Patrol.Clear();
@@ -663,7 +665,7 @@ namespace Game.Presentation.Map
                 case PersonKind.Hand: return _handHuts.ContainsKey(p.HomeHut) ? HutDoor(p.HomeHut, p.HomeTile) : HouseYard(p.HomeHut, p.HomeTile); // a hand whose family has a house
                 case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
                 case PersonKind.Customer: return MillQueue(p.HomeHut, p.HomeTile, p.Key[p.Key.Length - 1] - '0');
-                case PersonKind.Labourer when p.HomeHut != 0: return HouseYard(p.HomeHut, p.HomeTile); // one of your people: their house
+                case PersonKind.Labourer when p.HomeHut != 0: case PersonKind.Worker when p.HomeHut != 0: return HouseYard(p.HomeHut, p.HomeTile); // one of your people: their house
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }
         }
@@ -671,6 +673,7 @@ namespace Game.Presentation.Map
         /// <summary>A spot to work inside a field, kept clear of its edges.</summary>
         private Vector3 WorkPoint(int tile)
         {
+            if (_businessTiles.Contains(tile)) return OnTile(tile, BusinessWorkAt[Random.Range(0, BusinessWorkAt.Length)]);
             float u = Random.Range(-0.3f, 0.3f), v = Random.Range(-0.3f, 0.3f);
             return TileCentre(tile) + new Vector3((u - v) * HalfWidth, -(u + v) * _grid.HalfHeight, 0);
         }
@@ -720,7 +723,7 @@ namespace Game.Presentation.Map
                 else { v.Facing = "_front"; v.Body.flipX = false; }
 
                 // Walking: four frames at 8 a second (ADR 0041 §8). Hoeing: the stand and work frames alternate, a stroke every 0.7 s.
-                bool down = hoeing && Mathf.Repeat(t + v.Phase, 0.7f) < 0.35f;
+                bool down = hoeing && !_businessTiles.Contains(v.WorkTile) && Mathf.Repeat(t + v.Phase, 0.7f) < 0.35f; // no hoe at a business
                 string frame = walking ? "_walk" + (int)Mathf.Repeat((t + v.Phase) * 8f, 4f) : down ? "_work" : "";
                 v.Body.sprite = SpriteBank.Rendered(v.Sprite + v.Facing + frame) ?? SpriteBank.Rendered(v.Sprite + v.Facing);
                 float bob = walking ? Mathf.Abs(Mathf.Sin((t + v.Phase) * 12.6f)) * 0.004f : hoeing ? 0f : Mathf.Sin((t + v.Phase) * 2.2f) * 0.003f;
