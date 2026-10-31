@@ -434,6 +434,41 @@ What this says:
 - **Fresh greens and okra on every acre earn little.** Methi's market takes 150 kg a day from an acre that can make 412. Radish already behaves so. It's the right lesson, and a player could still walk into it, so the crops' notes say so (§4).
 - **Already on `main`, not from this spec:** land reads 5.4 seasons of an owner-operated acre's net against ADR 0033's 8–15 (the crops move it to 5.2). The orders of Sprint 11 raised that net. To look at when land next comes up.
 
+**Measured after the build (US-226, 2026-10-31; the real content; 100 seeds × 8 seasons unless noted; `dotnet run --project tools/Tools.Balancer -- ladder` and `-- gate`):**
+
+| Measure | Before (the table above) | After | Gate |
+| --- | --- | --- | --- |
+| Competent bot's net worth | 15,85,020 (60 seeds) | 15,88,198 | ±5% |
+| Hamlet, median day | 5–9 (the gate) | 5.4 | 5–9 |
+| Ladder bot against competent | 0.994 (the rough one) | **0.937** | 0.90–1.20 |
+| Diversifier against competent | n/a | **0.875** | ≤ 1.20 |
+| Maize in Spring / mustard in Winter / both | 0.994 / 1.003 / 1.000 | 0.994 / 1.007 / 1.000 | ≤ 1.20 |
+| Highest stress bot | n/a | subsistence-dodger 1.039 | ≤ 1.20 |
+| Absentee | n/a | 0.906 | ≥ 0.80 |
+| Orders' share of sales; truck full | 15.2%; n/a | 15.2%; 0.0% of days | < 20%; < 10% |
+| Prices on the rails | n/a | 0.000% | under 0.1% |
+| Foreclosed in the recovery check | 54 of 100 | 54 of 100 | ≥ 50 |
+| `DairyBusiness`, hired median and farms foreclosed (64 seeds) | 10,124; 0 | 10,284; 0 | 10,000–20,000; 0 |
+
+The ladder bot is a checking-in player whose hand keeps the long crops. It earns a little less than competent because a short crop loses growing time between visits, as this section expected. Nothing needed tuning, so §4's values stand.
+
+**Two gate samples were raised, a test change and no rule change:** `Hr` from 16 to 256 seeds (fair pay's farm profit 1.77% from Phase 1's output; limit 2%), `DairyBusiness` from 16 to 64.
+
+**The residual is explained.** `CropLadder_ExactLedger` shows it's milk, to the coin: co-op milk has its own report line and isn't in the sales record, and the milk the house drinks is in both the milk account and home use. So crop sales + fruit sales = the sales record + home use − milk drunk at home, in every season of every run.
+
+**The hand's pick, sampled at 7:00 on all six inherited acres (16 seeds × 8 seasons, no fertiliser), on the finished content:** Spring radish 45%, potato 36%, okra 11%, methi 5%, maize 4%; Summer rice 68%, radish 27%, amaranth 5%; Monsoon rice 84%, radish 14%, amaranth 1%; Winter potato 76%, wheat 23%, lentils 1%. New crops are 20% in Spring and 5% or less otherwise, inside this section's tolerance. It differs from the earlier table because it's sampled at one fixed hour.
+
+**Each new crop's niche (`Gate.CropLadderNiches`):**
+
+| Crop | Best pick when |
+| --- | --- |
+| Methi | Back in 1 h (Spring, Winter); a dry acre (Spring) |
+| Amaranth | Back in 1 h (Summer, Monsoon); a dry acre and light labour (Monsoon) |
+| Okra | Back in 4 h (Spring, Summer, Monsoon) |
+| Green peas | Back in 4 h (Winter) |
+| Maize | Back in 6 h (Spring, Monsoon); tired soil (Monsoon) |
+| Mustard | Back in 8 h, a dry acre and light labour (Winter) |
+
 ## 10. Open questions
 
 G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 were revisited on 2026-10-31, and G15–G22 are new from the check against Sprints 14 and 15 and the owner's requests. All are closed.

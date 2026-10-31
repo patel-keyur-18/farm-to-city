@@ -43,6 +43,7 @@ namespace Tools.Balancer
                 return 0;
             }
             if (mode == "economy") return Economy.Print(Config(content), years, seed);
+            if (mode == "ladder") return Gate.PrintCropLadder(Config(content, null), named && args.Length > 0 ? int.Parse(args[0]) : 100);
             if (mode == "gate") return Gate.Print(edit => Config(content, edit), named && args.Length > 0 ? int.Parse(args[0]) : 1000);
 
             ClockDef clock = ContentLoader.LoadClock(File.ReadAllText(Path.Combine(content, "clock.json")));

@@ -142,7 +142,7 @@ namespace Tools.Balancer
             private readonly Dictionary<long, long> _bedGrams = new Dictionary<long, long>(); // keyed lookups only
             private readonly Dictionary<long, int> _treeBatches = new Dictionary<long, int>();
             public double Kg, CareSum, WaterSum, GardenKg, AcreSeasons, SpoiledKg;
-            public long Trader, Local, Mandi, HomeUse, Supermarket;
+            public long Trader, Local, Mandi, HomeUse, Supermarket, HomeMilk;
             public int TruckFullDays, TruckDays;
             public SeasonReport Report;
             public Fixed Index;
@@ -186,6 +186,7 @@ namespace Tools.Balancer
                     case MarketSales m: Local += m.Amount; break;
                     case MandiTripReturned r: Mandi += r.Net; MandiTrips++; break;
                     case HomeUseEaten u: HomeUse += u.Value; break;
+                    case MilkCollected k: HomeMilk += k.HomeAmount; break;
                     case OrderDelivered d: Supermarket += d.Amount; break;
                     case TruckArrived _: TruckDays++; break;
                     case TruckLeft l: if (l.Reason == TruckLeaveReason.Full) TruckFullDays++; break;
