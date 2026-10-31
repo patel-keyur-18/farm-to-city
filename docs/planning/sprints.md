@@ -650,7 +650,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 15 · 8–21 Mar 2027 · Phase 2 (the bakery and the dairy, full hiring and HR; specs 018 and 019 written; 2 weeks, ADR 0076)
 
-- **Status:** Built; awaiting the owner's device check (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
+- **Status:** Done; the owner's device check passed 2026-10-31 (plan approved by the owner, 2026-10-27). Before it: Sprint 14's checklist finished in the Editor (checks 7, 8, 21, 25, 27 pass; the field sheet's home loan fixed)
 - **Branch:** `sprint/15-chains-and-hr`
 - **Goal:** Spec 016's production chains built (F12.2): recipes, the bakery (pav and rusk from your atta) and the dairy (paneer, curd and ghee from your milk), each with its art, screens and buyers. Spec 015 built (F11.4): one hiring board for every role, interviews, references and negotiation, output from skill, motivation and fatigue, courses and four traits, HR events and employer reputation. Save schema 11 with its migration and fixture (ADR 0076). The developer panel's Next era. Specs 018 (school, literacy, Codex, advisors, the Village unlock) and 019 (statements, the finance hub, milestones) written and approved; their code comes in Sprints 17 and 18.
 - **Points:** 56 (F12.2 16 with US-223, F11.4 21, US-218 1; the owner's requests 18, ADR 0083: US-219 3, US-220 2, US-221 7, US-222 6)
