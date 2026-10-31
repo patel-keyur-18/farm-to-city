@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
@@ -149,10 +150,21 @@ namespace Tools.Balancer
         /// cash is short), a market-wage post, interviews, an offer to the best applicant once two wait or one has waited a
         /// day, renewal within the grace, and orders on the inherited acres each season.
         /// </summary>
+        /// <summary>
+        /// HR events (spec 015 §3.7), as a fair employer: pay the raise, match the offer, paid sick leave, the advance, throw a bad batch
+        /// away; the other choice only when the first can't be paid (a refused raise loses the worker at the close).
+        /// </summary>
+        protected virtual void AnswerHr(Simulation sim, long t)
+        {
+            foreach (HrEvent e in sim.State.People.HrEvents.ToArray())
+                if (!sim.Execute(new AnswerHrEvent(t, e.Id, 0)).Accepted) sim.Execute(new AnswerHrEvent(t, e.Id, 1));
+        }
+
         protected virtual void Employ(Simulation sim, long t)
         {
             PeopleState p = sim.State.People;
             if (p == null) return;
+            AnswerHr(sim, t);
             long S = sim.Clock.SecondsPerSeason;
             if (PeopleRules.HutCount(sim) == 0 && t >= S - ClockDef.SecondsPerDay / 2 && ReadyToHire(sim))
             {
@@ -161,15 +173,17 @@ namespace Tools.Balancer
                 Ok(sim, new BuildHandHut(t, Home.Quarters(sim.Config.Game))); // the labour quarters (ADR 0040)
             }
             if (p.Post == null && p.Hands.Count == 0 && PeopleRules.HutCount(sim) > 0 && !_posted) _posted = Ok(sim, new PostJob(t, PostAboveMarket));
-            if (PeopleRules.EmptyHut(sim) != null && p.Applicants.Count > 0 && ReadyToHire(sim))
+            // A hand from outside, into the hut (Phase 1's play; the board's townspeople are left to the business bots).
+            List<Applicant> outside = p.Applicants.FindAll(a => a.Place == 0 && a.CitizenId == 0);
+            if (PeopleRules.EmptyHut(sim) != null && outside.Count > 0 && ReadyToHire(sim))
             {
-                foreach (Applicant a in p.Applicants.ToArray()) if (!a.SecondTraitKnown) Ok(sim, new Interview(t, a.Id));
+                foreach (Applicant a in outside) if (!a.SecondTraitKnown) Ok(sim, new Interview(t, a.Id));
                 Applicant best = null;
-                foreach (Applicant a in p.Applicants) if (Acceptable(sim, a) && (best == null || Expected(sim, a) > Expected(sim, best))) best = a;
-                if (best != null && (p.Applicants.Count >= 2 || t - best.ArrivedAt >= ClockDef.SecondsPerDay))
+                foreach (Applicant a in outside) if (Acceptable(sim, a) && (best == null || Expected(sim, a) > Expected(sim, best))) best = a;
+                if (best != null && (outside.Count >= 2 || t - best.ArrivedAt >= ClockDef.SecondsPerDay))
                 {
                     Borrow(sim, t, PeopleRules.RestOfSeason(sim, PeopleRules.AskedWage(sim, Fixed.FromInt(best.Skill), best.AboveMarket)) + 20_000 * Money.Coin);
-                    Ok(sim, new OfferContract(t, best.Id));
+                    Ok(sim, new OfferContract(t, best.Id, OfferAt));
                 }
             }
             foreach (Hand h in p.Hands.ToArray())
@@ -203,6 +217,9 @@ namespace Tools.Balancer
         private int _orderSeason = -1;
 
         protected virtual bool PostAboveMarket { get { return false; } }
+
+        /// <summary>The level of a hand's offer: the asked wage.</summary>
+        protected virtual OfferLevel OfferAt { get { return OfferLevel.Asked; } }
 
         // ---- Cattle (spec 012 §9): after the Hamlet, a shed and two buffalo, a fodder acre, feed kept stocked ----
 
@@ -605,6 +622,22 @@ namespace Tools.Balancer
     }
 
     /// <summary>
+    /// Spec 015 §9: the competent founder who hires every hand 10% low and says no to every HR event (no raise, unpaid sick
+    /// leave, no advance, lets an offer from elsewhere take them).
+    /// </summary>
+    public sealed class LowPayBot : FarmerBot
+    {
+        public override string Name { get { return "low-pay"; } }
+
+        protected override OfferLevel OfferAt { get { return OfferLevel.Low; } }
+
+        protected override void AnswerHr(Simulation sim, long t)
+        {
+            foreach (HrEvent e in sim.State.People.HrEvents.ToArray()) sim.Execute(new AnswerHrEvent(t, e.Id, 1));
+        }
+    }
+
+    /// <summary>
     /// Stress bot (ADR 0016, 0045): random. Each hour a seeded random player command (the zero-time check's picker), plus
     /// harvesting what's ready so the farm isn't left to rot by chance alone. It must finish below the competent bot.
     /// </summary>
@@ -869,95 +902,184 @@ namespace Tools.Balancer
     }
 
     /// <summary>
-    /// Spec 016 §9 (US-117): the competent founder who, once the Hamlet comes, keeps the last inherited acre clear and founds a flour
-    /// mill on it, run by a hired miller or by the founder, with or without a business loan. A mill short of cash gets cash put in; at
-    /// each season's start, cash beyond a season's running costs and a margin comes out to the founder.
+    /// Spec 016 §9 (US-117, US-119): the competent founder who keeps the last inherited acres clear and founds businesses on them as
+    /// their era comes, one after another (the flour mill, then the bakery beside it), run by hired workers or by the founder, with or
+    /// without a business loan. A business short of cash gets cash put in; at each season's start, cash beyond a season's running
+    /// costs and a margin comes out to the founder.
     /// </summary>
-    public sealed class MillBot : FarmerBot
+    public class BusinessBot : FarmerBot
     {
         private readonly bool _self, _borrow;
+        private readonly string[] _types;
 
-        public MillBot(bool runsIt, bool borrows = false)
+        public BusinessBot(bool runsIt, bool borrows, params string[] types)
         {
             _self = runsIt;
             _borrow = borrows;
+            _types = types;
         }
 
-        public override string Name { get { return (_self ? "mill-yours" : "mill-hired") + (_borrow ? "-loan" : ""); } }
+        /// <summary>The dairy works only your herd's milk (neighbours' milk stopped).</summary>
+        public bool OwnMilkOnly { get; set; }
 
-        /// <summary>The rain-fed acre before the two kept for family houses (the last is the fodder acre).</summary>
-        private static int Acre(Simulation sim) { int[] a = AcresOf(sim); return a[a.Length - 4]; }
+        public override string Name
+        {
+            get
+            {
+                string what = string.Join("+", _types.Select(x => x == "flour_mill" ? "mill" : x));
+                return what + (_self ? "-yours" : "-hired") + (_borrow ? "-loan" : "") + (OwnMilkOnly ? "-own-milk" : "");
+            }
+        }
+
+        private static Sim.Core.Definitions.BusinessTypeDef Type(Simulation sim, string id)
+        {
+            return Sim.Core.Business.BusinessRules.Defs(sim).Types.First(x => x.Id == id);
+        }
+
+        /// <summary>The rain-fed acres before the two kept for family houses (the last is the fodder acre): the first business's, then the next's.</summary>
+        private static int Acre(Simulation sim, int i) { int[] a = AcresOf(sim); return a[a.Length - 4 - i]; }
+
+        private static Sim.Core.Business.Business Of(Simulation sim, string id)
+        {
+            return sim.State.Businesses?.Businesses.Find(b => b.Status != Sim.Core.Business.BusinessStatus.Closed && Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == id);
+        }
+
+        /// <summary>The next business to found: the first of the list not standing whose era has come, once those before it stand.</summary>
+        private int Next(Simulation sim)
+        {
+            if (sim.State.Businesses == null) return -1;
+            for (int i = 0; i < _types.Length; i++)
+            {
+                if (Of(sim, _types[i]) != null) continue;
+                return Sim.Core.Business.BusinessRules.Unlocked(sim, Type(sim, _types[i])) ? i : -1;
+            }
+            return -1;
+        }
+
+        private bool Mills(Simulation sim)
+        {
+            return _types.Contains("flour_mill") && sim.State.Businesses != null && Sim.Core.Business.BusinessRules.Unlocked(sim, Type(sim, "flour_mill"));
+        }
 
         /// <summary>Wheat in Winter once the Hamlet allows a mill: its own wheat to mill.</summary>
         protected override string CropFor(Simulation sim, int season)
         {
-            bool mill = sim.State.Businesses != null && Sim.Core.Business.BusinessRules.Unlocked(sim, Sim.Core.Business.BusinessRules.Defs(sim).Types[0]);
-            return season == 3 && mill ? "wheat" : base.CropFor(sim, season);
+            return season == 3 && Mills(sim) ? "wheat" : base.CropFor(sim, season);
         }
 
         /// <summary>Its own wheat for the mill: a year's daily amount kept back from selling (wheat comes in Winter only).</summary>
         protected override long Kept(Simulation sim, int good)
         {
-            Sim.Core.Business.Business mill = Mill(sim);
+            Sim.Core.Business.Business mill = sim.State.Businesses == null ? null : Of(sim, "flour_mill");
             if (mill == null || good != Sim.Core.Business.BusinessRules.TypeOf(sim, mill).Input) return 0;
             return mill.OwnPerDay * sim.Clock.DaysPerSeason * 4;
         }
 
-        /// <summary>The mill first: until it's founded, its cash is kept back from building houses.</summary>
+        /// <summary>The next business first: until it's founded, its cash is kept back from building houses.</summary>
         protected override long HomeReserve(Simulation sim)
         {
             long reserve = base.HomeReserve(sim);
-            if (sim.State.Businesses == null || Mill(sim) != null) return reserve;
-            var type = Sim.Core.Business.BusinessRules.Defs(sim).Types[0];
-            if (!Sim.Core.Business.BusinessRules.Unlocked(sim, type)) return reserve;
+            int i = Next(sim);
+            if (i < 0) return reserve;
+            var type = Type(sim, _types[i]);
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
-            return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, type.OwnPerDay, type.Fee, loan).CashNeeded - loan;
+            return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
         }
-
-        private static Sim.Core.Business.Business Mill(Simulation sim) { return sim.State.Businesses?.Businesses.Find(b => b.Status != Sim.Core.Business.BusinessStatus.Closed); }
 
         protected override bool KeepsClear(Simulation sim, int tile)
         {
-            return tile == Acre(sim) && Mill(sim) == null && sim.State.Businesses != null
-                && Sim.Core.Business.BusinessRules.Unlocked(sim, Sim.Core.Business.BusinessRules.Defs(sim).Types[0]);
+            int i = Next(sim);
+            return i >= 0 && tile == Acre(sim, i);
         }
 
         public override void Play(Simulation sim, long t)
         {
             base.Play(sim, t);
             if (sim.State.Businesses == null) return;
-            Sim.Core.Business.Business mill = Mill(sim);
-            if (mill == null) { Found(sim, t); return; }
-            // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
-            bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
-            if (Sim.Core.Business.BusinessBooks.Short(sim, mill) || (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(mill) > 0))
+            int next = Next(sim);
+            if (next >= 0) Found(sim, t, next);
+            foreach (string id in _types)
             {
-                long put = Sim.Core.Business.BusinessBooks.Overdrawn(mill) + (mill.Worker == Sim.Core.Business.WorkerKind.None ? MarketRules.Indexed(sim, Sim.Core.Business.BusinessRules.TypeOf(sim, mill).Wage) : 0);
-                put = (put + Money.Coin - 1) / Money.Coin * Money.Coin;
-                if (put > 0 && sim.State.Ledger.Cash >= put + 10_000 * Money.Coin) Ok(sim, new PutCash(t, mill.Id, put));
-            }
-            if (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(mill) == 0)
-            {
-                var type = Sim.Core.Business.BusinessRules.TypeOf(sim, mill);
-                long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;
-                long spare = (mill.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
-                if (spare > 0) Ok(sim, new TakeCash(t, mill.Id, spare));
+                Sim.Core.Business.Business b = Of(sim, id);
+                if (b != null) Manage(sim, t, b);
             }
         }
 
-        private void Found(Simulation sim, long t)
+        private void Manage(Simulation sim, long t, Sim.Core.Business.Business b)
+        {
+            // The day's mix: what the shops buy, and for what keeps, what the trader takes as well when it pays (rusk does; ghee from whole milk doesn't).
+            var bt = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
+            foreach (int p in bt.Products)
+            {
+                long want = Sim.Core.Business.BusinessRules.ShopGramsPerDay(sim, bt, p)
+                    + (Sim.Core.Business.BusinessRules.Pays(sim, bt, p) ? sim.Config.Game.Market.Region.TraderBuyPerDay(p) : 0);
+                if (b.Status == Sim.Core.Business.BusinessStatus.Open && b.Mix[p] != want) Ok(sim, new SetMix(t, b.Id, sim.Config.Game.Market.Goods[p].Id, want));
+            }
+            // The dairy's milk a day follows its mix; neighbours' milk unless it works its own only.
+            if (bt.TakesMilk && b.Status == Sim.Core.Business.BusinessStatus.Open)
+            {
+                long milk = Sim.Core.Business.BusinessRules.MilkFor(bt, b.Mix);
+                if (b.OwnPerDay != milk || b.BuyFromMarket == OwnMilkOnly) Ok(sim, new SetBusiness(t, b.Id, b.OpenHour, b.CloseHour, b.Fee, milk, !OwnMilkOnly));
+            }
+            if (!_self) Hire(sim, t, b);
+            // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
+            bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
+            if (Sim.Core.Business.BusinessBooks.Short(sim, b) || (seasonStart && Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0))
+            {
+                long put = Sim.Core.Business.BusinessBooks.Overdrawn(b) + (b.Worker == Sim.Core.Business.WorkerKind.None ? MarketRules.Indexed(sim, Sim.Core.Business.BusinessRules.TypeOf(sim, b).Wage) : 0);
+                put = (put + Money.Coin - 1) / Money.Coin * Money.Coin;
+                if (put > 0 && sim.State.Ledger.Cash >= put + 10_000 * Money.Coin) Ok(sim, new PutCash(t, b.Id, put));
+            }
+            // Your cash running low (loan payments come at the close): draw what the business can spare, as an owner would.
+            bool low = sim.State.Ledger.Cash < 20_000 * Money.Coin;
+            if ((seasonStart || low) && Sim.Core.Business.BusinessBooks.Overdrawn(b) == 0)
+            {
+                var type = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
+                long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;
+                long spare = (b.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
+                if (spare > 0) Ok(sim, new TakeCash(t, b.Id, spare));
+            }
+        }
+
+        /// <summary>
+        /// Nobody working (spec 015): word sent at the usual wage; a townsperson hired at once at what they ask, the most skilled;
+        /// else the best migrant by what they seem, once two ask or one has waited a day.
+        /// </summary>
+        private static void Hire(Simulation sim, long t, Sim.Core.Business.Business b)
+        {
+            if (b.Status == Sim.Core.Business.BusinessStatus.Closed || HiringRules.BusinessPlace(sim, b.Id) != RejectReason.None) return;
+            PeopleState p = sim.State.People;
+            if (p.PostAt(b.Id) == null && p.ApplicantsFor(b.Id).Count == 0 && sim.State.Ledger.CanAfford(MarketRules.Indexed(sim, sim.Config.Game.People.JobPost.Cost)))
+                Ok(sim, new PostJob(t, b.Id, false));
+            List<Applicant> list = p.ApplicantsFor(b.Id);
+            Applicant best = list.Find(a => a.CitizenId != 0);
+            if (best == null)
+            {
+                foreach (Applicant a in list) if (best == null || a.Skill > best.Skill) best = a;
+                if (best == null || (list.Count < 2 && t - best.ArrivedAt < ClockDef.SecondsPerDay)) return;
+            }
+            if (Sim.Core.Business.BusinessBooks.CanSpend(sim, b) < PeopleRules.RestOfSeason(sim, HiringRules.OfferWage(sim, best, OfferLevel.Asked))) return;
+            Ok(sim, new OfferContract(t, best.Id));
+        }
+
+        private void Found(Simulation sim, long t, int i)
         {
             var defs = Sim.Core.Business.BusinessRules.Defs(sim);
-            var type = defs.Types[0];
-            if (!Sim.Core.Business.BusinessRules.Unlocked(sim, type)) return;
-            int acre = Acre(sim);
+            var type = Type(sim, _types[i]);
+            int acre = Acre(sim, i);
             PeopleState p = sim.State.People;
             if (p?.OrderFor(OrderTargetKind.Field, acre) is StandingOrder o) Ok(sim, new ClearStandingOrder(t, o.HandId, OrderTargetKind.Field, acre));
             if (Sim.Core.Business.BusinessRules.Place(sim, acre) != RejectReason.None) return;
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
-            long need = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, type.OwnPerDay, type.Fee, loan).CashNeeded - loan;
+            long need = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
             if (sim.State.Ledger.Cash < need + 30_000 * Money.Coin) return;
             Ok(sim, new FoundBusiness(t, type.Id, acre, need, _self, loan > 0 ? new Financing(defs.LenderId, loan, defs.TermSeasons) : null));
         }
+    }
+
+    /// <summary>Spec 016 §9 (US-117): the flour mill alone, from the Hamlet.</summary>
+    public sealed class MillBot : BusinessBot
+    {
+        public MillBot(bool runsIt, bool borrows = false) : base(runsIt, borrows, "flour_mill") { }
     }
 }

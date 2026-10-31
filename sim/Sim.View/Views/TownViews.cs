@@ -431,6 +431,16 @@ namespace Sim.View.Views
     /// </summary>
     public static class CitizenSheet
     {
+        /// <summary>
+        /// Offer work as a hand (ADR 0083 §3), only for an adult who works outside: for anyone else the Work line beside it already says
+        /// why not (too young, retired, a job in town), so a greyed button would only repeat it (Editor review, 2026-10-30).
+        /// </summary>
+        private static ActionVm OfferWork(ViewContext ctx, Citizen c)
+        {
+            if (!HouseholdRules.WorksOutside(ctx.Sim, c)) return null;
+            return ActionVm.Open("offerWork:" + c.Id, ctx.Strings.Get("citizen.offerWork"), new SheetRequest("TownOffer", c.Id));
+        }
+
         public static SheetVm Build(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;
@@ -448,6 +458,7 @@ namespace Sim.View.Views
                         { Opens = new SheetRequest("Household", home.Id) });
                 var job = new LineVm(s.Get("citizen.job"), TownWords.Job(ctx, c), c.Job == CitizenJob.Hand ? null : "citizen.job", c.Id);
                 if (c.Job == CitizenJob.Hand) job.Action = ActionVm.Open("hand:" + c.HandId, s.Get("action.see"), new SheetRequest("Hand", c.HandId));
+                else job.Action = OfferWork(ctx, c);
                 vm.Lines.Add(job);
             }
             string from = TownWords.Village(ctx, c);
@@ -662,11 +673,18 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), s.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))) { Icon = "family_house_building" });
         }
 
-        /// <summary>Build a family house on this acre (an empty field's sheet and the homestead's): the cost, or the sim's reason.</summary>
+        /// <summary>
+        /// Build a family house on this acre (an empty field's sheet and the homestead's): the cost, or the sim's reason; short of
+        /// the price but not the down payment, "With a home loan" in its place (ADR 0071, as the placement bar).
+        /// </summary>
         internal static ActionVm BuildHere(ViewContext ctx, int tileId)
         {
-            return ActionVm.Checked(ctx, "buildHouse", ctx.Strings.Get("town.buildHouse"), ctx.Fmt.Coins(TownSheet.HouseCost(ctx.Sim)), ActionKind.Secondary,
+            ActionVm cash = ActionVm.Checked(ctx, "buildHouse", ctx.Strings.Get("town.buildHouse"), ctx.Fmt.Coins(TownSheet.HouseCost(ctx.Sim)), ActionKind.Secondary,
                 at => new BuildFamilyHouse(at, tileId));
+            if (cash.Enabled) return cash;
+            ActionVm loan = HousePlacement.WithLoan(ctx, tileId);
+            if (!loan.Enabled) return cash;
+            return new ActionVm(loan.Id, cash.Label, ctx.Strings.Get("houseLoan.fieldDetail", "amount", loan.Detail), ActionKind.Secondary, true, null, null, loan.Opens);
         }
     }
 }

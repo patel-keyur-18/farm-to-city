@@ -26,12 +26,25 @@ namespace Sim.Core.Tests
         internal static long NextClose(Simulation sim) { return (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason; }
 
         /// <summary>A rich Hamlet town with a flour mill founded on <see cref="PeopleKit.HomeTile"/> (capital 1,50,000), not yet built.</summary>
-        internal static Business.Business Mill(Simulation sim, bool runYourself = false, long capital = 150_000_00)
+        internal static Business.Business Mill(Simulation sim, bool runYourself = false, long capital = 150_000_00, bool hire = true)
         {
             Hamlet(sim);
             CashTo(sim, 500_000_00);
             Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile, capital, runYourself));
-            return sim.State.Businesses.Businesses.Last();
+            Business.Business b = sim.State.Businesses.Businesses.Last();
+            if (!runYourself && hire) Staff(sim, b);
+            return b;
+        }
+
+        /// <summary>
+        /// A worker hired at once, as the board would (spec 015 §3.1): a commuter at skill 50 and the role's market wage, the rest of the
+        /// season paid from the business's cash. Spec 016's tests predate the board; spec 015's own are in <see cref="HiringTests"/>.
+        /// </summary>
+        internal static void Staff(Simulation sim, Business.Business b)
+        {
+            int steady = sim.Config.Game.People.IndexOfTrait("steady");
+            var a = new Applicant { Id = sim.State.People.NextApplicantId++, Skill = 50, Trait1 = steady, Trait2 = steady, Place = b.Id };
+            HiringRules.HireWorker(sim, a, HiringRules.OfferWage(sim, a, OfferLevel.Asked), 0);
         }
 
         internal static void GiveWheat(Simulation sim, long grams)
@@ -50,7 +63,8 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.EraLocked), "the Hamlet's");
             Hamlet(sim);
             CashTo(sim, 500_000_00);
-            Assert.That(sim.Execute(new FoundBusiness(t, "bakery", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
+            Assert.That(sim.Execute(new FoundBusiness(t, "bakery", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.EraLocked), "the Village's");
+            Assert.That(sim.Execute(new FoundBusiness(t, "sweet_shop", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", QuartersTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed));
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 50_000_00, false)).Reason, Is.EqualTo(RejectReason.CapitalTooLow), "the building, equipment and a season's wage");
             Ok(sim, new Sow(t, HomeTile + 1, "radish", Farm.SeedSource.Certified, "none"));
@@ -71,8 +85,9 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.NoRoom), "one business an acre");
             Assert.That(b.Status, Is.EqualTo(BusinessStatus.Building));
             sim.AdvanceTo(b.ReadyAt);
-            Assert.That(b.Status, Is.EqualTo(BusinessStatus.Open));
-            Assert.That(b.Worker, Is.EqualTo(WorkerKind.Neighbour), "nobody in town: a daily worker from a neighbouring village");
+            Assert.That((b.Status, b.Worker), Is.EqualTo((BusinessStatus.Open, WorkerKind.None)), "open, waiting for a hire from the board (spec 015)");
+            Staff(sim, b);
+            Assert.That(b.Worker, Is.EqualTo(WorkerKind.Neighbour), "a worker from a neighbouring village");
             Assert.That(b.Ledger.Balance(Account.HiredLabour), Is.EqualTo(PeopleRules.RestOfSeason(sim, MarketRules.Indexed(sim, 27_000_00))).Within(100), "the rest of the season's wage, upfront");
         }
 
@@ -87,12 +102,15 @@ namespace Sim.Core.Tests
             long day = sim.State.Clock.SimTime / 86_400 + 1;
             sim.AdvanceTo(day * 86_400 + 8 * 3600);
             long sales = sim.State.Ledger.Balance(Account.CropSales), cash = sim.State.Ledger.Cash;
+            long Recorded() { return sim.State.Finance.Sales.This.Where(x => x.Good == "wheat" && x.To == SoldTo.Business).Sum(x => x.Amount); }
+            long recorded = Recorded();
             int wheat = sim.Config.Game.Market.IndexOf("wheat");
             Fixed price = MarketRules.Floor(sim, wheat);
             sim.AdvanceTo(day * 86_400 + 18 * 3600);
             long value = MarketRules.Value(sim, wheat, 200_000, price);
             Assert.That(b.OwnToday, Is.EqualTo(200_000), "200 kg a day by default");
             Assert.That(sales - sim.State.Ledger.Balance(Account.CropSales), Is.EqualTo(value).Within(value / 50), "Crop sales on the farm (prices move a little in a day)");
+            Assert.That(Recorded() - recorded, Is.EqualTo(value).Within(value / 50), "in the sales record (spec 019 §3.9)");
             Assert.That(sim.State.Ledger.Cash - cash, Is.EqualTo(value).Within(value / 50));
             Assert.That((sim.State.Ledger.Reconcile(), b.Ledger.Reconcile()), Is.EqualTo(((string)null, (string)null)));
         }
@@ -250,6 +268,8 @@ namespace Sim.Core.Tests
             CashTo(sim, 500_000_00);
             Ok(sim, new PutCash(sim.State.Clock.SimTime, b.Id, 100_000_00));
             Assert.That(BusinessBooks.Overdrawn(b), Is.EqualTo(0), "cash put in pays the overdraft off first");
+            Assert.That(b.Worker, Is.EqualTo(WorkerKind.None), "nobody comes by themselves (spec 015): hire from the board");
+            Staff(sim, b);
             Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.None), "a worker again, paid upfront");
             Assert.That(BusinessBooks.Short(sim, b), Is.False);
             Assert.That(b.Ledger.Reconcile(), Is.Null);
@@ -267,6 +287,7 @@ namespace Sim.Core.Tests
             var mill = sim.Config.Game.Businesses.Types[0];
             long max = BusinessBooks.MaxLoan(sim, mill), need = BusinessRules.Projected(sim, mill, false, mill.OwnPerDay, mill.Fee).CashNeeded;
             Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Staff(sim, sim.State.Businesses.Businesses.Last());
             Business.Business b = sim.State.Businesses.Businesses.Last();
             sim.AdvanceTo(b.ReadyAt + 86_400);
             Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, b.Ledger.Cash));
@@ -300,6 +321,7 @@ namespace Sim.Core.Tests
             Hamlet(fore);
             CashTo(fore, 500_000_00);
             Ok(fore, new FoundBusiness(fore.State.Clock.SimTime, "flour_mill", HomeTile, need - max, false, new Financing("coop_bank", max, 12)));
+            Staff(fore, fore.State.Businesses.Businesses.Last());
             Business.Business f = fore.State.Businesses.Businesses.Last();
             BusinessBooks.LoanOf(fore, f).State = LoanState.Defaulted;
             CreditSystem.Foreclose(fore);
@@ -331,6 +353,7 @@ namespace Sim.Core.Tests
             Simulation s = CreditKit.NewSim(cash: 500_000);
             Hamlet(s);
             Ok(s, new FoundBusiness(s.State.Clock.SimTime, "flour_mill", HomeTile, 150_000_00, false));
+            Staff(s, s.State.Businesses.Businesses.Last());
             s.AdvanceTo(s.State.Clock.SimTime + 3 * 86_400);
             LoadResult r = SaveTests.RoundTrip(s);
             Assert.That(r.Error, Is.EqualTo(SaveError.None));
@@ -383,6 +406,138 @@ namespace Sim.Core.Tests
             Assert.That(b.AreaToday, Is.EqualTo(0));
             Assert.That(b.OwnToday, Is.EqualTo(200_000), "your own wheat still");
             Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        // AC-12: the bakery turns 10 kg atta (+ 1.5 kg of supplies, bought as 150 coins) into 13 kg of pav, and 12 kg of pav into 10 kg
+        // of rusk, at most 95 kg of inputs (about 124 kg of bread) a real hour; at 6:00 the village shops buy each up to their amount a
+        // person for the area's people and your town's; then the trader takes rusk; with no mill of yours the plan prices atta at the
+        // market's import price, with one at the trader's.
+        [Test]
+        public void Bakery_Recipe_Buyers()
+        {
+            Simulation sim = Start();
+            int atta = sim.Config.Game.Market.IndexOf("atta"), pav = sim.Config.Game.Market.IndexOf("pav"), rusk = sim.Config.Game.Market.IndexOf("rusk");
+            Assert.That(BusinessRules.InputPrice(sim, atta), Is.EqualTo(MarketRules.Ceiling(sim, atta)), "no mill: atta at the market's import price");
+            Business.Business b = RecipeTests.Found(sim, "bakery");
+            var t = BusinessRules.TypeOf(sim, b);
+            Assert.That(BusinessRules.AreaPeople(sim), Is.EqualTo(BusinessRules.Defs(sim).CatchmentPeople + sim.State.Citizens.Population), "the area's people and your town's");
+            long shopPav = BusinessRules.ShopGramsPerDay(sim, t, pav), shopRusk = BusinessRules.ShopGramsPerDay(sim, t, rusk);
+            long trader = sim.Config.Game.Market.Region.TraderBuyPerDay(rusk);
+            Assert.That(trader, Is.GreaterThan(0), "rusk keeps, so the trader takes it");
+            Ok(sim, new SetMix(sim.State.Clock.SimTime, b.Id, "rusk", shopRusk + trader));
+
+            long day = sim.State.Clock.SimTime / 86_400 + 1;
+            sim.AdvanceTo(day * 86_400 + 7 * 3600);
+            sim.DrainEvents();
+            long supplies0 = SuppliesPaid(b);
+            sim.AdvanceTo(day * 86_400 + 19 * 3600);
+            var worked = sim.DrainEvents().OfType<BusinessWorked>().Where(w => w.BusinessId == b.Id).ToList();
+            Assert.That(worked.All(w => w.OwnGrams <= 95_000), Is.True, "95 kg of inputs a real hour at most");
+            long ruskMade = b.MadeToday[rusk], pavIntoRusk = ruskMade * 12 / 10, pavMade = b.MadeToday[pav] + pavIntoRusk;
+            Assert.That(ruskMade, Is.EqualTo(shopRusk + trader));
+            Assert.That(b.MadeToday[pav], Is.EqualTo(shopPav));
+            long attaUsed = worked.Sum(w => w.OwnGrams) - pavIntoRusk;
+            Assert.That(attaUsed, Is.EqualTo(pavMade * 10 / 13).Within(worked.Count * 2), "10 kg of atta to 13 kg of pav (rounded up a batch at a time)");
+            Assert.That(SuppliesPaid(b) - supplies0, Is.EqualTo(Finance.Money.Value(pavMade, Fixed.FromInt(150) * sim.State.Market.PriceIndex, 13_000)).Within(worked.Count * 2),
+                "1.5 kg of supplies (150 coins) a 13 kg batch");
+            Assert.That(worked.Max(w => w.OwnGrams) * 13 / 10, Is.LessThanOrEqualTo(124_000), "about 124 kg of bread a real hour at most");
+
+            // The round at 6:00: the shops first, then the trader's truck takes the rusk left.
+            sim.AdvanceTo((day + 1) * 86_400 + 6 * 3600 + 1);
+            Assert.That(sim.State.Market.TraderBoughtToday[rusk], Is.EqualTo(trader), "the trader takes the rusk the shops don't");
+            Assert.That(sim.State.Market.TraderBoughtToday[pav], Is.Zero, "a crop trader doesn't buy fresh bread");
+            Assert.That(b.Stock[pav] + b.Stock[rusk], Is.Zero, "all of it sold");
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+
+            // With your mill open, its atta comes at the trader's price, and the plan counts it so.
+            Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", HomeTile + 1, 150_000_00, false));
+            BusinessTests.Staff(sim, sim.State.Businesses.Businesses.Last());
+            Assert.That(BusinessRules.InputPrice(sim, atta), Is.EqualTo(MarketRules.Floor(sim, atta)), "your mill's atta at the trader's price");
+        }
+
+        // AC-13: the dairy keeps your milk at 6:00 up to its milk a day at the co-op's price (your farm's milk sales either way; the rest
+        // to the co-op), buffalo milk to paneer first and cow milk to curd first, by the yields, at most 190 L a real hour; with
+        // neighbours' milk allowed it fills the day's amount at the co-op's price and the premium.
+        [Test]
+        public void Dairy_MilkIn_Recipes()
+        {
+            Simulation sim = Start();
+            RecipeTests.Village(sim);
+            CashTo(sim, 1_000_000_00);
+            Ok(sim, new BuildShed(sim.State.Clock.SimTime));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 25 * 3600);
+            Ok(sim, new BuyAnimal(sim.State.Clock.SimTime, "buffalo"));
+            Ok(sim, new BuyAnimal(sim.State.Clock.SimTime, "cow"));
+            Business.Business b = RecipeTests.Found(sim, "dairy", HomeTile + 1);
+            var t = BusinessRules.TypeOf(sim, b);
+            int buf = sim.Config.Game.Market.IndexOf("milk_buffalo"), cow = sim.Config.Game.Market.IndexOf("milk_cow");
+            int paneer = sim.Config.Game.Market.IndexOf("paneer"), curd = sim.Config.Game.Market.IndexOf("curd"), ghee = sim.Config.Game.Market.IndexOf("ghee");
+            Assert.That(b.OwnPerDay, Is.EqualTo(BusinessRules.MilkFor(t, b.Mix)), "it starts keeping what its mix needs");
+            Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, b.OpenHour, b.CloseHour, b.Fee, 150_000, false)); // your milk only, 150 L
+
+            long day = sim.State.Clock.SimTime / 86_400 + 1;
+            sim.AdvanceTo(day * 86_400 + 5 * 3600);
+            long fromFarm0 = Paid(b, "ledger.boughtFromFarm");
+            sim.AdvanceTo(day * 86_400 + 6 * 3600 + 1);
+            long keptBuf = b.Stock[buf], keptCow = b.Stock[cow], herd = sim.State.Livestock.LastMilkMl - sim.State.Livestock.LastHomeMl;
+            Assert.That(keptBuf + keptCow, Is.EqualTo(System.Math.Min(150_000, herd)), "your milk up to its milk a day");
+            Assert.That(keptBuf, Is.GreaterThan(0), "buffalo milk first");
+            long price = Finance.Money.Value(keptBuf, Livestock.LivestockRules.MilkPrice(sim, 0), 1000) + Finance.Money.Value(keptCow, Livestock.LivestockRules.MilkPrice(sim, 1), 1000);
+            Assert.That(Paid(b, "ledger.boughtFromFarm") - fromFarm0, Is.EqualTo(price).Within(1), "at the co-op's price");
+
+            sim.DrainEvents();
+            sim.AdvanceTo(day * 86_400 + 19 * 3600);
+            var worked = sim.DrainEvents().OfType<BusinessWorked>().Where(w => w.BusinessId == b.Id).ToList();
+            Assert.That(worked.All(w => w.OwnGrams <= 190_000), Is.True, "190 L a real hour at most");
+            // Buffalo milk to paneer, cow milk to curd, buffalo milk left to ghee (15 L a kilo).
+            long paneerKg = System.Math.Min(b.Mix[paneer], keptBuf * 2 / 10);
+            Assert.That(b.MadeToday[paneer], Is.EqualTo(paneerKg).Within(100), "5 L of buffalo milk a kilo of paneer, first");
+            Assert.That(b.MadeToday[curd], Is.EqualTo(System.Math.Min(b.Mix[curd], keptCow)).Within(100), "a litre of cow milk a kilo of curd");
+            Assert.That(b.MadeToday[ghee], Is.EqualTo(System.Math.Min(b.Mix[ghee], (keptBuf - paneerKg * 5) / 15)).Within(100), "the buffalo milk left to ghee");
+
+            // Neighbours' milk fills the day's amount after yours, at the co-op's price and the premium.
+            Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, b.OpenHour, b.CloseHour, b.Fee, 600_000, true));
+            long fromNeighbours0 = Paid(b, "ledger.boughtFromNeighbours");
+            sim.AdvanceTo((day + 1) * 86_400 + 6 * 3600 + 1);
+            long own = b.Stock[buf] + b.Stock[cow];
+            Assert.That(own, Is.EqualTo(600_000), "filled to its milk a day");
+            long bought = Paid(b, "ledger.boughtFromNeighbours") - fromNeighbours0;
+            Assert.That(bought, Is.GreaterThan(0));
+            Assert.That(BusinessRules.NeighbourMilkPrice(sim, t), Is.EqualTo(Livestock.LivestockRules.MilkPrice(sim, 0) + Fixed.FromInt(2) * sim.State.Market.PriceIndex));
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        // §3.9b: with no herd at all (no shed), the dairy still buys its milk a day from neighbours at 6:00 and makes paneer and curd.
+        [Test]
+        public void Dairy_NoHerd_NeighboursMilk()
+        {
+            Simulation sim = Start();
+            Business.Business b = RecipeTests.Found(sim, "dairy", HomeTile + 1);
+            Assert.That(sim.State.Livestock.Animals, Is.Empty);
+            int buf = sim.Config.Game.Market.IndexOf("milk_buffalo"), paneer = sim.Config.Game.Market.IndexOf("paneer");
+            long day = sim.State.Clock.SimTime / 86_400 + 1;
+            sim.AdvanceTo(day * 86_400 + 6 * 3600 + 1);
+            Assert.That(b.Stock[buf], Is.EqualTo(b.OwnPerDay), "neighbours' buffalo milk, the whole day's amount");
+            sim.AdvanceTo(day * 86_400 + 19 * 3600);
+            Assert.That(b.MadeToday[paneer], Is.GreaterThan(0));
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+
+            // US-114: with its dairyman away (sick leave or a course), nobody can work the milk, so none is taken that morning.
+            Worker w = BusinessRules.HiredWorker(sim, b);
+            w.Hr.SickUntil = (day + 2) * 86_400 + 12 * 3600;
+            long milk = Paid(b, "ledger.boughtFromNeighbours");
+            sim.AdvanceTo((day + 1) * 86_400 + 6 * 3600 + 1);
+            Assert.That(Paid(b, "ledger.boughtFromNeighbours"), Is.EqualTo(milk), "no milk bought for a day nobody works");
+        }
+
+        private static long Paid(Business.Business b, string key)
+        {
+            return b.Ledger.Entries.Where(e => e.DescriptionKey == key).Sum(e => e.Postings.Where(p => p.Account == Account.BusinessStock).Sum(p => p.Amount));
+        }
+
+        private static long SuppliesPaid(Business.Business b)
+        {
+            return b.Ledger.Entries.Where(e => e.DescriptionKey == "ledger.supplies").Sum(e => e.Postings.Where(p => p.Account == Account.BusinessStock).Sum(p => p.Amount));
         }
     }
 }

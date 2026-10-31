@@ -138,6 +138,13 @@ namespace Game.Presentation
                     CardVm card = Cards.Regular(_ctx, r.ApplicantId);
                     if (card != null) ShowCard(card, id => { if (id == SettingsIds.SeePeople) OpenSheet(new SheetRequest("People", 0)); });
                 }
+                if (e is HrEventRaised hr)
+                {
+                    // Spec 015 §3.7: a worker needs a word (a raise, an offer, sick leave, an emergency, a bad batch); the alert keeps it if put off.
+                    CardVm card = HrEventSheet.Card(_ctx, hr.EventId);
+                    long id = hr.EventId;
+                    if (card != null) ShowCard(card, b => Run(new Command[] { new AnswerHrEvent(Sim.State.Clock.SimTime, id, b == SettingsIds.Yes ? 0 : 1) }));
+                }
                 if (e is FamilyRequest f)
                 {
                     // Spec 014 §3.13: a free house is offered to a hand living alone first; the card asks (null once it has lapsed).

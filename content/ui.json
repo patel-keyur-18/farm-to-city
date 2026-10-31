@@ -221,5 +221,33 @@
   "skillBands": [35, 55, 75],
   "skillStarPoints": 20,
   "referenceAcreHours": 3,
-  "happyAbove": 60
+  "happyAbove": 60,
+  "outputBands": [70, 85, 97, 110],
+  "weatherLook": {
+    "_note": "The look approved in the preview (owner, 2026-10-30; docs/art/s15-222-weather-*.png). Colours multiply (or, as overlay, lay a pale wash over) the map; sizes and speeds are points on an iPhone 13 screen (390 high). Lightning never flashes: rise >= 0.3 s, gaps >= 15 s (ADR 0083 §15).",
+    "easeSeconds": 3,
+    "streakCap": 480,
+    "nightLight": 0.45,
+    "reducedStreakAlpha": 0.6,
+    "weathers": {
+      "sun": { "multiply": [1.0, 0.81, 0.56], "multiplyAlpha": 0.08, "saturation": 1.06, "brightness": 1.05 },
+      "cloudy": { "multiply": [0.725, 0.765, 0.8], "multiplyAlpha": 0.3, "saturation": 0.88, "brightness": 0.98,
+        "clouds": { "count": 6, "alpha": 0.22, "speed": 14 } },
+      "rain": { "multiply": [0.557, 0.62, 0.671], "multiplyAlpha": 0.4, "saturation": 0.92, "brightness": 0.95,
+        "clouds": { "count": 5, "alpha": 0.12, "speed": 22 },
+        "streaks": { "count": 220, "alpha": 0.35, "length": 16, "slant": 0.18, "speed": 820, "width": 1.1, "gust": 0 } },
+      "heavy_rain": { "multiply": [0.463, 0.529, 0.604], "multiplyAlpha": 0.52, "saturation": 0.82, "brightness": 0.92,
+        "streaks": { "count": 420, "alpha": 0.42, "length": 22, "slant": 0.22, "speed": 1050, "width": 1.2, "gust": 0 },
+        "splashesPerSecond": 70, "mist": [0.78, 0.816, 0.847], "mistAlpha": 0.14 },
+      "storm": { "multiply": [0.345, 0.396, 0.478], "multiplyAlpha": 0.6, "saturation": 0.78, "brightness": 0.92,
+        "clouds": { "count": 5, "alpha": 0.18, "speed": 40 },
+        "streaks": { "count": 380, "alpha": 0.4, "length": 22, "slant": 0.35, "speed": 1100, "width": 1.2, "gust": 0.15 },
+        "splashesPerSecond": 50,
+        "glow": { "peak": 0.32, "riseSeconds": 0.4, "fadeSeconds": 1.0, "minGap": 15, "maxGap": 25 } },
+      "heatwave": { "multiply": [0.953, 0.863, 0.722], "multiplyAlpha": 0.18, "overlay": [1.0, 0.824, 0.604], "overlayAlpha": 0.2,
+        "saturation": 0.82, "brightness": 1.05, "haze": 0.34, "shimmer": 1.2 },
+      "frost": { "multiply": [0.812, 0.863, 0.918], "multiplyAlpha": 0.3, "overlay": [0.914, 0.945, 0.984], "overlayAlpha": 0.24,
+        "saturation": 0.68, "brightness": 1.0, "rime": 0.55 }
+    }
+  }
 }

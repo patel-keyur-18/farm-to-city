@@ -117,7 +117,7 @@ namespace Game.Presentation.Ui
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
                 case "hand_hut": case "hand_hut_building": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
-                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
+                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "population": case "happiness": return SpriteBank.Rendered("icon_" + icon);
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
@@ -129,7 +129,7 @@ namespace Game.Presentation.Ui
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
-                case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran":
+                case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran": case "pav": case "rusk": case "paneer": case "curd": case "ghee":
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
@@ -496,15 +496,15 @@ namespace Game.Presentation.Ui
         }
 
         /// <summary>Tabs over the rows (People: Workers and Town): the showing one filled, the other a plain button.</summary>
-        private VisualElement TabStrip(SheetVm vm)
+        private VisualElement TabStrip(System.Collections.Generic.List<ActionVm> tabs, string showing)
         {
             var strip = new VisualElement { pickingMode = PickingMode.Ignore };
             strip.style.flexDirection = FlexDirection.Row;
             strip.style.marginTop = 10;
-            foreach (ActionVm t in vm.Tabs)
+            foreach (ActionVm t in tabs)
             {
                 ActionVm tab = t;
-                bool on = t.Id == vm.Tab;
+                bool on = t.Id == showing;
                 Button b = UiKit.MakeButton(t.Label, on ? ActionLook.Primary : ActionLook.Secondary, () => { if (!on && OnAction != null) OnAction(tab); });
                 b.name = t.Id;
                 b.style.flexGrow = 1; b.style.flexBasis = 0;
@@ -894,7 +894,7 @@ namespace Game.Presentation.Ui
 
         public void Show(SheetVm vm, bool refresh = false)
         {
-            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab);
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn);
             foreach (LineVm l in vm.Lines)
             {
                 if (l.Pie != null) foreach (PieSliceVm p in l.Pie) key.Append('|').Append(p.Label).Append(p.Percent).Append(p.Value);
@@ -906,7 +906,21 @@ namespace Game.Presentation.Ui
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
-            if (vm.Tabs != null) sheet.Add(TabStrip(vm));
+            if (vm.Tabs != null) sheet.Add(TabStrip(vm.Tabs, vm.Tab));
+            if (vm.Switch != null)
+            {
+                // A smaller strip under the tabs (This season | Last season), indented and slimmer so it reads as part of the tab above.
+                VisualElement sw = TabStrip(vm.Switch, vm.SwitchOn);
+                sw.style.marginLeft = 60; sw.style.marginRight = 46;
+                foreach (VisualElement b in sw.Children())
+                {
+                    b.style.minHeight = 56;
+                    b.style.borderBottomWidth = 5;
+                    b.style.paddingTop = b.style.paddingBottom = 2;
+                    b.Query<Label>().ForEach(l => l.style.fontSize = 30);
+                }
+                sheet.Add(sw);
+            }
             var scroll = NewScroll();
             scroll.style.marginTop = 8;
             scroll.style.flexShrink = 1;

@@ -188,6 +188,9 @@ namespace Sim.Core.Livestock
             return q;
         }
 
+        /// <summary>Green fodder's name in the sales record (spec 019 §3.9): it's sold standing, never a good in the store.</summary>
+        public const string GreenFodder = "green_fodder";
+
         /// <summary>What the fodder fields cut beyond the animals' need is sold standing to neighbours (§3.7): Dr Cash, Cr 4000.</summary>
         private static void SellStanding(Simulation sim, FeedingReport report, long grams)
         {
@@ -196,6 +199,7 @@ namespace Sim.Core.Livestock
             long amount = Money.Value(grams, price, 1000);
             if (amount > 0)
                 sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.fodderSold", "shed", new Posting(Account.Cash, amount), new Posting(Account.CropSales, -amount));
+            sim.State.Finance.Sales.Add(GreenFodder, SoldTo.Neighbours, amount);
             report.GreenSold = grams;
             report.GreenSoldAmount = amount;
         }
@@ -251,7 +255,12 @@ namespace Sim.Core.Livestock
             LivestockState s = sim.State.Livestock;
             LivestockDefs defs = LivestockRules.Defs(sim);
             long t = sim.State.Clock.SimTime;
-            if (animals.Count == 0) { ResetCare(s); return; }
+            if (animals.Count == 0)
+            {
+                ResetCare(s);
+                if (household) Business.BusinessRules.MilkIn(sim, new long[defs.Animals.Count]); // no herd: your dairy still buys neighbours' milk
+                return;
+            }
             FarmSystem.Accrue(sim);
             Season season = Calendar.SeasonAt(t - 1, sim.Clock);
             Fixed care = LivestockRules.CareFactor(sim);
@@ -268,6 +277,12 @@ namespace Sim.Core.Livestock
             var home = new long[animals.Count];
             long homeValue = 0, homeMl = 0;
             if (household) homeValue = HouseholdMilk(sim, animals, ml, home, System.Math.Min(ClockDef.SecondsPerDay, t - since), out homeMl);
+            if (household) // your dairy keeps its milk a day before the co-op (spec 016 §3.9b): still your milk sales
+            {
+                var left = new long[defs.Animals.Count];
+                for (int i = 0; i < animals.Count; i++) left[animals[i].Kind] += ml[i] - home[i];
+                Business.BusinessRules.MilkIn(sim, left);
+            }
 
             long total = 0, totalMl = 0;
             for (int i = 0; i < animals.Count; i++)

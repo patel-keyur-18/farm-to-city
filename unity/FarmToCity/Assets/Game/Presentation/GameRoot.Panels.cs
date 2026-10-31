@@ -116,8 +116,14 @@ namespace Game.Presentation
                 Sim = () => Sim,
                 Advance = (s, mode) => { Sim.Execute(new DebugAdvance(s, mode)); AfterCommands(); },
                 Snapshot = () => _snapshot = Sim.State.Clone(),
+                NextEra = () =>
+                {
+                    CommandResult r = Sim.Execute(new DebugNextEra());
+                    AfterCommands();
+                    return r.Accepted ? "Era: " + Sim.Config.Game.Onboarding.Eras[Sim.State.Era.Current].Id : "Next era: " + r.Reason;
+                },
                 Restore = RestoreSnapshot,
-                Status = () => "snapshot " + (_snapshot == null ? "none" : "saved"),
+                Status = () => "snapshot " + (_snapshot == null ? "none" : "saved") + " · era " + (Sim.State.Era == null ? "none" : Sim.Config.Game.Onboarding.Eras[Sim.State.Era.Current].Id),
                 Visibility = v => _hud.SetVisible(v),
             });
             _hud.OnTimeHeld = () => _dev.Open();
@@ -143,12 +149,12 @@ namespace Game.Presentation
                 case "Letter": _sheet.Show(Letter.List(_ctx), refreshOnly); break;
                 case "Progress": _sheet.Show(ProgressSheet.Build(_ctx), refreshOnly); break;
                 case "Lands": _sheet.Show(LandsSheet.Build(_ctx), refreshOnly); break;
-                case "Money": _sheet.Show(MoneySheet.Build(_ctx), refreshOnly); break;
+                case "Money": _sheet.Show(MoneySheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id), refreshOnly); break;
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Repay":
                     Loan loan = Sim.State.Credit.Loans.Find(l => l.Id == r.Id);
-                    if (loan == null || !loan.IsOpen) { Return(new SheetRequest("Money", 0)); break; } // repaid in full
+                    if (loan == null || !loan.IsOpen) { Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); break; } // repaid in full
                     _sheet.Show(Repay.Build(_ctx, r.Id), refreshOnly);
                     break;
                 case "LandLoan": _sheet.Show(LandLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
@@ -185,7 +191,7 @@ namespace Game.Presentation
             {
                 case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
-                case "Borrow": case "Repay": Return(new SheetRequest("Money", 0)); return;
+                case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
                 case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
                 case "BusinessClose": Return(new SheetRequest("Businesses", 0)); return;
                 case "BuyInput":
@@ -193,10 +199,15 @@ namespace Game.Presentation
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));
                     return;
                 case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
-                case "Hire": case "Word": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working, word out
+                case "Hire": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working
+                case "Word": return; // the board stays: the post, a reference asked, a talk
+                case "HrEvent": if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: back to the alerts it came from
+                case "TownOffer": Return(new SheetRequest("Citizen", r.Id)); return; // back to their card: hired, countered or not
+                case "JobOffer": Return(new SheetRequest("Word", r.Arg == null ? 0 : long.Parse(r.Arg, System.Globalization.CultureInfo.InvariantCulture))); return; // back to the job's tab: hired, countered or gone
             }
             // The shed sheet stays open: building, buying from neighbours on or off, the hand's animals order (spec 012 §7).
             if (r.Kind == "Tile" && Sim.Config.Game.Livestock != null && r.Id == Sim.Config.Game.Livestock.Livestock.ShedTile) return;
+            if (r.Kind == "Tile" && Sim.State.Businesses != null && Sim.State.Businesses.Businesses.Exists(x => x.TileId == r.Id)) return; // a business's card stays: its worker, its settings
             if (commands[commands.Length - 1] is Spray || commands[commands.Length - 1] is HireLabourers) return; // the field sheet stays: see who's on it
             _sheet.Close();
         }

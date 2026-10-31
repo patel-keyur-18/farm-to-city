@@ -119,6 +119,9 @@ namespace Sim.Content
                     OnlyFields(c, path, "type", "seconds", "mode");
                     return new DebugAdvance(Long(Required(c, path, "seconds"), path + ".seconds"),
                         Mode(Required(c, path, "mode"), path + ".mode"));
+                case "DebugNextEra":
+                    OnlyFields(c, path, "type");
+                    return new DebugNextEra();
                 default:
                     return ReadGameCommand(c, path, type);
             }
@@ -291,6 +294,9 @@ namespace Sim.Content
                     Prop(w, "type", "DebugAdvance");
                     w.WritePropertyName("seconds"); w.WriteValue(d.Seconds);
                     Prop(w, "mode", ModeName(d.Mode));
+                    break;
+                case DebugNextEra _:
+                    Prop(w, "type", "DebugNextEra");
                     break;
                 default:
                     WriteGameCommand(w, command);

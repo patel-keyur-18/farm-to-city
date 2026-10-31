@@ -80,6 +80,7 @@ namespace Game.Presentation.Map
             public int WorkTile = -1; // the field being worked, or −1 at home
             public float WorkStart = -1f, WorkFor;
             public bool Leaving;
+            public Vector3? LeaveTo; // a labourer's way out: the west edge for a neighbour, their house for your people; else off to the west
             public float Phase;
         }
 
@@ -136,6 +137,51 @@ namespace Game.Presentation.Map
         private bool _built;
 
         public IsoGrid Grid { get { return _grid; } }
+
+        /// <summary>The storm's wind now, from the weather (−1 to 1 times its gust; 0 when still): trees lean, crops ripple (ADR 0083, US-222).</summary>
+        public float Gust { get; set; }
+        private bool _swaying;
+
+        /// <summary>Everything the map draws, valley edge included: where the weather's ground layers (rime, cloud shadows) lie.</summary>
+        public Bounds WorldBounds()
+        {
+            var b = new Bounds(TileCentre(0), Vector3.zero);
+            foreach (EdgeSpot e in _edge) b.Encapsulate(e.Ground.bounds);
+            foreach (Spot s in _crops) if (s.Renderer != null) b.Encapsulate(s.Renderer.bounds);
+            return b;
+        }
+
+        /// <summary>The material map sprites draw with (the 2D renderer's default), for the weather's particles.</summary>
+        public Material SpriteMaterial() { return _ring.sharedMaterial; }
+
+        /// <summary>
+        /// Gusts (spec 008 §3.4): each tree leans from its base by up to 4° and each crop's rows ripple a little, every one a little out of
+        /// step; set back upright when the wind drops.
+        /// </summary>
+        private void Sway()
+        {
+            if (Gust == 0f && !_swaying) return;
+            _swaying = Gust != 0f;
+            float t = Time.unscaledTime;
+            int i = 0;
+            foreach (KeyValuePair<long, Spot> kv in _slots)
+            {
+                Transform tr = kv.Value.Renderer.transform;
+                float lean = Gust * 4f * (0.8f + 0.2f * Mathf.Sin(t * 3f + i++ * 1.7f));
+                tr.localRotation = Quaternion.Euler(0, 0, -lean);
+            }
+            _swayers.RemoveAll(x => x == null); // a valley acre redrawn since
+            foreach (Transform tr in _swayers) { float lean = Gust * 4f * (0.8f + 0.2f * Mathf.Sin(t * 3f + i++ * 1.3f)); tr.localRotation = Quaternion.Euler(0, 0, -lean); }
+            foreach (Spot s in _crops)
+            {
+                if (s.Renderer == null) continue;
+                float ripple = 1f - Mathf.Abs(Gust) * 0.12f * (0.5f + 0.5f * Mathf.Sin(t * 4f + i++ * 0.9f));
+                s.Renderer.transform.localScale = new Vector3(1f, ripple, 1f);
+            }
+        }
+
+        /// <summary>The valley's and village's own trees (neem, mango, babul), leaning with the farm's.</summary>
+        private readonly List<Transform> _swayers = new List<Transform>();
 
         public static MapPresenter Create(Transform parent, Tweens tweens, UiDef ui)
         {
@@ -271,6 +317,7 @@ namespace Game.Presentation.Map
                 if (decor != null)
                 {
                     v.Decor = NewRenderer("edgeDecor", SpriteBank.Rendered(decor), c, EdgeOrder(e.X, e.Y, 50));
+                    if (decor.StartsWith("tree", System.StringComparison.Ordinal)) _swayers.Add(v.Decor.transform);
                     v.Decor.transform.localScale = Vector3.one * scale;
                 }
                 _edge.Add(v);
@@ -545,7 +592,8 @@ namespace Game.Presentation.Map
                 case PersonKind.Founder: return "person_founder";
                 case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
                 case PersonKind.Citizen: case PersonKind.Customer: return "person_" + p.Look;
-                default: return p.Female ? "person_labourer_f" : "person_labourer_m";
+                case PersonKind.Worker when p.Look == null: return p.Female ? "person_hand_f" : "person_hand_m"; // as their card shows them
+                default: return p.Look != null ? "person_" + p.Look : p.Female ? "person_labourer_f" : "person_labourer_m"; // your townspeople as themselves (ADR 0083)
             }
         }
 
@@ -557,6 +605,7 @@ namespace Game.Presentation.Map
                 if (p.TileId < 0) continue;
                 seen.Add(p.Key);
                 Vector3 home = HomeOf(p);
+                bool comes = p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker;
                 if (!_people.TryGetValue(p.Key, out PersonView v))
                 {
                     v = new PersonView { Sprite = PersonSprite(p), Phase = Random.value * 6f };
@@ -564,13 +613,16 @@ namespace Game.Presentation.Map
                     v.Body = NewRenderer("person:" + p.Key, SpriteBank.Rendered(v.Sprite + "_front"), start, 0);
                     v.Shadow = NewRenderer("personShadow:" + p.Key, SpriteBank.ContactShadow, start, 0);
                     v.Shadow.transform.localScale = new Vector3(0.11f, 0.11f, 1f);
-                    // A day labourer walks in from the west edge of the valley; everyone else is simply there.
-                    v.Pos = animate && p.Kind == PersonKind.Labourer ? TileCentre(_width * (p.TileId / _width)) + new Vector3(-1.2f, -0.6f, 0) : start;
+                    // A neighbour hired for the day walks in from the west edge of the valley, one of your people from their house (ADR
+                    // 0083 §5), a business's worker the same; everyone else is simply there.
+                    bool town = comes && p.HomeHut != 0;
+                    v.Pos = animate && comes ? (town ? home : WestEdge(p.TileId)) : start;
                     v.Target = start;
                     if (p.Patrol.Count > 0) { v.WorkTile = p.Patrol[0]; v.PointsLeft = 2; }
                     _people[p.Key] = v;
                 }
                 v.Home = home;
+                v.LeaveTo = !comes ? (Vector3?)null : p.HomeHut != 0 ? home : WestEdge(p.TileId);
                 v.Leaving = false;
                 bool changed = !SamePatrol(v.Patrol, p.Patrol);
                 v.Patrol.Clear();
@@ -591,9 +643,12 @@ namespace Game.Presentation.Map
                 {
                     kv.Value.Leaving = true;
                     kv.Value.WorkTile = -1;
-                    kv.Value.Target = kv.Value.Pos + new Vector3(-2.5f, -1.25f, 0); // off to the west, then gone
+                    kv.Value.Target = kv.Value.LeaveTo ?? kv.Value.Pos + new Vector3(-2.5f, -1.25f, 0); // then gone
                 }
         }
+
+        /// <summary>Just past the valley's west edge on <paramref name="tile"/>'s row: where neighbours hired for the day come and go.</summary>
+        private Vector3 WestEdge(int tile) { return TileCentre(_width * (tile / _width)) + new Vector3(-1.2f, -0.6f, 0); }
 
         private static bool SamePatrol(List<int> a, List<int> b)
         {
@@ -610,6 +665,7 @@ namespace Game.Presentation.Map
                 case PersonKind.Hand: return _handHuts.ContainsKey(p.HomeHut) ? HutDoor(p.HomeHut, p.HomeTile) : HouseYard(p.HomeHut, p.HomeTile); // a hand whose family has a house
                 case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
                 case PersonKind.Customer: return MillQueue(p.HomeHut, p.HomeTile, p.Key[p.Key.Length - 1] - '0');
+                case PersonKind.Labourer when p.HomeHut != 0: case PersonKind.Worker when p.HomeHut != 0: return HouseYard(p.HomeHut, p.HomeTile); // one of your people: their house
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }
         }
@@ -617,6 +673,7 @@ namespace Game.Presentation.Map
         /// <summary>A spot to work inside a field, kept clear of its edges.</summary>
         private Vector3 WorkPoint(int tile)
         {
+            if (_businessTiles.Contains(tile)) return OnTile(tile, BusinessWorkAt[Random.Range(0, BusinessWorkAt.Length)]);
             float u = Random.Range(-0.3f, 0.3f), v = Random.Range(-0.3f, 0.3f);
             return TileCentre(tile) + new Vector3((u - v) * HalfWidth, -(u + v) * _grid.HalfHeight, 0);
         }
@@ -666,7 +723,7 @@ namespace Game.Presentation.Map
                 else { v.Facing = "_front"; v.Body.flipX = false; }
 
                 // Walking: four frames at 8 a second (ADR 0041 §8). Hoeing: the stand and work frames alternate, a stroke every 0.7 s.
-                bool down = hoeing && Mathf.Repeat(t + v.Phase, 0.7f) < 0.35f;
+                bool down = hoeing && !_businessTiles.Contains(v.WorkTile) && Mathf.Repeat(t + v.Phase, 0.7f) < 0.35f; // no hoe at a business
                 string frame = walking ? "_walk" + (int)Mathf.Repeat((t + v.Phase) * 8f, 4f) : down ? "_work" : "";
                 v.Body.sprite = SpriteBank.Rendered(v.Sprite + v.Facing + frame) ?? SpriteBank.Rendered(v.Sprite + v.Facing);
                 float bob = walking ? Mathf.Abs(Mathf.Sin((t + v.Phase) * 12.6f)) * 0.004f : hoeing ? 0f : Mathf.Sin((t + v.Phase) * 2.2f) * 0.003f;
@@ -796,6 +853,7 @@ namespace Game.Presentation.Map
             if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
             AnimateVehicles();
+            Sway();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }

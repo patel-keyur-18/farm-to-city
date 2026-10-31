@@ -19,7 +19,7 @@ namespace Sim.Core.People
             PeopleState s = sim.State.People;
             foreach (Hand h in s.Hands)
             {
-                if (h.Contract != ContractState.Active) continue;
+                if (h.Contract != ContractState.Active || WorkRules.Away(h)) continue; // away on a course or sick: orders wait
                 foreach (StandingOrder o in s.Orders.ToArray())
                 {
                     if (!HasActionLeft(sim, h)) break;
@@ -34,7 +34,7 @@ namespace Sim.Core.People
         /// </summary>
         public static void ActNow(Simulation sim, Hand h, StandingOrder o)
         {
-            if (h.Contract == ContractState.Active && HasActionLeft(sim, h)) Act(sim, h, o);
+            if (h.Contract == ContractState.Active && !WorkRules.Away(h) && HasActionLeft(sim, h)) Act(sim, h, o);
         }
 
         private static bool HasActionLeft(Simulation sim, Hand h)

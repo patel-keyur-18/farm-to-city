@@ -31,6 +31,13 @@
     { "id": "sapling_guava",  "nameKey": "good.sapling_guava",  "kind": "input", "unit": "each", "basePrice": 180, "weightKg": 2 },
     { "id": "sapling_mango",  "nameKey": "good.sapling_mango",  "kind": "input", "unit": "each", "basePrice": 350, "weightKg": 2 },
     { "id": "atta",      "nameKey": "good.atta",      "kind": "produce", "unit": "kg", "basePrice": 32, "elasticity": 0.4, "spoilagePerDay": 0.01, "sales": "processed", "dailyVolatility": 0.01, "dailyBand": 0.04 },
-    { "id": "bran",      "nameKey": "good.bran",      "kind": "produce", "unit": "kg", "basePrice": 15, "elasticity": 0.6, "spoilagePerDay": 0.005, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 }
+    { "id": "bran",      "nameKey": "good.bran",      "kind": "produce", "unit": "kg", "basePrice": 15, "elasticity": 0.6, "spoilagePerDay": 0.005, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "pav",       "nameKey": "good.pav",       "kind": "produce", "unit": "kg", "basePrice": 100, "elasticity": 0.5, "spoilagePerDay": 1.0, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "rusk",      "nameKey": "good.rusk",      "kind": "produce", "unit": "kg", "basePrice": 110, "elasticity": 0.5, "spoilagePerDay": 0.01, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "milk_buffalo", "nameKey": "good.milk_buffalo", "kind": "produce", "unit": "litre", "basePrice": 57.5, "elasticity": 0.3, "spoilagePerDay": 1.0, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "milk_cow",  "nameKey": "good.milk_cow",  "kind": "produce", "unit": "litre", "basePrice": 38, "elasticity": 0.3, "spoilagePerDay": 1.0, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "paneer",    "nameKey": "good.paneer",    "kind": "produce", "unit": "kg", "basePrice": 380, "elasticity": 0.8, "spoilagePerDay": 0.5, "sales": "processed", "edible": false, "dailyVolatility": 0.015, "dailyBand": 0.05 },
+    { "id": "curd",      "nameKey": "good.curd",      "kind": "produce", "unit": "kg", "basePrice": 75, "elasticity": 0.5, "spoilagePerDay": 1.0, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "ghee",      "nameKey": "good.ghee",      "kind": "produce", "unit": "kg", "basePrice": 900, "elasticity": 0.6, "spoilagePerDay": 0.003, "sales": "processed", "edible": false, "dailyVolatility": 0.015, "dailyBand": 0.05 }
   ]
 }

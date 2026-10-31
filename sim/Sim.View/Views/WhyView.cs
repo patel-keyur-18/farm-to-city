@@ -57,7 +57,7 @@ namespace Sim.View.Views
             { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
-            { "seasonSoFar", SeasonSoFar },
+            { "season", SeasonWhy },
             // The truck and supermarket orders (spec 011).
             { "orderPrice", OrderPrice }, { "owed", Owed }, { "truck", Truck },
             // Time and weather (spec 001).
@@ -69,6 +69,10 @@ namespace Sim.View.Views
             { "hire", Hire }, { "hand.skill", HandSkill }, { "hand.hours", HandHours }, { "hand.wage", HandWage },
             { "hand.lapse", HandLapse }, { "hand.prepaid", HandPrepaid }, { "hut", Hut }, { "applicant", Applicant },
             { "orderMin", OrderMin }, { "order", Order }, { "post", Post }, { "free", FreeLabourers },
+            // The hiring board (spec 015).
+            { "jobUsual", JobUsual }, { "jobWage", JobWage }, { "jobReference", JobReference },
+            { "staffOutput", StaffOutput }, { "staffOutputAt", StaffOutputAt }, { "staffLongDays", StaffLongDays },
+            { "reputation", ReputationWhy },
             // The away card (spec 008 §3.9).
             { "away", Away },
             // The Hamlet (spec 009 §3.6).
@@ -91,6 +95,9 @@ namespace Sim.View.Views
             { "planProfit", (c, i) => PlanLine(c, i, "profit") }, { "planCash", (c, i) => PlanLine(c, i, "cash") }, { "planPayback", (c, i) => PlanLine(c, i, "payback") },
             { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
             { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
+            { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
+            { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
+            { "dairyMilkADay", DairyMilkADay },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

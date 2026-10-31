@@ -165,12 +165,21 @@ namespace Sim.Core.Business
         /// <summary>The last closed seasons' reports, oldest first, at most <see cref="BusinessBooks.KeptReports"/>.</summary>
         public List<BusinessReport> Reports { get; internal set; } = new List<BusinessReport>();
 
+        /// <summary>
+        /// The day's mix (spec 016 §3.9c; save schema 11): grams a day to make of each product, and what was made since the last
+        /// morning round, indexed like the goods. All zero for the mill.
+        /// </summary>
+        public long[] Mix { get; internal set; }
+        public long[] MadeToday { get; internal set; }
+
         internal Business Clone()
         {
             var c = (Business)MemberwiseClone();
             c.Ledger = Ledger.Clone();
             c.Stock = (long[])Stock.Clone();
             c.StockCost = (long[])StockCost.Clone();
+            c.Mix = (long[])Mix.Clone();
+            c.MadeToday = (long[])MadeToday.Clone();
             c.Plan = Plan.Clone();
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
             return c;
@@ -208,6 +217,12 @@ namespace Sim.Core.Business
             h.WriteLong(OwnSeason);
             h.WriteInt(Reports.Count);
             foreach (BusinessReport report in Reports) report.WriteTo(h);
+            if (h is SaveWriter sw && sw.Schema < 11) return;
+            for (int i = 0; i < Mix.Length; i++)
+            {
+                h.WriteLong(Mix[i]);
+                h.WriteLong(MadeToday[i]);
+            }
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -218,13 +233,18 @@ namespace Sim.Core.Business
                 OpenHour = r.ReadInt(), CloseHour = r.ReadInt(), Fee = r.ReadFixed(), OwnPerDay = r.ReadLong(), BuyFromMarket = r.ReadBool(),
                 Worker = (WorkerKind)r.ReadInt(), WorkerCitizen = r.ReadLong(), Ledger = Ledger.ReadFrom(r),
             };
-            int n = r.ReadCount();
-            b.Stock = new long[n];
-            b.StockCost = new long[n];
+            // Per-good arrays in the save's good order, put back in the running content's (goods added since start empty).
+            int n = r.ReadCount(), goods = r.Count(ContentTable.Good);
+            if (n != r.SavedCount(ContentTable.Good)) throw new SaveContentException("a business has " + n + " goods, the save " + r.SavedCount(ContentTable.Good));
+            b.Stock = new long[goods];
+            b.StockCost = new long[goods];
+            b.Mix = new long[goods];
+            b.MadeToday = new long[goods];
             for (int i = 0; i < n; i++)
             {
-                b.Stock[i] = r.ReadLong();
-                b.StockCost[i] = r.ReadLong();
+                int at = r.Slot(ContentTable.Good, i);
+                b.Stock[at] = r.ReadLong();
+                b.StockCost[at] = r.ReadLong();
             }
             b.Day = r.ReadLong();
             b.OwnToday = r.ReadLong();
@@ -234,8 +254,15 @@ namespace Sim.Core.Business
             b.SeasonOpeningCash = r.ReadLong();
             b.AreaSeason = r.ReadLong();
             b.OwnSeason = r.ReadLong();
-            n = r.ReadCount();
-            for (int i = 0; i < n; i++) b.Reports.Add(BusinessReport.ReadFrom(r));
+            int reports = r.ReadCount();
+            for (int i = 0; i < reports; i++) b.Reports.Add(BusinessReport.ReadFrom(r));
+            if (r.Schema >= 11)
+                for (int i = 0; i < n; i++)
+                {
+                    int at = r.Slot(ContentTable.Good, i);
+                    b.Mix[at] = r.ReadLong();
+                    b.MadeToday[at] = r.ReadLong();
+                }
             return b;
         }
     }

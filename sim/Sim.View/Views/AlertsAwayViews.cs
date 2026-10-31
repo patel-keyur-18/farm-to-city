@@ -49,7 +49,7 @@ namespace Sim.View.Views
             if (sim.State.Credit != null)
             {
                 if (sim.State.Credit.PendingForeclosure)
-                    list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0)) });
+                    list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0, MoneySheet.Wealth)) });
                 foreach (Loan l in sim.State.Credit.Loans)
                     if (l.IsOpen && l.HasArrears && l.BusinessId != 0)
                         list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.businessMissed", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, sim.State.Businesses.Find(l.BusinessId)))),
@@ -119,6 +119,10 @@ namespace Sim.View.Views
                 foreach (Sim.Core.Livestock.Animal a in herd.Animals)
                     if (a.SickDays > 0)
                         list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Get("alert.animalSick", "name", a.Name), Action = ActionVm.Open("animal:" + a.Id, s.Get("action.open"), new SheetRequest("Animal", a.Id)) });
+            // HR events waiting for an answer (spec 015 §3.7): each opens its sheet with the two choices.
+            if (sim.State.People != null)
+                foreach (Sim.Core.People.HrEvent e in sim.State.People.HrEvents)
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = HrEventSheet.Title(ctx, e), Action = ActionVm.Open("hr:" + e.Id, s.Get("hr.answer"), new SheetRequest("HrEvent", e.Id)) });
             // A free family house offered to a hand living alone (spec 014 §3.13): Yes from here, or the card.
             if (sim.State.Citizens != null && sim.State.Citizens.OfferHandId != 0)
             {
@@ -434,6 +438,9 @@ namespace Sim.View.Views
             { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "LabourersHarvested", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
+            { "ReferenceChecked", Use.Motion }, { "CounterOffer", Use.StateOnly }, { "WorkerHired", Use.Motion }, { "WorkerLeft", Use.StateOnly },
+            { "CourseFinished", Use.Away }, { "LongDaysStopped", Use.Away },
+            { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away },
             { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },

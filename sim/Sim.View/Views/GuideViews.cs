@@ -86,7 +86,7 @@ namespace Sim.View.Views
             int hours = 0;
             foreach (SimEvent e in events)
             {
-                _happened.Add(e.GetType().Name);
+                _happened.Add(Name(e));
                 if (e is AwayAdvanceCompleted) away = true;
                 if (e is HourStarted) hours++;
                 if (e is CropSown c) _longestSown = Math.Max(_longestSown, c.ReadyAt - c.SimTime);
@@ -235,12 +235,15 @@ namespace Sim.View.Views
             return false;
         }
 
+        /// <summary>An event's name in the content: its type, and for an era its id too ("EraUnlocked(hamlet)"), so each era has its own page.</summary>
+        private static string Name(SimEvent e) { return e is EraUnlocked u ? "EraUnlocked(" + u.EraId + ")" : e.GetType().Name; }
+
         private bool Fires(Simulation sim, ConditionDef t, IReadOnlyList<SimEvent> events)
         {
             switch (t.Trigger)
             {
                 case TriggerKind.Event:
-                    foreach (SimEvent e in events) if (Contains(t.Names, e.GetType().Name)) return true;
+                    foreach (SimEvent e in events) if (Contains(t.Names, Name(e))) return true;
                     return false;
                 case TriggerKind.SeasonStart:
                     foreach (SimEvent e in events) if (e is SeasonStarted s && s.Season.ToString().ToLowerInvariant() == t.Value) return true;
@@ -405,7 +408,7 @@ namespace Sim.View.Views
                     var reports = sim.State.Finance.Reports;
                     return reports.Count == 0 ? (SheetRequest?)new SheetRequest("Money", 0) : new SheetRequest("Report", reports[reports.Count - 1].Period);
                 case "people": return new SheetRequest("People", 0);
-                case "money": return new SheetRequest("Money", 0);
+                case "money": return new SheetRequest("Money", 0, MoneySheet.Wealth); // the borrowing letter: the lenders are on Your wealth
                 case "progress": return new SheetRequest("Progress", 0);
                 case "orders": return new SheetRequest("Orders", 0);
                 case "shed": return new SheetRequest("Tile", sim.Config.Game.Livestock.Livestock.ShedTile);
@@ -524,7 +527,7 @@ namespace Sim.View.Views
             OnboardingDefs d = sim.Config.Game.Onboarding;
             EraState e = sim.State.Era;
             var vm = new SheetVm { Icon = "hut", Title = s.Get("progress.title") };
-            if (e.Current + 1 >= d.Eras.Count)
+            if (e.Current + 1 >= d.Eras.Count || d.Eras[e.Current + 1].Manual) // the Village's gate comes with spec 018 (ADR 0076)
             {
                 vm.Subtitle = s.Get("progress.done");
                 Rewards(ctx, vm, e.Current);

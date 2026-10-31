@@ -31,6 +31,11 @@ namespace Sim.Core.Saves
             AnswerFamilyRequest,
             BuildFamilyHouseLoan,
             FoundBusiness, SetBusiness, PutCash, TakeCash, CloseBusiness,
+            DebugNextEra,
+            SetMix,
+            PostJobAt, CheckReference, OfferAt, LetWorkerGo, RunBusinessYourself,
+            SendOnCourse, SetLongDays, AnswerHrEvent,
+            OfferTownsperson,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -43,6 +48,7 @@ namespace Sim.Core.Saves
                 case AdvanceTo c: T(Tag.AdvanceTo); w.WriteLong(c.Target); w.WriteInt((int)c.Mode); break;
                 case Sync c: T(Tag.Sync); w.WriteLong(c.NowWallUtc); break;
                 case DebugAdvance c: T(Tag.DebugAdvance); w.WriteLong(c.Seconds); w.WriteInt((int)c.Mode); break;
+                case DebugNextEra _: T(Tag.DebugNextEra); break;
                 case LiveRun c: T(Tag.LiveRun); w.WriteLong(c.FromWallUtc); w.WriteLong(c.ToWallUtc); w.WriteLong(c.SimSeconds); break;
                 case BuyParcel c:
                     At(c, Tag.BuyParcel); w.WriteString(c.ParcelId); w.WriteBool(c.Financing != null);
@@ -95,6 +101,7 @@ namespace Sim.Core.Saves
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
                 case CloseBusiness c: At(c, Tag.CloseBusiness); w.WriteLong(c.BusinessId); break;
+                case SetMix c: At(c, Tag.SetMix); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
                     break;
@@ -106,11 +113,20 @@ namespace Sim.Core.Saves
                     break;
                 case SellAnimal c: At(c, Tag.SellAnimal); w.WriteLong(c.AnimalId); break;
                 case SetBuyGreenFodder c: At(c, Tag.SetBuyGreenFodder); w.WriteBool(c.On); break;
-                case PostJob c: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
+                case PostJob c when c.Place == 0: At(c, Tag.PostJob); w.WriteBool(c.AboveMarket); break;
+                case PostJob c: At(c, Tag.PostJobAt); w.WriteLong(c.Place); w.WriteBool(c.AboveMarket); break;
+                case CheckReference c: At(c, Tag.CheckReference); w.WriteLong(c.ApplicantId); break;
+                case LetWorkerGo c: At(c, Tag.LetWorkerGo); w.WriteLong(c.BusinessId); break;
+                case RunBusinessYourself c: At(c, Tag.RunBusinessYourself); w.WriteLong(c.BusinessId); break;
+                case SendOnCourse c: At(c, Tag.SendOnCourse); w.WriteLong(c.Place); w.WriteLong(c.WorkerId); break;
+                case SetLongDays c: At(c, Tag.SetLongDays); w.WriteLong(c.HandId); w.WriteBool(c.On); break;
+                case AnswerHrEvent c: At(c, Tag.AnswerHrEvent); w.WriteLong(c.EventId); w.WriteInt(c.Choice); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
-                case OfferContract c: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
+                case OfferContract c when c.Level == OfferLevel.Asked: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
+                case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
                 case RenewContract c: At(c, Tag.RenewContract); w.WriteLong(c.HandId); break;
                 case DismissHand c: At(c, Tag.DismissHand); w.WriteLong(c.HandId); break;
+                case OfferTownsperson c: At(c, Tag.OfferTownsperson); w.WriteLong(c.CitizenId); w.WriteInt((int)c.Level); break;
                 case SetStandingOrder c:
                 {
                     At(c, Tag.SetStandingOrder); w.WriteLong(c.HandId);
@@ -131,6 +147,7 @@ namespace Sim.Core.Saves
             if (tag == Tag.AdvanceTo) return new AdvanceTo(r.ReadLong(), (AdvanceMode)r.ReadInt());
             if (tag == Tag.Sync) return new Sync(r.ReadLong());
             if (tag == Tag.DebugAdvance) return new DebugAdvance(r.ReadLong(), (AdvanceMode)r.ReadInt());
+            if (tag == Tag.DebugNextEra) return new DebugNextEra();
             if (tag == Tag.LiveRun) return new LiveRun(r.ReadLong(), r.ReadLong(), r.ReadLong());
             long at = r.ReadLong();
             switch (tag)
@@ -194,6 +211,7 @@ namespace Sim.Core.Saves
                     return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
                 }
                 case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
+                case Tag.SetMix: return new SetMix(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
@@ -209,8 +227,17 @@ namespace Sim.Core.Saves
                 case Tag.PostJob: return new PostJob(at, r.ReadBool());
                 case Tag.Interview: return new Interview(at, r.ReadLong());
                 case Tag.OfferContract: return new OfferContract(at, r.ReadLong());
+                case Tag.PostJobAt: return new PostJob(at, r.ReadLong(), r.ReadBool());
+                case Tag.CheckReference: return new CheckReference(at, r.ReadLong());
+                case Tag.OfferAt: return new OfferContract(at, r.ReadLong(), (OfferLevel)r.ReadInt());
+                case Tag.LetWorkerGo: return new LetWorkerGo(at, r.ReadLong());
+                case Tag.RunBusinessYourself: return new RunBusinessYourself(at, r.ReadLong());
+                case Tag.SendOnCourse: return new SendOnCourse(at, r.ReadLong(), r.ReadLong());
+                case Tag.SetLongDays: return new SetLongDays(at, r.ReadLong(), r.ReadBool());
+                case Tag.AnswerHrEvent: return new AnswerHrEvent(at, r.ReadLong(), r.ReadInt());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());
+                case Tag.OfferTownsperson: return new OfferTownsperson(at, r.ReadLong(), (OfferLevel)r.ReadInt());
                 case Tag.SetStandingOrder:
                 {
                     long hand = r.ReadLong();

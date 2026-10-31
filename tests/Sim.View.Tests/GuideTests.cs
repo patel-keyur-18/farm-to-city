@@ -413,5 +413,18 @@ namespace Sim.View.Tests
             GuideKit.Ok(sim, new AdvanceTo(sim.State.Clock.SimTime + 86400));
             Assert.That(ProgressSheet.Build(ctx).Lines.First(l => l.Label == "A house for a hand").Value, Is.EqualTo("Built"));
         }
+
+        // ADR 0076: each era's chapter fires on its own era only, so the developer panel's Next era (or a later era's gate) never
+        // reopens the Hamlet's page; the progress sheet says Hamlet while the Village's gate isn't built.
+        [Test]
+        public void EraChapter_OwnEraOnly()
+        {
+            Simulation sim = GuideKit.Skipped(out Guide guide);
+            var era = sim.State.Era;
+            typeof(Sim.Core.Progress.EraState).GetProperty("Current").SetValue(era, 1); // the Hamlet, its page not yet read
+            guide.Observe(sim, new SimEvent[] { new EraUnlocked(sim.State.Clock.SimTime, "village") });
+            Assert.That(guide.Next(sim), Is.Null, "no Hamlet page at the Village");
+            Assert.That(ProgressSheet.Build(ViewKit2.Context(sim)).Subtitle, Is.EqualTo("Your farm is a Hamlet."));
+        }
     }
 }

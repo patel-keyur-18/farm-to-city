@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -74,7 +74,97 @@ namespace Sim.View.Content
             Range(awayHours, 0, 72, root + ".awayCardMinHours");
             int happy = Int(Required(o, root, "happyAbove"), root + ".happyAbove");
             Range(happy, 1, 100, root + ".happyAbove");
-            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy);
+            var output = new List<int>();
+            List<JToken> ot = Array(Required(o, root, "outputBands"), root + ".outputBands");
+            if (ot.Count != 4) throw new ContentException(root + ".outputBands", "expected 4 output thresholds");
+            for (int i = 0; i < 4; i++)
+            {
+                int b = Int(ot[i], Index(root + ".outputBands", i));
+                Range(b, i == 0 ? 1 : output[i - 1] + 1, 200, Index(root + ".outputBands", i));
+                output.Add(b);
+            }
+            WeatherLookDef weather = o["weatherLook"] == null ? null : WeatherLook(Object(o["weatherLook"], root + ".weatherLook"), root + ".weatherLook");
+            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather);
+        }
+
+        private static float F(JToken t, string path, string lo, string hi)
+        {
+            Fixed v = Number(t, path);
+            Range(v, Fixed.Parse(lo), Fixed.Parse(hi), path);
+            return v.Raw / (float)(1L << Fixed.FractionBits);
+        }
+
+        private static float F(JObject o, string path, string name, string lo, string hi) { return F(Required(o, path, name), Join(path, name), lo, hi); }
+
+        /// <summary>
+        /// The weather's look (spec 008 §3.4, ADR 0083 §13–18). The no-flashing rule is checked here, so no tuning can break it: a glow
+        /// rises over at least 0.3 s and comes at most once a second (WCAG 2.3.1: never more than 3 flashes a second).
+        /// </summary>
+        private static WeatherLookDef WeatherLook(JObject o, string path)
+        {
+            OnlyFields(o, path, "_note", "easeSeconds", "streakCap", "nightLight", "reducedStreakAlpha", "weathers");
+            var def = new WeatherLookDef
+            {
+                EaseSeconds = F(o, path, "easeSeconds", "0.5", "10"), StreakCap = Int(Required(o, path, "streakCap"), Join(path, "streakCap")),
+                NightLight = F(o, path, "nightLight", "0", "1"), ReducedStreakAlpha = F(o, path, "reducedStreakAlpha", "0", "1"),
+            };
+            Range(def.StreakCap, 0, 1000, Join(path, "streakCap"));
+            var list = new List<WeatherStyle>();
+            string wp = Join(path, "weathers");
+            foreach (JProperty p in Object(Required(o, path, "weathers"), wp).Properties())
+            {
+                string q = Join(wp, p.Name);
+                JObject w = Object(p.Value, q);
+                OnlyFields(w, q, "multiply", "multiplyAlpha", "overlay", "overlayAlpha", "saturation", "brightness", "clouds", "streaks", "splashesPerSecond",
+                    "mist", "mistAlpha", "haze", "shimmer", "rime", "glow");
+                var s = new WeatherStyle
+                {
+                    Id = p.Name, Multiply = Colour(Required(w, q, "multiply"), Join(q, "multiply")), MultiplyAlpha = F(w, q, "multiplyAlpha", "0", "1"),
+                    Saturation = F(w, q, "saturation", "0", "2"), Brightness = F(w, q, "brightness", "0.5", "1.5"),
+                };
+                if (w["overlay"] != null) { s.Overlay = Colour(w["overlay"], Join(q, "overlay")); s.OverlayAlpha = F(w, q, "overlayAlpha", "0", "1"); }
+                if (w["mist"] != null) { s.Mist = Colour(w["mist"], Join(q, "mist")); s.MistAlpha = F(w, q, "mistAlpha", "0", "1"); }
+                if (w["splashesPerSecond"] != null) s.SplashesPerSecond = F(w, q, "splashesPerSecond", "0", "300");
+                if (w["haze"] != null) s.Haze = F(w, q, "haze", "0", "1");
+                if (w["shimmer"] != null) s.Shimmer = F(w, q, "shimmer", "0", "4");
+                if (w["rime"] != null) s.Rime = F(w, q, "rime", "0", "1");
+                if (w["clouds"] != null)
+                {
+                    string cp = Join(q, "clouds");
+                    JObject c = Object(w["clouds"], cp);
+                    OnlyFields(c, cp, "count", "alpha", "speed");
+                    s.Clouds = new CloudsDef { Count = Int(Required(c, cp, "count"), Join(cp, "count")), Alpha = F(c, cp, "alpha", "0", "1"), Speed = F(c, cp, "speed", "0", "200") };
+                    Range(s.Clouds.Count, 0, 12, Join(cp, "count"));
+                }
+                if (w["streaks"] != null)
+                {
+                    string sp = Join(q, "streaks");
+                    JObject r = Object(w["streaks"], sp);
+                    OnlyFields(r, sp, "count", "alpha", "length", "slant", "speed", "width", "gust");
+                    s.Streaks = new StreaksDef
+                    {
+                        Count = Int(Required(r, sp, "count"), Join(sp, "count")), Alpha = F(r, sp, "alpha", "0", "1"), Length = F(r, sp, "length", "1", "80"),
+                        Slant = F(r, sp, "slant", "-1", "1"), Speed = F(r, sp, "speed", "0", "3000"), Width = F(r, sp, "width", "0.5", "4"), Gust = F(r, sp, "gust", "0", "1"),
+                    };
+                    Range(s.Streaks.Count, 0, def.StreakCap, Join(sp, "count"));
+                }
+                if (w["glow"] != null)
+                {
+                    string gp = Join(q, "glow");
+                    JObject g = Object(w["glow"], gp);
+                    OnlyFields(g, gp, "peak", "riseSeconds", "fadeSeconds", "minGap", "maxGap");
+                    s.Glow = new GlowDef
+                    {
+                        Peak = F(g, gp, "peak", "0", "0.6"), RiseSeconds = F(g, gp, "riseSeconds", "0.3", "3"), FadeSeconds = F(g, gp, "fadeSeconds", "0.3", "5"),
+                        MinGap = F(g, gp, "minGap", "1", "120"), MaxGap = F(g, gp, "maxGap", "1", "300"),
+                    };
+                    if (s.Glow.MaxGap < s.Glow.MinGap) throw new ContentException(Join(gp, "maxGap"), "must be at least minGap");
+                    if (s.Glow.MinGap < s.Glow.RiseSeconds + s.Glow.FadeSeconds) throw new ContentException(Join(gp, "minGap"), "a glow must end before the next starts");
+                }
+                list.Add(s);
+            }
+            def.Weathers = list.AsReadOnly();
+            return def;
         }
 
         private static List<JToken> NonEmptyArray(JObject o, string path, string name)

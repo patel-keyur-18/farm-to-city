@@ -104,8 +104,9 @@ namespace Sim.Core.People
         /// Sets the season's budget (§3.5): income ÷ adult equivalents gives the food share; food, rent, clothing 8%, health 5%,
         /// education 5%, the rest half leisure and half to be saved (banked at the close). Short of what eating enough costs, savings
         /// make up the food first.
+        /// With <paramref name="keepRent"/> the season's rent already owed stands (a tenant hired as a hand mid-season, ADR 0083 §1).
         /// </summary>
-        public static void SetBudget(Simulation sim, Household x)
+        public static void SetBudget(Simulation sim, Household x, bool keepRent = false)
         {
             PopulationDefs p = sim.Config.Game.Population;
             long income = Income(sim, x, out long outside);
@@ -115,13 +116,14 @@ namespace Sim.Core.People
             x.Income = income;
             x.Food = Money.MulRate(income, FoodShare(sim, perPerson));
             x.FoodNeed = Money.MulRate(MarketRules.Indexed(sim, p.FoodBasketPerPerson), ae);
-            x.Rent = InFamilyHouse(sim, x) && !HasHand(sim, x) ? MarketRules.Indexed(sim, p.RentPerSeason) : 0;
+            if (!keepRent) x.Rent = InFamilyHouse(sim, x) && !HasHand(sim, x) ? MarketRules.Indexed(sim, p.RentPerSeason) : 0;
             x.Clothing = Money.MulRate(income, p.ClothingShare);
             x.HealthCare = Money.MulRate(income, p.HealthShare);
             x.Schooling = Money.MulRate(income, p.EducationShare);
             long rest = income - x.Food - x.Rent - x.Clothing - x.HealthCare - x.Schooling;
             if (rest < 0) rest = 0;
             x.Leisure = Money.MulRate(rest, p.LeisureOfRest);
+            if (SavesLeisure(sim, x)) x.Leisure /= 2; // a frugal member (spec 015 §3.6): half the leisure saved
             x.Saved = rest - x.Leisure;
             if (x.Food < x.FoodNeed && x.Savings > 0)
             {
@@ -131,6 +133,17 @@ namespace Sim.Core.People
             }
             x.FoodMet = x.FoodNeed <= 0 || x.Food >= x.FoodNeed ? Fixed.One : Fixed.FromRatio(x.Food, x.FoodNeed);
             HappinessRules.Update(sim, x); // the new budget shows at once, not at the next daily pass
+        }
+
+        private static bool SavesLeisure(Simulation sim, Household x)
+        {
+            var traits = sim.Config.Game.People.Traits;
+            foreach (long id in x.Members)
+            {
+                Citizen c = sim.State.Citizens.Citizen(id);
+                if (!IsChild(sim, c) && (traits[c.Trait1].SavesLeisure || traits[c.Trait2].SavesLeisure)) return true;
+            }
+            return false;
         }
 
         /// <summary>A hand's household in a family house pays no rent: the house is part of his pay (§3.6).</summary>

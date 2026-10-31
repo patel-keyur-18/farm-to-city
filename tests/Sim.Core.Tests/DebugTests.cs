@@ -74,5 +74,34 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new DebugAdvance(seconds, AdvanceMode.Live)).Reason, Is.EqualTo(RejectReason.InvalidStep));
             Assert.That(sim.Execute(new DebugAdvance(seconds, AdvanceMode.Away)).Reason, Is.EqualTo(RejectReason.InvalidStep));
         }
+
+        // ADR 0076 (US-218): the developer panel's Next era moves the town on an era at a time, as a gate would; the Village (its
+        // gate not built yet) never unlocks by itself; release builds refuse it; the command saves and replays.
+        [Test]
+        public void NextEra()
+        {
+            Simulation release = NewFarm();
+            Assert.That(release.Execute(new DebugNextEra()).Reason, Is.EqualTo(RejectReason.DevCommandsDisabled));
+            Assert.That(release.State.Era.Current, Is.Zero);
+
+            Simulation sim = NewFarm(options: new SimOptions { DevCommandsEnabled = true });
+            var eras = sim.Config.Game.Onboarding.Eras;
+            Assert.That(sim.Execute(new DebugNextEra()).Accepted, Is.True);
+            Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("hamlet"));
+            Assert.That(sim.DrainEvents().OfType<EraUnlocked>().Single().EraId, Is.EqualTo("hamlet"));
+
+            // A Hamlet whose Village gate isn't built stays a Hamlet through closes (eras.json: manual).
+            Assert.That(eras[2].Manual, Is.True);
+            sim.Execute(new DebugAdvance(sim.Clock.SecondsPerSeason, AdvanceMode.Live));
+            Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("hamlet"));
+
+            Assert.That(sim.Execute(new DebugNextEra()).Accepted, Is.True);
+            Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("village"));
+            Assert.That(sim.Execute(new DebugNextEra()).Reason, Is.EqualTo(RejectReason.InvalidStep), "the last era");
+
+            Saves.LoadResult r = Saves.SaveCodec.Read(Saves.SaveCodec.Write(sim.State, sim.Config, Wall0), sim.Config);
+            Assert.That(r.Error, Is.EqualTo(Saves.SaveError.None), r.Detail);
+            Assert.That(r.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
     }
 }

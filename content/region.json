@@ -30,13 +30,14 @@
     "sapling_banana": [1.00, 1.00, 1.00, 1.00],
     "sapling_papaya": [1.00, 1.00, 1.00, 1.00],
     "sapling_guava":  [1.00, 1.00, 1.00, 1.00],
-    "sapling_mango":  [1.00, 1.00, 1.00, 1.00]
+    "sapling_mango":  [1.00, 1.00, 1.00, 1.00],
+    "pav": [1.0, 1.0, 1.0, 1.0], "rusk": [1.0, 1.0, 1.0, 1.0], "milk_buffalo": [1.0, 1.0, 1.0, 1.0], "milk_cow": [1.0, 1.0, 1.0, 1.0],
+    "paneer": [1.0, 1.0, 1.0, 1.0], "curd": [1.0, 1.0, 1.0, 1.0], "ghee": [1.0, 1.0, 1.0, 1.0]
   },
   "traderBuyPerDay": {
     "radish": 300, "atta": 400, "bran": 100, "wheat": 2000, "rice": 2000, "potato": 3000, "lentils": 500, "banana": 150,
-    "papaya": 100, "guava": 150, "mango": 400, "spinach": 100, "coriander": 30
-  },
-  "demandPerDay": { "radish": 150, "atta": 120, "bran": 30, "wheat": 300, "rice": 300, "potato": 500, "lentils": 40, "banana": 60, "papaya": 40, "guava": 40, "mango": 80, "spinach": 60, "coriander": 15 },
-  "valleySupplyPerDay": { "radish": 135, "atta": 100, "bran": 20, "wheat": 270, "rice": 270, "potato": 450, "lentils": 36, "banana": 54, "papaya": 36, "guava": 36, "mango": 72, "spinach": 54, "coriander": 13.5 },
-  "importCapacityPerDay": { "radish": 15, "atta": 20, "bran": 10, "wheat": 30, "rice": 30, "potato": 50, "lentils": 4, "banana": 6, "papaya": 4, "guava": 4, "mango": 8, "spinach": 6, "coriander": 1.5 }
+    "papaya": 100, "guava": 150, "mango": 400, "spinach": 100, "coriander": 30, "pav": 0, "rusk": 100, "milk_buffalo": 0, "milk_cow": 0, "paneer": 60, "curd": 0, "ghee": 20 },
+  "demandPerDay": { "radish": 150, "atta": 120, "bran": 30, "wheat": 300, "rice": 300, "potato": 500, "lentils": 40, "banana": 60, "papaya": 40, "guava": 40, "mango": 80, "spinach": 60, "coriander": 15, "pav": 10, "rusk": 5, "milk_buffalo": 10, "milk_cow": 10, "paneer": 2, "curd": 10, "ghee": 1 },
+  "valleySupplyPerDay": { "radish": 135, "atta": 100, "bran": 20, "wheat": 270, "rice": 270, "potato": 450, "lentils": 36, "banana": 54, "papaya": 36, "guava": 36, "mango": 72, "spinach": 54, "coriander": 13.5, "pav": 9.0, "rusk": 4.5, "milk_buffalo": 9.0, "milk_cow": 9.0, "paneer": 1.8, "curd": 9.0, "ghee": 0.9 },
+  "importCapacityPerDay": { "radish": 15, "atta": 20, "bran": 10, "wheat": 30, "rice": 30, "potato": 50, "lentils": 4, "banana": 6, "papaya": 4, "guava": 4, "mango": 8, "spinach": 6, "coriander": 1.5, "pav": 1.0, "rusk": 0.5, "milk_buffalo": 1.0, "milk_cow": 1.0, "paneer": 0.2, "curd": 1.0, "ghee": 0.1 }
 }

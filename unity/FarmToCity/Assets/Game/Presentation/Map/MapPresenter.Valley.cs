@@ -116,6 +116,7 @@ namespace Game.Presentation.Map
         {
             Vector3 pos = OnTile(tile, p.At);
             SpriteRenderer r = NewRenderer(p.Sprite, SpriteBank.Rendered(p.Sprite), pos, Order(tile, _width, 45, pos.y - TileCentre(tile).y));
+            if (p.Sprite.Contains("tree")) _swayers.Add(r.transform);
             r.transform.localScale = Vector3.one * p.Scale;
             r.color = _tint;
             return r;
@@ -129,6 +130,7 @@ namespace Game.Presentation.Map
             {
                 Vector3 pos = centre + new Vector3((p.At.x + p.At.y) * HalfWidth, (p.At.y - p.At.x) * _grid.HalfHeight, 0f);
                 SpriteRenderer r = NewRenderer("edge" + p.Sprite, SpriteBank.Rendered(p.Sprite), pos, EdgeOrder(e.X, e.Y, 50) - Mathf.RoundToInt((pos.y - centre.y) * 100f));
+                if (p.Sprite.Contains("tree")) _swayers.Add(r.transform);
                 r.transform.localScale = Vector3.one * p.Scale;
                 _edgeFarmsteads.Add(r);
             }

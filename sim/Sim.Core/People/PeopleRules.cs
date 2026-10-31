@@ -15,13 +15,28 @@ namespace Sim.Core.People
         private const long Day = ClockDef.SecondsPerDay;
 
         /// <summary>
-        /// HandHours = hoursPerDay × (productivityBase + productivityPerSkill × skill ÷ 100) × Π traitHoursFactor (spec 006 §3.1).
+        /// HandHours = hours × (productivityBase + productivityPerSkill × skill ÷ 100) × Π traitHoursFactor (spec 006 §3.1), × motivation ×
+        /// (1 − fatigue) (spec 015 §3.4); hours are hoursPerDay, or longDayHours more on long days; 0 while away on a course.
         /// </summary>
         public static Fixed HandHours(Simulation sim, Hand h)
         {
+            if (WorkRules.Away(h)) return Fixed.Zero;
             PeopleDefs p = sim.Config.Game.People;
-            Fixed hours = p.Hand.HoursPerDay * (p.Hand.ProductivityBase + p.Hand.ProductivityPerSkill * h.Skill.MulRatio(1, 100));
-            return hours * p.Traits[h.Trait1].HoursFactor * p.Traits[h.Trait2].HoursFactor;
+            Fixed day = h.LongDays ? p.Hand.HoursPerDay + Fixed.FromInt(p.Work.LongDayHours) : p.Hand.HoursPerDay;
+            Fixed hours = day * (p.Hand.ProductivityBase + p.Hand.ProductivityPerSkill * h.Skill.MulRatio(1, 100));
+            hours = hours * p.Traits[h.Trait1].HoursFactor * p.Traits[h.Trait2].HoursFactor;
+            Fixed condition = WorkRules.Condition(sim, h);
+            return condition == Fixed.One ? hours : hours * condition; // neutral: exactly spec 006's hours
+        }
+
+        /// <summary>A second trait from <paramref name="roll"/> (spec 015 §3.6): evenly among those that don't clash with the first.</summary>
+        internal static int SecondTrait(Simulation sim, ulong roll, int first)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            int n = 0;
+            for (int i = 0; i < p.Traits.Count; i++) if (!p.Clash(first, i)) n++;
+            int k = (int)Rng.Below(roll, (ulong)n);
+            for (int i = 0; ; i++) if (!p.Clash(first, i) && k-- == 0) return i;
         }
 
         /// <summary>Labourers' hours a day while they're hired.</summary>
@@ -57,16 +72,22 @@ namespace Sim.Core.People
         /// </summary>
         public static long AskedWage(Simulation sim, Fixed skill, bool aboveMarket)
         {
+            return AskedWage(sim, sim.Config.Game.People.Hand.MarketWage, skill, aboveMarket);
+        }
+
+        /// <summary>The same for a role whose market wage (year-0, skill 50) is <paramref name="marketWage"/> (spec 015 §3.3).</summary>
+        public static long AskedWage(Simulation sim, long marketWage, Fixed skill, bool aboveMarket)
+        {
             HandDef h = sim.Config.Game.People.Hand;
             Fixed factor = h.WageBase + h.WagePerSkill * skill.MulRatio(1, 100);
             if (aboveMarket) factor = factor * sim.Config.Game.People.JobPost.AboveMarketFactor;
-            return Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(h.MarketWage, factor)));
+            return Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(marketWage, factor)));
         }
 
         /// <summary>The shown skill range: skill ± skillRangeHalfWidth, clamped to 0–100 (a regular's is exact).</summary>
         public static void SkillRange(Simulation sim, Applicant a, out int low, out int high)
         {
-            int w = a.SkillKnown ? 0 : sim.Config.Game.People.Hand.SkillRangeHalfWidth;
+            int w = HiringRules.RangeHalfWidth(sim, a);
             low = System.Math.Max(0, a.Skill - w);
             high = System.Math.Min(100, a.Skill + w);
         }
@@ -171,7 +192,7 @@ namespace Sim.Core.People
 
         /// <summary>
         /// Seconds until the next applicant (spec 006 §3.5): applicantEveryHours ± up to applicantJitterHours, both × rateFactor
-        /// while a job is posted. Seeded by the applicant's id (stream Applicants, draw 0).
+        /// while a job is posted, ÷ 0.75 at reputation 20 or below. Seeded by the applicant's id (stream Applicants, draw 0).
         /// </summary>
         internal static long ApplicantInterval(Simulation sim, long applicantId, bool posted)
         {
@@ -180,7 +201,10 @@ namespace Sim.Core.People
             long baseSec = factor.MulRatio(p.Hand.ApplicantEveryHours * 3600L, 1).RoundToLong();
             long jitter = factor.MulRatio(p.Hand.ApplicantJitterHours * 3600L, 1).RoundToLong();
             ulong r = Rng.Next(sim.State.Seed, RngStream.Applicants, (ulong)applicantId, 0);
-            return baseSec - jitter + (long)Rng.Below(r, (ulong)(2 * jitter + 1));
+            long wait = baseSec - jitter + (long)Rng.Below(r, (ulong)(2 * jitter + 1));
+            ReputationDef rep = p.Reputation;
+            if (sim.State.People.Reputation > rep.Low) return wait;
+            return (Fixed.FromInt(wait) / rep.LowPace).RoundToLong(); // a poor employer's name: applicants come more slowly (spec 015 §3.8)
         }
     }
 }

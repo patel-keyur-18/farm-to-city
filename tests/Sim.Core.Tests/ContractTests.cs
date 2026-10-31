@@ -162,8 +162,9 @@ namespace Sim.Core.Tests
             Fixed skill = h.Skill;
             sim.AdvanceTo(S);
             Assert.That(h.Skill, Is.EqualTo(skill + Fixed.FromInt(3)));
+            long wage = h.Wage;
             sim.AdvanceTo(2 * S);
-            Assert.That(h.Wage, Is.EqualTo(PeopleRules.AskedWage(sim, skill + Fixed.FromInt(3), false)), "the next renewal asks for the new skill");
+            Assert.That(h.Wage, Is.EqualTo(wage), "a contract renews at its current wage (ADR 0081): a raise is asked for (HrEventTests)");
 
             Simulation a = Start(seed: 2);
             Hand amb = HireHand(a);

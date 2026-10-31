@@ -40,6 +40,25 @@ namespace Sim.Core.Finance
                 new Posting(Account.Buildings, buildings),
                 new Posting(Account.OpeningEquity, -(cash + inputs + land + buildings)));
             sim.State.Finance.SeasonOpeningCash = cash;
+            sim.State.Finance.SeasonStartEntry = sim.State.Ledger.NextEntryId;
+        }
+
+        /// <summary>
+        /// A schema-11 save (spec 019 AC-16): the seasons' first entries found from the entries' periods, and an empty sales record that
+        /// fills from the next sale.
+        /// </summary>
+        internal static void MigrateSeasons(Simulation sim)
+        {
+            FinanceState f = sim.State.Finance;
+            long now = sim.Period;
+            f.SeasonStartEntry = f.LastSeasonStartEntry = sim.State.Ledger.NextEntryId;
+            for (int i = sim.State.Ledger.Entries.Count - 1; i >= 0; i--)
+            {
+                JournalEntry e = sim.State.Ledger.Entries[i];
+                if (e.Period >= now) f.SeasonStartEntry = e.Id;
+                if (e.Period >= now - 1) f.LastSeasonStartEntry = e.Id;
+            }
+            if (f.Reports.Count == 0) f.LastSeasonStartEntry = 0;
         }
 
         /// <summary>
@@ -68,6 +87,9 @@ namespace Sim.Core.Finance
             }
             sim.State.Finance.Reports.Add(report);
             sim.State.Finance.SeasonOpeningCash = ledger.Cash;
+            sim.State.Finance.LastSeasonStartEntry = sim.State.Finance.SeasonStartEntry; // spec 019 §3.9: your season starts here
+            sim.State.Finance.SeasonStartEntry = ledger.NextEntryId;
+            sim.State.Finance.Sales.Roll();
             Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
 
             // Settle and pay upfront (these entries belong to the new season).

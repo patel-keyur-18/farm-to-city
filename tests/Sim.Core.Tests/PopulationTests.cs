@@ -74,6 +74,8 @@ namespace Sim.Core.Tests
                 var events = sim.DrainEvents();
                 deaths += events.OfType<CitizenDied>().Count();
                 births += events.OfType<CitizenBorn>().Count();
+                foreach (CitizenBorn born in events.OfType<CitizenBorn>())
+                    Assert.That(sim.State.Citizens.Citizen(born.CitizenId).Skill, Is.EqualTo(CitizenRules.DrawFarming(sim, born.CitizenId)), "a farming skill at birth (ADR 0081)");
                 sons += events.OfType<CitizenMarried>().Count(e => !e.MovedAway);
                 daughters += events.OfType<CitizenMarried>().Count(e => e.MovedAway);
                 Assert.That(sim.State.Ledger.Reconcile(), Is.Null);

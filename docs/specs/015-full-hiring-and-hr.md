@@ -1,6 +1,6 @@
 # 015. Full hiring and HR
 
-- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner
+- Status: Approved 2026-10-25 (ADR 0069); every gap closed with the owner. Amended 2026-10-29 by the owner's request US-219 (ADR 0083, G10: offering work from a citizen's card); approved 2026-10-30
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Hiring flow, Wages, Productivity, Hours and shifts, Training, HR events, Letting people go)
@@ -51,6 +51,8 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). **N
   - Regulars (spec 006 §3.3), as now.
 - **Pace:** applicants come every 12 ± 6 h while a post is open (twice as fast above the market). Walk-ins for a farm hand still come while a hut stands empty (spec 006).
 - **Spec 016's stopgap ends:** from Sprint 15 a business's worker is hired here, or you run it yourself.
+- **Offering work from the card (§10 G10, ADR 0083):** an adult 18–59 of your town who works outside has **Offer work as a hand** on their citizen card: the board's offer (asked wage, 10% less or 10% more, answered by §3.3's townspeople's rule) with no post fee, interview or reference check (you know them). The offer shows the house as part of the pay when their household lives in your family house: "30,000 a season. From next season: 24,000 cash + the house (6,000)" (spec 014 §3.6). The button says why when it can't be offered (works in town, too young, retired). Business jobs stay on the board.
+- **Never work for housing alone:** unpaid work in return for a home would be bonded labour (abolished by the Bonded Labour System (Abolition) Act, 1976). A deduction for housing the employer provides is lawful (Payment of Wages Act 1936 s.7(2)(d); Code on Wages 2019 s.18) and always shown.
 
 ### 3.2 Knowing a candidate (§10 G2)
 
@@ -68,7 +70,8 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). **N
 | Offer | At the asked wage, 10% below it, or 10% above it | |
 | Answer | Accepts with `acceptChance` (0.85) at the asked wage, 0.95 above it, 0.40 below it. A refusal of a low offer becomes a counter at the asked wage, once; any other refusal ends it (the applicant leaves). Regulars always accept (ADR 0041) | Seeded, stream Applicants |
 | Townspeople | Always accept at the asked wage or above (they live here); 0.6 below it | |
-| Wage memory | A worker hired below their asked wage remembers it: motivation is lower (§3.4) until a renewal pays the asked wage | |
+| Wage memory | A worker hired below their asked wage remembers it: motivation is lower (§3.4) until a raise or a renewal pays the asked wage | |
+| Renewal (ADR 0081) | A contract renews at its current wage. When the asked wage for the worker's skill has risen above it (on the job, a course, or hired low), they may ask for a raise (§3.7); a loyal worker never asks | |
 
 ### 3.4 Output: skill, motivation, fatigue (§10 G4)
 
@@ -93,7 +96,7 @@ A fair hire with a household at 60 or above has motivation exactly 1, so today's
 | Way | Effect | Cost |
 | --- | --- | --- |
 | On the job | +3 skill a season (spec 006), ×1.5 ambitious | Nothing |
-| A course | +10 skill, in the worker's role skill | 6,000 coins; the worker is away 2 days (no work, wage still paid) |
+| A course | +10 skill, in the worker's role skill | 6,000 coins; the worker is away 1 day (no work, wage still paid; ADR 0082) |
 | Worth more | A trained worker asks more at the next renewal (the asked wage follows skill) and draws more poaching offers (§3.7) | |
 
 ### 3.6 Four more traits (§10 G6)
@@ -113,9 +116,9 @@ Events that need a decision wait for the player (ADR 0002): an alert, a card wit
 
 | Event | When | Choices | Consequences |
 | --- | --- | --- | --- |
-| Raise request | At a close, a worker paid below their asked wage (skill grew, or hired low) asks, 50% a close | Pay the asked wage from now / Not now | Yes: wage and motivation up. No: motivation −0.1 a season until paid; asked twice and refused, they look elsewhere (a poaching offer is likelier) |
+| Raise request | At a close, a worker paid below their asked wage (skill grew, or hired low) asks, 50% a close | Pay the asked wage from now / Not now | Yes: wage and motivation up. No: motivation −0.1 for the rest of the season, and still underpaid at the next close they leave instead of renewing, whatever their skill (ADR 0082) |
 | Poaching offer | A worker of skill 60+ gets an offer from the next village (5% a season, ×2 if under-paid) | Match it (+15% wage) / Let them go | Match: they stay, motivation +0.05. Let go: they leave at the close, no severance, the job opens on the board |
-| Sick leave | 2% a worker a season (×2 if fatigue is over 0.3) | Paid leave (2 days off, wage as usual) / Unpaid | Paid: reputation +2, motivation +0.05. Unpaid: the days' wage refunded, motivation −0.1 |
+| Sick leave | 2% a worker a season (×2 if fatigue is over 0.3) | Paid leave (1 day off, wage as usual; ADR 0082) / Unpaid | Paid: reputation +2, motivation +0.05. Unpaid: the days' wage refunded, motivation −0.1 |
 | Family emergency | 2% a worker a season | An advance of a quarter's wage (paid back from the next renewal) / No | Yes: reputation +3, motivation +0.1 for a season. No: motivation −0.1 |
 | A bad batch | 3% a business a season (never with a perfectionist) | Throw it away / Sell it cheap | Throw: the batch's inputs lost. Sell: half its value, reputation −2 |
 
@@ -156,6 +159,7 @@ As spec 006: no severance in probation (the first season), then 10% of the seaso
 | `PostJob` | role, place, aboveMarket | `NoHousing` (farm hand), `UnknownBusiness`, `AlreadyPosted` | §3.1 |
 | `CheckReference` | applicant | `AlreadyChecked`, `InsufficientFunds` | §3.2 |
 | `OfferContract` | applicant, offer (asked / low / high) | spec 006's | §3.3 |
+| `OfferTownsperson` | citizen, offer (asked / low / high) | `NotAWorker` (under 18, retired, works in town), `InsufficientFunds` | §3.1: an applicant for the farm hand made and offered at once, no post fee |
 | `SendOnCourse` | worker | `Busy`, `InsufficientFunds` | §3.5 |
 | `SetLongDays` | worker or business, on | | §3.4 |
 | `AnswerHrEvent` | event, choice | `UnknownEvent` | §3.7 |
@@ -173,7 +177,7 @@ As spec 006: no severance in probation (the first season), then 10% of the seaso
 | --- | --- | --- | --- | --- |
 | Hire below the asked wage | Saves 10% | Lower motivation, a raise request, poaching | Reputation −2 | Pay the asked wage at renewal |
 | Check a reference | 300, 12 h | A surer hire | | — |
-| Send on a course | 6,000, 2 days away | +10 skill: more output | Asks more at renewal; poaching likelier | — |
+| Send on a course | 6,000, 1 day away | +10 skill: more output | Asks more at renewal; poaching likelier | — |
 | Long days | 1.5 × wage for the extra hours | More output now | Fatigue; sick leave likelier | Turn off |
 | Match a poaching offer | +15% wage | Keeps a skilled worker | | — |
 
@@ -201,21 +205,22 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 | AC-1 | A post brings applicants for its role every 12 ± 6 h; townspeople without a town job apply with known skill and traits | `HiringTests.Board_Applicants` |
 | AC-2 | A reference check costs 300, finishes after 12 h and narrows the skill to ±5 | `HiringTests.Reference` |
 | AC-3 | A low offer is accepted at 0.40, else a counter at the asked wage once; a high offer at 0.95 | `HiringTests.Negotiation` |
-| AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair hire in a content home has motivation exactly 1, so an existing hand works as before; the golden replays are regenerated once, because new applicants draw from ten traits | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
+| AC-4 | Output = skill factor × motivation × (1 − fatigue); a fair hire in a content home has motivation exactly 1, so an existing hand works as before; the golden replays are unchanged (their content has no people) | `WorkerTests.Output_Neutral`, `ReplayTests.*` |
 | AC-5 | Long days raise output and fatigue; fatigue falls at normal hours; overtime pays 1.5× | `WorkerTests.Fatigue_Overtime` |
-| AC-6 | A course adds 10 skill after 2 days away, paid; the next renewal asks more | `WorkerTests.Course` |
+| AC-6 | A course adds 10 skill after a day away (ADR 0082), paid; the next renewal asks more | `WorkerTests.Course` |
 | AC-7 | The four traits act as §3.6; no contradictory pairs are drawn | `WorkerTests.Traits` |
 | AC-8 | Each HR event follows its chance, waits for the player, and applies its choice's effects | `HrEventTests.Choices` |
 | AC-9 | Reputation moves by §3.8's steps and changes acceptance and applicants as stated | `HrEventTests.Reputation` |
 | AC-10 | A schema-10 save loads into 11 (workers neutral, reputation 50, a crafting skill drawn for each citizen) and round-trips | `MigrationTests.Schema10_Workers` |
+| AC-11 | A townsperson who works outside can be offered work as a hand from their card with no post fee; accepts at the asked wage or above; refused with a reason when under 18, retired or working in town; the offer shows the house as part of the pay | `HiringTests.Townsperson_FromCard` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A competent bot paying fair wages | Motivation 1.0–1.1, output as Phase 1 | No farm-profit change over 2% |
-| A bot hiring everyone 10% low | Saves 10% of wages and loses more than that in output and quits within 2 seasons | The lesson holds |
-| HR events | 0–2 a season for a town of 3 workers | Not a nag |
+| A competent bot paying fair wages | Motivation 1.0–1.1, output as Phase 1 | No farm-profit change over 2%. `GateTests.Hr` (16 seeds, 12 seasons, ADR 0082): motivation 1.000, farm profit 5,61,247 vs Phase 1's output 5,64,114 (−0.5%) |
+| A bot hiring everyone 10% low | Saves 10% of wages and loses more than that in output and quits within 2 seasons | The lesson holds. `GateTests.Hr`: wages −21%, farm profit −3.7% against the fair bot, hands gone after 2.6 seasons (median) |
+| HR events | 0–2 a season for a town of 3 workers | Not a nag. `GateTests.Hr`: 0.19 a worker a season (0.56 for 3) |
 
 ## 10. Open questions
 
@@ -223,11 +228,61 @@ Output is shown in words and stars, never as a factor (ADR 0039 §7); every numb
 - **G2. Knowing a candidate.** **Closed (owner, 2026-10-25):** the application shows the skill ±15 and one trait; a free interview the second trait; a reference check (300, 12 h) narrows the skill to ±5 and says how they left their last job ("was let go" when a trait is lazy or careless); townspeople are known (§3.2).
 - **G3. Negotiation.** **Closed (owner, 2026-10-25):** offer at the asked wage (0.85), 10% less (0.40, then one counter at the asked wage; a low hire is remembered in motivation and reputation) or 10% more (0.95); townspeople always accept at the asked wage or above, 0.6 below; regulars always (§3.3).
 - **G4. Output.** **Closed (owner, 2026-10-25):** skill × motivation (0.7–1.2: +0.05 hired above, −0.10 hired below until paid the asked wage, lower when the family is under 60, the events' effects) × (1 − fatigue: +0.05 a long day, −0.10 a normal one, at most 0.5); long days to 12 h with the extra hours at 1.5×; tools with spec 013; exactly neutral for a fair hire in a content home (§3.4). Review (Claude, same day): citizens get a crafting skill beside farming and each role reads its own, so the "wrong skill at 0.8" never arises in Phase 2.
-- **G5. Training.** **Closed (owner, 2026-10-25):** on the job +3 a season (×1.5 ambitious); a course +10 skill in the role for 6,000, 2 days away and paid; a trained worker asks more at renewal and draws more poaching offers. Example: a miller from skill 40 to 50 works about 5% faster and asks about 1,100 more a season (the owner was told about 900; the formula gives 25,920 → 27,000) (§3.5).
+- **G5. Training.** **Closed (owner, 2026-10-25):** on the job +3 a season (×1.5 ambitious); a course +10 skill in the role for 6,000, 2 days away and paid (1 day since ADR 0082); a trained worker asks more at renewal and draws more poaching offers. Example: a miller from skill 40 to 50 works about 5% faster and asks about 1,100 more a season (the owner was told about 900; the formula gives 25,920 → 27,000) (§3.5).
 - **G6. Four traits.** **Closed (owner, 2026-10-25):** creative (a business's goods sell 5% higher; no farm effect yet), frugal (−10% power, fuel and supplies; the household saves half its leisure), sociable (+0.05 motivation to colleagues; shops later), perfectionist (no bad batch, 5% slower); never hardworking with lazy or careless with perfectionist; all ten drawn evenly (§3.6).
 - **G7. HR events.** **Closed (owner, 2026-10-25):** raise request, an offer from elsewhere (skill 60+, match +15% or let go), sick leave (paid or unpaid), family emergency (an advance of a quarter's wage), a bad batch (throw away or sell at half); at most one a worker a season; each waits for the player, the worker carrying on meanwhile; about 0–2 a season for 3 workers; conflicts, accidents and petitions in Phase 3 (§3.7).
 - **G8. Employer reputation.** **Closed (owner, 2026-10-25):** 0–100 (start 50) shown with its *Why?*; up with the asked wage or more at renewal (+1 a worker), paid sick leave (+2), an advance (+3), severance paid (+1); down with a low hire (−2), a refused raise (−2), letting go in probation (−1), a lapse (−3); at 80+ acceptance +10% and better above-market applicants, at 20− acceptance −10% and applicants slower (§3.8).
 - **G9. What stays out.** **Closed (owner, 2026-10-25):** supervisors and span of control, benefits and minimum wage policy (with the treasury), managers, night shifts in Phase 3; education bonds with the school (spec 018); a family house as part of a hand's pay already exists (§2).
+
+- **G10. Your townspeople on your fields** (US-219, owner, 2026-10-29, ADR 0083). **Closed:** offer work as a hand from a citizen's card (no post fee, the board's offer and answers, the housing line); the house is part of the pay from the first renewal and counted once a house (spec 014 §3.6); long days stay §3.4's; never unpaid work for housing (§3.1).
+
+### US-112 build notes (2026-10-28, for the owner's review)
+
+Choices made while building where the spec was silent, each to keep it realistic and clear on screen:
+- **When townspeople apply:** the moment you send word (they live here), the most skilled in the job's skill first, listed above migrants. Townspeople and people from outside each have up to `maxApplicants` (3) waiting, so neither crowds the other out. Townspeople answering an above-usual post are offered its wage.
+- **Pace:** a business's post brings a migrant every 12 ± 6 h at the usual wage, twice as fast above it (AC-1); a farm hand's post keeps spec 006's pace (walk-ins every 12 ± 6 h, a post twice as often).
+- **Roles' data:** the farm hand's wage stays in `people.json` (`hand.marketWage`) and each business role's wage and skill in `businesses.json` (`worker`, `workerSkill`, `wage`), so no wage is written twice; `people.json` gains `hiring` (the reference, offer factors and chances, reputation's start).
+- **A migrant farm hand** still needs an empty hut; your townspeople need none (their family house counts).
+- **Letting a business's worker go** (§3.9 named it, no command did): `LetWorkerGo` from the business's card, with a confirm; the season's wage was paid upfront from the business and isn't refunded; severance 10% after the first season. With nobody working, **Run it** (`RunBusinessYourself`) or hire again.
+- **Renewal:** a worker was renewed at each close at the asked wage for their skill, so §3.7's raise request had almost nobody to come from. **Settled (owner, 2026-10-28, ADR 0081):** a contract renews at its current wage, and a worker whose asked wage has risen asks for a raise (US-114).
+- **Not yet in play:** reputation is stored (50) but moves with US-114; motivation and output with US-113.
+
+**Accepted (owner, 2026-10-28, ADR 0081).** Also from that review: every citizen's farming skill is drawn at birth (children no longer grow up at 0).
+
+### US-113 build notes (2026-10-28, for the owner's review)
+
+- **A business worker's skill factor is measured against a skill-50 worker** (the market wage's skill): output ÷ (0.70 + 0.50 × 0.5). So a typical hire works at the business's rate, and the rates, the plan and ADR 0073/0079/0080's targets stay a typical hire's; skill 70 works 5% faster, skill 30 5% slower; tiredness and motivation come on top. The literal form (no division) would have made every typical hire 5% slower than the rate and moved all three businesses' targets. A farm hand's hours are spec 006's exactly, as before.
+- **A business's long day is its open hours, not a separate switch.** Spec 016 already lets you set the hours (8–18, 8–14, or a long day). Hours past the village's usual 8:00–18:00 are overtime: each paid at time and a half of the worker's hourly wage (the season's wage over 4 days × 10 usual hours) as it's worked, from the business's cash; past its overdraft, the hour isn't worked. The worker tires on such days. The long-day choice is now **7–19** (12 hours, §3.4's cap; it was 6–20, 14 hours), and `SetBusiness` refuses more than 12. A farm hand's long days are a switch on their card (10 hours), each day's overtime paid each morning upfront; short of cash, they stop with a note on the away card.
+- **The business's usual day is 10 hours, not §3.4's 8:** the village's mill, bakery and dairy keep 8:00–18:00 (with a meal break), and their wages are for that day. Counting overtime from 8 hours would have made every business tire its worker from day one, against "neutral by default".
+- **Courses:** paid by whoever employs them (you for a hand, the business for its worker), refused while away on one. While away, a hand's orders wait and a business stands idle, wages still paid.
+- **The trait sentences are in words** ("a little keener", "a tenth less"): the numbers live in the output's *Why?*, which shows each part (skill and traits, fair pay, their home, colleagues, motivation, tiredness) against a typical worker.
+- **Frugal at home:** a household with a frugal adult saves half its leisure money.
+- **The golden replays didn't change:** their frozen content has no people, so drawing from ten traits touches none of them. AC-4's `ReplayTests.*` pass unchanged.
+- **Not yet in play:** HR events' effects on motivation (US-114); the bad batch the perfectionist avoids (US-114).
+
+**Accepted (owner, 2026-10-29).**
+
+### US-114 build notes (2026-10-29, for the owner's review)
+
+- **Renewal (ADR 0081) is in:** a contract renews at its current wage; an advance is repaid from it; a worker who took an offer from elsewhere leaves at the close instead.
+- **"Underpaid" means more than 5% below what they'd ask** (`hrEvents.raiseGap`). A season's skill growth alone (+3, about 1.2% on the wage) doesn't make a raise request or count against a fair renewal; a course, a few seasons' growth, inflation or a low hire does. Without this, nearly every worker asked for a small raise nearly every close (against §9's "not a nag"), and a fair employer never earned the +1 for a fair renewal.
+- **An offer from elsewhere is 15% above what their skill is worth** (the asked wage), and only comes when that's above what you pay. Matching it pays it. Taken literally as "+15% on your wage", a matched worker got another +15% at the next offer, compounding without limit (seen in a bot run: three matches in six seasons).
+- **Sick leave starts at once** (a day off since ADR 0082, no work, the business idle); the choice is only whether those days are paid. "The worker carries on" can't hold for someone who's ill.
+- **A bad batch comes with a business's first batch of the day** (the mill's first grinding of your wheat, a recipe's first batch), before anything is sold: the mill sells its atta to the truck every hour, so at any other moment there would rarely be a batch to spoil. It sets aside up to a day's mix (an hour's grinding at the mill) of the product it holds most of.
+- **A dairy takes no milk on a day nobody can work it** (its dairyman sick or on a course): the co-op takes it. Before, a sick dairyman's two days of neighbours' milk spoiled (a bot season lost 1,09,014).
+- **Each event shows as a card when it happens and as an alert until answered** (the alert opens a sheet with the two choices); the card says what yes costs now and from whose cash; a notification while away ("Geeta needs a word with you").
+- **Reputation** shows on the People sheet in words and its score ("Fair (52)") with its *Why?*. A lapse is a hand's unpaid renewal or a business's missed wages. Selling a bad batch cheap counts −2 as §3.7 says.
+- **The bots answer as a fair employer:** yes to everything they can pay (ADR 0082).
+- **Random draws use their own stream** (`HrEvents`), not People, so no existing draw moves.
+- **Balance flags (settled, ADR 0082):** on 16 seeds the bakery is inside ADR 0079's targets (hired 18,240 a season, payback 7.1; on a loan 18,849); the 13,500 seen at US-114 was 8 seeds and the bot refusing raises.
+- **Settled at the balance step (owner, 2026-10-29, ADR 0082):** sick leave and a course take 1 day, not 2 (half a season was out of proportion); a refused raise loses the worker at the next close; the bots answer as a fair employer; the bakery holds ADR 0079's targets and the dairy's are widened.
+
+### US-219 build notes (2026-10-30; accepted by the owner the same day)
+
+- **The button shows only when it can be used.** ADR 0083 §3 had a greyed button saying why for anyone else. In the Editor a baby's card read "Too young to work" three times (subtitle, Work line, button), so the button is left off: the Work line beside it already says why (too young, retired, a job in town).
+- **The words:** "From next season: 24,758 coins in cash + the house (worth 6,420 coins)", on every offer row, at the board's offers too; a second adult from the same house reads "The house is already part of Arjun's pay: all of this is cash". The hand card has a *Housing* row: part of the pay (from the next renewal), or counted in another hand's pay.
+- **Found in the Editor and fixed (both from earlier stories):** a townsperson hired (from the board or the card) got the toast "Your farm hand moved in!": now "Radha works your fields now!". Someone away on a course or off sick showed "back in −1 min 33 s" for up to an hour, because they're back at the next hourly pass: the countdown now runs to that hour.
+- **Rent in the season he's hired:** the household's rent already owed stands (`SetBudget(keepRent)`); a hand bringing his family into a free house keeps spec 014's rule (no rent from the move, the house in his pay from his next renewal).
 
 ## 11. Cut first
 

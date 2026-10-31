@@ -83,7 +83,7 @@ namespace Sim.Core.Tests
         }
     }
 
-    public class HiringTests
+    public partial class HiringTests
     {
         // Spec 006 AC-18.
         [Test]

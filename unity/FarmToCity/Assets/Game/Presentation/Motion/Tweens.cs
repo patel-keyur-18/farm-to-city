@@ -87,6 +87,9 @@ namespace Game.Presentation.Motion
             for (int i = 0; i < _items.Count; i++)
             {
                 Item it = _items[i];
+                // Keyed by a sprite's transform that has since been destroyed (a site finished in the same moment it popped): drop it,
+                // or the exception would stop every other tween on screen (seen 2026-10-30).
+                if (it.Key is UnityEngine.Object o && o == null) { _items.RemoveAt(i--); continue; }
                 float t = Mathf.Clamp01((now - it.Start) / it.Duration);
                 it.Step(it.Ease(t));
                 if (t < 1f) continue;

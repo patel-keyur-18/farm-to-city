@@ -87,6 +87,7 @@ namespace Sim.Core.Market
             if (amount > 0)
                 sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.supermarketSale", "order:" + o.Id,
                     new Posting(Account.OwedByBuyers, amount), new Posting(Store.SalesAccount(sim, o.Good), -amount));
+            sim.State.Finance.Sales.Add(sim, o.Good, SoldTo.Orders, amount);
             sim.Emit(new OrderDelivered(sim.State.Clock.SimTime, o.Id, good, q, amount, byHand));
             return amount;
         }

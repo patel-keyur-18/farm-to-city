@@ -19,6 +19,7 @@ namespace Tools.Balancer
     /// <item><c>moisture [years] [seed]</c>: spec 002's seasonal moisture hook per soil.</item>
     /// <item><c>economy [years] [seed]</c>: the seasonal farm cash-flow model (US-013), 15 years by default.</item>
     /// <item><c>gate [seeds]</c>: the Phase 0 gate checks (US-015, US-016, ADR 0034 §7), 1,000 seeds by default.</item>
+    /// <item><c>bakery [seeds] [pav kg a person a day]</c>: the bakery's bots (spec 016 §9, US-119), with the shops' pav amount tried.</item>
     /// </list>
     /// Usage: dotnet run --project tools/Tools.Balancer -- [mode] [years] [seed]
     /// </summary>
@@ -30,6 +31,10 @@ namespace Tools.Balancer
             bool named = args.Length > 0 && !char.IsDigit(args[0][0]);
             string mode = named ? args[0] : "weather";
             if (named) args = args[1..];
+            if (mode == "dairy") return Gate.PrintDairy(edit => Config(content, edit), args.Length > 0 ? int.Parse(args[0]) : 12,
+                args.Length > 1 ? args[1] : null, args.Length > 2 ? args[2] : null, args.Length > 3 ? args[3] : null);
+            if (mode == "hr") return Gate.PrintHr(edit => Config(content, edit), args.Length > 0 ? int.Parse(args[0]) : 8, args.Length > 1 ? int.Parse(args[1]) : 12);
+            if (mode == "bakery") return Gate.PrintBakery(edit => Config(content, edit), args.Length > 0 ? int.Parse(args[0]) : 12, args.Length > 1 ? args[1] : null);
             int years = args.Length > 0 ? int.Parse(args[0]) : mode == "economy" ? 15 : 100;
             ulong seed = args.Length > 1 ? ulong.Parse(args[1]) : 1;
             if (mode == "moisture")

@@ -31,7 +31,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 | --- | --- | --- | --- | --- |
 | 1. Homestead | Farmer | Start: an inherited, protected 6-acre farm with a hut and a well, 20,000 coins, and a store of seed potato, grain and garden seed (ADR 0030) | 0–3 (the founder isn't counted) | Crops, livestock (built in Phase 2), selling to a travelling trader, cash ledger, small loans (moneylender, cooperative bank farm loans), day labour, hiring day labourers and the first resident hand (ADR 0022) |
 | 2. Hamlet | Landowner | 6 different acres harvested in one season with average Care of at least 0.9 (more than the founder can tend alone), a house for a hired hand, one season with a farm profit (ADR 0030, 0032) | 4–15 | More roles, storage, cattle (buffalo and cows, ADR 0060), first processing (flour mill) |
-| 3. Village | Village head | 5 households, a market stall, 1 business profitable for 2 seasons, a primary school (funded by the founder, ADR 0011) | 15–80 | Businesses, household needs, larger cooperative-bank loans, the treasury |
+| 3. Village | Village head | 5 households, a business with 2 profitable seasons, the primary school built and open (funded by the founder from the Hamlet; ADR 0011, 0077) | 15–80 | The bakery and the dairy, shops on the pitches, drip, the borewell and the tractor, larger cooperative-bank loans (ADR 0077) |
 | 4. Township | Council chair | 20 households, a staffed clinic (the first doctor is a migrant), a road to the highway, 3 businesses, literacy above 40% | 80–500 | Zoning, taxes, water and power, land value, rentals |
 | 5. Town | Mayor | Population 500, a secondary school, employment above 85%, a budget surplus | 500–3,000 | Public services, transport, industry, investments, elections |
 | 6. City | Mayor and tycoon | Population 3,000, a college, a hospital, a power plant | 3,000–20,000 | Districts, trade with other cities, shares in businesses, specialisation |
@@ -49,7 +49,7 @@ The town moves through six eras, and each one changes the player's role, not jus
 - This is never an energy bar. It changes background output only, never blocks a tap, and can't be bought.
 - The founder splits labour between their own fields and day labour for neighbours. The base capacity tends about 2–3 acres, so growing beyond that is the reason to hire.
 
-**Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Village era there is also a *town treasury*, funded by taxes and spent on public services. Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
+**Two wallets.** The player's *personal wallet* holds their own farms, businesses and assets. From the Township era there is also a *town treasury*, funded by taxes and spent on public services (ADR 0077). Keeping the two apart teaches the difference between personal and public finance. Using public money to favour your own businesses is possible, but it carries scandal risk.
 
 **Town identity.** Cumulative choices give the town tags such as Agri-hub, Merchant town, Industrial town, Education town or Green town. Each tag unlocks unique buildings and small bonuses, so two playthroughs end in different cities.
 
@@ -274,7 +274,7 @@ Every business is a small company with its own books, staff and customers. The p
 **The first businesses (spec 016, ADR 0068).**
 - **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
 - **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 350 people besides your town, ADR 0073) and mills your own wheat into atta and bran.
-- **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk into paneer, curd and ghee. The village grocer and tea stall buy from both each morning.
+- **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk, and the village's (bought at a little over the co-op's price), into paneer, curd and ghee. The village grocer and tea stall buy from both each morning, and the trader takes what keeps (rusk, paneer, ghee) to town (ADR 0079, 0080).
 - **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
 - **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.
 - **Later.** Investors and partner citizens come in Phase 3.
@@ -349,7 +349,7 @@ Every citizen is a person with skills, a family and ambitions. Managing them wel
 - **Migration out** is pushed by unemployment, unhappiness, and better wages in other towns.
 - **Ageing and deaths** follow life expectancy, which healthcare, sanitation and nutrition raise.
 
-**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 2 an acre sharing a wall, rent 6,000 a season; ADR 0067), with cash or a home loan from the bank (three quarters of the houses' value, ADR 0071). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; couples have children; a son's bride moves in and a daughter marries into her husband's village (ADR 0070); only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
+**Phase 2: your people (spec 014, ADR 0063).** The town is the people living on the founder's land: hands in their huts and families in the family houses the founder builds from the Hamlet (60,000 each, 2 an acre sharing a wall, rent 6,000 a season; ADR 0067), with cash or a home loan from the bank (three quarters of the houses' value, ADR 0071). A family moves into an empty house every 18 hours or so, live or away; a hand living alone is offered a free house first, and his family's house is then part of his pay (6,000 less in cash from his next renewal). A tenant can be offered work as a hand from their own card; the house becomes part of his pay from his first renewal, counted once a house. Work in return for housing alone is never possible: that would be bonded labour (ADR 0083). Adults without a job in town find outside work at the founder's day-labour rate on about half the days, and the founder's day labourers come from the town first. Citizens age a year each season; couples have children; a son's bride moves in and a daughter marries into her husband's village (ADR 0070); only elders pass away, worded gently. Households that stay unhappy or two seasons behind on rent leave. A citizen's card shows their close family, with links to relatives in other houses.
 
 **Hiring starts in Homestead (ADR 0022)**
 
@@ -373,7 +373,7 @@ Applicants walk in while a hand's hut stands empty, or come faster after the fou
 4. **Make an offer.** Candidates can accept, reject, or negotiate the wage.
 5. **Probation:** one season, during which the employee can be let go without severance.
 
-**Wages.** Workers are hired on season-long contracts at a fixed wage per season, paid upfront at the start of each season (ADR 0008). The wage is renegotiated at renewal. If the player can't afford a renewal, the contract lapses. A worker who leaves mid-season returns the unearned part, less any severance. Prepaid wages sit on the balance sheet and are expensed day by day, which is the game's main example of profit not being cash. Each skill level has a market wage, set by labour supply and demand and nudged by inflation. Paying above market raises loyalty and applicant quality. Paying below market raises quit rates and invites poaching. Later eras add minimum wage policy and worker associations.
+**Wages.** Workers are hired on season-long contracts at a fixed wage per season, paid upfront at the start of each season (ADR 0008). A contract renews at its current wage; a worker whose skill has grown asks for a raise, which the player may grant or refuse (ADR 0081). If the player can't afford a renewal, the contract lapses. A worker who leaves mid-season returns the unearned part, less any severance. Prepaid wages sit on the balance sheet and are expensed day by day, which is the game's main example of profit not being cash. Each skill level has a market wage, set by labour supply and demand and nudged by inflation. Paying above market raises loyalty and applicant quality. Paying below market raises quit rates and invites poaching. Later eras add minimum wage policy and worker associations.
 
 **Productivity.** Output depends on five factors, and each is shown in the worker's panel.
 
@@ -398,8 +398,8 @@ Motivation comes from wage fairness, manager quality, working conditions, recogn
 - **Knowing a candidate.** A free interview reveals the second trait. A reference check (300 coins, 12 h) narrows the skill and says how they left their last job.
 - **The offer.** You offer the asked wage, 10% less (often refused, and remembered) or 10% more.
 - **Output.** Output = skill × motivation × (1 − fatigue), neutral for a fair hire in a content home. Long days pay 1.5× for the extra hours and tire people. Citizens have a farming and a crafting skill.
-- **Training.** Courses add 10 skill for 6,000.
-- **Traits and events.** The four new traits (creative, frugal, sociable, perfectionist) arrive. HR events in Phase 2: a raise request, an offer from elsewhere, sick leave, a family emergency and a bad batch.
+- **Training.** Courses add 10 skill for 6,000, a day away.
+- **Traits and events.** The four new traits (creative, frugal, sociable, perfectionist) arrive. HR events in Phase 2: a raise request, an offer from elsewhere, sick leave, a family emergency and a bad batch. A contract renews at its current wage; a worker refused a raise and still underpaid leaves at the next close (ADR 0082). Sick leave and a course take a day.
 - **Reputation.** Employer reputation moves with fair pay and treatment.
 - **Later.** Supervisors, benefits, managers and night shifts come in Phase 3.
 
@@ -438,7 +438,7 @@ In Phase 2 the weights are 40, 30, 20 and 10%, each layer counting fully only wh
 - **Literacy** (the share of residents aged 7+ who can read) comes quickly. A child becomes literate after 4 life-years of primary school, about 16 real days. Adult literacy classes at the school take about 1 season. Migrants also arrive with some education.
 - **Skilled graduates** come slowly (below).
 
-The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan. The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
+The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan, on the village's school plot from the Hamlet; the founder gives it to the district, which posts and pays the teacher, and pays its upkeep. Adult literacy classes are the founder's choice (3,000 a season for up to 15), and a literate adult earns 10% more outside (ADR 0077, spec 018). The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
 
 **Education as a long-term investment.** A school's skilled payoff comes 10–15 life-years later (about 40–60 real days), as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
 
@@ -497,7 +497,7 @@ The player can buy materials, produce them, or own the construction company. A s
 
 ## Governance and public finance
 
-From the Village era the player also runs the town treasury. Public money pays for public goods, and every tax and policy has winners, losers and a lag.
+From the Township era the player also runs the town treasury (ADR 0077). Public money pays for public goods, and every tax and policy has winners, losers and a lag.
 
 **Revenue**
 
@@ -554,7 +554,7 @@ The player's real score is **net worth**: everything they own minus everything t
 | Asset | Value over time | Income | Liquidity | Lesson |
 | --- | --- | --- | --- | --- |
 | Cash | Loses value to inflation | None | Instant | Keep an emergency fund, not a hoard |
-| Savings deposit | Grows at bank interest | Interest | 1 day | Compounding |
+| Savings deposit | Grows at bank interest (Phase 2: the co-op bank, 1.5% a season, never collateral; ADR 0078) | Interest | Any time | Compounding |
 | Farmland | Appreciates as the town grows | Crop profit or lease rent | Slow sale at a discount | Land as a long-term store of value |
 | Buildings | Depreciate; maintenance slows it | Rent or business use | Slow | Upkeep is a real cost |
 | Equipment and vehicles | Depreciate fast | Through productivity | Medium | Buy or lease? |
@@ -598,7 +598,9 @@ Each lender has a credit limit set by collateral, credit score and recent income
 
 **Diversification.** One crop, one business or one customer is fragile. Events hit specific sectors, and a spread of assets smooths the shocks.
 
-**Personal finance screen**
+**Your season** (Phase 2, ADR 0083). Money and loans opens on *Your season*: what you earned and spent line by line (each crop by name, each hand's wage by name), the profit, why your cash moved differently (paid ahead, loans repaid, things you bought and still own), and what's already due at the next close. Last season is one tap away; land and net worth are on the *Your wealth* tab.
+
+**Personal finance screen** (Phase 2: the *Your wealth* tab of Money and loans, redesigned in the Store and People layout; spec 019, ADR 0078)
 
 - net worth trend
 - an asset allocation pie chart
@@ -606,9 +608,9 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - the debt-to-asset ratio
 - an emergency fund measured in seasons of costs covered
 
-**Wealth milestones** mark progress without telling players what to do. At rupee scale (ADR 0008):
+**Wealth milestones** mark progress without telling players what to do: a toast and a list, never a reward (ADR 0078). At rupee scale (ADR 0008):
 
-- first 1 lakh coins of cash savings
+- first 1 lakh coins of savings (cash and deposit, less what you owe)
 - net worth double the inherited estate
 - first rental income
 - debt-free
@@ -658,7 +660,7 @@ Entries are written in a warm, slightly poetic voice, and they become the emotio
 
 The game teaches in three steps: the player decides, sees the result, and only then gets the concept named. A lesson the player felt lands harder than one they read.
 
-**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision.
+**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision. Phase 2 has the first three, people of the village with portraits (an old farmer neighbour, the co-op bank's secretary, a retired headmaster): one line on the season report and on an alert whose cause they know, at most one a sheet and a topic a day; the town planner comes with the treasury (ADR 0077).
 
 - **Farm advisor:** soil, crops, weather risk.
 - **Accountant:** margins, cash flow, loans, assets.
@@ -677,7 +679,7 @@ The game teaches in three steps: the player decides, sees the result, and only t
 | Town report | Each season | Services, happiness, budget against actual |
 | Year-end review | Yearly | Best decision, costliest mistake, what to try next |
 
-**Concept Codex.** About 40 concept cards unlock the first time the player meets each idea in play. Every card has a plain definition, the player's own numbers as the example, and a one-line real-world link. Launch set:
+**Concept Codex.** About 40 concept cards unlock the first time the player meets each idea in play. Phase 2 has about 24, found after their result, announced by a toast and kept in Menu → Codex (ADR 0077, spec 018). Every card has a plain definition, the player's own numbers as the example, and a one-line real-world link. Launch set:
 
 - **Business:** gross margin, break-even, fixed versus variable cost, unit economics, pricing power, competition and market entry, forecast versus actual.
 - **Money:** cash flow versus profit, working capital, interest and compounding, inflation, credit score, leverage, liquidity, emergency fund.
@@ -984,11 +986,12 @@ The data falls into two groups. Definitions are static content shipped with the 
 The look is clean, stylised 2D isometric: readable at phone size, and producible at zero budget (ADR 0007). CC0 base packs give the base style: Kenney's flat, low-poly *Isometric Landscape* set (ADR 0036). Setting-specific assets are modelled low-poly in Blender and rendered to isometric sprites with a fixed camera and light rig, so they match the base packs. By the end of Sprint 6 every map sprite (crops, trees, the garden, buildings, props and the ground), every icon and the people's walk cycles are Blender renders on that rig (ADR 0041).
 
 - **Lighting and seasons.** A day-night cycle with 2D lights, and seasonal palette shifts: spring greens, golden harvest, monsoon greys, winter haze.
+- **Weather on the map** (ADR 0083). The valley shows the current weather: warm light in sun, drifting cloud shadows, falling rain with darker ground, a dark storm with gusting trees and a soft lightning glow (never a flash), heat shimmer, frost rime. Reduced motion keeps it still. People work the fields from 7:00 to 19:00 and go home at night.
 - **Characters.** Small sprites with 4-direction walks, mirrored to 8, plus work animations per job: hoeing, kneading, hammering, teaching. Seeing your hire actually working builds attachment.
 - **Buildings.** Every building shows its level and condition. Poor maintenance is visible as cracked walls and faded paint.
 - **The UI ages with the town.** Wood, paper and chalk in the Homestead era, brass and ledgers in the Village, clean glass in the City.
 - **Motion and feedback (Hay Day-like).** Every action answers with motion: a tapped field or building bounces (squash and stretch), harvested items and coins fly along a curve to the store or the wallet, numbers count up instead of jumping, and panels slide and scale in with easing, never snapping. All of it is driven by code (tweens on transforms and UI Toolkit elements, ADR 0017), not hand-made animation clips, and it reads only from domain events and state, so the simulation never waits on an animation. Spec 008 (HUD) defines the motion catalogue (which event triggers which motion, durations, easing curves), and the art style check (F00.6) includes a short motion sample alongside the still screenshot.
-- **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count.
+- **Audio.** The soundscape grows with the town: birds and cart wheels, then market chatter, then traffic and construction. Adaptive music changes by season and era. Satisfying feedback sounds for a harvest, a sale or a coin count. Rain on the roofs and distant thunder follow the weather (ADR 0083); taps and sheets stay silent (ADR 0044).
 - **Moments that matter.** The first settler arrives, the first child is born, the first graduate leaves school, the year-end Almanac. Each gets a short animated vignette and music.
 - **Sourcing.** Zero budget (ADR 0007). Allowed licences are CC0, CC-BY (with a credits screen) and the Unity Asset Store licence, plus SIL OFL for fonts only (Baloo 2 for headings and buttons, Noto Sans for body text, with Noto Sans Devanagari for Hindi; ADR 0036, 0038). CC-BY-SA, non-commercial and personal-use-only assets are never used. Every third-party asset is logged in `ASSETS_LICENSES.md`. AI-generated images are for concepts only. Audio comes from CC0 sources.
 
@@ -1119,7 +1122,7 @@ flowchart TB
 
     P0 -->|"Gate: no money loops; 2,000 agents at 60 fps; replays match on iPhone"| P1
     P1 -->|"Gate: a reason to return each day, the Hamlet in about a week, nothing broke (ADR 0047)"| P2
-    P2 -->|"Gate: a week of play; players can explain profit versus cash"| P3
+    P2 -->|"Gate: the Village in 2–3 weeks; players can explain profit versus cash"| P3
     P3 -->|"Gate: 4 weeks of play; the balancer finds no exploits"| P4
     P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
 ```
@@ -1128,7 +1131,7 @@ flowchart TB
 | --- | --- | --- |
 | 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Part A, on the owner's solo playtest week (ADR 0047): a reason to return on at least 4 of days 2–7, notification returns at sensible times, the Hamlet on day 5–9, no blocker, the release candidate and CI passing. Part B, before Launch at the latest: fresh players come back on day 2 and day 3 unprompted (2 of 3) |
-| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | A week of play; players can explain profit versus cash |
+| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | The Village in 2–3 weeks using credit (4–6 saving) for the balancer's bots; the owner's playtest from the Hamlet to the Village; players can explain profit versus cash (ADR 0077) |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
 | 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
 | 5 · Polish | Localisation, accessibility, Blender art pipeline; store release only if the owner decides | Owner's call |

@@ -372,6 +372,7 @@ namespace Sim.Core.Finance
                     if (amount > 0)
                         ledger.Post(t, period, "ledger.produceSeized", "good:" + goods[g].Id,
                             new Posting(Account.Cash, amount), new Posting(Store.SalesAccount(sim, g), -amount));
+                    sim.State.Finance.Sales.Add(sim, g, SoldTo.Lender, amount);
                     pot += amount;
                     produce.Add(new KeyValuePair<string, long>(goods[g].Id, q));
                 }

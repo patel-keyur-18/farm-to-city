@@ -41,6 +41,7 @@ namespace Game.Presentation
         private Camera _camera;
         private Tweens _tweens;
         private MapPresenter _map;
+        private WeatherPresenter _weather;
         private MapInput _input;
         private HudPresenter _hud;
         private SheetPresenter _sheet;
@@ -144,6 +145,10 @@ namespace Game.Presentation
 
             _sounds = new Sounds(gameObject);
             ApplyLookAndSound();
+            // The weather on the map (ADR 0083, US-222): the sim's spell, reduced motion and Sound as Settings has them, night from the day tint.
+            if (_ui.WeatherLook != null)
+                _weather = WeatherPresenter.Create(transform, _camera, _map, _ui.WeatherLook, () => Sim.CurrentWeather.Id, () => _tweens.ReducedMotion,
+                    () => _sounds.Enabled, () => _ui.TintAt(_mapVm.SecondOfDay).R);
             BuildUi();
         }
 
@@ -281,7 +286,13 @@ namespace Game.Presentation
                     case FounderSick _: Toast(_strings.Get("toast.sick")); break;
                     case ApplicantArrived _: Toast(_strings.Get("toast.applicant")); break;
                     case HandHutBuilt _: Toast(_strings.Get("toast.hutBuilt")); break;
-                    case HandHired _: Toast(_strings.Get("toast.handHired")); break;
+                    case HandHired hh:
+                        // One of your townspeople stays at home (ADR 0083): nobody moved in.
+                        Hand hired = Sim.State.People.Hand(hh.HandId);
+                        Toast(hired != null && hired.HutId == 0
+                            ? _strings.Get("toast.townHandHired", "name", _strings.Get(Sim.Config.Game.People.Names[hired.Name].NameKey))
+                            : _strings.Get("toast.handHired"));
+                        break;
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                 }
@@ -389,7 +400,16 @@ namespace Game.Presentation
             {
                 case "People": _sheet.Show(PeopleSheet.Build(_ctx), refreshOnly); break;
                 case "Hire": _sheet.Show(PeopleSheet.Hire(_ctx), refreshOnly); break;
-                case "Word": _sheet.Show(PeopleSheet.Word(_ctx), refreshOnly); break;
+                case "Word": _sheet.Show(HiringBoard.Build(_ctx, r.Id), refreshOnly); break;
+                case "HrEvent":
+                    if (Sim.State.People?.HrEvents.Find(x => x.Id == r.Id) == null) { _sheet.Close(); break; } // answered
+                    _sheet.Show(HrEventSheet.Build(_ctx, r.Id), refreshOnly);
+                    break;
+                case "JobOffer":
+                    if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
+                    _sheet.Show(HiringBoard.Offer(_ctx, r.Id), refreshOnly);
+                    break;
+                case "TownOffer": _sheet.Show(HiringBoard.TownOffer(_ctx, r.Id), refreshOnly); break; // offering work from a card (ADR 0083)
                 case "Hand":
                     if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left
                     _sheet.Show(HandSheet.Build(_ctx, r.Id), refreshOnly);
@@ -485,7 +505,7 @@ namespace Game.Presentation
                     return;
                 }
                 // A tab or a sort changes the sheet in place: nothing new to go back to.
-                if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
+                if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("switch:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
                 Push(action.Opens.Value);
                 return;
             }
@@ -557,7 +577,8 @@ namespace Game.Presentation
             text.style.flexGrow = 1;
             text.style.flexShrink = 1;
             string what = _placingHouse ? "place.house" : _placing == PlaceKind.Business ? "place.business" : "place.";
-            text.Add(UiKit.Heading1(_strings.Get(what + (what == "place." ? "title" : "Title")), 40));
+            text.Add(UiKit.Heading1(_strings.Get(what + (what == "place." ? "title" : "Title"), "name",
+                _placing == PlaceKind.Business ? BusinessWords.InSentence(_ctx, Sim.Config.Game.Businesses.Types[_placeType]) : ""), 40));
             text.Add(UiKit.Text(reason ?? _strings.Get(what + (what == "place." ? "hint" : "Hint")), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
             _placeBar.Add(text);
             ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile)

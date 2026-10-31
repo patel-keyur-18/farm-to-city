@@ -130,6 +130,22 @@ namespace Sim.Core.Commands
         UnknownBusiness,
         CapitalTooLow,
         BusinessClosed,
+
+        // Spec 015
+        /// <summary>The business already has someone hired: let them go first.</summary>
+        AlreadyStaffed,
+        /// <summary>The reference is asked, or the person is known (a townsperson, a regular).</summary>
+        AlreadyChecked,
+        /// <summary>Nobody works there to let go.</summary>
+        NoWorker,
+        /// <summary>Already away on a course.</summary>
+        OnCourse,
+        /// <summary>No such HR event waiting (answered already, or the worker has gone).</summary>
+        UnknownEvent,
+        /// <summary>Off sick: back in a day or two.</summary>
+        OffSick,
+        /// <summary>Not someone you can offer work: under 18, retired, or already working in town (ADR 0083).</summary>
+        NotAWorker,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

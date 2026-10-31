@@ -79,6 +79,9 @@ namespace Sim.Core.People
 
         /// <summary>Farming 0–100. A hand's own record (<see cref="Hand.Skill"/>) is the live one while he works for you.</summary>
         public Fixed Skill { get; internal set; }
+
+        /// <summary>Crafting 0–100 (spec 015 §3.4, schema 11): the miller's and the baker's skill. A worker's own record is the live one while they work.</summary>
+        public Fixed Crafting { get; internal set; }
         public int Trait1 { get; internal set; }
         public int Trait2 { get; internal set; }
 
@@ -152,6 +155,7 @@ namespace Sim.Core.People
                 h.WriteLong(s.Other);
             }
             if (!(h is SaveWriter sw && sw.Schema < 10) && (!h.Hashing || Employer != 0)) h.WriteLong(Employer); // hashed only once used
+            if (!(h is SaveWriter sw11 && sw11.Schema < 11)) h.WriteFixed(Crafting);
         }
 
         internal static Citizen ReadFrom(SaveReader r)
@@ -166,6 +170,7 @@ namespace Sim.Core.People
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) c.Story.Add(new StoryLine((StoryKind)r.ReadInt(), r.ReadLong(), r.ReadLong()));
             if (r.Schema >= 10) c.Employer = r.ReadLong();
+            if (r.Schema >= 11) c.Crafting = r.ReadFixed();
             return c;
         }
     }

@@ -24,6 +24,13 @@ namespace Sim.View.Tests
 
         private static void Ok(Simulation sim, Command c) { Assert.That(sim.Execute(c).Accepted, Is.True, c.GetType().Name); }
 
+        /// <summary>On to 10:00 if it's outside the map's working day (ADR 0083 §5: people are home at night).</summary>
+        private static void Daytime(Simulation sim)
+        {
+            long t = sim.State.Clock.SimTime;
+            if (!MapView.WorkingHours(t % Day)) sim.AdvanceTo(t / Day * Day + (t % Day >= 19 * Hour ? Day : 0) + 10 * Hour);
+        }
+
         /// <summary>A hut on field 18, then a hand (the first applicant who accepts).</summary>
         private static Hand Hire(Simulation sim)
         {
@@ -84,6 +91,80 @@ namespace Sim.View.Tests
             AssertWords(PeopleSheet.Build(ctx));
         }
 
+        // Spec 015 §7 (US-113): a worker's output in words and stars with its Why?; a hand's long days; Send on a course; the same
+        // output row on a business's card.
+        [Test]
+        public void WorkerCard()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            h.Trait1 = h.Trait2 = sim.Config.Game.People.IndexOfTrait("steady");
+            h.Skill = Fixed.FromInt(50);
+            ViewContext ctx = ViewKit2.Context(sim);
+            SheetVm card = HandSheet.Build(ctx, h.Id);
+            LineVm output = card.Lines.Single(l => l.Label == "Output");
+            Assert.That((output.Value, output.Stars), Is.EqualTo(("Works well", (StarsVm?)new StarsVm(4, 0))), "a typical, fairly paid hand");
+            Assert.That((output.Action.Label, output.Action.Detail, output.Action.Enabled), Is.EqualTo(("Send on a course", "6,000 coins · +10 skill · 1 day away", true)));
+            WhyVm why = WhyView.Build(ctx, output.WhyKey, output.WhyId);
+            Assert.That(why.Title, Is.EqualTo(PeopleWords.Name(ctx, h.Name) + "'s output"));
+            Assert.That(why.Rows.Select(r => r.Label), Is.SupersetOf(new[] { "Skill (Capable) and traits", "Fair pay", "Motivation, all told", "Tiredness", "Against a typical worker" }));
+            Assert.That(why.Rows.Single(r => r.Label == "Against a typical worker").Value, Is.EqualTo("no change"));
+
+            LineVm longDays = card.Lines.Single(l => l.Label == "Long days");
+            Assert.That((longDays.Value, longDays.Action.Label), Is.EqualTo(("8 hours a day", "Start")));
+            Ok(sim, longDays.Action.Create(sim.State.Clock.SimTime));
+            ctx = ViewKit2.Context(sim);
+            longDays = HandSheet.Build(ctx, h.Id).Lines.Single(l => l.Label == "Long days");
+            Assert.That(longDays.Value, Does.StartWith("10 hours a day · ").And.EndWith(" a day extra"));
+            Assert.That(longDays.Action.Label, Is.EqualTo("Stop"));
+            Assert.That(WhyView.Build(ctx, longDays.WhyKey, longDays.WhyId).Rows[0].Label, Does.Contain("time and a half"));
+
+            Ok(sim, new SendOnCourse(sim.State.Clock.SimTime, 0, h.Id));
+            output = HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Output");
+            Assert.That(output.Value, Is.EqualTo("Away on a course · back in 1 d"));
+            Assert.That(output.Action.Enabled, Is.False, "already away");
+            Assert.That(HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Long days").Value, Does.StartWith("On, paused"));
+            Assert.That(HandSheet.Build(ViewKit2.Context(sim), h.Id).Lines.Single(l => l.Label == "Work").Value, Is.EqualTo("Away on a course"));
+
+            Simulation mill = Situations.Mill();
+            var b = mill.State.Businesses.Businesses.Last();
+            SheetVm business = BusinessSheet.Build(ViewKit2.Context(mill), b.Id);
+            Assert.That(business.Lines.Single(l => l.Label == "Output").WhyKey, Is.EqualTo("staffOutputAt"));
+        }
+
+        // Spec 015 §7 (US-114): an HR event as a card, an alert and a sheet with its two choices; reputation on the People sheet.
+        [Test]
+        public void HrEventCard()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            h.Skill = h.Skill + Fixed.FromInt(20);
+            PeopleState p = sim.State.People;
+            var e = new HrEvent { Id = p.NextHrEventId++, Kind = HrEventKind.RaiseRequest, Place = 0, WorkerId = h.Id, At = sim.State.Clock.SimTime, Amount = HrRules.Asked(sim, h) };
+            p.HrEvents.Add(e);
+            ViewContext ctx = ViewKit2.Context(sim);
+            string name = PeopleWords.Name(ctx, h.Name);
+            CardVm card = HrEventSheet.Card(ctx, e.Id);
+            Assert.That(card.Title, Is.EqualTo(name + " asks for a raise"));
+            Assert.That(card.Text, Does.StartWith(name + " asks for " + ctx.Fmt.Coins(e.Amount) + " a season; you pay " + ctx.Fmt.Coins(h.Wage) + ". Their skill has grown"));
+            Assert.That(card.Text, Does.EndWith("Saying yes costs " + ctx.Fmt.Coins(HrRules.CostNow(sim, e)) + " now, from your cash."));
+            Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Pay " + ctx.Fmt.Coins(e.Amount) + " from now", "Not now" }));
+            AlertVm alert = Alerts.Build(ctx).Single(x => x.Text == card.Title);
+            Assert.That((alert.Level, alert.Action.Label, alert.Action.Opens.Value.Kind), Is.EqualTo((AlertLevel.Decision, "Answer", "HrEvent")));
+            SheetVm sheet = HrEventSheet.Build(ctx, e.Id);
+            Assert.That(sheet.Actions.Select(x => x.Label), Is.EqualTo(card.Buttons.Select(b => b.Label)));
+            Assert.That(sheet.Actions[0].Detail, Is.EqualTo(ctx.Fmt.Coins(HrRules.CostNow(sim, e)) + " now"));
+
+            LineVm rep = PeopleSheet.Build(ctx).Lines.Single(l => l.Label == "Your name as an employer");
+            Assert.That(rep.Value, Is.EqualTo("Fair (50)"));
+            Assert.That(WhyView.Build(ctx, rep.WhyKey, rep.WhyId).Rows.Count, Is.GreaterThanOrEqualTo(3));
+
+            Ok(sim, sheet.Actions[0].Create(sim.State.Clock.SimTime));
+            Assert.That(p.HrEvents, Is.Empty);
+            Assert.That(h.Wage, Is.EqualTo(e.Amount));
+            Assert.That(HrEventSheet.Card(ViewKit2.Context(sim), e.Id), Is.Null, "answered");
+        }
+
         [Test]
         public void PeopleSheet_ThroughHiring()
         {
@@ -95,7 +176,7 @@ namespace Sim.View.Tests
             Assert.That(buttons.Select(b => b.Id), Is.EqualTo(new[] { "hire", "buildHut", "word" }));
             Assert.That(buttons.Select(b => b.Opens.Value.Kind), Is.EqualTo(new[] { "Hire", "HutPlacement", "Word" }));
             Assert.That(buttons.All(b => b.Icon != null && b.Detail != null), Is.True);
-            Assert.That(PeopleSheet.Word(ViewKit2.Context(sim)).Lines.Single(l => l.Action?.Id == "postMarket").Action.Enabled, Is.False, "no hut yet");
+            Assert.That(HiringBoard.Build(ViewKit2.Context(sim), 0).Lines.Any(l => l.Action?.Id == "postMarket:0"), Is.True, "the board: a hand's post");
 
             // Hut placement: the six inherited acres, the yard is not among them.
             List<HutPlaceVm> places = HutPlacement.Places(ViewKit2.Context(sim));
@@ -212,6 +293,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Rich();
             Hand h = Hire(sim);
+            Daytime(sim);
             long t = sim.State.Clock.SimTime;
             Ok(sim, new Sow(t, 85, "radish", SeedSource.Certified, "none"));
             Ok(sim, new Sow(t, 86, "radish", SeedSource.Certified, "none"));
@@ -240,6 +322,7 @@ namespace Sim.View.Tests
         public void PeopleSheet_HiresTillCropsIn()
         {
             Simulation sim = Rich();
+            Daytime(sim);
             long t = sim.State.Clock.SimTime;
             SheetVm people = PeopleSheet.Hire(ViewKit2.Context(sim));
             Assert.That(people.Lines.Any(l => l.Action?.Id?.StartsWith("hire:") == true), Is.False, "nothing growing");
@@ -253,7 +336,7 @@ namespace Sim.View.Tests
             Assert.That(hires[0].Label, Is.EqualTo("1 labourer till harvest"));
             Assert.That(sim.Execute(hires[0].Action.Create(t)).Accepted, Is.True);
             Assert.That(PeopleSheet.Hire(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Working today").Value, Is.EqualTo("1, till the crops are in"));
-            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Icon == "person_labourer_m" && l.Note != null).Label, Is.EqualTo("1 labourer working"));
+            Assert.That(PeopleSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Icon == "person_labourer_m" && l.Note != null).Label, Is.EqualTo("1 from a nearby village"));
             Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Single(p => p.Kind == PersonKind.Labourer).Patrol, Is.EqualTo(new[] { 86 }));
         }
 
@@ -460,6 +543,14 @@ namespace Sim.View.Tests
             long cost = TownSheet.HouseCost(sim), loan = HouseLoanSheet.Loan(sim, cost);
             Assert.That(loan, Is.GreaterThan(0), "the bank lends against the houses");
             Assert.That(HousePlacement.WithLoan(ctx, tile).Enabled, Is.True);
+            // An empty field's sheet with cash for the down payment but not the price offers the loan, not a greyed button.
+            long burn = sim.State.Ledger.Balance(Sim.Core.Finance.Account.Cash) - (cost - loan);
+            sim.State.Ledger.Post(0, sim.Period, "test.burn", "test", new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.SeedsAndPlanting, burn), new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Cash, -burn));
+            ActionVm build = FieldSheets.ForTile(ctx, tile).Actions.Single(a => a.Id == "buildHouse" || a.Id == "houseLoan");
+            Assert.That(build.Id, Is.EqualTo("houseLoan"));
+            Assert.That(build.Enabled, Is.True);
+            Assert.That(build.Label, Is.EqualTo("Build a family house"));
+            Assert.That(build.Detail, Is.EqualTo("with a home loan: you pay " + ctx.Fmt.Coins(cost - loan) + " now"));
             SheetVm sheet = HouseLoanSheet.Build(ctx, tile);
             Assert.That(sheet.Title, Is.EqualTo("Build with a home loan"));
             LineVm row = sheet.Lines.First(l => l.Action != null);
@@ -486,6 +577,73 @@ namespace Sim.View.Tests
             Assert.That(LivesIn(CitizenSheet.Build(ctx, manoj.Id)), Is.EqualTo("Family house 1 · Manoj's family"));
         }
 
+        // Spec 015 AC-11, ADR 0083 §1–3: Offer work as a hand on a townsperson's card (none for a child or an elder); the offer
+        // says the house becomes part of the pay; once one hand has it, the next one's offer and card say his wage is all cash.
+        [Test]
+        public void OfferFromCard()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            Citizen Named(string n) => sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == n);
+            ActionVm Offer(Citizen c) => CitizenSheet.Build(ctx, c.Id).Lines.Single(l => l.Label == "Work").Action;
+            Citizen manoj = Named("Manoj"), usha = Named("Usha"), ravi = Named("Ravi"), kamala = Named("Kamala");
+
+            Assert.That((Offer(manoj).Label, Offer(manoj).Enabled), Is.EqualTo(("Offer work as a hand", true)));
+            Assert.That((Offer(ravi), Offer(kamala)), Is.EqualTo(((ActionVm)null, (ActionVm)null)), "the Work line already says why (too young, retired)");
+
+            SheetVm offer = HiringBoard.TownOffer(ctx, manoj.Id);
+            LineVm asked = offer.Lines.First(l => l.Action != null && l.Action.Kind == ActionKind.Primary);
+            long wage = HiringRules.OfferWage(sim, HiringRules.TownApplicant(sim, manoj, 0), OfferLevel.Asked);
+            long house = Sim.Core.Market.MarketRules.Indexed(sim, 6_000_00);
+            Assert.That(asked.Note, Does.EndWith("From next season: " + ctx.Fmt.Coins(wage - house) + " in cash + the house (worth " + ctx.Fmt.Coins(house) + ")"));
+            Ok(sim, asked.Action.Create(sim.State.Clock.SimTime));
+            Assert.That(manoj.Job, Is.EqualTo(CitizenJob.Hand));
+            Assert.That(HandSheet.Build(ctx, manoj.HandId).Lines.Single(l => l.Label == "Housing").Value, Does.StartWith("Family house, part of the pay from the next renewal"));
+
+            Assert.That(HiringBoard.TownOffer(ctx, usha.Id).Lines.First(l => l.Action != null).Note, Does.EndWith("The house is already part of Manoj's pay: all of this is cash"));
+            Ok(sim, new OfferTownsperson(sim.State.Clock.SimTime, usha.Id));
+            Assert.That(HandSheet.Build(ctx, usha.HandId).Lines.Single(l => l.Label == "Housing").Value, Is.EqualTo("Family house, counted in Manoj's pay: this wage is all cash"));
+        }
+
+        // Editor review (2026-10-30): someone away on a course is back at the first hourly pass after it ends, so the countdown runs to
+        // that hour and is never negative ("back in −1 min 33 s" was seen).
+        [Test]
+        public void BackIn_NeverNegative()
+        {
+            Simulation sim = Situations.Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            long hour = (ctx.Now / 3600 + 1) * 3600;
+            Assert.That(StaffView.BackIn(ctx, hour - 3600 + 60), Is.EqualTo(hour - ctx.Now), "ended this hour: back at the next pass");
+            Assert.That(StaffView.BackIn(ctx, hour - 7200), Is.EqualTo(0L));
+            Assert.That(StaffView.BackIn(ctx, hour + 3600), Is.EqualTo(hour + 3600 - ctx.Now));
+        }
+
+        // Spec 014 AC-17, ADR 0083 §6 and the clarity line (owner, 2026-10-30): the People sheet counts your townspeople at work and names
+        // each (their house, opening their card), the neighbours on one row; out of working hours, everyone is home for the night.
+        [Test]
+        public void TownLabourers_Named()
+        {
+            Simulation sim = MapViewTests.Hired(10);
+            ViewContext ctx = ViewKit2.Context(sim);
+            SheetVm day = PeopleSheet.Build(ctx);
+            Assert.That(day.Lines.Any(l => l.IsHeader && l.Label == "3 labourers at work"), Is.True, "your townspeople counted");
+            LineVm manoj = day.Lines.Single(l => l.Label == "Manoj"), usha = day.Lines.Single(l => l.Label == "Usha");
+            Assert.That((manoj.Note, manoj.Action.Opens?.Kind), Is.EqualTo(("Family house 1", "Citizen")));
+            Assert.That(usha.Value, Does.StartWith("Till "));
+            Assert.That(day.Lines.Single(l => l.Label == "1 from a nearby village").Note, Is.EqualTo("They harvest ripe fields with no hand's order, then go home"));
+
+            sim = MapViewTests.Hired(21);
+            ctx = ViewKit2.Context(sim);
+            Citizen m = sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == "Manoj");
+            long morning = ctx.Now / Day * Day + Day + 7 * Hour;
+            string expected = m.LabourUntil > morning ? "Home for the night · back at 7:00" : "Home for the night"; // back only if still hired
+            SheetVm night = PeopleSheet.Build(ctx);
+            Assert.That(night.Lines.Single(l => l.Label == "Manoj").Note, Is.EqualTo(expected));
+            Assert.That(night.Lines.Single(l => l.Label == "1 from a nearby village").Note, Is.EqualTo(expected));
+            string hand = PeopleWords.Name(ViewKit2.Context(sim), sim.State.People.Hands[0].Name);
+            Assert.That(night.Lines.Single(l => l.Label == hand).Note, Does.StartWith("Home for the night · back at 7:00 · "));
+        }
+
         [Test]
         public void Map_People_And_Construction()
         {
@@ -496,7 +654,7 @@ namespace Sim.View.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 12 * Hour);
             MapVm map = MapView.Build(ViewKit2.Context(sim));
             Assert.That(map.People.Count(p => p.Kind == PersonKind.Founder), Is.EqualTo(1));
-            Assert.That(map.People.Count(p => p.Kind == PersonKind.Labourer), Is.EqualTo(PeopleRules.DayLabourHours(sim) > Fixed.Zero ? 2 : 0));
+            Assert.That(map.People.Count(p => p.Kind == PersonKind.Labourer), Is.EqualTo(PeopleRules.DayLabourHours(sim) > Fixed.Zero && MapView.WorkingHours(map.SecondOfDay) ? 2 : 0), "home at night (ADR 0083 §5)");
             Assert.That(map.Constructions.Single().Progress, Is.EqualTo(0.5f).Within(0.05f));
             ulong hash = sim.State.ComputeHash();
             ViewContext ctx = ViewKit2.Context(sim);

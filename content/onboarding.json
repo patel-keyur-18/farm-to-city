@@ -30,7 +30,7 @@
     { "id": "borrowing",         "triggers": [{ "kind": "rejection", "reason": "InsufficientFunds", "commands": ["Sow", "BuildHandHut", "HireLabourers", "OfferContract"] },
                                               { "kind": "cashBelowHutCost", "after": "labour" }], "action": "money" },
     { "id": "sick",              "triggers": [{ "kind": "event", "events": ["FounderSick"] }], "action": "founder" },
-    { "id": "hamlet",            "triggers": [{ "kind": "event", "events": ["EraUnlocked"] }], "action": "progress" },
+    { "id": "hamlet",            "triggers": [{ "kind": "event", "events": ["EraUnlocked(hamlet)"] }], "action": "progress" },
     { "id": "firstOrders",       "triggers": [{ "kind": "event", "events": ["OrdersPosted"] }], "action": "orders" },
     { "id": "truckAway",         "triggers": [{ "kind": "storeTruckAway" }, { "kind": "rejection", "reason": "TraderAway", "commands": ["SellToTrader", "Harvest", "PickGarden", "PickFruit"] }], "action": "store" },
     { "id": "cattle",            "triggers": [{ "kind": "cattleAcre" }], "action": "shed" }

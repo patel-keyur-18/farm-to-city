@@ -45,6 +45,12 @@ namespace Sim.View.Views
                     Row(vm, ctx, "why.householdIncome.wage", Money(ctx, h.Wage), "name", TownWords.Name(ctx, c));
                     if (hut) Row(vm, ctx, "why.householdIncome.remit", "−" + Money(ctx, Sim.Core.Finance.Money.MulRate(h.Wage, sim.Config.Game.Population.RemitShare)));
                 }
+                else if (c.Job == CitizenJob.Business && sim.State.Businesses?.Find(c.Employer) is Sim.Core.Business.Business b)
+                {
+                    Sim.Core.Definitions.BusinessTypeDef t = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
+                    Row(vm, ctx, "why.householdIncome.business", Money(ctx, Sim.Core.Business.BusinessRules.Wage(sim, t)), "name", TownWords.Name(ctx, c),
+                        "business", BusinessWords.InSentence(ctx, t));
+                }
                 else if (HouseholdRules.WorksOutside(sim, c))
                     Row(vm, ctx, "why.householdIncome.outside", Money(ctx, HouseholdRules.OutsideSeasonPay(sim)), "name", TownWords.Name(ctx, c));
             }

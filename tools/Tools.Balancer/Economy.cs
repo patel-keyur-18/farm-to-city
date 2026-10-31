@@ -26,7 +26,7 @@ namespace Tools.Balancer
     {
         private static string C(double coins) { return coins.ToString("N0", CultureInfo.InvariantCulture); }
 
-        private static double Real(long money, Fixed index) { return money / 100.0 / ToDouble(index); }
+        internal static double Real(long money, Fixed index) { return money / 100.0 / ToDouble(index); }
 
         /// <summary>Runs a bot for <paramref name="years"/> from a new game at 08:00 and collects each season.</summary>
         public static Run RunBot(SimConfig config, Bot bot, int years, ulong seed) { return RunBot(config, bot, years * 4, seed, null); }

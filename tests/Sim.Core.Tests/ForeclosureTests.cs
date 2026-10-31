@@ -184,6 +184,7 @@ namespace Sim.Core.Tests
             Assert.That(done.Parcels, Is.Empty);
             Assert.That(done.WrittenOff, Is.EqualTo(0), "the potatoes covered the debt");
             Assert.That(done.Produce.Select(p => p.Key), Is.EqualTo(new[] { "potato" }), "highest value first, only until covered");
+            Assert.That(sim.State.Finance.Sales.This.Concat(sim.State.Finance.Sales.Last).Any(x => x.Good == "potato" && x.To == SoldTo.Lender && x.Amount > 0), Is.True, "in the sales record (spec 019 §3.9)");
             Assert.That(sim.State.Market.Stock[potato], Is.GreaterThan(0).And.LessThan(6_000_000));
             Assert.That(sim.State.Market.Stock[wheat], Is.EqualTo(wheatBefore), "no more than needed is taken");
             Assert.That(sim.State.Market.Stock[seed], Is.EqualTo(seedBefore), "inputs are not seized");

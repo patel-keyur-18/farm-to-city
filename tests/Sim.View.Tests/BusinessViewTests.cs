@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Business;
 using Sim.Core.Commands;
+using Sim.Core.People;
 using Sim.View.Views;
 
 namespace Sim.View.Tests
@@ -10,6 +11,40 @@ namespace Sim.View.Tests
     /// <summary>Spec 016 §3.3, §7 (US-115): the Businesses sheet, research, the plan, placement and the business card.</summary>
     public class BusinessViewTests
     {
+        private static MapVm MapAt(Simulation sim, int hour)
+        {
+            sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 1) * 86_400 + hour * 3600);
+            return MapView.Build(ViewKit2.Context(sim));
+        }
+
+        // AC-16: whoever works a business is seen there while it's open: the hired worker as themselves, not also at home, gone when it
+        // shuts; run by you, you're there instead of on the fields.
+        [Test]
+        public void WorkerOnMap()
+        {
+            Simulation sim = Situations.Mill();
+            Business b = sim.State.Businesses.Businesses.Single();
+            Worker w = BusinessRules.HiredWorker(sim, b);
+            Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
+            Assert.That(c, Is.Not.Null, "a townsperson was hired");
+
+            MapVm day = MapAt(sim, 12);
+            PersonVm seen = day.People.Single(p => p.Key == "worker:" + w.Id);
+            Assert.That((seen.Kind, seen.TileId, seen.Look), Is.EqualTo((PersonKind.Worker, b.TileId, MapView.Look(sim, c))));
+            Assert.That(seen.Patrol, Is.EqualTo(new[] { b.TileId }));
+            Assert.That(seen.HomeHut, Is.EqualTo(sim.State.Citizens.Household(c.HouseholdId).HomeId), "they walk from their house");
+            Assert.That(day.People.Any(p => p.Key == "citizen:" + c.Id), Is.False, "not also at home");
+            Assert.That(day.People.Single(p => p.Kind == PersonKind.Founder).Patrol, Does.Not.Contain(b.TileId));
+            Assert.That(MapAt(sim, 20).People.Any(p => p.Kind == PersonKind.Worker), Is.False, "shut for the night");
+
+            Assert.That(sim.Execute(new LetWorkerGo(sim.State.Clock.SimTime, b.Id)).Accepted, Is.True);
+            Assert.That(MapAt(sim, 12).People.Any(p => p.Kind == PersonKind.Worker), Is.False, "nobody there, nobody drawn");
+            Assert.That(sim.Execute(new RunBusinessYourself(sim.State.Clock.SimTime, b.Id)).Accepted, Is.True);
+            PersonVm me = MapAt(sim, 12).People.Single(p => p.Kind == PersonKind.Founder);
+            Assert.That((me.TileId, me.Patrol.Single()), Is.EqualTo((b.TileId, b.TileId)), "run by you: you're there");
+            Assert.That(MapAt(sim, 20).People.Single(p => p.Kind == PersonKind.Founder).Patrol, Does.Not.Contain(b.TileId));
+        }
+
         private static void Ok(Simulation sim, Command c) { Assert.That(sim.Execute(c).Accepted, Is.True, c.GetType().Name + " " + sim.Preview(c).Reason); }
 
         // AC-14 (the plan shown; compared after 4 seasons in US-116): from the Menu to an open mill, every step in words.
@@ -20,8 +55,11 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             Assert.That(MenuSheet.Build(ctx).Lines.Select(l => l.Label), Does.Contain("Businesses"));
             SheetVm list = BusinessesSheet.Build(ctx);
-            ActionVm start = list.Lines.First(l => l.Buttons != null).Buttons.Single();
+            var buttons = list.Lines.First(l => l.Buttons != null).Buttons;
+            ActionVm start = buttons[0];
             Assert.That((start.Label, start.Enabled), Is.EqualTo(("Start a flour mill", true)));
+            Assert.That(buttons.Skip(1).Select(b => (b.Label, b.Enabled, b.DisabledReason)),
+                Is.EqualTo(new[] { ("Start a bakery", false, "Comes with the Village"), ("Start a dairy", false, "Comes with the Village") }), "Village businesses greyed until then");
             Assert.That(list.Lines.Any(l => l.Label == "None yet"), Is.True);
 
             SheetVm research = BusinessResearchSheet.Build(ctx, 0);
@@ -45,10 +83,18 @@ namespace Sim.View.Tests
             Assert.That(BusinessesSheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Flour mill").Value, Does.StartWith("Being built"));
             sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 2) * 86_400 + 12 * 3600);
             SheetVm card = BusinessSheet.Build(ViewKit2.Context(sim), b.Id);
+            Assert.That(card.Lines.Single(l => l.Label == "Who works here").Note, Does.StartWith("Nobody works here: hire someone on the board"), "spec 015: the stopgap is gone");
+            Assert.That(card.Subtitle, Is.EqualTo("Closed · nobody works here"), "at noon, in its hours: shut for want of a worker, not till 8:00");
+            Assert.That(card.Lines.Single(l => l.Label == "Who works here").Action.Opens.Value, Is.EqualTo(new SheetRequest("Word", b.Id)));
+            Assert.That(card.Lines.Single(l => l.Label == "Run it yourself").Action.Enabled, Is.True);
+            Ok(sim, new PostJob(sim.State.Clock.SimTime, b.Id, false));
+            Ok(sim, new OfferContract(sim.State.Clock.SimTime, sim.State.People.ApplicantsFor(b.Id)[0].Id));
+            card = BusinessSheet.Build(ViewKit2.Context(sim), b.Id);
             Assert.That(card.Subtitle, Is.EqualTo("Open now · until 18:00"));
             Assert.That(card.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Today", "Books", "Settings" }));
             Assert.That(card.Lines.Single(l => l.Label == "Ground for the area today").Value, Does.Contain("in fees"));
-            Assert.That(card.Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Manoj (miller)").Or.EqualTo("Usha (miller)"), "the town's best-skilled adult");
+            Assert.That(card.Lines.Single(l => l.Label == "Who works here").Action.Id, Is.EqualTo("letGo"));
+            Assert.That(card.Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Manoj (miller)").Or.EqualTo("Usha (miller)"), "the most skilled townsperson, hired from the board");
 
             SheetVm settings = BusinessSheet.Build(ViewKit2.Context(sim), b.Id, BusinessSheet.Settings);
             LineVm hours = settings.Lines.Single(l => l.Label == "Open");
@@ -133,14 +179,14 @@ namespace Sim.View.Tests
             SheetVm card = BusinessSheet.Build(ctx, b.Id);
             Assert.That(card.Lines.Single(l => l.Label == "Overdraft").Value, Is.EqualTo("0 coins of " + ctx.Fmt.Coins(BusinessBooks.OverdraftLimit(sim, b))));
             Assert.That(card.Lines.Single(l => l.Label == "Business loan").Value, Does.StartWith("Owes "));
-            Assert.That(MoneySheet.Build(ctx).Lines.Any(l => l.Label == "Cooperative bank, for the flour mill"), Is.True, "your guarantee, on Money and loans");
+            Assert.That(MoneySheet.Build(ctx, MoneySheet.Wealth).Lines.Any(l => l.Label == "Cooperative bank, for the flour mill"), Is.True, "your guarantee, on Money and loans");
 
-            // Short: no worker. The alert and the card say what to do.
-            b.GetType().GetProperty("Worker").SetValue(b, WorkerKind.None);
+            // Nobody working: the alert and the card say what to do.
+            Assert.That(b.Worker, Is.EqualTo(WorkerKind.None), "nobody hired from the board yet");
             ctx = ViewKit2.Context(sim);
-            Assert.That(Alerts.Build(ctx).Any(a => a.Text == "The flour mill has no worker: the wage went unpaid" && a.Action.Opens.Value.Kind == "Business"), Is.True);
-            Assert.That(BusinessSheet.Build(ctx, b.Id).Lines.Single(l => l.Label == "The mill's cash").Note, Does.StartWith("No worker"));
-            Assert.That(BusinessSheet.Build(ctx, b.Id).Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Nobody: the wage went unpaid"));
+            Assert.That(Alerts.Build(ctx).Any(a => a.Text == "Nobody works at the flour mill: hire someone, or run it yourself" && a.Action.Opens.Value.Kind == "Business"), Is.True);
+            Assert.That(BusinessSheet.Build(ctx, b.Id).Lines.Single(l => l.Label == "The mill's cash").Note, Is.Null);
+            Assert.That(BusinessSheet.Build(ctx, b.Id).Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Nobody yet"));
 
             SheetVm settings = BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings);
             Assert.That(settings.Lines.Single(l => l.Label == "Close the flour mill").Action.Opens.Value.Kind, Is.EqualTo("BusinessClose"));

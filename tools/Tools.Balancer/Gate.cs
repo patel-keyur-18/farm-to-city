@@ -338,7 +338,8 @@ namespace Tools.Balancer
         public sealed class MillResult
         {
             public string Bot;
-            public int Seeds, Founded, Closed, Foreclosed;
+            public int Seeds, Founded, Closed, Foreclosed, WorkersLeft, HandsLeft;
+            public Dictionary<string, int> Answers = new Dictionary<string, int>();
 
             /// <summary>Per seed that founded one: the mill's mean net profit a full season, its payback in seasons (its cost ÷ that
             /// profit; NaN when never), and the most closes in a row it ended overdrawn.</summary>
@@ -347,10 +348,33 @@ namespace Tools.Balancer
 
             /// <summary>Your cash at the end of every run: never stuck (ADR 0009) means playing on, a foreclosure included.</summary>
             public List<long> EndCash = new List<long>();
+
+            /// <summary>Your town's people at the end of each run (the shops' customers include them).</summary>
+            public List<int> EndPeople = new List<int>();
+
+            /// <summary>Per seed that founded one: full seasons measured.</summary>
+            public List<int> FullSeasons = new List<int>();
         }
 
         /// <summary>Plays a mill bot for <paramref name="seasons"/> and measures its mill's own books.</summary>
-        public static MillResult Mill(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        public static MillResult Mill(SimConfig config, Func<Bot> make, int seeds, int seasons = 12) { return Business(config, make, seeds, "flour_mill", seasons); }
+
+        /// <summary>
+        /// Spec 016 §9 (US-119): the bakery measured from the Hamlet, because the Village's own gate comes with spec 018 (Sprint 17);
+        /// the content is edited only in its era.
+        /// </summary>
+        public static string BakeryInHamlet(string file, string json) { return InHamlet("bakery", file, json); }
+
+        public static string DairyInHamlet(string file, string json) { return InHamlet("dairy", file, json); }
+
+        private static string InHamlet(string type, string file, string json)
+        {
+            return file == "businesses.json" ? json.Replace("\"id\": \"" + type + "\", \"nameKey\": \"business." + type + "\", \"era\": \"village\"",
+                "\"id\": \"" + type + "\", \"nameKey\": \"business." + type + "\", \"era\": \"hamlet\"") : json;
+        }
+
+        /// <summary>Plays a business bot for <paramref name="seasons"/> and measures the own books of its business of <paramref name="type"/>.</summary>
+        public static MillResult Business(SimConfig config, Func<Bot> make, int seeds, string type, int seasons = 12)
         {
             var all = new MillResult { Bot = make().Name, Seeds = seeds };
             Parallel.For(0, seeds, i =>
@@ -361,17 +385,29 @@ namespace Tools.Balancer
                     foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
                     {
                         if (e is Sim.Core.Events.ForeclosureCompleted) foreclosed++;
+                        if (e is Sim.Core.Events.WorkerLeft || e is Sim.Core.Events.HandLeft || e is Sim.Core.Events.HrEventAnswered)
+                            lock (all)
+                            {
+                                if (e is Sim.Core.Events.WorkerLeft) all.WorkersLeft++;
+                                if (e is Sim.Core.Events.HandLeft) all.HandsLeft++;
+                                if (e is Sim.Core.Events.HrEventAnswered a) { string k = a.Kind + ":" + a.Choice; all.Answers[k] = (all.Answers.TryGetValue(k, out int n) ? n : 0) + 1; }
+                            }
                         if (!(e is Sim.Core.Events.SeasonClosed)) continue;
-                        var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed);
+                        var b = sim.State.Businesses?.Businesses.Find(x => x.Status != Sim.Core.Business.BusinessStatus.Closed && Sim.Core.Business.BusinessRules.TypeOf(sim, x).Id == type);
                         if (b == null) continue;
                         run = Sim.Core.Business.BusinessBooks.Overdrawn(b) > 0 ? run + 1 : 0;
                         worst = Math.Max(worst, run);
                     }
                 });
-                Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Count > 0 ? r.Sim.State.Businesses.Businesses[0] : null;
+                Sim.Core.Business.Business mill = r.Sim.State.Businesses?.Businesses.Find(x => Sim.Core.Business.BusinessRules.TypeOf(r.Sim, x).Id == type);
                 lock (all)
                 {
-                    all.EndCash.Add(r.Sim.State.Ledger.Cash);
+                    // Cash you can reach: your own and the open businesses' (Take out moves it to you), not inputs or stock bought.
+                    long reach = r.Sim.State.Ledger.Cash;
+                    foreach (Sim.Core.Business.Business x in r.Sim.State.Businesses?.Businesses ?? new System.Collections.Generic.List<Sim.Core.Business.Business>())
+                        if (x.Status != Sim.Core.Business.BusinessStatus.Closed) reach += Math.Max(0, x.Ledger.Cash - Sim.Core.Business.BusinessBooks.Overdrawn(x));
+                    all.EndCash.Add(reach);
+                    all.EndPeople.Add(r.Sim.State.Citizens?.Population ?? 0);
                     all.Foreclosed += foreclosed > 0 ? 1 : 0;
                     if (mill == null) return;
                     all.Founded++;
@@ -379,6 +415,7 @@ namespace Tools.Balancer
                     long founded = mill.FoundedAt / r.Sim.Clock.SecondsPerSeason;
                     var full = mill.Reports.Where(x => x.Period > founded).ToList();
                     if (full.Count == 0) return;
+                    all.FullSeasons.Add(full.Count);
                     double profit = full.Average(x => (double)Sim.Core.Business.BusinessBooks.NetProfit(x)) / Money.Coin;
                     all.Profit.Add(profit);
                     double cost = Sim.Core.Business.BusinessRules.Cost(r.Sim, Sim.Core.Business.BusinessRules.TypeOf(r.Sim, mill)) / (double)Money.Coin;
@@ -388,6 +425,63 @@ namespace Tools.Balancer
             });
             return all;
         }
+
+        /// <summary>The bakery's bots (US-119): hired with no mill, hired beside your mill, run by you; the shops' pav amount optionally tried.</summary>
+        /// <summary>The dairy's bots (US-216): hired, run by you, and hired on your own milk only (no neighbours').</summary>
+        public static int PrintDairy(ConfigFor configFor, int seeds, string paneerPrice = null, string paneerTrader = null, string gheeTrader = null)
+        {
+            SimConfig config = configFor((f, j) =>
+            {
+                j = DairyInHamlet(f, j);
+                if (paneerPrice != null && f == "goods.json") j = System.Text.RegularExpressions.Regex.Replace(j, "(\"id\": \"paneer\",[^}]*\"basePrice\": )320", "${1}" + paneerPrice);
+                if (f == "region.json")
+                {
+                    if (paneerTrader != null) j = System.Text.RegularExpressions.Regex.Replace(j, "(\"traderBuyPerDay\"[^}]*\"paneer\": )0", "${1}" + paneerTrader);
+                    if (gheeTrader != null) j = System.Text.RegularExpressions.Regex.Replace(j, "(\"traderBuyPerDay\"[^}]*\"ghee\": )20", "${1}" + gheeTrader);
+                }
+                return j;
+            });
+            if (paneerPrice != null) Console.WriteLine("  paneer " + paneerPrice + ", the trader's paneer " + paneerTrader + " kg and ghee " + gheeTrader + " kg a day");
+            Console.WriteLine("Dairy (spec 016 §9, US-216), " + seeds + " seeds, 16 seasons");
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new BusinessBot(false, false, "dairy"), () => new BusinessBot(true, false, "dairy"),
+                () => new BusinessBot(false, false, "dairy") { OwnMilkOnly = true }, () => new BusinessBot(true, false, "dairy") { OwnMilkOnly = true } })
+            {
+                MillResult m = Business(config, make, seeds, "dairy", 16);
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  " + m.Bot.PadRight(26) + "founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : K(pr[0]) + " / " + K(pr[pr.Count / 2]) + " / " + K(pr[pr.Count - 1]))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", overdrawn run " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed
+                    + ", end cash min " + K(m.EndCash.Min() / (double)Money.Coin));
+            }
+            return 0;
+        }
+
+        public static int PrintBakery(ConfigFor configFor, int seeds, string pav)
+        {
+            SimConfig config = configFor((f, j) =>
+            {
+                j = BakeryInHamlet(f, j);
+                return pav != null && f == "businesses.json" ? j.Replace("\"shops\": { \"pav\": 0.03,", "\"shops\": { \"pav\": " + pav + ",") : j;
+            });
+            Console.WriteLine("Bakery (spec 016 §9, US-119), " + seeds + " seeds, 16 seasons" + (pav == null ? "" : ", the shops' pav " + pav + " kg a person a day"));
+            foreach (Func<Bot> make in new Func<Bot>[] { () => new BusinessBot(false, false, "bakery"), () => new BusinessBot(false, false, "flour_mill", "bakery"),
+                () => new BusinessBot(true, false, "bakery"), () => new BusinessBot(false, true, "bakery"), () => new MillBot(true) })
+            {
+                string type = make() is MillBot ? "flour_mill" : "bakery";
+                MillResult m = Business(config, make, seeds, type, 16);
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  " + m.Bot.PadRight(26) + "founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : K(pr[0]) + " / " + K(pr[pr.Count / 2]) + " / " + K(pr[pr.Count - 1]))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", overdrawn run " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed
+                    + ", end cash min " + K(m.EndCash.Min() / (double)Money.Coin) + ", town " + m.EndPeople.OrderBy(x => x).ElementAt(m.EndPeople.Count / 2)
+                    + " people, " + (m.FullSeasons.Count == 0 ? 0 : m.FullSeasons.OrderBy(x => x).ElementAt(m.FullSeasons.Count / 2)) + " full seasons (medians)");
+            }
+            return 0;
+        }
+
+        private static string K(double coins) { return coins.ToString("N0", CultureInfo.InvariantCulture); }
 
         // ---- US-098 (ADR 0045 §4): the Phase 1 health checks ----
 
@@ -530,6 +624,108 @@ namespace Tools.Balancer
             }
             a.MedianScoreAtEnd = Median(runs.Select(r => (double)r.Sim.State.Credit.Score));
             return a;
+        }
+
+        // ---- Spec 015 §9: HR ----
+
+        public sealed class HrResult
+        {
+            public string Bot;
+            public List<double> Motivation = new List<double>(), Condition = new List<double>(), FarmProfit = new List<double>(), Wages = new List<double>(),
+                EventsPerWorkerSeason = new List<double>(), SeasonsToQuit = new List<double>(),
+                Fair = new List<double>(), Home = new List<double>(), Mood = new List<double>(), Fatigue = new List<double>();
+            public int Hands, Quits;
+            public Dictionary<Sim.Core.People.HrEventKind, int> Kinds = new Dictionary<Sim.Core.People.HrEventKind, int>();
+        }
+
+        /// <summary>
+        /// A farm bot's hands for <paramref name="seasons"/>: motivation and motivation × (1 − fatigue) per hand-hour under contract, HR
+        /// events per worker-season, the farm's profit (year-0 prices) and wages over the run, and how long each hand who left had stayed.
+        /// </summary>
+        public static HrResult Hr(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        {
+            var all = new HrResult { Bot = make().Name };
+            Parallel.For(0, seeds, i =>
+            {
+                double m = 0, c = 0, hours = 0, fair = 0, home = 0, mood = 0, tired = 0;
+                int events = 0, hands = 0;
+                var hired = new Dictionary<long, long>();
+                var stayed = new List<double>();
+                var kinds = new Dictionary<Sim.Core.People.HrEventKind, int>();
+                Economy.Run r = Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.People.Hand h in sim.State.People?.Hands ?? new List<Sim.Core.People.Hand>())
+                    {
+                        if (h.Contract != Sim.Core.People.ContractState.Active || Sim.Core.People.WorkRules.Away(h)) continue;
+                        m += Economy.ToDouble(Sim.Core.People.WorkRules.Motivation(sim, h));
+                        c += Economy.ToDouble(Sim.Core.People.WorkRules.Condition(sim, h));
+                        fair += Economy.ToDouble(Sim.Core.People.WorkRules.Fairness(sim, h));
+                        home += Economy.ToDouble(Sim.Core.People.WorkRules.Home(sim, h));
+                        mood += Economy.ToDouble(Sim.Core.People.HrRules.Mood(sim, h));
+                        tired += Economy.ToDouble(h.Fatigue);
+                        hours++;
+                    }
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        if (e is Sim.Core.Events.HandHired hh) { hired[hh.HandId] = e.SimTime; hands++; }
+                        if (e is Sim.Core.Events.HandLeft hl && hired.TryGetValue(hl.HandId, out long at)) stayed.Add((e.SimTime - at) / (double)sim.Clock.SecondsPerSeason);
+                        if (e is Sim.Core.Events.HrEventRaised x && x.Place == 0)
+                        {
+                            events++;
+                            kinds[x.Kind] = kinds.TryGetValue(x.Kind, out int n) ? n + 1 : 1;
+                        }
+                    }
+                });
+                lock (all)
+                {
+                    double workerSeasons = hours * 3600 / r.Sim.Clock.SecondsPerSeason;
+                    if (hours > 0)
+                    {
+                        all.Motivation.Add(m / hours);
+                        all.Condition.Add(c / hours);
+                        all.Fair.Add(fair / hours);
+                        all.Home.Add(home / hours);
+                        all.Mood.Add(mood / hours);
+                        all.Fatigue.Add(tired / hours);
+                        all.EventsPerWorkerSeason.Add(events / workerSeasons);
+                    }
+                    all.FarmProfit.Add(r.Seasons.Sum(x => x.RealFarmProfit));
+                    all.Wages.Add(r.Seasons.Sum(x => Economy.Real(x.Report.ByAccount.Where(k => k.Key == Account.HiredLabour).Sum(k => Math.Abs(k.Value)), x.Index)));
+                    all.Hands += hands;
+                    all.Quits += stayed.Count;
+                    all.SeasonsToQuit.AddRange(stayed);
+                    foreach (var k in kinds) all.Kinds[k.Key] = (all.Kinds.TryGetValue(k.Key, out int n) ? n : 0) + k.Value;
+                }
+            });
+            return all;
+        }
+
+        /// <summary>Phase 1's output for spec 015 §9's baseline: motivation fixed at 1, no fatigue, and of the HR events only raise requests (Phase 1's wages followed skill).</summary>
+        public static string Phase1Output(string file, string json)
+        {
+            if (file != "people.json") return json;
+            json = System.Text.RegularExpressions.Regex.Replace(json, "\"(motivationMin|motivationMax)\": [0-9.]+", "\"$1\": 1.00");
+            return System.Text.RegularExpressions.Regex.Replace(json, "\"(poachChance|sickChance|emergencyChance|badBatchChance|fatigueUp)\": [0-9.]+", "\"$1\": 0");
+        }
+
+        /// <summary>Spec 015 §9 printed: the fair bot with output neutral and only raise requests (Phase 1, where wages followed skill), the fair bot, the 10%-low bot.</summary>
+        public static int PrintHr(ConfigFor configFor, int seeds, int seasons)
+        {
+            SimConfig live = configFor(null);
+            SimConfig neutral = configFor(Phase1Output);
+            string C(double v) { return v.ToString("N0", CultureInfo.InvariantCulture); }
+            string F(double v) { return v.ToString("0.000", CultureInfo.InvariantCulture); }
+            foreach (var (name, config, make) in new (string, SimConfig, Func<Bot>)[] {
+                ("phase 1", neutral, () => new FarmerBot()), ("fair", live, () => new FarmerBot()), ("low-pay", live, () => new LowPayBot()) })
+            {
+                HrResult r = Hr(config, make, seeds, seasons);
+                Console.WriteLine(name + ": motivation " + F(Median(r.Motivation)) + " (" + F(r.Motivation.DefaultIfEmpty().Min()) + "–" + F(r.Motivation.DefaultIfEmpty().Max())
+                    + ") [fair " + F(Median(r.Fair)) + ", home " + F(Median(r.Home)) + ", mood " + F(Median(r.Mood)) + ", fatigue " + F(Median(r.Fatigue)) + "], × (1 − fatigue) " + F(Median(r.Condition)) + "; farm profit over the run " + C(Median(r.FarmProfit)) + "; wages " + C(Median(r.Wages))
+                    + "; HR events a worker-season " + F(Median(r.EventsPerWorkerSeason)) + " (max " + F(r.EventsPerWorkerSeason.DefaultIfEmpty().Max()) + ")"
+                    + "; hands hired " + r.Hands + ", left " + r.Quits + " (seasons stayed median " + F(Median(r.SeasonsToQuit)) + ")"
+                    + "; events " + string.Join(", ", r.Kinds.OrderBy(k => k.Key).Select(k => k.Key + " " + k.Value)));
+            }
+            return 0;
         }
 
         private static double Median(IEnumerable<double> values)

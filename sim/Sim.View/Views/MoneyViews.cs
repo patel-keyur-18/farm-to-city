@@ -63,14 +63,98 @@ namespace Sim.View.Views
         }
     }
 
-    /// <summary>Money and loans (ADR 0043 §5): at a glance, the last report, the loans and borrowing.</summary>
+    /// <summary>
+    /// Money and loans (ADR 0043 §5, spec 019 §3.9): opens on *This season* (earned, spent, profit, why your cash moved differently,
+    /// next season already due), with *Last season* beside it after the first close; *Your wealth* holds net worth, the loans and borrowing.
+    /// </summary>
     public static class MoneySheet
     {
-        public static SheetVm Build(ViewContext ctx)
+        public const string Wealth = "wealth", LastSeason = "last";
+
+        /// <summary>A *Your season* line's *Why?* id: last season or this, the block, the line.</summary>
+        public const int EarnedBlock = 0, SpentBlock = 1, MovedBlock = 2, DueBlock = 3, Totals = 9;
+        public const int ProfitLine = 0, CashLine = 1, DueLine = 2;
+
+        public static long WhyId(bool last, int block, int line) { return (last ? 1_000_000 : 0) + block * 10_000 + line; }
+
+        public static SheetVm Build(ViewContext ctx, string tab = null)
+        {
+            return tab == Wealth ? BuildWealth(ctx) : BuildSeason(ctx, tab == LastSeason);
+        }
+
+        private static void Tabs(ViewContext ctx, SheetVm vm, string tab)
+        {
+            vm.Tab = tab;
+            vm.Tabs = new List<ActionVm>
+            {
+                ActionVm.Open("tab:season", ctx.Strings.Get("money.tabSeason"), new SheetRequest("Money", 0)),
+                ActionVm.Open("tab:wealth", ctx.Strings.Get("money.tabWealth"), new SheetRequest("Money", 0, Wealth)),
+            };
+        }
+
+        private static SheetVm BuildSeason(ViewContext ctx, bool last)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            SeasonVm season = SeasonBook.Build(ctx, last);
+            last = season.Last;
+            var vm = new SheetVm { Icon = "coin", Title = s.Get("money.title"), Subtitle = ReportSheet.PeriodName(ctx, season.Period) };
+            Tabs(ctx, vm, "tab:season");
+            if (SeasonBook.HasLast(sim))
+            {
+                vm.Switch = new List<ActionVm>
+                {
+                    ActionVm.Open("switch:this", s.Get("money.thisSeason"), new SheetRequest("Money", 0)),
+                    ActionVm.Open("switch:last", s.Get("money.lastSeason"), new SheetRequest("Money", 0, LastSeason)),
+                };
+                vm.SwitchOn = last ? "switch:last" : "switch:this";
+            }
+            if (!last) vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash") { Icon = "coin" });
+
+            void Block(string head, long total, List<SeasonLineVm> lines, int block, bool signed)
+            {
+                vm.Lines.Add(LineVm.Header(total < 0 ? head : s.Get("season.head", "head", head, "amount", signed ? Signed(ctx, total) : ctx.Fmt.Coins(total))));
+                for (int i = 0; i < lines.Count; i++)
+                    vm.Lines.Add(new LineVm(lines[i].Label, signed ? Signed(ctx, lines[i].Amount) : ctx.Fmt.Coins(lines[i].Amount), "season", WhyId(last, block, i)) { Icon = lines[i].Icon });
+            }
+            Block(s.Get("season.earned"), season.EarnedTotal, season.Earned, EarnedBlock, false);
+            if (season.Earned.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingEarned"), null));
+            Block(s.Get("season.spent"), season.SpentTotal, season.Spent, SpentBlock, false);
+            if (season.Spent.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingSpent"), null));
+            vm.Lines.Add(LineVm.Header(s.Get(last ? "season.profitLast" : "season.profit")));
+            vm.Lines.Add(new LineVm(s.Get(season.Profit < 0 ? "season.loss" : "season.profitLine"), Signed(ctx, season.Profit), "season", WhyId(last, Totals, ProfitLine)) { Icon = "coin" });
+
+            Block(s.Get("season.moved"), -1, season.Moved, MovedBlock, true);
+            vm.Lines.Add(new LineVm(s.Get("season.cashLine"), s.Get(last ? "season.cashValueLast" : "season.cashValue", "start", ctx.Fmt.Coins(season.CashStart), "end", ctx.Fmt.Coins(season.CashEnd)),
+                "season", WhyId(last, Totals, CashLine)) { Icon = "coin" });
+
+            if (last)
+            {
+                vm.Lines.Add(new LineVm(s.Get("season.report"), s.Get("season.reportNote"))
+                    { Action = ActionVm.Open("report", s.Get("money.seeReport"), new SheetRequest("Report", season.Period)) });
+                return vm;
+            }
+            Block(s.Get("season.due"), season.DueTotal, season.Due, DueBlock, false);
+            if (season.Due.Count == 0) { vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null)); return vm; }
+            if (season.Short == 0)
+                vm.Lines.Add(new LineVm(s.Get("season.dueTotal"), ctx.Fmt.Coins(season.DueTotal), "season", WhyId(false, Totals, DueLine)) { Note = s.Get("season.covered"), NoteTone = Tone.Good });
+            else
+                vm.Lines.Add(new LineVm(s.Get("season.dueTotal"), ctx.Fmt.Coins(season.DueTotal), "season", WhyId(false, Totals, DueLine))
+                {
+                    Note = s.Get("season.short", "amount", ctx.Fmt.Coins(season.Short), "who", season.ShortWho), NoteTone = Tone.Warn,
+                    Action = ActionVm.Open("store", s.Get("season.toStore"), new SheetRequest("Store", 0)),
+                });
+            return vm;
+        }
+
+        public static string Signed(ViewContext ctx, long v) { return v > 0 ? "+" + ctx.Fmt.Coins(v) : v < 0 ? "−" + ctx.Fmt.Coins(-v) : ctx.Fmt.Coins(0); }
+
+        private static SheetVm BuildWealth(ViewContext ctx)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             var vm = new SheetVm { Icon = "coin", Title = s.Get("money.title") };
+            Tabs(ctx, vm, "tab:wealth");
             vm.Lines.Add(LineVm.Header(s.Get("money.glance")));
             vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
             NetWorthSnapshot worth = Reporting.NetWorth(sim);
@@ -78,17 +162,6 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("money.landPart"), ctx.Fmt.Coins(worth.LandAtMarket), "netWorth"));
             if (worth.Businesses > 0) vm.Lines.Add(new LineVm(s.Get("money.businessPart"), ctx.Fmt.Coins(worth.Businesses), "netWorth"));
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
-            vm.Lines.Add(new LineVm(s.Get("money.soFar"), ctx.Fmt.Coins(SeasonSoFar(sim)), "seasonSoFar"));
-
-            vm.Lines.Add(LineVm.Header(s.Get("money.report")));
-            List<SeasonReport> reports = sim.State.Finance.Reports;
-            if (reports.Count == 0) vm.Lines.Add(new LineVm(s.Get("money.noReport"), s.Get("money.noReportNote")));
-            else
-            {
-                SeasonReport r = reports[reports.Count - 1];
-                vm.Lines.Add(new LineVm(ReportSheet.PeriodName(ctx, r.Period), s.Get("money.reportValue", "profit", ctx.Fmt.Coins(r.FarmProfit)), "report.farmProfit", r.Period)
-                { Action = ActionVm.Open("report", s.Get("money.seeReport"), new SheetRequest("Report", r.Period)) });
-            }
 
             if (sim.State.Credit == null) return vm;
             vm.Lines.Add(LineVm.Header(s.Get("money.loans")));
@@ -124,15 +197,6 @@ namespace Sim.View.Views
                 });
             }
             return vm;
-        }
-
-        internal static long SeasonSoFar(Simulation sim)
-        {
-            Ledger ledger = sim.State.Ledger;
-            long income = -(ledger.Balance(Account.CropSales) + ledger.Balance(Account.FruitSales));
-            long costs = ledger.Balance(Account.SeedsAndPlanting) + ledger.Balance(Account.FertiliserAndSpraying) + ledger.Balance(Account.HiredLabour)
-                + ledger.Balance(Account.Depreciation) + ledger.Balance(Account.TransportAndSelling);
-            return income - costs;
         }
     }
 
@@ -263,15 +327,21 @@ namespace Sim.View.Views
         /// What the next season close will ask (spec 005 §3.6): the interest owed and accruing up to the close, any arrears, and the
         /// principal due then (none at a part-season first close; all of it at the last; a bank's part of it in between).
         /// </summary>
-        public static long NextPayment(Simulation sim, Loan loan)
+        public static long NextPayment(Simulation sim, Loan loan) { return NextPayment(sim, loan, out _, out _); }
+
+        /// <summary>The next payment as interest (with any late interest) and principal: paying back what you borrowed, not a cost.</summary>
+        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue)
         {
+            interestDue = principalDue = 0;
             if (!loan.IsOpen) return 0;
             long S = sim.Clock.SecondsPerSeason, close = (sim.State.Clock.SimTime / S + 1) * S;
             CreditRules.AccruedSince(sim, loan, close, out long interest, out long penalty);
             long principal = loan.FirstClosePartial ? loan.ArrearsPrincipal
                 : loan.Remaining <= 1 ? loan.Principal
                 : loan.ArrearsPrincipal + (loan.Schedule == LoanSchedule.Bullet ? 0 : System.Math.Min(loan.InstalmentBase, loan.Principal - loan.ArrearsPrincipal));
-            return loan.ArrearsInterest + loan.InterestAccrued + interest + penalty + principal;
+            interestDue = loan.ArrearsInterest + loan.InterestAccrued + interest + penalty;
+            principalDue = principal;
+            return interestDue + principalDue;
         }
 
         private static long NextNow(Simulation sim, Loan loan) { return System.Math.Min(NextPayment(sim, loan), CreditRules.OwedNow(sim, loan)); }

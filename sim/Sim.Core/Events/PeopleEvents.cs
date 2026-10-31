@@ -85,21 +85,96 @@ namespace Sim.Core.Events
         public long Cost { get; }
         public long ExpiresAt { get; }
 
-        public JobPosted(long simTime, bool aboveMarket, long cost, long expiresAt) : base(simTime)
+        /// <summary>0 your fields, else the business (spec 015 §3.1).</summary>
+        public long Place { get; }
+
+        public JobPosted(long simTime, bool aboveMarket, long cost, long expiresAt, long place = 0) : base(simTime)
         {
             AboveMarket = aboveMarket;
             Cost = cost;
             ExpiresAt = expiresAt;
+            Place = place;
         }
 
-        protected override string Describe() { return "JobPosted(aboveMarket=" + AboveMarket + ", cost=" + Cost + ", expiresAt=" + ExpiresAt + ")"; }
+        protected override string Describe()
+        {
+            return "JobPosted(" + (Place == 0 ? "" : "place=" + Place + ", ") + "aboveMarket=" + AboveMarket + ", cost=" + Cost + ", expiresAt=" + ExpiresAt + ")";
+        }
     }
 
     public sealed class JobPostExpired : SimEvent
     {
-        public JobPostExpired(long simTime) : base(simTime) { }
+        public long Place { get; }
 
-        protected override string Describe() { return "JobPostExpired"; }
+        public JobPostExpired(long simTime, long place = 0) : base(simTime) { Place = place; }
+
+        protected override string Describe() { return Place == 0 ? "JobPostExpired" : "JobPostExpired(place=" + Place + ")"; }
+    }
+
+    /// <summary>A reference check came back (spec 015 §3.2): the skill now ±5, and how they left their last job.</summary>
+    public sealed class ReferenceChecked : SimEvent
+    {
+        public long ApplicantId { get; }
+        public bool GoodTerms { get; }
+
+        public ReferenceChecked(long simTime, long applicantId, bool goodTerms) : base(simTime)
+        {
+            ApplicantId = applicantId;
+            GoodTerms = goodTerms;
+        }
+
+        protected override string Describe() { return "ReferenceChecked(id=" + ApplicantId + ", goodTerms=" + GoodTerms + ")"; }
+    }
+
+    /// <summary>A low offer refused: the applicant asks for their asked wage instead (spec 015 §3.3).</summary>
+    public sealed class CounterOffer : SimEvent
+    {
+        public long ApplicantId { get; }
+        public long Wage { get; }
+
+        public CounterOffer(long simTime, long applicantId, long wage) : base(simTime)
+        {
+            ApplicantId = applicantId;
+            Wage = wage;
+        }
+
+        protected override string Describe() { return "CounterOffer(id=" + ApplicantId + ", wage=" + Wage + ")"; }
+    }
+
+    /// <summary>A business's worker hired from the board (spec 015 §3.1), the rest of the season paid from its cash.</summary>
+    public sealed class WorkerHired : SimEvent
+    {
+        public long BusinessId { get; }
+        public long WorkerId { get; }
+        public long Wage { get; }
+        public long Prepaid { get; }
+
+        public WorkerHired(long simTime, long businessId, long workerId, long wage, long prepaid) : base(simTime)
+        {
+            BusinessId = businessId;
+            WorkerId = workerId;
+            Wage = wage;
+            Prepaid = prepaid;
+        }
+
+        protected override string Describe() { return "WorkerHired(business=" + BusinessId + ", worker=" + WorkerId + ", wage=" + Wage + ", prepaid=" + Prepaid + ")"; }
+    }
+
+    /// <summary>A business's worker left: let go, retired, or gone from the town (spec 015 §3.9); the business waits for a hire or you.</summary>
+    public sealed class WorkerLeft : SimEvent
+    {
+        public long BusinessId { get; }
+        public long WorkerId { get; }
+        public long Severance { get; }
+
+        public WorkerLeft(long simTime, long businessId, long workerId, long severance) : base(simTime)
+        {
+            BusinessId = businessId;
+            WorkerId = workerId;
+            Severance = severance;
+        }
+
+        protected override string Describe() { return "WorkerLeft(business=" + BusinessId + ", worker=" + WorkerId + ", severance=" + Severance + ")"; }
     }
 
     public sealed class ApplicantArrived : SimEvent
@@ -371,5 +446,87 @@ namespace Sim.Core.Events
         }
 
         protected override string Describe() { return "OrderCompleted(hand=" + HandId + ", " + Kind + "=" + Target + ")"; }
+    }
+
+    /// <summary>A worker came back from a course with their skill up (spec 015 §3.5). Place 0 is a farm hand.</summary>
+    public sealed class CourseFinished : SimEvent
+    {
+        public long Place { get; }
+        public long WorkerId { get; }
+        public Maths.Fixed Skill { get; }
+
+        public CourseFinished(long simTime, long place, long workerId, Maths.Fixed skill) : base(simTime)
+        {
+            Place = place;
+            WorkerId = workerId;
+            Skill = skill;
+        }
+
+        protected override string Describe() { return "CourseFinished(place=" + Place + ", worker=" + WorkerId + ", skill=" + Skill + ")"; }
+    }
+
+    /// <summary>Long days stopped because tomorrow's overtime couldn't be paid, or the hand's contract lapsed (spec 015 §3.4).</summary>
+    public sealed class LongDaysStopped : SimEvent
+    {
+        public long Place { get; }
+        public long WorkerId { get; }
+
+        public LongDaysStopped(long simTime, long place, long workerId) : base(simTime)
+        {
+            Place = place;
+            WorkerId = workerId;
+        }
+
+        protected override string Describe() { return "LongDaysStopped(place=" + Place + ", worker=" + WorkerId + ")"; }
+    }
+
+    /// <summary>An HR event waits for the player (spec 015 §3.7): an alert, a card and a notification.</summary>
+    public sealed class HrEventRaised : SimEvent
+    {
+        public long EventId { get; }
+        public People.HrEventKind Kind { get; }
+        public long Place { get; }
+        public long WorkerId { get; }
+
+        public HrEventRaised(long simTime, long eventId, People.HrEventKind kind, long place, long workerId) : base(simTime)
+        {
+            EventId = eventId;
+            Kind = kind;
+            Place = place;
+            WorkerId = workerId;
+        }
+
+        protected override string Describe() { return "HrEventRaised(" + EventId + ", " + Kind + ", place=" + Place + ", worker=" + WorkerId + ")"; }
+    }
+
+    public sealed class HrEventAnswered : SimEvent
+    {
+        public long EventId { get; }
+        public People.HrEventKind Kind { get; }
+        public int Choice { get; }
+
+        public HrEventAnswered(long simTime, long eventId, People.HrEventKind kind, int choice) : base(simTime)
+        {
+            EventId = eventId;
+            Kind = kind;
+            Choice = choice;
+        }
+
+        protected override string Describe() { return "HrEventAnswered(" + EventId + ", " + Kind + ", choice=" + Choice + ")"; }
+    }
+
+    /// <summary>Employer reputation moved (spec 015 §3.8).</summary>
+    public sealed class ReputationChanged : SimEvent
+    {
+        public int Score { get; }
+        public int Delta { get; }
+
+        public ReputationChanged(long simTime, int score, int delta) : base(simTime)
+        {
+            Score = score;
+            Delta = delta;
+        }
+
+        protected override string Describe() { return "ReputationChanged(" + Score + ", " + Delta + ")"; }
     }
 }

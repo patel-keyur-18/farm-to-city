@@ -180,4 +180,18 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>
+    /// Developer: moves the town to the next era now (ADR 0076), as its gate would, so a later era's buildings can be tested on
+    /// the device before that gate is built. Rejected with DevCommandsDisabled unless dev commands are on, and InvalidStep at the
+    /// last era.
+    /// </summary>
+    public sealed class DebugNextEra : Command
+    {
+        internal override CommandResult Apply(Simulation sim)
+        {
+            if (!sim.Config.Options.DevCommandsEnabled) return CommandResult.Reject(RejectReason.DevCommandsDisabled);
+            return Progress.EraRules.Unlock(sim) ? CommandResult.Ok : CommandResult.Reject(RejectReason.InvalidStep);
+        }
+    }
 }

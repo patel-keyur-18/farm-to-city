@@ -97,7 +97,7 @@ namespace Sim.View.Tests
             LineVm owed = OrdersSheet.Build(ctx).Lines.Single(l => l.WhyKey == "owed");
             Assert.That(owed.Label + " " + owed.Value, Does.Match("^Supermarket pays you [\\d,]+ coins at 6:00 tomorrow$"));
             Assert.That(StoreSheet.Build(ctx).Lines.Any(l => l.WhyKey == "owed"), Is.True);
-            Assert.That(MoneySheet.Build(ctx).Lines.Any(l => l.WhyKey == "owed"), Is.True);
+            Assert.That(MoneySheet.Build(ctx, MoneySheet.Wealth).Lines.Any(l => l.WhyKey == "owed"), Is.True);
             foreach (string key in new[] { "orderPrice", "owed", "truck" }) Assert.That(WhyView.Has(key), Is.True, key);
             Assert.That(WhyView.Build(ctx, "orderPrice", o.Id).Rows.Select(r => r.Label), Does.Contain("Supermarket premium"));
         }

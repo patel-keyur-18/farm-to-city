@@ -112,7 +112,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
-| Own cash | You put in at least the building and equipment's cost less any loan, plus a season's running cash (the wage or, run by you, a season's power and repairs), as owner's capital | |
+| Own cash | You put in at least the building and equipment's cost less any loan, plus a season's running cash (the wage or, run by you, a season's power and repairs) and, for a bakery or dairy, a day's inputs and fuel (bought before the next 6:00 round pays for them, ADR 0080), as owner's capital | |
 | Business loan | The cooperative bank's small-business loan (like India's MUDRA loans), to the business: up to `businessLtv` of its building and equipment, at the bank's rate for your score (spec 005), equal principal over up to `termSeasons`; you guarantee it (§3.10). Example: a 1,00,000 mill, 60,000 borrowed, 40,000 + about 15,000 running cash put in | 0.6; 12 seasons |
 | Overdraft | The bank's overdraft for the business up to `overdraftLimit` × a season's costs, at `overdraftRate` a season on the balance at each close | 0.5; 4% |
 
@@ -124,7 +124,7 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 | Rate | One oven, about 10 batches a working day: 130 kg of bread, so 124 kg a real hour while open | |
 | Inputs | Atta from your mill first (an internal sale at the market price), else the market; bakery supplies bought at their price | Supplies base 100 a kg |
 | Fuel | Wood or gas, coins a batch | 100 |
-| Who buys | The village grocer and tea stall (neighbours) each morning at wholesale, for the area (§3.5b's people) up to a set amount a person; your town's families from their leisure share (spec 014 §3.5); rusk keeps, so the trader and supermarket orders take it too | Pav 100, rusk 110 a kg; the shops 0.03 kg pav and 0.01 kg rusk a person a day of life |
+| Who buys | The village grocer and tea stall (neighbours) each morning at wholesale, for the area (§3.5b's people) up to a set amount a person; your town's families from their leisure share (spec 014 §3.5); rusk keeps, so the trader and supermarket orders take it too | Pav 100, rusk 110 a kg; the shops 0.01 kg pav and 0.01 kg rusk a person a day of life (ADR 0079) |
 | Keeping | Pav 2 days, rusk 60 days | Spoilage in `goods.json` |
 | The margin, year-0 | About 700 a batch; sales, not the oven, set how much it earns | |
 | What it bakes | You set the day's mix (pav and rusk); unsold pav spoils | |
@@ -133,13 +133,24 @@ Your village has no chakki: its people carry their wheat to the one in the next 
 
 | Rule | Behaviour | Default |
 | --- | --- | --- |
-| Milk in | Your animals' morning milk, up to a daily amount you set ("Keep up to 100 L a day for the dairy"), taken at the co-op's price that morning (an internal sale: the farm's Cr 4020 Milk sales); the rest still goes to the co-op at 6:00 (spec 012 §3.5). If you allow it, neighbours' milk at the co-op's price + 2 a litre | |
+| Milk in | Your animals' morning milk, up to a daily amount you set ("Milk a day", starting at what the mix needs), taken at the co-op's price that morning as far as the dairy's cash goes (an internal sale: the farm's Cr 4020 Milk sales); the rest still goes to the co-op at 6:00 (spec 012 §3.5). Neighbours' milk fills the rest of the day's amount at the co-op's price + 2 a litre; on by default, and you can stop it (ADR 0080) | |
 | Recipes | Paneer: 5 L buffalo milk (6.5 L cow) → 1 kg. Curd: 1 L → 1 kg, set overnight. Ghee: 15 L buffalo milk (22 L cow) → 1 kg | Yields by fat (spec 012 §3.5) |
 | Rate | A small unit handles about 200 L a working day, so 190 L a real hour while open; curd sets overnight | |
 | Fuel and culture | Coins a batch | 20 |
-| Who buys | The village grocer and tea stall each morning at wholesale, for the area up to a set amount a person; your town's families from their food and leisure shares; ghee keeps, so the trader and supermarket orders take it too | Paneer 320, curd 75, ghee 900 a kg; the shops 0.005 kg paneer and 0.03 kg curd a person a day of life |
+| Who buys | The village grocer and tea stall each morning at wholesale, for the area up to a set amount a person; your town's families from their food and leisure shares; paneer (3 days in the freezer) and ghee keep, so the trader takes them too (60 kg of paneer, 20 kg of ghee a day) and supermarket orders | Paneer 380, curd 75, ghee 900 a kg; the shops 0.005 kg paneer and 0.03 kg curd a person a day of life (ADR 0080) |
 | Keeping | Paneer 3 days in the freezer, curd 1 day, ghee 6 months | Spoilage in `goods.json` |
-| The margin, year-0 | Paneer about 30 a kg on milk at 57.50; curd about 15; ghee little at today's price, but it keeps and can wait for a better one. Thin, as a real dairy's: it pays with a big herd or run by you | |
+| The margin, year-0 | Paneer about 80 a kg on milk at 59.50; curd about 13; ghee from whole milk loses (it isn't in the starting mix). Thin, as a real dairy's: it pays on the village's milk, and best run by you (ADR 0080) | |
+
+### 3.9c Recipes, the day's mix and the morning round (owner, 2026-10-27, US-118)
+
+| Rule | Behaviour |
+| --- | --- |
+| The day's mix | The bakery and the dairy each have a daily mix: a kg-a-day target for each product (pav and rusk; paneer, curd and ghee), set in Settings with Change presets; the dairy's rows also show the litres each takes. Each open hour the worker makes toward the mix, up to the rate (kg of inputs a real hour). A new business starts with what the shops buy and, for what keeps, what the trader takes as well when it pays at today's prices (ghee from whole milk doesn't); the plan counts the same (ADR 0079, 0080) |
+| Milk | The dairy keeps up to its milk a day (§3.9b) at the 6:00 milking; buffalo milk goes to paneer and ghee first (more paneer a litre), cow milk to curd first; milk not made up that day spoils |
+| The morning round | At 6:00 (with the trader's truck and the co-op) the village grocer and tea stall collect what was made since the last round, each product up to its amount a person × the people (the area's plus your town's: your townspeople buy through the village shops, no budget line of their own) × 22.8, at that morning's wholesale price (the good's price, following the index and the day's move). Then rusk and ghee go to the trader. Pav, curd and raw milk left after the round spoil; paneer loses half a day; rusk and ghee keep |
+| Atta | The bakery's atta comes from your mill first (before it sells to the trader; an internal sale at the trader's price), else the market at its import price |
+| Deferred | Supermarket orders asking for rusk or ghee: with spec 017's shops (Sprint 16) |
+| The plan (US-119) | A bakery's or dairy's plan sells the day's mix to the shops (and what keeps to the trader), and prices its bought inputs as they'd really cost: atta at the trader's price when a mill of yours stands, else the market's import price; supplies count with the goods' cost (as in its books), firewood on its own line. Research shows the people the shops serve, what they'd buy of each product a day and at what price, what the trader would take, and what atta costs |
 
 ### 3.10 Overdraft, trouble and closing (§10 G9)
 
@@ -225,6 +236,7 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | AC-13 | The dairy takes your milk up to its daily amount at the co-op's price (the rest still to the co-op), makes paneer, curd and ghee by the yields, at most 190 L a real hour | `ProductionTests.Dairy_MilkIn_Recipes` |
 | AC-14 | Research and the plan show the projected season; after 4 seasons the plan-vs-actual card compares each line in words | `BusinessViewTests.Plan_VsActual` |
 | AC-15 | A business loan is the business's: at most 60% of its building and equipment, up to 12 seasons, its entries on its own books and paid from its own cash; your guarantee uses the bank's room | `BusinessTests.BusinessLoan` |
+| AC-16 | Whoever works a business is seen at it while it's open: a hired worker on its acre (a townsperson as themselves, from their house, not also at home; someone from outside from the valley's edge), and you when you run it, instead of on the fields; nobody once it shuts or with nobody hired | `BusinessViewTests.WorkerOnMap` |
 
 ## 9. Balancing hooks
 
@@ -233,6 +245,11 @@ Every number has a *Why?* (margin: "Atta 30 × 0.97 + bran 15 × 0.03 − wheat 
 | A mill grinding for the area (350 people plus your town) and milling the farm's own wheat (200 kg a day), miller hired (ADR 0073) | Net profit 5,000–10,000 a season, on a business loan too | US-117's bot (8 seeds, 3 years): 6,400–8,000; on a loan 8,200–10,000 (at 260 people it lost 2,200–3,800, ADR 0073) |
 | The same mill run by you | 30,000–40,000 a season, with your farm hours less (about what they'd earn as day labour, shown in the plan); payback 3–4 seasons | US-117's bot: 33,700–37,400, payback 3.0–3.3 |
 | Milling wheat bought at the market | 1–2 a kg | Teaches that margins are thin |
+| A bakery (the shops 0.01 kg of pav a person a day, rusk to the trader), baker hired (ADR 0079) | Net profit 15,000–25,000 a season, payback 5–8 seasons, on a business loan too | US-119's bot (8 seeds, 16 seasons): 19,800, payback 6.5; on a loan 19,500; with HR (16 seeds, ADR 0082): 18,200, payback 7.1; on a loan 18,800 |
+| The same bakery run by you | 45,000–60,000 a season, payback 2–3 seasons | US-119's bot: 53,700, payback 2.4; 0 of 12 runs foreclosed (with a day's working capital, ADR 0080) |
+| A dairy on your and neighbours' milk, dairyman hired (ADR 0080, 0082) | 10,000–20,000 a season, payback 5–10 seasons (fair pay's cost, ADR 0082) | US-216's bot (8 seeds, 16 seasons): 14,700, payback 6.6; with HR (16 seeds, ADR 0082): 12,100, payback 9.4 |
+| The same dairy run by you | 35,000–50,000, payback 2–4 seasons; the farm foreclosed in at most 10 of 16 runs (your hours; ADR 0082) | US-216's bot: 41,000, payback 3.7; 4 of 8 foreclosed; with HR: 43,300, 9 of 16 |
+| A dairy on your herd's milk alone | A loss: a village dairy runs on the village's milk | US-216's bot: −17,000 hired |
 | A business bot in the balancer | Never stuck (ADR 0009); overdraft never permanent | US-117 (`GateTests.Mill`): every run plays on with cash; overdrawn at most 2 closes in a row; run by you while borrowing for houses and cattle, 1 of 8 runs foreclosed on the farm's loans (the competent bot: 0 of 8) |
 
 ## 10. Open questions
