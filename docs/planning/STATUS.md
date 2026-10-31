@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
 | Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
-| Branch with latest work | `sprint/16-shops-and-farm` (Sprint 16's plan, from `sprint/15-chains-and-hr`; PR #20 awaits the owner's merge) |
+| Branch with latest work | `main` (PR #20 merged). `sprint/16-shops-and-farm` holds Sprint 16's approved plan; `claude/busy-meitner-h0sefn` holds the crop ladder's drafts |
 | Last updated | 2026-10-31 |
 
 ## Done so far
@@ -265,10 +265,10 @@
 
 ## Next up
 
-1. **Owner:** merge PR #20.
-2. **Owner:** approve Sprint 16's plan (`sprints.md`). **Claude**, then: the granary's layout preview, then US-130.
+1. **Next session (owner, 2026-10-31): the crop ladder first**, from `claude/busy-meitner-h0sefn` (`docs/planning/adhoc/crop-ladder/`, written before Sprints 14 and 15; it needs bringing up to date), in its own pull request.
+2. **Then Sprint 16:** plan approved 2026-10-31 (`sprints.md`); merge `main` into this branch; the granary's layout preview, then US-130.
 
-Where it stands (2026-10-31): Sprint 15 is finished; the device check passed checks 1–40 (check 41, for US-223, is new and not yet run on the device). PR #20 is ready for the owner to merge.
+Where it stands (2026-10-31): Sprint 15 is merged (PR #20); check 41, for US-223, is not yet run on the device. Sprint 16 is planned and approved, not started; the crop ladder goes first.
 
 ## Owner action checklist (Phases 0–1)
 

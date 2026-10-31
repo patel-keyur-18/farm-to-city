@@ -688,8 +688,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 16 · 22 Mar – 4 Apr 2027 · Phase 2 (irrigation, machines, orchards and the granary; shops, customer choice and rivals; 2 weeks, ADR 0076)
 
-- **Status:** Plan proposed, awaiting the owner's approval
-- **Branch:** `sprint/16-shops-and-farm` (from Sprint 15's head; rebased on `main` once PR #20 is merged)
+- **Status:** Plan approved by the owner, 2026-10-31. Not started: the crop ladder (`claude/busy-meitner-h0sefn`) comes first, in its own session and pull request
+- **Branch:** `sprint/16-shops-and-farm` (merge `main` again once the crop ladder is merged)
 - **Goal:** Spec 013 built (F13.2, F13.3): the irrigation ladder, machines to buy, lease or hire, whole-acre orchards and the granary. Spec 017 built (F12.3, F12.4): a vegetable stall, a tea stall and a sweet shop, customers choosing between shops, stars, and rivals. Save schema 13 with its migration and fixture (ADR 0076, 0083).
 - **Points:** 37
 - **Specs for the owner to review:** none (013 and 017 approved 2026-10-27)
