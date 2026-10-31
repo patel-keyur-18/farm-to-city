@@ -265,8 +265,8 @@
 
 ## Next up
 
-1. **Sprint 15b, the crop ladder, step 1 (2026-10-31):** the drafts are promoted (spec 020, ADR 0084, F02.5, US-224 to US-230, checklist) on `sprint/15b-crop-ladder`, checked against the code after Sprint 15 and re-measured on current content (spec 020 §3.10, §9). Bringing the owner G15 to G20 one per message: G15 (saves) asked; then the whole spec and ADR for approval. **No game code before that.**
-2. **Then step 2:** build US-225 to US-230 one story at a time, stopping for review after each. Back up the Editor saves first.
+1. **Sprint 15b, the crop ladder, step 1 (2026-10-31):** the drafts are promoted (spec 020, ADR 0084, F02.5, US-224 to US-230, checklist) on `sprint/15b-crop-ladder`, checked against the code after Sprint 15 and re-measured on current content (spec 020 §3.10, §9). G15–G20 closed as recommended (owner, 2026-10-31). The money is measured: ledgers exact and net worth 1.00 × competent with the best mix (spec 020 §9). G21 (time card) and G22 (sow sheet, crop calendar) proposed with the whole spec and ADR for approval. **No game code before that.**
+2. **Then step 2:** build US-225 to US-232 one story at a time, stopping for review after each. Back up the Editor saves first.
 3. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for what the crops change (schema numbers, spec 020 G15 and G18; its dates are now 29 Mar – 11 Apr 2027), and start with the granary's layout preview.
 
 ## Owner action checklist (Phases 0–1)
@@ -284,7 +284,7 @@
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
 | Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
-| Sprint 15b | Close G15–G20; approve spec 020 and ADR 0084; approve the Blender previews; device check; merge |
+| Sprint 15b | Answer G21 and G22; approve spec 020 and ADR 0084; approve the Blender previews; device check; merge |
 
 ## Open questions (with the owner)
 
@@ -309,7 +309,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 15b: spec 020 and ADR 0084 in review, with G15–G20 open. `GDD.md`, `CLAUDE.md`'s ADR table and the amendment notes in specs 003, 008 and 009 wait for the approval (US-224.T3, T4). No game code or content has changed.
+Sprint 15b: spec 020 and ADR 0084 in review, with G21 and G22 proposed. `GDD.md`, `CLAUDE.md`'s ADR table and the amendment notes in specs 003, 008 and 009 wait for the approval (US-224.T3, T4). No game code or content has changed.
 
 ## Environment notes
 

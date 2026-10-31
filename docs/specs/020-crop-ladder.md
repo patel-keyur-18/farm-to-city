@@ -1,12 +1,12 @@
 # 020. The crop ladder: new crops in every season
 
-- Status: In review. G1–G14 closed by the owner (2026-10-26). Brought up to date against Sprints 14 and 15 and re-measured on 2026-10-31; new gaps G15–G20 in §10 go to the owner one at a time, then the whole spec is approved (US-224). No code before that
+- Status: In review. G1–G14 closed by the owner (2026-10-26). Brought up to date against Sprints 14 and 15 and re-measured on 2026-10-31; G15–G20 closed as recommended (owner, 2026-10-31); G21 and G22 proposed. Awaiting approval of the whole spec (US-224). No code before that
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Time and world simulation (Task clock, Seasons); Land, farming and livestock (Crops); UI/UX and screens (the sow sheet); Roadmap
 - Related ADRs: 0084 (this spec's decision); 0021 (crop calendar), 0008 (per-season realism), 0014 (yield), 0016 (balance rule), 0031 (seasonal input prices), 0033 (land payback), 0034 (ready grace, spoilage), 0048 and 0050 (the hand's choice), 0051 (fertility shown to one decimal), 0055 and 0058 (rice and potato in 15 h; the long crop ≥ 12 h), 0062 (neighbours grow mustard), 0059 (a hand's field order starts with the sow sheet), 0076 and 0083 (schemas by sprint; the sales record)
 - Depends on specs: 003 (crops; every rule used unchanged), 004 (goods and the market), 008 (the sow sheet and the crop-calendar card), 009 (season hints), 011 (supermarket orders), 006 (the hand's choice), 007 (saves match content by id), 012 (fodder on the sow sheet), 014 (the town's food), 019 (the sales record)
-- Amends: spec 003 §4 (the crop tables), spec 008 §3.7 (row order, ready time, an hourly figure), spec 009 §3.4 (the hint names at most 5 crops)
+- Amends: spec 003 §4 (the crop tables); spec 008 §3.5 and §3.7 (the sow sheet lists this season's crops only, in order, with a ready time and an hourly figure; the crop calendar moves to its own sheet; the time card's wording); spec 009 §3.2 and §3.4 (one line in `comeBack`; the hint names at most 5 crops, and the best price only for what you can have); spec 011 §4 (`orders.perDay` 4); specs 013 and 017 (the granary's goods, the intercrops, the stall's goods); the schema numbers in ADR 0076 and specs 013, 017, 018 and 019
 
 ## 1. Goal
 
@@ -22,14 +22,15 @@ Whenever the player looks in, there's a crop that will be ready by their next vi
 **In:**
 - **Six field crops** with their produce and seed goods: fenugreek (methi), amaranth (chaulai), okra (bhindi), green peas (matar), maize (makka) and mustard (sarson). All are available from the Homestead.
 - **Their data:** crop, goods, seasonal prices, the trader's daily limits, local demand, pest risk, strings.
-- **The sow sheet and the crop-calendar card:**
-  - This season's crops are listed in order of growing time.
+- **The sow sheet and a separate crop calendar (G22):**
+  - The sow sheet lists only this season's crops, in order of growing time.
   - Each row shows its ready time and what the sowing earns for each hour it grows.
   - Each crop has a one-line note.
 - **The season hint** names at most five crops.
 - **"Legumes fed the soil"** replaces "Lentils fed the soil" in *Why?*.
 - **Crop lists in code:** the presentation and the bots stop naming crops one by one.
 - **Balance:** the balance rule (§3.4), two new bots and every existing gate.
+- **The time card's wording (G21).** No rule changes.
 - **Art:** each new crop's four growth stages and its produce icon, in Blender.
 
 **Out** (and where it goes instead):
@@ -144,19 +145,28 @@ Spring is the tight season: potato is cheap at its rabi harvest (0.85) and its s
 | No flood of notifications | A crop's "ready" notification is grouped with others within 30 minutes and never sent in quiet hours (spec 007 §3.5); a field under a hand's standing order sends none |
 | Not stale | Prices move daily and by season, greens spoil and vegetables need hands, so the best crop for an acre changes with the season, the day's price and how many people work for you |
 
-### 3.6 The sow sheet and the crop-calendar card (amends spec 008 §3.7)
+### 3.6 The sow sheet (amends spec 008 §3.5, §3.7)
 
 | Column or rule | Behaviour |
 | --- | --- |
-| Order | This season's sowable crops by growth time (ties in `crops.json` order), then the crops of other seasons (greyed) in `crops.json` order. Fodder keeps its own rules: shown only with cattle unlocked, with its own card and no hourly figure, because its worth is the fodder it saves (spec 012 §3.8b) |
+| Which crops | This season's sowable crops only, by growth time (ties in `crops.json` order). Nothing greyed or disabled: other seasons' crops are in the crop calendar (§3.6b). Fodder keeps its own rules: shown only with cattle unlocked, with its own card and no hourly figure, because its worth is the fodder it saves (spec 012 §3.8b) |
 | Ready time | "Ready at 16:40" when the ready time falls today; "Ready tomorrow 07:10" when it falls tomorrow; else "Ready in N days". From `now + growthSeconds`, in the device's local time (the sim's time of day, spec 001) |
 | An hour's growing (new) | "About N an hour": the row's profit (spec 008 §3.7) ÷ growth hours, rounded to 10 coins, ties away from zero. *Why?*: "This sowing's profit about P over H hours. A shorter crop earns about as much an hour if you come back when it's ready." |
-| The same sheet everywhere | A hand's field order opens this sheet too (ADR 0059), so the order, ready time and hourly figure show there as well |
+| A hand's order | A hand's field order opens this sheet too (ADR 0059), with the same rows. His out-of-season pick (ADR 0048: a crop for another season, his best in-season crop till then) moves behind one **Other seasons** row, which opens a plain list to choose from. This keeps fodder and Winter wheat orderable all year (§10 G22) |
+| A link | **All crops ›** at the sheet's foot opens the crop calendar; ← comes back (ADR 0044) |
 | Note (new) | One line from strings (`crop.<id>.note`), for every crop, old and new. For example, methi: "Quick greens: small harvests every hour. Spoils fast once picked."; okra: "Picked every other day: needs plenty of hands."; mustard: "Needs little water or work. Sold for oil, not eaten at home." |
+
+### 3.6b The crop calendar (new, G22)
+
+A sheet of its own, from **Menu → Crop calendar** and the sow sheet's **All crops ›**. A grid of the ladder: a column per season, a row per rung, today's season marked, each crop as its picture and name. Every crop in the game, from content, so a later crop needs no code. Fodder adds its rows once cattle unlock. No money on the grid. Tapping a crop opens its page: its seasons, growing time, its note, water it likes, hours a day, what it does to the soil, how fast it spoils, whether seed can be saved. Nothing is sown from here.
+
+### 3.6c The time card (new, G21)
+
+Words only, on the HUD: `{season} · {n} days left · Year {year}`, and `{season} · last day · Year {year}` on the season's last day (for example "Spring · 3 days left · Year 6"). The time card's *Why?* gains: "A season lasts 4 days and a year 16." Numbers come from `ClockDef`. The forecast, the *Why?*'s title and the import list keep `date.full`.
 
 ### 3.7 The season hint (amends spec 009 §3.4)
 
-`hint.sow` names at most **5** of the season's sowable field crops, in growing-time order, then "and N more" (`hint.sowMore`). For example, Winter: "You can sow methi, radish, peas, wheat, lentils and 2 more now." The "best price" and "dearer seed" remarks are computed as before over every good, the new ones included.
+`hint.sow` names at most **5** of the season's sowable field crops, in growing-time order, then "and N more" (`hint.sowMore`). For example, Winter: "You can sow methi, radish, peas, wheat, lentils and 2 more now." The "dearer seed" remark is computed as before, and names at most 5 too. The **"best price"** remark looks only at crops sowable now or goods that keep (`spoilagePerDay` ≤ 0.03), so it never praises what you can't have (G17). Today's four remarks stay exactly as they are: Spring rice, Summer radish, Monsoon potato, Winter wheat.
 
 ### 3.8 Fertility wording
 
@@ -167,7 +177,7 @@ The reason `FertilityReason.Lentils` (saved value 3, unchanged) already covers e
 | System | How |
 | --- | --- |
 | The hand's choice (ADR 0048, 0050) | Considered like any in-season crop, by the sow-sheet profit per growing second. Measured (§9): mostly the same crops as today; the new ones take about a fifth of Spring's picks, mostly from radish |
-| Supermarket orders (spec 011 §3.3) | Eligible when in season and 18 h or shorter (all six), with no code change. The greens order stays garden-only. **This dilutes orders: see §9 and G16** |
+| Supermarket orders (spec 011 §3.3) | Eligible when in season and 18 h or shorter (all six), with no code change. The greens order stays garden-only. To keep orders worth the same, `orders.perDay` goes from 2 to 4 (§9, G16): each eligible crop's chance of an order stays about as today |
 | Eating from the store (spec 003 §3.11) | Edible goods eaten most-perishable first; mustard never |
 | Notifications, *While you were away*, the store, the market, the mandi | By good and crop id from content |
 | The crop-calendar card, every *Why?* | Rows built from content |
@@ -182,9 +192,11 @@ The reason `FertilityReason.Lentils` (saved value 3, unchanged) already covers e
 Saves name content by id and remap it on load (spec 007 §3.1, ADR 0041). **Measured on 2026-10-31**, with the six crops added to a copy of the content and the schema 3, 9, 11 and 12 fixtures loaded:
 
 - Every fixture loads. The new goods have no stock, their daily factor is 1, and the first hourly pass sets their market price. A day later each save round-trips to the same hash. No per-good or per-crop field goes unfilled.
-- **Two things break, and both need a schema step (G15):**
+- **Two things break, so this spec takes schema 13 (G15):**
   - A schema 12 town's history no longer replays: `Replay diverged: command 144 (DeliverOrder) was Rejected(InsufficientStock)`. New crops change which orders are drawn, so the old command log means something else (spec 007 AC-6). Older fixtures replay because their migrations already made them their own replay base.
   - The schema 12 fixture's pinned hash changes, because per-good arrays are hashed at the new length, so `MigrationTests.EverySchemaLoads` fails. Re-pinning an old fixture is against its rule.
+- **The step:** the format doesn't change. A save below schema 13 becomes its own replay base on load, with `saves/schema13` and a test. Nothing in the town changes.
+- **Later schemas move up one** (ADR 0084 amends ADR 0076's numbers): Sprint 16 is 14, Sprint 17 is 15, Sprint 18 is 16.
 
 ## 4. Data
 
@@ -250,8 +262,12 @@ Valley supply is 0.9 × demand and import capacity 0.1 × demand, as for every e
 - `crop.<id>` and `good.<id>`: "Methi", "Amaranth", "Okra", "Green peas", "Maize", "Mustard" (names: §10 G11).
 - `good.seed_<id>`: "Methi seed" and so on.
 - `crop.<id>.note` for all 13 crops, old and new.
-- `sow.readyAt`, `sow.readyTomorrow`, `sow.readyInDays`, `sow.perHour`, `why.sow.perHour`, `hint.sowMore`.
+- `sow.readyAt`, `sow.readyTomorrow`, `sow.readyInDays`, `sow.perHour`, `why.sow.perHour`, `hint.sowMore`, `date.hud`, `date.hudLast`, the crop calendar's and the Other seasons row's strings.
+- `letter.comeBack` and `letter.comeBack.on` gain a line (G20): "Your other acres needn't wait: okra or maize will be ready by this evening."
+- The notes of methi and amaranth say the market for fresh greens is small: "Quick greens: small harvests every hour. Spoils fast, and few buy it: an acre or two is plenty."
 - `why.fertility.lentils` and `why.fertility.lesson` reworded (§3.8).
+
+**`content/market.json`:** `orders.perDay` 2 → 4.
 
 **State:** no new field. Per-good and per-crop arrays grow with content (§3.10).
 
@@ -285,14 +301,13 @@ Sow on a Loam acre: fertility 45.0, moisture 45                       Spring
 | [pic] Okra    4 h   Ready at 19:00                            good       |
 | [pic] Maize   6 h   Ready at 21:00                            good       |
 | [pic] Potato 15 h   Ready tomorrow 06:00                      good       |
-| Wheat · Winter only    Peas · Winter only    Rice · Summer, Monsoon  ... |
+|                                                       All crops ›        |
 +--------------------------------------------------------------------------+
 ```
 
 This keeps today's row (picture, spend, sells for, profit, inputs, labour and soil, ADR 0059); only the order, the ready time, the hourly figure and the note are new. The fertiliser choice and the free-hours line stay above the rows.
 
 - The rows' *Why?* lines are spec 008 §3.7's, plus "About N an hour" (§3.6).
-- The crop-calendar card's season grid gains the six rows.
 - Store, market, mandi, orders and away-card rows need no layout change: they list goods from content.
 
 ## 8. Acceptance criteria
@@ -323,11 +338,17 @@ Each is corrected without weakening what it checks.
 | AC-12 | The hand's `BestCrop` considers every in-season non-fodder crop, the new ones included, and picks by the same profit-per-second rule (a test sets the prices so each new crop wins once) | `PeopleTests.BestCrop_ConsidersNewCrops` |
 | AC-13 | The latest schema fixture save, written before this content, loads: the new goods have no stock, a daily factor of 1 and their regional price; saving and loading again gives the same state hash; play continues with the new crops sowable. The history behaves as G15 decides | `MigrationTests.CropLadder_OldSaveLoads` |
 | AC-14 | The golden replays (001, 003, 004, 005) reproduce their stored hashes unchanged (they run on frozen content) | existing `ReplayTests.Golden_*` |
-| AC-15 | The sow sheet in Spring at 15:00 lists methi (ready at 16:00), radish (17:00), okra (19:00), maize (21:00), potato ("ready tomorrow 06:00"), then the other seasons' crops greyed in `crops.json` order | `SowSheetTests.CropLadder_OrderAndReadyAt` |
+| AC-15 | The sow sheet in Spring at 15:00 lists methi (ready at 16:00), radish (17:00), okra (19:00), maize (21:00), potato ("ready tomorrow 06:00"), and no other crop | `SowSheetTests.CropLadder_OrderAndReadyAt` |
 | AC-16 | Each row's "About N an hour" equals its profit ÷ growth hours, rounded to 10 coins, ties away from zero, and has a *Why?* | `SowSheetTests.CropLadder_PerHour` |
 | AC-17 | The Winter hint names methi, radish, peas, wheat and lentils, then "and 2 more" | `HintTests.NamesAtMostFive` |
 | AC-18 | Every crop in `crops.json` has sprites `crop_<id>_g1`, `_g2`, `_g3`, `_ready` and `icon_good_<id>` in `unity/FarmToCity/Assets/Resources/Art/Blender/sprites.json` | `ContentTests.EveryCropHasSprites` |
 | AC-19 | The every-number-has-a-*Why?* sweep passes with the new rows | existing `WhyTests.EveryNumberHasWhy` |
+| AC-20 | Every season's best mix of crops (maize in Spring, mustard in Winter, each alone and together) ends at no more than 1.20 × the competent bot's median net worth | `GateTests.CropLadder_BestMix` |
+| AC-21 | Every ledger reconciles to the coin when any new crop fills every acre it can through a whole game; 1200 equals inputs at cost; a save round-trips; nothing is harvested over its season's cap | `GateTests.CropLadder_ExactLedger` |
+| AC-22 | The "best price" remark never names a crop out of season that doesn't keep; today's four remarks are unchanged | `HintTests.BestPrice_OnlyWhatYouCanHave` |
+| AC-23 | The HUD reads "Spring · 3 days left · Year 6" on day 1 and "Spring · last day · Year 6" on day 4; the forecast keeps `date.full` | `ViewTests.TimeCard_Words` |
+| AC-24 | A hand's order sheet lists this season's crops and an Other seasons row; choosing Winter wheat there in Spring sets the same order as before | `PeopleViewTests.Order_OtherSeasons` |
+| AC-25 | The crop calendar shows every crop in `crops.json` under each of its seasons and on its rung, fodder only with cattle; a crop's page has a *Why?* for each number | `CalendarTests.CropCalendar_EveryCrop` |
 
 ## 9. Balancing hooks
 
@@ -361,9 +382,9 @@ Every existing gate keeps its threshold.
 | `DairyBusiness`, hired median profit (64 seeds; target 10,000–20,000) | **9,108–9,332: below target** | 8,444 | 9,412 | 10,124 |
 | `Hr`, fair pay's farm profit against Phase 1's output (limit 2%) | 0.7% (16 seeds 0.5%; 256 seeds 1.65%) | 1.5% | 0.1% | 2.35% at 64 seeds; 1.77% at 256 |
 
-Every other gate passes in all columns. The two sample-size notes that matter:
+Every other gate passes in all columns. The two sample-size notes that matter (and `orders.perDay` 4 is chosen, G16):
 - **`DairyBusiness` passes on `main` by luck.** Its hired median is 10,428 on the gate's 16 seeds, but 64 seeds put it near 9,200, under ADR 0080's floor. It's measured here so that a change on this branch isn't blamed for it, or credited.
-- **`Hr`'s limit sits on the noise.** At 16 seeds the 4-orders column reads 2.46% and fails; 256 seeds read 1.65% on `main` and 1.77% with the crops, the same gap. If it fails at the end, raise its sample (a test change, not a rule change) and say so.
+- **`Hr`'s limit sits on the noise.** At 16 seeds the 4-orders column reads 2.46% and fails; 256 seeds read 1.65% on `main` and 1.77% with the crops, the same gap. If it fails at the end, raise its sample (a test change, not a rule change) and say so. The same goes for `DairyBusiness`: 4 orders read 8,833 on its 16 seeds and 10,124 on 64.
 
 **The hand's pick, sampled each morning on all six inherited acres (16 seeds × 8 seasons, no fertiliser):**
 
@@ -375,6 +396,37 @@ Every other gate passes in all columns. The two sample-size notes that matter:
 | Winter | potato 89%, wheat 11% | potato 89%, wheat 8%, mustard 2% |
 
 The draft expected 10–40% of his sowings: it's lower, and in Spring most of it comes out of radish. Spoilage falls for an active player: the rough ladder bot rots 3,651 kg of radish a run today, against 1,148 kg of radish plus 244 of amaranth and 227 of methi with the crops.
+
+**Does it break the money, and does it make sense? Measured 2026-10-31 (six crops, 4 orders; a throwaway copy):**
+
+The books hold. With strict checks on, each new crop was forced onto every acre the bot could tend, 30 seeds × 8 seasons, sold through the trader, market, mandi and orders:
+- Every season closed reconciled to the coin. Account 1200 equalled the inputs at cost every season. Sales in the record plus home use equalled farm income, wherever no milk was sold. Saves round-tripped. Nothing went over its season's cap.
+- One real sowing of every crop matched the sow sheet's sum: seed cash equalled its Spend (potato came from the store), and the sale was 8–14% above the estimate, as for the old crops, because care and the weather beat the estimate's soil at factor 1.
+
+The game's value holds over a whole game, but not every season:
+
+| Whole-game net worth, against competent, 60 seeds | 8 seasons | 16 seasons |
+| --- | --- | --- |
+| Maize every Spring | 0.994 | 0.990 |
+| Mustard every Winter | 1.003 | 1.006 |
+| Both | 1.000 | 0.999 |
+| Only new crops wherever one exists (maize, amaranth, maize, mustard) | 0.883 | 0.821 |
+
+| Farm profit in that season, median (every acre the bot can tend) | Spring | Summer | Monsoon | Winter |
+| --- | --- | --- | --- | --- |
+| Competent (potato, lentils, rice, potato) | 20,426 | 66,400 | 47,885 | 41,917 |
+| Radish, today's only short crop | 13,203 | 18,429 | 12,272 | 4,613 |
+| Methi | 2,080 | | | −3,710 |
+| Amaranth | | 24,170 | 2,580 | |
+| Okra | 19,899 | 15,407 | 507 | |
+| Green peas | | | | 15,946 |
+| Maize | **48,990** | | 24,449 | |
+| Mustard | | | | **64,165** |
+
+What this says:
+- **§3.4's "never the leader" is true per acre, not on a whole farm.** A farm's worth of potato overflows the 4 t truck and gluts the market (about 1,750 kg a day an acre), so early on maize in Spring and mustard in Winter earn more that season. It's realistic: the glut is why farmers spread. Over 16 seasons the gap closes (Spring 50,653 against 43,906; Winter level), and net worth stays at 1.00. No rule changes; AC-20 guards it.
+- **Fresh greens and okra on every acre earn little.** Methi's market takes 150 kg a day from an acre that can make 412. Radish already behaves so. It's the right lesson, and a player could still walk into it, so the crops' notes say so (§4).
+- **Already on `main`, not from this spec:** land reads 5.4 seasons of an owner-operated acre's net against ADR 0033's 8–15 (the crops move it to 5.2). The orders of Sprint 11 raised that net. To look at when land next comes up.
 
 ## 10. Open questions
 
@@ -395,14 +447,19 @@ G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 nee
 - **G13. Phase and milestone. Closed (owner, 2026-10-26), timing changed (owner, 2026-10-31):** Sprint 15b, before Sprint 16, in the middle of Phase 2, so "after Phase 2's gate" no longer applies. The milestone stays `Phase 2 · Hamlet & Village`: it now fits better, because the sprint runs inside that phase.
 - **G14. Saves. Closed (owner, 2026-10-26), reopened by the test it called for:** the owner's rule was a schema step only if the test found an unfilled per-good field. The test ran on 2026-10-31: no field goes unfilled, but the history and the pinned hash break (§3.10). See G15.
 
-**Open, one at a time with the owner:**
+**Closed as recommended (owner, 2026-10-31):**
 
-- **G15. Saves:** a schema step for the replay base (§3.10), and how the later schemas shift. *Open.*
-- **G16. Supermarket orders:** the new crops halve the orders' share (§9). *Open.*
-- **G17. The season hint's best price:** computed over the new goods, Winter's hint says "Okra fetches its best price" when okra can't be sown or kept. *Open.*
-- **G18. Sprint 16's specs:** the granary's dry goods, the stall's goods and the orchard's intercrops name crops by hand. *Open.*
-- **G19. Neighbours:** ADR 0062 already draws mustard, so US-230 is maize only. *Open.*
-- **G20. The first day:** the owner's starting complaint was the first session ending on "tomorrow", and this spec leaves that step as it is. *Open.*
+- **G15. Saves. Closed:** schema 13 in this sprint, for the replay base (§3.10). Sprint 16 takes 14, Sprint 17 15, Sprint 18 16.
+- **G16. Supermarket orders. Closed:** `orders.perDay` 4. As drafted, the new crops halve the orders' share of sales (16.9% → 7.9%) and fail `RecoverableBankruptcy` and the hired dairy's no-foreclosure check, because a methi order is 10–17 kg against 500+ for potato. Four orders bring the share back to 15.2% and each crop's chance back near today's (Spring 80% against 100%; Winter 57% against 50%); the Orders sheet shows up to 5 rows with the greens order. No rule changes.
+- **G17. The best-price hint. Closed:** only crops sowable now or goods that keep (§3.7).
+- **G18. Sprint 16's specs. Closed:** amended with the ADR. Spec 013's granary adds maize and mustard (dry goods). Spec 013's intercrops become radish, methi, amaranth, lentils and peas: spinach and coriander aren't field crops. Spec 017's stall sells any edible produce from the store, which adds methi, amaranth, okra, peas and maize, and leaves out raw mustard. The combine stays wheat and rice.
+- **G19. Neighbours. Closed:** US-230 is maize only, as ADR 0062 already draws mustard (1 point, Could).
+- **G20. The first day. Closed:** the long-crop step stays (ADR 0045, 0058). `comeBack` gains one line pointing at the quicker crops, so the first session no longer ends only on "tomorrow". Words only.
+
+**Proposed, awaiting the owner:**
+
+- **G21. The time card** (owner, 2026-10-31): "Day 1 of 4 · Year 6" reads as if a year had 4 days. Recommended: "Spring · 3 days left · Year 6" (§3.6c). Words only.
+- **G22. The sow sheet and a master list** (owner, 2026-10-31): the sow sheet shows only crops you can sow now, with no disabled rows; all crops go on a separate crop calendar (§3.6, §3.6b). Recommended: a season-by-rung grid, from the Menu and the sow sheet. A hand's order sheet keeps its out-of-season choice behind one Other seasons row, because hiding it would stop fodder and Winter wheat being ordered ahead.
 
 **Also settled with the owner's closing guidance (2026-10-26):** "make sense, align with the game's core idea, not stale, achievable by an average player, not too profitable, as realistic as possible with the existing calculations". A final check found the first draft's okra, maize and methi out-earned potato per hour in Spring at the floor; their yields were lowered (methi 1,800 → 1,650, okra 2,600 → 2,100, maize 1,450 → 1,250 kg) and okra's labour set to 4.5 h, and §3.4 now checks the floor basis too (AC-8).
 

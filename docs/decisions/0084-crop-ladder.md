@@ -1,6 +1,6 @@
 # 0084. A crop ladder: new crops in every season
 
-- Status: Proposed (G1–G14 closed with the owner, 2026-10-26; brought up to date 2026-10-31; accepted with the spec)
+- Status: Proposed (G1–G20 closed with the owner, 2026-10-26 and 2026-10-31; G21 and G22 proposed; accepted with the spec)
 - Date: 2026-10-26
 - Deciders: Keyur Patel
 - Related: ADR 0021 (crop calendar), 0008 (per-season realism), 0014 (yield), 0016 (balance rule), 0031 (seasonal input prices), 0033 (land payback), 0048 and 0050 (the hand's choice), 0055 and 0058 (rice and potato in 15 h; the long crop ≥ 12 h)
@@ -43,15 +43,22 @@
    - Seed costs 10% more in its sowing seasons (ADR 0031's pattern).
    - Produce is cheaper in its harvest season.
 6. **Legumes feed the soil.** Peas and methi restore fertility like lentils. The fertility reason `Lentils` is shown as "Legumes fed the soil" (the saved value is unchanged).
-7. **The sow sheet** lists this season's crops in order of growing time, each with its ready time ("ready at 16:40", "ready tomorrow 07:10") and "About N an hour" (profit ÷ growing hours), then the crops of other seasons.
+7. **The sow sheet** lists only this season's crops, in order of growing time, each with its ready time ("ready at 16:40", "ready tomorrow 07:10") and "About N an hour" (profit ÷ growing hours). Every crop goes on a new **crop calendar**, a season-by-rung grid from the Menu and the sow sheet. A hand's order sheet keeps out-of-season choices behind one Other seasons row (spec 020 G22).
 8. **Out:** onion (later: no sprint plans it), tomato, sugarcane and cotton (later phases); new kitchen-garden crops; maize straw and fodder; milling maize or pressing mustard.
 9. **Run as Sprint 15b**, before Sprint 16 (owner, 2026-10-31), under the `Phase 2 · Hamlet & Village` milestone. Sprints 16–18 keep their numbers and move a week later.
+
+10. **Save schema 13** in this sprint: the format is unchanged and a town below 13 becomes its own replay base on load, because new crops change which orders are drawn and an old history no longer replays. **Amends ADR 0076 and 0083's numbers:** Sprint 16 takes 14, Sprint 17 15, Sprint 18 16.
+11. **`orders.perDay` 2 → 4**, so the crops don't halve what orders are worth (measured 16.9% → 7.9% of sales; 15.2% with four). Amends ADR 0055's "two orders" and keeps ADR 0058's size of an order.
+12. **The season hint's best price** names only crops sowable now or goods that keep. **`comeBack`** gains one line pointing at quicker crops. The long crop stays.
+13. **Sprint 16's specs:** the granary adds maize and mustard; intercrops are radish, methi, amaranth, lentils and peas; the stall sells any edible produce.
+14. **The time card** reads "Spring · 3 days left · Year 6". Words only.
 
 ## Consequences
 
 - **Content:** `crops.json`, `goods.json`, `region.json`, `farming.json` (pest risk) and `strings/en.json` gain the six crops and their seed. There's no new definition field (mustard uses the existing `edible: false`).
 - **Sim:** no new rule. The hand's choice (ADR 0048, 0050), supermarket orders (crops of 18 h or less in season), eating from the store, notifications and *Why?* pick the new crops up from content.
 - **Saves:** content is matched by id (spec 007), so an old save loads with the new goods at their regional price. Measured: it does, but its history no longer replays and the current fixture's pinned hash changes (spec 020 §3.10, G15).
+- **Money:** measured with strict checks and every new crop on every acre: the ledger reconciles to the coin, net worth with the best mix stays at 1.00 × competent over 8 and 16 seasons, and only new crops gives 0.82–0.88 (spec 020 §9). Early on, maize in Spring and mustard in Winter out-earn a whole farm of potato, which gluts; realistic, and it closes by 16 seasons.
 - **Balance:** two new balancer bots: an active player who sows the quickest crops, and a diversifier who spreads over every crop's separate demand. Both must stay within 1.20 × the competent bot (ADR 0016). Every existing gate keeps its threshold.
 - **Art:** 6 crops × 4 growth stages plus a produce icon, rendered in Blender (mustard's `g2` exists for the neighbours' fields).
 - **Hard-coded crop lists** in the presentation and the bots move to content or stop listing crops by name.

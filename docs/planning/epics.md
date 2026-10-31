@@ -58,7 +58,7 @@
 | [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-042–US-046, US-177 | 20 |
 | [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-047–US-049 | 7 |
 | [F02.4](features/F02.4-village-map.md) | The village map | E02 | 2 | [Spec 010](../specs/010-map-village-and-edge.md) (approved) | Ready | US-188–US-191 | 18 |
-| [F02.5](features/F02.5-crop-ladder.md) | The crop ladder | E02 | 2 | [Spec 020](../specs/020-crop-ladder.md) (in review) | In review | US-224–US-230 | 23 |
+| [F02.5](features/F02.5-crop-ladder.md) | The crop ladder | E02 | 2 | [Spec 020](../specs/020-crop-ladder.md) (in review) | In review | US-224–US-232 | 27 |
 | [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-050–US-053 | 11 |
 | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-054–US-056, US-178–US-181 | 17 |
 | [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-057–US-058 | 4 |

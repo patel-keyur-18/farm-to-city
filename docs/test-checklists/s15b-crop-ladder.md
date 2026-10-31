@@ -37,7 +37,7 @@ The developer panel: hold the time card for 3 seconds (**+1 hour**, **+1 day**, 
 | # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
 | --- | --- | --- | --- | --- | --- |
 | 1 | US-225 (AC-13) | Launch with your town | Same cash, fields, people and animals as before | | **Screenshot** |
-| 2 | US-228 (AC-15) | In Spring, tap an empty acre | Methi (about 1 h), radish, okra, maize, potato in that order, each with "Ready at …" (potato "Ready tomorrow …"), then the other seasons' crops greyed | | **Screenshot** |
+| 2 | US-228 (AC-15) | In Spring, tap an empty acre | Methi (about 1 h), radish, okra, maize, potato in that order, each with "Ready at …" (potato "Ready tomorrow …"), and no other crop or disabled row | | **Screenshot** |
 | 3 | US-228 (AC-16) | Tap the **?** on okra's "About N an hour" | It explains: this sowing's profit over its hours; a shorter crop earns about as much an hour if you come back when it's ready | | |
 | 4 | US-228 | Settings → text size 125%, open the sow sheet again | Every row readable; notes wrap, nothing cut off | | **Screenshot** |
 | 5 | US-229 | Sow methi on one acre, okra on another, maize on a third | Each shows its first growth stage | | **Screenshot** |
@@ -45,7 +45,7 @@ The developer panel: hold the time card for 3 seconds (**+1 hour**, **+1 day**, 
 | 7 | US-225 | Sell the methi to the trader | Sold at the trader's price; nothing refused | | |
 | 8 | US-229 | **+1 hour** three times | Okra goes through its stages and is ready at about 4 h; harvest: about 70–90 kg | | **Screenshot** |
 | 9 | US-229 | **+1 hour** twice more | Maize ready at about 6 h; harvest | | |
-| 10 | US-225 (AC-4) | Try to sow peas in Spring | Greyed: "Green peas: Winter only" | | |
+| 10 | US-232 (AC-25) | **All crops ›** on the sow sheet, then **Menu → Crop calendar** | The grid shows every crop by season and time; peas under Winter only; a crop's page opens; ← comes back | | |
 | 11 | US-225 (AC-6) | **+1 day** until Winter; sow peas and mustard; harvest the peas; open the acre's fertility **?** | "Legumes fed the soil this season" | | **Screenshot** |
 | 12 | US-228 (AC-17) | Read the Winter hint (Menu → Dadi's letter, or the season's first page) | Names five crops, then "and 2 more" | | |
 | 13 | US-225 (AC-7) | With mustard in the store and eating from the store on, **+1 day** | The household eats other food; the mustard stays | | |
