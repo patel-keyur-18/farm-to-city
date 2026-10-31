@@ -65,12 +65,12 @@ namespace Sim.View.Tests
             Simulation sim = Morning(out ViewContext ctx);
             SheetVm sheet = OrdersSheet.Build(ctx);
             Assert.That(sheet.Subtitle, Is.EqualTo("Harvest today, deliver by midnight, paid at 6:00 tomorrow"));
-            Assert.That(sim.State.Market.SupermarketOrders.Count, Is.EqualTo(3));
+            Assert.That(sim.State.Market.SupermarketOrders.Count, Is.EqualTo(5));
             // One row per order (owner's Sprint 11 device review): its state is on the same row, no second row.
-            Assert.That(sheet.Lines.Count, Is.EqualTo(3));
+            Assert.That(sheet.Lines.Count, Is.EqualTo(5));
             Assert.That(sheet.Lines.All(l => l.WhyKey == "orderPrice" && l.Value.StartsWith("Wants ") && l.Badge == null && l.Action == null), Is.True);
             Assert.That(sheet.Lines.Select(l => l.Note), Has.All.Match("^(Sow by \\d\\d:\\d\\d to harvest it today|Pick it from the garden today|Too late to sow for today)$"));
-            Assert.That(HudView.Build(ctx).OrdersBadge, Is.EqualTo(3));
+            Assert.That(HudView.Build(ctx).OrdersBadge, Is.EqualTo(5));
             Assert.That(HudView.Build(ctx).HasOrders, Is.True);
 
             SupermarketOrder o = sim.State.Market.SupermarketOrders[0];
@@ -93,7 +93,7 @@ namespace Sim.View.Tests
             Assert.That(done.Badge, Is.EqualTo("Delivered"));
             Assert.That(done.Note, Is.EqualTo("All " + ctx.Fmt.Kg(o.Amount) + " delivered"));
             Assert.That(done.Action, Is.Null);
-            Assert.That(HudView.Build(ctx).OrdersBadge, Is.EqualTo(2));
+            Assert.That(HudView.Build(ctx).OrdersBadge, Is.EqualTo(4));
             LineVm owed = OrdersSheet.Build(ctx).Lines.Single(l => l.WhyKey == "owed");
             Assert.That(owed.Label + " " + owed.Value, Does.Match("^Supermarket pays you [\\d,]+ coins at 6:00 tomorrow$"));
             Assert.That(StoreSheet.Build(ctx).Lines.Any(l => l.WhyKey == "owed"), Is.True);
@@ -118,8 +118,8 @@ namespace Sim.View.Tests
             GuideKit.Live(sim, guide, 6 * 3600);
             store = StoreSheet.Build(ctx);
             Assert.That(store.Lines.Any(l => l.Label == "Stall closed till 6:00"), Is.False);
-            Assert.That(Orders(store).Label + " · " + Orders(store).Detail, Is.EqualTo("Supermarket orders · 3 to deliver"));
-            Assert.That(Orders(store).Count, Is.EqualTo(3), "the picture button's red count");
+            Assert.That(Orders(store).Label + " · " + Orders(store).Detail, Is.EqualTo("Supermarket orders · 5 to deliver"));
+            Assert.That(Orders(store).Count, Is.EqualTo(5), "the picture button's red count");
             Assert.That(Orders(store).Opens.Value.Kind, Is.EqualTo("Orders"));
             int wheat = sim.Config.Game.Market.IndexOf("wheat");
             string Today() { return GoodSheet.Build(ctx, wheat).Lines.Single(l => l.WhyKey == "traderPrice").Value; }

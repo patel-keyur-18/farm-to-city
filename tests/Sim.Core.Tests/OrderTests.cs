@@ -308,7 +308,7 @@ namespace Sim.Core.Tests
             long t = sim.State.Clock.SimTime;
             Assert.That(sim.Execute(new SetStandingOrder(t, 99, KeepWheat())).Reason, Is.EqualTo(RejectReason.NoHand));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(50, "wheat", SeedSource.Certified, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownTarget));
-            Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "maize", SeedSource.Certified, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownCrop));
+            Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "tomato", SeedSource.Certified, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownCrop));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "radish", SeedSource.Saved, "none", SellRule.Store))).Reason, Is.EqualTo(RejectReason.SeedCannotBeSaved));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(HomeTile, "wheat", SeedSource.Certified, "gold", SellRule.Store))).Reason, Is.EqualTo(RejectReason.UnknownFertiliser));
             Assert.That(sim.Execute(new SetStandingOrder(t, h.Id, KeepWheat(SellRule.Offer, "0"))).Reason, Is.EqualTo(RejectReason.InvalidArgument));

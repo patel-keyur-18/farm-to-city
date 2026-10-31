@@ -74,7 +74,7 @@ namespace Sim.Core.Tests
             Hand h = HireHand(sim);
             Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(HomeTile, "berseem", SeedSource.Certified, "none", SellRule.Trader)));
             long s = sim.Clock.SecondsPerSeason;
-            sim.AdvanceTo(s + 3 * Hour); // Summer
+            sim.AdvanceTo(s + 9 * Hour); // Summer, once a short crop sown late in Spring is in (6 h at most, with its hours to harvest and sow)
             Assert.That(CropId(sim), Is.EqualTo("sorghum"));
             sim.AdvanceTo(3 * s + 3 * Hour); // Winter: the sorghum stood through the Monsoon
             Assert.That(CropId(sim), Is.EqualTo("berseem"));

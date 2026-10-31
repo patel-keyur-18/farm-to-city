@@ -265,7 +265,7 @@
 
 ## Next up
 
-1. **Sprint 15b, the crop ladder (spec 020, ADR 0084, approved 2026-10-31):** build US-225 to US-232 one at a time, stopping for the owner's review after each. Editor saves are backed up first and restored at the end (Environment notes). The sow sheet keeps today's row with the new lines (the owner chose this over a compact row); the hand's order sheet follows it.
+1. **Sprint 15b, the crop ladder (spec 020, ADR 0084, approved 2026-10-31):** US-225 built, in the owner's review: six crops in content, save schema 13 (`saves/schema13`), four orders a day. `DairyBusiness` and `Hr` fail on their small samples until US-226 (spec 020 §9). New crops have no art until US-229, so they're invisible on the map. Next: US-227, then US-226, US-229's previews, US-228, US-232, US-231, US-230, one at a time, stopping for the owner's review after each. Editor saves are backed up first and restored at the end (Environment notes). The sow sheet keeps today's row with the new lines (the owner chose this over a compact row); the hand's order sheet follows it.
 2. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for schema 14 and spec 020 G18, its dates (29 Mar – 11 Apr 2027), and start with the granary's layout preview.
 
 ## Owner action checklist (Phases 0–1)

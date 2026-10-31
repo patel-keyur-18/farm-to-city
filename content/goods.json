@@ -38,6 +38,19 @@
     { "id": "milk_cow",  "nameKey": "good.milk_cow",  "kind": "produce", "unit": "litre", "basePrice": 38, "elasticity": 0.3, "spoilagePerDay": 1.0, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
     { "id": "paneer",    "nameKey": "good.paneer",    "kind": "produce", "unit": "kg", "basePrice": 380, "elasticity": 0.8, "spoilagePerDay": 0.5, "sales": "processed", "edible": false, "dailyVolatility": 0.015, "dailyBand": 0.05 },
     { "id": "curd",      "nameKey": "good.curd",      "kind": "produce", "unit": "kg", "basePrice": 75, "elasticity": 0.5, "spoilagePerDay": 1.0, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
-    { "id": "ghee",      "nameKey": "good.ghee",      "kind": "produce", "unit": "kg", "basePrice": 900, "elasticity": 0.6, "spoilagePerDay": 0.003, "sales": "processed", "edible": false, "dailyVolatility": 0.015, "dailyBand": 0.05 }
+    { "id": "ghee",      "nameKey": "good.ghee",      "kind": "produce", "unit": "kg", "basePrice": 900, "elasticity": 0.6, "spoilagePerDay": 0.003, "sales": "processed", "edible": false, "dailyVolatility": 0.015, "dailyBand": 0.05 },
+
+    { "id": "methi", "nameKey": "good.methi", "kind": "produce", "unit": "kg", "basePrice": 16, "elasticity": 1.0, "spoilagePerDay": 0.35, "sales": "crop", "dailyVolatility": 0.04, "dailyBand": 0.12 },
+    { "id": "amaranth", "nameKey": "good.amaranth", "kind": "produce", "unit": "kg", "basePrice": 14, "elasticity": 1.0, "spoilagePerDay": 0.35, "sales": "crop", "dailyVolatility": 0.04, "dailyBand": 0.12 },
+    { "id": "okra", "nameKey": "good.okra", "kind": "produce", "unit": "kg", "basePrice": 14, "elasticity": 1.0, "spoilagePerDay": 0.2, "sales": "crop", "dailyVolatility": 0.04, "dailyBand": 0.12 },
+    { "id": "peas", "nameKey": "good.peas", "kind": "produce", "unit": "kg", "basePrice": 20, "elasticity": 1.0, "spoilagePerDay": 0.15, "sales": "crop", "dailyVolatility": 0.04, "dailyBand": 0.12 },
+    { "id": "maize", "nameKey": "good.maize", "kind": "produce", "unit": "kg", "basePrice": 20, "elasticity": 0.4, "spoilagePerDay": 0.005, "sales": "crop", "dailyVolatility": 0.015, "dailyBand": 0.05 },
+    { "id": "mustard", "nameKey": "good.mustard", "kind": "produce", "unit": "kg", "basePrice": 56, "elasticity": 0.4, "spoilagePerDay": 0.003, "sales": "crop", "dailyVolatility": 0.015, "dailyBand": 0.05, "edible": false },
+    { "id": "seed_methi", "nameKey": "good.seed_methi", "kind": "input", "unit": "kg", "basePrice": 100, "spoilagePerDay": 0.001 },
+    { "id": "seed_amaranth", "nameKey": "good.seed_amaranth", "kind": "input", "unit": "kg", "basePrice": 250, "spoilagePerDay": 0.001 },
+    { "id": "seed_okra", "nameKey": "good.seed_okra", "kind": "input", "unit": "kg", "basePrice": 1500, "spoilagePerDay": 0.001 },
+    { "id": "seed_peas", "nameKey": "good.seed_peas", "kind": "input", "unit": "kg", "basePrice": 90, "spoilagePerDay": 0.001 },
+    { "id": "seed_maize", "nameKey": "good.seed_maize", "kind": "input", "unit": "kg", "basePrice": 250, "spoilagePerDay": 0.001 },
+    { "id": "seed_mustard", "nameKey": "good.seed_mustard", "kind": "input", "unit": "kg", "basePrice": 100, "spoilagePerDay": 0.001 }
   ]
 }

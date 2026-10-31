@@ -463,20 +463,22 @@ namespace Sim.View.Views
             int best = -1;
             Fixed bestFactor = Fixed.One;
             var dearer = new List<string>();
-            foreach (CropDef c in farm.Crops)
+            foreach (CropDef c in System.Linq.Enumerable.OrderBy(farm.Crops, x => x.GrowthSeconds)) // quickest first, ties in content order (spec 020 §3.7)
             {
                 if (c.Fodder) continue; // fodder has its own place on the sow sheet once cattle unlock (spec 012 §3.8b)
                 string name = s.Get(c.NameKey).ToLowerInvariant();
                 if (c.SowSeasons[season]) crops.Add(name);
                 int good = c.OutputGood;
                 Fixed f = market.Region.SeasonalFactor(good, season);
-                if (f > bestFactor) { best = good; bestFactor = f; }
+                // Only what the player can have: a crop sowable now or a good that keeps (spec 020 §3.7, G17).
+                bool within = c.SowSeasons[season] || market.Goods[good].SpoilagePerDay <= ctx.Ui.HintKeepsSpoilagePerDay;
+                if (within && f > bestFactor) { best = good; bestFactor = f; }
                 int seed = c.SeedGood;
                 if (market.Region.SeasonalFactor(seed, next) > market.Region.SeasonalFactor(seed, season)) dearer.Add(name);
             }
-            var parts = new List<string> { s.Get("hint.intro." + seasonId), s.Get("hint.sow", "crops", And(ctx, crops)) };
+            var parts = new List<string> { s.Get("hint.intro." + seasonId), s.Get("hint.sow", "crops", AtMostFive(ctx, crops)) };
             if (best >= 0) parts.Add(s.Get("hint.best", "good", Cap(s.Get(market.Goods[best].NameKey))));
-            if (dearer.Count > 0) parts.Add(s.Get("hint.dearer", "seeds", And(ctx, dearer)));
+            if (dearer.Count > 0) parts.Add(s.Get("hint.dearer", "seeds", AtMostFive(ctx, dearer)));
             if (seasonId == "winter" && SeedKeeping(sim)) parts.Add(s.Get("hint.seedKeeping"));
             return string.Join(" ", parts);
         }
@@ -509,6 +511,13 @@ namespace Sim.View.Views
         private static string Cap(string word) { return word.Length == 0 ? word : char.ToUpperInvariant(word[0]) + word.Substring(1); }
 
         /// <summary>"a", "a and b", "a, b and c".</summary>
+        /// <summary>Up to five names, then "and N more" (spec 020 §3.7).</summary>
+        private static string AtMostFive(ViewContext ctx, List<string> items)
+        {
+            if (items.Count <= 5) return And(ctx, items);
+            return ctx.Strings.Get("hint.sowMore", "crops", string.Join(", ", items.GetRange(0, 5)), "n", (items.Count - 5).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
         private static string And(ViewContext ctx, List<string> items)
         {
             if (items.Count == 0) return "";

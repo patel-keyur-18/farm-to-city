@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Sim.Core.Maths;
 
 namespace Sim.View.Content
 {
@@ -91,11 +92,15 @@ namespace Sim.View.Content
         /// <summary>The weather on the map (ADR 0083), or null in content without it.</summary>
         public WeatherLookDef WeatherLook { get; }
 
+        /// <summary>The season hint praises a crop out of season only if it spoils no faster than this a day (spec 020 §3.7).</summary>
+        public Fixed HintKeepsSpoilagePerDay { get; }
+
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
             int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60,
-            IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null)
+            IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null, Fixed? hintKeepsSpoilagePerDay = null)
         {
+            HintKeepsSpoilagePerDay = hintKeepsSpoilagePerDay ?? Fixed.Parse("0.03");
             WeatherLook = weatherLook;
             OutputBands = new List<int>(outputBands ?? new[] { 70, 85, 97, 110 }).AsReadOnly();
             SkillBands = new List<int>(skillBands ?? new[] { 35, 55, 75 }).AsReadOnly();

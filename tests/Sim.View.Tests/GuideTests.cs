@@ -350,19 +350,42 @@ namespace Sim.View.Tests
 
     public class HintTests
     {
+        // Spec 020 AC-17.
+        [Test]
+        public void NamesAtMostFive()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            Assert.That(Hints.Season(ctx, "winter"), Does.Contain("You can sow methi, radish, green peas, wheat, lentils and 2 more now."));
+            Assert.That(Hints.Season(ctx, "spring"), Does.Contain("You can sow methi, radish, okra, maize and potato now."));
+        }
+
+        // Spec 020 AC-22: never a crop out of season that doesn't keep; today's four remarks unchanged.
+        [Test]
+        public void BestPrice_OnlyWhatYouCanHave()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            Assert.That(Hints.Season(ctx, "spring"), Does.Contain("Rice fetches its best price"));
+            Assert.That(Hints.Season(ctx, "summer"), Does.Contain("Radish fetches its best price"));
+            Assert.That(Hints.Season(ctx, "monsoon"), Does.Contain("Potato fetches its best price"));
+            Assert.That(Hints.Season(ctx, "winter"), Does.Contain("Wheat fetches its best price"));
+            foreach (string s in new[] { "spring", "summer", "monsoon", "winter" })
+                foreach (string never in new[] { "Okra fetches", "Green peas fetches", "Amaranth fetches" })
+                    if (s != "summer" && s != "monsoon") Assert.That(Hints.Season(ctx, s), Does.Not.Contain(never), s);
+        }
+
         // Spec 009 AC-6: the season pages name the crops sown in it, the field good at its best price, the seeds dearer next season.
         [Test]
         public void FromContent()
         {
             ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
-            Assert.That(Hints.Season(ctx, "winter"), Does.StartWith("Rabi. You can sow radish, wheat, potato and lentils now. Wheat fetches its best price this season."));
-            Assert.That(Hints.Season(ctx, "spring"), Is.EqualTo("Late rabi. You can sow radish and potato now. Rice fetches its best price this season. Buy rice and lentils seed now: it costs more next season."));
+            Assert.That(Hints.Season(ctx, "winter"), Does.StartWith("Rabi. You can sow methi, radish, green peas, wheat, lentils and 2 more now. Wheat fetches its best price this season."));
+            Assert.That(Hints.Season(ctx, "spring"), Is.EqualTo("Late rabi. You can sow methi, radish, okra, maize and potato now. Rice fetches its best price this season. Buy amaranth, lentils and rice seed now: it costs more next season."));
             Assert.That(Hints.Season(ctx, "monsoon"), Does.Contain("Potato fetches its best price"));
-            Assert.That(Hints.Season(ctx, "summer"), Does.StartWith("Zaid season. You can sow radish, rice and lentils now. Radish fetches its best price"));
+            Assert.That(Hints.Season(ctx, "summer"), Does.StartWith("Zaid season. You can sow amaranth, radish, okra, lentils and rice now. Radish fetches its best price"));
 
             // Changing the content changes the hint.
             ViewContext edited = ViewKit2.Context(ViewKit.NewGame(edit: (f, j) => f == "crops.json" ? j.Replace("\"sowSeasons\": [\"winter\"]", "\"sowSeasons\": [\"spring\", \"winter\"]") : j));
-            Assert.That(Hints.Season(edited, "spring"), Does.StartWith("Late rabi. You can sow radish, wheat and potato now."));
+            Assert.That(Hints.Season(edited, "spring"), Does.StartWith("Late rabi. You can sow methi, radish, okra, green peas, wheat and 3 more now."));
         }
 
         // Spec 009 AC-7: the seed-keeping hint in the household page, and again at the first Winter only with grain in store and eating on.

@@ -10,7 +10,7 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    public class SeedTests
+    public partial class SeedTests
     {
         /// <summary>No inherited seed age and no eating from the store, so saved seed comes only from these harvests.</summary>
         private static Simulation Fresh()

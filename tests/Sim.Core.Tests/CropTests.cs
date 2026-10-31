@@ -109,7 +109,7 @@ namespace Sim.Core.Tests
             Rejects(new Sow(0, 84, "wheat", SeedSource.Certified, "none"), RejectReason.OutOfSeason);
             Rejects(new Sow(0, 84, "potato", SeedSource.Saved, "none"), RejectReason.NoSavedSeed);
             Rejects(new Sow(0, 84, "radish", SeedSource.Saved, "none"), RejectReason.SeedCannotBeSaved);
-            Rejects(new Sow(0, 84, "maize", SeedSource.Certified, "none"), RejectReason.UnknownCrop);
+            Rejects(new Sow(0, 84, "tomato", SeedSource.Certified, "none"), RejectReason.UnknownCrop);
             Rejects(new Sow(0, 84, "potato", SeedSource.Certified, "manure"), RejectReason.UnknownFertiliser);
             Rejects(new Sow(0, 999, "potato", SeedSource.Certified, "none"), RejectReason.UnknownTile);
 

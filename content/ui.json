@@ -214,6 +214,7 @@
   "maxFlyingTotal": 20,
   "spoilWarningHours": 12,
   "storeNearlyFullPercent": 90,
+  "hintKeepsSpoilagePerDay": 0.03,
   "awayRowsMax": 8,
   "awayCardMinHours": 8,
   "ratingGoodPercent": 95,

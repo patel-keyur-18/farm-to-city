@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -84,7 +84,9 @@ namespace Sim.View.Content
                 output.Add(b);
             }
             WeatherLookDef weather = o["weatherLook"] == null ? null : WeatherLook(Object(o["weatherLook"], root + ".weatherLook"), root + ".weatherLook");
-            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather);
+            Fixed keeps = Number(Required(o, root, "hintKeepsSpoilagePerDay"), root + ".hintKeepsSpoilagePerDay");
+            Range(keeps, Fixed.Zero, Fixed.One, root + ".hintKeepsSpoilagePerDay");
+            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather, keeps);
         }
 
         private static float F(JToken t, string path, string lo, string hi)
