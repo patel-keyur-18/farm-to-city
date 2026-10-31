@@ -1,6 +1,6 @@
 # 0084. A crop ladder: new crops in every season
 
-- Status: Proposed (G1–G20 closed with the owner, 2026-10-26 and 2026-10-31; G21 and G22 proposed; accepted with the spec)
+- Status: Accepted (owner, 2026-10-31)
 - Date: 2026-10-26
 - Deciders: Keyur Patel
 - Related: ADR 0021 (crop calendar), 0008 (per-season realism), 0014 (yield), 0016 (balance rule), 0031 (seasonal input prices), 0033 (land payback), 0048 and 0050 (the hand's choice), 0055 and 0058 (rice and potato in 15 h; the long crop ≥ 12 h)
@@ -43,7 +43,7 @@
    - Seed costs 10% more in its sowing seasons (ADR 0031's pattern).
    - Produce is cheaper in its harvest season.
 6. **Legumes feed the soil.** Peas and methi restore fertility like lentils. The fertility reason `Lentils` is shown as "Legumes fed the soil" (the saved value is unchanged).
-7. **The sow sheet** lists only this season's crops, in order of growing time, each with its ready time ("ready at 16:40", "ready tomorrow 07:10") and "About N an hour" (profit ÷ growing hours). Every crop goes on a new **crop calendar**, a season-by-rung grid from the Menu and the sow sheet. A hand's order sheet keeps out-of-season choices behind one Other seasons row (spec 020 G22).
+7. **The sow sheet** lists only this season's crops, in order of growing time, each with its ready time ("ready at 16:40", "ready tomorrow 07:10") and "About N an hour" (profit ÷ growing hours). Every crop goes on a new **crop calendar**, a season-by-rung grid from the Menu and the sow sheet. Rows keep today's layout with the new lines added. A hand's order sheet uses the same row and keeps out-of-season choices behind one Other seasons row (spec 020 G22).
 8. **Out:** onion (later: no sprint plans it), tomato, sugarcane and cotton (later phases); new kitchen-garden crops; maize straw and fodder; milling maize or pressing mustard.
 9. **Run as Sprint 15b**, before Sprint 16 (owner, 2026-10-31), under the `Phase 2 · Hamlet & Village` milestone. Sprints 16–18 keep their numbers and move a week later.
 

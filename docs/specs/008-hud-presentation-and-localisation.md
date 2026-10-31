@@ -1,6 +1,6 @@
 # 008. HUD, presentation and localisation
 
-- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows; amended by ADR 0083 (2026-10-29): the working day on the map, the weather on the map and its sound, the developer panel's *Weather look* (approved 2026-10-30)
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows; amended by ADR 0083 (2026-10-29): the working day on the map, the weather on the map and its sound, the developer panel's *Weather look* (approved 2026-10-30); amended by spec 020 (ADR 0084): the sow sheet lists this season's crops only, §3.5 and §3.7; the crop calendar on its own sheet; the time card's words
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation

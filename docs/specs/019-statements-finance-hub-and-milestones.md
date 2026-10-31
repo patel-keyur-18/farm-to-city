@@ -116,7 +116,7 @@ Money and loans opens on the **This season** tab, a switch at its top: **This se
 
 **New state, Sprint 15** (save schema 12, ADR 0083): the sales record (§3.9), on `FinanceState`.
 
-**New state, Sprint 18** (save schema 15; 14 before ADR 0083 shifted the schemas by one): the founder's season statements (the last 8: cash flow by group, balance sheet lines), net worth at each close (the last 8), the deposit's balance (an account in the ledger: 1020 Bank deposit), milestones reached (id, at).
+**New state, Sprint 18** (save schema 16; ADR 0083 and ADR 0084 each shifted the schemas by one): the founder's season statements (the last 8: cash flow by group, balance sheet lines), net worth at each close (the last 8), the deposit's balance (an account in the ledger: 1020 Bank deposit), milestones reached (id, at).
 
 ## 5. Commands and events
 
@@ -199,7 +199,7 @@ Your books: this season so far and past seasons, each opening three tabs as the 
 | AC-6 | Deposit and withdraw move cash and 1020; interest at the close; never collateral | `DepositTests.Interest` |
 | AC-7 | Each milestone fires once, by its condition, saved and replayed | `MilestoneTests.Once` |
 | AC-8 | After each Winter close, *Your year* compares with last year | `MoneyViewTests.YearReview` |
-| AC-9 | A schema-14 save loads into 15 with no deposit, statements from the next close, the trend from its net worth | `MigrationTests.Schema14_Statements` |
+| AC-9 | A schema-15 save loads into 16 with no deposit, statements from the next close, the trend from its net worth | `MigrationTests.Schema15_Statements` |
 | AC-10 | The season report's *Your people* section lists wages against the market, who left and why, output and reputation's change | `MoneyViewTests.YourPeople` |
 | AC-11 | Money and loans opens on *This season*; *Your wealth* holds net worth, land, businesses, owed, loans and borrowing | `MoneyViewTests.OpensOnSeason` |
 | AC-12 | Earned − spent equals the season report's *what's left* at the close; cash at the start + profit + every *why your cash moved* line = cash now, to the coin; bought assets and loan principal are never under *Spent* | `MoneyViewTests.Season_Reconciles` |

@@ -1,6 +1,6 @@
 # 020. The crop ladder: new crops in every season
 
-- Status: In review. G1–G14 closed by the owner (2026-10-26). Brought up to date against Sprints 14 and 15 and re-measured on 2026-10-31; G15–G20 closed as recommended (owner, 2026-10-31); G21 and G22 proposed. Awaiting approval of the whole spec (US-224). No code before that
+- Status: Approved by the owner, 2026-10-31 (ADR 0084). G1–G14 closed 2026-10-26; brought up to date against Sprints 14 and 15, re-measured, and G15–G22 closed 2026-10-31
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Time and world simulation (Task clock, Seasons); Land, farming and livestock (Crops); UI/UX and screens (the sow sheet); Roadmap
@@ -149,10 +149,11 @@ Spring is the tight season: potato is cheap at its rabi harvest (0.85) and its s
 
 | Column or rule | Behaviour |
 | --- | --- |
+| The row | Today's layout stays (spec 008 §3.7, ADR 0059: harvest, Spend, Sells for, Profit, inputs, hours, soil), with the new lines added (G22) |
 | Which crops | This season's sowable crops only, by growth time (ties in `crops.json` order). Nothing greyed or disabled: other seasons' crops are in the crop calendar (§3.6b). Fodder keeps its own rules: shown only with cattle unlocked, with its own card and no hourly figure, because its worth is the fodder it saves (spec 012 §3.8b) |
 | Ready time | "Ready at 16:40" when the ready time falls today; "Ready tomorrow 07:10" when it falls tomorrow; else "Ready in N days". From `now + growthSeconds`, in the device's local time (the sim's time of day, spec 001) |
 | An hour's growing (new) | "About N an hour": the row's profit (spec 008 §3.7) ÷ growth hours, rounded to 10 coins, ties away from zero. *Why?*: "This sowing's profit about P over H hours. A shorter crop earns about as much an hour if you come back when it's ready." |
-| A hand's order | A hand's field order opens this sheet too (ADR 0059), with the same rows. His out-of-season pick (ADR 0048: a crop for another season, his best in-season crop till then) moves behind one **Other seasons** row, which opens a plain list to choose from. This keeps fodder and Winter wheat orderable all year (§10 G22) |
+| A hand's order | A hand's field order opens this sheet too (ADR 0059), with the same rows. His out-of-season pick (ADR 0048: a crop for another season, his best in-season crop till then) moves behind one **Other seasons** row, under "Let him choose", which opens a plain list to choose from. This keeps fodder and Winter wheat orderable all year (§10 G22) |
 | A link | **All crops ›** at the sheet's foot opens the crop calendar; ← comes back (ADR 0044) |
 | Note (new) | One line from strings (`crop.<id>.note`), for every crop, old and new. For example, methi: "Quick greens: small harvests every hour. Spoils fast once picked."; okra: "Picked every other day: needs plenty of hands."; mustard: "Needs little water or work. Sold for oil, not eaten at home." |
 
@@ -291,21 +292,25 @@ None new. `Sow`, `Harvest`, `Spray`, `ClearField`, selling and orders take the n
 The sow sheet in Spring at 15:00, on a loam acre at fertility 45 and moisture 45, with §4's values (spec 008 §3.7's formula at the floor; potato 15 h).
 
 ```
-Sow on a Loam acre: fertility 45.0, moisture 45                       Spring
-+--------------------------------------------------------------------------+
-| [pic] Methi   1 h   Ready at 16:00                            good       |
-|   Quick greens: small harvests every hour. Spoils fast once picked.      |
-|   Spend 34   Sells for 210   Profit about 170   About 170 an hour [?]    |
-|   seed 34 · 3.0 h a day · Soil 45.0 → 45.0                 [Sow Methi]   |
-| [pic] Radish  2 h   Ready at 17:00                            good       |
-| [pic] Okra    4 h   Ready at 19:00                            good       |
-| [pic] Maize   6 h   Ready at 21:00                            good       |
-| [pic] Potato 15 h   Ready tomorrow 06:00                      good       |
-|                                                       All crops ›        |
-+--------------------------------------------------------------------------+
+Sow on this Loam field                                                 [←] [x]
+Spring · fertility 45.0 · moisture 45
+Free hours today: 3.7 of 7.2
+Fertiliser for this sowing   [Normal]  [Compost]  [Chemical]
+For one sowing of this field: Spend is its seed and fertiliser; Sells for ...
+
+[pic]   good  Harvest about 15.0 kg
+Methi   Ready at 16:00
+1 h     Spend 34 coins   Sells for about 200 coins         [Sow Methi]
+        Profit about 170 coins · about 170 an hour [?]     pay 34 coins now
+        Quick greens. Spoils fast and few buy it: an acre or two is plenty.
+        seed 34 · 3.0 h a day
+        Soil 45.0 → 45.0
+[pic]   ... Radish 2 h, Ready at 17:00 (scroll)
+... Okra 4 h, Maize 6 h, Potato 15 h
+                                                           All crops ›
 ```
 
-This keeps today's row (picture, spend, sells for, profit, inputs, labour and soil, ADR 0059); only the order, the ready time, the hourly figure and the note are new. The fertiliser choice and the free-hours line stay above the rows.
+This keeps today's row (ADR 0059); only the order, the ready time, the hourly figure and the note are new. Preview: `docs/art/s15b-preview-sow.png`.
 
 - The rows' *Why?* lines are spec 008 §3.7's, plus "About N an hour" (§3.6).
 - Store, market, mandi, orders and away-card rows need no layout change: they list goods from content.
@@ -431,7 +436,7 @@ What this says:
 
 ## 10. Open questions
 
-G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 need revisiting (below), and G15–G20 are new from the check against Sprints 14 and 15.
+G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 were revisited on 2026-10-31, and G15–G22 are new from the check against Sprints 14 and 15 and the owner's requests. All are closed.
 
 - **G1. The crop list. Closed (owner, 2026-10-26): option A, all six:** methi, amaranth, okra, green peas, maize and mustard. Mustard is cheap to draw (its middle stage exists, ADR 0062) and gives Winter a low-water, low-labour crop. Amaranth is the only realistic quick green for Summer and the Monsoon. Onion waits for the granary (F13.3). Amaranth, then mustard, are still first to cut if the sprint runs over (§11).
 - **G2. The game times. Closed (owner, 2026-10-26): option A,** banded by real days to the first harvest (§3.3): methi and amaranth 1 h, okra and green peas 4 h, maize 6 h, mustard 8 h. Strictly proportional times were rejected: okra and peas would sit beside radish, the 4 h rung would vanish, and the times would read oddly ("2 h 12 min"). The economy model may tune the times inside their bands without re-approval (ADR 0027).
@@ -448,7 +453,7 @@ G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 nee
 - **G13. Phase and milestone. Closed (owner, 2026-10-26), timing changed (owner, 2026-10-31):** Sprint 15b, before Sprint 16, in the middle of Phase 2, so "after Phase 2's gate" no longer applies. The milestone stays `Phase 2 · Hamlet & Village`: it now fits better, because the sprint runs inside that phase.
 - **G14. Saves. Closed (owner, 2026-10-26), reopened by the test it called for:** the owner's rule was a schema step only if the test found an unfilled per-good field. The test ran on 2026-10-31: no field goes unfilled, but the history and the pinned hash break (§3.10). See G15.
 
-**Closed as recommended (owner, 2026-10-31):**
+**Closed (owner, 2026-10-31):**
 
 - **G15. Saves. Closed:** schema 13 in this sprint, for the replay base (§3.10). Sprint 16 takes 14, Sprint 17 15, Sprint 18 16.
 - **G16. Supermarket orders. Closed:** `orders.perDay` 4. As drafted, the new crops halve the orders' share of sales (16.9% → 7.9%) and fail `RecoverableBankruptcy` and the hired dairy's no-foreclosure check, because a methi order is 10–17 kg against 500+ for potato. Four orders bring the share back to 15.2% and each crop's chance back near today's (Spring 80% against 100%; Winter 57% against 50%); the Orders sheet shows up to 5 rows with the greens order. No rule changes.
@@ -457,10 +462,8 @@ G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 nee
 - **G19. Neighbours. Closed:** US-230 is maize only, as ADR 0062 already draws mustard (1 point, Could).
 - **G20. The first day. Closed:** the long-crop step stays (ADR 0045, 0058). `comeBack` gains one line pointing at the quicker crops, so the first session no longer ends only on "tomorrow". Words only.
 
-**Proposed, awaiting the owner:**
-
-- **G21. The time card** (owner, 2026-10-31): "Day 1 of 4 · Year 6" reads as if a year had 4 days. Recommended: "Spring · 3 days left · Year 6" (§3.6c). Words only.
-- **G22. The sow sheet and a master list** (owner, 2026-10-31): the sow sheet shows only crops you can sow now, with no disabled rows; all crops go on a separate crop calendar (§3.6, §3.6b). Recommended: a season-by-rung grid, from the Menu and the sow sheet. A hand's order sheet keeps its out-of-season choice behind one Other seasons row, because hiding it would stop fodder and Winter wheat being ordered ahead.
+- **G21. The time card. Closed (owner, 2026-10-31):** "Day 1 of 4 · Year 6" reads as if a year had 4 days. Now "Spring · 3 days left · Year 6" (§3.6c). Words only. Preview: `docs/art/s15b-preview-timecard.png`.
+- **G22. The sow sheet and a master list. Closed (owner, 2026-10-31):** the sow sheet shows only crops you can sow now, with no disabled rows; all crops go on a separate crop calendar, a season-by-rung grid from the Menu and the sow sheet (§3.6, §3.6b). **The row keeps today's layout with the new lines added** (`docs/art/s15b-preview-sow.png`): a more compact row that fit three crops on screen was shown and not chosen, so a player scrolls to compare. A hand's order sheet uses the same row, with an Other seasons row near the top, under "Let him choose", because hiding those crops would stop fodder and Winter wheat being ordered ahead. Previews: `s15b-preview-calendar.png`, `s15b-preview-crop-page.png`, `s15b-preview-order-other.png`.
 
 **Also settled with the owner's closing guidance (2026-10-26):** "make sense, align with the game's core idea, not stale, achievable by an average player, not too profitable, as realistic as possible with the existing calculations". A final check found the first draft's okra, maize and methi out-earned potato per hour in Spring at the floor; their yields were lowered (methi 1,800 → 1,650, okra 2,600 → 2,100, maize 1,450 → 1,250 kg) and okra's labour set to 4.5 h, and §3.4 now checks the floor basis too (AC-8).
 

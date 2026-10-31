@@ -1,6 +1,6 @@
 # 011. The trader's truck and supermarket orders
 
-- Status: Approved (owner, 2026-10-21). All gaps closed 2026-10-21
+- Status: Approved (owner, 2026-10-21). All gaps closed 2026-10-21; amended by spec 020 (ADR 0084): `orders.perDay` 4
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Storage and selling); Economy (Regional trader); Offline play (notifications)
@@ -131,7 +131,7 @@ At the hourly pass at `arriveHour`, system Market: (0) the supermarket pays what
 | `TruckDef` (in `market.json`) | `arriveHour` | int | 6 | 0–23 | |
 | | `leaveHour` | int | 0 | 0–23 | Midnight |
 | | `loadKg` | long (kg) | 4,000 | > 0 | Total load a day |
-| `OrderDef` (in `market.json`) | `perDay` | int | 2 | 0–4 | |
+| `OrderDef` (in `market.json`) | `perDay` | int | 4 (spec 020 G16; 2 before the crop ladder) | 0–4 | |
 | | `sowingsMin`, `sowingsMax` | Fixed | 0.5, 1.0 (ADR 0058) | 0 < min ≤ max | Acres' sowings |
 | | `lotKg` | long (kg) | 10 | > 0 | |
 | | `premiumMin`, `premiumMax` | Fixed | 0.15, 0.30 | 0 ≤ min ≤ max | Over P_regional |

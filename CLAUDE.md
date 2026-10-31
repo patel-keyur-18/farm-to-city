@@ -193,6 +193,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0081 | US-112 review: a contract renews at its current wage and a worker whose skill has grown asks for a raise (US-114); every citizen's farming skill drawn at birth; the hiring board's build notes accepted |
 | 0082 | Sprint 15 balance: a worker refused a raise and still underpaid leaves at the next close (any skill); sick leave and a course a day; bots answer HR as a fair employer; the bakery holds ADR 0079's targets; the dairy's hired payback 5–10 and founder-run foreclosures ≤ 10 of 16 |
 | 0083 | Owner requests in Sprint 15: a tenant hired as a hand from their card (no post fee), the house part of his pay from his first renewal and once a house, never unpaid; your labourers drawn as themselves and named, everyone on the fields 7:00–19:00; Money and loans opens on *Your season* (earned, spent, profit, why cash moved, next season due; a sales record, save schema 12, later schemas +1; spec 019 amended); the weather on the map, previewed first, rain and thunder sound, no flashing, reduced motion still, a look-only dev picker |
+| 0084 | The crop ladder (Sprint 15b, before Sprint 16): methi, amaranth, okra, green peas, maize and mustard, so every season has a crop for about 1, 2, 4, 6–8 and 15 hours; no formula changes; save schema 13 (later schemas +1); four supermarket orders a day; the sow sheet shows this season's crops only, in order, with a ready time and an hourly figure; a crop calendar on its own sheet; the time card says "3 days left" |
 
 ## Current status
 
