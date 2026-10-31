@@ -988,9 +988,12 @@ namespace Game.Presentation.Ui
                 card.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
 
                 var name = new VisualElement { pickingMode = PickingMode.Ignore };
-                name.style.width = 230;
+                name.style.width = 260; // "Green peas" clear of the figures, "Fodder sorghum" on two lines
                 name.style.flexShrink = 0;
-                name.Add(UiKit.Heading1(r.Name, 46));
+                name.style.paddingRight = 14;
+                Label cropName = UiKit.Heading1(r.Name, 46);
+                cropName.style.whiteSpace = WhiteSpace.Normal;
+                name.Add(cropName);
                 name.Add(UiKit.Text(r.TimeText, 30, UiKit.Wood, UiKit.Body));
                 card.Add(name);
                 name.style.opacity = r.SowableNow ? 1f : 0.62f; // out of season: faded, but a hand's Choose stays bright
