@@ -2,7 +2,8 @@
 
 - **Build:** the head of branch `sprint/15-chains-and-hr` (the commit is in the pull request)
 - **Device:** iPhone 13, iOS version: ____
-- **Tested by / date:** ____
+- **Tested by / date:** Keyur, 2026-10-31
+- **Result:** the owner passed every check except 14–25. Those need the Village and wait until the owner reaches it by normal play, which becomes possible with the Village gate in Sprint 17 (US-102).
 - **How to install:** see `how-to-build-ios.md`. This is **a Development build**, so it has the developer panel. Delete `unity/FarmToCity/Builds/iOS` before building (this avoids the macOS 27 crash).
 
 ## Before you install: keep your town safe
@@ -64,46 +65,46 @@ If anything looks wrong with your town after the update, stop and report it befo
 
 | # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Migration (spec 015 AC-10) | Launch with your town | Same cash, fields, people, houses, orders, animals and mill as before. In the Files app: `FarmToCity-before-update-schema10.ftc` | | **Screenshot** |
-| 2 | US-114 | People | The row *Your name as an employer*: "Fair (50)". Its **?** lists what moves it | | **Screenshot** |
-| 3 | US-112 | People → **Hiring board** | The hiring board, with a tab for each job you have: *Farm hand*, plus *Miller* if you have the mill. Each tab shows the usual wage | | **Screenshot** |
-| 4 | US-112 | *Farm hand* → **Send word** | If any townspeople want work, they're listed at once: skill, both traits and "From your town". People from outside come over 4 days | | |
-| 5 | US-112 | An applicant from outside → **Talk** | Their second trait shows | | |
-| 6 | US-112 | *Ask about …* → **Ask** (about 300 coins) | "Asking their last employer · back in 12 h"; after **+1 day**: their skill and "Left on good terms" or "Was let go" | | |
-| 7 | US-112 | **Offer** | Three offers: what they ask, 10% less, 10% more. Each shows how likely they are to accept, and the cost now | | **Screenshot** |
-| 8 | US-113 | A hand's card | *Output*: words and stars. Its **?**: skill, keenness, tiredness | | **Screenshot** |
-| 9 | US-113 | **Long days** → **Start** | "10 h a day · … overtime a day". **+1 day**: the Output **?** shows them tired. Then **Stop** | | |
-| 10 | US-113 | **Send on a course** | "6,000 coins · +10 skill · 1 day away". The card says "Away on a course · back in 1 d" | | |
-| 11 | US-113 | **+1 day** | They're back, with 10 more skill on their card | | |
-| 12 | US-114 | Hire a hand who isn't *Loyal* (a loyal worker never asks) at **10% less**, then **+1 season** (twice if no card comes) | A card: "… asks for a raise", with what it costs now and from whose cash | | **Screenshot** |
-| 13 | US-114, ADR 0082 | **Not now**, then open the hand's card | The *Contract* row: "Leaving at the season's end". Output **?**: −10% for low pay and −10% for the refused raise. **+1 season**: they've gone | | **Screenshot** |
-| 14 | US-218 | **Snapshot**. Then **Next era** until "Era: village" | The Village era. Menu → **Businesses** lists *Start a bakery* and *Start a dairy* | | |
-| 15 | US-119 | **Start a bakery** → research → **Make a plan** | The shops' pav and the trader's rusk, the atta's price, a baker's wage, the cost; each with **?** | | **Screenshot** |
-| 16 | US-119 | **Choose the acre** → a lit acre → **Build here**, then **+1 day** | The bakery on its acre; its card says "Closed · nobody works here" until you hire, with **Hire** under *Who works here* | | **Screenshot** |
-| 17 | US-112 | The bakery's card → **Hire** → **Send word**, then **+1 day** and **Offer** | The board on the *Baker* tab. Once hired, the card says *Open now* in its hours | | |
-| 18 | US-118, US-119 | **+1 day**, then the bakery's **Today** in the afternoon | The day's pav and rusk made from atta, each with **?** (the recipe). The shops and the trader collect them at 6:00 next morning: **Books** then shows them sold | | **Screenshot** |
-| 19 | US-119 | **Settings** → *Pav a day* → **Change** | Half as much pav a day; the card stays open | | |
-| 20 | US-216 | **Start a dairy** → plan → acre → **Build here**, then **+1 day** | The dairy on its acre; the plan and the card show *Buy neighbours' milk* (on) | | **Screenshot** |
-| 21 | US-216 | The dairy's **Today**, after a day with a dairyman | Paneer, curd and ghee batches from milk; your herd's milk used first | | |
-| 22 | US-114 | Play on with **+1 day** / **+1 season**. If an HR card comes (sick, emergency, offer, bad batch) | The card says what happened, what *yes* costs now and from whose cash. Answer it: the bell's row goes | | **Screenshot** if one comes |
-| 23 | US-114 | A card you didn't answer: tap the bell | The event's row; **Answer** opens a sheet with the same two choices | | |
-| 24 | US-116 | The bakery's **Books** | Profit and loss, cash and what it owns and owes, each line with **?** | | |
-| 25 | Restore | **Restore** | Your town is back as it was at the Snapshot | | |
-| 26 | Frame time | Pinch out so the whole map shows. Developer panel → **Measure frame time (20 s)**; don't touch the screen | Main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write the numbers in Notes | | **Numbers** |
-| 27 | US-222 | Developer panel → **Weather look ▸**, then **Close**. Repeat for each weather (the line under the status names it) | Sun, cloudy, rain, heavy rain, heatwave, frost, storm drawn over the whole map, each fading in over about 3 s. Fields, crops and people readable in every one; the top and bottom bars unchanged | | **Screenshot** of storm and frost |
-| 28 | US-222, spec 008 AC-21 | Storm look **at night** (after 21:00; **+1 hour** if needed). Pinch out so the whole map shows. **Measure frame time (20 s)**. Then the same in heavy rain | Each: main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write both in Notes | | **Numbers** |
-| 29 | US-222 | Storm look, **Sound** on, watch for a minute | A rain loop; a soft glow every 15–25 s that rises and fades (never a flash); distant thunder 1–3 s after it; trees leaning in the gusts | | Is the mix right? |
-| 30 | US-222 | Settings → **Reduced motion** on, storm look | The rain stands still and lighter; no glow, no gusts; thunder still plays with Sound on. Then turn **Reduced motion** back off | | |
-| 31 | US-222 | **Weather look ▸** until it says "the sim's own", then leave the app and come back | The map shows the time card's weather again; nothing about your town changed | | |
-| 32 | US-219, spec 015 AC-11 | People → the **Town** tab → a household → someone aged 18–59 whose *Work* says "Works outside, about half the days" → **Offer work as a hand** | The offer sheet, each offer with the line "From next season: … coins in cash + the house (worth … coins)". Hire one: the toast "… works your fields now!"; their hand card's *Housing* row says the house is part of the pay from the next renewal | | **Screenshot** |
-| 33 | US-219 | A child's (or an elder's) card, and a second adult from the same house | No offer button for the child or elder (the *Work* line says why, for example "Too young to work"). The second adult's offer reads "The house is already part of …'s pay: all of this is cash" | | |
-| 34 | US-220, spec 014 AC-17 | With a crop growing, People → hire labourers. Then **+1 hour** until after 7:00 | Your townspeople walk from their houses to the fields, drawn as themselves (not also at home). People names each one, with their house and till when | | **Screenshot** |
-| 35 | US-220 | **+1 hour** until after 19:00 | Everyone walks home: your hands, the founder, your labourers to their houses, neighbours' labourers out by the west edge | | |
-| 36 | US-221, spec 019 AC-11 | Tap the cash on the top bar | Money and loans opens on *Your season* → *This season*: Earned, Spent, Profit, *Why your cash moved differently*, *Next season, already due*; every line has **?** | | **Screenshot** |
-| 37 | US-221, AC-12 | The *Your cash* line ("… at the start → … now") and its **?** | Cash at the start + profit + each line of *Why your cash moved differently* equals the cash now and the cash on the top bar (within a coin or two: each line is rounded to the coin). Each crop sold has its own line, and its **?** says where it sold (after the update, earlier sales show as *Other sales*) | | |
-| 38 | US-221, AC-14, AC-15 | *Next season, already due*, then **+1 season** and the *Last season* switch | Due shows only what's committed (loans, living costs, each hand's renewal). *Last season*'s profit equals the season report's | | **Screenshot** |
-| 39 | US-221 | The *Your wealth* tab | Your balance sheet, land, Borrow and Repay as before | | |
-| 40 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | | |
+| 1 | Migration (spec 015 AC-10) | Launch with your town | Same cash, fields, people, houses, orders, animals and mill as before. In the Files app: `FarmToCity-before-update-schema10.ftc` | Pass | **Screenshot** |
+| 2 | US-114 | People | The row *Your name as an employer*: "Fair (50)". Its **?** lists what moves it | Pass | **Screenshot** |
+| 3 | US-112 | People → **Hiring board** | The hiring board, with a tab for each job you have: *Farm hand*, plus *Miller* if you have the mill. Each tab shows the usual wage | Pass | **Screenshot** |
+| 4 | US-112 | *Farm hand* → **Send word** | If any townspeople want work, they're listed at once: skill, both traits and "From your town". People from outside come over 4 days | Pass | |
+| 5 | US-112 | An applicant from outside → **Talk** | Their second trait shows | Pass | |
+| 6 | US-112 | *Ask about …* → **Ask** (about 300 coins) | "Asking their last employer · back in 12 h"; after **+1 day**: their skill and "Left on good terms" or "Was let go" | Pass | |
+| 7 | US-112 | **Offer** | Three offers: what they ask, 10% less, 10% more. Each shows how likely they are to accept, and the cost now | Pass | **Screenshot** |
+| 8 | US-113 | A hand's card | *Output*: words and stars. Its **?**: skill, keenness, tiredness | Pass | **Screenshot** |
+| 9 | US-113 | **Long days** → **Start** | "10 h a day · … overtime a day". **+1 day**: the Output **?** shows them tired. Then **Stop** | Pass | |
+| 10 | US-113 | **Send on a course** | "6,000 coins · +10 skill · 1 day away". The card says "Away on a course · back in 1 d" | Pass | |
+| 11 | US-113 | **+1 day** | They're back, with 10 more skill on their card | Pass | |
+| 12 | US-114 | Hire a hand who isn't *Loyal* (a loyal worker never asks) at **10% less**, then **+1 season** (twice if no card comes) | A card: "… asks for a raise", with what it costs now and from whose cash | Pass | **Screenshot** |
+| 13 | US-114, ADR 0082 | **Not now**, then open the hand's card | The *Contract* row: "Leaving at the season's end". Output **?**: −10% for low pay and −10% for the refused raise. **+1 season**: they've gone | Pass | **Screenshot** |
+| 14 | US-218 | **Snapshot**. Then **Next era** until "Era: village" | The Village era. Menu → **Businesses** lists *Start a bakery* and *Start a dairy* | Deferred | |
+| 15 | US-119 | **Start a bakery** → research → **Make a plan** | The shops' pav and the trader's rusk, the atta's price, a baker's wage, the cost; each with **?** | Deferred | **Screenshot** |
+| 16 | US-119 | **Choose the acre** → a lit acre → **Build here**, then **+1 day** | The bakery on its acre; its card says "Closed · nobody works here" until you hire, with **Hire** under *Who works here* | Deferred | **Screenshot** |
+| 17 | US-112 | The bakery's card → **Hire** → **Send word**, then **+1 day** and **Offer** | The board on the *Baker* tab. Once hired, the card says *Open now* in its hours | Deferred | |
+| 18 | US-118, US-119 | **+1 day**, then the bakery's **Today** in the afternoon | The day's pav and rusk made from atta, each with **?** (the recipe). The shops and the trader collect them at 6:00 next morning: **Books** then shows them sold | Deferred | **Screenshot** |
+| 19 | US-119 | **Settings** → *Pav a day* → **Change** | Half as much pav a day; the card stays open | Deferred | |
+| 20 | US-216 | **Start a dairy** → plan → acre → **Build here**, then **+1 day** | The dairy on its acre; the plan and the card show *Buy neighbours' milk* (on) | Deferred | **Screenshot** |
+| 21 | US-216 | The dairy's **Today**, after a day with a dairyman | Paneer, curd and ghee batches from milk; your herd's milk used first | Deferred | |
+| 22 | US-114 | Play on with **+1 day** / **+1 season**. If an HR card comes (sick, emergency, offer, bad batch) | The card says what happened, what *yes* costs now and from whose cash. Answer it: the bell's row goes | Deferred | **Screenshot** if one comes |
+| 23 | US-114 | A card you didn't answer: tap the bell | The event's row; **Answer** opens a sheet with the same two choices | Deferred | |
+| 24 | US-116 | The bakery's **Books** | Profit and loss, cash and what it owns and owes, each line with **?** | Deferred | |
+| 25 | Restore | **Restore** | Your town is back as it was at the Snapshot | Deferred | |
+| 26 | Frame time | Pinch out so the whole map shows. Developer panel → **Measure frame time (20 s)**; don't touch the screen | Main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write the numbers in Notes | Pass | Passed per the owner; numbers not reported |
+| 27 | US-222 | Developer panel → **Weather look ▸**, then **Close**. Repeat for each weather (the line under the status names it) | Sun, cloudy, rain, heavy rain, heatwave, frost, storm drawn over the whole map, each fading in over about 3 s. Fields, crops and people readable in every one; the top and bottom bars unchanged | Pass | **Screenshot** of storm and frost |
+| 28 | US-222, spec 008 AC-21 | Storm look **at night** (after 21:00; **+1 hour** if needed). Pinch out so the whole map shows. **Measure frame time (20 s)**. Then the same in heavy rain | Each: main thread p95 at or under 8.3 ms, about 60 fps, under 1% dropped. Write both in Notes | Pass | Passed per the owner; numbers not reported |
+| 29 | US-222 | Storm look, **Sound** on, watch for a minute | A rain loop; a soft glow every 15–25 s that rises and fades (never a flash); distant thunder 1–3 s after it; trees leaning in the gusts | Pass | Is the mix right? |
+| 30 | US-222 | Settings → **Reduced motion** on, storm look | The rain stands still and lighter; no glow, no gusts; thunder still plays with Sound on. Then turn **Reduced motion** back off | Pass | |
+| 31 | US-222 | **Weather look ▸** until it says "the sim's own", then leave the app and come back | The map shows the time card's weather again; nothing about your town changed | Pass | |
+| 32 | US-219, spec 015 AC-11 | People → the **Town** tab → a household → someone aged 18–59 whose *Work* says "Works outside, about half the days" → **Offer work as a hand** | The offer sheet, each offer with the line "From next season: … coins in cash + the house (worth … coins)". Hire one: the toast "… works your fields now!"; their hand card's *Housing* row says the house is part of the pay from the next renewal | Pass | **Screenshot** |
+| 33 | US-219 | A child's (or an elder's) card, and a second adult from the same house | No offer button for the child or elder (the *Work* line says why, for example "Too young to work"). The second adult's offer reads "The house is already part of …'s pay: all of this is cash" | Pass | |
+| 34 | US-220, spec 014 AC-17 | With a crop growing, People → hire labourers. Then **+1 hour** until after 7:00 | Your townspeople walk from their houses to the fields, drawn as themselves (not also at home). People names each one, with their house and till when | Pass | **Screenshot** |
+| 35 | US-220 | **+1 hour** until after 19:00 | Everyone walks home: your hands, the founder, your labourers to their houses, neighbours' labourers out by the west edge | Pass | |
+| 36 | US-221, spec 019 AC-11 | Tap the cash on the top bar | Money and loans opens on *Your season* → *This season*: Earned, Spent, Profit, *Why your cash moved differently*, *Next season, already due*; every line has **?** | Pass | **Screenshot** |
+| 37 | US-221, AC-12 | The *Your cash* line ("… at the start → … now") and its **?** | Cash at the start + profit + each line of *Why your cash moved differently* equals the cash now and the cash on the top bar (within a coin or two: each line is rounded to the coin). Each crop sold has its own line, and its **?** says where it sold (after the update, earlier sales show as *Other sales*) | Pass | |
+| 38 | US-221, AC-14, AC-15 | *Next season, already due*, then **+1 season** and the *Last season* switch | Due shows only what's committed (loans, living costs, each hand's renewal). *Last season*'s profit equals the season report's | Pass | **Screenshot** |
+| 39 | US-221 | The *Your wealth* tab | Your balance sheet, land, Borrow and Repay as before | Pass | |
+| 40 | Regression | Play your normal morning: orders, sowing, harvest, selling, the shed, your people, the mill | Everything works as in Sprint 14 | Pass | |
 
 ## Report
 

@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check next** |
+| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 except checks 14–25 (need the Village, deferred to normal play after Sprint 17)** |
 | Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
-| Last updated | 2026-10-30 |
+| Last updated | 2026-10-31 |
 
 ## Done so far
 
@@ -264,9 +264,11 @@
 
 ## Next up
 
-1. **Owner:** one device check covering Sprint 15 and US-219 to US-222 on the iPhone 13 (export the town first; schema 10 → 12); report; merge PR #20.
+1. **Owner:** merge PR #20 (device check 2026-10-31: every check passed except 14–25, deferred).
+2. **Claude, after the merge:** Sprint 16 from `main`.
+3. **Owner, after Sprint 17:** reach the Village by normal play (the gate is US-102), then run checks 14–25 of `s15-chains-hr.md` (the bakery, the dairy, their hiring and books, HR cards).
 
-Where it stands (2026-10-30): US-219 to US-222 approved and built; the checklist's rows 27–39 run in the Editor; one new Development build made (the 2026-10-29 one is superseded); PR #20 updated. **Next: the owner's device check of `s15-chains-hr.md` on the iPhone 13 (rows 1–40), then merge PR #20.** After the merge, Sprint 16 (ADR 0076: save schema 13 now, as later schemas shift by one).
+Where it stands (2026-10-30): US-219 to US-222 approved and built; the checklist's rows 27–39 run in the Editor; one new Development build made (the 2026-10-29 one is superseded); PR #20 updated. **The owner's device check (2026-10-31) passed all but checks 14–25, which wait for the Village by normal play; the owner merges PR #20.** After the merge, Sprint 16 (ADR 0076: save schema 13 now, as later schemas shift by one).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -282,7 +284,7 @@ Where it stands (2026-10-30): US-219 to US-222 approved and built; the checklist
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
-| Sprint 15 | Install the 2026-10-30 Development build (delete `Builds/iOS` first), run `s15-chains-hr.md`, report; merge PR #20 |
+| Sprint 15 | Device check done 2026-10-31 except checks 14–25 (the Village, after Sprint 17); merge PR #20 |
 
 ## Open questions (with the owner)
 
