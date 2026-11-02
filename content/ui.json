@@ -216,6 +216,7 @@
   "storeNearlyFullPercent": 90,
   "hintKeepsSpoilagePerDay": 0.03,
   "comeBackQuickMinutes": [181, 540],
+  "calendarRungMinutes": [60, 180, 300, 540],
   "awayRowsMax": 8,
   "awayCardMinHours": 8,
   "ratingGoodPercent": 95,

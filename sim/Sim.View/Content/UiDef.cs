@@ -99,6 +99,9 @@ namespace Sim.View.Content
         /// The first session's last letter (comeBack) names the in-season crops whose growing time falls in this range, in minutes:
         /// the ladder's 4 h and 6–8 h rungs (spec 020 §3.2, G20).
         /// </summary>
+        /// <summary>The crop calendar's rungs (spec 020 §3.2, §3.6b): each rung's upper bound in minutes of growing, ascending; the last rung is everything longer.</summary>
+        public IReadOnlyList<int> CalendarRungMinutes { get; }
+
         public int ComeBackQuickMinMinutes { get; }
         public int ComeBackQuickMaxMinutes { get; }
 
@@ -106,8 +109,9 @@ namespace Sim.View.Content
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
             int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60,
             IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null, Fixed? hintKeepsSpoilagePerDay = null,
-            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540)
+            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540, IReadOnlyList<int> calendarRungMinutes = null)
         {
+            CalendarRungMinutes = new List<int>(calendarRungMinutes ?? new[] { 60, 180, 300, 540 }).AsReadOnly();
             ComeBackQuickMinMinutes = comeBackQuickMinMinutes;
             ComeBackQuickMaxMinutes = comeBackQuickMaxMinutes;
             HintKeepsSpoilagePerDay = hintKeepsSpoilagePerDay ?? Fixed.Parse("0.03");

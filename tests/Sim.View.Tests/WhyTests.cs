@@ -61,6 +61,14 @@ namespace Sim.View.Tests
                 }
             }
             yield return Named("forecast", ForecastView.Sheet(ctx));
+            for (int i = 0; i < sim.Config.Game.Farm.Crops.Count; i++) yield return Named("crop page " + i, CropCalendar.Page(ctx, i)); // spec 020 §3.6b
+            if (sim.State.People != null)
+                foreach (Tile t in sim.State.Land.Tiles)
+                    if (t.Terrain == Terrain.Farm && PeopleWords.OrderHand(sim, Sim.Core.People.OrderTargetKind.Field, t.Id) != null)
+                    {
+                        yield return Named("order other " + t.Id, OrderSheet.Other(ctx, t.Id, "+none"));
+                        break;
+                    }
             foreach (var extra in Panels.All(ctx)) yield return extra;
         }
 

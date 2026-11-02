@@ -47,6 +47,7 @@ The developer panel: hold the time card for 3 seconds (**+1 hour**, **+1 day**, 
 | 8 | US-229 | **+1 hour** three times | Okra goes through its stages and is ready at about 4 h; harvest: about 70–90 kg | | **Screenshot** |
 | 9 | US-229 | **+1 hour** twice more | Maize ready at about 6 h; harvest | | |
 | 10 | US-232 (AC-25) | **All crops ›** on the sow sheet, then **Menu → Crop calendar** | The grid shows every crop by season and time; peas under Winter only; a crop's page opens; ← comes back | | |
+| 10b | US-232 (AC-24) | With a hand, in Spring: tap an acre → give an order. Then **Other seasons** → **Wheat** → Choose → every season → sell to the trader | The order sheet lists this season's crops, then *Let … choose* and *Other seasons*; the list shows each crop with its seasons and time (wheat "Winter · 6 h"); the order reads "Keep Wheat …" and till Winter the hand sows the best crop in season | | |
 | 11 | US-225 (AC-6) | **+1 day** until Winter; sow peas and mustard; harvest the peas; open the acre's fertility **?** | "Legumes fed the soil this season" | | **Screenshot** |
 | 12 | US-228 (AC-17) | Read the Winter hint (Menu → Dadi's letter, or the season's first page) | Names five crops, then "and 2 more" | | |
 | 13 | US-225 (AC-7) | With mustard in the store and eating from the store on, **+1 day** | The household eats other food; the mustard stays | | |

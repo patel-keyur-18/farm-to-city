@@ -21,11 +21,11 @@ namespace Sim.View.Tests
             Simulation sim = SpringAt(15);
             ViewContext ctx = ViewKit2.Context(sim);
             SowSheetVm sheet = SowSheet.Build(ctx, 86);
-            var now = sheet.Rows.TakeWhile(r => r.SowableNow).ToList();
-            Assert.That(now.Select(r => r.CropId), Is.EqualTo(new[] { "methi", "radish", "okra", "maize", "potato" }), "quickest first");
+            var now = sheet.Rows.ToList();
+            Assert.That(now.Select(r => r.CropId), Is.EqualTo(new[] { "methi", "radish", "okra", "maize", "potato" }), "quickest first, and no other crop (US-232)");
             Assert.That(now.Select(r => r.ReadyText), Is.EqualTo(new[] { "Ready at 16:00", "Ready at 17:00", "Ready at 19:00", "Ready at 21:00", "Ready tomorrow 06:00" }));
-            Assert.That(sheet.Rows.Skip(now.Count).All(r => !r.SowableNow && r.ReadyText == null && r.PerHourText == null), Is.True,
-                "out-of-season crops after this season's, with no ready time or hourly figure");
+            Assert.That(sheet.AllCrops.Opens.Value.Kind, Is.EqualTo(CropCalendar.Sheet), "All crops › opens the crop calendar");
+            Assert.That(sheet.AllCrops.Label, Is.EqualTo("All crops ›"));
 
             // Each row has its note, old crops and new (spec 020 §3.6).
             Assert.That(sheet.Rows.All(r => !string.IsNullOrEmpty(r.NoteText)), Is.True);
@@ -45,6 +45,7 @@ namespace Sim.View.Tests
             SowSheetVm order = OrderSheet.Crops(rctx, 85, null), own = SowSheet.Build(rctx, 85);
             Assert.That(order.Rows.Select(r => r.CropId + r.ReadyText + r.PerHourText + r.NoteText),
                 Is.EqualTo(own.Rows.Select(r => r.CropId + r.ReadyText + r.PerHourText + r.NoteText)));
+            Assert.That(order.AllCrops, Is.Null, "the order sheet has its Other seasons row instead");
         }
 
         // Spec 020 AC-16: "about N an hour" is the row's profit ÷ growing hours, rounded to 10 coins, ties away from zero, with a Why?.
@@ -56,7 +57,7 @@ namespace Sim.View.Tests
             foreach (string fert in new[] { "none", "compost", "chemical" })
             {
                 SowSheetVm sheet = SowSheet.Build(ctx, 86, fert);
-                foreach (CropRowVm r in sheet.Rows.Where(x => x.SowableNow))
+                foreach (CropRowVm r in sheet.Rows)
                 {
                     decimal perHour = (decimal)r.Profit / Money.Coin * 3600m / r.GrowthSeconds;
                     long expected = (long)Math.Round(perHour / 10m, MidpointRounding.AwayFromZero) * 10 * Money.Coin;

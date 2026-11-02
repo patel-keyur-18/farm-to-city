@@ -17,6 +17,40 @@ namespace Sim.View.Tests
     {
         private const long Hour = 3600, Day = 86400;
 
+        // Spec 020 AC-24: a hand's order sheet lists this season's crops and an Other seasons row, under "Let him choose"; choosing
+        // Winter wheat there in Spring sets the same order as before (ADR 0048: his best in-season pick till Winter).
+        [Test]
+        public void Order_OtherSeasons()
+        {
+            Simulation sim = Rich();
+            Hand h = Hire(sim);
+            Assert.That(Sim.Core.Time.Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock), Is.EqualTo(Sim.Core.Time.Season.Spring), "hired in the first Spring");
+            ViewContext ctx = ViewKit2.Context(sim);
+            SowSheetVm crops = OrderSheet.Crops(ctx, 85, "+compost");
+            Assert.That(crops.Rows.Select(r => r.CropId), Is.EqualTo(new[] { "methi", "radish", "okra", "maize", "potato" }));
+            Assert.That(crops.Lines.Select(l => l.Label), Is.EqualTo(new[] { "Let " + PeopleWords.Name(ctx, h.Name) + " choose", "Other seasons" }));
+            LineVm other = crops.Lines[1];
+            Assert.That(other.Value, Is.EqualTo("Set a crop for its season; till then " + PeopleWords.Name(ctx, h.Name) + " sows the best crop in season"));
+            Assert.That(other.Action.Opens.Value.Arg, Is.EqualTo("+compost"), "the list keeps the fertiliser chosen");
+
+            SheetVm list = OrderSheet.Other(ctx, 85, other.Action.Opens.Value.Arg);
+            Assert.That(list.Title, Is.EqualTo(PeopleWords.Name(ctx, h.Name) + ": other seasons"));
+            // Soonest season first (Summer, then Winter), quickest first within it; fodder only with cattle.
+            Assert.That(list.Lines.Select(l => l.Icon), Is.EqualTo(new[] { "amaranth", "lentils", "rice", "peas", "wheat", "mustard" }));
+            Assert.That(list.Lines.Single(l => l.Icon == "wheat").Value, Is.EqualTo("Winter · 6 h"));
+            Assert.That(list.Lines.Single(l => l.Icon == "lentils").Value, Is.EqualTo("Summer and Winter · 8 h"));
+            foreach (LineVm l in list.Lines) WhyTests.AssertWords("other " + l.Icon, WhyView.Build(ctx, l.WhyKey, l.WhyId));
+
+            // Choose Winter wheat: the same order steps, and the same order, as choosing it on the old sheet.
+            ActionVm wheat = list.Lines.Single(l => l.Icon == "wheat").Action;
+            Assert.That(wheat.Opens.Value.Kind + " " + wheat.Opens.Value.Arg, Is.EqualTo("Order wheat+compost"));
+            ActionVm set = OrderSheet.Build(ctx, OrderTargetKind.Field, 85, wheat.Opens.Value.Arg + "|every").Lines.Single(l => l.Action?.Id == "set:trader").Action;
+            Assert.That(sim.Execute(set.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
+            StandingOrder kept = sim.State.People.OrderFor(OrderTargetKind.Field, 85);
+            Assert.That(sim.Config.Game.Farm.Crops[kept.Crop].Id + " " + sim.Config.Game.Farm.Fertilisers[kept.Fertiliser].Id + " " + kept.Once, Is.EqualTo("wheat compost False"));
+            Assert.That(PeopleWords.Order(ctx, kept), Does.StartWith("Keep Wheat with compost"));
+        }
+
         internal static Simulation Rich(ulong seed = 42)
         {
             return ViewKit.NewGame(seed: seed, edit: (f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j);
@@ -200,11 +234,13 @@ namespace Sim.View.Tests
             // ADR 0059 §3: the crop step is the player's sow sheet, with the fertiliser choice and every figure, and Choose.
             Assert.That(OrderSheet.IsCropStep(OrderTargetKind.Field, null), Is.True);
             SowSheetVm crops = OrderSheet.Crops(ctx, 85, null);
-            Assert.That(crops.Rows.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count(c => !c.Fodder)), "each crop (fodder has its own card, US-205)");
+            int seasonNow = (int)Sim.Core.Time.Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+            Assert.That(crops.Rows.Count, Is.EqualTo(sim.Config.Game.Farm.Crops.Count(c => !c.Fodder && c.SowSeasons[seasonNow])),
+                "this season's crops (fodder has its own card, US-205; other seasons behind their row, spec 020 G22)");
             Assert.That(crops.Fertilisers.Select(f => f.Name), Is.EqualTo(new[] { "Normal", "Compost", "Chemical" }));
-            Assert.That(crops.Lines.Single().Action.Opens.Value.Arg, Is.EqualTo(OrderSpec.HandChooses + "+none"), "the hand's choice first");
-            Assert.That(crops.Rows.All(r => r.Sow.Label == "Choose" && r.Sow.Opens.HasValue), Is.True, "in season or not");
-            Assert.That(crops.Rows.Where(r => !r.SowableNow).Select(r => r.SeasonNote), Has.All.Contain("picks the best crop in between"));
+            Assert.That(crops.Lines[0].Action.Opens.Value.Arg, Is.EqualTo(OrderSpec.HandChooses + "+none"), "the hand's choice first");
+            Assert.That(crops.Lines[1].Action.Opens.Value.Kind, Is.EqualTo(OrderSheet.OtherSheet), "then Other seasons");
+            Assert.That(crops.Rows.All(r => r.Sow.Label == "Choose" && r.Sow.Opens.HasValue), Is.True);
             SowSheetVm compost = OrderSheet.Crops(ctx, 85, "+compost");
             Assert.That(OrderSheet.IsCropStep(OrderTargetKind.Field, "+compost"), Is.True);
             Assert.That(compost.Fertilisers.Single(f => f.Selected).Id, Is.EqualTo("compost"));

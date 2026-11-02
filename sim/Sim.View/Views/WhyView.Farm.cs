@@ -108,6 +108,72 @@ namespace Sim.View.Views
             return vm;
         }
 
+        // ---- A crop's page on the crop calendar (spec 020 §3.6b): what the content says about the crop, in words --------------
+
+        private static CropDef CropDefOf(ViewContext ctx, long id) { return ctx.Sim.Config.Game.Farm.Crops[(int)id]; }
+
+        private static WhyVm CropGrows(ViewContext ctx, long id)
+        {
+            CropDef def = CropDefOf(ctx, id);
+            WhyVm vm = New(ctx, "why.crop.grows.title", ctx.Fmt.Duration(def.GrowthSeconds), "crop", CropName(ctx, def));
+            Row(vm, ctx, "why.timeLeft.grows", ctx.Fmt.Duration(def.GrowthSeconds), "crop", CropName(ctx, def));
+            Text(vm, ctx, "why.crop.grows.same");
+            vm.Footnote = ctx.Strings.Get("why.timeLeft.lesson");
+            return vm;
+        }
+
+        private static WhyVm CropWater(ViewContext ctx, long id)
+        {
+            CropDef def = CropDefOf(ctx, id);
+            string band = CropCalendar.Num(ctx, def.MoistureMin) + "–" + CropCalendar.Num(ctx, def.MoistureMax);
+            WhyVm vm = New(ctx, "why.crop.water.title", band, "crop", CropName(ctx, def));
+            Row(vm, ctx, "why.moisture.band", band, "crop", CropName(ctx, def));
+            Text(vm, ctx, "why.crop.water.outside");
+            vm.Footnote = ctx.Strings.Get("why.water.lesson");
+            return vm;
+        }
+
+        private static WhyVm CropLabour(ViewContext ctx, long id)
+        {
+            CropDef def = CropDefOf(ctx, id);
+            string hours = CropCalendar.Hours(def.LabourPerAcrePerDay) + " h";
+            WhyVm vm = New(ctx, "why.crop.labour.title", hours, "crop", CropName(ctx, def));
+            Row(vm, ctx, "why.crop.labour.acre", hours);
+            Text(vm, ctx, "why.crop.labour.shared");
+            vm.Footnote = ctx.Strings.Get("why.care.lesson");
+            return vm;
+        }
+
+        private static WhyVm CropSoil(ViewContext ctx, long id)
+        {
+            CropDef def = CropDefOf(ctx, id);
+            WhyVm vm = New(ctx, "why.crop.soil.title", CropCalendar.SoilText(ctx, def), "crop", CropName(ctx, def));
+            Text(vm, ctx, def.FertilityPerSeason < Fixed.Zero ? "why.crop.soil.legume" : "why.crop.soil.share");
+            vm.Footnote = ctx.Strings.Get("why.fertility.lesson");
+            return vm;
+        }
+
+        private static WhyVm CropSpoils(ViewContext ctx, long id)
+        {
+            CropDef def = CropDefOf(ctx, id);
+            Fixed rate = ctx.Sim.Config.Game.Market.Goods[def.OutputGood].SpoilagePerDay;
+            WhyVm vm = New(ctx, "why.crop.spoils.title", Pct(ctx, rate), "crop", CropName(ctx, def));
+            Row(vm, ctx, "why.spoils.rate", Pct(ctx, rate));
+            Text(vm, ctx, "why.crop.spoils.field", "time", ctx.Fmt.Duration(ctx.Sim.Config.Game.Farm.Farm.ReadyGraceSeconds));
+            vm.Footnote = ctx.Strings.Get("why.spoilage.lesson");
+            return vm;
+        }
+
+        private static WhyVm CropSeed(ViewContext ctx, long id)
+        {
+            CropDef def = CropDefOf(ctx, id);
+            WhyVm vm = New(ctx, "why.crop.seed.title", Pct(ctx, def.SavedSeedLossPerSeason), "crop", CropName(ctx, def));
+            Row(vm, ctx, "why.crop.seed.loss", Pct(ctx, def.SavedSeedLossPerSeason));
+            Row(vm, ctx, "why.crop.seed.floor", Pct(ctx, def.SavedSeedFloor));
+            vm.Footnote = ctx.Strings.Get("why.crop.seed.lesson");
+            return vm;
+        }
+
         private static WhyVm Care(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;

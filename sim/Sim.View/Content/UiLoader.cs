@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes", "calendarRungMinutes");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -93,8 +93,17 @@ namespace Sim.View.Content
             Range(quickFrom, 1, 10080, Index(root + ".comeBackQuickMinutes", 0));
             int quickTo = Int(quick[1], Index(root + ".comeBackQuickMinutes", 1));
             Range(quickTo, quickFrom, 10080, Index(root + ".comeBackQuickMinutes", 1));
+            // The crop calendar's rungs (spec 020 §3.6b): upper bounds in minutes, strictly ascending.
+            List<JToken> rt = NonEmptyArray(o, root, "calendarRungMinutes");
+            var rungs = new List<int>();
+            for (int i = 0; i < rt.Count; i++)
+            {
+                int b = Int(rt[i], Index(root + ".calendarRungMinutes", i));
+                Range(b, i == 0 ? 1 : rungs[i - 1] + 1, 10080, Index(root + ".calendarRungMinutes", i));
+                rungs.Add(b);
+            }
             return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather, keeps,
-                quickFrom, quickTo);
+                quickFrom, quickTo, rungs);
         }
 
         private static float F(JToken t, string path, string lo, string hi)

@@ -421,6 +421,7 @@ namespace Game.Presentation
                     if (OrderSheet.IsCropStep(kind, r.Arg) && PeopleWords.OrderHand(Sim, kind, r.Id) != null) _sheet.Show(OrderSheet.Crops(_ctx, r.Id, r.Arg), refreshOnly);
                     else _sheet.Show(OrderSheet.Build(_ctx, kind, r.Id, r.Arg), refreshOnly);
                     break;
+                case OrderSheet.OtherSheet: _sheet.Show(OrderSheet.Other(_ctx, r.Id, r.Arg), refreshOnly); break; // another season's crop (spec 020 G22)
                 case "HutPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Hut); break;
                 case "HousePlacement": if (!refreshOnly) StartPlacing(PlaceKind.House); break;
                 case "BusinessPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Business, (int)r.Id, r.Arg); break;

@@ -514,16 +514,73 @@ namespace Sim.View.Views
                 best < 0 ? s.Get("order.handChoosesWhy") : s.Get("order.handChoosesNow", "crop", s.Get(defs.Farm.Crops[best].NameKey)));
             choice.Action = ActionVm.Open("crop:" + OrderSpec.HandChooses, s.Get("action.choose"), new SheetRequest("Order", target, OrderSpec.HandChooses + "+" + fert));
             vm.Lines.Add(choice);
-            foreach (CropRowVm r in vm.Rows)
+            // Another season's crop, set now (ADR 0048: his best in-season pick till then), behind one row (spec 020 §3.6, G22).
+            if (OtherSeasonCrops(ctx).Count > 0)
             {
-                CropDef c = defs.Farm.Crops[defs.Farm.IndexOfCrop(r.CropId)];
-                r.Sow = ActionVm.Open("crop:" + c.Id, s.Get("action.choose"), new SheetRequest("Order", target, c.Id + "+" + fert));
-                if (!r.SowableNow) r.SeasonNote = s.Get("order.othersBest", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons), "name", name);
+                var other = new LineVm(s.Get("order.otherSeasons"), s.Get("order.otherSeasonsNote", "name", name));
+                other.Action = ActionVm.Open("otherSeasons", s.Get("action.see"), new SheetRequest(OtherSheet, target, "+" + fert));
+                vm.Lines.Add(other);
             }
+            foreach (CropRowVm r in vm.Rows)
+                r.Sow = ActionVm.Open("crop:" + r.CropId, s.Get("action.choose"), new SheetRequest("Order", target, r.CropId + "+" + fert));
+            vm.AllCrops = null; // the order's own Other seasons row instead
             if (existing != null)
             {
                 long holder = existing.HandId;
                 vm.Actions.Add(ActionVm.Checked(ctx, "clearOrder", s.Get("action.removeOrder"), null, ActionKind.Danger, at => new ClearStandingOrder(at, holder, OrderTargetKind.Field, target)));
+            }
+            return vm;
+        }
+
+        /// <summary>The sheet kind of a hand's Other seasons list.</summary>
+        public const string OtherSheet = "OrderOther";
+
+        /// <summary>
+        /// Crops a hand can be ordered to keep that can't be sown this season (fodder only with cattle): soonest season first, then
+        /// quickest, ties in content order.
+        /// </summary>
+        public static List<int> OtherSeasonCrops(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            FarmDefs farm = sim.Config.Game.Farm;
+            int now = (int)Calendar.SeasonAt(ctx.Now, sim.Clock);
+            var list = new List<int>();
+            for (int i = 0; i < farm.Crops.Count; i++)
+            {
+                CropDef c = farm.Crops[i];
+                if (c.SowSeasons[now] || (c.Fodder && !Sim.Core.Livestock.LivestockRules.Unlocked(sim))) continue;
+                list.Add(i);
+            }
+            int Wait(int i) { for (int k = 1; k < 4; k++) if (farm.Crops[i].SowSeasons[(now + k) % 4]) return k; return 4; }
+            return System.Linq.Enumerable.ToList(System.Linq.Enumerable.ThenBy(System.Linq.Enumerable.OrderBy(list, Wait), i => farm.Crops[i].GrowthSeconds));
+        }
+
+        /// <summary>
+        /// A hand's Other seasons list (spec 020 §3.6, G22): each crop with its seasons and growing time, and Choose, which goes on
+        /// to the same order steps as a crop on the sow sheet. Arg: "+fertiliser".
+        /// </summary>
+        public static SheetVm Other(ViewContext ctx, long target, string arg)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "people" };
+            Hand h = PeopleWords.OrderHand(sim, OrderTargetKind.Field, target);
+            if (h == null)
+            {
+                vm.Title = s.Get("order.noHand");
+                return vm;
+            }
+            string name = PeopleWords.Name(ctx, h.Name), fert = FertiliserOf(arg);
+            vm.Title = s.Get("order.otherTitle", "name", name);
+            vm.Subtitle = s.Get("order.otherSubtitle", "name", name);
+            FarmDefs farm = sim.Config.Game.Farm;
+            foreach (int i in OtherSeasonCrops(ctx))
+            {
+                CropDef c = farm.Crops[i];
+                var line = new LineVm(s.Get(c.NameKey), s.Get("order.otherLine", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons), "time", ctx.Fmt.Duration(c.GrowthSeconds)),
+                    CropCalendar.GrowsWhy, i) { Icon = c.Id };
+                line.Action = ActionVm.Open("crop:" + c.Id, s.Get("action.choose"), new SheetRequest("Order", target, c.Id + "+" + fert));
+                vm.Lines.Add(line);
             }
             return vm;
         }
