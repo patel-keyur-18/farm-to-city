@@ -10,7 +10,8 @@
     { "id": "good",     "drainAbove": 65, "drainRatePerHour": 0.25, "priceFactor": 1.05 }
   ],
   "land": {
-    "moistureByWeather": { "sun": -0.7, "cloudy": -0.2, "rain": 3, "heavy_rain": 8, "heatwave": -1.2, "frost": -0.1, "storm": 5 },
+    "moistureByWeather": { "sun": -0.9, "cloudy": -0.2, "rain": 3, "heavy_rain": 8, "heatwave": -1.6, "frost": -0.1, "storm": 5 },
+    "dryingSlowsBelow": 50,
     "fertilityFactorCurve": [ [0, 0.50], [60, 1.00], [100, 1.15] ],
     "fallowRecoveryPerSeason": 6,
     "acreBasePrice": 120000,

@@ -1110,6 +1110,7 @@
   "why.moisture.wetter": "{weather} weather adds this much water each hour",
   "why.moisture.drier": "{weather} weather dries this much out each hour",
   "why.moisture.drainage": "Past a point, {soil} soil drains the extra water away hour by hour.",
+  "why.moisture.drySoil": "Below {level}, dry soil gives up its last water slowly: dries slower by",
   "why.moisture.well": "The well keeps this acre at least at",
   "why.moisture.band": "{crop} grows best between",
   "why.moisture.holds": "{fertiliser} holds water: dries slower by",

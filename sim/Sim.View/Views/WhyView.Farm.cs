@@ -43,6 +43,10 @@ namespace Sim.View.Views
             string weather = ctx.Strings.Get(sim.CurrentWeather.NameKey).ToLowerInvariant();
             Fixed perHour = sim.Config.Game.Land.MoistureByWeather[sim.Weather.IndexOf(sim.CurrentWeather.Id)];
             Row(vm, ctx, perHour >= Fixed.Zero ? "why.moisture.wetter" : "why.moisture.drier", ctx.Fmt.Integer(System.Math.Abs(perHour.RoundToLong() == 0 ? 1 : perHour.RoundToLong())), "weather", weather);
+            // Dry soil gives up its last water slowly (spec 002 §3.2, ADR 0085): shown while the weather dries and the soil is below the level.
+            Fixed drySoil = LandSystem.DrySoilFactor(sim.Config.Game.Land, t.Moisture);
+            if (perHour < Fixed.Zero && drySoil < Fixed.One)
+                Row(vm, ctx, "why.moisture.drySoil", ctx.Fmt.Percent(Fixed.One - drySoil), "level", Num(ctx, sim.Config.Game.Land.DryingSlowsBelow));
             Text(vm, ctx, "why.moisture.drainage", "soil", ctx.Strings.Get(sim.Config.Game.Soils[t.Soil].NameKey).ToLowerInvariant());
             if (LandSystem.IsWellTile(sim.Config.Game, t.Id)) Row(vm, ctx, "why.moisture.well", Num(ctx, sim.Config.Game.Land.WellMoistureFloor) + " / 100");
             Crop c = CropOn(ctx, id);

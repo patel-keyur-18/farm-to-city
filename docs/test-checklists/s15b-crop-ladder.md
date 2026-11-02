@@ -22,6 +22,7 @@
   - **Mustard** (Winter): about 8 hours.
 - **Every season now has a crop for about 1, 2, 4, 6–8 and 15 hours.**
 - **The sow sheet** lists this season's crops from quickest to longest, with when each will be ready ("Ready at 16:40"), what it earns for each hour it grows ("About 250 an hour"), and a one-line note.
+- **Dry soil dries slower (US-233, ADR 0085):** in a dry Spring or Summer a rain-fed acre stays low but stops falling to 0; rain adds the same water as before. Your town keeps its fields' moisture: they won't jump up, but rain now lifts them for longer.
 - **Old crops' numbers don't change:** yields, prices, Care, pests and loans work as before. A short crop earns about the same in a season as a long one, in smaller, more frequent harvests.
 
 **Your questions:**
@@ -53,6 +54,8 @@ The developer panel: hold the time card for 3 seconds (**+1 hour**, **+1 day**, 
 | 15 | US-225 | With a hand on "Let him choose" on an empty acre | He sows a crop of this season (any, old or new) and the acre's sheet says which | | |
 | 16 | Frame time | Play 5 minutes with the developer panel's frame graph | Within the Phase 2 budget (main p95 under about 7.6 ms) | | **Screenshot** |
 | 17 | — | **Restore** the snapshot | Your town as it was before check 5 | | |
+| 18 | US-233 (AC-17) | On a rain-fed acre below 50 moisture while it's sunny, tap the moisture row's **?** | A row "Below 50, dry soil gives up its last water slowly: dries slower by N%"; N is bigger the drier the acre (about 50% at 25). Above 50, no such row | | **Screenshot** |
+| 19 | US-233 (ADR 0085) | Note a dry rain-fed acre's moisture, then **+1 day** through sun | It falls by less than 1 a sunny hour, much less when very dry, and never reaches 0 in a day; after rain it holds up for longer than before | | |
 
 ## What to report
 

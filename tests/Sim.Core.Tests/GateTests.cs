@@ -212,11 +212,13 @@ namespace Sim.Core.Tests
         }
 
         // Recoverable bankruptcy: after a foreclosure, farm profit within 2 seasons and the Hamlet's conditions again within
-        // 3 game years (the GDD's window; measured: 1 season, and a median of 8 days).
+        // 3 game years (the GDD's window; measured: 1 season, and a median of 8 days). 120 seeds so at least 50 runs reach a
+        // foreclosure to measure (ADR 0085: with dry soil drying slower the defaulter is foreclosed less often; a sample size,
+        // not a rule, as spec 020 §9 allows).
         [Test]
         public void RecoverableBankruptcy()
         {
-            Gate.RecoveryResult r = Gate.Recovery(Live(), 100);
+            Gate.RecoveryResult r = Gate.Recovery(Live(), 120);
             int profit = r.SeasonsToProfit.Count(k => k >= 1 && k <= 2);
             int hamlet = r.DaysToHamlet.Count(d => !double.IsNaN(d) && d <= 48);
             TestContext.Out.WriteLine(r.Foreclosed + " foreclosed; profit within 2 seasons " + profit + "; Hamlet within 48 days " + hamlet);

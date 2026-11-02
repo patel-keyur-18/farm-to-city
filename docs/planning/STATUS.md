@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15b** (the crop ladder, ad hoc, before Sprint 16; 22–28 Mar 2027): spec 020 and ADR 0084 approved 2026-10-31; building. Sprint 15 is done and merged (PR #20). **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
+| Sprint | **Sprint 15b** (the crop ladder, ad hoc, before Sprint 16; 22–28 Mar 2027): spec 020 and ADR 0084 approved 2026-10-31; building. **Ad hoc US-233 (2026-11-02, ADR 0085): dry soil dries slower; built, in the owner's review (Editor check on the Mac pending).** Sprint 15 is done and merged (PR #20). **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
 | Branch with latest work | `sprint/15b-crop-ladder` (from `main` after PR #20 merged): the crop ladder. `sprint/16-shops-and-farm` holds Sprint 16's approved plan, not started |
-| Last updated | 2026-10-31 |
+| Last updated | 2026-11-02 |
 
 ## Done so far
 
@@ -265,8 +265,9 @@
 
 ## Next up
 
-1. **Sprint 15b, the crop ladder (spec 020, ADR 0084, approved 2026-10-31):** US-225, US-226 and US-227 done. US-229 built, in the owner's review: the six crops' art (approved 2026-10-31) in the game, every test green; `Hr`'s sample is 256 seeds and `DairyBusiness`'s 64. The Editor keeps `SpriteBank`'s sprite list between plays: after new art, clear `_rendered` or reload the domain. Next: US-228, US-232, US-231, US-230, one at a time, stopping for the owner's review after each. Editor saves are backed up first and restored at the end (Environment notes). The sow sheet keeps today's row with the new lines (the owner chose this over a compact row); the hand's order sheet follows it.
-2. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for schema 14 and spec 020 G18, its dates (29 Mar – 11 Apr 2027), and start with the granary's layout preview.
+1. **US-233, dry soil dries slower (ad hoc, owner 2026-11-02; ADR 0085, spec 002 amended):** built and pushed from a cloud session, every test green (see ADR 0085 for the gate before and after). The owner reported rain-fed acres stuck at moisture 3–10 through a Spring; measured, rain's share was unchanged and the bad seasons were the problem; stronger rain (the owner's first idea) was rejected because it waterlogs the Monsoon and barely helps the dry seasons. In the owner's review. **Left to do (T7):** the Editor check on the Mac with scripted touch (checklist rows 18–19: the moisture *Why?* row on a dry acre) and the owner's approval.
+2. **Sprint 15b, the crop ladder (spec 020, ADR 0084, approved 2026-10-31):** US-225, US-226 and US-227 done. US-229 built, in the owner's review: the six crops' art (approved 2026-10-31) in the game, every test green; `Hr`'s sample is 256 seeds and `DairyBusiness`'s 64. The Editor keeps `SpriteBank`'s sprite list between plays: after new art, clear `_rendered` or reload the domain. Next: US-228, US-232, US-231, US-230, one at a time, stopping for the owner's review after each. Editor saves are backed up first and restored at the end (Environment notes). The sow sheet keeps today's row with the new lines (the owner chose this over a compact row); the hand's order sheet follows it.
+3. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for schema 14 and spec 020 G18, its dates (29 Mar – 11 Apr 2027), and start with the granary's layout preview.
 
 ## Owner action checklist (Phases 0–1)
 
