@@ -97,6 +97,19 @@ namespace Sim.View.Tests
                         checkedRows++;
                     }
                 }
+                // The sow sheet's hourly figures (spec 020 AC-19), on every field you own.
+                foreach (Tile t in sim.State.Land.Tiles)
+                {
+                    if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                    foreach (CropRowVm r in SowSheet.Build(ctx, t.Id).Rows)
+                    {
+                        if (r.PerHourText == null) continue;
+                        string where = "sow " + t.Id + " / " + r.CropId + " = " + r.PerHourText;
+                        if (!WhyView.Has(r.PerHourWhyKey)) { if (!missing.Contains(where)) missing.Add(where); continue; }
+                        AssertWords(where, WhyView.Build(ctx, r.PerHourWhyKey, r.PerHourWhyId));
+                        checkedRows++;
+                    }
+                }
                 foreach (string key in new[] { "cash", "store", "calendar", "townHappiness" }) AssertWords("HUD " + key, WhyView.Build(ctx, key, 0));
                 Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "building sheets and Why? sheets is read only (AC-1)");
             }

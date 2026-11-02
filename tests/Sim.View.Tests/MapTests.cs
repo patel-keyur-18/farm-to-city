@@ -244,6 +244,11 @@ namespace Sim.View.Tests
             Assert.That(Assert.Throws<ContentException>(() => UiLoader.Load(good.Replace("\"maxFlyingTotal\": 20", "\"maxFlyingTotal\": 99"))).FieldPath, Is.EqualTo("ui.maxFlyingTotal"));
             Assert.That(Assert.Throws<ContentException>(() => UiLoader.Load(good.Replace("\"easing\": \"OutBack\"", "\"easing\": \"Bounce\""))).FieldPath, Does.EndWith("easing"));
             Assert.That(Assert.Throws<ContentException>(() => UiLoader.Load(good.Replace("[0.55, 0.6, 0.8]", "[0.55, 0.6]"))).FieldPath, Does.StartWith("ui.dayTint"));
+            // The comeBack letter's quicker crops (spec 020 G20): [from, to] minutes, from ≤ to.
+            Assert.That(UiLoader.Load(good).ComeBackQuickMinMinutes + "–" + UiLoader.Load(good).ComeBackQuickMaxMinutes, Is.EqualTo("181–540"));
+            Assert.That(Assert.Throws<ContentException>(() => UiLoader.Load(good.Replace("\"comeBackQuickMinutes\": [181, 540]", "\"comeBackQuickMinutes\": [540, 181]"))).FieldPath, Is.EqualTo("ui.comeBackQuickMinutes[1]"));
+            Assert.That(Assert.Throws<ContentException>(() => UiLoader.Load(good.Replace("\"comeBackQuickMinutes\": [181, 540]", "\"comeBackQuickMinutes\": [181]"))).FieldPath, Is.EqualTo("ui.comeBackQuickMinutes"));
+            Assert.That(Assert.Throws<ContentException>(() => UiLoader.Load(good.Replace("  \"comeBackQuickMinutes\": [181, 540],\n", ""))).FieldPath, Is.EqualTo("ui.comeBackQuickMinutes"));
         }
 
         // AC-10: reduced motion is at most 0.1 s and never bounces or flies.

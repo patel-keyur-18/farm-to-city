@@ -264,7 +264,7 @@ Valley supply is 0.9 × demand and import capacity 0.1 × demand, as for every e
 - `good.seed_<id>`: "Methi seed" and so on.
 - `crop.<id>.note` for all 13 crops, old and new.
 - `sow.readyAt`, `sow.readyTomorrow`, `sow.readyInDays`, `sow.perHour`, `why.sow.perHour`, `hint.sowMore`, `date.hud`, `date.hudLast`, the crop calendar's and the Other seasons row's strings.
-- `letter.comeBack` and `letter.comeBack.on` gain a line (G20): "Your other acres needn't wait: okra or maize will be ready by this evening."
+- `letter.comeBack` and `letter.comeBack.on` gain a line (G20): "Your other acres needn't wait: sown now, okra would be ready tonight at 19:00 and maize tonight at 21:00." (owner, 2026-11-02, US-228: built from content and the clock, so it stays true when the first session ends late; the draft "okra or maize will be ready by this evening" wasn't). It names the two quickest in-season field crops whose growing time is within `ui.json`'s `comeBackQuickMinutes` (181–540: the 4 h and 6–8 h rungs), never the long crop, each with when it would be ready if sown now ("today at", "tonight at", "tomorrow at"); with none, the line is left out.
 - The notes of methi and amaranth say the market for fresh greens is small: "Quick greens: small harvests every hour. Spoils fast, and few buy it: an acre or two is plenty."
 - `why.fertility.lentils` and `why.fertility.lesson` reworded (§3.8).
 
@@ -354,6 +354,7 @@ Each is corrected without weakening what it checks.
 | AC-23 | The HUD reads "Spring · 3 days left · Year 6" on day 1 and "Spring · last day · Year 6" on day 4; the forecast keeps `date.full` | `ViewTests.TimeCard_Words` |
 | AC-24 | A hand's order sheet lists this season's crops and an Other seasons row; choosing Winter wheat there in Spring sets the same order as before | `PeopleViewTests.Order_OtherSeasons` |
 | AC-25 | The crop calendar shows every crop in `crops.json` under each of its seasons and on its rung, fodder only with cattle; a crop's page has a *Why?* for each number | `CalendarTests.CropCalendar_EveryCrop` |
+| AC-26 | `comeBack` (asking or not) adds, after the long crop's time, the two quickest in-season field crops of 181–540 minutes with their ready times if sown now: in Spring at 15:00 "okra would be ready tonight at 19:00 and maize tonight at 21:00", at 21:00 "tomorrow at 01:00" and "tomorrow at 03:00"; in Winter peas and wheat (G20) | `FirstSessionTests.ComeBack_QuickerCrops` |
 
 ## 9. Balancing hooks
 
@@ -495,7 +496,7 @@ G1–G14 were closed with the owner one at a time on 2026-10-26. G13 and G14 wer
 - **G17. The best-price hint. Closed:** only crops sowable now or goods that keep (§3.7).
 - **G18. Sprint 16's specs. Closed:** amended with the ADR. Spec 013's granary adds maize and mustard (dry goods). Spec 013's intercrops become radish, methi, amaranth, lentils and peas: spinach and coriander aren't field crops. Spec 017's stall sells any edible produce from the store, which adds methi, amaranth, okra, peas and maize, and leaves out raw mustard. The combine stays wheat and rice.
 - **G19. Neighbours. Closed:** US-230 is maize only, as ADR 0062 already draws mustard (1 point, Could).
-- **G20. The first day. Closed:** the long-crop step stays (ADR 0045, 0058). `comeBack` gains one line pointing at the quicker crops, so the first session no longer ends only on "tomorrow". Words only.
+- **G20. The first day. Closed:** the long-crop step stays (ADR 0045, 0058). `comeBack` gains one line pointing at the quicker crops, so the first session no longer ends only on "tomorrow". Words only. **Wording settled in US-228 (owner, 2026-11-02):** the crops and their ready times are computed (§4), because a fixed "by this evening" was untrue for a session ending after about 18:00.
 
 - **G21. The time card. Closed (owner, 2026-10-31):** "Day 1 of 4 · Year 6" reads as if a year had 4 days. Now "Spring · 3 days left · Year 6" (§3.6c). Words only. Preview: `docs/art/s15b-preview-timecard.png`.
 - **G22. The sow sheet and a master list. Closed (owner, 2026-10-31):** the sow sheet shows only crops you can sow now, with no disabled rows; all crops go on a separate crop calendar, a season-by-rung grid from the Menu and the sow sheet (§3.6, §3.6b). **The row keeps today's layout with the new lines added** (`docs/art/s15b-preview-sow.png`): a more compact row that fit three crops on screen was shown and not chosen, so a player scrolls to compare. A hand's order sheet uses the same row, with an Other seasons row near the top, under "Let him choose", because hiding those crops would stop fodder and Winter wheat being ordered ahead. Previews: `s15b-preview-calendar.png`, `s15b-preview-crop-page.png`, `s15b-preview-order-other.png`.

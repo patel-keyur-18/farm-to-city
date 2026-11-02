@@ -195,6 +195,35 @@ namespace Sim.View.Tests
             Assert.That(guide.Nudge(ctx), Is.Null);
         }
 
+        // Spec 020 G20: comeBack points at the quicker crops, each with when it would be ready if sown now, from the clock.
+        [Test]
+        public void ComeBack_QuickerCrops()
+        {
+            foreach (var at in new[]
+            {
+                (hour: 15, line: "Your other acres needn't wait: sown now, okra would be ready tonight at 19:00 and maize tonight at 21:00."),
+                (hour: 21, line: "Your other acres needn't wait: sown now, okra would be ready tomorrow at 01:00 and maize tomorrow at 03:00."),
+            })
+            {
+                Simulation sim = ViewKit.NewGame(localSeconds: at.hour * 3600L);
+                ViewContext ctx = ViewKit2.Context(sim);
+                GuideKit.Ok(sim, new Sow(sim.State.Clock.SimTime, 86, "potato", SeedSource.Certified, "none"));
+                // The device's clock at the same time of day (UTC, no offset).
+                var info = new SettingsInfo { NowWallUtc = GuideKit.Wall0 - GuideKit.Wall0 % 86400 + at.hour * 3600L };
+                LetterVm asks = Letter.Page(ctx, "comeBack", false, info, 0);
+                Assert.That(asks.Text, Does.Contain("Your potato will be ready tomorrow at " + ((at.hour + 15) % 24).ToString("00") + ":00. " + at.line + " Want a nudge"), at.hour.ToString());
+                info.NotificationsOn = true;
+                Assert.That(Letter.Page(ctx, "comeBack", false, info, 0).Text, Does.EndWith(at.line), "the page that doesn't ask has it too");
+            }
+
+            // Winter's middle rungs hold peas (4 h), wheat (6 h), lentils and mustard (8 h): the two quickest are named.
+            Simulation winter = ViewKit.NewGame(localSeconds: 9 * 3600L);
+            winter.AdvanceTo(3 * winter.Clock.SecondsPerSeason + 9 * 3600L);
+            ViewContext w = ViewKit2.Context(winter);
+            Assert.That(Letter.QuickLine(w, new SettingsInfo { NowWallUtc = GuideKit.Wall0 - GuideKit.Wall0 % 86400 + 9 * 3600L }),
+                Is.EqualTo(" Your other acres needn't wait: sown now, green peas would be ready today at 13:00 and wheat today at 15:00."));
+        }
+
         // ADR 0045 §2, AC-14: comeBack asks; Continue when notifications are on; the card is the fallback after a skip; 2 asks at most.
         [Test]
         public void ComeBackAsks()

@@ -88,6 +88,26 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>A sow row's "about N an hour" (spec 020 §3.6): this sowing's profit over the hours it grows.</summary>
+        private static WhyVm SowPerHour(ViewContext ctx, long id)
+        {
+            SowSheet.PerHourParts(id, out int tileId, out int crop, out int fert);
+            GameDefs defs = ctx.Sim.Config.Game;
+            CropDef def = defs.Farm.Crops[crop];
+            CropRowVm row = null;
+            foreach (CropRowVm r in SowSheet.Build(ctx, tileId, defs.Farm.Fertilisers[fert].Id).Rows) if (r.CropId == def.Id) row = r; // the very row's numbers
+            string profit = ctx.Strings.Get(row.Profit >= 0 ? "why.sow.perHour.profitAbout" : "why.sow.perHour.lossAbout", "amount", Money(ctx, System.Math.Abs(row.Profit)));
+            string hours = ctx.Fmt.Duration(def.GrowthSeconds);
+            WhyVm vm = New(ctx, "why.sow.perHour.title", ctx.Strings.Get(row.PerHour >= 0 ? "why.sow.perHour.value" : "why.sow.perHour.valueLoss", "amount", ctx.Fmt.Amount(System.Math.Abs(row.PerHour))),
+                "crop", CropName(ctx, def));
+            Text(vm, ctx, "why.sow.perHour.text", "profit", profit, "hours", hours);
+            Row(vm, ctx, row.Profit >= 0 ? "why.sow.perHour.profit" : "why.sow.perHour.loss", Money(ctx, System.Math.Abs(row.Profit)));
+            Row(vm, ctx, "why.sow.perHour.hours", hours);
+            Text(vm, ctx, "why.sow.perHour.rounded");
+            vm.Footnote = ctx.Strings.Get("why.sow.perHour.lesson");
+            return vm;
+        }
+
         private static WhyVm Care(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;

@@ -17,7 +17,7 @@ namespace Sim.View.Tests
     {
         private const long Hour = 3600, Day = 86400;
 
-        private static Simulation Rich(ulong seed = 42)
+        internal static Simulation Rich(ulong seed = 42)
         {
             return ViewKit.NewGame(seed: seed, edit: (f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j);
         }
@@ -32,7 +32,7 @@ namespace Sim.View.Tests
         }
 
         /// <summary>A hut on field 18, then a hand (the first applicant who accepts).</summary>
-        private static Hand Hire(Simulation sim)
+        internal static Hand Hire(Simulation sim)
         {
             Ok(sim, new BuildHandHut(sim.State.Clock.SimTime, 119));
             for (int i = 0; i < 24 * 10; i++)

@@ -694,8 +694,15 @@ namespace Game.Presentation.Ui
         private void AddWhyChip(VisualElement row, LineVm line)
         {
             if (!HasWhy(line)) return;
-            var chip = new Button(() => { if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId); }) { text = "" };
-            chip.name = "why:" + line.WhyKey;
+            AddWhyChip(row, line.WhyKey, line.WhyId);
+        }
+
+        /// <summary>The same ? for a Why? that isn't a sheet row's (a sow row's hourly figure, spec 020 §3.6).</summary>
+        private Button AddWhyChip(VisualElement row, string whyKey, long whyId)
+        {
+            if (whyKey == null || !WhyView.Has(whyKey)) return null;
+            var chip = new Button(() => { if (OnWhy != null) OnWhy(whyKey, whyId); }) { text = "" };
+            chip.name = "why:" + whyKey;
             chip.style.width = 56; chip.style.height = 56;
             chip.style.marginLeft = 14; chip.style.marginRight = 6;
             chip.style.flexShrink = 0;
@@ -709,6 +716,7 @@ namespace Game.Presentation.Ui
             q.style.marginTop = -4;
             chip.Add(q);
             row.Add(chip);
+            return chip;
         }
 
         /// <summary>
@@ -948,7 +956,8 @@ namespace Game.Presentation.Ui
             foreach (CropRowVm r in vm.Rows)
                 key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
-                   .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
+                   .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason)
+                   .Append(r.ReadyText).Append(r.PerHourText).Append(r.NoteText);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
             var scroll = NewScroll();
@@ -1017,15 +1026,40 @@ namespace Game.Presentation.Ui
                     harvest.style.marginLeft = 16;
                     chipRow.Add(harvest);
                     info.Add(chipRow);
-                    // Money in, money out, what's left (owner, Sprint 6): three figures side by side, each in its own colour.
+                    // When it's ready if sown now (spec 020 §3.6): the ladder's first question.
+                    if (r.ReadyText != null)
+                    {
+                        Label ready = UiKit.Text(r.ReadyText, 30, UiKit.GreenDark, UiKit.Heading);
+                        ready.style.marginTop = 4;
+                        info.Add(ready);
+                    }
+                    // Money in, money out (owner, Sprint 6), each in its own colour; then what's left and what each hour of growing
+                    // earns, with its ? (spec 020 §3.6, layout A).
                     var money = new VisualElement { pickingMode = PickingMode.Ignore };
                     money.style.flexDirection = FlexDirection.Row;
                     money.style.flexWrap = Wrap.Wrap;
                     money.style.marginTop = 4;
                     money.Add(Figure(r.SpendText, UiKit.RedDark));
                     money.Add(Figure(r.GetText, UiKit.GreenDark));
-                    money.Add(Figure(r.ProfitText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn));
                     info.Add(money);
+                    var profitRow = new VisualElement { pickingMode = PickingMode.Ignore };
+                    profitRow.style.flexDirection = FlexDirection.Row;
+                    profitRow.style.alignItems = Align.Center;
+                    profitRow.style.marginTop = 2;
+                    Label profit = Figure(r.PerHourText == null ? r.ProfitText : r.ProfitText + " · " + r.PerHourText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn);
+                    profit.style.whiteSpace = WhiteSpace.Normal;
+                    profit.style.flexShrink = 1;
+                    profit.style.marginRight = 0;
+                    profitRow.Add(profit);
+                    Button perHourWhy = AddWhyChip(profitRow, r.PerHourWhyKey, r.PerHourWhyId);
+                    if (perHourWhy != null) perHourWhy.name = "why:" + r.PerHourWhyKey + ":" + r.CropId; // one per crop, for scripted touch
+                    info.Add(profitRow);
+                    if (r.NoteText != null)
+                    {
+                        Label cropNote = UiKit.Text(r.NoteText, 27, UiKit.Wood, UiKit.Body);
+                        cropNote.style.whiteSpace = WhiteSpace.Normal;
+                        info.Add(cropNote);
+                    }
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                     info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));
                 }

@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -86,7 +86,15 @@ namespace Sim.View.Content
             WeatherLookDef weather = o["weatherLook"] == null ? null : WeatherLook(Object(o["weatherLook"], root + ".weatherLook"), root + ".weatherLook");
             Fixed keeps = Number(Required(o, root, "hintKeepsSpoilagePerDay"), root + ".hintKeepsSpoilagePerDay");
             Range(keeps, Fixed.Zero, Fixed.One, root + ".hintKeepsSpoilagePerDay");
-            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather, keeps);
+            // The comeBack letter's quicker crops (spec 020 G20): [from, to] minutes of growing, from ≤ to.
+            List<JToken> quick = NonEmptyArray(o, root, "comeBackQuickMinutes");
+            if (quick.Count != 2) throw new ContentException(root + ".comeBackQuickMinutes", "needs exactly 2 values, [from, to] minutes");
+            int quickFrom = Int(quick[0], Index(root + ".comeBackQuickMinutes", 0));
+            Range(quickFrom, 1, 10080, Index(root + ".comeBackQuickMinutes", 0));
+            int quickTo = Int(quick[1], Index(root + ".comeBackQuickMinutes", 1));
+            Range(quickTo, quickFrom, 10080, Index(root + ".comeBackQuickMinutes", 1));
+            return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather, keeps,
+                quickFrom, quickTo);
         }
 
         private static float F(JToken t, string path, string lo, string hi)

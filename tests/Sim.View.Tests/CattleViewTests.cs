@@ -116,6 +116,7 @@ namespace Sim.View.Tests
             CropRowVm berseem = sow.Rows.Single(r => r.CropId == "berseem");
             Assert.That(berseem.HarvestText, Does.StartWith("About").And.EndWith("of green fodder a day"));
             Assert.That(berseem.GetText, Does.StartWith("Feeds about"));
+            Assert.That(berseem.PerHourText, Is.Null, "no hourly figure: its worth is the fodder it saves (spec 020 §3.6)");
 
             // Fill: straw and feed only with the shed, to their places.
             Assert.That(BuyInputsSheet.Build(ctx).Lines.Any(l => l.Label == "Straw"), Is.False);

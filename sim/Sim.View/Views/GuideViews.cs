@@ -8,6 +8,7 @@ using Sim.Core.Farm;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Progress;
+using Sim.Core.Time;
 
 namespace Sim.View.Views
 {
@@ -323,7 +324,7 @@ namespace Sim.View.Views
                 ShowMe = Sheet(sim, ch.Action),
             };
             vm.Asks = asks && !reading && notifyAsked == 0 && !info.NotificationsOn;
-            if (!vm.Asks && asks) vm.Text = s.Get("letter.comeBack.on", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info));
+            if (!vm.Asks && asks) vm.Text = s.Get("letter.comeBack.on", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info), "quick", QuickLine(ctx, info));
             if (vm.Asks)
             {
                 vm.Buttons.Add(new CardButton(LetterIds.Yes, s.Get("card.yesNudge"), ActionKind.Primary));
@@ -420,7 +421,7 @@ namespace Sim.View.Views
         {
             asks = id == "comeBack";
             var s = ctx.Strings;
-            if (asks) return s.Get("letter.comeBack", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info));
+            if (asks) return s.Get("letter.comeBack", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info), "quick", QuickLine(ctx, info));
             if (id.StartsWith("season.", StringComparison.Ordinal)) return Hints.Season(ctx, id.Substring(7));
             return s.Get("letter." + id);
         }
@@ -436,6 +437,33 @@ namespace Sim.View.Views
         {
             Crop c = LongCrop(ctx);
             return c == null ? ctx.Strings.Get("letter.yourCrop") : ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[c.Def].NameKey).ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// The quicker crops (spec 020 G20): " Your other acres needn't wait: sown now, okra would be ready today at 19:00 and maize tonight at
+        /// 21:00." The two quickest in-season field crops on the ladder's middle rungs (<see cref="Content.UiDef.ComeBackQuickMinMinutes"/>),
+        /// other than the long crop, each with when it would be ready if sown now; empty when there are none.
+        /// </summary>
+        public static string QuickLine(ViewContext ctx, SettingsInfo info)
+        {
+            Simulation sim = ctx.Sim;
+            Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
+            Crop longCrop = LongCrop(ctx);
+            var picked = new List<CropDef>();
+            foreach (CropDef c in System.Linq.Enumerable.OrderBy(sim.Config.Game.Farm.Crops, x => x.GrowthSeconds)) // quickest first, ties in content order
+            {
+                if (c.Fodder || !c.SowSeasons[(int)season] || (longCrop != null && sim.Config.Game.Farm.Crops[longCrop.Def] == c)) continue;
+                if (c.GrowthMinutes < ctx.Ui.ComeBackQuickMinMinutes || c.GrowthMinutes > ctx.Ui.ComeBackQuickMaxMinutes) continue;
+                picked.Add(c);
+                if (picked.Count == 2) break;
+            }
+            if (picked.Count == 0) return "";
+            var s = ctx.Strings;
+            var parts = new List<string>();
+            foreach (CropDef c in picked)
+                parts.Add(s.Get(parts.Count == 0 ? "letter.comeBack.quickFirst" : "letter.comeBack.quickMore",
+                    "crop", s.Get(c.NameKey).ToLowerInvariant(), "time", WallTime.Ready(ctx, info.NowWallUtc + c.GrowthSeconds, info)));
+            return " " + s.Get("letter.comeBack.quick", "crops", string.Join(" " + s.Get("list.and") + " ", parts));
         }
 
         private static string LongCropTime(ViewContext ctx, SettingsInfo info)
