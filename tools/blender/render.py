@@ -322,9 +322,29 @@ def model_hut():
     return group(o, scale=BUILDING_SCALE)
 
 
-def model_well():
-    """The village well: a stone parapet, dark water, two posts with a crossbar, a pulley and a small terracotta roof."""
+PUMP_TURN = 180
+
+
+def model_well(pump=False):
+    """The village well: a stone parapet, dark water, two posts with a crossbar, a pulley and a small terracotta roof. With
+    pump (spec 013 §3.1): an electric monoblock pump on a small plinth against the parapet, its suction pipe over the rim into
+    the water, its delivery pipe down into the ground and a switch box on a post, all inside the well's footprint."""
     o = []
+    if pump:
+        cement, pipe = toon("cement", 0xBDB8AC), toon("pipe", 0x5A5F66)
+        o += [box("pumpPlinth", (0.075, 0.05, 0.018), (0, -0.115, 0.009), cement, bevel=0.003),
+              cylinder("motor", 0.017, 0.017, 0.04, (-0.012, -0.115, 0.036), toon("pumpMotor", 0x2F7F6F), segs=12,
+                       rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+              cylinder("volute", 0.021, 0.021, 0.016, (0.018, -0.115, 0.036), toon("pumpBody", 0x2F6FB5), segs=12,
+                       rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+              cylinder("suctionUp", 0.006, 0.006, 0.07, (0.03, -0.115, 0.07), pipe, segs=8),
+              cylinder("suctionOver", 0.006, 0.006, 0.07, (0.03, -0.08, 0.105), pipe, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+              cylinder("suctionDown", 0.006, 0.006, 0.05, (0.03, -0.045, 0.08), pipe, segs=8),
+              cylinder("delivery", 0.007, 0.007, 0.04, (0.034, -0.14, 0.02), pipe, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+              box("switch", (0.02, 0.012, 0.026), (-0.012, -0.075, 0.12), toon("switchBox", 0xC9C2B4))]
+        turn = Matrix.Rotation(math.radians(PUMP_TURN), 4, "Z")
+        for part in o:
+            part.matrix_world = turn @ part.matrix_world
     o.append(cylinder("parapet", 0.085, 0.085, 0.07, (0, 0, 0.035), toon("stone", STONE), segs=14))
     o.append(cylinder("lip", 0.093, 0.093, 0.016, (0, 0, 0.075), toon("stone_dark", STONE_DARK), segs=14))
     o.append(cylinder("water", 0.066, 0.066, 0.004, (0, 0, 0.082), toon("water", WATER), segs=14, outline=False))
@@ -3175,6 +3195,92 @@ def model_granary():
 
 
 SPRITES["granary"] = model_granary
+
+
+# ---------------------------------------------------------------- irrigation (spec 013 §3.1, ADR 0086, ADR 0087)
+
+def model_canal():
+    """The minor canal on a tile edge (ADR 0087 §2): a concrete-lined channel of water, a packed-earth footpath on the river side
+    and a grassy verge on the other, one tile edge long along x."""
+    import random
+    rnd = random.Random(71)
+    b = Batch("canal")
+    lining, water, path, verge = toon("canalLining", 0xB8B2A6), toon("canalWater", 0x5E9FBF), toon("canalPath", 0xC7A877), toon("canalVerge", 0x86AE4C)
+    b.box(path, (1.0, 0.04, 0.012), Matrix.Translation((0, 0.06, 0.006)))
+    b.box(lining, (1.0, 0.085, 0.022), Matrix.Translation((0, 0.0, 0.011)))
+    b.box(water, (1.0, 0.062, 0.004), Matrix.Translation((0, 0.0, 0.020)))
+    b.box(verge, (1.0, 0.03, 0.01), Matrix.Translation((0, -0.056, 0.005)))
+    ripple = toon("canalRipple", 0xA9D4E6)
+    for i in range(5):
+        b.box(ripple, (0.06, 0.008, 0.002), Matrix.Translation((-0.4 + i * 0.2 + rnd.uniform(-0.04, 0.04), rnd.uniform(-0.015, 0.015), 0.0225)))
+    tuft = toon("canalTuft", 0x6FA03A)
+    for i in range(7):
+        b.cone(tuft, 0.014, 0.0, 0.026, Matrix.Translation((-0.45 + i * 0.15 + rnd.uniform(-0.03, 0.03), -0.058, 0.01)), segs=5)
+    return b.objects(outline_for=(lining,))
+
+
+def model_canal_end():
+    """Where the minor canal meets the village lane: a concrete headwall over a culvert pipe under the road."""
+    lining, dark = toon("canalLining", 0xB8B2A6), toon("culvert", 0x4E5A60)
+    o = [box("headwall", (0.03, 0.13, 0.05), (0, 0, 0.025), lining, bevel=0.004),
+         cylinder("mouth", 0.022, 0.022, 0.01, (-0.016, 0, 0.022), dark, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False)]
+    return group(o)
+
+
+def model_channel(axis):
+    """A field channel (a lined nali) from the canal along a field's edge, where the bund was: narrow, water in it, gaps cut
+    into the field side to let water in."""
+    b = Batch("channel")
+    lining, water = toon("channelLining", 0xC2BBAE), toon("channelWater", 0x6AAACB)
+    size, inner = ((1.0, 0.05, 0.02), (1.0, 0.032, 0.004)) if axis == "x" else ((0.05, 1.0, 0.02), (0.032, 1.0, 0.004))
+    b.box(lining, size, Matrix.Translation((0, 0, 0.01)))
+    b.box(water, inner, Matrix.Translation((0, 0, 0.019)))
+    return b.objects(outline_for=(lining,))
+
+
+def model_channel_gate():
+    """The outlet (a mogha) where a field channel leaves the canal: a small concrete box with a steel slide gate and its wheel."""
+    lining, steel, wheel = toon("canalLining", 0xB8B2A6), toon("gateSteel", 0x4F6B7A), toon("gateWheel", 0xC2452D)
+    o = [box("box", (0.07, 0.06, 0.035), (0, 0, 0.0175), lining, bevel=0.003),
+         box("gate", (0.05, 0.008, 0.06), (0, 0, 0.05), steel),
+         cylinder("stem", 0.003, 0.003, 0.03, (0, 0, 0.09), steel, segs=6),
+         cylinder("wheel", 0.016, 0.016, 0.005, (0, 0, 0.105), wheel, segs=12)]
+    return group(o, scale=BUILDING_SCALE * 0.8)
+
+
+def model_drip():
+    """Drip on an acre (spec 013 §3.1): a black lateral along each crop ridge with drippers, a white PVC header across the near
+    edge, and a blue screen filter with its valve at the front corner (the side corners are the tree slots'). Drawn under the crop."""
+    b = Batch("drip")
+    lateral, dripper, header = toon("dripLateral", 0x1F1F22), toon("dripper", 0x4FC05A), toon("dripHeader", 0xE6E3DA)
+    for x in RIDGE_X:
+        b.box(lateral, (0.014, 0.76, 0.01), Matrix.Translation((x + 0.035, 0.0, 0.008)))
+        for j in range(8):
+            b.box(dripper, (0.02, 0.014, 0.012), Matrix.Translation((x + 0.035, -0.33 + j * 0.095, 0.011)))
+    b.box(header, (0.84, 0.022, 0.018), Matrix.Translation((0.0, -0.39, 0.009)))
+    o = b.objects(outline_for=(header,))
+    blue, valve = toon("dripFilter", 0x2F6FB5), toon("dripValve", 0xC2452D)
+    o += group([cylinder("filter", 0.022, 0.022, 0.06, (0.45, -0.39, 0.03), blue, segs=12),
+                cylinder("filterCap", 0.025, 0.025, 0.012, (0.45, -0.39, 0.066), toon("dripHeader", 0xE6E3DA), segs=12),
+                cylinder("valve", 0.012, 0.012, 0.01, (0.41, -0.39, 0.03), valve, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"))])
+    return o
+
+
+def model_pump_outlet():
+    """Where pumped water comes up on an acre (the well's pump or a borewell): a pipe out of the ground pouring into a small
+    cement tank (a hauz) with a gap into the field, so you see which acres are watered."""
+    cement, water, pipe = toon("cement", 0xBDB8AC), toon("tankWater", 0x86BAC6), toon("pipe", 0x5A5F66)
+    o = [cylinder("riser", 0.009, 0.009, 0.06, (0, 0.045, 0.03), pipe, segs=10),
+         cylinder("spout", 0.009, 0.009, 0.035, (0, 0.03, 0.06), pipe, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+         box("tank", (0.11, 0.07, 0.035), (0, -0.01, 0.0175), cement, bevel=0.003),
+         box("water", (0.095, 0.055, 0.004), (0, -0.01, 0.033), water, outline=False),
+         sphere("gush", 0.016, (0, 0.012, 0.045), toon("gush", 0xD6EEF4), scale=(0.8, 1.2, 1.4), segs=8, rings=5, outline=False)]
+    return group(o, scale=BUILDING_SCALE * 0.8)
+
+
+SPRITES.update({"canal_x": model_canal, "pump_outlet": model_pump_outlet, "canal_end": model_canal_end, "channel_x": lambda: model_channel("x"),
+                "channel_y": lambda: model_channel("y"), "channel_gate": model_channel_gate, "drip": model_drip,
+                "well_pump": lambda: model_well(pump=True)})
 
 
 def pav_tray(o, name, x, y, z, mat_tray, mat_pav, cols=4, rows=2):

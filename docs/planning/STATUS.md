@@ -205,7 +205,7 @@
 
 ## In progress
 
-**Sprint 16, US-130 done (2026-11-03), waiting for the owner's review: grain storage in the mandi town** (spec 013 §3.4 as amended by ADR 0087).
+**Sprint 16, US-130 done (2026-11-03, approved by the owner): grain storage in the mandi town** (spec 013 §3.4 as amended by ADR 0087).
 - Sim: the `godown` building (a building with no tile, TileId −1: depreciated with the buildings, not collateral, not on the map) and the `godown` block in `buildings.json`; `BuyGodown`, `RentWarehouse(tonnes)`, `LetGodown(on)`; `GodownState` (rented tonnes, next season's, let next and now, the last outcome) as its own save section; `GodownRules.Dry` works out what each place holds from the stock (fastest-spoiling first, the hut store emptied first), so the hut's capacity and spoilage need no new per-good state; spoilage at 0.2 in town; at the close (after the businesses' upfront pay) the let (seeded `Godown` stream; only if all your dry goods fit the rented space) then the warehouse's rent upfront (prepaid 1120 → 5300), never below what is stored there. Save schema 14 with `saves/schema14`; a schema-13 town becomes its own replay base (its history may predate ADR 0085's drying: found by `Schema13_Farm`).
 - Screens: the Store's picture buttons two to a row (four were cramped), a **Godown in town** button opening *Grain storage in the mandi town* (buy, let, rent a tonne more or less, what is kept), four *Why?* sources, the away card's let rent, alerts.
 - Tests: `GranaryTests.Capacity_Spoilage` (AC-7), `Rent` (AC-11), `LetOut` (AC-12); `MigrationTests.Schema13_Farm` (AC-9, the godown's part) and schema-14 defaults in `EverySchemaLoads`.
@@ -273,7 +273,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-130** (`docs/art/s16-godown-*.png`). Then US-127's art preview (pump house, the minor canal on the row 4/5 edge, channels, drip lines, the borewell's pump room: it must not block a field, ADR 0087).
+1. **Sprint 16: the owner reviews US-127's art preview** (`docs/art/s16-irrigation-*.png`: the minor canal on the row 4/5 edge ending at the lane in a headwall, a field channel with its outlet gate, drip lines, the pump on the well's parapet, a cement outlet at the back corner of each pumped acre, the borewell as the valley's tube-well room at its acre's back corner). Then US-127's code.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -316,7 +316,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 built, waiting for the owner's review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
