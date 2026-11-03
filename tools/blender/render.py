@@ -3128,6 +3128,55 @@ for _f, _deg in FACINGS.items():
     SPRITES["flour_mill_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_mill("building"), d)))()
 
 
+GRANARY_SCALE = 0.62     # times BUILDING_SCALE: a 10-tonne godown, well under the founder's house (spec 013 §3.4)
+
+
+def model_granary():
+    """The granary (spec 013 §3.4): a small pucca godown on a high plinth (damp and rats stay out), cream plaster over brick with
+    a terracotta dado, a green steel double door with a padlock up three steps, two grilled ventilators high on the walls, a
+    red-painted tin gable roof, and jute sacks on a wooden pallet by the steps."""
+    o = []
+    w, d, h = 0.30, 0.21, 0.15
+    pz = 0.06                                                  # the plinth's top
+    plaster, dado = toon("godownPlaster", 0xEFE3C2), toon("godownDado", 0xB5653E)
+    cement = toon("cement", 0xBDB5A6)
+    o.append(box("plinth", (w + 0.05, d + 0.05, pz), (0, 0, pz / 2), cement, bevel=0.005))
+    for i in range(3):                                         # steps up to the door, on the camera-facing long wall (-y)
+        o.append(box("step%d" % i, (0.09, 0.03, pz * (3 - i) / 3), (0.05, -d / 2 - 0.025 - (2 - i) * 0.028 + 0.028, pz * (3 - i) / 6), cement))
+    o.append(box("walls", (w, d, h), (0, 0, pz + h / 2), plaster))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.035), (0, 0, pz + 0.0175), dado, outline=False))
+    door = toon("godownDoor", 0x3F7A4A)
+    for sx in (-1, 1):
+        o.append(box("door%d" % sx, (0.038, 0.01, 0.11), (0.05 + sx * 0.0195, -d / 2 - 0.004, pz + 0.055), door))
+    o.append(box("doorFrame", (0.088, 0.006, 0.118), (0.05, -d / 2 - 0.001, pz + 0.059), toon("frame", 0x2E5A37), outline=False))
+    o.append(box("hasp", (0.01, 0.006, 0.02), (0.05, -d / 2 - 0.011, pz + 0.06), toon("lock", 0xD9A93A), outline=False))
+    vent, bar = toon("vent", 0x3B3127), toon("ventBar", 0x8F877C)
+    for name, loc, size in (("ventFront", (-0.08, -d / 2 - 0.002, pz + h - 0.03), (0.05, 0.008, 0.028)),
+                            ("ventSide", (w / 2 + 0.002, 0.0, pz + h - 0.03), (0.008, 0.05, 0.028))):
+        o.append(box(name, size, loc, vent, outline=False))
+        for i in (-1, 0, 1):
+            off = (i * 0.014, 0, 0) if size[0] > size[1] else (0, i * 0.014, 0)
+            o.append(box(name + "Bar%d" % i, (0.004 if size[0] > size[1] else 0.01, 0.01 if size[0] > size[1] else 0.004, 0.028),
+                         (loc[0] + off[0], loc[1] + off[1] - (0.002 if size[0] > size[1] else 0), loc[2]), bar, outline=False))
+    o.append(gable_roof("roof", w, d, 0.07, pz + h, toon("roofRed", 0xB8453A), overhang=0.025))
+    for i in range(7):                                         # the corrugations, down each slope
+        x = -w / 2 + 0.02 + i * (w - 0.04) / 6
+        for sy in (-1, 1):
+            o.append(box("rib%d%d" % (i, sy), (0.005, d / 2 + 0.03, 0.004), (x, sy * (d / 4 + 0.006), pz + h + 0.037), toon("roofRib", 0x8E3029),
+                         rot=Matrix.Rotation(math.radians(-sy * 33.7), 3, "X"), outline=False))
+    o.append(box("ridgeCap", (w + 0.054, 0.02, 0.012), (0, 0, pz + h + 0.072), toon("roofRib", 0x8E3029)))
+    # Jute sacks on a pallet beside the steps: grain going in.
+    wood, jute = toon("wood", WOOD), toon("sack", 0xC7A06A)
+    o.append(box("pallet", (0.11, 0.07, 0.012), (-0.07, -d / 2 - 0.07, 0.006), wood))
+    for i, (x, y, z, r) in enumerate(((-0.095, -d / 2 - 0.07, 0.025, 0.0), (-0.045, -d / 2 - 0.07, 0.025, 0.0), (-0.07, -d / 2 - 0.07, 0.05, 0.15))):
+        o.extend(sack("sack%d" % i, (x, y, z), jute, rot=math.radians(90) + r))
+    back_details(o, w, d, pz + 0.1, vent)
+    return group(o, scale=BUILDING_SCALE * GRANARY_SCALE)
+
+
+SPRITES["granary"] = model_granary
+
+
 def pav_tray(o, name, x, y, z, mat_tray, mat_pav, cols=4, rows=2):
     """A steel baking tray of pav: soft golden buns baked touching, in rows (ladi pav)."""
     o.append(box(name, (0.012 + cols * 0.016, 0.012 + rows * 0.016, 0.004), (x, y, z), mat_tray, outline=False))

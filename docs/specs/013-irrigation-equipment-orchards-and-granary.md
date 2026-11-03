@@ -5,6 +5,7 @@
 - Reviewer: Keyur Patel
 - GDD sections: Farming (irrigation ladder, equipment ladder, fruit trees: whole-acre orchards; storage and selling: the granary); Finance (depreciation, buy or lease, capital versus operating spending)
 - Amends: spec 002 (moisture: canal and drip floors, §3.1), spec 003 (the Tools factor and labour per acre with machines, §3.2; orchards as tree acres, §3.3), spec 004 (the granary's capacity and slower spoilage, §3.4), spec 005 (machines as assets, leases as rent), spec 012 (bullocks take shed places, §3.2)
+- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting)
 - Related ADRs: 0032 (the well acres), 0014 (the yield formula and its Tools factor), 0021 and 0033 (trees and their prices), 0024 and 0034 (the store, spoilage), 0037 (the hired tractor-trolley), 0057 (spec order), 0064 (map layouts previewed)
 - Depends on specs: 002, 003, 004, 005, 006, 012
 
@@ -81,9 +82,11 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 
 | Rule | Behaviour |
 | --- | --- |
-| Building | A pucca granary (godown) on the yard: 45,000, 80 seasons, built in 24 h; one (Hamlet) |
+| Building | Your own pucca godown in the mandi town, off the map (as the next village's chakki and the town's halwai): bought for 45,000, 80 seasons, ready in 24 h; one (Hamlet). The yard, the fields, the lane and the village have no room for it without crowding (owner, 2026-11-03); a place on the map may come later. Shown in the Store sheet with its picture |
 | Capacity | 10,000 kg of dry goods: wheat, rice, lentils, maize, mustard, atta, seed and saved seed (maize and mustard: spec 020 G18), except seed potato (tubers need cold storage like potato; owner, 2026-11-03). They go to the granary first, then the hut store |
 | Spoilage | Goods in the granary spoil at `granarySpoilageFactor` 0.2 of their rate (wheat 0.005 → 0.001 a day) |
+| Renting space (owner, 2026-11-03) | Instead of or as well as buying: space in the State Warehousing Corporation's warehouse in the mandi town (off the map, from the Hamlet), booked in whole tonnes, 1–20 t, at `warehouseRentPerKgSeason` 0.30 (30 a quintal a season, about 10 a quintal a month); 10 t is 3,000 a season. Paid upfront at each close like a lease (Dr Rent); booked mid-season, the days left in this season are paid now. More space any time (paid for the days left); less from the next close, never below what is stored there. Dry goods fill your own godown first, then the rented space, then the hut store; the same goods and spoilage factor. Buying pays for itself against renting 10 t in about 15 seasons |
+| Letting your godown (owner, 2026-11-03) | **Let it out next season** (`LetGodown(on)`): the whole godown, whole seasons, renewed each close until switched off. At each close a grain trader from the town takes it with `godownTenantChance` 0.8 (seeded, `godown` stream) and pays `godownLetRentPerKgSeason` 0.24 × its 10,000 kg = 2,400 upfront (Cr Rent received; under the warehouse's 0.30, so renting space to let your own never pays). While let, your goods fill rented space, then the hut store. Holding your goods at the close, it isn't let that season and the Store row says why; no tenant, an alert says it is yours to use. Counted as passive income (spec 019 §3.4). About 5% of its cost a season, against about 18% for an acre you farm |
 | Not for | Potato, vegetables, fruit, milk (they need cold storage, Phase 3) |
 | Books | A building (spec 005); the goods are the same stock, valued as now |
 
@@ -93,9 +96,9 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 ## 4. Data
 
-**New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; the pump: cost, life, power, `wellPumpAcres` 4; the borewell: cost, life, power, `borewellAcres` 4), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (trees an acre, labour young and bearing, the intercrop share). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor), `pump`, `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
+**New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; the pump: cost, life, power, `wellPumpAcres` 4; the borewell: cost, life, power, `borewellAcres` 4), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (trees an acre, labour young and bearing, the intercrop share). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor, `warehouseRentPerKgSeason`, the most tonnes to rent, `godownTenantChance`, `godownLetRentPerKgSeason`), `pump`, `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
 
-**New state** (save schema 14 with spec 017; ADR 0083 and ADR 0084 each moved it up one): per tile, irrigation (none, canal, drip); `Machine` (id, kind, owned or leased, bought at, book value, maintained, broken until); hired days (kind, day); `Orchard` on a tile (tree, trees, planted at, batches, intercrop); the granary's goods (a store place, spec 012's mechanism).
+**New state** (save schema 14 with spec 017; ADR 0083 and ADR 0084 each moved it up one): per tile, irrigation (none, canal, drip); `Machine` (id, kind, owned or leased, bought at, book value, maintained, broken until); hired days (kind, day); `Orchard` on a tile (tree, trees, planted at, batches, intercrop); the granary's goods (a store place, spec 012's mechanism); the warehouse space rented (tonnes) and its goods; the godown let next season (on or off) and let this season.
 
 ## 5. Commands and events
 
@@ -109,14 +112,17 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 | `BuyMachine`, `LeaseMachine`, `HireMachine` | kind (+ financing) | `EraLocked`, `NoShedRoom` (bullocks), `InsufficientFunds`, `CreditRefused` | §3.2 |
 | `SellMachine`, `SetMaintenance` | machine (, on) | `UnknownMachine` | §3.2 |
 | `PlantOrchard`, `ClearOrchard` | tile, tree | `TileOccupied`, `NotOwned`, `InsufficientFunds` | §3.3 |
-| `BuildGranary` | — | `EraLocked`, `AlreadyBuilt`, `InsufficientFunds` | §3.4 |
+| `BuyGodown` | — | `EraLocked`, `AlreadyBuilt`, `InsufficientFunds` | §3.4 |
+| `LetGodown` | on | `NoGodown` | §3.4 |
+| `RentWarehouse` | tonnes (0 ends it at the close) | `EraLocked`, `InvalidArgument` (over 20 t), `InsufficientFunds`, `StockTooHigh` (less than what is stored) | §3.4 |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
 | `ChannelBuilt`, `DripLaid`, `MachineBought`, `MachineLeased`, `MachineHired`, `MachineSold` | | Motion |
 | `MachineBroke`, `MachineRepaired` | machine, cost | Alerts, away card |
 | `OrchardPlanted`, `OrchardBearing` | tile, tree | Motion, away card |
-| `GranaryBuilt` | | Motion |
+| `GodownBought` | | Alerts, the Store |
+| `GodownLet`, `GodownNotLet` | rent, or why not (no tenant, your goods in it) | Alerts, away card, the season report |
 
 ## 6. Decision card
 
@@ -128,7 +134,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 | Buy a tractor | 6,00,000 or a loan | Labour −35%, Tools 1.06, no trolley hire | Diesel, maintenance, breakdowns | Sell at 80% of book |
 | Lease or hire instead | A season's or a day's charge | The same effect while it lasts | No resale, no breakdown risk | Ends by itself |
 | Plant a mango orchard | 14,000 and the acre's crops for 1.5 years | Fruit every Summer, for the whole game | Gluts the mango market if too many | Clear at a loss |
-| Build the granary | 45,000 | Grain waits for Winter prices at a fifth of the spoilage | More room in the hut store | Permanent |
+| Buy a godown in town | 45,000 | Grain waits for Winter prices at a fifth of the spoilage | More room in the hut store | Permanent |
 
 ## 7. UI
 
@@ -138,7 +144,7 @@ Menu → Equipment:  Ox plough  [Buy 70,000] [Hire a day 900]
                    Tractor    [Buy 6,00,000] [Lease 30,000 a season] [Hire a day 2,000]
                    Yours: Tractor · book 5,70,000 · market 4,56,000 · maintained [Skip] · covers 8 acres [?]
 Field card (empty acre):  [Plant an orchard] → mango 40 trees 14,000 · first fruit in about 24 days [?]
-Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10,000 kg) [?]
+Store:  Your godown in the mandi town  [Buy · 45,000] → godown: wheat 3,200 kg · rice 1,100 kg (10,000 kg) [?]
 ```
 
 *Why?* rows: the water floor and fee; labour saved and Tools factor; book versus market value; the orchard's payback; the granary's spoilage saved. Art in Blender (channels, drip lines, bullocks, the tractor, orchard trees in rows, the granary), map layouts previewed to the owner first (ADR 0064).
@@ -157,6 +163,8 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 | AC-8 | Same seed and commands give the same farm, in one chunk or many | `EquipmentTests.ChunkingInvariance` |
 | AC-9 | A schema-13 save loads into 14 with rain-fed acres, hand tools and no granary | `MigrationTests.Schema13_Farm` |
 | AC-10 | From the Village a borewell on an owned acre holds the 4 acres you choose at moisture 40 or more with no bucket labour, its power paid at the close; a fifth acre is refused (`TooManyAcres`); before the Village it's refused (`EraLocked`) | `IrrigationTests.Borewell` (ADR 0086) |
+| AC-11 | Renting books whole tonnes, charges the days left this season and a full season at each close, fills after your own godown and before the hut store, and never shrinks below what is stored | `GranaryTests.Rent` |
+| AC-12 | A godown set to let, empty at the close, is let with the seeded chance for 2,400 paid upfront, takes none of your goods while let, isn't let while it holds your goods, and renews until switched off | `GranaryTests.LetOut` |
 
 ## 9. Balancing hooks
 
@@ -177,7 +185,7 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 - **G5. Breakdowns.** **Closed (owner, 2026-10-27):** maintenance paid at each close (on by default); a seeded daily chance of 0.5% maintained or 4% skipped; broken, 24 h out and 5% of the price to repair; nothing worse; leased and hired machines never break on you (§3.2).
 - **G6. Orchards.** **Closed (owner, 2026-10-27):** whole acres of mango (40 trees), guava (100), banana and papaya (400), real densities and spec 003's tree rules per tree; the balancer checks the glut a large planting causes (§3.3, §9).
 - **G7. Intercropping.** **Closed (owner, 2026-10-27):** until the first fruit, a short crop (radish, spinach, coriander, lentils) grows between the rows at half the acre's yield and labour; it stops when the trees bear (§3.3). **Amended (spec 020 G18, 2026-10-31):** radish, methi, amaranth, lentils and peas (spinach and coriander are kitchen-garden crops, not field crops).
-- **G8. The granary.** **Closed (owner, 2026-10-27):** one pucca granary on the yard from the Hamlet (45,000), 10,000 kg of grains, pulses, atta and seed, filled before the hut store, at a fifth of the spoilage; potato, vegetables, fruit and milk need cold storage (Phase 3); its place previewed to the owner (§3.4).
+- **G8. The granary.** **Closed (owner, 2026-10-27):** one pucca granary on the yard from the Hamlet (45,000), 10,000 kg of grains, pulses, atta and seed, filled before the hut store, at a fifth of the spoilage; potato, vegetables, fruit and milk need cold storage (Phase 3); its place previewed to the owner (§3.4). **Amended (owner, 2026-11-03):** seed potato left out of it; the yard, a field corner, the lane and the village were tried on the map and all crowd it, so it is your own godown in the mandi town, off the map.
 
 ## 11. Cut first
 

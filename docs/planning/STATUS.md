@@ -267,8 +267,8 @@
 
 ## Next up
 
-1. **Sprint 16 starts:** check its plan against what the crop ladder changed (spec 020 G15 and G18: the granary stores maize and mustard; the orchard intercrops; the stall's goods) and every story, task and AC in F13.2, F13.3, F12.3 and F12.4 against specs 013 and 017; bring any gaps to the owner one per message. The borewell is settled (owner, 2026-11-03, ADR 0086: on any owned acre, 4 acres you choose, flooding at 40 or drip, power 250 a season an acre; spec 013 G2 and AC-10; US-127's points to check). Then the granary's (US-130) layout preview, approved before its code.
-2. Sprint 15b is done and merged (PR #21): the owner's device check passed on the iPhone 13, 2026-11-03.
+1. **Sprint 16, US-130 (the granary, 6 points): code.** The plan check is done (ADR 0087, 2026-11-03): seed potato out of the granary; the minor canal between rows 4 and 5; one pumped source an acre; US-127 8 points; no maize at the stall; the granary is your own godown in the mandi town (off the map, `BuyGodown`), warehouse space to rent (`RentWarehouse`, AC-11) and an empty godown let to a trader (`LetGodown`, AC-12); Sprint 16 is 43 points. The godown's art is approved (`docs/art/s16-granary-model.png`, `model_granary` in `tools/blender/render.py`): it appears in the Store sheet, not on the map.
+2. Then US-127's art preview (pump house, the canal on the row 4/5 edge, channels, drip lines, borewell pump room: its place must not block a field, ADR 0087).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -311,7 +311,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-None. Sprint 16 is planned and approved, not started.
+Sprint 16 started 2026-11-03: plan check and the granary decision done (ADR 0087); no code yet.
 
 ## Environment notes
 

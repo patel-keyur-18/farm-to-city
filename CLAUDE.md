@@ -196,6 +196,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0084 | The crop ladder (Sprint 15b, before Sprint 16): methi, amaranth, okra, green peas, maize and mustard, so every season has a crop for about 1, 2, 4, 6–8 and 15 hours; no formula changes; save schema 13 (later schemas +1); four supermarket orders a day; the sow sheet shows this season's crops only, in order, with a ready time and an hourly figure; a crop calendar on its own sheet; the time card says "3 days left" |
 | 0085 | Dry soil dries slower: below moisture 50 drying is × m ÷ 50 (sun 0.9, heatwave 1.6 an hour), so rain-fed acres don't sit at 0 through a dry Spring or Summer; rain unchanged (stronger rain would waterlog the Monsoon); no save change |
 | 0086 | The borewell (Village, 30,000): on any acre you own, it waters 4 acres you choose like the well's pump (moisture 40 all year, no buckets, can feed drip), power 250 a season an acre (amends 0075's 6 acres) |
+| 0087 | Sprint 16 plan check: seed potato out of the granary; the minor canal between rows 4 and 5; one pumped source an acre; no maize at the stall; the granary is your own godown in the mandi town (off the map, 45,000), or rent warehouse space (0.30 a kg a season), and let an empty godown to a trader (80% chance, 2,400 a season, passive income); US-127 8 and US-130 6 points (sprint 43) |
 
 ## Current status
 
