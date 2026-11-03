@@ -267,7 +267,7 @@
 
 ## Next up
 
-1. **Sprint 16 starts:** check its plan against what the crop ladder changed (spec 020 G15 and G18: the granary stores maize and mustard; the orchard intercrops; the stall's goods) and every story, task and AC in F13.2, F13.3, F12.3 and F12.4 against specs 013 and 017; bring any gaps to the owner one per message. The borewell is settled (spec 013 G2, amended 2026-11-03: 4 acres). Then the granary's (US-130) layout preview, approved before its code.
+1. **Sprint 16 starts:** check its plan against what the crop ladder changed (spec 020 G15 and G18: the granary stores maize and mustard; the orchard intercrops; the stall's goods) and every story, task and AC in F13.2, F13.3, F12.3 and F12.4 against specs 013 and 017; bring any gaps to the owner one per message. The borewell is settled (owner, 2026-11-03, ADR 0086: on any owned acre, 4 acres you choose, flooding at 40 or drip, power 250 a season an acre; spec 013 G2 and AC-10; US-127's points to check). Then the granary's (US-130) layout preview, approved before its code.
 2. Sprint 15b is done and merged (PR #21): the owner's device check passed on the iPhone 13, 2026-11-03.
 
 ## Owner action checklist (Phases 0–1)

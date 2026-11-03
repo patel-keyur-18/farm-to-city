@@ -42,7 +42,8 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | **Canal channel** | Hamlet | 6,000 an acre (a lined field channel from the minor canal along the river side; an acre must border a channelled acre or the canal) | Water fee 400 a season an acre (the irrigation department), paid at the close | Floor 45 in Monsoon, Winter and Spring; **dry in Summer** (the canal is closed for repairs, as Indian canals are in May–June) | None |
 | **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Power 300 a season an acre, maintenance 1% of cost a season | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +5% (fertigation) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
 
-- **Water sources:** the pump and drip run on pumped water: the well's pump waters `wellPumpAcres` 4 acres, by flooding or by drip (drip needs the pump's pressure); a **borewell** with its own pump (Village, 30,000, 60 seasons) waters 6 more (§10 G2). The canal is its own source along its channels.
+- **Water sources:** the pump and drip run on pumped water: the well's pump waters `wellPumpAcres` 4 acres, by flooding or by drip (drip needs the pump's pressure); a **borewell** with its own pump (Village, 30,000, 60 seasons) waters `borewellAcres` 4 more (§10 G2, ADR 0086). The canal is its own source along its channels.
+- **The borewell (ADR 0086):** drilled on any acre you own (a small pump room at the field's edge; the acre is still farmed). It waters any 4 acres you own, chosen by you, exactly as the well's pump does: moisture 40 or more all year by flooding, no bucket labour, and it can feed drip. Power 250 a season an acre watered, paid at the close; Dr Buildings at the build, depreciated over 60 seasons.
 - An irrigated acre's water factor rarely falls below 1 except in the Summer canal closure; that steadiness is what the player buys (§9).
 - A channel or drip line is a building on the acre: capitalised (Dr Buildings), depreciated (spec 005 §3.3), sold with the acre at book value, seized with bought land.
 
@@ -100,6 +101,8 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 | --- | --- | --- | --- |
 | `InstallPump`, `SetPumpAcres` | (tiles) | `EraLocked`, `TooManyAcres`, `InsufficientFunds` | §3.1 |
 | `BuildChannel` | tile | `NotOwned`, `NotAdjacent`, `EraLocked`, `InsufficientFunds` | §3.1 |
+| `DrillBorewell` | tile | `NotOwned`, `EraLocked`, `AlreadyBuilt`, `InsufficientFunds` | §3.1 (ADR 0086) |
+| `SetBorewellAcres` | (tiles) | `TooManyAcres` | §3.1 (ADR 0086) |
 | `LayDrip` | tile | `NoWaterSource`, `EraLocked`, `InsufficientFunds` | §3.1 |
 | `BuyMachine`, `LeaseMachine`, `HireMachine` | kind (+ financing) | `EraLocked`, `NoShedRoom` (bullocks), `InsufficientFunds`, `CreditRefused` | §3.2 |
 | `SellMachine`, `SetMaintenance` | machine (, on) | `UnknownMachine` | §3.2 |
@@ -151,6 +154,7 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 | AC-7 | The granary takes dry goods first and spoils them at a fifth of the rate | `GranaryTests.Capacity_Spoilage` |
 | AC-8 | Same seed and commands give the same farm, in one chunk or many | `EquipmentTests.ChunkingInvariance` |
 | AC-9 | A schema-13 save loads into 14 with rain-fed acres, hand tools and no granary | `MigrationTests.Schema13_Farm` |
+| AC-10 | From the Village a borewell on an owned acre holds the 4 acres you choose at moisture 40 or more with no bucket labour, its power paid at the close; a fifth acre is refused (`TooManyAcres`); before the Village it's refused (`EraLocked`) | `IrrigationTests.Borewell` (ADR 0086) |
 
 ## 9. Balancing hooks
 
@@ -165,7 +169,7 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 ## 10. Open questions (all closed with the owner, 2026-10-27)
 
 - **G1. The irrigation ladder.** **Closed (owner, 2026-10-27):** rain-fed; the well and buckets; a pump on the well (Hamlet, 15,000: no bucket labour, 4 acres at 40); a canal channel (Hamlet, 6,000 an acre and a 400 fee a season, dry in Summer); drip (Village, 40,000 an acre, half subsidised on 2 acres, on pumped water) (§3.1).
-- **G2. Pumped water.** **Closed (owner, 2026-10-27):** the well's pump waters 4 acres by flooding or drip; a borewell with its own pump (Village, 30,000, 60 seasons) 6 more; the canal any acre along its channels; no water budget or water table in Phase 2 (§3.1).
+- **G2. Pumped water.** **Closed (owner, 2026-10-27):** the well's pump waters 4 acres by flooding or drip; a borewell with its own pump (Village, 30,000, 60 seasons) 6 more; the canal any acre along its channels; no water budget or water table in Phase 2 (§3.1). **Amended (owner, 2026-11-03, ADR 0086):** the borewell waters **4** acres you choose (not 6), from any acre you own, by flooding at 40 or by drip, power 250 a season an acre.
 - **G3. Which machines.** **Closed (owner, 2026-10-27):** an ox plough (Hamlet) to buy or hire, a tractor (Village) to buy, lease or hire, and the combine harvester hired by the acre at harvest; buying a harvester in Phase 3 (§3.2).
 - **G4. Bullocks.** **Closed (owner, 2026-10-27):** the pair live in the cattle shed (2 of its 4 places), fed like cattle (green fodder, straw, feed), their dung to compost, 1 h a day of care, no milk; the plough needs the shed (Hamlet, spec 012) (§3.2).
 - **G5. Breakdowns.** **Closed (owner, 2026-10-27):** maintenance paid at each close (on by default); a seeded daily chance of 0.5% maintained or 4% skipped; broken, 24 h out and 5% of the price to repair; nothing worse; leased and hired machines never break on you (§3.2).
