@@ -42,8 +42,10 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | **Canal channel** | Hamlet | 6,000 an acre (a lined field channel from the minor canal along the river side; an acre must border a channelled acre or the canal) | Water fee 400 a season an acre (the irrigation department), paid at the close | Floor 45 in Monsoon, Winter and Spring; **dry in Summer** (the canal is closed for repairs, as Indian canals are in May–June) | None |
 | **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Power 300 a season an acre, maintenance 1% of cost a season | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +5% (fertigation) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
 
+- **The minor canal (owner, 2026-11-03):** it runs west to east along the edge between rows 4 and 5, from the map's west edge (a distributary off the hills) to the village lane (column 10), drawn on the tile edge as a thin lined channel with a footpath (no acre taken). Acres sharing that edge border the canal: row 4 (`w3`, `nw1`, `n3`, `n4`, `ne1`) and row 5 (`w4`, `w1`, `home_a`'s 84–86, the yard, `e1`); others reach it through channelled neighbours (`home_b` through `home_a`). Its drawing is previewed to the owner first (ADR 0064).
 - **Water sources:** the pump and drip run on pumped water: the well's pump waters `wellPumpAcres` 4 acres, by flooding or by drip (drip needs the pump's pressure); a **borewell** with its own pump (Village, 30,000, 60 seasons) waters `borewellAcres` 4 more (§10 G2, ADR 0086). The canal is its own source along its channels.
 - **The borewell (ADR 0086):** drilled on any acre you own (a small pump room at the field's edge; the acre is still farmed). It waters any 4 acres you own, chosen by you, exactly as the well's pump does: moisture 40 or more all year by flooding, no bucket labour, and it can feed drip. Power 250 a season an acre watered, paid at the close; Dr Buildings at the build, depreciated over 60 seasons.
+- **One pumped source an acre (owner, 2026-11-03):** an acre is on the pump's list or the borewell's, never both (each chooser offers only acres not on the other), so together they water 8 different acres. A channelled acre may also be pumped: its floor is the higher of the two (pumped water covers the canal's Summer closure) and its canal fee still runs. Drip can be laid only on an acre on the pump's or the borewell's list, and a drip acre can't be taken off its list (`DripNeedsWater`).
 - An irrigated acre's water factor rarely falls below 1 except in the Summer canal closure; that steadiness is what the player buys (§9).
 - A channel or drip line is a building on the acre: capitalised (Dr Buildings), depreciated (spec 005 §3.3), sold with the acre at book value, seized with bought land.
 
@@ -80,7 +82,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | Rule | Behaviour |
 | --- | --- |
 | Building | A pucca granary (godown) on the yard: 45,000, 80 seasons, built in 24 h; one (Hamlet) |
-| Capacity | 10,000 kg of dry goods: wheat, rice, lentils, maize, mustard, atta, seed and saved seed (maize and mustard: spec 020 G18). They go to the granary first, then the hut store |
+| Capacity | 10,000 kg of dry goods: wheat, rice, lentils, maize, mustard, atta, seed and saved seed (maize and mustard: spec 020 G18), except seed potato (tubers need cold storage like potato; owner, 2026-11-03). They go to the granary first, then the hut store |
 | Spoilage | Goods in the granary spoil at `granarySpoilageFactor` 0.2 of their rate (wheat 0.005 → 0.001 a day) |
 | Not for | Potato, vegetables, fruit, milk (they need cold storage, Phase 3) |
 | Books | A building (spec 005); the goods are the same stock, valued as now |
@@ -91,7 +93,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 ## 4. Data
 
-**New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; `wellDripAcres`; the borewell), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (trees an acre, labour young and bearing, the intercrop share). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor), `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
+**New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; the pump: cost, life, power, `wellPumpAcres` 4; the borewell: cost, life, power, `borewellAcres` 4), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (trees an acre, labour young and bearing, the intercrop share). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor), `pump`, `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
 
 **New state** (save schema 14 with spec 017; ADR 0083 and ADR 0084 each moved it up one): per tile, irrigation (none, canal, drip); `Machine` (id, kind, owned or leased, bought at, book value, maintained, broken until); hired days (kind, day); `Orchard` on a tile (tree, trees, planted at, batches, intercrop); the granary's goods (a store place, spec 012's mechanism).
 
@@ -99,10 +101,10 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
-| `InstallPump`, `SetPumpAcres` | (tiles) | `EraLocked`, `TooManyAcres`, `InsufficientFunds` | §3.1 |
+| `InstallPump`, `SetPumpAcres` | (tiles) | `EraLocked`, `TooManyAcres`, `AlreadyWatered` (on the borewell), `DripNeedsWater`, `InsufficientFunds` | §3.1 |
 | `BuildChannel` | tile | `NotOwned`, `NotAdjacent`, `EraLocked`, `InsufficientFunds` | §3.1 |
 | `DrillBorewell` | tile | `NotOwned`, `EraLocked`, `AlreadyBuilt`, `InsufficientFunds` | §3.1 (ADR 0086) |
-| `SetBorewellAcres` | (tiles) | `TooManyAcres` | §3.1 (ADR 0086) |
+| `SetBorewellAcres` | (tiles) | `TooManyAcres`, `NotOwned`, `AlreadyWatered` (on the pump), `DripNeedsWater` | §3.1 (ADR 0086) |
 | `LayDrip` | tile | `NoWaterSource`, `EraLocked`, `InsufficientFunds` | §3.1 |
 | `BuyMachine`, `LeaseMachine`, `HireMachine` | kind (+ financing) | `EraLocked`, `NoShedRoom` (bullocks), `InsufficientFunds`, `CreditRefused` | §3.2 |
 | `SellMachine`, `SetMaintenance` | machine (, on) | `UnknownMachine` | §3.2 |
@@ -174,7 +176,7 @@ Yard:  [Build a granary 45,000] → granary: wheat 3,200 kg · rice 1,100 kg (10
 - **G4. Bullocks.** **Closed (owner, 2026-10-27):** the pair live in the cattle shed (2 of its 4 places), fed like cattle (green fodder, straw, feed), their dung to compost, 1 h a day of care, no milk; the plough needs the shed (Hamlet, spec 012) (§3.2).
 - **G5. Breakdowns.** **Closed (owner, 2026-10-27):** maintenance paid at each close (on by default); a seeded daily chance of 0.5% maintained or 4% skipped; broken, 24 h out and 5% of the price to repair; nothing worse; leased and hired machines never break on you (§3.2).
 - **G6. Orchards.** **Closed (owner, 2026-10-27):** whole acres of mango (40 trees), guava (100), banana and papaya (400), real densities and spec 003's tree rules per tree; the balancer checks the glut a large planting causes (§3.3, §9).
-- **G7. Intercropping.** **Closed (owner, 2026-10-27):** until the first fruit, a short crop (radish, spinach, coriander, lentils) grows between the rows at half the acre's yield and labour; it stops when the trees bear (§3.3).
+- **G7. Intercropping.** **Closed (owner, 2026-10-27):** until the first fruit, a short crop (radish, spinach, coriander, lentils) grows between the rows at half the acre's yield and labour; it stops when the trees bear (§3.3). **Amended (spec 020 G18, 2026-10-31):** radish, methi, amaranth, lentils and peas (spinach and coriander are kitchen-garden crops, not field crops).
 - **G8. The granary.** **Closed (owner, 2026-10-27):** one pucca granary on the yard from the Hamlet (45,000), 10,000 kg of grains, pulses, atta and seed, filled before the hut store, at a fifth of the spoilage; potato, vegetables, fruit and milk need cold storage (Phase 3); its place previewed to the owner (§3.4).
 
 ## 11. Cut first
