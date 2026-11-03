@@ -35,7 +35,13 @@ namespace Sim.View.Views
             }
             buttons.Add(Shortcut("buyInputs", s.Get("store.buyInputs"), s.Get("store.buyInputsNote"), new SheetRequest("BuyInputs", 0), "seed_wheat", 0));
             buttons.Add(Shortcut("mandi", s.Get("store.mandi"), s.Get("store.mandiNote"), new SheetRequest("Mandi", 0), "cart", 0));
-            vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
+            // Grain storage in the mandi town, from the Hamlet (spec 013 §3.4, ADR 0087).
+            if (GodownRules.Unlocked(sim))
+                buttons.Add(Shortcut("godown", s.Get("store.godown"), GodownSheet.ShortcutNote(ctx), new SheetRequest(GodownSheet.Kind, 0), "granary", 0));
+            // Two to a row once there are four, so each keeps room for its words (Sprint 16, the godown's button).
+            int perRow = buttons.Count > 3 ? 2 : buttons.Count;
+            for (int i = 0; i < buttons.Count; i += perRow)
+                vm.Lines.Add(new LineVm(null, null) { Buttons = buttons.GetRange(i, System.Math.Min(perRow, buttons.Count - i)) });
             if (sim.State.Ledger.Balance(Sim.Core.Finance.Account.OwedByBuyers) > 0) vm.Lines.Add(OrdersSheet.OwedLine(ctx));
 
             // Selling to the trader: the truck's state (spec 011 §7), then one row per crop with its Sell.

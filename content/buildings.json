@@ -7,6 +7,15 @@
     { "id": "cattle_shed", "nameKey": "building.cattle_shed", "yardTreeSlots": 0, "value": 40000, "usefulLifeSeasons": 60, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0,
       "buildHours": 24, "animals": 4, "feedRoomKg": 2400, "strawStackKg": 10000 },
     { "id": "family_house", "nameKey": "building.family_house", "yardTreeSlots": 0, "value": 60000, "usefulLifeSeasons": 120, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0,
-      "buildHours": 48 }
-  ]
+      "buildHours": 48 },
+    { "id": "godown", "nameKey": "building.godown", "yardTreeSlots": 0, "value": 45000, "usefulLifeSeasons": 80, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 }
+  ],
+  "godown": {
+    "building": "godown", "unlockEra": "hamlet", "capacityKg": 10000, "spoilageFactor": 0.2,
+    "goods": ["wheat", "rice", "lentils", "maize", "mustard", "atta",
+      "seed_radish", "seed_wheat", "seed_rice", "seed_lentils", "seed_spinach", "seed_berseem", "seed_sorghum", "seed_coriander",
+      "seed_methi", "seed_amaranth", "seed_okra", "seed_peas", "seed_maize", "seed_mustard"],
+    "warehouseRentPerKgSeason": 0.30, "maxRentTonnes": 20,
+    "tenantChance": 0.8, "letRentPerKgSeason": 0.24
+  }
 }

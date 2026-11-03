@@ -260,4 +260,51 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "OrderPaid(" + Amount + ")"; }
     }
+    /// <summary>You bought your godown in the mandi town (spec 013 §3.4, ADR 0087).</summary>
+    public sealed class GodownBought : SimEvent
+    {
+        public long Cost { get; }
+
+        public GodownBought(long simTime, long cost) : base(simTime) { Cost = cost; }
+
+        protected override string Describe() { return "GodownBought(cost=" + Cost + ")"; }
+    }
+
+    /// <summary>
+    /// Warehouse space booked (ADR 0087): <see cref="Tonnes"/> from now when more (paid now for the days left), from the next close
+    /// when less (<see cref="Cost"/> 0).
+    /// </summary>
+    public sealed class WarehouseRented : SimEvent
+    {
+        public int Tonnes { get; }
+        public long Cost { get; }
+
+        public WarehouseRented(long simTime, int tonnes, long cost) : base(simTime)
+        {
+            Tonnes = tonnes;
+            Cost = cost;
+        }
+
+        protected override string Describe() { return "WarehouseRented(tonnes=" + Tonnes + ", cost=" + Cost + ")"; }
+    }
+
+    /// <summary>A trader took your godown for the season that opens, paying <see cref="Rent"/> upfront (ADR 0087).</summary>
+    public sealed class GodownLet : SimEvent
+    {
+        public long Rent { get; }
+
+        public GodownLet(long simTime, long rent) : base(simTime) { Rent = rent; }
+
+        protected override string Describe() { return "GodownLet(rent=" + Rent + ")"; }
+    }
+
+    /// <summary>Your godown was set to let but isn't let this season, and why (ADR 0087).</summary>
+    public sealed class GodownNotLet : SimEvent
+    {
+        public Market.LetOutcome Reason { get; }
+
+        public GodownNotLet(long simTime, Market.LetOutcome reason) : base(simTime) { Reason = reason; }
+
+        protected override string Describe() { return "GodownNotLet(reason=" + Reason + ")"; }
+    }
 }

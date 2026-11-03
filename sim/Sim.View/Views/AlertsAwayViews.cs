@@ -226,7 +226,7 @@ namespace Sim.View.Views
             var lapsed = new Dictionary<long, long>();
             var orderGood = new Dictionary<long, string>();
             long paid = 0, held = 0;
-            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0;
+            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0;
             int calfCount = 0, vetCount = 0;
             foreach (SimEvent e in events)
             {
@@ -261,6 +261,7 @@ namespace Sim.View.Views
                     case CalfBorn cb: calves += cb.Amount; calfCount++; break;
                     case AnimalSick sk: vet += sk.Cost; vetCount++; break;
                     case DayLabourPaid d: vm.DayLabour += d.Amount; break;
+                    case GodownLet gl: godownRent += gl.Rent; break;
                     case HomeUseEaten h: vm.HomeUse += h.Value; break;
                     case GoodsSpoiled g: vm.SpoiledGrams += Store.WeightGrams(sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(g.GoodId)], g.Quantity); break;
                     case PestWarning p: vm.Pests++; string fld = PeopleWords.Field(ctx, p.TileId); if (!pests.Contains(fld)) pests.Add(fld); break;
@@ -292,6 +293,7 @@ namespace Sim.View.Views
             if (calves > 0)
                 money.Add(new KeyValuePair<long, LineVm>(calves, new LineVm(s.Plural("away.calves", calfCount), ctx.Fmt.Coins(calves), "away", (long)AwayRow.Dairy) { Icon = "coin" }));
             Money(fodderSold, "away.fodderSold", AwayRow.Dairy, "green_fodder");
+            Money(godownRent, "away.godownLet", AwayRow.Godown, "granary");
             long rent = TownAway.Rent(events, out int payers);
             if (rent > 0) money.Add(new KeyValuePair<long, LineVm>(rent, new LineVm(s.Plural("away.rent", payers), ctx.Fmt.Coins(rent), "away", (long)AwayRow.Town) { Icon = "coin" }));
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
@@ -449,6 +451,8 @@ namespace Sim.View.Views
             { "EraProgress", Use.StateOnly }, { "EraUnlocked", Use.Away },
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
+            // Spec 013 §3.4 (ADR 0087).
+            { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
         };
     }

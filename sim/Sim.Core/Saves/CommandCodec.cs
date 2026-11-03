@@ -36,6 +36,7 @@ namespace Sim.Core.Saves
             PostJobAt, CheckReference, OfferAt, LetWorkerGo, RunBusinessYourself,
             SendOnCourse, SetLongDays, AnswerHrEvent,
             OfferTownsperson,
+            BuyGodown, RentWarehouse, LetGodown,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -121,6 +122,9 @@ namespace Sim.Core.Saves
                 case SendOnCourse c: At(c, Tag.SendOnCourse); w.WriteLong(c.Place); w.WriteLong(c.WorkerId); break;
                 case SetLongDays c: At(c, Tag.SetLongDays); w.WriteLong(c.HandId); w.WriteBool(c.On); break;
                 case AnswerHrEvent c: At(c, Tag.AnswerHrEvent); w.WriteLong(c.EventId); w.WriteInt(c.Choice); break;
+                case BuyGodown c: At(c, Tag.BuyGodown); break;
+                case RentWarehouse c: At(c, Tag.RentWarehouse); w.WriteInt(c.Tonnes); break;
+                case LetGodown c: At(c, Tag.LetGodown); w.WriteBool(c.On); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c when c.Level == OfferLevel.Asked: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
@@ -235,6 +239,9 @@ namespace Sim.Core.Saves
                 case Tag.SendOnCourse: return new SendOnCourse(at, r.ReadLong(), r.ReadLong());
                 case Tag.SetLongDays: return new SetLongDays(at, r.ReadLong(), r.ReadBool());
                 case Tag.AnswerHrEvent: return new AnswerHrEvent(at, r.ReadLong(), r.ReadInt());
+                case Tag.BuyGodown: return new BuyGodown(at);
+                case Tag.RentWarehouse: return new RentWarehouse(at, r.ReadInt());
+                case Tag.LetGodown: return new LetGodown(at, r.ReadBool());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());
                 case Tag.OfferTownsperson: return new OfferTownsperson(at, r.ReadLong(), (OfferLevel)r.ReadInt());

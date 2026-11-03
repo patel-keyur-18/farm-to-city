@@ -205,6 +205,12 @@
 
 ## In progress
 
+**Sprint 16, US-130 done (2026-11-03), waiting for the owner's review: grain storage in the mandi town** (spec 013 §3.4 as amended by ADR 0087).
+- Sim: the `godown` building (a building with no tile, TileId −1: depreciated with the buildings, not collateral, not on the map) and the `godown` block in `buildings.json`; `BuyGodown`, `RentWarehouse(tonnes)`, `LetGodown(on)`; `GodownState` (rented tonnes, next season's, let next and now, the last outcome) as its own save section; `GodownRules.Dry` works out what each place holds from the stock (fastest-spoiling first, the hut store emptied first), so the hut's capacity and spoilage need no new per-good state; spoilage at 0.2 in town; at the close (after the businesses' upfront pay) the let (seeded `Godown` stream; only if all your dry goods fit the rented space) then the warehouse's rent upfront (prepaid 1120 → 5300), never below what is stored there. Save schema 14 with `saves/schema14`; a schema-13 town becomes its own replay base (its history may predate ADR 0085's drying: found by `Schema13_Farm`).
+- Screens: the Store's picture buttons two to a row (four were cramped), a **Godown in town** button opening *Grain storage in the mandi town* (buy, let, rent a tonne more or less, what is kept), four *Why?* sources, the away card's let rent, alerts.
+- Tests: `GranaryTests.Capacity_Spoilage` (AC-7), `Rent` (AC-11), `LetOut` (AC-12); `MigrationTests.Schema13_Farm` (AC-9, the godown's part) and schema-14 defaults in `EverySchemaLoads`.
+- Editor (scripted touch): Store → Godown in town → *Why?* → Rent 1 t more → (test coins by script) Buy → Let it out → a good's *Why?*; a day advanced by script across the close: let for 2,535 (indexed); the sheet at Large text and back to Normal. Captures `docs/art/s16-godown-*.png`. Saves restored and identical.
+
 **Sprint 15b, the crop ladder: done (2026-11-03).** Six crops (methi, amaranth, okra, green peas, maize, mustard) in every season's gaps, save schema 13, four supermarket orders a day, the balance rule and two new bots with every gate holding (spec 020 §9), the crops' Blender art, the sow sheet as a ladder with only this season's crops, the crop calendar, the time card's "3 days left", neighbours' maize, and ad hoc US-233 (dry soil dries slower, ADR 0085). `Hr`'s gate runs 256 seeds and `DairyBusiness`'s 64 (both near their limits: watch them in Sprint 16). US-228 to US-232's Editor checks were covered by the owner's device check instead.
 
 **Sprint 15, the owner's requests (ADR 0083):**
@@ -267,8 +273,7 @@
 
 ## Next up
 
-1. **Sprint 16, US-130 (the granary, 6 points): code.** The plan check is done (ADR 0087, 2026-11-03): seed potato out of the granary; the minor canal between rows 4 and 5; one pumped source an acre; US-127 8 points; no maize at the stall; the granary is your own godown in the mandi town (off the map, `BuyGodown`), warehouse space to rent (`RentWarehouse`, AC-11) and an empty godown let to a trader (`LetGodown`, AC-12); Sprint 16 is 43 points. The godown's art is approved (`docs/art/s16-granary-model.png`, `model_granary` in `tools/blender/render.py`): it appears in the Store sheet, not on the map.
-2. Then US-127's art preview (pump house, the canal on the row 4/5 edge, channels, drip lines, borewell pump room: its place must not block a field, ADR 0087).
+1. **Sprint 16: the owner reviews US-130** (`docs/art/s16-godown-*.png`). Then US-127's art preview (pump house, the minor canal on the row 4/5 edge, channels, drip lines, the borewell's pump room: it must not block a field, ADR 0087).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -311,7 +316,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check and the granary decision done (ADR 0087); no code yet.
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 built, waiting for the owner's review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 

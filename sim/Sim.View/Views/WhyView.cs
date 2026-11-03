@@ -59,6 +59,7 @@ namespace Sim.View.Views
             // Money and the market (specs 004, 005).
             { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
+            { "godown", Godown }, { "godownLet", GodownLet }, { "warehouse", Warehouse }, { "godownGood", GodownGood },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
             { "season", SeasonWhy },
             // The truck and supermarket orders (spec 011).

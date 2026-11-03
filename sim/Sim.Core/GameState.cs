@@ -69,6 +69,9 @@ namespace Sim.Core
         /// <summary>The founder's businesses (spec 016); null when the content has none.</summary>
         public Business.BusinessesState Businesses { get; internal set; }
 
+        /// <summary>The godown in the mandi town, rented space and letting (spec 013 §3.4, ADR 0087); null when the content has no godown.</summary>
+        public GodownState Godown { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -105,6 +108,8 @@ namespace Sim.Core
             if (Citizens != null && !(h is SaveWriter sw && sw.Schema < 9)) Citizens.WriteTo(h);
             // Spec 016, last: content without businesses hashes as before.
             if (Businesses != null && !(h is SaveWriter bw && bw.Schema < 10)) Businesses.WriteTo(h);
+            // Spec 013 §3.4 (schema 14), last: content without a godown (the golden replays' frozen content) hashes as before.
+            if (Godown != null && !(h is SaveWriter gw && gw.Schema < 14)) Godown.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -149,6 +154,7 @@ namespace Sim.Core
             if (g.Livestock != null) s.Livestock = r.Schema >= 7 ? LivestockState.ReadFrom(r) : new LivestockState { LastFeeding = new FeedingReport() }; // schema 6: no cattle yet
             if (g.Population != null && r.Schema >= 9) s.Citizens = CitizensState.ReadFrom(r); // older towns: CitizenRules.Migrate after loading
             if (g.Businesses != null) s.Businesses = r.Schema >= 10 ? Business.BusinessesState.ReadFrom(r) : new Business.BusinessesState(); // schema 9: none yet
+            if (g.Godown != null) s.Godown = r.Schema >= 14 ? GodownState.ReadFrom(r) : new GodownState(); // schema 13: no godown, nothing rented
             return s;
         }
 
@@ -182,6 +188,7 @@ namespace Sim.Core
                 Livestock = Livestock?.Clone(),
                 Citizens = Citizens?.Clone(),
                 Businesses = Businesses?.Clone(),
+                Godown = Godown?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

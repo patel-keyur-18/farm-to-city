@@ -151,15 +151,19 @@ namespace Sim.Core.Market
 
         /// <summary>
         /// Daily spoilage in the store (spec 004 §3.5): round(q × spoilagePerDay) per good in id order, stock not on offer
-        /// first. Spoiled inputs are expensed at average cost to their use account (5000 seed, 5010 the rest; ADR 0034).
+        /// first. Spoiled inputs are expensed at average cost to their use account (5000 seed, 5010 the rest; ADR 0034). What is in
+        /// your godown or rented warehouse space spoils at the godown's factor of the rate (spec 013 §3.4, ADR 0087), rounded apart.
         /// </summary>
         private static void Spoil(Simulation sim)
         {
             Definitions.MarketDefs defs = sim.Config.Game.Market;
             MarketState m = sim.State.Market;
+            long[] dry = GodownRules.Dry(sim); // where each good is at the start of the day's pass
             for (int g = 0; g < defs.Goods.Count; g++)
             {
-                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g], 1).RoundToLong();
+                long inGodown = dry == null ? 0 : dry[g];
+                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g] - inGodown, 1).RoundToLong();
+                if (inGodown > 0) lost += (defs.Goods[g].SpoilagePerDay * GodownRules.Def(sim).SpoilageFactor).MulRatio(inGodown, 1).RoundToLong();
                 if (lost <= 0) continue;
                 if (defs.Goods[g].Kind == Definitions.GoodKind.Produce) Store.Take(sim, g, lost);
                 else

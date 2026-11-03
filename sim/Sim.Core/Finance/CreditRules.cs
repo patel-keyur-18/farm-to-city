@@ -46,7 +46,7 @@ namespace Sim.Core.Finance
             foreach (Parcel p in sim.State.Land.Parcels)
                 if (p.Owned && !p.Protected && p.Id != excludeParcel) sum += LandRules.ParcelPrice(sim, p);
             foreach (Building b in sim.State.Land.Buildings)
-                if (!People.HouseRules.IsHouse(sim, b) && !sim.State.Land.Parcels[sim.State.Land.Tiles[b.TileId].ParcelId].Protected) sum += b.Cost - b.Depreciated;
+                if (b.TileId >= 0 && !People.HouseRules.IsHouse(sim, b) && !sim.State.Land.Parcels[sim.State.Land.Tiles[b.TileId].ParcelId].Protected) sum += b.Cost - b.Depreciated; // the godown in town (no tile) can't be seized, so it isn't collateral (ADR 0087)
             return sum;
         }
 

@@ -29,7 +29,7 @@ namespace Game.Presentation.Art
             if (goodId == "sack") return Sack;
             if (goodId == "gear") return Gear;
             if (goodId == "sign") return SpriteBank.Sign;
-            if (goodId == "hand_hut" || goodId == "hand_hut_building") return SpriteBank.Rendered(goodId) ?? Basket;
+            if (goodId == "hand_hut" || goodId == "hand_hut_building" || goodId == "granary") return SpriteBank.Rendered(goodId) ?? Basket; // granary: your godown in town (ADR 0087)
             if (goodId == "family_house" || goodId == "family_house_building" || goodId == "flour_mill" || goodId == "flour_mill_building" || goodId == "bakery" || goodId == "bakery_building" || goodId == "dairy" || goodId == "dairy_building") return SpriteBank.Rendered(goodId + "_s") ?? Basket;
             if (goodId.StartsWith("portrait_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId) ?? Basket;
             if (goodId.StartsWith("person_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId + "_front") ?? Basket;

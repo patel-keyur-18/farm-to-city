@@ -42,21 +42,35 @@ namespace Sim.Core.Market
             return kg * 1000;
         }
 
-        /// <summary>The weight of everything kept in a place (the hut store by default), in grams.</summary>
+        /// <summary>
+        /// The weight of everything kept in a place (the hut store by default), in grams. Dry goods in your godown or rented
+        /// warehouse space (spec 013 §3.4, ADR 0087) aren't in the hut store.
+        /// </summary>
         public static long UsedGrams(Simulation sim, GoodPlace place = GoodPlace.Store)
         {
             var goods = sim.Config.Game.Market.Goods;
+            long[] dry = place == GoodPlace.Store ? GodownRules.Dry(sim) : null;
             long used = 0;
             for (int g = 0; g < goods.Count; g++)
-                if (goods[g].Place == place) used += WeightGrams(goods[g], sim.State.Market.Stock[g]);
+                if (goods[g].Place == place) used += WeightGrams(goods[g], sim.State.Market.Stock[g] - (dry == null ? 0 : dry[g]));
             return used;
         }
 
-        /// <summary>The most of a good that fits the free space of its place (rounded down).</summary>
+        /// <summary>
+        /// The most of a good that fits the free space of its place (rounded down); a dry good also fits the free room in your
+        /// godown and rented warehouse space (spec 013 §3.4, ADR 0087).
+        /// </summary>
         public static long Fits(Simulation sim, int good)
         {
             GoodDef g = sim.Config.Game.Market.Goods[good];
-            long free = CapacityGrams(sim, g.Place) - UsedGrams(sim, g.Place);
+            long free = System.Math.Max(0, CapacityGrams(sim, g.Place) - UsedGrams(sim, g.Place));
+            if (GodownRules.Holds(sim, good)) free += System.Math.Max(0, GodownRules.CapacityGrams(sim) - GodownRules.UsedGrams(sim));
+            return QuantityFitting(g, free);
+        }
+
+        /// <summary>The most of a good whose weight fits <paramref name="free"/> grams (rounded down).</summary>
+        internal static long QuantityFitting(GoodDef g, long free)
+        {
             if (free <= 0) return 0;
             if (g.WeightKg == Fixed.Zero) return long.MaxValue;
             // q × weightKg × (1000 / unitSize) ≤ free  ⇔  q ≤ free × 2^32 ÷ (weightKg.Raw × (1000 / unitSize))

@@ -135,6 +135,14 @@ namespace Sim.Core.Tests
                     Assert.That(r.State.Businesses.Businesses.All(x => x.Mix.All(v => v == 0) && x.MadeToday.All(v => v == 0)), Is.True, name);
                 }
 
+                if (r.Header.Schema < 14)
+                {
+                    // Spec 013 §3.4 (ADR 0087, schema 14): no godown, no warehouse space, nothing let.
+                    Assert.That(r.State.Godown, Is.Not.Null, name);
+                    Assert.That((r.State.Godown.RentedTonnes, r.State.Godown.LetNext, r.State.Godown.LetNow), Is.EqualTo((0, false, false)), name);
+                    Assert.That(Market.GodownRules.Owned(Simulation.FromState(config, r.State.Clone())), Is.Null, name);
+                }
+
                 if (r.Header.Schema < 7)
                 {
                     // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.
@@ -167,6 +175,32 @@ namespace Sim.Core.Tests
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
+
+        // Spec 013 AC-9 (ADR 0087): a schema-13 save loads into 14 with no godown and no warehouse space, as its own replay base, buys a
+        // godown, and round-trips.
+        [Test]
+        public void Schema13_Farm()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(13)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Market.GodownState g = r.State.Godown;
+            Assert.That(g, Is.Not.Null);
+            Assert.That((g.RentedTonnes, g.RentNextTonnes, g.LetNext, g.LetNow), Is.EqualTo((0, 0, false, false)));
+            Assert.That(r.State.Land.Buildings.Any(b => b.TileId < 0), Is.False, "no godown");
+            Assert.That(r.State.CommandLog.Base, Is.Not.Null, "its own replay base: a schema-13 history may predate ADR 0085's drying");
+            Assert.That(SaveCodec.Replay(r, config).State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "and replays from it");
+
+            Simulation sim = Simulation.FromState(config, r.State);
+            sim.State.Era.Current = config.Game.Godown.UnlockEra;
+            CommandResult bought = sim.Execute(new BuyGodown(sim.State.Clock.SimTime));
+            Assert.That(bought.Accepted, Is.True, bought.ToString());
+            sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+            Assert.That(Market.GodownRules.Owned(sim), Is.Not.Null);
         }
 
         // Spec 019 AC-16: the schema-11 fixture loads into 12 with an empty sales record and the season's first entry found, is its own

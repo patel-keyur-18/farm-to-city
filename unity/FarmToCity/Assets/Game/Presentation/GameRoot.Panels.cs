@@ -166,6 +166,7 @@ namespace Game.Presentation
                 case "BuyInputs": _sheet.Show(BuyInputsSheet.Build(_ctx), refreshOnly); break;
                 case "BuyInput": _sheet.Show(BuyInputsSheet.One(_ctx, (int)r.Id), refreshOnly); break;
                 case "Mandi": _sheet.Show(MandiSheet.Build(_ctx, r.Arg), refreshOnly); break;
+                case GodownSheet.Kind: _sheet.Show(GodownSheet.Build(_ctx), refreshOnly); break;
                 case "MandiLoad": _sheet.Show(MandiSheet.Load(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Forecast": _sheet.Show(ForecastView.Sheet(_ctx), refreshOnly); break;
                 case "Alerts": _sheet.Show(Alerts.Sheet(_ctx), refreshOnly); break;
@@ -191,7 +192,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": return;
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": case GodownSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
                 case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books

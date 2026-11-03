@@ -744,7 +744,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-130 | Granary | [F13.3](features/F13.3-orchards-and-granary.md) | 6 | Must | To do |
+| US-130 | Granary | [F13.3](features/F13.3-orchards-and-granary.md) | 6 | Must | Done (owner review) |
 | US-127 | Irrigation ladder | [F13.2](features/F13.2-irrigation-and-equipment.md) | 8 | Must | To do |
 | US-128 | Equipment | [F13.2](features/F13.2-irrigation-and-equipment.md) | 8 | Should | To do |
 | US-129 | Orchard acre | [F13.3](features/F13.3-orchards-and-granary.md) | 5 | Should | To do |

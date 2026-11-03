@@ -429,7 +429,7 @@ namespace Sim.View.Views
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)
-                map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
+                if (b.TileId >= 0) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
             AddHouses(ctx, map);
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);

@@ -146,6 +146,12 @@ namespace Sim.Core.Commands
         OffSick,
         /// <summary>Not someone you can offer work: under 18, retired, or already working in town (ADR 0083).</summary>
         NotAWorker,
+
+        /// <summary>Less warehouse space than your goods stored there need (spec 013 §3.4, ADR 0087).</summary>
+        StockTooHigh,
+
+        /// <summary>You don't own a godown to let (ADR 0087).</summary>
+        NoGodown,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -42,6 +42,9 @@ namespace Sim.Content
             var game = new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
             // Businesses come with citizens (a worker is one, spec 016 §3.6).
             if (population != null) game.Businesses = LoadBusinesses(read("businesses.json"), market, onboarding);
+            // The godown comes with a godown in the buildings (spec 013 §3.4, ADR 0087).
+            int godown = buildings.FindIndex(b => b.Id == GodownDef.BuildingId);
+            if (godown >= 0) game.Godown = LoadGodown(read("buildings.json"), godown, market, onboarding);
             return game;
         }
 
@@ -232,7 +235,7 @@ namespace Sim.Content
         {
             const string root = "buildings";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "buildings");
+            OnlyFields(o, root, "buildings", "godown");
             List<JToken> tokens = NonEmptyArray(o, root, "buildings");
             var list = new List<BuildingDef>();
             for (int i = 0; i < tokens.Count; i++)
@@ -259,6 +262,52 @@ namespace Sim.Content
                     b["compostPitKg"] == null ? 0 : BoundedInt(b, p, "compostPitKg", 0, 100_000)));
             }
             return list;
+        }
+
+        /// <summary>The <c>godown</c> block of <c>buildings.json</c> (spec 013 §3.4, ADR 0087): dry goods kept in the hut store only.</summary>
+        private static GodownDef LoadGodown(string json, int building, MarketDefs market, OnboardingDefs onboarding)
+        {
+            const string root = "buildings";
+            JObject o = Object(Parse(json, root), root);
+            string p = Join(root, "godown");
+            JObject d = Object(Required(o, root, "godown"), p);
+            OnlyFields(d, p, "building", "unlockEra", "capacityKg", "spoilageFactor", "goods", "warehouseRentPerKgSeason", "maxRentTonnes", "tenantChance", "letRentPerKgSeason");
+            if (String(Required(d, p, "building"), Join(p, "building")) != GodownDef.BuildingId) throw new ContentException(Join(p, "building"), "must be '" + GodownDef.BuildingId + "'");
+            string eraId = String(Required(d, p, "unlockEra"), Join(p, "unlockEra"));
+            int era = 0;
+            if (onboarding != null)
+            {
+                era = -1;
+                for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == eraId) era = i;
+                if (era < 0) throw new ContentException(Join(p, "unlockEra"), "unknown era '" + eraId + "'");
+            }
+            var holds = new bool[market.Goods.Count];
+            List<JToken> goods = NonEmptyArray(d, p, "goods");
+            for (int i = 0; i < goods.Count; i++)
+            {
+                string gp = Index(Join(p, "goods"), i);
+                string id = String(goods[i], gp);
+                int g = market.IndexOf(id);
+                if (g < 0) throw new ContentException(gp, "unknown good '" + id + "'");
+                if (market.Goods[g].Place != GoodPlace.Store) throw new ContentException(gp, "only goods kept in the hut store go to the godown");
+                if (holds[g]) throw new ContentException(gp, "'" + id + "' is listed twice");
+                holds[g] = true;
+            }
+            long letRent = Money(Required(d, p, "letRentPerKgSeason"), Join(p, "letRentPerKgSeason"));
+            long rent = Money(Required(d, p, "warehouseRentPerKgSeason"), Join(p, "warehouseRentPerKgSeason"));
+            // ADR 0087: a trader pays less for your godown than the warehouse charges, so renting space to let your own never pays.
+            if (letRent >= rent) throw new ContentException(Join(p, "letRentPerKgSeason"), "must be below warehouseRentPerKgSeason");
+            return new GodownDef
+            {
+                Building = building, UnlockEra = era,
+                CapacityKg = BoundedInt(d, p, "capacityKg", 1, 1_000_000),
+                SpoilageFactor = Bounded(d, p, "spoilageFactor", "0", "1"),
+                Holds = holds,
+                WarehouseRentPerKgSeason = rent,
+                MaxRentTonnes = BoundedInt(d, p, "maxRentTonnes", 1, 1000),
+                TenantChance = Bounded(d, p, "tenantChance", "0", "1"),
+                LetRentPerKgSeason = letRent,
+            };
         }
 
         private static StartDef LoadStart(string json, MapDef map, List<BuildingDef> buildings, MarketDefs market, FarmDefs farm, LandDef land)

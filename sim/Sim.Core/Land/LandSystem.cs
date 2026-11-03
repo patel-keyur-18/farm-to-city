@@ -97,7 +97,7 @@ namespace Sim.Core.Land
             foreach (TreeSlot slot in land.Slots)
                 if (slot.TreeId != 0 && land.Tiles[slot.TileId].ParcelId == parcelId) return true;
             foreach (Building b in land.Buildings)
-                if (land.Tiles[b.TileId].ParcelId == parcelId) return true;
+                if (b.TileId >= 0 && land.Tiles[b.TileId].ParcelId == parcelId) return true; // the godown in town has no tile (ADR 0087)
             return false;
         }
 

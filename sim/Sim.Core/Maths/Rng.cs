@@ -26,6 +26,9 @@ namespace Sim.Core.Maths
 
         /// <summary>HR events (spec 015 §3.7): key = the worker (a hand's id, or a business worker's id + 2^32), counter = day × 8 + kind.</summary>
         HrEvents = 16,
+
+        /// <summary>A trader taking your godown at a close (spec 013 §3.4, ADR 0087): key 0, counter = the season that opens.</summary>
+        Godown = 17,
     }
 
     /// <summary>

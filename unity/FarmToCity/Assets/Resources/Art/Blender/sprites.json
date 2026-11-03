@@ -877,6 +877,13 @@
    "name": "flour_mill_w"
   },
   {
+   "w": 228,
+   "h": 212,
+   "pivotX": 0.50535,
+   "pivotY": 0.33032,
+   "name": "granary"
+  },
+  {
    "w": 466,
    "h": 240,
    "pivotX": 0.48362,
