@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
-| Branch with latest work | `sprint/15-chains-and-hr` (from `main` after PR #19 merged) |
-| Last updated | 2026-10-31 |
+| Sprint | **Sprint 15b done** (the crop ladder, ad hoc; spec 020, ADR 0084; US-233, ADR 0085): every story approved, the owner's device check passed on the iPhone 13 (2026-11-03); pull request open for the owner to merge. **Next: Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027) on `sprint/16-shops-and-farm`, after the merge |
+| Branch with latest work | `sprint/15b-crop-ladder` (pull request open, not merged yet). `sprint/16-shops-and-farm` holds Sprint 16's approved plan, not started |
+| Last updated | 2026-11-03 |
 
 ## Done so far
 
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 15b, the crop ladder: done (2026-11-03).** Six crops (methi, amaranth, okra, green peas, maize, mustard) in every season's gaps, save schema 13, four supermarket orders a day, the balance rule and two new bots with every gate holding (spec 020 §9), the crops' Blender art, the sow sheet as a ladder with only this season's crops, the crop calendar, the time card's "3 days left", neighbours' maize, and ad hoc US-233 (dry soil dries slower, ADR 0085). `Hr`'s gate runs 256 seeds and `DairyBusiness`'s 64 (both near their limits: watch them in Sprint 16). US-228 to US-232's Editor checks were covered by the owner's device check instead.
+
 **Sprint 15, the owner's requests (ADR 0083):**
 - **US-223 done (2026-10-31, the owner's one change from the device check): whoever works a business is seen there** (spec 016 AC-16). `PersonKind.Worker` while a business is open: a townsperson as themselves, from their house and not also at home; someone from outside from the valley's edge; you, instead of on the fields, when you run it. The work frame holds a hoe, so at a business people walk between spots and stand (a tool-free frame would need Blender). Test `BusinessViewTests.WorkerOnMap`. Editor: the bakery's **Run it** by scripted touch and the map captured with all three kinds on their acres, at 20:24 and 08:25; the worker first stood in the mill's queue, so the spots moved. Set up by script: test coins, a family house, Next era, three businesses, the mill's and dairy's hires, dev time travel. Saves restored and checked identical. The Village's gate is still Sprint 17: the Village can only be reached by **Next era** until then.
 - **End of sprint (2026-10-30, owner: "go ahead with final checks and update PR"):** US-222 approved. `s15-chains-hr.md` gains rows 32–39 (US-219: offer from a citizen's card, the housing line, a child's card and a second adult; US-220: your labourers named, at work 7:00–19:00, home at night; US-221: *Your season*, the cash line adding up, next season due, *Last season*, *Your wealth*), the schema 10/11 → 12 upgrade note, question 6 and a note that "till"/"until" times are the phone's clock and drift from the time card after dev time travel (older behaviour, the forecast too). **All of rows 32–39 run in the Editor by scripted touch** (People → Town → Arjun's family → Arjun → *Offer work as a hand* → hired, the hand card's Housing row; Radha's offer "already part of Arjun's pay"; Raju's card with no button; *Hire labourers* at 07:00 and the map, then 19:14 home; Money and loans by the cash pill, both switches and *Your wealth*); set up by script: 4,00,000 test coins, a family house on acre 84, dev time travel (6 days, then 7 h and 12 h). Rows 27–31 ran in the US-222 tour the same day. **Found and fixed:** a migrated town's *Last season* showed "Land bought −85,932" and "Other changes +85,932" from the schema 8 cattle acre's opening entry (no cash, no profit): `SeasonBook` now leaves out entries moving neither, asserted in `MoneyViewTests.Season_Reconciles` (fails without the fix). 400 sim and 112 view tests pass. Saves restored and checked identical. **One new Development build** (`BuildCli.IosDevelopment` from the open Editor after deleting `Builds/iOS`; Build Succeeded, the one console error the CLI's 5 s eval timeout), superseding 2026-10-29's; unsigned Xcode Release compile check (`CODE_SIGNING_ALLOWED=NO`): BUILD SUCCEEDED.
@@ -265,10 +267,8 @@
 
 ## Next up
 
-1. **Owner:** merge PR #20.
-2. **Claude:** Sprint 16: the plan's gaps with the owner, then its stories.
-
-Where it stands (2026-10-31): Sprint 15 is finished; the device check passed checks 1–40 (check 41, for US-223, is new and not yet run on the device). PR #20 is ready for the owner to merge.
+1. **Sprint 15b is done** (2026-11-03): US-224 to US-233 approved; the owner's device check passed on the iPhone 13 (`docs/test-checklists/s15b-crop-ladder.md`); a Development build compiled (Unity 0 errors, the unsigned Xcode Release compile with no errors); `dotnet test` green in CI. The owner merges the pull request.
+2. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for schema 14 and spec 020 G18, its dates (29 Mar – 11 Apr 2027), and start with the granary's layout preview.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -284,13 +284,16 @@ Where it stands (2026-10-31): Sprint 15 is finished; the device check passed che
 | Sprint 12 | Done: device check passed 2026-10-24; PR #17 merged |
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
-| Sprint 15 | Device check passed 2026-10-31; merge PR #20 |
+| Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
+| Sprint 15b | Done: device check passed 2026-11-03; merge the pull request |
 
 ## Open questions (with the owner)
 
 - **The owner's requests US-219 to US-222 (2026-10-29):** planned into Sprint 15 (55 points), all 18 gaps closed with the owner (ADR 0083). Specs 008, 014, 015 and 019 approved (2026-10-30); the weather look approved and all four stories approved (2026-10-30). Open: the weather's post-processing cost on the iPhone 13 (checklist row 28; fallback: drop the saturation change).
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
+
+- ~~**The crop ladder** (owner, 2026-10-26).~~ Settled: spec 020 and ADR 0084 approved 2026-10-31, built as Sprint 15b, device check passed 2026-11-03.
 
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**
 - ~~The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3.~~ Settled (owner, 2026-10-27, spec 018 G7, ADR 0077): the treasury comes with the Township.
@@ -307,7 +310,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-None.
+None. Sprint 15b is finished; its pull request waits for the owner's merge.
 
 ## Environment notes
 
@@ -319,6 +322,15 @@ None.
   - After a recompile, `eval` can see stale objects: reach the live ones through `GameRoot` (`FindFirstObjectByType<GameRoot>()`, then its private `_input`, `_map`, `_sheet` fields by reflection), not `FindFirstObjectByType<MapInput>()`.
   - Capture with `capture_game_view --save_path Temp/cap/<name>.png` (lands in `Assets/Temp/cap/`), read each image, copy the keepers to `docs/art/`, and delete `Assets/Temp` and `Assets/Temp.meta` before committing.
   - Scripted touches reach UI Toolkit only while Unity is the frontmost app (map taps too); when taps log but nothing opens, bring it to the front: `osascript -e 'tell application "System Events" to set frontmost of (first process whose name is "Unity") to true'`.
+  - **Learned in Sprint 15b (owner, 2026-11-02):**
+    - In zsh, pass several names to a command as an array (`"${N[@]}"`), not an unquoted variable.
+    - `TouchDriver`'s y runs upward: `Drag(x, 300, x, 900)` scrolls a sheet down. A drag with no sheet open pans the map.
+    - Close a sheet with `TouchDriver.TapNamed("close")`. `TapElement` can hit a label inside a ScrollView: for a button, query the Buttons (`UQueryExtensions.Query<Button>`), take `TouchDriver.ScreenOf(b)` and `Tap` there, after scrolling it into view. Each sow row's hourly **?** is named `why:sow.perHour:<cropId>` (US-228).
+    - The Editor keeps `SpriteBank`'s sprite list between plays (no domain reload): after new art, set `SpriteBank._rendered` to null by reflection or reload the domain.
+    - Advance time with `g.Sim.Execute(new Sim.Core.Commands.DebugAdvance(seconds, Sim.Core.Time.AdvanceMode.Live))`, then invoke `GameRoot`'s private `AfterCommands`. Dadi's letters and the season report appear after a season change and block taps until closed.
+    - In the owner's town, acres 84 and 85 are fields you can sow (the others near the yard aren't); aim at them with the map's private `TileCentre` and the input's `WorldToScreen`.
+    - Check text size by touch (Menu → Settings → Text size) at Normal and Large, then set it back to Normal (`PlayerPrefs` `look.text` 100).
+    - `dotnet test` takes about 9 minutes: run it in the background.
   - Back up `~/Library/Application Support/keyur-patel-18/Farm to City/Saves` before a test that migrates or changes the Editor's town. To restore: `editor_stop`, wait about 10 s (Unity writes a last save on leaving play mode, after the command returns), copy the backup back with `cp -Rp`, wait again and `diff -r` it against the backup.
 
 - The SessionStart hook installs the .NET 10 SDK in cloud sessions (US-003). It runs synchronously, so the session starts only once the SDK is ready. If it ever fails, install by hand with `apt-get install -y dotnet-sdk-10.0`.

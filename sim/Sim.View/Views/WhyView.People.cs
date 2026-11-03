@@ -40,6 +40,8 @@ namespace Sim.View.Views
             ClockDef c = ctx.Sim.Clock;
             CalendarDate d = Calendar.From(ctx.Now, c);
             WhyVm vm = New(ctx, "why.calendar.title", ctx.Fmt.Date(d, c.DaysPerSeason));
+            // What the time card's "3 days left" counts (spec 020 §3.6c): the season, not the year.
+            Text(vm, ctx, "why.calendar.words", "season", ctx.Fmt.Integer(c.DaysPerSeason), "year", ctx.Fmt.Integer(c.DaysPerSeason * 4));
             Row(vm, ctx, "why.calendar.season", ctx.Strings.Plural("why.days", c.DaysPerSeason));
             Row(vm, ctx, "why.calendar.year", ctx.Strings.Plural("why.days", c.DaysPerSeason * 4));
             Text(vm, ctx, "why.calendar.clock");

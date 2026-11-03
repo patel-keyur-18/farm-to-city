@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Sim.Core.Maths;
 
 namespace Sim.View.Content
 {
@@ -91,11 +92,29 @@ namespace Sim.View.Content
         /// <summary>The weather on the map (ADR 0083), or null in content without it.</summary>
         public WeatherLookDef WeatherLook { get; }
 
+        /// <summary>The season hint praises a crop out of season only if it spoils no faster than this a day (spec 020 §3.7).</summary>
+        public Fixed HintKeepsSpoilagePerDay { get; }
+
+        /// <summary>
+        /// The first session's last letter (comeBack) names the in-season crops whose growing time falls in this range, in minutes:
+        /// the ladder's 4 h and 6–8 h rungs (spec 020 §3.2, G20).
+        /// </summary>
+        /// <summary>The crop calendar's rungs (spec 020 §3.2, §3.6b): each rung's upper bound in minutes of growing, ascending; the last rung is everything longer.</summary>
+        public IReadOnlyList<int> CalendarRungMinutes { get; }
+
+        public int ComeBackQuickMinMinutes { get; }
+        public int ComeBackQuickMaxMinutes { get; }
+
         public UiDef(IReadOnlyList<Rgb> dayTint, IReadOnlyList<Rgb> seasonTint, Rgb valleyTint, IReadOnlyList<MotionDef> motions,
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
             int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60,
-            IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null)
+            IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null, Fixed? hintKeepsSpoilagePerDay = null,
+            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540, IReadOnlyList<int> calendarRungMinutes = null)
         {
+            CalendarRungMinutes = new List<int>(calendarRungMinutes ?? new[] { 60, 180, 300, 540 }).AsReadOnly();
+            ComeBackQuickMinMinutes = comeBackQuickMinMinutes;
+            ComeBackQuickMaxMinutes = comeBackQuickMaxMinutes;
+            HintKeepsSpoilagePerDay = hintKeepsSpoilagePerDay ?? Fixed.Parse("0.03");
             WeatherLook = weatherLook;
             OutputBands = new List<int>(outputBands ?? new[] { 70, 85, 97, 110 }).AsReadOnly();
             SkillBands = new List<int>(skillBands ?? new[] { 35, 55, 75 }).AsReadOnly();

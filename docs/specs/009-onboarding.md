@@ -1,6 +1,6 @@
 # 009. Onboarding: the letter, the first session, the guided first week and the Hamlet unlock
 
-- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 step 5 (the first sale at any hour), §3.3 (chapters `firstOrders` and `truckAway`), §3.6 (`comeBack` says tonight or tomorrow); amended by spec 012 (ADR 0056, 0060; Phase 2): the `cattle` chapter; the Hamlet lists cattle among its rewards
+- Status: Approved (2026-10-18), all six open questions answered as recommended (§10); amended and re-approved 2026-10-20 (ADR 0045: step 6's goal, nudges, the ask, AC-11 to AC-16); amended by spec 011 (ADR 0054, 0055; Phase 2): §3.1 step 5 (the first sale at any hour), §3.3 (chapters `firstOrders` and `truckAway`), §3.6 (`comeBack` says tonight or tomorrow); amended by spec 012 (ADR 0056, 0060; Phase 2): the `cattle` chapter; the Hamlet lists cattle among its rewards; amended by spec 020 (ADR 0084): one line in comeBack; the hint names at most 5 crops and the best price only for what you can have
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens (Onboarding); Player journey and eras (Homestead, Hamlet); Learning layer
@@ -193,7 +193,7 @@ The highlight: the target bounces once (spec 008 §3.12) and keeps a soft glow u
 - `firstPick`: "There: your first basket. Everything you pick goes to the store, where it waits for you. Greens don't keep long, so eat them or sell them soon."
 - `firstSale`: "The trader comes to the gate every day and buys at a fair, low price. That's money today. Later you'll learn when it pays to wait, or to take a cart to the *mandi* in town."
 - `longCrop`: "Now something that takes longer. Potato does well in Spring on the well acres, and the seed is already in the store. It will be ready this time tomorrow. Crops wait in the field when they're ready, but not forever: after three days they start to spoil."
-- `comeBack`: "That's a good first day. The farm keeps going while you're away: the crops grow, the house eats, the trader buys. Your potato will be ready at {readyTime} tomorrow. Want a nudge when it's ready? Never at night." (buttons **Yes, nudge me** / **Not now**; without the question and with **Continue** when notifications are on)
+- `comeBack`: "That's a good first day. The farm keeps going while you're away: the crops grow, the house eats, the trader buys. Your potato will be ready at {readyTime} tomorrow. Your other acres needn't wait: sown now, okra would be ready {time} and maize {time}. Want a nudge when it's ready? Never at night." (the quicker crops' line from spec 020 G20, built from content and the clock; buttons **Yes, nudge me** / **Not now**; without the question and with **Continue** when notifications are on)
 - Signature (every chapter): "Your Dadi, Kamla"
 - `firstReturn`: "Welcome back. Here's what happened while you were away. Tap Collect all to bring in what's ready."
 - `firstFieldHarvest`: "Your first field harvest. Tap *Why?* to see what made it: the soil, the water, your care, the weather, the seed. The weakest of them holds the rest back."

@@ -8,6 +8,7 @@ point, lands in the image) go into one manifest that the game reads.
 Run headless from the repository root:
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P tools/blender/render.py -- [names...]
 With no names every sprite is rendered. Output: unity/FarmToCity/Assets/Resources/Art/Blender/<name>.png and sprites.json.
+FTC_ART_OUT=<folder> renders a preview there instead.
 
 World scale: one map tile (an acre) is a 1 x 1 square on the ground plane (x, y), z up. The game's tile is 132 px wide,
 so a unit along the camera's screen axes is 132 / sqrt(2) px at 1x.
@@ -24,8 +25,8 @@ SCALE = 4                                      # supersampling: the game shows s
 PX_PER_UNIT = 132.0 / math.sqrt(2.0) * SCALE   # px per world unit in the camera plane
 MARGIN_PX = 8 * SCALE
 OUTLINE = 0.0065                               # world units after scaling; about 2 px at 1x
-OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
-                       "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender")
+OUT_DIR = os.environ.get("FTC_ART_OUT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+                                                        "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender")  # FTC_ART_OUT: a preview, not the game's
 OUTLINE_RGB = (0x4A / 255.0, 0x33 / 255.0, 0x20 / 255.0)
 
 
@@ -902,7 +903,7 @@ def model_crop(crop, stage):
             crop_mat(b, "ready", toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=True, width=width, y0=0.0, length=0.45)
             crop_mat(b, "g2", toon(crop + "Stubble", 0x9A9A5A), None, low=True, width=width * 0.4, y0=-0.45, length=0.45)
         else:
-            crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=crop in ("lentils", "berseem"), width=width)
+            crop_mat(b, stage, toon(crop + "Mat", young), toon(crop + "MatRipe", ripe), low=crop in ("lentils", "berseem", "methi", "peas"), width=width)
     for x in RIDGE_X:
         for j in range(per_row):
             y = -0.42 + j * (0.84 / (per_row - 1)) + rnd.uniform(-0.012, 0.012)
@@ -1337,13 +1338,18 @@ def icon_good(good):
         for i, (x, y, z) in enumerate(((-0.05, 0.0, 0.04), (0.05, 0.01, 0.04), (0.0, -0.02, 0.10))):
             o.append(sphere("potato%d" % i, 0.06, (x, y, z), toon("potato", 0xC59A5A), scale=(1.25, 1, 0.85), segs=14, rings=9))
             o.append(sphere("eye%d" % i, 0.006, (x + 0.02, y - 0.05, z + 0.01), toon("potatoEye", 0x8C6A3A), segs=6, rings=4, outline=False))
-    elif good in ("spinach", "coriander"):
+    elif good in ("spinach", "coriander", "methi", "amaranth"):
         # A market bunch (gaddi): stems gathered and tied, leaves opening upward all round, not a flat fan.
         import random
         rnd = random.Random(31)
         stem_mat = toon("stem", 0x6FA03A)
         if good == "spinach":
             mats, n, L, W = (toon("spinach", 0x2E8E45), toon("spinach2", 0x3FA455)), 11, 0.15, 0.085
+        elif good == "amaranth":   # chaulai: broad leaves, red at the heart, on red stems
+            stem_mat = toon("amaranthStem", 0xA8325E)
+            mats, n, L, W = (toon("amaranthRed", 0xB5305F), toon("amaranthLeaf", 0x5C9E3C)), 11, 0.14, 0.08
+        elif good == "methi":
+            mats, n, L, W = (toon("methi", 0x4E9E3C), toon("methiMid", 0x3C8A34)), 15, 0.0, 0.0
         else:
             mats, n, L, W = (toon("dhania", 0x86D45E), toon("dhaniaMid", 0x68B848)), 13, 0.0, 0.0
             for i in range(5):  # coriander comes to market with its roots on
@@ -1358,7 +1364,7 @@ def icon_good(good):
             stem_len = rnd.uniform(0.07, 0.10)
             b.cone(stem_mat, 0.0045, 0.003, stem_len, d.to_track_quat("Z", "Y").to_matrix().to_4x4(), segs=4)
             tip = d * stem_len
-            if good == "spinach":   # broad, spoon-shaped blades
+            if W > 0:   # broad, spoon-shaped blades
                 leaf(b, mats[i % 2], tip.x, tip.y, tip.z, L * rnd.uniform(0.85, 1.1), W, ga, tilt - 0.15, rot=rnd.uniform(-0.3, 0.3))
             else:                   # lacy sprigs: clusters of small round leaflets
                 for q in range(8):
@@ -1368,6 +1374,46 @@ def icon_good(good):
         o += b.objects(outline_for=tuple(m for m in b.parts if m is not stem_mat), thickness=OUTLINE * 0.8)
         o.append(cylinder("tie", 0.017, 0.017, 0.016, (0, 0, 0.022), toon("tie", 0xB4572E), segs=12))
         return o
+    elif good == "okra":
+        # Bhindi: three ridged green fingers with pale caps, lying crossed.
+        b = Batch("okra")
+        pod, cap = toon("okraPod", 0x5FA63C), toon("okraCap", 0xB8CF7A)
+        for i, (x, a2) in enumerate(((-0.055, 0.42), (0.055, -0.42), (0.0, 0.0))):
+            m = Matrix.Translation((x, -i * 0.02, -0.085)) @ Matrix.Rotation(a2, 4, "Y")
+            b.cone(pod, 0.032, 0.005, 0.2, m, segs=6)
+            b.cone(cap, 0.018, 0.034, 0.025, m @ Matrix.Translation((0, 0, -0.022)), segs=8)
+        o += b.objects(outline_for=tuple(b.parts))
+        return o
+    elif good == "peas":
+        # Matar: an open pod showing its round green peas.
+        b = Batch("peas")
+        shell, pea = toon("peaPod", 0x3F9A35), toon("pea", 0xA4E060)
+        tilt = Matrix.Rotation(math.radians(25), 4, "Y") @ Matrix.Rotation(math.radians(90), 4, "X")
+        b.sphere(shell, 1.0, tilt, scale=(0.062, 0.18, 0.026), segs=14, rings=8)
+        for i in range(5):
+            b.sphere(pea, 0.034, tilt @ Matrix.Translation((0, -0.11 + i * 0.055, 0.022)), segs=12, rings=8)
+        o += b.objects(outline_for=tuple(b.parts))
+        return o
+    elif good == "maize":
+        # Makka: a yellow cob, rows of kernels, the green husk peeled back round its foot.
+        b = Batch("maize")
+        kernel, kernel2, husk, husk2 = toon("maizeKernel", 0xF2C230), toon("maizeKernel2", 0xE5AE24), toon("maizeHusk", 0x7DB54A), toon("maizeHusk2", 0x5E9E3A)
+        b.sphere(kernel2, 1.0, Matrix.Translation((0, 0, 0.03)), scale=(0.058, 0.058, 0.135), segs=14, rings=10)
+        for row in range(7):
+            for j in range(12):
+                z = j / 11.0
+                r = 0.054 * math.sqrt(max(0.0, 1 - (2 * z - 1) ** 2)) + 0.006
+                ang = row * math.tau / 7 + j * 0.45
+                b.sphere(kernel if j % 2 else kernel2, 0.0105, Matrix.Translation((math.cos(ang) * r, math.sin(ang) * r, -0.09 + z * 0.24)), segs=6, rings=4)
+        for i in range(4):
+            ang = i * math.tau / 4 + 0.4
+            leaf(b, husk if i % 2 else husk2, math.cos(ang) * 0.05, math.sin(ang) * 0.05, -0.12, 0.17, 0.09, ang, 0.95)
+        o += b.objects(outline_for=tuple(b.parts))
+        return o
+    elif good == "mustard":
+        bowl(o, 0x7A4A22, grain=0.0065, seed=9)   # sarson comes to market as seed, here with a sprig of its flowers
+        for i, (x, y) in enumerate(((-0.02, 0.0), (0.012, 0.018), (0.03, -0.012), (-0.002, -0.02), (0.012, -0.002))):
+            o.append(sphere("flower%d" % i, 0.024, (x, y, 0.135), toon("mustardFlower", (0xF6D32B, 0xE8BC1E)[i % 2]), scale=(1, 1, 0.75), segs=10, rings=6))
     elif good == "banana":
         for i in range(4):
             a = (i - 1.5) * 0.35
@@ -2634,20 +2680,26 @@ for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), (
 # whitewashed corner stones, and fresh bunds against the neighbours' worn, grassed-over ones.
 
 def crop_mustard(b, rnd, x, y, stage):
-    """Sarson in bloom: leaves at the foot, then thin stems topped by many small yellow florets, so a field reads as a yellow carpet."""
+    """Sarson: a rosette, then thin stems topped by many small yellow florets, so a field reads as a yellow carpet; ready, the florets gone to tan pods."""
     leaf_m, stem = toon("mustardLeaf", 0x5E9E3A), toon("mustardStem", 0x7FB24A)
     flowers = (toon("mustardFlower", 0xF6D32B), toon("mustardFlowerDeep", 0xE8BC1E), toon("mustardFlowerPale", 0xFBE46A))
     for k in range(4):
-        leaf(b, leaf_m, x, y, 0.02, 0.05, 0.03, k * math.tau / 4 + rnd.uniform(-0.3, 0.3), 0.4)
-    for k in range(4):
-        a = k * math.tau / 4 + rnd.uniform(-0.4, 0.4)
-        h = rnd.uniform(0.09, 0.13)
+        leaf(b, leaf_m if stage != "ready" else toon("mustardLeafDry", 0x9FA24A), x, y, 0.02, 0.05, 0.03, k * math.tau / 4 + rnd.uniform(-0.3, 0.3), 0.4)
+    if stage == "g1":
+        return
+    lo, hi, stems = {"g2": (0.09, 0.13, 4), "g3": (0.12, 0.16, 5), "ready": (0.12, 0.16, 5)}[stage]
+    for k in range(stems):
+        a = k * math.tau / stems + rnd.uniform(-0.4, 0.4)
+        h = rnd.uniform(lo, hi)
         m = at(x + math.cos(a) * 0.012, y + math.sin(a) * 0.012, 0.02, tilt=rnd.uniform(0.1, 0.3), tilt_dir=a)
-        b.cone(stem, 0.0025, 0.0018, h, m, segs=4)
+        b.cone(stem if stage != "ready" else toon("mustardStemDry", 0xB8A455), 0.0025, 0.0018, h, m, segs=4)
         for j in range(7):
             fa = j * math.tau / 7 + rnd.uniform(-0.5, 0.5)
-            b.sphere(flowers[(k + j) % 3], 0.0105, m @ Matrix.Translation((math.cos(fa) * 0.009, math.sin(fa) * 0.009, h + rnd.uniform(-0.012, 0.008))),
-                     scale=(1, 1, 0.8), segs=6, rings=4)
+            if stage == "ready":   # thin pods pressed up against the stem
+                b.cone(toon("mustardPod", 0xD4A63E), 0.0058, 0.0012, 0.04, m @ Matrix.Translation((math.cos(fa) * 0.007, math.sin(fa) * 0.007, h * (0.55 + j * 0.065))), segs=4)
+            else:
+                b.sphere(flowers[(k + j) % 3], 0.0105, m @ Matrix.Translation((math.cos(fa) * 0.009, math.sin(fa) * 0.009, h + rnd.uniform(-0.012, 0.008))),
+                         scale=(1, 1, 0.8), segs=6, rings=4)
 
 
 def crop_sugarcane(b, rnd, x, y, stage):
@@ -2767,9 +2819,126 @@ def model_bund_worn(axis):
     return b.objects(outline_for=(earth,))
 
 
-SPRITES.update({"crop_mustard_g2": lambda: model_crop("mustard", "g3"), "crop_sugarcane_g2": lambda: model_crop("sugarcane", "g3"),
+SPRITES.update({"crop_sugarcane_g2": lambda: model_crop("sugarcane", "g3"),
                 "ground_scrub": model_ground_scrub, "tree_babul": model_babul, "tubewell": model_tubewell, "chhappar": model_chhappar,
                 "corner_stone": model_corner_stone, "bund_worn_x": lambda: model_bund_worn("x"), "bund_worn_y": lambda: model_bund_worn("y")})
+
+
+# ---------------------------------------------------------------- the crop ladder (spec 020, US-229)
+
+def crop_methi(b, rnd, x, y, stage):
+    """Methi: low tufts of small three-part leaves, cut young, closing over the ridge when ready."""
+    green, deep, stem = toon("methiLeaf", 0x7CC655), toon("methiDeep", 0x57A63F), toon("methiStem", 0x8DB85A)
+    n, h, size = {"g1": (3, 0.018, 0.014), "g2": (5, 0.03, 0.018), "g3": (8, 0.045, 0.023), "ready": (11, 0.06, 0.029)}[stage]
+    if stage == "ready":
+        green, deep = toon("methiLeafFull", 0x5FB544), toon("methiDeepFull", 0x3F8F35)
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.4, 0.4)
+        s = at(x, y, 0.014, tilt=rnd.uniform(0.3, 0.85), tilt_dir=a)
+        hh = h * rnd.uniform(0.8, 1.15)
+        b.cone(stem, 0.0022, 0.0016, hh, s, segs=3)
+        tip = s @ Vector((0, 0, hh))
+        for q in range(3):
+            leaf(b, green if (k + q) % 2 else deep, tip.x, tip.y, tip.z, size, size * 0.72, a + (q - 1) * 0.95, 0.3)
+
+
+def crop_amaranth(b, rnd, x, y, stage):
+    """Chaulai: upright red stems, broad leaves red at the heart of the plant, and a red plume when ready: no other crop on the farm is this colour."""
+    green, red, stem = toon("amaranthLeaf", 0x6FAE45), toon("amaranthRed", 0xB5305F), toon("amaranthStem", 0xA8325E)
+    h, nl = {"g1": (0.025, 3), "g2": (0.06, 5), "g3": (0.095, 7), "ready": (0.105, 7)}[stage]
+    hh = h * rnd.uniform(0.88, 1.1)
+    s = at(x, y, 0.012, tilt=rnd.uniform(0.0, 0.14), tilt_dir=rnd.uniform(0, math.tau))
+    b.cone(stem, 0.0045, 0.0025, hh, s, segs=5)
+    for k in range(nl):
+        t = 0.2 + 0.75 * k / nl
+        p = s @ Vector((0, 0, hh * t))
+        leaf(b, red if k > nl * 0.45 else green, p.x, p.y, p.z, 0.05 * (1.15 - 0.45 * t), 0.03 * (1.15 - 0.45 * t), k * 2.39996 + rnd.uniform(-0.3, 0.3), rnd.uniform(0.2, 0.6))
+    if stage == "ready":
+        b.cone(toon("amaranthPlume", 0xC4265E), 0.011, 0.002, 0.045, s @ Matrix.Translation((0, 0, hh)), segs=6)
+
+
+def crop_okra(b, rnd, x, y, stage):
+    """Bhindi: a tall single stem with big lobed leaves, pale yellow flowers with a dark heart, then green fingers pointing up."""
+    green, deep, stem = toon("okraLeaf", 0x4F9E3A), toon("okraDeep", 0x3A8430), toon("okraStem", 0x7EA84A)
+    h, nl, size = {"g1": (0.03, 3, 0.03), "g2": (0.075, 5, 0.045), "g3": (0.125, 7, 0.055), "ready": (0.135, 7, 0.055)}[stage]
+    hh = h * rnd.uniform(0.9, 1.08)
+    s = at(x, y, 0.012, tilt=rnd.uniform(0.0, 0.08), tilt_dir=rnd.uniform(0, math.tau))
+    b.cone(stem, 0.0055, 0.0032, hh, s, segs=5)
+    for k in range(nl):
+        t = 0.25 + 0.72 * k / nl
+        p = s @ Vector((0, 0, hh * t))
+        a = k * 2.39996 + rnd.uniform(-0.3, 0.3)
+        for lobe in (-0.5, 0.0, 0.5):   # a hand of three lobes
+            leaf(b, green if k % 2 else deep, p.x, p.y, p.z, size * (1.0 - 0.2 * abs(lobe)), size * 0.42, a + lobe, rnd.uniform(0.1, 0.4))
+    if stage == "g3":
+        p = s @ Vector((0, 0, hh * 0.78))
+        d = rnd.uniform(0, math.tau)
+        c = Matrix.Translation((p.x + math.cos(d) * 0.016, p.y + math.sin(d) * 0.016, p.z + 0.008))
+        b.sphere(toon("okraFlower", 0xF7EDA0), 0.0125, c, scale=(1, 1, 0.55), segs=8, rings=4)
+        b.sphere(toon("okraHeart", 0x7A2A3A), 0.0042, c @ Matrix.Translation((0, 0, 0.006)), segs=6, rings=4)
+    if stage == "ready":
+        for k in range(3):
+            d = k * math.tau / 3 + rnd.uniform(-0.4, 0.4)
+            p = s @ Vector((math.cos(d) * 0.012, math.sin(d) * 0.012, hh * (0.62 + k * 0.13)))
+            b.cone(toon("okraPod", 0xB4E05A), 0.0095, 0.0016, 0.06, at(p.x + math.cos(d) * 0.02, p.y + math.sin(d) * 0.02, p.z, tilt=0.3, tilt_dir=d), segs=5)
+
+
+def crop_peas(b, rnd, x, y, stage):
+    """Matar: a low tangle of pale blue-green stems and oval leaflets, white flowers, then fat bright pods hanging on the outside."""
+    green, deep, stem = toon("peaLeaf", 0x9AD07A), toon("peaDeep", 0x74B860), toon("peaStem", 0xB0D68A)
+    n, h = {"g1": (3, 0.03), "g2": (6, 0.05), "g3": (8, 0.07), "ready": (8, 0.07)}[stage]
+    for k in range(n):
+        a = k * math.tau / n + rnd.uniform(-0.4, 0.4)
+        s = at(x, y, 0.014, tilt=rnd.uniform(0.3, 0.7), tilt_dir=a)
+        hh = h * rnd.uniform(0.85, 1.1)
+        b.cone(stem, 0.0028, 0.0018, hh, s, segs=3)
+        for j in range(3):
+            b.sphere(green if (k + j) % 2 else deep, 0.0125, s @ Matrix.Translation((0.007 * (1 if j % 2 else -1), 0, hh * (0.45 + 0.27 * j))), scale=(1.3, 0.85, 0.45), segs=7, rings=4)
+        if stage == "g3" and k % 2 == 0:
+            b.sphere(toon("peaFlower", 0xFAF8F0), 0.0085, s @ Matrix.Translation((0, 0, hh + 0.006)), segs=6, rings=4)
+        if stage == "ready":
+            p = s @ Vector((0, 0, hh * 0.95))
+            m = Matrix.Translation((p.x + math.cos(a) * 0.014, p.y + math.sin(a) * 0.014, p.z)) @ Matrix.Rotation(a, 4, "Z") @ Matrix.Rotation(0.6, 4, "Y")
+            b.sphere(toon("peaPod", 0x4FB02E), 0.0105, m, scale=(0.95, 0.95, 2.5), segs=8, rings=5)
+
+
+def crop_maize(b, rnd, x, y, stage):
+    """Makka: a tall stalk with long arching strap leaves, a pale tassel on top, and when ready a husked cob with its silk, the leaves drying."""
+    ready = stage == "ready"
+    leafc, deep, stalk = toon("maizeLeaf", 0x68B040), toon("maizeDeep", 0x4A9436), toon("maizeStalk", 0x8AB854)
+    dry = toon("maizeDry", 0xB7AE58)
+    h, nl = {"g1": (0.0, 3), "g2": (0.085, 5), "g3": (0.18, 8), "ready": (0.19, 8)}[stage]
+    if stage == "g1":
+        for k in range(nl):
+            leaf(b, leafc if k % 2 else deep, x, y, 0.012, 0.05, 0.016, k * math.tau / nl + rnd.uniform(-0.3, 0.3), rnd.uniform(0.7, 1.1))
+        return
+    hh = h * rnd.uniform(0.9, 1.08)
+    s = at(x, y, 0.012, tilt=rnd.uniform(0.0, 0.07), tilt_dir=rnd.uniform(0, math.tau))
+    b.cone(stalk, 0.0085, 0.0045, hh, s, segs=6)
+    for k in range(nl):
+        t = 0.18 + 0.75 * k / nl
+        p = s @ Vector((0, 0, hh * t))
+        mat = dry if ready and k % 3 == 0 else (leafc if k % 2 else deep)
+        leaf(b, mat, p.x, p.y, p.z, 0.085 * (1.15 - 0.4 * t) + 0.02, 0.022, k * 2.39996 + rnd.uniform(-0.3, 0.3), rnd.uniform(0.05, 0.4))
+    if stage in ("g3", "ready"):
+        for k in range(5):   # the tassel: pale spikes fanning out from the top
+            b.cone(toon("maizeTassel", 0xE3D58F), 0.0032, 0.0006, 0.036, s @ Matrix.Translation((0, 0, hh - 0.002)) @ Matrix.Rotation(0.34, 4, "Y" if k % 2 else "X") @ Matrix.Rotation(k * 1.26, 4, "Z"), segs=3)
+    if ready:
+        d = rnd.uniform(0, math.tau)
+        p = s @ Vector((math.cos(d) * 0.012, math.sin(d) * 0.012, hh * 0.55))
+        m = at(p.x, p.y, p.z, tilt=0.42, tilt_dir=d)
+        b.sphere(toon("maizeHuskPale", 0xE6D98A), 0.016, m @ Matrix.Translation((0, 0, 0.03)), scale=(0.95, 0.95, 2.5), segs=8, rings=5)
+        b.cone(toon("maizeSilk", 0x8E5A2B), 0.008, 0.002, 0.022, m @ Matrix.Translation((0, 0, 0.066)), segs=5)
+
+
+CROPS.update({"methi": crop_methi, "amaranth": crop_amaranth, "okra": crop_okra, "peas": crop_peas, "maize": crop_maize})
+MATS.update({"methi": (0x6FB84A, 0x6FB84A), "amaranth": (0x6E9E40, 0x8E5A50), "okra": (0x4F9A38, 0x4F9A38), "peas": (0x86C26A, 0x7AB85E), "maize": (0x5FA238, 0x9FA24E)})
+MATS["mustard"] = (0x5E9E3A, 0xB5A24E)
+for _c in ("methi", "amaranth", "okra", "peas", "maize", "mustard"):
+    for _st in STAGES:
+        SPRITES["crop_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_crop(c, st)))()
+    ICONS["icon_good_" + _c] = (lambda g=_c: (lambda: icon_good(g)))()
+    SPRITES["icon_good_" + _c] = ICONS["icon_good_" + _c]
 
 
 # ---------------------------------------------------------------- framing and render

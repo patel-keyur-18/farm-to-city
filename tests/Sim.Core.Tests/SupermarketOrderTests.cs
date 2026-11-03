@@ -21,7 +21,7 @@ namespace Sim.Core.Tests
         /// <summary>A content edit keeping the order rules but posting none, so a test places its own order.</summary>
         private static string NonePosted(string file, string json)
         {
-            return file == "market.json" ? json.Replace("\"perDay\": 2", "\"perDay\": 0").Replace("\"greensPerDay\": 1", "\"greensPerDay\": 0") : json;
+            return file == "market.json" ? json.Replace("\"perDay\": 4", "\"perDay\": 0").Replace("\"greensPerDay\": 1", "\"greensPerDay\": 0") : json;
         }
 
         private static SupermarketOrder Place(Simulation sim, string good, long grams, string price)
@@ -89,7 +89,7 @@ namespace Sim.Core.Tests
             Assert.That(Days(5, out _), Is.EqualTo(a), "the same seed, the same orders");
 
             // No crop ripens within the day: only the greens order.
-            Simulation slow = Skipped(Quiet((f, j) => f == "crops.json" ? j.Replace("\"growthMinutes\": 120,", "\"growthMinutes\": 1200,").Replace("\"growthMinutes\": 900", "\"growthMinutes\": 1200") : j));
+            Simulation slow = Skipped(Quiet((f, j) => f == "crops.json" ? j.Replace("\"growthMinutes\": 60,", "\"growthMinutes\": 1200,").Replace("\"growthMinutes\": 120,", "\"growthMinutes\": 1200,").Replace("\"growthMinutes\": 240,", "\"growthMinutes\": 1200,").Replace("\"growthMinutes\": 360,", "\"growthMinutes\": 1200,").Replace("\"growthMinutes\": 900", "\"growthMinutes\": 1200") : j));
             int s = (int)Calendar.SeasonAt(0, slow.Clock);
             Assert.That(slow.Config.Game.Farm.Crops.Where(c => c.SowSeasons[s]).All(c => c.GrowthSeconds > 18 * Hour), "Spring has no quick crop in this content");
             slow.AdvanceTo(6 * Hour);

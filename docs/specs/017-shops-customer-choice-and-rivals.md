@@ -40,7 +40,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 
 | Type | Era | Pitch or building | Worker | Sells | Rate (a real hour = a working day) |
 | --- | --- | --- | --- | --- | --- |
-| Vegetable stall (sabzi stall) | Village | A handcart and a shade (8,000, 20 seasons) on a rented pitch, or a stall shed (15,000, 40 seasons) on your acre | 1 stallholder | Your produce from the store (radish, spinach, coriander, potato, fruit) and your products (atta, pav, paneer, curd) at a retail price you set | Up to 400 kg a real hour |
+| Vegetable stall (sabzi stall) | Village | A handcart and a shade (8,000, 20 seasons) on a rented pitch, or a stall shed (15,000, 40 seasons) on your acre | 1 stallholder | Your edible produce from the store (radish, spinach, coriander, potato, methi, amaranth, okra, peas, maize, fruit; spec 020 G18) and your products (atta, pav, paneer, curd) at a retail price you set | Up to 400 kg a real hour |
 | Tea stall (chai stall) | Village | A counter, stove and benches (12,000, 20 seasons) | 1 tea maker | Cups of chai (milk 0.06 L, tea and sugar 1.50 coins) and a snack (rusk or pav, 0.05 kg) | Up to 300 cups a real hour |
 | Sweet shop (halwai) | Village | A shop with a kadhai, a burner, a glass counter (25,000 building, 40 seasons; 20,000 equipment, 20 seasons) | 1 halwai (crafting skill, spec 015) | Two sweets made in batches: **rasgulla** (paneer 0.5 kg + sugar 0.5 kg → 1 kg) and **atta laddoo** (atta 0.45 kg + ghee 0.20 kg + sugar 0.35 kg → 1 kg); sweets keep 4 days (`spoilagePerDay` 0.15) | Up to 25 kg a real hour |
 
@@ -116,7 +116,7 @@ Hourly pass, system Shops (after Market and Business): demand per group, attract
 
 **New definitions:** `content/shops.json`: `villagePeople`, demand per kind (`vegPerPerson`, `chaiPerPerson`, adult share), elasticities and their power table, the attraction weights (`wPrice` 1.5, `wQuality` 0.25, `wStars` 0.30, `wDistance` 0.10 per 100 m, `wWait` 0.20 per 10 minutes), `retailMarkup`, `pitchRent`, the reputation weights, the rivals (grocer, tea stall: prices, hours, capacity, stars), newcomer rules (gap 0.8, margin 1.25, chance 0.5, exit share 0.1). `businesses.json`: the three shop types (spec 016's fields plus `kind`, `capacityPerHour`, `qualityCosts`; the sweet shop's two recipes). Goods: `rasgulla`, `atta_laddoo` (spoilage 0.15 a day), `sweet_supplies` (sugar). `map.json`: three `pitch` places round the banyan. Goods: tea and sugar as one input (`chai_supplies`, 1.50 a cup).
 
-**New state** (save schema 13; 12 before ADR 0083 took 12 for the sales record): on `Business`: price, quality, the goods put out, stars, last hour's arrivals and capacity, the season's customers and served. `ShopsState`: rivals (kind, place, price, quality, stars, open hours, opened at, low seasons), pitch tenants.
+**New state** (save schema 14; ADR 0083 and ADR 0084 each moved it up one): on `Business`: price, quality, the goods put out, stars, last hour's arrivals and capacity, the season's customers and served. `ShopsState`: rivals (kind, place, price, quality, stars, open hours, opened at, low seasons), pitch tenants.
 
 ## 5. Commands and events
 
@@ -166,7 +166,7 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 | AC-5 | The mill loses area grain smoothly as its fee rises above the chakki's | `ShopTests.Mill_Choice` |
 | AC-6 | A pitch's rent is paid at the close; a taken pitch is refused | `ShopTests.Pitch` |
 | AC-7 | Same seed and commands give the same shares, in one chunk or many, live or away | `ShopTests.ChunkingInvariance` |
-| AC-8 | A schema-12 save loads into 13 with the village's rivals and no player shops | `MigrationTests.Schema12_Shops` |
+| AC-8 | A schema-13 save loads into 14 with the village's rivals and no player shops | `MigrationTests.Schema13_Shops` |
 | AC-9 | Every share and star has a *Why?* in words | `WhyTests.EveryNumberHasWhy` |
 
 ## 9. Balancing hooks

@@ -149,6 +149,8 @@ namespace Game.Presentation
                 case "Letter": _sheet.Show(Letter.List(_ctx), refreshOnly); break;
                 case "Progress": _sheet.Show(ProgressSheet.Build(_ctx), refreshOnly); break;
                 case "Lands": _sheet.Show(LandsSheet.Build(_ctx), refreshOnly); break;
+                case CropCalendar.Sheet: _sheet.Show(CropCalendar.Build(_ctx), refreshOnly); break; // spec 020 §3.6b
+                case CropCalendar.PageSheet: _sheet.Show(CropCalendar.Page(_ctx, (int)r.Id), refreshOnly); break;
                 case "Money": _sheet.Show(MoneySheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id), refreshOnly); break;
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;

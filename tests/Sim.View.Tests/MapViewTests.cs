@@ -32,6 +32,41 @@ namespace Sim.View.Tests
             return sim.State.Citizens.Citizens.Single(c => c.Living && PeopleWords.Name(ctx, c.Name) == name);
         }
 
+        // Spec 020 G19 (US-230): some neighbours grow maize in Spring and the Monsoon, stable per parcel; sandy Monsoon land maize
+        // rather than fallow; the parcels that grew potato, radish or rice before still do; Summer and Winter unchanged.
+        [Test]
+        public void Neighbours_LadderCrops()
+        {
+            var maize = new System.Collections.Generic.Dictionary<int, int>();
+            for (int parcel = 0; parcel < 60; parcel++)
+                foreach (string soil in new[] { "loam", "clay", "sandy" })
+                    for (int season = 0; season < 4; season++)
+                    {
+                        string crop = MapView.NeighbourCrop(soil, parcel, season);
+                        Assert.That(crop, Is.EqualTo(MapView.NeighbourCrop(soil, parcel, season)), "stable");
+                        int k = ((parcel * 7 + season * 3) % 3 + 3) % 3;
+                        string before = season == 0 ? (k == 0 ? "potato" : k == 1 ? "radish" : null)
+                            : season == 1 ? (k == 0 ? "lentils" : null)
+                            : season == 2 ? (soil == "sandy" || k == 2 ? null : "rice")
+                            : (k == 1 ? "potato" : "wheat");
+                        if (before != null) Assert.That(crop, Is.EqualTo(before), "an old crop stays: parcel " + parcel + " season " + season);
+                        else Assert.That(crop == null || (crop == "maize" && (season == 0 || season == 2)), Is.True, "only maize, only in Spring and the Monsoon");
+                        if (crop == "maize") maize[season] = maize.TryGetValue(season, out int n) ? n + 1 : 1;
+                        if (season == 2 && soil == "sandy") Assert.That(crop, Is.EqualTo("maize"), "sandy Monsoon land grows maize");
+                        Assert.That(new[] { "potato", "radish", "lentils", "rice", "wheat", "maize", null }, Does.Contain(crop));
+                    }
+            Assert.That(maize.Keys.OrderBy(k => k), Is.EqualTo(new[] { 0, 2 }));
+            Assert.That(maize[0], Is.InRange(20, 40), "about a sixth of Spring's parcels (of 180 parcel-soils)");
+            // Some loam parcels still lie fallow in Spring and the Monsoon: not every acre is sown.
+            Assert.That(Enumerable.Range(0, 60).Count(p => MapView.NeighbourCrop("loam", p, 0) == null), Is.GreaterThan(5));
+            Assert.That(Enumerable.Range(0, 60).Count(p => MapView.NeighbourCrop("loam", p, 2) == null), Is.GreaterThan(5));
+
+            // On the map in Spring: some neighbours' fields show maize.
+            Simulation sim = ViewKit.NewGame();
+            MapVm map = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned && t.NeighbourCrop == "maize"), Is.GreaterThan(0));
+        }
+
         // Spec 014 AC-17: a townsperson hired as a labourer is drawn as that citizen, from their family house, and not also at home.
         [Test]
         public void TownLabourers()

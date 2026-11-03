@@ -176,7 +176,7 @@ namespace Sim.Core.Land
             Fixed d = defs.Land.MoistureByWeather[weather];
             Fixed m = tile.Moisture;
             if (d > Fixed.Zero) m += d * soil.GainFactor;
-            else if (d < Fixed.Zero) m += d * soil.LossFactor * DryingFactor(sim, tile.Id);
+            else if (d < Fixed.Zero) m += d * soil.LossFactor * DryingFactor(sim, tile.Id) * DrySoilFactor(defs.Land, m);
             m = Clamp(m);
             if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
             // The well acres only (ADR 0032); the lift is the founder's bucket-carrying, charged by spec 003.
@@ -187,6 +187,18 @@ namespace Sim.Core.Land
                 m = defs.Land.WellMoistureFloor;
             }
             tile.Moisture = m;
+        }
+
+        /// <summary>
+        /// How much of the weather's drying dry soil still loses (spec 002 §3.2, ADR 0085): 1 at or above
+        /// <see cref="LandDef.DryingSlowsBelow"/>, else m ÷ dryingSlowsBelow, so a field at 25 dries half as fast and one at 10 a fifth
+        /// (real evaporation falls with the water left in the soil). 1 when the rule is off (0).
+        /// </summary>
+        public static Fixed DrySoilFactor(LandDef land, Fixed m)
+        {
+            Fixed below = land.DryingSlowsBelow;
+            if (below <= Fixed.Zero || m >= below) return Fixed.One;
+            return m <= Fixed.Zero ? Fixed.Zero : m / below;
         }
 
         /// <summary>The drying factor of the fertiliser under a crop growing on the tile, else 1 (ADR 0051: compost holds water).</summary>

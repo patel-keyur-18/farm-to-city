@@ -20,6 +20,53 @@ namespace Sim.Core.Tests
             return new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game(edit));
         }
 
+        // Spec 020 AC-8: no new crop leads a season or is a dud; each has its niche (§3.4).
+        [Test]
+        public void CropLadder_BalanceRule()
+        {
+            Assert.That(Gate.CropLadderRule(Live()), Is.Empty);
+            foreach (var n in Gate.CropLadderNiches(Live()))
+            {
+                TestContext.Out.WriteLine(n.Key + ": " + string.Join(", ", n.Value));
+                Assert.That(n.Value, Is.Not.Empty, n.Key + " has a niche");
+            }
+        }
+
+        // Spec 020 AC-9: the ladder bot about the competent bot, the diversifier no money loop.
+        [Test]
+        public void CropLadder_Bots()
+        {
+            var results = Gate.CropLadderBots(Live(), 100);
+            foreach (Gate.StressResult s in results) TestContext.Out.WriteLine(s.Bot + " " + s.Ratio.ToString("0.000"));
+            Assert.That(results[1].Ratio, Is.InRange(0.90, 1.20), "ladder");
+            Assert.That(results[2].Ratio, Is.LessThanOrEqualTo(1.20), "diversifier");
+        }
+
+        // Spec 020 AC-20: maize in Spring and mustard in Winter, each alone and together.
+        [Test]
+        public void CropLadder_BestMix()
+        {
+            foreach (Gate.StressResult s in Gate.CropLadderBestMix(Live(), 60).Skip(1))
+            {
+                TestContext.Out.WriteLine(s.Bot + " " + s.Ratio.ToString("0.000"));
+                Assert.That(s.Ratio, Is.LessThanOrEqualTo(1.20), s.Bot);
+            }
+        }
+
+        // Spec 020 AC-10.
+        [Test]
+        public void CropLadder_NeverOverCap()
+        {
+            Assert.That(Gate.CropLadderOverCap(Live(), 100), Is.Zero);
+        }
+
+        // Spec 020 AC-21.
+        [Test]
+        public void CropLadder_ExactLedger()
+        {
+            Assert.That(Gate.CropLadderLedger(Live(), 16), Is.Empty);
+        }
+
         // US-015: no command buys produce or sells inputs.
         [Test]
         public void MoneyLoops_Structural()
@@ -165,11 +212,13 @@ namespace Sim.Core.Tests
         }
 
         // Recoverable bankruptcy: after a foreclosure, farm profit within 2 seasons and the Hamlet's conditions again within
-        // 3 game years (the GDD's window; measured: 1 season, and a median of 8 days).
+        // 3 game years (the GDD's window; measured: 1 season, and a median of 8 days). 120 seeds so at least 50 runs reach a
+        // foreclosure to measure (ADR 0085: with dry soil drying slower the defaulter is foreclosed less often; a sample size,
+        // not a rule, as spec 020 §9 allows).
         [Test]
         public void RecoverableBankruptcy()
         {
-            Gate.RecoveryResult r = Gate.Recovery(Live(), 100);
+            Gate.RecoveryResult r = Gate.Recovery(Live(), 120);
             int profit = r.SeasonsToProfit.Count(k => k >= 1 && k <= 2);
             int hamlet = r.DaysToHamlet.Count(d => !double.IsNaN(d) && d <= 48);
             TestContext.Out.WriteLine(r.Foreclosed + " foreclosed; profit within 2 seasons " + profit + "; Hamlet within 48 days " + hamlet);
@@ -242,9 +291,10 @@ namespace Sim.Core.Tests
         [Test]
         public void Hr()
         {
-            Gate.HrResult phase1 = Gate.Hr(LiveWith(Gate.Phase1Output), () => new FarmerBot(), 16);
-            Gate.HrResult fair = Gate.Hr(Live(), () => new FarmerBot(), 16);
-            Gate.HrResult low = Gate.Hr(Live(), () => new LowPayBot(), 16);
+            const int Samples = 256; // spec 020 §9: the 2% limit sits on the noise at 16 seeds (2.46% against 1.77% at 256)
+            Gate.HrResult phase1 = Gate.Hr(LiveWith(Gate.Phase1Output), () => new FarmerBot(), Samples);
+            Gate.HrResult fair = Gate.Hr(Live(), () => new FarmerBot(), Samples);
+            Gate.HrResult low = Gate.Hr(Live(), () => new LowPayBot(), Samples);
             foreach (Gate.HrResult r in new[] { phase1, fair, low })
                 TestContext.Out.WriteLine(r.Bot + ": motivation " + Median(r.Motivation).ToString("0.000") + ", farm profit " + Median(r.FarmProfit).ToString("0") + ", wages "
                     + Median(r.Wages).ToString("0") + ", events a worker-season " + Median(r.EventsPerWorkerSeason).ToString("0.000") + ", hands " + r.Hands + ", left " + r.Quits
@@ -295,7 +345,7 @@ namespace Sim.Core.Tests
         {
             var config = LiveWith(Gate.DairyInHamlet);
             var results = new[] { () => new BusinessBot(false, false, "dairy"), () => new BusinessBot(true, false, "dairy"), (Func<Bot>)(() => new BusinessBot(false, false, "dairy") { OwnMilkOnly = true }) }
-                .Select(make => Gate.Business(config, make, 16, "dairy", 16)).ToList();
+                .Select(make => Gate.Business(config, make, 64, "dairy", 16)).ToList(); // 64 seeds (spec 020 §9): at 16 the hired median moves by 1,000 either way
             foreach (Gate.MillResult m in results)
                 TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
                     + "; payback " + string.Join(", ", m.Payback.OrderBy(x => x).Select(x => x.ToString("0.0"))) + "; overdrawn runs " + string.Join(",", m.OverdrawnRun)

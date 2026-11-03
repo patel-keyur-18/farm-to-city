@@ -65,8 +65,11 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
 
    | Job | Duration |
    | --- | --- |
-   | Onboarding crops (radish, greens) | minutes |
-   | Wheat, onion | 4–8 hours |
+   | Kitchen-garden greens | minutes |
+   | Quick field greens (methi, amaranth) | about an hour |
+   | Radish in the field | about 2 hours |
+   | Vegetables (okra, green peas) | about 4 hours |
+   | Wheat, maize, lentils, mustard; later onion | 6–8 hours |
    | Rice, potato | about a day |
    | Sugarcane, cotton | 2–3 days |
    | Orchard, first fruit | about 2 weeks |
@@ -96,12 +99,12 @@ Sowing windows follow India's cropping seasons, so every season has something to
 
 | Season | Cropping season | Crops sowable (Phase 1 crops first) | Economy |
 | --- | --- | --- | --- |
-| Spring | Late rabi and early zaid | Radish, potato | Seed and labour prices rise |
-| Summer | Zaid | Radish, lentils (moong-type pulses), early rice | Heat lowers outdoor productivity; water demand peaks; mangoes fruit |
-| Monsoon | Kharif | Radish, rice; later maize, cotton, sugarcane | Abundant rain; harvest gluts push crop prices down |
-| Winter | Rabi | Radish, wheat, potato, lentils; later onion | Stored goods sell at a premium |
+| Spring | Late rabi and early zaid | Methi, radish, okra, maize, potato | Seed and labour prices rise |
+| Summer | Zaid | Amaranth, radish, okra, lentils (moong-type pulses), early rice | Heat lowers outdoor productivity; water demand peaks; mangoes fruit |
+| Monsoon | Kharif | Amaranth, radish, okra, maize, rice; later cotton, sugarcane | Abundant rain; harvest gluts push crop prices down |
+| Winter | Rabi | Methi, radish, green peas, wheat, lentils, mustard, potato; later onion | Stored goods sell at a premium |
 
-Radish can be sown all year. A sowing window only limits *sowing*: a crop keeps growing into the next season. Outside its window, a crop can't be sown, and the *Why?* breakdown explains which season it belongs to.
+Every season has a crop for about 1, 2, 4, 6–8 and 15 hours, so the player can sow for when they'll be back (ADR 0084). Radish can be sown all year. A sowing window only limits *sowing*: a crop keeps growing into the next season. Outside its window, a crop can't be sown, and the *Why?* breakdown explains which season it belongs to.
 
 **Weather.** Weather is drawn hour by hour from the season's climate table: sun, cloudy, rain, heavy rain, heatwave, frost or storm. Calm weather lasts and severe weather passes, with each season's overall mix unchanged (ADR 0042): sun runs about 30–37 hours outside the Monsoon and comes in breaks of about 6 hours in it, Monsoon rain runs about 18 hours, dry-season rain 4–6 hours, a heatwave 6–8 hours, frost 3–4 hours, heavy rain and storms 1.5–2 hours (ADR 0043; 1 game hour is about 1 world day). Weather changes crop yield (never crop duration), soil moisture, shop foot traffic, construction output and energy demand. A 3-day forecast, shown as runs ("Sun until 14:00, then heavy rain about 1 hour"), lets the player prepare. Day 1 is certain, day 2 is right about 80% of the time and day 3 about 65%, rolled once per run so a forecast never flickers hour by hour (spec 001, ADR 0043). Big events like droughts are signalled days ahead.
 
@@ -122,14 +125,14 @@ The founder inherits 6 farm acres, a 2-acre yard (the house, the well, the kitch
 
 - **The village around the farm (ADR 0053).** North is the river side. The village centre (houses, grocery, tea stall, chemist, temple, council hall, the banyan and threshing floor, the pond and an empty school plot) lies east of the farm, and the grazing commons on the river bank in the north-west. The district road runs along the south edge, with the village lane and the farm lane leading off it. A street runs through the middle of the centre, its buildings drawn from every side and facing their street, in clusters with courtyards, an open square round the banyan and the temple on the pond's bank; the village dairy co-op collects the milk there (ADR 0061). The village is the player's town: its places serve the player's citizens, while the families already living there stay neighbours and aren't counted in the population. An acre a road passes through is a road acre (road and verges on half of it), never for sale. Land the player doesn't own is neighbours' farms: some are for sale (about 77 acres in Phase 2) and some are **not for sale yet**. The centre, the commons and the river bank are never for sale.
 
-- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
+- **Moisture** changes every hour with the weather, the soil type (sandy dries fast, clay holds water) and the drainage (poor drainage waterlogs in the Monsoon). The well waters two of the inherited acres (the well acres), so they never dry out completely; the other acres, inherited or bought, are rain-fed until irrigation (ADR 0032). Dry soil gives up its last water slowly: below moisture 50 it dries more slowly the drier it is, so a rain-fed field in a dry Spring or Summer stays low but rarely bone dry (ADR 0085). Seasons follow Indian reality: dry Summers, a wet Monsoon, and rabi crops in Winter growing on the moisture the monsoon left behind.
 - **Fertility** recovers while an owned field lies fallow, up to a cap set by its soil, and crops and fertiliser change it with each cycle. Neighbours' land keeps its fertility.
 - **The Soil factor** in the yield formula combines the soil type, fertility and the shade of mature field-edge trees.
 - **Buying** is paid in full upfront, optionally with a land-purchase loan. A bought parcel can be **quick-sold** to a neighbour at once for 80% of its price. The inherited land can never be sold, seized or used as collateral.
 - An acre costs about 8–15 seasons of the net farm income it earns when the household farms it itself, so land pays back in 2–4 game years; with hired labour it pays back far more slowly, as in reality (ADR 0028, 0033).
 - Spec 002 has the formulas and values.
 
-**Crops (launch set).** Radish (the quick onboarding crop), wheat, rice, maize, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:
+**Crops (launch set).** Radish (the quick onboarding crop), methi, amaranth, okra, green peas, wheat, rice, maize, mustard, potato, tomato, onion, lentils, sugarcane and cotton. Each crop defines:
 
 - a sowing window (the seasons it can be sown in)
 - a growth duration in real time
@@ -933,7 +936,7 @@ The data falls into two groups. Definitions are static content shipped with the 
 | `FounderDef` | baseLabourHours, fatigue gain and recovery per hours option, health parameters |
 | `DietPlanDef` | id, costPerSeason, nutrition |
 | `LenderDef` | id, baseRate, rate slope by score, penaltyRate, schedule (bullet or equal principal), term bounds, secured, baseLimit, collateralLtv, incomeMultiple, minScore, graceCloses, restructureExtraSeasons, eraCaps |
-| `LandDef` | moisture change by weather, fertility factor curve, fallow recovery, acre base price, fertility price factors, quick-sale factor, field-edge slots per acre, shade per mature tree |
+| `LandDef` | moisture change by weather, the moisture below which drying slows, fertility factor curve, fallow recovery, acre base price, fertility price factors, quick-sale factor, field-edge slots per acre, shade per mature tree |
 | `SoilDef` / `DrainageDef` | yield, moisture gain and loss, price factor, fallow cap / drain threshold, drain rate, price factor |
 | `MapDef` / `ParcelDef` | grid size and starting tiles / tiles, location factor |
 | `CreditScoreDef` | range, start score, gains and penalties, foreclosure score |

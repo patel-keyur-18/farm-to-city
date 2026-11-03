@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Sim.Core;
 using Sim.Core.Commands;
@@ -577,6 +578,203 @@ namespace Tools.Balancer
                     catch (InvalidOperationException e) { failures.Add(bot.Name + " seed " + (i + 1) + ": " + e.Message); }
                 });
             return failures.OrderBy(f => f, StringComparer.Ordinal).ToList();
+        }
+
+        // ---- Spec 020: the crop ladder ----
+
+        /// <summary>The crops spec 020 §3.4 measures the new ones against.</summary>
+        private static readonly string[] ExistingCrops = { "radish", "wheat", "rice", "potato", "lentils" };
+
+        public sealed class LadderCrop
+        {
+            public string Id;
+            public double Gm, Net;
+            public double[] PerHour = new double[4]; // by season; the floor's profit per growing hour, at soil 0.875
+            public double[] Sowing = new double[4];  // by season; one sowing's profit at the same prices
+        }
+
+        /// <summary>Every field crop on spec 020 §3.4's two price bases.</summary>
+        public static List<LadderCrop> LadderCrops(SimConfig config)
+        {
+            GameDefs game = config.Game;
+            Simulation sim = Simulation.NewGame(config, new NewGame(1, 0, 8 * 3600));
+            double wage = game.Farm.Founder.DayLabourWagePerHour / 100.0, soil = 0.875;
+            var list = game.Farm.Crops.Where(c => !c.Fodder).Select(c =>
+            {
+                double yield = Economy.ToDouble(c.SeasonYieldPerAcre), seed = Economy.ToDouble(c.SeedPerAcrePerSeason);
+                double gm = yield * Economy.ToDouble(game.Market.Goods[c.OutputGood].BasePrice) - seed * Economy.ToDouble(game.Market.Goods[c.SeedGood].BasePrice);
+                return new LadderCrop { Id = c.Id, Gm = gm, Net = gm - Economy.ToDouble(c.LabourPerAcrePerDay) * sim.Clock.DaysPerSeason * wage };
+            }).ToList();
+            for (int s = 0; s < 4; s++)
+            {
+                sim.AdvanceTo(s * sim.Clock.SecondsPerSeason + 9 * 3600);
+                foreach (LadderCrop l in list)
+                {
+                    CropDef c = game.Farm.Crops[game.Farm.IndexOfCrop(l.Id)];
+                    double share = c.GrowthSeconds / (double)sim.Clock.SecondsPerSeason;
+                    l.Sowing[s] = share * (Economy.ToDouble(c.SeasonYieldPerAcre) * soil * Economy.ToDouble(MarketRules.Floor(sim, c.OutputGood))
+                        - Economy.ToDouble(c.SeedPerAcrePerSeason) * Economy.ToDouble(MarketRules.InputPrice(sim, c.SeedGood)));
+                    l.PerHour[s] = l.Sowing[s] / (c.GrowthSeconds / 3600.0);
+                }
+            }
+            return list;
+        }
+
+        /// <summary>Spec 020 §3.4's checks from the loaded content: what breaks them, empty when none does.</summary>
+        public static List<string> CropLadderRule(SimConfig config)
+        {
+            var crops = config.Game.Farm.Crops;
+            bool Sown(LadderCrop l, int s) { return crops[config.Game.Farm.IndexOfCrop(l.Id)].SowSeasons[s]; }
+            List<LadderCrop> all = LadderCrops(config);
+            List<LadderCrop> old = all.Where(l => ExistingCrops.Contains(l.Id)).ToList();
+            var failures = new List<string>();
+            double floor = 0.9 * old.Min(l => l.Gm);
+            foreach (LadderCrop n in all.Except(old))
+            {
+                if (n.Gm < floor) failures.Add(n.Id + ": GM " + n.Gm.ToString("0") + " under the floor " + floor.ToString("0"));
+                for (int s = 0; s < 4; s++)
+                {
+                    if (!Sown(n, s)) continue;
+                    List<LadderCrop> here = old.Where(l => Sown(l, s)).ToList();
+                    if (n.Gm > here.Max(l => l.Gm)) failures.Add(n.Id + ": GM above the leader in season " + s);
+                    if (n.Net > here.Max(l => l.Net)) failures.Add(n.Id + ": Net above the leader in season " + s);
+                    if (n.PerHour[s] > here.Max(l => l.PerHour[s])) failures.Add(n.Id + ": " + n.PerHour[s].ToString("0.0") + " an hour above the leader's " + here.Max(l => l.PerHour[s]).ToString("0.0") + " in season " + s);
+                }
+            }
+            return failures;
+        }
+
+        /// <summary>Spec 020 §3.4's niche: the realistic cases where each new crop is the best pick, by crop.</summary>
+        public static Dictionary<string, List<string>> CropLadderNiches(SimConfig config)
+        {
+            FarmDefs farm = config.Game.Farm;
+            string[] seasons = { "Spring", "Summer", "Monsoon", "Winter" };
+            List<LadderCrop> all = LadderCrops(config);
+            CropDef Def(LadderCrop l) { return farm.Crops[farm.IndexOfCrop(l.Id)]; }
+            var niches = all.Where(l => !ExistingCrops.Contains(l.Id)).ToDictionary(l => l.Id, l => new List<string>());
+            void Win(string id, string why) { if (niches.ContainsKey(id)) niches[id].Add(why); }
+            for (int s = 0; s < 4; s++)
+            {
+                int season = s;
+                List<LadderCrop> here = all.Where(l => Def(l).SowSeasons[season]).ToList();
+                foreach (long back in here.Select(l => Def(l).GrowthSeconds).Distinct())
+                    Win(here.Where(l => Def(l).GrowthSeconds <= back).OrderByDescending(l => l.Sowing[season]).First().Id, seasons[s] + ": back in " + back / 3600.0 + " h");
+                Fixed dry = Fixed.FromInt(25);
+                Win(here.OrderByDescending(l => l.PerHour[season] * Economy.ToDouble(FarmRules.WaterFactor(farm.Farm, Def(l), dry))).First().Id, seasons[s] + ": a dry acre");
+                Win(here.OrderByDescending(l => l.Gm / Economy.ToDouble(Def(l).LabourPerAcrePerDay)).First().Id, seasons[s] + ": light labour");
+                Win(here.OrderByDescending(l => Economy.ToDouble(Def(l).FertilityPerSeason)).ThenByDescending(l => l.Gm).First().Id, seasons[s] + ": tired soil");
+            }
+            return niches;
+        }
+
+        /// <summary>The hand's pick each morning on the inherited acres, no fertiliser (spec 020 §9): by season, crop → share.</summary>
+        public static Dictionary<string, double>[] HandPicks(SimConfig config, int seeds, int seasons = 8)
+        {
+            var counts = new Dictionary<string, long>[4];
+            for (int s = 0; s < 4; s++) counts[s] = new Dictionary<string, long>();
+            Parallel.For(0, seeds, i => Economy.RunBot(config, new FarmerBot(), seasons, (ulong)(i + 1), sim =>
+            {
+                long t = sim.State.Clock.SimTime;
+                if (t % ClockDef.SecondsPerDay / 3600 != 7) return;
+                var mine = counts[(int)Sim.Core.Time.Calendar.SeasonAt(t, sim.Clock)];
+                foreach (int tile in Home.Acres(sim.Config.Game))
+                {
+                    int pick = FarmRules.BestCrop(sim, sim.State.Land.Tiles[tile], sim.Config.Game.Farm.Fertilisers[0]);
+                    if (pick < 0) continue;
+                    string id = sim.Config.Game.Farm.Crops[pick].Id;
+                    lock (mine) { mine.TryGetValue(id, out long n); mine[id] = n + 1; }
+                }
+            }));
+            return counts.Select(m => m.ToDictionary(kv => kv.Key, kv => kv.Value / (double)Math.Max(1, m.Values.Sum()))).ToArray();
+        }
+
+        /// <summary>Spec 020 AC-9: the ladder and diversifier bots against the competent bot.</summary>
+        public static List<StressResult> CropLadderBots(SimConfig config, int seeds, int seasons = 8)
+        {
+            return Stress(config, seeds, seasons, new Func<Bot>[] { () => new LadderBot(), () => new DiversifierBot() });
+        }
+
+        /// <summary>Spec 020 AC-20: every season's best mix against the competent bot.</summary>
+        public static List<StressResult> CropLadderBestMix(SimConfig config, int seeds, int seasons = 8)
+        {
+            return Stress(config, seeds, seasons, new Func<Bot>[]
+            {
+                () => new ForcedCropBot("maize in Spring", new[] { "maize", null, null, null }),
+                () => new ForcedCropBot("mustard in Winter", new string[] { null, null, null, "mustard" }),
+                () => new ForcedCropBot("maize and mustard", new[] { "maize", null, null, "mustard" }),
+            });
+        }
+
+        /// <summary>Spec 020 AC-10: seeds of the ladder bot with a harvest over its cap.</summary>
+        public static int CropLadderOverCap(SimConfig config, int seeds, int seasons = 8)
+        {
+            int over = 0;
+            Parallel.For(0, seeds, i =>
+            {
+                if (Economy.RunBot(config, new LadderBot(), seasons, (ulong)(i + 1), null).Seasons.Any(s => s.OverCap > 0)) Interlocked.Increment(ref over);
+            });
+            return over;
+        }
+
+        /// <summary>
+        /// Spec 020 AC-21: each new crop on every acre the bot can tend through a whole game. Every close reconciles (strict checks), 1200 equals
+        /// the inputs at cost, the farm's income is its record of sales and home use line by line, a save round-trips, nothing goes over its cap.
+        /// </summary>
+        public static List<string> CropLadderLedger(SimConfig config, int seeds, int seasons = 8)
+        {
+            if (!config.Options.StrictChecks) throw new ArgumentException("the ledger check needs strict checks");
+            FarmDefs farm = config.Game.Farm;
+            var failures = new System.Collections.Concurrent.ConcurrentBag<string>();
+            foreach (CropDef crop in farm.Crops.Where(c => !c.Fodder && !ExistingCrops.Contains(c.Id)))
+                Parallel.For(0, seeds, i =>
+                {
+                    string[] bySeason = Enumerable.Range(0, 4).Select(s => crop.SowSeasons[s] ? crop.Id : null).ToArray();
+                    string who = crop.Id + " seed " + (i + 1) + ": ";
+                    int seen = 0;
+                    var sold = new List<long>();
+                    try
+                    {
+                        Economy.Run run = Economy.RunBot(config, new ForcedCropBot(crop.Id, bySeason), seasons, (ulong)(i + 1), sim =>
+                        {
+                            FinanceState f = sim.State.Finance;
+                            if (f.Reports.Count == seen) return;
+                            seen = f.Reports.Count;
+                            SeasonReport r = f.Reports[seen - 1];
+                            long stock = 0;
+                            for (int g = 0; g < config.Game.Market.Goods.Count; g++) stock += sim.State.Market.StockCostOf(g);
+                            if (stock != sim.State.Ledger.Balance(Account.InputsInStore)) failures.Add(who + "1200 is " + sim.State.Ledger.Balance(Account.InputsInStore) + ", inputs at cost " + stock);
+                            sold.Add(f.Sales.Last.Sum(x => x.Amount));
+                            var again = Sim.Core.Saves.SaveCodec.Read(Sim.Core.Saves.SaveCodec.Write(sim.State, config, 0), config, Sim.Core.Saves.SaveCodec.SchemaVersion);
+                            if (again.State.ComputeHash() != sim.State.ComputeHash()) failures.Add(who + "the save didn't round-trip");
+                        });
+                        if (run.Seasons.Any(s => s.OverCap > 0)) failures.Add(who + "over its cap");
+                        // Co-op milk has its own line, not a sale in the record, and the milk the house drinks is in both the milk account and home use.
+                        for (int k = 0; k < run.Seasons.Count; k++)
+                        {
+                            SeasonReport r = run.Seasons[k].Report;
+                            long crops = r.ByAccount.Where(a => a.Key == Account.CropSales || a.Key == Account.FruitSales).Sum(a => a.Value);
+                            long recorded = sold[k] + r.HomeUse - run.Seasons[k].HomeMilk;
+                            if (Math.Abs(crops) != recorded) failures.Add(who + "season " + (k + 1) + ": crops and fruit " + Math.Abs(crops) + ", sales and home use " + recorded);
+                        }
+                    }
+                    catch (InvalidOperationException e) { failures.Add(who + e.Message); }
+                });
+            return failures.OrderBy(x => x, StringComparer.Ordinal).ToList();
+        }
+
+        /// <summary>The balancer's report for spec 020 §9.</summary>
+        public static int PrintCropLadder(SimConfig config, int seeds)
+        {
+            string[] seasons = { "Spring", "Summer", "Monsoon", "Winter" };
+            Console.WriteLine("Crop ladder (spec 020), " + seeds + " seeds × 8 seasons");
+            Console.WriteLine("  Rule: " + (CropLadderRule(config) is var rule && rule.Count == 0 ? "pass" : string.Join("; ", rule)));
+            foreach (LadderCrop l in LadderCrops(config))
+                Console.WriteLine("    " + l.Id.PadRight(9) + " GM " + l.Gm.ToString("0").PadLeft(6) + "  Net " + l.Net.ToString("0").PadLeft(6) + "  an hour " + string.Join(" / ", l.PerHour.Select(p => p.ToString("0"))));
+            foreach (var n in CropLadderNiches(config)) Console.WriteLine("  Niche, " + n.Key + ": " + string.Join(", ", n.Value));
+            var picks = HandPicks(config, Math.Min(seeds, 16));
+            for (int s = 0; s < 4; s++) Console.WriteLine("  Hand's picks, " + seasons[s] + ": " + string.Join(", ", picks[s].OrderByDescending(kv => kv.Value).Select(kv => kv.Key + " " + (kv.Value * 100).ToString("0") + "%")));
+            foreach (StressResult s in CropLadderBots(config, seeds).Concat(CropLadderBestMix(config, seeds).Skip(1))) Console.WriteLine("  " + s.Bot.PadRight(20) + s.MedianNetWorth.ToString("N0", CultureInfo.InvariantCulture).PadLeft(12) + "  " + s.Ratio.ToString("0.000", CultureInfo.InvariantCulture));
+            return 0;
         }
 
         /// <summary>The share of produce good-hours where the 0.5–2× rail clamped the price, over the competent runs.</summary>

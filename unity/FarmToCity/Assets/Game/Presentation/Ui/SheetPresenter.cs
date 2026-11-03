@@ -128,7 +128,6 @@ namespace Game.Presentation.Ui
                 case "orders": return IconBank.Orders;
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
-                case "seed_radish": case "seed_wheat": case "seed_rice": case "seed_potato": case "seed_lentils": case "seed_spinach": case "seed_coriander":
                 case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran": case "pav": case "rusk": case "paneer": case "curd": case "ghee":
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
@@ -140,13 +139,12 @@ namespace Game.Presentation.Ui
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
-                case "potato": case "radish": case "wheat": case "rice": case "lentils": case "berseem": case "sorghum": return SpriteBank.Crop(icon, CropStage.Growing3);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
                     if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");
-                    if (icon.StartsWith("animal_", StringComparison.Ordinal)) return IconBank.Good(icon);
+                    if (icon.StartsWith("animal_", StringComparison.Ordinal) || icon.StartsWith("seed_", StringComparison.Ordinal)) return IconBank.Good(icon);
                     if (icon.StartsWith("portrait_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);
-                    return SpriteBank.Bed(icon, CropStage.Growing3);
+                    return SpriteBank.Crop(icon, CropStage.Growing3) ?? SpriteBank.Bed(icon, CropStage.Growing3);
             }
         }
 
@@ -696,8 +694,15 @@ namespace Game.Presentation.Ui
         private void AddWhyChip(VisualElement row, LineVm line)
         {
             if (!HasWhy(line)) return;
-            var chip = new Button(() => { if (OnWhy != null) OnWhy(line.WhyKey, line.WhyId); }) { text = "" };
-            chip.name = "why:" + line.WhyKey;
+            AddWhyChip(row, line.WhyKey, line.WhyId);
+        }
+
+        /// <summary>The same ? for a Why? that isn't a sheet row's (a sow row's hourly figure, spec 020 §3.6).</summary>
+        private Button AddWhyChip(VisualElement row, string whyKey, long whyId)
+        {
+            if (whyKey == null || !WhyView.Has(whyKey)) return null;
+            var chip = new Button(() => { if (OnWhy != null) OnWhy(whyKey, whyId); }) { text = "" };
+            chip.name = "why:" + whyKey;
             chip.style.width = 56; chip.style.height = 56;
             chip.style.marginLeft = 14; chip.style.marginRight = 6;
             chip.style.flexShrink = 0;
@@ -711,6 +716,7 @@ namespace Game.Presentation.Ui
             q.style.marginTop = -4;
             chip.Add(q);
             row.Add(chip);
+            return chip;
         }
 
         /// <summary>
@@ -941,6 +947,110 @@ namespace Game.Presentation.Ui
             Show(sheet, refresh);
         }
 
+        /// <summary>
+        /// The crop calendar (spec 020 §3.6b): a column per season (this one tinted, with "now"), a row per rung of the ladder and
+        /// fodder, each crop as its picture and name; a tap opens the crop's page. No money on the grid.
+        /// </summary>
+        public void Show(CropCalendarVm vm, bool refresh = false)
+        {
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Now);
+            foreach (CalendarRowVm row in vm.Rows)
+            {
+                key.Append('|').Append(row.Label);
+                foreach (var cell in row.Cells) { key.Append('/'); foreach (CalendarCropVm c in cell) key.Append(c.CropId).Append(','); }
+            }
+            if (Unchanged(key.ToString(), refresh)) return;
+            VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
+            var scroll = NewScroll();
+            scroll.style.marginTop = 8;
+            scroll.style.flexGrow = 1;
+            scroll.style.flexShrink = 1;
+            var nowTint = new Color(UiKit.Green.r, UiKit.Green.g, UiKit.Green.b, 0.18f);
+            var line = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
+
+            VisualElement GridRow()
+            {
+                var r = new VisualElement { pickingMode = PickingMode.Ignore };
+                r.style.flexDirection = FlexDirection.Row;
+                r.style.alignItems = Align.Stretch;
+                r.style.borderBottomWidth = 2;
+                r.style.borderBottomColor = line;
+                return r;
+            }
+            VisualElement Column(VisualElement r, int season)
+            {
+                var c = new VisualElement { pickingMode = PickingMode.Ignore };
+                c.style.flexGrow = 1; c.style.flexBasis = 0; c.style.minWidth = 0;
+                c.style.justifyContent = Justify.Center;
+                c.style.paddingTop = c.style.paddingBottom = 8;
+                c.style.paddingLeft = 8;
+                if (season == vm.Now) c.style.backgroundColor = nowTint;
+                r.Add(c);
+                return c;
+            }
+            VisualElement RungLabel(VisualElement r, string text)
+            {
+                var l = UiKit.Text(text ?? "", 30, UiKit.Wood, UiKit.Heading);
+                l.style.width = 190; l.style.flexShrink = 0;
+                l.style.alignSelf = Align.Center;
+                r.Add(l);
+                return l;
+            }
+
+            VisualElement head = GridRow();
+            RungLabel(head, "");
+            for (int season = 0; season < vm.Seasons.Count; season++)
+            {
+                VisualElement c = Column(head, season);
+                c.style.alignItems = Align.Center;
+                c.Add(UiKit.Text(vm.Seasons[season], 34, season == vm.Now ? UiKit.GreenDark : UiKit.Ink, UiKit.Heading));
+                if (season == vm.Now) c.Add(UiKit.Text(vm.NowText, 26, UiKit.GreenDark, UiKit.Heading));
+            }
+            scroll.Add(head);
+
+            foreach (CalendarRowVm row in vm.Rows)
+            {
+                VisualElement r = GridRow();
+                RungLabel(r, row.Label);
+                for (int season = 0; season < row.Cells.Count; season++)
+                {
+                    VisualElement c = Column(r, season);
+                    var cell = row.Cells[season];
+                    if (cell.Count == 0)
+                    {
+                        Label dash = UiKit.Text("–", 30, UiKit.Wood, UiKit.Body);
+                        dash.style.alignSelf = Align.Center;
+                        c.Add(dash);
+                        continue;
+                    }
+                    bool many = cell.Count > 1; // smaller pictures when crops share a cell (Winter's day rung)
+                    foreach (CalendarCropVm crop in cell)
+                    {
+                        ActionVm open = crop.Open;
+                        var b = new Button(() => { if (OnAction != null) OnAction(open); }) { text = "", name = "crop:" + crop.CropId + ":" + season };
+                        b.style.flexDirection = FlexDirection.Row;
+                        b.style.alignItems = Align.Center;
+                        b.style.backgroundColor = Color.clear;
+                        b.style.borderTopWidth = b.style.borderBottomWidth = b.style.borderLeftWidth = b.style.borderRightWidth = 0;
+                        UiKit.Padding(b, many ? 2 : 4, 0);
+                        b.style.marginLeft = b.style.marginRight = 0;
+                        VisualElement pic = UiKit.Icon(IconBank.Good(crop.Icon), many ? 40 : 60);
+                        pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                        pic.style.marginRight = 10;
+                        pic.style.flexShrink = 0;
+                        b.Add(pic);
+                        Label name = UiKit.Text(crop.Name, many ? 28 : 32, UiKit.Ink, UiKit.Heading);
+                        name.style.flexShrink = 1;
+                        b.Add(name);
+                        c.Add(b);
+                    }
+                }
+                scroll.Add(r);
+            }
+            sheet.Add(scroll);
+            Show(sheet, refresh);
+        }
+
         public void Show(SowSheetVm vm, bool refresh = false)
         {
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.FreeHoursText);
@@ -948,9 +1058,11 @@ namespace Game.Presentation.Ui
             foreach (LineVm l in vm.Lines) key.Append('|').Append(l.Label).Append('=').Append(l.Value);
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Enabled);
             foreach (CropRowVm r in vm.Rows)
-                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SowableNow).Append(r.SeasonNote).Append(r.SuitsText).Append(r.HarvestText)
+                key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
-                   .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason);
+                   .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason)
+                   .Append(r.ReadyText).Append(r.PerHourText).Append(r.NoteText);
+            key.Append('|').Append(vm.AllCrops != null);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
             var scroll = NewScroll();
@@ -990,19 +1102,20 @@ namespace Game.Presentation.Ui
                 card.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
 
                 var name = new VisualElement { pickingMode = PickingMode.Ignore };
-                name.style.width = 230;
+                name.style.width = 260; // "Green peas" clear of the figures, "Fodder sorghum" on two lines
                 name.style.flexShrink = 0;
-                name.Add(UiKit.Heading1(r.Name, 46));
+                name.style.paddingRight = 14;
+                Label cropName = UiKit.Heading1(r.Name, 46);
+                cropName.style.whiteSpace = WhiteSpace.Normal;
+                name.Add(cropName);
                 name.Add(UiKit.Text(r.TimeText, 30, UiKit.Wood, UiKit.Body));
                 card.Add(name);
-                name.style.opacity = r.SowableNow ? 1f : 0.62f; // out of season: faded, but a hand's Choose stays bright
 
                 var info = new VisualElement { pickingMode = PickingMode.Ignore };
                 info.style.flexGrow = 1;
                 info.style.flexShrink = 1;
                 info.style.flexBasis = 0;   // the figures wrap inside; the Sow button keeps its width on the right
                 info.style.minWidth = 0;
-                if (r.SowableNow)
                 {
                     var chipRow = new VisualElement { pickingMode = PickingMode.Ignore };
                     chipRow.style.flexDirection = FlexDirection.Row;
@@ -1016,35 +1129,63 @@ namespace Game.Presentation.Ui
                     harvest.style.marginLeft = 16;
                     chipRow.Add(harvest);
                     info.Add(chipRow);
-                    // Money in, money out, what's left (owner, Sprint 6): three figures side by side, each in its own colour.
+                    // When it's ready if sown now (spec 020 §3.6): the ladder's first question.
+                    if (r.ReadyText != null)
+                    {
+                        Label ready = UiKit.Text(r.ReadyText, 30, UiKit.GreenDark, UiKit.Heading);
+                        ready.style.marginTop = 4;
+                        info.Add(ready);
+                    }
+                    // Money in, money out (owner, Sprint 6), each in its own colour; then what's left and what each hour of growing
+                    // earns, with its ? (spec 020 §3.6, layout A).
                     var money = new VisualElement { pickingMode = PickingMode.Ignore };
                     money.style.flexDirection = FlexDirection.Row;
                     money.style.flexWrap = Wrap.Wrap;
                     money.style.marginTop = 4;
                     money.Add(Figure(r.SpendText, UiKit.RedDark));
                     money.Add(Figure(r.GetText, UiKit.GreenDark));
-                    money.Add(Figure(r.ProfitText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn));
                     info.Add(money);
+                    var profitRow = new VisualElement { pickingMode = PickingMode.Ignore };
+                    profitRow.style.flexDirection = FlexDirection.Row;
+                    profitRow.style.alignItems = Align.Center;
+                    profitRow.style.marginTop = 2;
+                    Label profit = Figure(r.PerHourText == null ? r.ProfitText : r.ProfitText + " · " + r.PerHourText, r.Profit >= 0 ? UiKit.Ink : UiKit.Warn);
+                    profit.style.whiteSpace = WhiteSpace.Normal;
+                    profit.style.flexShrink = 1;
+                    profit.style.marginRight = 0;
+                    profitRow.Add(profit);
+                    Button perHourWhy = AddWhyChip(profitRow, r.PerHourWhyKey, r.PerHourWhyId);
+                    if (perHourWhy != null) perHourWhy.name = "why:" + r.PerHourWhyKey + ":" + r.CropId; // one per crop, for scripted touch
+                    info.Add(profitRow);
+                    if (r.NoteText != null)
+                    {
+                        Label cropNote = UiKit.Text(r.NoteText, 27, UiKit.Wood, UiKit.Body);
+                        cropNote.style.whiteSpace = WhiteSpace.Normal;
+                        info.Add(cropNote);
+                    }
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                     info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));
                 }
-                else
-                {
-                    Label season = UiKit.Text(r.SeasonNote, 32, UiKit.Warn, UiKit.Body);
-                    season.style.whiteSpace = WhiteSpace.Normal;
-                    season.style.opacity = 0.8f;
-                    info.Add(season);
-                }
                 card.Add(info);
 
-                if (r.SowableNow || (r.Sow != null && r.Sow.Kind == ActionKind.Open))
-                {
-                    VisualElement sow = ActionColumn(r.Sow);
-                    sow.style.flexShrink = 0;
-                    sow.style.marginLeft = 12;
-                    card.Add(sow);
-                }
+                VisualElement sow = ActionColumn(r.Sow);
+                sow.style.flexShrink = 0;
+                sow.style.marginLeft = 12;
+                card.Add(sow);
                 scroll.Add(card);
+            }
+            // Every crop by season is on the crop calendar (spec 020 §3.6): a link at the foot, ← comes back.
+            if (vm.AllCrops != null)
+            {
+                ActionVm all = vm.AllCrops;
+                var link = new Button(() => { if (OnAction != null) OnAction(all); }) { text = "", name = "allCrops" };
+                link.style.alignSelf = Align.FlexEnd;
+                link.style.backgroundColor = Color.clear;
+                link.style.borderTopWidth = link.style.borderBottomWidth = link.style.borderLeftWidth = link.style.borderRightWidth = 0;
+                link.style.marginTop = 10; link.style.marginBottom = 10;
+                UiKit.Padding(link, 12, 18); // a finger-sized target around the words
+                link.Add(UiKit.Text(all.Label, 34, UiKit.GreenDark, UiKit.Heading));
+                scroll.Add(link);
             }
             sheet.Add(scroll);
             if (vm.Actions.Count > 0)

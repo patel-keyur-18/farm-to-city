@@ -62,10 +62,53 @@ namespace Sim.Core.Tests
 
             tile.Moisture = Fixed.FromInt(80);
             LandSystem.UpdateMoisture(sim, tile, LandTest.Weather(sim, "sun"));
-            // 77.905 to content precision; 0.7 and 0.15 aren't exact in binary, so Q31.32 lands within an ulp of
-            // Fixed.Parse("77.905"). The raw value is pinned for determinism (spec 002 §10, implementation note).
-            Assert.That(Math.Abs(tile.Moisture.Raw - LandTest.F("77.905").Raw), Is.LessThanOrEqualTo(8));
-            Assert.That(tile.Moisture.Raw, Is.EqualTo(334_599_427_199L));
+            // 80 − 0.9 = 79.1, then 79.1 − 9.1 × 0.15 = 77.735 to content precision; 0.9 and 0.15 aren't exact in binary, so
+            // Q31.32 lands within a few ulps of Fixed.Parse("77.735"). The raw value is pinned for determinism (spec 002 §10, note 1).
+            Assert.That(Math.Abs(tile.Moisture.Raw - LandTest.F("77.735").Raw), Is.LessThanOrEqualTo(8));
+            Assert.That(tile.Moisture.Raw, Is.EqualTo(333_869_282_759L));
+        }
+
+        // Spec 002 AC-17 (ADR 0085): below dryingSlowsBelow (50) drying is × m ÷ 50; rain is unchanged; compost still multiplies.
+        [Test]
+        public void DrySoil_DriesSlower()
+        {
+            Simulation sim = NewFarm();
+            Tile tile = LandTest.TileOf(sim, "loam", "moderate");
+            int sun = LandTest.Weather(sim, "sun");
+
+            tile.Moisture = Fixed.FromInt(50); // at the level: the full 0.9
+            LandSystem.UpdateMoisture(sim, tile, sun);
+            FarmTest.AssertNear(tile.Moisture, "49.1", 8);
+
+            tile.Moisture = Fixed.FromInt(25); // half as fast: 25 − 0.9 × 25 ÷ 50
+            LandSystem.UpdateMoisture(sim, tile, sun);
+            FarmTest.AssertNear(tile.Moisture, "24.55", 8);
+
+            tile.Moisture = Fixed.FromInt(10); // a fifth: 10 − 0.18
+            LandSystem.UpdateMoisture(sim, tile, sun);
+            FarmTest.AssertNear(tile.Moisture, "9.82", 8);
+
+            tile.Moisture = Fixed.Zero; // bone dry stays at 0
+            LandSystem.UpdateMoisture(sim, tile, sun);
+            Assert.That(tile.Moisture, Is.EqualTo(Fixed.Zero));
+
+            tile.Moisture = Fixed.FromInt(10); // rain soaks in as before
+            LandSystem.UpdateMoisture(sim, tile, LandTest.Weather(sim, "rain"));
+            Assert.That(tile.Moisture, Is.EqualTo(Fixed.FromInt(13)));
+
+            // Sandy at 20 in a heatwave: 1.6 × 1.5 × 20 ÷ 50 = 0.96.
+            Tile sandy = LandTest.TileOf(sim, "sandy", "good");
+            sandy.Moisture = Fixed.FromInt(20);
+            LandSystem.UpdateMoisture(sim, sandy, LandTest.Weather(sim, "heatwave"));
+            FarmTest.AssertNear(sandy.Moisture, "19.04", 8);
+
+            // Off (0, as in content before ADR 0085): the full drying at any moisture.
+            GameDefs off = TestContent.Game((f, j) => f == "land.json" ? j.Replace("\"dryingSlowsBelow\": 50,", "") : j);
+            Simulation old = NewFarm(game: off);
+            Tile t2 = LandTest.TileOf(old, "loam", "moderate");
+            t2.Moisture = Fixed.FromInt(25);
+            LandSystem.UpdateMoisture(old, t2, LandTest.Weather(old, "sun"));
+            FarmTest.AssertNear(t2.Moisture, "24.1", 8);
         }
 
         // Spec 002 §9 moisture hook (US-014.T6): an unwatered loam acre's mean moisture by season, over 100 years after
@@ -97,6 +140,43 @@ namespace Sim.Core.Tests
             Assert.That(mean[2], Is.InRange(65, 85), "Monsoon");
             Assert.That(mean[3], Is.InRange(40, 60), "Winter");
             Assert.That(mean[2] > mean[3] && mean[3] > mean[0] && mean[0] > mean[1], Is.True, "Monsoon > Winter > Spring > Summer");
+        }
+
+        // Spec 002 §9 dry-season hook (ADR 0085, AC-18): on an unwatered loam acre, okra's water factor averaged over each Spring and
+        // each Summer, over 100 years after a warm-up year (fixed seed). Measured: Spring mean 0.84 and worst season in 10 0.63
+        // (0.80 and 0.51 before ADR 0085), Summer 0.81 and 0.59 (0.75 and 0.46). The thresholds sit between, so the check fails if
+        // the rule is off. Monsoon (okra) and Winter (wheat) don't fall: 0.82 and 0.95, as before.
+        [Test]
+        public void DrySeasons_WorstSeason()
+        {
+            Simulation sim = NewFarm(seed: 1);
+            GameDefs d = sim.Config.Game;
+            CropDef okra = d.Farm.Crops.First(c => c.Id == "okra"), wheat = d.Farm.Crops.First(c => c.Id == "wheat");
+            Tile tile = sim.State.Land.Tiles.First(t => t.Terrain == Terrain.Farm && !sim.State.Land.Parcels[t.ParcelId].Owned
+                && d.Soils[t.Soil].Id == "loam" && d.Drainages[t.Drainage].Id == "moderate");
+            long year = sim.Clock.SecondsPerYear;
+            var seasons = Enumerable.Range(0, 4).Select(_ => new List<double>()).ToArray();
+            double sum = 0; int n = 0, current = -1;
+            for (long t = Hour; t <= 101 * year; t += Hour)
+            {
+                sim.AdvanceTo(t);
+                if (t <= year) continue;
+                int season = (int)Time.Calendar.SeasonAt(t - 1, sim.Clock);
+                if (season != current && n > 0) { seasons[current].Add(sum / n); sum = 0; n = 0; }
+                current = season;
+                sum += Farm.FarmRules.WaterFactor(d.Farm.Farm, season == 3 ? wheat : okra, tile.Moisture).Raw / 4294967296.0;
+                n++;
+            }
+            double Worst(int s) { return seasons[s].OrderBy(x => x).ElementAt(seasons[s].Count / 10); }
+            string[] names = { "Spring", "Summer", "Monsoon", "Winter" };
+            for (int s = 0; s < 4; s++)
+                TestContext.Out.WriteLine(names[s] + ": mean " + seasons[s].Average().ToString("0.00") + ", worst in 10 " + Worst(s).ToString("0.00"));
+            Assert.That(Worst(0), Is.GreaterThanOrEqualTo(0.60), "Spring worst season in 10");
+            Assert.That(seasons[0].Average(), Is.GreaterThanOrEqualTo(0.82), "Spring mean");
+            Assert.That(Worst(1), Is.GreaterThanOrEqualTo(0.55), "Summer worst season in 10");
+            Assert.That(seasons[1].Average(), Is.GreaterThanOrEqualTo(0.78), "Summer mean");
+            Assert.That(seasons[2].Average(), Is.GreaterThanOrEqualTo(0.80), "Monsoon");
+            Assert.That(seasons[3].Average(), Is.GreaterThanOrEqualTo(0.93), "Winter");
         }
 
         // Spec 002 AC-4.

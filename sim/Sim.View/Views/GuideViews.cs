@@ -8,6 +8,7 @@ using Sim.Core.Farm;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Progress;
+using Sim.Core.Time;
 
 namespace Sim.View.Views
 {
@@ -323,7 +324,7 @@ namespace Sim.View.Views
                 ShowMe = Sheet(sim, ch.Action),
             };
             vm.Asks = asks && !reading && notifyAsked == 0 && !info.NotificationsOn;
-            if (!vm.Asks && asks) vm.Text = s.Get("letter.comeBack.on", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info));
+            if (!vm.Asks && asks) vm.Text = s.Get("letter.comeBack.on", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info), "quick", QuickLine(ctx, info));
             if (vm.Asks)
             {
                 vm.Buttons.Add(new CardButton(LetterIds.Yes, s.Get("card.yesNudge"), ActionKind.Primary));
@@ -420,7 +421,7 @@ namespace Sim.View.Views
         {
             asks = id == "comeBack";
             var s = ctx.Strings;
-            if (asks) return s.Get("letter.comeBack", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info));
+            if (asks) return s.Get("letter.comeBack", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info), "quick", QuickLine(ctx, info));
             if (id.StartsWith("season.", StringComparison.Ordinal)) return Hints.Season(ctx, id.Substring(7));
             return s.Get("letter." + id);
         }
@@ -436,6 +437,33 @@ namespace Sim.View.Views
         {
             Crop c = LongCrop(ctx);
             return c == null ? ctx.Strings.Get("letter.yourCrop") : ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[c.Def].NameKey).ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// The quicker crops (spec 020 G20): " Your other acres needn't wait: sown now, okra would be ready today at 19:00 and maize tonight at
+        /// 21:00." The two quickest in-season field crops on the ladder's middle rungs (<see cref="Content.UiDef.ComeBackQuickMinMinutes"/>),
+        /// other than the long crop, each with when it would be ready if sown now; empty when there are none.
+        /// </summary>
+        public static string QuickLine(ViewContext ctx, SettingsInfo info)
+        {
+            Simulation sim = ctx.Sim;
+            Season season = Calendar.SeasonAt(ctx.Now, sim.Clock);
+            Crop longCrop = LongCrop(ctx);
+            var picked = new List<CropDef>();
+            foreach (CropDef c in System.Linq.Enumerable.OrderBy(sim.Config.Game.Farm.Crops, x => x.GrowthSeconds)) // quickest first, ties in content order
+            {
+                if (c.Fodder || !c.SowSeasons[(int)season] || (longCrop != null && sim.Config.Game.Farm.Crops[longCrop.Def] == c)) continue;
+                if (c.GrowthMinutes < ctx.Ui.ComeBackQuickMinMinutes || c.GrowthMinutes > ctx.Ui.ComeBackQuickMaxMinutes) continue;
+                picked.Add(c);
+                if (picked.Count == 2) break;
+            }
+            if (picked.Count == 0) return "";
+            var s = ctx.Strings;
+            var parts = new List<string>();
+            foreach (CropDef c in picked)
+                parts.Add(s.Get(parts.Count == 0 ? "letter.comeBack.quickFirst" : "letter.comeBack.quickMore",
+                    "crop", s.Get(c.NameKey).ToLowerInvariant(), "time", WallTime.Ready(ctx, info.NowWallUtc + c.GrowthSeconds, info)));
+            return " " + s.Get("letter.comeBack.quick", "crops", string.Join(" " + s.Get("list.and") + " ", parts));
         }
 
         private static string LongCropTime(ViewContext ctx, SettingsInfo info)
@@ -463,20 +491,22 @@ namespace Sim.View.Views
             int best = -1;
             Fixed bestFactor = Fixed.One;
             var dearer = new List<string>();
-            foreach (CropDef c in farm.Crops)
+            foreach (CropDef c in System.Linq.Enumerable.OrderBy(farm.Crops, x => x.GrowthSeconds)) // quickest first, ties in content order (spec 020 §3.7)
             {
                 if (c.Fodder) continue; // fodder has its own place on the sow sheet once cattle unlock (spec 012 §3.8b)
                 string name = s.Get(c.NameKey).ToLowerInvariant();
                 if (c.SowSeasons[season]) crops.Add(name);
                 int good = c.OutputGood;
                 Fixed f = market.Region.SeasonalFactor(good, season);
-                if (f > bestFactor) { best = good; bestFactor = f; }
+                // Only what the player can have: a crop sowable now or a good that keeps (spec 020 §3.7, G17).
+                bool within = c.SowSeasons[season] || market.Goods[good].SpoilagePerDay <= ctx.Ui.HintKeepsSpoilagePerDay;
+                if (within && f > bestFactor) { best = good; bestFactor = f; }
                 int seed = c.SeedGood;
                 if (market.Region.SeasonalFactor(seed, next) > market.Region.SeasonalFactor(seed, season)) dearer.Add(name);
             }
-            var parts = new List<string> { s.Get("hint.intro." + seasonId), s.Get("hint.sow", "crops", And(ctx, crops)) };
+            var parts = new List<string> { s.Get("hint.intro." + seasonId), s.Get("hint.sow", "crops", AtMostFive(ctx, crops)) };
             if (best >= 0) parts.Add(s.Get("hint.best", "good", Cap(s.Get(market.Goods[best].NameKey))));
-            if (dearer.Count > 0) parts.Add(s.Get("hint.dearer", "seeds", And(ctx, dearer)));
+            if (dearer.Count > 0) parts.Add(s.Get("hint.dearer", "seeds", AtMostFive(ctx, dearer)));
             if (seasonId == "winter" && SeedKeeping(sim)) parts.Add(s.Get("hint.seedKeeping"));
             return string.Join(" ", parts);
         }
@@ -509,6 +539,13 @@ namespace Sim.View.Views
         private static string Cap(string word) { return word.Length == 0 ? word : char.ToUpperInvariant(word[0]) + word.Substring(1); }
 
         /// <summary>"a", "a and b", "a, b and c".</summary>
+        /// <summary>Up to five names, then "and N more" (spec 020 §3.7).</summary>
+        private static string AtMostFive(ViewContext ctx, List<string> items)
+        {
+            if (items.Count <= 5) return And(ctx, items);
+            return ctx.Strings.Get("hint.sowMore", "crops", string.Join(", ", items.GetRange(0, 5)), "n", (items.Count - 5).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
         private static string And(ViewContext ctx, List<string> items)
         {
             if (items.Count == 0) return "";
