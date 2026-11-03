@@ -1,6 +1,6 @@
 # Sprint 15b build: the crop ladder (new crops in every season)
 
-> **Draft**, written with the spec so the owner can see what will be tested. It's finalised at the end of the sprint with the build's real figures.
+> **Passed.** The owner ran every check on the iPhone 13 on 2026-11-03 and reported them all working ("all checklist works fine"). Build: the head of `sprint/15b-crop-ladder` at `0c9d369`, a Development build (Unity: Build Succeeded, 0 errors; the unsigned Xcode Release compile: no errors).
 
 - **Build:** the head of branch `sprint/15b-crop-ladder` (the commit is in the pull request)
 - **Device:** iPhone 13, iOS version: ____

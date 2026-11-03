@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 15b** (the crop ladder, ad hoc, before Sprint 16; 22–28 Mar 2027): spec 020 and ADR 0084 approved 2026-10-31; building. **Ad hoc US-233 (2026-11-02, ADR 0085): dry soil dries slower; done and approved (2026-11-02).** US-224 to US-227, US-229 and US-233 done; US-228, US-232, US-231 and US-230 built, in review (the Editor checks on the Mac left). Sprint 15 is done and merged (PR #20). **Sprint 15** (8–21 Mar 2027, 2 weeks, ADR 0076): the bakery and the dairy (F12.2), full hiring and HR (F11.4), specs 018 and 019; plan approved; US-218, US-118, US-119, US-216, US-112, US-113 done; US-114 done; balance (ADR 0082), the Editor pass and the Development build done; **the owner's requests US-219 to US-222 added (ADR 0083, 55 points): gaps closed, specs approved 2026-10-30; US-219 to US-222 approved; checklist rows added and run in the Editor, one new Development build (2026-10-30); the owner's device check passed 2026-10-31 (checks 1–40); their one change built as US-223** |
-| Branch with latest work | `sprint/15b-crop-ladder` (from `main` after PR #20 merged): the crop ladder. `sprint/16-shops-and-farm` holds Sprint 16's approved plan, not started |
-| Last updated | 2026-11-02 |
+| Sprint | **Sprint 15b done** (the crop ladder, ad hoc; spec 020, ADR 0084; US-233, ADR 0085): every story approved, the owner's device check passed on the iPhone 13 (2026-11-03); pull request open for the owner to merge. **Next: Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027) on `sprint/16-shops-and-farm`, after the merge |
+| Branch with latest work | `sprint/15b-crop-ladder` (pull request open, not merged yet). `sprint/16-shops-and-farm` holds Sprint 16's approved plan, not started |
+| Last updated | 2026-11-03 |
 
 ## Done so far
 
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 15b, the crop ladder: done (2026-11-03).** Six crops (methi, amaranth, okra, green peas, maize, mustard) in every season's gaps, save schema 13, four supermarket orders a day, the balance rule and two new bots with every gate holding (spec 020 §9), the crops' Blender art, the sow sheet as a ladder with only this season's crops, the crop calendar, the time card's "3 days left", neighbours' maize, and ad hoc US-233 (dry soil dries slower, ADR 0085). `Hr`'s gate runs 256 seeds and `DairyBusiness`'s 64 (both near their limits: watch them in Sprint 16). US-228 to US-232's Editor checks were covered by the owner's device check instead.
+
 **Sprint 15, the owner's requests (ADR 0083):**
 - **US-223 done (2026-10-31, the owner's one change from the device check): whoever works a business is seen there** (spec 016 AC-16). `PersonKind.Worker` while a business is open: a townsperson as themselves, from their house and not also at home; someone from outside from the valley's edge; you, instead of on the fields, when you run it. The work frame holds a hoe, so at a business people walk between spots and stand (a tool-free frame would need Blender). Test `BusinessViewTests.WorkerOnMap`. Editor: the bakery's **Run it** by scripted touch and the map captured with all three kinds on their acres, at 20:24 and 08:25; the worker first stood in the mill's queue, so the spots moved. Set up by script: test coins, a family house, Next era, three businesses, the mill's and dairy's hires, dev time travel. Saves restored and checked identical. The Village's gate is still Sprint 17: the Village can only be reached by **Next era** until then.
 - **End of sprint (2026-10-30, owner: "go ahead with final checks and update PR"):** US-222 approved. `s15-chains-hr.md` gains rows 32–39 (US-219: offer from a citizen's card, the housing line, a child's card and a second adult; US-220: your labourers named, at work 7:00–19:00, home at night; US-221: *Your season*, the cash line adding up, next season due, *Last season*, *Your wealth*), the schema 10/11 → 12 upgrade note, question 6 and a note that "till"/"until" times are the phone's clock and drift from the time card after dev time travel (older behaviour, the forecast too). **All of rows 32–39 run in the Editor by scripted touch** (People → Town → Arjun's family → Arjun → *Offer work as a hand* → hired, the hand card's Housing row; Radha's offer "already part of Arjun's pay"; Raju's card with no button; *Hire labourers* at 07:00 and the map, then 19:14 home; Money and loans by the cash pill, both switches and *Your wealth*); set up by script: 4,00,000 test coins, a family house on acre 84, dev time travel (6 days, then 7 h and 12 h). Rows 27–31 ran in the US-222 tour the same day. **Found and fixed:** a migrated town's *Last season* showed "Land bought −85,932" and "Other changes +85,932" from the schema 8 cattle acre's opening entry (no cash, no profit): `SeasonBook` now leaves out entries moving neither, asserted in `MoneyViewTests.Season_Reconciles` (fails without the fix). 400 sim and 112 view tests pass. Saves restored and checked identical. **One new Development build** (`BuildCli.IosDevelopment` from the open Editor after deleting `Builds/iOS`; Build Succeeded, the one console error the CLI's 5 s eval timeout), superseding 2026-10-29's; unsigned Xcode Release compile check (`CODE_SIGNING_ALLOWED=NO`): BUILD SUCCEEDED.
@@ -265,7 +267,7 @@
 
 ## Next up
 
-1. **Sprint 15b, the crop ladder (spec 020, ADR 0084, approved 2026-10-31):** US-224 to US-227 done; US-229 (the six crops' art) and US-233 (dry soil dries slower, ADR 0085) approved by the owner, 2026-11-02 (US-233's checklist rows 18–19 run again in the sprint-end Editor pass). **US-228 built in a cloud session (2026-11-02), in the owner's review:** the sow sheet and the hand's order sheet list this season's crops quickest first (out-of-season rows stay faded at the foot until US-232, the split the owner approved), each with "Ready at 16:00" / "Ready tomorrow 06:00" / "Ready in N days", "Profit about P · about N an hour" with a **?** (`sow.perHour`), and the crop's note (layout A); fodder has no hourly figure; `comeBack` gains the quicker crops' line, computed from content and the clock (owner's choice over the spec's fixed "by this evening"; `ui.json` `comeBackQuickMinutes`, spec 020 §4, AC-26). Every dotnet test green. **Left (US-228.T3): the Editor check on the Mac**, which the cloud session can't reach: back up the Editor saves; recompile; play; `TouchDriver.Setup()`; on an empty acre (84 or 85) open the sow sheet by touch and capture it (the order, the ready lines, the profit line with its ?, the note; scroll to potato); tap okra's ? (`why:sow.perHour:okra`) and capture the *Why?*; Menu → Settings → Text size Large, reopen the sheet and capture; back to Normal (`look.text` 100); a hand's order sheet on a field the same; look at every capture; stop, wait 10 s, restore the saves, `diff -r`. **US-232 built in a cloud session (2026-11-02), in the owner's review** (the owner will check US-228 and US-232 together on the Mac): the sow sheet shows this season's crops only, with **All crops ›** at its foot (the crop calendar, ← back); the hand's order sheet has **Other seasons** under "Let … choose" (`OrderSheet.Other`, soonest season first; Choose goes on to the same order steps); **Menu → Crop calendar**: a season-by-rung grid (`ui.json` `calendarRungMinutes`), this season tinted, fodder once cattle unlock, a crop opening its page with a *Why?* on every number. Every dotnet test green. **Left (US-232.T5): the Editor check on the Mac**, with US-228's: the sow sheet in each season (dev +1 season), **All crops ›** (button `allCrops`) and **Menu → Crop calendar**, a crop's page (buttons `crop:<id>:<season>`), ← back to the sow sheet, an order for Winter wheat in Spring through Other seasons, text at 125%; every capture looked at; the saves restored and `diff -r`. **US-231 and US-230 built together (owner's request, 2026-11-03), in review:** the time card reads "Spring · 3 days left · Year N" ("1 day left", "last day"), its *Why?* adds "A season lasts 4 days and a year 16.", the forecast and the *Why?*'s value keep `date.full`; neighbours grow maize on half of their fallow Spring and Monsoon parcels and on every sandy Monsoon field. Every dotnet test green. **All four stories (US-228, US-232, US-231, US-230) wait for the owner's check on the Mac and iPhone**: the Editor steps above, and the device checklist `docs/test-checklists/s15b-crop-ladder.md` (rows 2–4, 10, 10b, 12, 14, 20–23 for these stories). Then the sprint's end tasks: the checklist's non-device checks in the Editor; delete `Builds/iOS`, one Development build, the unsigned Xcode compile check; `STATUS.md`, `sprints.md`, the feature files, `GDD.md` and `CLAUDE.md`'s ADR table; a pull request with labels and the `Phase 2 · Hamlet & Village` milestone (not merged by Claude). `Hr`'s sample is 256 seeds and `DairyBusiness`'s 64. The Editor keeps `SpriteBank`'s sprite list between plays: after new art, clear `_rendered` or reload the domain.
+1. **Sprint 15b is done** (2026-11-03): US-224 to US-233 approved; the owner's device check passed on the iPhone 13 (`docs/test-checklists/s15b-crop-ladder.md`); a Development build compiled (Unity 0 errors, the unsigned Xcode Release compile with no errors); `dotnet test` green in CI. The owner merges the pull request.
 2. **After the owner merges it:** Sprint 16 resumes on `sprint/16-shops-and-farm`: merge `main` into it, update its plan for schema 14 and spec 020 G18, its dates (29 Mar – 11 Apr 2027), and start with the granary's layout preview.
 
 ## Owner action checklist (Phases 0–1)
@@ -283,7 +285,7 @@
 | Sprint 13 | Done: device check passed 2026-10-25; PR #18 merged |
 | Sprint 14 | Done: device check passed; PR #19 merged |
 | Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
-| Sprint 15b | Spec and ADR approved 2026-10-31. Approve the Blender previews; review each story; device check; merge |
+| Sprint 15b | Done: device check passed 2026-11-03; merge the pull request |
 
 ## Open questions (with the owner)
 
@@ -291,7 +293,7 @@
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 
-- **The crop ladder** (owner, 2026-10-26; timing changed 2026-10-31): the start felt slow (a 15 h potato after the first session). From the brainstorm (`docs/planning/proposals/first-day-pacing.md`) the owner chose new crops in every season. It now runs as Sprint 15b, before Sprint 16. G1–G14 closed 2026-10-26; the spec and ADR are not yet approved as a whole. No code until then.
+- ~~**The crop ladder** (owner, 2026-10-26).~~ Settled: spec 020 and ADR 0084 approved 2026-10-31, built as Sprint 15b, device check passed 2026-11-03.
 
 **Conflicts to settle in later Phase 2 specs (noted 2026-10-21, not decided):**
 - ~~The GDD gives the Village era "the treasury", but F15.1 (treasury) is Phase 3.~~ Settled (owner, 2026-10-27, spec 018 G7, ADR 0077): the treasury comes with the Township.
@@ -308,7 +310,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 15b in progress: see Next up.
+None. Sprint 15b is finished; its pull request waits for the owner's merge.
 
 ## Environment notes
 

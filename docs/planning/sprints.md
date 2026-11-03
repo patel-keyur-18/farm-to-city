@@ -689,7 +689,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 15b · 22–28 Mar 2027 · Phase 2 (the crop ladder, ad hoc, owner 2026-10-31)
 
-- **Status:** Spec 020 and ADR 0084 approved 2026-10-31; building, one story at a time
+- **Status:** Done. Every story approved; the owner's device check passed on the iPhone 13 (2026-11-03); pull request open for the owner to merge
 - **Branch:** `sprint/15b-crop-ladder`, from `main` after PR #20
 - **Goal:** Every season has a crop for every return. Six real Indian crops, no formula changes, the sow sheet compares crops fairly, every balance gate holds.
 - **Points:** 30 (Must 29, Could 1); US-233 added ad hoc (owner, 2026-11-02)
@@ -705,11 +705,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-225 | Six crops in content, true to the farm's rules | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
 | US-226 | Balanced: the rule, the ladder and diversifier bots, every gate | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
 | US-227 | No crop named in code | [F02.5](features/F02.5-crop-ladder.md) | 2 | Must | Done |
-| US-228 | The sow sheet as a ladder: order, ready time, an hour's earnings, notes | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | In review |
+| US-228 | The sow sheet as a ladder: order, ready time, an hour's earnings, notes | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | Done |
 | US-229 | The new crops drawn in Blender, seen in the Editor | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
-| US-230 | Neighbours grow maize | [F02.5](features/F02.5-crop-ladder.md) | 1 | Could | In review |
-| US-231 | The time card's words | [F02.5](features/F02.5-crop-ladder.md) | 1 | Must | In review |
-| US-232 | The crop calendar, and only this season's crops on the sow sheet | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | In review |
+| US-230 | Neighbours grow maize | [F02.5](features/F02.5-crop-ladder.md) | 1 | Could | Done |
+| US-231 | The time card's words | [F02.5](features/F02.5-crop-ladder.md) | 1 | Must | Done |
+| US-232 | The crop calendar, and only this season's crops on the sow sheet | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | Done |
 | US-233 | Dry soil dries slower (ad hoc, owner 2026-11-02; ADR 0085) | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
 
 **Order of work:** US-224 (gaps, approval, GDD) → US-225 → US-227 → US-226 → US-229's previews, approved before they go in → US-228 → US-232 (layout previewed first) → US-231 → US-229's Editor tour → US-230 if there's room → the checklist's non-device checks in the Editor → one Development build. One stop for the owner's review after each story.
@@ -724,11 +724,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] `dotnet build` and `dotnet test` green in CI; every existing gate at its threshold; the golden replays' content untouched
-- [ ] The balancer's before-and-after numbers recorded in spec 020 §9
-- [ ] Every schema change has a migration, a fixture and a test
-- [ ] The Editor tour done with scripted touch, every capture looked at; the Editor saves restored and identical
-- [ ] Device checklist, one Development build, the unsigned Xcode compile check; the owner's device check
-- [ ] Feature file, this file, `STATUS.md`, `GDD.md` and `CLAUDE.md`'s ADR table updated; the adhoc folder gone
-- [ ] Pull request with labels and the milestone; the owner merges it to `main`
+- [x] `dotnet build` and `dotnet test` green in CI; every existing gate at its threshold; the golden replays' content untouched
+- [x] The balancer's before-and-after numbers recorded in spec 020 §9
+- [x] Every schema change has a migration, a fixture and a test
+- [x] The Editor tour done with scripted touch, every capture looked at; the Editor saves restored and identical
+- [x] Device checklist, one Development build, the unsigned Xcode compile check; the owner's device check
+- [x] Feature file, this file, `STATUS.md`, `GDD.md` and `CLAUDE.md`'s ADR table updated; the adhoc folder gone
+- [x] Pull request with labels and the milestone (the owner merges it to `main`)
 - [ ] After the merge, Sprint 16's section and plan updated for what the crops change (spec 020 G15, G18)
