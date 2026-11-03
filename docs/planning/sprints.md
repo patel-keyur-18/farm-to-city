@@ -707,8 +707,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-227 | No crop named in code | [F02.5](features/F02.5-crop-ladder.md) | 2 | Must | Done |
 | US-228 | The sow sheet as a ladder: order, ready time, an hour's earnings, notes | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | In review |
 | US-229 | The new crops drawn in Blender, seen in the Editor | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
-| US-230 | Neighbours grow maize | [F02.5](features/F02.5-crop-ladder.md) | 1 | Could | To do |
-| US-231 | The time card's words | [F02.5](features/F02.5-crop-ladder.md) | 1 | Must | To do |
+| US-230 | Neighbours grow maize | [F02.5](features/F02.5-crop-ladder.md) | 1 | Could | In review |
+| US-231 | The time card's words | [F02.5](features/F02.5-crop-ladder.md) | 1 | Must | In review |
 | US-232 | The crop calendar, and only this season's crops on the sow sheet | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | In review |
 | US-233 | Dry soil dries slower (ad hoc, owner 2026-11-02; ADR 0085) | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
 

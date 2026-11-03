@@ -90,13 +90,37 @@ namespace Sim.View.Tests
             Assert.That(seen.Count, Is.GreaterThan(1), "the ready count changed during the run");
         }
 
+        // Spec 020 AC-23 (G21): the time card says how long the season has left; the forecast and the Why?'s title keep date.full.
+        [Test]
+        public void TimeCard_Words()
+        {
+            Simulation sim = ViewKit.NewGame(localSeconds: 9 * Hour);
+            long day = 24 * Hour;
+            var expected = new[] { "Spring · 3 days left · Year 1", "Spring · 2 days left · Year 1", "Spring · 1 day left · Year 1", "Spring · last day · Year 1", "Summer · 3 days left · Year 1" };
+            for (int d = 0; d < expected.Length; d++)
+            {
+                if (d > 0) sim.AdvanceTo(sim.State.Clock.SimTime + day);
+                Assert.That(HudView.Build(ViewKit2.Context(sim)).DateText, Is.EqualTo(expected[d]), "day " + (d + 1));
+            }
+            // Year 6, as the spec's example: 5 years of 16 days on, Spring day 1 and day 4.
+            Sim.View.Text.Formatter f = ViewKit2.Context(sim).Fmt;
+            Assert.That(f.HudDate(Sim.Core.Time.Calendar.From(5 * 16 * day + 9 * Hour, sim.Clock), 4), Is.EqualTo("Spring · 3 days left · Year 6"));
+            Assert.That(f.HudDate(Sim.Core.Time.Calendar.From(5 * 16 * day + 3 * day + 9 * Hour, sim.Clock), 4), Is.EqualTo("Spring · last day · Year 6"));
+
+            ViewContext ctx = ViewKit2.Context(sim);
+            Assert.That(ForecastView.Sheet(ctx).Lines.Single(l => l.WhyKey == "calendar").Value, Is.EqualTo("Summer · Day 1 of 4 · Year 1"), "the forecast keeps date.full");
+            WhyVm why = WhyView.Build(ctx, "calendar", 0);
+            Assert.That(why.Value, Is.EqualTo("Summer · Day 1 of 4 · Year 1"), "the Why? keeps date.full");
+            Assert.That(why.Rows.Select(r => r.Label), Does.Contain("A season lasts 4 days and a year 16."));
+        }
+
         [Test]
         public void Hud_Text()
         {
             Simulation sim = ViewKit.NewGame(seed: 1, localSeconds: 14 * Hour + 5 * 60);
             HudVm hud = HudView.Build(ViewKit2.Context(sim));
             Assert.That(hud.ClockText, Is.EqualTo("14:05"));
-            Assert.That(hud.DateText, Does.StartWith("Spring · Day 1 of 4 · Year 1"));
+            Assert.That(hud.DateText, Is.EqualTo("Spring · 3 days left · Year 1"));
             Assert.That(hud.CashText, Is.EqualTo("2,000").Or.EqualTo(hud.CashFullText.Replace(" coins", "")));
             Assert.That(hud.CashFullText, Does.EndWith("coins"));
             Assert.That(HudView.Build(ViewKit2.Context(sim, Sim.View.Text.NumberFormat.Western)).CashFullText, Does.EndWith("coins"));

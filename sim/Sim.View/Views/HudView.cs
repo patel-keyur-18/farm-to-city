@@ -70,7 +70,7 @@ namespace Sim.View.Views
                 ForecastText = ForecastView.HudLine(ctx),
                 AlertCount = alerts.Count,
                 AlertUrgent = alerts.Count > 0 && alerts[0].Level == AlertLevel.Urgent,
-                DateText = ctx.Fmt.Date(d, sim.Clock.DaysPerSeason),
+                DateText = ctx.Fmt.HudDate(d, sim.Clock.DaysPerSeason), // words (spec 020 §3.6c); the forecast and the Why?'s title keep date.full
                 ClockText = Text.Formatter.Clock(d),
                 WeatherId = sim.CurrentWeather.Id,
                 WeatherText = ctx.Strings.Get(sim.CurrentWeather.NameKey),

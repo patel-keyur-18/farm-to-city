@@ -215,6 +215,19 @@ namespace Sim.View.Text
             return d.Hour.ToString("00", CultureInfo.InvariantCulture) + ":" + d.Minute.ToString("00", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// The time card's words (spec 020 §3.6c, G21): "Spring · 3 days left · Year 6", and "Spring · last day · Year 6" on the
+        /// season's last day, so "1 of 4" no longer reads as the length of a year.
+        /// </summary>
+        public string HudDate(CalendarDate d, int daysPerSeason)
+        {
+            string season = _strings.Get("season." + d.Season.ToString().ToLowerInvariant());
+            string year = d.Year.ToString(CultureInfo.InvariantCulture);
+            int left = daysPerSeason - d.DayOfSeason;
+            if (left <= 0) return _strings.Get("date.hudLast", "season", season, "year", year);
+            return _strings.Plural("date.hud", left, "season", season, "year", year);
+        }
+
         /// <summary>Spring · Day 2 of 4 · Year 1.</summary>
         public string Date(CalendarDate d, int daysPerSeason)
         {
