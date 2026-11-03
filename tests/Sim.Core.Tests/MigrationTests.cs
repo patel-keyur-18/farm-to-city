@@ -16,7 +16,7 @@ namespace Sim.Core.Tests
     /// are unchanged. <c>FTC_UPDATE_SAVES=1</c> writes the bot fixture of the current schema and pins the facts of every
     /// current-schema fixture (a device town dropped in as <c>schemaN-device.ftc</c> included). Never re-pin an older schema.
     /// </summary>
-    public class MigrationTests
+    public partial class MigrationTests
     {
         private static bool Update { get { return Environment.GetEnvironmentVariable("FTC_UPDATE_SAVES") == "1"; } }
 

@@ -135,7 +135,7 @@ namespace Sim.Core.Tests
                 long local = (p.WallUtc + India * 60) % 86400;
                 Assert.That(local, Is.EqualTo(7 * 3600), "6:00 is in quiet hours: moved to 07:00");
                 string[] goods = p.CropId.Split(',');
-                Assert.That(goods.Length, Is.EqualTo(3), "two crop orders and a greens order");
+                Assert.That(goods.Length, Is.EqualTo(5), "four crop orders and a greens order");
                 Assert.That(goods.All(g => sim.Config.Game.Market.IndexOf(g) >= 0), Is.True, "goods by id, never amounts: " + p.CropId);
             }
         }

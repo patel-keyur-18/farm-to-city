@@ -24,9 +24,10 @@
 | S13 | 8–21 Feb 2027 (2 weeks, as S12) | 2 | Citizens and the life clock, the family house, homes and people art; households, needs, happiness, work and food, your people on screen (F11.1, F11.2; spec 014, ADR 0063). | 39 | 016, 015 | Yes |
 | S14 | 22 Feb – 7 Mar 2027 (2 weeks, as S13) | 2 | Population flows and family trees, population balance (F11.3); founding a business (the flour mill) and its books (F12.1); save schema 10. | 33 | 017, 013 | Yes |
 | S15 | 8–21 Mar 2027 (2 weeks, ADR 0076) | 2 | Production chains: the bakery and the dairy (F12.2); full hiring and HR (F11.4); save schema 11; the developer panel's Next era; the owner's requests US-219 to US-222 (ADR 0083, save schema 12). | 55 | 018, 019 | Yes |
-| S16 | 22 Mar – 4 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 13 (ADR 0076, 0083). | 37 (re-pointed, ADR 0076) | — | Yes |
-| S17 | 5–11 Apr 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
-| S18 | 12–18 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
+| S15b | 22–28 Mar 2027 (ad hoc, owner 2026-10-31) | 2 | The crop ladder: six real crops give every season a crop for about 1, 2, 4, 6–8 and 15 hours; the sow sheet shows when each is ready and what it earns an hour; a crop calendar; clearer time card; no formula changes (F02.5; spec 020, ADR 0084; save schema 13). Ad hoc: dry soil dries slower (US-233, ADR 0085). | 30 | 020, 002 (amended) | Yes |
+| S16 | 29 Mar – 11 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 14 (ADR 0076, 0083, 0084). | 37 (re-pointed, ADR 0076) | — | Yes |
+| S17 | 12–18 Apr 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
+| S18 | 19–25 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -686,11 +687,57 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] The owner's requests US-219 to US-222 (ADR 0083): gaps closed with the owner (18, done), specs 008, 014, 015 and 019 amended and approved, each story Editor-tested by scripted touch and reviewed; save schema 12 with migration and `saves/schema12`; the weather look approved before code (all four approved 2026-10-30)
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #20 opened 2026-10-29)
 
-## Sprint 16 · 22 Mar – 4 Apr 2027 · Phase 2 (irrigation, machines, orchards and the granary; shops, customer choice and rivals; 2 weeks, ADR 0076)
+## Sprint 15b · 22–28 Mar 2027 · Phase 2 (the crop ladder, ad hoc, owner 2026-10-31)
 
-- **Status:** Plan approved by the owner, 2026-10-31. Not started: the crop ladder (`claude/busy-meitner-h0sefn`) comes first, in its own session and pull request
-- **Branch:** `sprint/16-shops-and-farm` (merge `main` again once the crop ladder is merged)
-- **Goal:** Spec 013 built (F13.2, F13.3): the irrigation ladder, machines to buy, lease or hire, whole-acre orchards and the granary. Spec 017 built (F12.3, F12.4): a vegetable stall, a tea stall and a sweet shop, customers choosing between shops, stars, and rivals. Save schema 13 with its migration and fixture (ADR 0076, 0083).
+- **Status:** Done. Every story approved; the owner's device check passed on the iPhone 13 (2026-11-03); pull request open for the owner to merge
+- **Branch:** `sprint/15b-crop-ladder`, from `main` after PR #20
+- **Goal:** Every season has a crop for every return. Six real Indian crops, no formula changes, the sow sheet compares crops fairly, every balance gate holds.
+- **Points:** 30 (Must 29, Could 1); US-233 added ad hoc (owner, 2026-11-02)
+- **Specs for the owner to review:** 020 and ADR 0084 as a whole; spec 002's amendment and ADR 0085 (US-233, approved 2026-11-02)
+- **Device build:** Yes: Development build, `docs/test-checklists/s15b-crop-ladder.md`
+- **Milestone and labels:** `Phase 2 · Hamlet & Village`; `type:spec`, `type:adr`, `type:feature`, `type:balance`; `area:content`, `area:sim`, `area:ui`, `area:art`, `area:tooling`; `documentation`
+- **Why a "b":** Sprints 16–18 keep their numbers, because other documents refer to them; their dates move a week later.
+- Owner: close the gaps; approve the spec and ADR; approve the Blender previews (US-229.T2); run the device checklist; merge the pull request.
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-224 | The crop-ladder spec and ADR approved, the GDD updated | [F02.5](features/F02.5-crop-ladder.md) | 2 | Must | Done |
+| US-225 | Six crops in content, true to the farm's rules | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
+| US-226 | Balanced: the rule, the ladder and diversifier bots, every gate | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
+| US-227 | No crop named in code | [F02.5](features/F02.5-crop-ladder.md) | 2 | Must | Done |
+| US-228 | The sow sheet as a ladder: order, ready time, an hour's earnings, notes | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | Done |
+| US-229 | The new crops drawn in Blender, seen in the Editor | [F02.5](features/F02.5-crop-ladder.md) | 5 | Must | Done |
+| US-230 | Neighbours grow maize | [F02.5](features/F02.5-crop-ladder.md) | 1 | Could | Done |
+| US-231 | The time card's words | [F02.5](features/F02.5-crop-ladder.md) | 1 | Must | Done |
+| US-232 | The crop calendar, and only this season's crops on the sow sheet | [F02.5](features/F02.5-crop-ladder.md) | 3 | Must | Done |
+| US-233 | Dry soil dries slower (ad hoc, owner 2026-11-02; ADR 0085) | [F02.1](features/F02.1-land-and-soil.md) | 3 | Must | Done |
+
+**Order of work:** US-224 (gaps, approval, GDD) → US-225 → US-227 → US-226 → US-229's previews, approved before they go in → US-228 → US-232 (layout previewed first) → US-231 → US-229's Editor tour → US-230 if there's room → the checklist's non-device checks in the Editor → one Development build. One stop for the owner's review after each story.
+
+**Definition of Ready (ADR 0025)**
+
+- [x] G1–G14 answered (2026-10-26)
+- [x] G15–G20 answered (2026-10-31)
+- [x] G21 and G22 answered (2026-10-31)
+- [x] The spec and ADR approved as a whole (2026-10-31)
+- [x] Each story's acceptance criteria name their tests
+
+**Sprint end checklist**
+
+- [x] `dotnet build` and `dotnet test` green in CI; every existing gate at its threshold; the golden replays' content untouched
+- [x] The balancer's before-and-after numbers recorded in spec 020 §9
+- [x] Every schema change has a migration, a fixture and a test
+- [x] The Editor tour done with scripted touch, every capture looked at; the Editor saves restored and identical
+- [x] Device checklist, one Development build, the unsigned Xcode compile check; the owner's device check
+- [x] Feature file, this file, `STATUS.md`, `GDD.md` and `CLAUDE.md`'s ADR table updated; the adhoc folder gone
+- [x] Pull request with labels and the milestone (the owner merges it to `main`)
+- [ ] After the merge, Sprint 16's section and plan updated for what the crops change (spec 020 G15, G18)
+
+## Sprint 16 · 29 Mar – 11 Apr 2027 · Phase 2 (irrigation, machines, orchards and the granary; shops, customer choice and rivals; 2 weeks, ADR 0076)
+
+- **Status:** Plan approved by the owner, 2026-10-31. Not started. The crop ladder (Sprint 15b) is merged (PR #21); the plan is checked against it first (spec 020 G15, G18)
+- **Branch:** `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03)
+- **Goal:** Spec 013 built (F13.2, F13.3): the irrigation ladder, machines to buy, lease or hire, whole-acre orchards and the granary. Spec 017 built (F12.3, F12.4): a vegetable stall, a tea stall and a sweet shop, customers choosing between shops, stars, and rivals. Save schema 14 with its migration and fixture (ADR 0076, 0083, 0084).
 - **Points:** 37
 - **Specs for the owner to review:** none (013 and 017 approved 2026-10-27)
 - **Device build:** Yes: Development build
@@ -710,7 +757,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 **Sprint end checklist**
 
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [ ] Save schema 13: migration, `saves/schema13` fixture, every older schema loads
+- [ ] Save schema 14 (13 was the crop ladder's, ADR 0084): migration, `saves/schema14` fixture, every older schema loads
 - [ ] Art previewed to and approved by the owner before each story's code
 - [ ] Balance: spec 013 §9 and spec 017 §9 measured with the bots; contradictions flagged to the owner
 - [ ] Test checklist `docs/test-checklists/s16-shops-and-farm.md`, every non-device check run in the Editor; Development build; the owner's device check

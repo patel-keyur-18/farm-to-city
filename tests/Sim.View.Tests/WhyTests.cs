@@ -61,6 +61,14 @@ namespace Sim.View.Tests
                 }
             }
             yield return Named("forecast", ForecastView.Sheet(ctx));
+            for (int i = 0; i < sim.Config.Game.Farm.Crops.Count; i++) yield return Named("crop page " + i, CropCalendar.Page(ctx, i)); // spec 020 §3.6b
+            if (sim.State.People != null)
+                foreach (Tile t in sim.State.Land.Tiles)
+                    if (t.Terrain == Terrain.Farm && PeopleWords.OrderHand(sim, Sim.Core.People.OrderTargetKind.Field, t.Id) != null)
+                    {
+                        yield return Named("order other " + t.Id, OrderSheet.Other(ctx, t.Id, "+none"));
+                        break;
+                    }
             foreach (var extra in Panels.All(ctx)) yield return extra;
         }
 
@@ -97,11 +105,45 @@ namespace Sim.View.Tests
                         checkedRows++;
                     }
                 }
+                // The sow sheet's hourly figures (spec 020 AC-19), on every field you own.
+                foreach (Tile t in sim.State.Land.Tiles)
+                {
+                    if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                    foreach (CropRowVm r in SowSheet.Build(ctx, t.Id).Rows)
+                    {
+                        if (r.PerHourText == null) continue;
+                        string where = "sow " + t.Id + " / " + r.CropId + " = " + r.PerHourText;
+                        if (!WhyView.Has(r.PerHourWhyKey)) { if (!missing.Contains(where)) missing.Add(where); continue; }
+                        AssertWords(where, WhyView.Build(ctx, r.PerHourWhyKey, r.PerHourWhyId));
+                        checkedRows++;
+                    }
+                }
                 foreach (string key in new[] { "cash", "store", "calendar", "townHappiness" }) AssertWords("HUD " + key, WhyView.Build(ctx, key, 0));
                 Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "building sheets and Why? sheets is read only (AC-1)");
             }
             Assert.That(missing, Is.Empty, "rows with a number and no Why?: " + string.Join(" | ", missing));
             Assert.That(checkedRows, Is.GreaterThan(100));
+        }
+
+        // Spec 002 AC-17 (ADR 0085): the moisture Why? says that dry soil dries slower, by how much, while the weather dries it.
+        [Test]
+        public void Moisture_DrySoilRow()
+        {
+            Simulation sim = ViewKit.NewGame();
+            long t = sim.State.Clock.SimTime;
+            while (sim.Config.Game.Land.MoistureByWeather[sim.Weather.IndexOf(sim.CurrentWeather.Id)] >= Fixed.Zero) sim.AdvanceTo(t += 3600);
+            ViewContext ctx = ViewKit2.Context(sim);
+            Tile tile = sim.State.Land.Tiles[84];
+            string label = ctx.Strings.Get("why.moisture.drySoil", "level", "50");
+
+            tile.Moisture = Fixed.FromInt(25);
+            WhyVm dry = WhyView.Build(ctx, "moisture", tile.Id);
+            AssertWords("dry soil", dry);
+            WhyRowVm row = dry.Rows.Single(r => r.Label == label);
+            Assert.That(row.Value, Is.EqualTo("50%"), "25 of 50: dries half as fast");
+
+            tile.Moisture = Fixed.FromInt(60);
+            Assert.That(WhyView.Build(ctx, "moisture", tile.Id).Rows.Any(r => r.Label == label), Is.False, "above the level: the full drying");
         }
 
         // Spec 008 AC-5: each source lists its formula's causes, in words.

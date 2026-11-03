@@ -64,7 +64,7 @@ namespace Sim.Core.Tests
         }
     }
 
-    public class PeopleTests
+    public partial class PeopleTests
     {
         // Spec 006 AC-16.
         [Test]

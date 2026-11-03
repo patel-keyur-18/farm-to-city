@@ -11,7 +11,7 @@ namespace Sim.View.Tests
     {
         private const int Acre = 104;
 
-        private static Simulation Hamlet(out ViewContext ctx)
+        internal static Simulation Hamlet(out ViewContext ctx)
         {
             Simulation sim = ViewKit.NewGame();
             sim.State.Era.Current = sim.Config.Game.Livestock.UnlockEra;
@@ -112,10 +112,13 @@ namespace Sim.View.Tests
             Simulation sim = ViewKit.NewGame();
             Assert.That(SowSheet.Build(ViewKit2.Context(sim), 84).Rows.Any(r => r.CropId == "berseem"), Is.False, "fodder comes with cattle");
             sim = Hamlet(out ViewContext ctx);
+            Assert.That(SowSheet.Build(ctx, 84).Rows.Any(r => r.CropId == "berseem"), Is.False, "a Winter crop: in Spring it's on the crop calendar (spec 020 G22)");
+            sim.AdvanceTo(3 * sim.Clock.SecondsPerSeason + 9 * 3600L); // Winter
             SowSheetVm sow = SowSheet.Build(ctx, 84);
             CropRowVm berseem = sow.Rows.Single(r => r.CropId == "berseem");
             Assert.That(berseem.HarvestText, Does.StartWith("About").And.EndWith("of green fodder a day"));
             Assert.That(berseem.GetText, Does.StartWith("Feeds about"));
+            Assert.That(berseem.PerHourText, Is.Null, "no hourly figure: its worth is the fodder it saves (spec 020 §3.6)");
 
             // Fill: straw and feed only with the shed, to their places.
             Assert.That(BuyInputsSheet.Build(ctx).Lines.Any(l => l.Label == "Straw"), Is.False);

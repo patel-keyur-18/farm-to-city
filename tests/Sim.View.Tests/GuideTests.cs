@@ -195,6 +195,35 @@ namespace Sim.View.Tests
             Assert.That(guide.Nudge(ctx), Is.Null);
         }
 
+        // Spec 020 G20: comeBack points at the quicker crops, each with when it would be ready if sown now, from the clock.
+        [Test]
+        public void ComeBack_QuickerCrops()
+        {
+            foreach (var at in new[]
+            {
+                (hour: 15, line: "Your other acres needn't wait: sown now, okra would be ready tonight at 19:00 and maize tonight at 21:00."),
+                (hour: 21, line: "Your other acres needn't wait: sown now, okra would be ready tomorrow at 01:00 and maize tomorrow at 03:00."),
+            })
+            {
+                Simulation sim = ViewKit.NewGame(localSeconds: at.hour * 3600L);
+                ViewContext ctx = ViewKit2.Context(sim);
+                GuideKit.Ok(sim, new Sow(sim.State.Clock.SimTime, 86, "potato", SeedSource.Certified, "none"));
+                // The device's clock at the same time of day (UTC, no offset).
+                var info = new SettingsInfo { NowWallUtc = GuideKit.Wall0 - GuideKit.Wall0 % 86400 + at.hour * 3600L };
+                LetterVm asks = Letter.Page(ctx, "comeBack", false, info, 0);
+                Assert.That(asks.Text, Does.Contain("Your potato will be ready tomorrow at " + ((at.hour + 15) % 24).ToString("00") + ":00. " + at.line + " Want a nudge"), at.hour.ToString());
+                info.NotificationsOn = true;
+                Assert.That(Letter.Page(ctx, "comeBack", false, info, 0).Text, Does.EndWith(at.line), "the page that doesn't ask has it too");
+            }
+
+            // Winter's middle rungs hold peas (4 h), wheat (6 h), lentils and mustard (8 h): the two quickest are named.
+            Simulation winter = ViewKit.NewGame(localSeconds: 9 * 3600L);
+            winter.AdvanceTo(3 * winter.Clock.SecondsPerSeason + 9 * 3600L);
+            ViewContext w = ViewKit2.Context(winter);
+            Assert.That(Letter.QuickLine(w, new SettingsInfo { NowWallUtc = GuideKit.Wall0 - GuideKit.Wall0 % 86400 + 9 * 3600L }),
+                Is.EqualTo(" Your other acres needn't wait: sown now, green peas would be ready today at 13:00 and wheat today at 15:00."));
+        }
+
         // ADR 0045 §2, AC-14: comeBack asks; Continue when notifications are on; the card is the fallback after a skip; 2 asks at most.
         [Test]
         public void ComeBackAsks()
@@ -350,19 +379,42 @@ namespace Sim.View.Tests
 
     public class HintTests
     {
+        // Spec 020 AC-17.
+        [Test]
+        public void NamesAtMostFive()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            Assert.That(Hints.Season(ctx, "winter"), Does.Contain("You can sow methi, radish, green peas, wheat, lentils and 2 more now."));
+            Assert.That(Hints.Season(ctx, "spring"), Does.Contain("You can sow methi, radish, okra, maize and potato now."));
+        }
+
+        // Spec 020 AC-22: never a crop out of season that doesn't keep; today's four remarks unchanged.
+        [Test]
+        public void BestPrice_OnlyWhatYouCanHave()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            Assert.That(Hints.Season(ctx, "spring"), Does.Contain("Rice fetches its best price"));
+            Assert.That(Hints.Season(ctx, "summer"), Does.Contain("Radish fetches its best price"));
+            Assert.That(Hints.Season(ctx, "monsoon"), Does.Contain("Potato fetches its best price"));
+            Assert.That(Hints.Season(ctx, "winter"), Does.Contain("Wheat fetches its best price"));
+            foreach (string s in new[] { "spring", "summer", "monsoon", "winter" })
+                foreach (string never in new[] { "Okra fetches", "Green peas fetches", "Amaranth fetches" })
+                    if (s != "summer" && s != "monsoon") Assert.That(Hints.Season(ctx, s), Does.Not.Contain(never), s);
+        }
+
         // Spec 009 AC-6: the season pages name the crops sown in it, the field good at its best price, the seeds dearer next season.
         [Test]
         public void FromContent()
         {
             ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
-            Assert.That(Hints.Season(ctx, "winter"), Does.StartWith("Rabi. You can sow radish, wheat, potato and lentils now. Wheat fetches its best price this season."));
-            Assert.That(Hints.Season(ctx, "spring"), Is.EqualTo("Late rabi. You can sow radish and potato now. Rice fetches its best price this season. Buy rice and lentils seed now: it costs more next season."));
+            Assert.That(Hints.Season(ctx, "winter"), Does.StartWith("Rabi. You can sow methi, radish, green peas, wheat, lentils and 2 more now. Wheat fetches its best price this season."));
+            Assert.That(Hints.Season(ctx, "spring"), Is.EqualTo("Late rabi. You can sow methi, radish, okra, maize and potato now. Rice fetches its best price this season. Buy amaranth, lentils and rice seed now: it costs more next season."));
             Assert.That(Hints.Season(ctx, "monsoon"), Does.Contain("Potato fetches its best price"));
-            Assert.That(Hints.Season(ctx, "summer"), Does.StartWith("Zaid season. You can sow radish, rice and lentils now. Radish fetches its best price"));
+            Assert.That(Hints.Season(ctx, "summer"), Does.StartWith("Zaid season. You can sow amaranth, radish, okra, lentils and rice now. Radish fetches its best price"));
 
             // Changing the content changes the hint.
             ViewContext edited = ViewKit2.Context(ViewKit.NewGame(edit: (f, j) => f == "crops.json" ? j.Replace("\"sowSeasons\": [\"winter\"]", "\"sowSeasons\": [\"spring\", \"winter\"]") : j));
-            Assert.That(Hints.Season(edited, "spring"), Does.StartWith("Late rabi. You can sow radish, wheat and potato now."));
+            Assert.That(Hints.Season(edited, "spring"), Does.StartWith("Late rabi. You can sow methi, radish, okra, green peas, wheat and 3 more now."));
         }
 
         // Spec 009 AC-7: the seed-keeping hint in the household page, and again at the first Winter only with grain in store and eating on.

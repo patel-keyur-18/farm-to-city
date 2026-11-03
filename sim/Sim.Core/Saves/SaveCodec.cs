@@ -77,7 +77,7 @@ namespace Sim.Core.Saves
         /// Raised whenever the state's fields change (spec 007 §3.1). From schema 3 on <c>minSchema</c> stays 3: a new schema ships a
         /// migration step in the readers (branch on <see cref="SaveReader.Schema"/>) and a frozen fixture save (ADR 0047 §3, AC-14).
         /// </summary>
-        public const int SchemaVersion = 12; // 12: the sales record and the seasons' first entries (spec 019 §3.9, ADR 0083); 11: a business's day's mix (spec 016 §3.9c, ADR 0076), the hiring board's posts, workers, references, reputation, a crafting skill, tiredness, long days, courses, HR events and their records (spec 015); 10: housing in kind on a hand (spec 014 §3.6); 9: citizens and households, the Village content table (spec 014); 8: the inherited cattle acre (ADR 0064); 7: cattle, the shed and the livestock accounts (spec 012); 6: the trader's truck, daily prices and supermarket orders (spec 011); 5: the 16 × 12 village map, tile ids remapped (spec 010, ADR 0052); 4: labourers hired for a crop, a neighbour's tile and until (ADR 0048); 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
+        public const int SchemaVersion = 13; // 13: the crop ladder: no new field, but new crops change which orders are drawn, so an older town's history can't replay and it becomes its own replay base (spec 020 §3.10, ADR 0084); 12: the sales record and the seasons' first entries (spec 019 §3.9, ADR 0083); 11: a business's day's mix (spec 016 §3.9c, ADR 0076), the hiring board's posts, workers, references, reputation, a crafting skill, tiredness, long days, courses, HR events and their records (spec 015); 10: housing in kind on a hand (spec 014 §3.6); 9: citizens and households, the Village content table (spec 014); 8: the inherited cattle acre (ADR 0064); 7: cattle, the shed and the livestock accounts (spec 012); 6: the trader's truck, daily prices and supermarket orders (spec 011); 5: the 16 × 12 village map, tile ids remapped (spec 010, ADR 0052); 4: labourers hired for a crop, a neighbour's tile and until (ADR 0048); 3: the guidance and era state (spec 009, ADR 0045); 2: the weather run's start (ADR 0043); below 3 refused and kept (ADR 0041 §2)
 
         public const int DefaultMaxLogEntries = 100_000;
 
@@ -142,7 +142,9 @@ namespace Sim.Core.Saves
                     // replay base (spec 007 AC-6). Cattle's places change where compost is kept, so a schema-6 history does too (spec 012),
                     // and the cattle acre changes the map (ADR 0064). Citizens' draws would differ from an old history's hires (spec 014).
                     // An old history would replay its sales into a record the save didn't have (spec 019 AC-16).
-                    if (r.OldMap || cattleAcre || citizens || (result.Header.Schema < 6 && config.Game?.Market.Truck != null) || (result.Header.Schema < 7 && config.Game?.Livestock != null) || (result.Header.Schema < 10 && config.Game?.Population != null) || workers || sales)
+                    // New crops change which supermarket orders are drawn, so an older history means something else (spec 020 §3.10).
+                    bool ladder = result.Header.Schema < 13 && state.Market != null;
+                    if (r.OldMap || cattleAcre || citizens || (result.Header.Schema < 6 && config.Game?.Market.Truck != null) || (result.Header.Schema < 7 && config.Game?.Livestock != null) || (result.Header.Schema < 10 && config.Game?.Population != null) || workers || sales || ladder)
                         state.CommandLog.Checkpoint(Encode(state, config, result.Header.SavedAtWallUtc, result.Header.ContentFingerprint, SchemaVersion, false));
                     result.State = state;
                 }

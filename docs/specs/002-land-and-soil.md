@@ -1,10 +1,10 @@
 # 002. Land and soil
 
-- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17. Amended by ADR 0032 (well acres, 2026-10-18); by spec 010 (ADR 0052, 0053: the 16 × 12 map, new terrain kinds, `forSale`, `NotForSale`, location factors by geography; Phase 2); amended by spec 012 (ADR 0056, 0060; Phase 2): the yard holds the cattle shed and straw stack (tile 103, from the Hamlet) and a compost pit
+- Status: Implemented (2026-10-17, Sprint 1). Approved 2026-10-17. Amended by ADR 0032 (well acres, 2026-10-18); by spec 010 (ADR 0052, 0053: the 16 × 12 map, new terrain kinds, `forSale`, `NotForSale`, location factors by geography; Phase 2); amended by spec 012 (ADR 0056, 0060; Phase 2): the yard holds the cattle shed and straw stack (tile 103, from the Hamlet) and a compost pit; amended by ADR 0085 (2026-11-02, Sprint 15b, US-233): dry soil dries slower (§3.2, §4, §8 AC-3, AC-17, AC-18, §9)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Land, Fruit trees, Irrigation ladder); Assets and wealth (Farmland, Liquidity); City building (land bought parcel by parcel); Data model (`Tile` / `Parcel`)
-- Related ADRs: 0032 (the well waters two well acres), 0030 (inherited 6-acre farm, 8 × 6 map, owned-only fallow), 0028 (land priced by earning power, land-purchase loans), 0008 (upfront payment, starting package), 0009 (protected inherited plot), 0014 (fertility and the Soil factor), 0017 (Phase 1 scope), 0021 (tree slots), 0024 (hut store)
+- Related ADRs: 0085 (dry soil dries slower), 0032 (the well waters two well acres), 0030 (inherited 6-acre farm, 8 × 6 map, owned-only fallow), 0028 (land priced by earning power, land-purchase loans), 0008 (upfront payment, starting package), 0009 (protected inherited plot), 0014 (fertility and the Soil factor), 0017 (Phase 1 scope), 0021 (tree slots), 0024 (hut store)
 - Depends on specs: 001 (time, weather, scheduler). Spec 005 (ledger) records the money; spec 003 (crops and trees) uses the soil, moisture, occupancy and slots defined here.
 
 ## 1. Goal
@@ -57,14 +57,16 @@ Moisture runs from 0 (bone dry) to 100 (saturated). At every hourly pass (system
 
 1. **Weather:** `d = LandDef.moistureByWeather[w]` (points per hour, signed).
    - If `d > 0`: `m ← m + d × SoilDef.gainFactor` (how much rain soaks in).
-   - If `d < 0`: `m ← m + d × SoilDef.lossFactor × dryingFactor` (how fast the soil dries). `dryingFactor` is the fertiliser's under a crop growing on the tile (compost 0.8, spec 003 §3.10, ADR 0051), else 1.
+   - If `d < 0`: `m ← m + d × SoilDef.lossFactor × dryingFactor × drySoil` (how fast the soil dries). `dryingFactor` is the fertiliser's under a crop growing on the tile (compost 0.8, spec 003 §3.10, ADR 0051), else 1. `drySoil = min(1, m ÷ LandDef.dryingSlowsBelow)`, using `m` before this hour's change: dry soil gives up its last water slowly, as real evaporation falls with the water left (ADR 0085). It is 1 when `dryingSlowsBelow` is 0 (off).
 2. **Clamp** to `[0, 100]`.
 3. **Drainage:** if `m > DrainageDef.drainAbove`, then `m ← m − (m − drainAbove) × DrainageDef.drainRatePerHour`.
 4. **Well:** on the well acres (`WellDef.irrigatedTiles`, ADR 0032), `m ← max(m, WellDef.moistureFloor)`. This models the founder carrying buckets; spec 003 charges the labour hours for it. Every other tile, inherited or bought, is rain-fed.
 
 Examples (loam, moderate drainage, defaults below):
 - `m = 50`, an hour of rain: `50 + 3.0 × 1.0 = 53.0`. Below 70, so no drainage. Result **53.0**.
-- `m = 80`, an hour of sun: `80 − 0.7 × 1.0 = 79.3`, then `79.3 − 9.3 × 0.15 = 77.905`. Result **77.905**.
+- `m = 80`, an hour of sun: `80 − 0.9 × 1.0 = 79.1`, then `79.1 − 9.1 × 0.15 = 77.735`. Result **77.735**.
+- `m = 25`, an hour of sun: `25 − 0.9 × 1.0 × (25 ÷ 50) = 24.55`. Result **24.55** (half the drying of a moist field).
+- Sandy at `m = 20`, an hour of heatwave: `20 − 1.6 × 1.5 × (20 ÷ 50) = 19.04`.
 
 What moisture does to a crop (too dry, waterlogged) is the Water factor in spec 003.
 
@@ -150,7 +152,8 @@ FertilityPriceFactor(f) = LandDef.fertilityPriceMin + (LandDef.fertilityPriceMax
 | | `drainAbove` | Fixed | 85 / 70 / 65 | 0–100 | |
 | | `drainRatePerHour` | Fixed | 0.02 / 0.15 / 0.25 | 0–1 | Share of the excess drained each hour |
 | | `priceFactor` | Fixed | 0.85 / 1.00 / 1.05 | 0.3–2 | |
-| `LandDef` | `moistureByWeather` | map weather id → Fixed | sun −0.7, cloudy −0.2, rain 3.0, heavy_rain 8.0, heatwave −1.2, frost −0.1, storm 5.0 (tuned, US-014) | −10 to 10 | Points per hour. Every weather id in `weather.json` must appear |
+| `LandDef` | `moistureByWeather` | map weather id → Fixed | sun −0.9, cloudy −0.2, rain 3.0, heavy_rain 8.0, heatwave −1.6, frost −0.1, storm 5.0 (tuned, US-014; sun and heatwave with ADR 0085) | −10 to 10 | Points per hour. Every weather id in `weather.json` must appear |
+| | `dryingSlowsBelow` | Fixed | 50 (ADR 0085) | 0–100; optional, absent or 0 = off | Below it, drying is × m ÷ this (§3.2) |
 | | `fertilityFactorCurve` | list of (fertility, factor) | (0, 0.50), (60, 1.00), (100, 1.15) | x ascending from 0 to 100; factors 0–2 | |
 | | `fallowRecoveryPerSeason` | Fixed | 6 | 0–25 | Points |
 | | `acreBasePrice` | money (coins) | 1,20,000 | > 0 | About 8–15 seasons of an owner-operated acre's net farm income (ADR 0028, 0033); the economy model measures about 7–8 |
@@ -291,7 +294,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | --- | --- | --- |
 | AC-1 | Given a new game with the default content, then the inherited parcels (`home_a`, `home_b`) are owned and protected, hold 6 farm tiles and 1 yard tile, the hut and the well stand on the yard tile, the inherited farm tiles have fertility 45, the hut provides 4 yard slots, and the farm tiles have 12 field-edge slots | `LandTests.NewGame_InheritedPlot` |
 | AC-2 | Loading `map.json` where a tile is in two parcels, or in none, or a tile names an unknown soil, or `land.json` misses a weather id in `moistureByWeather`, or `start.json` lists inherited parcels without a yard or twice, fails validation naming the field | `ContentTests.Land_Validation` |
-| AC-3 | Given loam, moderate drainage, moisture 50, when an hour of rain passes, then moisture is exactly 53.0. Given moisture 80 and an hour of sun, then exactly 77.905 (the tuned content, US-014) | `MoistureTests.HourlyUpdate_Exact` |
+| AC-3 | Given loam, moderate drainage, moisture 50, when an hour of rain passes, then moisture is exactly 53.0. Given moisture 80 and an hour of sun, then exactly 77.735 (the tuned content, US-014, ADR 0085) | `MoistureTests.HourlyUpdate_Exact` |
 | AC-4 | Given three tiles at moisture 95 with poor, moderate and good drainage, after 24 hours of sun their moisture is strictly ordered poor > moderate > good | `MoistureTests.Drainage_Order` |
 | AC-5 | Over 3 game years for 20 seeds, every tile's moisture stays within [0, 100] and fertility within [0, 100] | `MoistureTests.StaysInBounds` |
 | AC-6 | Through a Summer of only sun and heatwave, the well acres never fall below the well floor (30), and a rain-fed inherited tile and a bought tile of the same soil fall below it. Loading a well tile that isn't an inherited farm tile fails validation | `MoistureTests.WellFloor_WellAcresOnly` |
@@ -305,12 +308,15 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-14 | A quick sale pays exactly 80% of the current price, rounded to the coin. Selling an inherited parcel is rejected with `Protected`; a parcel with a crop, a tree or a building with `ParcelInUse`; a sale that would disconnect another bought parcel with `WouldStrandLand` | `ParcelTests.Sell_QuickSale_AndGuards` |
 | AC-15 | Land state is part of `StateHash`, and the spec 001 chunking-invariance check (1 game year in one call against 500 chunks) still holds with land and a fallow schedule | `LandTests.ChunkingInvariance_WithLand` |
 | AC-16 | Performance (CI, Release): advancing 72 h with clock, weather and the default map takes under 20 ms | `PerfTests.Advance72h_WithLand` (category `Perf`) |
+| AC-17 | Dry soil dries slower (ADR 0085): loam at 50, 25, 10 and 0 after an hour of sun is 49.1, 24.55, 9.82 and 0; rain on 10 gives 13; sandy at 20 in a heatwave gives 19.04; with `dryingSlowsBelow` absent, loam at 25 gives 24.1. Loading `dryingSlowsBelow` outside 0–100 fails validation naming the field. The moisture *Why?* shows "dries slower by 50%" at 25 under a drying weather, and no such row at 60 | `MoistureTests.DrySoil_DriesSlower`, `ContentTests.Land_Validation`, `WhyTests.Moisture_DrySoilRow` (Sim.View.Tests) |
+| AC-18 | The dry-season hook (§9) on an unwatered loam acre over 100 years: okra's water factor in Spring has a mean ≥ 0.82 and a worst season in 10 ≥ 0.60, in Summer ≥ 0.78 and ≥ 0.55; okra in the Monsoon ≥ 0.80; wheat in Winter ≥ 0.93 | `MoistureTests.DrySeasons_WorstSeason` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
-| Mean moisture of an unwatered loam acre, by season (realistic Indian seasons; rabi crops grow on the moisture left by the monsoon) | Spring 30–50, Summer 15–35, Monsoon 65–85, Winter 40–60. Tuned by the economy model (US-014), with a test | ±5 |
+| Mean moisture of an unwatered loam acre, by season (realistic Indian seasons; rabi crops grow on the moisture left by the monsoon) | Spring 30–50, Summer 15–35, Monsoon 65–85, Winter 40–60. Tuned by the economy model (US-014), with a test. With ADR 0085: 40.4, 34.5, 76.5, 55.1 | ±5 |
+| A dry season on an unwatered loam acre (ADR 0085): okra's water factor averaged over the season, mean and worst season in 10 | Spring at least 0.82 and 0.60, Summer at least 0.78 and 0.55; the Monsoon and Winter no lower than before. Measured: Spring 0.84 / 0.63, Summer 0.81 / 0.59 (before ADR 0085: 0.80 / 0.51 and 0.75 / 0.46) | AC-18's thresholds |
 | Seasons of fallow to bring a neglected acre (45) to 60 | 2–3 seasons | ±1 season |
 | Price of an average acre, in seasons of an owner-operated acre's net farm income | 8–15 seasons (payback within 2–4 game years; ADR 0033). With a hired hand it is far slower (about 25–50 seasons) | Economy model (F00.3) |
 | Share of a 2-acre farm's yield lost to 4 mature edge trees | About 6% of the shaded acres | ±1 point |
@@ -349,6 +355,10 @@ None of these changes a formula or a rule.
 ### Changes after approval (Sprint 4 planning review, 2026-10-18, ADR 0038)
 
 - **`SellParcel` under a bank loan** repays the bank first from the proceeds, or is rejected with `LoanSecured` (spec 005 §3.6).
+
+### Changes after approval (Sprint 15b, 2026-11-02, ADR 0085, US-233)
+
+- **Dry soil dries slower** (§3.2): below `dryingSlowsBelow` (50) drying is × m ÷ 50, so rain-fed acres no longer sit at 0 for days in a dry Spring or Summer. Sun dries 0.9 an hour and a heatwave 1.6 (were 0.7 and 1.2), keeping §9's seasonal means in range. A rule change, approved by the owner (2026-11-02). The rule is off when the field is absent, as in the frozen golden content.
 
 ### Changes after approval (Sprint 3 findings, 2026-10-18, ADR 0037)
 

@@ -186,6 +186,9 @@ namespace Sim.Core.Tests
             // Bounds and cross-file checks.
             Assert.That(Error("land.json", j => j.Replace("\"quickSaleFactor\": 0.80", "\"quickSaleFactor\": 1.5")).FieldPath,
                 Is.EqualTo("land.land.quickSaleFactor"));
+            // ADR 0085: dryingSlowsBelow is a moisture level (0–100).
+            Assert.That(Error("land.json", j => j.Replace("\"dryingSlowsBelow\": 50", "\"dryingSlowsBelow\": 101")).FieldPath,
+                Is.EqualTo("land.land.dryingSlowsBelow"));
             Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\", \"home_d\"]", "[\"w1\"]")).FieldPath,
                 Is.EqualTo("start.inheritedParcels"));
             Assert.That(Error("start.json", j => j.Replace("[\"home_a\", \"home_b\", \"home_c\", \"home_d\"]", "[\"home_a\", \"home_a\"]")).FieldPath,

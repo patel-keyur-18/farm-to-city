@@ -19,16 +19,12 @@ namespace Sim.View.Views
         Poor = 2,
     }
 
-    /// <summary>One crop on the sow sheet and the crop-calendar card (spec 008 §3.7).</summary>
+    /// <summary>One crop on the sow sheet (spec 008 §3.7, spec 020 §3.6): only crops you can sow this season.</summary>
     public sealed class CropRowVm
     {
         public string CropId { get; internal set; }
         public string Name { get; internal set; }
         public string TimeText { get; internal set; }
-        public bool SowableNow { get; internal set; }
-
-        /// <summary>"Winter only" when it can't be sown this season, else null.</summary>
-        public string SeasonNote { get; internal set; }
         public Suits Suits { get; internal set; }
         public string SuitsText { get; internal set; }
 
@@ -59,6 +55,26 @@ namespace Sim.View.Views
         /// <summary>What sowing would buy now (seed and fertiliser not in the store): "pay 20 coins now" or "from your store".</summary>
         public string CostText { get; internal set; }
         public ActionVm Sow { get; internal set; }
+
+        /// <summary>How long it grows (the ladder's order, spec 020 §3.6).</summary>
+        public long GrowthSeconds { get; internal set; }
+
+        /// <summary>Sown now, when it's ready: "Ready at 16:40", "Ready tomorrow 07:10", "Ready in 2 days" (spec 020 §3.6).</summary>
+        public string ReadyText { get; internal set; }
+
+        /// <summary>
+        /// The profit for each hour it grows, money: <see cref="Profit"/> ÷ growth hours, rounded to 10 coins, ties away from zero
+        /// (spec 020 §3.6). <see cref="PerHourText"/> is null for fodder, whose worth is the fodder it saves.
+        /// </summary>
+        public long PerHour { get; internal set; }
+        public string PerHourText { get; internal set; }
+
+        /// <summary>The Why? behind <see cref="PerHourText"/>: its key and id (the field, the crop and the fertiliser).</summary>
+        public string PerHourWhyKey { get; internal set; }
+        public long PerHourWhyId { get; internal set; }
+
+        /// <summary>One line about the crop from strings (<c>crop.&lt;id&gt;.note</c>), or null.</summary>
+        public string NoteText { get; internal set; }
     }
 
     public sealed class FertiliserVm
@@ -87,9 +103,12 @@ namespace Sim.View.Views
         /// <summary>Rows above the crops (a hand's order: his current order and "Let him choose"), and buttons under them.</summary>
         public List<LineVm> Lines { get; } = new List<LineVm>();
         public List<ActionVm> Actions { get; } = new List<ActionVm>();
+
+        /// <summary>"All crops ›" at the sheet's foot: the crop calendar, every crop by season (spec 020 §3.6, §3.6b).</summary>
+        public ActionVm AllCrops { get; internal set; }
     }
 
-    /// <summary>The sow sheet with the crop-calendar card (spec 008 §3.5, §3.7).</summary>
+    /// <summary>The sow sheet: this season's crops, quickest first, and a link to the crop calendar (spec 008 §3.5, §3.7; spec 020 §3.6).</summary>
     public static class SowSheet
     {
         public static SowSheetVm Build(ViewContext ctx, int tileId, string fertiliserId = "none", SeedSource seed = SeedSource.Certified)
@@ -113,12 +132,14 @@ namespace Sim.View.Views
             foreach (FertiliserDef f in defs.Farm.Fertilisers)
                 vm.Fertilisers.Add(new FertiliserVm { Id = f.Id, Name = ctx.Strings.Get("fertiliser." + f.Id), EffectText = Effect(ctx, f), Selected = f.Id == fertiliserId });
 
-            FertiliserDef fert = defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fertiliserId)];
-            foreach (CropDef crop in defs.Farm.Crops)
+            int fertIndex = defs.Farm.IndexOfFertiliser(fertiliserId);
+            FertiliserDef fert = defs.Farm.Fertilisers[fertIndex];
+            var inSeason = new List<CropRowVm>();
+            for (int ci = 0; ci < defs.Farm.Crops.Count; ci++)
             {
-                if (crop.Fodder && !Sim.Core.Livestock.LivestockRules.Unlocked(sim)) continue; // fodder comes with cattle (spec 012 §3.8b)
-                CropDef c = crop;
-                bool sowable = c.SowSeasons[(int)season];
+                CropDef c = defs.Farm.Crops[ci];
+                if (c.Fodder && !Sim.Core.Livestock.LivestockRules.Unlocked(sim)) continue; // fodder comes with cattle (spec 012 §3.8b)
+                if (!c.SowSeasons[(int)season]) continue; // other seasons' crops are on the crop calendar (spec 020 §3.6, G22)
                 string name = ctx.Strings.Get(c.NameKey);
                 Fixed water = FarmRules.WaterFactor(defs.Farm.Farm, c, tile.Moisture);
                 Suits suits = water >= Fixed.One ? Suits.Good : water >= Fixed.Parse("0.85") ? Suits.Fair : Suits.Poor;
@@ -143,8 +164,7 @@ namespace Sim.View.Views
                     : ctx.Strings.Get("sow.inputsBoth", "seed", ctx.Fmt.Amount(seedValue), "fertiliser", ctx.Strings.Get("fertiliser." + fert.Id), "kg", ctx.Fmt.Kg(fertGrams), "cost", ctx.Fmt.Amount(fertValue));
                 var row = new CropRowVm
                 {
-                    CropId = c.Id, Name = name, TimeText = ctx.Fmt.Duration(c.GrowthSeconds), SowableNow = sowable,
-                    SeasonNote = sowable ? null : ctx.Strings.Get("sow.seasonsOnly", "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons)),
+                    CropId = c.Id, Name = name, TimeText = ctx.Fmt.Duration(c.GrowthSeconds),
                     Suits = suits, SuitsText = ctx.Strings.Get("suits." + suits.ToString().ToLowerInvariant()),
                     HarvestGrams = harvest, HarvestText = ctx.Strings.Get("sow.harvest", "kg", ctx.Fmt.Kg(harvest)),
                     Spend = spend, SpendText = ctx.Strings.Get("sow.spend", "amount", ctx.Fmt.Coins(spend)),
@@ -155,7 +175,15 @@ namespace Sim.View.Views
                     SoilText = ctx.Strings.Get("sow.soil", "before", ctx.Fmt.Decimal1(tile.Fertility), "after", ctx.Fmt.Decimal1(after)),
                     SoilFalls = after < tile.Fertility && ctx.Fmt.Decimal1(after) != ctx.Fmt.Decimal1(tile.Fertility), // amber only for a fall the player can see
                     CostText = buy == 0 ? ctx.Strings.Get("sow.fromStore") : ctx.Strings.Get("sow.buys", "cost", ctx.Fmt.Coins(buy)),
+                    GrowthSeconds = c.GrowthSeconds,
+                    NoteText = ctx.Strings.Has(c.NameKey + ".note") ? ctx.Strings.Get(c.NameKey + ".note") : null,
                 };
+                // The ladder (spec 020 §3.6): when it's ready if sown now, and what each hour of growing earns.
+                row.ReadyText = ReadyText(ctx, ctx.Now, c.GrowthSeconds);
+                row.PerHour = PerHour(profit, c.GrowthSeconds);
+                row.PerHourText = PerHourText(ctx, row.PerHour);
+                row.PerHourWhyKey = PerHourWhy;
+                row.PerHourWhyId = PerHourId(tileId, ci, fertIndex);
                 row.Sow = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sowCrop", "crop", name), row.CostText, ActionKind.Primary,
                     at => new Sow(at, tileId, c.Id, seed, fertiliserId), "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons));
                 if (c.Fodder) FodderView.Card(ctx, row, tile, c, fert); // cut daily for your animals: its own figures (spec 012 §3.8b)
@@ -174,9 +202,52 @@ namespace Sim.View.Views
                                 : OrderSpec.KeepCrop(tileId, c.Id, c.CanSaveSeed ? o.Seed : SeedSource.Certified, defs.Farm.Fertilisers[o.Fertiliser].Id, o.Sell, o.MinPrice)),
                         });
                 }
-                vm.Rows.Add(row);
+                inSeason.Add(row);
             }
+            // This season's crops quickest first (ties in content order: the sort is stable), spec 020 §3.6.
+            vm.Rows.AddRange(System.Linq.Enumerable.OrderBy(inSeason, r => r.GrowthSeconds));
+            vm.AllCrops = ActionVm.Open("allCrops", ctx.Strings.Get("sow.allCrops"), new SheetRequest(CropCalendar.Sheet, 0));
             return vm;
+        }
+
+        /// <summary>The Why? key of a row's hourly figure (spec 020 §3.6).</summary>
+        public const string PerHourWhy = "sow.perHour";
+
+        /// <summary>The field, crop and fertiliser of an hourly figure in one Why? id; <see cref="PerHourParts"/> reads it back.</summary>
+        public static long PerHourId(int tileId, int crop, int fertiliser) { return (tileId * 1000L + crop) * 100L + fertiliser; }
+
+        public static void PerHourParts(long id, out int tileId, out int crop, out int fertiliser)
+        {
+            fertiliser = (int)(id % 100);
+            crop = (int)(id / 100 % 1000);
+            tileId = (int)(id / 100000);
+        }
+
+        /// <summary>A sowing's profit for each hour it grows: profit × 3600 ÷ growth seconds, rounded to 10 coins, ties away from zero.</summary>
+        public static long PerHour(long profit, long growthSeconds)
+        {
+            if (growthSeconds <= 0) return 0;
+            long unit = 10 * Money.Coin;
+            long num = System.Math.Abs(profit) * 3600L, den = growthSeconds * unit;
+            long rounded = (2 * num + den) / (2 * den) * unit; // exact: no rounding before the last step
+            return profit < 0 ? -rounded : rounded;
+        }
+
+        /// <summary>"about 170 an hour", or "losing about 20 an hour".</summary>
+        public static string PerHourText(ViewContext ctx, long perHour)
+        {
+            return ctx.Strings.Get(perHour >= 0 ? "sow.perHour" : "sow.perHourLoss", "amount", ctx.Fmt.Amount(System.Math.Abs(perHour)));
+        }
+
+        /// <summary>Sown at <paramref name="now"/>: "Ready at 16:40" today, "Ready tomorrow 07:10", else "Ready in N days" (the sim's time of day is the device's).</summary>
+        public static string ReadyText(ViewContext ctx, long now, long growthSeconds)
+        {
+            CalendarDate from = Calendar.From(now, ctx.Sim.Clock), at = Calendar.From(now + growthSeconds, ctx.Sim.Clock);
+            long days = at.Day - from.Day;
+            string clock = Text.Formatter.Clock(at);
+            if (days == 0) return ctx.Strings.Get("sow.readyAt", "time", clock);
+            if (days == 1) return ctx.Strings.Get("sow.readyTomorrow", "time", clock);
+            return ctx.Strings.Get("sow.readyInDays", "n", ctx.Fmt.Integer(days));
         }
 
         /// <summary>A fertiliser's effect from its data: how much more harvest, and whether it holds water. Its soil effect is on each crop (ADR 0051).</summary>

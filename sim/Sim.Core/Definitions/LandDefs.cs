@@ -106,12 +106,19 @@ namespace Sim.Core.Definitions
         /// <summary>What the village pays for land a road takes, × its price (spec 010 §3.4; 2.0).</summary>
         public Fixed RoadTakeFactor { get; }
 
+        /// <summary>
+        /// Below this moisture, drying slows in proportion to the water left: × m ÷ this (spec 002 §3.2, ADR 0085: dry soil gives up
+        /// its last water slowly). 0 turns it off (the content before ADR 0085, such as the frozen golden content).
+        /// </summary>
+        public Fixed DryingSlowsBelow { get; }
+
         public LandDef(IReadOnlyList<Fixed> moistureByWeather, IReadOnlyList<CurvePoint> fertilityFactorCurve,
             Fixed fallowRecoveryPerSeason, long acreBasePrice, Fixed fertilityPriceMin, Fixed fertilityPriceMax,
             Fixed quickSaleFactor, int fieldEdgeSlotsPerAcre, Fixed minShadeFactor,
-            Fixed wellMoistureFloor, IReadOnlyList<int> wellTiles, Fixed roadTakeFactor)
+            Fixed wellMoistureFloor, IReadOnlyList<int> wellTiles, Fixed roadTakeFactor, Fixed dryingSlowsBelow)
         {
             RoadTakeFactor = roadTakeFactor;
+            DryingSlowsBelow = dryingSlowsBelow;
             WellTiles = new List<int>(wellTiles).AsReadOnly();
             MoistureByWeather = new List<Fixed>(moistureByWeather).AsReadOnly();
             FertilityFactorCurve = new List<CurvePoint>(fertilityFactorCurve).AsReadOnly();

@@ -116,11 +116,11 @@ namespace Tools.Balancer
         {
             if (sim.State.Farm.Founder.AutoSubsistence) return; // feed the household first: day labour until the plan is back
             FarmDefs farm = sim.Config.Game.Farm;
-            CropDef crop = farm.Crops[farm.IndexOfCrop(cropId)];
             Fixed supply = FounderRules.LabourRate(sim) + FounderRules.MandiCut(sim) + PeopleRules.HiredHours(sim);
             foreach (int tile in AcresOf(sim))
             {
                 if (sim.State.Farm.CropOn(tile) != null || Town.Reserved(sim, tile) || KeepsClear(sim, tile)) continue;
+                CropDef crop = farm.Crops[farm.IndexOfCrop(AcreCrop(sim, tile, cropId))];
                 if (FarmRules.LabourDemand(sim) + crop.LabourPerAcrePerDay > supply) break;
                 if (!Ok(sim, new Sow(t, tile, crop.Id, SeedSource.Certified, Fertiliser(sim, tile)))) break;
             }
@@ -208,7 +208,7 @@ namespace Tools.Balancer
                     }
                     left -= need;
                     bool extra = System.Array.IndexOf(AcresOf(sim), tile) >= 2;
-                    Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(tile, extra ? HandCrop[season] : BestCrop[season], SeedSource.Certified, Fertiliser(sim, tile), OrderSell, OrderMinPrice(sim))));
+                    Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.KeepCrop(tile, AcreCrop(sim, tile, extra ? HandCrop[season] : BestCrop[season]), SeedSource.Certified, Fertiliser(sim, tile), OrderSell, OrderMinPrice(sim))));
                 }
             }
         }
@@ -316,6 +316,9 @@ namespace Tools.Balancer
 
         /// <summary>The founder's crop this season (0 Spring … 3 Winter).</summary>
         protected virtual string CropFor(Simulation sim, int season) { return BestCrop[season]; }
+
+        /// <summary>The crop for one acre, by the founder or the hand: the planned one, unless a bot spreads or forces its crops.</summary>
+        protected virtual string AcreCrop(Simulation sim, int tile, string planned) { return planned; }
 
         /// <summary>Grams of a good kept back from selling (a mill's wheat).</summary>
         protected virtual long Kept(Simulation sim, int good) { return 0; }
@@ -662,6 +665,63 @@ namespace Tools.Balancer
                 if (c != null && c.State == CropState.Ready) Ok(sim, new Harvest(t, tile, Overflow.SellRestToTrader));
             }
         }
+    }
+
+    /// <summary>
+    /// Spec 020 §9: an active player. Checks in every 1–2 hours (seeded) from 07:00 to 23:00, sows the longest in-season crop ready by
+    /// the next check-in, the longest of all at 23:00; otherwise the competent bot (its hand keeps the long crops).
+    /// </summary>
+    public sealed class LadderBot : FarmerBot
+    {
+        private ulong _n;
+        private long _next, _gap;
+
+        public override string Name { get { return "ladder"; } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            if (t < _next) return;
+            long hour = t % ClockDef.SecondsPerDay / 3600;
+            long hours = hour >= 23 ? 24 + 7 - hour : hour < 7 ? 7 - hour : Math.Min(1 + (long)(Rng.Next(sim.State.Seed, (RngStream)961, _n++, 0) % 2), 23 - hour);
+            _gap = hour >= 23 ? long.MaxValue : hours * 3600;
+            _next = t + hours * 3600;
+            if (hour >= 7) base.Play(sim, t);
+        }
+
+        protected override string CropFor(Simulation sim, int season)
+        {
+            CropDef best = null;
+            foreach (CropDef c in sim.Config.Game.Farm.Crops)
+                if (!c.Fodder && c.SowSeasons[season] && c.GrowthSeconds <= _gap && (best == null || c.GrowthSeconds > best.GrowthSeconds)) best = c;
+            return best == null ? base.CropFor(sim, season) : best.Id;
+        }
+    }
+
+    /// <summary>Spec 020 §9: every acre a different in-season crop, sold through every outlet, to exploit the separate demand curves.</summary>
+    public sealed class DiversifierBot : FarmerBot
+    {
+        public override string Name { get { return "diversifier"; } }
+
+        protected override string AcreCrop(Simulation sim, int tile, string planned)
+        {
+            int season = Season(sim, sim.State.Clock.SimTime);
+            List<CropDef> crops = new List<CropDef>();
+            foreach (CropDef c in sim.Config.Game.Farm.Crops) if (!c.Fodder && c.SowSeasons[season]) crops.Add(c);
+            return crops[Array.IndexOf(AcresOf(sim), tile) % crops.Count].Id;
+        }
+    }
+
+    /// <summary>Spec 020 AC-20, AC-21: a chosen crop on every acre the bot can tend, by season (null: the competent bot's).</summary>
+    public sealed class ForcedCropBot : FarmerBot
+    {
+        private readonly string _name;
+        private readonly string[] _crops;
+
+        public ForcedCropBot(string name, string[] cropBySeason) { _name = name; _crops = cropBySeason; }
+
+        public override string Name { get { return _name; } }
+
+        protected override string AcreCrop(Simulation sim, int tile, string planned) { return _crops[Season(sim, sim.State.Clock.SimTime)] ?? planned; }
     }
 
     /// <summary>

@@ -401,6 +401,10 @@ namespace Sim.View.Views
             row.ProfitText = st.Animals.Count == 0 ? s.Get("fodder.sellsStanding", "amount", ctx.Fmt.Coins(saves))
                 : s.Plural("fodder.saves", st.Animals.Count, "amount", ctx.Fmt.Coins(saves));
             row.TimeText = s.Get("fodder.cutIn", "seasons", FieldSheets.SeasonsText(ctx, c.CutSeasons));
+            // No hourly figure: its worth is the fodder it saves each day, not a harvest (spec 020 §3.6).
+            row.PerHour = 0;
+            row.PerHourText = null;
+            row.PerHourWhyKey = null;
         }
     }
 }
