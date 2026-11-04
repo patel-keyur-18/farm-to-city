@@ -281,7 +281,7 @@
 
 ## Next up
 
-1. **Sprint 16: US-234's layout preview** (the second cattle acre on a field you own: shed, mangers, trough, straw stack, the bullocks; never cramped, ADR 0064, 0088). Then US-234's code, then US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night; US-128's art approved 2026-11-04).
+1. **Sprint 16: the owner reviews US-234's layout preview** (`docs/art/s16-second-shed-preview*.png`) (the second cattle acre on a field you own: shed, mangers, trough, straw stack, the bullocks; never cramped, ADR 0064, 0088). Then US-234's code, then US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night; US-128's art approved 2026-11-04).
 
 ## Owner action checklist (Phases 0–1)
 
