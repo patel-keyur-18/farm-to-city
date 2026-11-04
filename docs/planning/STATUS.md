@@ -281,7 +281,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-128's art preview** (`docs/art/s16-equipment-*.png`: bullocks, the pair ploughing, the tractor with a cultivator or trolley, the harvester; machines shown at work on your fields by day, the bullocks in the shed and the tractor on the farm lane's acre 167 at night; no bullock cart on the map). Then US-128's code.
+1. **Sprint 16: US-234's layout preview** (the second cattle acre on a field you own: shed, mangers, trough, straw stack, the bullocks; never cramped, ADR 0064, 0088). Then US-234's code, then US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night; US-128's art approved 2026-11-04).
 
 ## Owner action checklist (Phases 0–1)
 

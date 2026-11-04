@@ -4,6 +4,7 @@
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Livestock; Crops; Storage and selling); Assets and wealth (Livestock); Offline play (notifications)
+- Amended by: ADR 0088 (a second shed, the bullocks' home)
 - Amends: spec 002 (the cattle acre, ADR 0064: the shed, the straw stack and the compost pit); spec 003 §3.1–3.3 (fodder crops are cut, not harvested; straw from the wheat and rice harvests; Care demand from animals), §3.11 (milk as home use); spec 004 §3.5 (goods kept in their own place: straw stack, feed room, compost pit); spec 005 §3.1 (accounts 1750, 4020, 4030, 5020, 5030), §3.4 (report lines), §3.5 (net worth), §3.6 (a dairy loan), §3.9 (foreclosure seizes animals); spec 006 §3.8 (an "animals" order); spec 007 §3.5 (notification kinds), save schema 7; spec 008 (the shed sheet); spec 009 (letter chapters)
 - Related ADRs: 0056 (buffalo and cows), 0002 (the clocks, the 72-hour away cap), 0008 (per-season realism), 0009 (never stuck), 0028 and 0038 (loans secured by what they buy; selling collateral repays the bank first), 0032 (home use), 0034 (inputs in store are an asset; every coin amount follows the price index), 0040 (the yard), 0051 (compost), 0053 (the grazing commons)
 - Depends on specs: 001 (clock and passes), 003 (crops, Care, the household), 004 (store, input prices), 005 (ledger, loans), 006 (hands and orders), 007 (saves, notifications), 010 (the commons)
@@ -35,9 +36,9 @@ The player buys a buffalo or a cow, keeps her fed from their own land, and the v
 - Silage and chaff cutters: Phase 3 with the equipment ladder (spec 013 / F13.2).
 - Raising calves into heifers, growing the herd from your own calves, breed improvement: later (Phase 3).
 - Ageing and culling of animals: later. Animals don't age in Phase 2.
-- Bullocks for ploughing: the equipment ladder (spec 013, ADR 0075): a pair takes 2 of the shed's 4 places, fed like cattle, no milk.
+- Bullocks for ploughing: the equipment ladder (spec 013, ADR 0075): a pair lives in the second shed (ADR 0088), fed like cattle, no milk.
 - A dairy business (processing milk, a milk round): spec 016 (open conflict noted in `STATUS.md`).
-- More than one shed: Phase 3.
+- More than one shed: a second shed in Phase 2 (ADR 0088, US-234); more in Phase 3.
 
 ## 3. Rules and formulas
 
@@ -86,6 +87,7 @@ ADR 0056's per-game-day figures used 30 real days a game day; at 22.8 every amou
 | Compost pit | The farm's from the start (every farm has one), drawn in the cattle acre's far corner: compost up to `BuildingDef(hut).compostPitKg` 8,000 kg | |
 | Where goods live | A good with `GoodDef.place` (`feedRoom`, `strawStack`, `compostPit`) is stocked in that place and counts against its capacity, not the hut store's (§10 G5). Buying, average cost (1200 Inputs in store), spoilage and net worth work as for any input (spec 004 §3.4–3.5). `Buy` beyond a place's room is rejected with `PlaceFull`; buying cattle feed or straw needs the shed (`NoShed`) | |
 | Protected | The shed stands on the inherited cattle acre, so it is never seized or used as collateral (ADR 0009) | |
+| A second shed (ADR 0088) | From the Hamlet, once the first shed stands: the same shed on any empty field you own, chosen on lit acres; that acre becomes a second cattle acre (not farmed). 4 more places; its feed room and straw stack add to the farm's stores, both sheds feed from them as one; no second compost pit. Bullocks live only here; cows and buffalo fill the first shed, then the second. On bought land it is seized with the field like a family house | `AlreadyBuilt` (two sheds), `NoShed` (no first shed), `TileOccupied`, `NotOwned`, `InsufficientFunds` |
 
 ### 3.4 Buying and selling animals
 

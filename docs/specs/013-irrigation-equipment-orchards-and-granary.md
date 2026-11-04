@@ -5,7 +5,7 @@
 - Reviewer: Keyur Patel
 - GDD sections: Farming (irrigation ladder, equipment ladder, fruit trees: whole-acre orchards; storage and selling: the granary); Finance (depreciation, buy or lease, capital versus operating spending)
 - Amends: spec 002 (moisture: canal and drip floors, §3.1), spec 003 (the Tools factor and labour per acre with machines, §3.2; orchards as tree acres, §3.3), spec 004 (the granary's capacity and slower spoilage, §3.4), spec 005 (machines as assets, leases as rent), spec 012 (bullocks take shed places, §3.2)
-- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting)
+- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting), ADR 0088 (the bullocks' own shed; machines drawn at work and at 70%)
 - Related ADRs: 0032 (the well acres), 0014 (the yield formula and its Tools factor), 0021 and 0033 (trees and their prices), 0024 and 0034 (the store, spoilage), 0037 (the hired tractor-trolley), 0057 (spec order), 0064 (map layouts previewed)
 - Depends on specs: 002, 003, 004, 005, 006, 012
 
@@ -62,13 +62,14 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | Machine | Era | Buy | Lease a season | Hire a day | Upkeep | Covers | Effect on the acres it covers |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Hand tools | Start | — | — | — | — | All | Tools 1.00 (as now) |
-| **Ox plough** (a pair of bullocks, a plough, a cart) | Hamlet | 70,000 (bullocks 60,000 as livestock, plough and cart 10,000 over 20 seasons) | — | 900 a day with its owner | Bullocks eat as cattle and take 2 shed places (spec 012); 1 h a day of care | 6 acres | Labour −15% (spec 003 §3.6 `labourPerAcrePerDay`), Tools 1.03 (timely sowing); the cart takes 500 kg to the mandi (no trolley hire for small loads) |
+| **Ox plough** (a pair of bullocks, a plough, a cart) | Hamlet | 70,000 (bullocks 60,000 as livestock, plough and cart 10,000 over 20 seasons) | — | 900 a day with its owner | Bullocks eat as cattle and take 2 places in the second shed (spec 012, ADR 0088); 1 h a day of care | 6 acres | Labour −15% (spec 003 §3.6 `labourPerAcrePerDay`), Tools 1.03 (timely sowing); the cart takes 500 kg to the mandi (no trolley hire for small loads) |
 | **Tractor** (35 HP with a cultivator and a trolley) | Village | 6,00,000 (bank loan: the tractor as collateral at 0.70) over 60 seasons | 30,000 a season | 2,000 a day with a driver | Diesel 600 a season an acre covered; maintenance 1.5% of price a season | 20 acres | Labour −35%, Tools 1.06; mandi trips without trolley hire (2,000 kg) |
 | **Combine harvester** | Village | — (Phase 3) | — | 2,500 an acre at harvest (wheat, rice) | — | The acres hired | The harvest needs no labourers; half the straw is lost (it's cut high) |
 
 - **Coverage:** a machine covers its acres in id order (well acres first); the best machine covering an acre applies. A leased machine is a season's rent (Dr Rent, paid upfront at the close). A hired day covers all your acres for that day only (a sowing or a harvest day).
 - **Maintenance** (bought machines): on by default (paid at the close); skipped, it saves the cost and raises the breakdown chance.
 - **Breakdowns:** at each daily pass a bought machine breaks with probability `breakdownMaintained` 0.005 or `breakdownSkipped` 0.04 a day (seeded, `equipment` stream); broken, it covers nothing for 24 h and costs 5% of its price to repair (Dr Repairs). Never while away beyond the repair (the 24 h runs on; no losses from it alone).
+- **On the map (ADR 0088):** machines are drawn at 70% (the ploughing pair at 75%), at work by day (7:00–19:00) on the acres they cover a field at a time, a hired harvester on the field it harvests; at night the bullocks rest in their shed and the tractor parks on the farm lane's acre 167. The bullock cart isn't drawn.
 - **Depreciation and resale:** straight-line over its life (spec 005 §3.3); sold at `resaleShare` 0.80 of book value (the market value is shown beside the book value, GDD Finance).
 
 ### 3.3 Whole-acre orchards (§10 G6, G7)

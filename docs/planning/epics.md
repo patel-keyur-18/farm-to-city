@@ -92,7 +92,7 @@
 | [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-122–US-122 | 5 |
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | To write at the start of Phase 3 | Backlog | US-123–US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | To write at the start of Phase 3 | Backlog | US-124–US-125 | 10 |
-| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (to write, ADR 0057) | Backlog | US-126–US-126 | 5 |
+| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (to write, ADR 0057) | Backlog | US-126–US-126, US-234 | 10 |
 | [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-127–US-128 | 16 |
 | [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-129–US-130 | 11 |
 | [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (to write, ADR 0057) | Backlog | US-131–US-132 | 8 |
