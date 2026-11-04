@@ -10,7 +10,8 @@ namespace Game.Presentation.Map
     /// ending in a headwall at the village lane, in place of the bunds and hedges there; a lined channel on a channelled field's west
     /// edge with a low gate where it leaves the canal; drip lines under a field's crop; a cement outlet at the back corner of each
     /// pumped field; the borewell's small pump room at its field's back corner; the pump on the well's parapet. Offsets are
-    /// render.py's world units from the acre's centre (+x lower right, +y upper right on screen).
+    /// render.py's world units from the acre's centre (+x lower right, +y upper right on screen). The canal and a channel are drawn
+    /// dry when they carry no water (the canal's dry season; a channel's fee unpaid or cut off; owner, 2026-11-04).
     /// </summary>
     public sealed partial class MapPresenter
     {
@@ -38,14 +39,14 @@ namespace Game.Presentation.Map
             for (int x = map.CanalFrom; x <= map.CanalTo; x++)
             {
                 int t = map.CanalRow * _width + x;
-                AddBund("canal_x", t, EdgeSW, CropBase + Order(t, _width, 88, EdgeSW.y));
+                AddBund(map.CanalDry ? "canal_x_dry" : "canal_x", t, EdgeSW, CropBase + Order(t, _width, 88, EdgeSW.y));
             }
             int end = map.CanalRow * _width + map.CanalTo;
             Vector3 head = OnTile(end, new Vector2(0.5f, -0.5f));
             AddBund("canal_end", end, (Vector2)(head - TileCentre(end)), Order(end, _width, 89, head.y - TileCentre(end).y));
             foreach (int t in _channels)
             {
-                AddBund("channel_y", t, EdgeNW, CropBase + Order(t, _width, 4, EdgeNW.y));
+                AddBund(map.Tiles[t].ChannelDry ? "channel_y_dry" : "channel_y", t, EdgeNW, CropBase + Order(t, _width, 4, EdgeNW.y));
                 int y = t / _width;
                 if (y != map.CanalRow && y != map.CanalRow + 1) continue;
                 // The gate at the channel's head, on the field's own edge where it meets the canal: the north corner below the canal,

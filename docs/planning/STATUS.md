@@ -210,7 +210,8 @@
 - Screens: the field card's **Irrigation** row (replaces "Well acre") with its *Why?*, picture buttons by era (pump, borewell, channel, drip; refusals in words), the card stays open after them; the moisture *Why?* shows irrigation's floor; the season report's *Power and water* and *Repairs and upkeep*; map: canal, channels and gates, drip, outlets, the borewell room, the pump on the well.
 - Tests: `IrrigationTests` (Pump, Canal: AC-1; Drip_Source: AC-2; Borewell: AC-10; Sold_With_The_Land), `MigrationTests.Schema13_Farm` (AC-9's irrigation part), `IrrigationViewTests.FieldCard`, an irrigated situation in the *Why?* sweep; `saves/schema14` re-pinned.
 - Editor (scripted touch): field 86 → Pump on the well; 84 → Water from the pump; 85 and 101 → Dig a canal channel; 85's irrigation *Why?*; (Next era by script) 86 → Lay drip, 100 → Drill a borewell; a day by script across the close (power and water 2,482, upkeep 208, nothing unpaid); Summer: "Canal channel (dry this season)"; Large text; the card staying open (101 → Water from the borewell). Captures `docs/art/s16-irrigation-*.png`. Saves restored and identical.
-- Open for the owner: a dry canal in Summer (`docs/art/s16-irrigation-dry-preview.png`), and the pump's acres being any 4 of your fields.
+- The canal and channels drawn dry in Summer (approved 2026-11-04; `MapVm.CanalDry`, `TileVm.ChannelDry`, `IrrigationViewTests.Map_DryCanal`). Open for the owner: the pump's acres being any 4 of your fields.
+- Found in the Editor: after developer time travel puts the town ahead of the clock, the season report's close doesn't respond until the clock catches up (dev-only; players can't time-travel).
 
 **Sprint 16, US-130 done (2026-11-03, approved by the owner): grain storage in the mandi town** (spec 013 §3.4 as amended by ADR 0087).
 - Sim: the `godown` building (a building with no tile, TileId −1: depreciated with the buildings, not collateral, not on the map) and the `godown` block in `buildings.json`; `BuyGodown`, `RentWarehouse(tonnes)`, `LetGodown(on)`; `GodownState` (rented tonnes, next season's, let next and now, the last outcome) as its own save section; `GodownRules.Dry` works out what each place holds from the stock (fastest-spoiling first, the hut store emptied first), so the hut's capacity and spoilage need no new per-good state; spoilage at 0.2 in town; at the close (after the businesses' upfront pay) the let (seeded `Godown` stream; only if all your dry goods fit the rented space) then the warehouse's rent upfront (prepaid 1120 → 5300), never below what is stored there. Save schema 14 with `saves/schema14`; a schema-13 town becomes its own replay base (its history may predate ADR 0085's drying: found by `Schema13_Farm`).
@@ -280,7 +281,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-127** (`docs/art/s16-irrigation-*.png`; two questions: the dry canal in Summer, the pump's acres). Then US-128's art preview (bullocks and plough, tractor, harvester).
+1. **Sprint 16: the owner reviews US-127** (`docs/art/s16-irrigation-*.png`; one question left: the pump's acres). Then US-128's art preview (bullocks and plough, tractor, harvester).
 
 ## Owner action checklist (Phases 0–1)
 

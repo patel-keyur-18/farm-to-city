@@ -233,6 +233,13 @@
    "name": "canal_x"
   },
   {
+   "w": 368,
+   "h": 222,
+   "pivotX": 0.49677,
+   "pivotY": 0.48398,
+   "name": "canal_x_dry"
+  },
+  {
    "w": 112,
    "h": 94,
    "pivotX": 0.47201,
@@ -266,6 +273,13 @@
    "pivotX": 0.5,
    "pivotY": 0.48517,
    "name": "channel_y"
+  },
+  {
+   "w": 350,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48517,
+   "name": "channel_y_dry"
   },
   {
    "w": 220,

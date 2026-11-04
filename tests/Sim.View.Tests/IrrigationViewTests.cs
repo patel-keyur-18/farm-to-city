@@ -70,5 +70,19 @@ namespace Sim.View.Tests
             Assert.That(why.Rows.Select(r => r.Label), Does.Contain("The pump keeps it at least at").And.Contain("Care saved each day (no weeding between the lines)"));
             Assert.That(why.Rows.Select(r => r.Label), Does.Not.Contain("Water fee each season"), "86 has no channel");
         }
+
+        // The map draws the canal dry in its dry season and a channel dry when it carries no water for you (owner, 2026-11-04).
+        [Test]
+        public void Map_DryCanal()
+        {
+            Simulation sim = Game("hamlet");
+            sim.Execute(new BuildChannel(sim.State.Clock.SimTime, 85));
+            MapVm spring = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(spring.CanalRow, Is.EqualTo(4));
+            Assert.That((spring.CanalDry, spring.Tiles[85].ChannelDry, spring.Tiles[84].ChannelDry), Is.EqualTo((false, false, false)));
+            sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason); // Summer: closed for repairs
+            MapVm summer = MapView.Build(ViewKit2.Context(sim));
+            Assert.That((summer.CanalDry, summer.Tiles[85].ChannelDry), Is.EqualTo((true, true)));
+        }
     }
 }

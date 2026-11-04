@@ -149,7 +149,8 @@ namespace Game.Presentation.Map
             int owned = map.Season;
             foreach (TileVm t in map.Tiles) if (Yours(t.Kind)) owned = owned * 31 + t.Id + 1;
             _channels.Clear();
-            foreach (BuildingVm b in map.Buildings) if (b.DefId == ChannelId) { _channels.Add(b.TileId); owned = owned * 37 + b.TileId + 7; }
+            foreach (BuildingVm b in map.Buildings) if (b.DefId == ChannelId) { _channels.Add(b.TileId); owned = owned * 37 + b.TileId + (map.Tiles[b.TileId].ChannelDry ? 11 : 7); }
+            if (map.CanalDry) owned = owned * 41 + 3;
             if (owned == _bundsFor) { foreach (SpriteRenderer b in _bunds) b.color = _tint; return; }
             _bundsFor = owned;
             foreach (SpriteRenderer b in _bunds) Destroy(b.gameObject);

@@ -3221,7 +3221,7 @@ def model_canal():
 
 def model_canal_dry():
     """The minor canal in its dry season (closed for repairs, spec 013 §3.1): the same lining, its bed dry mud with cracks and a
-    last puddle or two. A preview for the owner (2026-11-04)."""
+    last puddle or two (approved by the owner, 2026-11-04)."""
     import random
     rnd = random.Random(73)
     b = Batch("canalDry")
@@ -3239,7 +3239,7 @@ def model_canal_dry():
 
 
 def model_channel_dry():
-    """A field channel with no water in it: the lined nali with a dry mud bottom (preview, 2026-11-04)."""
+    """A field channel with no water in it: the lined nali with a dry mud bottom (approved, 2026-11-04)."""
     b = Batch("channelDry")
     lining, bed = toon("channelLining", 0xC2BBAE), toon("canalBed", 0xB08A5C)
     b.box(lining, (0.05, 1.0, 0.02), Matrix.Translation((0, 0, 0.01)))

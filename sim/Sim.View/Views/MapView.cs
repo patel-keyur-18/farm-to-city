@@ -69,6 +69,9 @@ namespace Sim.View.Views
         /// <summary>The pump or the borewell waters the acre: a cement outlet at its back corner (spec 013 §3.1).</summary>
         public bool Pumped { get; internal set; }
 
+        /// <summary>The acre's canal channel carries no water for you now (the canal closed, its fee unpaid, or cut off): drawn dry.</summary>
+        public bool ChannelDry { get; internal set; }
+
         /// <summary>An outbreak was found on the growing crop and it isn't sprayed yet: the field shows a pest marker.</summary>
         public bool PestWarning { get; internal set; }
 
@@ -301,6 +304,9 @@ namespace Sim.View.Views
         public int CanalRow { get; internal set; } = -1;
         public int CanalFrom { get; internal set; }
         public int CanalTo { get; internal set; }
+
+        /// <summary>The canal is closed for repairs this season: drawn dry (owner, 2026-11-04).</summary>
+        public bool CanalDry { get; internal set; }
     }
 
     public static class MapView
@@ -440,6 +446,10 @@ namespace Sim.View.Views
                 map.CanalRow = canal.Row;
                 map.CanalFrom = canal.FromColumn;
                 map.CanalTo = canal.ToColumn;
+                map.CanalDry = canal.DrySeasons[(int)Sim.Core.Time.Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)];
+                bool[] reached = IrrigationRules.Reached(sim);
+                bool flowing = IrrigationRules.CanalFlowing(sim);
+                foreach (TileVm t in map.Tiles) t.ChannelDry = IrrigationRules.Channelled(sim, t.Id) && !(flowing && reached[t.Id]);
             }
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
