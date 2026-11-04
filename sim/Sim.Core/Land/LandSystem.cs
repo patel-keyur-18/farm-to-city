@@ -88,7 +88,7 @@ namespace Sim.Core.Land
             return false;
         }
 
-        /// <summary>A crop on any tile, a tree in any slot, or a building on the parcel.</summary>
+        /// <summary>A crop on any tile, a tree in any slot, or a building on the parcel (not irrigation, which is sold with it).</summary>
         internal static bool InUse(Simulation sim, int parcelId)
         {
             LandState land = sim.State.Land;
@@ -97,7 +97,7 @@ namespace Sim.Core.Land
             foreach (TreeSlot slot in land.Slots)
                 if (slot.TreeId != 0 && land.Tiles[slot.TileId].ParcelId == parcelId) return true;
             foreach (Building b in land.Buildings)
-                if (b.TileId >= 0 && land.Tiles[b.TileId].ParcelId == parcelId) return true; // the godown in town has no tile (ADR 0087)
+                if (b.TileId >= 0 && land.Tiles[b.TileId].ParcelId == parcelId && !IrrigationRules.IsIrrigation(sim, b)) return true; // the godown in town has no tile (ADR 0087); channels, drip and a borewell go with the land
             return false;
         }
 
@@ -148,7 +148,8 @@ namespace Sim.Core.Land
             switch (pass)
             {
                 case ItemClass.Hourly:
-                    foreach (Tile tile in land.Tiles) UpdateMoisture(sim, tile, land.HourWeather);
+                    Fixed[] floors = IrrigationRules.Floors(sim); // once an hour: the pumped, canal and drip floors (spec 013 §3.1)
+                    foreach (Tile tile in land.Tiles) UpdateMoisture(sim, tile, land.HourWeather, floors[tile.Id]);
                     land.HourWeather = sim.State.Weather.WeatherOf(Calendar.SpellAt(t, sim.Clock));
                     break;
                 case ItemClass.Daily:
@@ -167,8 +168,16 @@ namespace Sim.Core.Land
             return false;
         }
 
-        /// <summary>One hour of moisture change on a tile under the given weather (spec 002 §3.2). The well keeps the well acres above its floor.</summary>
         internal static void UpdateMoisture(Simulation sim, Tile tile, int weather)
+        {
+            UpdateMoisture(sim, tile, weather, IrrigationRules.Floors(sim)[tile.Id]);
+        }
+
+        /// <summary>
+        /// One hour of moisture change on a tile under the given weather (spec 002 §3.2). Irrigation holds the tile at its floor with
+        /// no labour (spec 013 §3.1); then the well keeps the well acres above its own, lower floor with the founder's buckets.
+        /// </summary>
+        internal static void UpdateMoisture(Simulation sim, Tile tile, int weather, Fixed irrigated)
         {
             GameDefs defs = sim.Config.Game;
             SoilDef soil = defs.Soils[tile.Soil];
@@ -179,6 +188,7 @@ namespace Sim.Core.Land
             else if (d < Fixed.Zero) m += d * soil.LossFactor * DryingFactor(sim, tile.Id) * DrySoilFactor(defs.Land, m);
             m = Clamp(m);
             if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
+            if (m < irrigated) m = irrigated;
             // The well acres only (ADR 0032); the lift is the founder's bucket-carrying, charged by spec 003.
             tile.WellLift = Fixed.Zero;
             if (m < defs.Land.WellMoistureFloor && IsWellTile(defs, tile.Id))

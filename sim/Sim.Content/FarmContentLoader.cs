@@ -92,7 +92,7 @@ namespace Sim.Content
         {
             const string root = "farming";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "farm", "fertilisers", "pests");
+            OnlyFields(o, root, "farm", "fertilisers", "pests", "irrigation"); // irrigation: LoadIrrigation, after the eras
             string fp = root + ".farm";
             JObject f = Object(Required(o, root, "farm"), fp);
             OnlyFields(f, fp, "yieldCap", "careCap", "toolsFactor", "weatherYieldFactor", "waterDryFloor", "waterWetFloor",
@@ -288,6 +288,68 @@ namespace Sim.Content
             if (!overlap) throw new ContentException(Join(fp, "cutSeasons"), "must include a sowing season");
             if (c["canSaveSeed"] != null && Bool(c["canSaveSeed"], p + ".canSaveSeed")) throw new ContentException(p + ".canSaveSeed", "fodder seed isn't saved");
             return cut;
+        }
+
+        /// <summary>
+        /// The <c>irrigation</c> block of <c>farming.json</c> (spec 013 §3.1, ADR 0086, ADR 0087), read after the eras it names: the
+        /// pump and the borewell (the acres each waters, its floor, power), the canal (fee, floor, dry seasons, where it runs) and drip.
+        /// </summary>
+        private static IrrigationDef LoadIrrigation(string json, List<BuildingDef> buildings, MapDef map, OnboardingDefs onboarding)
+        {
+            const string root = "farming";
+            JObject o = Object(Parse(json, root), root);
+            string p = Join(root, "irrigation");
+            JObject d = Object(Required(o, root, "irrigation"), p);
+            OnlyFields(d, p, "pump", "borewell", "canal", "drip");
+            int Building(JObject x, string xp)
+            {
+                string id = String(Required(x, xp, "building"), Join(xp, "building"));
+                int b = buildings.FindIndex(y => y.Id == id);
+                if (b < 0) throw new ContentException(Join(xp, "building"), "unknown building '" + id + "'");
+                return b;
+            }
+            int Era(JObject x, string xp)
+            {
+                string id = String(Required(x, xp, "unlockEra"), Join(xp, "unlockEra"));
+                if (onboarding == null) return 0;
+                for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == id) return i;
+                throw new ContentException(Join(xp, "unlockEra"), "unknown era '" + id + "'");
+            }
+            PumpedDef Pumped(string name)
+            {
+                string xp = Join(p, name);
+                JObject x = Object(Required(d, p, name), xp);
+                OnlyFields(x, xp, "building", "unlockEra", "acres", "moistureFloor", "powerPerAcreSeason");
+                return new PumpedDef
+                {
+                    Building = Building(x, xp), UnlockEra = Era(x, xp), Acres = BoundedInt(x, xp, "acres", 1, 40),
+                    MoistureFloor = Bounded(x, xp, "moistureFloor", "0", "100"), PowerPerAcreSeason = Money(Required(x, xp, "powerPerAcreSeason"), Join(xp, "powerPerAcreSeason")),
+                };
+            }
+
+            string cp = Join(p, "canal");
+            JObject c = Object(Required(d, p, "canal"), cp);
+            OnlyFields(c, cp, "building", "unlockEra", "feePerAcreSeason", "moistureFloor", "drySeasons", "row", "fromColumn", "toColumn");
+            var canal = new CanalDef
+            {
+                Building = Building(c, cp), UnlockEra = Era(c, cp), FeePerAcreSeason = Money(Required(c, cp, "feePerAcreSeason"), Join(cp, "feePerAcreSeason")),
+                MoistureFloor = Bounded(c, cp, "moistureFloor", "0", "100"), DrySeasons = Seasons(c, cp, "drySeasons"),
+                Row = BoundedInt(c, cp, "row", 0, map.Height - 2), FromColumn = BoundedInt(c, cp, "fromColumn", 0, map.Width - 1),
+                ToColumn = BoundedInt(c, cp, "toColumn", 0, map.Width - 1),
+            };
+            if (canal.ToColumn < canal.FromColumn) throw new ContentException(Join(cp, "toColumn"), "must be at least fromColumn");
+
+            string dp = Join(p, "drip");
+            JObject r = Object(Required(d, p, "drip"), dp);
+            OnlyFields(r, dp, "building", "unlockEra", "subsidyShare", "subsidyAcres", "powerPerAcreSeason", "upkeepShare", "fertigationBonus", "careCutHoursPerDay");
+            var drip = new DripDef
+            {
+                Building = Building(r, dp), UnlockEra = Era(r, dp), SubsidyShare = Bounded(r, dp, "subsidyShare", "0", "1"),
+                SubsidyAcres = BoundedInt(r, dp, "subsidyAcres", 0, 40), PowerPerAcreSeason = Money(Required(r, dp, "powerPerAcreSeason"), Join(dp, "powerPerAcreSeason")),
+                UpkeepShare = Bounded(r, dp, "upkeepShare", "0", "1"), FertigationBonus = Bounded(r, dp, "fertigationBonus", "0", "1"),
+                CareCutHoursPerDay = Bounded(r, dp, "careCutHoursPerDay", "0", "24"),
+            };
+            return new IrrigationDef { Pump = Pumped("pump"), Borewell = Pumped("borewell"), Canal = canal, Drip = drip };
         }
 
         /// <summary>A non-empty list of season ids as a bool per season.</summary>

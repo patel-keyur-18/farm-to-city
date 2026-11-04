@@ -58,6 +58,7 @@ namespace Sim.View.Views
         {
             Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.SeedsAndPlanting, Account.FertiliserAndSpraying,
             Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent, Account.Depreciation, Account.TransportAndSelling,
+            Account.Power, Account.Repairs,
         };
 
         // The *why your cash moved* lines, in the order shown.

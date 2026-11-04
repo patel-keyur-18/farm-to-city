@@ -39,7 +39,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | --- | --- | --- | --- | --- | --- |
 | Rain-fed | Start | — | — | Weather and soil only | — |
 | Well and buckets | Start (the 2 well acres) | — | Your bucket labour (spec 003 §3.6) | Floor 30 | 1–2.4 h a day an acre in dry weather |
-| **Pump on the well** | Hamlet | An electric pump and pipes, 15,000, depreciated over 40 seasons | Power 250 a season an acre watered | Floor 40 on up to `wellPumpAcres` 4 acres (the 2 well acres and 2 next to them, chosen by the player) | None (no buckets) |
+| **Pump on the well** | Hamlet | An electric pump and pipes, 15,000, depreciated over 40 seasons | Power 250 a season an acre watered | Floor 40 on up to `wellPumpAcres` 4 of your fields, chosen by the player (it starts on the 2 well acres) | None (no buckets) |
 | **Canal channel** | Hamlet | 6,000 an acre (a lined field channel from the minor canal along the river side; an acre must border a channelled acre or the canal) | Water fee 400 a season an acre (the irrigation department), paid at the close | Floor 45 in Monsoon, Winter and Spring; **dry in Summer** (the canal is closed for repairs, as Indian canals are in May–June) | None |
 | **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Power 300 a season an acre, maintenance 1% of cost a season | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +5% (fertigation) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
 
@@ -49,6 +49,13 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 - **One pumped source an acre (owner, 2026-11-03):** an acre is on the pump's list or the borewell's, never both (each chooser offers only acres not on the other), so together they water 8 different acres. A channelled acre may also be pumped: its floor is the higher of the two (pumped water covers the canal's Summer closure) and its canal fee still runs. Drip can be laid only on an acre on the pump's or the borewell's list, and a drip acre can't be taken off its list (`DripNeedsWater`).
 - An irrigated acre's water factor rarely falls below 1 except in the Summer canal closure; that steadiness is what the player buys (§9).
 - A channel or drip line is a building on the acre: capitalised (Dr Buildings), depreciated (spec 005 §3.3), sold with the acre at book value, seized with bought land.
+- **As built (US-127, 2026-11-04):**
+  - Running costs (power, the canal's fee, drip's power and 1% upkeep) are paid at each close for the season ahead, for the acres on each list then (an acre added mid-season runs free until the close). Power goes to 5810 (shown as *Power and water*), upkeep to 5820 (*Repairs and upkeep*), both farm costs. Unpaid, that source is off until the next close (the well's buckets take over on the well acres).
+  - A channel carries water only while it reaches the canal through channelled fields you own: one cut off by a field sold is dry.
+  - Channels, drip and a borewell never stop a field being sold: they go with it at book value (`SellParcel`, foreclosure), and its acres leave the pump's and the borewell's lists.
+  - Drip's subsidy is the government's share of the price on your first 2 drip acres; only what you pay is capitalised.
+  - Fertigation: with drip running and a fertiliser given, the fertiliser's yield factor rises by 5% (still under the yield cap).
+- **On the map (art approved by the owner, 2026-11-04):** the canal along its edge, in place of the bunds and hedges there, ending in a headwall at the village lane; a lined channel on a channelled field's west edge, with a low gate on the field's own edge where it leaves the canal; drip lines under the crop (under a grown crop only the white header and blue filter show); the pump on the well's parapet (no pump house: the yard has no room); a cement outlet at the back corner of each pumped field (the side corners are the tree slots); the borewell as the valley's tube-well room at its field's back corner.
 
 ### 3.2 The equipment ladder (§10 G3, G4, G5)
 
@@ -139,7 +146,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 ## 7. UI
 
 ```
-Field card (irrigation):  Water: rain-fed [?]  [Dig a canal channel · 6,000]  [Lay drip · 20,000]
+Field card (irrigation):  Irrigation: The pump + Canal channel [?]  [Pump on the well · 15,000] [Water from the pump · waters 3 of 4 acres] [Drill a borewell here · 30,000] [Dig a canal channel · 6,000] [Lay drip · 20,000 · half paid by the government]
 Menu → Equipment:  Ox plough  [Buy 70,000] [Hire a day 900]
                    Tractor    [Buy 6,00,000] [Lease 30,000 a season] [Hire a day 2,000]
                    Yours: Tractor · book 5,70,000 · market 4,56,000 · maintained [Skip] · covers 8 acres [?]

@@ -152,6 +152,16 @@ namespace Sim.Core.Commands
 
         /// <summary>You don't own a godown to let (ADR 0087).</summary>
         NoGodown,
+
+        // Spec 013 §3.1 (irrigation, ADR 0086, ADR 0087)
+        /// <summary>More acres than the pump or the borewell waters.</summary>
+        TooManyAcres,
+        /// <summary>The acre is already on the other pumped source's list (one pumped source an acre).</summary>
+        AlreadyWatered,
+        /// <summary>A drip acre can't leave its pumped source's list: drip needs pumped water.</summary>
+        DripNeedsWater,
+        /// <summary>No pump or borewell waters the acre (drip), or no pump or borewell is built (choosing acres).</summary>
+        NoWaterSource,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

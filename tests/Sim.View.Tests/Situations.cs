@@ -115,6 +115,40 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>
+        /// The ready farm as a Village with irrigation (spec 013 §3.1): the pump on the well's acres and one more, channels on 85 and 101,
+        /// a borewell on 100, drip on a well acre, and a season closed so the running costs are paid.
+        /// </summary>
+        public static Simulation Irrigated()
+        {
+            Simulation sim = Ready();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
+            Ok(sim, new SetCashForTest(T(sim), 5_00_000_00));
+            Ok(sim, new InstallPump(T(sim)));
+            Ok(sim, new SetPumpAcres(T(sim), new[] { 86, 102, 84 }));
+            Ok(sim, new BuildChannel(T(sim), 85));
+            Ok(sim, new BuildChannel(T(sim), 101));
+            Ok(sim, new DrillBorewell(T(sim), 100));
+            Ok(sim, new LayDrip(T(sim), 86));
+            sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + Hour);
+            return sim;
+        }
+
+        /// <summary>Sets cash with a balanced test entry against opening equity.</summary>
+        private sealed class SetCashForTest : TimedCommand
+        {
+            private readonly long _amount;
+            public SetCashForTest(long at, long amount) : base(at) { _amount = amount; }
+            protected override CommandResult ApplyAt(Simulation sim)
+            {
+                long d = _amount - sim.State.Ledger.Cash;
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.opening", "test",
+                    new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Cash, d), new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.OpeningEquity, -d));
+                return CommandResult.Ok;
+            }
+        }
+
         /// <summary>An owned farm acre with nothing growing, for a family house.</summary>
         public static int HouseTile(Simulation sim)
         {
@@ -207,6 +241,7 @@ namespace Sim.View.Tests
             yield return Bakery();
             yield return Dairy();
             yield return Board();
+            yield return Irrigated();
         }
     }
 }

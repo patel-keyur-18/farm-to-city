@@ -72,6 +72,9 @@ namespace Sim.Core
         /// <summary>The godown in the mandi town, rented space and letting (spec 013 §3.4, ADR 0087); null when the content has no godown.</summary>
         public GodownState Godown { get; internal set; }
 
+        /// <summary>Spec 013 §3.1: the acres the pump and the borewell water; null in content without a pump.</summary>
+        public Sim.Core.Land.IrrigationState Irrigation { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -110,6 +113,8 @@ namespace Sim.Core
             if (Businesses != null && !(h is SaveWriter bw && bw.Schema < 10)) Businesses.WriteTo(h);
             // Spec 013 §3.4 (schema 14), last: content without a godown (the golden replays' frozen content) hashes as before.
             if (Godown != null && !(h is SaveWriter gw && gw.Schema < 14)) Godown.WriteTo(h);
+            // Spec 013 §3.1 (schema 14), last: content without a pump hashes as before.
+            if (Irrigation != null && !(h is SaveWriter iw && iw.Schema < 14)) Irrigation.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -155,6 +160,7 @@ namespace Sim.Core
             if (g.Population != null && r.Schema >= 9) s.Citizens = CitizensState.ReadFrom(r); // older towns: CitizenRules.Migrate after loading
             if (g.Businesses != null) s.Businesses = r.Schema >= 10 ? Business.BusinessesState.ReadFrom(r) : new Business.BusinessesState(); // schema 9: none yet
             if (g.Godown != null) s.Godown = r.Schema >= 14 ? GodownState.ReadFrom(r) : new GodownState(); // schema 13: no godown, nothing rented
+            if (g.Irrigation != null) s.Irrigation = r.Schema >= 14 ? Sim.Core.Land.IrrigationState.ReadFrom(r) : new Sim.Core.Land.IrrigationState(); // schema 13: rain-fed and the well's buckets
             return s;
         }
 
@@ -189,6 +195,7 @@ namespace Sim.Core
                 Citizens = Citizens?.Clone(),
                 Businesses = Businesses?.Clone(),
                 Godown = Godown?.Clone(),
+                Irrigation = Irrigation?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

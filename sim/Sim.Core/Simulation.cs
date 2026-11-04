@@ -93,6 +93,7 @@ namespace Sim.Core
                 if (config.Game.Population != null && config.Game.People != null) state.Citizens = new People.CitizensState();
                 if (config.Game.Businesses != null) state.Businesses = new Business.BusinessesState();
                 if (config.Game.Godown != null) state.Godown = new Market.GodownState();
+                if (config.Game.Irrigation != null) state.Irrigation = new Land.IrrigationState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

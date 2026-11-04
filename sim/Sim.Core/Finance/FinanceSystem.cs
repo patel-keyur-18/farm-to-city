@@ -99,6 +99,7 @@ namespace Sim.Core.Finance
             People.HouseholdRules.Close(sim); // spec 014 §3.12: households' health and the new season's budgets, on the wages just paid
             Business.BusinessRules.PayUpfront(sim, closing); // spec 016 §3.11: each business's new season's wage, after its loan payment
             Market.GodownRules.Close(sim); // spec 013 §3.4, ADR 0087: your godown let or not, then the warehouse's rent upfront
+            Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));

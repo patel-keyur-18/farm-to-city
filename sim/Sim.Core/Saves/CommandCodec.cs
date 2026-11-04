@@ -37,12 +37,14 @@ namespace Sim.Core.Saves
             SendOnCourse, SetLongDays, AnswerHrEvent,
             OfferTownsperson,
             BuyGodown, RentWarehouse, LetGodown,
+            InstallPump, SetPumpAcres, SetBorewellAcres, DrillBorewell, BuildChannel, LayDrip,
         }
 
         public static void Write(SaveWriter w, Command command)
         {
             void T(Tag tag) { w.WriteByte((byte)tag); }
             void At(TimedCommand c, Tag tag) { T(tag); w.WriteLong(c.At); }
+            void Tiles(System.Collections.Generic.IReadOnlyList<int> tiles) { w.WriteInt(tiles.Count); foreach (int t in tiles) w.WriteInt(t); }
             switch (command)
             {
                 case NewGame c: T(Tag.NewGame); w.WriteULong(c.Seed); w.WriteLong(c.StartWallUtc); w.WriteLong(c.LocalSecondsSinceMidnight); break;
@@ -125,6 +127,12 @@ namespace Sim.Core.Saves
                 case BuyGodown c: At(c, Tag.BuyGodown); break;
                 case RentWarehouse c: At(c, Tag.RentWarehouse); w.WriteInt(c.Tonnes); break;
                 case LetGodown c: At(c, Tag.LetGodown); w.WriteBool(c.On); break;
+                case InstallPump c: At(c, Tag.InstallPump); break;
+                case SetPumpAcres c: At(c, Tag.SetPumpAcres); Tiles(c.Tiles); break;
+                case SetBorewellAcres c: At(c, Tag.SetBorewellAcres); Tiles(c.Tiles); break;
+                case DrillBorewell c: At(c, Tag.DrillBorewell); w.WriteInt(c.TileId); break;
+                case BuildChannel c: At(c, Tag.BuildChannel); w.WriteInt(c.TileId); break;
+                case LayDrip c: At(c, Tag.LayDrip); w.WriteInt(c.TileId); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c when c.Level == OfferLevel.Asked: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
@@ -142,6 +150,15 @@ namespace Sim.Core.Saves
                 case ClearStandingOrder c: At(c, Tag.ClearStandingOrder); w.WriteLong(c.HandId); w.WriteInt((int)c.Kind); w.WriteLong(c.Target); break;
                 default: throw new System.ArgumentException("No save encoding for " + command.GetType().Name + ".");
             }
+        }
+
+        private static int[] ReadTiles(SaveReader r)
+        {
+            int n = r.ReadInt();
+            if (n < 0 || n > 1000) throw new SaveFormatException("a list of " + n + " acres");
+            var tiles = new int[n];
+            for (int i = 0; i < n; i++) tiles[i] = r.ReadInt();
+            return tiles;
         }
 
         public static Command Read(SaveReader r)
@@ -241,6 +258,12 @@ namespace Sim.Core.Saves
                 case Tag.AnswerHrEvent: return new AnswerHrEvent(at, r.ReadLong(), r.ReadInt());
                 case Tag.BuyGodown: return new BuyGodown(at);
                 case Tag.RentWarehouse: return new RentWarehouse(at, r.ReadInt());
+                case Tag.InstallPump: return new InstallPump(at);
+                case Tag.SetPumpAcres: return new SetPumpAcres(at, ReadTiles(r));
+                case Tag.SetBorewellAcres: return new SetBorewellAcres(at, ReadTiles(r));
+                case Tag.DrillBorewell: return new DrillBorewell(at, r.ReadInt());
+                case Tag.BuildChannel: return new BuildChannel(at, r.ReadInt());
+                case Tag.LayDrip: return new LayDrip(at, r.ReadInt());
                 case Tag.LetGodown: return new LetGodown(at, r.ReadBool());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());

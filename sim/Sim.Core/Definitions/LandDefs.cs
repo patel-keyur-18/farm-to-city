@@ -379,6 +379,9 @@ namespace Sim.Core.Definitions
         /// <summary>The godown in the mandi town, renting and letting (spec 013 §3.4, ADR 0087); null when the buildings have no godown.</summary>
         public GodownDef Godown { get; internal set; }
 
+        /// <summary>Spec 013 §3.1: the pump, the borewell, the canal and drip; null in content without a pump.</summary>
+        public IrrigationDef Irrigation { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

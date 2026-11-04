@@ -83,6 +83,7 @@ namespace Sim.Core.Commands
                 new Posting(Account.Cash, price),
                 new Posting(Account.Land, -basis),
                 gain >= 0 ? new Posting(Account.GainOnAssetSales, -gain) : new Posting(Account.LossOnAssetSales, -gain));
+            price += IrrigationRules.Release(sim, id, sim.Period, "ledger.irrigationSold"); // channels, drip, a borewell: with the land at book value
             LandSystem.Release(sim, parcel);
             if (required > 0) CreditSystem.RepaySecured(sim, required);
             sim.Emit(new ParcelSold(t, ParcelId, price, basis));

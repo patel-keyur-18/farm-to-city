@@ -745,14 +745,14 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-130 | Granary | [F13.3](features/F13.3-orchards-and-granary.md) | 6 | Must | Done |
-| US-127 | Irrigation ladder | [F13.2](features/F13.2-irrigation-and-equipment.md) | 8 | Must | To do |
+| US-127 | Irrigation ladder | [F13.2](features/F13.2-irrigation-and-equipment.md) | 8 | Must | Done (owner review) |
 | US-128 | Equipment | [F13.2](features/F13.2-irrigation-and-equipment.md) | 8 | Should | To do |
 | US-129 | Orchard acre | [F13.3](features/F13.3-orchards-and-granary.md) | 5 | Should | To do |
 | US-120 | Customer choice | [F12.3](features/F12.3-services-and-customer-choice.md) | 8 | Must | To do |
 | US-121 | Reputation | [F12.3](features/F12.3-services-and-customer-choice.md) | 3 | Should | To do |
 | US-122 | Rival entry | [F12.4](features/F12.4-rivals-and-competition.md) | 5 | Should | To do |
 
-**Order of work:** the farm first, because a normal town can use it now, while shops open only with the Village (its gate comes in Sprint 17, so until then through the developer panel's **Next era**). The art is previewed to the owner before each story's code: the granary (approved 2026-11-03: a godown in the mandi town, bought or rented, and let out) → US-130 → the pump house, channels, drip lines and borewell → US-127 → bullocks and plough, tractor and harvester → US-128 → orchard rows → US-129 → the handcart, tea stall, sweet shop and pitches → US-120 → US-121 → US-122 → balance with the bots (spec 013 §9, spec 017 §9) → the whole checklist in the Editor → the device build. One stop for the owner's review after each story. Schema 14 grows on this branch and ships once, with the device build.
+**Order of work:** the farm first, because a normal town can use it now, while shops open only with the Village (its gate comes in Sprint 17, so until then through the developer panel's **Next era**). The art is previewed to the owner before each story's code: the granary (approved 2026-11-03: a godown in the mandi town, bought or rented, and let out) → US-130 → the canal, channels, drip lines, the pump on the well and the borewell (approved 2026-11-04) → US-127 → bullocks and plough, tractor and harvester → US-128 → orchard rows → US-129 → the handcart, tea stall, sweet shop and pitches → US-120 → US-121 → US-122 → balance with the bots (spec 013 §9, spec 017 §9) → the whole checklist in the Editor → the device build. One stop for the owner's review after each story. Schema 14 grows on this branch and ships once, with the device build.
 
 **Sprint end checklist**
 

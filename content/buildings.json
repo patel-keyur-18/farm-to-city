@@ -8,7 +8,11 @@
       "buildHours": 24, "animals": 4, "feedRoomKg": 2400, "strawStackKg": 10000 },
     { "id": "family_house", "nameKey": "building.family_house", "yardTreeSlots": 0, "value": 60000, "usefulLifeSeasons": 120, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0,
       "buildHours": 48 },
-    { "id": "godown", "nameKey": "building.godown", "yardTreeSlots": 0, "value": 45000, "usefulLifeSeasons": 80, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 }
+    { "id": "godown", "nameKey": "building.godown", "yardTreeSlots": 0, "value": 45000, "usefulLifeSeasons": 80, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 },
+    { "id": "pump", "nameKey": "building.pump", "yardTreeSlots": 0, "value": 15000, "usefulLifeSeasons": 40, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 },
+    { "id": "borewell", "nameKey": "building.borewell", "yardTreeSlots": 0, "value": 30000, "usefulLifeSeasons": 60, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 },
+    { "id": "canal_channel", "nameKey": "building.canalChannel", "yardTreeSlots": 0, "value": 6000, "usefulLifeSeasons": 80, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 },
+    { "id": "drip", "nameKey": "building.drip", "yardTreeSlots": 0, "value": 40000, "usefulLifeSeasons": 30, "storeCapacityKg": 0, "restRecovery": 0, "gardenBeds": 0 }
   ],
   "godown": {
     "building": "godown", "unlockEra": "hamlet", "capacityKg": 10000, "spoilageFactor": 0.2,

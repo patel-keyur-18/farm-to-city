@@ -219,6 +219,20 @@
    "name": "bund_y"
   },
   {
+   "w": 110,
+   "h": 106,
+   "pivotX": 0.5,
+   "pivotY": 0.42374,
+   "name": "canal_end"
+  },
+  {
+   "w": 368,
+   "h": 222,
+   "pivotX": 0.49677,
+   "pivotY": 0.48398,
+   "name": "canal_x"
+  },
+  {
    "w": 112,
    "h": 94,
    "pivotX": 0.47201,
@@ -238,6 +252,20 @@
    "pivotX": 0.50498,
    "pivotY": 0.43086,
    "name": "cattle_shed_building"
+  },
+  {
+   "w": 98,
+   "h": 98,
+   "pivotX": 0.5,
+   "pivotY": 0.43103,
+   "name": "channel_gate"
+  },
+  {
+   "w": 350,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48517,
+   "name": "channel_y"
   },
   {
    "w": 220,
@@ -716,6 +744,13 @@
    "name": "dairy_w"
   },
   {
+   "w": 500,
+   "h": 286,
+   "pivotX": 0.50581,
+   "pivotY": 0.5277,
+   "name": "drip"
+  },
+  {
    "w": 596,
    "h": 332,
    "pivotX": 0.5,
@@ -1133,7 +1168,21 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_borewell"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_cart"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_channel"
   },
   {
    "w": 256,
@@ -1155,6 +1204,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_compost"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_drip"
   },
   {
    "w": 256,
@@ -1414,6 +1470,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_population"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_pump"
   },
   {
    "w": 256,
@@ -2543,6 +2606,13 @@
    "name": "portrait_town_m"
   },
   {
+   "w": 124,
+   "h": 118,
+   "pivotX": 0.5247,
+   "pivotY": 0.41823,
+   "name": "pump_outlet"
+  },
+  {
    "w": 356,
    "h": 206,
    "pivotX": 0.49791,
@@ -3136,6 +3206,13 @@
    "pivotX": 0.5,
    "pivotY": 0.21671,
    "name": "well"
+  },
+  {
+   "w": 228,
+   "h": 278,
+   "pivotX": 0.5,
+   "pivotY": 0.24409,
+   "name": "well_pump"
   },
   {
    "w": 172,

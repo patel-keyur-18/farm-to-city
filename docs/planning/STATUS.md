@@ -205,6 +205,13 @@
 
 ## In progress
 
+**Sprint 16, US-127 done (2026-11-04), waiting for the owner's review: the irrigation ladder** (spec 013 §3.1 as amended by ADR 0086, ADR 0087; art approved 2026-11-04 with the gate moved to the field's edge).
+- Sim: `irrigation` in `farming.json` (pump, borewell, canal, drip) and the `pump`, `borewell`, `canal_channel`, `drip` buildings; `IrrigationState` (the pump's and the borewell's acres, unpaid flags, subsidised drip acres) as schema 14's last section; `IrrigationRules` (floors once an hour before the well's buckets, the canal's reach through channelled fields, dry in Summer, drip at the crop's lowest good moisture, care cut, fertigation, running costs at the close to 5810/5820, release with the land); commands `InstallPump`, `SetPumpAcres`, `SetBorewellAcres`, `DrillBorewell`, `BuildChannel`, `LayDrip`; rejects `TooManyAcres`, `AlreadyWatered`, `DripNeedsWater`, `NoWaterSource`. Irrigation never stops a field's sale: it goes with it at book value.
+- Screens: the field card's **Irrigation** row (replaces "Well acre") with its *Why?*, picture buttons by era (pump, borewell, channel, drip; refusals in words), the card stays open after them; the moisture *Why?* shows irrigation's floor; the season report's *Power and water* and *Repairs and upkeep*; map: canal, channels and gates, drip, outlets, the borewell room, the pump on the well.
+- Tests: `IrrigationTests` (Pump, Canal: AC-1; Drip_Source: AC-2; Borewell: AC-10; Sold_With_The_Land), `MigrationTests.Schema13_Farm` (AC-9's irrigation part), `IrrigationViewTests.FieldCard`, an irrigated situation in the *Why?* sweep; `saves/schema14` re-pinned.
+- Editor (scripted touch): field 86 → Pump on the well; 84 → Water from the pump; 85 and 101 → Dig a canal channel; 85's irrigation *Why?*; (Next era by script) 86 → Lay drip, 100 → Drill a borewell; a day by script across the close (power and water 2,482, upkeep 208, nothing unpaid); Summer: "Canal channel (dry this season)"; Large text; the card staying open (101 → Water from the borewell). Captures `docs/art/s16-irrigation-*.png`. Saves restored and identical.
+- Open for the owner: a dry canal in Summer (`docs/art/s16-irrigation-dry-preview.png`), and the pump's acres being any 4 of your fields.
+
 **Sprint 16, US-130 done (2026-11-03, approved by the owner): grain storage in the mandi town** (spec 013 §3.4 as amended by ADR 0087).
 - Sim: the `godown` building (a building with no tile, TileId −1: depreciated with the buildings, not collateral, not on the map) and the `godown` block in `buildings.json`; `BuyGodown`, `RentWarehouse(tonnes)`, `LetGodown(on)`; `GodownState` (rented tonnes, next season's, let next and now, the last outcome) as its own save section; `GodownRules.Dry` works out what each place holds from the stock (fastest-spoiling first, the hut store emptied first), so the hut's capacity and spoilage need no new per-good state; spoilage at 0.2 in town; at the close (after the businesses' upfront pay) the let (seeded `Godown` stream; only if all your dry goods fit the rented space) then the warehouse's rent upfront (prepaid 1120 → 5300), never below what is stored there. Save schema 14 with `saves/schema14`; a schema-13 town becomes its own replay base (its history may predate ADR 0085's drying: found by `Schema13_Farm`).
 - Screens: the Store's picture buttons two to a row (four were cramped), a **Godown in town** button opening *Grain storage in the mandi town* (buy, let, rent a tonne more or less, what is kept), four *Why?* sources, the away card's let rent, alerts.
@@ -273,7 +280,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-127's art preview** (`docs/art/s16-irrigation-*.png`: the minor canal on the row 4/5 edge ending at the lane in a headwall, a field channel with its outlet gate, drip lines, the pump on the well's parapet, a cement outlet at the back corner of each pumped acre, the borewell as the valley's tube-well room at its acre's back corner). Then US-127's code.
+1. **Sprint 16: the owner reviews US-127** (`docs/art/s16-irrigation-*.png`; two questions: the dry canal in Summer, the pump's acres). Then US-128's art preview (bullocks and plough, tractor, harvester).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -316,7 +323,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done, waiting for the owner's review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 

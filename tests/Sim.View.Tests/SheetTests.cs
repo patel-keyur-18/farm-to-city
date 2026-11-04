@@ -32,13 +32,14 @@ namespace Sim.View.Tests
             SheetVm sheet = FieldSheets.ForTile(ViewKit2.Context(sim), 86);
             Assert.That(sheet.Title, Is.EqualTo("Loam field"));
             Assert.That(sheet.Subtitle, Is.EqualTo("Your family's land"));
-            Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Fertility").And.Contain("Moisture").And.Contain("Soil for crops").And.Contain("Well acre"));
+            Assert.That(sheet.Lines.Select(l => l.Label), Does.Contain("Fertility").And.Contain("Moisture").And.Contain("Soil for crops").And.Contain("Irrigation"));
+            Assert.That(sheet.Lines.Single(l => l.Label == "Irrigation").Value, Is.EqualTo("The well, by bucket"), "the well acre (spec 013 §7)");
             Assert.That(sheet.Lines.Single(l => l.Label == "Soil for crops").Value, Is.AnyOf("Good", "Fair", "Poor"), "a word, not a factor");
             Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45.0 / 100"));
             Assert.That(Action(sheet, "sow").Opens.Value.Kind, Is.EqualTo("Sow"));
             Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(86));
             Assert.That(sheet.Actions.Any(a => a.Id == "sellParcel"), Is.False, "the inherited land can never be sold");
-            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 84).Lines.Any(l => l.Label == "Well acre"), Is.False);
+            Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 84).Lines.Single(l => l.Label == "Irrigation").Value, Is.EqualTo("Rain-fed"));
         }
 
         [Test]

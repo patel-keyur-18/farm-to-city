@@ -45,6 +45,8 @@ namespace Sim.Content
             // The godown comes with a godown in the buildings (spec 013 §3.4, ADR 0087).
             int godown = buildings.FindIndex(b => b.Id == GodownDef.BuildingId);
             if (godown >= 0) game.Godown = LoadGodown(read("buildings.json"), godown, market, onboarding);
+            // Irrigation comes with a pump in the buildings (spec 013 §3.1), after the eras it unlocks with.
+            if (buildings.Exists(b => b.Id == "pump")) game.Irrigation = LoadIrrigation(read("farming.json"), buildings, map, onboarding);
             return game;
         }
 

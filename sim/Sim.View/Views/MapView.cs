@@ -63,8 +63,11 @@ namespace Sim.View.Views
         /// <summary>0..1 through the growth; 1 once ready.</summary>
         public float Progress { get; internal set; }
 
-        /// <summary>The well acres show a bucket marker (ADR 0032).</summary>
+        /// <summary>The well acres show a bucket marker (ADR 0032), until the pump waters them.</summary>
         public bool WellAcre { get; internal set; }
+
+        /// <summary>The pump or the borewell waters the acre: a cement outlet at its back corner (spec 013 §3.1).</summary>
+        public bool Pumped { get; internal set; }
 
         /// <summary>An outbreak was found on the growing crop and it isn't sprayed yet: the field shows a pest marker.</summary>
         public bool PestWarning { get; internal set; }
@@ -293,6 +296,11 @@ namespace Sim.View.Views
 
         /// <summary>The cattle acre, or null when the map has none.</summary>
         public CattleAcreVm Cattle { get; internal set; }
+
+        /// <summary>The minor canal (ADR 0087 §2): along the edge below <see cref="CanalRow"/> from column <see cref="CanalFrom"/> to <see cref="CanalTo"/>; row −1 without one.</summary>
+        public int CanalRow { get; internal set; } = -1;
+        public int CanalFrom { get; internal set; }
+        public int CanalTo { get; internal set; }
     }
 
     public static class MapView
@@ -363,7 +371,7 @@ namespace Sim.View.Views
                     Id = t.Id, X = t.Id % defs.Map.Width, Y = t.Id / defs.Map.Width,
                     Kind = Kind(t.Terrain, parcel.Owned),
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
-                    WellAcre = LandSystem.IsWellTile(defs, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
+                    WellAcre = LandSystem.IsWellTile(defs, t.Id) && !IrrigationRules.Pumped(sim, t.Id), Pumped = IrrigationRules.Pumped(sim, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
                 if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
@@ -426,6 +434,13 @@ namespace Sim.View.Views
                 map.Beds.Add(vm);
             }
 
+            if (IrrigationRules.On(sim))
+            {
+                CanalDef canal = IrrigationRules.Def(sim).Canal;
+                map.CanalRow = canal.Row;
+                map.CanalFrom = canal.FromColumn;
+                map.CanalTo = canal.ToColumn;
+            }
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)

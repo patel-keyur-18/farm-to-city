@@ -119,6 +119,7 @@ namespace Game.Presentation.Ui
                 case "hand_hut": case "hand_hut_building": case "granary": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut; // granary: your godown in town (ADR 0087)
                 case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "population": case "happiness": return SpriteBank.Rendered("icon_" + icon);
+                case "pump": case "borewell": case "channel": case "drip": return SpriteBank.Rendered("icon_" + icon); // irrigation (spec 013 §7)
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;

@@ -16,6 +16,12 @@
     { "id": "compost",  "good": "compost",             "kgPerAcrePerSeason": 2000, "yieldFactor": 1.05, "fertilityPerSeason": 6, "dryingFactor": 0.8 },
     { "id": "chemical", "good": "fertiliser_chemical", "kgPerAcrePerSeason": 150,  "yieldFactor": 1.25, "fertilityPerSeason": -3 }
   ],
+  "irrigation": {
+    "pump": { "building": "pump", "unlockEra": "hamlet", "acres": 4, "moistureFloor": 40, "powerPerAcreSeason": 250 },
+    "borewell": { "building": "borewell", "unlockEra": "village", "acres": 4, "moistureFloor": 40, "powerPerAcreSeason": 250 },
+    "canal": { "building": "canal_channel", "unlockEra": "hamlet", "feePerAcreSeason": 400, "moistureFloor": 45, "drySeasons": ["summer"], "row": 4, "fromColumn": 0, "toColumn": 9 },
+    "drip": { "building": "drip", "unlockEra": "village", "subsidyShare": 0.5, "subsidyAcres": 2, "powerPerAcreSeason": 300, "upkeepShare": 0.01, "fertigationBonus": 0.05, "careCutHoursPerDay": 0.5 }
+  },
   "pests": {
     "baseRisk": { "radish": 0.03, "wheat": 0.06, "rice": 0.10, "potato": 0.10, "lentils": 0.05, "berseem": 0, "sorghum": 0, "methi": 0.03, "amaranth": 0.03, "okra": 0.08, "peas": 0.05, "maize": 0.06, "mustard": 0.06 },
     "monocultureStep": 0.5,

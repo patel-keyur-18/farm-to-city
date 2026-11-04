@@ -93,7 +93,7 @@ namespace Sim.Core.Farm
         {
             FarmDef farm = sim.Config.Game.Farm.Farm;
             long harvest = Yield(farm, crop.SeasonYieldPerAcre * CycleShare(sim.Clock, crop), LandRules.SoilFactor(sim, tile), WaterFactor(farm, crop, tile.Moisture),
-                Fixed.One, Fixed.One, Fixed.One, fert.YieldFactor, Fixed.One).Grams;
+                Fixed.One, Fixed.One, Fixed.One, Land.IrrigationRules.FertiliserFactor(sim, tile.Id, fert), Fixed.One).Grams;
             long seedGrams = SeedGrams(sim.Clock, crop);
             long fertGrams = FertiliserGrams(sim.Clock, crop, fert, sim.State.Clock.SimTime);
             return new SowingEstimate(harvest, crop.Fodder ? 0 : MarketRules.Value(sim, crop.OutputGood, harvest, MarketRules.Floor(sim, crop.OutputGood)),

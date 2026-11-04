@@ -3219,6 +3219,34 @@ def model_canal():
     return b.objects(outline_for=(lining,))
 
 
+def model_canal_dry():
+    """The minor canal in its dry season (closed for repairs, spec 013 §3.1): the same lining, its bed dry mud with cracks and a
+    last puddle or two. A preview for the owner (2026-11-04)."""
+    import random
+    rnd = random.Random(73)
+    b = Batch("canalDry")
+    lining, bed, crack, puddle = toon("canalLining", 0xB8B2A6), toon("canalBed", 0xB08A5C), toon("canalCrack", 0x7E5F3C), toon("canalPuddle", 0x7FA9BC)
+    path, verge = toon("canalPath", 0xC7A877), toon("canalVerge", 0x86AE4C)
+    b.box(path, (1.0, 0.04, 0.012), Matrix.Translation((0, 0.06, 0.006)))
+    b.box(lining, (1.0, 0.085, 0.022), Matrix.Translation((0, 0.0, 0.011)))
+    b.box(bed, (1.0, 0.062, 0.004), Matrix.Translation((0, 0.0, 0.0205)))
+    for i in range(9):
+        b.box(crack, (rnd.uniform(0.03, 0.07), 0.004, 0.002), Matrix.Translation((-0.45 + i * 0.11, rnd.uniform(-0.02, 0.02), 0.0228)) @ Matrix.Rotation(rnd.uniform(-0.6, 0.6), 4, "Z"))
+    for x in (-0.22, 0.31):
+        b.box(puddle, (0.07, 0.03, 0.002), Matrix.Translation((x, rnd.uniform(-0.01, 0.01), 0.0228)))
+    b.box(verge, (1.0, 0.03, 0.01), Matrix.Translation((0, -0.056, 0.005)))
+    return b.objects(outline_for=(lining,))
+
+
+def model_channel_dry():
+    """A field channel with no water in it: the lined nali with a dry mud bottom (preview, 2026-11-04)."""
+    b = Batch("channelDry")
+    lining, bed = toon("channelLining", 0xC2BBAE), toon("canalBed", 0xB08A5C)
+    b.box(lining, (0.05, 1.0, 0.02), Matrix.Translation((0, 0, 0.01)))
+    b.box(bed, (0.032, 1.0, 0.004), Matrix.Translation((0, 0, 0.019)))
+    return b.objects(outline_for=(lining,))
+
+
 def model_canal_end():
     """Where the minor canal meets the village lane: a concrete headwall over a culvert pipe under the road."""
     lining, dark = toon("canalLining", 0xB8B2A6), toon("culvert", 0x4E5A60)
@@ -3239,13 +3267,13 @@ def model_channel(axis):
 
 
 def model_channel_gate():
-    """The outlet (a mogha) where a field channel leaves the canal: a small concrete box with a steel slide gate and its wheel."""
+    """The outlet (a mogha) where a field channel leaves the canal: a low concrete box on the field's edge with a steel slide gate
+    and its small wheel, kept low so it never stands over the crops behind it (owner, 2026-11-04)."""
     lining, steel, wheel = toon("canalLining", 0xB8B2A6), toon("gateSteel", 0x4F6B7A), toon("gateWheel", 0xC2452D)
-    o = [box("box", (0.07, 0.06, 0.035), (0, 0, 0.0175), lining, bevel=0.003),
-         box("gate", (0.05, 0.008, 0.06), (0, 0, 0.05), steel),
-         cylinder("stem", 0.003, 0.003, 0.03, (0, 0, 0.09), steel, segs=6),
-         cylinder("wheel", 0.016, 0.016, 0.005, (0, 0, 0.105), wheel, segs=12)]
-    return group(o, scale=BUILDING_SCALE * 0.8)
+    o = [box("box", (0.06, 0.05, 0.022), (0, 0, 0.011), lining, bevel=0.003),
+         box("gate", (0.042, 0.007, 0.03), (0, 0, 0.033), steel),
+         cylinder("wheel", 0.012, 0.012, 0.004, (0, 0, 0.05), wheel, segs=12)]
+    return group(o, scale=BUILDING_SCALE * 0.7)
 
 
 def model_drip():
@@ -3278,9 +3306,38 @@ def model_pump_outlet():
     return group(o, scale=BUILDING_SCALE * 0.8)
 
 
-SPRITES.update({"canal_x": model_canal, "pump_outlet": model_pump_outlet, "canal_end": model_canal_end, "channel_x": lambda: model_channel("x"),
+def icon_irrigation(kind):
+    """The field card's picture buttons: the pump on the well, the borewell's room, a channel with its gate, a corner of drip."""
+    if kind == "pump":
+        return model_well(pump=True)
+    if kind == "borewell":
+        return model_tubewell()
+    if kind == "channel":
+        b = Batch("iconChannel")
+        lining, water = toon("channelLining", 0xC2BBAE), toon("channelWater", 0x6AAACB)
+        b.box(lining, (0.06, 0.4, 0.02), Matrix.Translation((0, 0, 0.01)))
+        b.box(water, (0.04, 0.4, 0.004), Matrix.Translation((0, 0, 0.019)))
+        b.box(toon("canalLining", 0xB8B2A6), (0.4, 0.1, 0.022), Matrix.Translation((0, 0.25, 0.011)))
+        b.box(toon("canalWater", 0x5E9FBF), (0.4, 0.075, 0.004), Matrix.Translation((0, 0.25, 0.02)))
+        return b.objects(outline_for=(lining,)) + model_channel_gate()
+    b = Batch("iconDrip")
+    lateral, dripper = toon("dripLateral", 0x1F1F22), toon("dripper", 0x4FC05A)
+    for i in range(3):
+        b.box(lateral, (0.014, 0.3, 0.01), Matrix.Translation((-0.1 + i * 0.1, 0.0, 0.008)))
+        for j in range(3):
+            b.box(dripper, (0.022, 0.016, 0.014), Matrix.Translation((-0.1 + i * 0.1, -0.1 + j * 0.1, 0.012)))
+    b.box(toon("dripHeader", 0xE6E3DA), (0.3, 0.022, 0.018), Matrix.Translation((0, -0.16, 0.009)))
+    o = b.objects()
+    o.append(cylinder("filter", 0.022, 0.022, 0.06, (0.17, -0.16, 0.03), toon("dripFilter", 0x2F6FB5), segs=12))
+    return o
+
+
+SPRITES.update({"canal_x": model_canal, "canal_x_dry": model_canal_dry, "channel_y_dry": model_channel_dry, "pump_outlet": model_pump_outlet, "canal_end": model_canal_end,
                 "channel_y": lambda: model_channel("y"), "channel_gate": model_channel_gate, "drip": model_drip,
                 "well_pump": lambda: model_well(pump=True)})
+for _k in ("pump", "borewell", "channel", "drip"):
+    ICONS["icon_" + _k] = (lambda k=_k: (lambda: icon_irrigation(k)))()
+    SPRITES["icon_" + _k] = ICONS["icon_" + _k]
 
 
 def pav_tray(o, name, x, y, z, mat_tray, mat_pav, cols=4, rows=2):

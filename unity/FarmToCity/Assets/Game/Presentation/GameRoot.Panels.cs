@@ -212,6 +212,9 @@ namespace Game.Presentation
             if (r.Kind == "Tile" && Sim.Config.Game.Livestock != null && r.Id == Sim.Config.Game.Livestock.Livestock.ShedTile) return;
             if (r.Kind == "Tile" && Sim.State.Businesses != null && Sim.State.Businesses.Businesses.Exists(x => x.TileId == r.Id)) return; // a business's card stays: its worker, its settings
             if (commands[commands.Length - 1] is Spray || commands[commands.Length - 1] is HireLabourers) return; // the field sheet stays: see who's on it
+            Command last = commands[commands.Length - 1];
+            if (last is InstallPump || last is SetPumpAcres || last is SetBorewellAcres || last is DrillBorewell || last is BuildChannel || last is LayDrip)
+                return; // the field sheet stays: see its water change (spec 013 §7)
             _sheet.Close();
         }
     }

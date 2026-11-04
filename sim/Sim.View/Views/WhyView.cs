@@ -47,7 +47,7 @@ namespace Sim.View.Views
         private static readonly Dictionary<string, Source> Sources = new Dictionary<string, Source>
         {
             // Land and crops (specs 002, 003).
-            { "fertility", Fertility }, { "moisture", Moisture }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
+            { "fertility", Fertility }, { "moisture", Moisture }, { "irrigation", Irrigation }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
             { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice },
             { "resale", Resale }, { "pests", Pests }, { SowSheet.PerHourWhy, SowPerHour },
             // The crop calendar's crop page (spec 020 §3.6b), by crop index.
