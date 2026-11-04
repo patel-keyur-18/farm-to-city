@@ -44,10 +44,17 @@ namespace Sim.Core.Definitions
         /// <summary>Selling her at the fair gives price × this × her health.</summary>
         public Fixed SellShare { get; }
 
+        /// <summary>A draught animal (the bullock, spec 013 §3.2): no milk, no calves, bought and sold with its machine, kept in the second shed.</summary>
+        public bool Draught { get; }
+
+        /// <summary>Its own names (the bullocks'), or null for the livestock list's.</summary>
+        public IReadOnlyList<string> Names { get; internal set; }
+
         public AnimalDef(string id, string nameKey, long price, Fixed milkPerDay, Fixed fatPercent, IReadOnlyList<Fixed> seasonMilk, int milkDays,
             int dryDays, Fixed green, Fixed straw, Fixed feed, Fixed dryFeedFactor, Fixed labourHoursPerDay, Fixed dungCompostKgPerDay,
-            long calfPrice, Fixed sellShare)
+            long calfPrice, Fixed sellShare, bool draught = false)
         {
+            Draught = draught;
             Id = id;
             NameKey = nameKey;
             Price = price;

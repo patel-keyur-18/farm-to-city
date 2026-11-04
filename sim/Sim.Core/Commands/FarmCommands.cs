@@ -77,6 +77,7 @@ namespace Sim.Core.Commands
             sown.Repeats = PestRules.RepeatsAt(sim, TileId, c);
             if (!crop.Fodder) sown.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, id, t + crop.GrowthSeconds / 2).Id;
             farm.Crops.Add(sown);
+            Equipment.EquipmentRules.Sown(sim, sown); // the Tools factor of timely sowing under a machine (spec 013 §3.2)
             LandSystem.SetOccupied(sim, TileId, true);
             FarmSystem.Refresh(sim);
             sim.Emit(new CropSown(t, TileId, CropId, sown.ReadyAt, cost));

@@ -382,6 +382,9 @@ namespace Sim.Core.Definitions
         /// <summary>Spec 013 §3.1: the pump, the borewell, the canal and drip; null in content without a pump.</summary>
         public IrrigationDef Irrigation { get; internal set; }
 
+        /// <summary>The equipment ladder (spec 013 §3.2), or null in content without it.</summary>
+        public EquipmentDefs Equipment { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

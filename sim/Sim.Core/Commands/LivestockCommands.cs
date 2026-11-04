@@ -72,6 +72,7 @@ namespace Sim.Core.Commands
             if (s == null) return CommandResult.Reject(RejectReason.UnknownAnimal);
             int kind = LivestockRules.Defs(sim).IndexOfAnimal(KindId);
             if (kind < 0) return CommandResult.Reject(RejectReason.UnknownAnimal);
+            if (LivestockRules.Defs(sim).Animals[kind].Draught) return CommandResult.Reject(RejectReason.PartOfMachine); // bullocks come with the ox plough
             if (LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
             int shed = LivestockRules.PlaceFor(sim);
             if (shed < 0) return CommandResult.Reject(RejectReason.ShedFull);
@@ -93,7 +94,7 @@ namespace Sim.Core.Commands
             FarmSystem.Accrue(sim); // her labour joins the Care demand from now (§3.9)
             var a = new Animal
             {
-                Id = s.NextAnimalId++, Kind = kind, Name = PickName(sim, s.NextAnimalId - 1), BoughtAt = t, Cost = cost, Stage = AnimalStage.Milking,
+                Id = s.NextAnimalId++, Kind = kind, Name = PickName(sim, s.NextAnimalId - 1, kind), BoughtAt = t, Cost = cost, Stage = AnimalStage.Milking,
                 VaccinatedPeriod = sim.Period, Since = t, LoanId = loanId, Shed = shed,
             };
             sim.State.Ledger.Post(t, sim.Period, "ledger.buyAnimal", "animal:" + a.Id, new Posting(Account.Livestock, cost), new Posting(Account.Cash, -cost));
@@ -104,10 +105,10 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
 
-        /// <summary>A seeded name (stream Livestock, counter = animal id), the next one along if it's already in the shed.</summary>
-        private static string PickName(Simulation sim, long id)
+        /// <summary>A seeded name (stream Livestock, counter = animal id), the next one along if it's already in the shed; a bullock from its own list.</summary>
+        internal static string PickName(Simulation sim, long id, int kind)
         {
-            IReadOnlyList<string> names = LivestockRules.Defs(sim).Livestock.Names;
+            IReadOnlyList<string> names = LivestockRules.Defs(sim).Animals[kind].Names ?? LivestockRules.Defs(sim).Livestock.Names;
             int i = (int)Rng.Below(Rng.Next(sim.State.Seed, RngStream.Livestock, 0, (ulong)id), (ulong)names.Count);
             for (int k = 0; k < names.Count; k++)
             {
@@ -132,6 +133,7 @@ namespace Sim.Core.Commands
         {
             Animal a = LivestockRules.Find(sim, AnimalId);
             if (a == null) return CommandResult.Reject(RejectReason.UnknownAnimal);
+            if (LivestockRules.Defs(sim).Animals[a.Kind].Draught) return CommandResult.Reject(RejectReason.PartOfMachine); // sold with the plough
             long t = sim.State.Clock.SimTime;
             long proceeds = LivestockRules.SellPrice(sim, a);
             // Selling collateral repays the bank first (ADR 0038): what the rest of the herd and the land can't support.

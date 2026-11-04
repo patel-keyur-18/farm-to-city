@@ -362,6 +362,7 @@ namespace Sim.Core.Livestock
             foreach (Animal a in sim.State.Livestock.Animals)
             {
                 AnimalDef def = defs.Animals[a.Kind];
+                if (def.Draught) continue; // a bullock gives no milk and no calves
                 a.StageDay++;
                 if (a.Stage == AnimalStage.Milking && a.StageDay >= def.MilkDays)
                 {

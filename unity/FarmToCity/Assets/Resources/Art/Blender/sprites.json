@@ -23,6 +23,27 @@
    "name": "animal_buffalo_stand"
   },
   {
+   "w": 152,
+   "h": 162,
+   "pivotX": 0.5533,
+   "pivotY": 0.31791,
+   "name": "animal_bullock_eat"
+  },
+  {
+   "w": 170,
+   "h": 146,
+   "pivotX": 0.48946,
+   "pivotY": 0.41889,
+   "name": "animal_bullock_lie"
+  },
+  {
+   "w": 150,
+   "h": 162,
+   "pivotX": 0.55278,
+   "pivotY": 0.31791,
+   "name": "animal_bullock_stand"
+  },
+  {
    "w": 150,
    "h": 160,
    "pivotX": 0.55718,
@@ -1155,6 +1176,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_animal_buffalo"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_animal_bullock"
   },
   {
    "w": 256,
@@ -2557,6 +2585,13 @@
    "name": "place_temple"
   },
   {
+   "w": 208,
+   "h": 192,
+   "pivotX": 0.52673,
+   "pivotY": 0.30273,
+   "name": "plough_team"
+  },
+  {
    "w": 256,
    "h": 256,
    "pivotX": 0.5,
@@ -2688,6 +2723,27 @@
    "pivotX": 0.5,
    "pivotY": 0.49724,
    "name": "street_y"
+  },
+  {
+   "w": 224,
+   "h": 220,
+   "pivotX": 0.54199,
+   "pivotY": 0.26045,
+   "name": "tractor"
+  },
+  {
+   "w": 238,
+   "h": 220,
+   "pivotX": 0.50891,
+   "pivotY": 0.26045,
+   "name": "tractor_cultivator"
+  },
+  {
+   "w": 348,
+   "h": 220,
+   "pivotX": 0.34827,
+   "pivotY": 0.26045,
+   "name": "tractor_trolley"
   },
   {
    "w": 224,

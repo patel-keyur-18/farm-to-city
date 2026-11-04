@@ -49,6 +49,7 @@ namespace Sim.Core
                 if (config.Game.Livestock != null) AddSystem(new Livestock.LivestockSystem());
                 if (config.Game.Population != null && config.Game.People != null) AddSystem(new People.PopulationSystem());
                 if (config.Game.Businesses != null) AddSystem(new Business.BusinessSystem());
+                if (config.Game.Equipment != null) AddSystem(new Equipment.EquipmentSystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
@@ -94,6 +95,7 @@ namespace Sim.Core
                 if (config.Game.Businesses != null) state.Businesses = new Business.BusinessesState();
                 if (config.Game.Godown != null) state.Godown = new Market.GodownState();
                 if (config.Game.Irrigation != null) state.Irrigation = new Land.IrrigationState();
+                if (config.Game.Equipment != null) state.Equipment = new Equipment.EquipmentState { HiredUntil = new long[config.Game.Equipment.Machines.Count] };
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

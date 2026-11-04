@@ -135,6 +135,26 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The Village with both sheds, the ox plough and a tractor bought (maintenance skipped), past a close (spec 013 §3.2).</summary>
+        public static Simulation Equipped()
+        {
+            Simulation sim = Ready();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
+            Ok(sim, new SetCashForTest(T(sim), 20_00_000_00));
+            Ok(sim, new BuildShed(T(sim)));
+            sim.AdvanceTo(T(sim) + 25 * Hour);
+            int field = System.Linq.Enumerable.First(System.Linq.Enumerable.Range(0, sim.State.Land.Tiles.Count),
+                t => Sim.Core.Livestock.LivestockRules.PlaceSecond(sim, t) == RejectReason.None);
+            Ok(sim, new BuildShed(T(sim), field));
+            sim.AdvanceTo(T(sim) + 25 * Hour);
+            Ok(sim, new BuyMachine(T(sim), "ox_plough"));
+            Ok(sim, new BuyMachine(T(sim), "tractor"));
+            Ok(sim, new SetMaintenance(T(sim), sim.State.Equipment.Machines[1].Id, false));
+            sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + Hour);
+            return sim;
+        }
+
         /// <summary>Sets cash with a balanced test entry against opening equity.</summary>
         private sealed class SetCashForTest : TimedCommand
         {
@@ -242,6 +262,7 @@ namespace Sim.View.Tests
             yield return Dairy();
             yield return Board();
             yield return Irrigated();
+            yield return Equipped();
         }
     }
 }

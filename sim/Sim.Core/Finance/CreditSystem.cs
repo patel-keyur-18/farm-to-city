@@ -343,6 +343,17 @@ namespace Sim.Core.Finance
                 }
             FarmSystem.Refresh(sim);
 
+            // 1c. Bought machines, in id order, at their resale value with their bullocks, only until the debt is covered (spec 013 §3.2).
+            if (Sim.Core.Equipment.EquipmentRules.On(sim))
+                foreach (Sim.Core.Equipment.Machine m in sim.State.Equipment.Machines.ToArray())
+                {
+                    if (debt <= pot) break;
+                    if (m.Leased) continue;
+                    long value = Sim.Core.Equipment.EquipmentRules.Sell(sim, m, "ledger.machineSeized", period);
+                    pot += value;
+                    sim.Emit(new MachineSeized(t, m.Id, sim.Config.Game.Equipment.Machines[m.Kind].Id, value));
+                }
+
             // 2. Stored produce at the Floor, highest value first, only until the debt is covered.
             var produce = new List<KeyValuePair<string, long>>();
             if (debt > pot)
@@ -446,12 +457,12 @@ namespace Sim.Core.Finance
         /// What a sale must repay to the secured lenders: <c>max(0, bankOwed − ltv × remaining collateral)</c>, where the remaining
         /// collateral excludes the parcel being sold.
         /// </summary>
-        internal static long RequiredOnSale(Simulation sim, int parcelId, long animalId = -1)
+        internal static long RequiredOnSale(Simulation sim, int parcelId, long animalId = -1, long machineId = -1)
         {
             if (sim.State.Credit == null) return 0;
             CreditDefs defs = sim.Config.Game.Credit;
             long owed = 0;
-            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero, houseLtv = Fixed.Zero;
+            Fixed ltv = Fixed.Zero, animalLtv = Fixed.Zero, houseLtv = Fixed.Zero, machineLtv = Fixed.Zero;
             foreach (Loan l in sim.State.Credit.Loans)
             {
                 if (!l.IsOpen || l.BusinessId != 0 || !defs.Lenders[l.Lender].Secured) continue; // a business loan is secured on the business
@@ -459,11 +470,12 @@ namespace Sim.Core.Finance
                 if (defs.Lenders[l.Lender].CollateralLtv > ltv) ltv = defs.Lenders[l.Lender].CollateralLtv;
                 if (defs.Lenders[l.Lender].LivestockLtv > animalLtv) animalLtv = defs.Lenders[l.Lender].LivestockLtv;
                 if (defs.Lenders[l.Lender].HouseLtv > houseLtv) houseLtv = defs.Lenders[l.Lender].HouseLtv;
+                if (defs.Lenders[l.Lender].EquipmentLtv > machineLtv) machineLtv = defs.Lenders[l.Lender].EquipmentLtv;
             }
             if (owed == 0) return 0;
             // What stays behind the loans once this parcel or animal is sold (spec 005 §3.6, spec 012 §3.12).
             long supported = Money.MulRate(CreditRules.Collateral(sim, 0, parcelId), ltv) + Money.MulRate(CreditRules.LivestockCollateral(sim, 0, animalId), animalLtv)
-                + Money.MulRate(CreditRules.HouseCollateral(sim), houseLtv);
+                + Money.MulRate(CreditRules.HouseCollateral(sim), houseLtv) + Money.MulRate(Sim.Core.Equipment.EquipmentRules.Collateral(sim, 0, machineId), machineLtv);
             return System.Math.Max(0, owed - supported);
         }
 

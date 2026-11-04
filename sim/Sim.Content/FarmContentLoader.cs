@@ -92,7 +92,7 @@ namespace Sim.Content
         {
             const string root = "farming";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "farm", "fertilisers", "pests", "irrigation"); // irrigation: LoadIrrigation, after the eras
+            OnlyFields(o, root, "farm", "fertilisers", "pests", "irrigation", "equipment"); // irrigation, equipment: their own loaders, after the eras
             string fp = root + ".farm";
             JObject f = Object(Required(o, root, "farm"), fp);
             OnlyFields(f, fp, "yieldCap", "careCap", "toolsFactor", "weatherYieldFactor", "waterDryFloor", "waterWetFloor",
@@ -350,6 +350,63 @@ namespace Sim.Content
                 CareCutHoursPerDay = Bounded(r, dp, "careCutHoursPerDay", "0", "24"),
             };
             return new IrrigationDef { Pump = Pumped("pump"), Borewell = Pumped("borewell"), Canal = canal, Drip = drip };
+        }
+
+        /// <summary>The equipment ladder (spec 013 §3.2), or null when <c>farming.json</c> has none.</summary>
+        internal static EquipmentDefs LoadEquipment(string json, LivestockDefs livestock, MapDef map, OnboardingDefs onboarding)
+        {
+            const string root = "farming";
+            JObject o = Object(Parse(json, root), root);
+            if (o["equipment"] == null) return null;
+            string p = Join(root, "equipment");
+            JObject d = Object(o["equipment"], p);
+            OnlyFields(d, p, "machines", "bullock", "breakdownMaintained", "breakdownSkipped", "repairShare", "resaleShare", "workFromHour", "workToHour", "parkTile");
+            int Era(JObject x, string xp)
+            {
+                string id = String(Required(x, xp, "unlockEra"), Join(xp, "unlockEra"));
+                if (onboarding == null) return 0;
+                for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == id) return i;
+                throw new ContentException(Join(xp, "unlockEra"), "unknown era '" + id + "'");
+            }
+            if (livestock == null) throw new ContentException(p, "machines need livestock content for the bullocks");
+            string bullockId = String(Required(d, p, "bullock"), Join(p, "bullock"));
+            int bullock = livestock.IndexOfAnimal(bullockId);
+            if (bullock < 0 || !livestock.Animals[bullock].Draught) throw new ContentException(Join(p, "bullock"), "must be a draught animal in livestock.json");
+
+            var machines = new List<MachineDef>();
+            List<JToken> tokens = NonEmptyArray(d, p, "machines");
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                string mp = Index(Join(p, "machines"), i);
+                JObject m = Object(tokens[i], mp);
+                OnlyFields(m, mp, "id", "nameKey", "unlockEra", "price", "lifeSeasons", "bullocks", "leasePerSeason", "hirePerDay", "maintenanceShare",
+                    "dieselPerAcreSeason", "acres", "labourCut", "tools", "cartKg", "loan");
+                var def = new MachineDef
+                {
+                    Id = UniqueId(m, mp, machines.ConvertAll(x => x.Id)), NameKey = String(Required(m, mp, "nameKey"), Join(mp, "nameKey")), UnlockEra = Era(m, mp),
+                    Price = Money(Required(m, mp, "price"), Join(mp, "price")), LifeSeasons = BoundedInt(m, mp, "lifeSeasons", 1, 400),
+                    Bullocks = BoundedInt(m, mp, "bullocks", 0, 4), LeasePerSeason = Money(Required(m, mp, "leasePerSeason"), Join(mp, "leasePerSeason")),
+                    HirePerDay = Money(Required(m, mp, "hirePerDay"), Join(mp, "hirePerDay")), MaintenanceShare = Bounded(m, mp, "maintenanceShare", "0", "0.5"),
+                    DieselPerAcreSeason = Money(Required(m, mp, "dieselPerAcreSeason"), Join(mp, "dieselPerAcreSeason")), Acres = BoundedInt(m, mp, "acres", 1, 200),
+                    LabourCut = Bounded(m, mp, "labourCut", "0", "0.9"), Tools = Bounded(m, mp, "tools", "1", "1.5"), CartKg = BoundedInt(m, mp, "cartKg", 0, 10000),
+                    Loan = Bool(Required(m, mp, "loan"), Join(mp, "loan")),
+                };
+                if (def.Price <= 0 || def.HirePerDay <= 0) throw new ContentException(mp, "a machine needs a price and a day's hire");
+                machines.Add(def);
+            }
+
+            int park = BoundedInt(d, p, "parkTile", 0, map.Width * map.Height - 1);
+            if (map.Tiles[park].Terrain != Terrain.Road) throw new ContentException(Join(p, "parkTile"), "the tractor parks on a road acre");
+            var e = new EquipmentDefs
+            {
+                Machines = machines.AsReadOnly(), Bullock = bullock,
+                BreakdownMaintained = Bounded(d, p, "breakdownMaintained", "0", "1"), BreakdownSkipped = Bounded(d, p, "breakdownSkipped", "0", "1"),
+                RepairShare = Bounded(d, p, "repairShare", "0", "1"), ResaleShare = Bounded(d, p, "resaleShare", "0", "1"),
+                WorkFromHour = BoundedInt(d, p, "workFromHour", 0, 23), WorkToHour = BoundedInt(d, p, "workToHour", 1, 24), ParkTile = park,
+            };
+            if (e.WorkToHour <= e.WorkFromHour) throw new ContentException(Join(p, "workToHour"), "must be after workFromHour");
+            if (e.BreakdownSkipped < e.BreakdownMaintained) throw new ContentException(Join(p, "breakdownSkipped"), "skipping maintenance never lowers the chance");
+            return e;
         }
 
         /// <summary>A non-empty list of season ids as a bool per season.</summary>

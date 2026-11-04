@@ -29,6 +29,9 @@ namespace Sim.Core.Maths
 
         /// <summary>A trader taking your godown at a close (spec 013 §3.4, ADR 0087): key 0, counter = the season that opens.</summary>
         Godown = 17,
+
+        /// <summary>A bought machine breaking down (spec 013 §3.2): key = the machine, counter = the day.</summary>
+        Equipment = 18,
     }
 
     /// <summary>

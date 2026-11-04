@@ -74,6 +74,7 @@ namespace Sim.View.Views
             for (int k = 0; k < defs.Animals.Count; k++)
             {
                 AnimalDef d = defs.Animals[k];
+                if (d.Draught) continue; // bullocks come with the ox plough (Equipment)
                 ActionVm b = ActionVm.Open("buyAnimal:" + d.Id, s.Get("shed.buy", "animal", s.Get(d.NameKey).ToLowerInvariant()), new SheetRequest("BuyAnimal", k),
                     LivestockRules.PlaceFor(sim) < 0 ? s.Get("reject.ShedFull") : ctx.Fmt.Coins(MarketRules.Indexed(sim, d.Price)));
                 b.Icon = "animal_" + d.Id;
@@ -148,6 +149,7 @@ namespace Sim.View.Views
         internal static string Stage(ViewContext ctx, Animal a)
         {
             AnimalDef d = LivestockRules.Defs(ctx.Sim).Animals[a.Kind];
+            if (d.Draught) return ctx.Strings.Get("animal.draught");
             if (a.Stage == AnimalStage.Dry) return ctx.Strings.Plural("animal.dry", System.Math.Max(1, d.DryDays - a.StageDay));
             string day = ctx.Strings.Get("animal.inMilk", "day", ctx.Fmt.Integer(a.StageDay + 1), "of", ctx.Fmt.Integer(d.MilkDays));
             return a.LastMilkMl > 0 ? day + " · " + ctx.Strings.Get("animal.milkToday", "milk", ctx.Fmt.Litres(a.LastMilkMl)) : day;

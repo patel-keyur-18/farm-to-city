@@ -76,6 +76,7 @@ namespace Sim.Core.Finance
 
             // Close the season (accruals; no cash moves).
             Depreciate(sim, closing);
+            Sim.Core.Equipment.EquipmentRules.Depreciate(sim, closing); // bought machines (spec 013 §3.2)
             if (sim.State.Credit != null) CreditSystem.AccrueAll(sim, closing); // step 2: interest to the boundary, in the closing season
             SeasonReport report = Reporting.Build(sim, closing);
             CloseToRetainedEarnings(ledger, sim.State.Clock.SimTime, closing);
@@ -100,6 +101,7 @@ namespace Sim.Core.Finance
             Business.BusinessRules.PayUpfront(sim, closing); // spec 016 §3.11: each business's new season's wage, after its loan payment
             Market.GodownRules.Close(sim); // spec 013 §3.4, ADR 0087: your godown let or not, then the warehouse's rent upfront
             Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
+            Sim.Core.Equipment.EquipmentRules.Close(sim); // spec 013 §3.5: leases, maintenance and diesel for the new season
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));

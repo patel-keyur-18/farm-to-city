@@ -33,6 +33,7 @@ namespace Sim.Core.Finance
                 BuildingsAtBook = l.Balance(Account.Buildings) + l.Balance(Account.AccumulatedDepreciation),
                 TreesAtBook = l.Balance(Account.Trees),
                 LivestockAtBook = l.Balance(Account.Livestock),
+                EquipmentAtBook = l.Balance(Account.Equipment),
                 Businesses = Business.BusinessBooks.AtEquity(sim),
                 StoredGoods = Market.Store.Value(sim),
                 LoanPrincipal = -(l.Balance(Account.MoneylenderLoans) + l.Balance(Account.BankLoans)),

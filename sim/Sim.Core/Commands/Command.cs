@@ -162,6 +162,11 @@ namespace Sim.Core.Commands
         DripNeedsWater,
         /// <summary>No pump or borewell waters the acre (drip), or no pump or borewell is built (choosing acres).</summary>
         NoWaterSource,
+
+        /// <summary>Equipment (spec 013 §3.2): no such machine of yours; no room in the second shed for its bullocks; a bullock goes with its plough.</summary>
+        UnknownMachine,
+        NoShedRoom,
+        PartOfMachine,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -455,6 +455,9 @@ namespace Sim.View.Views
             { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 013 §3.1.
             { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
+            // Spec 013 §3.2.
+            { "MachineBought", Use.Motion }, { "MachineLeased", Use.Motion }, { "MachineHired", Use.Motion }, { "MachineSold", Use.Motion }, { "MachineReturned", Use.Away },
+            { "MachineBroke", Use.Alert }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
             { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
         };
     }

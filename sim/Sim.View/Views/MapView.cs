@@ -265,6 +265,15 @@ namespace Sim.View.Views
         public int Place { get; internal set; }
     }
 
+    /// <summary>A machine on the map (ADR 0088): at work on a field by day, or the tractor parked on the farm lane.</summary>
+    public sealed class MachineVm
+    {
+        /// <summary>The sprite: plough_team, tractor_cultivator, or tractor_trolley parked.</summary>
+        public string Sprite { get; internal set; }
+        public int TileId { get; internal set; }
+        public bool Parked { get; internal set; }
+    }
+
     public sealed class MapVm
     {
         public int Width { get; internal set; }
@@ -302,6 +311,9 @@ namespace Sim.View.Views
 
         /// <summary>The second cattle acre on a field of yours (ADR 0088), or null without a second shed.</summary>
         public CattleAcreVm SecondCattle { get; internal set; }
+
+        /// <summary>Machines at work or parked (ADR 0088).</summary>
+        public List<MachineVm> Machines { get; } = new List<MachineVm>();
 
         /// <summary>The minor canal (ADR 0087 §2): along the edge below <see cref="CanalRow"/> from column <see cref="CanalFrom"/> to <see cref="CanalTo"/>; row −1 without one.</summary>
         public int CanalRow { get; internal set; } = -1;
@@ -462,7 +474,8 @@ namespace Sim.View.Views
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
             map.Cattle = CattleAcre(sim, map.SecondOfDay);
-            map.SecondCattle = SecondCattleAcre(sim, map.SecondOfDay);
+            bool ploughing = AddMachines(sim, map);
+            map.SecondCattle = SecondCattleAcre(sim, map.SecondOfDay, ploughing);
             return map;
         }
 
@@ -487,14 +500,49 @@ namespace Sim.View.Views
         }
 
         /// <summary>The second cattle acre (ADR 0088): its shed, the farm's straw stack (one store over both), and the animals in it.</summary>
-        public static CattleAcreVm SecondCattleAcre(Simulation sim, long secondOfDay)
+        public static CattleAcreVm SecondCattleAcre(Simulation sim, long secondOfDay, bool ploughing = false)
         {
             int tile = Sim.Core.Livestock.LivestockRules.SecondShedTile(sim);
             if (tile < 0) return null;
             var vm = new CattleAcreVm { TileId = tile, Shed = Sim.Core.Livestock.LivestockRules.SecondShed(sim) != null ? 2 : 1 };
             if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
             AddAnimals(sim, vm, 1, secondOfDay);
+            if (ploughing) vm.Animals.RemoveAll(a => sim.Config.Game.Livestock.Animals[sim.Config.Game.Livestock.IndexOfAnimal(a.Kind)].Draught); // out at the plough
             return vm;
+        }
+
+        /// <summary>
+        /// The machines (ADR 0088): by day (workFromHour–workToHour) each working machine of yours, or hired today, works the fields it
+        /// covers that have a crop growing, a field an hour; at night, or with nothing growing, your tractor parks on the farm lane's
+        /// acre with its trolley and the bullocks rest in their shed. Returns whether the ox plough is out at work.
+        /// </summary>
+        private static bool AddMachines(Simulation sim, MapVm map)
+        {
+            if (!Sim.Core.Equipment.EquipmentRules.On(sim)) return false;
+            EquipmentDefs defs = sim.Config.Game.Equipment;
+            int hour = (int)(map.SecondOfDay / 3600);
+            bool day = hour >= defs.WorkFromHour && hour < defs.WorkToHour, ploughing = false;
+            int[] cover = Sim.Core.Equipment.EquipmentRules.Cover(sim);
+            for (int k = 0; k < defs.Machines.Count; k++)
+            {
+                MachineDef d = defs.Machines[k];
+                Sim.Core.Equipment.Machine m = Sim.Core.Equipment.EquipmentRules.OfKind(sim, k);
+                bool hired = Sim.Core.Equipment.EquipmentRules.Hired(sim, k);
+                if (m == null && !hired) continue;
+                var fields = new List<int>();
+                for (int t = 0; t < cover.Length; t++)
+                {
+                    Crop c = cover[t] == k ? sim.State.Farm.CropOn(t) : null;
+                    if (c != null && c.State == CropState.Growing) fields.Add(t);
+                }
+                if (day && fields.Count > 0)
+                {
+                    map.Machines.Add(new MachineVm { Sprite = d.Bullocks > 0 ? "plough_team" : "tractor_cultivator", TileId = fields[hour % fields.Count] });
+                    if (d.Bullocks > 0 && !hired) ploughing = true;
+                }
+                else if (m != null && d.Bullocks == 0) map.Machines.Add(new MachineVm { Sprite = "tractor_trolley", TileId = defs.ParkTile, Parked = true });
+            }
+            return ploughing;
         }
 
         /// <summary>

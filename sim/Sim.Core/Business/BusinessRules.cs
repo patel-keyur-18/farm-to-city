@@ -243,6 +243,7 @@ namespace Sim.Core.Business
             milkCost = 0;
             for (int k = 0; k < kinds.Count && room > 0; k++)
             {
+                if (kinds[k].Draught) continue; // a bullock gives no milk
                 long q = System.Math.Min(room, herd[k]);
                 stock[sim.Config.Game.Market.IndexOf("milk_" + kinds[k].Id)] += q;
                 milkCost += Money.Value(q, Livestock.LivestockRules.MilkPrice(sim, k), 1000);

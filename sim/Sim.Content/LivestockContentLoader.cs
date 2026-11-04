@@ -80,7 +80,7 @@ namespace Sim.Content
                 string p = Index(root + ".animals", i);
                 JObject a = Object(tokens[i], p);
                 OnlyFields(a, p, "id", "nameKey", "price", "milkPerDay", "fatPercent", "seasonMilk", "milkDays", "dryDays", "ration", "dryFeedFactor",
-                    "labourHoursPerDay", "dungCompostKgPerDay", "calfPrice", "sellShare");
+                    "labourHoursPerDay", "dungCompostKgPerDay", "calfPrice", "sellShare", "draught", "names");
                 string id = UniqueId(a, p, animals.ConvertAll(x => x.Id));
                 long price = Money(Required(a, p, "price"), Join(p, "price"));
                 if (price <= 0) throw new ContentException(Join(p, "price"), "must be more than 0");
@@ -96,7 +96,17 @@ namespace Sim.Content
                     Bounded(r, rp, "green", "0", "100"), Bounded(r, rp, "straw", "0", "40"), Bounded(r, rp, "feed", "0", "20"),
                     Bounded(a, p, "dryFeedFactor", "0", "1"), Bounded(a, p, "labourHoursPerDay", "0", "8"),
                     Bounded(a, p, "dungCompostKgPerDay", "0", "50"), Money(Required(a, p, "calfPrice"), Join(p, "calfPrice")),
-                    Bounded(a, p, "sellShare", "0", "1")));
+                    Bounded(a, p, "sellShare", "0", "1"), a["draught"] != null && Bool(a["draught"], Join(p, "draught"))));
+                if (animals[animals.Count - 1].Draught && (animals[animals.Count - 1].MilkPerDay != Fixed.Zero || animals[animals.Count - 1].CalfPrice != 0))
+                    throw new ContentException(p, "a draught animal gives no milk and no calves");
+                if (a["names"] != null)
+                {
+                    var names = new List<string>();
+                    List<JToken> nt = NonEmptyArray(a, p, "names");
+                    for (int k = 0; k < nt.Count; k++) names.Add(String(nt[k], Index(Join(p, "names"), k)));
+                    if (names.Count < 2) throw new ContentException(Join(p, "names"), "needs at least 2 names");
+                    animals[animals.Count - 1].Names = names.AsReadOnly();
+                }
             }
             if (def.GreenFodderSellPrice > def.GreenFodderBuyPrice) throw new ContentException(Join(lp, "greenFodderSellPrice"), "must not be above the buying price");
             if (!buildings.Exists(b => b.CompostPitKg > 0) || shedDef.FeedRoomKg <= 0 || shedDef.StrawStackKg <= 0)

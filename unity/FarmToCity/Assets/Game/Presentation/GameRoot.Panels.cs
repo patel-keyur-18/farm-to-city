@@ -174,6 +174,8 @@ namespace Game.Presentation
                 case "BuyAnimal": _sheet.Show(AnimalBuySheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "AnimalLoan": _sheet.Show(AnimalLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "HouseLoan": _sheet.Show(HouseLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case EquipmentSheet.Kind: _sheet.Show(EquipmentSheet.Build(_ctx), refreshOnly); break; // spec 013 §7
+                case MachineLoanSheet.Kind: _sheet.Show(MachineLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Animal":
                     if (global::Sim.Core.Livestock.LivestockRules.Find(Sim, r.Id) == null) { Return(ShedSheetRequest()); break; } // sold
                     _sheet.Show(AnimalSheet.Build(_ctx, r.Id), refreshOnly);
@@ -192,7 +194,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": case GodownSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
                 case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
@@ -202,6 +204,7 @@ namespace Game.Presentation
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));
                     return;
                 case "BuyAnimal": case "AnimalLoan": case "Animal": Return(ShedSheetRequest()); return;
+                case MachineLoanSheet.Kind: Return(new SheetRequest(EquipmentSheet.Kind, 0)); return; // bought: see it among yours
                 case "Hire": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working
                 case "Word": return; // the board stays: the post, a reference asked, a talk
                 case "HrEvent": if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: back to the alerts it came from

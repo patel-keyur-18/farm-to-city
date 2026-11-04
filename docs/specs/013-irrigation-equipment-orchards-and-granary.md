@@ -5,7 +5,7 @@
 - Reviewer: Keyur Patel
 - GDD sections: Farming (irrigation ladder, equipment ladder, fruit trees: whole-acre orchards; storage and selling: the granary); Finance (depreciation, buy or lease, capital versus operating spending)
 - Amends: spec 002 (moisture: canal and drip floors, §3.1), spec 003 (the Tools factor and labour per acre with machines, §3.2; orchards as tree acres, §3.3), spec 004 (the granary's capacity and slower spoilage, §3.4), spec 005 (machines as assets, leases as rent), spec 012 (bullocks take shed places, §3.2)
-- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting), ADR 0088 (the bullocks' own shed; machines drawn at work and at 70%)
+- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting), ADR 0088 (the bullocks' own shed; machines drawn at work and at 70%), ADR 0089 (equipment as built: the combine to Phase 3)
 - Related ADRs: 0032 (the well acres), 0014 (the yield formula and its Tools factor), 0021 and 0033 (trees and their prices), 0024 and 0034 (the store, spoilage), 0037 (the hired tractor-trolley), 0057 (spec order), 0064 (map layouts previewed)
 - Depends on specs: 002, 003, 004, 005, 006, 012
 
@@ -19,12 +19,12 @@ The player turns a farm of rain-fed acres and hand tools into a capital-backed f
 
 **In:**
 - The irrigation ladder per acre: rain-fed, the well and buckets (as now), a pump on the well, a canal channel, drip (owner, 2026-10-27, §3.1).
-- The equipment ladder: hand tools (as now), an ox plough with a pair of bullocks, a tractor; bought, leased a season or hired a day; maintenance, breakdowns, depreciation, resale; a combine harvester hired by the acre at harvest (§3.2).
+- The equipment ladder: hand tools (as now), an ox plough with a pair of bullocks, a tractor; bought, leased a season or hired a day; maintenance, breakdowns, depreciation, resale (§3.2). The combine harvester waits for Phase 3 (ADR 0089).
 - Whole-acre orchards of mango, guava, banana or papaya (§3.3).
 - The granary (§3.4).
 
 **Out** (and where it goes instead):
-- Buying a harvester, cold storage, a tube well per acre, solar pumps: Phase 3.
+- A combine harvester, hired or bought (ADR 0089: harvesting is a free tap in Phase 2, so a hired combine would buy nothing), cold storage, a tube well per acre, solar pumps: Phase 3.
 - Droughts, floods and hailstorms as events: the event engine (F16.1).
 - Apple orchards: hill parcels, Phase 3.
 - Hands driving the tractor for neighbours (custom hiring as a business): Phase 3.
@@ -64,12 +64,12 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | Hand tools | Start | — | — | — | — | All | Tools 1.00 (as now) |
 | **Ox plough** (a pair of bullocks, a plough, a cart) | Hamlet | 70,000 (bullocks 60,000 as livestock, plough and cart 10,000 over 20 seasons) | — | 900 a day with its owner | Bullocks eat as cattle and take 2 places in the second shed (spec 012, ADR 0088); 1 h a day of care | 6 acres | Labour −15% (spec 003 §3.6 `labourPerAcrePerDay`), Tools 1.03 (timely sowing); the cart takes 500 kg to the mandi (no trolley hire for small loads) |
 | **Tractor** (35 HP with a cultivator and a trolley) | Village | 6,00,000 (bank loan: the tractor as collateral at 0.70) over 60 seasons | 30,000 a season | 2,000 a day with a driver | Diesel 600 a season an acre covered; maintenance 1.5% of price a season | 20 acres | Labour −35%, Tools 1.06; mandi trips without trolley hire (2,000 kg) |
-| **Combine harvester** | Village | — (Phase 3) | — | 2,500 an acre at harvest (wheat, rice) | — | The acres hired | The harvest needs no labourers; half the straw is lost (it's cut high) |
 
 - **Coverage:** a machine covers its acres in id order (well acres first); the best machine covering an acre applies. A leased machine is a season's rent (Dr Rent, paid upfront at the close). A hired day covers all your acres for that day only (a sowing or a harvest day).
+- **As built (ADR 0089):** your fields are owned farm acres that aren't a homestead, a business's yard or the second cattle acre; machines take them best first. A crop keeps the Tools factor of the machine it was sown with. Diesel is paid upfront at each close for the fields a machine works (for the days left when bought or leased mid-season); unpaid, it stands idle until the next close. A lease runs until you give it back (no refund) or can't pay at a close. One machine of each kind. The bullocks are bought and sold only with the plough (`PartOfMachine`), named from their own list, no milk or calves; without them the plough stands. Bought machines are capitalised to 1610 and depreciated to it (its balance is their book value); net worth shows them at book; foreclosure takes them after the animals. Your working cart or tractor-trolley carries a mandi load that fits without the trolley hire.
 - **Maintenance** (bought machines): on by default (paid at the close); skipped, it saves the cost and raises the breakdown chance.
 - **Breakdowns:** at each daily pass a bought machine breaks with probability `breakdownMaintained` 0.005 or `breakdownSkipped` 0.04 a day (seeded, `equipment` stream); broken, it covers nothing for 24 h and costs 5% of its price to repair (Dr Repairs). Never while away beyond the repair (the 24 h runs on; no losses from it alone).
-- **On the map (ADR 0088):** machines are drawn at 70% (the ploughing pair at 75%), at work by day (7:00–19:00) on the acres they cover a field at a time, a hired harvester on the field it harvests; at night the bullocks rest in their shed and the tractor parks on the farm lane's acre 167. The bullock cart isn't drawn.
+- **On the map (ADR 0088):** machines are drawn at 70% (the ploughing pair at 75%), at work by day (7:00–19:00) on the growing fields they cover, a field an hour; at night the bullocks rest in their shed and the tractor parks on the farm lane's acre 167. The bullock cart isn't drawn.
 - **Depreciation and resale:** straight-line over its life (spec 005 §3.3); sold at `resaleShare` 0.80 of book value (the market value is shown beside the book value, GDD Finance).
 
 ### 3.3 Whole-acre orchards (§10 G6, G7)
@@ -173,6 +173,8 @@ Store:  Your godown in the mandi town  [Buy · 45,000] → godown: wheat 3,200 k
 | AC-10 | From the Village a borewell on an owned acre holds the 4 acres you choose at moisture 40 or more with no bucket labour, its power paid at the close; a fifth acre is refused (`TooManyAcres`); before the Village it's refused (`EraLocked`) | `IrrigationTests.Borewell` (ADR 0086) |
 | AC-11 | Renting books whole tonnes, charges the days left this season and a full season at each close, fills after your own godown and before the hut store, and never shrinks below what is stored | `GranaryTests.Rent` |
 | AC-12 | A godown set to let, empty at the close, is let with the seeded chance for 2,400 paid upfront, takes none of your goods while let, isn't let while it holds your goods, and renews until switched off | `GranaryTests.LetOut` |
+| AC-13 | The ox plough needs 2 free places in the second shed for its bullocks, which come and go with it, give no milk and are fed as cattle; without them it stands; a working cart or tractor-trolley takes a mandi load that fits without the trolley hire (ADR 0088, 0089) | `EquipmentTests.Coverage`, `EquipmentTests.Cart_ToTheMandi` |
+| AC-14 | Menu → Equipment shows what each machine does, Buy (the tractor with a loan), Lease and Hire a day with refusals in words, yours with its state, book and resale value, maintenance and Sell; a field shows what works it; machines are drawn at work by day and the tractor parked on the lane at night | `EquipmentViewTests.Sheet`, `EquipmentViewTests.Yours`, `EquipmentViewTests.Map` |
 
 ## 9. Balancing hooks
 
@@ -188,7 +190,7 @@ Store:  Your godown in the mandi town  [Buy · 45,000] → godown: wheat 3,200 k
 
 - **G1. The irrigation ladder.** **Closed (owner, 2026-10-27):** rain-fed; the well and buckets; a pump on the well (Hamlet, 15,000: no bucket labour, 4 acres at 40); a canal channel (Hamlet, 6,000 an acre and a 400 fee a season, dry in Summer); drip (Village, 40,000 an acre, half subsidised on 2 acres, on pumped water) (§3.1).
 - **G2. Pumped water.** **Closed (owner, 2026-10-27):** the well's pump waters 4 acres by flooding or drip; a borewell with its own pump (Village, 30,000, 60 seasons) 6 more; the canal any acre along its channels; no water budget or water table in Phase 2 (§3.1). **Amended (owner, 2026-11-03, ADR 0086):** the borewell waters **4** acres you choose (not 6), from any acre you own, by flooding at 40 or by drip, power 250 a season an acre.
-- **G3. Which machines.** **Closed (owner, 2026-10-27):** an ox plough (Hamlet) to buy or hire, a tractor (Village) to buy, lease or hire, and the combine harvester hired by the acre at harvest; buying a harvester in Phase 3 (§3.2).
+- **G3. Which machines.** **Closed (owner, 2026-10-27; the combine moved to Phase 3 by ADR 0089):** an ox plough (Hamlet) to buy or hire, a tractor (Village) to buy, lease or hire, and the combine harvester hired by the acre at harvest; buying a harvester in Phase 3 (§3.2).
 - **G4. Bullocks.** **Closed (owner, 2026-10-27):** the pair live in the cattle shed (2 of its 4 places), fed like cattle (green fodder, straw, feed), their dung to compost, 1 h a day of care, no milk; the plough needs the shed (Hamlet, spec 012) (§3.2).
 - **G5. Breakdowns.** **Closed (owner, 2026-10-27):** maintenance paid at each close (on by default); a seeded daily chance of 0.5% maintained or 4% skipped; broken, 24 h out and 5% of the price to repair; nothing worse; leased and hired machines never break on you (§3.2).
 - **G6. Orchards.** **Closed (owner, 2026-10-27):** whole acres of mango (40 trees), guava (100), banana and papaya (400), real densities and spec 003's tree rules per tree; the balancer checks the glut a large planting causes (§3.3, §9).

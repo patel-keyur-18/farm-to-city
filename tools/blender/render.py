@@ -2616,7 +2616,7 @@ def icon_cattle(kind):
     import random
     rnd = random.Random(5)
     o = []
-    if kind in ("buffalo", "cow"):
+    if kind in ("buffalo", "cow", "bullock"):
         return model_animal(kind, "stand")
     if kind == "milk":
         # An aluminium milk can (the dairy's can) with a lid and side handles.
@@ -2695,7 +2695,7 @@ SPRITES["sign_locked"] = model_sign_locked
 for _c in ("berseem", "sorghum"):
     for _st in STAGES + ("cut",):
         SPRITES["crop_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_crop(c, st)))()
-for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), ("milk", "icon_good_milk"), ("straw", "icon_good_straw"),
+for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), ("bullock", "icon_animal_bullock"), ("milk", "icon_good_milk"), ("straw", "icon_good_straw"),
                ("green_fodder", "icon_good_green_fodder"), ("cattle_feed", "icon_good_cattle_feed"), ("berseem", "icon_good_berseem"),
                ("sorghum", "icon_good_sorghum")):
     ICONS[_n] = (lambda k=_k: (lambda: icon_cattle(k)))()

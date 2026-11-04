@@ -207,7 +207,8 @@ namespace Sim.Core.Commands
             if (m.Trip != null) return CommandResult.Reject(RejectReason.TripUnderway);
             if (m.LastTripDay == t / Definitions.ClockDef.SecondsPerDay) return CommandResult.Reject(RejectReason.AlreadyWentToday);
             if (sim.State.Farm.Founder.SickToday) return CommandResult.Reject(RejectReason.FounderSick);
-            long hire = MarketRules.Indexed(sim, def.CartHirePerTrip);
+            // Your own cart or tractor-trolley takes the load if it fits: no trolley to hire (spec 013 §3.2).
+            long hire = weight <= Equipment.EquipmentRules.CartGrams(sim) ? 0 : MarketRules.Indexed(sim, def.CartHirePerTrip);
             if (!sim.State.Ledger.CanAfford(hire)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             FarmSystem.Accrue(sim);

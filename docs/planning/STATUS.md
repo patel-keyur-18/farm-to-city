@@ -7,7 +7,7 @@
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
 | Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, not started. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
 | Branch with latest work | `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03): Sprint 16's approved plan, not started |
-| Last updated | 2026-11-03 |
+| Last updated | 2026-11-04 |
 
 ## Done so far
 
@@ -205,6 +205,13 @@
 
 ## In progress
 
+**Sprint 16, US-128 done (2026-11-04, for the owner's review): equipment** (spec 013 §3.2 as amended by ADR 0089; ADR 0088; art approved 2026-11-04).
+- Sim: `equipment` in `farming.json` (the ox plough from the Hamlet, the tractor from the Village; the combine harvester moved to Phase 3, ADR 0089), the bullock in `livestock.json` (draught, no milk or calves, its own names), `equipmentLtv` 0.70 on the co-op bank. `EquipmentState` (machines, the day's hires, each crop's sowing Tools) as schema 14's last section; `EquipmentRules` (coverage best machine first, well acres first; labour × (1 − cut); Tools kept from sowing; the cart on mandi trips; diesel, maintenance and leases at the close; breakdowns 0.5% or 4% a day on `RngStream.Equipment`; repairs; straight-line depreciation Dr 5500 Cr 1610; resale at 80%); commands `BuyMachine` (cash or the bank's loan against the tractor), `LeaseMachine`, `HireMachine` (until midnight), `SellMachine` (the bank repaid first; a lease given back), `SetMaintenance`; rejects `UnknownMachine`, `NoShedRoom` (the bullocks only in the second shed), `PartOfMachine` (bullocks never at the fair). Foreclosure takes bought machines after the animals; net worth gains *Machines at book value*.
+- Screens: Menu → **Equipment** (what each does; yours with its state, book and resale, maintenance, Sell; otherwise Buy, Buy with a loan, Lease and Hire a day as picture buttons, two a row, refusals in words with the price in sight); the tractor loan sheet (terms, this season's diesel); the field card's **Worked by** row and its *Why?*; the machine's *Why?* (price, fields, work saved, Tools, cart, bullocks, diesel, upkeep, breakdowns, repair, life); away-card rows for machine events; the map: the plough team or the tractor with its cultivator on a growing field by day (a field an hour), the tractor-trolley parked on lane acre 167 at night, the bullocks in the second shed when not at the plough.
+- Tests: `EquipmentTests.Coverage` (AC-3), `Breakdowns` (AC-4), `Books` (AC-5), `ChunkingInvariance` (AC-8), `Cart_ToTheMandi`; `MigrationTests.Schema13_Farm` (a schema-13 save has no machines; one bought round-trips); `EquipmentViewTests.Sheet`, `Yours`, `Map`; `saves/schema14` re-pinned. 434 + 131 pass.
+- Editor (scripted touch, `docs/art/s16-equipment-*.png`): Menu → Equipment in the Hamlet (the plough's Buy refused "Build a second shed for the bullocks, with 2 free places", the tractor's "Comes once you're a Village"); Hire a day on the plough (937 coins; "Hired today · Working your fields until midnight"); the field card's *Worked by · Ox plough* and its *Why?*; the plough bought with its pair (73,933; Bhola and Sheru in the second shed); the plough team on field 101 at 10:00 with the second acre empty; the tractor hired, then bought with the bank's loan over 4 seasons (lends 4,22,000); the plough idle under it ("Working 0 fields"); the tractor at work by day and parked with its trolley on acre 167 at 22:00; the tractor sold (the bank repaid first, 47,528 left against the land), leased (18,087 for the rest of the season with diesel) and given back. Set up by script: 5,00,000 test coins, both sheds built (the second on field 86), a day and 21 hours of dev time travel, Next era to the Village. Fixed during the tour: rows drew a sack for machine icons; the tractor's four buttons were cramped on one row (now two a row); "Work saved −15%" was drawn red (now plain); the plough's Sell showed 8,450 though its pair sells too (now "59,148 with the pair"); a cash refusal hid the price; Buy and Buy with a loan left out this season's diesel; Buy with a loan opened terms that all refused for cash (now refused on the button); the machine *Why?* headline overran its title (now the price). Saves restored and identical.
+- For the owner: ADR 0089's as-built choices (Tools kept from sowing, best machine first, diesel upfront at the close, leases until given back, one of each kind, bullocks only with the plough, machines at book, the bank at 0.70). Two notes: machines are drawn at work on a *growing* field (ADR 0088), so the plough shows in a standing paddy; drawing them on bare fields first would read more like ploughing. On field 86 the homestead's roof hides part of the second cattle acre.
+
 **Sprint 16, US-234 done (2026-11-04, approved by the owner): a second cattle shed** (ADR 0088, spec 012 §3.3; layout approved 2026-11-04: the lighter one).
 - Sim: `BuildShed(tile)` builds the second shed on an empty field you own (the first shed standing; refused `NoShed`, `AlreadyBuilt`, `NotOwned`, `TerrainNotAllowed`, `TileOccupied` for a crop, house, business or irrigation built there); the field stops being farmed and can't be sold; 8 places over both sheds, cows and buffalo fill the first then the second (`Animal.Shed`); the feed rooms and straw stacks add up through `Store.CapacityGrams`; foreclosure on its bought field takes it at book value (or its cost while being built), moves its animals into the first shed's free places and seizes the rest. Save schema 14: each animal's shed and the field of a shed being built (`LivestockState.ShedTile`); new command tag `BuildSecondShed`. The bullocks' rule (only in the second shed, `NoShedRoom`) comes with US-128, where bullocks are bought.
 - Screens: the shed sheet's **A second shed** section (what it adds; **Choose the field** on its own row, not the sheet's bar, so the first shed's animals come first); placing it on lit acres with a ghost shed, refusals in words; the field draws as a cattle acre in the approved lighter layout (shed, straw stack, trough, hedge with the gate on the far side, a manger only where an animal stands) and opens the shed sheet; *Your cattle sheds · 5 of 8 stalls* with the animals by shed.
@@ -287,7 +294,7 @@
 
 ## Next up
 
-1. **Sprint 16: US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night, the bullocks only in the second shed with `NoShedRoom`; US-128's art approved 2026-11-04).
+1. **Sprint 16: the owner's review of US-128** (ADR 0089's as-built choices). Then US-129's orchard rows: art previewed first, then the code.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -330,7 +337,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done, for review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 

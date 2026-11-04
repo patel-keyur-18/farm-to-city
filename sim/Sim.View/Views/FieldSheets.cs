@@ -46,6 +46,7 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100", "moisture", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
             IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
+            EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
 
             if (crop == null)
             {
@@ -174,6 +175,7 @@ namespace Sim.View.Views
             for (int k = 0; k < defs.Animals.Count; k++)
             {
                 AnimalDef a = defs.Animals[k];
+                if (a.Draught) continue; // the co-op buys milk: bullocks give none
                 long perLitre = (Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k) * Sim.Core.Maths.Fixed.FromInt(100)).RoundToLong();
                 int owned = 0, milking = 0;
                 foreach (Sim.Core.Livestock.Animal x in s.Animals)

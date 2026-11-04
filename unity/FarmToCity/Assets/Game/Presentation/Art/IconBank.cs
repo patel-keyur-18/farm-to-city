@@ -36,6 +36,7 @@ namespace Game.Presentation.Art
             if (goodId.StartsWith("seed_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_seed");
             if (goodId.StartsWith("sapling_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_sapling");
             if (goodId == "fertiliser_chemical") return SpriteBank.Rendered("icon_fertiliser");
+            if (goodId == "tractor" || goodId == "plough_team") return SpriteBank.Rendered(goodId) ?? Sack; // equipment (spec 013 §7)
             return SpriteBank.Rendered("icon_good_" + goodId) ?? SpriteBank.Rendered("icon_" + goodId) ?? Sack;
         }
     }

@@ -96,6 +96,7 @@ namespace Sim.Core.Farm
             FarmState farm = sim.State.Farm;
             int weather = sim.State.Weather.WeatherOf(Calendar.SpellAt(sim.State.Clock.SimTime, sim.Clock));
             Fixed demand = Fixed.Zero;
+            int[] cover = Equipment.EquipmentRules.Cover(sim);
             foreach (Crop c in farm.Crops)
             {
                 if (c.State != CropState.Growing) continue;
@@ -104,7 +105,7 @@ namespace Sim.Core.Farm
                 c.WaterRate = FarmRules.WaterFactor(defs.Farm.Farm, def, tile.Moisture);
                 c.WeatherRate = defs.Farm.Farm.WeatherYieldFactor[weather];
                 c.Wet = defs.Farm.Pests.WetWeather[weather];
-                demand += CareDemand(sim, def, tile);
+                demand += CareDemand(sim, def, tile, cover);
             }
             demand += Livestock.LivestockRules.LabourDemand(sim); // every animal, dry or in milk (spec 012 §3.9)
             Fixed cap = defs.Farm.Farm.CareCap;
@@ -113,10 +114,15 @@ namespace Sim.Core.Farm
             farm.CareRatio = ratio > cap ? cap : ratio;
         }
 
-        /// <summary>A growing crop's care, hours a day: its labour and the founder's buckets, less what drip saves (spec 013 §3.1), never below 0.</summary>
-        public static Fixed CareDemand(Simulation sim, CropDef def, Tile tile)
+        /// <summary>
+        /// A growing crop's care, hours a day: its labour less the machine working the field's share (spec 013 §3.2) and what drip
+        /// saves (§3.1), never below 0; then the founder's buckets.
+        /// </summary>
+        public static Fixed CareDemand(Simulation sim, CropDef def, Tile tile) { return CareDemand(sim, def, tile, Equipment.EquipmentRules.Cover(sim)); }
+
+        public static Fixed CareDemand(Simulation sim, CropDef def, Tile tile, int[] cover)
         {
-            Fixed labour = def.LabourPerAcrePerDay - Land.IrrigationRules.CareCut(sim, tile.Id);
+            Fixed labour = def.LabourPerAcrePerDay * (Fixed.One - Equipment.EquipmentRules.LabourCut(sim, cover, tile.Id)) - Land.IrrigationRules.CareCut(sim, tile.Id);
             if (labour < Fixed.Zero) labour = Fixed.Zero;
             return labour + tile.WellLift.MulRatio(24, 1) * sim.Config.Game.Farm.Farm.BucketHoursPerMoisturePoint;
         }
@@ -126,9 +132,10 @@ namespace Sim.Core.Farm
         {
             GameDefs defs = sim.Config.Game;
             Fixed demand = Fixed.Zero;
+            int[] cover = Equipment.EquipmentRules.Cover(sim);
             foreach (Crop c in sim.State.Farm.Crops)
                 if (c.State == CropState.Growing)
-                    demand += CareDemand(sim, defs.Farm.Crops[c.Def], sim.State.Land.Tiles[c.TileId]);
+                    demand += CareDemand(sim, defs.Farm.Crops[c.Def], sim.State.Land.Tiles[c.TileId], cover);
             return demand + Livestock.LivestockRules.LabourDemand(sim);
         }
 
@@ -225,7 +232,9 @@ namespace Sim.Core.Farm
 
                 c.Breakdown = FarmRules.Yield(defs.Farm.Farm, def.SeasonYieldPerAcre * share, c.SoilFactor,
                     c.WaterSum.MulRatio(1, g), c.CareSum.MulRatio(1, g), FarmRules.SeedFactor(def, c.Seed, c.SeedAge),
-                    c.WeatherSum.MulRatio(1, g), Land.IrrigationRules.FertiliserFactor(sim, c.TileId, fert), PestRules.FinalHealth(defs.Farm.Pests, c));
+                    c.WeatherSum.MulRatio(1, g), Land.IrrigationRules.FertiliserFactor(sim, c.TileId, fert), PestRules.FinalHealth(defs.Farm.Pests, c),
+                    Equipment.EquipmentRules.ToolsOf(sim, c));
+                Equipment.EquipmentRules.Forget(sim, c.Id);
                 c.State = CropState.Ready;
 
                 // Fertility for the cycle's share (§3.10).

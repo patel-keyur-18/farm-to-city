@@ -194,6 +194,7 @@ namespace Sim.Core.Tests
             Assert.That((g.RentedTonnes, g.RentNextTonnes, g.LetNext, g.LetNow), Is.EqualTo((0, 0, false, false)));
             Assert.That(r.State.Land.Buildings.Any(b => b.TileId < 0), Is.False, "no godown");
             Assert.That(r.State.Irrigation.PumpAcres.Concat(r.State.Irrigation.BorewellAcres), Is.Empty, "rain-fed and the well's buckets");
+            Assert.That(r.State.Equipment.Machines, Is.Empty, "hand tools");
             Assert.That(r.State.CommandLog.Base, Is.Not.Null, "its own replay base: a schema-13 history may predate ADR 0085's drying");
             Assert.That(SaveCodec.Replay(r, config).State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "and replays from it");
 
@@ -222,6 +223,7 @@ namespace Sim.Core.Tests
             }
             sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
             for (int i = 0; i < 3; i++) Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, "cow")).Accepted, Is.True);
+            Assert.That(sim.Execute(new BuyMachine(sim.State.Clock.SimTime, "ox_plough")).Accepted, Is.True, "its bullocks into the second shed");
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
@@ -229,7 +231,8 @@ namespace Sim.Core.Tests
             Assert.That(again.State.Irrigation.PumpAcres, Is.EqualTo(sim.State.Irrigation.PumpAcres));
             Assert.That(Land.IrrigationRules.Channelled(Simulation.FromState(config, again.State), 85), Is.True);
             Assert.That(Livestock.LivestockRules.SecondShed(Simulation.FromState(config, again.State)).TileId, Is.EqualTo(second), "the second shed, built");
-            Assert.That(again.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0, 1 }));
+            Assert.That(again.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0, 1, 1, 1 }));
+            Assert.That(again.State.Equipment.Machines.Single().Kind, Is.EqualTo(config.Game.Equipment.IndexOf("ox_plough")));
         }
 
         // Spec 019 AC-16: the schema-11 fixture loads into 12 with an empty sales record and the season's first entry found, is its own

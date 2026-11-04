@@ -47,6 +47,7 @@ namespace Sim.Content
             if (godown >= 0) game.Godown = LoadGodown(read("buildings.json"), godown, market, onboarding);
             // Irrigation comes with a pump in the buildings (spec 013 §3.1), after the eras it unlocks with.
             if (buildings.Exists(b => b.Id == "pump")) game.Irrigation = LoadIrrigation(read("farming.json"), buildings, map, onboarding);
+            if (livestock != null) game.Equipment = LoadEquipment(read("farming.json"), livestock, map, onboarding);
             return game;
         }
 
@@ -447,7 +448,7 @@ namespace Sim.Content
                 string p = Index(root + ".lenders", i);
                 JObject d = Object(tokens[i], p);
                 OnlyFields(d, p, "id", "nameKey", "baseRate", "rateSlopePer100", "refScore", "penaltyRate", "schedule", "minTerm", "maxTerm",
-                    "minAmount", "secured", "baseLimit", "collateralLtv", "livestockLtv", "houseLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
+                    "minAmount", "secured", "baseLimit", "collateralLtv", "livestockLtv", "houseLtv", "equipmentLtv", "incomeMultiple", "minScore", "scoreScaledLimit", "graceCloses",
                     "restructureExtraSeasons", "eraCaps");
                 string id = UniqueId(d, p, lenders.ConvertAll(x => x.Id));
                 if (id != LenderDef.MoneylenderId && id != LenderDef.BankId)
@@ -486,6 +487,7 @@ namespace Sim.Content
                     {
                         LivestockLtv = d["livestockLtv"] == null ? Fixed.Zero : Bounded(d, p, "livestockLtv", "0", "1"),
                         HouseLtv = d["houseLtv"] == null ? Fixed.Zero : Bounded(d, p, "houseLtv", "0", "1"),
+                        EquipmentLtv = d["equipmentLtv"] == null ? Fixed.Zero : Bounded(d, p, "equipmentLtv", "0", "1"),
                     });
             }
             if (lenders.Count != 2 || lenders[0].Id != LenderDef.MoneylenderId || lenders[1].Id != LenderDef.BankId)

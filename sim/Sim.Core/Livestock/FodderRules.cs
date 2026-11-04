@@ -40,7 +40,7 @@ namespace Sim.Core.Livestock
             {
                 Fixed baseKg = def.SeasonYieldPerAcre.MulRatio(t - from, sim.Clock.SecondsPerSeason);
                 grams = FarmRules.Yield(defs.Farm.Farm, baseKg, c.SoilFactor, c.WaterSum.MulRatio(1, span), c.CareSum.MulRatio(1, span), Fixed.One,
-                    c.WeatherSum.MulRatio(1, span), defs.Farm.Fertilisers[c.Fertiliser].YieldFactor, Fixed.One).Grams;
+                    c.WeatherSum.MulRatio(1, span), defs.Farm.Fertilisers[c.Fertiliser].YieldFactor, Fixed.One, Equipment.EquipmentRules.ToolsOf(sim, c)).Grams;
             }
             Settle(sim, c);
             return grams;
@@ -70,6 +70,7 @@ namespace Sim.Core.Livestock
             Settle(sim, c);
             sim.CompleteJob(job);
             sim.State.Farm.Crops.Remove(c);
+            Equipment.EquipmentRules.Forget(sim, c.Id);
             LandSystem.SetOccupied(sim, c.TileId, false);
             FarmSystem.Refresh(sim);
             sim.Emit(new FodderEnded(sim.State.Clock.SimTime, c.TileId, sim.Config.Game.Farm.Crops[c.Def].Id));

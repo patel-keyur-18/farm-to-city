@@ -102,6 +102,8 @@ namespace Sim.View.Views
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
             { "dairyMilkADay", DairyMilkADay },
+            // Equipment (spec 013 §3.2).
+            { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

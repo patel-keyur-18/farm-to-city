@@ -72,13 +72,20 @@ namespace Sim.Core.Farm
         public static YieldBreakdown Yield(FarmDef farm, Fixed baseKg, Fixed soil, Fixed water, Fixed care, Fixed seed, Fixed weather,
             Fixed fertiliser, Fixed cropHealth)
         {
-            Fixed product = baseKg * soil * water * care * seed * weather * farm.ToolsFactor * fertiliser * cropHealth;
+            return Yield(farm, baseKg, soil, water, care, seed, weather, fertiliser, cropHealth, farm.ToolsFactor);
+        }
+
+        /// <summary>The yield with the Tools factor the crop was sown under (a machine's, spec 013 §3.2).</summary>
+        public static YieldBreakdown Yield(FarmDef farm, Fixed baseKg, Fixed soil, Fixed water, Fixed care, Fixed seed, Fixed weather,
+            Fixed fertiliser, Fixed cropHealth, Fixed tools)
+        {
+            Fixed product = baseKg * soil * water * care * seed * weather * tools * fertiliser * cropHealth;
             Fixed cap = farm.YieldCap * baseKg;
             bool capped = product > cap;
             Fixed kg = capped ? cap : product;
             return new YieldBreakdown
             {
-                Base = baseKg, Soil = soil, Water = water, Care = care, Seed = seed, Weather = weather, Tools = farm.ToolsFactor,
+                Base = baseKg, Soil = soil, Water = water, Care = care, Seed = seed, Weather = weather, Tools = tools,
                 Fertiliser = fertiliser, CropHealth = cropHealth, Uncapped = product, Capped = capped,
                 Grams = kg.MulRatio(1000, 1).RoundToLong(),
             };
@@ -93,7 +100,8 @@ namespace Sim.Core.Farm
         {
             FarmDef farm = sim.Config.Game.Farm.Farm;
             long harvest = Yield(farm, crop.SeasonYieldPerAcre * CycleShare(sim.Clock, crop), LandRules.SoilFactor(sim, tile), WaterFactor(farm, crop, tile.Moisture),
-                Fixed.One, Fixed.One, Fixed.One, Land.IrrigationRules.FertiliserFactor(sim, tile.Id, fert), Fixed.One).Grams;
+                Fixed.One, Fixed.One, Fixed.One, Land.IrrigationRules.FertiliserFactor(sim, tile.Id, fert), Fixed.One,
+                Equipment.EquipmentRules.Tools(sim, Equipment.EquipmentRules.Cover(sim), tile.Id)).Grams; // the machine working this field now
             long seedGrams = SeedGrams(sim.Clock, crop);
             long fertGrams = FertiliserGrams(sim.Clock, crop, fert, sim.State.Clock.SimTime);
             return new SowingEstimate(harvest, crop.Fodder ? 0 : MarketRules.Value(sim, crop.OutputGood, harvest, MarketRules.Floor(sim, crop.OutputGood)),
