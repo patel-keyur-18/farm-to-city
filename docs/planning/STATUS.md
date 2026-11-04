@@ -205,7 +205,7 @@
 
 ## In progress
 
-**Sprint 16, US-234 done (2026-11-04, for the owner's review): a second cattle shed** (ADR 0088, spec 012 §3.3; layout approved 2026-11-04: the lighter one).
+**Sprint 16, US-234 done (2026-11-04, approved by the owner): a second cattle shed** (ADR 0088, spec 012 §3.3; layout approved 2026-11-04: the lighter one).
 - Sim: `BuildShed(tile)` builds the second shed on an empty field you own (the first shed standing; refused `NoShed`, `AlreadyBuilt`, `NotOwned`, `TerrainNotAllowed`, `TileOccupied` for a crop, house, business or irrigation built there); the field stops being farmed and can't be sold; 8 places over both sheds, cows and buffalo fill the first then the second (`Animal.Shed`); the feed rooms and straw stacks add up through `Store.CapacityGrams`; foreclosure on its bought field takes it at book value (or its cost while being built), moves its animals into the first shed's free places and seizes the rest. Save schema 14: each animal's shed and the field of a shed being built (`LivestockState.ShedTile`); new command tag `BuildSecondShed`. The bullocks' rule (only in the second shed, `NoShedRoom`) comes with US-128, where bullocks are bought.
 - Screens: the shed sheet's **A second shed** section (what it adds; **Choose the field** on its own row, not the sheet's bar, so the first shed's animals come first); placing it on lit acres with a ghost shed, refusals in words; the field draws as a cattle acre in the approved lighter layout (shed, straw stack, trough, hedge with the gate on the far side, a manger only where an animal stands) and opens the shed sheet; *Your cattle sheds · 5 of 8 stalls* with the animals by shed.
 - Tests: `LivestockTests.SecondShed` (AC-18), `MigrationTests.Schema13_Farm` (a schema-13 save has every animal in the first shed; round-trips one in the second), `CattleViewTests.SecondShed` (AC-19); `saves/schema14` re-pinned. 429 + 128 pass.
@@ -287,7 +287,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-234** (`docs/art/s16-second-shed-*.png`). Then US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night, the bullocks only in the second shed with `NoShedRoom`; US-128's art approved 2026-11-04).
+1. **Sprint 16: US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night, the bullocks only in the second shed with `NoShedRoom`; US-128's art approved 2026-11-04).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -330,7 +330,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done (for review). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
