@@ -1,6 +1,6 @@
 # 0089. Equipment as built: the combine to Phase 3, Tools kept from sowing, diesel upfront
 
-- Status: Accepted (owner, 2026-11-04, the combine; the rest for review with US-128)
+- Status: Accepted (owner, 2026-11-04: the combine, then the rest with US-128's review)
 - Date: 2026-11-04
 - Deciders: Keyur Patel
 - Amends: spec 013 §3.2 (the combine harvester, coverage, running costs, leases and hires), §5, §8
