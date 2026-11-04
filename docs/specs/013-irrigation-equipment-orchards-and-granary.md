@@ -39,7 +39,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | --- | --- | --- | --- | --- | --- |
 | Rain-fed | Start | — | — | Weather and soil only | — |
 | Well and buckets | Start (the 2 well acres) | — | Your bucket labour (spec 003 §3.6) | Floor 30 | 1–2.4 h a day an acre in dry weather |
-| **Pump on the well** | Hamlet | An electric pump and pipes, 15,000, depreciated over 40 seasons | Power 250 a season an acre watered | Floor 40 on up to `wellPumpAcres` 4 of your fields, chosen by the player (it starts on the 2 well acres) | None (no buckets) |
+| **Pump on the well** | Hamlet | An electric pump and pipes, 15,000, depreciated over 40 seasons | Power 250 a season an acre watered | Floor 40 on up to `wellPumpAcres` 4 of your fields, chosen by the player (it starts on the 2 well acres; any field, by buried pipe: owner, 2026-11-04) | None (no buckets) |
 | **Canal channel** | Hamlet | 6,000 an acre (a lined field channel from the minor canal along the river side; an acre must border a channelled acre or the canal) | Water fee 400 a season an acre (the irrigation department), paid at the close | Floor 45 in Monsoon, Winter and Spring; **dry in Summer** (the canal is closed for repairs, as Indian canals are in May–June) | None |
 | **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Power 300 a season an acre, maintenance 1% of cost a season | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +5% (fertigation) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
 

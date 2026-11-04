@@ -205,12 +205,12 @@
 
 ## In progress
 
-**Sprint 16, US-127 done (2026-11-04), waiting for the owner's review: the irrigation ladder** (spec 013 §3.1 as amended by ADR 0086, ADR 0087; art approved 2026-11-04 with the gate moved to the field's edge).
+**Sprint 16, US-127 done (2026-11-04, reviewed by the owner): the irrigation ladder** (spec 013 §3.1 as amended by ADR 0086, ADR 0087; art approved 2026-11-04 with the gate moved to the field's edge).
 - Sim: `irrigation` in `farming.json` (pump, borewell, canal, drip) and the `pump`, `borewell`, `canal_channel`, `drip` buildings; `IrrigationState` (the pump's and the borewell's acres, unpaid flags, subsidised drip acres) as schema 14's last section; `IrrigationRules` (floors once an hour before the well's buckets, the canal's reach through channelled fields, dry in Summer, drip at the crop's lowest good moisture, care cut, fertigation, running costs at the close to 5810/5820, release with the land); commands `InstallPump`, `SetPumpAcres`, `SetBorewellAcres`, `DrillBorewell`, `BuildChannel`, `LayDrip`; rejects `TooManyAcres`, `AlreadyWatered`, `DripNeedsWater`, `NoWaterSource`. Irrigation never stops a field's sale: it goes with it at book value.
 - Screens: the field card's **Irrigation** row (replaces "Well acre") with its *Why?*, picture buttons by era (pump, borewell, channel, drip; refusals in words), the card stays open after them; the moisture *Why?* shows irrigation's floor; the season report's *Power and water* and *Repairs and upkeep*; map: canal, channels and gates, drip, outlets, the borewell room, the pump on the well.
 - Tests: `IrrigationTests` (Pump, Canal: AC-1; Drip_Source: AC-2; Borewell: AC-10; Sold_With_The_Land), `MigrationTests.Schema13_Farm` (AC-9's irrigation part), `IrrigationViewTests.FieldCard`, an irrigated situation in the *Why?* sweep; `saves/schema14` re-pinned.
 - Editor (scripted touch): field 86 → Pump on the well; 84 → Water from the pump; 85 and 101 → Dig a canal channel; 85's irrigation *Why?*; (Next era by script) 86 → Lay drip, 100 → Drill a borewell; a day by script across the close (power and water 2,482, upkeep 208, nothing unpaid); Summer: "Canal channel (dry this season)"; Large text; the card staying open (101 → Water from the borewell). Captures `docs/art/s16-irrigation-*.png`. Saves restored and identical.
-- The canal and channels drawn dry in Summer (approved 2026-11-04; `MapVm.CanalDry`, `TileVm.ChannelDry`, `IrrigationViewTests.Map_DryCanal`). Open for the owner: the pump's acres being any 4 of your fields.
+- The canal and channels drawn dry in Summer (approved 2026-11-04; `MapVm.CanalDry`, `TileVm.ChannelDry`, `IrrigationViewTests.Map_DryCanal`). The pump waters any 4 of your fields (owner, 2026-11-04).
 - Found in the Editor: after developer time travel puts the town ahead of the clock, the season report's close doesn't respond until the clock catches up (dev-only; players can't time-travel).
 
 **Sprint 16, US-130 done (2026-11-03, approved by the owner): grain storage in the mandi town** (spec 013 §3.4 as amended by ADR 0087).
@@ -281,7 +281,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-127** (`docs/art/s16-irrigation-*.png`; one question left: the pump's acres). Then US-128's art preview (bullocks and plough, tractor, harvester).
+1. **Sprint 16: US-128's art preview** (bullocks and the ox plough, the tractor, the hired harvester; where each stands on the map, never cramped). Then US-128's code.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -324,7 +324,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done, waiting for the owner's review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
