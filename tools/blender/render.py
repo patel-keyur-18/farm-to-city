@@ -2231,6 +2231,8 @@ ANIMALS = {
     "buffalo": dict(body=0x47424F, dark=0x2A2730, muzzle=0x66606E, horn=0x2E2A2A, hoof=0x1C1A1E, legs=0.058, slim=1.0, patches=False),
     # Crossbred cow (HF cross, the valley's commonest): white with black patches, a pink muzzle and udder, short horns.
     "cow": dict(body=0xF5F1EA, dark=0xD9D2C8, muzzle=0xE9A7A0, horn=0xE8DCC0, hoof=0x3A302A, legs=0.068, slim=0.9, patches=True),
+    # Draught bullock (a Hariana-type zebu, spec 013 §3.2): grey-white, a big hump over the shoulders, a dewlap, long upright horns.
+    "bullock": dict(body=0xE4DFD4, dark=0xA9A296, muzzle=0x5C5650, horn=0x4A4038, hoof=0x2A2420, legs=0.074, slim=0.95, patches=False, hump=True),
 }
 
 
@@ -2259,9 +2261,12 @@ def model_animal(kind, pose="stand"):
         for i, (x, y) in enumerate(((-0.026, -0.055), (0.026, -0.055), (-0.027, 0.058), (0.027, 0.058))):
             legs.append(cylinder("leg%d" % i, 0.0125, 0.0105, lh, (x * w, y, lh / 2 + 0.006), body if not p["patches"] else m("leg", 0xEFEAE2), segs=10, smooth=True))
             legs.append(cylinder("hoof%d" % i, 0.011, 0.0115, 0.012, (x * w, y, 0.006), hoof, segs=10))
-        if p["patches"]:   # the udder
+        if p["patches"] and not p.get("hump"):   # the udder
             o.append(sphere("udder", 0.022, (0, 0.045, z0 - 0.04), m("udder", 0xEFB0A8), scale=(1.0, 1.0, 0.7), segs=12, rings=8))
     o += legs
+    if p.get("hump"):   # the zebu's hump over the shoulders and the dewlap under the neck
+        o.append(sphere("hump", 0.03, (0, -0.045, z0 + 0.045), body, scale=(0.8 * w, 1.0, 1.0), segs=14, rings=8))
+        o.append(sphere("dewlap", 0.022, (0, -0.085, z0 - 0.03), body, scale=(0.5, 1.4, 1.2), segs=12, rings=8))
     # Neck, head, muzzle, eyes, ears, horns: these bow together to eat.
     hz = z0 + 0.02
     head.append(sphere("neck", 0.03, (0, -0.088, hz - 0.004), body, scale=(0.9 * w, 1.1, 1.0), segs=14, rings=8))
@@ -2283,6 +2288,9 @@ def model_animal(kind, pose="stand"):
                 r = 0.016 * (1 - 0.4 * t)
                 q = c + Vector((s * 0.012 * t, r * math.sin(th), r * math.cos(th)))
                 head.append(sphere("horn%d_%d" % (s, k), 0.0062 * (1 - 0.55 * t), tuple(q), horn, segs=8, rings=6, outline=False))
+        elif p.get("hump"):   # long, upright, curving a little outward
+            head.append(cylinder("horn%d" % s, 0.0065, 0.0022, 0.046, (s * 0.028, -0.11, hz + 0.044), horn, segs=8,
+                                 rot=Matrix.Rotation(math.radians(-s * 22), 3, "Y")))
         else:
             head.append(cylinder("horn%d" % s, 0.0055, 0.002, 0.022, (s * 0.022, -0.112, hz + 0.034), horn, segs=8,
                                  rot=Matrix.Rotation(math.radians(-s * 35), 3, "Y")))
@@ -3335,6 +3343,117 @@ def icon_irrigation(kind):
 SPRITES.update({"canal_x": model_canal, "canal_x_dry": model_canal_dry, "channel_y_dry": model_channel_dry, "pump_outlet": model_pump_outlet, "canal_end": model_canal_end,
                 "channel_y": lambda: model_channel("y"), "channel_gate": model_channel_gate, "drip": model_drip,
                 "well_pump": lambda: model_well(pump=True)})
+# ---------------------------------------------------------------- equipment (spec 013 §3.2, US-128): previewed to the owner first
+
+def model_plough():
+    """A desi plough (hal): a wooden beam and handle with an iron share, and the yoke for the pair, laid on the ground."""
+    wood, dark, iron = toon("ploughWood", 0x9A6B3E), toon("ploughDark", 0x6E4A2A), toon("ploughIron", 0x5A5F66)
+    o = [box("beam", (0.014, 0.26, 0.014), (0, 0.0, 0.03), wood, rot=Matrix.Rotation(math.radians(8), 3, "X")),
+         box("handle", (0.012, 0.012, 0.09), (0, 0.13, 0.06), dark, rot=Matrix.Rotation(math.radians(-25), 3, "X")),
+         box("body", (0.02, 0.06, 0.02), (0, 0.1, 0.012), wood),
+         box("share", (0.014, 0.04, 0.008), (0, 0.06, 0.006), iron),
+         box("yoke", (0.18, 0.014, 0.014), (0, -0.13, 0.012), dark, bevel=0.003)]
+    return group(o, rot_z=math.radians(30), scale=BUILDING_SCALE)
+
+
+def model_bullock_cart():
+    """A bullock cart (bail gaadi): a plank bed on two tall spoked wooden wheels, a long shaft to the yoke, resting on a prop."""
+    wood, dark, iron, plank = toon("cartWood", 0xA87442), toon("cartDark", 0x6E4A2A), toon("cartIron", 0x5A5F66), toon("cartPlank", 0xC08A55)
+    o = [box("bed", (0.14, 0.2, 0.012), (0, 0.03, 0.085), plank, bevel=0.003)]
+    for x in (-0.07, 0.07):
+        o.append(box("rail%d" % (x > 0), (0.008, 0.2, 0.03), (x, 0.03, 0.105), wood))
+        o.append(cylinder("wheel%d" % (x > 0), 0.075, 0.075, 0.012, (x * 1.18, 0.03, 0.075), dark, segs=20, cap=True, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("rim%d" % (x > 0), 0.077, 0.077, 0.006, (x * 1.26, 0.03, 0.075), iron, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(cylinder("hub%d" % (x > 0), 0.016, 0.016, 0.022, (x * 1.18, 0.03, 0.075), wood, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    o.append(box("shaft", (0.016, 0.24, 0.014), (0, -0.17, 0.05), wood, rot=Matrix.Rotation(math.radians(-10), 3, "X")))
+    o.append(box("prop", (0.01, 0.01, 0.03), (0, -0.27, 0.015), dark, outline=False))
+    o.append(box("yoke", (0.16, 0.014, 0.014), (0, -0.28, 0.034), dark, bevel=0.003))
+    return group(o, rot_z=math.radians(-60), scale=BUILDING_SCALE)
+
+
+def model_tractor(tool):
+    """A 35 HP tractor (no maker's marks): an orange-red bonnet and mudguards, a cream grille, big rear and small front wheels, a
+    seat and a steering wheel, a canopy; tool 'cultivator' (tines behind), 'trolley' (a red trolley hitched) or 'none'."""
+    paint, dark, cream = toon("tractorRed", 0xD0452E), toon("tractorDark", 0x8E2E20), toon("tractorCream", 0xEDE3C8)
+    tyre, hub, seat = toon("tyre", 0x3A3530), toon("tractorHub", 0xE9C46A), toon("tractorSeat", 0x2B2B2B)
+    o = [box("chassis", (0.07, 0.24, 0.04), (0, -0.04, 0.07), dark),
+         box("bonnet", (0.075, 0.15, 0.06), (0, -0.1, 0.11), paint, bevel=0.01),
+         box("grille", (0.065, 0.01, 0.05), (0, -0.177, 0.105), cream, outline=False),
+         cylinder("exhaust", 0.006, 0.006, 0.07, (0.025, -0.06, 0.17), toon("exhaust", 0x3A3530), segs=8),
+         box("fenders", (0.15, 0.08, 0.012), (0, 0.06, 0.14), paint, bevel=0.004),
+         box("seat", (0.04, 0.035, 0.012), (0, 0.06, 0.152), seat),
+         cylinder("wheelPost", 0.004, 0.004, 0.05, (0, 0.02, 0.16), seat, segs=6, rot=Matrix.Rotation(math.radians(-30), 3, "X")),
+         cylinder("steering", 0.016, 0.016, 0.004, (0, 0.005, 0.185), seat, segs=12, outline=False),
+         box("canopy", (0.13, 0.11, 0.008), (0, 0.06, 0.26), cream, bevel=0.003)]
+    for x in (-0.055, 0.055):
+        o.append(cylinder("post%d" % (x > 0), 0.003, 0.003, 0.11, (x, 0.1, 0.2), dark, segs=6, outline=False))
+        o.append(cylinder("rear%d" % (x > 0), 0.065, 0.065, 0.04, (x * 1.25, 0.06, 0.065), tyre, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("rearHub%d" % (x > 0), 0.03, 0.03, 0.043, (x * 1.25, 0.06, 0.065), hub, segs=14, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(cylinder("front%d" % (x > 0), 0.035, 0.035, 0.022, (x * 0.85, -0.14, 0.035), tyre, segs=16, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("frontHub%d" % (x > 0), 0.015, 0.015, 0.025, (x * 0.85, -0.14, 0.035), hub, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    if tool == "cultivator":
+        iron = toon("tineIron", 0x5A5F66)
+        o.append(box("toolBar", (0.18, 0.014, 0.014), (0, 0.15, 0.05), iron))
+        for i in range(7):
+            o.append(box("tine%d" % i, (0.006, 0.012, 0.05), (-0.081 + i * 0.027, 0.155, 0.025), iron, outline=False))
+    elif tool == "trolley":
+        red, plank = toon("trolleyRed", 0xB8402C), toon("trolleyPlank", 0x8E5A33)
+        o.append(box("hitch", (0.01, 0.07, 0.01), (0, 0.13, 0.05), dark))
+        o.append(box("trolleyBed", (0.16, 0.24, 0.02), (0, 0.28, 0.07), plank))
+        for x in (-0.08, 0.08):
+            o.append(box("trolleySide%d" % (x > 0), (0.01, 0.24, 0.06), (x, 0.28, 0.11), red, bevel=0.003))
+        o.append(box("trolleyBack", (0.16, 0.01, 0.06), (0, 0.4, 0.11), red, bevel=0.003))
+        o.append(box("trolleyFront", (0.16, 0.01, 0.06), (0, 0.16, 0.11), red, bevel=0.003))
+        wheels(o, (-0.09, 0.09), (0.28,), 0.04, "trolleyWheel")
+    return group(o, rot_z=math.radians(-30), scale=VEHICLE_SCALE)
+
+
+def model_harvester():
+    """A combine harvester hired for the harvest (no maker's marks): a yellow-green body, the wide cutting header with its reel in
+    front, a glass cab, the grain tank and the unloading auger folded back, big front drive wheels."""
+    body, dark, glass, reel = toon("combineBody", 0xE0B43A), toon("combineDark", 0x7A6A2E), toon("glass", 0x2E4F6E), toon("combineReel", 0xC23B2A)
+    tyre, hub = toon("tyre", 0x3A3530), toon("hubMetal", 0xC9C2B4)
+    o = [box("body", (0.14, 0.24, 0.13), (0, 0.04, 0.135), body, bevel=0.01),
+         box("tank", (0.12, 0.1, 0.05), (0, 0.06, 0.225), dark, bevel=0.006),
+         box("cab", (0.08, 0.07, 0.07), (0, -0.07, 0.235), glass, bevel=0.006),
+         box("cabRoof", (0.09, 0.08, 0.012), (0, -0.07, 0.275), body),
+         box("feeder", (0.08, 0.1, 0.05), (0, -0.12, 0.08), dark),
+         box("header", (0.3, 0.06, 0.04), (0, -0.19, 0.04), body, bevel=0.005),
+         cylinder("reel", 0.022, 0.022, 0.28, (0, -0.2, 0.075), reel, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+         cylinder("auger", 0.01, 0.01, 0.2, (0.08, 0.1, 0.22), dark, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X"))]
+    for x in (-0.08, 0.08):
+        o.append(cylinder("drive%d" % (x > 0), 0.06, 0.06, 0.035, (x, -0.04, 0.06), tyre, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("driveHub%d" % (x > 0), 0.026, 0.026, 0.038, (x, -0.04, 0.06), hub, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(cylinder("steer%d" % (x > 0), 0.035, 0.035, 0.025, (x * 0.9, 0.13, 0.035), tyre, segs=16, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    return group(o, rot_z=math.radians(-30), scale=VEHICLE_SCALE)
+
+
+def model_plough_team():
+    """The pair at work: two bullocks side by side under one yoke, the plough behind them in the furrow (spec 013 §3.2)."""
+    o = []
+    turn = Matrix.Rotation(math.radians(18), 4, "Z")
+    for s in (-1, 1):
+        parts = model_animal("bullock", "stand")
+        shift = Matrix.Translation(turn @ Vector((s * 0.06 * ANIMAL_SCALE, 0, 0)))
+        for part in parts:
+            part.matrix_world = shift @ part.matrix_world
+        o += parts
+    wood, dark, iron = toon("ploughWood", 0x9A6B3E), toon("ploughDark", 0x6E4A2A), toon("ploughIron", 0x5A5F66)
+    tack = [box("yoke", (0.2, 0.014, 0.014), (0, -0.075, 0.135), dark, bevel=0.003),
+            box("beam", (0.014, 0.26, 0.012), (0, 0.08, 0.07), wood, rot=Matrix.Rotation(math.radians(-14), 3, "X")),
+            box("plough", (0.02, 0.05, 0.03), (0, 0.22, 0.02), wood),
+            box("share", (0.014, 0.03, 0.008), (0, 0.2, 0.004), iron),
+            box("handle", (0.01, 0.01, 0.08), (0, 0.25, 0.06), dark, rot=Matrix.Rotation(math.radians(-25), 3, "X"))]
+    for part in group(tack, rot_z=math.radians(18), scale=ANIMAL_SCALE):
+        o.append(part)
+    return o
+
+
+SPRITES.update({"plough_team": model_plough_team, "plough": model_plough, "bullock_cart": model_bullock_cart, "harvester": model_harvester,
+                "tractor": lambda: model_tractor("none"), "tractor_cultivator": lambda: model_tractor("cultivator"),
+                "tractor_trolley": lambda: model_tractor("trolley")})
+
+
 for _k in ("pump", "borewell", "channel", "drip"):
     ICONS["icon_" + _k] = (lambda k=_k: (lambda: icon_irrigation(k)))()
     SPRITES["icon_" + _k] = ICONS["icon_" + _k]

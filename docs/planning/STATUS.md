@@ -281,7 +281,7 @@
 
 ## Next up
 
-1. **Sprint 16: US-128's art preview** (bullocks and the ox plough, the tractor, the hired harvester; where each stands on the map, never cramped). Then US-128's code.
+1. **Sprint 16: the owner reviews US-128's art preview** (`docs/art/s16-equipment-*.png`: bullocks, the pair ploughing, the tractor with a cultivator or trolley, the harvester; machines shown at work on your fields by day, the bullocks in the shed and the tractor on the farm lane's acre 167 at night; no bullock cart on the map). Then US-128's code.
 
 ## Owner action checklist (Phases 0–1)
 
