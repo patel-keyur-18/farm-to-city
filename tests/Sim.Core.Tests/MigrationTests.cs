@@ -201,18 +201,35 @@ namespace Sim.Core.Tests
             sim.State.Era.Current = config.Game.Godown.UnlockEra;
             CommandResult bought = sim.Execute(new BuyGodown(sim.State.Clock.SimTime));
             Assert.That(bought.Accepted, Is.True, bought.ToString());
-            foreach (Command c in new Command[] { new InstallPump(sim.State.Clock.SimTime), new BuildChannel(sim.State.Clock.SimTime, 85) })
+            // ADR 0088: a schema-13 town has one shed, and every animal is in it.
+            long gift = 800_000 * 100;
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test.gift", "test", new Finance.Posting(Finance.Account.Cash, gift), new Finance.Posting(Finance.Account.OpeningEquity, -gift));
+            Assert.That(sim.Execute(new BuildShed(sim.State.Clock.SimTime)).Accepted, Is.True);
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            foreach (string kind in new[] { "buffalo", "cow" }) Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, kind)).Accepted, Is.True, kind);
+            LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 13), config, MinSchema);
+            Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
+            Assert.That(old.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0 }), "one shed, every animal in it");
+            Assert.That(old.State.Livestock.ShedTile, Is.EqualTo(-1));
+
+            // The bot's fields are all sown: clear one for the second shed; once it stands, the fifth animal lives there.
+            int second = sim.State.Farm.Crops.Select(c => c.TileId).Where(i => i != 85 && i != 86 && sim.Config.Game.Map.Parcels[sim.State.Land.Tiles[i].ParcelId].Id != "home_a").Max();
+            Assert.That(sim.Execute(new ClearField(sim.State.Clock.SimTime, second)).Accepted, Is.True);
+            foreach (Command c in new Command[] { new InstallPump(sim.State.Clock.SimTime), new BuildChannel(sim.State.Clock.SimTime, 85), new BuildShed(sim.State.Clock.SimTime, second) })
             {
                 CommandResult done = sim.Execute(c);
                 Assert.That(done.Accepted, Is.True, c.GetType().Name + ": " + done);
             }
-            sim.AdvanceTo(r.State.Clock.SimTime + TestSim.Day);
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            for (int i = 0; i < 3; i++) Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, "cow")).Accepted, Is.True);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
             Assert.That(Market.GodownRules.Owned(sim), Is.Not.Null);
             Assert.That(again.State.Irrigation.PumpAcres, Is.EqualTo(sim.State.Irrigation.PumpAcres));
             Assert.That(Land.IrrigationRules.Channelled(Simulation.FromState(config, again.State), 85), Is.True);
+            Assert.That(Livestock.LivestockRules.SecondShed(Simulation.FromState(config, again.State)).TileId, Is.EqualTo(second), "the second shed, built");
+            Assert.That(again.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0, 1 }));
         }
 
         // Spec 019 AC-16: the schema-11 fixture loads into 12 with an empty sales record and the season's first entry found, is its own

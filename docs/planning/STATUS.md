@@ -205,6 +205,12 @@
 
 ## In progress
 
+**Sprint 16, US-234 done (2026-11-04, for the owner's review): a second cattle shed** (ADR 0088, spec 012 §3.3; layout approved 2026-11-04: the lighter one).
+- Sim: `BuildShed(tile)` builds the second shed on an empty field you own (the first shed standing; refused `NoShed`, `AlreadyBuilt`, `NotOwned`, `TerrainNotAllowed`, `TileOccupied` for a crop, house, business or irrigation built there); the field stops being farmed and can't be sold; 8 places over both sheds, cows and buffalo fill the first then the second (`Animal.Shed`); the feed rooms and straw stacks add up through `Store.CapacityGrams`; foreclosure on its bought field takes it at book value (or its cost while being built), moves its animals into the first shed's free places and seizes the rest. Save schema 14: each animal's shed and the field of a shed being built (`LivestockState.ShedTile`); new command tag `BuildSecondShed`. The bullocks' rule (only in the second shed, `NoShedRoom`) comes with US-128, where bullocks are bought.
+- Screens: the shed sheet's **A second shed** section (what it adds; **Choose the field** on its own row, not the sheet's bar, so the first shed's animals come first); placing it on lit acres with a ghost shed, refusals in words; the field draws as a cattle acre in the approved lighter layout (shed, straw stack, trough, hedge with the gate on the far side, a manger only where an animal stands) and opens the shed sheet; *Your cattle sheds · 5 of 8 stalls* with the animals by shed.
+- Tests: `LivestockTests.SecondShed` (AC-18), `MigrationTests.Schema13_Farm` (a schema-13 save has every animal in the first shed; round-trips one in the second), `CattleViewTests.SecondShed` (AC-19); `saves/schema14` re-pinned. 429 + 128 pass.
+- Editor (scripted touch, `docs/art/s16-second-shed-*.png`): cattle acre → Build the shed; the sheet's second-shed rows → Choose the field → five fields lit; the sown field 101 refused "Something is growing here"; field 100 → Build here; a cow bought with the dairy loan (8 seasons) went into the second shed; the sheet by shed and the summed stores (straw 20,000 kg, feed 4,800 kg); the map; tapping field 100 opens the sheet. Set up by script: 5,00,000 test coins, a day and 14 hours of dev time travel to finish the sheds, four animals and straw bought. Fixed during the tour: the second-shed button sat in the sheet's bottom bar over the last row and pushed a second shed over an empty first one (now on its own row). Saves restored and identical.
+
 **Sprint 16, US-127 done (2026-11-04, reviewed by the owner): the irrigation ladder** (spec 013 §3.1 as amended by ADR 0086, ADR 0087; art approved 2026-11-04 with the gate moved to the field's edge).
 - Sim: `irrigation` in `farming.json` (pump, borewell, canal, drip) and the `pump`, `borewell`, `canal_channel`, `drip` buildings; `IrrigationState` (the pump's and the borewell's acres, unpaid flags, subsidised drip acres) as schema 14's last section; `IrrigationRules` (floors once an hour before the well's buckets, the canal's reach through channelled fields, dry in Summer, drip at the crop's lowest good moisture, care cut, fertigation, running costs at the close to 5810/5820, release with the land); commands `InstallPump`, `SetPumpAcres`, `SetBorewellAcres`, `DrillBorewell`, `BuildChannel`, `LayDrip`; rejects `TooManyAcres`, `AlreadyWatered`, `DripNeedsWater`, `NoWaterSource`. Irrigation never stops a field's sale: it goes with it at book value.
 - Screens: the field card's **Irrigation** row (replaces "Well acre") with its *Why?*, picture buttons by era (pump, borewell, channel, drip; refusals in words), the card stays open after them; the moisture *Why?* shows irrigation's floor; the season report's *Power and water* and *Repairs and upkeep*; map: canal, channels and gates, drip, outlets, the borewell room, the pump on the well.
@@ -281,7 +287,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner reviews US-234's layout preview** (`docs/art/s16-second-shed-preview*.png`) (the second cattle acre on a field you own: shed, mangers, trough, straw stack, the bullocks; never cramped, ADR 0064, 0088). Then US-234's code, then US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night; US-128's art approved 2026-11-04).
+1. **Sprint 16: the owner reviews US-234** (`docs/art/s16-second-shed-*.png`). Then US-128's code (machines at 70%, at work by day, the tractor on lane acre 167 at night, the bullocks only in the second shed with `NoShedRoom`; US-128's art approved 2026-11-04).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -324,7 +330,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done (for review). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 

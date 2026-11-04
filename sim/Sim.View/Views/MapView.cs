@@ -300,6 +300,9 @@ namespace Sim.View.Views
         /// <summary>The cattle acre, or null when the map has none.</summary>
         public CattleAcreVm Cattle { get; internal set; }
 
+        /// <summary>The second cattle acre on a field of yours (ADR 0088), or null without a second shed.</summary>
+        public CattleAcreVm SecondCattle { get; internal set; }
+
         /// <summary>The minor canal (ADR 0087 §2): along the edge below <see cref="CanalRow"/> from column <see cref="CanalFrom"/> to <see cref="CanalTo"/>; row −1 without one.</summary>
         public int CanalRow { get; internal set; } = -1;
         public int CanalFrom { get; internal set; }
@@ -367,7 +370,7 @@ namespace Sim.View.Views
             var places = new Dictionary<int, string>();
             var placeIds = new Dictionary<int, string>();
             foreach (PlaceDef p in defs.Map.Places) { places[p.Tile] = p.Kind; placeIds[p.Tile] = p.Id; }
-            int yards = 0;
+            int yards = 0, secondShed = Sim.Core.Livestock.LivestockRules.SecondShedTile(sim);
             foreach (Tile t in land.Tiles)
             {
                 Parcel parcel = land.Parcels[t.ParcelId];
@@ -375,7 +378,7 @@ namespace Sim.View.Views
                 var vm = new TileVm
                 {
                     Id = t.Id, X = t.Id % defs.Map.Width, Y = t.Id / defs.Map.Width,
-                    Kind = Kind(t.Terrain, parcel.Owned),
+                    Kind = t.Id == secondShed ? TileKind.Cattle : Kind(t.Terrain, parcel.Owned), // the second cattle acre (ADR 0088)
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
                     WellAcre = LandSystem.IsWellTile(defs, t.Id) && !IrrigationRules.Pumped(sim, t.Id), Pumped = IrrigationRules.Pumped(sim, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
@@ -459,6 +462,7 @@ namespace Sim.View.Views
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
             map.Cattle = CattleAcre(sim, map.SecondOfDay);
+            map.SecondCattle = SecondCattleAcre(sim, map.SecondOfDay);
             return map;
         }
 
@@ -478,15 +482,36 @@ namespace Sim.View.Views
             vm.Locked = !Sim.Core.Livestock.LivestockRules.Unlocked(sim);
             vm.Shed = Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? 2 : s.ShedReadyAt > 0 ? 1 : 0;
             if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            AddAnimals(sim, vm, 0, secondOfDay);
+            return vm;
+        }
+
+        /// <summary>The second cattle acre (ADR 0088): its shed, the farm's straw stack (one store over both), and the animals in it.</summary>
+        public static CattleAcreVm SecondCattleAcre(Simulation sim, long secondOfDay)
+        {
+            int tile = Sim.Core.Livestock.LivestockRules.SecondShedTile(sim);
+            if (tile < 0) return null;
+            var vm = new CattleAcreVm { TileId = tile, Shed = Sim.Core.Livestock.LivestockRules.SecondShed(sim) != null ? 2 : 1 };
+            if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            AddAnimals(sim, vm, 1, secondOfDay);
+            return vm;
+        }
+
+        /// <summary>
+        /// A shed's animals take places 1, 2, 3, then 0, in id order. Poses: lying at night (20:00–6:00) and when ill, eating in the morning
+        /// feed (6:00–9:00), then turn by turn every 3 hours so the yard moves.
+        /// </summary>
+        private static void AddAnimals(Simulation sim, CattleAcreVm vm, int shed, long secondOfDay)
+        {
             int hour = (int)(secondOfDay / 3600);
             int n = 0;
-            foreach (Sim.Core.Livestock.Animal a in s.Animals)
+            foreach (Sim.Core.Livestock.Animal a in sim.State.Livestock.Animals)
             {
+                if (a.Shed != shed) continue;
                 string pose = a.SickDays > 0 || hour >= 20 || hour < 6 ? "lie" : hour < 9 ? "eat" : new[] { "stand", "eat", "lie" }[(int)((a.Id + hour / 3) % 3)];
-                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = defs.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
+                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = sim.Config.Game.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
                 n++;
             }
-            return vm;
         }
 
         /// <summary>How full a place is in steps: 0 under 1% full, then 1..top in equal bands of what it holds.</summary>

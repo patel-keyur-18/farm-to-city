@@ -38,6 +38,7 @@ namespace Sim.Core.Saves
             OfferTownsperson,
             BuyGodown, RentWarehouse, LetGodown,
             InstallPump, SetPumpAcres, SetBorewellAcres, DrillBorewell, BuildChannel, LayDrip,
+            BuildSecondShed,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -92,7 +93,8 @@ namespace Sim.Core.Saves
                     break;
                 case HireLabourers c: At(c, Tag.HireLabourers); w.WriteInt(-1); w.WriteInt(c.Count); break; // the field slot of Sprint 10's first build, unused since ADR 0049
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
-                case BuildShed c: At(c, Tag.BuildShed); break;
+                case BuildShed c when c.TileId < 0: At(c, Tag.BuildShed); break;
+                case BuildShed c: At(c, Tag.BuildSecondShed); w.WriteInt(c.TileId); break;
                 case BuildFamilyHouse c when c.Financing == null: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
                 case BuildFamilyHouse c:
                     At(c, Tag.BuildFamilyHouseLoan); w.WriteInt(c.TileId);
@@ -264,6 +266,7 @@ namespace Sim.Core.Saves
                 case Tag.DrillBorewell: return new DrillBorewell(at, r.ReadInt());
                 case Tag.BuildChannel: return new BuildChannel(at, r.ReadInt());
                 case Tag.LayDrip: return new LayDrip(at, r.ReadInt());
+                case Tag.BuildSecondShed: return new BuildShed(at, r.ReadInt());
                 case Tag.LetGodown: return new LetGodown(at, r.ReadBool());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());

@@ -9,26 +9,43 @@ using Sim.Core.Maths;
 
 namespace Sim.Core.Commands
 {
-    /// <summary>Builds the cattle shed on the yard (spec 012 §3.3): from the Hamlet, one shed, capitalised to 1600, ready in its build hours.</summary>
+    /// <summary>
+    /// Builds the cattle shed (spec 012 §3.3): from the Hamlet, on the cattle acre; then a second on an empty field you own
+    /// (<see cref="TileId"/>, ADR 0088), which stops being farmed. Capitalised to 1600, ready in its build hours.
+    /// </summary>
     public sealed class BuildShed : TimedCommand
     {
-        public BuildShed(long at) : base(at) { }
+        /// <summary>The second shed's field, or −1 for the shed on the cattle acre.</summary>
+        public int TileId { get; }
+
+        public BuildShed(long at, int tileId = -1) : base(at) { TileId = tileId; }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
             LivestockState s = sim.State.Livestock;
             if (s == null) return CommandResult.Reject(RejectReason.UnknownTile);
             if (!LivestockRules.Unlocked(sim)) return CommandResult.Reject(RejectReason.EraLocked);
-            if (s.ShedReadyAt > 0 || LivestockRules.Shed(sim) != null) return CommandResult.Reject(RejectReason.AlreadyBuilt);
+            if (TileId < 0 && (s.ShedReadyAt > 0 || LivestockRules.Shed(sim) != null)) return CommandResult.Reject(RejectReason.AlreadyBuilt);
+            if (TileId >= 0)
+            {
+                RejectReason place = LivestockRules.PlaceSecond(sim, TileId);
+                if (place != RejectReason.None) return CommandResult.Reject(place);
+            }
             BuildingDef def = sim.Config.Game.Buildings[LivestockRules.Defs(sim).Shed];
             long cost = MarketRules.Indexed(sim, def.Value);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             long t = sim.State.Clock.SimTime;
             s.ShedCost = cost;
+            s.ShedTile = TileId;
             s.ShedReadyAt = t + def.BuildHours * 3600L;
             sim.State.Ledger.Post(t, sim.Period, "ledger.buildShed", "shed", new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
             sim.ScheduleJob(LivestockSystem.ShedJob, 0, s.ShedReadyAt);
+            if (TileId >= 0)
+            {
+                Land.LandSystem.SetOccupied(sim, TileId, true); // a cattle acre now, never farmed (ADR 0088)
+                sim.State.People.Orders.RemoveAll(o => o.Kind == People.OrderTargetKind.Field && o.Target == TileId);
+            }
             sim.Emit(new ShedStarted(t, cost, s.ShedReadyAt));
             return CommandResult.Ok;
         }
@@ -56,7 +73,8 @@ namespace Sim.Core.Commands
             int kind = LivestockRules.Defs(sim).IndexOfAnimal(KindId);
             if (kind < 0) return CommandResult.Reject(RejectReason.UnknownAnimal);
             if (LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
-            if (s.Animals.Count >= LivestockRules.Stalls(sim)) return CommandResult.Reject(RejectReason.ShedFull);
+            int shed = LivestockRules.PlaceFor(sim);
+            if (shed < 0) return CommandResult.Reject(RejectReason.ShedFull);
             long cost = MarketRules.Indexed(sim, LivestockRules.Defs(sim).Animals[kind].Price);
             int lender = -1;
             long loan = 0;
@@ -76,7 +94,7 @@ namespace Sim.Core.Commands
             var a = new Animal
             {
                 Id = s.NextAnimalId++, Kind = kind, Name = PickName(sim, s.NextAnimalId - 1), BoughtAt = t, Cost = cost, Stage = AnimalStage.Milking,
-                VaccinatedPeriod = sim.Period, Since = t, LoanId = loanId,
+                VaccinatedPeriod = sim.Period, Since = t, LoanId = loanId, Shed = shed,
             };
             sim.State.Ledger.Post(t, sim.Period, "ledger.buyAnimal", "animal:" + a.Id, new Posting(Account.Livestock, cost), new Posting(Account.Cash, -cost));
             s.Animals.Add(a);

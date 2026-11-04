@@ -36,7 +36,8 @@ namespace Sim.Core.Business
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
-            if (sim.State.Farm.CropOn(tileId) != null || HouseRules.HousesOn(sim, tileId) > 0) return RejectReason.TileOccupied;
+            if (sim.State.Farm.CropOn(tileId) != null || HouseRules.HousesOn(sim, tileId) > 0 || Livestock.LivestockRules.SecondShedTile(sim) == tileId)
+                return RejectReason.TileOccupied;
             return On(sim, tileId) != null ? RejectReason.NoRoom : RejectReason.None;
         }
 

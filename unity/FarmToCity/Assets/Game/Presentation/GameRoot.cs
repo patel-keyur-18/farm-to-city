@@ -60,7 +60,7 @@ namespace Game.Presentation
 
         // Placing a hand's hut (ADR 0039 §2): the ghost's acre and the bar with Build here / Cancel.
         private int _ghostTile = -1;
-        private enum PlaceKind { Hut, House, Business }
+        private enum PlaceKind { Hut, House, Business, Shed }
 
         private PlaceKind _placing; // a hand's hut, a family house (spec 014 §3.13) or a business (spec 016 §3.3)
         private int _placeType;     // the business type being placed, and its plan ("hire" or "self", ":loan" when it borrows)
@@ -425,6 +425,7 @@ namespace Game.Presentation
                 case "HutPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Hut); break;
                 case "HousePlacement": if (!refreshOnly) StartPlacing(PlaceKind.House); break;
                 case "BusinessPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Business, (int)r.Id, r.Arg); break;
+                case "ShedPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Shed); break;
                 case "Businesses": _sheet.Show(BusinessesSheet.Build(_ctx), refreshOnly); break;
                 case "BusinessResearch": _sheet.Show(BusinessResearchSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "BusinessPlan": _sheet.Show(BusinessPlanSheet.Build(_ctx, (int)r.Id, BusinessWords.Self(r.Arg), BusinessWords.Loan(r.Arg)), refreshOnly); break;
@@ -496,11 +497,12 @@ namespace Game.Presentation
                     _safeRoot.schedule.Execute(() => ShowLetter(id, reading: true));
                     return;
                 }
-                if (action.Opens.Value.Kind == "HutPlacement" || action.Opens.Value.Kind == "HousePlacement" || action.Opens.Value.Kind == "BusinessPlacement")
+                if (action.Opens.Value.Kind == "HutPlacement" || action.Opens.Value.Kind == "HousePlacement" || action.Opens.Value.Kind == "BusinessPlacement" || action.Opens.Value.Kind == "ShedPlacement")
                 {
                     // Start on the next UI tick, outside this click: a bar built inside the handler never got its own clicks on touch.
                     SheetRequest place = action.Opens.Value;
-                    PlaceKind kind = place.Kind == "HousePlacement" ? PlaceKind.House : place.Kind == "BusinessPlacement" ? PlaceKind.Business : PlaceKind.Hut;
+                    PlaceKind kind = place.Kind == "HousePlacement" ? PlaceKind.House : place.Kind == "BusinessPlacement" ? PlaceKind.Business
+                        : place.Kind == "ShedPlacement" ? PlaceKind.Shed : PlaceKind.Hut;
                     _sheet.Close();
                     _safeRoot.schedule.Execute(() => StartPlacing(kind, (int)place.Id, place.Arg));
                     return;
@@ -547,7 +549,8 @@ namespace Game.Presentation
             _placing = kind;
             _placeType = type;
             _placeArg = arg;
-            List<HutPlaceVm> places = kind == PlaceKind.House ? HousePlacement.Places(_ctx) : kind == PlaceKind.Business ? BusinessPlacement.Places(_ctx) : HutPlacement.Places(_ctx);
+            List<HutPlaceVm> places = kind == PlaceKind.House ? HousePlacement.Places(_ctx) : kind == PlaceKind.Business ? BusinessPlacement.Places(_ctx)
+                : kind == PlaceKind.Shed ? ShedPlacement.Places(_ctx) : HutPlacement.Places(_ctx);
             HutPlaceVm first = places.Find(p => p.Allowed) ?? (places.Count > 0 ? places[0] : null);
             if (first == null) return;
             if (kind != PlaceKind.Hut) _map.LightPlaces(places.FindAll(p => p.Allowed).ConvertAll(p => p.TileId));
@@ -558,10 +561,12 @@ namespace Game.Presentation
 
         private void MoveGhost(int tile)
         {
-            string reason = _placingHouse ? HousePlacement.ReasonFor(_ctx, tile) : _placing == PlaceKind.Business ? BusinessPlacement.ReasonFor(_ctx, tile) : HutPlacement.ReasonFor(_ctx, tile);
+            string reason = _placingHouse ? HousePlacement.ReasonFor(_ctx, tile) : _placing == PlaceKind.Business ? BusinessPlacement.ReasonFor(_ctx, tile)
+                : _placing == PlaceKind.Shed ? ShedPlacement.ReasonFor(_ctx, tile) : HutPlacement.ReasonFor(_ctx, tile);
             if (tile == _ghostTile && _placeBar != null) return;
             _ghostTile = tile;
             if (_placing == PlaceKind.Business) _map.ShowBusinessGhost(tile, reason == null, Sim.Config.Game.Businesses.Types[_placeType].Id);
+            else if (_placing == PlaceKind.Shed) _map.ShowShedGhost(tile, reason == null);
             else if (_placingHouse)
                 _map.ShowHouseGhost(tile, reason == null, global::Sim.Core.People.HouseRules.HousesOn(Sim, tile), Sim.State.Land.Tiles[tile].Terrain == global::Sim.Core.Definitions.Terrain.Quarters);
             else _map.ShowGhost(tile, reason == null);
@@ -577,12 +582,12 @@ namespace Game.Presentation
             var text = new VisualElement { pickingMode = PickingMode.Ignore };
             text.style.flexGrow = 1;
             text.style.flexShrink = 1;
-            string what = _placingHouse ? "place.house" : _placing == PlaceKind.Business ? "place.business" : "place.";
+            string what = _placingHouse ? "place.house" : _placing == PlaceKind.Business ? "place.business" : _placing == PlaceKind.Shed ? "place.shed" : "place.";
             text.Add(UiKit.Heading1(_strings.Get(what + (what == "place." ? "title" : "Title"), "name",
                 _placing == PlaceKind.Business ? BusinessWords.InSentence(_ctx, Sim.Config.Game.Businesses.Types[_placeType]) : ""), 40));
             text.Add(UiKit.Text(reason ?? _strings.Get(what + (what == "place." ? "hint" : "Hint")), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
             _placeBar.Add(text);
-            ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile)
+            ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile) : _placing == PlaceKind.Shed ? ShedPlacement.Confirm(_ctx, tile)
                 : _placing == PlaceKind.Business ? BusinessPlacement.Confirm(_ctx, tile, _placeType, BusinessWords.Self(_placeArg), BusinessWords.Loan(_placeArg)) : HutPlacement.Confirm(_ctx, tile);
             _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
             {

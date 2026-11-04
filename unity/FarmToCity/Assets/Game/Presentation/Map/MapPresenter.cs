@@ -758,6 +758,12 @@ namespace Game.Presentation.Map
             PlaceGhost(SpriteBank.Rendered(typeId + "_s") ?? SpriteBank.Hut, 1f, OnTile(tile, MillAt), tile, allowed);
         }
 
+        /// <summary>The second cattle shed's ghost (ADR 0088) where it will stand at the back of the acre.</summary>
+        public void ShowShedGhost(int tile, bool allowed)
+        {
+            PlaceGhost(SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut, 1f, OnAcre(tile, CattleShed), tile, allowed);
+        }
+
         private void PlaceGhost(Sprite sprite, float scale, Vector3 pos, int tile, bool allowed)
         {
             if (_ghost == null)

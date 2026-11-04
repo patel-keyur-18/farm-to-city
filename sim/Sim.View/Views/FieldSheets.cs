@@ -33,7 +33,7 @@ namespace Sim.View.Views
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
-            if (tile.Terrain == Terrain.Cattle) return ShedSheet.Build(ctx);
+            if (tile.Terrain == Terrain.Cattle || Sim.Core.Livestock.LivestockRules.SecondShedTile(sim) == tileId) return ShedSheet.Build(ctx); // the second cattle acre too (ADR 0088)
             if (Sim.Core.People.HouseRules.HousesOn(sim, tileId) > 0) return HomesteadSheet.Build(ctx, tile); // a homestead acre is never sown
             Sim.Core.Business.Business business = Sim.Core.Business.BusinessRules.On(sim, tileId);
             if (business != null) return BusinessSheet.Build(ctx, business.Id); // spec 016 §7

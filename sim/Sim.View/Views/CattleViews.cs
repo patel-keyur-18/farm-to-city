@@ -51,7 +51,8 @@ namespace Sim.View.Views
                 return plan;
             }
 
-            var vm = new SheetVm { Icon = "cattle_shed", Title = s.Get("shed.title"), Subtitle = s.Get("shed.stalls", "n", ctx.Fmt.Integer(st.Animals.Count), "of", ctx.Fmt.Integer(shedDef.Animals)) };
+            int stalls = LivestockRules.Stalls(sim);
+            var vm = new SheetVm { Icon = "cattle_shed", Title = s.Get(stalls > shedDef.Animals ? "shed.titleTwo" : "shed.title"), Subtitle = s.Get("shed.stalls", "n", ctx.Fmt.Integer(st.Animals.Count), "of", ctx.Fmt.Integer(stalls)) };
             Sim.Core.Business.Business dairy = ctx.Sim.State.Businesses?.Businesses.Find(x => x.Status == Sim.Core.Business.BusinessStatus.Open
                 && Sim.Core.Business.BusinessRules.TypeOf(ctx.Sim, x).TakesMilk);
             var milk = new LineVm(s.Get("shed.milkToday"), st.LastMilkMl > 0
@@ -60,15 +61,21 @@ namespace Sim.View.Views
             if (dairy != null) milk.Note = s.Get("shed.toYourDairy", "milk", ctx.Fmt.Litres(dairy.OwnPerDay)); // spec 016 §3.9b
             vm.Lines.Add(milk);
 
-            vm.Lines.Add(LineVm.Header(s.Get("shed.animals")));
-            foreach (Animal a in st.Animals) vm.Lines.Add(AnimalRow(ctx, a));
+            // The animals by shed once there are two (ADR 0088).
+            bool two = LivestockRules.SecondShed(sim) != null;
+            for (int shed = 0; shed < (two ? 2 : 1); shed++)
+            {
+                vm.Lines.Add(LineVm.Header(!two ? s.Get("shed.animals") : s.Get(shed == 0 ? "shed.first" : "shed.second", "n", ctx.Fmt.Integer(LivestockRules.InShed(sim, shed)),
+                    "of", ctx.Fmt.Integer(LivestockRules.Stalls(sim, shed)))));
+                foreach (Animal a in st.Animals) if (!two || a.Shed == shed) vm.Lines.Add(AnimalRow(ctx, a));
+            }
             if (st.Animals.Count == 0) vm.Lines.Add(new LineVm(s.Get("shed.noAnimals"), null));
             var buy = new List<ActionVm>();
             for (int k = 0; k < defs.Animals.Count; k++)
             {
                 AnimalDef d = defs.Animals[k];
                 ActionVm b = ActionVm.Open("buyAnimal:" + d.Id, s.Get("shed.buy", "animal", s.Get(d.NameKey).ToLowerInvariant()), new SheetRequest("BuyAnimal", k),
-                    st.Animals.Count >= shedDef.Animals ? s.Get("reject.ShedFull") : ctx.Fmt.Coins(MarketRules.Indexed(sim, d.Price)));
+                    LivestockRules.PlaceFor(sim) < 0 ? s.Get("reject.ShedFull") : ctx.Fmt.Coins(MarketRules.Indexed(sim, d.Price)));
                 b.Icon = "animal_" + d.Id;
                 buy.Add(b);
             }
@@ -76,12 +83,42 @@ namespace Sim.View.Views
 
             vm.Lines.Add(LineVm.Header(s.Get("shed.feed")));
             vm.Lines.Add(GreenRow(ctx));
-            vm.Lines.Add(PlaceRow(ctx, defs.Straw, "shed.straw", shedDef.StrawStackKg * 1000, st.StrawLow));
-            vm.Lines.Add(PlaceRow(ctx, defs.Feed, "shed.feedRoom", shedDef.FeedRoomKg * 1000, st.FeedLow));
+            vm.Lines.Add(PlaceRow(ctx, defs.Straw, "shed.straw", Store.CapacityGrams(sim, GoodPlace.StrawStack), st.StrawLow));
+            vm.Lines.Add(PlaceRow(ctx, defs.Feed, "shed.feedRoom", Store.CapacityGrams(sim, GoodPlace.FeedRoom), st.FeedLow));
             vm.Lines.Add(CompostRow(ctx, defs));
             vm.Lines.Add(new LineVm(s.Get("shed.work"), s.Get("shed.workValue", "hours", ctx.Fmt.Decimal1(LivestockRules.LabourDemand(sim))), "animalWork", 0));
             vm.Lines.Add(LookAfter(ctx));
+            SecondShedRows(ctx, vm, shedDef);
             return vm;
+        }
+
+        /// <summary>
+        /// A second shed (ADR 0088): its price and what it adds, and Build a second shed (a field chosen on lit acres); while it's built,
+        /// when it's ready.
+        /// </summary>
+        private static void SecondShedRows(ViewContext ctx, SheetVm vm, BuildingDef shedDef)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            if (LivestockRules.SecondShed(sim) != null) return;
+            vm.Lines.Add(LineVm.Header(s.Get("shed.secondTitle")));
+            LivestockState st = sim.State.Livestock;
+            if (st.ShedReadyAt > 0)
+            {
+                vm.Lines.Add(new LineVm(s.Get("shed.secondBuilding"), ctx.Fmt.Duration(System.Math.Max(0, st.ShedReadyAt - ctx.Now)), "shedCost", 0) { Icon = "cattle_shed_building" });
+                return;
+            }
+            long cost = MarketRules.Indexed(sim, shedDef.Value);
+            vm.Lines.Add(new LineVm(s.Get("shed.secondWhat"), s.Get("shed.secondValue", "n", ctx.Fmt.Integer(shedDef.Animals), "feed", ctx.Fmt.Kg(shedDef.FeedRoomKg * 1000),
+                "straw", ctx.Fmt.Kg(shedDef.StrawStackKg * 1000)), "shedCost", 1));
+            bool any = ShedPlacement.Places(ctx).Exists(p => p.Allowed);
+            string reason = !any ? s.Get("shed.secondNoField") : !sim.State.Ledger.CanAfford(cost) ? ctx.Reject(RejectReason.InsufficientFunds) : null;
+            // On its own row, not the sheet's bar: the first shed's animals come first (ADR 0088).
+            vm.Lines.Add(new LineVm(s.Get("shed.secondWhere"), null)
+            {
+                Note = s.Get("shed.secondNote"),
+                Action = new ActionVm("secondShed", s.Get("shed.secondBuild"), ctx.Fmt.Coins(cost), ActionKind.Secondary, reason == null, reason, null, new SheetRequest("ShedPlacement", 0)),
+            });
         }
 
         /// <summary>The compost pit in the acre's far corner, the farm's from the start (§3.3).</summary>
@@ -198,12 +235,11 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("buyAnimal.labour"), s.Get("why.hoursADay", "n", ctx.Fmt.Decimal1(d.LabourHoursPerDay)), "animalBuy", id + 4));
             vm.Lines.Add(new LineVm(s.Get("buyAnimal.payback"), Payback(ctx, price, e), "animalBuy", id + 5));
             vm.Lines.Add(LineVm.Header(s.Get("buyAnimal.inShed")));
-            BuildingDef shed = sim.Config.Game.Buildings[defs.Shed];
             foreach (int good in new[] { defs.Straw, defs.Feed })
             {
                 long have = sim.State.Market.Stock[good];
                 vm.Lines.Add(new LineVm(s.Get(good == defs.Straw ? "shed.straw" : "shed.feedRoom"),
-                    s.Get("shed.ofValue", "have", ctx.Fmt.Kg(have), "cap", ctx.Fmt.Kg(good == defs.Straw ? shed.StrawStackKg * 1000 : shed.FeedRoomKg * 1000)), "feedStock", good)
+                    s.Get("shed.ofValue", "have", ctx.Fmt.Kg(have), "cap", ctx.Fmt.Kg(Store.CapacityGrams(sim, good == defs.Straw ? GoodPlace.StrawStack : GoodPlace.FeedRoom))), "feedStock", good)
                 {
                     Icon = sim.Config.Game.Market.Goods[good].Id,
                     Action = ActionVm.Open("fill:" + good, s.Get("shed.fill"), new SheetRequest("BuyInput", good)),
@@ -405,6 +441,49 @@ namespace Sim.View.Views
             row.PerHour = 0;
             row.PerHourText = null;
             row.PerHourWhyKey = null;
+        }
+    }
+}
+
+namespace Sim.View.Views
+{
+    /// <summary>Where the second shed can go (ADR 0088): every field you own, lit where it may, the reason in words where not.</summary>
+    public static class ShedPlacement
+    {
+        public static List<HutPlaceVm> Places(ViewContext ctx)
+        {
+            var list = new List<HutPlaceVm>();
+            Simulation sim = ctx.Sim;
+            foreach (Sim.Core.Land.Tile t in sim.State.Land.Tiles)
+            {
+                if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                RejectReason r = LivestockRules.PlaceSecond(sim, t.Id);
+                list.Add(new HutPlaceVm { TileId = t.Id, Allowed = r == RejectReason.None, Reason = r == RejectReason.None ? null : Reason(ctx, t.Id, r) });
+            }
+            return list;
+        }
+
+        public static string ReasonFor(ViewContext ctx, int tileId)
+        {
+            RejectReason r = LivestockRules.PlaceSecond(ctx.Sim, tileId);
+            return r == RejectReason.None ? null : Reason(ctx, tileId, r);
+        }
+
+        /// <summary>"Something is growing here", "A family house stands here", "A business stands here", "Water channels or drip run here".</summary>
+        private static string Reason(ViewContext ctx, int tileId, RejectReason r)
+        {
+            Simulation sim = ctx.Sim;
+            if (r != RejectReason.TileOccupied) return ctx.Reject(r);
+            if (Sim.Core.People.HouseRules.HousesOn(sim, tileId) > 0) return ctx.Strings.Get("business.placeHouse");
+            if (Sim.Core.Business.BusinessRules.On(sim, tileId) != null) return ctx.Strings.Get("business.placeTaken");
+            if (sim.State.Farm.CropOn(tileId) != null) return ctx.Strings.Get("house.growing");
+            return ctx.Strings.Get("shed.placeWater");
+        }
+
+        public static ActionVm Confirm(ViewContext ctx, int tileId)
+        {
+            long cost = MarketRules.Indexed(ctx.Sim, ctx.Sim.Config.Game.Buildings[LivestockRules.Defs(ctx.Sim).Shed].Value);
+            return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(cost), ActionKind.Primary, at => new BuildShed(at, tileId));
         }
     }
 }
