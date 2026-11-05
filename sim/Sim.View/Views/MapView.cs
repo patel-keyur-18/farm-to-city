@@ -213,6 +213,9 @@ namespace Sim.View.Views
         public string TypeId { get; internal set; }
         public bool Building { get; internal set; }
         public bool Working { get; internal set; }
+
+        /// <summary>A shop's pitch in the square (0-based, spec 017 §3.4), or −1 on its acre.</summary>
+        public int Pitch { get; internal set; } = -1;
     }
 
     /// <summary>
@@ -300,6 +303,10 @@ namespace Sim.View.Views
 
         /// <summary>Businesses being built or open (spec 016), in id order.</summary>
         public List<BusinessVm> Businesses { get; } = new List<BusinessVm>();
+
+        /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
+        public int SquareTile { get; internal set; } = -1;
+        public int Pitches { get; internal set; }
         public List<PersonVm> People { get; } = new List<PersonVm>();
         public long SimTime { get; internal set; }
         public int Season { get; internal set; }
@@ -693,16 +700,29 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             if (sim.State.Businesses == null) return;
+            if (sim.Config.Game.Shops != null)
+            {
+                map.SquareTile = sim.Config.Game.Shops.SquareTile;
+                map.Pitches = sim.Config.Game.Shops.Pitches;
+            }
             int hour = (int)(map.SecondOfDay / 3600);
             foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
             {
                 if (b.Status == Sim.Core.Business.BusinessStatus.Closed) continue;
                 var t = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
                 bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(sim, b, hour);
-                map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working });
-                map.Tiles[b.TileId].Business = true;
+                map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working, Pitch = b.Pitch });
+                if (b.Pitch < 0) map.Tiles[b.TileId].Business = true; // a pitch is the village's square, not your acre
                 if (working) AddWorker(sim, b, map);
-                if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;
+                if (working && t.IsShop && b.LastArrivals > 0) // spec 017 §7: customers at the counter while it's serving
+                {
+                    string[] shoppers = { "town_f", "town_m" };
+                    for (int i = 0; i < shoppers.Length; i++)
+                        map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = shoppers[i], Female = shoppers[i] == "town_f",
+                            HomeTile = b.TileId, HomeHut = b.Id, TileId = b.TileId });
+                    continue;
+                }
+                if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || Sim.Core.Business.ShopRules.MillShare(sim, b) < Sim.Core.Maths.Fixed.FromRatio(1, 2)) continue; // most of the area grinds at the chakki: nobody waits
                 string[] looks = { "town_m", "town_f", "elder_m" };
                 for (int i = 0; i < looks.Length; i++)
                     map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = looks[i], Female = looks[i] == "town_f",

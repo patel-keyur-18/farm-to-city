@@ -1287,6 +1287,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_atta_laddoo"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_banana"
   },
   {
@@ -1435,6 +1442,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_radish"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_rasgulla"
   },
   {
    "w": 256,
@@ -2508,6 +2522,27 @@
    "name": "person_town_m_front_work"
   },
   {
+   "w": 244,
+   "h": 164,
+   "pivotX": 0.5,
+   "pivotY": 0.47427,
+   "name": "pitch_empty_1"
+  },
+  {
+   "w": 244,
+   "h": 164,
+   "pivotX": 0.5,
+   "pivotY": 0.47427,
+   "name": "pitch_empty_2"
+  },
+  {
+   "w": 244,
+   "h": 164,
+   "pivotX": 0.5,
+   "pivotY": 0.47427,
+   "name": "pitch_empty_3"
+  },
+  {
    "w": 332,
    "h": 380,
    "pivotX": 0.4818,
@@ -2725,6 +2760,62 @@
    "name": "street_y"
   },
   {
+   "w": 244,
+   "h": 242,
+   "pivotX": 0.49942,
+   "pivotY": 0.32308,
+   "name": "sweet_shop_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 242,
+   "pivotX": 0.49942,
+   "pivotY": 0.32308,
+   "name": "sweet_shop_pitch_2"
+  },
+  {
+   "w": 246,
+   "h": 242,
+   "pivotX": 0.49767,
+   "pivotY": 0.32308,
+   "name": "sweet_shop_pitch_3"
+  },
+  {
+   "w": 234,
+   "h": 222,
+   "pivotX": 0.47928,
+   "pivotY": 0.30326,
+   "name": "sweet_shop_s"
+  },
+  {
+   "w": 244,
+   "h": 252,
+   "pivotX": 0.5,
+   "pivotY": 0.30843,
+   "name": "tea_stall_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 252,
+   "pivotX": 0.5,
+   "pivotY": 0.30843,
+   "name": "tea_stall_pitch_2"
+  },
+  {
+   "w": 244,
+   "h": 252,
+   "pivotX": 0.49707,
+   "pivotY": 0.30843,
+   "name": "tea_stall_pitch_3"
+  },
+  {
+   "w": 224,
+   "h": 234,
+   "pivotX": 0.4742,
+   "pivotY": 0.30066,
+   "name": "tea_stall_s"
+  },
+  {
    "w": 224,
    "h": 220,
    "pivotX": 0.54199,
@@ -2919,6 +3010,34 @@
    "pivotX": 0.52003,
    "pivotY": 0.31406,
    "name": "van_front"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "veg_stall_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "veg_stall_pitch_2"
+  },
+  {
+   "w": 262,
+   "h": 268,
+   "pivotX": 0.5282,
+   "pivotY": 0.29344,
+   "name": "veg_stall_pitch_3"
+  },
+  {
+   "w": 318,
+   "h": 270,
+   "pivotX": 0.54443,
+   "pivotY": 0.38291,
+   "name": "veg_stall_s"
   },
   {
    "w": 292,

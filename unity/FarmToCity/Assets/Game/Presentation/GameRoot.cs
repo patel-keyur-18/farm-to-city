@@ -425,6 +425,7 @@ namespace Game.Presentation
                 case "HutPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Hut); break;
                 case "HousePlacement": if (!refreshOnly) StartPlacing(PlaceKind.House); break;
                 case "BusinessPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Business, (int)r.Id, r.Arg); break;
+                case ShopPlaceSheet.Kind: _sheet.Show(ShopPlaceSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break; // a pitch in the square or your acre (spec 017 §3.4)
                 case "ShedPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Shed); break;
                 case "Businesses": _sheet.Show(BusinessesSheet.Build(_ctx), refreshOnly); break;
                 case "BusinessResearch": _sheet.Show(BusinessResearchSheet.Build(_ctx, (int)r.Id), refreshOnly); break;

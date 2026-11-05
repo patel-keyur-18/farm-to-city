@@ -41,6 +41,7 @@ namespace Sim.Core.Saves
             BuildSecondShed,
             BuyMachine, LeaseMachine, HireMachine, SellMachine, SetMaintenance,
             PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
+            FoundOnPitch, SetShop, SetStallGoods,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -116,11 +117,14 @@ namespace Sim.Core.Saves
                     break;
                 case AnswerFamilyRequest c: At(c, Tag.AnswerFamilyRequest); w.WriteLong(c.HandId); w.WriteBool(c.Yes); break;
                 case FoundBusiness c:
-                    At(c, Tag.FoundBusiness); w.WriteString(c.TypeId); w.WriteInt(c.TileId); w.WriteLong(c.Capital); w.WriteBool(c.RunYourself); w.WriteBool(c.Financing != null);
+                    At(c, c.Pitch >= 0 ? Tag.FoundOnPitch : Tag.FoundBusiness); if (c.Pitch >= 0) w.WriteInt(c.Pitch); // a shop in the square (spec 017 §3.4)
+                    w.WriteString(c.TypeId); w.WriteInt(c.TileId); w.WriteLong(c.Capital); w.WriteBool(c.RunYourself); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
                 case CloseBusiness c: At(c, Tag.CloseBusiness); w.WriteLong(c.BusinessId); break;
                 case SetMix c: At(c, Tag.SetMix); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
+                case SetShop c: At(c, Tag.SetShop); w.WriteLong(c.BusinessId); w.WriteFixed(c.PriceFactor); break;
+                case SetStallGoods c: At(c, Tag.SetStallGoods); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
                     break;
@@ -240,13 +244,17 @@ namespace Sim.Core.Saves
                 case Tag.BuildFamilyHouse: return new BuildFamilyHouse(at, r.ReadInt());
                 case Tag.AnswerFamilyRequest: return new AnswerFamilyRequest(at, r.ReadLong(), r.ReadBool());
                 case Tag.FoundBusiness:
+                case Tag.FoundOnPitch:
                 {
+                    int pitch = tag == Tag.FoundOnPitch ? r.ReadInt() : -1;
                     string type = r.ReadString();
                     int tile = r.ReadInt();
                     long capital = r.ReadLong();
                     bool self = r.ReadBool();
-                    return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                    return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null, pitch);
                 }
+                case Tag.SetShop: return new SetShop(at, r.ReadLong(), r.ReadFixed());
+                case Tag.SetStallGoods: return new SetStallGoods(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
                 case Tag.SetMix: return new SetMix(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());

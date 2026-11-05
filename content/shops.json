@@ -1,0 +1,28 @@
+{
+  "villagePeople": 250,
+  "openHour": 8,
+  "closeHour": 20,
+  "metresPerAcre": 100,
+  "square": "banyan",
+  "pitches": 3,
+  "pitchRent": 3000,
+  "retailMarkup": 1.25,
+  "pricePresets": [1.0, 0.9, 1.1, 1.2],
+  "weights": { "price": 1.5, "quality": 0.25, "stars": 0.30, "distancePer100m": 0.10, "waitPer10Minutes": 0.20, "floor": 0.05 },
+  "startStars": 2.5,
+  "kinds": {
+    "veg":    { "kgPerPerson": 0.20,  "adultShare": 1.0, "elasticity": 0.5 },
+    "chai":   { "cupsPerPerson": 0.4, "adultShare": 0.7, "elasticity": 0.8, "reference": 10, "snackShare": 0.5 },
+    "sweets": { "kgPerPerson": 0.015, "adultShare": 1.0, "elasticity": 1.2, "references": { "rasgulla": 240, "atta_laddoo": 280 } }
+  },
+  "vegShares": {
+    "potato": 0.30, "radish": 0.08, "spinach": 0.08, "coriander": 0.02, "methi": 0.05, "amaranth": 0.05, "okra": 0.10, "peas": 0.08,
+    "banana": 0.10, "papaya": 0.04, "guava": 0.04, "mango": 0.06
+  },
+  "rivals": [
+    { "id": "grocer",      "kind": "veg",    "place": "grocery",   "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 7, "closeHour": 21 },
+    { "id": "village_tea", "kind": "chai",   "place": "tea_stall", "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 6, "closeHour": 22, "capacityPerHour": 200 },
+    { "id": "town_halwai", "kind": "sweets", "metres": 1500,       "priceFactor": 1.0, "quality": "good",     "stars": 4, "openHour": 8, "closeHour": 20 }
+  ],
+  "chakki": { "metres": 1500, "quality": "good", "stars": 3 }
+}

@@ -27,7 +27,18 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.businessArea.people", ctx.Fmt.Integer(d.CatchmentPeople + (sim.State.Citizens?.Population ?? 0)), "town", ctx.Fmt.Integer(sim.State.Citizens?.Population ?? 0));
             Row(vm, ctx, "why.businessArea.each", ctx.Fmt.Kg((d.GrainPerPersonPerRealDay * sim.Config.Game.Population.RealDaysPerGameDay * Fixed.FromInt(1000)).RoundToLong()));
             Text(vm, ctx, "why.businessArea.hours");
-            Text(vm, ctx, "why.businessArea.lost");
+            Business mill = BusinessOf(ctx, id);
+            if (sim.Config.Game.Shops != null && mill != null && !BusinessRules.TypeOf(sim, mill).ByRecipe)
+            {
+                // Its share against the chakki (spec 017 §3.6, ADR 0091 §3): the parts of its pull and the chakki's.
+                Attraction a = ShopRules.MillAttraction(sim, mill);
+                Row(vm, ctx, "why.businessArea.share", ctx.Fmt.Percent(ShopRules.MillShare(sim, mill)));
+                Row(vm, ctx, "why.shopShare.price", Part(ctx, a.Price), "price", ShopWords.PriceSetting(ctx, mill.Fee / d.NextVillageFee));
+                Row(vm, ctx, "why.shopShare.distance", Part(ctx, a.Distance), "m", ctx.Fmt.Integer(a.Metres));
+                Row(vm, ctx, "why.businessArea.yours", Pull(ctx, a.Total));
+                Row(vm, ctx, "why.businessArea.chakki", Pull(ctx, ShopRules.Chakki(sim).Total), "m", ctx.Fmt.Integer(sim.Config.Game.Shops.ChakkiMetres));
+            }
+            Text(vm, ctx, sim.Config.Game.Shops != null ? "why.businessArea.choice" : "why.businessArea.lost");
             vm.Footnote = ctx.Strings.Get("why.businessArea.lesson");
             return vm;
         }
@@ -39,7 +50,15 @@ namespace Sim.View.Views
             Fixed index = sim.State.Market.PriceIndex;
             WhyVm vm = New(ctx, "why.businessFee.title", ctx.Fmt.PricePerKg(d.NextVillageFee * index));
             Text(vm, ctx, "why.businessFee.next");
-            Row(vm, ctx, "why.businessFee.most", ctx.Fmt.PricePerKg((d.NextVillageFee + d.FeeTolerance) * index));
+            if (sim.Config.Game.Shops == null) Row(vm, ctx, "why.businessFee.most", ctx.Fmt.PricePerKg((d.NextVillageFee + d.FeeTolerance) * index));
+            else // the area's share at each fee (spec 017 §3.6): every coin above the chakki's takes a share away, not all of it
+            {
+                Business b = id >= 1000 ? BusinessOf(ctx, id - 1000) : null;
+                int tile = b?.TileId ?? BusinessRules.PlanTile(sim);
+                foreach (int fee in new[] { 3, 4, 5, 6 })
+                    Row(vm, ctx, "why.businessFee.share", ctx.Fmt.Percent(ShopRules.MillShare(sim, Fixed.FromInt(fee), 1, b?.Stars ?? sim.Config.Game.Shops.StartStars, tile)),
+                        "fee", ctx.Fmt.PricePerKg(Fixed.FromInt(fee) * index));
+            }
             vm.Footnote = ctx.Strings.Get("why.businessFee.lesson");
             return vm;
         }
@@ -102,7 +121,7 @@ namespace Sim.View.Views
         {
             Business b = BusinessOf(ctx, id);
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
-            int input = t.ByRecipe ? BusinessRules.BoughtInputs(t)[0] : t.Input;
+            int input = t.ByRecipe ? BusinessRules.BoughtInputs(t)[0] : t.Input >= 0 ? t.Input : t.Goods[t.Goods.Count - 1]; // a stall: its last product (curd)
             WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.businessMarket.title", t),
                 t.TakesMilk ? ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(ctx.Sim, t)) : ctx.Fmt.PricePerKg(MarketRules.Ceiling(ctx.Sim, input)));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.businessMarket.price", t));
@@ -128,7 +147,7 @@ namespace Sim.View.Views
             Fixed index = ctx.Sim.State.Market.PriceIndex;
             int days = ctx.Sim.Clock.DaysPerSeason;
             long value = line == "loan" ? (p.Loan > 0 ? p.Loan : BusinessBooks.MaxLoan(ctx.Sim, t)) : line == "interest" ? p.Interest : line == "cash" ? p.CashNeeded - p.Loan : line == "fees" ? p.Fees : line == "sales" ? p.Sales : line == "wheat" ? p.Wheat : line == "power" ? p.Power : line == "repairs" ? p.Repairs
-                : line == "depreciation" ? p.Depreciation : line == "wage" ? p.Wage : line == "profit" ? p.Profit : line == "cost" ? p.Cost : p.CashNeeded;
+                : line == "depreciation" ? p.Depreciation : line == "wage" ? p.Wage : line == "rent" ? p.Rent : line == "profit" ? p.Profit : line == "cost" ? p.Cost : p.CashNeeded;
             RecipeDef first = t.ByRecipe ? BusinessRules.First(t, t.Products[0]) : null;
             WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.plan." + line + ".title", t), line == "payback" ? BusinessPlanSheet.Payback(ctx, p) : ctx.Fmt.Coins(value),
                 "role", ctx.Strings.Get("business.role." + t.Worker));
@@ -138,7 +157,8 @@ namespace Sim.View.Views
                 "loan", ctx.Fmt.Coins(p.Loan), "ltv", ctx.Fmt.Percent(BusinessRules.Defs(ctx.Sim).BusinessLtv), "seasons", ctx.Fmt.Integer(BusinessRules.Defs(ctx.Sim).TermSeasons),
                 "rate", ctx.Fmt.Percent(p.Loan > 0 ? Fixed.FromRatio(p.Interest, p.Loan) : Fixed.Zero),
                 "batch", first == null ? "" : ctx.Fmt.Kg(first.OutputGrams), "fuel", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Fuel * index)),
-                "supplies", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Supplies * index)));
+                "supplies", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Supplies * index)),
+                "rent", ctx.Fmt.Coins(p.Rent), "wage", ctx.Fmt.Coins(p.Wage));
             if (line == "profit" || line == "payback") vm.Footnote = ctx.Strings.Get(BusinessWords.Key(ctx, "why.plan.lesson", t));
             return vm;
         }
@@ -156,7 +176,7 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.books.title", Money(ctx, Amount(line)), "line", BusinessBooksSheet.Label(ctx, b, line), "period", when);
             Text(vm, ctx, BusinessWords.Key(ctx, "why.books." + BusinessBooksSheet.Names[line], t), "area", ctx.Fmt.Kg(r.AreaGrams), "own", ctx.Fmt.Kg(r.OwnGrams), "kg", ctx.Fmt.Kg(r.AreaGrams + r.OwnGrams),
                 "fee", ctx.Fmt.PricePerKg(b.Fee * index), "power", ctx.Fmt.PricePerKg(t.PowerPerKg * index), "share", ctx.Fmt.Percent(t.RepairsShare),
-                "building", Money(ctx, MarketRules.Indexed(sim, t.BuildingValue)), "buildingLife", ctx.Fmt.Integer(t.BuildingLifeSeasons),
+                "building", Money(ctx, MarketRules.Indexed(sim, ShopRules.BuildingValue(t, b.Pitch))), "buildingLife", ctx.Fmt.Integer(ShopRules.BuildingLife(t, b.Pitch)),
                 "equipment", Money(ctx, MarketRules.Indexed(sim, t.EquipmentValue)), "equipmentLife", ctx.Fmt.Integer(t.EquipmentLifeSeasons),
                 "role", ctx.Strings.Get("business.role." + t.Worker));
             if (line == BusinessBooksSheet.Margin || line == BusinessBooksSheet.Profit)
@@ -165,7 +185,7 @@ namespace Sim.View.Views
                 Row(vm, ctx, BusinessWords.Key(ctx, "why.books.rowGoods", t), "−" + Money(ctx, Amount(BusinessBooksSheet.Goods)));
                 if (line == BusinessBooksSheet.Profit)
                     Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, Amount(BusinessBooksSheet.Wages) + Amount(BusinessBooksSheet.Power) + Amount(BusinessBooksSheet.Repairs)
-                        + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest)));
+                        + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest) + Amount(BusinessBooksSheet.Rent)));
             }
             if (line >= BusinessBooksSheet.CashStart && line <= BusinessBooksSheet.CashEnd)
             {
@@ -174,7 +194,7 @@ namespace Sim.View.Views
                 Row(vm, ctx, "why.books.rowOut", "−" + Money(ctx, r.Outflows));
                 vm.Footnote = ctx.Strings.Get("why.books.cashLesson");
             }
-            else if (line >= BusinessBooksSheet.Cash)
+            else if (line >= BusinessBooksSheet.Cash && line != BusinessBooksSheet.Rent)
             {
                 Row(vm, ctx, "why.books.rowOwns", Money(ctx, Amount(BusinessBooksSheet.Cash) + Amount(BusinessBooksSheet.Stock) + Amount(BusinessBooksSheet.Fixed)));
                 Row(vm, ctx, "why.books.rowOwes", "−" + Money(ctx, Amount(BusinessBooksSheet.Debts)));

@@ -42,6 +42,8 @@ namespace Sim.Content
             var game = new GameDefs(soils, drainages, land, map, buildings, start, ledger, market, farm, credit, people, onboarding, livestock, population);
             // Businesses come with citizens (a worker is one, spec 016 §3.6).
             if (population != null) game.Businesses = LoadBusinesses(read("businesses.json"), market, onboarding);
+            // Shops come with a shop type among the businesses (spec 017), after the map's places they stand round.
+            if (game.Businesses != null && System.Linq.Enumerable.Any(game.Businesses.Types, t => t.IsShop)) game.Shops = LoadShops(read("shops.json"), market, map);
             // The godown comes with a godown in the buildings (spec 013 §3.4, ADR 0087).
             int godown = buildings.FindIndex(b => b.Id == GodownDef.BuildingId);
             if (godown >= 0) game.Godown = LoadGodown(read("buildings.json"), godown, market, onboarding);

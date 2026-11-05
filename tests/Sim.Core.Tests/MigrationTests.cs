@@ -181,6 +181,42 @@ namespace Sim.Core.Tests
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
         }
 
+        // Spec 017 AC-8: a schema-13 save loads into 14 with the village's rivals on their own terms and no shops of yours; a business
+        // written at schema 13 comes back on its acre at the reference price and the starting stars; a shop then opens on a pitch and
+        // the town round-trips.
+        [Test]
+        public void Schema13_Shops()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(13)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Business.ShopsState shops = r.State.Shops;
+            Assert.That(shops, Is.Not.Null);
+            Assert.That(shops.Rivals.Select(x => x.Id), Is.EqualTo(config.Game.Shops.Rivals.Select(x => x.Id)), "the village grocer, tea stall and the town's halwai");
+            Assert.That(shops.Rivals.Select(x => x.Stars), Is.EqualTo(config.Game.Shops.Rivals.Select(x => x.Stars)));
+            Assert.That(r.State.Businesses.Businesses.Any(b => config.Game.Businesses.Types[b.Type].IsShop), Is.False, "no shops of yours");
+
+            Simulation sim = Simulation.FromState(config, r.State);
+            BusinessTests.Hamlet(sim);
+            long gift = 1_000_000 * 100;
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test.gift", "test", new Finance.Posting(Finance.Account.Cash, gift), new Finance.Posting(Finance.Account.OpeningEquity, -gift));
+            int tile = sim.State.Farm.Crops.Select(c => c.TileId).Max(); // the bot's fields are all sown: clear one for the mill
+            Assert.That(sim.Execute(new ClearField(sim.State.Clock.SimTime, tile)).Accepted, Is.True);
+            CommandResult founded = sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", tile, 150_000_00, true));
+            Assert.That(founded.Accepted, Is.True, founded.ToString());
+            LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 13), config, MinSchema);
+            Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
+            Business.Business mill = old.State.Businesses.Businesses.Last();
+            Assert.That((mill.Pitch, mill.PriceFactor, mill.Stars, mill.PutOut.Sum()), Is.EqualTo((-1, Maths.Fixed.One, config.Game.Shops.StartStars, 0L)));
+
+            RecipeTests.Village(sim);
+            Assert.That(sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, "tea_stall", 0, 100_000_00, true, null, 0)).Accepted, Is.True);
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "a shop on a pitch round-trips");
+        }
+
         // Spec 013 AC-9 (ADR 0087): a schema-13 save loads into 14 with rain-fed acres and the well's buckets, no godown and no warehouse
         // space and no orchards, as its own replay base, installs a pump and digs a channel, buys a godown, plants an orchard, and round-trips.
         [Test]

@@ -97,6 +97,7 @@ namespace Sim.Core
                 if (config.Game.Irrigation != null) state.Irrigation = new Land.IrrigationState();
                 if (config.Game.Equipment != null) state.Equipment = new Equipment.EquipmentState { HiredUntil = new long[config.Game.Equipment.Machines.Count] };
                 if (config.Game.Orchard != null) state.Orchards = new Farm.OrchardState();
+                if (config.Game.Shops != null) state.Shops = Business.ShopsState.New(config);
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

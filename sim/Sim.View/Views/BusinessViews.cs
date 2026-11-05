@@ -31,11 +31,12 @@ namespace Sim.View.Views
             return s.Get("business.workerNone");
         }
 
-        /// <summary>A type's own wording where it has one ("business.cash.bakery"), else the shared one.</summary>
+        /// <summary>A type's own wording where it has one ("business.cash.bakery"), else the shops' ("….shop", spec 017), else the shared one.</summary>
         public static string Key(ViewContext ctx, string key, BusinessTypeDef t)
         {
             string own = key + "." + t.Id;
-            return ctx.Strings.Has(own) ? own : key;
+            if (ctx.Strings.Has(own)) return own;
+            return t.IsShop && ctx.Strings.Has(key + ".shop") ? key + ".shop" : key;
         }
 
         /// <summary>The good's name in a sentence: "atta".</summary>
@@ -75,11 +76,13 @@ namespace Sim.View.Views
                 bool open = BusinessRules.Unlocked(sim, t);
                 string locked = s.Get("businesses.locked." + sim.Config.Game.Onboarding.Eras[t.Era].Id);
                 var a = new ActionVm("start:" + t.Id, s.Get("businesses.start", "name", BusinessWords.InSentence(ctx, t)),
-                    s.Get("businesses.startDetail", "cost", ctx.Fmt.Coins(BusinessRules.Cost(sim, t))), ActionKind.Open, open, open ? null : locked, null,
+                    s.Get(BusinessWords.Key(ctx, "businesses.startDetail", t), "cost", ctx.Fmt.Coins(BusinessRules.Cost(sim, t, t.IsShop ? 0 : -1))), ActionKind.Open, open, open ? null : locked, null,
                     new SheetRequest("BusinessResearch", i)) { Icon = t.Id };
                 buttons.Add(a);
             }
-            vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
+            // Three to a row: six in one row left each a letter wide (Sprint 16, the shops).
+            for (int i = 0; i < buttons.Count; i += 3)
+                vm.Lines.Add(new LineVm(null, null) { Buttons = buttons.GetRange(i, System.Math.Min(3, buttons.Count - i)) });
             vm.Lines.Add(LineVm.Header(s.Get("businesses.yours")));
             int n = 0;
             foreach (Business b in sim.State.Businesses.Businesses)
@@ -105,9 +108,10 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
             var vm = new SheetVm { Icon = t.Id, Title = s.Get("research.title", "name", BusinessWords.InSentence(ctx, t)), Subtitle = s.Get("research.subtitle") };
-            if (t.ByRecipe) AddRecipeResearch(ctx, vm, t, type);
+            if (t.IsShop) ShopResearch.Add(ctx, vm, t, type); // spec 017: who buys, the rivals, your share
+            else if (t.ByRecipe) AddRecipeResearch(ctx, vm, t, type);
             else AddMillResearch(ctx, vm, t, type);
-            vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "research.cost", t)), ctx.Fmt.Coins(BusinessRules.Cost(sim, t)), "planCost", BusinessWords.PlanId(type, false)) { Icon = t.Id });
+            vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "research.cost", t)), ctx.Fmt.Coins(BusinessRules.Cost(sim, t, t.IsShop ? 0 : -1)), "planCost", BusinessWords.PlanId(type, false)) { Icon = t.Id });
             vm.Actions.Add(ActionVm.Open("plan", s.Get("research.plan"), new SheetRequest("BusinessPlan", type, "hire")));
             return vm;
         }
@@ -202,14 +206,15 @@ namespace Sim.View.Views
                 new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(self, !loan)));
             vm.Lines.Add(funding);
             vm.Lines.Add(LineVm.Header(s.Get("plan.season")));
-            if (!t.ByRecipe) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
+            if (!t.ByRecipe && !t.IsShop) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.sales", t)), ctx.Fmt.Coins(p.Sales), "planSales", id));
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", t.TakesMilk ? ctx.Fmt.Litres(BusinessRules.DefaultOwnPerDay(sim, t)) : ctx.Fmt.Kg(t.OwnPerDay)),
                 "−" + ctx.Fmt.Coins(p.Wheat), "planWheat", id));
-            vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.power", t)), "−" + ctx.Fmt.Coins(p.Power), "planPower", id));
-            vm.Lines.Add(new LineVm(s.Get("plan.repairs"), "−" + ctx.Fmt.Coins(p.Repairs), "planRepairs", id));
+            if (!t.IsShop || p.Power > 0) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.power", t)), "−" + ctx.Fmt.Coins(p.Power), "planPower", id));
+            if (!t.IsShop || p.Repairs > 0) vm.Lines.Add(new LineVm(s.Get("plan.repairs"), "−" + ctx.Fmt.Coins(p.Repairs), "planRepairs", id)); // a handcart needs none
             vm.Lines.Add(new LineVm(s.Get("plan.depreciation"), "−" + ctx.Fmt.Coins(p.Depreciation), "planDepreciation", id));
             if (!self) vm.Lines.Add(new LineVm(s.Get("plan.wage", "role", s.Get("business.role." + t.Worker)), "−" + ctx.Fmt.Coins(p.Wage), "planWage", id));
+            if (p.Rent > 0) vm.Lines.Add(new LineVm(s.Get("plan.rent"), "−" + ctx.Fmt.Coins(p.Rent), "planRent", id)); // a pitch in the square (spec 017 §3.4)
             if (loan) vm.Lines.Add(new LineVm(s.Get("plan.interest"), "−" + ctx.Fmt.Coins(p.Interest), "planInterest", id));
             if (self)
             {
@@ -224,8 +229,8 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("plan.cash"), ctx.Fmt.Coins(cash), "planCash", id));
             vm.Lines.Add(new LineVm(s.Get("plan.payback"), Payback(ctx, p), "planPayback", id));
             bool can = sim.State.Ledger.CanAfford(cash);
-            vm.Actions.Add(new ActionVm("place", s.Get("plan.place"), s.Get("plan.placeDetail", "cash", ctx.Fmt.Coins(cash)), ActionKind.Open, can,
-                can ? null : s.Get("plan.short", "cash", ctx.Fmt.Coins(cash)), null, new SheetRequest("BusinessPlacement", type, BusinessWords.PlanArg(self, loan))));
+            vm.Actions.Add(new ActionVm("place", s.Get(BusinessWords.Key(ctx, "plan.place", t)), s.Get("plan.placeDetail", "cash", ctx.Fmt.Coins(cash)), ActionKind.Open, can,
+                can ? null : s.Get("plan.short", "cash", ctx.Fmt.Coins(cash)), null, new SheetRequest(t.IsShop ? ShopPlaceSheet.Kind : "BusinessPlacement", type, BusinessWords.PlanArg(self, loan))));
             return vm;
         }
 
@@ -294,7 +299,7 @@ namespace Sim.View.Views
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
             BusinessDefs d = BusinessRules.Defs(sim);
             long borrow = BusinessWords.LoanFor(sim, t, loan);
-            long capital = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t), t.Fee, borrow).CashNeeded - borrow;
+            long capital = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t, tileId), t.Fee, borrow, null, -1, tileId).CashNeeded - borrow;
             string id = t.Id, lender = d.LenderId;
             int term = d.TermSeasons;
             return ActionVm.Checked(ctx, "buildHere", ctx.Strings.Get("action.buildHere"), ctx.Fmt.Coins(capital), ActionKind.Primary,
@@ -333,7 +338,9 @@ namespace Sim.View.Views
                 ActionVm.Open("tab:" + Books, s.Get("business.tabBooks"), new SheetRequest("Business", id, Books)),
                 ActionVm.Open("tab:" + Settings, s.Get("business.tabSettings"), new SheetRequest("Business", id, Settings)),
             };
-            if (tab == Settings) AddSettings(ctx, vm, b, t);
+            if (t.IsShop) vm.Tabs.Insert(1, ActionVm.Open("tab:" + ShopSheet.Customers, s.Get("shop.tabCustomers"), new SheetRequest("Business", id, ShopSheet.Customers)));
+            if (tab == ShopSheet.Customers && t.IsShop) ShopSheet.AddCustomers(ctx, vm, b, t);
+            else if (tab == Settings) AddSettings(ctx, vm, b, t);
             else if (tab == Books) BusinessBooksSheet.AddBooks(ctx, vm, b);
             else AddToday(ctx, vm, b, t);
             return vm;
@@ -343,8 +350,9 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
+            if (t.IsShop) ShopSheet.AddToday(ctx, vm, b, t); // spec 017: sold today, what's out
             if (t.ByRecipe) AddRecipeToday(ctx, vm, b, t);
-            else AddMillToday(ctx, vm, b, t);
+            else if (!t.IsShop) AddMillToday(ctx, vm, b, t);
             AddMoney(ctx, vm, b, t);
         }
 
@@ -452,6 +460,12 @@ namespace Sim.View.Views
 
         private static void AddSettings(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
+            if (t.IsShop) // spec 017: its own hours, price and goods
+            {
+                ShopSheet.AddSettings(ctx, vm, b, t);
+                AddCash(ctx, vm, b, t);
+                return;
+            }
             var s = ctx.Strings;
             long id = b.Id;
             int hi = 0;
@@ -526,7 +540,7 @@ namespace Sim.View.Views
             long id = b.Id;
             foreach (int p in t.Products)
             {
-                List<long> presets = MixPresets(sim, t, p);
+                List<long> presets = MixPresets(sim, t, p, b.TileId);
                 int at0 = presets.IndexOf(b.Mix[p]);
                 long next = presets[(at0 + 1) % presets.Count];
                 string good = sim.Config.Game.Market.Goods[p].Id;
@@ -558,9 +572,19 @@ namespace Sim.View.Views
             vm.Lines.Add(line);
         }
 
-        /// <summary>A product's mix choices: what the shops buy, plus what the trader takes if he takes it, half the shops', none.</summary>
-        public static List<long> MixPresets(Simulation sim, BusinessTypeDef t, int good)
+        /// <summary>The sweet shop's day's batches (spec 017 §3.1): as the bakery's mix.</summary>
+        internal static void AddMixFor(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t) { AddMix(ctx, vm, b, t); }
+
+        /// <summary>A product's mix choices: what the shops buy, plus what the trader takes if he takes it, half the shops', none (the sweet shop: what it would sell).</summary>
+        public static List<long> MixPresets(Simulation sim, BusinessTypeDef t, int good, int tile = -1)
         {
+            if (t.Kind == ShopKind.Sweets)
+            {
+                long sell = ShopRules.ExpectedPerDay(sim, ShopKind.Sweets, good, tile < 0 ? ShopRules.Defs(sim).SquareTile : tile);
+                var sweets = new List<long>();
+                foreach (long v in new[] { sell, sell * 3 / 2, sell / 2, 0L }) if (!sweets.Contains(v)) sweets.Add(v);
+                return sweets;
+            }
             long shops = BusinessRules.ShopGramsPerDay(sim, t, good), trader = sim.Config.Game.Market.Region.TraderBuyPerDay(good);
             var list = new List<long>();
             foreach (long v in new[] { shops, shops + trader, shops / 2, 0L }) if (!list.Contains(v)) list.Add(v);

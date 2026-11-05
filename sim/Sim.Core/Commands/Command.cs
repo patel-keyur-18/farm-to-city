@@ -174,6 +174,10 @@ namespace Sim.Core.Commands
         TreesBearing,
         /// <summary>Only a short crop grows between a young orchard's rows.</summary>
         NotAnIntercrop,
+
+        // Spec 017 (shops)
+        /// <summary>Another shop stands on that pitch in the square.</summary>
+        PitchTaken,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

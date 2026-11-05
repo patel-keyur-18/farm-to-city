@@ -105,6 +105,10 @@ namespace Sim.View.Views
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
             { "dairyMilkADay", DairyMilkADay },
+            // Shops and customer choice (spec 017 §7).
+            { "shopShare", ShopShare }, { "shopToday", ShopToday }, { "shopLost", ShopLost }, { "shopPeople", ShopPeople }, { "shopDemand", ShopDemand },
+            { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
+            { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
         };

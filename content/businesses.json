@@ -53,6 +53,38 @@
         { "id": "ghee_cow",       "inputs": { "milk_cow": 22 },     "output": "ghee",   "outputKg": 1,    "fuel": 20 }
       ],
       "shops": { "paneer": 0.005, "curd": 0.03 }
+    },
+    {
+      "id": "veg_stall", "nameKey": "business.veg_stall", "era": "village", "kind": "veg",
+      "building": { "value": 15000, "lifeSeasons": 40 },
+      "equipment": { "value": 0, "lifeSeasons": 20 },
+      "pitchBuilding": { "value": 8000, "lifeSeasons": 20 },
+      "buildHours": 6, "worker": "stallholder", "workerSkill": "crafting", "wage": 12000,
+      "capacityPerHour": 400, "repairsShare": 0.02,
+      "openHour": 8, "closeHour": 20,
+      "goods": ["potato", "radish", "spinach", "coriander", "methi", "amaranth", "okra", "peas", "banana", "papaya", "guava", "mango", "pav", "paneer", "curd"]
+    },
+    {
+      "id": "tea_stall", "nameKey": "business.tea_stall", "era": "village", "kind": "chai",
+      "building": { "value": 0, "lifeSeasons": 40 },
+      "equipment": { "value": 12000, "lifeSeasons": 20 },
+      "buildHours": 12, "worker": "tea_maker", "workerSkill": "crafting", "wage": 12000,
+      "capacityPerHour": 300, "repairsShare": 0.02,
+      "openHour": 8, "closeHour": 20, "takesMilk": true, "neighbourMilkPremium": 2,
+      "cup": { "milkLitres": 0.06, "supplies": 1.50, "snackKg": 0.05 },
+      "goods": ["rusk", "pav"]
+    },
+    {
+      "id": "sweet_shop", "nameKey": "business.sweet_shop", "era": "village", "kind": "sweets",
+      "building": { "value": 25000, "lifeSeasons": 40 },
+      "equipment": { "value": 20000, "lifeSeasons": 20 },
+      "buildHours": 36, "worker": "halwai", "workerSkill": "crafting", "wage": 20000,
+      "kgPerHour": 25, "capacityPerHour": 25, "powerPerKg": 0, "repairsShare": 0.02,
+      "openHour": 8, "closeHour": 20,
+      "recipes": [
+        { "id": "rasgulla",    "inputs": { "paneer": 0.5 },              "output": "rasgulla",    "outputKg": 1, "fuel": 6, "supplies": 22.5 },
+        { "id": "atta_laddoo", "inputs": { "atta": 0.45, "ghee": 0.20 }, "output": "atta_laddoo", "outputKg": 1, "fuel": 4, "supplies": 16 }
+      ]
     }
   ]
 }

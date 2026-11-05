@@ -32,6 +32,7 @@ namespace Game.Presentation.Map
             _businessTiles.Clear();
             foreach (BusinessVm b in map.Businesses)
             {
+                if (b.Pitch >= 0) continue; // a shop on a pitch is drawn with the square (MapPresenter.Shops)
                 seen.Add(b.Id);
                 _businessTiles.Add(b.TileId);
                 string name = b.TypeId + (b.Building ? "_building_s" : "_s");
@@ -39,7 +40,7 @@ namespace Game.Presentation.Map
                 int order = Order(b.TileId, _width, 45, pos.y - TileCentre(b.TileId).y);
                 if (!_businesses.TryGetValue(b.Id, out SpriteRenderer r))
                 {
-                    _businesses[b.Id] = r = NewRenderer("business" + b.Id, SpriteBank.Rendered(name) ?? SpriteBank.Hut, pos, order);
+                    _businesses[b.Id] = r = NewRenderer("business" + b.Id, SpriteBank.Rendered(name) ?? SpriteBank.Rendered(b.TypeId + "_s") ?? SpriteBank.Hut, pos, order);
                     SpriteRenderer shadow = NewRenderer("business" + b.Id + "Shadow", SpriteBank.ContactShadow, pos, order - 1, r.transform);
                     shadow.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
                     if (animate) Pop(r.transform, 1f);
@@ -51,7 +52,7 @@ namespace Game.Presentation.Map
                     }
                     _businessProps[b.Id] = props;
                 }
-                r.sprite = SpriteBank.Rendered(name) ?? r.sprite;
+                r.sprite = SpriteBank.Rendered(name) ?? SpriteBank.Rendered(b.TypeId + "_s") ?? r.sprite; // a shop has no building stage of its own
                 r.color = _tint;
                 foreach (SpriteRenderer p in _businessProps[b.Id]) p.color = _tint;
             }
@@ -67,6 +68,8 @@ namespace Game.Presentation.Map
 
         private Vector3 MillQueue(long businessId, int tile, int place)
         {
+            Vector3? atPitch = PitchCustomer(businessId, tile, place); // a shop's customers at its counter (spec 017 §7)
+            if (atPitch.HasValue) return atPitch.Value;
             return OnTile(tile, MillQueueAt[Mathf.Clamp(place, 0, MillQueueAt.Length - 1)]);
         }
     }

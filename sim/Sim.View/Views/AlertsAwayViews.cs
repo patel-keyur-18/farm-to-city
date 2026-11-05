@@ -453,7 +453,7 @@ namespace Sim.View.Views
             { "CourseFinished", Use.Away }, { "LongDaysStopped", Use.Away },
             { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away },
-            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "ShopSales", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.

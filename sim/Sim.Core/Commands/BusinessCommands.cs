@@ -16,16 +16,76 @@ namespace Sim.Core.Commands
         /// <summary>A business loan from the co-op bank (spec 016 §3.8), or null.</summary>
         public Financing Financing { get; }
 
-        public FoundBusiness(long at, string typeId, int tileId, long capital, bool runYourself, Financing financing = null) : base(at)
+        /// <summary>A shop's pitch in the village square (spec 017 §3.4, 0-based; <see cref="TileId"/> unused), or −1 for your acre.</summary>
+        public int Pitch { get; }
+
+        public FoundBusiness(long at, string typeId, int tileId, long capital, bool runYourself, Financing financing = null, int pitch = -1) : base(at)
         {
             TypeId = typeId;
             TileId = tileId;
             Capital = capital;
             RunYourself = runYourself;
             Financing = financing;
+            Pitch = pitch;
         }
 
-        protected override CommandResult ApplyAt(Simulation sim) { return BusinessRules.Found(sim, TypeId, TileId, Capital, RunYourself, Financing); }
+        protected override CommandResult ApplyAt(Simulation sim) { return BusinessRules.Found(sim, TypeId, TileId, Capital, RunYourself, Financing, Pitch); }
+    }
+
+    /// <summary>A shop's price as a share of the reference (spec 017 §3.1): one of the presets (the reference, 10% below, 10% or 20% above).</summary>
+    public sealed class SetShop : TimedCommand
+    {
+        public long BusinessId { get; }
+        public Maths.Fixed PriceFactor { get; }
+
+        public SetShop(long at, long businessId, Maths.Fixed priceFactor) : base(at)
+        {
+            BusinessId = businessId;
+            PriceFactor = priceFactor;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null || !BusinessRules.TypeOf(sim, b).IsShop) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
+            bool preset = false;
+            foreach (Maths.Fixed f in sim.Config.Game.Shops.PricePresets) if (f == PriceFactor) preset = true;
+            if (!preset) return CommandResult.Reject(RejectReason.InvalidArgument);
+            b.PriceFactor = PriceFactor;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// What a stall puts out a day of a good (spec 017 §5): each morning at 6:00 it takes up to that much, produce from your store, your
+    /// products from your businesses; the tea stall's snacks the same way.
+    /// </summary>
+    public sealed class SetStallGoods : TimedCommand
+    {
+        public long BusinessId { get; }
+        public string Good { get; }
+        public long GramsPerDay { get; }
+
+        public SetStallGoods(long at, long businessId, string good, long gramsPerDay) : base(at)
+        {
+            BusinessId = businessId;
+            Good = good;
+            GramsPerDay = gramsPerDay;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null || !ShopRules.Stocked(BusinessRules.TypeOf(sim, b))) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
+            int g = sim.Config.Game.Market.IndexOf(Good);
+            if (g < 0) return CommandResult.Reject(RejectReason.UnknownGood);
+            if (!BusinessRules.TypeOf(sim, b).Sells(g)) return CommandResult.Reject(RejectReason.NotProduce);
+            if (GramsPerDay < 0 || GramsPerDay > 100_000_000) return CommandResult.Reject(RejectReason.InvalidArgument);
+            b.PutOut[g] = GramsPerDay;
+            return CommandResult.Ok;
+        }
     }
 
     /// <summary>A business's settings (spec 016 §3.4, §3.5): open hours, the fee, your own input a day, buying at the market.</summary>

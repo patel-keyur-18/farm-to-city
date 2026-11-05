@@ -1339,6 +1339,17 @@ def icon_good(good):
                          rot=Matrix.Rotation(math.radians(-12), 3, "X")))
             o.append(box("crumb%d" % i, (0.13, 0.024, 0.05), (0, (i - 2) * 0.03 - 0.001, 0.04), toon("ruskIn", 0xE5B877), outline=False,
                          rot=Matrix.Rotation(math.radians(-12), 3, "X")))
+    elif good == "rasgulla":
+        # Rasgulla: soft white balls in syrup in a steel katori.
+        o.append(cylinder("katori", 0.13, 0.10, 0.07, (0, 0, 0.035), toon("steel", 0xC9CDD2), segs=24, smooth=True))
+        o.append(cylinder("syrup", 0.122, 0.122, 0.004, (0, 0, 0.066), toon("syrup", 0xEFD9A0), segs=24, outline=False))
+        for i, (x, y) in enumerate(((-0.045, -0.02), (0.04, -0.03), (0.0, 0.04), (0.0, -0.005))):
+            o.append(sphere("ras%d" % i, 0.045, (x, y, 0.085 + (0.03 if i == 3 else 0)), toon("rasgulla", 0xFBF7EC), segs=14, rings=9))
+    elif good == "atta_laddoo":
+        # Atta laddoo: golden-brown balls stacked on a steel plate.
+        o.append(cylinder("plate", 0.13, 0.12, 0.012, (0, 0, 0.006), toon("steel", 0xC9CDD2), segs=24, smooth=True))
+        for i, (x, y, z) in enumerate(((-0.05, -0.03, 0.05), (0.05, -0.03, 0.05), (0.0, 0.05, 0.05), (0.0, 0.0, 0.12))):
+            o.append(sphere("laddoo%d" % i, 0.05, (x, y, z), toon("laddoo", 0xE0A040), segs=14, rings=9))
     elif good == "paneer":
         # A fresh block of paneer on a steel plate, one cube cut from it.
         o.append(cylinder("plate", 0.13, 0.12, 0.012, (0, 0, 0.006), toon("steel", 0xC9CDD2), segs=24, smooth=True))
@@ -1645,7 +1656,8 @@ for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", mod
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
-for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee"):
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee",
+           "rasgulla", "atta_laddoo"):
     ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
 for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
@@ -3724,12 +3736,12 @@ def veg_heaps(o, x0, y0, z, w, d, seed):
                             scale=(1, 1, 0.8), segs=8, rings=5, outline=(i == 0)))
 
 
-def model_veg_cart(on_pitch=True):
+def model_veg_cart(on_pitch=True, number=1):
     """The sabzi stall: a wooden handcart on four spoked wheels, heaped with vegetables on a sloping board, a brass scale hanging
     from its bamboo, a big faded umbrella over it; a plastic crate of spare stock under the cart."""
     o = []
     if on_pitch:
-        pitch_base(o, 1)
+        pitch_base(o, number)
     wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
     z0 = 0.02 if on_pitch else 0.0
     L, W, H = 0.17, 0.09, 0.07
@@ -3795,13 +3807,13 @@ def model_veg_shed():
     return group(o, scale=BUILDING_SCALE * MILL_SCALE)
 
 
-def model_tea_counter(on_pitch=True):
+def model_tea_counter(on_pitch=True, number=2):
     """Your tea stall: a blue tarpaulin on bamboo poles over a bench at the back; in front of it, in the open, a blue-painted wooden
     counter with a pot of chai and a kettle on a gas stove, glass jars of rusk and small glasses; a water drum; two benches for
     the customers."""
     o = []
     if on_pitch:
-        pitch_base(o, 2)
+        pitch_base(o, number)
     z0 = 0.02 if on_pitch else 0.0
     wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
     bam = toon("bamboo", BAMBOO)
@@ -3837,13 +3849,13 @@ def model_tea_counter(on_pitch=True):
     return group(o, scale=BUILDING_SCALE)
 
 
-def model_sweet_shop(on_pitch=True):
+def model_sweet_shop(on_pitch=True, number=3):
     """The sweet shop (halwai): a small lime-washed kiosk with a pink band and a red signboard; in front of it, in the open, a counter
     with big steel thaals of rasgulla in syrup and a pyramid of atta laddoo; beside it the bhatti, a clay stove with its iron kadhai
     of milk."""
     o = []
     if on_pitch:
-        pitch_base(o, 3)
+        pitch_base(o, number)
     z0 = 0.02 if on_pitch else 0.0
     w, d, h = 0.20, 0.08, 0.15
     cy = 0.055
@@ -3896,6 +3908,18 @@ for _n in (1, 2, 3):
     SPRITES["pitch_empty_%d" % _n] = (lambda n=_n: (lambda: model_pitch_empty(n)))()
 SPRITES["veg_shed"] = model_veg_shed
 SPRITES["veg_cart_e"] = lambda: refit(model_veg_cart(on_pitch=False), 90)
+
+# The game's shops (spec 017 §3.4, layout D approved 2026-11-05): each shop on each of the square's pitches with that pitch's number,
+# facing as the pitch does (I and II to the camera's left face, III to its right); on your own acre the stall shed, the tea counter and
+# the sweet shop without the council's brick pitch.
+PITCH_FACING = {1: 0, 2: 0, 3: 90}
+SHOP_MODELS = {"veg_stall": model_veg_cart, "tea_stall": model_tea_counter, "sweet_shop": model_sweet_shop}
+for _id, _fn in SHOP_MODELS.items():
+    for _n, _deg in PITCH_FACING.items():
+        SPRITES["%s_pitch_%d" % (_id, _n)] = (lambda fn=_fn, n=_n, d=_deg: (lambda: refit(fn(on_pitch=True, number=n), d)))()
+SPRITES["veg_stall_s"] = model_veg_shed
+SPRITES["tea_stall_s"] = lambda: refit(model_tea_counter(on_pitch=False), 0)
+SPRITES["sweet_shop_s"] = lambda: refit(model_sweet_shop(on_pitch=False), 0)
 
 
 def portrait(kind):

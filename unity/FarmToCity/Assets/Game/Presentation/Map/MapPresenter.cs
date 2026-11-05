@@ -469,6 +469,7 @@ namespace Game.Presentation.Map
             RefreshHandHuts(map, animate);
             RefreshHouses(map, animate);
             RefreshBusinesses(map, animate);
+            RefreshPitches(map, animate);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
             RefreshCattleAcre(map, animate);
@@ -677,6 +678,8 @@ namespace Game.Presentation.Map
         private Vector3 WorkPoint(int tile)
         {
             if (_businessTiles.Contains(tile)) return OnTile(tile, BusinessWorkAt[Random.Range(0, BusinessWorkAt.Length)]);
+            Vector3? counter = PitchWork(tile);
+            if (counter.HasValue) return counter.Value;
             float u = Random.Range(-0.3f, 0.3f), v = Random.Range(-0.3f, 0.3f);
             return TileCentre(tile) + new Vector3((u - v) * HalfWidth, -(u + v) * _grid.HalfHeight, 0);
         }

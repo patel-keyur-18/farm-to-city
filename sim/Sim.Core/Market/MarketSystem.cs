@@ -196,7 +196,7 @@ namespace Sim.Core.Market
                 var input = new ClearingInput
                 {
                     Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = MarketRules.Ceiling(sim, g),
-                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + People.HouseholdRules.TownDemandPerDay(sim, g), // spec 014 §3.7
+                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + TownAtMarket(sim, g), // spec 014 §3.7
                     OtherSupplyPerDay = defs.Region.ValleySupplyPerDay(g) + defs.Region.ImportCapacityPerDay(g),
                     Eligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
                     TraderMayTake = !hasMin || m.MinPrice[g] <= floor,
@@ -263,6 +263,13 @@ namespace Sim.Core.Market
             var goods = sim.Config.Game.Market.Goods;
             for (int g = 0; g < goods.Count; g++)
                 if (goods[g].Kind == Definitions.GoodKind.Produce) FollowRegion(sim, g);
+        }
+
+        /// <summary>Your town's buying at the market a day (spec 014 §3.7), less what it bought at your stalls yesterday (spec 017 §3.2).</summary>
+        private static long TownAtMarket(Simulation sim, int g)
+        {
+            long town = People.HouseholdRules.TownDemandPerDay(sim, g);
+            return sim.State.Shops == null ? town : System.Math.Max(0, town - sim.State.Shops.TownYesterday[g]);
         }
     }
 }

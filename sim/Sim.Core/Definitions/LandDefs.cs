@@ -388,6 +388,9 @@ namespace Sim.Core.Definitions
         /// <summary>Whole-acre orchards (spec 013 §3.3), or null in content without them.</summary>
         public OrchardDefs Orchard { get; internal set; }
 
+        /// <summary>Shops and customer choice (spec 017), with businesses that include a shop type; else null.</summary>
+        public ShopDefs Shops { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

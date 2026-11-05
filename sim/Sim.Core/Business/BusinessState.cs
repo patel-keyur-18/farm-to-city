@@ -172,6 +172,31 @@ namespace Sim.Core.Business
         public long[] Mix { get; internal set; }
         public long[] MadeToday { get; internal set; }
 
+        // A shop's own (spec 017; save schema 14). Zero, the reference price and the starting stars for the mill, bakery and dairy.
+
+        /// <summary>The square's pitch it stands on (0-based), or −1 on its own acre (§3.4).</summary>
+        public int Pitch { get; internal set; } = -1;
+
+        /// <summary>Its price as a share of the reference (§3.1): 1 is the reference, 0.9 ten percent below.</summary>
+        public Fixed PriceFactor { get; internal set; } = Fixed.One;
+
+        /// <summary>1 standard, 2 good (§3.5; US-121 lets you choose).</summary>
+        public int Quality { get; internal set; } = 1;
+        public Fixed Stars { get; internal set; } = Fixed.FromRatio(5, 2);
+
+        /// <summary>What a stall puts out a day, grams by good (§5 <c>SetStallGoods</c>): taken at 6:00 up to that much.</summary>
+        public long[] PutOut { get; internal set; }
+
+        /// <summary>Last hour's customers and what it could serve (cups or grams), for the queue this hour (§3.3).</summary>
+        public long LastArrivals { get; internal set; }
+        public long LastCapacity { get; internal set; }
+
+        /// <summary>Today's customers who chose it and those it served (cups or grams), and this season's.</summary>
+        public long CustomersToday { get; internal set; }
+        public long ServedToday { get; internal set; }
+        public long SeasonCustomers { get; internal set; }
+        public long SeasonServed { get; internal set; }
+
         internal Business Clone()
         {
             var c = (Business)MemberwiseClone();
@@ -180,6 +205,7 @@ namespace Sim.Core.Business
             c.StockCost = (long[])StockCost.Clone();
             c.Mix = (long[])Mix.Clone();
             c.MadeToday = (long[])MadeToday.Clone();
+            c.PutOut = (long[])PutOut.Clone();
             c.Plan = Plan.Clone();
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
             return c;
@@ -223,6 +249,13 @@ namespace Sim.Core.Business
                 h.WriteLong(Mix[i]);
                 h.WriteLong(MadeToday[i]);
             }
+            if (h is SaveWriter s14 && s14.Schema < 14) return;
+            h.WriteInt(Pitch);
+            h.WriteFixed(PriceFactor);
+            h.WriteInt(Quality);
+            h.WriteFixed(Stars);
+            for (int i = 0; i < PutOut.Length; i++) h.WriteLong(PutOut[i]);
+            foreach (long v in new[] { LastArrivals, LastCapacity, CustomersToday, ServedToday, SeasonCustomers, SeasonServed }) h.WriteLong(v);
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -240,6 +273,7 @@ namespace Sim.Core.Business
             b.StockCost = new long[goods];
             b.Mix = new long[goods];
             b.MadeToday = new long[goods];
+            b.PutOut = new long[goods];
             for (int i = 0; i < n; i++)
             {
                 int at = r.Slot(ContentTable.Good, i);
@@ -263,6 +297,18 @@ namespace Sim.Core.Business
                     b.Mix[at] = r.ReadLong();
                     b.MadeToday[at] = r.ReadLong();
                 }
+            if (r.Schema < 14) return b; // schema 13: no shops yet, the mill and the rest at the reference and the starting stars
+            b.Pitch = r.ReadInt();
+            b.PriceFactor = r.ReadFixed();
+            b.Quality = r.ReadInt();
+            b.Stars = r.ReadFixed();
+            for (int i = 0; i < n; i++) b.PutOut[r.Slot(ContentTable.Good, i)] = r.ReadLong();
+            b.LastArrivals = r.ReadLong();
+            b.LastCapacity = r.ReadLong();
+            b.CustomersToday = r.ReadLong();
+            b.ServedToday = r.ReadLong();
+            b.SeasonCustomers = r.ReadLong();
+            b.SeasonServed = r.ReadLong();
             return b;
         }
     }
@@ -276,8 +322,11 @@ namespace Sim.Core.Business
 
         public Business Find(long id) { return Businesses.Find(b => b.Id == id); }
 
-        /// <summary>The business standing on a tile (building or open), or null.</summary>
-        public Business On(int tileId) { return Businesses.Find(b => b.TileId == tileId && b.Status != BusinessStatus.Closed); }
+        /// <summary>The business standing on a tile (building or open), or null. A shop on a pitch in the square isn't on its acre.</summary>
+        public Business On(int tileId) { return Businesses.Find(b => b.TileId == tileId && b.Pitch < 0 && b.Status != BusinessStatus.Closed); }
+
+        /// <summary>Your shop on the square's pitch (building or open), or null.</summary>
+        public Business OnPitch(int pitch) { return Businesses.Find(b => b.Pitch == pitch && b.Status != BusinessStatus.Closed); }
 
         internal BusinessesState Clone()
         {

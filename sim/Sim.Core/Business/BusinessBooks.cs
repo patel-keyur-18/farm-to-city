@@ -133,6 +133,8 @@ namespace Sim.Core.Business
             b.SeasonOpeningCash = b.Ledger.Cash;
             b.AreaSeason = 0;
             b.OwnSeason = 0;
+            b.SeasonCustomers = 0;
+            b.SeasonServed = 0;
         }
 
         // ---- the overdraft (§3.8, §3.10) ----
@@ -140,7 +142,7 @@ namespace Sim.Core.Business
         /// <summary>The overdraft's limit: <c>overdraftLimit</c> × a season's running costs at its settings and today's prices, to 100 coins.</summary>
         public static long OverdraftLimit(Simulation sim, Business b)
         {
-            BusinessRules.Projection p = BusinessRules.Projected(sim, BusinessRules.TypeOf(sim, b), b.Worker == WorkerKind.Founder, b.OwnPerDay, b.Fee);
+            BusinessRules.Projection p = BusinessRules.Projected(sim, BusinessRules.TypeOf(sim, b), b.Worker == WorkerKind.Founder, b.OwnPerDay, b.Fee, 0, null, b.Pitch, b.TileId);
             long limit = Money.MulRate(p.Costs - p.Depreciation, BusinessRules.Defs(sim).OverdraftLimit);
             return limit - limit % (100 * Money.Coin);
         }
@@ -257,7 +259,7 @@ namespace Sim.Core.Business
                 sim.State.Ledger.Post(now, sim.Period, "ledger.businessLost", reference, new Posting(Account.LossOnAssetSales, lost), new Posting(Account.InvestmentInBusinesses, -lost));
 
             b.Status = BusinessStatus.Closed;
-            Land.LandSystem.SetOccupied(sim, b.TileId, false);
+            if (b.Pitch < 0) Land.LandSystem.SetOccupied(sim, b.TileId, false); // a pitch in the square is the village's
             sim.Emit(new BusinessClosed(now, b.Id, t.Id, toYou, guaranteed));
         }
     }

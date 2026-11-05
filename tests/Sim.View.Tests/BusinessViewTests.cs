@@ -55,11 +55,12 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             Assert.That(MenuSheet.Build(ctx).Lines.Select(l => l.Label), Does.Contain("Businesses"));
             SheetVm list = BusinessesSheet.Build(ctx);
-            var buttons = list.Lines.First(l => l.Buttons != null).Buttons;
+            var buttons = list.Lines.Where(l => l.Buttons != null).SelectMany(l => l.Buttons).ToList();
+            Assert.That(list.Lines.Where(l => l.Buttons != null).Select(l => l.Buttons.Count), Is.EqualTo(new[] { 3, 3 }), "three to a row");
             ActionVm start = buttons[0];
             Assert.That((start.Label, start.Enabled), Is.EqualTo(("Start a flour mill", true)));
             Assert.That(buttons.Skip(1).Select(b => (b.Label, b.Enabled, b.DisabledReason)),
-                Is.EqualTo(new[] { ("Start a bakery", false, "Comes with the Village"), ("Start a dairy", false, "Comes with the Village") }), "Village businesses greyed until then");
+                Is.EqualTo(new[] { ("Start a bakery", false, "Comes with the Village"), ("Start a dairy", false, "Comes with the Village"), ("Start a vegetable stall", false, "Comes with the Village"), ("Start a tea stall", false, "Comes with the Village"), ("Start a sweet shop", false, "Comes with the Village") }), "Village businesses and shops greyed until then");
             Assert.That(list.Lines.Any(l => l.Label == "None yet"), Is.True);
 
             SheetVm research = BusinessResearchSheet.Build(ctx, 0);

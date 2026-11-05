@@ -31,6 +31,13 @@ namespace Game.Presentation.Art
             if (goodId == "sign") return SpriteBank.Sign;
             if (goodId == "hand_hut" || goodId == "hand_hut_building" || goodId == "granary") return SpriteBank.Rendered(goodId) ?? Basket; // granary: your godown in town (ADR 0087)
             if (goodId == "family_house" || goodId == "family_house_building" || goodId == "flour_mill" || goodId == "flour_mill_building" || goodId == "bakery" || goodId == "bakery_building" || goodId == "dairy" || goodId == "dairy_building") return SpriteBank.Rendered(goodId + "_s") ?? Basket;
+            if (goodId == "veg_stall" || goodId == "tea_stall" || goodId == "sweet_shop") return SpriteBank.Rendered(goodId + "_s") ?? Basket; // shops (spec 017)
+            if (goodId.EndsWith("_building", System.StringComparison.Ordinal) && (goodId.StartsWith("veg_stall", System.StringComparison.Ordinal) || goodId.StartsWith("tea_stall", System.StringComparison.Ordinal)
+                || goodId.StartsWith("sweet_shop", System.StringComparison.Ordinal))) return SpriteBank.Rendered(goodId.Substring(0, goodId.Length - 9) + "_s") ?? Basket;
+            if (goodId == "pitch") return SpriteBank.Rendered("pitch_empty_1") ?? Basket;
+            if (goodId == "field") return SpriteBank.SoilTile;
+            if (goodId == "place_halwai") return SpriteBank.Rendered("sweet_shop_s") ?? Basket; // the town's halwai, off the map (spec 017)
+            if (goodId.StartsWith("place_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId) ?? Basket; // the village's grocer and tea stall
             if (goodId.StartsWith("portrait_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId) ?? Basket;
             if (goodId.StartsWith("person_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId + "_front") ?? Basket;
             if (goodId.StartsWith("seed_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_seed");

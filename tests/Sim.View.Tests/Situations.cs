@@ -250,6 +250,25 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>
+        /// The dairy's town with three shops (spec 017): a tea stall and a vegetable stall on the square's pitches, a sweet shop on an
+        /// acre, all hired, a day of customers gone by.
+        /// </summary>
+        public static Simulation Shops()
+        {
+            Simulation sim = Dairy();
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("potato")] += 500_000;
+            Ok(sim, new FoundBusiness(T(sim), "tea_stall", 0, 100_000_00, false, null, 0));
+            Hire(sim);
+            Ok(sim, new FoundBusiness(T(sim), "veg_stall", 0, 100_000_00, false, null, 1));
+            Hire(sim);
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "sweet_shop", tile, 200_000_00, false));
+            Hire(sim);
+            sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 12 * 3600);
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -260,6 +279,7 @@ namespace Sim.View.Tests
             yield return Mill();
             yield return Bakery();
             yield return Dairy();
+            yield return Shops();
             yield return Board();
             yield return Irrigated();
             yield return Equipped();
