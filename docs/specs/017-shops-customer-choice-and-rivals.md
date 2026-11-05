@@ -44,7 +44,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | Tea stall (chai stall) | Village | A counter, stove and benches (12,000, 20 seasons) | 1 tea maker | Cups of chai (milk 0.06 L, tea and sugar 1.50 coins) and a snack (rusk or pav, 0.05 kg) | Up to 300 cups a real hour |
 | Sweet shop (halwai) | Village | A shop with a kadhai, a burner, a glass counter (25,000 building, 40 seasons; 20,000 equipment, 20 seasons) | 1 halwai (crafting skill, spec 015) | Two sweets made in batches: **rasgulla** (paneer 0.5 kg + sugar 0.5 kg → 1 kg) and **atta laddoo** (atta 0.45 kg + ghee 0.20 kg + sugar 0.35 kg → 1 kg); sweets keep 4 days (`spoilagePerDay` 0.15) | Up to 25 kg a real hour |
 
-**As built (ADR 0091 §1, §2):** the tea stall takes your herd's milk first at the 6:00 milking (co-op price), then neighbours' at the co-op's + 2, and its snack from your bakery or the market; the vegetable stall sells pav, paneer and curd (not atta) from your bakery and dairy. A shop's leftovers stay on it for the next day, spoiling at their rate.
+**As built (ADR 0091 §1, §2):** the tea stall takes your herd's milk first at the 6:00 milking (co-op price), then neighbours' at the co-op's + 2, and its snack from your bakery or the market; the vegetable stall sells pav, paneer and curd (not atta) from your bakery and dairy. A shop's leftovers stay on it for the next day, spoiling at their rate. A stall that opens, or is first staffed, after the 6:00 round takes its stock that hour (neighbours' milk for the tea stall), once a day, so it never stands empty till the next morning (owner, 2026-11-05).
 
 Each shop sets its **price** (a few presets round the reference, as the mill's fee: the reference, 10% below, 10% or 20% above), its **quality** (§3.5: standard or good), its **hours** and, for the stall, which goods to put out; the sweet shop also sets its daily batch of each sweet (made in the morning, as the bakery bakes). Its paneer, ghee and atta come from your dairy and mill at today's market price (an internal sale, spec 016 §3.2) or from the market at the import price, and sugar is bought as `sweet_supplies`. Its books, funding, worker, overdraft and closing are spec 016's.
 
@@ -98,7 +98,7 @@ share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 
 ### 3.6 The mill and the next village's chakki
 
-**As built (ADR 0091 §3, owner 2026-11-05):** the mill's distance runs from the middle of your land (your houses, or your yard before them), the chakki 1.5 km from there; at its fee about 90–95% of the area grinds with you.
+**As built (ADR 0091 §3, owner 2026-11-05):** the mill's distance runs from the middle of your land (your houses, or your yard before them), the chakki 1.5 km from there; at its fee about 90–95% of the area grinds with you, so the catchment rises to 375 people (spec 016 §3.5(b)).
 
 Spec 016 §3.5(b)'s rule (a fee more than 1 above the next village's loses all the area's grain) becomes customer choice between your mill and the chakki: the chakki at its fee, 3 stars, good quality, distance: the area's people walk 1.5 km to it (−1.5 at wDistance 0.10 per 100 m, floor 0.05); yours at your fee, quality, stars and distance from the square. At equal fees almost all the area grinds with you (as now); every coin above takes a share away instead of all of it.
 

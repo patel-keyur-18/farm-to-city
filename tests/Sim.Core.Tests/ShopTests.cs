@@ -79,6 +79,27 @@ namespace Sim.Core.Tests
             Assert.That(one.Ledger.Reconcile(), Is.Null);
         }
 
+        // ADR 0091 §4 (owner, 2026-11-05): a stall that opens after the 6:00 round takes its milk and snacks that hour, once, instead of
+        // standing empty till the next morning.
+        [Test]
+        public void FirstDay()
+        {
+            Simulation sim = Start();
+            sim.AdvanceTo(NextDayAt(sim, 1));
+            Business.Business b = Shop(sim, "tea_stall", 0);
+            Assert.That(b.ReadyAt % 86_400, Is.GreaterThan(6 * 3600L), "it opens after the morning round");
+            int rusk = sim.Config.Game.Market.IndexOf("rusk");
+            sim.AdvanceTo((b.ReadyAt / 3600 + 1) * 3600 + 1);
+            Assert.That(ShopRules.Milk(sim, b), Is.GreaterThan(0), "neighbours' milk the hour it opens");
+            Assert.That(b.Stock[rusk], Is.GreaterThan(0), "and its snacks");
+            Assert.That(b.StockedDay, Is.EqualTo(sim.State.Clock.SimTime / 86_400));
+            long milk = ShopRules.Milk(sim, b);
+            sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
+            Assert.That(b.ServedToday, Is.GreaterThan(0), "it served the same day");
+            Assert.That(ShopRules.Milk(sim, b), Is.LessThan(milk), "once a day: no more bought that afternoon");
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
         // AC-2: a stall that runs out of a good serves no more of it that hour; the rest of its share goes to the grocer, none lost.
         [Test]
         public void StockOut()

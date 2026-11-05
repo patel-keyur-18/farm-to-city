@@ -496,6 +496,8 @@ namespace Sim.Core.Business
                     if (b.Status == BusinessStatus.Open && TypeOf(sim, b).ByRecipe) System.Array.Clear(b.MadeToday, 0, b.MadeToday.Length);
                 if (sim.State.Shops != null) took = ShopRules.Stock(sim);
             }
+            else if (sim.State.Shops != null && MarketRules.HourOfDay(sim) > (sim.Config.Game.Market.Truck?.ArriveHour ?? 6))
+                ShopRules.FirstStock(sim, sim.State.Clock.SimTime / Day); // a stall that missed the morning round
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
@@ -923,7 +925,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Neighbours' milk to fill the day's amount (§3.9b), at the co-op's price and the premium, as far as its cash goes.</summary>
-        private static void Neighbours(Simulation sim, Business b, long ml)
+        internal static void Neighbours(Simulation sim, Business b, long ml)
         {
             BusinessTypeDef t = TypeOf(sim, b);
             int good = sim.Config.Game.Market.IndexOf("milk_" + sim.Config.Game.Livestock.Animals[NeighbourMilkKind(sim)].Id);

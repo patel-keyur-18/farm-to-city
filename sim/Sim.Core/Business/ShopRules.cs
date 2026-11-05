@@ -555,17 +555,42 @@ namespace Sim.Core.Business
                 if (b.Status != BusinessStatus.Open || !Stocked(t)) continue;
                 foreach (int g in t.Goods) if (b.Stock[g] > 0) BusinessRules.Spoil(sim, b, g, sim.Config.Game.Market.Goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong());
                 if (!BusinessRules.Staffed(sim, b)) continue; // nobody to take it out today
-                foreach (int g in t.Goods)
-                {
-                    long need = b.PutOut[g] - b.Stock[g];
-                    if (need <= 0) continue;
-                    if (VegShare(sim, g) > Fixed.Zero) need -= FromStore(sim, b, g, need);
-                    else need -= FromYours(sim, b, g, need, took);
-                    if (need > 0 && b.BuyFromMarket && VegShare(sim, g) == Fixed.Zero) FromMarket(sim, b, g, need);
-                }
-                BusinessBooks.Sweep(sim, b);
+                Fill(sim, b, took);
             }
             return took;
+        }
+
+        /// <summary>
+        /// A stall's first stock on a day it missed the 6:00 round (it opened, or someone first came to work it, later that day: ADR 0091
+        /// §4, owner 2026-11-05): its goods by the morning's rules and, for the tea stall, neighbours' milk up to its milk a day (your
+        /// herd's went to the co-op at 6:00). Before 6:00, or once it has shut for the day, it waits for the morning round.
+        /// </summary>
+        internal static void FirstStock(Simulation sim, long day)
+        {
+            int hour = MarketRules.HourOfDay(sim);
+            foreach (Business b in sim.State.Businesses.Businesses)
+            {
+                BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+                if (b.Status != BusinessStatus.Open || !Stocked(t) || b.StockedDay == day || hour >= b.CloseHour || !BusinessRules.Staffed(sim, b)) continue;
+                if (t.TakesMilk && b.BuyFromMarket && b.OwnPerDay > Milk(sim, b)) BusinessRules.Neighbours(sim, b, b.OwnPerDay - Milk(sim, b));
+                Fill(sim, b, new long[sim.Config.Game.Market.Goods.Count]);
+            }
+        }
+
+        /// <summary>Fills each of a stall's goods up to its amount a day: produce from your store, products from yours, else the market's.</summary>
+        private static void Fill(Simulation sim, Business b, long[] took)
+        {
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            foreach (int g in t.Goods)
+            {
+                long need = b.PutOut[g] - b.Stock[g];
+                if (need <= 0) continue;
+                if (VegShare(sim, g) > Fixed.Zero) need -= FromStore(sim, b, g, need);
+                else need -= FromYours(sim, b, g, need, took);
+                if (need > 0 && b.BuyFromMarket && VegShare(sim, g) == Fixed.Zero) FromMarket(sim, b, g, need);
+            }
+            BusinessBooks.Sweep(sim, b);
+            b.StockedDay = sim.State.Clock.SimTime / Day;
         }
 
         /// <summary>Produce from your store at today's market price (the trader's, as spec 016's own wheat): Cr the farm's sales, Dr the stall's stock.</summary>

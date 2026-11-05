@@ -33,6 +33,7 @@ Coding US-120 turned up three gaps in spec 017. They were settled with the owner
    - **Sweets:** a person's sweets are shared evenly between rasgulla and atta laddoo. Their sugar is the recipes' `supplies` in coins, not a good of its own; the tea and sugar for chai are the cup's `supplies`.
    - **Snacks:** half of all cups (`snackShare` 0.5) are sold with a 50 g snack at the snack's price.
    - **Leftovers:** what a stall hasn't sold stays on the stall for the next day, spoiling at its rate; the morning only tops it up to the day's amount. The spec had it go back to the store.
+   - **A new stall's first day** (owner, 2026-11-05, from the Editor tour): a stall gets its goods at the 6:00 round, so one opened at 14:00 stood "Open now" with no milk till the next morning. Now a stall that opens, or is first staffed, after 6:00 and before it shuts takes its stock that hour, once a day, by the morning's rules; the tea stall buys neighbours' milk up to its milk a day (your herd's went to the co-op at 6:00). `Business.StockedDay` in schema 14. The dairy and the bakery still start at the next 6:00.
    - **Prices:** a shop's price is one of four presets: the reference, 10% below, 10% or 20% above (`pricePresets`).
    - **The town's buying:** what your town buys at your stalls yesterday comes off its buying at the local market today.
    - **Not yet:** quality and stars stay at standard and 2.5 until US-121. Newcomers and the rivals' 5% price cut come with US-122. Customers are drawn at a pitch shop's counter while it serves.
