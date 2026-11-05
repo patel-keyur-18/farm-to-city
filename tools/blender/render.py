@@ -3682,6 +3682,222 @@ for _f, _deg in FACINGS.items():
     SPRITES["bakery_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("building"), d)))()
 
 
+# ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
+# Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
+
+PITCH_W, PITCH_D = 0.26, 0.20
+
+
+def pitch_base(o, number=1):
+    """A council pitch in the square: a low brick chabutra with a plastered top and its number painted on a small post."""
+    o.append(box("pitchBrick", (PITCH_W, PITCH_D, 0.018), (0, 0, 0.009), toon("brick", BRICK), bevel=0.003))
+    o.append(box("pitchTop", (PITCH_W - 0.014, PITCH_D - 0.014, 0.004), (0, 0, 0.02), toon("pitchPlaster", 0xE3D3B4), outline=False))
+    px, py = PITCH_W / 2 - 0.012, -PITCH_D / 2 + 0.012
+    o.append(box("pitchPost", (0.008, 0.008, 0.05), (px, py, 0.045), toon("wood_dark", WOOD_DARK)))
+    o.append(box("pitchPlate", (0.028, 0.004, 0.022), (px, py - 0.006, 0.066), toon("pitchPlate", 0xF7F4EC)))
+    for i in range(number):
+        o.append(box("pitchNo%d" % i, (0.003, 0.002, 0.012), (px - 0.006 + i * 0.006, py - 0.009, 0.066), toon("pitchInk", 0x2E6FBA), outline=False))
+
+
+def model_pitch_empty(number):
+    o = []
+    pitch_base(o, number)
+    return group(o, scale=BUILDING_SCALE)
+
+
+def veg_heaps(o, x0, y0, z, w, d, seed):
+    """Heaps of vegetables on a sloping board: tomatoes, onions, potatoes, okra, cauliflower, greens and lemons."""
+    rnd = __import__("random").Random(seed)
+    kinds = [("tomato", 0xD8402F, 0.011), ("onion", 0x9C4A7A, 0.011), ("potato", 0xB98A55, 0.012), ("okra", 0x5E9A34, 0.008),
+             ("cauli", 0xF4EFD9, 0.015), ("greens", 0x3F8F3A, 0.012), ("lemon", 0xF2D43C, 0.008), ("chilli", 0x2F7A2A, 0.007)]
+    cols, rows = 4, 2
+    for k, (name, hexv, r) in enumerate(kinds):
+        cx = x0 - w / 2 + w * (k % cols + 0.5) / cols
+        cy = y0 - d / 2 + d * (k // cols + 0.5) / rows
+        mat = toon("veg" + name, hexv)
+        n = 6 if r < 0.012 else 3
+        for i in range(n):
+            a = rnd.random() * math.tau
+            rr = rnd.random() * w / cols * 0.28
+            zz = z + r + (0.004 if i < 3 else r * 1.3)
+            o.append(sphere("%s%d" % (name, i), r, (cx + math.cos(a) * rr, cy + math.sin(a) * rr, zz), mat,
+                            scale=(1, 1, 0.8), segs=8, rings=5, outline=(i == 0)))
+
+
+def model_veg_cart(on_pitch=True):
+    """The sabzi stall: a wooden handcart on four spoked wheels, heaped with vegetables on a sloping board, a brass scale hanging
+    from its bamboo, a big faded umbrella over it; a plastic crate of spare stock under the cart."""
+    o = []
+    if on_pitch:
+        pitch_base(o, 1)
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    z0 = 0.02 if on_pitch else 0.0
+    L, W, H = 0.17, 0.09, 0.07
+    o.append(box("cartBed", (L, W, 0.012), (0, 0, z0 + H), wood, bevel=0.002))
+    o.append(box("cartRim", (L + 0.006, W + 0.006, 0.008), (0, 0, z0 + H + 0.010), dark, outline=False))
+    for i, x in enumerate((-L / 2 + 0.03, L / 2 - 0.03)):
+        for s in (-1, 1):
+            o.append(cylinder("wheel%d%d" % (i, s), 0.022, 0.022, 0.006, (x, s * (W / 2 + 0.006), z0 + 0.022), toon("wheel", 0x3A3A3A),
+                              segs=14, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+            o.append(cylinder("hub%d%d" % (i, s), 0.007, 0.007, 0.008, (x, s * (W / 2 + 0.008), z0 + 0.022), toon("hub", 0xC9CDD2),
+                              segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    o.append(box("axle", (0.006, W + 0.01, 0.006), (0, 0, z0 + 0.03), dark, outline=False))
+    for s in (-1, 1):
+        o.append(box("handle%d" % s, (0.06, 0.006, 0.006), (L / 2 + 0.03, s * 0.03, z0 + H + 0.004), dark))
+    veg_heaps(o, 0.0, 0.0, z0 + H + 0.008, L - 0.02, W - 0.01, 7)
+    o.append(box("crate", (0.07, 0.05, 0.035), (-0.02, 0.0, z0 + 0.0175), toon("crate", 0x2E6FBA), bevel=0.003))
+    # The umbrella: a bamboo pole from the cart, an eight-panel canopy in two faded colours.
+    bam = toon("bamboo", BAMBOO)
+    ux, uy = -L / 2 + 0.005, W / 2 - 0.005                # the pole at the cart's back corner: the vegetables stay in sight
+    o.append(cylinder("umbrellaPole", 0.004, 0.004, 0.22, (ux, uy, z0 + H + 0.11), bam, segs=6))
+    top = z0 + H + 0.22
+    a_mat, b_mat = toon("umbrellaA", 0x2F6FB0), toon("umbrellaB", 0xF2EAD8)
+    R, drop = 0.11, 0.04
+    for i in range(8):
+        a0, a1 = i * math.tau / 8, (i + 1) * math.tau / 8
+        cx, cy = ux + 0.02, uy + 0.02
+        o.append(poly_mesh("umb%d" % i, [(cx, cy, top), (cx + R * math.cos(a0), cy + R * math.sin(a0), top - drop),
+                                         (cx + R * math.cos(a1), cy + R * math.sin(a1), top - drop)], [(0, 1, 2)], a_mat if i % 2 else b_mat))
+    # The scale: a brass pan pair on a cord from the pole.
+    brass = toon("brass", 0xD9A93C)
+    o.append(box("scaleBeam", (0.04, 0.003, 0.003), (ux + 0.02, uy - 0.004, z0 + H + 0.10), dark, outline=False))
+    for x in (ux + 0.002, ux + 0.038):
+        o.append(cylinder("scalePan%d" % (x > ux + 0.02), 0.009, 0.006, 0.004, (x, uy - 0.004, z0 + H + 0.07), brass, segs=10))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_veg_shed():
+    """The stall shed on your own acre: a tin lean-to on four posts at the back, a plank table of vegetable heaps in front of it
+    under the open sky, baskets and the board."""
+    o = []
+    yard_pad(o, 0.40, 0.24, -0.08)
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    w, d, h = 0.26, 0.10, 0.16
+    sy = 0.08                                      # the shed's centre, at the back
+    o.append(box("shedPlinth", (w + 0.02, d + 0.02, 0.02), (0, sy, 0.01), toon("plinth", PLINTH), bevel=0.004))
+    basket = toon("basket", 0xC9A86A)
+    for i, x in enumerate((-0.08, 0.0, 0.08)):
+        o.append(cylinder("basket%d" % i, 0.032, 0.026, 0.03, (x, sy + 0.01, 0.035), basket, segs=12))
+    for x in (-w / 2, w / 2):
+        for y, hh in ((sy - d / 2, h), (sy + d / 2, h + 0.03)):
+            o.append(box("post%d%d" % (x > 0, y > sy), (0.012, 0.012, hh), (x, y, hh / 2), dark))
+    o.append(box("roof", (w + 0.05, d + 0.05, 0.01), (0, sy, h + 0.02), toon("tin", TIN), rot=Matrix.Rotation(math.radians(-14), 3, "X")))
+    for i in range(7):
+        o.append(box("rib%d" % i, (0.004, d + 0.05, 0.003), (-w / 2 - 0.015 + i * 0.048, sy, h + 0.027), toon("tinRib", TIN_RIB),
+                     rot=Matrix.Rotation(math.radians(-14), 3, "X"), outline=False))
+    o.append(box("sign", (0.16, 0.008, 0.035), (0, sy - d / 2 - 0.006, h - 0.015), toon("vegSign", 0x3F9A5A)))
+    # The table in front, in the open: planks on trestles, the heaps on it.
+    ty = -0.05
+    o.append(box("table", (0.24, 0.08, 0.012), (0, ty, 0.06), wood, bevel=0.002))
+    for x in (-0.10, 0.10):
+        o.append(box("trestle%d" % (x > 0), (0.01, 0.07, 0.055), (x, ty, 0.0275), dark, outline=False))
+    veg_heaps(o, 0.0, ty, 0.066, 0.22, 0.07, 11)
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+def model_tea_counter(on_pitch=True):
+    """Your tea stall: a blue tarpaulin on bamboo poles over a bench at the back; in front of it, in the open, a blue-painted wooden
+    counter with a pot of chai and a kettle on a gas stove, glass jars of rusk and small glasses; a water drum; two benches for
+    the customers."""
+    o = []
+    if on_pitch:
+        pitch_base(o, 2)
+    z0 = 0.02 if on_pitch else 0.0
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    bam = toon("bamboo", BAMBOO)
+    # The tarp: high at the back, over the tea maker's corner, ending before the counter.
+    for x in (-0.11, 0.11):
+        o.append(cylinder("poleB%d" % (x > 0), 0.004, 0.004, 0.19, (x, 0.085, z0 + 0.095), bam, segs=6))
+        o.append(cylinder("poleF%d" % (x > 0), 0.004, 0.004, 0.16, (x, 0.03, z0 + 0.08), bam, segs=6))
+    o.append(poly_mesh("tarp", [(-0.125, 0.095, z0 + 0.19), (0.125, 0.095, z0 + 0.19), (0.125, 0.02, z0 + 0.16),
+                                (-0.125, 0.02, z0 + 0.16)], [(0, 1, 2, 3)], toon("tarp", 0x2F6FB0)))
+    o.append(cylinder("drum", 0.022, 0.022, 0.05, (-0.09, 0.06, z0 + 0.025), toon("drum", 0x2E6FBA), segs=12, smooth=True))
+    o.append(cylinder("gas", 0.014, 0.014, 0.055, (0.08, 0.06, z0 + 0.0275), toon("gasRed", 0xC2412D), segs=12, smooth=True))
+    # The counter, in front of the tarp.
+    cy = -0.01
+    o.append(box("counter", (0.16, 0.055, 0.065), (0, cy, z0 + 0.0325), toon("teaBlue", 0x3E7C8C), bevel=0.003))
+    o.append(box("counterTop", (0.17, 0.062, 0.008), (0, cy, z0 + 0.069), wood, outline=False))
+    o.append(box("board", (0.12, 0.004, 0.024), (0, cy - 0.029, z0 + 0.04), toon("teaBoard", 0xF2C94C), outline=False))
+    o.append(box("stove", (0.05, 0.04, 0.012), (0.045, cy, z0 + 0.079), toon("iron", 0x4A4A4A)))
+    o.append(cylinder("patila", 0.02, 0.018, 0.022, (0.045, cy, z0 + 0.096), toon("alu", 0xD5D9DD), segs=14, smooth=True))
+    o.append(cylinder("chai", 0.018, 0.018, 0.003, (0.045, cy, z0 + 0.106), toon("chai", 0xB07A45), segs=14, outline=False))
+    o.append(sphere("kettle", 0.014, (0.01, cy + 0.012, z0 + 0.087), toon("alu", 0xD5D9DD), scale=(1, 1, 0.8), segs=10, rings=6))
+    glass, rusk = toon("jarGlass", 0xD7ECEE), toon("rusk", 0xD9A35A)
+    for i, x in enumerate((-0.065, -0.04)):
+        o.append(cylinder("jar%d" % i, 0.011, 0.011, 0.03, (x, cy + 0.01, z0 + 0.088), glass, segs=10))
+        o.append(cylinder("jarIn%d" % i, 0.0095, 0.0095, 0.018, (x, cy + 0.01, z0 + 0.083), rusk, segs=10, outline=False))
+    for i in range(4):
+        o.append(cylinder("glass%d" % i, 0.0045, 0.004, 0.012, (-0.014 + (i % 2) * 0.01, cy - 0.012 + (i // 2) * 0.01, z0 + 0.079),
+                          glass, segs=8))
+    # Two benches in front.
+    for i, (x, y) in enumerate(((-0.05, -0.075), (0.065, -0.082))):
+        o.append(box("bench%d" % i, (0.09, 0.025, 0.008), (x, y, z0 + 0.03), dark))
+        for sgn in (-1, 1):
+            o.append(box("benchLeg%d%d" % (i, sgn), (0.006, 0.02, 0.026), (x + sgn * 0.038, y, z0 + 0.013), dark, outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_sweet_shop(on_pitch=True):
+    """The sweet shop (halwai): a small lime-washed kiosk with a pink band and a red signboard; in front of it, in the open, a counter
+    with big steel thaals of rasgulla in syrup and a pyramid of atta laddoo; beside it the bhatti, a clay stove with its iron kadhai
+    of milk."""
+    o = []
+    if on_pitch:
+        pitch_base(o, 3)
+    z0 = 0.02 if on_pitch else 0.0
+    w, d, h = 0.20, 0.08, 0.15
+    cy = 0.055
+    lime, band = toon("sweetLime", 0xF6EEE2), toon("sweetPink", 0xD9637A)
+    o.append(box("back", (w, 0.016, h), (0, cy + d / 2 - 0.008, z0 + h / 2), lime))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.016, d, h), (sx * (w / 2 - 0.008), cy, z0 + h / 2), lime))
+    o.append(box("inside", (w - 0.03, 0.006, h - 0.03), (0, cy + d / 2 - 0.018, z0 + (h - 0.03) / 2), toon("shopDark", 0x4A3424), outline=False))
+    o.append(box("band", (w + 0.004, d + 0.004, 0.02), (0, cy, z0 + h - 0.01), band, outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.03, 0.01), (0, cy, z0 + h + 0.005), toon("limeShade", LIME_SHADE)))
+    o.append(box("sign", (0.17, 0.008, 0.035), (0, cy - d / 2 - 0.012, z0 + h + 0.02), toon("sweetSign", 0xC23B32)))
+    o.append(box("signText", (0.12, 0.009, 0.008), (0, cy - d / 2 - 0.013, z0 + h + 0.02), toon("sweetGold", 0xF2C94C), outline=False))
+    for i in range(6):                           # a short striped awning over the doorway
+        x0 = -w / 2 + i * w / 6
+        o.append(poly_mesh("awn%d" % i, [(x0, cy - d / 2, z0 + h - 0.02), (x0 + w / 6, cy - d / 2, z0 + h - 0.02),
+                                         (x0 + w / 6, cy - d / 2 - 0.03, z0 + h - 0.04), (x0, cy - d / 2 - 0.03, z0 + h - 0.04)],
+                           [(0, 1, 2, 3)], band if i % 2 else toon("awnWhite", 0xF7F4EC)))
+    # The counter in front, its sweets in open thaals on top.
+    case_y = -0.04
+    o.append(box("case", (0.17, 0.05, 0.05), (0.02, case_y, z0 + 0.025), toon("caseWood", 0x7A4A2A), bevel=0.002))
+    o.append(box("caseGlass", (0.15, 0.004, 0.03), (0.02, case_y - 0.026, z0 + 0.028), toon("caseGlass", 0xD7ECEE), outline=False))
+    steel, white, syrup = toon("steel", 0xC9CDD2), toon("rasgulla", 0xFBF7EC), toon("syrup", 0xEFD9A0)
+    for i, x in enumerate((-0.035, 0.012)):
+        o.append(cylinder("thaal%d" % i, 0.021, 0.018, 0.008, (x, case_y, z0 + 0.054), steel, segs=16))
+        o.append(cylinder("syrup%d" % i, 0.019, 0.019, 0.002, (x, case_y, z0 + 0.058), syrup, segs=16, outline=False))
+        for j in range(5):
+            a = j * math.tau / 5 + 0.3
+            o.append(sphere("ras%d%d" % (i, j), 0.0072, (x + math.cos(a) * 0.009, case_y + math.sin(a) * 0.009, z0 + 0.063), white,
+                            segs=8, rings=5, outline=(j == 0)))
+    laddoo = toon("laddoo", 0xE0A040)
+    lx = 0.065
+    o.append(cylinder("tray", 0.022, 0.022, 0.004, (lx, case_y, z0 + 0.052), steel, segs=16))
+    for k, (dx, dy, dz) in enumerate(((-0.011, -0.006, 0), (0.0, -0.011, 0), (0.011, -0.006, 0), (-0.008, 0.007, 0), (0.008, 0.007, 0),
+                                      (-0.005, -0.003, 0.012), (0.006, -0.003, 0.012), (0.0, 0.004, 0.012), (0.0, 0.0, 0.023))):
+        o.append(sphere("laddoo%d" % k, 0.0072, (lx + dx, case_y + dy, z0 + 0.061 + dz), laddoo, segs=8, rings=5, outline=(k == 8)))
+    # The bhatti and its kadhai, out front on the left.
+    bx, by = -0.10, -0.05
+    o.append(cylinder("bhatti", 0.028, 0.032, 0.038, (bx, by, z0 + 0.019), toon("clay", 0xB4572E), segs=12))
+    o.append(cylinder("kadhai", 0.032, 0.019, 0.015, (bx, by, z0 + 0.045), toon("kadhai", 0x3A3A3A), segs=16, smooth=True))
+    o.append(cylinder("milk", 0.028, 0.028, 0.003, (bx, by, z0 + 0.051), toon("milkTop", 0xFBF6E9), segs=16, outline=False))
+    o.append(box("fire", (0.018, 0.004, 0.012), (bx, by - 0.031, z0 + 0.012), toon("fire", 0xF2873A), outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["pitch_veg_%s" % _f] = (lambda d=_deg: (lambda: refit(model_veg_cart(), d)))()
+    SPRITES["pitch_tea_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tea_counter(), d)))()
+    SPRITES["pitch_sweet_%s" % _f] = (lambda d=_deg: (lambda: refit(model_sweet_shop(), d)))()
+for _n in (1, 2, 3):
+    SPRITES["pitch_empty_%d" % _n] = (lambda n=_n: (lambda: model_pitch_empty(n)))()
+SPRITES["veg_shed"] = model_veg_shed
+SPRITES["veg_cart_e"] = lambda: refit(model_veg_cart(on_pitch=False), 90)
+
+
 def portrait(kind):
     """A card portrait: the villager from the shoulders up, framed as an icon."""
     objs = model_person(kind, "front")
