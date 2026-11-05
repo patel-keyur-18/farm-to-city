@@ -1,6 +1,6 @@
 # 0090. Orchards as built: shade, the Hamlet, the intercrop, and a batch picked in parts or sold on the trees
 
-- Status: Accepted (owner, 2026-11-05: §1–§4; §5 with US-129's review)
+- Status: Accepted (owner, 2026-11-05: §1–§4; §5 with US-129's review, approved the same day)
 - Date: 2026-11-05
 - Deciders: Keyur Patel
 - Amends: spec 013 §3.3, §4, §5, §7, §8 (AC-6, AC-13)

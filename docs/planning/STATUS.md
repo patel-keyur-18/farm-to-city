@@ -205,7 +205,7 @@
 
 ## In progress
 
-**Sprint 16, US-129 done (2026-11-05, waiting for the owner's review): orchard acres** (spec 013 §3.3 as amended by ADR 0090; the light layout approved 2026-11-05).
+**Sprint 16, US-129 done (2026-11-05, approved by the owner): orchard acres** (spec 013 §3.3 as amended by ADR 0090; the light layout approved 2026-11-05).
 - Sim: `orchard` in `farming.json` (from the Hamlet; mango 40, guava 100, banana and papaya 400 trees an acre; labour young and bearing; the trees' moisture band; radish, methi, amaranth, lentils and peas between young rows at `intercropShare` 0.5; `contractorShare` 0.7). `OrchardState` (one orchard an acre) as schema 14's last section; `OrchardRules` (where it may go, the intercrop, shade on the fields beside, a batch from the averaged Water, Care and Weather, what can be picked today, the contractor's price, spent and cleared write-offs, sold or seized with the land at book). Commands `PlantOrchard`, `PickOrchard` (what the store and the trader take; the rest waits on the trees), `SellOrchardOnTrees` (Dr Cash, Cr 4010; `SoldTo.Contractor`), `ClearOrchard`; rejects `NoOrchard`, `TreesBearing`, `NotAnIntercrop`. Hands with an order on the field and labourers pick what can go each hour; *Collect all* picks what fits; a ripe batch 12 h from spoiling is an alert; away, it raises the fruit-is-ripe notification. Machines, houses, businesses and the second shed keep off orchard acres.
 - Screens: the field card's *Plant an orchard* (greyed "Comes once you're a Hamlet" before), the plant sheet (four trees, trees · seasons · bears in, price, *Why?*), the orchard's field card (young: bears in, the next batch so far, shade note, cost, earned, payback, *Sow between the rows*; ripe: ripe fruit, fruit waiting, you can pick today, the contractor's offer, *Pick what can go today*, *Sell it all on the trees* or *Sell the rest on the trees* once some is picked, *Clear the orchard* asked first), the sow sheet between rows (short crops only, half the harvest and the hours), seven *Why?* sheets; the map: the approved grid of trees in their stage, the crop between young rows under them, a ripe or spoiling marker beside the field's own.
 - Tests: `OrchardTests.Bearing_Intercrop` (AC-6, AC-13), `Place_Clear`, `Sold_With_The_Land`, `ChunkingInvariance`; `OrchardViewTests.FieldCard`; `MigrationTests.Schema13_Farm` (no orchards in a schema-13 save; one planted round-trips); `saves/schema14` re-pinned. 438 + 132 pass. `FarmPlayTests.Advance72h_WithPeople` (20 ms limit) fails now and then on this Mac, on the last commit without US-129 too (18–21.5 ms both ways); it passed in the final run.
@@ -302,8 +302,7 @@
 
 ## Next up
 
-1. **The owner reviews US-129** (ADR 0090 §5's choices).
-2. **Sprint 16: US-120's art** (the handcart, tea stall, sweet shop and pitches), previewed to the owner first, then US-120 and US-121.
+1. **Sprint 16: US-120's art** (the handcart, tea stall, sweet shop and pitches), previewed to the owner first, then US-120 and US-121.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -346,7 +345,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done, waiting for review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
