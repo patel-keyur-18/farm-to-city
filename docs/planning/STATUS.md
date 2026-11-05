@@ -205,7 +205,7 @@
 
 ## In progress
 
-**Sprint 16, US-121 done (2026-11-05, for the owner's review): stars and quality** (spec 017 §3.5, AC-3, as amended by ADR 0092; its three gaps closed with the owner first).
+**Sprint 16, US-121 done (2026-11-05, approved by the owner): stars and quality** (spec 017 §3.5, AC-3, as amended by ADR 0092; its three gaps closed with the owner first).
 - Content: `good` on each shop type (the tea stall's 0.08 L and +1.20 a cup; the sweet shop's +8% and fresh; the vegetable stall's fresh); `reputation` in `shops.json` (served 2, standard 1, good 1.5, value 1 gone at 30% above, a tenth a day, one shut day forgiven).
 - Sim: the day scored at midnight for your shops and the mill (`ShopRules.Rate`, `DayScore`, `ValuePart`, `ServedShare`); a shut day forgiven once, then scored as serving nobody; good quality's milk, supplies and recipe cost; good stalls and sweet shops clear yesterday's leftovers at 6:00; `SetShop` carries the quality (the tea stall's milk a day scaled to the same cups); the mill counts what came to it and what it ground. Save schema 14 gains `OpenToday` and `ShutDays`.
 - Screens: Stars on the card's Today (shops and the mill) and its *Why?* (today's score part by part, how a night moves the stars); Quality in Settings with its *Why?*; a cup's milk in ml. Fixed in the presenter: a row's note wrapped narrower than its value and spilled into the next row (the text column now fills the row).
@@ -318,7 +318,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner's review of US-121**, then the balance step with the bots (spec 013 §9, spec 017 §9: the shop bots, the shops' targets, the mango glut).
+1. **Sprint 16: the balance step** with the bots (spec 013 §9, spec 017 §9: the shop bots, the shops' targets, the mango glut).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -361,7 +361,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done, for review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
