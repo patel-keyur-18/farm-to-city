@@ -56,6 +56,9 @@ namespace Sim.View.Views
             // The garden and trees.
             { "bedTime", BedTime }, { "gardenSeason", GardenSeason }, { "gardenCrop", GardenCrop }, { "treeMatures", TreeMatures }, { "payback", Payback },
             { "sapling", Sapling },
+            // Orchards (spec 013 §3.3, ADR 0090).
+            { "orchardBears", OrchardBears }, { "orchardBatch", OrchardBatch }, { "orchardSpoils", OrchardSpoils }, { "orchardToday", OrchardToday },
+            { "orchardContractor", OrchardContractor }, { "orchardPayback", OrchardPayback }, { "orchardPlant", OrchardPlant },
             // Money and the market (specs 004, 005).
             { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },

@@ -127,7 +127,9 @@ namespace Sim.View.Views
             Fixed rate = FounderRules.LabourRate(sim);
             Fixed free = rate - FarmRules.LabourDemand(sim);
             vm.FreeHoursText = ctx.Strings.Get("sow.freeHours", "free", Hours(free < Fixed.Zero ? Fixed.Zero : free), "total", Hours(rate));
-            vm.NoteText = ctx.Strings.Get("sow.note");
+            Orchard orchard = OrchardRules.Of(sim, tileId);
+            vm.NoteText = orchard == null ? ctx.Strings.Get("sow.note") // between young rows: the short crops only, at the share (ADR 0090 §3)
+                : ctx.Strings.Get("orchard.sowNote", "tree", ctx.Strings.Get(defs.Farm.Trees[orchard.Def].NameKey), "share", ctx.Fmt.Percent(OrchardRules.Defs(sim).IntercropShare));
             vm.FertiliserHeading = ctx.Strings.Get("sow.fertiliserHeading");
             foreach (FertiliserDef f in defs.Farm.Fertilisers)
                 vm.Fertilisers.Add(new FertiliserVm { Id = f.Id, Name = ctx.Strings.Get("fertiliser." + f.Id), EffectText = Effect(ctx, f), Selected = f.Id == fertiliserId });
@@ -140,6 +142,7 @@ namespace Sim.View.Views
                 CropDef c = defs.Farm.Crops[ci];
                 if (c.Fodder && !Sim.Core.Livestock.LivestockRules.Unlocked(sim)) continue; // fodder comes with cattle (spec 012 §3.8b)
                 if (!c.SowSeasons[(int)season]) continue; // other seasons' crops are on the crop calendar (spec 020 §3.6, G22)
+                if (OrchardRules.MaySow(sim, tileId, ci) != RejectReason.None) continue;
                 string name = ctx.Strings.Get(c.NameKey);
                 Fixed water = FarmRules.WaterFactor(defs.Farm.Farm, c, tile.Moisture);
                 Suits suits = water >= Fixed.One ? Suits.Good : water >= Fixed.Parse("0.85") ? Suits.Fair : Suits.Poor;
@@ -171,7 +174,7 @@ namespace Sim.View.Views
                     Get = get, GetText = ctx.Strings.Get("sow.get", "amount", ctx.Fmt.Coins(get)),
                     Profit = profit, ProfitText = ctx.Strings.Get(profit >= 0 ? "sow.profit" : "sow.loss", "amount", ctx.Fmt.Coins(System.Math.Abs(profit))),
                     InputsText = inputs,
-                    LabourText = ctx.Strings.Get("sow.labour", "hours", Hours(c.LabourPerAcrePerDay + BucketHours(ctx, tile))),
+                    LabourText = ctx.Strings.Get("sow.labour", "hours", Hours(c.LabourPerAcrePerDay * OrchardRules.CropShare(sim, tileId) + BucketHours(ctx, tile))),
                     SoilText = ctx.Strings.Get("sow.soil", "before", ctx.Fmt.Decimal1(tile.Fertility), "after", ctx.Fmt.Decimal1(after)),
                     SoilFalls = after < tile.Fertility && ctx.Fmt.Decimal1(after) != ctx.Fmt.Decimal1(tile.Fertility), // amber only for a fall the player can see
                     CostText = buy == 0 ? ctx.Strings.Get("sow.fromStore") : ctx.Strings.Get("sow.buys", "cost", ctx.Fmt.Coins(buy)),

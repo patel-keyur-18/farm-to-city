@@ -78,6 +78,9 @@ namespace Sim.Core
         /// <summary>Machines (spec 013 §3.2), or null in content without the equipment ladder.</summary>
         public Sim.Core.Equipment.EquipmentState Equipment { get; internal set; }
 
+        /// <summary>Whole-acre orchards (spec 013 §3.3), or null in content without them.</summary>
+        public Sim.Core.Farm.OrchardState Orchards { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -120,6 +123,8 @@ namespace Sim.Core
             if (Irrigation != null && !(h is SaveWriter iw && iw.Schema < 14)) Irrigation.WriteTo(h);
             // Spec 013 §3.2 (schema 14), last: content without machines hashes as before.
             if (Equipment != null && !(h is SaveWriter ew && ew.Schema < 14)) Equipment.WriteTo(h);
+            // Spec 013 §3.3 (schema 14), last: content without orchards hashes as before.
+            if (Orchards != null && !(h is SaveWriter ow && ow.Schema < 14)) Orchards.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -169,6 +174,7 @@ namespace Sim.Core
             if (g.Equipment != null) // schema 13: hand tools
                 s.Equipment = r.Schema >= 14 ? Sim.Core.Equipment.EquipmentState.ReadFrom(r, g.Equipment.Machines.Count)
                     : new Sim.Core.Equipment.EquipmentState { HiredUntil = new long[g.Equipment.Machines.Count] };
+            if (g.Orchard != null) s.Orchards = r.Schema >= 14 ? Sim.Core.Farm.OrchardState.ReadFrom(r) : new Sim.Core.Farm.OrchardState(); // schema 13: none
             return s;
         }
 
@@ -205,6 +211,7 @@ namespace Sim.Core
                 Godown = Godown?.Clone(),
                 Irrigation = Irrigation?.Clone(),
                 Equipment = Equipment?.Clone(),
+                Orchards = Orchards?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

@@ -182,7 +182,7 @@ namespace Sim.Core.Tests
         }
 
         // Spec 013 AC-9 (ADR 0087): a schema-13 save loads into 14 with rain-fed acres and the well's buckets, no godown and no warehouse
-        // space, as its own replay base, installs a pump and digs a channel, buys a godown, and round-trips.
+        // space and no orchards, as its own replay base, installs a pump and digs a channel, buys a godown, plants an orchard, and round-trips.
         [Test]
         public void Schema13_Farm()
         {
@@ -195,6 +195,7 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Land.Buildings.Any(b => b.TileId < 0), Is.False, "no godown");
             Assert.That(r.State.Irrigation.PumpAcres.Concat(r.State.Irrigation.BorewellAcres), Is.Empty, "rain-fed and the well's buckets");
             Assert.That(r.State.Equipment.Machines, Is.Empty, "hand tools");
+            Assert.That(r.State.Orchards.Orchards, Is.Empty, "no orchards (ADR 0090)");
             Assert.That(r.State.CommandLog.Base, Is.Not.Null, "its own replay base: a schema-13 history may predate ADR 0085's drying");
             Assert.That(SaveCodec.Replay(r, config).State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "and replays from it");
 
@@ -224,6 +225,9 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
             for (int i = 0; i < 3; i++) Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, "cow")).Accepted, Is.True);
             Assert.That(sim.Execute(new BuyMachine(sim.State.Clock.SimTime, "ox_plough")).Accepted, Is.True, "its bullocks into the second shed");
+            int orchard = sim.State.Farm.Crops.Select(c => c.TileId).Where(i => i != 85 && i != 86 && i != second && sim.Config.Game.Map.Parcels[sim.State.Land.Tiles[i].ParcelId].Id != "home_a").Max();
+            Assert.That(sim.Execute(new ClearField(sim.State.Clock.SimTime, orchard)).Accepted, Is.True);
+            Assert.That(sim.Execute(new PlantOrchard(sim.State.Clock.SimTime, orchard, "mango")).Accepted, Is.True);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
@@ -233,6 +237,7 @@ namespace Sim.Core.Tests
             Assert.That(Livestock.LivestockRules.SecondShed(Simulation.FromState(config, again.State)).TileId, Is.EqualTo(second), "the second shed, built");
             Assert.That(again.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0, 1, 1, 1 }));
             Assert.That(again.State.Equipment.Machines.Single().Kind, Is.EqualTo(config.Game.Equipment.IndexOf("ox_plough")));
+            Assert.That(again.State.Orchards.Orchards.Single().TileId, Is.EqualTo(orchard), "the orchard, planted");
         }
 
         // Spec 019 AC-16: the schema-11 fixture loads into 12 with an empty sales record and the season's first entry found, is its own

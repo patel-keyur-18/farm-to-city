@@ -139,6 +139,9 @@ namespace Sim.Core.Saves
                     case FruitRipe f:
                         if (!HandWillTake(events, i, OrderTargetKind.Tree, f.SlotId)) items.Add(new AbsenceItem(at, NotifyKind.FruitRipe, f.TreeId));
                         break;
+                    case OrchardRipe r: // an orchard's batch, like a tree's (ADR 0090)
+                        if (!HandWillTake(events, i, OrderTargetKind.Field, r.TileId)) items.Add(new AbsenceItem(at, NotifyKind.FruitRipe, r.Tree));
+                        break;
                     case OrdersPosted p:
                         var goods = new List<string>();
                         foreach (Market.SupermarketOrder so in p.Orders) goods.Add(sim.Config.Game.Market.Goods[so.Good].Id);

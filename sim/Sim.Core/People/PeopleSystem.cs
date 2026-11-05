@@ -113,6 +113,13 @@ namespace Sim.Core.People
                 if (c.State != CropState.Ready || s.OrderFor(OrderTargetKind.Field, c.TileId) != null) continue;
                 if (new Harvest(t, c.TileId, Overflow.SellRestToTrader).ApplyNow(sim).Accepted) sim.Emit(new LabourersHarvested(t, c.TileId, c.HarvestGrams));
             }
+            if (sim.State.Orchards != null)
+                foreach (Orchard o in sim.State.Orchards.Orchards.ToArray()) // and pick a ripe orchard with no hand's order (spec 013 §3.3)
+                {
+                    if (o.RipeGrams == 0 || s.OrderFor(OrderTargetKind.Field, o.TileId) != null) continue;
+                    long grams = o.RipeGrams;
+                    if (new PickOrchard(t, o.TileId, Overflow.SellRestToTrader).ApplyNow(sim).Accepted) sim.Emit(new LabourersHarvested(t, o.TileId, grams - o.RipeGrams));
+                }
             if (!done) return;
             FarmSystem.Accrue(sim);
             int count = 0;

@@ -88,6 +88,14 @@ namespace Sim.View.Views
                 if (tree.RipeGrams > 0 && left > 0 && left <= warn)
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.fruitSpoiling", "tree", s.Get(sim.Config.Game.Farm.Trees[tree.Def].NameKey), "time", ctx.Fmt.Duration(left)), Action = ActionVm.Checked(ctx, "pick:" + slot, s.Get("action.pick"), null, ActionKind.Primary, at => new PickFruit(at, slot, Overflow.StoreOnly)) });
             }
+            if (sim.State.Orchards != null) // an orchard's batch: open its sheet to pick or sell on the trees (ADR 0090 §4)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                {
+                    long left = o.RipeAt + grace - t;
+                    if (o.RipeGrams == 0 || left <= 0 || left > warn) continue;
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.orchardSpoiling", "tree", s.Get(sim.Config.Game.Farm.Trees[o.Def].NameKey),
+                        "field", PeopleWords.Field(ctx, o.TileId), "time", ctx.Fmt.Duration(left)), Action = ActionVm.Open("orchard:" + o.TileId, s.Get("action.see"), new SheetRequest("Tile", o.TileId)) });
+                }
             long used = Store.UsedGrams(sim), cap = Store.CapacityGrams(sim);
             if (cap > 0 && used * 100 >= cap * ctx.Ui.StoreNearlyFullPercent)
                 list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.storeFull"), Action = ActionVm.Open("store", s.Get("action.open"), new SheetRequest("Store", 0)) });
@@ -168,6 +176,7 @@ namespace Sim.View.Views
                 if (c is Harvest h) rest.Commands.Add(new Harvest(at, h.TileId, Overflow.SellRestToTrader));
                 else if (c is PickGarden p) rest.Commands.Add(new PickGarden(at, p.BedId, Overflow.SellRestToTrader));
                 else if (c is PickFruit f) rest.Commands.Add(new PickFruit(at, f.SlotId, Overflow.SellRestToTrader));
+                else if (c is PickOrchard o) rest.Commands.Add(new PickOrchard(at, o.TileId, Overflow.SellRestToTrader));
             }
             // Exact: run them on a copy of the town and read what the trader paid and how much was sold.
             Simulation copy = Simulation.FromState(sim.Config, sim.State.Clone(withCommandLog: false));
@@ -232,7 +241,7 @@ namespace Sim.View.Views
             {
                 switch (e)
                 {
-                    case CropReady _: case BedReady _: case FruitRipe _: becameReady++; break;
+                    case CropReady _: case BedReady _: case FruitRipe _: case OrchardRipe _: becameReady++; break;
                     case AwayAdvanceCompleted a: applied = a.AppliedSeconds; capped = a.Capped; break;
                     case MarketSales m:
                         long local = MarketRules.Value(sim, sim.Config.Game.Market.IndexOf(m.GoodId), m.LocalQuantity, m.Price);
@@ -456,6 +465,8 @@ namespace Sim.View.Views
             // Spec 013 §3.1.
             { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.
+            { "OrchardPlanted", Use.Motion }, { "OrchardBearing", Use.Motion }, { "OrchardRipe", Use.Motion }, { "OrchardPicked", Use.Motion },
+            { "OrchardSoldOnTrees", Use.Motion }, { "OrchardGone", Use.StateOnly },
             { "MachineBought", Use.Motion }, { "MachineLeased", Use.Motion }, { "MachineHired", Use.Motion }, { "MachineSold", Use.Motion }, { "MachineReturned", Use.Away },
             { "MachineBroke", Use.Alert }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
             { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },

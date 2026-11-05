@@ -170,7 +170,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Where trees go:**
   - yard slots around the house (about 4, with more for bigger houses)
   - field-edge slots (about 2 per acre), which don't take field area but slightly shade the next crop
-  - whole-acre orchards come in Phase 2 (spec 013, ADR 0075): mango 40 trees an acre, guava 100, banana and papaya 400, with a short crop between young trees at half yield until they bear
+  - whole-acre orchards come in Phase 2 with the Hamlet (spec 013, ADR 0075, ADR 0090): mango 40 trees an acre, guava 100, banana and papaya 400, with a short crop between young trees at half yield until they bear; a bearing orchard shades the fields beside it; a ripe batch is more than a day's store and truck, so you pick what can go today and the rest waits on the trees, or sell it on the trees to a fruit contractor at 70% of the trader's price
 - **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
 - **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 

@@ -33,6 +33,18 @@
     "breakdownMaintained": 0.005, "breakdownSkipped": 0.04, "repairShare": 0.05, "resaleShare": 0.8,
     "workFromHour": 7, "workToHour": 19, "parkTile": 167
   },
+  "orchard": {
+    "unlockEra": "hamlet",
+    "intercropShare": 0.5,
+    "contractorShare": 0.7,
+    "intercrops": ["radish", "methi", "amaranth", "lentils", "peas"],
+    "trees": [
+      { "tree": "mango",  "treesPerAcre": 40,  "labourYoung": 1.0, "labourBearing": 2.0, "moistureMin": 25, "moistureMax": 70 },
+      { "tree": "guava",  "treesPerAcre": 100, "labourYoung": 1.0, "labourBearing": 2.5, "moistureMin": 25, "moistureMax": 75 },
+      { "tree": "banana", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 50, "moistureMax": 85 },
+      { "tree": "papaya", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 40, "moistureMax": 70 }
+    ]
+  },
   "pests": {
     "baseRisk": { "radish": 0.03, "wheat": 0.06, "rice": 0.10, "potato": 0.10, "lentils": 0.05, "berseem": 0, "sorghum": 0, "methi": 0.03, "amaranth": 0.03, "okra": 0.08, "peas": 0.05, "maize": 0.06, "mustard": 0.06 },
     "monocultureStep": 0.5,

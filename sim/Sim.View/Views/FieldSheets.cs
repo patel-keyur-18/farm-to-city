@@ -40,6 +40,7 @@ namespace Sim.View.Views
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
+            Orchard orchard = OrchardRules.Of(sim, tileId);
             vm.Title = ctx.Strings.Get("field.title", "soil", soil);
             vm.Subtitle = ctx.Strings.Get(parcel.Protected ? "field.inherited" : "field.bought");
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Decimal1(tile.Fertility) + " / 100", "fertility", tileId));
@@ -48,10 +49,20 @@ namespace Sim.View.Views
             IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
             EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
 
+            if (crop == null && orchard != null)
+            {
+                // An orchard (ADR 0090): a short crop between young rows only.
+                OrchardSheet.AddRows(ctx, vm, orchard, null);
+                AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
+                if (orchard.State == TreeState.Growing) vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("orchard.sowBetween"), new SheetRequest("Sow", tileId)));
+                OrchardSheet.AddActions(ctx, vm, orchard);
+                return vm;
+            }
             if (crop == null)
             {
                 AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
+                if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
                 if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
@@ -103,8 +114,10 @@ namespace Sim.View.Views
                     vm.Actions.Add(ActionVm.Checked(ctx, "harvestSell", ctx.Strings.Get("action.harvestSell"), null, ActionKind.Secondary,
                         at => new Harvest(at, tileId, Overflow.SellRestToTrader)));
             }
+            if (orchard != null) OrchardSheet.AddRows(ctx, vm, orchard, vm.Title); // the crop between the rows under the orchard's title
             AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
-            vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get("action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
+            if (orchard != null) OrchardSheet.AddActions(ctx, vm, orchard);
+            vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get(orchard != null ? "orchard.clearCrop" : "action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
             return vm;
         }
 

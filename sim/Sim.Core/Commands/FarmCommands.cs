@@ -37,6 +37,8 @@ namespace Sim.Core.Commands
             if (c < 0) return CommandResult.Reject(RejectReason.UnknownCrop);
             CropDef crop = defs.Farm.Crops[c];
             if (crop.Fodder && !Livestock.LivestockRules.Unlocked(sim)) return CommandResult.Reject(RejectReason.EraLocked); // with cattle, from the Hamlet
+            RejectReason between = OrchardRules.MaySow(sim, TileId, c); // a short crop between a young orchard's rows only (spec 013 §3.3)
+            if (between != RejectReason.None) return CommandResult.Reject(between);
             if (!crop.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return CommandResult.Reject(RejectReason.OutOfSeason);
             int f = defs.Farm.IndexOfFertiliser(FertiliserId);
             if (f < 0) return CommandResult.Reject(RejectReason.UnknownFertiliser);

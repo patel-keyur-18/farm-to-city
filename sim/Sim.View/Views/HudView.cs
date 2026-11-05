@@ -107,6 +107,7 @@ namespace Sim.View.Views
             foreach (Crop c in sim.State.Farm.Crops) if (c.State == CropState.Ready) n++;
             foreach (GardenBed b in sim.State.Farm.Beds) if (b.State == BedState.Ready) n++;
             foreach (Tree t in sim.State.Farm.Trees) if (t.RipeGrams > 0) n++;
+            if (sim.State.Orchards != null) foreach (Orchard o in sim.State.Orchards.Orchards) if (o.RipeGrams > 0) n++;
             return n;
         }
 
@@ -121,6 +122,9 @@ namespace Sim.View.Views
                 if (b.State == BedState.Ready) items.Add(new KeyValuePair<long, Command>(b.ReadyAt + grace, new PickGarden(at, b.Id, Overflow.StoreOnly)));
             foreach (Tree t in sim.State.Farm.Trees)
                 if (t.RipeGrams > 0) items.Add(new KeyValuePair<long, Command>(t.RipeAt + grace, new PickFruit(at, t.SlotId, Overflow.StoreOnly)));
+            if (sim.State.Orchards != null) // what fits the store; the rest waits on the trees (ADR 0090 §4)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                    if (o.RipeGrams > 0) items.Add(new KeyValuePair<long, Command>(o.RipeAt + grace, new PickOrchard(at, o.TileId, Overflow.StoreOnly)));
             // A stable sort: List.Sort isn't stable, so order by the deadline and the position in the list.
             var order = new List<int>();
             for (int i = 0; i < items.Count; i++) order.Add(i);

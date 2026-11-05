@@ -167,6 +167,13 @@ namespace Sim.Core.Commands
         UnknownMachine,
         NoShedRoom,
         PartOfMachine,
+
+        // Spec 013 §3.3 (orchards, ADR 0090)
+        NoOrchard,
+        /// <summary>The orchard's trees bear: no crop between the rows now.</summary>
+        TreesBearing,
+        /// <summary>Only a short crop grows between a young orchard's rows.</summary>
+        NotAnIntercrop,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

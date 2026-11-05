@@ -48,6 +48,7 @@ namespace Sim.Content
             // Irrigation comes with a pump in the buildings (spec 013 §3.1), after the eras it unlocks with.
             if (buildings.Exists(b => b.Id == "pump")) game.Irrigation = LoadIrrigation(read("farming.json"), buildings, map, onboarding);
             if (livestock != null) game.Equipment = LoadEquipment(read("farming.json"), livestock, map, onboarding);
+            if (livestock != null) game.Orchard = LoadOrchard(read("farming.json"), farm, onboarding); // with the Phase 2 content, like the machines
             return game;
         }
 

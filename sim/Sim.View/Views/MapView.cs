@@ -152,6 +152,16 @@ namespace Sim.View.Views
         public TreeStage Stage { get; internal set; }
     }
 
+    /// <summary>A whole-acre orchard (spec 013 §3.3, ADR 0090): its tree and stage, drawn as a grid of trees over the acre.</summary>
+    public sealed class OrchardVm
+    {
+        public int TileId { get; internal set; }
+        public string TreeId { get; internal set; }
+
+        /// <summary>Sapling, Young, Mature, Ripe or Spoiling, as an edge tree's.</summary>
+        public TreeStage Stage { get; internal set; }
+    }
+
     public sealed class BedVm
     {
         public long Id { get; internal set; }
@@ -280,6 +290,7 @@ namespace Sim.View.Views
         public int Height { get; internal set; }
         public List<TileVm> Tiles { get; } = new List<TileVm>();
         public List<SlotVm> Slots { get; } = new List<SlotVm>();
+        public List<OrchardVm> Orchards { get; } = new List<OrchardVm>();
         public List<BedVm> Beds { get; } = new List<BedVm>();
         public List<BuildingVm> Buildings { get; } = new List<BuildingVm>();
         public List<ConstructionVm> Constructions { get; } = new List<ConstructionVm>();
@@ -438,6 +449,14 @@ namespace Sim.View.Views
                 }
                 map.Slots.Add(vm);
             }
+            if (sim.State.Orchards != null)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                {
+                    TreeDef def = defs.Farm.Trees[o.Def];
+                    map.Orchards.Add(new OrchardVm { TileId = o.TileId, TreeId = def.Id,
+                        Stage = o.State == TreeState.Growing ? (now - o.PlantedAt < def.GrowthSeconds / 2 ? TreeStage.Sapling : TreeStage.Young)
+                            : o.RipeGrams > 0 ? (now > o.RipeAt + grace ? TreeStage.Spoiling : TreeStage.Ripe) : TreeStage.Mature });
+                }
 
             foreach (GardenBed b in sim.State.Farm.Beds)
             {

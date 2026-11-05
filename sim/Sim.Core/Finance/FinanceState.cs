@@ -63,6 +63,9 @@ namespace Sim.Core.Finance
 
         /// <summary>Produce seized and sold at a foreclosure (ADR 0038).</summary>
         Lender = 6,
+
+        /// <summary>An orchard's batch sold on the trees to a fruit contractor (ADR 0090 §4).</summary>
+        Contractor = 7,
     }
 
     /// <summary>One good's sales to one buyer in a season, at its gross value (before the mandi's commission).</summary>

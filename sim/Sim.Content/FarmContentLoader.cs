@@ -92,7 +92,7 @@ namespace Sim.Content
         {
             const string root = "farming";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "farm", "fertilisers", "pests", "irrigation", "equipment"); // irrigation, equipment: their own loaders, after the eras
+            OnlyFields(o, root, "farm", "fertilisers", "pests", "irrigation", "equipment", "orchard"); // irrigation, equipment, orchard: their own loaders, after the eras
             string fp = root + ".farm";
             JObject f = Object(Required(o, root, "farm"), fp);
             OnlyFields(f, fp, "yieldCap", "careCap", "toolsFactor", "weatherYieldFactor", "waterDryFloor", "waterWetFloor",
@@ -407,6 +407,56 @@ namespace Sim.Content
             if (e.WorkToHour <= e.WorkFromHour) throw new ContentException(Join(p, "workToHour"), "must be after workFromHour");
             if (e.BreakdownSkipped < e.BreakdownMaintained) throw new ContentException(Join(p, "breakdownSkipped"), "skipping maintenance never lowers the chance");
             return e;
+        }
+
+        /// <summary>Whole-acre orchards (spec 013 §3.3, ADR 0090), or null without the <c>orchard</c> block.</summary>
+        internal static OrchardDefs LoadOrchard(string json, FarmDefs farm, OnboardingDefs onboarding)
+        {
+            const string root = "farming";
+            JObject o = Object(Parse(json, root), root);
+            if (o["orchard"] == null) return null;
+            string p = Join(root, "orchard");
+            JObject d = Object(o["orchard"], p);
+            OnlyFields(d, p, "unlockEra", "intercropShare", "contractorShare", "intercrops", "trees");
+            string era = String(Required(d, p, "unlockEra"), Join(p, "unlockEra"));
+            int unlock = 0;
+            if (onboarding != null)
+            {
+                unlock = onboarding.Eras.Count;
+                for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == era) unlock = i;
+                if (unlock == onboarding.Eras.Count) throw new ContentException(Join(p, "unlockEra"), "unknown era '" + era + "'");
+            }
+            var intercrops = new bool[farm.Crops.Count];
+            List<JToken> crops = NonEmptyArray(d, p, "intercrops");
+            for (int i = 0; i < crops.Count; i++)
+            {
+                string cp = Index(Join(p, "intercrops"), i);
+                int c = farm.IndexOfCrop(String(crops[i], cp));
+                if (c < 0) throw new ContentException(cp, "unknown crop");
+                if (farm.Crops[c].Fodder) throw new ContentException(cp, "fodder isn't grown between an orchard's rows");
+                intercrops[c] = true;
+            }
+            var trees = new OrchardTreeDef[farm.Trees.Count];
+            List<JToken> tokens = NonEmptyArray(d, p, "trees");
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                string tp = Index(Join(p, "trees"), i);
+                JObject t = Object(tokens[i], tp);
+                OnlyFields(t, tp, "tree", "treesPerAcre", "labourYoung", "labourBearing", "moistureMin", "moistureMax");
+                int tree = farm.IndexOfTree(String(Required(t, tp, "tree"), Join(tp, "tree")));
+                if (tree < 0) throw new ContentException(Join(tp, "tree"), "unknown tree");
+                if (trees[tree] != null) throw new ContentException(Join(tp, "tree"), "listed twice");
+                var def = new OrchardTreeDef
+                {
+                    TreesPerAcre = BoundedInt(t, tp, "treesPerAcre", 1, 2000),
+                    LabourYoung = Bounded(t, tp, "labourYoung", "0", "24"), LabourBearing = Bounded(t, tp, "labourBearing", "0", "24"),
+                    MoistureMin = Bounded(t, tp, "moistureMin", "1", "99"), MoistureMax = Bounded(t, tp, "moistureMax", "1", "99"),
+                };
+                if (def.MoistureMax <= def.MoistureMin) throw new ContentException(Join(tp, "moistureMax"), "must be above moistureMin");
+                trees[tree] = def;
+            }
+            return new OrchardDefs { UnlockEra = unlock, IntercropShare = Bounded(d, p, "intercropShare", "0", "1"),
+                ContractorShare = Bounded(d, p, "contractorShare", "0", "1"), Intercrops = intercrops, Trees = trees };
         }
 
         /// <summary>A non-empty list of season ids as a bool per season.</summary>

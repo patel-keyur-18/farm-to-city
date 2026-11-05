@@ -385,6 +385,9 @@ namespace Sim.Core.Definitions
         /// <summary>The equipment ladder (spec 013 §3.2), or null in content without it.</summary>
         public EquipmentDefs Equipment { get; internal set; }
 
+        /// <summary>Whole-acre orchards (spec 013 §3.3), or null in content without them.</summary>
+        public OrchardDefs Orchard { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

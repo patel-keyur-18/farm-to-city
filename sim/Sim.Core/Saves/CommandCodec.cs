@@ -40,6 +40,7 @@ namespace Sim.Core.Saves
             InstallPump, SetPumpAcres, SetBorewellAcres, DrillBorewell, BuildChannel, LayDrip,
             BuildSecondShed,
             BuyMachine, LeaseMachine, HireMachine, SellMachine, SetMaintenance,
+            PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -104,6 +105,10 @@ namespace Sim.Core.Saves
                 case HireMachine c: At(c, Tag.HireMachine); w.WriteString(c.KindId); break;
                 case SellMachine c: At(c, Tag.SellMachine); w.WriteLong(c.MachineId); break;
                 case SetMaintenance c: At(c, Tag.SetMaintenance); w.WriteLong(c.MachineId); w.WriteBool(c.On); break;
+                case PlantOrchard c: At(c, Tag.PlantOrchard); w.WriteInt(c.TileId); w.WriteString(c.TreeId); break;
+                case PickOrchard c: At(c, Tag.PickOrchard); w.WriteInt(c.TileId); w.WriteInt((int)c.Overflow); break;
+                case ClearOrchard c: At(c, Tag.ClearOrchard); w.WriteInt(c.TileId); break;
+                case SellOrchardOnTrees c: At(c, Tag.SellOrchardOnTrees); w.WriteInt(c.TileId); break;
                 case BuildFamilyHouse c when c.Financing == null: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
                 case BuildFamilyHouse c:
                     At(c, Tag.BuildFamilyHouseLoan); w.WriteInt(c.TileId);
@@ -285,6 +290,10 @@ namespace Sim.Core.Saves
                 case Tag.HireMachine: return new HireMachine(at, r.ReadString());
                 case Tag.SellMachine: return new SellMachine(at, r.ReadLong());
                 case Tag.SetMaintenance: return new SetMaintenance(at, r.ReadLong(), r.ReadBool());
+                case Tag.PlantOrchard: return new PlantOrchard(at, r.ReadInt(), r.ReadString());
+                case Tag.PickOrchard: return new PickOrchard(at, r.ReadInt(), (Overflow)r.ReadInt());
+                case Tag.ClearOrchard: return new ClearOrchard(at, r.ReadInt());
+                case Tag.SellOrchardOnTrees: return new SellOrchardOnTrees(at, r.ReadInt());
                 case Tag.LetGodown: return new LetGodown(at, r.ReadBool());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());

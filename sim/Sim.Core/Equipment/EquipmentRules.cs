@@ -59,7 +59,7 @@ namespace Sim.Core.Equipment
             {
                 Tile tile = sim.State.Land.Tiles[t];
                 return tile.Terrain == Terrain.Farm && sim.State.Land.Parcels[tile.ParcelId].Owned && t != shed && People.HouseRules.HousesOn(sim, t) == 0
-                    && Business.BusinessRules.On(sim, t) == null;
+                    && Business.BusinessRules.On(sim, t) == null && Farm.OrchardRules.Of(sim, t) == null; // an orchard isn't ploughed (ADR 0090)
             }
             foreach (int t in sim.Config.Game.Land.WellTiles) if (Field(t)) list.Add(t);
             for (int t = 0; t < sim.State.Land.Tiles.Count; t++) if (!list.Contains(t) && Field(t)) list.Add(t);

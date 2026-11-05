@@ -83,7 +83,9 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 
 - Planted with `PlantOrchard(acre, tree)` on an owned acre with nothing growing: the acre becomes an orchard (no field crop, no field-edge slots), its trees capitalised (Dr Trees) and counted in net worth at book value, its shade on neighbours as spec 003's field-edge trees.
 - **Intercropping while young** (§10 G7): until the first fruit, a short crop (radish, methi, amaranth, lentils, peas; spec 020 G18) can grow between the rows at half the acre's yield and half its labour.
-- Fruit per batch = trees × `batchYieldPerTree` (spec 003) × Water × Care × Weather (the same factors as crops); picked by the founder, a hand's orchard order, or labourers at harvest; it waits ripe 72 h then spoils (ADR 0034).
+- Fruit per batch = trees × `batchYieldPerTree` (spec 003) × Water × Care × Weather (the same factors as crops, averaged since the last batch; ADR 0090 §5); it waits ripe 72 h then spoils (ADR 0034).
+- **A batch picked in parts or sold on the trees** (ADR 0090 §4). A batch (3,000–4,800 kg) is more than the store (2,000 kg) and the trader (100–400 kg a day) can take. `PickOrchard` takes what fits the store and what the trader can still take today; the rest waits on the trees. `SellOrchardOnTrees` sells what's left to a fruit contractor at `contractorShare` 0.7 of the trader's price, at any hour. Picked by the founder, a hand's order on the field, or labourers on a field with no order; only the player sells to the contractor.
+- From the Hamlet (ADR 0090 §2); a bearing orchard shades each field beside it as one mature edge tree of its kind (ADR 0090 §1); it goes with its land at book value when the parcel is sold or seized; machines don't work it.
 - Removing an orchard (`ClearOrchard`) writes the trees off (Dr Loss) and frees the acre.
 
 ### 3.4 The granary (§10 G8)
@@ -104,7 +106,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 
 ## 4. Data
 
-**New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; the pump: cost, life, power, `wellPumpAcres` 4; the borewell: cost, life, power, `borewellAcres` 4), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (trees an acre, labour young and bearing, the intercrop share). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor, `warehouseRentPerKgSeason`, the most tonnes to rent, `godownTenantChance`, `godownLetRentPerKgSeason`), `pump`, `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
+**New definitions:** `content/farming.json`: `irrigation` (canal: cost an acre, fee, floor, dry seasons; drip: cost, subsidy share and acres, power, maintenance, life, fertigation bonus, labour cut; the pump: cost, life, power, `wellPumpAcres` 4; the borewell: cost, life, power, `borewellAcres` 4), `equipment` (per machine: era, price, life, lease, hire, upkeep, covers, labour cut, tools factor, cart kg, breakdown chances, repair share, `resaleShare`), `orchard` (the era, trees an acre, labour young and bearing, the trees' moisture band, the intercrops and their share, `contractorShare`). `buildings.json`: `granary` (value, life, capacity, the goods it holds, spoilage factor, `warehouseRentPerKgSeason`, the most tonnes to rent, `godownTenantChance`, `godownLetRentPerKgSeason`), `pump`, `borewell`, `canal_channel`, `drip`. `livestock.json`: `bullock` (price, feed, shed places 1 each, no milk).
 
 **New state** (save schema 14 with spec 017; ADR 0083 and ADR 0084 each moved it up one): per tile, irrigation (none, canal, drip); `Machine` (id, kind, owned or leased, bought at, book value, maintained, broken until); hired days (kind, day); `Orchard` on a tile (tree, trees, planted at, batches, intercrop); the granary's goods (a store place, spec 012's mechanism); the warehouse space rented (tonnes) and its goods; the godown let next season (on or off) and let this season.
 
@@ -119,7 +121,9 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 | `LayDrip` | tile | `NoWaterSource`, `EraLocked`, `InsufficientFunds` | §3.1 |
 | `BuyMachine`, `LeaseMachine`, `HireMachine` | kind (+ financing) | `EraLocked`, `NoShedRoom` (bullocks), `InsufficientFunds`, `CreditRefused` | §3.2 |
 | `SellMachine`, `SetMaintenance` | machine (, on) | `UnknownMachine` | §3.2 |
-| `PlantOrchard`, `ClearOrchard` | tile, tree | `TileOccupied`, `NotOwned`, `InsufficientFunds` | §3.3 |
+| `PlantOrchard`, `ClearOrchard` | tile, tree | `TileOccupied`, `NotOwned`, `NotFarmTile`, `EraLocked`, `UnknownTree`, `NoOrchard`, `InsufficientFunds` | §3.3 |
+| `PickOrchard`, `SellOrchardOnTrees` | tile (, overflow) | `NoOrchard`, `NoRipeFruit`, `StoreFull`, `TraderAway`, `TraderFull` | §3.3 (ADR 0090 §4) |
+| `Sow` on an orchard | tile, crop | `TreesBearing`, `NotAnIntercrop` | §3.3 (ADR 0090 §3) |
 | `BuyGodown` | — | `EraLocked`, `AlreadyBuilt`, `InsufficientFunds` | §3.4 |
 | `LetGodown` | on | `NoGodown` | §3.4 |
 | `RentWarehouse` | tonnes (0 ends it at the close) | `EraLocked`, `InvalidArgument` (over 20 t), `InsufficientFunds`, `StockTooHigh` (less than what is stored) | §3.4 |
@@ -152,6 +156,9 @@ Menu → Equipment:  Ox plough  [Buy 70,000] [Hire a day 900]
                    Tractor    [Buy 6,00,000] [Lease 30,000 a season] [Hire a day 2,000]
                    Yours: Tractor · book 5,70,000 · market 4,56,000 · maintained [Skip] · covers 8 acres [?]
 Field card (empty acre):  [Plant an orchard] → mango 40 trees 14,000 · first fruit in about 24 days [?]
+Field card (orchard):     Banana orchard · 400 trees, fruit is ripe · Ripe fruit on the trees 3,177 kg [?] · Fruit waiting spoils in 2 d 13 h [?]
+                          You can pick today 1,328 kg [?] · A fruit contractor pays 69,310 coins [?] · Cost, Earned so far, Pays for itself [?]
+                          [Pick what can go today · 1,328 kg] [Sell it all on the trees · 69,310 coins] [Clear the orchard]
 Store:  Your godown in the mandi town  [Buy · 45,000] → godown: wheat 3,200 kg · rice 1,100 kg (10,000 kg) [?]
 ```
 
@@ -166,13 +173,14 @@ Store:  Your godown in the mandi town  [Buy · 45,000] → godown: wheat 3,200 k
 | AC-3 | A machine cuts labour and raises Tools on the acres it covers, the best one applying | `EquipmentTests.Coverage` |
 | AC-4 | Skipped maintenance raises breakdowns; a broken machine covers nothing for 24 h and costs its repair | `EquipmentTests.Breakdowns` |
 | AC-5 | A bought machine depreciates straight-line and sells at 80% of book; a lease is a season's rent | `EquipmentTests.Books` |
-| AC-6 | An orchard bears by spec 003's rules on every tree; intercrops grow at half until the first fruit | `OrchardTests.Bearing_Intercrop` |
+| AC-6 | An orchard bears by spec 003's rules on every tree; intercrops grow at half until the first fruit | `OrchardTests.Bearing_Intercrop`, `OrchardTests.Place_Clear`, `OrchardTests.Sold_With_The_Land`, `OrchardTests.ChunkingInvariance`, `OrchardViewTests.FieldCard` (ADR 0090) |
 | AC-7 | The granary takes dry goods first and spoils them at a fifth of the rate | `GranaryTests.Capacity_Spoilage` |
 | AC-8 | Same seed and commands give the same farm, in one chunk or many | `EquipmentTests.ChunkingInvariance` |
 | AC-9 | A schema-13 save loads into 14 with rain-fed acres, hand tools and no granary | `MigrationTests.Schema13_Farm` |
 | AC-10 | From the Village a borewell on an owned acre holds the 4 acres you choose at moisture 40 or more with no bucket labour, its power paid at the close; a fifth acre is refused (`TooManyAcres`); before the Village it's refused (`EraLocked`) | `IrrigationTests.Borewell` (ADR 0086) |
 | AC-11 | Renting books whole tonnes, charges the days left this season and a full season at each close, fills after your own godown and before the hut store, and never shrinks below what is stored | `GranaryTests.Rent` |
 | AC-12 | A godown set to let, empty at the close, is let with the seeded chance for 2,400 paid upfront, takes none of your goods while let, isn't let while it holds your goods, and renews until switched off | `GranaryTests.LetOut` |
+| AC-13 | A ripe batch is picked as far as the store and the trader take today, the rest waiting on the trees; a fruit contractor buys what's left at `contractorShare` of the trader's price; a batch gone counts as a harvest | `OrchardTests.Bearing_Intercrop`, `OrchardViewTests.FieldCard` (ADR 0090 §4) |
 | AC-13 | The ox plough needs 2 free places in the second shed for its bullocks, which come and go with it, give no milk and are fed as cattle; without them it stands; a working cart or tractor-trolley takes a mandi load that fits without the trolley hire (ADR 0088, 0089) | `EquipmentTests.Coverage`, `EquipmentTests.Cart_ToTheMandi` |
 | AC-14 | Menu → Equipment shows what each machine does, Buy (the tractor with a loan), Lease and Hire a day with refusals in words, yours with its state, book and resale value, maintenance and Sell; a field shows what works it; machines are drawn at work by day and the tractor parked on the lane at night | `EquipmentViewTests.Sheet`, `EquipmentViewTests.Yours`, `EquipmentViewTests.Map` |
 

@@ -465,6 +465,7 @@ namespace Game.Presentation.Map
             foreach (SpriteRenderer r in _props) r.color = _tint;
             RefreshIrrigation(map);
             RefreshMachines(map);
+            RefreshOrchards(map, animate);
             RefreshHandHuts(map, animate);
             RefreshHouses(map, animate);
             RefreshBusinesses(map, animate);

@@ -1,5 +1,6 @@
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Land;
 
@@ -84,6 +85,9 @@ namespace Sim.Core.Commands
                 new Posting(Account.Land, -basis),
                 gain >= 0 ? new Posting(Account.GainOnAssetSales, -gain) : new Posting(Account.LossOnAssetSales, -gain));
             price += IrrigationRules.Release(sim, id, sim.Period, "ledger.irrigationSold"); // channels, drip, a borewell: with the land at book value
+            FarmSystem.Accrue(sim);
+            price += OrchardRules.Release(sim, id, sim.Period, "ledger.orchardSold"); // and its orchards (ADR 0090)
+            FarmSystem.Refresh(sim);
             LandSystem.Release(sim, parcel);
             if (required > 0) CreditSystem.RepaySecured(sim, required);
             sim.Emit(new ParcelSold(t, ParcelId, price, basis));

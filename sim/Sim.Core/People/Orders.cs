@@ -64,6 +64,10 @@ namespace Sim.Core.People
                 sim.State.People.Orders.Remove(o); // the land was sold
                 return false;
             }
+            Orchard orchard = OrchardRules.Of(sim, tile);
+            if (orchard != null && orchard.RipeGrams > 0) // an orchard's batch is picked like a ripe tree's (spec 013 §3.3)
+                return Collect(sim, h, o, defs.Farm.Trees[orchard.Def].FruitGood, new PickOrchard(t, tile, Overflow.SellRestToTrader), OrderAction.Picked,
+                    OrchardRules.Pickable(sim, orchard, Overflow.SellRestToTrader)); // what fits now; the rest waits on the trees (ADR 0090 §4)
             Crop c = sim.State.Farm.CropOn(tile);
             if (c != null && c.State == CropState.Ready)
             {
@@ -71,6 +75,7 @@ namespace Sim.Core.People
                 return Collect(sim, h, o, good, new Harvest(t, tile, Overflow.SellRestToTrader), OrderAction.Harvested, c.HarvestGrams);
             }
             if (c != null) return false; // growing: nothing to do
+            if (orchard != null && orchard.State != TreeState.Growing) return false; // bearing trees: nothing to sow between them
             int pick = CropToSow(sim, o);
             if (pick < 0)
             {
@@ -110,7 +115,7 @@ namespace Sim.Core.People
                 CropDef own = farm.Crops[o.Crop];
                 bool seed = o.Seed != SeedSource.Saved
                     || (!own.Fodder && sim.State.Market.InStore(own.OutputGood) >= FarmRules.CycleGrams(sim.Clock, own, own.SeedPerAcrePerSeason) && sim.State.Farm.SavedSeedAgeOf(o.Crop) != null);
-                if (seed && own.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]
+                if (seed && own.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)] && OrchardRules.MaySow(sim, (int)o.Target, o.Crop) == RejectReason.None
                     && sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, own, o.Seed, fert))) return o.Crop;
                 if (own.Fodder)
                 {

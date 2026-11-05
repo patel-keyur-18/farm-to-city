@@ -84,7 +84,8 @@ namespace Sim.Core.Livestock
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
-            if (tile.Occupied || sim.State.Farm.CropOn(tileId) != null || People.HouseRules.HousesOn(sim, tileId) > 0 || Business.BusinessRules.On(sim, tileId) != null)
+            if (tile.Occupied || sim.State.Farm.CropOn(tileId) != null || People.HouseRules.HousesOn(sim, tileId) > 0 || Business.BusinessRules.On(sim, tileId) != null
+                || Farm.OrchardRules.Of(sim, tileId) != null)
                 return RejectReason.TileOccupied;
             foreach (Building b in sim.State.Land.Buildings) if (b.TileId == tileId) return RejectReason.TileOccupied;
             return RejectReason.None;

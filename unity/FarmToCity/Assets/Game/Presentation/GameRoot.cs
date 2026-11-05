@@ -441,6 +441,10 @@ namespace Game.Presentation
                 case "Citizen": _sheet.Show(CitizenSheet.Build(_ctx, r.Id), refreshOnly); break;
                 case "Departed": _sheet.Show(CitizenSheet.Departed(_ctx, r.Id), refreshOnly); break;
                 case "Tile": _sheet.Show(FieldSheets.ForTile(_ctx, (int)r.Id), refreshOnly); break;
+                case OrchardSheet.Kind: // once planted, the field's own sheet shows the orchard
+                    if (global::Sim.Core.Farm.OrchardRules.Of(Sim, (int)r.Id) != null) Return(new SheetRequest("Tile", r.Id));
+                    else _sheet.Show(OrchardSheet.Build(_ctx, (int)r.Id), refreshOnly);
+                    break;
                 case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
                 case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
                 case "Store": _sheet.Show(StoreSheet.Build(_ctx), refreshOnly); break;
