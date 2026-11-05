@@ -1,6 +1,6 @@
 # 0091. Shops as built: the tea stall's milk, your products at the stall, the mill's distance, and choices made while coding
 
-- Status: Proposed (owner, 2026-11-05: §1–§3 decided; §4 with US-120's review)
+- Status: Accepted (owner, 2026-11-05: §1–§3 decided; §4 approved with US-120)
 - Date: 2026-11-05
 - Deciders: Keyur Patel
 - Amends: spec 017 §3.1, §3.2, §3.4, §3.6, §4, §5, §7; spec 016 §3.5(b) (the catchment, ADR 0073's 350 to 375)

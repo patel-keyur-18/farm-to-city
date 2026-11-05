@@ -205,7 +205,7 @@
 
 ## In progress
 
-**Sprint 16, US-120 done (2026-11-05, for the owner's review): customer choice** (spec 017 AC-1, AC-2, AC-5–AC-9 as amended by ADR 0091; art approved 2026-11-05, layout D).
+**Sprint 16, US-120 done (2026-11-05, approved by the owner): customer choice** (spec 017 AC-1, AC-2, AC-5–AC-9 as amended by ADR 0091; art approved 2026-11-05, layout D).
 - Content: `shops.json` (250 village people, open 8–20, the banyan square with 3 pitches at 3,000 a season, the retail markup 1.25, four price presets, the attraction weights, demand and elasticity per kind, `vegShares`, the grocer, the village tea stall and the town's halwai as rivals, the chakki); three shop types in `businesses.json` (vegetable stall, tea stall, sweet shop with rasgulla and atta laddoo recipes); the two sweets in `goods.json` and `region.json`; about 200 strings.
 - Sim: `ShopRules` (demand per group and kind, attraction, shares with stock-outs passed on, the price response by `Fixed.Pow`, waits from last hour, the stalls' 6:00 stock from your store, your businesses or the market, chai's milk, supplies and snacks, rent upfront and at each close, the plan); `ShopsState` (rivals by id, lost customers, your town's buying at your stalls) as schema 14's last section, shop fields on `Business`; commands `FoundBusiness` with a pitch (`FoundOnPitch`), `SetShop` (a price preset), `SetStallGoods`; event `ShopSales`; the mill's area grinding as a share against the chakki (`AreaGramsThisHour`); the local market's town demand less what your town bought at your stalls yesterday.
 - Screens: the Businesses list three to a row (six in one row were a letter wide); research, the plan and *Choose the place* (pitches with their share and rent, or your own acre); the square's sheet with its pitches; the card's Today, Customers (each shop's share and terms, lost customers) and Settings (hours, price presets, milk and snacks or goods a day, buying at the market); twelve *Why?* sheets; the map: shops on their pitches round the banyan, customers at the counter while it serves, whoever runs it behind the counter.
@@ -311,7 +311,7 @@
 
 ## Next up
 
-1. **Sprint 16: the owner's review of US-120** (the mill's catchment 375 and a stall's first day settled with the owner), then US-121 (stars and quality).
+1. **Sprint 16: US-121** (stars and quality: spec 017 §3.5, AC-3), its gaps closed with the owner first.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -354,7 +354,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done, for review. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
