@@ -301,7 +301,7 @@ namespace Sim.Core.Business
             ShopsState s = sim.State.Shops;
             if (s == null || sim.State.Businesses == null) return;
             long start = sim.State.Clock.SimTime - Hour;
-            NewDay(sim, s, start / Day);
+            NewDay(sim, start / Day);
             int hour = (int)(start % Day / Hour);
             foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets })
             {
@@ -328,11 +328,20 @@ namespace Sim.Core.Business
             }
         }
 
-        /// <summary>The day's figures start again at a new day; your town's buying at your stalls moves to yesterday's.</summary>
-        private static void NewDay(Simulation sim, ShopsState s, long day)
+        /// <summary>
+        /// A new day: yesterday's stars for your shops and your mill (§3.5), then the day's figures start again; your town's buying at your
+        /// stalls moves to yesterday's.
+        /// </summary>
+        internal static void NewDay(Simulation sim, long day)
         {
+            ShopsState s = sim.State.Shops;
             if (s.Day == day) return;
             s.Day = day;
+            foreach (Business b in sim.State.Businesses.Businesses)
+            {
+                if (b.Status == BusinessStatus.Open && Rated(BusinessRules.TypeOf(sim, b))) Rate(sim, b);
+                b.OpenToday = false;
+            }
             System.Array.Copy(s.TownToday, s.TownYesterday, s.TownToday.Length);
             System.Array.Clear(s.TownToday, 0, s.TownToday.Length);
             System.Array.Clear(s.LostToday, 0, s.LostToday.Length);
@@ -349,7 +358,7 @@ namespace Sim.Core.Business
         {
             if (o.R != null) return o.CapLeft;
             BusinessTypeDef t = BusinessRules.TypeOf(sim, o.B);
-            long stock = kind == ShopKind.Chai ? Milk(sim, o.B) / t.CupMilkMl : o.B.Stock[good];
+            long stock = kind == ShopKind.Chai ? Milk(sim, o.B) / t.CupMl(o.B.Quality) : o.B.Stock[good];
             return System.Math.Min(o.CapLeft, stock);
         }
 
@@ -489,7 +498,7 @@ namespace Sim.Core.Business
             string reference = "business:" + b.Id;
             long cups = BusinessRules.SalePrice(sim, b, Money.Value(q, Price(sim, b, -1), 1));
             if (cups > 0) b.Ledger.Post(now, sim.Period, "ledger.sales", reference, new Posting(Account.Cash, cups), new Posting(Account.Sales, -cups));
-            long milk = q * t.CupMilkMl;
+            long milk = q * t.CupMl(b.Quality);
             foreach (int g in MilkGoods(sim))
             {
                 long use = System.Math.Min(milk, b.Stock[g]);
@@ -497,7 +506,8 @@ namespace Sim.Core.Business
                 Use(sim, b, g, use);
                 milk -= use;
             }
-            long supplies = Money.Value(q, t.CupSupplies * sim.State.Market.PriceIndex * BusinessRules.CostFactor(sim, b), 1);
+            Fixed cup = t.CupSupplies + (b.Quality == 2 ? t.GoodCupExtra : Fixed.Zero); // good: full-cream milk and fresh snacks (§3.5)
+            long supplies = Money.Value(q, cup * sim.State.Market.PriceIndex * BusinessRules.CostFactor(sim, b), 1);
             BusinessBooks.Draw(sim, b, supplies);
             if (supplies > 0) b.Ledger.Post(now, sim.Period, "ledger.supplies", reference, new Posting(Account.CostOfGoodsSold, supplies), new Posting(Account.Cash, -supplies));
             long snacks = Defs(sim).Kind(kind).SnackShare.MulRatio(q, 1).FloorToLong() * t.SnackGrams, total = cups;
@@ -537,6 +547,67 @@ namespace Sim.Core.Business
 
         // ---- the morning (§5 SetStallGoods) ----
 
+        // ---- quality and stars (§3.5, ADR 0092) ----
+
+        /// <summary>Whether a business earns stars: the shops and the mill (the bakery and dairy sell at the morning round, chosen by nobody).</summary>
+        public static bool Rated(BusinessTypeDef t) { return t.IsShop || !t.ByRecipe; }
+
+        /// <summary>Whether it keeps nothing overnight: good quality at the vegetable stall and the sweet shop.</summary>
+        public static bool Fresh(BusinessTypeDef t, Business b) { return b.Quality == 2 && t.GoodFresh; }
+
+        /// <summary>Its price as a share of the reference: a shop's setting, the mill's fee over the chakki's.</summary>
+        public static Fixed PriceShare(Simulation sim, Business b)
+        {
+            if (BusinessRules.TypeOf(sim, b).IsShop) return b.PriceFactor;
+            Fixed chakki = BusinessRules.Defs(sim).NextVillageFee;
+            return chakki == Fixed.Zero ? Fixed.One : b.Fee / chakki;
+        }
+
+        /// <summary>Value for money's part of a day's score: full at or below the reference, nothing at <c>valueGoneAbove</c> above it.</summary>
+        public static Fixed ValuePart(Simulation sim, Business b)
+        {
+            ShopDefs d = Defs(sim);
+            Fixed over = PriceShare(sim, b) - Fixed.One;
+            if (over <= Fixed.Zero) return d.ScoreValue;
+            if (over >= d.ValueGoneAbove) return Fixed.Zero;
+            return d.ScoreValue * (Fixed.One - over / d.ValueGoneAbove);
+        }
+
+        /// <summary>The served share so far today: what it served of those who chose it (all, if nobody came).</summary>
+        public static Fixed ServedShare(Business b) { return b.CustomersToday > 0 ? Fixed.FromRatio(b.ServedToday, b.CustomersToday) : Fixed.One; }
+
+        /// <summary>A day's score on the stars' scale (0–5): served share × 2 + quality + value, over the best day's.</summary>
+        public static Fixed DayScore(Simulation sim, Business b, Fixed served)
+        {
+            ShopDefs d = Defs(sim);
+            Fixed best = d.ScoreServed + d.ScoreGood + d.ScoreValue;
+            Fixed raw = served * d.ScoreServed + (b.Quality == 2 ? d.ScoreGood : d.ScoreStandard) + ValuePart(sim, b);
+            return raw * Fixed.FromInt(5) / best;
+        }
+
+        /// <summary>
+        /// Yesterday's stars: a tenth of the way to its day score. A day it never opened scores as if it served nobody, but the first such
+        /// day in a row is forgiven (everyone has a day of personal work or an emergency: owner, 2026-11-05).
+        /// </summary>
+        private static void Rate(Simulation sim, Business b)
+        {
+            ShopDefs d = Defs(sim);
+            Fixed served;
+            if (!b.OpenToday)
+            {
+                b.ShutDays++;
+                if (b.ShutDays <= d.ForgivenShutDays) return;
+                served = Fixed.Zero;
+            }
+            else
+            {
+                b.ShutDays = 0;
+                served = ServedShare(b);
+            }
+            Fixed stars = b.Stars + d.StarsStep * (DayScore(sim, b, served) - b.Stars);
+            b.Stars = stars < Fixed.Zero ? Fixed.Zero : stars > Fixed.FromInt(5) ? Fixed.FromInt(5) : stars;
+        }
+
         /// <summary>Whether a business is a stall that's stocked each morning (the vegetable stall, the tea stall's snacks), not one that makes its goods.</summary>
         public static bool Stocked(BusinessTypeDef t) { return t.IsShop && !t.ByRecipe; }
 
@@ -553,7 +624,8 @@ namespace Sim.Core.Business
             {
                 BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
                 if (b.Status != BusinessStatus.Open || !Stocked(t)) continue;
-                foreach (int g in t.Goods) if (b.Stock[g] > 0) BusinessRules.Spoil(sim, b, g, sim.Config.Game.Market.Goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong());
+                foreach (int g in t.Goods)
+                    if (b.Stock[g] > 0) BusinessRules.Spoil(sim, b, g, Fresh(t, b) ? b.Stock[g] : sim.Config.Game.Market.Goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong()); // good: nothing kept overnight
                 if (!BusinessRules.Staffed(sim, b)) continue; // nobody to take it out today
                 Fill(sim, b, took);
             }

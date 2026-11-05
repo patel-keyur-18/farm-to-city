@@ -121,6 +121,7 @@ namespace Game.Presentation.Ui
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "veg_stall_building": case "tea_stall_building": case "sweet_shop_building": return SpriteBank.Rendered(icon.Substring(0, icon.Length - 9) + "_s") ?? SpriteBank.Hut;
                 case "pitch": return SpriteBank.Rendered("pitch_empty_1");
+                case "star": return IconBank.Star(2); // a shop's stars (spec 017 §3.5)
                 case "place_halwai": return SpriteBank.Rendered("sweet_shop_s");
                 case "population": case "happiness": return SpriteBank.Rendered("icon_" + icon);
                 case "pump": case "borewell": case "channel": case "drip": return SpriteBank.Rendered("icon_" + icon); // irrigation (spec 013 §7)
@@ -563,6 +564,7 @@ namespace Game.Presentation.Ui
             // A row with its own button (the store's Sell): name and details on the left, the button on the right.
             var text = new VisualElement { pickingMode = PickingMode.Ignore };
             text.style.flexShrink = 1;
+            text.style.flexGrow = 1; // the full width up to the ? chip: a wrapped note measured narrower than its value spilled into the next row
             text.Add(UiKit.Heading1(line.Label, 40));
             if (line.Stars.HasValue)
             {

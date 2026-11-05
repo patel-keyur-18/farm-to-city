@@ -96,9 +96,11 @@ share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 - **Quality:** standard or good. Good costs more: vegetables: only produce harvested in the last 2 days goes out (older goes back to the store or the trader); chai: full-cream milk 0.08 L and fresh snacks (+1.20 coins a cup); sweets: pure ghee and fresh paneer only (no market vanaspati: +8% on the recipe's cost), and sweets older than 2 days withdrawn.
 - **Stars** (0–5, start 2.5): each closing hour (the shop's day) gets a **day score**: served share of its customers (1 − stock-out share) × 2 + quality (standard 1, good 1.5) + value (+1 at or below the reference, falling to 0 at 30% above) = 0–4.5, scaled to 0–5. Stars = 0.9 × stars + 0.1 × day score: about a season to move half way. A stock-out or a 20-minute queue costs more than a cheap price earns, as in life.
 
+**As built (ADR 0092, owner 2026-11-05):** good quality at the vegetable stall and the sweet shop keeps nothing overnight (yesterday's leftovers cleared at 6:00 as spoilage; the store has no produce ages); good sweets cost 8% more; good chai 0.08 L and +1.20 a cup, the milk a day scaled to the same cups. The day is scored at midnight; a day never opened is forgiven once, then scores as serving nobody. The mill earns stars the same way (§3.6).
+
 ### 3.6 The mill and the next village's chakki
 
-**As built (ADR 0091 §3, owner 2026-11-05):** the mill's distance runs from the middle of your land (your houses, or your yard before them), the chakki 1.5 km from there; at its fee about 90–95% of the area grinds with you, so the catchment rises to 375 people (spec 016 §3.5(b)).
+**As built (ADR 0091 §3, owner 2026-11-05):** the mill's distance runs from the middle of your land (your houses, or your yard before them), the chakki 1.5 km from there; at its fee about 90–95% of the area grinds with you, so the catchment rises to 375 people (spec 016 §3.5(b)). The mill earns stars from the share of the area's grain it grinds, standard quality and its fee against the chakki's (ADR 0092 §2).
 
 Spec 016 §3.5(b)'s rule (a fee more than 1 above the next village's loses all the area's grain) becomes customer choice between your mill and the chakki: the chakki at its fee, 3 stars, good quality, distance: the area's people walk 1.5 km to it (−1.5 at wDistance 0.10 per 100 m, floor 0.05); yours at your fee, quality, stars and distance from the square. At equal fees almost all the area grinds with you (as now); every coin above takes a share away instead of all of it.
 

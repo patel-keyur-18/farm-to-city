@@ -43,7 +43,7 @@ namespace Sim.Content
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "workerSkill", "wage", "kgPerHour", "powerPerKg", "repairsShare",
                     "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium",
-                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup");
+                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
                 x.Era = -1;
@@ -112,7 +112,7 @@ namespace Sim.Content
         {
             if (t["kind"] == null)
             {
-                foreach (string f in new[] { "pitchBuilding", "capacityPerHour", "goods", "cup" })
+                foreach (string f in new[] { "pitchBuilding", "capacityPerHour", "goods", "cup", "good" })
                     if (t[f] != null) throw new ContentException(Join(p, f), "only a shop (with a kind) has this");
                 return;
             }
@@ -154,6 +154,22 @@ namespace Sim.Content
                 x.SnackGrams = (Bounded(c, cp, "snackKg", "0", "1") * Fixed.FromInt(1000)).RoundToLong();
             }
             else if (t["takesMilk"] != null && Bool(t["takesMilk"], p + ".takesMilk")) throw new ContentException(p + ".takesMilk", "of the shops, only the tea stall takes milk");
+
+            // Good quality's costs (§3.5, ADR 0092).
+            string gp = p + ".good";
+            JObject good = Object(Required(t, p, "good"), gp);
+            OnlyFields(good, gp, "milkLitres", "supplies", "recipeCost", "fresh");
+            if ((x.Kind == ShopKind.Chai) != (good["milkLitres"] != null)) throw new ContentException(gp + ".milkLitres", "the tea stall, and only it, sets a good cup's milk");
+            if (x.Kind == ShopKind.Chai)
+            {
+                x.GoodCupMilkMl = (Bounded(good, gp, "milkLitres", "0.001", "1") * Fixed.FromInt(1000)).RoundToLong();
+                if (x.GoodCupMilkMl < x.CupMilkMl) throw new ContentException(gp + ".milkLitres", "a good cup has at least the standard cup's milk");
+                x.GoodCupExtra = Bounded(good, gp, "supplies", "0", "100");
+            }
+            else if (good["supplies"] != null) throw new ContentException(gp + ".supplies", "only the tea stall's cup has supplies");
+            if ((x.Kind == ShopKind.Sweets) != (good["recipeCost"] != null)) throw new ContentException(gp + ".recipeCost", "the sweet shop, and only it, has a recipe cost");
+            if (good["recipeCost"] != null) x.GoodRecipeExtra = Bounded(good, gp, "recipeCost", "0", "2");
+            x.GoodFresh = good["fresh"] != null && Bool(good["fresh"], gp + ".fresh");
         }
 
         /// <summary>Recipes (spec 016 §3.9c): each a batch of goods into one product; the shops' amounts a person for its products.</summary>

@@ -488,6 +488,7 @@ namespace Sim.Core.Business
         {
             bool morning = MarketRules.HourOfDay(sim) == (sim.Config.Game.Market.Truck?.ArriveHour ?? 6);
             long[] took = null;
+            if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
                 // A new day's batches for every maker first (so what your shops still need is counted), then the stalls fill up from your
@@ -581,6 +582,7 @@ namespace Sim.Core.Business
             int hour = (int)(start % Day / Hour);
             KeepStaffed(sim, b);
             if (!OpenAt(sim, b, hour)) return;
+            b.OpenToday = true;
             Worker hired = HiredWorker(sim, b);
             if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
             if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
@@ -602,13 +604,16 @@ namespace Sim.Core.Business
             long area = 0;
             if (hour >= t.OpenHour && hour < t.CloseHour)
             {
-                area = System.Math.Min(capacity, AreaGramsThisHour(sim, b)); // its share against the chakki (spec 017 §3.6)
+                long came = AreaGramsThisHour(sim, b); // its share against the chakki (spec 017 §3.6)
+                area = System.Math.Min(capacity, came);
                 long fees = Money.Value(area, b.Fee * index, 1000);
                 if (PowerCost(sim, b, area) > fees + BusinessBooks.CanSpend(sim, b)) area = fees = 0; // a fee below the power's, with no cash left (§3.10)
                 if (fees > 0) b.Ledger.Post(now, sim.Period, "ledger.grindingFees", reference, new Posting(Account.Cash, fees), new Posting(Account.ServiceIncome, -fees));
                 Power(sim, b, area);
                 b.AreaToday += area;
                 b.AreaSeason += area;
+                b.CustomersToday += came; // what came to it and what it ground: its stars (§3.5, ADR 0092)
+                b.ServedToday += area;
             }
             long left = capacity - area;
 
@@ -757,6 +762,13 @@ namespace Sim.Core.Business
             return used;
         }
 
+        /// <summary>Good quality's extra on a batch's cost (the sweet shop's pure ghee and fresh paneer, §3.5, ADR 0092), or 0.</summary>
+        private static long GoodExtra(Simulation sim, Business b, long cost)
+        {
+            BusinessTypeDef t = TypeOf(sim, b);
+            return b.Quality == 2 && t.GoodRecipeExtra > Fixed.Zero ? Money.MulRate(cost, t.GoodRecipeExtra) : 0;
+        }
+
         private static long RecipeInputs(RecipeDef r, long q)
         {
             long n = 0;
@@ -767,13 +779,14 @@ namespace Sim.Core.Business
         /// <summary>What <paramref name="q"/> grams of the product cost in cash now: inputs to buy, fuel and supplies.</summary>
         private static long BatchCost(Simulation sim, Business b, RecipeDef r, long q)
         {
-            long cost = Money.Value(q, (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex * CostFactor(sim, b), r.OutputGrams);
+            long cost = Money.Value(q, (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex * CostFactor(sim, b), r.OutputGrams), inputs = 0;
             foreach (KeyValuePair<int, long> kv in r.Inputs)
             {
                 long buy = Need(kv.Value, q, r.OutputGrams) - b.Stock[kv.Key];
                 if (buy > 0) cost += MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key));
+                inputs += Money.Value(Need(kv.Value, q, r.OutputGrams), InputPrice(sim, kv.Key), 1000);
             }
-            return cost;
+            return cost + GoodExtra(sim, b, inputs + Money.Value(q, r.Supplies * sim.State.Market.PriceIndex, r.OutputGrams));
         }
 
         private static long Batch(Simulation sim, Business b, RecipeDef r, long q)
@@ -801,6 +814,7 @@ namespace Sim.Core.Business
             }
             Fixed index = sim.State.Market.PriceIndex * CostFactor(sim, b);
             long fuel = Money.Value(q, r.Fuel * index, r.OutputGrams), supplies = Money.Value(q, r.Supplies * index, r.OutputGrams);
+            supplies += GoodExtra(sim, b, inputCost + supplies); // good quality: pure ghee and fresh paneer (§3.5)
             BusinessBooks.Draw(sim, b, fuel + supplies);
             if (fuel > 0) b.Ledger.Post(now, sim.Period, "ledger.fuel", reference, new Posting(Account.Power, fuel), new Posting(Account.Cash, -fuel));
             if (supplies > 0) b.Ledger.Post(now, sim.Period, "ledger.supplies", reference, new Posting(Account.BusinessStock, supplies), new Posting(Account.Cash, -supplies));
@@ -841,7 +855,7 @@ namespace Sim.Core.Business
             for (int g = 0; g < goods.Count; g++)
             {
                 if (b.Stock[g] <= 0 || (t.ByRecipe ? !t.Makes(g) : g == t.Input)) continue;
-                Spoil(sim, b, g, goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong());
+                Spoil(sim, b, g, ShopRules.Fresh(t, b) ? b.Stock[g] : goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong()); // good sweets: none kept overnight
             }
             BusinessBooks.Sweep(sim, b);
         }

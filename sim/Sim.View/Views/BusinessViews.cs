@@ -353,6 +353,7 @@ namespace Sim.View.Views
             if (t.IsShop) ShopSheet.AddToday(ctx, vm, b, t); // spec 017: sold today, what's out
             if (t.ByRecipe) AddRecipeToday(ctx, vm, b, t);
             else if (!t.IsShop) AddMillToday(ctx, vm, b, t);
+            if (!t.IsShop && ShopRules.Rated(t) && ShopRules.Defs(sim) != null) vm.Lines.Add(ShopSheet.StarsLine(ctx, b)); // the mill earns stars too (ADR 0092)
             AddMoney(ctx, vm, b, t);
         }
 

@@ -15,6 +15,9 @@ namespace Sim.View.Views
         /// <summary>A pull in points: "1.15 points".</summary>
         private static string Pull(ViewContext ctx, Fixed f) { return ctx.Strings.Get("why.shopShare.points", "n", ctx.Fmt.Decimal2(f)); }
 
+        /// <summary>A cup's milk in millilitres ("60 ml"): litres to one decimal can't tell a standard cup from a good one.</summary>
+        private static string Ml(ViewContext ctx, long ml) { return ctx.Strings.Get("why.shopQuality.ml", "n", ctx.Fmt.Integer(ml)); }
+
         private static string Signed(Fixed f)
         {
             long hundredths = (f * Fixed.FromInt(100)).RoundToLong();
@@ -190,6 +193,50 @@ namespace Sim.View.Views
         }
 
         /// <summary>The tea stall's milk (§3.1, ADR 0091 §1): your herd's first at the 6:00 milking, then neighbours'.</summary>
+        /// <summary>
+        /// A shop's or the mill's stars (§3.5, ADR 0092): today's score so far, part by part, and how a night moves the stars a tenth of
+        /// the way to it; shut days in a row (the first forgiven).
+        /// </summary>
+        private static WhyVm ShopStars(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Business b = BusinessOf(ctx, id);
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            ShopDefs d = ShopRules.Defs(sim);
+            WhyVm vm = New(ctx, "why.shopStars.title", ShopWords.Stars(ctx, b.Stars), "name", BusinessWords.Name(ctx, t));
+            Fixed served = ShopRules.ServedShare(b);
+            Text(vm, ctx, "why.shopStars.today");
+            Row(vm, ctx, "why.shopStars.served", Part(ctx, served * d.ScoreServed), "pct", ctx.Fmt.Percent(served));
+            Row(vm, ctx, "why.shopStars.quality", Part(ctx, b.Quality == 2 ? d.ScoreGood : d.ScoreStandard), "quality", ShopWords.Quality(ctx, b.Quality));
+            Row(vm, ctx, "why.shopStars.value", Part(ctx, ShopRules.ValuePart(sim, b)), "price", t.IsShop ? ShopWords.PriceSetting(ctx, b.PriceFactor) : ctx.Strings.Get("why.shopStars.fee"));
+            Row(vm, ctx, "why.shopStars.score", ShopWords.Stars(ctx, ShopRules.DayScore(sim, b, served)));
+            if (b.ShutDays > 0) Row(vm, ctx, "why.shopStars.shut", ctx.Fmt.Integer(b.ShutDays));
+            Text(vm, ctx, "why.shopStars.how");
+            vm.Footnote = ctx.Strings.Get("why.shopStars.lesson");
+            return vm;
+        }
+
+        /// <summary>Quality (§3.5, ADR 0092): what good quality costs this kind of shop, and what it earns.</summary>
+        private static WhyVm ShopQuality(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Business b = BusinessOf(ctx, id);
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            ShopDefs d = ShopRules.Defs(sim);
+            WhyVm vm = New(ctx, "why.shopQuality.title", ShopWords.Quality(ctx, b.Quality, true));
+            Text(vm, ctx, "why.shopQuality." + t.Kind.ToString().ToLowerInvariant());
+            if (t.Kind == ShopKind.Chai)
+            {
+                Row(vm, ctx, "why.shopQuality.cupMilk", Ml(ctx, t.GoodCupMilkMl), "standard", Ml(ctx, t.CupMilkMl));
+                Row(vm, ctx, "why.shopQuality.cupExtra", ctx.Strings.Get("why.shopQuality.coins", "n", ctx.Fmt.Decimal2(t.GoodCupExtra * sim.State.Market.PriceIndex)));
+            }
+            if (t.GoodRecipeExtra > Fixed.Zero) Row(vm, ctx, "why.shopQuality.recipe", ctx.Fmt.Percent(t.GoodRecipeExtra));
+            Row(vm, ctx, "why.shopQuality.pull", Part(ctx, d.WQuality));
+            Row(vm, ctx, "why.shopQuality.stars", Part(ctx, d.ScoreGood - d.ScoreStandard));
+            vm.Footnote = ctx.Strings.Get("why.shopQuality.lesson");
+            return vm;
+        }
+
         private static WhyVm ShopMilk(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;
@@ -197,7 +244,7 @@ namespace Sim.View.Views
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             WhyVm vm = New(ctx, "why.shopMilk.title", ctx.Fmt.Litres(ShopRules.Milk(sim, b)));
             Row(vm, ctx, "why.shopMilk.day", ctx.Fmt.Litres(b.OwnPerDay));
-            Row(vm, ctx, "why.shopMilk.cup", ctx.Fmt.Litres(t.CupMilkMl));
+            Row(vm, ctx, "why.shopMilk.cup", Ml(ctx, t.CupMl(b.Quality)));
             Row(vm, ctx, "why.shopMilk.neighbours", ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(sim, t)));
             Text(vm, ctx, "why.shopMilk.how");
             return vm;

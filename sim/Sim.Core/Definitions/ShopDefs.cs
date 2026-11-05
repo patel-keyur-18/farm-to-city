@@ -83,6 +83,19 @@ namespace Sim.Core.Definitions
         public Fixed AttractionFloor { get; internal set; }
         public Fixed StartStars { get; internal set; }
 
+        /// <summary>
+        /// Stars (§3.5, ADR 0092): a day's score is served share × <see cref="ScoreServed"/> + quality (standard or good) + value
+        /// (full at or below the reference, gone at <see cref="ValueGoneAbove"/> above it), scaled so the best day is 5; stars move
+        /// <see cref="StarsStep"/> of the way to it a day. The first <see cref="ForgivenShutDays"/> shut days in a row leave them alone.
+        /// </summary>
+        public Fixed ScoreServed { get; internal set; }
+        public Fixed ScoreStandard { get; internal set; }
+        public Fixed ScoreGood { get; internal set; }
+        public Fixed ScoreValue { get; internal set; }
+        public Fixed ValueGoneAbove { get; internal set; }
+        public Fixed StarsStep { get; internal set; }
+        public int ForgivenShutDays { get; internal set; }
+
         /// <summary>By <see cref="ShopKind"/> (index 0 unused).</summary>
         public IReadOnlyList<ShopKindDef> Kinds { get; internal set; }
 

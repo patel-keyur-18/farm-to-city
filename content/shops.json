@@ -10,6 +10,7 @@
   "pricePresets": [1.0, 0.9, 1.1, 1.2],
   "weights": { "price": 1.5, "quality": 0.25, "stars": 0.30, "distancePer100m": 0.10, "waitPer10Minutes": 0.20, "floor": 0.05 },
   "startStars": 2.5,
+  "reputation": { "served": 2, "standard": 1, "good": 1.5, "value": 1, "valueGoneAbove": 0.30, "step": 0.1, "forgivenShutDays": 1 },
   "kinds": {
     "veg":    { "kgPerPerson": 0.20,  "adultShare": 1.0, "elasticity": 0.5 },
     "chai":   { "cupsPerPerson": 0.4, "adultShare": 0.7, "elasticity": 0.8, "reference": 10, "snackShare": 0.5 },

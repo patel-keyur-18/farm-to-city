@@ -52,7 +52,11 @@ namespace Sim.View.Views
         /// <summary>Stars to one decimal: "2.5 stars".</summary>
         public static string Stars(ViewContext ctx, Fixed stars) { return ctx.Strings.Get("shop.stars", "n", ctx.Fmt.Decimal1(stars)); }
 
-        public static string Quality(ViewContext ctx, int quality) { return ctx.Strings.Get(quality >= 2 ? "shop.qualityGood" : "shop.qualityStandard"); }
+        public static string Quality(ViewContext ctx, int quality, bool capital = false)
+        {
+            string q = ctx.Strings.Get(quality >= 2 ? "shop.qualityGood" : "shop.qualityStandard");
+            return capital ? char.ToUpperInvariant(q[0]) + q.Substring(1) : q;
+        }
 
         /// <summary>A shop's terms in a line: price, quality, stars and its queue.</summary>
         public static string Terms(ViewContext ctx, ShopKind kind, Fixed factor, int quality, Fixed stars, Fixed wait)
@@ -172,6 +176,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             vm.Lines.Add(new LineVm(s.Get("shop.soldToday"), ShopWords.Amount(ctx, t.Kind, b.ServedToday), "shopToday", b.Id) { Icon = t.Id });
+            vm.Lines.Add(StarsLine(ctx, b));
             if (t.Kind == ShopKind.Chai)
             {
                 vm.Lines.Add(new LineVm(s.Get("shop.milk"), ctx.Fmt.Litres(ShopRules.Milk(sim, b)), "shopMilk", b.Id) { Icon = "milk" });
@@ -188,6 +193,12 @@ namespace Sim.View.Views
                         BusinessWords.GoodId(b.Id, g)) { Icon = sim.Config.Game.Market.Goods[g].Id });
                 }
             }
+        }
+
+        /// <summary>Its stars (§3.5): the card's Today for a shop and the mill.</summary>
+        internal static LineVm StarsLine(ViewContext ctx, Business b)
+        {
+            return new LineVm(ctx.Strings.Get("shop.reputation"), ShopWords.Stars(ctx, b.Stars), "shopStars", b.Id) { Icon = "star" };
         }
 
         /// <summary>
@@ -254,13 +265,21 @@ namespace Sim.View.Views
             for (int i = 0; i < presets.Count; i++) if (presets[i] == b.PriceFactor) pi = i;
             Fixed nextPrice = presets[(pi + 1) % presets.Count];
             var price = new LineVm(s.Get("shop.price"), ShopWords.Price(ctx, t.Kind, b.PriceFactor), "shopPrice", id) { Icon = "coin", Note = t.Kind == ShopKind.Veg ? null : ShopWords.PriceSetting(ctx, b.PriceFactor) };
-            price.Action = new ActionVm("price", s.Get("business.change"), ShopWords.Price(ctx, t.Kind, nextPrice), ActionKind.Secondary, true, null, at => new SetShop(at, id, nextPrice));
+            int quality = b.Quality, nextQuality = 3 - b.Quality;
+            price.Action = new ActionVm("price", s.Get("business.change"), ShopWords.Price(ctx, t.Kind, nextPrice), ActionKind.Secondary, true, null, at => new SetShop(at, id, nextPrice, quality));
             vm.Lines.Add(price);
+
+            // Quality (§3.5, ADR 0092): standard or good, and what good costs this kind of shop.
+            Fixed factor = b.PriceFactor;
+            var q = new LineVm(s.Get("shop.quality"), ShopWords.Quality(ctx, quality, true), "shopQuality", id)
+                { Icon = "star", Note = s.Get("shop.qualityNote." + t.Kind.ToString().ToLowerInvariant()) };
+            q.Action = new ActionVm("quality", s.Get("business.change"), ShopWords.Quality(ctx, nextQuality, true), ActionKind.Secondary, true, null, at => new SetShop(at, id, factor, nextQuality));
+            vm.Lines.Add(q);
 
             if (t.Kind == ShopKind.Sweets) BusinessSheet.AddMixFor(ctx, vm, b, t);
             if (t.Kind == ShopKind.Chai)
             {
-                long need = ShopRules.DefaultMilk(sim, t, b.TileId);
+                long need = ShopRules.DefaultMilk(sim, t, b.TileId) * t.CupMl(b.Quality) / t.CupMilkMl; // good cups take more
                 var milkPresets = new List<long>();
                 foreach (long v in new[] { need, need * 3 / 2, need / 2 }) if (v > 0 && !milkPresets.Contains(v)) milkPresets.Add(v);
                 if (milkPresets.Count == 0) milkPresets.Add(0);

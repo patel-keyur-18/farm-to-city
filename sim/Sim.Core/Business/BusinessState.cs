@@ -200,6 +200,10 @@ namespace Sim.Core.Business
         /// <summary>The day (t ÷ day) a stall last took its goods: at 6:00, or the hour it first opens or is first staffed (ADR 0091 §4).</summary>
         public long StockedDay { get; internal set; } = -1;
 
+        /// <summary>Whether it opened at any hour today, and its shut days in a row (§3.5, ADR 0092: the first is forgiven).</summary>
+        public bool OpenToday { get; internal set; }
+        public int ShutDays { get; internal set; }
+
         internal Business Clone()
         {
             var c = (Business)MemberwiseClone();
@@ -259,6 +263,8 @@ namespace Sim.Core.Business
             h.WriteFixed(Stars);
             for (int i = 0; i < PutOut.Length; i++) h.WriteLong(PutOut[i]);
             foreach (long v in new[] { LastArrivals, LastCapacity, CustomersToday, ServedToday, SeasonCustomers, SeasonServed, StockedDay }) h.WriteLong(v);
+            h.WriteBool(OpenToday);
+            h.WriteInt(ShutDays);
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -313,6 +319,8 @@ namespace Sim.Core.Business
             b.SeasonCustomers = r.ReadLong();
             b.SeasonServed = r.ReadLong();
             b.StockedDay = r.ReadLong();
+            b.OpenToday = r.ReadBool();
+            b.ShutDays = r.ReadInt();
             return b;
         }
     }

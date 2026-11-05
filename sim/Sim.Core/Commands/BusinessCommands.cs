@@ -38,10 +38,14 @@ namespace Sim.Core.Commands
         public long BusinessId { get; }
         public Maths.Fixed PriceFactor { get; }
 
-        public SetShop(long at, long businessId, Maths.Fixed priceFactor) : base(at)
+        /// <summary>1 standard, 2 good (§3.5, US-121).</summary>
+        public int Quality { get; }
+
+        public SetShop(long at, long businessId, Maths.Fixed priceFactor, int quality = 1) : base(at)
         {
             BusinessId = businessId;
             PriceFactor = priceFactor;
+            Quality = quality;
         }
 
         protected override CommandResult ApplyAt(Simulation sim)
@@ -51,8 +55,11 @@ namespace Sim.Core.Commands
             if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
             bool preset = false;
             foreach (Maths.Fixed f in sim.Config.Game.Shops.PricePresets) if (f == PriceFactor) preset = true;
-            if (!preset) return CommandResult.Reject(RejectReason.InvalidArgument);
+            if (!preset || Quality < 1 || Quality > 2) return CommandResult.Reject(RejectReason.InvalidArgument);
             b.PriceFactor = PriceFactor;
+            Definitions.BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            if (Quality != b.Quality && t.TakesMilk) b.OwnPerDay = b.OwnPerDay * t.CupMl(Quality) / t.CupMl(b.Quality); // the same cups a day
+            b.Quality = Quality;
             return CommandResult.Ok;
         }
     }

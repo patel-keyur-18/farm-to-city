@@ -123,7 +123,7 @@ namespace Sim.Core.Saves
                     break;
                 case CloseBusiness c: At(c, Tag.CloseBusiness); w.WriteLong(c.BusinessId); break;
                 case SetMix c: At(c, Tag.SetMix); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
-                case SetShop c: At(c, Tag.SetShop); w.WriteLong(c.BusinessId); w.WriteFixed(c.PriceFactor); break;
+                case SetShop c: At(c, Tag.SetShop); w.WriteLong(c.BusinessId); w.WriteFixed(c.PriceFactor); w.WriteInt(c.Quality); break;
                 case SetStallGoods c: At(c, Tag.SetStallGoods); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
@@ -253,7 +253,7 @@ namespace Sim.Core.Saves
                     bool self = r.ReadBool();
                     return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null, pitch);
                 }
-                case Tag.SetShop: return new SetShop(at, r.ReadLong(), r.ReadFixed());
+                case Tag.SetShop: return new SetShop(at, r.ReadLong(), r.ReadFixed(), r.ReadInt());
                 case Tag.SetStallGoods: return new SetStallGoods(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
                 case Tag.SetMix: return new SetMix(at, r.ReadLong(), r.ReadString(), r.ReadLong());

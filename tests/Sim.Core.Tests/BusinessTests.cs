@@ -399,7 +399,7 @@ namespace Sim.Core.Tests
             // Open only 8–12: the area's afternoon grain goes to the next village.
             Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, 8, 12, b.Fee, b.OwnPerDay, false));
             sim.AdvanceTo((day + 2) * 86_400);
-            Assert.That(b.AreaToday, Is.EqualTo(hourly * 4), "4 hours of it");
+            Assert.That(b.AreaToday, Is.EqualTo(BusinessRules.AreaGramsThisHour(sim, b) * 4), "4 hours of it (at that day's stars: they move each night, ADR 0092)");
 
             // A fee 2 coins above the next village's: a share of the area goes there, not all of it (spec 017 §3.6, AC-5).
             Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, 8, 18, Fixed.FromInt(6), b.OwnPerDay, false));

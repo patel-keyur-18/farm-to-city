@@ -14,7 +14,7 @@ namespace Sim.Content
             const string root = "shops";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "villagePeople", "openHour", "closeHour", "metresPerAcre", "square", "pitches", "pitchRent", "retailMarkup", "pricePresets", "weights",
-                "startStars", "kinds", "vegShares", "rivals", "chakki");
+                "startStars", "reputation", "kinds", "vegShares", "rivals", "chakki");
             var d = new ShopDefs
             {
                 VillagePeople = BoundedInt(o, root, "villagePeople", 0, 100000),
@@ -49,6 +49,18 @@ namespace Sim.Content
             d.WDistance = Bounded(w, wp, "distancePer100m", "0", "10");
             d.WWait = Bounded(w, wp, "waitPer10Minutes", "0", "10");
             d.AttractionFloor = Bounded(w, wp, "floor", "0.001", "1");
+
+            string rp = root + ".reputation";
+            JObject rep = Object(Required(o, root, "reputation"), rp);
+            OnlyFields(rep, rp, "served", "standard", "good", "value", "valueGoneAbove", "step", "forgivenShutDays");
+            d.ScoreServed = Bounded(rep, rp, "served", "0", "10");
+            d.ScoreStandard = Bounded(rep, rp, "standard", "0", "10");
+            d.ScoreGood = Bounded(rep, rp, "good", "0", "10");
+            d.ScoreValue = Bounded(rep, rp, "value", "0", "10");
+            d.ValueGoneAbove = Bounded(rep, rp, "valueGoneAbove", "0.01", "1");
+            d.StarsStep = Bounded(rep, rp, "step", "0.001", "1");
+            d.ForgivenShutDays = BoundedInt(rep, rp, "forgivenShutDays", 0, 30);
+            if (d.ScoreGood < d.ScoreStandard) throw new ContentException(rp + ".good", "good quality scores at least standard");
 
             string kp = root + ".kinds";
             JObject k = Object(Required(o, root, "kinds"), kp);

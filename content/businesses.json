@@ -62,7 +62,8 @@
       "buildHours": 6, "worker": "stallholder", "workerSkill": "crafting", "wage": 12000,
       "capacityPerHour": 400, "repairsShare": 0.02,
       "openHour": 8, "closeHour": 20,
-      "goods": ["potato", "radish", "spinach", "coriander", "methi", "amaranth", "okra", "peas", "banana", "papaya", "guava", "mango", "pav", "paneer", "curd"]
+      "goods": ["potato", "radish", "spinach", "coriander", "methi", "amaranth", "okra", "peas", "banana", "papaya", "guava", "mango", "pav", "paneer", "curd"],
+      "good": { "fresh": true }
     },
     {
       "id": "tea_stall", "nameKey": "business.tea_stall", "era": "village", "kind": "chai",
@@ -72,7 +73,8 @@
       "capacityPerHour": 300, "repairsShare": 0.02,
       "openHour": 8, "closeHour": 20, "takesMilk": true, "neighbourMilkPremium": 2,
       "cup": { "milkLitres": 0.06, "supplies": 1.50, "snackKg": 0.05 },
-      "goods": ["rusk", "pav"]
+      "goods": ["rusk", "pav"],
+      "good": { "milkLitres": 0.08, "supplies": 1.20 }
     },
     {
       "id": "sweet_shop", "nameKey": "business.sweet_shop", "era": "village", "kind": "sweets",
@@ -84,7 +86,8 @@
       "recipes": [
         { "id": "rasgulla",    "inputs": { "paneer": 0.5 },              "output": "rasgulla",    "outputKg": 1, "fuel": 6, "supplies": 22.5 },
         { "id": "atta_laddoo", "inputs": { "atta": 0.45, "ghee": 0.20 }, "output": "atta_laddoo", "outputKg": 1, "fuel": 4, "supplies": 16 }
-      ]
+      ],
+      "good": { "recipeCost": 0.08, "fresh": true }
     }
   ]
 }

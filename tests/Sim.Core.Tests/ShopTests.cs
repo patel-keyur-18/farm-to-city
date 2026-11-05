@@ -52,6 +52,7 @@ namespace Sim.Core.Tests
             Business.Business one = Shop(sim, "tea_stall", 0);
             Business.Business two = Shop(sim, "tea_stall", 1);
             sim.AdvanceTo(NextDayAt(sim, 9) + 1);
+            two.Stars = one.Stars; // the first opened a day sooner and has had a night's stars (ShopTests.Stars): make them equal
             Assert.That(ShopRules.Milk(sim, one), Is.GreaterThan(0), "neighbours' milk at the 6:00 milking");
             sim.DrainEvents();
             sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
@@ -97,6 +98,77 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
             Assert.That(b.ServedToday, Is.GreaterThan(0), "it served the same day");
             Assert.That(ShopRules.Milk(sim, b), Is.LessThan(milk), "once a day: no more bought that afternoon");
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        // AC-3 (ADR 0092): each day the stars move a tenth of the way to the day's score (served share × 2 + quality + value, on a 0–5
+        // scale); value falls above the reference; a shut day is forgiven once, then scores as serving nobody; the mill earns stars too.
+        [Test]
+        public void Stars()
+        {
+            Simulation sim = Start();
+            Business.Business b = Shop(sim, "tea_stall", 0);
+            sim.AdvanceTo(NextDayAt(sim, 22) + 1);
+            Assert.That(b.OpenToday, Is.True);
+            Assert.That(D(ShopRules.ServedShare(b)), Is.EqualTo((double)b.ServedToday / b.CustomersToday).Within(0.0001));
+            Fixed before = b.Stars, score = ShopRules.DayScore(sim, b, ShopRules.ServedShare(b));
+            Assert.That(D(ShopRules.DayScore(sim, b, Fixed.One)), Is.EqualTo(4.0 / 4.5 * 5).Within(0.001), "all served, standard, the usual price: 4 of 4.5");
+            sim.AdvanceTo(NextDayAt(sim, 1) + 1);
+            Assert.That(D(b.Stars), Is.EqualTo(D(before) + 0.1 * (D(score) - D(before))).Within(0.0001), "a tenth of the way");
+
+            Ok(sim, new SetShop(sim.State.Clock.SimTime, b.Id, Fixed.FromRatio(12, 10)));
+            Assert.That(D(ShopRules.ValuePart(sim, b)), Is.EqualTo(1.0 / 3).Within(0.001), "20% above: a third of value's point");
+            Ok(sim, new SetShop(sim.State.Clock.SimTime, b.Id, Fixed.One, 2));
+            Assert.That(D(ShopRules.DayScore(sim, b, Fixed.One)), Is.EqualTo(5).Within(0.001), "good quality, all served, the usual price: the best day");
+
+            Ok(sim, new LetWorkerGo(sim.State.Clock.SimTime, b.Id));
+            before = b.Stars;
+            sim.AdvanceTo(NextDayAt(sim, 1) + 1);
+            Assert.That(b.ShutDays, Is.EqualTo(1));
+            Assert.That(b.Stars, Is.EqualTo(before), "the first shut day is forgiven");
+            Fixed shut = ShopRules.DayScore(sim, b, Fixed.Zero);
+            sim.AdvanceTo(NextDayAt(sim, 1) + 1);
+            Assert.That(b.ShutDays, Is.EqualTo(2));
+            Assert.That(D(b.Stars), Is.EqualTo(D(before) + 0.1 * (D(shut) - D(before))).Within(0.0001), "the second scores as serving nobody");
+
+            Business.Business mill = BusinessTests.Mill(sim);
+            sim.AdvanceTo(NextDayAt(sim, 20) + 1);
+            Assert.That(mill.ServedToday, Is.GreaterThan(0).And.EqualTo(mill.AreaToday), "what it ground of the area's grain");
+            before = mill.Stars;
+            sim.AdvanceTo(NextDayAt(sim, 1) + 1);
+            Assert.That(mill.Stars, Is.GreaterThan(before), "a mill that keeps up at the chakki's fee earns stars");
+        }
+
+        // §3.5 (ADR 0092): good chai takes 0.08 L a cup and 1.20 more in supplies; the milk a day keeps the same cups; a good vegetable
+        // stall keeps nothing overnight.
+        [Test]
+        public void GoodQuality()
+        {
+            Simulation sim = Start();
+            Business.Business b = Shop(sim, "tea_stall", 0);
+            long standardMilk = b.OwnPerDay;
+            Ok(sim, new SetShop(sim.State.Clock.SimTime, b.Id, Fixed.One, 2));
+            Assert.That(b.OwnPerDay, Is.EqualTo(standardMilk * 80 / 60), "the milk a day keeps the same cups");
+            sim.AdvanceTo(NextDayAt(sim, 9) + 1);
+            long milk = ShopRules.Milk(sim, b), cups = b.ServedToday;
+            sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
+            Assert.That(b.ServedToday - cups, Is.GreaterThan(0));
+            Assert.That(milk - ShopRules.Milk(sim, b), Is.EqualTo((b.ServedToday - cups) * 80), "0.08 L a good cup");
+
+            Business.Business v = Shop(sim, "veg_stall", 1);
+            int potato = sim.Config.Game.Market.IndexOf("potato");
+            foreach (int g in BusinessRules.TypeOf(sim, v).Goods) Ok(sim, new SetStallGoods(sim.State.Clock.SimTime, v.Id, sim.Config.Game.Market.Goods[g].Id, 0));
+            Ok(sim, new SetStallGoods(sim.State.Clock.SimTime, v.Id, "potato", 1_000_000)); // more than a day's customers
+            Ok(sim, new SetShop(sim.State.Clock.SimTime, v.Id, Fixed.One, 2));
+            sim.State.Market.Stock[potato] += 10_000_000;
+            sim.AdvanceTo(NextDayAt(sim, 21) + 1);
+            Assert.That(v.Stock[potato], Is.GreaterThan(0), "left over at closing");
+            sim.DrainEvents();
+            sim.AdvanceTo(NextDayAt(sim, 6) + 1);
+            var spoiled = sim.DrainEvents().OfType<GoodsSpoiled>().Where(e => e.Where == v.Id && e.GoodId == "potato").ToList();
+            Assert.That(spoiled, Is.Not.Empty, "yesterday's potatoes cleared at 6:00");
+            Assert.That(v.Stock[potato], Is.EqualTo(1_000_000), "and the day's put out fresh");
+            Assert.That(v.Ledger.Reconcile(), Is.Null);
             Assert.That(b.Ledger.Reconcile(), Is.Null);
         }
 
