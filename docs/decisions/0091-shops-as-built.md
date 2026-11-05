@@ -3,7 +3,7 @@
 - Status: Proposed (owner, 2026-11-05: §1–§3 decided; §4 with US-120's review)
 - Date: 2026-11-05
 - Deciders: Keyur Patel
-- Amends: spec 017 §3.1, §3.2, §3.4, §3.6, §4, §5, §7
+- Amends: spec 017 §3.1, §3.2, §3.4, §3.6, §4, §5, §7; spec 016 §3.5(b) (the catchment, ADR 0073's 350 to 375)
 - Related: ADR 0074 (spec 017), 0073 (the mill's targets), 0080 (the dairy's neighbours' milk), 0068 (businesses)
 - GDD sections: Businesses (customer choice, competition)
 
@@ -25,6 +25,7 @@ Coding US-120 turned up three gaps in spec 017. They were settled with the owner
    - The area's farm families live round your land. So the mill's distance runs from the middle of your houses, or your yard before you have any.
    - The chakki is 1.5 km from there.
    - At the chakki's fee, a mill on your land gets about 90–95% of the area. Every coin above takes a smooth share away: fee 5 about 80%, fee 6 about 50%.
+   - The catchment rises from 350 to 375 people (owner, 2026-11-05), so the mill grinds about as much as before the share (350 ÷ 0.93). Measured by the business bots (8 seeds): hired, a median 5,901 a season (4,919 at 350); run by you about 36,000, payback 3.1. Both are inside ADR 0073's ranges.
    - The shops keep the spec's distances: the village from the square, your town from the middle of your houses.
 4. **Choices made while coding, shown with US-120.**
    - **Pitches:** the square and its pitch count are in `content/shops.json` (`square`: the banyan, `pitches`: 3), not as three map places on one tile. A shop on a pitch stands on the banyan's tile but isn't "on" it, so the acre rules don't apply. Its rent is paid upfront when it opens and at each close.
@@ -51,4 +52,4 @@ Coding US-120 turned up three gaps in spec 017. They were settled with the owner
 
 - Spec 017 §3.1, §3.2, §3.4, §3.6, §4, §5 and §7 are updated, and the GDD's businesses line with them.
 - Save schema 14 gains the shops on `Business` (pitch, price, quality, stars, goods a day, the hour's and day's figures) and `ShopsState` (the rivals by id, the day's lost customers, your town's buying at your stalls) as its last section. A schema-13 save loads with the rivals and no shops of yours. New command tags: `FoundOnPitch`, `SetShop`, `SetStallGoods`.
-- The mill's area grinding is a share (`BusinessRules.AreaGramsThisHour`) instead of spec 016's cliff. A hired mill's median profit is now 4,919 a season, just under ADR 0073's 5,000–10,000.
+- The mill's area grinding is a share (`BusinessRules.AreaGramsThisHour`) instead of spec 016's cliff, with `catchmentPeople` 375 (was 350, ADR 0073). Spec 016 §3.5(b) and its targets table say so.
