@@ -302,7 +302,7 @@
 
 ## Next up
 
-1. **Sprint 16: US-120's art** (the handcart, tea stall, sweet shop and pitches), previewed to the owner first, then US-120 and US-121.
+1. **Sprint 16: US-120's code** (art approved 2026-11-05, layout D: pitch I at the banyan acre's left corner, II on its front edge, III at its right corner, pieces at 85%; `docs/art/s16-shops-preview-*.png`; models in `tools/blender/render.py`), then US-121.
 
 ## Owner action checklist (Phases 0–1)
 
