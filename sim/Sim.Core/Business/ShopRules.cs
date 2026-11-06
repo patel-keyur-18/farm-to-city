@@ -506,8 +506,7 @@ namespace Sim.Core.Business
                 Use(sim, b, g, use);
                 milk -= use;
             }
-            Fixed cup = t.CupSupplies + (b.Quality == 2 ? t.GoodCupExtra : Fixed.Zero); // good: full-cream milk and fresh snacks (§3.5)
-            long supplies = Money.Value(q, cup * sim.State.Market.PriceIndex * BusinessRules.CostFactor(sim, b), 1);
+            long supplies = Money.Value(q, t.CupSupplies * sim.State.Market.PriceIndex * BusinessRules.CostFactor(sim, b), 1);
             BusinessBooks.Draw(sim, b, supplies);
             if (supplies > 0) b.Ledger.Post(now, sim.Period, "ledger.supplies", reference, new Posting(Account.CostOfGoodsSold, supplies), new Posting(Account.Cash, -supplies));
             long snacks = Defs(sim).Kind(kind).SnackShare.MulRatio(q, 1).FloorToLong() * t.SnackGrams, total = cups;
@@ -657,9 +656,9 @@ namespace Sim.Core.Business
             {
                 long need = b.PutOut[g] - b.Stock[g];
                 if (need <= 0) continue;
-                if (VegShare(sim, g) > Fixed.Zero) need -= FromStore(sim, b, g, need);
-                else need -= FromYours(sim, b, g, need, took);
-                if (need > 0 && b.BuyFromMarket && VegShare(sim, g) == Fixed.Zero) FromMarket(sim, b, g, need);
+                bool produce = VegShare(sim, g) > Fixed.Zero;
+                need -= produce ? FromStore(sim, b, g, need) : FromYours(sim, b, g, need, took);
+                if (need > 0 && b.BuyFromMarket) FromMarket(sim, b, g, need, produce ? sim.State.Market.Price[g] : MarketRules.Ceiling(sim, g)); // the mandi's produce, else the import price
             }
             BusinessBooks.Sweep(sim, b);
             b.StockedDay = sim.State.Clock.SimTime / Day;
@@ -711,10 +710,12 @@ namespace Sim.Core.Business
             return got;
         }
 
-        /// <summary>A snack or product bought at the market's import price, as far as its cash goes.</summary>
-        private static void FromMarket(Simulation sim, Business b, int g, long need)
+        /// <summary>
+        /// What your store and businesses can't give, bought as far as its cash goes: vegetables and fruit at the local market's price (a
+        /// sabziwala at the mandi each morning, ADR 0093), snacks and products at the import price.
+        /// </summary>
+        private static void FromMarket(Simulation sim, Business b, int g, long need, Fixed price)
         {
-            Fixed price = MarketRules.Ceiling(sim, g);
             long q = System.Math.Min(need, Money.QuantityFor(System.Math.Max(0, BusinessBooks.CanSpend(sim, b)), price, 1000));
             long value = MarketRules.Value(sim, g, q, price);
             if (q <= 0 || value <= 0) return;
@@ -828,6 +829,12 @@ namespace Sim.Core.Business
                     Fixed unit = BusinessRules.UnitCost(sim, t, good), fuelUnit = r.Fuel * sim.State.Market.PriceIndex;
                     inputs += MarketRules.Value(sim, good, q, unit - fuelUnit.MulRatio(1000, r.OutputGrams));
                     fuel += Money.Value(q, fuelUnit, r.OutputGrams);
+                }
+                else if (VegShare(sim, good) > Fixed.Zero)
+                {
+                    // Your store's produce at the trader's price, the rest bought at the local market's (ADR 0093).
+                    long held = System.Math.Min(q, System.Math.Max(0, sim.State.Market.Stock[good] - sim.State.Market.Offered[good]));
+                    inputs += MarketRules.Value(sim, good, held, MarketRules.Floor(sim, good)) + MarketRules.Value(sim, good, q - held, sim.State.Market.Price[good]);
                 }
                 else inputs += MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));
             }

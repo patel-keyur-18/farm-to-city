@@ -962,6 +962,90 @@ namespace Tools.Balancer
     }
 
     /// <summary>
+    /// Spec 013 §9 (Sprint 16's balance step, ADR 0093): the competent founder who makes farm investments as soon as they unlock and
+    /// the cash allows: <c>pump</c> (the well's pump on 4 acres), <c>canal</c> (a channel on every rain-fed acre it can reach),
+    /// <c>drip</c> (on the subsidised pumped acres), <c>mango</c> (an orchard on the last inherited acre, picked or sold on the trees),
+    /// <c>tractor</c> (bought on the bank's loan for 70%), <c>tractor-hire</c> (hired on each day there's an acre to sow).
+    /// </summary>
+    public sealed class FarmToolBot : FarmerBot
+    {
+        private readonly string[] _tools;
+        public long Spent { get; private set; }
+        public int Period { get; private set; } = -1;
+
+        public FarmToolBot(params string[] tools) { _tools = tools; }
+
+        public override string Name { get { return string.Join("+", _tools); } }
+
+        public override void Play(Simulation sim, long t)
+        {
+            foreach (string tool in _tools) Invest(sim, t, tool);
+            base.Play(sim, t);
+            if (_tools.Contains("mango")) Fruit(sim, t);
+        }
+
+        private bool Spend(Simulation sim, Command c)
+        {
+            long before = sim.State.Ledger.Cash;
+            if (!Ok(sim, c)) return false;
+            Spent += before - sim.State.Ledger.Cash;
+            if (Period < 0) Period = (int)sim.Period;
+            return true;
+        }
+
+        private static bool Cash(Simulation sim, long coins) { return sim.State.Ledger.Cash >= coins * Money.Coin; }
+
+        private void Invest(Simulation sim, long t, string tool)
+        {
+            int[] acres = AcresOf(sim);
+            switch (tool)
+            {
+                case "pump":
+                    if (Sim.Core.Land.IrrigationRules.Pump(sim) == null && Cash(sim, 40_000) && Spend(sim, new InstallPump(t)))
+                        Ok(sim, new SetPumpAcres(t, acres.Take(4).ToList()));
+                    break;
+                case "canal":
+                    if (!Cash(sim, 30_000)) break;
+                    foreach (int tile in acres.Skip(2))
+                        if (!Sim.Core.Land.IrrigationRules.Channelled(sim, tile) && Sim.Core.Land.IrrigationRules.SourceOf(sim, tile) == 0) Spend(sim, new BuildChannel(t, tile));
+                    break;
+                case "drip":
+                    if (!Cash(sim, 40_000)) break;
+                    foreach (int tile in acres) // the subsidised acres only (spec 013 §9: drip's payback with the subsidy)
+                        if (Sim.Core.Land.IrrigationRules.DripCount(sim) < Sim.Core.Land.IrrigationRules.Def(sim).Drip.SubsidyAcres
+                            && Sim.Core.Land.IrrigationRules.SourceOf(sim, tile) != 0 && !Sim.Core.Land.IrrigationRules.HasDrip(sim, tile)) Spend(sim, new LayDrip(t, tile));
+                    break;
+                case "mango":
+                    int last = acres[acres.Length - 1];
+                    if (OrchardRules.Of(sim, last) != null || !Cash(sim, 30_000)) break;
+                    Harvest(sim, t);
+                    if (sim.State.Farm.CropOn(last) == null) Spend(sim, new PlantOrchard(t, last, "mango"));
+                    break;
+                case "tractor":
+                    if (Sim.Core.Equipment.EquipmentRules.OfKind(sim, 1) != null) break; // whenever the cash and the bank's 70% allow
+                    long price = Sim.Core.Equipment.EquipmentRules.Price(sim, Sim.Core.Equipment.EquipmentRules.Defs(sim).Machines[1]);
+                    Spend(sim, new BuyMachine(t, "tractor", new Financing("coop_bank", price * 7 / 10 / Money.Coin * Money.Coin, 16)));
+                    break;
+                case "tractor-hire":
+                    if (t % 86_400 / 3600 != 7 || !acres.Any(a => sim.State.Farm.CropOn(a) == null && OrchardRules.Of(sim, a) == null)) break;
+                    Spend(sim, new HireMachine(t, "tractor"));
+                    break;
+            }
+        }
+
+        /// <summary>Picks what the store and the trader take each hour; at 21:00 what's still ripe is sold on the trees.</summary>
+        private static void Fruit(Simulation sim, long t)
+        {
+            foreach (int tile in AcresOf(sim))
+            {
+                if (OrchardRules.Of(sim, tile) == null) continue;
+                Ok(sim, new PickOrchard(t, tile, Overflow.SellRestToTrader));
+                if (t % 86_400 / 3600 == 21) Ok(sim, new SellOrchardOnTrees(t, tile));
+            }
+        }
+    }
+
+    /// <summary>
     /// Spec 016 §9 (US-117, US-119): the competent founder who keeps the last inherited acres clear and founds businesses on them as
     /// their era comes, one after another (the flour mill, then the bakery beside it), run by hired workers or by the founder, with or
     /// without a business loan. A business short of cash gets cash put in; at each season's start, cash beyond a season's running
@@ -982,12 +1066,17 @@ namespace Tools.Balancer
         /// <summary>The dairy works only your herd's milk (neighbours' milk stopped).</summary>
         public bool OwnMilkOnly { get; set; }
 
+        /// <summary>Shops (spec 017 §9): on your acre instead of a pitch in the square, and their quality (1 standard, 2 good).</summary>
+        public bool OnAcre { get; set; }
+        public int Quality { get; set; } = 1;
+        public Fixed Price { get; set; } = Fixed.One;
+
         public override string Name
         {
             get
             {
                 string what = string.Join("+", _types.Select(x => x == "flour_mill" ? "mill" : x));
-                return what + (_self ? "-yours" : "-hired") + (_borrow ? "-loan" : "") + (OwnMilkOnly ? "-own-milk" : "");
+                return what + (_self ? "-yours" : "-hired") + (_borrow ? "-loan" : "") + (OwnMilkOnly ? "-own-milk" : "") + (OnAcre ? "-acre" : "") + (Quality == 2 ? "-good" : "") + (Price != Fixed.One ? "-at-" + ((Price * Fixed.FromInt(100)).RoundToLong() / 100.0).ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
             }
         }
 
@@ -1030,6 +1119,9 @@ namespace Tools.Balancer
         /// <summary>Its own wheat for the mill: a year's daily amount kept back from selling (wheat comes in Winter only).</summary>
         protected override long Kept(Simulation sim, int good)
         {
+            // A vegetable stall's goods: two days of what it puts out, kept back from the trader for its 6:00 round (spec 017 §3.1).
+            Sim.Core.Business.Business stall = sim.State.Businesses == null ? null : Of(sim, "veg_stall");
+            if (stall != null && stall.PutOut[good] > 0) return stall.PutOut[good] * 2;
             Sim.Core.Business.Business mill = sim.State.Businesses == null ? null : Of(sim, "flour_mill");
             if (mill == null || good != Sim.Core.Business.BusinessRules.TypeOf(sim, mill).Input) return 0;
             return mill.OwnPerDay * sim.Clock.DaysPerSeason * 4;
@@ -1049,7 +1141,19 @@ namespace Tools.Balancer
         protected override bool KeepsClear(Simulation sim, int tile)
         {
             int i = Next(sim);
-            return i >= 0 && tile == Acre(sim, i);
+            return i >= 0 && !OnPitch(sim, i) && tile == Acre(sim, i);
+        }
+
+        /// <summary>Whether the i-th business is a shop on a pitch in the square (spec 017 §3.4).</summary>
+        private bool OnPitch(Simulation sim, int i) { return Type(sim, _types[i]).IsShop && !OnAcre; }
+
+        /// <summary>The first free pitch, or −1.</summary>
+        private static int FreePitch(Simulation sim)
+        {
+            var d = Sim.Core.Business.ShopRules.Defs(sim);
+            for (int p = 0; d != null && p < d.Pitches; p++)
+                if (sim.State.Businesses.Businesses.All(b => b.Status == Sim.Core.Business.BusinessStatus.Closed || b.Pitch != p)) return p;
+            return -1;
         }
 
         public override void Play(Simulation sim, long t)
@@ -1069,14 +1173,15 @@ namespace Tools.Balancer
         {
             // The day's mix: what the shops buy, and for what keeps, what the trader takes as well when it pays (rusk does; ghee from whole milk doesn't).
             var bt = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
-            foreach (int p in bt.Products)
+            if (bt.IsShop && b.Status == Sim.Core.Business.BusinessStatus.Open && (b.Quality != Quality || b.PriceFactor != Price)) Ok(sim, new SetShop(t, b.Id, Price, Quality));
+            foreach (int p in bt.IsShop ? new int[0] : bt.Products) // a shop keeps the mix and the milk it was founded with (spec 017 §3.1)
             {
                 long want = Sim.Core.Business.BusinessRules.ShopGramsPerDay(sim, bt, p)
                     + (Sim.Core.Business.BusinessRules.Pays(sim, bt, p) ? sim.Config.Game.Market.Region.TraderBuyPerDay(p) : 0);
                 if (b.Status == Sim.Core.Business.BusinessStatus.Open && b.Mix[p] != want) Ok(sim, new SetMix(t, b.Id, sim.Config.Game.Market.Goods[p].Id, want));
             }
             // The dairy's milk a day follows its mix; neighbours' milk unless it works its own only.
-            if (bt.TakesMilk && b.Status == Sim.Core.Business.BusinessStatus.Open)
+            if (bt.TakesMilk && !bt.IsShop && b.Status == Sim.Core.Business.BusinessStatus.Open)
             {
                 long milk = Sim.Core.Business.BusinessRules.MilkFor(bt, b.Mix);
                 if (b.OwnPerDay != milk || b.BuyFromMarket == OwnMilkOnly) Ok(sim, new SetBusiness(t, b.Id, b.OpenHour, b.CloseHour, b.Fee, milk, !OwnMilkOnly));
@@ -1126,12 +1231,21 @@ namespace Tools.Balancer
         {
             var defs = Sim.Core.Business.BusinessRules.Defs(sim);
             var type = Type(sim, _types[i]);
+            if (OnPitch(sim, i))
+            {
+                int pitch = FreePitch(sim);
+                if (pitch < 0) return;
+                long cash = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, 0, null, pitch).CashNeeded;
+                if (sim.State.Ledger.Cash < cash + 30_000 * Money.Coin) return;
+                Ok(sim, new FoundBusiness(t, type.Id, 0, cash, _self, null, pitch));
+                return;
+            }
             int acre = Acre(sim, i);
             PeopleState p = sim.State.People;
             if (p?.OrderFor(OrderTargetKind.Field, acre) is StandingOrder o) Ok(sim, new ClearStandingOrder(t, o.HandId, OrderTargetKind.Field, acre));
             if (Sim.Core.Business.BusinessRules.Place(sim, acre) != RejectReason.None) return;
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
-            long need = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
+            long need = Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type, acre), type.Fee, loan, null, -1, acre).CashNeeded - loan;
             if (sim.State.Ledger.Cash < need + 30_000 * Money.Coin) return;
             Ok(sim, new FoundBusiness(t, type.Id, acre, need, _self, loan > 0 ? new Financing(defs.LenderId, loan, defs.TermSeasons) : null));
         }

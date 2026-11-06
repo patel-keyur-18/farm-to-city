@@ -158,15 +158,13 @@ namespace Sim.Content
             // Good quality's costs (§3.5, ADR 0092).
             string gp = p + ".good";
             JObject good = Object(Required(t, p, "good"), gp);
-            OnlyFields(good, gp, "milkLitres", "supplies", "recipeCost", "fresh");
+            OnlyFields(good, gp, "milkLitres", "recipeCost", "fresh");
             if ((x.Kind == ShopKind.Chai) != (good["milkLitres"] != null)) throw new ContentException(gp + ".milkLitres", "the tea stall, and only it, sets a good cup's milk");
             if (x.Kind == ShopKind.Chai)
             {
                 x.GoodCupMilkMl = (Bounded(good, gp, "milkLitres", "0.001", "1") * Fixed.FromInt(1000)).RoundToLong();
                 if (x.GoodCupMilkMl < x.CupMilkMl) throw new ContentException(gp + ".milkLitres", "a good cup has at least the standard cup's milk");
-                x.GoodCupExtra = Bounded(good, gp, "supplies", "0", "100");
             }
-            else if (good["supplies"] != null) throw new ContentException(gp + ".supplies", "only the tea stall's cup has supplies");
             if ((x.Kind == ShopKind.Sweets) != (good["recipeCost"] != null)) throw new ContentException(gp + ".recipeCost", "the sweet shop, and only it, has a recipe cost");
             if (good["recipeCost"] != null) x.GoodRecipeExtra = Bounded(good, gp, "recipeCost", "0", "2");
             x.GoodFresh = good["fresh"] != null && Bool(good["fresh"], gp + ".fresh");

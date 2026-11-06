@@ -157,8 +157,16 @@ namespace Sim.View.Views
                 vm.Lines.Add(line);
             }
             vm.Lines.Add(LineVm.Header(s.Get("shopPlace.acre")));
-            vm.Lines.Add(new LineVm(s.Get("shopPlace.acreRow"), s.Get("shopPlace.acreValue"))
-                { Icon = "field", Action = ActionVm.Open("acre", s.Get("shopPlace.chooseAcre"), new SheetRequest("BusinessPlacement", type, arg)) });
+            var acre = new LineVm(s.Get("shopPlace.acreRow"), s.Get("shopPlace.acreValue"))
+                { Icon = "field", Action = ActionVm.Open("acre", s.Get("shopPlace.chooseAcre"), new SheetRequest("BusinessPlacement", type, arg)) };
+            Fixed best = Fixed.Zero; // the share your nearest free acre would get (ADR 0093): far from the square, few pass by
+            foreach (HutPlaceVm place in BusinessPlacement.Places(ctx))
+            {
+                Fixed share = place.Allowed ? ShopRules.ExpectedShare(sim, t.Kind, ShopGroup.Village, place.TileId) : Fixed.Zero;
+                if (share > best) best = share;
+            }
+            if (best > Fixed.Zero) acre.Note = s.Get("shopPlace.acreShare", "pct", ctx.Fmt.Percent(best));
+            vm.Lines.Add(acre);
             return vm;
         }
     }

@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, not started. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
-| Branch with latest work | `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03): Sprint 16's approved plan, not started |
-| Last updated | 2026-11-05 |
+| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, started 2026-11-03: every story done and approved, the balance step under way. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
+| Branch with latest work | `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03): Sprint 16's stories and the balance step |
+| Last updated | 2026-11-06 |
 
 ## Done so far
 
@@ -205,21 +205,29 @@
 
 ## In progress
 
+**Sprint 16, balance step, spec 017 §9 done (2026-11-06, each item decided with the owner, ADR 0093); spec 013 §9 next.**
+- Measured with the shop bots (the balancer's `shops` and `shopbooks` modes, 8 seeds × 12 seasons, shops moved to the Hamlet): tea stall hired, good, 10% above the reference 8,580 a season (target 5,000–12,000); sweet shop hired 11,773 (8,000–15,000); vegetable stall hired 3,714, run by you 17,609; a stall on your acre about 5% of the village; the mill with stars hired 6,070, run by you about 36,450.
+- Content: chai's reference 12 coins; good chai 0.08 L a cup with no surcharge; sweets 300 and 360 a kg (base prices 240 and 290); `retailMarkup` 1.15.
+- Sim: the vegetable stall buys what your store lacks at the local market's price (*Buy at the market*, on by default); `BatchCost` at book cost for held inputs and `Make` trims a batch it can't pay for (the balancer crashed on a negative shop cash).
+- Screens: the place sheet's *Any acre you own* row shows your nearest free acre's share; the stall's market setting and *Why?* texts name the mandi.
+- Tests: `ShopTests.Mandi`, `GateTests.Shops`, `BusinessViewTests.ShopPlace_AcreShare`.
+- Still to do in the step: spec 013 §9 (canal against rain-fed, drip and tractor payback, the mango orchard and glut, the granary), then an Editor look at the changed screens.
+
 **Sprint 16, US-121 done (2026-11-05, approved by the owner): stars and quality** (spec 017 §3.5, AC-3, as amended by ADR 0092; its three gaps closed with the owner first).
-- Content: `good` on each shop type (the tea stall's 0.08 L and +1.20 a cup; the sweet shop's +8% and fresh; the vegetable stall's fresh); `reputation` in `shops.json` (served 2, standard 1, good 1.5, value 1 gone at 30% above, a tenth a day, one shut day forgiven).
+- Content: `good` on each shop type (the tea stall's 0.08 L a cup, its +1.20 snacks surcharge dropped in the balance step (ADR 0093); the sweet shop's +8% and fresh; the vegetable stall's fresh); `reputation` in `shops.json` (served 2, standard 1, good 1.5, value 1 gone at 30% above, a tenth a day, one shut day forgiven).
 - Sim: the day scored at midnight for your shops and the mill (`ShopRules.Rate`, `DayScore`, `ValuePart`, `ServedShare`); a shut day forgiven once, then scored as serving nobody; good quality's milk, supplies and recipe cost; good stalls and sweet shops clear yesterday's leftovers at 6:00; `SetShop` carries the quality (the tea stall's milk a day scaled to the same cups); the mill counts what came to it and what it ground. Save schema 14 gains `OpenToday` and `ShutDays`.
 - Screens: Stars on the card's Today (shops and the mill) and its *Why?* (today's score part by part, how a night moves the stars); Quality in Settings with its *Why?*; a cup's milk in ml. Fixed in the presenter: a row's note wrapped narrower than its value and spilled into the next row (the text column now fills the row).
 - Tests: `ShopTests.Stars` (AC-3), `ShopTests.GoodQuality`; `ProductionTests.Mill_Rate_Order_Yield` reads the day's own share (the mill's stars move each night). `GateTests.Mill` with stars: hired median 6,070 a season, run by you about 36,450, payback 3.1. 447 + 132 pass.
 - Editor (scripted touch, `docs/art/s16-121-*.png`): a tea stall on pitch I run by you → the next night its stars went 2.5 → 2.7 (a tenth of the way to 4.4: all served, standard, the usual price) → Today's Stars and its *Why?* → Settings → Quality changed to good (milk a day 48.9 → 65.2 L) → its *Why?* (80 ml a good cup, 60 at standard, 1.27 coins, +0.25 pull, +0.50 a day). Set up by script: **Next era**, dev time travel. Fixed during the tour: the quality note spilling into the next row; a cup's milk shown as "0.1 L" either way. Saves restored and identical.
 
 **Sprint 16, US-120 done (2026-11-05, approved by the owner): customer choice** (spec 017 AC-1, AC-2, AC-5–AC-9 as amended by ADR 0091; art approved 2026-11-05, layout D).
-- Content: `shops.json` (250 village people, open 8–20, the banyan square with 3 pitches at 3,000 a season, the retail markup 1.25, four price presets, the attraction weights, demand and elasticity per kind, `vegShares`, the grocer, the village tea stall and the town's halwai as rivals, the chakki); three shop types in `businesses.json` (vegetable stall, tea stall, sweet shop with rasgulla and atta laddoo recipes); the two sweets in `goods.json` and `region.json`; about 200 strings.
+- Content: `shops.json` (250 village people, open 8–20, the banyan square with 3 pitches at 3,000 a season, the retail markup 1.25 (1.15 from ADR 0093), four price presets, the attraction weights, demand and elasticity per kind, `vegShares`, the grocer, the village tea stall and the town's halwai as rivals, the chakki); three shop types in `businesses.json` (vegetable stall, tea stall, sweet shop with rasgulla and atta laddoo recipes); the two sweets in `goods.json` and `region.json`; about 200 strings.
 - Sim: `ShopRules` (demand per group and kind, attraction, shares with stock-outs passed on, the price response by `Fixed.Pow`, waits from last hour, the stalls' 6:00 stock from your store, your businesses or the market, chai's milk, supplies and snacks, rent upfront and at each close, the plan); `ShopsState` (rivals by id, lost customers, your town's buying at your stalls) as schema 14's last section, shop fields on `Business`; commands `FoundBusiness` with a pitch (`FoundOnPitch`), `SetShop` (a price preset), `SetStallGoods`; event `ShopSales`; the mill's area grinding as a share against the chakki (`AreaGramsThisHour`); the local market's town demand less what your town bought at your stalls yesterday.
 - Screens: the Businesses list three to a row (six in one row were a letter wide); research, the plan and *Choose the place* (pitches with their share and rent, or your own acre); the square's sheet with its pitches; the card's Today, Customers (each shop's share and terms, lost customers) and Settings (hours, price presets, milk and snacks or goods a day, buying at the market); twelve *Why?* sheets; the map: shops on their pitches round the banyan, customers at the counter while it serves, whoever runs it behind the counter.
 - Tests: `ShopTests.Choice_Shares`, `StockOut`, `Mill_Choice`, `Pitch`, `ChunkingInvariance`, `FirstDay`; `MigrationTests.Schema13_Shops`; `WhyTests` sweep with shop sheets; `saves/schema14` re-pinned. `GateTests.Mill` failed at first (a hired mill's median 4,919 a season against ADR 0073's 5,000–10,000); the owner raised the catchment to 375 (2026-11-05, ADR 0091 §3): hired median 5,901, run by you about 36,000, payback 3.1. 445 + 132 pass. The full suite took 10 minutes (an earlier 2 h 44 min run was the machine, not the code).
 - Editor (scripted touch, `docs/art/s16-120-*.png`): Menu → Businesses → tea stall research → plan → *Choose the place* → Pitch I (34,746 put in) → the stall on pitch I → (dev time travel) a hired tea maker sent for, then *Run it yourself* → the next morning 68 cups in the 8:00 hour against the village stall's 65 → Customers (share 51%) and its *Why?* → Settings, price to 10% below → the square's sheet → *Open a shop* → vegetable stall research and plan (59,187 needed: not founded). Replayed after the fixes: a tea stall on acre 84 (13,415 put in; 7 cups an hour, its village pull at the floor) and a second on pitch I with the founder walking between both. Set up by script: **Next era** to the Village, dev time travel only. Fixed during the tour: the Businesses buttons (three a row); the list's shop cost (now "On a pitch, from …"); "your herd's 0.0 L" with no herd (now neighbours' only); the plan's *Choose the acre* (now *Choose the place* for shops); the rivals' and the acre row's icons (a sack); the share's *Why?* headline (68 cups for a 51% row: now the share); "Your Tea stall"; the founder hoeing by the banyan (now behind the counter). Saves restored and identical.
 - **A new stall's first day** (owner, 2026-11-05): a stall that opens or is first staffed after 6:00 takes its stock that hour, once a day (neighbours' milk for the tea stall); `Business.StockedDay` in schema 14, `saves/schema14` re-pinned. Checked in the Editor: a tea stall founded at 3:00 opened at 15:00 and sold 68 cups that hour (`docs/art/s16-120-first-day.png`); saves restored and identical.
-- For review: ADR 0091 §4's choices, and the shops' first figures (tea about 3,000, sweet shop about −11,000 a season against spec 017 §9's targets): tuned in the sprint's balance step with the shop bots.
+- For review: ADR 0091 §4's choices, and the shops' first figures (tea about 3,000, sweet shop about −11,000 a season against spec 017 §9's targets): tuned in the sprint's balance step with the shop bots (ADR 0093).
 
 **Sprint 16, US-129 done (2026-11-05, approved by the owner): orchard acres** (spec 013 §3.3 as amended by ADR 0090; the light layout approved 2026-11-05).
 - Sim: `orchard` in `farming.json` (from the Hamlet; mango 40, guava 100, banana and papaya 400 trees an acre; labour young and bearing; the trees' moisture band; radish, methi, amaranth, lentils and peas between young rows at `intercropShare` 0.5; `contractorShare` 0.7). `OrchardState` (one orchard an acre) as schema 14's last section; `OrchardRules` (where it may go, the intercrop, shade on the fields beside, a batch from the averaged Water, Care and Weather, what can be picked today, the contractor's price, spent and cleared write-offs, sold or seized with the land at book). Commands `PlantOrchard`, `PickOrchard` (what the store and the trader take; the rest waits on the trees), `SellOrchardOnTrees` (Dr Cash, Cr 4010; `SoldTo.Contractor`), `ClearOrchard`; rejects `NoOrchard`, `TreesBearing`, `NotAnIntercrop`. Hands with an order on the field and labourers pick what can go each hour; *Collect all* picks what fits; a ripe batch 12 h from spoiling is an alert; away, it raises the fruit-is-ripe notification. Machines, houses, businesses and the second shed keep off orchard acres.
@@ -318,7 +326,7 @@
 
 ## Next up
 
-1. **Sprint 16: the balance step** with the bots (spec 013 §9, spec 017 §9: the shop bots, the shops' targets, the mango glut).
+1. **Sprint 16: the balance step, spec 013 §9** with the bots (canal against rain-fed, drip and tractor payback, the mango orchard and its glut, the granary); spec 017 §9 is done (ADR 0093). Then the test checklist in the Editor, the device build and the pull request.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -361,7 +369,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved. Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved; the balance step's spec 017 half done (ADR 0093). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 

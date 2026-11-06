@@ -78,7 +78,7 @@ attraction = max(0.05,  1
 share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 ```
 
-- **Reference price:** vegetables: the good's local market price (spec 004) × `retailMarkup` 1.25; chai: 10 coins; rasgulla 240 and atta laddoo 280 coins a kg.
+- **Reference price:** vegetables: the good's local market price (spec 004) × `retailMarkup` 1.15 (1.25 until Sprint 16's balance step, ADR 0093); chai: 12 coins (10 until Sprint 16's balance step, ADR 0093); rasgulla 300 and atta laddoo 360 coins a kg (240 and 280 until Sprint 16's balance step, ADR 0093).
 - **Distance:** metres from the group's centre (the town: the middle of your houses; the village: the square) to the shop's tile, 100 m an acre, Manhattan, rounded down.
 - **Wait:** an hour's customers over the shop's capacity that hour: `wait = 10 × max(0, arrivals ÷ capacity − 0.8) ÷ 0.2` minutes, from last hour's figures (no loop within an hour).
 - A shop that runs out of a good serves no more of it that hour; the rest of its share goes to the others (§3.5 counts a stock-out).
@@ -89,14 +89,14 @@ share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 | Place | Rent | Location | Notes |
 | --- | --- | --- | --- |
 | **A pitch in the village square** (3 pitches, `MapDef.places` kind `pitch`, round the banyan) | `pitchRent` 3,000 a season, paid upfront at the close to the council (Cr Cash, Dr Rent) | Distance 0 from the village, the town's centre distance from your houses | The village's own sellers keep their places; a rival can take a free pitch |
-| **Your own acre** (spec 016 §3.3 step 4; the pitches are `square` and `pitches` in `shops.json`, ADR 0091 §4) beside the village lane or the farm lane | None | Distance from each group's centre: an inherited acre is 300–500 m from the square | Teaches location: cheaper, but fewer pass by |
+| **Your own acre** (spec 016 §3.3 step 4; the pitches are `square` and `pitches` in `shops.json`, ADR 0091 §4) beside the village lane or the farm lane | None | Distance from each group's centre. As built, an inherited acre is 800–1,200 m from the square (ADR 0091 §3), where the village's share is at the attraction's floor, about 5% (ADR 0093); the place sheet shows your nearest free acre's share beside the pitches' | Teaches location: cheaper, but fewer pass by |
 
 ### 3.5 Quality and reputation (§10 G4)
 
-- **Quality:** standard or good. Good costs more: vegetables: only produce harvested in the last 2 days goes out (older goes back to the store or the trader); chai: full-cream milk 0.08 L and fresh snacks (+1.20 coins a cup); sweets: pure ghee and fresh paneer only (no market vanaspati: +8% on the recipe's cost), and sweets older than 2 days withdrawn.
+- **Quality:** standard or good. Good costs more: vegetables: only produce harvested in the last 2 days goes out (older goes back to the store or the trader); chai: full-cream milk 0.08 L a cup (0.06 standard; the fresh-snacks surcharge dropped, ADR 0093); sweets: pure ghee and fresh paneer only (no market vanaspati: +8% on the recipe's cost), and sweets older than 2 days withdrawn.
 - **Stars** (0–5, start 2.5): each closing hour (the shop's day) gets a **day score**: served share of its customers (1 − stock-out share) × 2 + quality (standard 1, good 1.5) + value (+1 at or below the reference, falling to 0 at 30% above) = 0–4.5, scaled to 0–5. Stars = 0.9 × stars + 0.1 × day score: about a season to move half way. A stock-out or a 20-minute queue costs more than a cheap price earns, as in life.
 
-**As built (ADR 0092, owner 2026-11-05):** good quality at the vegetable stall and the sweet shop keeps nothing overnight (yesterday's leftovers cleared at 6:00 as spoilage; the store has no produce ages); good sweets cost 8% more; good chai 0.08 L and +1.20 a cup, the milk a day scaled to the same cups. The day is scored at midnight; a day never opened is forgiven once, then scores as serving nobody. The mill earns stars the same way (§3.6).
+**As built (ADR 0092, owner 2026-11-05):** good quality at the vegetable stall and the sweet shop keeps nothing overnight (yesterday's leftovers cleared at 6:00 as spoilage; the store has no produce ages); good sweets cost 8% more; good chai 0.08 L a cup, the milk a day scaled to the same cups (ADR 0093 dropped the +1.20 snacks surcharge). The day is scored at midnight; a day never opened is forgiven once, then scores as serving nobody. The mill earns stars the same way (§3.6).
 
 ### 3.6 The mill and the next village's chakki
 
@@ -109,7 +109,7 @@ Spec 016 §3.5(b)'s rule (a fee more than 1 above the next village's loses all t
 | Rival | Behaviour |
 | --- | --- |
 | **The village grocer** | Sells vegetables at the reference × 1.0, standard quality, 3 stars, open 7:00–21:00, never runs out (it buys from the trader). Never closes in Phase 2 |
-| **The village tea stall** | Chai at 10, standard, 3 stars, open 6:00–22:00, capacity 200 cups a real hour. Never closes in Phase 2 |
+| **The village tea stall** | Chai at the reference (12), standard, 3 stars, open 6:00–22:00, capacity 200 cups a real hour. Never closes in Phase 2 |
 | **The town's halwai** (off the map, as the next village's chakki) | Sweets at the reference, good quality, 4 stars, 1.5 km from the square, never runs out, never closes. Without your shop, the village buys its sweets there |
 | **A newcomer** | At each season close, for each kind of shop: if the last season's served demand was under 80% of demand (a gap), or the mean price was over the reference × 1.25 (rich margins), a newcomer opens on a free pitch with probability 0.5 (seeded, `rival` stream): reference price, standard, 2.5 stars, the village's hours. It closes when its season's share falls under 10% two seasons running. At most one newcomer of each kind. |
 | **Reaction** | Once a season, a rival whose share fell by more than a third lowers its price 5% (never under its cost); at its cost floor it stops. Rivals never raise prices above the reference |
@@ -154,8 +154,8 @@ Hourly pass, system Shops (after Market and Business): demand per group, attract
 ```
 Tea stall card:  [Today] [Customers] [Books] [Settings]
 Customers:  Today 1,840 cups · your share 46% [?]
-            You       10 coins · good · ★★★★☆ · 2 min wait     46% [?]
-            Village   10 coins · standard · ★★★☆☆ · no wait    38% [?]
+            You       13 coins · good · ★★★★☆ · 2 min wait     46% [?]
+            Village   12 coins · standard · ★★★☆☆ · no wait    38% [?]
             Newcomer   9 coins · standard · ★★☆☆☆            16% [?]
             Lost (closed or full): 120 cups [?]
 Settings:   price 10 [Change] · quality good [Change] · hours 6:00–20:00 [Change]
@@ -181,10 +181,10 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A tea stall on a pitch, hired, good quality, 10 coins | 5,000–12,000 a season (a hired mill's level, ADR 0073) | Measured by the business bot |
-| A vegetable stall selling your own produce | 10–20% more for your produce than the trader and market, less the wage | |
+| A tea stall on a pitch, hired, good quality, 10% above the reference (ADR 0093: good quality's cost comes back in its price) | 5,000–12,000 a season (a hired mill's level, ADR 0073) | Measured by the business bot |
+| A vegetable stall selling your own produce | 15% more for your produce than the market (`retailMarkup` 1.15, ADR 0093), more than the trader, less the wage | Run by you about 17,600 a season, hired about 3,700 (business bot, ADR 0093) |
 | A sweet shop on your own paneer and ghee, hired halwai | 8,000–15,000 a season; the dairy's milk worth more as sweets than at the co-op | Measured by the business bot |
-| Share against the village shop at equal terms | About 50% on the square; 25–35% from an inherited acre | |
+| Share against the village shop at equal terms | About 50% on the square; about 5% of the village from an inherited acre 800–1,200 m out, plus your own town (ADR 0093) | The place sheet shows both |
 | Newcomers in a game where the player opens nothing | 0–1 of each kind by the Township | |
 
 ## 10. Open questions (all closed with the owner, 2026-10-27)
@@ -193,10 +193,10 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 - **G2. How customers choose.** **Closed (owner, 2026-10-27):** the additive attraction score (§3.3): 1 + price + quality + stars − distance − wait, floored at 0.05, each shop's share its score over the total; the *Why?* lists every part in words.
 - **G3. Where shops stand.** **Closed (owner, 2026-10-27):** one of 3 rented pitches round the banyan (3,000 a season to the council, paid upfront at the close; the sweet shop's small building stands on its pitch) or your own acre, no rent, with the distance cost; a newcomer can take a free pitch (§3.4). The pitches' layout is previewed to the owner before it's final (ADR 0064).
 - **G4. Quality and reputation.** **Closed (owner, 2026-10-27):** standard or good quality; stars 0–5 (start 2.5) from a day score of served share × 2 + quality + value for money, moving a tenth of the way a day (§3.5).
-- **G5. The village grocer and tea stall.** **Closed (owner, 2026-10-27):** rivals on fixed terms (the grocer's vegetables at the reference, the tea stall's chai at 10, standard, 3 stars), cutting 5% a season when they lose a third of their customers, never below cost, and never closing in Phase 2 (ADR 0061) (§3.7).
+- **G5. The village grocer and tea stall.** **Closed (owner, 2026-10-27):** rivals on fixed terms (the grocer's vegetables at the reference, the tea stall's chai at 10, standard, 3 stars; the reference became 12 in ADR 0093), cutting 5% a season when they lose a third of their customers, never below cost, and never closing in Phase 2 (ADR 0061) (§3.7).
 - **G6. Newcomers.** **Closed (owner, 2026-10-27):** at each close, a gap (under 80% served) or rich prices (over 1.25 × the reference) opens a newcomer of that kind on a free pitch with a seeded 50% chance, at most one of each kind; it closes after two seasons under 10% share; buy-outs in Phase 3 (§3.7).
 - **G7. The mill.** **Closed (owner, 2026-10-27):** the area's grain chooses between your mill and the next village's chakki by the same score (§3.6), replacing spec 016's cliff; at the default fee the balance stays as ADR 0073 measured (rechecked by the bot when built).
-- **G8. Selling your own produce.** **Closed (owner, 2026-10-27):** an internal sale at today's market price, as spec 016's own wheat: the stallholder fills the stall each morning from your store up to the daily amount you set per good; the farm's books show the sale, the stall's its stock and margin (§5).
+- **G8. Selling your own produce.** **Closed (owner, 2026-10-27):** an internal sale at today's market price, as spec 016's own wheat: the stallholder fills the stall each morning from your store up to the daily amount you set per good; the farm's books show the sale, the stall's its stock and margin (§5). As built (ADR 0093), what your store lacks it buys at the local market's price (*Buy at the market*, on by default).
 
 ## 11. Cut first
 

@@ -139,7 +139,7 @@ namespace Sim.Core.Tests
             Assert.That(mill.Stars, Is.GreaterThan(before), "a mill that keeps up at the chakki's fee earns stars");
         }
 
-        // §3.5 (ADR 0092): good chai takes 0.08 L a cup and 1.20 more in supplies; the milk a day keeps the same cups; a good vegetable
+        // §3.5 (ADR 0092): good chai takes 0.08 L a cup (full-cream milk); the milk a day keeps the same cups; a good vegetable
         // stall keeps nothing overnight.
         [Test]
         public void GoodQuality()
@@ -169,6 +169,30 @@ namespace Sim.Core.Tests
             Assert.That(spoiled, Is.Not.Empty, "yesterday's potatoes cleared at 6:00");
             Assert.That(v.Stock[potato], Is.EqualTo(1_000_000), "and the day's put out fresh");
             Assert.That(v.Ledger.Reconcile(), Is.Null);
+            Assert.That(b.Ledger.Reconcile(), Is.Null);
+        }
+
+        // ADR 0093 (owner, 2026-11-05): what your store can't give, the vegetable stall buys at the local market's price each morning, as a
+        // sabziwala does at the mandi (on by default); with buying off it puts out only what your store has.
+        [Test]
+        public void Mandi()
+        {
+            Simulation sim = Start();
+            Business.Business b = Shop(sim, "veg_stall", 0);
+            Assert.That(b.BuyFromMarket, Is.True, "on by default");
+            int potato = sim.Config.Game.Market.IndexOf("potato");
+            foreach (int g in BusinessRules.TypeOf(sim, b).Goods) Ok(sim, new SetStallGoods(sim.State.Clock.SimTime, b.Id, sim.Config.Game.Market.Goods[g].Id, 0));
+            Ok(sim, new SetStallGoods(sim.State.Clock.SimTime, b.Id, "potato", 3_000));
+            sim.State.Market.Stock[potato] = sim.State.Market.Offered[potato]; // nothing of yours to take
+            sim.AdvanceTo(NextDayAt(sim, 6) + 1);
+            Assert.That(b.Stock[potato], Is.EqualTo(3_000), "bought at the market");
+            Assert.That((double)b.StockCost[potato] / 3 / 100, Is.EqualTo(D(sim.State.Market.Price[potato])).Within(D(sim.State.Market.Price[potato]) * 0.05), "at the local market's price a kg");
+
+            Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, b.OpenHour, b.CloseHour, b.Fee, b.OwnPerDay, false));
+            int bought = b.Ledger.Entries.Count(e => e.DescriptionKey == "ledger.boughtAtMarket");
+            sim.State.Market.Stock[potato] = sim.State.Market.Offered[potato];
+            sim.AdvanceTo(NextDayAt(sim, 6) + 1);
+            Assert.That(b.Ledger.Entries.Count(e => e.DescriptionKey == "ledger.boughtAtMarket"), Is.EqualTo(bought), "buying off: nothing bought");
             Assert.That(b.Ledger.Reconcile(), Is.Null);
         }
 

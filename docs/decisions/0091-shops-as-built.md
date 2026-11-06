@@ -18,7 +18,7 @@ Coding US-120 turned up three gaps in spec 017. They were settled with the owner
    - Then it buys neighbours' milk at the co-op's price + 2, as the dairy does (ADR 0080). *Buy neighbours' milk and snacks* turns this off.
    - The snack (rusk or pav) comes from your bakery at the trader's price, otherwise at the market's import price.
 2. **Your products at the vegetable stall** (owner, 2026-11-05). The spec gave no demand for the stall's products. A separate demand would have counted the same people twice.
-   - The village shops' daily buying of pav, paneer and curd (spec 016 §3.9c) becomes retail demand. Your stall and the grocer share it by the attraction score, at the trader's price × 1.25.
+   - The village shops' daily buying of pav, paneer and curd (spec 016 §3.9c) becomes retail demand. Your stall and the grocer share it by the attraction score, at the trader's price × the retail markup (1.25; 1.15 from Sprint 16's balance step, ADR 0093).
    - At 6:00 the stall takes its products from your bakery and dairy before the village shops buy. The village shops then buy that much less.
    - Atta isn't sold at the stall: the area grinds its own wheat, so retail atta would count that demand twice.
 3. **The mill's distance** (owner, 2026-11-05). The spec measured the mill's distance from the square and assumed an inherited acre is 300–500 m away. On the map they are 800–1,200 m away. Past about 1 km, every shop is at the attraction's floor, as the chakki is, so a mill there got only 50–80% of the area at the chakki's fee.

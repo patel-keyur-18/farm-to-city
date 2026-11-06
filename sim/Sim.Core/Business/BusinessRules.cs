@@ -398,7 +398,7 @@ namespace Sim.Core.Business
                 OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
-                BuyFromMarket = t.ByRecipe || t.TakesMilk, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk
+                BuyFromMarket = t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
                 Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
@@ -755,6 +755,7 @@ namespace Sim.Core.Business
                     long cost = BatchCost(sim, b, r, q), spend = BusinessBooks.CanSpend(sim, b);
                     if (cost > spend) q = cost <= 0 ? 0 : (long)((System.Numerics.BigInteger)q * System.Math.Max(0, spend) / cost);
                 }
+                while (q > 0 && BatchCost(sim, b, r, q) > BusinessBooks.CanSpend(sim, b)) q = q * 99 / 100 - 1; // rounding can leave it a few coins over
                 if (q <= 0) continue;
                 used += Batch(sim, b, r, q);
                 capacity -= RecipeInputs(r, q);
@@ -779,14 +780,17 @@ namespace Sim.Core.Business
         /// <summary>What <paramref name="q"/> grams of the product cost in cash now: inputs to buy, fuel and supplies.</summary>
         private static long BatchCost(Simulation sim, Business b, RecipeDef r, long q)
         {
-            long cost = Money.Value(q, (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex * CostFactor(sim, b), r.OutputGrams), inputs = 0;
+            Fixed index = sim.State.Market.PriceIndex * CostFactor(sim, b);
+            long supplies = Money.Value(q, r.Supplies * index, r.OutputGrams), cost = Money.Value(q, r.Fuel * index, r.OutputGrams) + supplies, inputs = 0;
             foreach (KeyValuePair<int, long> kv in r.Inputs)
             {
-                long buy = Need(kv.Value, q, r.OutputGrams) - b.Stock[kv.Key];
-                if (buy > 0) cost += MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key));
-                inputs += Money.Value(Need(kv.Value, q, r.OutputGrams), InputPrice(sim, kv.Key), 1000);
+                // As the batch will cost it: what it holds at its book cost, the rest bought at the import price.
+                long need = Need(kv.Value, q, r.OutputGrams), held = System.Math.Min(need, b.Stock[kv.Key]), buy = need - held;
+                long bought = buy > 0 ? MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key)) : 0;
+                cost += bought;
+                inputs += bought + (held <= 0 ? 0 : (long)((System.Numerics.BigInteger)b.StockCost[kv.Key] * held / b.Stock[kv.Key]));
             }
-            return cost + GoodExtra(sim, b, inputs + Money.Value(q, r.Supplies * sim.State.Market.PriceIndex, r.OutputGrams));
+            return cost + GoodExtra(sim, b, inputs + supplies);
         }
 
         private static long Batch(Simulation sim, Business b, RecipeDef r, long q)

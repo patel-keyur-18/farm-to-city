@@ -225,11 +225,7 @@ namespace Sim.View.Views
             ShopDefs d = ShopRules.Defs(sim);
             WhyVm vm = New(ctx, "why.shopQuality.title", ShopWords.Quality(ctx, b.Quality, true));
             Text(vm, ctx, "why.shopQuality." + t.Kind.ToString().ToLowerInvariant());
-            if (t.Kind == ShopKind.Chai)
-            {
-                Row(vm, ctx, "why.shopQuality.cupMilk", Ml(ctx, t.GoodCupMilkMl), "standard", Ml(ctx, t.CupMilkMl));
-                Row(vm, ctx, "why.shopQuality.cupExtra", ctx.Strings.Get("why.shopQuality.coins", "n", ctx.Fmt.Decimal2(t.GoodCupExtra * sim.State.Market.PriceIndex)));
-            }
+            if (t.Kind == ShopKind.Chai) Row(vm, ctx, "why.shopQuality.cupMilk", Ml(ctx, t.GoodCupMilkMl), "standard", Ml(ctx, t.CupMilkMl));
             if (t.GoodRecipeExtra > Fixed.Zero) Row(vm, ctx, "why.shopQuality.recipe", ctx.Fmt.Percent(t.GoodRecipeExtra));
             Row(vm, ctx, "why.shopQuality.pull", Part(ctx, d.WQuality));
             Row(vm, ctx, "why.shopQuality.stars", Part(ctx, d.ScoreGood - d.ScoreStandard));

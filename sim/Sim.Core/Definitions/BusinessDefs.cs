@@ -117,11 +117,10 @@ namespace Sim.Core.Definitions
         public long SnackGrams { get; internal set; }
 
         /// <summary>
-        /// Good quality's costs (spec 017 §3.5, ADR 0092): a good cup's milk (ml) and its extra coins (year-0); the extra share on a recipe's
-        /// cost (pure ghee, fresh paneer); and whether nothing is kept overnight (leftovers cleared at 6:00 as spoilage).
+        /// Good quality's costs (spec 017 §3.5, ADR 0092): a good cup's milk (ml: full-cream); the extra share on a recipe's cost (pure
+        /// ghee, fresh paneer); and whether nothing is kept overnight (leftovers cleared at 6:00 as spoilage).
         /// </summary>
         public long GoodCupMilkMl { get; internal set; }
-        public Fixed GoodCupExtra { get; internal set; }
         public Fixed GoodRecipeExtra { get; internal set; }
         public bool GoodFresh { get; internal set; }
 

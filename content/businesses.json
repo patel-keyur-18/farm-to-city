@@ -74,7 +74,7 @@
       "openHour": 8, "closeHour": 20, "takesMilk": true, "neighbourMilkPremium": 2,
       "cup": { "milkLitres": 0.06, "supplies": 1.50, "snackKg": 0.05 },
       "goods": ["rusk", "pav"],
-      "good": { "milkLitres": 0.08, "supplies": 1.20 }
+      "good": { "milkLitres": 0.08 }
     },
     {
       "id": "sweet_shop", "nameKey": "business.sweet_shop", "era": "village", "kind": "sweets",
