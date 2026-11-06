@@ -122,8 +122,8 @@ namespace Sim.View.Views
             Business b = BusinessOf(ctx, id);
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
             int input = t.ByRecipe ? BusinessRules.BoughtInputs(t)[0] : t.Input >= 0 ? t.Input : t.Goods[t.Goods.Count - 1]; // a stall: its last product (curd)
-            WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.businessMarket.title", t),
-                t.TakesMilk ? ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(ctx.Sim, t)) : ctx.Fmt.PricePerKg(MarketRules.Ceiling(ctx.Sim, input)));
+            WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.businessMarket.title", t), t.Kind == ShopKind.Veg ? ctx.Strings.Get(b.BuyFromMarket ? "business.yes" : "business.no") // many goods, each at its own price
+                : t.TakesMilk ? ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(ctx.Sim, t)) : ctx.Fmt.PricePerKg(MarketRules.Ceiling(ctx.Sim, input)));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.businessMarket.price", t));
             vm.Footnote = ctx.Strings.Get(BusinessWords.Key(ctx, "why.businessMarket.lesson", t));
             return vm;

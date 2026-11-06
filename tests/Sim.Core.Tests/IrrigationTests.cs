@@ -162,7 +162,8 @@ namespace Sim.Core.Tests
 
             ToNextClose(sim);
             ObligationPaid drip = Paid(sim, "drip");
-            Assert.That(drip.Amount, Is.EqualTo(4 * 300 * Coin + (20000 + 20000 + 40000 + 40000) * Coin / 100), "power 300 an acre and 1% upkeep");
+            Assert.That(drip.Amount, Is.EqualTo(Sim.Core.Market.MarketRules.Indexed(sim, 4 * D(sim).Drip.PowerPerAcreSeason) + (20000 + 20000 + 40000 + 40000) * Coin / 100),
+                "its power (none of its own since ADR 0093) and 1% upkeep");
         }
 
         // AC-10 (ADR 0086): from the Village, a borewell on an acre you own waters the 4 acres you choose at 40 with no buckets, its

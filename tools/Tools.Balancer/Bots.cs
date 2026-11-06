@@ -848,7 +848,7 @@ namespace Tools.Balancer
     {
         public const int Households = 5;
 
-        private static int[] HouseAcres(GameDefs d)
+        internal static int[] HouseAcres(GameDefs d)
         {
             int[] a = Home.Acres(d);
             return new[] { a[a.Length - 2], a[a.Length - 3] };
@@ -963,9 +963,9 @@ namespace Tools.Balancer
 
     /// <summary>
     /// Spec 013 §9 (Sprint 16's balance step, ADR 0093): the competent founder who makes farm investments as soon as they unlock and
-    /// the cash allows: <c>pump</c> (the well's pump on 4 acres), <c>canal</c> (a channel on every rain-fed acre it can reach),
+    /// the cash allows: <c>pump</c> (the well's pump on the well acres and 2 it farms), <c>canal</c> (a channel on every rain-fed acre it farms and can reach),
     /// <c>drip</c> (on the subsidised pumped acres), <c>mango</c> (an orchard on the last inherited acre, picked or sold on the trees),
-    /// <c>tractor</c> (bought on the bank's loan for 70%), <c>tractor-hire</c> (hired on each day there's an acre to sow).
+    /// <c>tractor</c> (bought on the bank's loan for 70%), <c>tractor-hire</c> (hired on each day there's an acre to sow), <c>granary</c> (your godown, rice kept from the Monsoon to Spring).
     /// </summary>
     public sealed class FarmToolBot : FarmerBot
     {
@@ -993,6 +993,12 @@ namespace Tools.Balancer
             return true;
         }
 
+        /// <summary>An acre the bot is farming (a crop on it) and will go on farming: not one its houses will take.</summary>
+        private static bool Farmed(Simulation sim, int tile)
+        {
+            return sim.State.Farm.CropOn(tile) != null && OrchardRules.Of(sim, tile) == null && !Town.HouseAcres(sim.Config.Game).Contains(tile);
+        }
+
         private static bool Cash(Simulation sim, long coins) { return sim.State.Ledger.Cash >= coins * Money.Coin; }
 
         private void Invest(Simulation sim, long t, string tool)
@@ -1001,13 +1007,13 @@ namespace Tools.Balancer
             switch (tool)
             {
                 case "pump":
-                    if (Sim.Core.Land.IrrigationRules.Pump(sim) == null && Cash(sim, 40_000) && Spend(sim, new InstallPump(t)))
-                        Ok(sim, new SetPumpAcres(t, acres.Take(4).ToList()));
+                    if (Sim.Core.Land.IrrigationRules.Pump(sim) == null && Cash(sim, 40_000) && acres.Skip(2).Count(a => Farmed(sim, a)) >= 2 && Spend(sim, new InstallPump(t)))
+                        Ok(sim, new SetPumpAcres(t, acres.Take(2).Concat(acres.Skip(2).Where(a => Farmed(sim, a)).Take(2)).ToList()));
                     break;
                 case "canal":
                     if (!Cash(sim, 30_000)) break;
                     foreach (int tile in acres.Skip(2))
-                        if (!Sim.Core.Land.IrrigationRules.Channelled(sim, tile) && Sim.Core.Land.IrrigationRules.SourceOf(sim, tile) == 0) Spend(sim, new BuildChannel(t, tile));
+                        if (Farmed(sim, tile) && !Sim.Core.Land.IrrigationRules.Channelled(sim, tile) && Sim.Core.Land.IrrigationRules.SourceOf(sim, tile) == 0) Spend(sim, new BuildChannel(t, tile));
                     break;
                 case "drip":
                     if (!Cash(sim, 40_000)) break;
@@ -1026,12 +1032,27 @@ namespace Tools.Balancer
                     long price = Sim.Core.Equipment.EquipmentRules.Price(sim, Sim.Core.Equipment.EquipmentRules.Defs(sim).Machines[1]);
                     Spend(sim, new BuyMachine(t, "tractor", new Financing("coop_bank", price * 7 / 10 / Money.Coin * Money.Coin, 16)));
                     break;
+                case "granary": // your godown, then rice kept from its Monsoon harvest until Spring (ADR 0093)
+                    if (Sim.Core.Market.GodownRules.Owned(sim) == null && Cash(sim, 60_000)) Spend(sim, new BuyGodown(t));
+                    break;
                 case "tractor-hire":
                     if (t % 86_400 / 3600 != 7 || !acres.Any(a => sim.State.Farm.CropOn(a) == null && OrchardRules.Of(sim, a) == null)) break;
                     Spend(sim, new HireMachine(t, "tractor"));
                     break;
             }
         }
+
+        /// <summary>With the granary, the rice harvested in the Monsoon waits through the Winter for Spring's price.</summary>
+        protected override long Kept(Simulation sim, int good)
+        {
+            if (!_tools.Contains("granary") || Sim.Core.Market.GodownRules.Owned(sim) == null || sim.Config.Game.Market.Goods[good].Id != "rice") return 0;
+            int season = Season(sim, sim.State.Clock.SimTime);
+            if (season != 2 && season != 3) return 0; // Monsoon and Winter
+            RiceHeld = Math.Max(RiceHeld, sim.State.Market.InStore(good));
+            return long.MaxValue / 4;
+        }
+
+        public long RiceHeld { get; private set; }
 
         /// <summary>Picks what the store and the trader take each hour; at 21:00 what's still ripe is sold on the trees.</summary>
         private static void Fruit(Simulation sim, long t)

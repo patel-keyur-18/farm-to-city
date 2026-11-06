@@ -41,7 +41,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | Well and buckets | Start (the 2 well acres) | — | Your bucket labour (spec 003 §3.6) | Floor 30 | 1–2.4 h a day an acre in dry weather |
 | **Pump on the well** | Hamlet | An electric pump and pipes, 15,000, depreciated over 40 seasons | Power 250 a season an acre watered | Floor 40 on up to `wellPumpAcres` 4 of your fields, chosen by the player (it starts on the 2 well acres; any field, by buried pipe: owner, 2026-11-04) | None (no buckets) |
 | **Canal channel** | Hamlet | 6,000 an acre (a lined field channel from the minor canal along the river side; an acre must border a channelled acre or the canal) | Water fee 400 a season an acre (the irrigation department), paid at the close | Floor 45 in Monsoon, Winter and Spring; **dry in Summer** (the canal is closed for repairs, as Indian canals are in May–June) | None |
-| **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Power 300 a season an acre, maintenance 1% of cost a season | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +5% (fertigation) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
+| **Drip** | Village | 40,000 an acre (pipes, drippers, filter), less a 50% government subsidy (PMKSY) for the first 2 acres; depreciates over 30 seasons | Maintenance 1% of cost a season; no power of its own (it runs on the pump's water, and less of it; power 300 a season an acre until Sprint 16's balance step, ADR 0093) | Held at the crop's `moistureMin` all year, never above its `moistureMax` (drip doesn't waterlog); fertiliser's yield bonus +15% (fertigation; +5% until Sprint 16's balance step, ADR 0093) | None; Care demand −0.5 h a day an acre (no weeding between lines) |
 
 - **The minor canal (owner, 2026-11-03):** it runs west to east along the edge between rows 4 and 5, from the map's west edge (a distributary off the hills) to the village lane (column 10), drawn on the tile edge as a thin lined channel with a footpath (no acre taken). Acres sharing that edge border the canal: row 4 (`w3`, `nw1`, `n3`, `n4`, `ne1`) and row 5 (`w4`, `w1`, `home_a`'s 84–86, the yard, `e1`); others reach it through channelled neighbours (`home_b` through `home_a`). Its drawing is previewed to the owner first (ADR 0064).
 - **Water sources:** the pump and drip run on pumped water: the well's pump waters `wellPumpAcres` 4 acres, by flooding or by drip (drip needs the pump's pressure); a **borewell** with its own pump (Village, 30,000, 60 seasons) waters `borewellAcres` 4 more (§10 G2, ADR 0086). The canal is its own source along its channels.
@@ -146,7 +146,7 @@ Hourly: moisture (spec 002) with the canal and drip floors after the well's. Dai
 | Buy a tractor | 6,00,000 or a loan | Labour −35%, Tools 1.06, no trolley hire | Diesel, maintenance, breakdowns | Sell at 80% of book |
 | Lease or hire instead | A season's or a day's charge | The same effect while it lasts | No resale, no breakdown risk | Ends by itself |
 | Plant a mango orchard | 14,000 and the acre's crops for 1.5 years | Fruit every Summer, for the whole game | Gluts the mango market if too many | Clear at a loss |
-| Buy a godown in town | 45,000 | Grain waits for Winter prices at a fifth of the spoilage | More room in the hut store | Permanent |
+| Buy a godown in town | 45,000 | Grain waits for its dearer season at a fifth of the spoilage (rice and maize from the Monsoon, mustard from Winter; wheat is dearest at its Winter harvest, ADR 0093) | More room in the hut store | Permanent |
 
 ## 7. UI
 
@@ -188,11 +188,11 @@ Store:  Your godown in the mandi town  [Buy · 45,000] → godown: wheat 3,200 k
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A canal acre's season profit against a rain-fed one | +10–25% (steadier water), payback 2–4 seasons | |
-| Drip's payback with the subsidy | 4–8 seasons | |
+| A canal acre's season profit against a rain-fed one | +3–8% (steadier water: outside Summer the rain mostly keeps a loam acre in its crop's band, and the canal is shut in Summer), payback 5–8 seasons (+10–25% and 2–4 until Sprint 16's balance step, ADR 0093) | Measured by the farm bot: +4%, payback 8 |
+| Drip's payback with the subsidy | About 12 seasons (3 years) on field crops, faster on thirsty crops (4–8 seasons until Sprint 16's balance step, ADR 0093) | Measured by the farm bot: 11.2 |
 | A tractor bought against hired days, for 8 acres | Hiring cheaper below about 10 acres; buying pays over 60 seasons only on a big farm | The lesson |
 | A mango orchard against crops on the same acre | Behind for about 6 seasons, ahead within 12 | |
-| Wheat stored from Winter to Summer in the granary | Earns more than its spoilage and the granary's cost a season on 5+ tonnes | |
+| Rice from the Monsoon to Spring, maize from the Monsoon to Summer, or mustard from Winter to Summer in the granary (wheat until Sprint 16's balance step: it ripens in Winter, its dearest season, ADR 0093) | Earns more than its spoilage and the granary's cost on 5+ tonnes | `GranaryTests.Rice_Waits_Pays`: 5 t of rice +11,104 in Spring against 1,125 of the godown's wear or 3,000 of rent |
 
 ## 10. Open questions (all closed with the owner, 2026-10-27)
 

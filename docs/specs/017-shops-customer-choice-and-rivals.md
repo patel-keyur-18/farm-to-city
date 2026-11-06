@@ -89,7 +89,7 @@ share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 | Place | Rent | Location | Notes |
 | --- | --- | --- | --- |
 | **A pitch in the village square** (3 pitches, `MapDef.places` kind `pitch`, round the banyan) | `pitchRent` 3,000 a season, paid upfront at the close to the council (Cr Cash, Dr Rent) | Distance 0 from the village, the town's centre distance from your houses | The village's own sellers keep their places; a rival can take a free pitch |
-| **Your own acre** (spec 016 §3.3 step 4; the pitches are `square` and `pitches` in `shops.json`, ADR 0091 §4) beside the village lane or the farm lane | None | Distance from each group's centre. As built, an inherited acre is 800–1,200 m from the square (ADR 0091 §3), where the village's share is at the attraction's floor, about 5% (ADR 0093); the place sheet shows your nearest free acre's share beside the pitches' | Teaches location: cheaper, but fewer pass by |
+| **Your own acre** (spec 016 §3.3 step 4; the pitches are `square` and `pitches` in `shops.json`, ADR 0091 §4) beside the village lane or the farm lane | None | Distance from each group's centre. As built, an inherited acre is 800–1,200 m from the square (ADR 0091 §3), where the village's share is at the attraction's floor, about 5–10% (ADR 0093); the place sheet shows your nearest free acre's share beside the pitches' | Teaches location: cheaper, but fewer pass by |
 
 ### 3.5 Quality and reputation (§10 G4)
 
@@ -184,7 +184,7 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 | A tea stall on a pitch, hired, good quality, 10% above the reference (ADR 0093: good quality's cost comes back in its price) | 5,000–12,000 a season (a hired mill's level, ADR 0073) | Measured by the business bot |
 | A vegetable stall selling your own produce | 15% more for your produce than the market (`retailMarkup` 1.15, ADR 0093), more than the trader, less the wage | Run by you about 17,600 a season, hired about 3,700 (business bot, ADR 0093) |
 | A sweet shop on your own paneer and ghee, hired halwai | 8,000–15,000 a season; the dairy's milk worth more as sweets than at the co-op | Measured by the business bot |
-| Share against the village shop at equal terms | About 50% on the square; about 5% of the village from an inherited acre 800–1,200 m out, plus your own town (ADR 0093) | The place sheet shows both |
+| Share against the village shop at equal terms | About 50% on the square; about 5–10% of the village from an inherited acre 800–1,200 m out, plus your own town (ADR 0093) | The place sheet shows both |
 | Newcomers in a game where the player opens nothing | 0–1 of each kind by the Township | |
 
 ## 10. Open questions (all closed with the owner, 2026-10-27)

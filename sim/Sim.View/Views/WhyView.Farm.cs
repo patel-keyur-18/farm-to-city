@@ -87,8 +87,10 @@ namespace Sim.View.Views
                 Text(vm, ctx, "why.irrigation.drip");
                 Row(vm, ctx, "why.irrigation.dripCare", ctx.Strings.Get("unit.h", "n", ctx.Fmt.Decimal1(d.Drip.CareCutHoursPerDay)));
                 Row(vm, ctx, "why.irrigation.fertigation", "+" + ctx.Fmt.Percent(d.Drip.FertigationBonus));
-                Row(vm, ctx, "why.irrigation.dripCost", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, d.Drip.PowerPerAcreSeason)),
-                    "upkeep", ctx.Fmt.Percent(d.Drip.UpkeepShare));
+                Building lines = IrrigationRules.On(sim, d.Drip.Building, tile); // its running cost: any power, and upkeep on what it cost
+                Row(vm, ctx, "why.irrigation.dripCost", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, d.Drip.PowerPerAcreSeason)
+                    + Sim.Core.Finance.Money.RoundToCoin(Sim.Core.Finance.Money.MulRate(lines.Cost, d.Drip.UpkeepShare))), "upkeep", ctx.Fmt.Percent(d.Drip.UpkeepShare));
+                Text(vm, ctx, "why.irrigation.dripPays");
                 if (source == 0) Text(vm, ctx, "why.irrigation.dripDry");
             }
             if (IrrigationRules.Channelled(sim, tile))

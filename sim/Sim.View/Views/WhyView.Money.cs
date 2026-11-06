@@ -340,6 +340,7 @@ namespace Sim.View.Views
             if (b == null) Row(vm, ctx, "why.godown.price", ctx.Fmt.Coins(price), "life", ctx.Fmt.Integer(sim.Config.Game.Buildings[d.Building].UsefulLifeSeasons));
             else Row(vm, ctx, "why.godown.book", ctx.Fmt.Coins(b.BookValue), "life", ctx.Fmt.Integer(sim.Config.Game.Buildings[d.Building].UsefulLifeSeasons));
             Text(vm, ctx, "why.godown.goods");
+            Text(vm, ctx, "why.godown.waits");
             vm.Footnote = ctx.Strings.Get("why.godown.lesson");
             return vm;
         }

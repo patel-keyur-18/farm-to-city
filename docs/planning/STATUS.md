@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, started 2026-11-03: every story done and approved, the balance step under way. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
+| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, started 2026-11-03: every story done and approved, the balance step done. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
 | Branch with latest work | `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03): Sprint 16's stories and the balance step |
 | Last updated | 2026-11-06 |
 
@@ -205,13 +205,14 @@
 
 ## In progress
 
-**Sprint 16, balance step, spec 017 §9 done (2026-11-06, each item decided with the owner, ADR 0093); spec 013 §9 next.**
-- Measured with the shop bots (the balancer's `shops` and `shopbooks` modes, 8 seeds × 12 seasons, shops moved to the Hamlet): tea stall hired, good, 10% above the reference 8,580 a season (target 5,000–12,000); sweet shop hired 11,773 (8,000–15,000); vegetable stall hired 3,714, run by you 17,609; a stall on your acre about 5% of the village; the mill with stars hired 6,070, run by you about 36,450.
+**Sprint 16, balance step done (2026-11-06, each item decided with the owner, ADR 0093): spec 017 §9 and spec 013 §9.**
+- Measured with the shop bots (the balancer's `shops` and `shopbooks` modes, 8 seeds × 12 seasons, shops moved to the Hamlet): tea stall hired, good, 10% above the reference 8,580 a season (target 5,000–12,000); sweet shop hired 11,773 (8,000–15,000); vegetable stall hired 3,714, run by you 17,609; a stall on your acre about 5–10% of the village; the mill with stars hired 6,070, run by you about 36,450.
 - Content: chai's reference 12 coins; good chai 0.08 L a cup with no surcharge; sweets 300 and 360 a kg (base prices 240 and 290); `retailMarkup` 1.15.
 - Sim: the vegetable stall buys what your store lacks at the local market's price (*Buy at the market*, on by default); `BatchCost` at book cost for held inputs and `Make` trims a batch it can't pay for (the balancer crashed on a negative shop cash).
 - Screens: the place sheet's *Any acre you own* row shows your nearest free acre's share; the stall's market setting and *Why?* texts name the mandi.
 - Tests: `ShopTests.Mandi`, `GateTests.Shops`, `BusinessViewTests.ShopPlace_AcreShare`.
-- Still to do in the step: spec 013 §9 (canal against rain-fed, drip and tractor payback, the mango orchard and glut, the granary), then an Editor look at the changed screens.
+- Spec 013 §9 with the farm bot (the balancer's `farm` mode, `FarmToolBot`, 64 seeds × 16 seasons, drip and the tractor moved to the Hamlet): a canal acre +4%, payback 8 (target restated +3–8%, 5–8: outside Summer the rain keeps loam in band, the canal is shut in Summer); drip's power 0 and fertigation +15% (payback 16.6 → 11.2 seasons, target restated about 12); a mango acre behind 8 seasons, ahead from season 8; a tractor hired on 6 acres +3,767 a season, bought affordable in 13 of 64 runs; the granary's target on rice, maize and mustard (wheat is dearest at its Winter harvest): 5 t of rice +11,104 in Spring (`GranaryTests.Rice_Waits_Pays`). The canal's, drip's and the godown's *Why?* texts say what they gain.
+- Editor (scripted touch, `docs/art/s16-balance-*.png`): Menu → Businesses → vegetable stall research ("the market's price + 15%") → plan (the produce line now "yours at the trader's price, the rest at the market") → *Choose the place* (pitches 54%; *Any acre you own*: "Your nearest: about 10% of the village's customers"; the tea stall's is about 5%, so the docs say 5–10%) → founded on pitch II → Settings: *Buy at the market · Yes* → its *Why?*; field 102's irrigation *Why?* with drip (+15%, upkeep 208, no power of its own, the payback line); field 84's canal *Why?* (dry spells, small steady gain); Store → *Godown in town* → its *Why?* (what gains by waiting). Set up by script: **Next era**, 1,00,000 test coins, the pump, drip on 102 and a channel on 84. Fixed during the tour: the vegetable plan's produce line and its *Why?* (said all at the trader's price); the market *Why?* headline showed curd's import price unlabelled (now Yes or No for the vegetable stall). Saves restored and identical.
 
 **Sprint 16, US-121 done (2026-11-05, approved by the owner): stars and quality** (spec 017 §3.5, AC-3, as amended by ADR 0092; its three gaps closed with the owner first).
 - Content: `good` on each shop type (the tea stall's 0.08 L a cup, its +1.20 snacks surcharge dropped in the balance step (ADR 0093); the sweet shop's +8% and fresh; the vegetable stall's fresh); `reputation` in `shops.json` (served 2, standard 1, good 1.5, value 1 gone at 30% above, a tenth a day, one shut day forgiven).
@@ -235,7 +236,7 @@
 - Tests: `OrchardTests.Bearing_Intercrop` (AC-6, AC-13), `Place_Clear`, `Sold_With_The_Land`, `ChunkingInvariance`; `OrchardViewTests.FieldCard`; `MigrationTests.Schema13_Farm` (no orchards in a schema-13 save; one planted round-trips); `saves/schema14` re-pinned. 438 + 132 pass. `FarmPlayTests.Advance72h_WithPeople` (20 ms limit) fails now and then on this Mac, on the last commit without US-129 too (18–21.5 ms both ways); it passed in the final run.
 - Editor (scripted touch, `docs/art/s16-orchard-*.png`): field 84's card → *Plant an orchard* → the plant sheet and mango's *Why?* → banana planted (24,978) → 16 saplings on the acre → the young orchard's card → *Sow between the rows* (methi and radish only, 1.5 h a day) → radish sown under the saplings → (7 days 13 hours of dev time travel) → the ripe banana trees with their marker → the card (3,022 kg; you can pick today 2,150 kg and its *Why?*: store 2,000 + trader 150) → *Pick what can go today* (store full, +4,683 from the trader) → Pick greyed "The trader can't take any more today." → *Sell the rest on the trees* (+19,049) → *Clear the orchard*'s question → *Keep it* → the next season's batch (3,176 kg) → *Sell it all on the trees* (+69,310). Set up by script: dev time travel only. Fixed during the tour: the next batch read "Poor" right after planting (the sums ran to the last hour; now the rates since are added); the sow sheet showed the full acre's hours between rows; the ripe marker floated over the acre behind (now beside the field's own); two rows both said "Waiting" (the fruit's is now "Fruit waiting"); "Sell the rest" before any picking (now "Sell it all"); "waiting for their season" on an all-season banana (now "bearing"); the batch's *Why?* row now starts "A batch:". Saves restored and identical.
 - **Two rule slips, reported:** C# was edited twice while play was running (the next-batch fix and the sow sheet's hours). Play was stopped and Unity recompiled before going on each time.
-- For review: §5's choices in ADR 0090 (one entity an acre, the batch averaged since the last, the trees' own moisture band, sold with the land at book, machines off orchards). The balancer's mango glut (§9) is measured in the sprint's balance step.
+- For review: §5's choices in ADR 0090 (one entity an acre, the batch averaged since the last, the trees' own moisture band, sold with the land at book, machines off orchards). The mango acre was measured in the balance step (ADR 0093): with the batch picked as far as the store and trader take and the rest sold on the trees, the glut doesn't stop it pulling ahead of crops from season 8.
 
 **Sprint 16, US-128 done (2026-11-04, approved by the owner): equipment** (spec 013 §3.2 as amended by ADR 0089; ADR 0088; art approved 2026-11-04).
 - Sim: `equipment` in `farming.json` (the ox plough from the Hamlet, the tractor from the Village; the combine harvester moved to Phase 3, ADR 0089), the bullock in `livestock.json` (draught, no milk or calves, its own names), `equipmentLtv` 0.70 on the co-op bank. `EquipmentState` (machines, the day's hires, each crop's sowing Tools) as schema 14's last section; `EquipmentRules` (coverage best machine first, well acres first; labour × (1 − cut); Tools kept from sowing; the cart on mandi trips; diesel, maintenance and leases at the close; breakdowns 0.5% or 4% a day on `RngStream.Equipment`; repairs; straight-line depreciation Dr 5500 Cr 1610; resale at 80%); commands `BuyMachine` (cash or the bank's loan against the tractor), `LeaseMachine`, `HireMachine` (until midnight), `SellMachine` (the bank repaid first; a lease given back), `SetMaintenance`; rejects `UnknownMachine`, `NoShedRoom` (the bullocks only in the second shed), `PartOfMachine` (bullocks never at the fair). Foreclosure takes bought machines after the animals; net worth gains *Machines at book value*.
@@ -326,7 +327,7 @@
 
 ## Next up
 
-1. **Sprint 16: the balance step, spec 013 §9** with the bots (canal against rain-fed, drip and tractor payback, the mango orchard and its glut, the granary); spec 017 §9 is done (ADR 0093). Then the test checklist in the Editor, the device build and the pull request.
+1. **Sprint 16:** the test checklist `docs/test-checklists/s16-shops-and-farm.md` with every non-device check run in the Editor, the Development build (Builds/iOS deleted first, the unsigned Xcode check) and the pull request.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -369,7 +370,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved; the balance step's spec 017 half done (ADR 0093). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved; the balance step done (ADR 0093). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 

@@ -479,6 +479,7 @@ namespace Tools.Balancer
                 ("tractor bought", () => new FarmToolBot("tractor"), () => new FarmerBot()),
                 ("tractor hired", () => new FarmToolBot("tractor-hire"), () => new FarmerBot()),
                 ("mango orchard", () => new FarmToolBot("mango"), () => new FarmerBot()),
+                ("granary (rice to Spring)", () => new FarmToolBot("granary"), () => new FarmerBot()),
             };
             foreach (var (name, make, against) in bots)
             {
@@ -487,6 +488,7 @@ namespace Tools.Balancer
                 var running = new List<double[]>();
                 double spent = 0, perAcre = 0;
                 int made = 0, channels = 0;
+                var held = new List<double>();
                 for (int seed = 1; seed <= seeds; seed++)
                 {
                     var bot = (FarmToolBot)make();
@@ -495,6 +497,7 @@ namespace Tools.Balancer
                     made++;
                     spent += bot.Spent / (double)Money.Coin;
                     channels += Sim.Core.Land.IrrigationRules.ChannelCount(with.Sim);
+                    if (bot.RiceHeld > 0) held.Add(bot.RiceHeld / 1000.0);
                     var after = new List<double>();
                     var run = new double[seasons];
                     double sum = 0;
@@ -522,6 +525,7 @@ namespace Tools.Balancer
                     + (channels > 0 ? "; " + (channels / (double)made).ToString("0.0", CultureInfo.InvariantCulture) + " channels, a canal acre "
                         + (gains[gains.Count / 2] / (channels / (double)made) / (perAcre / made)).ToString("+0%;-0%", CultureInfo.InvariantCulture) + " against a rain-fed acre's "
                         + K(perAcre / made) : ""));
+                if (held.Count > 0) Console.WriteLine("    rice held at most (median) " + K(held.OrderBy(x => x).ElementAt(held.Count / 2)) + " kg");
                 if (name.StartsWith("mango"))
                     Console.WriteLine("    net of its cost, by seasons since planting (median): "
                         + string.Join(" ", Enumerable.Range(0, seasons).Select(k => K(running.Select(r => r[k]).OrderBy(x => x).ElementAt(running.Count / 2)))));

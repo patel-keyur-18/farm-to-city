@@ -200,5 +200,37 @@ namespace Sim.Core.Tests
                 Assert.That(sim.State.Godown.LetNow, Is.False);
             }
         }
+
+        // Spec 013 §9 (ADR 0093 §9): 5 t of rice from the Monsoon harvest, sold to the trader at once, or kept in your godown and sold
+        // in Spring: waiting earns more than its spoilage and the godown's cost for the two seasons (its wear, or renting 5 t instead).
+        [Test]
+        public void Rice_Waits_Pays()
+        {
+            long Sold(bool wait)
+            {
+                Simulation sim = Hamlet();
+                int rice = Good(sim, "rice");
+                sim.AdvanceTo(3 * Season(sim) - 20 * 3600); // the Monsoon's last day, 4:00
+                if (wait) Ok(sim, new BuyGodown(sim.State.Clock.SimTime));
+                sim.State.Market.Stock[rice] += 5 * Tonne;
+                long from = wait ? 4 * Season(sim) : sim.State.Clock.SimTime, revenue = 0;
+                sim.AdvanceTo(from);
+                for (long t = from + 600; t < from + 6 * 86_400; t += 3600)
+                {
+                    sim.AdvanceTo(t);
+                    long q = System.Math.Min(sim.State.Market.InStore(rice), MarketRules.TraderCapacityLeft(sim, rice));
+                    if (q > 0) Ok(sim, new SellToTrader(t, "rice", q));
+                    revenue += sim.DrainEvents().OfType<SoldToTrader>().Sum(e => e.Amount);
+                }
+                Assert.That(sim.State.Market.InStore(rice), Is.Zero, "all of it sold");
+                return revenue;
+            }
+
+            long now = Sold(false), later = Sold(true);
+            long wear = 2 * 45000 * Coin / 80, rent = 2 * 5 * 1000 * Fixed.Parse("0.30").MulRatio(Coin, 1).RoundToLong();
+            TestContext.Out.WriteLine("sold at once " + now / Coin + ", in Spring " + later / Coin + ", the godown's wear " + wear / Coin + ", rent " + rent / Coin);
+            Assert.That(later - now, Is.GreaterThan(wear), "waiting pays for your godown's two seasons");
+            Assert.That(later - now, Is.GreaterThan(rent), "and for renting 5 t instead");
+        }
     }
 }
