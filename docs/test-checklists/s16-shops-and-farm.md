@@ -1,6 +1,6 @@
 # Sprint 16 build: the farm's capital (water, machines, orchards, the godown) and the village's shops
 
-- **Build:** the head of branch `sprint/16-shops-and-farm` (the commit is in the pull request)
+- **Build:** the head of branch `sprint/16-shops-and-farm`, a Development build made at `923f0b7` (Unity: Build Succeeded; the unsigned Xcode Release compile: no errors)
 - **Device:** iPhone 13, iOS version: ____
 - **Tested by / date:** ____
 - **How to install:** see `how-to-build-ios.md`. This is **a Development build**, so it has the developer panel. Delete `unity/FarmToCity/Builds/iOS` before building (this avoids the macOS 27 crash).
