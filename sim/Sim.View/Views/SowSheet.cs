@@ -129,7 +129,7 @@ namespace Sim.View.Views
             vm.FreeHoursText = ctx.Strings.Get("sow.freeHours", "free", Hours(free < Fixed.Zero ? Fixed.Zero : free), "total", Hours(rate));
             Orchard orchard = OrchardRules.Of(sim, tileId);
             vm.NoteText = orchard == null ? ctx.Strings.Get("sow.note") // between young rows: the short crops only, at the share (ADR 0090 §3)
-                : ctx.Strings.Get("orchard.sowNote", "tree", ctx.Strings.Get(defs.Farm.Trees[orchard.Def].NameKey), "share", ctx.Fmt.Percent(OrchardRules.Defs(sim).IntercropShare));
+                : ctx.Strings.Get("orchard.sowNote", "tree", ctx.Strings.Get(defs.Farm.Trees[orchard.Def].NameKey).ToLowerInvariant(), "share", ctx.Fmt.Percent(OrchardRules.Defs(sim).IntercropShare));
             vm.FertiliserHeading = ctx.Strings.Get("sow.fertiliserHeading");
             foreach (FertiliserDef f in defs.Farm.Fertilisers)
                 vm.Fertilisers.Add(new FertiliserVm { Id = f.Id, Name = ctx.Strings.Get("fertiliser." + f.Id), EffectText = Effect(ctx, f), Selected = f.Id == fertiliserId });

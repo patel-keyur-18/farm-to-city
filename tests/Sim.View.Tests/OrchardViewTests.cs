@@ -47,7 +47,7 @@ namespace Sim.View.Tests
             SowSheetVm sow = SowSheet.Build(ctx, Field);
             Assert.That(sow.Rows.Select(r => r.CropId), Is.SubsetOf(new[] { "radish", "methi", "amaranth", "lentils", "peas" }).And.Not.Empty);
             Assert.That(sow.Rows.Single(r => r.CropId == "radish").LabourText, Does.Contain("1.5 h"), "half the work between the rows");
-            Assert.That(sow.NoteText, Is.EqualTo("Between young Banana trees: 50% of the yield and of the work."));
+            Assert.That(sow.NoteText, Is.EqualTo("Between young banana trees: 50% of the yield and of the work."));
 
             // Between hourly passes the next batch so far is the rates since the last accrual, not zero (a fresh orchard isn't "Poor").
             sim.AdvanceTo(sim.State.Clock.SimTime / 3600 * 3600 + 1800);

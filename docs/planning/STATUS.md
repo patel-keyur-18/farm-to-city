@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 16, the test checklist run in the Editor (2026-11-06):** `docs/test-checklists/s16-shops-and-farm.md` (46 checks). Checks 2–43 passed in the Editor by scripted touch on the test town (captures `docs/art/s16-check-*.png`): the godown bought, rented and let (2,535); the pump, a channel dry in Summer, the rain-fed card's next steps; the first and second sheds (8 stalls); the plough bought and at work, the tractor hired, bought on a 4-season loan, at work by day and parked on the lane at 22:33, maintenance skipped, sold with the bank repaid first; drip, the borewell; a banana orchard planted, a short crop between its rows, ripe after 7 days, picked, the rest sold on the trees, *Clear* asked first; the tea stall's research, plan, place sheet (pitches 51%, nearest acre 9.4%), built and run by you, customers, price and quality, stars 2.5 → 2.7; the vegetable stall run by you with goods bought at the market; the sweet shop's plan; the square's pitches. Device-only: 1, 44, 45, 46. Set up by script: test coins, **Next era**, dev time travel. **Fixed during the run:** "young Banana trees" (now lower case); the checklist's steps for the second shed, maintenance, prices that follow the index and the price presets. **Editor lesson:** twice touches stopped reaching the UI after long scripted time travel; `Application.isFocused` was false, and restarting play cured it (once a sheet was closed by script to finish the map capture). This also explains the Sprint 16 note about the season report "not closing" after time travel. Saves restored and identical.
+
 **Sprint 16, balance step done (2026-11-06, each item decided with the owner, ADR 0093): spec 017 §9 and spec 013 §9.**
 - Measured with the shop bots (the balancer's `shops` and `shopbooks` modes, 8 seeds × 12 seasons, shops moved to the Hamlet): tea stall hired, good, 10% above the reference 8,580 a season (target 5,000–12,000); sweet shop hired 11,773 (8,000–15,000); vegetable stall hired 3,714, run by you 17,609; a stall on your acre about 5–10% of the village; the mill with stars hired 6,070, run by you about 36,450.
 - Content: chai's reference 12 coins; good chai 0.08 L a cup with no surcharge; sweets 300 and 360 a kg (base prices 240 and 290); `retailMarkup` 1.15.
@@ -327,7 +329,7 @@
 
 ## Next up
 
-1. **Sprint 16:** the test checklist `docs/test-checklists/s16-shops-and-farm.md` with every non-device check run in the Editor, the Development build (Builds/iOS deleted first, the unsigned Xcode check) and the pull request.
+1. **Sprint 16:** the Development build (Builds/iOS deleted first, the unsigned Xcode check), the pull request, then the owner's device check with `docs/test-checklists/s16-shops-and-farm.md` (checks 2–43 already passed in the Editor, 2026-11-06).
 
 ## Owner action checklist (Phases 0–1)
 
