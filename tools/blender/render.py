@@ -3972,6 +3972,74 @@ def icon_people(kind):
 for _f, _deg in FACINGS.items():
     SPRITES["family_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("done"), d)))()
     SPRITES["family_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("building"), d)))()
+# ---------------------------------------------------------------- the school (spec 018, US-131): previewed to the owner first
+
+def model_school(stage):
+    """The village's government primary school on its plot (tile 94): two classrooms under a flat roof, lime-washed with a maroon
+    dado, a pillared verandah, a green signboard, a blackboard painted on the front wall; a low boundary wall with its gate on the
+    main street (the model's +x side, which faces the street once turned to 'e'), the playground in front with the flag on a
+    stepped platform. stage 'done' or 'building' (the plot's brick wall, the plinth, half-raised walls, scaffolding, bricks, sand)."""
+    o = []
+    w, d, cy, h = 0.42, 0.16, 0.17, 0.15        # the classrooms, their doors towards -y, at the back of the plot
+    lime, dado = toon("schoolLime", 0xF4E7C2), toon("schoolDado", 0x9A3B2E)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    wallm = brick if stage == "building" else toon("schoolWall", 0xE9DBB8)
+    o.append(box("ground", (0.54, 0.30, 0.006), (0, -0.10, 0.003), toon("playground", 0xD6BE90), outline=False))
+    # The boundary wall: back and the far side whole, the street side (+x) with a gate gap at the front, the front low.
+    for name, size, loc in (("wallBack", (0.58, 0.025, 0.045), (0, 0.28, 0.0225)), ("wallFar", (0.025, 0.56, 0.045), (-0.28, 0, 0.0225)),
+                            ("wallFront", (0.58, 0.025, 0.035), (0, -0.27, 0.0175)), ("wallStreet", (0.025, 0.36, 0.045), (0.28, 0.10, 0.0225)),
+                            ("wallStreetFront", (0.025, 0.09, 0.045), (0.28, -0.235, 0.0225))):
+        o.append(box(name, size, loc, wallm))
+    if stage == "building":
+        o.append(box("plinth", (w + 0.03, d + 0.10, 0.035), (0, cy - 0.035, 0.0175), plinth, bevel=0.005))
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.08), (sx * (w / 2 - 0.01), cy, 0.075), brick))
+        o.append(box("wallBackHalf", (w, 0.02, 0.10), (0, cy + d / 2 - 0.01, 0.085), brick))
+        o.append(box("wallMid", (0.02, d, 0.06), (0, cy, 0.065), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, 0.0, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.14 + j * 0.055, -0.08, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.05, 0.035, (0.12, -0.10, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+    for i, y in enumerate((-0.08, -0.19)):        # the gate on the main street
+        o.append(box("gatePost%d" % i, (0.03, 0.03, 0.075), (0.28, y, 0.0375), toon("schoolLime", 0xF4E7C2)))
+    o.append(box("plinth", (w + 0.03, d + 0.10, 0.035), (0, cy - 0.035, 0.0175), plinth, bevel=0.005))
+    o.append(box("walls", (w, d, h), (0, cy, 0.035 + h / 2), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.035), (0, cy, 0.0525), dado, outline=False))
+    o.append(box("roof", (w + 0.02, d + 0.02, 0.016), (0, cy, 0.035 + h + 0.008), toon("roofSlab", 0xD8CDB8)))
+    o.append(box("parapet", (w + 0.024, d + 0.024, 0.03), (0, cy, 0.035 + h + 0.03), toon("schoolLimeShade", 0xE6D6AE)))
+    # The school's name painted on the parapet's front: a green band with a cream line.
+    o.append(box("sign", (0.32, 0.006, 0.022), (0, cy - d / 2 - 0.014, 0.035 + h + 0.03), toon("schoolSign", 0x2F5D3A), outline=False))
+    o.append(box("signLine", (0.26, 0.007, 0.005), (0, cy - d / 2 - 0.015, 0.035 + h + 0.03), toon("signText", 0xF2EBDC), outline=False))
+    doorm, win = toon("schoolDoor", 0x2F6E4E), toon("wood_dark", WOOD_DARK)
+    for x in (-0.10, 0.10):                     # two classrooms, a door and a window each
+        o.append(box("door%d" % (x > 0), (0.05, 0.010, 0.10), (x, cy - d / 2 - 0.004, 0.085), doorm))
+        o.append(box("win%d" % (x > 0), (0.05, 0.010, 0.04), (x + (0.065 if x > 0 else -0.065), cy - d / 2 - 0.004, 0.12), win))
+    o.append(box("blackboard", (0.07, 0.008, 0.045), (0, cy - d / 2 - 0.004, 0.11), toon("blackboard", 0x2B3A33)))
+    # The verandah: a lower, thin slab on four pillars, so the doors and the blackboard still show.
+    vy, vh = cy - d / 2 - 0.05, h - 0.035
+    for x in (-0.19, -0.065, 0.065, 0.19):
+        o.append(cylinder("pillar%d" % int(x * 100), 0.010, 0.010, vh, (x, vy, 0.035 + vh / 2), lime, segs=8))
+    o.append(box("verandahRoof", (w + 0.02, 0.10, 0.010), (0, cy - d / 2 - 0.045, 0.035 + vh + 0.005), toon("roofSlab", 0xD8CDB8)))
+    o.append(box("verandahEdge", (w + 0.022, 0.012, 0.016), (0, vy - 0.045, 0.035 + vh + 0.005), dado, outline=False))
+    # The flag on a stepped platform in the playground, a bench of slates by the verandah.
+    fx, fy = -0.13, -0.14
+    for i, r in enumerate((0.05, 0.036, 0.024)):
+        o.append(box("flagStep%d" % i, (r * 2, r * 2, 0.014), (fx, fy, 0.007 + i * 0.014), toon("stone", STONE) if i % 2 == 0 else toon("schoolLime", 0xF4E7C2)))
+    o.append(cylinder("flagpole", 0.004, 0.004, 0.26, (fx, fy, 0.17), toon("steel", 0xC9CDD2), segs=6, outline=False))
+    for i, hexv in enumerate((0xFF9933, 0xFFFFFF, 0x138808)):
+        o.append(box("band%d" % i, (0.0035, 0.06, 0.014), (fx, fy + 0.032, 0.285 - i * 0.014), toon("flag%d" % i, hexv), outline=False))
+    o.append(box("bench", (0.12, 0.03, 0.025), (0.12, vy - 0.07, 0.03), toon("wood", WOOD)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+SPRITES["village_school_e"] = lambda: refit(model_school("done"), FACINGS["e"])
+SPRITES["village_school_building_e"] = lambda: refit(model_school("building"), FACINGS["e"])
+
 for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f"):
     ICONS["portrait_" + _k] = (lambda k=_k: (lambda: portrait(k)))()
 ICONS["icon_population"] = lambda: icon_people("population")

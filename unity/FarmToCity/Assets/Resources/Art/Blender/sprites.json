@@ -3320,6 +3320,20 @@
    "name": "village_pond"
   },
   {
+   "w": 426,
+   "h": 316,
+   "pivotX": 0.50359,
+   "pivotY": 0.3924,
+   "name": "village_school_building_e"
+  },
+  {
+   "w": 426,
+   "h": 320,
+   "pivotX": 0.50359,
+   "pivotY": 0.38638,
+   "name": "village_school_e"
+  },
+  {
    "w": 232,
    "h": 224,
    "pivotX": 0.49688,
