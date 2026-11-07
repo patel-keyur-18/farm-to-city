@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, started 2026-11-03: every story done and approved, the balance step done, **the owner's device check passed 2026-11-07** (frame time under ADR 0094's GPU line); PR #22 for the owner to merge. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
-| Branch with latest work | `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03): Sprint 16's stories and the balance step |
+| Sprint | **Sprint 17** (the school and village, 12–25 Apr 2027, 2 weeks, 36 points, ADR 0095): plan check done and **plan approved 2026-11-07** (11 gaps closed one per message); no code yet. Sprint 16 is done and merged (PR #22, device check passed 2026-11-07: main p95 4.93 ms, GPU p95 9.21 ms) |
+| Branch with latest work | `sprint/17-school-and-village` (from `main` after PR #22): the plan (ADR 0095; specs 017 and 018, the GDD, F14.1, F14.2, F09.4, F12.4 and `sprints.md` updated) |
 | Last updated | 2026-11-07 |
 
 ## Done so far
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 17, plan approved (2026-11-07, ADR 0095).** PR #22 merged; branch `sprint/17-school-and-village` from `main`. The plan check found 11 gaps, each closed with the owner one per message: a newcomer opens when your shop prices above the reference (the 1.25 trigger no preset reached), on a free pitch or else as a cart on the lane by the square; the grocer and tea stall cut 5% of the reference when their share falls a third (floor 0.85) and go back when it recovers (the halwai and newcomers don't); the adult class enrols up to 15 with no picking (working-age first), literate 96 h after its start, one at a time; the school, its upkeep and classes are booked as **Gifts to the village**, outside farm profit; growth is the mean of School and leisure (+3.5 happiness); Codex bursts get one toast, no back-fill, *Fixed and variable costs* on its own moment; twelve advisor notes in `content/advisors.json`; the Village gate also checked when a household forms, measured by a new `VillageBot`; 2 weeks, 36 points; stale statements fixed. Specs 017 and 018, the GDD, F14.1, F14.2, F09.4, F12.4, `sprints.md` and `CLAUDE.md` updated.
+
 **Sprint 16, the owner's device check passed (2026-11-07):** every check in `docs/test-checklists/s16-shops-and-farm.md` passed on the iPhone 13, including the town's update from schema 13 to 14, the normal morning and Snapshot and Restore. Frame time (own town, Hamlet, whole map, cloudy): main thread p95 4.93 ms, GPU p95 9.21 ms, 60 fps, 0.00% over 25 ms. The panel said FAIL on the old 8.3 ms GPU line; the owner asked not to be rigid, so **ADR 0094** gives the GPU its own line, p95 ≤ 11 ms (two-thirds of the frame; it runs alongside the CPU), and keeps the main thread's 8.3 ms. `DevTools.FrameRecorder` checks both (compiled in the Editor); the GDD's Frame rate row updated. The GPU has grown 4.60 (Sprint 11) → 6.54 (Sprint 13) → 9.21 ms, so every device check writes both p95s down.
 
 **Sprint 16, Development build (2026-11-06):** at `923f0b7`, `Game.Editor.BuildCli.IosDevelopment` from the open Editor after deleting `Builds/iOS`: Build Succeeded (its 2 console errors are the CLI's eval timeouts); the unsigned Xcode Release compile (`CODE_SIGNING_ALLOWED=NO`): BUILD SUCCEEDED, no errors. Pull request opened for the owner (not merged).
@@ -333,8 +335,8 @@
 
 ## Next up
 
-1. **Sprint 16:** the owner merges PR #22 (device check passed 2026-11-07).
-2. **Sprint 17** (the school and literacy, the Codex and advisors, the Village unlock, and US-122's newcomers): plan it from `sprints.md` once PR #22 is merged. US-122 must stop a stall priced 10% above the usual price from earning more than one at it (ADR 0093).
+1. **Sprint 17, in `sprints.md`'s order of work:** first preview the school's art and its plot's layout to the owner (one facing to its street, its building stage, pupils in its yard), then US-131. Each story's tasks carry ADR 0095's decisions. US-122 must stop a stall priced 10% above the usual price from earning more than one at it (ADR 0093, 0095 §1). Save schema 15 opens with US-131.
+2. **Sprint 18** (statements, the hub, the Phase 2 playtest, 26 Apr – 2 May 2027): plan it once Sprint 17 is merged.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -352,7 +354,8 @@
 | Sprint 14 | Done: device check passed; PR #19 merged |
 | Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
 | Sprint 15b | Done: device check passed 2026-11-03; PR #21 merged |
-| Sprint 16 | Done: device check passed 2026-11-07; merge PR #22 |
+| Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
+| Sprint 17 | Plan approved 2026-11-07 (ADR 0095); approve each preview and story; device check; merge the PR |
 
 ## Open questions (with the owner)
 
@@ -377,7 +380,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved; the balance step done (ADR 0093); the device check passed 2026-11-07 (ADR 0094). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 17: plan approved 2026-11-07 (ADR 0095); no story started. Save schema 15 isn't open yet: US-131 opens it, later stories add to it and re-pin `saves/schema15`. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

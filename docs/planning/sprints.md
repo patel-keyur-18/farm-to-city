@@ -26,8 +26,8 @@
 | S15 | 8–21 Mar 2027 (2 weeks, ADR 0076) | 2 | Production chains: the bakery and the dairy (F12.2); full hiring and HR (F11.4); save schema 11; the developer panel's Next era; the owner's requests US-219 to US-222 (ADR 0083, save schema 12). | 55 | 018, 019 | Yes |
 | S15b | 22–28 Mar 2027 (ad hoc, owner 2026-10-31) | 2 | The crop ladder: six real crops give every season a crop for about 1, 2, 4, 6–8 and 15 hours; the sow sheet shows when each is ready and what it earns an hour; a crop calendar; clearer time card; no formula changes (F02.5; spec 020, ADR 0084; save schema 13). Ad hoc: dry soil dries slower (US-233, ADR 0085). | 30 | 020, 002 (amended) | Yes |
 | S16 | 29 Mar – 11 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 14 (ADR 0076, 0083, 0084). | 37 (re-pointed, ADR 0076) | — | Yes |
-| S17 | 12–18 Apr 2027 | 2 | The school and literacy, the Codex and advisors, the Village unlock (F14.1, F14.2, US-102). | 18 | — | Yes |
-| S18 | 19–25 Apr 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
+| S17 | 12–25 Apr 2027 (2 weeks, ADR 0095) | 2 | The school and literacy, the Codex and advisors, the Village unlock, rival entry (F14.1, F14.2, US-102, US-122); save schema 15. | 36 (re-pointed, ADR 0095) | — | Yes |
+| S18 | 26 Apr – 2 May 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -762,5 +762,43 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Balance: spec 013 §9 and spec 017 §9 measured with the bots; contradictions flagged to the owner (ADR 0093: chai 12, sweets 300 and 360, the vegetable stall at the mandi, an acre shop's share shown; the canal +3–8%, drip without power and fertigation +15%, the granary on rice, maize and mustard; `GateTests.Shops`, `GranaryTests.Rice_Waits_Pays`)
 - [x] Test checklist `docs/test-checklists/s16-shops-and-farm.md`, every non-device check run in the Editor (done 2026-11-06: checks 2–43); Development build (done 2026-11-06); the owner's device check (passed 2026-11-07; frame time main p95 4.93 ms, GPU p95 9.21 ms, 60 fps, 0.00% over 25 ms, under ADR 0094's GPU line)
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
+- [x] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #22 merged 2026-11-07)
 
+## Sprint 17 · 12–25 Apr 2027 · Phase 2 (the school and literacy, the Codex and advisors, the Village unlock, rival entry; 2 weeks, ADR 0095)
+
+- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Not started. Sprint 16 is merged (PR #22)
+- **Branch:** `sprint/17-school-and-village`, from `main` after PR #22
+- **Goal:** Spec 018 built (F14.1, F14.2, US-102): the school on its plot as a gift to the village, literacy from pupils and adult classes, the Codex's cards with the player's numbers, three advisors, and the Village unlocked by its gate. US-122 built (F12.4): newcomers on a gap or when your shop prices above the village's, on a free pitch or as a cart on the lane, and the grocer's and tea stall's price cuts, so that overpricing no longer pays (ADR 0093). Save schema 15 with its migration and fixture.
+- **Points:** 36 (re-pointed, ADR 0095: US-131 5 → 8, US-132 3 → 5, US-133 5 → 8, US-134 3 → 5, US-102 2 → 5, US-122 5)
+- **Specs for the owner to review:** none (018 approved 2026-10-27; 017 and 018 filled in by ADR 0095)
+- **Device build:** Yes: Development build, `docs/test-checklists/s17-school-and-village.md`
+- **Milestone and labels:** `Phase 2 · Hamlet & Village`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:art`, `area:tooling`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-131 | First school | [F14.1](features/F14.1-school-and-literacy.md) | 8 | Must | To do |
+| US-132 | Literacy | [F14.1](features/F14.1-school-and-literacy.md) | 5 | Must | To do |
+| US-122 | Rival entry | [F12.4](features/F12.4-rivals-and-competition.md) | 5 | Should | To do |
+| US-102 | Village unlock | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | To do |
+| US-133 | Codex | [F14.2](features/F14.2-codex-and-advisors.md) | 8 | Must | To do |
+| US-134 | Advisors | [F14.2](features/F14.2-codex-and-advisors.md) | 5 | Must | To do |
+
+**Order of work:** the school's art and its plot's layout previewed → US-131 → US-132 → the newcomer's cart spot previewed → US-122 → the `village` letter's text previewed → US-102 → the Codex's icons previewed → US-133 → the advisors' portraits previewed → US-134 → balance with the bots (`GateTests.Village` 14–21 and 28–42 days; `GateTests.Shops` with newcomers and price cuts, a stall at 1.1 no better than at 1.0; literacy at the Village 50–70%; Codex cards 12–18 by the Village; town happiness about 72) → the whole checklist in the Editor by scripted touch → the device build, writing down both frame-time p95s (ADR 0094: main ≤ 8.3 ms, GPU ≤ 11 ms; about 1.8 ms of GPU room). One stop for the owner's review after each story. Schema 15 grows on this branch and ships once, with the device build.
+
+**If it runs over,** cut in spec 018 §11's order: the advisors' alert lines, then adult classes, then Codex cards beyond the Money and Business groups. US-122 stays (ADR 0093 needs it).
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story, task and acceptance criterion checked against specs 017 and 018, ADRs 0076, 0077, 0088, 0093, 0094 and the code after Sprint 16
+- [x] G1–G11 answered (2026-11-07, ADR 0095)
+- [x] Each story's acceptance criteria name their tests
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [ ] Save schema 15: migration, `saves/schema15` fixture, every older schema loads
+- [ ] Art and layouts previewed to and approved by the owner before each story's code
+- [ ] Balance: spec 018 §9 and spec 017 §9's newcomers measured with the bots; ADR 0093's overpricing check passes; contradictions flagged to the owner
+- [ ] Test checklist `docs/test-checklists/s17-school-and-village.md`, every non-device check run in the Editor; Development build; the owner's device check with both frame-time p95s written down
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`

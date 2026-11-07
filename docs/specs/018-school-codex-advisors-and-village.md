@@ -1,6 +1,6 @@
 # 018. The school and literacy, the Codex, advisors and the Village unlock
 
-- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10)
+- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Player journey and eras (Village); Community and civic services (literacy versus skills, education); Learning layer (advisors, the Concept Codex)
@@ -42,30 +42,31 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 | --- | --- | --- |
 | Where | The school plot in the village centre (tile 94); one school in Phase 2 | |
 | When | From the Hamlet (it is part of the Village gate, §3.6) | |
-| Build | Two classrooms, a verandah and a playground, funded by the founder from cash or a co-op bank loan within the bank's existing room (land, animals, houses and income; the school itself isn't collateral, it belongs to the district once built) | 90,000 building, 15,000 benches, slates and books; 48 h |
-| Teacher | Once built and given to the district, the district posts a teacher and pays the wage (a government primary school, as in a real village; G2); the founder pays upkeep | Upkeep 2,000 a season |
+| Build | Two classrooms, a verandah and a playground, funded by the founder from cash or a co-op bank loan within the bank's existing room (land, animals, houses and income; the school itself isn't collateral, it belongs to the district once built). Booked as a gift (ADR 0095 §5): **Gifts to the village**, an expense outside farm profit beside the household's costs, so the bank's room isn't cut; net worth falls by the whole amount | 90,000 building, 15,000 benches, slates and books; 48 h |
+| Teacher | Once built and given to the district, the district posts a teacher and pays the wage (a government primary school, as in a real village; G2); the founder pays upkeep at each close (Gifts to the village) | Upkeep 2,000 a season |
 | Seats | One teacher for up to 30 pupils (the Right to Education norm); a second teacher when over 30 (Phase 2 rarely gets there) | 30 a teacher |
 | Pupils | Every child aged 6–13 in the town who can't read goes (free, so attendance is full; over-age pupils are common in real village schools); literate after four life-years at school (ADR 0011: about 16 real days) | Ages 6–13 |
-| Adult classes | An evening class of up to 15 people aged 14 or older who can't read (so nobody falls between school and the class), started by the founder; literate at the season's close (ADR 0011, G3); the founder pays the teacher's extra hours | 3,000 a class a season |
+| Adult classes | An evening class of up to 15 people aged 14 or older who can't read (so nobody falls between school and the class), started by the founder (ADR 0011, G3). **As planned (ADR 0095 §4):** no picking: it enrols working-age adults (14–59) first, then elders, in citizen id order, and the sheet shows who would join; one class at a time; it lasts 96 h from its start (a season, a life-year) and everyone still in it is literate when it ends; paid at the start (Gifts to the village); someone who leaves or dies leaves the class | 3,000 a class |
 
 ### 3.2 Literacy (§10 G3, G4)
 
 - **Literate:** a citizen who finished primary school, finished an adult class, or arrived literate (spec 014 draws 60% primary, 40% none for incoming adults).
 - **Literacy rate:** literate citizens aged 7+ ÷ all citizens aged 7+ (whole percent, rounded down). Shown on the Town tab with its *Why?*; it gates the Township (40%, Phase 3).
 - **What it changes in Phase 2 (G4).** A literate adult's outside work earns `literatePremium` 10% more (real rural wage premia for literacy are 10–20%; about 1,900 a season an adult today), and the growth need counts the school (below). No skill change: skills come from work and courses (spec 015).
-- **Growth need:** a household with a child of school age counts *School* met (1.0) once the school is open; with no children it counts as met when the school is open (the town has one). Until then spec 014's "No school yet" row stays.
+- **Growth need:** a household with a child of school age counts *School* met (1.0) once the school is open; with no children it counts as met when the school is open (the town has one). Until then spec 014's "No school yet" row stays. The layer is the mean of *School* and leisure (spec 014 §3.8): with leisure 0.3 → 0.65 (+3.5 happiness), without 0 → 0.5 (+5); town happiness about 69 → 72 (ADR 0095 §6).
 
 ### 3.3 The Concept Codex (§10 G5)
 
 - **Cards:** about 24 in Phase 2, each the first time the player meets the idea in play. A card has a plain definition, the player's own numbers as the example, and one line linking it to the real world.
 - **Shown after the result** (decide, see, then name it): a small toast "New in your Codex: Profit is not cash" that opens the card; never a sheet over play, never during the first session. Menu → **Codex** lists the cards found (unfound ones hidden, as the letter's chapters).
+- **Bursts, older towns, the first session (ADR 0095 §7):** two or more cards found in one pass get one toast ("3 new in your Codex") opening Menu → Codex with the new ones marked; nothing is back-filled (a card is found the next time its moment comes); a moment during the first session counts the next time it comes. Cards are recorded in the sim through a command, as the letter's chapters are.
 - **The Phase 2 set** (triggers in `content/codex.json`):
 
 | Group | Cards (trigger) |
 | --- | --- |
 | Farming | Diminishing returns (chemical fertiliser on a field already near the yield cap, ADR 0014), soil fertility (a crop that took more than it gave), opportunity cost (day labour while a field waits) |
 | Money | Profit is not cash (a profitable season with less cash), interest and compounding (the first interest charge), credit score (the score moves), leverage (a loan bigger than a season's profit), liquidity (an `InsufficientFunds` with assets in hand), inflation (the price index past 5%), working capital (a business's overdraft) |
-| Business | Gross margin (the first business season), fixed and variable costs (the first business report), break-even (a business's plan), forecast versus actual (plan vs actual after 4 seasons), unit economics (a batch's cost per kg) |
+| Business | Gross margin (the first business season), fixed and variable costs (the first business season whose sales fell from the last while its wage and rent didn't; ADR 0095 §7), break-even (a business's plan), forecast versus actual (plan vs actual after 4 seasons), unit economics (a batch's cost per kg) |
 | Assets | Depreciation (the first machine or building's wear), appreciation (land bought, its value up), yield (the first rent received) |
 | People | Hiring under uncertainty (a reference check), market wage (a low offer refused), retention (a poaching offer), training ROI (a course finished), employer reputation (the first step) |
 | Public | Public goods (the school opens), long-term investment (the first child literate from your school) |
@@ -76,6 +77,7 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 - **Who (G6).** People of the village, drawn and named, each with a portrait: an old farmer neighbour, the co-op bank's secretary, a retired school headmaster.
 - **When they speak:** one line on the season report (the most useful of their notes, ranked); one line on an alert whose cause they know ("Your mill's overdraft is near its limit: put cash in before the wage is due."); a *Why?* row may quote them. They warn and explain; they never act or press a choice.
 - **How often:** at most one advisor line a sheet; a warning on the same topic at most once a game day; none in the first session.
+- **The notes (ADR 0095 §8):** twelve, four an advisor, in `content/advisors.json` (id, advisor, condition, priority, the alert it attaches to); the season report shows the highest-priority note whose condition holds; a note's id is its topic. Names (placeholders): Ramdeen Kaka (farm), Sunita Verma (the co-op bank's secretary), Masterji Hariprasad (a retired headmaster). The *Why?* quotes are left out.
 
 ### 3.5 Conflicts settled (§10 G7, G8)
 
@@ -93,15 +95,15 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 | The school | The primary school built and open | |
 | (dropped) | ~~A market stall~~: stalls come with the Village | |
 
-- **Checked** at each season close and when the school opens (system Population, after Finance); **unlocks once**: `EraUnlocked(village)`, the play-log milestone.
+- **Checked** at each season close, when the school opens and when a household forms or moves in (ADR 0095 §9; system Population, after Finance); **unlocks once**: `EraUnlocked(village)`, the play-log milestone. A business's profitable seasons are counted on it (an existing one's from its own ledger at the migration).
 - **Progress:** Menu → Letter → "Becoming a Village": households (n of 5), businesses' profitable seasons (n of 2), the school (none, building, open); each row's *Why?* says what to do next ("Build a family house", "Start a flour mill", "Build the school on the school plot"). The Hamlet's celebration names the three goals, so a player knows them from the moment the Hamlet opens.
 - **Celebration:** the `village` chapter (the grandmother's letter's voice), confetti as the Hamlet's, and a list of what opens: the bakery and the dairy (spec 016), shops on the pitches (spec 017), drip and the borewell, the tractor (spec 013), the co-op bank's larger loans.
 - **Target:** the competent bot within 2–3 weeks, the cautious saver within 4–6 (ADR 0028, 0071); measured in the balancer (§9).
 
 ### 3.7 Processing order
 
-- Hourly (system Population): the school's construction finishes; adult classes count hours.
-- Season close (after spec 014's flows): pupils' years counted, those finishing primary become literate, adult classes finish; literacy recomputed; the Village gate checked.
+- Hourly (system Population): the school's construction finishes; an adult class ends 96 h after its start.
+- Season close (after spec 014's flows): pupils' years counted, those finishing primary become literate; the school's upkeep; literacy recomputed; the Village gate checked.
 - Codex triggers: after the event or state that triggers them, in the view layer (the sim records found cards so replays reproduce them).
 
 ## 4. Data
@@ -112,9 +114,12 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 - `content/codex.json` (new): cards (id, group, trigger kind and parameters, the numbers it quotes) with strings in `strings/en.json`.
 - `content/eras.json`: the Village's gate (households, business seasons, school).
 - `content/ui.json`: advisor caps (a line a sheet, a topic a day).
+- `content/advisors.json` (new, ADR 0095 §8): the advisors (names, portraits) and their twelve notes.
+- A ledger account, **Gifts to the village** (an expense outside farm profit, ADR 0095 §5).
 
 **New state** (save schema 15 in Sprint 17; ADR 0076 numbers schemas by sprint, ADR 0083 and ADR 0084 each shifted them by one):
 - `Citizen`: literate (bool), schooling years, in an adult class until.
+- `Business`: profitable seasons (ADR 0095 §9).
 - `CitizensState`: the school (status, built at, ready at, teachers), adult classes.
 - `GuidanceState`: Codex cards found (ids, found at), advisor topics last spoken.
 
@@ -123,7 +128,7 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 | Command | Parameters | Validation | Effect |
 | --- | --- | --- | --- |
 | `BuildSchool` | financing (cash or a co-op loan, term) | `EraLocked` (before the Hamlet), `AlreadyBuilt`, `InsufficientFunds`, the loan's reasons | §3.1 |
-| `StartAdultClass` | citizens (up to 15) | `NoSchool`, `ClassFull`, `AlreadyLiterate`, `InsufficientFunds` | §3.1 |
+| `StartAdultClass` | none (enrols up to 15, ADR 0095 §4) | `NoSchool`, `ClassRunning`, `NobodyToTeach`, `InsufficientFunds` | §3.1 |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
@@ -136,8 +141,8 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 
 | Decision | Immediate cost | Delayed effect | Side effects | Reversibility |
 | --- | --- | --- | --- | --- |
-| Build the school | 1,05,000 (or a loan) | Literate children after 4 seasons; the growth need met | The Village gate | Never (a gift to the village) |
-| An adult class | 3,000 a season | Literate adults earn more outside (G4) | Teacher's hours | Stop after the season |
+| Build the school | 1,05,000 (or a loan), a gift: net worth falls, farm profit doesn't | Literate children after 4 seasons; the growth need met | The Village gate | Never (a gift to the village) |
+| An adult class | 3,000 a class | Literate adults earn more outside (G4) after 96 h | Teacher's hours | Runs its 96 h |
 
 ## 7. UI
 
@@ -160,14 +165,14 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
-| AC-1 | From the Hamlet, `BuildSchool` on the plot costs its price (cash or a loan), opens after 48 h, and is refused before the Hamlet or twice | `SchoolTests.Build` |
-| AC-2 | Children aged 6–13 who can't read attend; after 4 life-years at school a child is literate; an adult class makes its adults literate in a season | `SchoolTests.Literacy` |
+| AC-1 | From the Hamlet, `BuildSchool` on the plot costs its price (cash or a loan), opens after 48 h, and is refused before the Hamlet or twice; its cost, upkeep and classes are Gifts to the village, outside farm profit | `SchoolTests.Build`, `SchoolTests.Gift_NotFarmProfit` |
+| AC-2 | Children aged 6–13 who can't read attend; after 4 life-years at school a child is literate; an adult class enrols up to 15 (working-age first) and makes them literate 96 h after it starts, one class at a time | `SchoolTests.Literacy`, `SchoolTests.AdultClass_96h` |
 | AC-3 | The literacy rate counts citizens aged 7+, rounded down, with its *Why?* | `SchoolTests.Rate`, `TownViewTests.Literacy` |
 | AC-4 | The growth need counts the school once open | `HappinessTests.School` |
 | AC-5 | A literate adult's outside work earns 10% more | `HouseholdTests.LiteracyPremium` |
-| AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay | `CodexTests.Triggers` |
-| AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session | `AdvisorTests.Caps` |
-| AC-8 | The Village unlocks once when its three conditions hold; the progress view shows each | `EraTests.Village` |
+| AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay; two or more in a pass get one toast | `CodexTests.Triggers`, `CodexTests.Burst` |
+| AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session; the season report shows the highest-priority note that holds | `AdvisorTests.Caps`, `AdvisorTests.Priority` |
+| AC-8 | The Village unlocks once when its three conditions hold, checked at the close, when the school opens and when a household forms; the progress view shows each | `EraTests.Village`, `EraTests.Village_OnHousehold` |
 | AC-9 | The competent bot reaches the Village in 14–21 days, the cautious saver in 28–42 | `GateTests.Village` |
 | AC-10 | A schema-14 save loads into 15 with no school, literacy from spec 014's education, no cards found | `MigrationTests.Schema14_School` |
 

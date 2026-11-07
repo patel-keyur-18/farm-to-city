@@ -312,7 +312,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 Each line has a *Why?* tap with a plain-language explanation and the numbers behind it.
 
-**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out. In Phase 2 the village's grocer and tea stall compete on fixed terms and never close; a newcomer may open on a gap or rich prices (a 50% chance a season, one of each kind) and closes after two weak seasons; buy-outs come in Phase 3 (ADR 0074).
+**Competition.** Computer-run rivals open when demand goes unmet and margins look good. Leaving a gap in the market, or charging too much, attracts competitors, just as in real life. Rivals can also close, merge, or offer to buy you out. In Phase 2 the village's grocer and tea stall compete on fixed terms and never close; a newcomer may open on a gap or when one of your shops prices above the village's (a 50% chance a season, one of each kind), on a free pitch or else as a cart on the lane by the square, and closes after two weak seasons; the grocer and tea stall cut their prices 5% a step when they lose a third of their customers (never under 85% of the usual price) and go back when they regain them; buy-outs come in Phase 3 (ADR 0074, 0095).
 
 **Lifecycle and trouble.** New businesses usually lose money for their first 1–3 seasons. Trouble arrives as events: a supplier shortage, a key worker quitting, a health inspection, a price war, a road closure, a viral rush of customers.
 
@@ -441,7 +441,7 @@ In Phase 2 the weights are 40, 30, 20 and 10%, each layer counting fully only wh
 - **Literacy** (the share of residents aged 7+ who can read) comes quickly. A child becomes literate after 4 life-years of primary school, about 16 real days. Adult literacy classes at the school take about 1 season. Migrants also arrive with some education.
 - **Skilled graduates** come slowly (below).
 
-The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan, on the village's school plot from the Hamlet; the founder gives it to the district, which posts and pays the teacher, and pays its upkeep. Adult literacy classes are the founder's choice (3,000 a season for up to 15), and a literate adult earns 10% more outside (ADR 0077, spec 018). The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
+The first primary school is funded by the founder, from the personal wallet or a cooperative-bank loan, on the village's school plot from the Hamlet; the founder gives it to the district, which posts and pays the teacher, and pays its upkeep. The school is a gift: it is booked outside farm profit (Gifts to the village), so net worth falls by its cost while the town gains (ADR 0095). Adult literacy classes are the founder's choice (3,000 a class of up to 15, working-age adults first, literate 96 h after it starts, one at a time), and a literate adult earns 10% more outside (ADR 0077, 0095, spec 018). The first professionals, such as the Township clinic's doctor, are migrants attracted by housing and above-market wages. Locally educated professionals become possible from the Town era.
 
 **Education as a long-term investment.** A school's skilled payoff comes 10–15 life-years later (about 40–60 real days), as skilled adults who can staff clinics, engineering firms and banks. Literacy rate is a visible town statistic that gates later eras. Investing for the future is the hardest lesson, and the game makes it visible.
 
@@ -775,7 +775,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
   - the first season close (P&L, prepaid costs)
   - the first loan offer, only when land or cash runs short, comparing moneylender and bank, never pushed
   - the first hire, once fields exceed the founder's labour (contracts, standing orders)
-  - the first school, at the Village unlock
+  - the Village's three goals (households, a business, the school), at the Hamlet unlock (the school is built from the Hamlet, ADR 0077, 0095)
 - Letter chapters can be reopened at any time.
 
 **Mobile ergonomics**
