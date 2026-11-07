@@ -376,6 +376,21 @@ namespace Sim.Core.Definitions
         /// <summary>Businesses (spec 016), with population content (a business's worker is a citizen); null without.</summary>
         public BusinessDefs Businesses { get; internal set; }
 
+        /// <summary>The godown in the mandi town, renting and letting (spec 013 §3.4, ADR 0087); null when the buildings have no godown.</summary>
+        public GodownDef Godown { get; internal set; }
+
+        /// <summary>Spec 013 §3.1: the pump, the borewell, the canal and drip; null in content without a pump.</summary>
+        public IrrigationDef Irrigation { get; internal set; }
+
+        /// <summary>The equipment ladder (spec 013 §3.2), or null in content without it.</summary>
+        public EquipmentDefs Equipment { get; internal set; }
+
+        /// <summary>Whole-acre orchards (spec 013 §3.3), or null in content without them.</summary>
+        public OrchardDefs Orchard { get; internal set; }
+
+        /// <summary>Shops and customer choice (spec 017), with businesses that include a shop type; else null.</summary>
+        public ShopDefs Shops { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

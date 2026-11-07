@@ -322,9 +322,29 @@ def model_hut():
     return group(o, scale=BUILDING_SCALE)
 
 
-def model_well():
-    """The village well: a stone parapet, dark water, two posts with a crossbar, a pulley and a small terracotta roof."""
+PUMP_TURN = 180
+
+
+def model_well(pump=False):
+    """The village well: a stone parapet, dark water, two posts with a crossbar, a pulley and a small terracotta roof. With
+    pump (spec 013 §3.1): an electric monoblock pump on a small plinth against the parapet, its suction pipe over the rim into
+    the water, its delivery pipe down into the ground and a switch box on a post, all inside the well's footprint."""
     o = []
+    if pump:
+        cement, pipe = toon("cement", 0xBDB8AC), toon("pipe", 0x5A5F66)
+        o += [box("pumpPlinth", (0.075, 0.05, 0.018), (0, -0.115, 0.009), cement, bevel=0.003),
+              cylinder("motor", 0.017, 0.017, 0.04, (-0.012, -0.115, 0.036), toon("pumpMotor", 0x2F7F6F), segs=12,
+                       rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+              cylinder("volute", 0.021, 0.021, 0.016, (0.018, -0.115, 0.036), toon("pumpBody", 0x2F6FB5), segs=12,
+                       rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+              cylinder("suctionUp", 0.006, 0.006, 0.07, (0.03, -0.115, 0.07), pipe, segs=8),
+              cylinder("suctionOver", 0.006, 0.006, 0.07, (0.03, -0.08, 0.105), pipe, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+              cylinder("suctionDown", 0.006, 0.006, 0.05, (0.03, -0.045, 0.08), pipe, segs=8),
+              cylinder("delivery", 0.007, 0.007, 0.04, (0.034, -0.14, 0.02), pipe, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+              box("switch", (0.02, 0.012, 0.026), (-0.012, -0.075, 0.12), toon("switchBox", 0xC9C2B4))]
+        turn = Matrix.Rotation(math.radians(PUMP_TURN), 4, "Z")
+        for part in o:
+            part.matrix_world = turn @ part.matrix_world
     o.append(cylinder("parapet", 0.085, 0.085, 0.07, (0, 0, 0.035), toon("stone", STONE), segs=14))
     o.append(cylinder("lip", 0.093, 0.093, 0.016, (0, 0, 0.075), toon("stone_dark", STONE_DARK), segs=14))
     o.append(cylinder("water", 0.066, 0.066, 0.004, (0, 0, 0.082), toon("water", WATER), segs=14, outline=False))
@@ -1319,6 +1339,17 @@ def icon_good(good):
                          rot=Matrix.Rotation(math.radians(-12), 3, "X")))
             o.append(box("crumb%d" % i, (0.13, 0.024, 0.05), (0, (i - 2) * 0.03 - 0.001, 0.04), toon("ruskIn", 0xE5B877), outline=False,
                          rot=Matrix.Rotation(math.radians(-12), 3, "X")))
+    elif good == "rasgulla":
+        # Rasgulla: soft white balls in syrup in a steel katori.
+        o.append(cylinder("katori", 0.13, 0.10, 0.07, (0, 0, 0.035), toon("steel", 0xC9CDD2), segs=24, smooth=True))
+        o.append(cylinder("syrup", 0.122, 0.122, 0.004, (0, 0, 0.066), toon("syrup", 0xEFD9A0), segs=24, outline=False))
+        for i, (x, y) in enumerate(((-0.045, -0.02), (0.04, -0.03), (0.0, 0.04), (0.0, -0.005))):
+            o.append(sphere("ras%d" % i, 0.045, (x, y, 0.085 + (0.03 if i == 3 else 0)), toon("rasgulla", 0xFBF7EC), segs=14, rings=9))
+    elif good == "atta_laddoo":
+        # Atta laddoo: golden-brown balls stacked on a steel plate.
+        o.append(cylinder("plate", 0.13, 0.12, 0.012, (0, 0, 0.006), toon("steel", 0xC9CDD2), segs=24, smooth=True))
+        for i, (x, y, z) in enumerate(((-0.05, -0.03, 0.05), (0.05, -0.03, 0.05), (0.0, 0.05, 0.05), (0.0, 0.0, 0.12))):
+            o.append(sphere("laddoo%d" % i, 0.05, (x, y, z), toon("laddoo", 0xE0A040), segs=14, rings=9))
     elif good == "paneer":
         # A fresh block of paneer on a steel plate, one cube cut from it.
         o.append(cylinder("plate", 0.13, 0.12, 0.012, (0, 0, 0.006), toon("steel", 0xC9CDD2), segs=24, smooth=True))
@@ -1625,7 +1656,8 @@ for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", mod
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
-for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee"):
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee",
+           "rasgulla", "atta_laddoo"):
     ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
 for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
@@ -2211,6 +2243,8 @@ ANIMALS = {
     "buffalo": dict(body=0x47424F, dark=0x2A2730, muzzle=0x66606E, horn=0x2E2A2A, hoof=0x1C1A1E, legs=0.058, slim=1.0, patches=False),
     # Crossbred cow (HF cross, the valley's commonest): white with black patches, a pink muzzle and udder, short horns.
     "cow": dict(body=0xF5F1EA, dark=0xD9D2C8, muzzle=0xE9A7A0, horn=0xE8DCC0, hoof=0x3A302A, legs=0.068, slim=0.9, patches=True),
+    # Draught bullock (a Hariana-type zebu, spec 013 §3.2): grey-white, a big hump over the shoulders, a dewlap, long upright horns.
+    "bullock": dict(body=0xE4DFD4, dark=0xA9A296, muzzle=0x5C5650, horn=0x4A4038, hoof=0x2A2420, legs=0.074, slim=0.95, patches=False, hump=True),
 }
 
 
@@ -2239,9 +2273,12 @@ def model_animal(kind, pose="stand"):
         for i, (x, y) in enumerate(((-0.026, -0.055), (0.026, -0.055), (-0.027, 0.058), (0.027, 0.058))):
             legs.append(cylinder("leg%d" % i, 0.0125, 0.0105, lh, (x * w, y, lh / 2 + 0.006), body if not p["patches"] else m("leg", 0xEFEAE2), segs=10, smooth=True))
             legs.append(cylinder("hoof%d" % i, 0.011, 0.0115, 0.012, (x * w, y, 0.006), hoof, segs=10))
-        if p["patches"]:   # the udder
+        if p["patches"] and not p.get("hump"):   # the udder
             o.append(sphere("udder", 0.022, (0, 0.045, z0 - 0.04), m("udder", 0xEFB0A8), scale=(1.0, 1.0, 0.7), segs=12, rings=8))
     o += legs
+    if p.get("hump"):   # the zebu's hump over the shoulders and the dewlap under the neck
+        o.append(sphere("hump", 0.03, (0, -0.045, z0 + 0.045), body, scale=(0.8 * w, 1.0, 1.0), segs=14, rings=8))
+        o.append(sphere("dewlap", 0.022, (0, -0.085, z0 - 0.03), body, scale=(0.5, 1.4, 1.2), segs=12, rings=8))
     # Neck, head, muzzle, eyes, ears, horns: these bow together to eat.
     hz = z0 + 0.02
     head.append(sphere("neck", 0.03, (0, -0.088, hz - 0.004), body, scale=(0.9 * w, 1.1, 1.0), segs=14, rings=8))
@@ -2263,6 +2300,9 @@ def model_animal(kind, pose="stand"):
                 r = 0.016 * (1 - 0.4 * t)
                 q = c + Vector((s * 0.012 * t, r * math.sin(th), r * math.cos(th)))
                 head.append(sphere("horn%d_%d" % (s, k), 0.0062 * (1 - 0.55 * t), tuple(q), horn, segs=8, rings=6, outline=False))
+        elif p.get("hump"):   # long, upright, curving a little outward
+            head.append(cylinder("horn%d" % s, 0.0065, 0.0022, 0.046, (s * 0.028, -0.11, hz + 0.044), horn, segs=8,
+                                 rot=Matrix.Rotation(math.radians(-s * 22), 3, "Y")))
         else:
             head.append(cylinder("horn%d" % s, 0.0055, 0.002, 0.022, (s * 0.022, -0.112, hz + 0.034), horn, segs=8,
                                  rot=Matrix.Rotation(math.radians(-s * 35), 3, "Y")))
@@ -2588,7 +2628,7 @@ def icon_cattle(kind):
     import random
     rnd = random.Random(5)
     o = []
-    if kind in ("buffalo", "cow"):
+    if kind in ("buffalo", "cow", "bullock"):
         return model_animal(kind, "stand")
     if kind == "milk":
         # An aluminium milk can (the dairy's can) with a lid and side handles.
@@ -2667,7 +2707,7 @@ SPRITES["sign_locked"] = model_sign_locked
 for _c in ("berseem", "sorghum"):
     for _st in STAGES + ("cut",):
         SPRITES["crop_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_crop(c, st)))()
-for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), ("milk", "icon_good_milk"), ("straw", "icon_good_straw"),
+for _k, _n in (("buffalo", "icon_animal_buffalo"), ("cow", "icon_animal_cow"), ("bullock", "icon_animal_bullock"), ("milk", "icon_good_milk"), ("straw", "icon_good_straw"),
                ("green_fodder", "icon_good_green_fodder"), ("cattle_feed", "icon_good_cattle_feed"), ("berseem", "icon_good_berseem"),
                ("sorghum", "icon_good_sorghum")):
     ICONS[_n] = (lambda k=_k: (lambda: icon_cattle(k)))()
@@ -3128,6 +3168,309 @@ for _f, _deg in FACINGS.items():
     SPRITES["flour_mill_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_mill("building"), d)))()
 
 
+GRANARY_SCALE = 0.62     # times BUILDING_SCALE: a 10-tonne godown, well under the founder's house (spec 013 §3.4)
+
+
+def model_granary():
+    """The granary (spec 013 §3.4): a small pucca godown on a high plinth (damp and rats stay out), cream plaster over brick with
+    a terracotta dado, a green steel double door with a padlock up three steps, two grilled ventilators high on the walls, a
+    red-painted tin gable roof, and jute sacks on a wooden pallet by the steps."""
+    o = []
+    w, d, h = 0.30, 0.21, 0.15
+    pz = 0.06                                                  # the plinth's top
+    plaster, dado = toon("godownPlaster", 0xEFE3C2), toon("godownDado", 0xB5653E)
+    cement = toon("cement", 0xBDB5A6)
+    o.append(box("plinth", (w + 0.05, d + 0.05, pz), (0, 0, pz / 2), cement, bevel=0.005))
+    for i in range(3):                                         # steps up to the door, on the camera-facing long wall (-y)
+        o.append(box("step%d" % i, (0.09, 0.03, pz * (3 - i) / 3), (0.05, -d / 2 - 0.025 - (2 - i) * 0.028 + 0.028, pz * (3 - i) / 6), cement))
+    o.append(box("walls", (w, d, h), (0, 0, pz + h / 2), plaster))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.035), (0, 0, pz + 0.0175), dado, outline=False))
+    door = toon("godownDoor", 0x3F7A4A)
+    for sx in (-1, 1):
+        o.append(box("door%d" % sx, (0.038, 0.01, 0.11), (0.05 + sx * 0.0195, -d / 2 - 0.004, pz + 0.055), door))
+    o.append(box("doorFrame", (0.088, 0.006, 0.118), (0.05, -d / 2 - 0.001, pz + 0.059), toon("frame", 0x2E5A37), outline=False))
+    o.append(box("hasp", (0.01, 0.006, 0.02), (0.05, -d / 2 - 0.011, pz + 0.06), toon("lock", 0xD9A93A), outline=False))
+    vent, bar = toon("vent", 0x3B3127), toon("ventBar", 0x8F877C)
+    for name, loc, size in (("ventFront", (-0.08, -d / 2 - 0.002, pz + h - 0.03), (0.05, 0.008, 0.028)),
+                            ("ventSide", (w / 2 + 0.002, 0.0, pz + h - 0.03), (0.008, 0.05, 0.028))):
+        o.append(box(name, size, loc, vent, outline=False))
+        for i in (-1, 0, 1):
+            off = (i * 0.014, 0, 0) if size[0] > size[1] else (0, i * 0.014, 0)
+            o.append(box(name + "Bar%d" % i, (0.004 if size[0] > size[1] else 0.01, 0.01 if size[0] > size[1] else 0.004, 0.028),
+                         (loc[0] + off[0], loc[1] + off[1] - (0.002 if size[0] > size[1] else 0), loc[2]), bar, outline=False))
+    o.append(gable_roof("roof", w, d, 0.07, pz + h, toon("roofRed", 0xB8453A), overhang=0.025))
+    for i in range(7):                                         # the corrugations, down each slope
+        x = -w / 2 + 0.02 + i * (w - 0.04) / 6
+        for sy in (-1, 1):
+            o.append(box("rib%d%d" % (i, sy), (0.005, d / 2 + 0.03, 0.004), (x, sy * (d / 4 + 0.006), pz + h + 0.037), toon("roofRib", 0x8E3029),
+                         rot=Matrix.Rotation(math.radians(-sy * 33.7), 3, "X"), outline=False))
+    o.append(box("ridgeCap", (w + 0.054, 0.02, 0.012), (0, 0, pz + h + 0.072), toon("roofRib", 0x8E3029)))
+    # Jute sacks on a pallet beside the steps: grain going in.
+    wood, jute = toon("wood", WOOD), toon("sack", 0xC7A06A)
+    o.append(box("pallet", (0.11, 0.07, 0.012), (-0.07, -d / 2 - 0.07, 0.006), wood))
+    for i, (x, y, z, r) in enumerate(((-0.095, -d / 2 - 0.07, 0.025, 0.0), (-0.045, -d / 2 - 0.07, 0.025, 0.0), (-0.07, -d / 2 - 0.07, 0.05, 0.15))):
+        o.extend(sack("sack%d" % i, (x, y, z), jute, rot=math.radians(90) + r))
+    back_details(o, w, d, pz + 0.1, vent)
+    return group(o, scale=BUILDING_SCALE * GRANARY_SCALE)
+
+
+SPRITES["granary"] = model_granary
+
+
+# ---------------------------------------------------------------- irrigation (spec 013 §3.1, ADR 0086, ADR 0087)
+
+def model_canal():
+    """The minor canal on a tile edge (ADR 0087 §2): a concrete-lined channel of water, a packed-earth footpath on the river side
+    and a grassy verge on the other, one tile edge long along x."""
+    import random
+    rnd = random.Random(71)
+    b = Batch("canal")
+    lining, water, path, verge = toon("canalLining", 0xB8B2A6), toon("canalWater", 0x5E9FBF), toon("canalPath", 0xC7A877), toon("canalVerge", 0x86AE4C)
+    b.box(path, (1.0, 0.04, 0.012), Matrix.Translation((0, 0.06, 0.006)))
+    b.box(lining, (1.0, 0.085, 0.022), Matrix.Translation((0, 0.0, 0.011)))
+    b.box(water, (1.0, 0.062, 0.004), Matrix.Translation((0, 0.0, 0.020)))
+    b.box(verge, (1.0, 0.03, 0.01), Matrix.Translation((0, -0.056, 0.005)))
+    ripple = toon("canalRipple", 0xA9D4E6)
+    for i in range(5):
+        b.box(ripple, (0.06, 0.008, 0.002), Matrix.Translation((-0.4 + i * 0.2 + rnd.uniform(-0.04, 0.04), rnd.uniform(-0.015, 0.015), 0.0225)))
+    tuft = toon("canalTuft", 0x6FA03A)
+    for i in range(7):
+        b.cone(tuft, 0.014, 0.0, 0.026, Matrix.Translation((-0.45 + i * 0.15 + rnd.uniform(-0.03, 0.03), -0.058, 0.01)), segs=5)
+    return b.objects(outline_for=(lining,))
+
+
+def model_canal_dry():
+    """The minor canal in its dry season (closed for repairs, spec 013 §3.1): the same lining, its bed dry mud with cracks and a
+    last puddle or two (approved by the owner, 2026-11-04)."""
+    import random
+    rnd = random.Random(73)
+    b = Batch("canalDry")
+    lining, bed, crack, puddle = toon("canalLining", 0xB8B2A6), toon("canalBed", 0xB08A5C), toon("canalCrack", 0x7E5F3C), toon("canalPuddle", 0x7FA9BC)
+    path, verge = toon("canalPath", 0xC7A877), toon("canalVerge", 0x86AE4C)
+    b.box(path, (1.0, 0.04, 0.012), Matrix.Translation((0, 0.06, 0.006)))
+    b.box(lining, (1.0, 0.085, 0.022), Matrix.Translation((0, 0.0, 0.011)))
+    b.box(bed, (1.0, 0.062, 0.004), Matrix.Translation((0, 0.0, 0.0205)))
+    for i in range(9):
+        b.box(crack, (rnd.uniform(0.03, 0.07), 0.004, 0.002), Matrix.Translation((-0.45 + i * 0.11, rnd.uniform(-0.02, 0.02), 0.0228)) @ Matrix.Rotation(rnd.uniform(-0.6, 0.6), 4, "Z"))
+    for x in (-0.22, 0.31):
+        b.box(puddle, (0.07, 0.03, 0.002), Matrix.Translation((x, rnd.uniform(-0.01, 0.01), 0.0228)))
+    b.box(verge, (1.0, 0.03, 0.01), Matrix.Translation((0, -0.056, 0.005)))
+    return b.objects(outline_for=(lining,))
+
+
+def model_channel_dry():
+    """A field channel with no water in it: the lined nali with a dry mud bottom (approved, 2026-11-04)."""
+    b = Batch("channelDry")
+    lining, bed = toon("channelLining", 0xC2BBAE), toon("canalBed", 0xB08A5C)
+    b.box(lining, (0.05, 1.0, 0.02), Matrix.Translation((0, 0, 0.01)))
+    b.box(bed, (0.032, 1.0, 0.004), Matrix.Translation((0, 0, 0.019)))
+    return b.objects(outline_for=(lining,))
+
+
+def model_canal_end():
+    """Where the minor canal meets the village lane: a concrete headwall over a culvert pipe under the road."""
+    lining, dark = toon("canalLining", 0xB8B2A6), toon("culvert", 0x4E5A60)
+    o = [box("headwall", (0.03, 0.13, 0.05), (0, 0, 0.025), lining, bevel=0.004),
+         cylinder("mouth", 0.022, 0.022, 0.01, (-0.016, 0, 0.022), dark, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False)]
+    return group(o)
+
+
+def model_channel(axis):
+    """A field channel (a lined nali) from the canal along a field's edge, where the bund was: narrow, water in it, gaps cut
+    into the field side to let water in."""
+    b = Batch("channel")
+    lining, water = toon("channelLining", 0xC2BBAE), toon("channelWater", 0x6AAACB)
+    size, inner = ((1.0, 0.05, 0.02), (1.0, 0.032, 0.004)) if axis == "x" else ((0.05, 1.0, 0.02), (0.032, 1.0, 0.004))
+    b.box(lining, size, Matrix.Translation((0, 0, 0.01)))
+    b.box(water, inner, Matrix.Translation((0, 0, 0.019)))
+    return b.objects(outline_for=(lining,))
+
+
+def model_channel_gate():
+    """The outlet (a mogha) where a field channel leaves the canal: a low concrete box on the field's edge with a steel slide gate
+    and its small wheel, kept low so it never stands over the crops behind it (owner, 2026-11-04)."""
+    lining, steel, wheel = toon("canalLining", 0xB8B2A6), toon("gateSteel", 0x4F6B7A), toon("gateWheel", 0xC2452D)
+    o = [box("box", (0.06, 0.05, 0.022), (0, 0, 0.011), lining, bevel=0.003),
+         box("gate", (0.042, 0.007, 0.03), (0, 0, 0.033), steel),
+         cylinder("wheel", 0.012, 0.012, 0.004, (0, 0, 0.05), wheel, segs=12)]
+    return group(o, scale=BUILDING_SCALE * 0.7)
+
+
+def model_drip():
+    """Drip on an acre (spec 013 §3.1): a black lateral along each crop ridge with drippers, a white PVC header across the near
+    edge, and a blue screen filter with its valve at the front corner (the side corners are the tree slots'). Drawn under the crop."""
+    b = Batch("drip")
+    lateral, dripper, header = toon("dripLateral", 0x1F1F22), toon("dripper", 0x4FC05A), toon("dripHeader", 0xE6E3DA)
+    for x in RIDGE_X:
+        b.box(lateral, (0.014, 0.76, 0.01), Matrix.Translation((x + 0.035, 0.0, 0.008)))
+        for j in range(8):
+            b.box(dripper, (0.02, 0.014, 0.012), Matrix.Translation((x + 0.035, -0.33 + j * 0.095, 0.011)))
+    b.box(header, (0.84, 0.022, 0.018), Matrix.Translation((0.0, -0.39, 0.009)))
+    o = b.objects(outline_for=(header,))
+    blue, valve = toon("dripFilter", 0x2F6FB5), toon("dripValve", 0xC2452D)
+    o += group([cylinder("filter", 0.022, 0.022, 0.06, (0.45, -0.39, 0.03), blue, segs=12),
+                cylinder("filterCap", 0.025, 0.025, 0.012, (0.45, -0.39, 0.066), toon("dripHeader", 0xE6E3DA), segs=12),
+                cylinder("valve", 0.012, 0.012, 0.01, (0.41, -0.39, 0.03), valve, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"))])
+    return o
+
+
+def model_pump_outlet():
+    """Where pumped water comes up on an acre (the well's pump or a borewell): a pipe out of the ground pouring into a small
+    cement tank (a hauz) with a gap into the field, so you see which acres are watered."""
+    cement, water, pipe = toon("cement", 0xBDB8AC), toon("tankWater", 0x86BAC6), toon("pipe", 0x5A5F66)
+    o = [cylinder("riser", 0.009, 0.009, 0.06, (0, 0.045, 0.03), pipe, segs=10),
+         cylinder("spout", 0.009, 0.009, 0.035, (0, 0.03, 0.06), pipe, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+         box("tank", (0.11, 0.07, 0.035), (0, -0.01, 0.0175), cement, bevel=0.003),
+         box("water", (0.095, 0.055, 0.004), (0, -0.01, 0.033), water, outline=False),
+         sphere("gush", 0.016, (0, 0.012, 0.045), toon("gush", 0xD6EEF4), scale=(0.8, 1.2, 1.4), segs=8, rings=5, outline=False)]
+    return group(o, scale=BUILDING_SCALE * 0.8)
+
+
+def icon_irrigation(kind):
+    """The field card's picture buttons: the pump on the well, the borewell's room, a channel with its gate, a corner of drip."""
+    if kind == "pump":
+        return model_well(pump=True)
+    if kind == "borewell":
+        return model_tubewell()
+    if kind == "channel":
+        b = Batch("iconChannel")
+        lining, water = toon("channelLining", 0xC2BBAE), toon("channelWater", 0x6AAACB)
+        b.box(lining, (0.06, 0.4, 0.02), Matrix.Translation((0, 0, 0.01)))
+        b.box(water, (0.04, 0.4, 0.004), Matrix.Translation((0, 0, 0.019)))
+        b.box(toon("canalLining", 0xB8B2A6), (0.4, 0.1, 0.022), Matrix.Translation((0, 0.25, 0.011)))
+        b.box(toon("canalWater", 0x5E9FBF), (0.4, 0.075, 0.004), Matrix.Translation((0, 0.25, 0.02)))
+        return b.objects(outline_for=(lining,)) + model_channel_gate()
+    b = Batch("iconDrip")
+    lateral, dripper = toon("dripLateral", 0x1F1F22), toon("dripper", 0x4FC05A)
+    for i in range(3):
+        b.box(lateral, (0.014, 0.3, 0.01), Matrix.Translation((-0.1 + i * 0.1, 0.0, 0.008)))
+        for j in range(3):
+            b.box(dripper, (0.022, 0.016, 0.014), Matrix.Translation((-0.1 + i * 0.1, -0.1 + j * 0.1, 0.012)))
+    b.box(toon("dripHeader", 0xE6E3DA), (0.3, 0.022, 0.018), Matrix.Translation((0, -0.16, 0.009)))
+    o = b.objects()
+    o.append(cylinder("filter", 0.022, 0.022, 0.06, (0.17, -0.16, 0.03), toon("dripFilter", 0x2F6FB5), segs=12))
+    return o
+
+
+SPRITES.update({"canal_x": model_canal, "canal_x_dry": model_canal_dry, "channel_y_dry": model_channel_dry, "pump_outlet": model_pump_outlet, "canal_end": model_canal_end,
+                "channel_y": lambda: model_channel("y"), "channel_gate": model_channel_gate, "drip": model_drip,
+                "well_pump": lambda: model_well(pump=True)})
+# ---------------------------------------------------------------- equipment (spec 013 §3.2, US-128): previewed to the owner first
+
+def model_plough():
+    """A desi plough (hal): a wooden beam and handle with an iron share, and the yoke for the pair, laid on the ground."""
+    wood, dark, iron = toon("ploughWood", 0x9A6B3E), toon("ploughDark", 0x6E4A2A), toon("ploughIron", 0x5A5F66)
+    o = [box("beam", (0.014, 0.26, 0.014), (0, 0.0, 0.03), wood, rot=Matrix.Rotation(math.radians(8), 3, "X")),
+         box("handle", (0.012, 0.012, 0.09), (0, 0.13, 0.06), dark, rot=Matrix.Rotation(math.radians(-25), 3, "X")),
+         box("body", (0.02, 0.06, 0.02), (0, 0.1, 0.012), wood),
+         box("share", (0.014, 0.04, 0.008), (0, 0.06, 0.006), iron),
+         box("yoke", (0.18, 0.014, 0.014), (0, -0.13, 0.012), dark, bevel=0.003)]
+    return group(o, rot_z=math.radians(30), scale=BUILDING_SCALE)
+
+
+def model_bullock_cart():
+    """A bullock cart (bail gaadi): a plank bed on two tall spoked wooden wheels, a long shaft to the yoke, resting on a prop."""
+    wood, dark, iron, plank = toon("cartWood", 0xA87442), toon("cartDark", 0x6E4A2A), toon("cartIron", 0x5A5F66), toon("cartPlank", 0xC08A55)
+    o = [box("bed", (0.14, 0.2, 0.012), (0, 0.03, 0.085), plank, bevel=0.003)]
+    for x in (-0.07, 0.07):
+        o.append(box("rail%d" % (x > 0), (0.008, 0.2, 0.03), (x, 0.03, 0.105), wood))
+        o.append(cylinder("wheel%d" % (x > 0), 0.075, 0.075, 0.012, (x * 1.18, 0.03, 0.075), dark, segs=20, cap=True, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("rim%d" % (x > 0), 0.077, 0.077, 0.006, (x * 1.26, 0.03, 0.075), iron, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(cylinder("hub%d" % (x > 0), 0.016, 0.016, 0.022, (x * 1.18, 0.03, 0.075), wood, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    o.append(box("shaft", (0.016, 0.24, 0.014), (0, -0.17, 0.05), wood, rot=Matrix.Rotation(math.radians(-10), 3, "X")))
+    o.append(box("prop", (0.01, 0.01, 0.03), (0, -0.27, 0.015), dark, outline=False))
+    o.append(box("yoke", (0.16, 0.014, 0.014), (0, -0.28, 0.034), dark, bevel=0.003))
+    return group(o, rot_z=math.radians(-60), scale=BUILDING_SCALE)
+
+
+def model_tractor(tool):
+    """A 35 HP tractor (no maker's marks): an orange-red bonnet and mudguards, a cream grille, big rear and small front wheels, a
+    seat and a steering wheel, a canopy; tool 'cultivator' (tines behind), 'trolley' (a red trolley hitched) or 'none'."""
+    paint, dark, cream = toon("tractorRed", 0xD0452E), toon("tractorDark", 0x8E2E20), toon("tractorCream", 0xEDE3C8)
+    tyre, hub, seat = toon("tyre", 0x3A3530), toon("tractorHub", 0xE9C46A), toon("tractorSeat", 0x2B2B2B)
+    o = [box("chassis", (0.07, 0.24, 0.04), (0, -0.04, 0.07), dark),
+         box("bonnet", (0.075, 0.15, 0.06), (0, -0.1, 0.11), paint, bevel=0.01),
+         box("grille", (0.065, 0.01, 0.05), (0, -0.177, 0.105), cream, outline=False),
+         cylinder("exhaust", 0.006, 0.006, 0.07, (0.025, -0.06, 0.17), toon("exhaust", 0x3A3530), segs=8),
+         box("fenders", (0.15, 0.08, 0.012), (0, 0.06, 0.14), paint, bevel=0.004),
+         box("seat", (0.04, 0.035, 0.012), (0, 0.06, 0.152), seat),
+         cylinder("wheelPost", 0.004, 0.004, 0.05, (0, 0.02, 0.16), seat, segs=6, rot=Matrix.Rotation(math.radians(-30), 3, "X")),
+         cylinder("steering", 0.016, 0.016, 0.004, (0, 0.005, 0.185), seat, segs=12, outline=False),
+         box("canopy", (0.13, 0.11, 0.008), (0, 0.06, 0.26), cream, bevel=0.003)]
+    for x in (-0.055, 0.055):
+        o.append(cylinder("post%d" % (x > 0), 0.003, 0.003, 0.11, (x, 0.1, 0.2), dark, segs=6, outline=False))
+        o.append(cylinder("rear%d" % (x > 0), 0.065, 0.065, 0.04, (x * 1.25, 0.06, 0.065), tyre, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("rearHub%d" % (x > 0), 0.03, 0.03, 0.043, (x * 1.25, 0.06, 0.065), hub, segs=14, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(cylinder("front%d" % (x > 0), 0.035, 0.035, 0.022, (x * 0.85, -0.14, 0.035), tyre, segs=16, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("frontHub%d" % (x > 0), 0.015, 0.015, 0.025, (x * 0.85, -0.14, 0.035), hub, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    if tool == "cultivator":
+        iron = toon("tineIron", 0x5A5F66)
+        o.append(box("toolBar", (0.18, 0.014, 0.014), (0, 0.15, 0.05), iron))
+        for i in range(7):
+            o.append(box("tine%d" % i, (0.006, 0.012, 0.05), (-0.081 + i * 0.027, 0.155, 0.025), iron, outline=False))
+    elif tool == "trolley":
+        red, plank = toon("trolleyRed", 0xB8402C), toon("trolleyPlank", 0x8E5A33)
+        o.append(box("hitch", (0.01, 0.07, 0.01), (0, 0.13, 0.05), dark))
+        o.append(box("trolleyBed", (0.16, 0.24, 0.02), (0, 0.28, 0.07), plank))
+        for x in (-0.08, 0.08):
+            o.append(box("trolleySide%d" % (x > 0), (0.01, 0.24, 0.06), (x, 0.28, 0.11), red, bevel=0.003))
+        o.append(box("trolleyBack", (0.16, 0.01, 0.06), (0, 0.4, 0.11), red, bevel=0.003))
+        o.append(box("trolleyFront", (0.16, 0.01, 0.06), (0, 0.16, 0.11), red, bevel=0.003))
+        wheels(o, (-0.09, 0.09), (0.28,), 0.04, "trolleyWheel")
+    return group(o, rot_z=math.radians(-30), scale=VEHICLE_SCALE)
+
+
+def model_harvester():
+    """A combine harvester hired for the harvest (no maker's marks): a yellow-green body, the wide cutting header with its reel in
+    front, a glass cab, the grain tank and the unloading auger folded back, big front drive wheels."""
+    body, dark, glass, reel = toon("combineBody", 0xE0B43A), toon("combineDark", 0x7A6A2E), toon("glass", 0x2E4F6E), toon("combineReel", 0xC23B2A)
+    tyre, hub = toon("tyre", 0x3A3530), toon("hubMetal", 0xC9C2B4)
+    o = [box("body", (0.14, 0.24, 0.13), (0, 0.04, 0.135), body, bevel=0.01),
+         box("tank", (0.12, 0.1, 0.05), (0, 0.06, 0.225), dark, bevel=0.006),
+         box("cab", (0.08, 0.07, 0.07), (0, -0.07, 0.235), glass, bevel=0.006),
+         box("cabRoof", (0.09, 0.08, 0.012), (0, -0.07, 0.275), body),
+         box("feeder", (0.08, 0.1, 0.05), (0, -0.12, 0.08), dark),
+         box("header", (0.3, 0.06, 0.04), (0, -0.19, 0.04), body, bevel=0.005),
+         cylinder("reel", 0.022, 0.022, 0.28, (0, -0.2, 0.075), reel, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+         cylinder("auger", 0.01, 0.01, 0.2, (0.08, 0.1, 0.22), dark, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X"))]
+    for x in (-0.08, 0.08):
+        o.append(cylinder("drive%d" % (x > 0), 0.06, 0.06, 0.035, (x, -0.04, 0.06), tyre, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("driveHub%d" % (x > 0), 0.026, 0.026, 0.038, (x, -0.04, 0.06), hub, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(cylinder("steer%d" % (x > 0), 0.035, 0.035, 0.025, (x * 0.9, 0.13, 0.035), tyre, segs=16, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    return group(o, rot_z=math.radians(-30), scale=VEHICLE_SCALE)
+
+
+def model_plough_team():
+    """The pair at work: two bullocks side by side under one yoke, the plough behind them in the furrow (spec 013 §3.2)."""
+    o = []
+    turn = Matrix.Rotation(math.radians(18), 4, "Z")
+    for s in (-1, 1):
+        parts = model_animal("bullock", "stand")
+        shift = Matrix.Translation(turn @ Vector((s * 0.06 * ANIMAL_SCALE, 0, 0)))
+        for part in parts:
+            part.matrix_world = shift @ part.matrix_world
+        o += parts
+    wood, dark, iron = toon("ploughWood", 0x9A6B3E), toon("ploughDark", 0x6E4A2A), toon("ploughIron", 0x5A5F66)
+    tack = [box("yoke", (0.2, 0.014, 0.014), (0, -0.075, 0.135), dark, bevel=0.003),
+            box("beam", (0.014, 0.26, 0.012), (0, 0.08, 0.07), wood, rot=Matrix.Rotation(math.radians(-14), 3, "X")),
+            box("plough", (0.02, 0.05, 0.03), (0, 0.22, 0.02), wood),
+            box("share", (0.014, 0.03, 0.008), (0, 0.2, 0.004), iron),
+            box("handle", (0.01, 0.01, 0.08), (0, 0.25, 0.06), dark, rot=Matrix.Rotation(math.radians(-25), 3, "X"))]
+    for part in group(tack, rot_z=math.radians(18), scale=ANIMAL_SCALE):
+        o.append(part)
+    return o
+
+
+SPRITES.update({"plough_team": model_plough_team, "plough": model_plough, "bullock_cart": model_bullock_cart, "harvester": model_harvester,
+                "tractor": lambda: model_tractor("none"), "tractor_cultivator": lambda: model_tractor("cultivator"),
+                "tractor_trolley": lambda: model_tractor("trolley")})
+
+
+for _k in ("pump", "borewell", "channel", "drip"):
+    ICONS["icon_" + _k] = (lambda k=_k: (lambda: icon_irrigation(k)))()
+    SPRITES["icon_" + _k] = ICONS["icon_" + _k]
+
+
 def pav_tray(o, name, x, y, z, mat_tray, mat_pav, cols=4, rows=2):
     """A steel baking tray of pav: soft golden buns baked touching, in rows (ladi pav)."""
     o.append(box(name, (0.012 + cols * 0.016, 0.012 + rows * 0.016, 0.004), (x, y, z), mat_tray, outline=False))
@@ -3349,6 +3692,234 @@ for _f, _deg in FACINGS.items():
 for _f, _deg in FACINGS.items():
     SPRITES["bakery_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("done"), d)))()
     SPRITES["bakery_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("building"), d)))()
+
+
+# ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
+# Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
+
+PITCH_W, PITCH_D = 0.26, 0.20
+
+
+def pitch_base(o, number=1):
+    """A council pitch in the square: a low brick chabutra with a plastered top and its number painted on a small post."""
+    o.append(box("pitchBrick", (PITCH_W, PITCH_D, 0.018), (0, 0, 0.009), toon("brick", BRICK), bevel=0.003))
+    o.append(box("pitchTop", (PITCH_W - 0.014, PITCH_D - 0.014, 0.004), (0, 0, 0.02), toon("pitchPlaster", 0xE3D3B4), outline=False))
+    px, py = PITCH_W / 2 - 0.012, -PITCH_D / 2 + 0.012
+    o.append(box("pitchPost", (0.008, 0.008, 0.05), (px, py, 0.045), toon("wood_dark", WOOD_DARK)))
+    o.append(box("pitchPlate", (0.028, 0.004, 0.022), (px, py - 0.006, 0.066), toon("pitchPlate", 0xF7F4EC)))
+    for i in range(number):
+        o.append(box("pitchNo%d" % i, (0.003, 0.002, 0.012), (px - 0.006 + i * 0.006, py - 0.009, 0.066), toon("pitchInk", 0x2E6FBA), outline=False))
+
+
+def model_pitch_empty(number):
+    o = []
+    pitch_base(o, number)
+    return group(o, scale=BUILDING_SCALE)
+
+
+def veg_heaps(o, x0, y0, z, w, d, seed):
+    """Heaps of vegetables on a sloping board: tomatoes, onions, potatoes, okra, cauliflower, greens and lemons."""
+    rnd = __import__("random").Random(seed)
+    kinds = [("tomato", 0xD8402F, 0.011), ("onion", 0x9C4A7A, 0.011), ("potato", 0xB98A55, 0.012), ("okra", 0x5E9A34, 0.008),
+             ("cauli", 0xF4EFD9, 0.015), ("greens", 0x3F8F3A, 0.012), ("lemon", 0xF2D43C, 0.008), ("chilli", 0x2F7A2A, 0.007)]
+    cols, rows = 4, 2
+    for k, (name, hexv, r) in enumerate(kinds):
+        cx = x0 - w / 2 + w * (k % cols + 0.5) / cols
+        cy = y0 - d / 2 + d * (k // cols + 0.5) / rows
+        mat = toon("veg" + name, hexv)
+        n = 6 if r < 0.012 else 3
+        for i in range(n):
+            a = rnd.random() * math.tau
+            rr = rnd.random() * w / cols * 0.28
+            zz = z + r + (0.004 if i < 3 else r * 1.3)
+            o.append(sphere("%s%d" % (name, i), r, (cx + math.cos(a) * rr, cy + math.sin(a) * rr, zz), mat,
+                            scale=(1, 1, 0.8), segs=8, rings=5, outline=(i == 0)))
+
+
+def model_veg_cart(on_pitch=True, number=1):
+    """The sabzi stall: a wooden handcart on four spoked wheels, heaped with vegetables on a sloping board, a brass scale hanging
+    from its bamboo, a big faded umbrella over it; a plastic crate of spare stock under the cart."""
+    o = []
+    if on_pitch:
+        pitch_base(o, number)
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    z0 = 0.02 if on_pitch else 0.0
+    L, W, H = 0.17, 0.09, 0.07
+    o.append(box("cartBed", (L, W, 0.012), (0, 0, z0 + H), wood, bevel=0.002))
+    o.append(box("cartRim", (L + 0.006, W + 0.006, 0.008), (0, 0, z0 + H + 0.010), dark, outline=False))
+    for i, x in enumerate((-L / 2 + 0.03, L / 2 - 0.03)):
+        for s in (-1, 1):
+            o.append(cylinder("wheel%d%d" % (i, s), 0.022, 0.022, 0.006, (x, s * (W / 2 + 0.006), z0 + 0.022), toon("wheel", 0x3A3A3A),
+                              segs=14, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+            o.append(cylinder("hub%d%d" % (i, s), 0.007, 0.007, 0.008, (x, s * (W / 2 + 0.008), z0 + 0.022), toon("hub", 0xC9CDD2),
+                              segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    o.append(box("axle", (0.006, W + 0.01, 0.006), (0, 0, z0 + 0.03), dark, outline=False))
+    for s in (-1, 1):
+        o.append(box("handle%d" % s, (0.06, 0.006, 0.006), (L / 2 + 0.03, s * 0.03, z0 + H + 0.004), dark))
+    veg_heaps(o, 0.0, 0.0, z0 + H + 0.008, L - 0.02, W - 0.01, 7)
+    o.append(box("crate", (0.07, 0.05, 0.035), (-0.02, 0.0, z0 + 0.0175), toon("crate", 0x2E6FBA), bevel=0.003))
+    # The umbrella: a bamboo pole from the cart, an eight-panel canopy in two faded colours.
+    bam = toon("bamboo", BAMBOO)
+    ux, uy = -L / 2 + 0.005, W / 2 - 0.005                # the pole at the cart's back corner: the vegetables stay in sight
+    o.append(cylinder("umbrellaPole", 0.004, 0.004, 0.22, (ux, uy, z0 + H + 0.11), bam, segs=6))
+    top = z0 + H + 0.22
+    a_mat, b_mat = toon("umbrellaA", 0x2F6FB0), toon("umbrellaB", 0xF2EAD8)
+    R, drop = 0.11, 0.04
+    for i in range(8):
+        a0, a1 = i * math.tau / 8, (i + 1) * math.tau / 8
+        cx, cy = ux + 0.02, uy + 0.02
+        o.append(poly_mesh("umb%d" % i, [(cx, cy, top), (cx + R * math.cos(a0), cy + R * math.sin(a0), top - drop),
+                                         (cx + R * math.cos(a1), cy + R * math.sin(a1), top - drop)], [(0, 1, 2)], a_mat if i % 2 else b_mat))
+    # The scale: a brass pan pair on a cord from the pole.
+    brass = toon("brass", 0xD9A93C)
+    o.append(box("scaleBeam", (0.04, 0.003, 0.003), (ux + 0.02, uy - 0.004, z0 + H + 0.10), dark, outline=False))
+    for x in (ux + 0.002, ux + 0.038):
+        o.append(cylinder("scalePan%d" % (x > ux + 0.02), 0.009, 0.006, 0.004, (x, uy - 0.004, z0 + H + 0.07), brass, segs=10))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_veg_shed():
+    """The stall shed on your own acre: a tin lean-to on four posts at the back, a plank table of vegetable heaps in front of it
+    under the open sky, baskets and the board."""
+    o = []
+    yard_pad(o, 0.40, 0.24, -0.08)
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    w, d, h = 0.26, 0.10, 0.16
+    sy = 0.08                                      # the shed's centre, at the back
+    o.append(box("shedPlinth", (w + 0.02, d + 0.02, 0.02), (0, sy, 0.01), toon("plinth", PLINTH), bevel=0.004))
+    basket = toon("basket", 0xC9A86A)
+    for i, x in enumerate((-0.08, 0.0, 0.08)):
+        o.append(cylinder("basket%d" % i, 0.032, 0.026, 0.03, (x, sy + 0.01, 0.035), basket, segs=12))
+    for x in (-w / 2, w / 2):
+        for y, hh in ((sy - d / 2, h), (sy + d / 2, h + 0.03)):
+            o.append(box("post%d%d" % (x > 0, y > sy), (0.012, 0.012, hh), (x, y, hh / 2), dark))
+    o.append(box("roof", (w + 0.05, d + 0.05, 0.01), (0, sy, h + 0.02), toon("tin", TIN), rot=Matrix.Rotation(math.radians(-14), 3, "X")))
+    for i in range(7):
+        o.append(box("rib%d" % i, (0.004, d + 0.05, 0.003), (-w / 2 - 0.015 + i * 0.048, sy, h + 0.027), toon("tinRib", TIN_RIB),
+                     rot=Matrix.Rotation(math.radians(-14), 3, "X"), outline=False))
+    o.append(box("sign", (0.16, 0.008, 0.035), (0, sy - d / 2 - 0.006, h - 0.015), toon("vegSign", 0x3F9A5A)))
+    # The table in front, in the open: planks on trestles, the heaps on it.
+    ty = -0.05
+    o.append(box("table", (0.24, 0.08, 0.012), (0, ty, 0.06), wood, bevel=0.002))
+    for x in (-0.10, 0.10):
+        o.append(box("trestle%d" % (x > 0), (0.01, 0.07, 0.055), (x, ty, 0.0275), dark, outline=False))
+    veg_heaps(o, 0.0, ty, 0.066, 0.22, 0.07, 11)
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+def model_tea_counter(on_pitch=True, number=2):
+    """Your tea stall: a blue tarpaulin on bamboo poles over a bench at the back; in front of it, in the open, a blue-painted wooden
+    counter with a pot of chai and a kettle on a gas stove, glass jars of rusk and small glasses; a water drum; two benches for
+    the customers."""
+    o = []
+    if on_pitch:
+        pitch_base(o, number)
+    z0 = 0.02 if on_pitch else 0.0
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    bam = toon("bamboo", BAMBOO)
+    # The tarp: high at the back, over the tea maker's corner, ending before the counter.
+    for x in (-0.11, 0.11):
+        o.append(cylinder("poleB%d" % (x > 0), 0.004, 0.004, 0.19, (x, 0.085, z0 + 0.095), bam, segs=6))
+        o.append(cylinder("poleF%d" % (x > 0), 0.004, 0.004, 0.16, (x, 0.03, z0 + 0.08), bam, segs=6))
+    o.append(poly_mesh("tarp", [(-0.125, 0.095, z0 + 0.19), (0.125, 0.095, z0 + 0.19), (0.125, 0.02, z0 + 0.16),
+                                (-0.125, 0.02, z0 + 0.16)], [(0, 1, 2, 3)], toon("tarp", 0x2F6FB0)))
+    o.append(cylinder("drum", 0.022, 0.022, 0.05, (-0.09, 0.06, z0 + 0.025), toon("drum", 0x2E6FBA), segs=12, smooth=True))
+    o.append(cylinder("gas", 0.014, 0.014, 0.055, (0.08, 0.06, z0 + 0.0275), toon("gasRed", 0xC2412D), segs=12, smooth=True))
+    # The counter, in front of the tarp.
+    cy = -0.01
+    o.append(box("counter", (0.16, 0.055, 0.065), (0, cy, z0 + 0.0325), toon("teaBlue", 0x3E7C8C), bevel=0.003))
+    o.append(box("counterTop", (0.17, 0.062, 0.008), (0, cy, z0 + 0.069), wood, outline=False))
+    o.append(box("board", (0.12, 0.004, 0.024), (0, cy - 0.029, z0 + 0.04), toon("teaBoard", 0xF2C94C), outline=False))
+    o.append(box("stove", (0.05, 0.04, 0.012), (0.045, cy, z0 + 0.079), toon("iron", 0x4A4A4A)))
+    o.append(cylinder("patila", 0.02, 0.018, 0.022, (0.045, cy, z0 + 0.096), toon("alu", 0xD5D9DD), segs=14, smooth=True))
+    o.append(cylinder("chai", 0.018, 0.018, 0.003, (0.045, cy, z0 + 0.106), toon("chai", 0xB07A45), segs=14, outline=False))
+    o.append(sphere("kettle", 0.014, (0.01, cy + 0.012, z0 + 0.087), toon("alu", 0xD5D9DD), scale=(1, 1, 0.8), segs=10, rings=6))
+    glass, rusk = toon("jarGlass", 0xD7ECEE), toon("rusk", 0xD9A35A)
+    for i, x in enumerate((-0.065, -0.04)):
+        o.append(cylinder("jar%d" % i, 0.011, 0.011, 0.03, (x, cy + 0.01, z0 + 0.088), glass, segs=10))
+        o.append(cylinder("jarIn%d" % i, 0.0095, 0.0095, 0.018, (x, cy + 0.01, z0 + 0.083), rusk, segs=10, outline=False))
+    for i in range(4):
+        o.append(cylinder("glass%d" % i, 0.0045, 0.004, 0.012, (-0.014 + (i % 2) * 0.01, cy - 0.012 + (i // 2) * 0.01, z0 + 0.079),
+                          glass, segs=8))
+    # Two benches in front.
+    for i, (x, y) in enumerate(((-0.05, -0.075), (0.065, -0.082))):
+        o.append(box("bench%d" % i, (0.09, 0.025, 0.008), (x, y, z0 + 0.03), dark))
+        for sgn in (-1, 1):
+            o.append(box("benchLeg%d%d" % (i, sgn), (0.006, 0.02, 0.026), (x + sgn * 0.038, y, z0 + 0.013), dark, outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+def model_sweet_shop(on_pitch=True, number=3):
+    """The sweet shop (halwai): a small lime-washed kiosk with a pink band and a red signboard; in front of it, in the open, a counter
+    with big steel thaals of rasgulla in syrup and a pyramid of atta laddoo; beside it the bhatti, a clay stove with its iron kadhai
+    of milk."""
+    o = []
+    if on_pitch:
+        pitch_base(o, number)
+    z0 = 0.02 if on_pitch else 0.0
+    w, d, h = 0.20, 0.08, 0.15
+    cy = 0.055
+    lime, band = toon("sweetLime", 0xF6EEE2), toon("sweetPink", 0xD9637A)
+    o.append(box("back", (w, 0.016, h), (0, cy + d / 2 - 0.008, z0 + h / 2), lime))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.016, d, h), (sx * (w / 2 - 0.008), cy, z0 + h / 2), lime))
+    o.append(box("inside", (w - 0.03, 0.006, h - 0.03), (0, cy + d / 2 - 0.018, z0 + (h - 0.03) / 2), toon("shopDark", 0x4A3424), outline=False))
+    o.append(box("band", (w + 0.004, d + 0.004, 0.02), (0, cy, z0 + h - 0.01), band, outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.03, 0.01), (0, cy, z0 + h + 0.005), toon("limeShade", LIME_SHADE)))
+    o.append(box("sign", (0.17, 0.008, 0.035), (0, cy - d / 2 - 0.012, z0 + h + 0.02), toon("sweetSign", 0xC23B32)))
+    o.append(box("signText", (0.12, 0.009, 0.008), (0, cy - d / 2 - 0.013, z0 + h + 0.02), toon("sweetGold", 0xF2C94C), outline=False))
+    for i in range(6):                           # a short striped awning over the doorway
+        x0 = -w / 2 + i * w / 6
+        o.append(poly_mesh("awn%d" % i, [(x0, cy - d / 2, z0 + h - 0.02), (x0 + w / 6, cy - d / 2, z0 + h - 0.02),
+                                         (x0 + w / 6, cy - d / 2 - 0.03, z0 + h - 0.04), (x0, cy - d / 2 - 0.03, z0 + h - 0.04)],
+                           [(0, 1, 2, 3)], band if i % 2 else toon("awnWhite", 0xF7F4EC)))
+    # The counter in front, its sweets in open thaals on top.
+    case_y = -0.04
+    o.append(box("case", (0.17, 0.05, 0.05), (0.02, case_y, z0 + 0.025), toon("caseWood", 0x7A4A2A), bevel=0.002))
+    o.append(box("caseGlass", (0.15, 0.004, 0.03), (0.02, case_y - 0.026, z0 + 0.028), toon("caseGlass", 0xD7ECEE), outline=False))
+    steel, white, syrup = toon("steel", 0xC9CDD2), toon("rasgulla", 0xFBF7EC), toon("syrup", 0xEFD9A0)
+    for i, x in enumerate((-0.035, 0.012)):
+        o.append(cylinder("thaal%d" % i, 0.021, 0.018, 0.008, (x, case_y, z0 + 0.054), steel, segs=16))
+        o.append(cylinder("syrup%d" % i, 0.019, 0.019, 0.002, (x, case_y, z0 + 0.058), syrup, segs=16, outline=False))
+        for j in range(5):
+            a = j * math.tau / 5 + 0.3
+            o.append(sphere("ras%d%d" % (i, j), 0.0072, (x + math.cos(a) * 0.009, case_y + math.sin(a) * 0.009, z0 + 0.063), white,
+                            segs=8, rings=5, outline=(j == 0)))
+    laddoo = toon("laddoo", 0xE0A040)
+    lx = 0.065
+    o.append(cylinder("tray", 0.022, 0.022, 0.004, (lx, case_y, z0 + 0.052), steel, segs=16))
+    for k, (dx, dy, dz) in enumerate(((-0.011, -0.006, 0), (0.0, -0.011, 0), (0.011, -0.006, 0), (-0.008, 0.007, 0), (0.008, 0.007, 0),
+                                      (-0.005, -0.003, 0.012), (0.006, -0.003, 0.012), (0.0, 0.004, 0.012), (0.0, 0.0, 0.023))):
+        o.append(sphere("laddoo%d" % k, 0.0072, (lx + dx, case_y + dy, z0 + 0.061 + dz), laddoo, segs=8, rings=5, outline=(k == 8)))
+    # The bhatti and its kadhai, out front on the left.
+    bx, by = -0.10, -0.05
+    o.append(cylinder("bhatti", 0.028, 0.032, 0.038, (bx, by, z0 + 0.019), toon("clay", 0xB4572E), segs=12))
+    o.append(cylinder("kadhai", 0.032, 0.019, 0.015, (bx, by, z0 + 0.045), toon("kadhai", 0x3A3A3A), segs=16, smooth=True))
+    o.append(cylinder("milk", 0.028, 0.028, 0.003, (bx, by, z0 + 0.051), toon("milkTop", 0xFBF6E9), segs=16, outline=False))
+    o.append(box("fire", (0.018, 0.004, 0.012), (bx, by - 0.031, z0 + 0.012), toon("fire", 0xF2873A), outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["pitch_veg_%s" % _f] = (lambda d=_deg: (lambda: refit(model_veg_cart(), d)))()
+    SPRITES["pitch_tea_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tea_counter(), d)))()
+    SPRITES["pitch_sweet_%s" % _f] = (lambda d=_deg: (lambda: refit(model_sweet_shop(), d)))()
+for _n in (1, 2, 3):
+    SPRITES["pitch_empty_%d" % _n] = (lambda n=_n: (lambda: model_pitch_empty(n)))()
+SPRITES["veg_shed"] = model_veg_shed
+SPRITES["veg_cart_e"] = lambda: refit(model_veg_cart(on_pitch=False), 90)
+
+# The game's shops (spec 017 §3.4, layout D approved 2026-11-05): each shop on each of the square's pitches with that pitch's number,
+# facing as the pitch does (I and II to the camera's left face, III to its right); on your own acre the stall shed, the tea counter and
+# the sweet shop without the council's brick pitch.
+PITCH_FACING = {1: 0, 2: 0, 3: 90}
+SHOP_MODELS = {"veg_stall": model_veg_cart, "tea_stall": model_tea_counter, "sweet_shop": model_sweet_shop}
+for _id, _fn in SHOP_MODELS.items():
+    for _n, _deg in PITCH_FACING.items():
+        SPRITES["%s_pitch_%d" % (_id, _n)] = (lambda fn=_fn, n=_n, d=_deg: (lambda: refit(fn(on_pitch=True, number=n), d)))()
+SPRITES["veg_stall_s"] = model_veg_shed
+SPRITES["tea_stall_s"] = lambda: refit(model_tea_counter(on_pitch=False), 0)
+SPRITES["sweet_shop_s"] = lambda: refit(model_sweet_shop(on_pitch=False), 0)
 
 
 def portrait(kind):

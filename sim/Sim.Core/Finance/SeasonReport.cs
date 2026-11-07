@@ -59,12 +59,15 @@ namespace Sim.Core.Finance
         /// <summary>Each business at its equity, never below 0 (spec 016 §3.2), in place of account 1800 at cost.</summary>
         public long Businesses { get; internal set; }
 
+        /// <summary>Bought machines at book value (spec 013 §3.2; save schema 14).</summary>
+        public long EquipmentAtBook { get; internal set; }
+
         /// <summary>Assets − liabilities on the ledger; the difference from Total is land and stored goods at market value.</summary>
         public long BookEquity { get; internal set; }
 
         public long Total
         {
-            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + Businesses + StoredGoods - LoanPrincipal - InterestPayable; }
+            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + EquipmentAtBook + Businesses + StoredGoods - LoanPrincipal - InterestPayable; }
         }
     }
 
@@ -137,6 +140,7 @@ namespace Sim.Core.Finance
                     h.WriteLong(v);
                 h.WriteLong(n.LivestockAtBook);
                 if (!(h is SaveWriter sw) || sw.Schema >= 10) h.WriteLong(n.Businesses);
+                if (!(h is SaveWriter ew) || ew.Schema >= 14) h.WriteLong(n.EquipmentAtBook);
                 h.WriteLong(CashFlow.Closing);
                 h.WriteBool(Credit != null);
             }
@@ -171,6 +175,7 @@ namespace Sim.Core.Finance
             if (r.Schema >= 6) worth.OwedByBuyers = r.ReadLong();
             if (r.Schema >= 7) worth.LivestockAtBook = r.ReadLong();
             if (r.Schema >= 10) worth.Businesses = r.ReadLong();
+            if (r.Schema >= 14) worth.EquipmentAtBook = r.ReadLong();
             if (worth.Total != total) throw new SaveFormatException("a season report's net worth doesn't add up");
             cash.Closing = r.ReadLong();
             CreditSummary credit = null;

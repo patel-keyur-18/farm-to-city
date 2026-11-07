@@ -63,8 +63,14 @@ namespace Sim.View.Views
         /// <summary>0..1 through the growth; 1 once ready.</summary>
         public float Progress { get; internal set; }
 
-        /// <summary>The well acres show a bucket marker (ADR 0032).</summary>
+        /// <summary>The well acres show a bucket marker (ADR 0032), until the pump waters them.</summary>
         public bool WellAcre { get; internal set; }
+
+        /// <summary>The pump or the borewell waters the acre: a cement outlet at its back corner (spec 013 §3.1).</summary>
+        public bool Pumped { get; internal set; }
+
+        /// <summary>The acre's canal channel carries no water for you now (the canal closed, its fee unpaid, or cut off): drawn dry.</summary>
+        public bool ChannelDry { get; internal set; }
 
         /// <summary>An outbreak was found on the growing crop and it isn't sprayed yet: the field shows a pest marker.</summary>
         public bool PestWarning { get; internal set; }
@@ -146,6 +152,16 @@ namespace Sim.View.Views
         public TreeStage Stage { get; internal set; }
     }
 
+    /// <summary>A whole-acre orchard (spec 013 §3.3, ADR 0090): its tree and stage, drawn as a grid of trees over the acre.</summary>
+    public sealed class OrchardVm
+    {
+        public int TileId { get; internal set; }
+        public string TreeId { get; internal set; }
+
+        /// <summary>Sapling, Young, Mature, Ripe or Spoiling, as an edge tree's.</summary>
+        public TreeStage Stage { get; internal set; }
+    }
+
     public sealed class BedVm
     {
         public long Id { get; internal set; }
@@ -197,6 +213,9 @@ namespace Sim.View.Views
         public string TypeId { get; internal set; }
         public bool Building { get; internal set; }
         public bool Working { get; internal set; }
+
+        /// <summary>A shop's pitch in the square (0-based, spec 017 §3.4), or −1 on its acre.</summary>
+        public int Pitch { get; internal set; } = -1;
     }
 
     /// <summary>
@@ -259,12 +278,22 @@ namespace Sim.View.Views
         public int Place { get; internal set; }
     }
 
+    /// <summary>A machine on the map (ADR 0088): at work on a field by day, or the tractor parked on the farm lane.</summary>
+    public sealed class MachineVm
+    {
+        /// <summary>The sprite: plough_team, tractor_cultivator, or tractor_trolley parked.</summary>
+        public string Sprite { get; internal set; }
+        public int TileId { get; internal set; }
+        public bool Parked { get; internal set; }
+    }
+
     public sealed class MapVm
     {
         public int Width { get; internal set; }
         public int Height { get; internal set; }
         public List<TileVm> Tiles { get; } = new List<TileVm>();
         public List<SlotVm> Slots { get; } = new List<SlotVm>();
+        public List<OrchardVm> Orchards { get; } = new List<OrchardVm>();
         public List<BedVm> Beds { get; } = new List<BedVm>();
         public List<BuildingVm> Buildings { get; } = new List<BuildingVm>();
         public List<ConstructionVm> Constructions { get; } = new List<ConstructionVm>();
@@ -274,6 +303,10 @@ namespace Sim.View.Views
 
         /// <summary>Businesses being built or open (spec 016), in id order.</summary>
         public List<BusinessVm> Businesses { get; } = new List<BusinessVm>();
+
+        /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
+        public int SquareTile { get; internal set; } = -1;
+        public int Pitches { get; internal set; }
         public List<PersonVm> People { get; } = new List<PersonVm>();
         public long SimTime { get; internal set; }
         public int Season { get; internal set; }
@@ -293,6 +326,20 @@ namespace Sim.View.Views
 
         /// <summary>The cattle acre, or null when the map has none.</summary>
         public CattleAcreVm Cattle { get; internal set; }
+
+        /// <summary>The second cattle acre on a field of yours (ADR 0088), or null without a second shed.</summary>
+        public CattleAcreVm SecondCattle { get; internal set; }
+
+        /// <summary>Machines at work or parked (ADR 0088).</summary>
+        public List<MachineVm> Machines { get; } = new List<MachineVm>();
+
+        /// <summary>The minor canal (ADR 0087 §2): along the edge below <see cref="CanalRow"/> from column <see cref="CanalFrom"/> to <see cref="CanalTo"/>; row −1 without one.</summary>
+        public int CanalRow { get; internal set; } = -1;
+        public int CanalFrom { get; internal set; }
+        public int CanalTo { get; internal set; }
+
+        /// <summary>The canal is closed for repairs this season: drawn dry (owner, 2026-11-04).</summary>
+        public bool CanalDry { get; internal set; }
     }
 
     public static class MapView
@@ -353,7 +400,7 @@ namespace Sim.View.Views
             var places = new Dictionary<int, string>();
             var placeIds = new Dictionary<int, string>();
             foreach (PlaceDef p in defs.Map.Places) { places[p.Tile] = p.Kind; placeIds[p.Tile] = p.Id; }
-            int yards = 0;
+            int yards = 0, secondShed = Sim.Core.Livestock.LivestockRules.SecondShedTile(sim);
             foreach (Tile t in land.Tiles)
             {
                 Parcel parcel = land.Parcels[t.ParcelId];
@@ -361,9 +408,9 @@ namespace Sim.View.Views
                 var vm = new TileVm
                 {
                     Id = t.Id, X = t.Id % defs.Map.Width, Y = t.Id / defs.Map.Width,
-                    Kind = Kind(t.Terrain, parcel.Owned),
+                    Kind = t.Id == secondShed ? TileKind.Cattle : Kind(t.Terrain, parcel.Owned), // the second cattle acre (ADR 0088)
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
-                    WellAcre = LandSystem.IsWellTile(defs, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
+                    WellAcre = LandSystem.IsWellTile(defs, t.Id) && !IrrigationRules.Pumped(sim, t.Id), Pumped = IrrigationRules.Pumped(sim, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
                 if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
@@ -409,6 +456,14 @@ namespace Sim.View.Views
                 }
                 map.Slots.Add(vm);
             }
+            if (sim.State.Orchards != null)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                {
+                    TreeDef def = defs.Farm.Trees[o.Def];
+                    map.Orchards.Add(new OrchardVm { TileId = o.TileId, TreeId = def.Id,
+                        Stage = o.State == TreeState.Growing ? (now - o.PlantedAt < def.GrowthSeconds / 2 ? TreeStage.Sapling : TreeStage.Young)
+                            : o.RipeGrams > 0 ? (now > o.RipeAt + grace ? TreeStage.Spoiling : TreeStage.Ripe) : TreeStage.Mature });
+                }
 
             foreach (GardenBed b in sim.State.Farm.Beds)
             {
@@ -426,14 +481,27 @@ namespace Sim.View.Views
                 map.Beds.Add(vm);
             }
 
+            if (IrrigationRules.On(sim))
+            {
+                CanalDef canal = IrrigationRules.Def(sim).Canal;
+                map.CanalRow = canal.Row;
+                map.CanalFrom = canal.FromColumn;
+                map.CanalTo = canal.ToColumn;
+                map.CanalDry = canal.DrySeasons[(int)Sim.Core.Time.Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)];
+                bool[] reached = IrrigationRules.Reached(sim);
+                bool flowing = IrrigationRules.CanalFlowing(sim);
+                foreach (TileVm t in map.Tiles) t.ChannelDry = IrrigationRules.Channelled(sim, t.Id) && !(flowing && reached[t.Id]);
+            }
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)
-                map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId });
+                if (b.TileId >= 0) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
             AddHouses(ctx, map);
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
             map.Cattle = CattleAcre(sim, map.SecondOfDay);
+            bool ploughing = AddMachines(sim, map);
+            map.SecondCattle = SecondCattleAcre(sim, map.SecondOfDay, ploughing);
             return map;
         }
 
@@ -453,15 +521,71 @@ namespace Sim.View.Views
             vm.Locked = !Sim.Core.Livestock.LivestockRules.Unlocked(sim);
             vm.Shed = Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? 2 : s.ShedReadyAt > 0 ? 1 : 0;
             if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            AddAnimals(sim, vm, 0, secondOfDay);
+            return vm;
+        }
+
+        /// <summary>The second cattle acre (ADR 0088): its shed, the farm's straw stack (one store over both), and the animals in it.</summary>
+        public static CattleAcreVm SecondCattleAcre(Simulation sim, long secondOfDay, bool ploughing = false)
+        {
+            int tile = Sim.Core.Livestock.LivestockRules.SecondShedTile(sim);
+            if (tile < 0) return null;
+            var vm = new CattleAcreVm { TileId = tile, Shed = Sim.Core.Livestock.LivestockRules.SecondShed(sim) != null ? 2 : 1 };
+            if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            AddAnimals(sim, vm, 1, secondOfDay);
+            if (ploughing) vm.Animals.RemoveAll(a => sim.Config.Game.Livestock.Animals[sim.Config.Game.Livestock.IndexOfAnimal(a.Kind)].Draught); // out at the plough
+            return vm;
+        }
+
+        /// <summary>
+        /// The machines (ADR 0088): by day (workFromHour–workToHour) each working machine of yours, or hired today, works the fields it
+        /// covers that have a crop growing, a field an hour; at night, or with nothing growing, your tractor parks on the farm lane's
+        /// acre with its trolley and the bullocks rest in their shed. Returns whether the ox plough is out at work.
+        /// </summary>
+        private static bool AddMachines(Simulation sim, MapVm map)
+        {
+            if (!Sim.Core.Equipment.EquipmentRules.On(sim)) return false;
+            EquipmentDefs defs = sim.Config.Game.Equipment;
+            int hour = (int)(map.SecondOfDay / 3600);
+            bool day = hour >= defs.WorkFromHour && hour < defs.WorkToHour, ploughing = false;
+            int[] cover = Sim.Core.Equipment.EquipmentRules.Cover(sim);
+            for (int k = 0; k < defs.Machines.Count; k++)
+            {
+                MachineDef d = defs.Machines[k];
+                Sim.Core.Equipment.Machine m = Sim.Core.Equipment.EquipmentRules.OfKind(sim, k);
+                bool hired = Sim.Core.Equipment.EquipmentRules.Hired(sim, k);
+                if (m == null && !hired) continue;
+                var fields = new List<int>();
+                for (int t = 0; t < cover.Length; t++)
+                {
+                    Crop c = cover[t] == k ? sim.State.Farm.CropOn(t) : null;
+                    if (c != null && c.State == CropState.Growing) fields.Add(t);
+                }
+                if (day && fields.Count > 0)
+                {
+                    map.Machines.Add(new MachineVm { Sprite = d.Bullocks > 0 ? "plough_team" : "tractor_cultivator", TileId = fields[hour % fields.Count] });
+                    if (d.Bullocks > 0 && !hired) ploughing = true;
+                }
+                else if (m != null && d.Bullocks == 0) map.Machines.Add(new MachineVm { Sprite = "tractor_trolley", TileId = defs.ParkTile, Parked = true });
+            }
+            return ploughing;
+        }
+
+        /// <summary>
+        /// A shed's animals take places 1, 2, 3, then 0, in id order. Poses: lying at night (20:00–6:00) and when ill, eating in the morning
+        /// feed (6:00–9:00), then turn by turn every 3 hours so the yard moves.
+        /// </summary>
+        private static void AddAnimals(Simulation sim, CattleAcreVm vm, int shed, long secondOfDay)
+        {
             int hour = (int)(secondOfDay / 3600);
             int n = 0;
-            foreach (Sim.Core.Livestock.Animal a in s.Animals)
+            foreach (Sim.Core.Livestock.Animal a in sim.State.Livestock.Animals)
             {
+                if (a.Shed != shed) continue;
                 string pose = a.SickDays > 0 || hour >= 20 || hour < 6 ? "lie" : hour < 9 ? "eat" : new[] { "stand", "eat", "lie" }[(int)((a.Id + hour / 3) % 3)];
-                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = defs.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
+                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = sim.Config.Game.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
                 n++;
             }
-            return vm;
         }
 
         /// <summary>How full a place is in steps: 0 under 1% full, then 1..top in equal bands of what it holds.</summary>
@@ -576,16 +700,29 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             if (sim.State.Businesses == null) return;
+            if (sim.Config.Game.Shops != null)
+            {
+                map.SquareTile = sim.Config.Game.Shops.SquareTile;
+                map.Pitches = sim.Config.Game.Shops.Pitches;
+            }
             int hour = (int)(map.SecondOfDay / 3600);
             foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
             {
                 if (b.Status == Sim.Core.Business.BusinessStatus.Closed) continue;
                 var t = Sim.Core.Business.BusinessRules.TypeOf(sim, b);
                 bool working = b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(sim, b, hour);
-                map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working });
-                map.Tiles[b.TileId].Business = true;
+                map.Businesses.Add(new BusinessVm { Id = b.Id, TileId = b.TileId, TypeId = t.Id, Building = b.Status == Sim.Core.Business.BusinessStatus.Building, Working = working, Pitch = b.Pitch });
+                if (b.Pitch < 0) map.Tiles[b.TileId].Business = true; // a pitch is the village's square, not your acre
                 if (working) AddWorker(sim, b, map);
-                if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || !Sim.Core.Business.BusinessRules.AreaComes(sim, b)) continue;
+                if (working && t.IsShop && b.LastArrivals > 0) // spec 017 §7: customers at the counter while it's serving
+                {
+                    string[] shoppers = { "town_f", "town_m" };
+                    for (int i = 0; i < shoppers.Length; i++)
+                        map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = shoppers[i], Female = shoppers[i] == "town_f",
+                            HomeTile = b.TileId, HomeHut = b.Id, TileId = b.TileId });
+                    continue;
+                }
+                if (!working || t.ByRecipe || hour < t.OpenHour || hour >= t.CloseHour || Sim.Core.Business.ShopRules.MillShare(sim, b) < Sim.Core.Maths.Fixed.FromRatio(1, 2)) continue; // most of the area grinds at the chakki: nobody waits
                 string[] looks = { "town_m", "town_f", "elder_m" };
                 for (int i = 0; i < looks.Length; i++)
                     map.People.Add(new PersonVm { Key = "customer:" + b.Id + ":" + i, Kind = PersonKind.Customer, Look = looks[i], Female = looks[i] == "town_f",

@@ -16,6 +16,35 @@
     { "id": "compost",  "good": "compost",             "kgPerAcrePerSeason": 2000, "yieldFactor": 1.05, "fertilityPerSeason": 6, "dryingFactor": 0.8 },
     { "id": "chemical", "good": "fertiliser_chemical", "kgPerAcrePerSeason": 150,  "yieldFactor": 1.25, "fertilityPerSeason": -3 }
   ],
+  "irrigation": {
+    "pump": { "building": "pump", "unlockEra": "hamlet", "acres": 4, "moistureFloor": 40, "powerPerAcreSeason": 250 },
+    "borewell": { "building": "borewell", "unlockEra": "village", "acres": 4, "moistureFloor": 40, "powerPerAcreSeason": 250 },
+    "canal": { "building": "canal_channel", "unlockEra": "hamlet", "feePerAcreSeason": 400, "moistureFloor": 45, "drySeasons": ["summer"], "row": 4, "fromColumn": 0, "toColumn": 9 },
+    "drip": { "building": "drip", "unlockEra": "village", "subsidyShare": 0.5, "subsidyAcres": 2, "powerPerAcreSeason": 0, "upkeepShare": 0.01, "fertigationBonus": 0.15, "careCutHoursPerDay": 0.5 }
+  },
+  "equipment": {
+    "machines": [
+      { "id": "ox_plough", "nameKey": "machine.ox_plough", "unlockEra": "hamlet", "price": 10000, "lifeSeasons": 20, "bullocks": 2,
+        "leasePerSeason": 0, "hirePerDay": 900, "maintenanceShare": 0, "dieselPerAcreSeason": 0, "acres": 6, "labourCut": 0.15, "tools": 1.03, "cartKg": 500, "loan": false },
+      { "id": "tractor", "nameKey": "machine.tractor", "unlockEra": "village", "price": 600000, "lifeSeasons": 60, "bullocks": 0,
+        "leasePerSeason": 30000, "hirePerDay": 2000, "maintenanceShare": 0.015, "dieselPerAcreSeason": 600, "acres": 20, "labourCut": 0.35, "tools": 1.06, "cartKg": 2000, "loan": true }
+    ],
+    "bullock": "bullock",
+    "breakdownMaintained": 0.005, "breakdownSkipped": 0.04, "repairShare": 0.05, "resaleShare": 0.8,
+    "workFromHour": 7, "workToHour": 19, "parkTile": 167
+  },
+  "orchard": {
+    "unlockEra": "hamlet",
+    "intercropShare": 0.5,
+    "contractorShare": 0.7,
+    "intercrops": ["radish", "methi", "amaranth", "lentils", "peas"],
+    "trees": [
+      { "tree": "mango",  "treesPerAcre": 40,  "labourYoung": 1.0, "labourBearing": 2.0, "moistureMin": 25, "moistureMax": 70 },
+      { "tree": "guava",  "treesPerAcre": 100, "labourYoung": 1.0, "labourBearing": 2.5, "moistureMin": 25, "moistureMax": 75 },
+      { "tree": "banana", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 50, "moistureMax": 85 },
+      { "tree": "papaya", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 40, "moistureMax": 70 }
+    ]
+  },
   "pests": {
     "baseRisk": { "radish": 0.03, "wheat": 0.06, "rice": 0.10, "potato": 0.10, "lentils": 0.05, "berseem": 0, "sorghum": 0, "methi": 0.03, "amaranth": 0.03, "okra": 0.08, "peas": 0.05, "maize": 0.06, "mustard": 0.06 },
     "monocultureStep": 0.5,

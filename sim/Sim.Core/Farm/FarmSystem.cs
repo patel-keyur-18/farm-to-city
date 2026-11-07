@@ -17,6 +17,7 @@ namespace Sim.Core.Farm
         public const string CropJob = "crop.grow";
         public const string GardenJob = "garden.grow";
         public const string TreeJob = "tree.mature";
+        public const string OrchardJob = "orchard.mature";
         public const string PestJob = "crop.pest";
 
         public SystemOrder Order { get { return SystemOrder.Agriculture; } }
@@ -63,6 +64,11 @@ namespace Sim.Core.Farm
                 case ItemClass.Seasonal:
                     foreach (GardenBed b in sim.State.Farm.Beds) b.RemainingGrams = sim.Config.Game.Farm.Farm.GardenSeasonOutputGrams;
                     foreach (Tree t in sim.State.Farm.Trees) Ripen(sim, t);
+                    if (OrchardRules.On(sim))
+                    {
+                        Accrue(sim); // a batch averages its factors up to now
+                        foreach (Orchard o in sim.State.Orchards.Orchards) OrchardRules.Ripen(sim, o);
+                    }
                     break;
             }
         }
@@ -84,6 +90,13 @@ namespace Sim.Core.Farm
                 c.WeatherSum += c.WeatherRate.MulRatio(dt, 1);
                 if (c.Wet) c.WetSeconds += dt;
             }
+            if (sim.State.Orchards != null)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                {
+                    o.WaterSum += o.WaterRate.MulRatio(dt, 1);
+                    o.CareSum += farm.CareRatio.MulRatio(dt, 1);
+                    o.WeatherSum += o.WeatherRate.MulRatio(dt, 1);
+                }
             FounderRules.Accrue(sim, dt);
             Livestock.LivestockSystem.AccrueCare(sim, dt);
             farm.LastAccrual = t;
@@ -96,6 +109,7 @@ namespace Sim.Core.Farm
             FarmState farm = sim.State.Farm;
             int weather = sim.State.Weather.WeatherOf(Calendar.SpellAt(sim.State.Clock.SimTime, sim.Clock));
             Fixed demand = Fixed.Zero;
+            int[] cover = Equipment.EquipmentRules.Cover(sim);
             foreach (Crop c in farm.Crops)
             {
                 if (c.State != CropState.Growing) continue;
@@ -104,13 +118,34 @@ namespace Sim.Core.Farm
                 c.WaterRate = FarmRules.WaterFactor(defs.Farm.Farm, def, tile.Moisture);
                 c.WeatherRate = defs.Farm.Farm.WeatherYieldFactor[weather];
                 c.Wet = defs.Farm.Pests.WetWeather[weather];
-                demand += def.LabourPerAcrePerDay + tile.WellLift.MulRatio(24, 1) * defs.Farm.Farm.BucketHoursPerMoisturePoint;
+                demand += CareDemand(sim, def, tile, cover);
             }
             demand += Livestock.LivestockRules.LabourDemand(sim); // every animal, dry or in milk (spec 012 §3.9)
+            if (sim.State.Orchards != null)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                {
+                    o.WaterRate = OrchardRules.WaterFactor(sim, o, sim.State.Land.Tiles[o.TileId].Moisture);
+                    o.WeatherRate = defs.Farm.Farm.WeatherYieldFactor[weather];
+                    demand += OrchardRules.Labour(sim, o); // young or bearing (spec 013 §3.3)
+                }
             Fixed cap = defs.Farm.Farm.CareCap;
             if (demand == Fixed.Zero) { farm.CareRatio = cap; return; }
             Fixed ratio = People.PeopleRules.CareSupply(sim) / demand;
             farm.CareRatio = ratio > cap ? cap : ratio;
+        }
+
+        /// <summary>
+        /// A growing crop's care, hours a day: its labour less the machine working the field's share (spec 013 §3.2) and what drip
+        /// saves (§3.1), never below 0; then the founder's buckets.
+        /// </summary>
+        public static Fixed CareDemand(Simulation sim, CropDef def, Tile tile) { return CareDemand(sim, def, tile, Equipment.EquipmentRules.Cover(sim)); }
+
+        public static Fixed CareDemand(Simulation sim, CropDef def, Tile tile, int[] cover)
+        {
+            Fixed labour = def.LabourPerAcrePerDay * OrchardRules.CropShare(sim, tile.Id) * (Fixed.One - Equipment.EquipmentRules.LabourCut(sim, cover, tile.Id))
+                - Land.IrrigationRules.CareCut(sim, tile.Id); // between an orchard's rows, a share of the labour (spec 013 §3.3)
+            if (labour < Fixed.Zero) labour = Fixed.Zero;
+            return labour + tile.WellLift.MulRatio(24, 1) * sim.Config.Game.Farm.Farm.BucketHoursPerMoisturePoint;
         }
 
         /// <summary>Labour needed today by the growing crops, hours a day (for Why?).</summary>
@@ -118,10 +153,11 @@ namespace Sim.Core.Farm
         {
             GameDefs defs = sim.Config.Game;
             Fixed demand = Fixed.Zero;
+            int[] cover = Equipment.EquipmentRules.Cover(sim);
             foreach (Crop c in sim.State.Farm.Crops)
                 if (c.State == CropState.Growing)
-                    demand += defs.Farm.Crops[c.Def].LabourPerAcrePerDay
-                        + sim.State.Land.Tiles[c.TileId].WellLift.MulRatio(24, 1) * defs.Farm.Farm.BucketHoursPerMoisturePoint;
+                    demand += CareDemand(sim, defs.Farm.Crops[c.Def], sim.State.Land.Tiles[c.TileId], cover);
+            if (sim.State.Orchards != null) foreach (Orchard o in sim.State.Orchards.Orchards) demand += OrchardRules.Labour(sim, o);
             return demand + Livestock.LivestockRules.LabourDemand(sim);
         }
 
@@ -150,6 +186,16 @@ namespace Sim.Core.Farm
                 if (lost <= 0) continue;
                 tree.RipeGrams -= lost;
                 sim.Emit(new GoodsSpoiled(t, defs.Market.Goods[good].Id, lost, SpoilSource.Tree, tree.SlotId));
+            }
+            if (sim.State.Orchards == null) return;
+            foreach (Orchard o in sim.State.Orchards.Orchards)
+            {
+                if (o.RipeGrams == 0 || t - o.RipeAt <= grace) continue;
+                int good = defs.Farm.Trees[o.Def].FruitGood;
+                long lost = Rot(defs.Market.Goods[good].SpoilagePerDay, o.RipeGrams);
+                if (lost <= 0) continue;
+                o.RipeGrams -= lost;
+                sim.Emit(new GoodsSpoiled(t, defs.Market.Goods[good].Id, lost, SpoilSource.Field, o.TileId));
             }
         }
 
@@ -216,9 +262,11 @@ namespace Sim.Core.Farm
                 long g = def.GrowthSeconds;
                 Fixed share = FarmRules.CycleShare(sim.Clock, def);
 
-                c.Breakdown = FarmRules.Yield(defs.Farm.Farm, def.SeasonYieldPerAcre * share, c.SoilFactor,
+                c.Breakdown = FarmRules.Yield(defs.Farm.Farm, def.SeasonYieldPerAcre * share * OrchardRules.CropShare(sim, c.TileId), c.SoilFactor, // half between an orchard's rows
                     c.WaterSum.MulRatio(1, g), c.CareSum.MulRatio(1, g), FarmRules.SeedFactor(def, c.Seed, c.SeedAge),
-                    c.WeatherSum.MulRatio(1, g), fert.YieldFactor, PestRules.FinalHealth(defs.Farm.Pests, c));
+                    c.WeatherSum.MulRatio(1, g), Land.IrrigationRules.FertiliserFactor(sim, c.TileId, fert), PestRules.FinalHealth(defs.Farm.Pests, c),
+                    Equipment.EquipmentRules.ToolsOf(sim, c));
+                Equipment.EquipmentRules.Forget(sim, c.Id);
                 c.State = CropState.Ready;
 
                 // Fertility for the cycle's share (§3.10).
@@ -277,6 +325,25 @@ namespace Sim.Core.Farm
                 LandSystem.SetTreeMature(sim, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Shade);
                 sim.Emit(new TreeMatured(sim.State.Clock.SimTime, t.SlotId, sim.Config.Game.Farm.Trees[t.Def].Id));
                 Ripen(sim, t);
+            }
+        }
+
+        /// <summary>An orchard's trees are grown (spec 013 §3.3): they shade the fields beside them from now, and fruit if this is a fruiting season.</summary>
+        internal sealed class OrchardMaturity : IJobHandler
+        {
+            public string JobType { get { return OrchardJob; } }
+            public SystemOrder System { get { return SystemOrder.Agriculture; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                Accrue(sim);
+                Orchard o = sim.State.Orchards.Orchards.Find(x => x.Id == job.TargetId);
+                o.State = TreeState.Mature;
+                o.JobId = 0;
+                sim.CompleteJob(job);
+                Refresh(sim);
+                sim.Emit(new OrchardBearing(sim.State.Clock.SimTime, o.TileId, sim.Config.Game.Farm.Trees[o.Def].Id));
+                OrchardRules.Ripen(sim, o);
             }
         }
 

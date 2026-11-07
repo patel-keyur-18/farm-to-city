@@ -15,12 +15,13 @@ namespace Sim.View.Views
     {
         // The lines of a statement, for the *Why?* id.
         public const int Fees = 0, Sales = 1, Goods = 2, Margin = 3, Wages = 4, Power = 5, Repairs = 6, Depreciation = 7, Interest = 8, Profit = 9,
-            CashStart = 10, CashIn = 11, CashOut = 12, CashEnd = 13, Cash = 14, Stock = 15, Fixed = 16, Debts = 17, Capital = 18, Kept = 19, Worth = 20;
+            CashStart = 10, CashIn = 11, CashOut = 12, CashEnd = 13, Cash = 14, Stock = 15, Fixed = 16, Debts = 17, Capital = 18, Kept = 19, Worth = 20,
+            Rent = 21; // a shop's pitch (spec 017 §3.4)
 
         internal static readonly string[] Names =
         {
             "fees", "sales", "goods", "margin", "wages", "power", "repairs", "depreciation", "interest", "profit",
-            "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth",
+            "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth", "rent",
         };
 
         private static readonly int[] PlanLines = { Fees, Sales, Goods, Wages, Power, Repairs, Depreciation, Interest, Profit };
@@ -66,6 +67,7 @@ namespace Sim.View.Views
                 case Debts: return Total(r, AccountGroup.Liabilities);
                 case Capital: return -r.Balance(Account.OwnersCapital);
                 case Kept: return -r.Balance(Account.RetainedEarnings) + BusinessBooks.NetProfit(r);
+                case Rent: return r.Balance(Account.Rent);
                 default: return Total(r, AccountGroup.Assets) - Total(r, AccountGroup.Liabilities);
             }
         }
@@ -81,7 +83,7 @@ namespace Sim.View.Views
         public static string Label(ViewContext ctx, Business b, int line)
         {
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
-            return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe ? "" : BusinessWords.Good(ctx, t.Input));
+            return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe || t.Input < 0 ? "" : BusinessWords.Good(ctx, t.Input));
         }
 
         private static bool IsCost(int line) { return line == Goods || (line >= Wages && line <= Interest) || line == CashOut || line == Debts; }
@@ -101,10 +103,12 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.pnlNow" : "books.pnl")));
-            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe; // a bakery or dairy charges no fees
+            BusinessTypeDef type = BusinessRules.TypeOf(ctx.Sim, b);
+            bool recipe = type.ByRecipe || type.IsShop; // a bakery, dairy or shop charges no fees
             foreach (int line in new[] { Fees, Sales, Goods, Margin })
                 if (line != Fees || !recipe) Add(ctx, vm, b, r, back, line);
             if (Amount(r, Wages) != 0 || b.Worker != WorkerKind.Founder) Add(ctx, vm, b, r, back, Wages);
+            if (Amount(r, Rent) != 0) Add(ctx, vm, b, r, back, Rent);
             foreach (int line in new[] { Power, Repairs, Depreciation })
                 Add(ctx, vm, b, r, back, line);
             if (Amount(r, Interest) != 0) Add(ctx, vm, b, r, back, Interest);
@@ -164,7 +168,7 @@ namespace Sim.View.Views
                     s.Get("books.pvaSoFar", "n", ctx.Fmt.Integer(full), "of", ctx.Fmt.Integer(BusinessBooks.KeptReports)), "booksPlan", WhyId(b, 0, Profit)));
                 return;
             }
-            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe;
+            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe || BusinessRules.TypeOf(ctx.Sim, b).IsShop;
             foreach (int line in PlanLines)
             {
                 if (line == Fees && recipe) continue;
@@ -226,7 +230,7 @@ namespace Sim.View.Views
                 case Fees:
                     if (Near(area, p.AreaGrams)) return Prices();
                     if (area > p.AreaGrams) return Kg("books.why.moreGrain", area, p.AreaGrams);
-                    if (!BusinessRules.AreaComes(ctx.Sim, b)) return s.Get("books.why.feeHigh");
+                    if (b.Fee > BusinessRules.Defs(ctx.Sim).NextVillageFee) return s.Get("books.why.feeHigh"); // some of the area walks on to the chakki (spec 017 §3.6)
                     if (b.CloseHour - b.OpenHour < t.CloseHour - t.OpenHour) return Kg("books.why.fewerHours", area, p.AreaGrams);
                     return Kg("books.why.lessGrain", area, p.AreaGrams);
                 case Sales: case Goods:

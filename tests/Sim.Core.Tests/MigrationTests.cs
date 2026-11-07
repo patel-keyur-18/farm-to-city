@@ -135,6 +135,18 @@ namespace Sim.Core.Tests
                     Assert.That(r.State.Businesses.Businesses.All(x => x.Mix.All(v => v == 0) && x.MadeToday.All(v => v == 0)), Is.True, name);
                 }
 
+                if (r.Header.Schema < 14)
+                {
+                    // Spec 013 §3.4 (ADR 0087, schema 14): no godown, no warehouse space, nothing let.
+                    Assert.That(r.State.Godown, Is.Not.Null, name);
+                    Assert.That((r.State.Godown.RentedTonnes, r.State.Godown.LetNext, r.State.Godown.LetNow), Is.EqualTo((0, false, false)), name);
+                    Assert.That(Market.GodownRules.Owned(Simulation.FromState(config, r.State.Clone())), Is.Null, name);
+                    // Spec 013 §3.1 (schema 14): rain-fed acres and the well's buckets: no pump, borewell, channel or drip.
+                    Assert.That(r.State.Irrigation, Is.Not.Null, name);
+                    Assert.That(r.State.Irrigation.PumpAcres.Concat(r.State.Irrigation.BorewellAcres), Is.Empty, name);
+                    Assert.That(r.State.Land.Buildings.Any(b => Land.IrrigationRules.IsIrrigation(Simulation.FromState(config, r.State.Clone()), b)), Is.False, name);
+                }
+
                 if (r.Header.Schema < 7)
                 {
                     // Spec 012 §4 (AC-16): no shed, no animals, buying green fodder on, no livestock money.
@@ -167,6 +179,101 @@ namespace Sim.Core.Tests
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+        }
+
+        // Spec 017 AC-8: a schema-13 save loads into 14 with the village's rivals on their own terms and no shops of yours; a business
+        // written at schema 13 comes back on its acre at the reference price and the starting stars; a shop then opens on a pitch and
+        // the town round-trips.
+        [Test]
+        public void Schema13_Shops()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(13)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Business.ShopsState shops = r.State.Shops;
+            Assert.That(shops, Is.Not.Null);
+            Assert.That(shops.Rivals.Select(x => x.Id), Is.EqualTo(config.Game.Shops.Rivals.Select(x => x.Id)), "the village grocer, tea stall and the town's halwai");
+            Assert.That(shops.Rivals.Select(x => x.Stars), Is.EqualTo(config.Game.Shops.Rivals.Select(x => x.Stars)));
+            Assert.That(r.State.Businesses.Businesses.Any(b => config.Game.Businesses.Types[b.Type].IsShop), Is.False, "no shops of yours");
+
+            Simulation sim = Simulation.FromState(config, r.State);
+            BusinessTests.Hamlet(sim);
+            long gift = 1_000_000 * 100;
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test.gift", "test", new Finance.Posting(Finance.Account.Cash, gift), new Finance.Posting(Finance.Account.OpeningEquity, -gift));
+            int tile = sim.State.Farm.Crops.Select(c => c.TileId).Max(); // the bot's fields are all sown: clear one for the mill
+            Assert.That(sim.Execute(new ClearField(sim.State.Clock.SimTime, tile)).Accepted, Is.True);
+            CommandResult founded = sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", tile, 150_000_00, true));
+            Assert.That(founded.Accepted, Is.True, founded.ToString());
+            LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 13), config, MinSchema);
+            Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
+            Business.Business mill = old.State.Businesses.Businesses.Last();
+            Assert.That((mill.Pitch, mill.PriceFactor, mill.Stars, mill.PutOut.Sum()), Is.EqualTo((-1, Maths.Fixed.One, config.Game.Shops.StartStars, 0L)));
+
+            RecipeTests.Village(sim);
+            Assert.That(sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, "tea_stall", 0, 100_000_00, true, null, 0)).Accepted, Is.True);
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "a shop on a pitch round-trips");
+        }
+
+        // Spec 013 AC-9 (ADR 0087): a schema-13 save loads into 14 with rain-fed acres and the well's buckets, no godown and no warehouse
+        // space and no orchards, as its own replay base, installs a pump and digs a channel, buys a godown, plants an orchard, and round-trips.
+        [Test]
+        public void Schema13_Farm()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(BotFixture(13)), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            Market.GodownState g = r.State.Godown;
+            Assert.That(g, Is.Not.Null);
+            Assert.That((g.RentedTonnes, g.RentNextTonnes, g.LetNext, g.LetNow), Is.EqualTo((0, 0, false, false)));
+            Assert.That(r.State.Land.Buildings.Any(b => b.TileId < 0), Is.False, "no godown");
+            Assert.That(r.State.Irrigation.PumpAcres.Concat(r.State.Irrigation.BorewellAcres), Is.Empty, "rain-fed and the well's buckets");
+            Assert.That(r.State.Equipment.Machines, Is.Empty, "hand tools");
+            Assert.That(r.State.Orchards.Orchards, Is.Empty, "no orchards (ADR 0090)");
+            Assert.That(r.State.CommandLog.Base, Is.Not.Null, "its own replay base: a schema-13 history may predate ADR 0085's drying");
+            Assert.That(SaveCodec.Replay(r, config).State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "and replays from it");
+
+            Simulation sim = Simulation.FromState(config, r.State);
+            sim.State.Era.Current = config.Game.Godown.UnlockEra;
+            CommandResult bought = sim.Execute(new BuyGodown(sim.State.Clock.SimTime));
+            Assert.That(bought.Accepted, Is.True, bought.ToString());
+            // ADR 0088: a schema-13 town has one shed, and every animal is in it.
+            long gift = 800_000 * 100;
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test.gift", "test", new Finance.Posting(Finance.Account.Cash, gift), new Finance.Posting(Finance.Account.OpeningEquity, -gift));
+            Assert.That(sim.Execute(new BuildShed(sim.State.Clock.SimTime)).Accepted, Is.True);
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            foreach (string kind in new[] { "buffalo", "cow" }) Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, kind)).Accepted, Is.True, kind);
+            LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 13), config, MinSchema);
+            Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
+            Assert.That(old.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0 }), "one shed, every animal in it");
+            Assert.That(old.State.Livestock.ShedTile, Is.EqualTo(-1));
+
+            // The bot's fields are all sown: clear one for the second shed; once it stands, the fifth animal lives there.
+            int second = sim.State.Farm.Crops.Select(c => c.TileId).Where(i => i != 85 && i != 86 && sim.Config.Game.Map.Parcels[sim.State.Land.Tiles[i].ParcelId].Id != "home_a").Max();
+            Assert.That(sim.Execute(new ClearField(sim.State.Clock.SimTime, second)).Accepted, Is.True);
+            foreach (Command c in new Command[] { new InstallPump(sim.State.Clock.SimTime), new BuildChannel(sim.State.Clock.SimTime, 85), new BuildShed(sim.State.Clock.SimTime, second) })
+            {
+                CommandResult done = sim.Execute(c);
+                Assert.That(done.Accepted, Is.True, c.GetType().Name + ": " + done);
+            }
+            sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
+            for (int i = 0; i < 3; i++) Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, "cow")).Accepted, Is.True);
+            Assert.That(sim.Execute(new BuyMachine(sim.State.Clock.SimTime, "ox_plough")).Accepted, Is.True, "its bullocks into the second shed");
+            int orchard = sim.State.Farm.Crops.Select(c => c.TileId).Where(i => i != 85 && i != 86 && i != second && sim.Config.Game.Map.Parcels[sim.State.Land.Tiles[i].ParcelId].Id != "home_a").Max();
+            Assert.That(sim.Execute(new ClearField(sim.State.Clock.SimTime, orchard)).Accepted, Is.True);
+            Assert.That(sim.Execute(new PlantOrchard(sim.State.Clock.SimTime, orchard, "mango")).Accepted, Is.True);
+            LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
+            Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
+            Assert.That(again.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
+            Assert.That(Market.GodownRules.Owned(sim), Is.Not.Null);
+            Assert.That(again.State.Irrigation.PumpAcres, Is.EqualTo(sim.State.Irrigation.PumpAcres));
+            Assert.That(Land.IrrigationRules.Channelled(Simulation.FromState(config, again.State), 85), Is.True);
+            Assert.That(Livestock.LivestockRules.SecondShed(Simulation.FromState(config, again.State)).TileId, Is.EqualTo(second), "the second shed, built");
+            Assert.That(again.State.Livestock.Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0, 1, 1, 1 }));
+            Assert.That(again.State.Equipment.Machines.Single().Kind, Is.EqualTo(config.Game.Equipment.IndexOf("ox_plough")));
+            Assert.That(again.State.Orchards.Orchards.Single().TileId, Is.EqualTo(orchard), "the orchard, planted");
         }
 
         // Spec 019 AC-16: the schema-11 fixture loads into 12 with an empty sales record and the season's first entry found, is its own

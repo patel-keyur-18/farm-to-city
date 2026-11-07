@@ -60,7 +60,9 @@ namespace Sim.Core.People
             if (tile.Terrain == Terrain.Quarters)
                 return PeopleRules.HutsOn(sim, tileId) + HousesOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre ? RejectReason.NoRoom : RejectReason.None;
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
-            if (sim.State.Farm.CropOn(tileId) != null || Business.BusinessRules.On(sim, tileId) != null) return RejectReason.TileOccupied;
+            if (sim.State.Farm.CropOn(tileId) != null || Business.BusinessRules.On(sim, tileId) != null || Livestock.LivestockRules.SecondShedTile(sim) == tileId
+                || Farm.OrchardRules.Of(sim, tileId) != null)
+                return RejectReason.TileOccupied;
             return HousesOn(sim, tileId) >= sim.Config.Game.Population.HousesPerAcre ? RejectReason.NoRoom : RejectReason.None;
         }
 

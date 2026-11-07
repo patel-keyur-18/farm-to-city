@@ -115,6 +115,60 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>
+        /// The ready farm as a Village with irrigation (spec 013 §3.1): the pump on the well's acres and one more, channels on 85 and 101,
+        /// a borewell on 100, drip on a well acre, and a season closed so the running costs are paid.
+        /// </summary>
+        public static Simulation Irrigated()
+        {
+            Simulation sim = Ready();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
+            Ok(sim, new SetCashForTest(T(sim), 5_00_000_00));
+            Ok(sim, new InstallPump(T(sim)));
+            Ok(sim, new SetPumpAcres(T(sim), new[] { 86, 102, 84 }));
+            Ok(sim, new BuildChannel(T(sim), 85));
+            Ok(sim, new BuildChannel(T(sim), 101));
+            Ok(sim, new DrillBorewell(T(sim), 100));
+            Ok(sim, new LayDrip(T(sim), 86));
+            sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + Hour);
+            return sim;
+        }
+
+        /// <summary>The Village with both sheds, the ox plough and a tractor bought (maintenance skipped), past a close (spec 013 §3.2).</summary>
+        public static Simulation Equipped()
+        {
+            Simulation sim = Ready();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
+            Ok(sim, new SetCashForTest(T(sim), 20_00_000_00));
+            Ok(sim, new BuildShed(T(sim)));
+            sim.AdvanceTo(T(sim) + 25 * Hour);
+            int field = System.Linq.Enumerable.First(System.Linq.Enumerable.Range(0, sim.State.Land.Tiles.Count),
+                t => Sim.Core.Livestock.LivestockRules.PlaceSecond(sim, t) == RejectReason.None);
+            Ok(sim, new BuildShed(T(sim), field));
+            sim.AdvanceTo(T(sim) + 25 * Hour);
+            Ok(sim, new BuyMachine(T(sim), "ox_plough"));
+            Ok(sim, new BuyMachine(T(sim), "tractor"));
+            Ok(sim, new SetMaintenance(T(sim), sim.State.Equipment.Machines[1].Id, false));
+            sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + Hour);
+            return sim;
+        }
+
+        /// <summary>Sets cash with a balanced test entry against opening equity.</summary>
+        private sealed class SetCashForTest : TimedCommand
+        {
+            private readonly long _amount;
+            public SetCashForTest(long at, long amount) : base(at) { _amount = amount; }
+            protected override CommandResult ApplyAt(Simulation sim)
+            {
+                long d = _amount - sim.State.Ledger.Cash;
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.opening", "test",
+                    new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Cash, d), new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.OpeningEquity, -d));
+                return CommandResult.Ok;
+            }
+        }
+
         /// <summary>An owned farm acre with nothing growing, for a family house.</summary>
         public static int HouseTile(Simulation sim)
         {
@@ -196,6 +250,25 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>
+        /// The dairy's town with three shops (spec 017): a tea stall and a vegetable stall on the square's pitches, a sweet shop on an
+        /// acre, all hired, a day of customers gone by.
+        /// </summary>
+        public static Simulation Shops()
+        {
+            Simulation sim = Dairy();
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("potato")] += 500_000;
+            Ok(sim, new FoundBusiness(T(sim), "tea_stall", 0, 100_000_00, false, null, 0));
+            Hire(sim);
+            Ok(sim, new FoundBusiness(T(sim), "veg_stall", 0, 100_000_00, false, null, 1));
+            Hire(sim);
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "sweet_shop", tile, 200_000_00, false));
+            Hire(sim);
+            sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 12 * 3600);
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -206,7 +279,10 @@ namespace Sim.View.Tests
             yield return Mill();
             yield return Bakery();
             yield return Dairy();
+            yield return Shops();
             yield return Board();
+            yield return Irrigated();
+            yield return Equipped();
         }
     }
 }

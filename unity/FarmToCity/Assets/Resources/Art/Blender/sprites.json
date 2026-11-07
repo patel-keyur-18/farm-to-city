@@ -23,6 +23,27 @@
    "name": "animal_buffalo_stand"
   },
   {
+   "w": 152,
+   "h": 162,
+   "pivotX": 0.5533,
+   "pivotY": 0.31791,
+   "name": "animal_bullock_eat"
+  },
+  {
+   "w": 170,
+   "h": 146,
+   "pivotX": 0.48946,
+   "pivotY": 0.41889,
+   "name": "animal_bullock_lie"
+  },
+  {
+   "w": 150,
+   "h": 162,
+   "pivotX": 0.55278,
+   "pivotY": 0.31791,
+   "name": "animal_bullock_stand"
+  },
+  {
    "w": 150,
    "h": 160,
    "pivotX": 0.55718,
@@ -219,6 +240,27 @@
    "name": "bund_y"
   },
   {
+   "w": 110,
+   "h": 106,
+   "pivotX": 0.5,
+   "pivotY": 0.42374,
+   "name": "canal_end"
+  },
+  {
+   "w": 368,
+   "h": 222,
+   "pivotX": 0.49677,
+   "pivotY": 0.48398,
+   "name": "canal_x"
+  },
+  {
+   "w": 368,
+   "h": 222,
+   "pivotX": 0.49677,
+   "pivotY": 0.48398,
+   "name": "canal_x_dry"
+  },
+  {
    "w": 112,
    "h": 94,
    "pivotX": 0.47201,
@@ -238,6 +280,27 @@
    "pivotX": 0.50498,
    "pivotY": 0.43086,
    "name": "cattle_shed_building"
+  },
+  {
+   "w": 98,
+   "h": 98,
+   "pivotX": 0.5,
+   "pivotY": 0.43103,
+   "name": "channel_gate"
+  },
+  {
+   "w": 350,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48517,
+   "name": "channel_y"
+  },
+  {
+   "w": 350,
+   "h": 218,
+   "pivotX": 0.5,
+   "pivotY": 0.48517,
+   "name": "channel_y_dry"
   },
   {
    "w": 220,
@@ -716,6 +779,13 @@
    "name": "dairy_w"
   },
   {
+   "w": 500,
+   "h": 286,
+   "pivotX": 0.50581,
+   "pivotY": 0.5277,
+   "name": "drip"
+  },
+  {
    "w": 596,
    "h": 332,
    "pivotX": 0.5,
@@ -875,6 +945,13 @@
    "pivotX": 0.55017,
    "pivotY": 0.37786,
    "name": "flour_mill_w"
+  },
+  {
+   "w": 228,
+   "h": 212,
+   "pivotX": 0.50535,
+   "pivotY": 0.33032,
+   "name": "granary"
   },
   {
    "w": 466,
@@ -1105,6 +1182,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_animal_bullock"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_animal_cow"
   },
   {
@@ -1126,7 +1210,21 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_borewell"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_cart"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_channel"
   },
   {
    "w": 256,
@@ -1148,6 +1246,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_compost"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_drip"
   },
   {
    "w": 256,
@@ -1176,6 +1281,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_atta"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_atta_laddoo"
   },
   {
    "w": 256,
@@ -1336,6 +1448,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_rasgulla"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_rice"
   },
   {
@@ -1407,6 +1526,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_population"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_pump"
   },
   {
    "w": 256,
@@ -2396,6 +2522,27 @@
    "name": "person_town_m_front_work"
   },
   {
+   "w": 244,
+   "h": 164,
+   "pivotX": 0.5,
+   "pivotY": 0.47427,
+   "name": "pitch_empty_1"
+  },
+  {
+   "w": 244,
+   "h": 164,
+   "pivotX": 0.5,
+   "pivotY": 0.47427,
+   "name": "pitch_empty_2"
+  },
+  {
+   "w": 244,
+   "h": 164,
+   "pivotX": 0.5,
+   "pivotY": 0.47427,
+   "name": "pitch_empty_3"
+  },
+  {
    "w": 332,
    "h": 380,
    "pivotX": 0.4818,
@@ -2473,6 +2620,13 @@
    "name": "place_temple"
   },
   {
+   "w": 208,
+   "h": 192,
+   "pivotX": 0.52673,
+   "pivotY": 0.30273,
+   "name": "plough_team"
+  },
+  {
    "w": 256,
    "h": 256,
    "pivotX": 0.5,
@@ -2536,6 +2690,13 @@
    "name": "portrait_town_m"
   },
   {
+   "w": 124,
+   "h": 118,
+   "pivotX": 0.5247,
+   "pivotY": 0.41823,
+   "name": "pump_outlet"
+  },
+  {
    "w": 356,
    "h": 206,
    "pivotX": 0.49791,
@@ -2597,6 +2758,83 @@
    "pivotX": 0.5,
    "pivotY": 0.49724,
    "name": "street_y"
+  },
+  {
+   "w": 244,
+   "h": 242,
+   "pivotX": 0.49942,
+   "pivotY": 0.32308,
+   "name": "sweet_shop_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 242,
+   "pivotX": 0.49942,
+   "pivotY": 0.32308,
+   "name": "sweet_shop_pitch_2"
+  },
+  {
+   "w": 246,
+   "h": 242,
+   "pivotX": 0.49767,
+   "pivotY": 0.32308,
+   "name": "sweet_shop_pitch_3"
+  },
+  {
+   "w": 234,
+   "h": 222,
+   "pivotX": 0.47928,
+   "pivotY": 0.30326,
+   "name": "sweet_shop_s"
+  },
+  {
+   "w": 244,
+   "h": 252,
+   "pivotX": 0.5,
+   "pivotY": 0.30843,
+   "name": "tea_stall_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 252,
+   "pivotX": 0.5,
+   "pivotY": 0.30843,
+   "name": "tea_stall_pitch_2"
+  },
+  {
+   "w": 244,
+   "h": 252,
+   "pivotX": 0.49707,
+   "pivotY": 0.30843,
+   "name": "tea_stall_pitch_3"
+  },
+  {
+   "w": 224,
+   "h": 234,
+   "pivotX": 0.4742,
+   "pivotY": 0.30066,
+   "name": "tea_stall_s"
+  },
+  {
+   "w": 224,
+   "h": 220,
+   "pivotX": 0.54199,
+   "pivotY": 0.26045,
+   "name": "tractor"
+  },
+  {
+   "w": 238,
+   "h": 220,
+   "pivotX": 0.50891,
+   "pivotY": 0.26045,
+   "name": "tractor_cultivator"
+  },
+  {
+   "w": 348,
+   "h": 220,
+   "pivotX": 0.34827,
+   "pivotY": 0.26045,
+   "name": "tractor_trolley"
   },
   {
    "w": 224,
@@ -2772,6 +3010,34 @@
    "pivotX": 0.52003,
    "pivotY": 0.31406,
    "name": "van_front"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "veg_stall_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "veg_stall_pitch_2"
+  },
+  {
+   "w": 262,
+   "h": 268,
+   "pivotX": 0.5282,
+   "pivotY": 0.29344,
+   "name": "veg_stall_pitch_3"
+  },
+  {
+   "w": 318,
+   "h": 270,
+   "pivotX": 0.54443,
+   "pivotY": 0.38291,
+   "name": "veg_stall_s"
   },
   {
    "w": 292,
@@ -3129,6 +3395,13 @@
    "pivotX": 0.5,
    "pivotY": 0.21671,
    "name": "well"
+  },
+  {
+   "w": 228,
+   "h": 278,
+   "pivotX": 0.5,
+   "pivotY": 0.24409,
+   "name": "well_pump"
   },
   {
    "w": 172,

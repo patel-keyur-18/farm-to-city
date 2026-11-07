@@ -74,6 +74,74 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new BuildShed(sim.State.Clock.SimTime)).Reason, Is.EqualTo(RejectReason.AlreadyBuilt));
         }
 
+        // ADR 0088 (US-234): a second shed on a field you own: refused in words before the first shed stands and on a busy or unowned acre;
+        // its 4 places come after the first shed's; the stores add up; the acre stops being farmed; on bought land foreclosure takes it
+        // with the field, moving its animals into the first shed's free places and seizing the rest.
+        [Test]
+        public void SecondShed()
+        {
+            Simulation sim = Start();
+            LivestockKit.Hamlet(sim);
+            long t = sim.State.Clock.SimTime;
+            int w1 = sim.Config.Game.Map.Parcels.ToList().FindIndex(p => p.Id == "w1");
+            int field = sim.Config.Game.Map.Parcels[w1].Tiles[0];
+            Assert.That(sim.Execute(new BuildShed(t, HomeTile)).Reason, Is.EqualTo(RejectReason.NoShed), "the first shed first");
+            Ok(sim, new BuildShed(t));
+            Assert.That(sim.Execute(new BuildShed(t, HomeTile)).Reason, Is.EqualTo(RejectReason.NoShed), "not while the first is being built");
+            sim.AdvanceTo(t + 24 * Hour);
+            t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new BuildShed(t, field)).Reason, Is.EqualTo(RejectReason.NotOwned));
+            Assert.That(sim.Execute(new BuildShed(t, YardTile)).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed));
+            Ok(sim, new Sow(t, HomeTile, "radish", Farm.SeedSource.Certified, "none"));
+            Assert.That(sim.Execute(new BuildShed(t, HomeTile)).Reason, Is.EqualTo(RejectReason.TileOccupied), "something is growing");
+            Ok(sim, new BuildChannel(t, 85));
+            Assert.That(sim.Execute(new BuildShed(t, 85)).Reason, Is.EqualTo(RejectReason.TileOccupied), "a channel runs along it");
+
+            long feed = Market.Store.CapacityGrams(sim, GoodPlace.FeedRoom), straw = Market.Store.CapacityGrams(sim, GoodPlace.StrawStack);
+            Ok(sim, new BuyParcel(t, "w1"));
+            long buildings = sim.State.Ledger.Balance(Account.Buildings);
+            Ok(sim, new BuildShed(t, field));
+            Assert.That(sim.State.Ledger.Balance(Account.Buildings) - buildings, Is.EqualTo(Money(40000)));
+            Assert.That(sim.Execute(new BuildShed(t, field + 1)).Reason, Is.EqualTo(RejectReason.AlreadyBuilt), "two sheds in Phase 2");
+            Assert.That(sim.Execute(new Sow(t, field, "radish", Farm.SeedSource.Certified, "none")).Reason, Is.EqualTo(RejectReason.TileOccupied), "a cattle acre, not farmed");
+            Assert.That(People.HouseRules.Place(sim, field), Is.EqualTo(RejectReason.TileOccupied), "no family house on it");
+            Assert.That(sim.Execute(new SellParcel(t, "w1")).Accepted, Is.False, "a field with a shed isn't sold");
+            sim.AdvanceTo(t + 24 * Hour);
+            Assert.That(LivestockRules.SecondShed(sim).TileId, Is.EqualTo(field));
+            Assert.That(LivestockRules.Stalls(sim), Is.EqualTo(8));
+            Assert.That(Market.Store.CapacityGrams(sim, GoodPlace.FeedRoom), Is.EqualTo(feed + 2_400_000), "the feed rooms add up");
+            Assert.That(Market.Store.CapacityGrams(sim, GoodPlace.StrawStack), Is.EqualTo(straw + 10_000_000), "and the straw stacks");
+
+            // Cows and buffalo fill the first shed, then the second; a sale frees a place in the first.
+            for (int i = 0; i < 6; i++) LivestockKit.Buy(sim, i % 2 == 0 ? "buffalo" : "cow");
+            Assert.That(LivestockKit.L(sim).Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0, 1, 1 }));
+            Ok(sim, new SellAnimal(sim.State.Clock.SimTime, LivestockKit.L(sim).Animals[0].Id));
+            Assert.That(LivestockKit.Buy(sim).Shed, Is.EqualTo(0));
+            LivestockKit.Buy(sim);
+            LivestockKit.Buy(sim);
+            Assert.That(sim.Execute(new BuyAnimal(sim.State.Clock.SimTime, "cow")).Reason, Is.EqualTo(RejectReason.ShedFull), "8 places");
+
+            // Foreclosure on the bought field: the shed goes at book value; with the first shed full, its animals are seized.
+            Ok(sim, new SellAnimal(sim.State.Clock.SimTime, LivestockKit.L(sim).Animals.First(a => a.Shed == 0).Id));
+            sim.DrainEvents();
+            Finance.CreditSystem.Foreclose(sim);
+            Assert.That(LivestockRules.SecondShed(sim), Is.Null);
+            Assert.That(sim.State.Land.Tiles[field].Occupied, Is.False);
+            Assert.That(LivestockKit.L(sim).Animals.Select(a => a.Shed), Is.EqualTo(new[] { 0, 0, 0, 0 }), "one moved into the free place");
+            Assert.That(sim.PendingEvents.OfType<AnimalSeized>().Count(), Is.EqualTo(3), "the other three had nowhere to go");
+            Assert.That(LivestockRules.Shed(sim), Is.Not.Null, "the first shed is on the protected cattle acre");
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+
+            // A second shed being built is seized at its cost, and its job ends.
+            Ok(sim, new BuyParcel(sim.State.Clock.SimTime, "w1"));
+            Ok(sim, new BuildShed(sim.State.Clock.SimTime, field));
+            Finance.CreditSystem.Foreclose(sim);
+            Assert.That((LivestockKit.L(sim).ShedReadyAt, LivestockRules.SecondShedTile(sim)), Is.EqualTo((0L, -1)));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 25 * Hour);
+            Assert.That(LivestockRules.SecondShed(sim), Is.Null);
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
+        }
+
         [Test]
         public void BuyAnimal()
         {

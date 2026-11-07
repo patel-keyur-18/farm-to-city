@@ -51,6 +51,8 @@
     { "id": "seed_okra", "nameKey": "good.seed_okra", "kind": "input", "unit": "kg", "basePrice": 1500, "spoilagePerDay": 0.001 },
     { "id": "seed_peas", "nameKey": "good.seed_peas", "kind": "input", "unit": "kg", "basePrice": 90, "spoilagePerDay": 0.001 },
     { "id": "seed_maize", "nameKey": "good.seed_maize", "kind": "input", "unit": "kg", "basePrice": 250, "spoilagePerDay": 0.001 },
-    { "id": "seed_mustard", "nameKey": "good.seed_mustard", "kind": "input", "unit": "kg", "basePrice": 100, "spoilagePerDay": 0.001 }
+    { "id": "seed_mustard", "nameKey": "good.seed_mustard", "kind": "input", "unit": "kg", "basePrice": 100, "spoilagePerDay": 0.001 },
+    { "id": "rasgulla",    "nameKey": "good.rasgulla",    "kind": "produce", "unit": "kg", "basePrice": 240, "elasticity": 1.2, "spoilagePerDay": 0.15, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 },
+    { "id": "atta_laddoo", "nameKey": "good.atta_laddoo", "kind": "produce", "unit": "kg", "basePrice": 290, "elasticity": 1.2, "spoilagePerDay": 0.15, "sales": "processed", "edible": false, "dailyVolatility": 0.01, "dailyBand": 0.04 }
   ]
 }

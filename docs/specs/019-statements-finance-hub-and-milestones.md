@@ -66,7 +66,7 @@ Percents are whole, rounded down; seasons to one decimal, rounded down (an emerg
 
 ### 3.4 Passive income (§10 G5)
 
-Income that comes without the founder's own labour in a season (G5): rent received from family houses, interest on the deposit, and the profit of businesses run by a hired worker (not ones you run). The farm, even with hands, isn't counted (you still decide and sow).
+Income that comes without the founder's own labour in a season (G5): rent received from family houses and from your godown in the mandi town (spec 013 §3.4, owner 2026-11-03), interest on the deposit, and the profit of businesses run by a hired worker (not ones you run). The farm, even with hands, isn't counted (you still decide and sow).
 
 ### 3.5 A savings deposit (§10 G4)
 

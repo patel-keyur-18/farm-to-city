@@ -23,6 +23,7 @@ namespace Sim.Core.Maths
         Era = 17,
         Animal = 18,
         Village = 19,
+        Machine = 20,
     }
 
     /// <summary>

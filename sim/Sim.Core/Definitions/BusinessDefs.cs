@@ -96,6 +96,44 @@ namespace Sim.Core.Definitions
 
         public bool ByRecipe { get { return Recipes.Count > 0; } }
 
+        /// <summary>What kind of shop it is (spec 017 §3.1), or None for the mill, bakery and dairy.</summary>
+        public ShopKind Kind { get; internal set; }
+
+        public bool IsShop { get { return Kind != ShopKind.None; } }
+
+        /// <summary>The building on a rented pitch in the square when it differs (the vegetable stall's handcart and shade, §3.1); −1: the same.</summary>
+        public long PitchBuildingValue { get; internal set; } = -1;
+        public int PitchBuildingLifeSeasons { get; internal set; }
+
+        /// <summary>A shop's most a real hour (§3.1): grams for the vegetable stall and the sweet shop, cups for the tea stall.</summary>
+        public long CapacityPerHour { get; internal set; }
+
+        /// <summary>The goods a stall may put out (§3.1): the vegetable stall's produce and products, the tea stall's snacks.</summary>
+        public IReadOnlyList<int> Goods { get; internal set; } = new int[0];
+
+        /// <summary>A cup of chai (§3.1): its milk (ml), its tea and sugar (coins, year-0) and the snack that goes with some cups (grams).</summary>
+        public long CupMilkMl { get; internal set; }
+        public Fixed CupSupplies { get; internal set; }
+        public long SnackGrams { get; internal set; }
+
+        /// <summary>
+        /// Good quality's costs (spec 017 §3.5, ADR 0092): a good cup's milk (ml: full-cream); the extra share on a recipe's cost (pure
+        /// ghee, fresh paneer); and whether nothing is kept overnight (leftovers cleared at 6:00 as spoilage).
+        /// </summary>
+        public long GoodCupMilkMl { get; internal set; }
+        public Fixed GoodRecipeExtra { get; internal set; }
+        public bool GoodFresh { get; internal set; }
+
+        /// <summary>A cup's milk at <paramref name="quality"/> (1 standard, 2 good).</summary>
+        public long CupMl(int quality) { return quality == 2 ? GoodCupMilkMl : CupMilkMl; }
+
+        /// <summary>Whether a stall may put <paramref name="good"/> out.</summary>
+        public bool Sells(int good)
+        {
+            foreach (int g in Goods) if (g == good) return true;
+            return false;
+        }
+
         /// <summary>Whether it makes <paramref name="good"/> by a recipe.</summary>
         public bool Makes(int good)
         {

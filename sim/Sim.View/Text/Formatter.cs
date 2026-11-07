@@ -161,10 +161,13 @@ namespace Sim.View.Text
 
         public string PricePerLitre(Fixed price) { return _strings.Get("unit.perLitre", "amount", Decimals(price, 2, false)); }
 
-        /// <summary>62%, 3.5%: whole from 10%, one decimal below (a fraction in, 0.0625 → 6.3%).</summary>
         /// <summary>One decimal, for hours a day ("3.4").</summary>
         public string Decimal1(Fixed v) { return Decimals(v, 1, false); }
 
+        /// <summary>Two decimals: a shop's attraction (spec 017 §3.3).</summary>
+        public string Decimal2(Fixed v) { return Decimals(v, 2, false); }
+
+        /// <summary>62%, 3.5%: whole from 10%, one decimal below (a fraction in, 0.0625 → 6.3%).</summary>
         public string Percent(Fixed fraction)
         {
             Fixed pct = fraction * Fixed.FromInt(100);

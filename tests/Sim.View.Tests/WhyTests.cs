@@ -47,12 +47,15 @@ namespace Sim.View.Tests
                     yield return Named("plan " + i, BusinessPlanSheet.Build(ctx, i, false));
                     yield return Named("plan self " + i, BusinessPlanSheet.Build(ctx, i, true));
                     yield return Named("plan loan " + i, BusinessPlanSheet.Build(ctx, i, false, true));
+                    if (sim.Config.Game.Businesses.Types[i].IsShop) yield return Named("shop place " + i, ShopPlaceSheet.Build(ctx, i, "hire"));
                 }
+                if (sim.Config.Game.Shops != null) yield return Named("square", FieldSheets.ForTile(ctx, sim.Config.Game.Shops.SquareTile));
                 foreach (var b in sim.State.Businesses.Businesses)
                 {
                     yield return Named("business " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Today));
                     yield return Named("business books " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Books));
                     yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
+                    yield return Named("business customers " + b.Id, BusinessSheet.Build(ctx, b.Id, ShopSheet.Customers));
                     yield return Named("put cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Put));
                     yield return Named("take cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take));
                     yield return Named("close " + b.Id, BusinessCloseSheet.Build(ctx, b.Id));
@@ -74,8 +77,8 @@ namespace Sim.View.Tests
 
         private static KeyValuePair<string, SheetVm> Named(string name, SheetVm s) { return new KeyValuePair<string, SheetVm>(name, s); }
 
-        /// <summary>A factor: a decimal number with no unit after it (5.30 /kg, 3.4 h, 70.7 kg, 6.3%, fertility 45.2 / 100, +0.4 points and a milk price of 57.50 coins are fine; 0.875 is not).</summary>
-        private static readonly Regex Factor = new Regex(@"\d\.\d+(?!\d|\s*(?:/kg|/L\b|h\b|kg|%|L\b|Cr\b|M\b|/ 100|of 100|points?\b|coins?\b))|×");
+        /// <summary>A factor: a decimal number with no unit after it (5.30 /kg, 3.4 h, 70.7 kg, 6.3%, fertility 45.2 / 100, +0.4 points, 2.5 stars and a milk price of 57.50 coins are fine; 0.875 is not).</summary>
+        private static readonly Regex Factor = new Regex(@"\d\.\d+(?!\d|\s*(?:/kg|/L\b|h\b|kg|%|L\b|Cr\b|M\b|/ 100|of 100|points?\b|coins?\b|stars?\b))|×");
 
         public static void AssertWords(string where, WhyVm why)
         {

@@ -463,9 +463,13 @@ namespace Game.Presentation.Map
             }
             foreach (SpriteRenderer r in _buildings) r.color = _tint;
             foreach (SpriteRenderer r in _props) r.color = _tint;
+            RefreshIrrigation(map);
+            RefreshMachines(map);
+            RefreshOrchards(map, animate);
             RefreshHandHuts(map, animate);
             RefreshHouses(map, animate);
             RefreshBusinesses(map, animate);
+            RefreshPitches(map, animate);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
             RefreshCattleAcre(map, animate);
@@ -674,6 +678,8 @@ namespace Game.Presentation.Map
         private Vector3 WorkPoint(int tile)
         {
             if (_businessTiles.Contains(tile)) return OnTile(tile, BusinessWorkAt[Random.Range(0, BusinessWorkAt.Length)]);
+            Vector3? counter = PitchWork(tile);
+            if (counter.HasValue) return counter.Value;
             float u = Random.Range(-0.3f, 0.3f), v = Random.Range(-0.3f, 0.3f);
             return TileCentre(tile) + new Vector3((u - v) * HalfWidth, -(u + v) * _grid.HalfHeight, 0);
         }
@@ -755,6 +761,12 @@ namespace Game.Presentation.Map
         public void ShowBusinessGhost(int tile, bool allowed, string typeId)
         {
             PlaceGhost(SpriteBank.Rendered(typeId + "_s") ?? SpriteBank.Hut, 1f, OnTile(tile, MillAt), tile, allowed);
+        }
+
+        /// <summary>The second cattle shed's ghost (ADR 0088) where it will stand at the back of the acre.</summary>
+        public void ShowShedGhost(int tile, bool allowed)
+        {
+            PlaceGhost(SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut, 1f, OnAcre(tile, CattleShed), tile, allowed);
         }
 
         private void PlaceGhost(Sprite sprite, float scale, Vector3 pos, int tile, bool allowed)

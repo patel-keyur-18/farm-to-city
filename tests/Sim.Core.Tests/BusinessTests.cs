@@ -64,7 +64,7 @@ namespace Sim.Core.Tests
             Hamlet(sim);
             CashTo(sim, 500_000_00);
             Assert.That(sim.Execute(new FoundBusiness(t, "bakery", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.EraLocked), "the Village's");
-            Assert.That(sim.Execute(new FoundBusiness(t, "sweet_shop", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
+            Assert.That(sim.Execute(new FoundBusiness(t, "kirana", HomeTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", QuartersTile, 150_000_00, false)).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed));
             Assert.That(sim.Execute(new FoundBusiness(t, "flour_mill", HomeTile, 50_000_00, false)).Reason, Is.EqualTo(RejectReason.CapitalTooLow), "the building, equipment and a season's wage");
             Ok(sim, new Sow(t, HomeTile + 1, "radish", Farm.SeedSource.Certified, "none"));
@@ -388,9 +388,10 @@ namespace Sim.Core.Tests
             long area = BusinessRules.AreaGramsPerDay(sim);
             Assert.That(worked.Select(w => (w.SimTime % 86_400) / 3600 - 1), Is.EqualTo(Enumerable.Range(8, 10)), "the hours 8:00–18:00 only");
             Assert.That(worked.All(w => w.AreaGrams + w.OwnGrams <= 380_000), Is.True, "380 kg a real hour at most");
-            Assert.That(worked.Sum(w => w.AreaGrams), Is.EqualTo(area / 10 * 10), "the area's grain first");
+            long hourly = BusinessRules.AreaGramsThisHour(sim, b); // its share against the chakki (spec 017 §3.6)
+            Assert.That(worked.Sum(w => w.AreaGrams), Is.EqualTo(hourly * 10), "the area's grain first, at its share");
             Assert.That(worked.Sum(w => w.OwnGrams), Is.EqualTo(200_000), "then 200 kg of your wheat");
-            Assert.That(worked.First().OwnGrams, Is.EqualTo(System.Math.Min(200_000, 380_000 - area / 10)), "your wheat fills what the area leaves");
+            Assert.That(worked.First().OwnGrams, Is.EqualTo(System.Math.Min(200_000, 380_000 - hourly)), "your wheat fills what the area leaves");
             Assert.That(b.Stock[atta] + attaSold, Is.EqualTo(194_000).Within(10), "0.97 atta (rounded an hour at a time)");
             Assert.That(toFeed, Is.GreaterThan(0), "bran to the feed room first");
             Assert.That(b.Stock[bran] + branSold + toFeed, Is.EqualTo(6_000).Within(10), "0.03 bran");
@@ -398,12 +399,12 @@ namespace Sim.Core.Tests
             // Open only 8–12: the area's afternoon grain goes to the next village.
             Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, 8, 12, b.Fee, b.OwnPerDay, false));
             sim.AdvanceTo((day + 2) * 86_400);
-            Assert.That(b.AreaToday, Is.EqualTo(area / 10 * 4), "4 hours of it");
+            Assert.That(b.AreaToday, Is.EqualTo(BusinessRules.AreaGramsThisHour(sim, b) * 4), "4 hours of it (at that day's stars: they move each night, ADR 0092)");
 
-            // A fee more than 1 coin above the next village's: the area goes there.
+            // A fee 2 coins above the next village's: a share of the area goes there, not all of it (spec 017 §3.6, AC-5).
             Ok(sim, new SetBusiness(sim.State.Clock.SimTime, b.Id, 8, 18, Fixed.FromInt(6), b.OwnPerDay, false));
             sim.AdvanceTo((day + 3) * 86_400);
-            Assert.That(b.AreaToday, Is.EqualTo(0));
+            Assert.That(b.AreaToday, Is.EqualTo(BusinessRules.AreaGramsThisHour(sim, b) * 10).And.LessThan(hourly * 10).And.GreaterThan(0));
             Assert.That(b.OwnToday, Is.EqualTo(200_000), "your own wheat still");
             Assert.That(b.Ledger.Reconcile(), Is.Null);
         }

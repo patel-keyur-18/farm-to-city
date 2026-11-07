@@ -50,11 +50,14 @@ namespace Sim.Core.Farm
         }
 
         /// <summary>The piecewise water factor of spec 003 §3.5.</summary>
-        public static Fixed WaterFactor(FarmDef farm, CropDef crop, Fixed m)
+        public static Fixed WaterFactor(FarmDef farm, CropDef crop, Fixed m) { return WaterFactor(farm, crop.MoistureMin, crop.MoistureMax, m); }
+
+        /// <summary>The same curve on any band (an orchard's trees, spec 013 §3.3).</summary>
+        public static Fixed WaterFactor(FarmDef farm, Fixed min, Fixed max, Fixed m)
         {
-            if (m < crop.MoistureMin) return farm.WaterDryFloor + (Fixed.One - farm.WaterDryFloor) * m / crop.MoistureMin;
-            if (m <= crop.MoistureMax) return Fixed.One;
-            return Fixed.One - (Fixed.One - farm.WaterWetFloor) * (m - crop.MoistureMax) / (Hundred - crop.MoistureMax);
+            if (m < min) return farm.WaterDryFloor + (Fixed.One - farm.WaterDryFloor) * m / min;
+            if (m <= max) return Fixed.One;
+            return Fixed.One - (Fixed.One - farm.WaterWetFloor) * (m - max) / (Hundred - max);
         }
 
         /// <summary>Certified 1; saved seed of age a: max(floor, 1 − loss × a).</summary>
@@ -72,13 +75,20 @@ namespace Sim.Core.Farm
         public static YieldBreakdown Yield(FarmDef farm, Fixed baseKg, Fixed soil, Fixed water, Fixed care, Fixed seed, Fixed weather,
             Fixed fertiliser, Fixed cropHealth)
         {
-            Fixed product = baseKg * soil * water * care * seed * weather * farm.ToolsFactor * fertiliser * cropHealth;
+            return Yield(farm, baseKg, soil, water, care, seed, weather, fertiliser, cropHealth, farm.ToolsFactor);
+        }
+
+        /// <summary>The yield with the Tools factor the crop was sown under (a machine's, spec 013 §3.2).</summary>
+        public static YieldBreakdown Yield(FarmDef farm, Fixed baseKg, Fixed soil, Fixed water, Fixed care, Fixed seed, Fixed weather,
+            Fixed fertiliser, Fixed cropHealth, Fixed tools)
+        {
+            Fixed product = baseKg * soil * water * care * seed * weather * tools * fertiliser * cropHealth;
             Fixed cap = farm.YieldCap * baseKg;
             bool capped = product > cap;
             Fixed kg = capped ? cap : product;
             return new YieldBreakdown
             {
-                Base = baseKg, Soil = soil, Water = water, Care = care, Seed = seed, Weather = weather, Tools = farm.ToolsFactor,
+                Base = baseKg, Soil = soil, Water = water, Care = care, Seed = seed, Weather = weather, Tools = tools,
                 Fertiliser = fertiliser, CropHealth = cropHealth, Uncapped = product, Capped = capped,
                 Grams = kg.MulRatio(1000, 1).RoundToLong(),
             };
@@ -92,8 +102,9 @@ namespace Sim.Core.Farm
         public static SowingEstimate Estimate(Simulation sim, Tile tile, CropDef crop, FertiliserDef fert)
         {
             FarmDef farm = sim.Config.Game.Farm.Farm;
-            long harvest = Yield(farm, crop.SeasonYieldPerAcre * CycleShare(sim.Clock, crop), LandRules.SoilFactor(sim, tile), WaterFactor(farm, crop, tile.Moisture),
-                Fixed.One, Fixed.One, Fixed.One, fert.YieldFactor, Fixed.One).Grams;
+            long harvest = Yield(farm, crop.SeasonYieldPerAcre * CycleShare(sim.Clock, crop) * OrchardRules.CropShare(sim, tile.Id), LandRules.SoilFactor(sim, tile), WaterFactor(farm, crop, tile.Moisture),
+                Fixed.One, Fixed.One, Fixed.One, Land.IrrigationRules.FertiliserFactor(sim, tile.Id, fert), Fixed.One,
+                Equipment.EquipmentRules.Tools(sim, Equipment.EquipmentRules.Cover(sim), tile.Id)).Grams; // the machine working this field now
             long seedGrams = SeedGrams(sim.Clock, crop);
             long fertGrams = FertiliserGrams(sim.Clock, crop, fert, sim.State.Clock.SimTime);
             return new SowingEstimate(harvest, crop.Fodder ? 0 : MarketRules.Value(sim, crop.OutputGood, harvest, MarketRules.Floor(sim, crop.OutputGood)),
@@ -124,6 +135,7 @@ namespace Sim.Core.Farm
                 CropDef c = farm.Crops[i];
                 // Fodder is never his own pick: its worth is the bought fodder it saves, which the sow sheet shows (spec 012 §3.8b).
                 if (c.Fodder || !c.SowSeasons[season] || !sim.State.Ledger.CanAfford(SowingCost(sim, c, SeedSource.Certified, fert))) continue;
+                if (OrchardRules.MaySow(sim, tile.Id, i) != Commands.RejectReason.None) continue; // between an orchard's young rows: a short crop only
                 SowingEstimate e = Estimate(sim, tile, c, fert);
                 // An open supermarket order he can fill counts at its price (spec 011 §3.3, AC-11).
                 long profit = Supermarket.HarvestValue(sim, c.OutputGood, e.HarvestGrams, sim.State.Clock.SimTime + c.GrowthSeconds) - e.Spend;

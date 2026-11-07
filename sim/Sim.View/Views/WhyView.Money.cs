@@ -43,13 +43,16 @@ namespace Sim.View.Views
             long used = Store.UsedGrams(sim), capacity = Store.CapacityGrams(sim);
             WhyVm vm = New(ctx, "why.store.title", ctx.Strings.Get("store.fill", "used", ctx.Fmt.Kg(used), "capacity", ctx.Fmt.Kg(capacity)));
             MarketState m = sim.State.Market;
+            long[] dry = GodownRules.Dry(sim); // what is in town isn't in the hut (ADR 0087)
             for (int g = 0; g < sim.Config.Game.Market.Goods.Count; g++)
             {
-                if (m.Stock[g] == 0) continue;
                 GoodDef good = sim.Config.Game.Market.Goods[g];
-                vm.Rows.Add(new WhyRowVm(ctx.Strings.Get(good.NameKey), ctx.Fmt.Kg(Store.WeightGrams(good, m.Stock[g]))));
+                long here = m.Stock[g] - (dry == null ? 0 : dry[g]);
+                if (here == 0 || good.Place != GoodPlace.Store) continue;
+                vm.Rows.Add(new WhyRowVm(ctx.Strings.Get(good.NameKey), ctx.Fmt.Kg(Store.WeightGrams(good, here))));
             }
             Text(vm, ctx, "why.store.room");
+            if (GodownRules.CapacityGrams(sim) > 0) Text(vm, ctx, "why.store.godown", "kg", ctx.Fmt.Kg(GodownRules.UsedGrams(sim)));
             vm.Footnote = ctx.Strings.Get("why.store.lesson");
             return vm;
         }
@@ -323,5 +326,70 @@ namespace Sim.View.Views
             vm.Footnote = ctx.Strings.Get("why.report." + line);
             return vm;
         }
-    }
+    
+        /// <summary>Your godown in the mandi town (spec 013 §3.4, ADR 0087): its room, the slower spoilage, its books.</summary>
+        private static WhyVm Godown(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            GodownDef d = GodownRules.Def(sim);
+            Sim.Core.Land.Building b = GodownRules.Owned(sim);
+            long price = MarketRules.Indexed(sim, sim.Config.Game.Buildings[d.Building].Value);
+            WhyVm vm = New(ctx, "why.godown.title", ctx.Fmt.Kg(d.CapacityKg * 1000));
+            Row(vm, ctx, "why.godown.room", ctx.Fmt.Kg(d.CapacityKg * 1000));
+            Row(vm, ctx, "why.godown.spoils", ctx.Fmt.Percent(d.SpoilageFactor));
+            if (b == null) Row(vm, ctx, "why.godown.price", ctx.Fmt.Coins(price), "life", ctx.Fmt.Integer(sim.Config.Game.Buildings[d.Building].UsefulLifeSeasons));
+            else Row(vm, ctx, "why.godown.book", ctx.Fmt.Coins(b.BookValue), "life", ctx.Fmt.Integer(sim.Config.Game.Buildings[d.Building].UsefulLifeSeasons));
+            Text(vm, ctx, "why.godown.goods");
+            Text(vm, ctx, "why.godown.waits");
+            vm.Footnote = ctx.Strings.Get("why.godown.lesson");
+            return vm;
+        }
+
+        /// <summary>Letting your godown (ADR 0087): the rent, the chance, why it isn't let.</summary>
+        private static WhyVm GodownLet(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            GodownDef d = GodownRules.Def(sim);
+            GodownState st = sim.State.Godown;
+            WhyVm vm = New(ctx, "why.godownLet.title", ctx.Fmt.Coins(GodownRules.LetRent(sim)));
+            Row(vm, ctx, "why.godownLet.rent", ctx.Fmt.Coins(GodownRules.LetRent(sim)));
+            Row(vm, ctx, "why.godownLet.chance", ctx.Fmt.Percent(d.TenantChance));
+            Text(vm, ctx, "why.godownLet.goods");
+            if (st.LastOutcome == LetOutcome.NoTenant) Text(vm, ctx, "godown.noTenant");
+            if (st.LastOutcome == LetOutcome.YourGoods) Text(vm, ctx, "godown.yourGoods");
+            vm.Footnote = ctx.Strings.Get("why.godownLet.lesson");
+            return vm;
+        }
+
+        /// <summary>Space rented in the warehouse (ADR 0087): the rent a tonne, what it holds, against buying.</summary>
+        private static WhyVm Warehouse(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            GodownDef d = GodownRules.Def(sim);
+            GodownState st = sim.State.Godown;
+            long price = MarketRules.Indexed(sim, sim.Config.Game.Buildings[d.Building].Value);
+            long tenTonnes = GodownRules.SeasonRent(sim, (int)(d.CapacityKg / 1000));
+            WhyVm vm = New(ctx, "why.warehouse.title", ctx.Strings.Get("why.warehouse.value", "t", ctx.Fmt.Integer(st.RentedTonnes)));
+            Row(vm, ctx, "why.warehouse.rent", ctx.Fmt.Coins(GodownRules.SeasonRent(sim, 1)));
+            Row(vm, ctx, "why.warehouse.stored", ctx.Fmt.Kg(GodownRules.InRentedGrams(sim)));
+            Text(vm, ctx, "why.warehouse.how");
+            Row(vm, ctx, "why.warehouse.vsBuy", ctx.Fmt.Integer(tenTonnes == 0 ? 0 : (price + tenTonnes - 1) / tenTonnes), "rent", ctx.Fmt.Coins(tenTonnes), "price", ctx.Fmt.Coins(price));
+            vm.Footnote = ctx.Strings.Get("why.warehouse.lesson");
+            return vm;
+        }
+
+        /// <summary>A good kept in town (ADR 0087): its spoilage there against the hut store. id = the good's index.</summary>
+        private static WhyVm GodownGood(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            GoodDef good = sim.Config.Game.Market.Goods[(int)id];
+            GodownDef d = GodownRules.Def(sim);
+            long kept = GodownRules.Dry(sim)[(int)id];
+            WhyVm vm = New(ctx, "why.godownGood.title", ctx.Fmt.Kg(Store.WeightGrams(good, kept)), "good", ctx.Strings.Get(good.NameKey));
+            Row(vm, ctx, "why.godownGood.hut", ctx.Fmt.Kg(good.SpoilagePerDay.MulRatio(1_000_000, 1).RoundToLong()));
+            Row(vm, ctx, "why.godownGood.town", ctx.Fmt.Kg((good.SpoilagePerDay * d.SpoilageFactor).MulRatio(1_000_000, 1).RoundToLong()));
+            Text(vm, ctx, "why.godownGood.order");
+            return vm;
+        }
+}
 }

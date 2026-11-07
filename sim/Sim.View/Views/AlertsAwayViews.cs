@@ -88,6 +88,14 @@ namespace Sim.View.Views
                 if (tree.RipeGrams > 0 && left > 0 && left <= warn)
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.fruitSpoiling", "tree", s.Get(sim.Config.Game.Farm.Trees[tree.Def].NameKey), "time", ctx.Fmt.Duration(left)), Action = ActionVm.Checked(ctx, "pick:" + slot, s.Get("action.pick"), null, ActionKind.Primary, at => new PickFruit(at, slot, Overflow.StoreOnly)) });
             }
+            if (sim.State.Orchards != null) // an orchard's batch: open its sheet to pick or sell on the trees (ADR 0090 §4)
+                foreach (Orchard o in sim.State.Orchards.Orchards)
+                {
+                    long left = o.RipeAt + grace - t;
+                    if (o.RipeGrams == 0 || left <= 0 || left > warn) continue;
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.orchardSpoiling", "tree", s.Get(sim.Config.Game.Farm.Trees[o.Def].NameKey),
+                        "field", PeopleWords.Field(ctx, o.TileId), "time", ctx.Fmt.Duration(left)), Action = ActionVm.Open("orchard:" + o.TileId, s.Get("action.see"), new SheetRequest("Tile", o.TileId)) });
+                }
             long used = Store.UsedGrams(sim), cap = Store.CapacityGrams(sim);
             if (cap > 0 && used * 100 >= cap * ctx.Ui.StoreNearlyFullPercent)
                 list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.storeFull"), Action = ActionVm.Open("store", s.Get("action.open"), new SheetRequest("Store", 0)) });
@@ -168,6 +176,7 @@ namespace Sim.View.Views
                 if (c is Harvest h) rest.Commands.Add(new Harvest(at, h.TileId, Overflow.SellRestToTrader));
                 else if (c is PickGarden p) rest.Commands.Add(new PickGarden(at, p.BedId, Overflow.SellRestToTrader));
                 else if (c is PickFruit f) rest.Commands.Add(new PickFruit(at, f.SlotId, Overflow.SellRestToTrader));
+                else if (c is PickOrchard o) rest.Commands.Add(new PickOrchard(at, o.TileId, Overflow.SellRestToTrader));
             }
             // Exact: run them on a copy of the town and read what the trader paid and how much was sold.
             Simulation copy = Simulation.FromState(sim.Config, sim.State.Clone(withCommandLog: false));
@@ -226,13 +235,13 @@ namespace Sim.View.Views
             var lapsed = new Dictionary<long, long>();
             var orderGood = new Dictionary<long, string>();
             long paid = 0, held = 0;
-            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0;
+            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0;
             int calfCount = 0, vetCount = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
                 {
-                    case CropReady _: case BedReady _: case FruitRipe _: becameReady++; break;
+                    case CropReady _: case BedReady _: case FruitRipe _: case OrchardRipe _: becameReady++; break;
                     case AwayAdvanceCompleted a: applied = a.AppliedSeconds; capped = a.Capped; break;
                     case MarketSales m:
                         long local = MarketRules.Value(sim, sim.Config.Game.Market.IndexOf(m.GoodId), m.LocalQuantity, m.Price);
@@ -261,6 +270,7 @@ namespace Sim.View.Views
                     case CalfBorn cb: calves += cb.Amount; calfCount++; break;
                     case AnimalSick sk: vet += sk.Cost; vetCount++; break;
                     case DayLabourPaid d: vm.DayLabour += d.Amount; break;
+                    case GodownLet gl: godownRent += gl.Rent; break;
                     case HomeUseEaten h: vm.HomeUse += h.Value; break;
                     case GoodsSpoiled g: vm.SpoiledGrams += Store.WeightGrams(sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(g.GoodId)], g.Quantity); break;
                     case PestWarning p: vm.Pests++; string fld = PeopleWords.Field(ctx, p.TileId); if (!pests.Contains(fld)) pests.Add(fld); break;
@@ -292,6 +302,7 @@ namespace Sim.View.Views
             if (calves > 0)
                 money.Add(new KeyValuePair<long, LineVm>(calves, new LineVm(s.Plural("away.calves", calfCount), ctx.Fmt.Coins(calves), "away", (long)AwayRow.Dairy) { Icon = "coin" }));
             Money(fodderSold, "away.fodderSold", AwayRow.Dairy, "green_fodder");
+            Money(godownRent, "away.godownLet", AwayRow.Godown, "granary");
             long rent = TownAway.Rent(events, out int payers);
             if (rent > 0) money.Add(new KeyValuePair<long, LineVm>(rent, new LineVm(s.Plural("away.rent", payers), ctx.Fmt.Coins(rent), "away", (long)AwayRow.Town) { Icon = "coin" }));
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
@@ -442,13 +453,22 @@ namespace Sim.View.Views
             { "CourseFinished", Use.Away }, { "LongDaysStopped", Use.Away },
             { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away },
-            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
+            { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "ShopSales", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },
             // Spec 009.
             { "EraProgress", Use.StateOnly }, { "EraUnlocked", Use.Away },
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
+            // Spec 013 §3.4 (ADR 0087).
+            { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            // Spec 013 §3.1.
+            { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
+            // Spec 013 §3.2.
+            { "OrchardPlanted", Use.Motion }, { "OrchardBearing", Use.Motion }, { "OrchardRipe", Use.Motion }, { "OrchardPicked", Use.Motion },
+            { "OrchardSoldOnTrees", Use.Motion }, { "OrchardGone", Use.StateOnly },
+            { "MachineBought", Use.Motion }, { "MachineLeased", Use.Motion }, { "MachineHired", Use.Motion }, { "MachineSold", Use.Motion }, { "MachineReturned", Use.Away },
+            { "MachineBroke", Use.Alert }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
             { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
         };
     }

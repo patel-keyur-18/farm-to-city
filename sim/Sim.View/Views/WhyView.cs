@@ -47,7 +47,7 @@ namespace Sim.View.Views
         private static readonly Dictionary<string, Source> Sources = new Dictionary<string, Source>
         {
             // Land and crops (specs 002, 003).
-            { "fertility", Fertility }, { "moisture", Moisture }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
+            { "fertility", Fertility }, { "moisture", Moisture }, { "irrigation", Irrigation }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
             { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice },
             { "resale", Resale }, { "pests", Pests }, { SowSheet.PerHourWhy, SowPerHour },
             // The crop calendar's crop page (spec 020 §3.6b), by crop index.
@@ -56,9 +56,13 @@ namespace Sim.View.Views
             // The garden and trees.
             { "bedTime", BedTime }, { "gardenSeason", GardenSeason }, { "gardenCrop", GardenCrop }, { "treeMatures", TreeMatures }, { "payback", Payback },
             { "sapling", Sapling },
+            // Orchards (spec 013 §3.3, ADR 0090).
+            { "orchardBears", OrchardBears }, { "orchardBatch", OrchardBatch }, { "orchardSpoils", OrchardSpoils }, { "orchardToday", OrchardToday },
+            { "orchardContractor", OrchardContractor }, { "orchardPayback", OrchardPayback }, { "orchardPlant", OrchardPlant },
             // Money and the market (specs 004, 005).
             { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
+            { "godown", Godown }, { "godownLet", GodownLet }, { "warehouse", Warehouse }, { "godownGood", GodownGood },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
             { "season", SeasonWhy },
             // The truck and supermarket orders (spec 011).
@@ -101,6 +105,12 @@ namespace Sim.View.Views
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
             { "dairyMilkADay", DairyMilkADay },
+            // Shops and customer choice (spec 017 §7).
+            { "shopShare", ShopShare }, { "shopToday", ShopToday }, { "shopLost", ShopLost }, { "shopPeople", ShopPeople }, { "shopDemand", ShopDemand },
+            { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
+            { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
+            // Equipment (spec 013 §3.2).
+            { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

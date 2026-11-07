@@ -3,6 +3,8 @@ using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Business;
 using Sim.Core.Commands;
+using Sim.Core.Definitions;
+using Sim.Core.Maths;
 using Sim.Core.People;
 using Sim.View.Views;
 
@@ -55,11 +57,12 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             Assert.That(MenuSheet.Build(ctx).Lines.Select(l => l.Label), Does.Contain("Businesses"));
             SheetVm list = BusinessesSheet.Build(ctx);
-            var buttons = list.Lines.First(l => l.Buttons != null).Buttons;
+            var buttons = list.Lines.Where(l => l.Buttons != null).SelectMany(l => l.Buttons).ToList();
+            Assert.That(list.Lines.Where(l => l.Buttons != null).Select(l => l.Buttons.Count), Is.EqualTo(new[] { 3, 3 }), "three to a row");
             ActionVm start = buttons[0];
             Assert.That((start.Label, start.Enabled), Is.EqualTo(("Start a flour mill", true)));
             Assert.That(buttons.Skip(1).Select(b => (b.Label, b.Enabled, b.DisabledReason)),
-                Is.EqualTo(new[] { ("Start a bakery", false, "Comes with the Village"), ("Start a dairy", false, "Comes with the Village") }), "Village businesses greyed until then");
+                Is.EqualTo(new[] { ("Start a bakery", false, "Comes with the Village"), ("Start a dairy", false, "Comes with the Village"), ("Start a vegetable stall", false, "Comes with the Village"), ("Start a tea stall", false, "Comes with the Village"), ("Start a sweet shop", false, "Comes with the Village") }), "Village businesses and shops greyed until then");
             Assert.That(list.Lines.Any(l => l.Label == "None yet"), Is.True);
 
             SheetVm research = BusinessResearchSheet.Build(ctx, 0);
@@ -200,6 +203,23 @@ namespace Sim.View.Tests
             Assert.That(b.Status, Is.EqualTo(BusinessStatus.Closed));
             if (net >= 0) Assert.That(sim.State.Ledger.Cash - before, Is.EqualTo(net).Within(100), "what the sheet said came to you");
             Assert.That(BusinessesSheet.Build(ViewKit2.Context(sim)).Lines.Any(l => l.Label == "None open"), Is.True);
+        }
+
+        // Spec 017 §3.4 (ADR 0093): the place sheet shows what your nearest free acre would get of the village's customers beside the
+        // pitches' share, so "no rent; fewer pass by" is a number before you choose.
+        [Test]
+        public void ShopPlace_AcreShare()
+        {
+            Simulation sim = Situations.Dairy();
+            ViewContext ctx = ViewKit2.Context(sim);
+            int type = BusinessRules.Defs(sim).Types.ToList().FindIndex(t => t.Id == "tea_stall");
+            SheetVm sheet = ShopPlaceSheet.Build(ctx, type, "hire");
+            Fixed best = BusinessPlacement.Places(ctx).Where(p => p.Allowed)
+                .Max(p => ShopRules.ExpectedShare(sim, ShopKind.Chai, ShopGroup.Village, p.TileId));
+            Fixed pitch = ShopRules.ExpectedShare(sim, ShopKind.Chai, ShopGroup.Village, ShopRules.Defs(sim).SquareTile);
+            Assert.That(sheet.Lines.Single(l => l.Label == "Any acre you own").Note,
+                Is.EqualTo("Your nearest: about " + ctx.Fmt.Percent(best) + " of the village's customers"));
+            Assert.That(best, Is.LessThan(pitch), "an acre out of the village gets fewer than the square");
         }
     }
 }

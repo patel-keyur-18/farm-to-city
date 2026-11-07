@@ -30,6 +30,9 @@ namespace Sim.View.Views
 
         /// <summary>Your people (spec 014 §7): a hand retired, a house built, rent paid or missed, a family left.</summary>
         Town = 14,
+
+        /// <summary>Your godown in the mandi town let to a trader (spec 013 §3.4, ADR 0087).</summary>
+        Godown = 15,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

@@ -362,6 +362,7 @@ namespace Sim.Core.Livestock
             foreach (Animal a in sim.State.Livestock.Animals)
             {
                 AnimalDef def = defs.Animals[a.Kind];
+                if (def.Draught) continue; // a bullock gives no milk and no calves
                 a.StageDay++;
                 if (a.Stage == AnimalStage.Milking && a.StageDay >= def.MilkDays)
                 {
@@ -384,7 +385,7 @@ namespace Sim.Core.Livestock
             }
         }
 
-        /// <summary>The shed is finished (§3.3): a building on the yard's shed acre.</summary>
+        /// <summary>The shed is finished (§3.3): a building on the cattle acre, or on the second shed's field (ADR 0088).</summary>
         internal sealed class ShedBuild : IJobHandler
         {
             public string JobType { get { return ShedJob; } }
@@ -395,10 +396,11 @@ namespace Sim.Core.Livestock
                 LivestockState s = sim.State.Livestock;
                 LandState land = sim.State.Land;
                 LivestockDefs defs = LivestockRules.Defs(sim);
-                var b = new Building { Id = land.NextBuildingId++, Def = defs.Shed, TileId = defs.Livestock.ShedTile, Cost = s.ShedCost };
+                var b = new Building { Id = land.NextBuildingId++, Def = defs.Shed, TileId = s.ShedTile >= 0 ? s.ShedTile : defs.Livestock.ShedTile, Cost = s.ShedCost };
                 land.Buildings.Add(b);
                 s.ShedReadyAt = 0;
                 s.ShedCost = 0;
+                s.ShedTile = -1;
                 sim.CompleteJob(job);
                 sim.Emit(new ShedBuilt(sim.State.Clock.SimTime, b.Id));
             }

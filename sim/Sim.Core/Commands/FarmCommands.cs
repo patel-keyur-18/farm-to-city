@@ -37,6 +37,8 @@ namespace Sim.Core.Commands
             if (c < 0) return CommandResult.Reject(RejectReason.UnknownCrop);
             CropDef crop = defs.Farm.Crops[c];
             if (crop.Fodder && !Livestock.LivestockRules.Unlocked(sim)) return CommandResult.Reject(RejectReason.EraLocked); // with cattle, from the Hamlet
+            RejectReason between = OrchardRules.MaySow(sim, TileId, c); // a short crop between a young orchard's rows only (spec 013 §3.3)
+            if (between != RejectReason.None) return CommandResult.Reject(between);
             if (!crop.SowSeasons[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)]) return CommandResult.Reject(RejectReason.OutOfSeason);
             int f = defs.Farm.IndexOfFertiliser(FertiliserId);
             if (f < 0) return CommandResult.Reject(RejectReason.UnknownFertiliser);
@@ -77,6 +79,7 @@ namespace Sim.Core.Commands
             sown.Repeats = PestRules.RepeatsAt(sim, TileId, c);
             if (!crop.Fodder) sown.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, id, t + crop.GrowthSeconds / 2).Id;
             farm.Crops.Add(sown);
+            Equipment.EquipmentRules.Sown(sim, sown); // the Tools factor of timely sowing under a machine (spec 013 §3.2)
             LandSystem.SetOccupied(sim, TileId, true);
             FarmSystem.Refresh(sim);
             sim.Emit(new CropSown(t, TileId, CropId, sown.ReadyAt, cost));

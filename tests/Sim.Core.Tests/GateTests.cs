@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using Sim.Core.Maths;
 using Tools.Balancer;
 
 namespace Sim.Core.Tests
@@ -366,6 +367,28 @@ namespace Sim.Core.Tests
             Assert.That(Mid(results[1].Profit), Is.InRange(35_000, 50_000), "run by you");
             Assert.That(Mid(results[1].Payback), Is.InRange(2.0, 4.0), "run by you, payback");
             Assert.That(Mid(results[2].Profit), Is.LessThan(0), "on your own herd's milk alone it loses");
+        }
+
+        // Spec 017 §9 (ADR 0093): a bot founds a shop on a free pitch (measured from the Hamlet: the Village gate is spec 018's) and
+        // runs it hired; never stuck, never foreclosed, and its season profit inside the targets: the tea stall at good quality 10%
+        // above the reference, the sweet shop on your paneer and ghee at standard.
+        [Test]
+        public void Shops()
+        {
+            var config = LiveWith(Gate.ShopsInHamlet);
+            var results = new[] { (Func<Bot>)(() => new BusinessBot(false, false, "tea_stall") { Quality = 2, Price = Fixed.Parse("1.1") }), () => new BusinessBot(false, false, "sweet_shop") }
+                .Select((make, i) => Gate.Business(config, make, 8, i == 0 ? "tea_stall" : "sweet_shop", 12)).ToList();
+            foreach (Gate.MillResult m in results)
+            {
+                TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
+                    + "; closed " + m.Closed + ", foreclosed " + m.Foreclosed);
+                Assert.That(m.Founded, Is.EqualTo(m.Seeds), m.Bot + ": founded in every seed");
+                Assert.That(m.EndCash.All(c => c > 0), Is.True, m.Bot + ": never stuck");
+                Assert.That(m.Foreclosed, Is.Zero, m.Bot + ": hired, the farm keeps its founder");
+            }
+            double Mid(System.Collections.Generic.List<double> v) { return v.OrderBy(x => x).ElementAt(v.Count / 2); }
+            Assert.That(Mid(results[0].Profit), Is.InRange(5_000, 12_000), "the tea stall, good, 10% above");
+            Assert.That(Mid(results[1].Profit), Is.InRange(8_000, 15_000), "the sweet shop, hired");
         }
 
         // Spec 016 §9 (US-117, ADR 0072): a bot founds the flour mill in the Hamlet and runs it, hired, by itself, and on a business loan;

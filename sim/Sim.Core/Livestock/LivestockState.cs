@@ -54,6 +54,9 @@ namespace Sim.Core.Livestock
         /// <summary>Millilitres at her last milking.</summary>
         public long LastMilkMl { get; internal set; }
 
+        /// <summary>Her shed: 0 the cattle acre's, 1 the second shed (ADR 0088). Save schema 14; older saves have one shed.</summary>
+        public int Shed { get; internal set; }
+
         internal Animal Clone() { return (Animal)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -74,17 +77,21 @@ namespace Sim.Core.Livestock
             h.WriteLong(Since);
             h.WriteLong(Earned);
             h.WriteLong(LastMilkMl);
+            if (!(h is SaveWriter w && w.Schema < 14)) h.WriteInt(Shed);
         }
 
         internal static Animal ReadFrom(SaveReader r)
         {
-            return new Animal
+            var a = new Animal
             {
                 Id = r.ReadLong(), Kind = r.ReadRef(ContentTable.Animal), Name = r.ReadString(), BoughtAt = r.ReadLong(), Cost = r.ReadLong(),
                 Stage = (AnimalStage)r.ReadInt(), StageDay = r.ReadInt(), Health = r.ReadFixed(), FedScore = r.ReadFixed(), HungryDays = r.ReadInt(),
                 VaccinatedPeriod = r.ReadLong(), SickDays = r.ReadInt(), LoanId = r.ReadLong(), Since = r.ReadLong(), Earned = r.ReadLong(),
                 LastMilkMl = r.ReadLong(),
             };
+            if (r.Schema >= 14) a.Shed = r.ReadInt();
+            if (a.Shed < 0 || a.Shed > 1) throw new SaveContentException("an animal in shed " + a.Shed);
+            return a;
         }
     }
 
@@ -133,6 +140,9 @@ namespace Sim.Core.Livestock
         public long ShedReadyAt { get; internal set; }
         public long ShedCost { get; internal set; }
 
+        /// <summary>Where the shed being built stands: −1 the cattle acre, else the field of the second shed (ADR 0088; save schema 14).</summary>
+        public int ShedTile { get; internal set; } = -1;
+
         /// <summary>Buy the green fodder shortfall from neighbours (§3.7; on by default).</summary>
         public bool BuyGreenFodder { get; internal set; } = true;
 
@@ -179,6 +189,7 @@ namespace Sim.Core.Livestock
             h.WriteLong(LastMilkAmount);
             h.WriteLong(LastHomeMl);
             LastFeeding.WriteTo(h);
+            if (!(h is SaveWriter w && w.Schema < 14)) h.WriteInt(ShedTile);
         }
 
         internal static LivestockState ReadFrom(SaveReader r)
@@ -199,6 +210,8 @@ namespace Sim.Core.Livestock
             s.LastMilkAmount = r.ReadLong();
             s.LastHomeMl = r.ReadLong();
             s.LastFeeding = FeedingReport.ReadFrom(r);
+            if (r.Schema >= 14) s.ShedTile = r.ReadInt();
+            if (s.ShedTile < -1) throw new SaveContentException("a shed on tile " + s.ShedTile);
             return s;
         }
     }

@@ -16,12 +16,13 @@ namespace Sim.Core.Land
             return defs.Soils[tile.Soil].YieldFactor * FertilityFactor(defs.Land, tile.Fertility) * ShadeFactor(sim, tile);
         }
 
-        /// <summary>max(minShadeFactor, 1 − Σ shade of the mature trees in the tile's field-edge slots) (ADR 0037: shade per tree).</summary>
+        /// <summary>max(minShadeFactor, 1 − Σ shade of the mature trees in the tile's field-edge slots and the bearing orchards beside it) (ADR 0037, 0090).</summary>
         public static Fixed ShadeFactor(Simulation sim, Tile tile)
         {
             Fixed f = Fixed.One;
             foreach (TreeSlot slot in sim.State.Land.Slots)
                 if (slot.TileId == tile.Id && slot.Kind == SlotKind.FieldEdge && slot.TreeId != 0 && slot.TreeMature) f -= slot.Shade;
+            f -= Farm.OrchardRules.Shade(sim, tile.Id); // a bearing orchard beside it, as one edge tree of its kind (ADR 0090 §1)
             LandDef land = sim.Config.Game.Land;
             return f < land.MinShadeFactor ? land.MinShadeFactor : f;
         }

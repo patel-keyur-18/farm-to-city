@@ -10,7 +10,7 @@ namespace Sim.Core.Finance
         private static readonly Account[] FarmCosts =
         {
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,
-            Account.Depreciation, Account.TransportAndSelling,
+            Account.Depreciation, Account.TransportAndSelling, Account.Power, Account.Repairs, // power and upkeep: irrigation (spec 013 §3.1)
         };
         private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.GainOnAssetSales, Account.DebtWrittenOff, Account.BusinessDrawingsIncome }; // rent: not farming (spec 014)
         private static readonly Account[] Household = { Account.LivingCosts, Account.HealthCosts };
@@ -33,6 +33,7 @@ namespace Sim.Core.Finance
                 BuildingsAtBook = l.Balance(Account.Buildings) + l.Balance(Account.AccumulatedDepreciation),
                 TreesAtBook = l.Balance(Account.Trees),
                 LivestockAtBook = l.Balance(Account.Livestock),
+                EquipmentAtBook = l.Balance(Account.Equipment),
                 Businesses = Business.BusinessBooks.AtEquity(sim),
                 StoredGoods = Market.Store.Value(sim),
                 LoanPrincipal = -(l.Balance(Account.MoneylenderLoans) + l.Balance(Account.BankLoans)),

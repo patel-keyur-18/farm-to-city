@@ -31,6 +31,53 @@ namespace Sim.View.Tests
             }
         }
 
+        // ADR 0088 (US-234): the shed sheet offers a second shed; it is placed on lit acres with refusals in words; its field becomes a
+        // cattle acre on the map and opens the shed sheet; the animals show by shed; the stores add up.
+        [Test]
+        public void SecondShed()
+        {
+            Simulation sim = Hamlet(out ViewContext ctx);
+            long t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new BuildShed(t)).Accepted, Is.True);
+            Assert.That(ShedPlacement.Places(ViewKit2.Context(sim)).Any(p => p.Allowed), Is.False, "not while the first is being built");
+            sim.AdvanceTo(t + 25 * 3600);
+            t = sim.State.Clock.SimTime;
+            Assert.That(sim.Execute(new Sow(t, 101, "radish", Sim.Core.Farm.SeedSource.Certified, "none")).Accepted, Is.True);
+            ctx = ViewKit2.Context(sim);
+
+            SheetVm sheet = FieldSheets.ForTile(ctx, Acre);
+            Assert.That(sheet.Lines.Any(l => l.IsHeader && l.Label == "A second shed"), Is.True);
+            Assert.That(sheet.Lines.Single(l => l.Label == "Room for more").Value, Is.EqualTo("4 more animals · 2,400 kg more feed · 10,000 kg more straw"));
+            ActionVm build = sheet.Lines.Single(l => l.Action?.Id == "secondShed").Action;
+            Assert.That((build.Enabled, build.Label, build.Opens.Value.Kind), Is.EqualTo((true, "Choose the field", "ShedPlacement")));
+            var places = ShedPlacement.Places(ctx);
+            Assert.That(places.Single(p => p.TileId == 100).Allowed, Is.True);
+            Assert.That(places.Single(p => p.TileId == 101).Reason, Is.EqualTo("Something is growing here"));
+            Assert.That(places.Any(p => p.TileId == Acre), Is.False, "the cattle acre isn't a field");
+            Assert.That(ShedPlacement.ReasonFor(ctx, 87), Is.EqualTo(ctx.Reject(RejectReason.TerrainNotAllowed)));
+
+            Assert.That(sim.Execute(ShedPlacement.Confirm(ctx, 100).Create(t)).Accepted, Is.True);
+            ctx = ViewKit2.Context(sim);
+            MapVm map = MapView.Build(ctx);
+            Assert.That((map.Tiles[100].Kind, map.SecondCattle.TileId, map.SecondCattle.Shed), Is.EqualTo((TileKind.Cattle, 100, 1)));
+            Assert.That(FieldSheets.ForTile(ctx, 100).Lines.Single(l => l.Label == "Your family is building it: ready in").Value, Is.Not.Empty);
+            sim.AdvanceTo(t + 25 * 3600);
+            t = sim.State.Clock.SimTime;
+            foreach (string k in new[] { "buffalo", "cow", "buffalo", "cow", "cow" }) Assert.That(sim.Execute(new BuyAnimal(t, k)).Accepted, Is.True, k);
+            ctx = ViewKit2.Context(sim);
+
+            SheetVm both = FieldSheets.ForTile(ctx, 100);
+            Assert.That((both.Title, both.Subtitle), Is.EqualTo(("Your cattle sheds", "5 of 8 stalls")));
+            Assert.That(both.Lines.Where(l => l.IsHeader).Select(l => l.Label), Does.Contain("In the cattle yard's shed · 4 of 4").And.Contain("In the second shed · 1 of 4"));
+            Assert.That(both.Lines.Any(l => l.Label == "A second shed"), Is.False);
+            Assert.That(both.Lines.Single(l => l.Label == "Straw stack").Value, Does.Contain(" of 20,000 kg"));
+            WhysBuild(ctx, both);
+            map = MapView.Build(ctx);
+            Assert.That(map.Cattle.Animals.Count, Is.EqualTo(4));
+            Assert.That(map.SecondCattle.Animals.Select(a => (a.Kind, a.Place)), Is.EqualTo(new[] { ("cow", 1) }));
+            Assert.That(map.SecondCattle.Shed, Is.EqualTo(2));
+        }
+
         [Test]
         public void ShedSheet_ThroughTheHamlet()
         {

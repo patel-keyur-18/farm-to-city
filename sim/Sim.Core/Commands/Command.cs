@@ -146,6 +146,38 @@ namespace Sim.Core.Commands
         OffSick,
         /// <summary>Not someone you can offer work: under 18, retired, or already working in town (ADR 0083).</summary>
         NotAWorker,
+
+        /// <summary>Less warehouse space than your goods stored there need (spec 013 §3.4, ADR 0087).</summary>
+        StockTooHigh,
+
+        /// <summary>You don't own a godown to let (ADR 0087).</summary>
+        NoGodown,
+
+        // Spec 013 §3.1 (irrigation, ADR 0086, ADR 0087)
+        /// <summary>More acres than the pump or the borewell waters.</summary>
+        TooManyAcres,
+        /// <summary>The acre is already on the other pumped source's list (one pumped source an acre).</summary>
+        AlreadyWatered,
+        /// <summary>A drip acre can't leave its pumped source's list: drip needs pumped water.</summary>
+        DripNeedsWater,
+        /// <summary>No pump or borewell waters the acre (drip), or no pump or borewell is built (choosing acres).</summary>
+        NoWaterSource,
+
+        /// <summary>Equipment (spec 013 §3.2): no such machine of yours; no room in the second shed for its bullocks; a bullock goes with its plough.</summary>
+        UnknownMachine,
+        NoShedRoom,
+        PartOfMachine,
+
+        // Spec 013 §3.3 (orchards, ADR 0090)
+        NoOrchard,
+        /// <summary>The orchard's trees bear: no crop between the rows now.</summary>
+        TreesBearing,
+        /// <summary>Only a short crop grows between a young orchard's rows.</summary>
+        NotAnIntercrop,
+
+        // Spec 017 (shops)
+        /// <summary>Another shop stands on that pitch in the square.</summary>
+        PitchTaken,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

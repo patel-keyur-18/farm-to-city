@@ -1,4 +1,6 @@
+using Sim.Core.Commands;
 using Sim.Core.Definitions;
+using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.Core.Maths;
 using Sim.Core.Time;
@@ -12,13 +14,30 @@ namespace Sim.Core.Livestock
 
         public static LivestockDefs Defs(Simulation sim) { return sim.Config.Game.Livestock; }
 
-        /// <summary>The finished cattle shed, or null (§3.3).</summary>
+        /// <summary>The finished cattle shed on the cattle acre, or null (§3.3).</summary>
         public static Building Shed(Simulation sim)
         {
             if (sim.State.Livestock == null) return null;
-            int def = Defs(sim).Shed;
-            foreach (Building b in sim.State.Land.Buildings) if (b.Def == def) return b;
+            int def = Defs(sim).Shed, acre = Defs(sim).Livestock.ShedTile;
+            foreach (Building b in sim.State.Land.Buildings) if (b.Def == def && b.TileId == acre) return b;
             return null;
+        }
+
+        /// <summary>The finished second shed on a field of yours (ADR 0088), or null.</summary>
+        public static Building SecondShed(Simulation sim)
+        {
+            if (sim.State.Livestock == null) return null;
+            int def = Defs(sim).Shed, acre = Defs(sim).Livestock.ShedTile;
+            foreach (Building b in sim.State.Land.Buildings) if (b.Def == def && b.TileId != acre) return b;
+            return null;
+        }
+
+        /// <summary>The field a second shed stands on or is being built on, or −1.</summary>
+        public static int SecondShedTile(Simulation sim)
+        {
+            if (sim.State.Livestock == null) return -1;
+            Building b = SecondShed(sim);
+            return b != null ? b.TileId : sim.State.Livestock.ShedReadyAt > 0 ? sim.State.Livestock.ShedTile : -1;
         }
 
         /// <summary>The shed can be built from the unlock era (§3.13).</summary>
@@ -27,11 +46,95 @@ namespace Sim.Core.Livestock
             return sim.State.Livestock != null && (sim.State.Era == null || sim.State.Era.Current >= Defs(sim).UnlockEra);
         }
 
-        /// <summary>Stalls the shed has (0 without a finished shed).</summary>
-        public static int Stalls(Simulation sim)
+        /// <summary>Places in one shed (0 the cattle acre's, 1 the second): 0 while it isn't finished.</summary>
+        public static int Stalls(Simulation sim, int shed)
         {
-            Building b = Shed(sim);
+            Building b = shed == 0 ? Shed(sim) : SecondShed(sim);
             return b == null ? 0 : sim.Config.Game.Buildings[b.Def].Animals;
+        }
+
+        /// <summary>Places over both sheds (ADR 0088).</summary>
+        public static int Stalls(Simulation sim) { return Stalls(sim, 0) + Stalls(sim, 1); }
+
+        public static int InShed(Simulation sim, int shed)
+        {
+            int n = 0;
+            foreach (Animal a in sim.State.Livestock.Animals) if (a.Shed == shed) n++;
+            return n;
+        }
+
+        /// <summary>Where a cow or a buffalo goes: the first shed, then the second (ADR 0088); −1 when both are full.</summary>
+        public static int PlaceFor(Simulation sim)
+        {
+            for (int shed = 0; shed < 2; shed++) if (InShed(sim, shed) < Stalls(sim, shed)) return shed;
+            return -1;
+        }
+
+        /// <summary>
+        /// Whether the second shed may go on this field (ADR 0088): from the Hamlet, the first shed standing, one second shed; a farm acre
+        /// you own with nothing growing or standing on it.
+        /// </summary>
+        public static RejectReason PlaceSecond(Simulation sim, int tileId)
+        {
+            LivestockState s = sim.State.Livestock;
+            if (s == null || tileId < 0 || tileId >= sim.State.Land.Tiles.Count) return RejectReason.UnknownTile;
+            if (!Unlocked(sim)) return RejectReason.EraLocked;
+            if (Shed(sim) == null) return RejectReason.NoShed;
+            if (SecondShedTile(sim) >= 0) return RejectReason.AlreadyBuilt;
+            Tile tile = sim.State.Land.Tiles[tileId];
+            if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
+            if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
+            if (tile.Occupied || sim.State.Farm.CropOn(tileId) != null || People.HouseRules.HousesOn(sim, tileId) > 0 || Business.BusinessRules.On(sim, tileId) != null
+                || Farm.OrchardRules.Of(sim, tileId) != null)
+                return RejectReason.TileOccupied;
+            foreach (Building b in sim.State.Land.Buildings) if (b.TileId == tileId) return RejectReason.TileOccupied;
+            return RejectReason.None;
+        }
+
+        /// <summary>
+        /// Foreclosure takes bought land (ADR 0088): a second shed on it goes with the field at its book value (one being built at its
+        /// cost). Its animals move to free places in the first shed; those that don't fit are seized at their fair price. Returns the
+        /// value raised.
+        /// </summary>
+        internal static long Seize(Simulation sim, int parcelId, long period)
+        {
+            int tile = SecondShedTile(sim);
+            if (tile < 0 || sim.State.Land.Tiles[tile].ParcelId != parcelId) return 0;
+            LivestockState s = sim.State.Livestock;
+            var ledger = sim.State.Ledger;
+            long t = sim.State.Clock.SimTime, raised;
+            Building b = SecondShed(sim);
+            if (b != null)
+            {
+                raised = b.Cost - b.Depreciated;
+                ledger.Post(t, period, "ledger.shedSeized", "building:" + b.Id, new Posting(Account.Cash, raised),
+                    new Posting(Account.AccumulatedDepreciation, b.Depreciated), new Posting(Account.Buildings, -b.Cost));
+                sim.State.Land.Buildings.Remove(b);
+            }
+            else
+            {
+                raised = s.ShedCost;
+                ledger.Post(t, period, "ledger.shedSeized", "shed", new Posting(Account.Cash, raised), new Posting(Account.Buildings, -raised));
+                foreach (Scheduling.Job j in sim.State.Jobs.All)
+                    if (j.Type == LivestockSystem.ShedJob && j.State == Scheduling.JobState.Running) { sim.CompleteJob(j); break; }
+                s.ShedReadyAt = 0;
+                s.ShedCost = 0;
+                s.ShedTile = -1;
+            }
+            LandSystem.SetOccupied(sim, tile, false);
+            Farm.FarmSystem.Accrue(sim);
+            foreach (Animal a in s.Animals.ToArray())
+            {
+                if (a.Shed != 1) continue;
+                if (InShed(sim, 0) < Stalls(sim, 0)) { a.Shed = 0; continue; }
+                long value = SellPrice(sim, a), gain = value - a.Cost;
+                ledger.Post(t, period, "ledger.animalSeized", "animal:" + a.Id, new Posting(Account.Cash, value), new Posting(Account.Livestock, -a.Cost),
+                    gain >= 0 ? new Posting(Account.GainOnAssetSales, -gain) : new Posting(Account.LossOnAssetSales, -gain));
+                s.Animals.Remove(a);
+                raised += value;
+                sim.Emit(new Events.AnimalSeized(t, a.Id, a.Name, value));
+            }
+            return raised;
         }
 
         /// <summary>x a real day × realDaysPerGameDay (§3.1).</summary>

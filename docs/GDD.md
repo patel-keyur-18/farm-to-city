@@ -72,7 +72,7 @@ The world runs on real time, like Hay Day or Township. Work you start keeps goin
    | Wheat, maize, lentils, mustard; later onion | 6–8 hours |
    | Rice, potato | about a day |
    | Sugarcane, cotton | 2–3 days |
-   | Orchard, first fruit | about 2 weeks |
+   | Orchard, first fruit | 1–3 weeks (banana and papaya 7 days, guava 14, mango 24) |
    | Production batch (for example bread) | minutes |
    | Construction | hours |
 
@@ -170,7 +170,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Where trees go:**
   - yard slots around the house (about 4, with more for bigger houses)
   - field-edge slots (about 2 per acre), which don't take field area but slightly shade the next crop
-  - whole-acre orchards come in Phase 2 (spec 013, ADR 0075): mango 40 trees an acre, guava 100, banana and papaya 400, with a short crop between young trees at half yield until they bear
+  - whole-acre orchards come in Phase 2 with the Hamlet (spec 013, ADR 0075, ADR 0090): mango 40 trees an acre, guava 100, banana and papaya 400, with a short crop between young trees at half yield until they bear; a bearing orchard shades the fields beside it; a ripe batch is more than a day's store and truck, so you pick what can go today and the rest waits on the trees, or sell it on the trees to a fruit contractor at 70% of the trader's price
 - **Fruit** waits ripe until harvested, is perishable, and can be sold, eaten by the household or stored.
 - **Each tree counts towards net worth.** Its *Why?* breakdown shows the cost, the returns so far and the payback season.
 
@@ -186,9 +186,9 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Crop rotation.** Repeating a crop drains its nutrient. Lentils restore soil, and leaving a field fallow for a season restores fertility.
 - **Pests and disease.** Each crop cycle rolls a seeded risk. Risk rises with monoculture and wet weather, and falls with rotation and spraying, which costs money. Outbreaks are signalled during growth so the player can respond. Ignoring the risk can wipe out a field, but severe outbreaks never strike while the player is away.
 
-**Irrigation ladder.** Rain-fed, then a well and buckets, then a pump on the well, a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending. In Phase 2 (spec 013, ADR 0075): the pump (Hamlet) ends bucket labour and waters 4 acres; a canal channel (Hamlet) waters an acre except in Summer, when the canal is shut, for a fee each season; drip (Village, half subsidised on 2 acres) holds each crop's ideal moisture on pumped water; a borewell (Village) waters 6 more acres.
+**Irrigation ladder.** Rain-fed, then a well and buckets, then a pump on the well, a canal channel, then drip irrigation. Each step costs more up front and makes yields more stable. This is the first lesson in capital spending versus operating spending. In Phase 2 (spec 013, ADR 0075): the pump (Hamlet) ends bucket labour and waters 4 acres; a canal channel (Hamlet) waters an acre except in Summer, when the canal is shut, for a fee each season (a small, steady gain: outside Summer the rain mostly keeps a loam acre wet enough, so a canal acre earns about 3–8% more, ADR 0093) (the minor canal runs between the farm's rows 4 and 5, so the inherited acres can use it without buying land); drip (Village, half subsidised on 2 acres) holds each crop's ideal moisture on pumped water, with no power of its own and fertiliser given through it worth +15% (it pays back in about 3 years on field crops, ADR 0093); a borewell (Village, ADR 0086) on any acre you own waters 4 more acres you choose. Each acre has one pumped source. Running costs are paid at each season's end; unpaid, that source stops until the next. Channels, drip and a borewell are sold with their acre.
 
-**Livestock (ADR 0056, ADR 0060, spec 012).** From the Hamlet, the player can build a 4-animal cattle shed on the cattle acre, a barren inherited acre beside the yard kept for the animals (ADR 0064), and buy Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 75,000, about 11 L, a lower price a litre and less milk in Summer) at the village cattle fair, with a bank dairy loan if needed. One game day stands for 22.8 real days of an animal's life (a season is a real quarter), so a buffalo gives about 182 L a game day. The village dairy co-op collects at 6:00 and pays by fat; the household drinks some as home use.
+**Livestock (ADR 0056, ADR 0060, spec 012).** From the Hamlet, the player can build a 4-animal cattle shed on the cattle acre, a barren inherited acre beside the yard kept for the animals (ADR 0064), and buy Murrah buffalo (about 1,00,000 coins, about 8 L of high-fat milk a day) and crossbred cows (about 75,000, about 11 L, a lower price a litre and less milk in Summer) at the village cattle fair, with a bank dairy loan if needed. A second shed (ADR 0088) can be built on any field you own: it houses the bullocks and up to 2 more animals, and adds its feed room and straw stack to the farm's stores. One game day stands for 22.8 real days of an animal's life (a season is a real quarter), so a buffalo gives about 182 L a game day. The village dairy co-op collects at 6:00 and pays by fat; the household drinks some as home use.
 
 - **Feed** is eaten automatically every morning at 6:00, also while away: green fodder (the grazing commons cover a share, most in the Monsoon; then berseem, sown in Winter and cut through Spring, or sorghum, sown in Summer and cut through the Monsoon; then bought from neighbours); straw, a by-product of wheat and rice, on a straw stack; and bought cattle feed in the shed's feed room. Green fodder is never stored; what the animals don't eat sells standing to neighbours cheaply.
 - **A shortfall** cuts milk, and several hungry days lower health. No animal dies in Phase 2. A notification comes 2 days before straw or feed runs out; the hand's "animals" order keeps them stocked.
@@ -202,11 +202,11 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - depreciation
 - a resale value
 
-Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2 (spec 013, ADR 0075): an ox plough with a pair of bullocks in the cattle shed (Hamlet) and a tractor (Village) cover a number of acres, cut their labour and raise the Tools factor; a combine harvester is hired by the acre at harvest. Skipped maintenance raises the chance of a breakdown (24 h out and a repair).
+Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2 (spec 013, ADR 0075): an ox plough with a pair of bullocks in a second cattle shed (Hamlet, ADR 0088) and a tractor (Village) cover a number of acres, cut their labour and raise the Tools factor of a crop sown with them; the combine harvester waits for Phase 3 (ADR 0089). Skipped maintenance raises the chance of a breakdown (24 h out and a repair). On the map machines are seen at work on your fields by day; at night the bullocks rest in their shed and the tractor parks on the farm lane (ADR 0088).
 
 **Storage and selling**
 
-- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A granary (Hamlet), and later cold storage, adds capacity and slows spoilage: the granary holds 10,000 kg of grains, pulses, atta and seed at a fifth of their spoilage (spec 013, ADR 0075).
+- Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A godown in the mandi town (Hamlet), and later cold storage, adds capacity and slows spoilage: your own godown, bought for 45,000, holds 10,000 kg of grains, pulses, atta and seed (not seed potato, which needs cold storage) at a fifth of their spoilage; warehouse space can be rented by the tonne instead, and an empty godown can be let to a trader for a season as passive income (spec 013, ADR 0075, 0087). Rice and maize gain by waiting from the Monsoon harvest, mustard from Winter; wheat ripens in Winter, its dearest season, so it sells at harvest (ADR 0093).
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
 - **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
 - **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, up to a daily limit per crop. **The trader's truck (ADR 0054)** of about 4 t arrives at 6:00 and leaves when full or at midnight; its price is set at 6:00 and held all day, and while it is away selling to the trader is refused. The player's stall pauses from midnight to 6:00. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
@@ -276,7 +276,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 **The first businesses (spec 016, ADR 0068).**
 - **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
-- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 350 people besides your town, ADR 0073) and mills your own wheat into atta and bran.
+- **The flour mill (Hamlet).** It grinds the area's grain for a fee (your town, the village and the hamlets around, about 375 people besides your town, ADR 0073, 0091) and mills your own wheat into atta and bran.
 - **The bakery and the dairy (Village).** The bakery turns atta into pav and rusk; the dairy turns your milk, and the village's (bought at a little over the co-op's price), into paneer, curd and ghee. The village grocer and tea stall buy from both each morning, and the trader takes what keeps (rusk, paneer, ghee) to town (ADR 0079, 0080).
 - **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
 - **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.
@@ -302,7 +302,7 @@ Every business is a small company with its own books, staff and customers. The p
 
 **Operating levers:** price, quality, staffing, hours, stock policy, marketing, supplier choice, equipment upgrades, expansion and automation.
 
-**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money. Underpricing wins customers but kills margin. Overpricing invites a competitor. In Phase 2 (spec 017, ADR 0074) each customer group shares its demand by an additive score (1 + price + quality + stars − distance − wait, each part shown in the *Why?*). The first shops, from the Village, are a vegetable stall selling your own produce, a tea stall and a sweet shop (rasgulla and atta laddoo from your paneer, atta and ghee), on a rented pitch in the village square or on your own acre; the mill's area customers choose between it and the next village's chakki the same way.
+**Customer choice.** Each customer picks a shop by comparing price, quality, distance, reputation and waiting time. Reputation runs from 0 to 5 stars, built from service quality, stock-outs and value for money: each night a shop's (and the mill's) stars move a tenth of the way to the day's score, and a day shut is forgiven once (ADR 0092). Underpricing wins customers but kills margin. Overpricing invites a competitor. In Phase 2 (spec 017, ADR 0074) each customer group shares its demand by an additive score (1 + price + quality + stars − distance − wait, each part shown in the *Why?*). The first shops, from the Village, are a vegetable stall selling your own produce, a tea stall and a sweet shop (rasgulla and atta laddoo from your paneer, atta and ghee), on a rented pitch in the village square or on your own acre; the mill's area customers choose between it and the next village's chakki the same way. As built (ADR 0091): the tea stall takes your herd's milk first, then neighbours'; the vegetable stall also sells your pav, paneer and curd, sharing the village shops' buying with the grocer; the mill's distance runs from the middle of your houses, so every coin above the chakki's fee takes a smooth share away. Balanced (ADR 0093): the vegetable stall buys at the local market what your store lacks, at 15% above the market; chai 12 coins a cup; a shop on your own acre far from the square gets about 5–10% of the village, shown on the place sheet.
 
 **Books for every business**
 
@@ -823,7 +823,7 @@ The game needs no account and no server. All content ships in the build, and the
 
 | Target | Value |
 | --- | --- |
-| Frame rate | 60 fps on iPhone 11 and on a 4 GB Android phone from 2021 (design minimum). Measured on the owner's iPhone 13, where sim and rendering must fit in half the frame budget, 8.3 ms (ADR 0026) |
+| Frame rate | 60 fps on iPhone 11 and on a 4 GB Android phone from 2021 (design minimum). Measured on the owner's iPhone 13, where the main thread (sim and scripts) must fit in half the frame budget, 8.3 ms (ADR 0026), and the GPU in two-thirds, 11 ms (ADR 0094) |
 | Fully simulated citizens | Up to about 2,000 |
 | Total population | 20,000, beyond the first 2,000 simulated as statistical cohorts with named notable citizens |
 | Cold start | Under 5 seconds to the map |

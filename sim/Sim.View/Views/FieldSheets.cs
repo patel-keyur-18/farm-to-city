@@ -33,24 +33,36 @@ namespace Sim.View.Views
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
-            if (tile.Terrain == Terrain.Cattle) return ShedSheet.Build(ctx);
+            if (tile.Terrain == Terrain.Cattle || Sim.Core.Livestock.LivestockRules.SecondShedTile(sim) == tileId) return ShedSheet.Build(ctx); // the second cattle acre too (ADR 0088)
             if (Sim.Core.People.HouseRules.HousesOn(sim, tileId) > 0) return HomesteadSheet.Build(ctx, tile); // a homestead acre is never sown
             Sim.Core.Business.Business business = Sim.Core.Business.BusinessRules.On(sim, tileId);
             if (business != null) return BusinessSheet.Build(ctx, business.Id); // spec 016 §7
 
             var vm = new SheetVm { Icon = "field" };
             Crop crop = sim.State.Farm.CropOn(tileId);
+            Orchard orchard = OrchardRules.Of(sim, tileId);
             vm.Title = ctx.Strings.Get("field.title", "soil", soil);
             vm.Subtitle = ctx.Strings.Get(parcel.Protected ? "field.inherited" : "field.bought");
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Decimal1(tile.Fertility) + " / 100", "fertility", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100", "moisture", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
-            if (LandSystem.IsWellTile(defs, tileId)) vm.Lines.Add(new LineVm(ctx.Strings.Get("field.well"), ctx.Strings.Get("field.wellNote")));
+            IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
+            EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
 
+            if (crop == null && orchard != null)
+            {
+                // An orchard (ADR 0090): a short crop between young rows only.
+                OrchardSheet.AddRows(ctx, vm, orchard, null);
+                AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
+                if (orchard.State == TreeState.Growing) vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("orchard.sowBetween"), new SheetRequest("Sow", tileId)));
+                OrchardSheet.AddActions(ctx, vm, orchard);
+                return vm;
+            }
             if (crop == null)
             {
                 AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
+                if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
                 if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
@@ -102,8 +114,10 @@ namespace Sim.View.Views
                     vm.Actions.Add(ActionVm.Checked(ctx, "harvestSell", ctx.Strings.Get("action.harvestSell"), null, ActionKind.Secondary,
                         at => new Harvest(at, tileId, Overflow.SellRestToTrader)));
             }
+            if (orchard != null) OrchardSheet.AddRows(ctx, vm, orchard, vm.Title); // the crop between the rows under the orchard's title
             AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
-            vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get("action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
+            if (orchard != null) OrchardSheet.AddActions(ctx, vm, orchard);
+            vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get(orchard != null ? "orchard.clearCrop" : "action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
             return vm;
         }
 
@@ -154,6 +168,7 @@ namespace Sim.View.Views
                     ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.MedicineCost)), ActionKind.Primary, at => new BuyMedicine(at)));
             if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
             if (kind == "dairy") Dairy(ctx, vm);
+            if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
             return vm;
         }
 
@@ -174,6 +189,7 @@ namespace Sim.View.Views
             for (int k = 0; k < defs.Animals.Count; k++)
             {
                 AnimalDef a = defs.Animals[k];
+                if (a.Draught) continue; // the co-op buys milk: bullocks give none
                 long perLitre = (Sim.Core.Livestock.LivestockRules.MilkPrice(sim, k) * Sim.Core.Maths.Fixed.FromInt(100)).RoundToLong();
                 int owned = 0, milking = 0;
                 foreach (Sim.Core.Livestock.Animal x in s.Animals)

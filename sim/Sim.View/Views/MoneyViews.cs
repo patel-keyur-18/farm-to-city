@@ -32,6 +32,7 @@ namespace Sim.View.Views
             if (ctx.Sim.State.People != null) Add("people", new SheetRequest("People", 0), "person_hand_f");
             if (ctx.Sim.State.Businesses != null) Add("businesses", new SheetRequest("Businesses", 0), "flour_mill"); // spec 016 §3.3
             Add("land", new SheetRequest("Lands", 0), "sign");
+            if (Sim.Core.Equipment.EquipmentRules.On(ctx.Sim)) Add("equipment", new SheetRequest(EquipmentSheet.Kind, 0), "tractor"); // spec 013 §3.2
             Add("calendar", new SheetRequest(CropCalendar.Sheet, 0), "seed_wheat"); // every crop by season (spec 020 §3.6b)
             Add("you", new SheetRequest("Founder", 0), "person_founder");
             if (ctx.Sim.State.Guidance != null) Add("letter", new SheetRequest("Letter", 0), "letter");

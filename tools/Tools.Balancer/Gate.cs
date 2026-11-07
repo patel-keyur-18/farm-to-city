@@ -458,6 +458,152 @@ namespace Tools.Balancer
             return 0;
         }
 
+        /// <summary>Spec 013 §9: drip, the borewell and the tractor in the Hamlet, so the competent bot meets them (the Village gate is spec 018's).</summary>
+        public static string FarmInHamlet(string file, string json) { return file == "farming.json" ? json.Replace("\"unlockEra\": \"village\"", "\"unlockEra\": \"hamlet\"") : json; }
+
+        /// <summary>
+        /// Spec 013 §9 (ADR 0093): the competent bot with and without each farm investment on the same seeds; the paired difference in
+        /// farm profit a season (year-0 prices) from the season after it was made, what it cost, and its payback; the orchard's
+        /// running difference season by season.
+        /// </summary>
+        public static int PrintFarm(ConfigFor configFor, int seeds, int seasons)
+        {
+            string[] tryEdit = (Environment.GetEnvironmentVariable("FTC_FARM_EDIT") ?? "").Split("=>"); // a variant of farming.json to try: "old=>new"
+            SimConfig config = configFor((file, json) => tryEdit.Length == 2 && file == "farming.json" ? FarmInHamlet(file, json).Replace(tryEdit[0], tryEdit[1]) : FarmInHamlet(file, json));
+            Console.WriteLine("Farm investments (spec 013 §9), " + seeds + " seeds, " + seasons + " seasons; farm profit at year-0 prices against the same bot without it");
+            var bots = new (string name, Func<Bot> make, Func<Bot> against)[]
+            {
+                ("canal", () => new FarmToolBot("canal"), () => new FarmerBot()),
+                ("pump", () => new FarmToolBot("pump"), () => new FarmerBot()),
+                ("drip (against the pump)", () => new FarmToolBot("pump", "drip"), () => new FarmToolBot("pump")),
+                ("tractor bought", () => new FarmToolBot("tractor"), () => new FarmerBot()),
+                ("tractor hired", () => new FarmToolBot("tractor-hire"), () => new FarmerBot()),
+                ("mango orchard", () => new FarmToolBot("mango"), () => new FarmerBot()),
+                ("granary (rice to Spring)", () => new FarmToolBot("granary"), () => new FarmerBot()),
+            };
+            foreach (var (name, make, against) in bots)
+            {
+                var gains = new List<double>();
+                var paybacks = new List<double>();
+                var running = new List<double[]>();
+                double spent = 0, perAcre = 0;
+                int made = 0, channels = 0;
+                var held = new List<double>();
+                for (int seed = 1; seed <= seeds; seed++)
+                {
+                    var bot = (FarmToolBot)make();
+                    Economy.Run with = Economy.RunBot(config, bot, seasons, (ulong)seed, null), without = Economy.RunBot(config, against(), seasons, (ulong)seed, null);
+                    if (bot.Period < 0) continue;
+                    made++;
+                    spent += bot.Spent / (double)Money.Coin;
+                    channels += Sim.Core.Land.IrrigationRules.ChannelCount(with.Sim);
+                    if (bot.RiceHeld > 0) held.Add(bot.RiceHeld / 1000.0);
+                    var after = new List<double>();
+                    var run = new double[seasons];
+                    double sum = 0;
+                    for (int i = 0; i < Math.Min(with.Seasons.Count, without.Seasons.Count); i++)
+                    {
+                        double d = with.Seasons[i].RealFarmProfit - without.Seasons[i].RealFarmProfit;
+                        if (with.Seasons[i].Report.Period < bot.Period) continue;
+                        sum += d;
+                        run[with.Seasons[i].Report.Period - bot.Period] = sum - bot.Spent / (double)Money.Coin;
+                        if (with.Seasons[i].Report.Period > bot.Period) after.Add(d);
+                    }
+                    double gain = after.Count == 0 ? 0 : after.Average();
+                    gains.Add(gain);
+                    paybacks.Add(gain <= 0 ? double.PositiveInfinity : bot.Spent / (double)Money.Coin / gain);
+                    running.Add(run);
+                    var steady = without.Seasons.Where(r => r.Report.Period > bot.Period).ToList();
+                    perAcre += steady.Sum(r => r.RealFarmProfit) / Math.Max(1, steady.Sum(r => r.AcreSeasons));
+                }
+                if (made == 0) { Console.WriteLine("  " + name.PadRight(26) + "never made"); continue; }
+                gains.Sort();
+                paybacks.Sort();
+                Console.WriteLine("  " + name.PadRight(26) + "made in " + made + " of " + seeds + ", cost " + K(spent / made) + ", farm profit a season "
+                    + K(gains[0]) + " / " + K(gains[gains.Count / 2]) + " / " + K(gains[gains.Count - 1]) + " (min / median / max), payback "
+                    + (double.IsInfinity(paybacks[paybacks.Count / 2]) ? "never" : paybacks[paybacks.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + (channels > 0 ? "; " + (channels / (double)made).ToString("0.0", CultureInfo.InvariantCulture) + " channels, a canal acre "
+                        + (gains[gains.Count / 2] / (channels / (double)made) / (perAcre / made)).ToString("+0%;-0%", CultureInfo.InvariantCulture) + " against a rain-fed acre's "
+                        + K(perAcre / made) : ""));
+                if (held.Count > 0) Console.WriteLine("    rice held at most (median) " + K(held.OrderBy(x => x).ElementAt(held.Count / 2)) + " kg");
+                if (name.StartsWith("mango"))
+                    Console.WriteLine("    net of its cost, by seasons since planting (median): "
+                        + string.Join(" ", Enumerable.Range(0, seasons).Select(k => K(running.Select(r => r[k]).OrderBy(x => x).ElementAt(running.Count / 2)))));
+            }
+            return 0;
+        }
+
+        /// <summary>The shops in the Hamlet (spec 017 §9): the Village gate is spec 018's, so the bots meet them sooner.</summary>
+        public static string ShopsInHamlet(string file, string json)
+        {
+            foreach (string type in new[] { "veg_stall", "tea_stall", "sweet_shop", "dairy" }) json = InHamlet(type, file, json);
+            return json;
+        }
+
+        /// <summary>Spec 017 §9: the shops' bots, each type on a pitch hired, good, by you, and on your acre; the sweet shop beside your dairy.</summary>
+        public static int PrintShops(ConfigFor configFor, int seeds, int seasons, string only = null)
+        {
+            SimConfig config = configFor(ShopsInHamlet);
+            Console.WriteLine("Shops (spec 017 §9), " + seeds + " seeds, " + seasons + " seasons");
+            var bots = new List<(string type, Func<Bot> make)>
+            {
+                ("tea_stall", () => new BusinessBot(false, false, "tea_stall")),
+                ("tea_stall", () => new BusinessBot(false, false, "tea_stall") { Quality = 2 }),
+                ("tea_stall", () => new BusinessBot(false, false, "tea_stall") { Quality = 2, Price = Fixed.Parse("1.1") }), // spec 017 §9's target (ADR 0093)
+                ("tea_stall", () => new BusinessBot(false, false, "tea_stall") { Price = Fixed.Parse("1.1") }),
+                ("tea_stall", () => new BusinessBot(true, false, "tea_stall")),
+                ("tea_stall", () => new BusinessBot(false, false, "tea_stall") { OnAcre = true }),
+                ("sweet_shop", () => new BusinessBot(false, false, "sweet_shop")),
+                ("sweet_shop", () => new BusinessBot(false, false, "sweet_shop") { Quality = 2 }),
+                ("sweet_shop", () => new BusinessBot(false, false, "sweet_shop") { Quality = 2, Price = Fixed.Parse("1.1") }),
+                ("sweet_shop", () => new BusinessBot(false, false, "dairy", "sweet_shop")),
+                ("veg_stall", () => new BusinessBot(false, false, "veg_stall")),
+                ("veg_stall", () => new BusinessBot(true, false, "veg_stall")),
+            };
+            foreach (var (type, make) in bots)
+            {
+                if (only != null && type != only) continue;
+                MillResult m = Business(config, make, seeds, type, seasons);
+                List<double> pr = m.Profit.OrderBy(x => x).ToList(), pb = m.Payback.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+                Console.WriteLine("  " + m.Bot.PadRight(32) + "founded " + m.Founded + " of " + m.Seeds + ", profit a season "
+                    + (pr.Count == 0 ? "-" : K(pr[0]) + " / " + K(pr[pr.Count / 2]) + " / " + K(pr[pr.Count - 1]))
+                    + " (min / median / max), payback " + (pb.Count == 0 ? "never" : pb[pb.Count / 2].ToString("0.0", CultureInfo.InvariantCulture) + " seasons")
+                    + ", overdrawn run " + (m.OverdrawnRun.Count == 0 ? 0 : m.OverdrawnRun.Max()) + ", closed " + m.Closed + ", foreclosed " + m.Foreclosed
+                    + ", end cash min " + K(m.EndCash.Min() / (double)Money.Coin));
+            }
+            return 0;
+        }
+
+        /// <summary>One run of a shop bot (seed 1): each season's books by account, its customers and served, and its stars.</summary>
+        public static int PrintShopBooks(ConfigFor configFor, string bot, int seasons)
+        {
+            SimConfig config = configFor(ShopsInHamlet);
+            string[] parts = bot.Split('-');
+            var make = new BusinessBot(parts.Contains("yours"), false, parts[0].Split('+')) { OnAcre = parts.Contains("acre"), Quality = parts.Contains("good") ? 2 : 1 };
+            string type = parts[0].Split('+').Last();
+            Economy.Run r = Economy.RunBot(config, make, seasons, 1, sim =>
+            {
+                if (Environment.GetEnvironmentVariable("FTC_SHOP_DEBUG") == "1" && sim.State.Clock.SimTime % 86_400 / 3600 == 23)
+                {
+                    var s = sim.State.Businesses?.Businesses.Find(x => Sim.Core.Business.BusinessRules.TypeOf(sim, x).Id == type);
+                    if (s != null)
+                        Console.WriteLine("  day " + sim.State.Clock.SimTime / 86_400 + " 7:00 yesterday chose " + s.CustomersToday / 1000 + " served " + s.ServedToday / 1000 + " worker " + s.Worker + " staffed " + Sim.Core.Business.BusinessRules.Staffed(sim, s) + " hours " + s.OpenHour + "-" + s.CloseHour + " cash " + s.Ledger.Cash / Money.Coin + " can spend " + Sim.Core.Business.BusinessBooks.CanSpend(sim, s) / Money.Coin + ": "
+                            + string.Join(", ", Enumerable.Range(0, s.PutOut.Length).Where(g => s.PutOut[g] > 0 || s.Stock[g] > 0)
+                                .Select(g => sim.Config.Game.Market.Goods[g].Id + " out " + s.PutOut[g] / 1000 + " stall " + s.Stock[g] / 1000 + " store " + (sim.State.Market.InStore(g) - sim.State.Market.OnOffer(g)) / 1000)));
+                }
+                foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                {
+                    if (!(e is Sim.Core.Events.SeasonClosed)) continue;
+                    var b = sim.State.Businesses?.Businesses.Find(x => Sim.Core.Business.BusinessRules.TypeOf(sim, x).Id == type);
+                    if (b == null || b.Reports.Count == 0) continue;
+                    var rep = b.Reports[b.Reports.Count - 1];
+                    Console.WriteLine("season " + rep.Period + " " + b.Status + ", stars " + b.Stars.ToString() + ", customers " + b.SeasonCustomers + " served " + b.SeasonServed + ": "
+                        + string.Join(", ", rep.Balances.Where(kv => kv.Value != 0).Select(kv => kv.Key + " " + K(-kv.Value / (double)Money.Coin))));
+                }
+            });
+            return 0;
+        }
+
         public static int PrintBakery(ConfigFor configFor, int seeds, string pav)
         {
             SimConfig config = configFor((f, j) =>

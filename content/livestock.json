@@ -36,6 +36,10 @@
     { "id": "cow", "nameKey": "animal.cow", "price": 75000, "milkPerDay": 11, "fatPercent": 4.0,
       "seasonMilk": { "spring": 1.00, "summer": 0.85, "monsoon": 1.00, "winter": 1.00 }, "milkDays": 13, "dryDays": 3,
       "ration": { "green": 25, "straw": 5, "feed": 4.5 }, "dryFeedFactor": 0.4, "labourHoursPerDay": 1.5,
-      "dungCompostKgPerDay": 9.5, "calfPrice": 4000, "sellShare": 0.80 }
+      "dungCompostKgPerDay": 9.5, "calfPrice": 4000, "sellShare": 0.80 },
+    { "id": "bullock", "nameKey": "animal.bullock", "price": 30000, "draught": true, "names": ["Hira", "Moti", "Badal", "Sheru", "Raja", "Bhola"], "milkPerDay": 0, "fatPercent": 0,
+      "seasonMilk": { "spring": 1.00, "summer": 1.00, "monsoon": 1.00, "winter": 1.00 }, "milkDays": 13, "dryDays": 0,
+      "ration": { "green": 15, "straw": 7, "feed": 2 }, "dryFeedFactor": 1, "labourHoursPerDay": 0.5,
+      "dungCompostKgPerDay": 9.5, "calfPrice": 0, "sellShare": 0.80 }
   ]
 }

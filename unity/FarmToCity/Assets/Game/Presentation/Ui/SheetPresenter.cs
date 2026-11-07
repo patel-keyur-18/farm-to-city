@@ -116,9 +116,16 @@ namespace Game.Presentation.Ui
                 case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
-                case "hand_hut": case "hand_hut_building": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
+                case "hand_hut": case "hand_hut_building": case "granary": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut; // granary: your godown in town (ADR 0087)
                 case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
+                case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
+                case "veg_stall_building": case "tea_stall_building": case "sweet_shop_building": return SpriteBank.Rendered(icon.Substring(0, icon.Length - 9) + "_s") ?? SpriteBank.Hut;
+                case "pitch": return SpriteBank.Rendered("pitch_empty_1");
+                case "star": return IconBank.Star(2); // a shop's stars (spec 017 §3.5)
+                case "place_halwai": return SpriteBank.Rendered("sweet_shop_s");
                 case "population": case "happiness": return SpriteBank.Rendered("icon_" + icon);
+                case "pump": case "borewell": case "channel": case "drip": return SpriteBank.Rendered("icon_" + icon); // irrigation (spec 013 §7)
+                case "tractor": case "plough_team": return SpriteBank.Rendered(icon); // equipment (spec 013 §7)
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
@@ -129,6 +136,7 @@ namespace Game.Presentation.Ui
                 case "letter": return IconBank.Letter;
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran": case "pav": case "rusk": case "paneer": case "curd": case "ghee":
+                case "rasgulla": case "atta_laddoo":
                     return IconBank.Good(icon);
                 case "garden": return SpriteBank.Bed(null, Sim.View.Views.CropStage.None);
                 case "land": return SpriteBank.Sign;
@@ -556,6 +564,7 @@ namespace Game.Presentation.Ui
             // A row with its own button (the store's Sell): name and details on the left, the button on the right.
             var text = new VisualElement { pickingMode = PickingMode.Ignore };
             text.style.flexShrink = 1;
+            text.style.flexGrow = 1; // the full width up to the ? chip: a wrapped note measured narrower than its value spilled into the next row
             text.Add(UiKit.Heading1(line.Label, 40));
             if (line.Stars.HasValue)
             {

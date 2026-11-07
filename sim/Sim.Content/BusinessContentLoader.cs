@@ -42,7 +42,8 @@ namespace Sim.Content
                 string p = Index(root + ".types", i);
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "workerSkill", "wage", "kgPerHour", "powerPerKg", "repairsShare",
-                    "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium");
+                    "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium",
+                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
                 x.Era = -1;
@@ -59,8 +60,11 @@ namespace Sim.Content
                 if (skill != "crafting" && skill != "farming") throw new ContentException(p + ".workerSkill", "expected crafting or farming");
                 x.WorkerFarms = skill == "farming";
                 x.Wage = Money(Required(t, p, "wage"), p + ".wage");
-                x.GramsPerHour = (Bounded(t, p, "kgPerHour", "1", "10000") * Fixed.FromInt(1000)).RoundToLong();
-                x.PowerPerKg = Bounded(t, p, "powerPerKg", "0", "100");
+                Shop(x, t, p, market);
+                // A stall or tea stall sells what it's given, at its own rate (capacityPerHour); the others work kg an hour.
+                x.GramsPerHour = x.IsShop && t["recipes"] == null && t["kgPerHour"] == null ? x.Kind == ShopKind.Veg ? x.CapacityPerHour : 0
+                    : (Bounded(t, p, "kgPerHour", "1", "10000") * Fixed.FromInt(1000)).RoundToLong();
+                x.PowerPerKg = t["powerPerKg"] == null ? Fixed.Zero : Bounded(t, p, "powerPerKg", "0", "100");
                 x.RepairsShare = Bounded(t, p, "repairsShare", "0", "1");
                 x.OpenHour = BoundedInt(t, p, "openHour", 0, 23);
                 x.CloseHour = BoundedInt(t, p, "closeHour", x.OpenHour + 1, 24);
@@ -76,6 +80,12 @@ namespace Sim.Content
                     continue;
                 }
                 if (t["shops"] != null) throw new ContentException(p + ".shops", "only a type with recipes sells to the shops");
+                if (x.IsShop) // a stall or tea stall: no input or outputs of its own
+                {
+                    if (t["input"] != null || t["outputs"] != null) throw new ContentException(p + ".input", "a shop sells goods, it doesn't grind them");
+                    types.Add(x);
+                    continue;
+                }
                 x.Input = Good(market, t, p, "input");
                 JObject outs = Object(Required(t, p, "outputs"), p + ".outputs");
                 var outputs = new List<BusinessOutput>();
@@ -95,6 +105,69 @@ namespace Sim.Content
             }
             d.Types = types.AsReadOnly();
             return d;
+        }
+
+        /// <summary>A shop's fields (spec 017 §3.1): its kind, a pitch's building, its rate a real hour, the goods it may put out, a cup of chai.</summary>
+        private static void Shop(BusinessTypeDef x, JObject t, string p, MarketDefs market)
+        {
+            if (t["kind"] == null)
+            {
+                foreach (string f in new[] { "pitchBuilding", "capacityPerHour", "goods", "cup", "good" })
+                    if (t[f] != null) throw new ContentException(Join(p, f), "only a shop (with a kind) has this");
+                return;
+            }
+            string kind = String(t["kind"], p + ".kind");
+            x.Kind = kind == "veg" ? ShopKind.Veg : kind == "chai" ? ShopKind.Chai : kind == "sweets" ? ShopKind.Sweets
+                : throw new ContentException(p + ".kind", "expected veg, chai or sweets");
+            if ((x.Kind == ShopKind.Sweets) != (t["recipes"] != null)) throw new ContentException(p + ".recipes", "the sweet shop, and only it, makes by recipes");
+            x.CapacityPerHour = BoundedInt(t, p, "capacityPerHour", 1, 100000) * (x.Kind == ShopKind.Chai ? 1L : 1000L);
+            if (t["pitchBuilding"] != null)
+            {
+                JObject b = Object(t["pitchBuilding"], p + ".pitchBuilding");
+                x.PitchBuildingValue = Money(Required(b, p + ".pitchBuilding", "value"), p + ".pitchBuilding.value");
+                x.PitchBuildingLifeSeasons = BoundedInt(b, p + ".pitchBuilding", "lifeSeasons", 1, 400);
+            }
+            var goods = new List<int>();
+            if (t["goods"] != null)
+            {
+                if (x.Kind == ShopKind.Sweets) throw new ContentException(p + ".goods", "the sweet shop sells what it makes");
+                List<JToken> list = NonEmptyArray(t, p, "goods");
+                for (int i = 0; i < list.Count; i++)
+                {
+                    string id = String(list[i], Index(p + ".goods", i));
+                    int g = market.IndexOf(id);
+                    if (g < 0 || market.Goods[g].Kind != GoodKind.Produce) throw new ContentException(Index(p + ".goods", i), "not a produce good '" + id + "'");
+                    if (goods.Contains(g)) throw new ContentException(Index(p + ".goods", i), "listed twice");
+                    goods.Add(g);
+                }
+            }
+            x.Goods = goods.AsReadOnly();
+            if ((x.Kind == ShopKind.Chai) != (t["cup"] != null)) throw new ContentException(p + ".cup", "the tea stall, and only it, sells cups");
+            if (x.Kind == ShopKind.Chai)
+            {
+                if (t["takesMilk"] == null || !Bool(t["takesMilk"], p + ".takesMilk")) throw new ContentException(p + ".takesMilk", "the tea stall takes milk");
+                string cp = p + ".cup";
+                JObject c = Object(t["cup"], cp);
+                OnlyFields(c, cp, "milkLitres", "supplies", "snackKg");
+                x.CupMilkMl = (Bounded(c, cp, "milkLitres", "0.001", "1") * Fixed.FromInt(1000)).RoundToLong();
+                x.CupSupplies = Bounded(c, cp, "supplies", "0", "100");
+                x.SnackGrams = (Bounded(c, cp, "snackKg", "0", "1") * Fixed.FromInt(1000)).RoundToLong();
+            }
+            else if (t["takesMilk"] != null && Bool(t["takesMilk"], p + ".takesMilk")) throw new ContentException(p + ".takesMilk", "of the shops, only the tea stall takes milk");
+
+            // Good quality's costs (§3.5, ADR 0092).
+            string gp = p + ".good";
+            JObject good = Object(Required(t, p, "good"), gp);
+            OnlyFields(good, gp, "milkLitres", "recipeCost", "fresh");
+            if ((x.Kind == ShopKind.Chai) != (good["milkLitres"] != null)) throw new ContentException(gp + ".milkLitres", "the tea stall, and only it, sets a good cup's milk");
+            if (x.Kind == ShopKind.Chai)
+            {
+                x.GoodCupMilkMl = (Bounded(good, gp, "milkLitres", "0.001", "1") * Fixed.FromInt(1000)).RoundToLong();
+                if (x.GoodCupMilkMl < x.CupMilkMl) throw new ContentException(gp + ".milkLitres", "a good cup has at least the standard cup's milk");
+            }
+            if ((x.Kind == ShopKind.Sweets) != (good["recipeCost"] != null)) throw new ContentException(gp + ".recipeCost", "the sweet shop, and only it, has a recipe cost");
+            if (good["recipeCost"] != null) x.GoodRecipeExtra = Bounded(good, gp, "recipeCost", "0", "2");
+            x.GoodFresh = good["fresh"] != null && Bool(good["fresh"], gp + ".fresh");
         }
 
         /// <summary>Recipes (spec 016 §3.9c): each a batch of goods into one product; the shops' amounts a person for its products.</summary>

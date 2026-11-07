@@ -36,12 +36,14 @@ namespace Sim.Core.Business
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
-            if (sim.State.Farm.CropOn(tileId) != null || HouseRules.HousesOn(sim, tileId) > 0) return RejectReason.TileOccupied;
+            if (sim.State.Farm.CropOn(tileId) != null || HouseRules.HousesOn(sim, tileId) > 0 || Livestock.LivestockRules.SecondShedTile(sim) == tileId
+                || Farm.OrchardRules.Of(sim, tileId) != null)
+                return RejectReason.TileOccupied;
             return On(sim, tileId) != null ? RejectReason.NoRoom : RejectReason.None;
         }
 
-        /// <summary>The building and equipment at today's prices.</summary>
-        public static long Cost(Simulation sim, BusinessTypeDef t) { return MarketRules.Indexed(sim, t.BuildingValue + t.EquipmentValue); }
+        /// <summary>The building and equipment at today's prices; on a pitch, a shop's pitch building (spec 017 §3.1).</summary>
+        public static long Cost(Simulation sim, BusinessTypeDef t, int pitch = -1) { return MarketRules.Indexed(sim, ShopRules.BuildingValue(t, pitch)) + MarketRules.Indexed(sim, t.EquipmentValue); }
 
         public static long Wage(Simulation sim, BusinessTypeDef t) { return MarketRules.Indexed(sim, t.Wage); }
 
@@ -53,22 +55,41 @@ namespace Sim.Core.Business
             return (d.GrainPerPersonPerRealDay * sim.Config.Game.Population.RealDaysPerGameDay * Fixed.FromInt(people) * Fixed.FromInt(1000)).RoundToLong();
         }
 
-        /// <summary>Whether the area brings its grain at this fee: no more than the next village's chakki's fee plus the tolerance (§3.7).</summary>
-        public static bool AreaComes(Simulation sim, Business b) { return b.Fee <= Defs(sim).NextVillageFee + Defs(sim).FeeTolerance; }
+        /// <summary>The area's grain that comes to your mill this hour of its usual day (spec 017 §3.6): its share against the chakki's.</summary>
+        public static long AreaGramsThisHour(Simulation sim, Business b)
+        {
+            BusinessTypeDef t = TypeOf(sim, b);
+            return ShopRules.MillShare(sim, b).MulRatio(AreaGramsPerDay(sim) / (t.CloseHour - t.OpenHour), 1).FloorToLong();
+        }
+
+        /// <summary>The acre the plan reckons a new mill's distance from (spec 017 §3.6, ADR 0091 §3): the nearest it may stand on to the middle of your land.</summary>
+        public static int PlanTile(Simulation sim)
+        {
+            int best = -1, metres = int.MaxValue;
+            if (sim.Config.Game.Shops == null) return -1;
+            int centre = ShopRules.LandCentre(sim);
+            foreach (Tile t in sim.State.Land.Tiles)
+            {
+                if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Owned || Place(sim, t.Id) != RejectReason.None) continue;
+                int m = ShopRules.Between(sim, centre, t.Id);
+                if (m < metres) { metres = m; best = t.Id; }
+            }
+            return best;
+        }
 
         /// <summary>The plan's season, line by line (§3.3), for the plan screen and its *Why?*s.</summary>
         public sealed class Projection
         {
-            public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Interest, Loan, Revenue, Costs, Profit, Cost, CashNeeded;
+            public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Rent, Interest, Loan, Revenue, Costs, Profit, Cost, CashNeeded;
         }
 
         /// <summary>
         /// The season ahead as planned (§3.3): the area's fees and your wheat's margin at today's prices, against the wage (or none when you
         /// run it), power, repairs and depreciation; a season's running cash is the wage or, run by you, the power and repairs.
         /// </summary>
-        public static BusinessPlan Project(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0)
+        public static BusinessPlan Project(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0, int pitch = -1, int tile = -1)
         {
-            Projection p = Projected(sim, t, runYourself, ownPerDay, fee, loan);
+            Projection p = Projected(sim, t, runYourself, ownPerDay, fee, loan, null, pitch, tile);
             return new BusinessPlan
             {
                 Revenue = p.Revenue, Costs = p.Costs, Profit = p.Profit, CashNeeded = p.CashNeeded, MadeAt = sim.State.Clock.SimTime, AreaGrams = p.AreaGrams, OwnGrams = p.OwnGrams,
@@ -77,12 +98,17 @@ namespace Sim.Core.Business
         }
 
         /// <param name="loan">A business loan taken (§3.8): its first season's interest is a cost, and it pays for that much of the cash needed.</param>
-        public static Projection Projected(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0, long[] mix = null)
+        /// <param name="pitch">A shop's pitch in the square (spec 017 §3.4), or −1 on <paramref name="tile"/> (−1: the plan's acre).</param>
+        public static Projection Projected(Simulation sim, BusinessTypeDef t, bool runYourself, long ownPerDay, Fixed fee, long loan = 0, long[] mix = null, int pitch = -1, int tile = -1)
         {
+            if (tile < 0 && pitch < 0 && t.IsShop) pitch = 0; // a shop's plan reckons on a pitch in the square
+            if (tile < 0 && pitch < 0) tile = PlanTile(sim);
+            if (t.IsShop) return ShopRules.Projected(sim, t, runYourself, loan, pitch, tile);
             if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t), ownPerDay);
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
-            long day = t.GramsPerHour * (t.CloseHour - t.OpenHour), areaDay = System.Math.Min(AreaGramsPerDay(sim), day);
+            Fixed share = ShopRules.MillShare(sim, fee, 1, sim.Config.Game.Shops?.StartStars ?? Fixed.One, tile); // the area's share against the chakki (spec 017 §3.6)
+            long day = t.GramsPerHour * (t.CloseHour - t.OpenHour), areaDay = System.Math.Min(share.MulRatio(AreaGramsPerDay(sim), 1).FloorToLong(), day);
             long area = areaDay * days;
             long own = System.Math.Min(ownPerDay, day - areaDay) * days; // your wheat fills what the area leaves (§3.5)
             long fees = Money.Value(area, fee * index, 1000);
@@ -152,8 +178,8 @@ namespace Sim.Core.Business
         }
 
         /// <summary>
-        /// What a recipe's input costs a kg (§3.9c): the trader's price when a business of yours makes it (your mill's atta), else the
-        /// market's import price.
+        /// What a recipe's input costs a kg (§3.9c): the trader's price when a business of yours makes it (your mill's atta, your dairy's
+        /// paneer), else the market's import price.
         /// </summary>
         public static Fixed InputPrice(Simulation sim, int good)
         {
@@ -164,6 +190,7 @@ namespace Sim.Core.Business
                 {
                     if (b.Status == BusinessStatus.Closed) continue;
                     foreach (BusinessOutput o in TypeOf(sim, b).Outputs) if (o.Good == good) return MarketRules.Floor(sim, good);
+                    if (TypeOf(sim, b).Makes(good)) return MarketRules.Floor(sim, good); // your dairy's paneer for your sweet shop (spec 017 §3.1)
                 }
             return MarketRules.Ceiling(sim, good);
         }
@@ -227,7 +254,11 @@ namespace Sim.Core.Business
         }
 
         /// <summary>A new business's own input a day: the dairy takes the milk its starting mix needs; the mill its type's wheat a day.</summary>
-        public static long DefaultOwnPerDay(Simulation sim, BusinessTypeDef t) { return t.TakesMilk ? MilkFor(t, DefaultMix(sim, t)) : t.OwnPerDay; }
+        public static long DefaultOwnPerDay(Simulation sim, BusinessTypeDef t, int tile = -1)
+        {
+            if (t.Kind == ShopKind.Chai) return ShopRules.DefaultMilk(sim, t, tile < 0 ? sim.Config.Game.Shops.SquareTile : tile); // the tea stall: its cups' milk (spec 017 §3.1)
+            return t.TakesMilk ? MilkFor(t, DefaultMix(sim, t)) : t.OwnPerDay;
+        }
 
         /// <summary>
         /// A day at the dairy as the plan sees it (§3.9b, §3.9c): the milk in at 6:00 (your herd's up to the day's amount, then
@@ -242,6 +273,7 @@ namespace Sim.Core.Business
             milkCost = 0;
             for (int k = 0; k < kinds.Count && room > 0; k++)
             {
+                if (kinds[k].Draught) continue; // a bullock gives no milk
                 long q = System.Math.Min(room, herd[k]);
                 stock[sim.Config.Game.Market.IndexOf("milk_" + kinds[k].Id)] += q;
                 milkCost += Money.Value(q, Livestock.LivestockRules.MilkPrice(sim, k), 1000);
@@ -326,17 +358,28 @@ namespace Sim.Core.Business
 
         // ---- founding (§3.3) ----
 
-        internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself, Financing financing = null)
+        internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself, Financing financing = null, int pitch = -1)
         {
             BusinessDefs d = Defs(sim);
             int type = d == null ? -1 : d.IndexOfType(typeId);
             if (type < 0) return CommandResult.Reject(RejectReason.UnknownBusiness);
             BusinessTypeDef t = d.Types[type];
             if (!Unlocked(sim, t)) return CommandResult.Reject(RejectReason.EraLocked);
-            RejectReason place = Place(sim, tileId);
-            if (place != RejectReason.None) return CommandResult.Reject(place);
+            if (pitch >= 0)
+            {
+                // A pitch in the square (spec 017 §3.4): shops only, one shop a pitch.
+                if (!t.IsShop || sim.Config.Game.Shops == null || pitch >= sim.Config.Game.Shops.Pitches) return CommandResult.Reject(RejectReason.InvalidArgument);
+                if (sim.State.Businesses.OnPitch(pitch) != null) return CommandResult.Reject(RejectReason.PitchTaken);
+                tileId = sim.Config.Game.Shops.SquareTile;
+            }
+            else
+            {
+                RejectReason place = Place(sim, tileId);
+                if (place != RejectReason.None) return CommandResult.Reject(place);
+            }
             long loan = financing == null ? 0 : financing.Amount;
-            BusinessPlan plan = Project(sim, t, runYourself, DefaultOwnPerDay(sim, t), t.Fee, loan);
+            long ownPerDay = DefaultOwnPerDay(sim, t, tileId);
+            BusinessPlan plan = Project(sim, t, runYourself, ownPerDay, t.Fee, loan, pitch, tileId);
             int lender = -1;
             if (financing != null)
             {
@@ -352,20 +395,26 @@ namespace Sim.Core.Business
             var b = new Business
             {
                 Id = s.NextId++, Type = type, TileId = tileId, Status = BusinessStatus.Building, FoundedAt = now, ReadyAt = now + t.BuildHours * Hour,
-                OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = DefaultOwnPerDay(sim, t), Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
+                OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
-                Mix = DefaultMix(sim, t), MadeToday = new long[goods], BuyFromMarket = t.ByRecipe, // the bakery buys atta your mill can't give; the dairy, neighbours' milk
+                Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
+                BuyFromMarket = t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
+                Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, capital), new Posting(Account.Cash, -capital));
             b.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.Cash, capital), new Posting(Account.OwnersCapital, -capital));
             s.Businesses.Add(b);
             if (financing != null) b.LoanId = CreditSystem.Create(sim, lender, loan, financing.TermSeasons, b.Id).Id; // to the business, your guarantee (§3.8)
-            long building = MarketRules.Indexed(sim, t.BuildingValue), equipment = MarketRules.Indexed(sim, t.EquipmentValue);
+            long building = MarketRules.Indexed(sim, ShopRules.BuildingValue(t, pitch)), equipment = MarketRules.Indexed(sim, t.EquipmentValue);
             b.Ledger.Post(now, sim.Period, "ledger.businessBuilt", reference,
                 new Posting(Account.Buildings, building), new Posting(Account.Equipment, equipment), new Posting(Account.Cash, -building - equipment));
-            LandSystem.SetOccupied(sim, tileId, true);
-            sim.State.People?.Orders.RemoveAll(o => o.Kind == OrderTargetKind.Field && o.Target == tileId);
+            ShopRules.PayRent(sim, b, sim.Period); // the first season's pitch rent, upfront
+            if (pitch < 0)
+            {
+                LandSystem.SetOccupied(sim, tileId, true);
+                sim.State.People?.Orders.RemoveAll(o => o.Kind == OrderTargetKind.Field && o.Target == tileId);
+            }
             sim.ScheduleJob(Job, b.Id, b.ReadyAt);
             sim.Emit(new BusinessFounded(now, b.Id, t.Id, tileId, capital));
             return CommandResult.Ok;
@@ -438,12 +487,25 @@ namespace Sim.Core.Business
         internal static void Hourly(Simulation sim)
         {
             bool morning = MarketRules.HourOfDay(sim) == (sim.Config.Game.Market.Truck?.ArriveHour ?? 6);
+            long[] took = null;
+            if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
+            if (morning)
+            {
+                // A new day's batches for every maker first (so what your shops still need is counted), then the stalls fill up from your
+                // store and businesses before the village shops buy what's left (spec 017 §5, ADR 0091 §2).
+                foreach (Business b in sim.State.Businesses.Businesses)
+                    if (b.Status == BusinessStatus.Open && TypeOf(sim, b).ByRecipe) System.Array.Clear(b.MadeToday, 0, b.MadeToday.Length);
+                if (sim.State.Shops != null) took = ShopRules.Stock(sim);
+            }
+            else if (sim.State.Shops != null && MarketRules.HourOfDay(sim) > (sim.Config.Game.Market.Truck?.ArriveHour ?? 6))
+                ShopRules.FirstStock(sim, sim.State.Clock.SimTime / Day); // a stall that missed the morning round
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning) Morning(sim, b);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b))) Morning(sim, b, took);
                     Work(sim, b);
                 }
+            ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
         }
 
         /// <summary>Whether the business works in the hour of day <paramref name="hour"/>: open then and staffed (its worker not away on a course).</summary>
@@ -498,14 +560,14 @@ namespace Sim.Core.Business
         }
 
         /// <summary>A sale's price: 5% more when a creative worker made it (spec 015 §3.6).</summary>
-        private static long SalePrice(Simulation sim, Business b, long amount)
+        internal static long SalePrice(Simulation sim, Business b, long amount)
         {
             Fixed f = TraitFactor(sim, b, x => x.SaleFactor);
             return f == Fixed.One ? amount : Money.MulRate(amount, f);
         }
 
         /// <summary>Power, fuel and supplies: 10% less with a frugal worker (spec 015 §3.6).</summary>
-        private static Fixed CostFactor(Simulation sim, Business b) { return TraitFactor(sim, b, x => x.CostFactor); }
+        internal static Fixed CostFactor(Simulation sim, Business b) { return TraitFactor(sim, b, x => x.CostFactor); }
 
         private static void Work(Simulation sim, Business b)
         {
@@ -520,8 +582,10 @@ namespace Sim.Core.Business
             int hour = (int)(start % Day / Hour);
             KeepStaffed(sim, b);
             if (!OpenAt(sim, b, hour)) return;
+            b.OpenToday = true;
             Worker hired = HiredWorker(sim, b);
             if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
+            if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
             if (t.ByRecipe)
             {
                 long made = 0;
@@ -538,15 +602,18 @@ namespace Sim.Core.Business
 
             // The area's grain first (§3.5b): it comes over the village's usual hours, and is lost to the next village if not ground then.
             long area = 0;
-            if (hour >= t.OpenHour && hour < t.CloseHour && AreaComes(sim, b))
+            if (hour >= t.OpenHour && hour < t.CloseHour)
             {
-                area = System.Math.Min(capacity, AreaGramsPerDay(sim) / (t.CloseHour - t.OpenHour));
+                long came = AreaGramsThisHour(sim, b); // its share against the chakki (spec 017 §3.6)
+                area = System.Math.Min(capacity, came);
                 long fees = Money.Value(area, b.Fee * index, 1000);
                 if (PowerCost(sim, b, area) > fees + BusinessBooks.CanSpend(sim, b)) area = fees = 0; // a fee below the power's, with no cash left (§3.10)
                 if (fees > 0) b.Ledger.Post(now, sim.Period, "ledger.grindingFees", reference, new Posting(Account.Cash, fees), new Posting(Account.ServiceIncome, -fees));
                 Power(sim, b, area);
                 b.AreaToday += area;
                 b.AreaSeason += area;
+                b.CustomersToday += came; // what came to it and what it ground: its stars (§3.5, ADR 0092)
+                b.ServedToday += area;
             }
             long left = capacity - area;
 
@@ -688,11 +755,19 @@ namespace Sim.Core.Business
                     long cost = BatchCost(sim, b, r, q), spend = BusinessBooks.CanSpend(sim, b);
                     if (cost > spend) q = cost <= 0 ? 0 : (long)((System.Numerics.BigInteger)q * System.Math.Max(0, spend) / cost);
                 }
+                while (q > 0 && BatchCost(sim, b, r, q) > BusinessBooks.CanSpend(sim, b)) q = q * 99 / 100 - 1; // rounding can leave it a few coins over
                 if (q <= 0) continue;
                 used += Batch(sim, b, r, q);
                 capacity -= RecipeInputs(r, q);
             }
             return used;
+        }
+
+        /// <summary>Good quality's extra on a batch's cost (the sweet shop's pure ghee and fresh paneer, §3.5, ADR 0092), or 0.</summary>
+        private static long GoodExtra(Simulation sim, Business b, long cost)
+        {
+            BusinessTypeDef t = TypeOf(sim, b);
+            return b.Quality == 2 && t.GoodRecipeExtra > Fixed.Zero ? Money.MulRate(cost, t.GoodRecipeExtra) : 0;
         }
 
         private static long RecipeInputs(RecipeDef r, long q)
@@ -705,13 +780,17 @@ namespace Sim.Core.Business
         /// <summary>What <paramref name="q"/> grams of the product cost in cash now: inputs to buy, fuel and supplies.</summary>
         private static long BatchCost(Simulation sim, Business b, RecipeDef r, long q)
         {
-            long cost = Money.Value(q, (r.Fuel + r.Supplies) * sim.State.Market.PriceIndex * CostFactor(sim, b), r.OutputGrams);
+            Fixed index = sim.State.Market.PriceIndex * CostFactor(sim, b);
+            long supplies = Money.Value(q, r.Supplies * index, r.OutputGrams), cost = Money.Value(q, r.Fuel * index, r.OutputGrams) + supplies, inputs = 0;
             foreach (KeyValuePair<int, long> kv in r.Inputs)
             {
-                long buy = Need(kv.Value, q, r.OutputGrams) - b.Stock[kv.Key];
-                if (buy > 0) cost += MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key));
+                // As the batch will cost it: what it holds at its book cost, the rest bought at the import price.
+                long need = Need(kv.Value, q, r.OutputGrams), held = System.Math.Min(need, b.Stock[kv.Key]), buy = need - held;
+                long bought = buy > 0 ? MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key)) : 0;
+                cost += bought;
+                inputs += bought + (held <= 0 ? 0 : (long)((System.Numerics.BigInteger)b.StockCost[kv.Key] * held / b.Stock[kv.Key]));
             }
-            return cost;
+            return cost + GoodExtra(sim, b, inputs + supplies);
         }
 
         private static long Batch(Simulation sim, Business b, RecipeDef r, long q)
@@ -739,6 +818,7 @@ namespace Sim.Core.Business
             }
             Fixed index = sim.State.Market.PriceIndex * CostFactor(sim, b);
             long fuel = Money.Value(q, r.Fuel * index, r.OutputGrams), supplies = Money.Value(q, r.Supplies * index, r.OutputGrams);
+            supplies += GoodExtra(sim, b, inputCost + supplies); // good quality: pure ghee and fresh paneer (§3.5)
             BusinessBooks.Draw(sim, b, fuel + supplies);
             if (fuel > 0) b.Ledger.Post(now, sim.Period, "ledger.fuel", reference, new Posting(Account.Power, fuel), new Posting(Account.Cash, -fuel));
             if (supplies > 0) b.Ledger.Post(now, sim.Period, "ledger.supplies", reference, new Posting(Account.BusinessStock, supplies), new Posting(Account.Cash, -supplies));
@@ -754,14 +834,15 @@ namespace Sim.Core.Business
         /// trader's price that morning; then the trader takes what keeps; then what's left spoils by its rate (inputs keep till used;
         /// the dairy's milk till the next milking); the day's counts start again.
         /// </summary>
-        private static void Morning(Simulation sim, Business b)
+        private static void Morning(Simulation sim, Business b, long[] took)
         {
             BusinessTypeDef t = TypeOf(sim, b);
             if (t.ByRecipe)
             {
+                foreach (int p in t.Products) ToYourBusinesses(sim, b, p); // your sweet shop's paneer and ghee first (spec 017 §3.1)
                 foreach (int p in t.Products)
                 {
-                    long q = System.Math.Min(b.Stock[p], ShopGramsPerDay(sim, t, p));
+                    long q = System.Math.Min(b.Stock[p], ShopGramsPerDay(sim, t, p) - (took == null ? 0 : took[p])); // less what your stalls took (ADR 0091 §2)
                     if (q > 0) Sold(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p))));
                 }
                 foreach (int p in t.Products)
@@ -778,13 +859,13 @@ namespace Sim.Core.Business
             for (int g = 0; g < goods.Count; g++)
             {
                 if (b.Stock[g] <= 0 || (t.ByRecipe ? !t.Makes(g) : g == t.Input)) continue;
-                Spoil(sim, b, g, goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong());
+                Spoil(sim, b, g, ShopRules.Fresh(t, b) ? b.Stock[g] : goods[g].SpoilagePerDay.MulRatio(b.Stock[g], 1).RoundToLong()); // good sweets: none kept overnight
             }
             BusinessBooks.Sweep(sim, b);
         }
 
         /// <summary>Stock lost to spoilage, at its cost, as part of the cost of goods (a real business's waste).</summary>
-        private static void Spoil(Simulation sim, Business b, int good, long grams)
+        internal static void Spoil(Simulation sim, Business b, int good, long grams)
         {
             grams = System.Math.Min(grams, b.Stock[good]);
             if (grams <= 0) return;
@@ -832,7 +913,9 @@ namespace Sim.Core.Business
             var taken = new long[available.Length];
             if (sim.State.Businesses == null) return taken;
             var kinds = sim.Config.Game.Livestock.Animals;
-            foreach (Business b in sim.State.Businesses.Businesses)
+            var order = sim.State.Businesses.Businesses.FindAll(x => TypeOf(sim, x).IsShop); // your tea stalls first, then your dairies (ADR 0091 §1)
+            order.AddRange(sim.State.Businesses.Businesses.FindAll(x => !TypeOf(sim, x).IsShop));
+            foreach (Business b in order)
             {
                 if (b.Status != BusinessStatus.Open || !TypeOf(sim, b).TakesMilk || !Staffed(sim, b)) continue; // nobody to work it today: the co-op takes it
                 long room = b.OwnPerDay;
@@ -860,7 +943,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Neighbours' milk to fill the day's amount (§3.9b), at the co-op's price and the premium, as far as its cash goes.</summary>
-        private static void Neighbours(Simulation sim, Business b, long ml)
+        internal static void Neighbours(Simulation sim, Business b, long ml)
         {
             BusinessTypeDef t = TypeOf(sim, b);
             int good = sim.Config.Game.Market.IndexOf("milk_" + sim.Config.Game.Livestock.Animals[NeighbourMilkKind(sim)].Id);
@@ -922,7 +1005,7 @@ namespace Sim.Core.Business
                     repairs = System.Math.Min(repairs, b.Ledger.Cash);
                     if (repairs > 0) b.Ledger.Post(now, closing, "ledger.repairs", reference, new Posting(Account.Repairs, repairs), new Posting(Account.Cash, -repairs));
                     long building = b.Ledger.Balance(Account.Buildings), equipment = b.Ledger.Balance(Account.Equipment);
-                    long depreciation = System.Math.Min(building / t.BuildingLifeSeasons + equipment / t.EquipmentLifeSeasons,
+                    long depreciation = System.Math.Min(building / ShopRules.BuildingLife(t, b.Pitch) + equipment / t.EquipmentLifeSeasons,
                         building + equipment + b.Ledger.Balance(Account.AccumulatedDepreciation));
                     if (depreciation > 0)
                         b.Ledger.Post(now, closing, "ledger.depreciation", reference, new Posting(Account.Depreciation, depreciation), new Posting(Account.AccumulatedDepreciation, -depreciation));
@@ -931,6 +1014,7 @@ namespace Sim.Core.Business
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
+            ShopRules.CloseSeason(sim);
         }
 
         /// <summary>
@@ -966,6 +1050,7 @@ namespace Sim.Core.Business
                         HrRules.Repute(sim, sim.Config.Game.People.Reputation.Lapse);
                     }
                 }
+                if (b.Status == BusinessStatus.Open || b.Status == BusinessStatus.Building) ShopRules.PayRent(sim, b, sim.Period); // the new season's pitch rent, upfront (spec 017 §3.4)
                 BusinessBooks.Sweep(sim, b);
                 b.Ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);
             }

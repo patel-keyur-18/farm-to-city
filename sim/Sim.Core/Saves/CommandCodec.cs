@@ -36,12 +36,19 @@ namespace Sim.Core.Saves
             PostJobAt, CheckReference, OfferAt, LetWorkerGo, RunBusinessYourself,
             SendOnCourse, SetLongDays, AnswerHrEvent,
             OfferTownsperson,
+            BuyGodown, RentWarehouse, LetGodown,
+            InstallPump, SetPumpAcres, SetBorewellAcres, DrillBorewell, BuildChannel, LayDrip,
+            BuildSecondShed,
+            BuyMachine, LeaseMachine, HireMachine, SellMachine, SetMaintenance,
+            PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
+            FoundOnPitch, SetShop, SetStallGoods,
         }
 
         public static void Write(SaveWriter w, Command command)
         {
             void T(Tag tag) { w.WriteByte((byte)tag); }
             void At(TimedCommand c, Tag tag) { T(tag); w.WriteLong(c.At); }
+            void Tiles(System.Collections.Generic.IReadOnlyList<int> tiles) { w.WriteInt(tiles.Count); foreach (int t in tiles) w.WriteInt(t); }
             switch (command)
             {
                 case NewGame c: T(Tag.NewGame); w.WriteULong(c.Seed); w.WriteLong(c.StartWallUtc); w.WriteLong(c.LocalSecondsSinceMidnight); break;
@@ -89,7 +96,20 @@ namespace Sim.Core.Saves
                     break;
                 case HireLabourers c: At(c, Tag.HireLabourers); w.WriteInt(-1); w.WriteInt(c.Count); break; // the field slot of Sprint 10's first build, unused since ADR 0049
                 case BuildHandHut c: At(c, Tag.BuildHandHut); w.WriteInt(c.TileId); break;
-                case BuildShed c: At(c, Tag.BuildShed); break;
+                case BuildShed c when c.TileId < 0: At(c, Tag.BuildShed); break;
+                case BuildShed c: At(c, Tag.BuildSecondShed); w.WriteInt(c.TileId); break;
+                case BuyMachine c:
+                    At(c, Tag.BuyMachine); w.WriteString(c.KindId); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case LeaseMachine c: At(c, Tag.LeaseMachine); w.WriteString(c.KindId); break;
+                case HireMachine c: At(c, Tag.HireMachine); w.WriteString(c.KindId); break;
+                case SellMachine c: At(c, Tag.SellMachine); w.WriteLong(c.MachineId); break;
+                case SetMaintenance c: At(c, Tag.SetMaintenance); w.WriteLong(c.MachineId); w.WriteBool(c.On); break;
+                case PlantOrchard c: At(c, Tag.PlantOrchard); w.WriteInt(c.TileId); w.WriteString(c.TreeId); break;
+                case PickOrchard c: At(c, Tag.PickOrchard); w.WriteInt(c.TileId); w.WriteInt((int)c.Overflow); break;
+                case ClearOrchard c: At(c, Tag.ClearOrchard); w.WriteInt(c.TileId); break;
+                case SellOrchardOnTrees c: At(c, Tag.SellOrchardOnTrees); w.WriteInt(c.TileId); break;
                 case BuildFamilyHouse c when c.Financing == null: At(c, Tag.BuildFamilyHouse); w.WriteInt(c.TileId); break;
                 case BuildFamilyHouse c:
                     At(c, Tag.BuildFamilyHouseLoan); w.WriteInt(c.TileId);
@@ -97,11 +117,14 @@ namespace Sim.Core.Saves
                     break;
                 case AnswerFamilyRequest c: At(c, Tag.AnswerFamilyRequest); w.WriteLong(c.HandId); w.WriteBool(c.Yes); break;
                 case FoundBusiness c:
-                    At(c, Tag.FoundBusiness); w.WriteString(c.TypeId); w.WriteInt(c.TileId); w.WriteLong(c.Capital); w.WriteBool(c.RunYourself); w.WriteBool(c.Financing != null);
+                    At(c, c.Pitch >= 0 ? Tag.FoundOnPitch : Tag.FoundBusiness); if (c.Pitch >= 0) w.WriteInt(c.Pitch); // a shop in the square (spec 017 §3.4)
+                    w.WriteString(c.TypeId); w.WriteInt(c.TileId); w.WriteLong(c.Capital); w.WriteBool(c.RunYourself); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
                 case CloseBusiness c: At(c, Tag.CloseBusiness); w.WriteLong(c.BusinessId); break;
                 case SetMix c: At(c, Tag.SetMix); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
+                case SetShop c: At(c, Tag.SetShop); w.WriteLong(c.BusinessId); w.WriteFixed(c.PriceFactor); w.WriteInt(c.Quality); break;
+                case SetStallGoods c: At(c, Tag.SetStallGoods); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteLong(c.GramsPerDay); break;
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
                     break;
@@ -121,6 +144,15 @@ namespace Sim.Core.Saves
                 case SendOnCourse c: At(c, Tag.SendOnCourse); w.WriteLong(c.Place); w.WriteLong(c.WorkerId); break;
                 case SetLongDays c: At(c, Tag.SetLongDays); w.WriteLong(c.HandId); w.WriteBool(c.On); break;
                 case AnswerHrEvent c: At(c, Tag.AnswerHrEvent); w.WriteLong(c.EventId); w.WriteInt(c.Choice); break;
+                case BuyGodown c: At(c, Tag.BuyGodown); break;
+                case RentWarehouse c: At(c, Tag.RentWarehouse); w.WriteInt(c.Tonnes); break;
+                case LetGodown c: At(c, Tag.LetGodown); w.WriteBool(c.On); break;
+                case InstallPump c: At(c, Tag.InstallPump); break;
+                case SetPumpAcres c: At(c, Tag.SetPumpAcres); Tiles(c.Tiles); break;
+                case SetBorewellAcres c: At(c, Tag.SetBorewellAcres); Tiles(c.Tiles); break;
+                case DrillBorewell c: At(c, Tag.DrillBorewell); w.WriteInt(c.TileId); break;
+                case BuildChannel c: At(c, Tag.BuildChannel); w.WriteInt(c.TileId); break;
+                case LayDrip c: At(c, Tag.LayDrip); w.WriteInt(c.TileId); break;
                 case Interview c: At(c, Tag.Interview); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c when c.Level == OfferLevel.Asked: At(c, Tag.OfferContract); w.WriteLong(c.ApplicantId); break;
                 case OfferContract c: At(c, Tag.OfferAt); w.WriteLong(c.ApplicantId); w.WriteInt((int)c.Level); break;
@@ -138,6 +170,15 @@ namespace Sim.Core.Saves
                 case ClearStandingOrder c: At(c, Tag.ClearStandingOrder); w.WriteLong(c.HandId); w.WriteInt((int)c.Kind); w.WriteLong(c.Target); break;
                 default: throw new System.ArgumentException("No save encoding for " + command.GetType().Name + ".");
             }
+        }
+
+        private static int[] ReadTiles(SaveReader r)
+        {
+            int n = r.ReadInt();
+            if (n < 0 || n > 1000) throw new SaveFormatException("a list of " + n + " acres");
+            var tiles = new int[n];
+            for (int i = 0; i < n; i++) tiles[i] = r.ReadInt();
+            return tiles;
         }
 
         public static Command Read(SaveReader r)
@@ -203,13 +244,17 @@ namespace Sim.Core.Saves
                 case Tag.BuildFamilyHouse: return new BuildFamilyHouse(at, r.ReadInt());
                 case Tag.AnswerFamilyRequest: return new AnswerFamilyRequest(at, r.ReadLong(), r.ReadBool());
                 case Tag.FoundBusiness:
+                case Tag.FoundOnPitch:
                 {
+                    int pitch = tag == Tag.FoundOnPitch ? r.ReadInt() : -1;
                     string type = r.ReadString();
                     int tile = r.ReadInt();
                     long capital = r.ReadLong();
                     bool self = r.ReadBool();
-                    return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                    return new FoundBusiness(at, type, tile, capital, self, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null, pitch);
                 }
+                case Tag.SetShop: return new SetShop(at, r.ReadLong(), r.ReadFixed(), r.ReadInt());
+                case Tag.SetStallGoods: return new SetStallGoods(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
                 case Tag.SetMix: return new SetMix(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
@@ -235,6 +280,29 @@ namespace Sim.Core.Saves
                 case Tag.SendOnCourse: return new SendOnCourse(at, r.ReadLong(), r.ReadLong());
                 case Tag.SetLongDays: return new SetLongDays(at, r.ReadLong(), r.ReadBool());
                 case Tag.AnswerHrEvent: return new AnswerHrEvent(at, r.ReadLong(), r.ReadInt());
+                case Tag.BuyGodown: return new BuyGodown(at);
+                case Tag.RentWarehouse: return new RentWarehouse(at, r.ReadInt());
+                case Tag.InstallPump: return new InstallPump(at);
+                case Tag.SetPumpAcres: return new SetPumpAcres(at, ReadTiles(r));
+                case Tag.SetBorewellAcres: return new SetBorewellAcres(at, ReadTiles(r));
+                case Tag.DrillBorewell: return new DrillBorewell(at, r.ReadInt());
+                case Tag.BuildChannel: return new BuildChannel(at, r.ReadInt());
+                case Tag.LayDrip: return new LayDrip(at, r.ReadInt());
+                case Tag.BuildSecondShed: return new BuildShed(at, r.ReadInt());
+                case Tag.BuyMachine:
+                {
+                    string kind = r.ReadString();
+                    return new BuyMachine(at, kind, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                }
+                case Tag.LeaseMachine: return new LeaseMachine(at, r.ReadString());
+                case Tag.HireMachine: return new HireMachine(at, r.ReadString());
+                case Tag.SellMachine: return new SellMachine(at, r.ReadLong());
+                case Tag.SetMaintenance: return new SetMaintenance(at, r.ReadLong(), r.ReadBool());
+                case Tag.PlantOrchard: return new PlantOrchard(at, r.ReadInt(), r.ReadString());
+                case Tag.PickOrchard: return new PickOrchard(at, r.ReadInt(), (Overflow)r.ReadInt());
+                case Tag.ClearOrchard: return new ClearOrchard(at, r.ReadInt());
+                case Tag.SellOrchardOnTrees: return new SellOrchardOnTrees(at, r.ReadInt());
+                case Tag.LetGodown: return new LetGodown(at, r.ReadBool());
                 case Tag.RenewContract: return new RenewContract(at, r.ReadLong());
                 case Tag.DismissHand: return new DismissHand(at, r.ReadLong());
                 case Tag.OfferTownsperson: return new OfferTownsperson(at, r.ReadLong(), (OfferLevel)r.ReadInt());

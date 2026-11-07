@@ -24,21 +24,33 @@ namespace Sim.Core.Farm
         /// </summary>
         public static TreePayback Payback(Simulation sim, Tree tree)
         {
-            TreeDef def = sim.Config.Game.Farm.Trees[tree.Def];
-            var p = new TreePayback { Cost = tree.Cost, Returns = tree.Returns };
-            if (tree.PaidBackPeriod >= 0) { p.PaidBack = true; p.Season = tree.PaidBackPeriod; return p; }
+            return Payback(sim, tree.Def, 1, tree.Cost, tree.Returns, tree.PaidBackPeriod, tree.State, tree.PlantedAt, tree.RipeGrams, tree.Batches);
+        }
 
-            long batchValue = MarketRules.Value(sim, def.FruitGood, def.BatchGrams, MarketRules.Floor(sim, def.FruitGood));
+        /// <summary>An orchard's payback: as a tree's, its batch the trees' fruit at full Water, Care and Weather (spec 013 §3.3).</summary>
+        public static TreePayback Payback(Simulation sim, Orchard o)
+        {
+            return Payback(sim, o.Def, o.Trees, o.Cost, o.Returns, o.PaidBackPeriod, o.State, o.PlantedAt, o.RipeGrams, o.Batches);
+        }
+
+        private static TreePayback Payback(Simulation sim, int d, int trees, long cost, long returns, long paidBackPeriod, TreeState state, long plantedAt, long ripeGrams,
+            int batches)
+        {
+            TreeDef def = sim.Config.Game.Farm.Trees[d];
+            var p = new TreePayback { Cost = cost, Returns = returns };
+            if (paidBackPeriod >= 0) { p.PaidBack = true; p.Season = paidBackPeriod; return p; }
+
+            long batchValue = MarketRules.Value(sim, def.FruitGood, def.BatchGrams * trees, MarketRules.Floor(sim, def.FruitGood));
             if (batchValue <= 0) return p;
-            long need = (tree.Cost - tree.Returns + batchValue - 1) / batchValue;
-            if (def.HarvestLimit > 0 && need > def.HarvestLimit - tree.Batches) return p; // never: spent first
+            long need = (cost - returns + batchValue - 1) / batchValue;
+            if (def.HarvestLimit > 0 && need > def.HarvestLimit - batches) return p; // never: spent first
 
             // The first season with a batch still to come: this one if a batch is waiting, else the next fruiting season
             // after now (this season's batch is picked) or at or after maturity for a young tree.
             long S = sim.Clock.SecondsPerSeason;
             long period;
-            if (tree.State == TreeState.Growing) period = (tree.PlantedAt + def.GrowthSeconds) / S;
-            else if (tree.RipeGrams > 0) period = sim.Period;
+            if (state == TreeState.Growing) period = (plantedAt + def.GrowthSeconds) / S;
+            else if (ripeGrams > 0) period = sim.Period;
             else period = sim.Period + 1;
             for (long found = 0; ; period++)
             {

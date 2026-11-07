@@ -148,6 +148,9 @@ namespace Game.Presentation.Map
         {
             int owned = map.Season;
             foreach (TileVm t in map.Tiles) if (Yours(t.Kind)) owned = owned * 31 + t.Id + 1;
+            _channels.Clear();
+            foreach (BuildingVm b in map.Buildings) if (b.DefId == ChannelId) { _channels.Add(b.TileId); owned = owned * 37 + b.TileId + (map.Tiles[b.TileId].ChannelDry ? 11 : 7); }
+            if (map.CanalDry) owned = owned * 41 + 3;
             if (owned == _bundsFor) { foreach (SpriteRenderer b in _bunds) b.color = _tint; return; }
             _bundsFor = owned;
             foreach (SpriteRenderer b in _bunds) Destroy(b.gameObject);
@@ -177,6 +180,7 @@ namespace Game.Presentation.Map
                     Worn(map, t, x, y + 1, "bund_worn_x", EdgeSW);
                 }
             }
+            DrawCanal(map);
         }
 
         private TileVm At(MapVm map, int x, int y) { return x >= 0 && y >= 0 && x < _width && y < _height ? map.Tiles[y * _width + x] : null; }
@@ -184,6 +188,7 @@ namespace Game.Presentation.Map
         /// <summary>One edge of your field: nothing to your yard, quarters or cattle acre; a fresh bund to your next field (drawn once, from the field behind); the hedge to anything else.</summary>
         private void Edge(MapVm map, int tile, int nx, int ny, string axis, Vector2 edge, int order, bool front)
         {
+            if (WaterEdge(map, tile, nx, ny)) return; // the canal or a field channel runs here instead (spec 013 §3.1)
             TileVm n = At(map, nx, ny);
             if (n != null && Yours(n.Kind))
             {
@@ -209,6 +214,7 @@ namespace Game.Presentation.Map
         /// <summary>A neighbour's old, grassed-over bund between two neighbours' acres when either is a field.</summary>
         private void Worn(MapVm map, TileVm t, int nx, int ny, string sprite, Vector2 edge)
         {
+            if (WaterEdge(map, t.Id, nx, ny)) return;
             TileVm n = At(map, nx, ny);
             if (n == null || n.Kind != TileKind.Unowned || !Tilled(t) && !Tilled(n)) return;
             AddBund(sprite, t.Id, edge, CropBase + Order(t.Id, _width, 87, edge.y));

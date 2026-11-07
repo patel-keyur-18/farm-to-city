@@ -1,6 +1,6 @@
 # 0075. Spec 013: irrigation, equipment, orchards and the granary
 
-- Status: Accepted
+- Status: Accepted; the borewell (§2) amended by ADR 0086 (4 acres, its rules filled in)
 - Date: 2026-10-27
 - Deciders: Keyur Patel
 - Amends: GDD Farming (the irrigation and equipment ladders, whole-acre orchards, the granary), spec 002 (moisture floors from the pump, canal and drip), spec 003 (the Tools factor and labour with machines; orchards), spec 004 (the granary), spec 005 (machines and irrigation as assets; leases), spec 012 (bullocks in the cattle shed)

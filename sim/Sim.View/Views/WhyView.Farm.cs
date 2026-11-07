@@ -48,7 +48,9 @@ namespace Sim.View.Views
             if (perHour < Fixed.Zero && drySoil < Fixed.One)
                 Row(vm, ctx, "why.moisture.drySoil", ctx.Fmt.Percent(Fixed.One - drySoil), "level", Num(ctx, sim.Config.Game.Land.DryingSlowsBelow));
             Text(vm, ctx, "why.moisture.drainage", "soil", ctx.Strings.Get(sim.Config.Game.Soils[t.Soil].NameKey).ToLowerInvariant());
-            if (LandSystem.IsWellTile(sim.Config.Game, t.Id)) Row(vm, ctx, "why.moisture.well", Num(ctx, sim.Config.Game.Land.WellMoistureFloor) + " / 100");
+            Fixed irrigated = IrrigationRules.Floors(sim)[t.Id];
+            if (irrigated > Fixed.Zero) Row(vm, ctx, "why.moisture.irrigated", Num(ctx, irrigated) + " / 100");
+            else if (LandSystem.IsWellTile(sim.Config.Game, t.Id)) Row(vm, ctx, "why.moisture.well", Num(ctx, sim.Config.Game.Land.WellMoistureFloor) + " / 100");
             Crop c = CropOn(ctx, id);
             if (c != null)
             {
@@ -59,6 +61,55 @@ namespace Sim.View.Views
                     Row(vm, ctx, "why.moisture.holds", ctx.Fmt.Percent(Fixed.One - drying), "fertiliser", ctx.Strings.Get("fertiliser." + sim.Config.Game.Farm.Fertilisers[c.Fertiliser].Id));
             }
             vm.Footnote = ctx.Strings.Get("why.moisture.lesson");
+            return vm;
+        }
+
+        /// <summary>The acre's water (spec 013 §3.1, §7): each source, the moisture it holds, what it costs a season, and the ladder.</summary>
+        private static WhyVm Irrigation(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            int tile = (int)id;
+            IrrigationDef d = IrrigationRules.Def(sim);
+            WhyVm vm = New(ctx, "why.irrigation.title", IrrigationViews.Water(ctx, tile));
+            int source = IrrigationRules.SourceOf(sim, tile);
+            bool any = false;
+            if (source != 0)
+            {
+                PumpedDef p = source == 1 ? d.Pump : d.Borewell;
+                string name = ctx.Strings.Get(source == 1 ? "water.pump" : "water.borewell");
+                Row(vm, ctx, "why.irrigation.pumped", Num(ctx, p.MoistureFloor) + " / 100", "source", name);
+                Row(vm, ctx, "why.irrigation.power", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, p.PowerPerAcreSeason)));
+                if (!IrrigationRules.Running(sim, source)) Text(vm, ctx, "why.irrigation.unpaid");
+                any = true;
+            }
+            if (IrrigationRules.HasDrip(sim, tile))
+            {
+                Text(vm, ctx, "why.irrigation.drip");
+                Row(vm, ctx, "why.irrigation.dripCare", ctx.Strings.Get("unit.h", "n", ctx.Fmt.Decimal1(d.Drip.CareCutHoursPerDay)));
+                Row(vm, ctx, "why.irrigation.fertigation", "+" + ctx.Fmt.Percent(d.Drip.FertigationBonus));
+                Building lines = IrrigationRules.On(sim, d.Drip.Building, tile); // its running cost: any power, and upkeep on what it cost
+                Row(vm, ctx, "why.irrigation.dripCost", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, d.Drip.PowerPerAcreSeason)
+                    + Sim.Core.Finance.Money.RoundToCoin(Sim.Core.Finance.Money.MulRate(lines.Cost, d.Drip.UpkeepShare))), "upkeep", ctx.Fmt.Percent(d.Drip.UpkeepShare));
+                Text(vm, ctx, "why.irrigation.dripPays");
+                if (source == 0) Text(vm, ctx, "why.irrigation.dripDry");
+            }
+            if (IrrigationRules.Channelled(sim, tile))
+            {
+                Row(vm, ctx, "why.irrigation.canal", Num(ctx, d.Canal.MoistureFloor) + " / 100");
+                Text(vm, ctx, "why.irrigation.canalDry", "seasons", IrrigationViews.DrySeasons(ctx));
+                Row(vm, ctx, "why.irrigation.fee", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, d.Canal.FeePerAcreSeason)));
+                if (!IrrigationRules.Reached(sim)[tile]) Text(vm, ctx, "why.irrigation.cutOff");
+                any = true;
+            }
+            if (!any && LandSystem.IsWellTile(sim.Config.Game, tile))
+            {
+                Row(vm, ctx, "why.irrigation.buckets", Num(ctx, sim.Config.Game.Land.WellMoistureFloor) + " / 100");
+                Text(vm, ctx, "why.irrigation.bucketHours");
+            }
+            else if (!any) Text(vm, ctx, "why.irrigation.rainFed");
+            Text(vm, ctx, "why.irrigation.ladder", "pumpAcres", ctx.Fmt.Integer(d.Pump.Acres), "pump", Num(ctx, d.Pump.MoistureFloor),
+                "canal", Num(ctx, d.Canal.MoistureFloor), "seasons", IrrigationViews.DrySeasons(ctx), "bore", ctx.Fmt.Integer(d.Borewell.Acres));
+            vm.Footnote = ctx.Strings.Get("why.irrigation.lesson");
             return vm;
         }
 
