@@ -823,7 +823,7 @@ The game needs no account and no server. All content ships in the build, and the
 
 | Target | Value |
 | --- | --- |
-| Frame rate | 60 fps on iPhone 11 and on a 4 GB Android phone from 2021 (design minimum). Measured on the owner's iPhone 13, where sim and rendering must fit in half the frame budget, 8.3 ms (ADR 0026) |
+| Frame rate | 60 fps on iPhone 11 and on a 4 GB Android phone from 2021 (design minimum). Measured on the owner's iPhone 13, where the main thread (sim and scripts) must fit in half the frame budget, 8.3 ms (ADR 0026), and the GPU in two-thirds, 11 ms (ADR 0094) |
 | Fully simulated citizens | Up to about 2,000 |
 | Total population | 20,000, beyond the first 2,000 simulated as statistical cohorts with named notable citizens |
 | Cold start | Under 5 seconds to the map |

@@ -756,11 +756,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [ ] Save schema 14 (13 was the crop ladder's, ADR 0084): migration, `saves/schema14` fixture, every older schema loads
-- [ ] Art previewed to and approved by the owner before each story's code
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [x] Save schema 14 (13 was the crop ladder's, ADR 0084): migration, `saves/schema14` fixture, every older schema loads
+- [x] Art previewed to and approved by the owner before each story's code
 - [x] Balance: spec 013 §9 and spec 017 §9 measured with the bots; contradictions flagged to the owner (ADR 0093: chai 12, sweets 300 and 360, the vegetable stall at the mandi, an acre shop's share shown; the canal +3–8%, drip without power and fertigation +15%, the granary on rice, maize and mustard; `GateTests.Shops`, `GranaryTests.Rice_Waits_Pays`)
-- [ ] Test checklist `docs/test-checklists/s16-shops-and-farm.md`, every non-device check run in the Editor (done 2026-11-06: checks 2–43); Development build (done 2026-11-06); the owner's device check
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] Test checklist `docs/test-checklists/s16-shops-and-farm.md`, every non-device check run in the Editor (done 2026-11-06: checks 2–43); Development build (done 2026-11-06); the owner's device check (passed 2026-11-07; frame time main p95 4.93 ms, GPU p95 9.21 ms, 60 fps, 0.00% over 25 ms, under ADR 0094's GPU line)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
 

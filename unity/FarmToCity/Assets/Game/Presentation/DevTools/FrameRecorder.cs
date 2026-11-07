@@ -10,10 +10,12 @@ namespace Game.Presentation.DevTools
     /// The frame-time check of the release candidate (ADR 0047 §4, ADR 0035's method): after a 3-second wait, 20 seconds of
     /// <see cref="FrameTimingManager"/> samples, then main thread avg / p95 / max, GPU avg / p95, frames over 25 ms and fps.
     /// The build step turns on frame-timing stats in Development builds; without them the CPU and GPU times read 0.
+    /// The pass (ADR 0094): main thread p95 within half the 60 fps frame, GPU p95 within two-thirds (it runs alongside the CPU).
     /// </summary>
     public sealed class FrameRecorder : MonoBehaviour
     {
         private const float Wait = 3f, Span = 20f;
+        private const double MainP95 = 8.3, GpuP95 = 11.0;
         private readonly List<double> _main = new List<double>(), _gpu = new List<double>(), _interval = new List<double>();
         private readonly FrameTiming[] _one = new FrameTiming[1];
         private float _start;
@@ -54,11 +56,11 @@ namespace Game.Presentation.DevTools
         {
             if (_interval.Count == 0) return "no frames";
             double dropped = 100.0 * _interval.Count(x => x > 25) / _interval.Count;
-            bool pass = P95(_main) <= 8.3 && P95(_gpu) <= 8.3 && dropped < 1.0 && _main.Any(x => x > 0);
+            bool pass = P95(_main) <= MainP95 && P95(_gpu) <= GpuP95 && dropped < 1.0 && _main.Any(x => x > 0);
             return "main " + Ms(_main.DefaultIfEmpty().Average()) + " / p95 " + Ms(P95(_main)) + " / max " + Ms(_main.DefaultIfEmpty().Max())
                 + " · GPU " + Ms(_gpu.DefaultIfEmpty().Average()) + " / p95 " + Ms(P95(_gpu))
                 + "\nover 25 ms " + dropped.ToString("0.00") + "% · " + (_interval.Count / Span).ToString("0.0") + " fps · " + _interval.Count + " frames"
-                + "\n" + (pass ? "PASS" : "FAIL") + " (p95 ≤ 8.3 ms, under 1% over 25 ms" + (_main.Any(x => x > 0) ? ")" : "; no timings: frame-timing stats off)");
+                + "\n" + (pass ? "PASS" : "FAIL") + " (main p95 ≤ " + MainP95 + " ms, GPU p95 ≤ " + GpuP95 + " ms, under 1% over 25 ms" + (_main.Any(x => x > 0) ? ")" : "; no timings: frame-timing stats off)");
         }
 
         private static double P95(List<double> xs)

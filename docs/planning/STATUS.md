@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, started 2026-11-03: every story done and approved, the balance step done. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
+| Sprint | **Sprint 16** (shops and the farm, 29 Mar – 11 Apr 2027, 2 weeks, ADR 0076): plan approved 2026-10-31, started 2026-11-03: every story done and approved, the balance step done, **the owner's device check passed 2026-11-07** (frame time under ADR 0094's GPU line); PR #22 for the owner to merge. Sprint 15b (the crop ladder, ADR 0084; US-233, ADR 0085) is done and merged (PR #21, device check passed 2026-11-03) |
 | Branch with latest work | `sprint/16-shops-and-farm` (`main` merged in after PR #21, 2026-11-03): Sprint 16's stories and the balance step |
-| Last updated | 2026-11-06 |
+| Last updated | 2026-11-07 |
 
 ## Done so far
 
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 16, the owner's device check passed (2026-11-07):** every check in `docs/test-checklists/s16-shops-and-farm.md` passed on the iPhone 13, including the town's update from schema 13 to 14, the normal morning and Snapshot and Restore. Frame time (own town, Hamlet, whole map, cloudy): main thread p95 4.93 ms, GPU p95 9.21 ms, 60 fps, 0.00% over 25 ms. The panel said FAIL on the old 8.3 ms GPU line; the owner asked not to be rigid, so **ADR 0094** gives the GPU its own line, p95 ≤ 11 ms (two-thirds of the frame; it runs alongside the CPU), and keeps the main thread's 8.3 ms. `DevTools.FrameRecorder` checks both (compiled in the Editor); the GDD's Frame rate row updated. The GPU has grown 4.60 (Sprint 11) → 6.54 (Sprint 13) → 9.21 ms, so every device check writes both p95s down.
+
 **Sprint 16, Development build (2026-11-06):** at `923f0b7`, `Game.Editor.BuildCli.IosDevelopment` from the open Editor after deleting `Builds/iOS`: Build Succeeded (its 2 console errors are the CLI's eval timeouts); the unsigned Xcode Release compile (`CODE_SIGNING_ALLOWED=NO`): BUILD SUCCEEDED, no errors. Pull request opened for the owner (not merged).
 
 **Sprint 16, the test checklist run in the Editor (2026-11-06):** `docs/test-checklists/s16-shops-and-farm.md` (46 checks). Checks 2–43 passed in the Editor by scripted touch on the test town (captures `docs/art/s16-check-*.png`): the godown bought, rented and let (2,535); the pump, a channel dry in Summer, the rain-fed card's next steps; the first and second sheds (8 stalls); the plough bought and at work, the tractor hired, bought on a 4-season loan, at work by day and parked on the lane at 22:33, maintenance skipped, sold with the bank repaid first; drip, the borewell; a banana orchard planted, a short crop between its rows, ripe after 7 days, picked, the rest sold on the trees, *Clear* asked first; the tea stall's research, plan, place sheet (pitches 51%, nearest acre 9.4%), built and run by you, customers, price and quality, stars 2.5 → 2.7; the vegetable stall run by you with goods bought at the market; the sweet shop's plan; the square's pitches. Device-only: 1, 44, 45, 46. Set up by script: test coins, **Next era**, dev time travel. **Fixed during the run:** "young Banana trees" (now lower case); the checklist's steps for the second shed, maintenance, prices that follow the index and the price presets. **Editor lesson:** twice touches stopped reaching the UI after long scripted time travel; `Application.isFocused` was false, and restarting play cured it (once a sheet was closed by script to finish the map capture). This also explains the Sprint 16 note about the season report "not closing" after time travel. Saves restored and identical.
@@ -331,7 +333,8 @@
 
 ## Next up
 
-1. **Sprint 16:** the owner's device check with `docs/test-checklists/s16-shops-and-farm.md` (checks 2–43 already passed in the Editor, 2026-11-06).
+1. **Sprint 16:** the owner merges PR #22 (device check passed 2026-11-07).
+2. **Sprint 17** (the school and literacy, the Codex and advisors, the Village unlock, and US-122's newcomers): plan it from `sprints.md` once PR #22 is merged. US-122 must stop a stall priced 10% above the usual price from earning more than one at it (ADR 0093).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -349,7 +352,7 @@
 | Sprint 14 | Done: device check passed; PR #19 merged |
 | Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
 | Sprint 15b | Done: device check passed 2026-11-03; PR #21 merged |
-| Sprint 16 | Approve each art and layout preview; review each story; device check; merge |
+| Sprint 16 | Done: device check passed 2026-11-07; merge PR #22 |
 
 ## Open questions (with the owner)
 
@@ -374,7 +377,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved; the balance step done (ADR 0093). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
+Sprint 16 started 2026-11-03: plan check done (ADR 0087); US-130 done and approved; US-127 done and reviewed; US-234 done and approved; US-128 done and approved; US-129 done and approved; US-120 done and approved; US-121 done and approved; the balance step done (ADR 0093); the device check passed 2026-11-07 (ADR 0094). Save schema 14 is open on this branch: later stories add to it and re-pin `saves/schema14` (current schema).
 
 ## Environment notes
 
