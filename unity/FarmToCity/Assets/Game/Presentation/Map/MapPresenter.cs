@@ -470,6 +470,7 @@ namespace Game.Presentation.Map
             RefreshHouses(map, animate);
             RefreshBusinesses(map, animate);
             RefreshPitches(map, animate);
+            RefreshSchool(map);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
             RefreshCattleAcre(map, animate);
@@ -595,7 +596,7 @@ namespace Game.Presentation.Map
             {
                 case PersonKind.Founder: return "person_founder";
                 case PersonKind.Hand: return p.Female ? "person_hand_f" : "person_hand_m";
-                case PersonKind.Citizen: case PersonKind.Customer: return "person_" + p.Look;
+                case PersonKind.Citizen: case PersonKind.Customer: case PersonKind.Pupil: return "person_" + p.Look;
                 case PersonKind.Worker when p.Look == null: return p.Female ? "person_hand_f" : "person_hand_m"; // as their card shows them
                 default: return p.Look != null ? "person_" + p.Look : p.Female ? "person_labourer_f" : "person_labourer_m"; // your townspeople as themselves (ADR 0083)
             }
@@ -609,7 +610,8 @@ namespace Game.Presentation.Map
                 if (p.TileId < 0) continue;
                 seen.Add(p.Key);
                 Vector3 home = HomeOf(p);
-                bool comes = p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker;
+                bool comes = p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker || (p.Kind == PersonKind.Pupil && p.HomeHut != 0);
+                Vector3 fromHome = p.Kind == PersonKind.Pupil && p.HomeHut != 0 ? HouseYard(p.HomeHut, p.HomeTile) : home; // a pupil walks from home and back
                 if (!_people.TryGetValue(p.Key, out PersonView v))
                 {
                     v = new PersonView { Sprite = PersonSprite(p), Phase = Random.value * 6f };
@@ -620,13 +622,13 @@ namespace Game.Presentation.Map
                     // A neighbour hired for the day walks in from the west edge of the valley, one of your people from their house (ADR
                     // 0083 §5), a business's worker the same; everyone else is simply there.
                     bool town = comes && p.HomeHut != 0;
-                    v.Pos = animate && comes ? (town ? home : WestEdge(p.TileId)) : start;
+                    v.Pos = animate && comes ? (town ? fromHome : WestEdge(p.TileId)) : start;
                     v.Target = start;
                     if (p.Patrol.Count > 0) { v.WorkTile = p.Patrol[0]; v.PointsLeft = 2; }
                     _people[p.Key] = v;
                 }
                 v.Home = home;
-                v.LeaveTo = !comes ? (Vector3?)null : p.HomeHut != 0 ? home : WestEdge(p.TileId);
+                v.LeaveTo = p.Kind == PersonKind.Pupil && p.HomeHut == 0 ? SchoolSpot(p) : !comes ? (Vector3?)null : p.HomeHut != 0 ? fromHome : WestEdge(p.TileId); // the teacher stays put
                 v.Leaving = false;
                 bool changed = !SamePatrol(v.Patrol, p.Patrol);
                 v.Patrol.Clear();
@@ -669,6 +671,7 @@ namespace Game.Presentation.Map
                 case PersonKind.Hand: return _handHuts.ContainsKey(p.HomeHut) ? HutDoor(p.HomeHut, p.HomeTile) : HouseYard(p.HomeHut, p.HomeTile); // a hand whose family has a house
                 case PersonKind.Citizen: return HouseYard(p.HomeHut, p.HomeTile) + new Vector3(p.Look == "boy" || p.Look == "girl" ? 0.06f : -0.03f, 0.01f, 0);
                 case PersonKind.Customer: return MillQueue(p.HomeHut, p.HomeTile, p.Key[p.Key.Length - 1] - '0');
+                case PersonKind.Pupil: return SchoolSpot(p);
                 case PersonKind.Labourer when p.HomeHut != 0: case PersonKind.Worker when p.HomeHut != 0: return HouseYard(p.HomeHut, p.HomeTile); // one of your people: their house
                 default: return TileCentre(p.HomeTile) + new Vector3(-0.1f, -0.08f, 0);
             }

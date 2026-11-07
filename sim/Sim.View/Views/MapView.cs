@@ -203,6 +203,9 @@ namespace Sim.View.Views
 
         /// <summary>A business's hired worker while it's open (spec 016 AC-16): <see cref="PersonVm.Look"/> is a townsperson's sprite, null for someone from outside.</summary>
         Worker = 5,
+
+        /// <summary>A pupil (or the teacher) in the school's yard in school hours (spec 018, US-131): <see cref="PersonVm.Spot"/> is their place there; home is their house.</summary>
+        Pupil = 6,
     }
 
     /// <summary>A business on the map (spec 016 §7): its type, being built or open, and working now.</summary>
@@ -244,6 +247,9 @@ namespace Sim.View.Views
 
         /// <summary>A citizen's sprite kind (town_m, town_f, boy, girl, elder_m, elder_f), else null.</summary>
         public string Look { get; internal set; }
+
+        /// <summary>A pupil's place in the school's yard (0 to <see cref="MapView.PupilsDrawn"/>, the teacher last).</summary>
+        public int Spot { get; internal set; }
     }
 
     /// <summary>Everything the map draws, built from the state: tiles, tree slots, garden beds and buildings (spec 008 §3.4).</summary>
@@ -303,6 +309,10 @@ namespace Sim.View.Views
 
         /// <summary>Businesses being built or open (spec 016), in id order.</summary>
         public List<BusinessVm> Businesses { get; } = new List<BusinessVm>();
+
+        /// <summary>The school plot (spec 018), or −1; its stage: 0 the empty plot, 1 being built, 2 open.</summary>
+        public int SchoolTile { get; internal set; } = -1;
+        public int SchoolStage { get; internal set; }
 
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
@@ -496,6 +506,7 @@ namespace Sim.View.Views
 
             foreach (Building b in land.Buildings)
                 if (b.TileId >= 0) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
+            AddSchool(ctx, map);
             AddHouses(ctx, map);
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
@@ -771,6 +782,7 @@ namespace Sim.View.Views
                 {
                     Sim.Core.People.Citizen c = s.Citizen(id);
                     if (c.Job == Sim.Core.People.CitizenJob.Hand || c.Job == Sim.Core.People.CitizenJob.Business || c.Labouring(ctx.Now)) continue; // at work
+                    if (map.People.Exists(p => p.Key == "pupil:" + c.Id)) continue; // at school
                     if (Sim.Core.People.HouseholdRules.IsChild(sim, c)) { if (child == null) child = c; }
                     else if (grown == null && (c.Female || Sim.Core.People.HouseholdRules.IsElder(sim, c))) grown = c;
                 }
@@ -779,6 +791,38 @@ namespace Sim.View.Views
                         map.People.Add(new PersonVm { Key = "citizen:" + c.Id, Kind = PersonKind.Citizen, Female = c.Female, TileId = home.TileId, HomeTile = home.TileId,
                             HomeHut = home.Id, Look = Look(sim, c) });
             }
+        }
+
+        /// <summary>The town's pupils drawn in the school's yard at most (owner, 2026-11-07: more crowds the yard; the school sheet counts them all).</summary>
+        public const int PupilsDrawn = 6;
+
+        /// <summary>School hours on the map, 9:00 to 14:00 (spec 018 preview, owner 2026-11-07).</summary>
+        public static bool SchoolHours(long secondOfDay) { return secondOfDay >= 9 * 3600 && secondOfDay < 14 * 3600; }
+
+        /// <summary>The school plot and its stage, and in school hours the first pupils (by id) and the teacher in its yard.</summary>
+        private static void AddSchool(ViewContext ctx, MapVm map)
+        {
+            Simulation sim = ctx.Sim;
+            if (!Sim.Core.People.SchoolRules.On(sim)) return;
+            map.SchoolTile = Sim.Core.People.SchoolRules.Def(sim).Tile;
+            Sim.Core.People.SchoolStatus st = Sim.Core.People.SchoolRules.State(sim).Status;
+            map.SchoolStage = st == Sim.Core.People.SchoolStatus.Open ? 2 : st == Sim.Core.People.SchoolStatus.Building ? 1 : 0;
+            if (map.SchoolStage != 2 || !SchoolHours(map.SecondOfDay)) return;
+            int n = 0;
+            foreach (Sim.Core.People.Citizen c in Sim.Core.People.SchoolRules.Pupils(sim))
+            {
+                if (n == PupilsDrawn) break;
+                Building home = HomeOfCitizen(sim, c);
+                map.People.Add(new PersonVm { Key = "pupil:" + c.Id, Kind = PersonKind.Pupil, Female = c.Female, TileId = map.SchoolTile, Spot = n++,
+                    HomeTile = home?.TileId ?? map.SchoolTile, HomeHut = home?.Id ?? 0, Look = Look(sim, c) });
+            }
+            map.People.Add(new PersonVm { Key = "teacher", Kind = PersonKind.Pupil, Female = true, TileId = map.SchoolTile, HomeTile = map.SchoolTile, Spot = PupilsDrawn, Look = "town_f" });
+        }
+
+        private static Building HomeOfCitizen(Simulation sim, Sim.Core.People.Citizen c)
+        {
+            Sim.Core.People.Household x = sim.State.Citizens.Household(c.HouseholdId);
+            return x == null ? null : sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
         }
 
         /// <summary>The village's working day on the map, 7:00 to 19:00 (ADR 0083 §5): people are on the fields, or at home outside it.</summary>

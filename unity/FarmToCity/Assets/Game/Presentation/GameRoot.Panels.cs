@@ -174,6 +174,7 @@ namespace Game.Presentation
                 case "BuyAnimal": _sheet.Show(AnimalBuySheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "AnimalLoan": _sheet.Show(AnimalLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "HouseLoan": _sheet.Show(HouseLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case SchoolSheet.LoanKind: _sheet.Show(SchoolSheet.LoanSheet(_ctx), refreshOnly); break; // spec 018 §7
                 case EquipmentSheet.Kind: _sheet.Show(EquipmentSheet.Build(_ctx), refreshOnly); break; // spec 013 §7
                 case MachineLoanSheet.Kind: _sheet.Show(MachineLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Animal":

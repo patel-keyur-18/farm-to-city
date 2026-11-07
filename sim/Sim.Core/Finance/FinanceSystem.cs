@@ -101,6 +101,7 @@ namespace Sim.Core.Finance
             Business.BusinessRules.PayUpfront(sim, closing); // spec 016 §3.11: each business's new season's wage, after its loan payment
             Market.GodownRules.Close(sim); // spec 013 §3.4, ADR 0087: your godown let or not, then the warehouse's rent upfront
             Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
+            People.SchoolRules.Close(sim); // spec 018 §3.1: the school's upkeep for the new season, a gift to the village
             Sim.Core.Equipment.EquipmentRules.Close(sim); // spec 013 §3.5: leases, maintenance and diesel for the new season
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 

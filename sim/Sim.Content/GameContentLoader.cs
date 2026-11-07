@@ -51,6 +51,9 @@ namespace Sim.Content
             if (buildings.Exists(b => b.Id == "pump")) game.Irrigation = LoadIrrigation(read("farming.json"), buildings, map, onboarding);
             if (livestock != null) game.Equipment = LoadEquipment(read("farming.json"), livestock, map, onboarding);
             if (livestock != null) game.Orchard = LoadOrchard(read("farming.json"), farm, onboarding); // with the Phase 2 content, like the machines
+            // The school comes with a school block in the buildings and citizens to teach (spec 018 §4).
+            if (population != null && Object(Parse(read("buildings.json"), "buildings"), "buildings")["school"] != null)
+                game.School = LoadSchool(read("buildings.json"), read("population.json"), map, onboarding);
             return game;
         }
 
@@ -241,7 +244,7 @@ namespace Sim.Content
         {
             const string root = "buildings";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "buildings", "godown");
+            OnlyFields(o, root, "buildings", "godown", "school");
             List<JToken> tokens = NonEmptyArray(o, root, "buildings");
             var list = new List<BuildingDef>();
             for (int i = 0; i < tokens.Count; i++)
@@ -314,6 +317,59 @@ namespace Sim.Content
                 TenantChance = Bounded(d, p, "tenantChance", "0", "1"),
                 LetRentPerKgSeason = letRent,
             };
+        }
+
+        /// <summary>
+        /// The <c>school</c> blocks of <c>buildings.json</c> (its build) and <c>population.json</c> (pupils, classes, literacy's premium)
+        /// (spec 018 §4, ADR 0095): built on the map's <c>school_plot</c>.
+        /// </summary>
+        private static SchoolDef LoadSchool(string buildingsJson, string populationJson, MapDef map, OnboardingDefs onboarding)
+        {
+            string p = "buildings.school";
+            JObject d = Object(Required(Object(Parse(buildingsJson, "buildings"), "buildings"), "buildings", "school"), p);
+            OnlyFields(d, p, "unlockEra", "place", "buildingCost", "equipmentCost", "buildHours");
+            string eraId = String(Required(d, p, "unlockEra"), Join(p, "unlockEra"));
+            int era = 0;
+            if (onboarding != null)
+            {
+                era = -1;
+                for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == eraId) era = i;
+                if (era < 0) throw new ContentException(Join(p, "unlockEra"), "unknown era '" + eraId + "'");
+            }
+            string placeId = String(Required(d, p, "place"), Join(p, "place"));
+            PlaceDef place = null;
+            foreach (PlaceDef x in map.Places) if (x.Id == placeId) place = x;
+            if (place == null || place.Kind != "school_plot") throw new ContentException(Join(p, "place"), "must name the map's school plot");
+            var s = new SchoolDef
+            {
+                UnlockEra = era, Tile = place.Tile,
+                BuildingCost = Money(Required(d, p, "buildingCost"), Join(p, "buildingCost")),
+                EquipmentCost = Money(Required(d, p, "equipmentCost"), Join(p, "equipmentCost")),
+                BuildHours = BoundedInt(d, p, "buildHours", 1, 24 * 30),
+            };
+            if (s.BuildingCost <= 0 || s.EquipmentCost < 0) throw new ContentException(Join(p, "buildingCost"), "must be above 0");
+
+            p = "population.school";
+            JObject q = Object(Required(Object(Parse(populationJson, "population"), "population"), "population", "school"), p);
+            OnlyFields(q, p, "seatsPerTeacher", "pupilAge", "primaryYears", "upkeepPerSeason", "adultClass", "literatePremium");
+            s.SeatsPerTeacher = BoundedInt(q, p, "seatsPerTeacher", 1, 100);
+            string ap = Join(p, "pupilAge");
+            JObject age = Object(Required(q, p, "pupilAge"), ap);
+            OnlyFields(age, ap, "min", "max");
+            s.PupilAgeMin = BoundedInt(age, ap, "min", 3, 20);
+            s.PupilAgeMax = BoundedInt(age, ap, "max", s.PupilAgeMin, 20);
+            s.PrimaryYears = BoundedInt(q, p, "primaryYears", 1, s.PupilAgeMax - s.PupilAgeMin + 1);
+            s.UpkeepPerSeason = Money(Required(q, p, "upkeepPerSeason"), Join(p, "upkeepPerSeason"));
+            string cp = Join(p, "adultClass");
+            JObject c = Object(Required(q, p, "adultClass"), cp);
+            OnlyFields(c, cp, "size", "cost", "hours", "minAge");
+            s.ClassSize = BoundedInt(c, cp, "size", 1, 60);
+            s.ClassCost = Money(Required(c, cp, "cost"), Join(cp, "cost"));
+            s.ClassHours = BoundedInt(c, cp, "hours", 1, 24 * 30);
+            s.ClassMinAge = BoundedInt(c, cp, "minAge", s.PupilAgeMax + 1, 30); // nobody falls between the school and the class (spec 018 §3.1)
+            if (s.ClassMinAge != s.PupilAgeMax + 1) throw new ContentException(Join(cp, "minAge"), "must follow the pupils' oldest age");
+            s.LiteratePremium = Bounded(q, p, "literatePremium", "0", "1");
+            return s;
         }
 
         private static StartDef LoadStart(string json, MapDef map, List<BuildingDef> buildings, MarketDefs market, FarmDefs farm, LandDef land)

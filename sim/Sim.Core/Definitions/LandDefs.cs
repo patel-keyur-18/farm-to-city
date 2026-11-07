@@ -391,6 +391,9 @@ namespace Sim.Core.Definitions
         /// <summary>Shops and customer choice (spec 017), with businesses that include a shop type; else null.</summary>
         public ShopDefs Shops { get; internal set; }
 
+        /// <summary>The first school, literacy and adult classes (spec 018 §3.1), with population content and a school plot; else null.</summary>
+        public SchoolDef School { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

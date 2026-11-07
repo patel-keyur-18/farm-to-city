@@ -51,6 +51,34 @@ namespace Sim.Core.Tests
             Assert.That(HappinessRules.Town(sim), Is.EqualTo(x.Happiness), "one household: the town's is its");
         }
 
+        // Spec 018 AC-4, ADR 0095 §6: once the school opens the growth layer is the mean of School (1) and leisure: +3.5 with leisure, +5 without.
+        [Test]
+        public void School()
+        {
+            Simulation sim = Start();
+            Hand h = HireHand(sim);
+            Household x = sim.State.Citizens.Household(sim.State.Citizens.OfHand(h.Id).HouseholdId);
+            x.FoodMet = Fixed.One;
+            x.Leisure = 1_000_00;
+            HappinessRules.Update(sim, x);
+            Fixed before = x.Happiness;
+            Assert.That(Score(x), Is.EqualTo(84), "no school yet: leisure alone");
+
+            sim.State.Citizens.School.Status = SchoolStatus.Building;
+            HappinessRules.Update(sim, x);
+            Assert.That(x.Happiness, Is.EqualTo(before), "a school being built doesn't count");
+
+            sim.State.Citizens.School.Status = SchoolStatus.Open;
+            HappinessRules.Update(sim, x);
+            Fixed leisure = sim.Config.Game.Population.Leisure;
+            Assert.That(x.Growth, Is.EqualTo((Fixed.One + leisure).MulRatio(1, 2)), "the mean of School and leisure");
+            Assert.That((x.Happiness - before).MulRatio(100, 1).RoundToLong(), Is.InRange(349L, 351L), "+3.5: a household with no children counts it too");
+
+            x.Leisure = 0;
+            HappinessRules.Update(sim, x);
+            Assert.That(x.Growth, Is.EqualTo(Fixed.FromRatio(1, 2)), "School alone");
+        }
+
         // §3.12: needs are updated at each daily pass.
         [Test]
         public void DailyPass()

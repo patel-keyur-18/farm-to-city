@@ -48,6 +48,9 @@ namespace Sim.Core.Saves
 
         /// <summary>An HR event waits for the player (spec 015 §3.7); CropId is the worker's name key.</summary>
         HrEvent = 17,
+
+        /// <summary>The village's school opened (spec 018 §5). Information.</summary>
+        SchoolOpened = 18,
     }
 
     public enum NotifyImportance
@@ -98,7 +101,7 @@ namespace Sim.Core.Saves
         {
             if (kind <= NotifyKind.ContractLapsed) return NotifyImportance.Urgent;
             return kind == NotifyKind.HandsWork || kind == NotifyKind.AnimalSick || kind == NotifyKind.CalfBorn || kind == NotifyKind.HouseBuilt || kind == NotifyKind.HandRetired
-                || kind == NotifyKind.FamilyMovedIn
+                || kind == NotifyKind.FamilyMovedIn || kind == NotifyKind.SchoolOpened
                 ? NotifyImportance.Information : NotifyImportance.NeedsYou;
         }
 
@@ -151,6 +154,7 @@ namespace Sim.Core.Saves
                     case AnimalSick a: items.Add(new AbsenceItem(at, NotifyKind.AnimalSick, Livestock.LivestockRules.Find(sim, a.AnimalId)?.Name)); break;
                     case CalfBorn b: items.Add(new AbsenceItem(at, NotifyKind.CalfBorn, Livestock.LivestockRules.Find(sim, b.AnimalId)?.Name)); break;
                     case Events.FamilyHouseBuilt _: items.Add(new AbsenceItem(at, NotifyKind.HouseBuilt, null)); break;
+                    case Events.SchoolOpened _: items.Add(new AbsenceItem(at, NotifyKind.SchoolOpened, null)); break;
                     case Events.RentMissed m: items.Add(new AbsenceItem(at, NotifyKind.RentMissed, NameKey(sim, sim.State.Citizens.Household(m.HouseholdId)?.Members[0] ?? 0))); break;
                     case Events.HouseholdLeft l: items.Add(new AbsenceItem(at, NotifyKind.HouseholdLeft, sim.Config.Game.People.Names[l.Name].NameKey)); break;
                     case Events.CitizenRetired r: items.Add(new AbsenceItem(at, NotifyKind.HandRetired, sim.Config.Game.People.Names[r.Name].NameKey)); break;

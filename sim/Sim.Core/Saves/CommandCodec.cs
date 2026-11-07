@@ -42,6 +42,7 @@ namespace Sim.Core.Saves
             BuyMachine, LeaseMachine, HireMachine, SellMachine, SetMaintenance,
             PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
             FoundOnPitch, SetShop, SetStallGoods,
+            BuildSchool,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -106,6 +107,10 @@ namespace Sim.Core.Saves
                 case HireMachine c: At(c, Tag.HireMachine); w.WriteString(c.KindId); break;
                 case SellMachine c: At(c, Tag.SellMachine); w.WriteLong(c.MachineId); break;
                 case SetMaintenance c: At(c, Tag.SetMaintenance); w.WriteLong(c.MachineId); w.WriteBool(c.On); break;
+                case BuildSchool c:
+                    At(c, Tag.BuildSchool); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
                 case PlantOrchard c: At(c, Tag.PlantOrchard); w.WriteInt(c.TileId); w.WriteString(c.TreeId); break;
                 case PickOrchard c: At(c, Tag.PickOrchard); w.WriteInt(c.TileId); w.WriteInt((int)c.Overflow); break;
                 case ClearOrchard c: At(c, Tag.ClearOrchard); w.WriteInt(c.TileId); break;
@@ -298,6 +303,7 @@ namespace Sim.Core.Saves
                 case Tag.HireMachine: return new HireMachine(at, r.ReadString());
                 case Tag.SellMachine: return new SellMachine(at, r.ReadLong());
                 case Tag.SetMaintenance: return new SetMaintenance(at, r.ReadLong(), r.ReadBool());
+                case Tag.BuildSchool: return new BuildSchool(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
                 case Tag.PlantOrchard: return new PlantOrchard(at, r.ReadInt(), r.ReadString());
                 case Tag.PickOrchard: return new PickOrchard(at, r.ReadInt(), (Overflow)r.ReadInt());
                 case Tag.ClearOrchard: return new ClearOrchard(at, r.ReadInt());

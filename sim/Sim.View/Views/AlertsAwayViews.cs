@@ -392,6 +392,7 @@ namespace Sim.View.Views
                         rows.Add(Row(s.Get("away.town"), TownNews.Died(ctx, d.CitizenId, d.Name, d.Female, d.Age), d.Female ? "portrait_elder_f" : "portrait_elder_m"));
                         break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
+                    case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
                     case RentMissed m:
                         Sim.Core.People.Household x = sim.State.Citizens.Household(m.HouseholdId);
                         rows.Add(Row(s.Get("away.town"), s.Get("away.rentMissed", "family", x == null ? s.Get("away.aFamily") : TownWords.Household(ctx, x),
@@ -461,7 +462,7 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 013 §3.1.
             { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.

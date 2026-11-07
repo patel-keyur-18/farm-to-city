@@ -35,7 +35,7 @@ namespace Game.Presentation.Map
             { "house_2", new[] { new VillagePiece("village_house_1_n", -0.05f, 0.12f), new VillagePiece("village_charpai", -0.22f, -0.26f), new VillagePiece("village_cow", 0.22f, -0.2f) } },
             { "chemist", new[] { new VillagePiece("village_chemist_e", 0.10f, 0f) } },
             { "house_3", new[] { new VillagePiece("village_house_2_n", 0f, 0.1f), new VillagePiece("village_buffalo", -0.26f, -0.24f) } },
-            { "school_plot", new[] { new VillagePiece("place_school_plot", 0f, 0f) } },
+            { "school_plot", new[] { new VillagePiece("place_school_plot", 0f, 0f), new VillagePiece("village_tree", -0.38f, -0.40f) } }, // its sprite follows the school (MapPresenter.School)
             { "house_4", new[] { new VillagePiece("village_house_0_w", -0.12f, 0f), new VillagePiece("village_haystack", 0.25f, -0.22f) } },
             { "dairy", new[] { new VillagePiece("village_dairy_e", 0.08f, 0f) } },
             { "house_5", new[] { new VillagePiece("village_house_1_w", -0.1f, 0f), new VillagePiece("village_tree", 0.28f, -0.25f) } },

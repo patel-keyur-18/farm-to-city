@@ -40,7 +40,8 @@ namespace Sim.View.Views
             rows.Add(Row(ctx, x.Id, "needs.worship", sim.Config.Game.Population.Belonging, s.Get("needs.worshipNotYet")));
 
             rows.Add(LineVm.Header(s.Get("needs.growth")));
-            rows.Add(new LineVm(s.Get("needs.school"), s.Get("needs.notCounted")) { Note = s.Get("needs.schoolNotYet") });
+            if (SchoolRules.IsOpen(sim)) rows.Add(Row(ctx, x.Id, "needs.school", Fixed.One, s.Get("needs.schoolMet"))); // spec 018 §3.2
+            else rows.Add(new LineVm(s.Get("needs.school"), s.Get("needs.notCounted")) { Note = s.Get("needs.schoolNotYet") });
             rows.Add(Row(ctx, x.Id, "needs.leisure", x.Leisure > 0 ? Fixed.One : Fixed.Zero, x.Leisure > 0 ? s.Get("needs.leisureMet") : s.Get("needs.leisureShort")));
             return rows;
         }

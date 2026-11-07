@@ -205,7 +205,7 @@ namespace Sim.View.Views
     /// <summary>The season report (spec 008 §3.8, ADR 0032): every line with its plain label and its Why?.</summary>
     public static class ReportSheet
     {
-        public static readonly string[] Order = { "farmIncome", "farmCosts", "farmProfit", "otherIncome", "household", "finance", "other", "netResult" };
+        public static readonly string[] Order = { "farmIncome", "farmCosts", "farmProfit", "otherIncome", "household", "gifts", "finance", "other", "netResult" };
 
         public static string PeriodName(ViewContext ctx, long period)
         {
@@ -220,7 +220,7 @@ namespace Sim.View.Views
             foreach (string key in Order)
             {
                 ReportLine l = r.Line(key);
-                if (l == null) continue;
+                if (l == null || (key == "gifts" && l.Amount == 0)) continue; // gifts only in a season that had them
                 vm.Lines.Add(new LineVm(ctx.Strings.Get(l.LabelKey), ctx.Fmt.Coins(l.Amount), "report." + key, period));
             }
             vm.Lines.Add(new LineVm(ctx.Strings.Get("report.cashFlow"),

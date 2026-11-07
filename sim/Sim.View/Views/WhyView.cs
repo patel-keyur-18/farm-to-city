@@ -109,6 +109,8 @@ namespace Sim.View.Views
             { "shopShare", ShopShare }, { "shopToday", ShopToday }, { "shopLost", ShopLost }, { "shopPeople", ShopPeople }, { "shopDemand", ShopDemand },
             { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
+            // The school (spec 018).
+            { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
         };

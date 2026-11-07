@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 17** (the school and village, 12–25 Apr 2027, 2 weeks, 36 points, ADR 0095): plan check done and **plan approved 2026-11-07** (11 gaps closed one per message); no code yet. Sprint 16 is done and merged (PR #22, device check passed 2026-11-07: main p95 4.93 ms, GPU p95 9.21 ms) |
+| Sprint | **Sprint 17** (the school and village, 12–25 Apr 2027, 2 weeks, 36 points, ADR 0095): plan check done and **plan approved 2026-11-07** (11 gaps closed one per message); the school's art approved; **US-131 done, for the owner's review**. Sprint 16 is done and merged (PR #22, device check passed 2026-11-07: main p95 4.93 ms, GPU p95 9.21 ms) |
 | Branch with latest work | `sprint/17-school-and-village` (from `main` after PR #22): the plan (ADR 0095; specs 017 and 018, the GDD, F14.1, F14.2, F09.4, F12.4 and `sprints.md` updated) |
 | Last updated | 2026-11-07 |
 
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 17, US-131 done (2026-11-07, for the owner's review): the first school** (spec 018 §3.1, AC-1, AC-4, AC-10; ADR 0095 §5, §6). Art approved first (`docs/art/s17-school-preview-*.png`: one facing to the main street, its building stage, up to 6 pupils in its yard 9:00–14:00 and the teacher at the verandah). Content: `buildings.json` and `population.json` `school` blocks (`SchoolDef`, `LoadSchool`). Sim: `BuildSchool` (cash or a co-op loan in the bank's existing room), 48 h, `SchoolStarted`, `SchoolOpened` (away line, notification); the new account **5260 Gifts to the village** (since schema 15, outside farm profit, its own report line shown only when used); upkeep at each close (unpaid: the district carries it); growth = mean of School and leisure once open. Views: the plot's sheet, the school's sheet, `SchoolLoan`, three *Why?* sources, the needs row, the map's stages and pupils (`PersonKind.Pupil`). Save schema 15 (`saves/schema15`). Tests: `SchoolTests.Build`, `SchoolTests.Gift_NotFarmProfit`, `HappinessTests.School`, `MigrationTests.Schema14_School`; 454 pass. Editor tour by scripted touch on the owner's town (captures `docs/art/s17-131-*.png`; test cash and a hand made 8 for the pupil check, in the session only); the sheet header's school icon fixed during it; saves restored and identical.
+
 **Sprint 17, plan approved (2026-11-07, ADR 0095).** PR #22 merged; branch `sprint/17-school-and-village` from `main`. The plan check found 11 gaps, each closed with the owner one per message: a newcomer opens when your shop prices above the reference (the 1.25 trigger no preset reached), on a free pitch or else as a cart on the lane by the square; the grocer and tea stall cut 5% of the reference when their share falls a third (floor 0.85) and go back when it recovers (the halwai and newcomers don't); the adult class enrols up to 15 with no picking (working-age first), literate 96 h after its start, one at a time; the school, its upkeep and classes are booked as **Gifts to the village**, outside farm profit; growth is the mean of School and leisure (+3.5 happiness); Codex bursts get one toast, no back-fill, *Fixed and variable costs* on its own moment; twelve advisor notes in `content/advisors.json`; the Village gate also checked when a household forms, measured by a new `VillageBot`; 2 weeks, 36 points; stale statements fixed. Specs 017 and 018, the GDD, F14.1, F14.2, F09.4, F12.4, `sprints.md` and `CLAUDE.md` updated.
 
 **Sprint 16, the owner's device check passed (2026-11-07):** every check in `docs/test-checklists/s16-shops-and-farm.md` passed on the iPhone 13, including the town's update from schema 13 to 14, the normal morning and Snapshot and Restore. Frame time (own town, Hamlet, whole map, cloudy): main thread p95 4.93 ms, GPU p95 9.21 ms, 60 fps, 0.00% over 25 ms. The panel said FAIL on the old 8.3 ms GPU line; the owner asked not to be rigid, so **ADR 0094** gives the GPU its own line, p95 ≤ 11 ms (two-thirds of the frame; it runs alongside the CPU), and keeps the main thread's 8.3 ms. `DevTools.FrameRecorder` checks both (compiled in the Editor); the GDD's Frame rate row updated. The GPU has grown 4.60 (Sprint 11) → 6.54 (Sprint 13) → 9.21 ms, so every device check writes both p95s down.
@@ -335,7 +337,7 @@
 
 ## Next up
 
-1. **Sprint 17, in `sprints.md`'s order of work:** first preview the school's art and its plot's layout to the owner (one facing to its street, its building stage, pupils in its yard), then US-131. Each story's tasks carry ADR 0095's decisions. US-122 must stop a stall priced 10% above the usual price from earning more than one at it (ADR 0093, 0095 §1). Save schema 15 opens with US-131.
+1. **Sprint 17, in `sprints.md`'s order of work:** the owner reviews US-131; then US-132 (literacy: pupils' years at the close, the adult class of ADR 0095 §4, the literacy rate, +10% outside). Each story's tasks carry ADR 0095's decisions. US-122 must stop a stall priced 10% above the usual price from earning more than one at it (ADR 0093, 0095 §1). Save schema 15 opens with US-131.
 2. **Sprint 18** (statements, the hub, the Phase 2 playtest, 26 Apr – 2 May 2027): plan it once Sprint 17 is merged.
 
 ## Owner action checklist (Phases 0–1)
@@ -380,7 +382,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 17: plan approved 2026-11-07 (ADR 0095); no story started. Save schema 15 isn't open yet: US-131 opens it, later stories add to it and re-pin `saves/schema15`. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+Sprint 17: plan approved 2026-11-07 (ADR 0095); US-131 done, for review. Save schema 15 is open on this branch (the school): later stories add to it and re-pin `saves/schema15` (current schema). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

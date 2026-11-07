@@ -287,6 +287,52 @@ namespace Sim.Core.People
         }
     }
 
+    /// <summary>The village's school (spec 018 §3.1): none yet, being built, open.</summary>
+    public enum SchoolStatus
+    {
+        None = 0,
+        Building = 1,
+        Open = 2,
+    }
+
+    /// <summary>The school the founder gives the district (spec 018 §4; save schema 15).</summary>
+    public sealed class SchoolState
+    {
+        public SchoolStatus Status { get; internal set; }
+
+        /// <summary>When it was started and is (or was) ready; its build job while building.</summary>
+        public long StartedAt { get; internal set; }
+        public long ReadyAt { get; internal set; }
+        public long JobId { get; internal set; }
+
+        /// <summary>What it cost (indexed), given to the village.</summary>
+        public long Cost { get; internal set; }
+
+        /// <summary>The season its upkeep last went unpaid, or −1.</summary>
+        public long UpkeepUnpaidPeriod { get; internal set; } = -1;
+
+        internal SchoolState Clone() { return (SchoolState)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteInt((int)Status);
+            h.WriteLong(StartedAt);
+            h.WriteLong(ReadyAt);
+            h.WriteLong(JobId);
+            h.WriteLong(Cost);
+            h.WriteLong(UpkeepUnpaidPeriod);
+        }
+
+        internal static SchoolState ReadFrom(SaveReader r)
+        {
+            return new SchoolState
+            {
+                Status = (SchoolStatus)r.ReadInt(), StartedAt = r.ReadLong(), ReadyAt = r.ReadLong(), JobId = r.ReadLong(), Cost = r.ReadLong(),
+                UpkeepUnpaidPeriod = r.ReadLong(),
+            };
+        }
+    }
+
     /// <summary>Citizens and households (spec 014 §4; save schema 9). Null when the content has no family house.</summary>
     public sealed class CitizensState
     {
@@ -309,6 +355,9 @@ namespace Sim.Core.People
         public long OfferHandId { get; internal set; }
         public long OfferHouseId { get; internal set; }
         public long OfferAt { get; internal set; }
+
+        /// <summary>The school (spec 018; schema 15, none in an older town).</summary>
+        public SchoolState School { get; internal set; } = new SchoolState();
 
         public Citizen Citizen(long id) { return Citizens.Find(c => c.Id == id); }
 
@@ -334,6 +383,7 @@ namespace Sim.Core.People
             c.Citizens = Citizens.ConvertAll(x => x.Clone());
             c.Households = Households.ConvertAll(x => x.Clone());
             c.Constructions = Constructions.ConvertAll(x => x.Clone());
+            c.School = School.Clone();
             return c;
         }
 
@@ -352,6 +402,8 @@ namespace Sim.Core.People
             h.WriteLong(OfferHandId);
             h.WriteLong(OfferHouseId);
             h.WriteLong(OfferAt);
+            // An older schema (migration tests) has no school; the hash counts it once started, so the golden replays stay as they were.
+            if (h.Hashing ? School.Status != SchoolStatus.None : !(h is SaveWriter w && w.Schema < 15)) School.WriteTo(h);
         }
 
         internal static CitizensState ReadFrom(SaveReader r)
@@ -370,6 +422,7 @@ namespace Sim.Core.People
             s.OfferHandId = r.ReadLong();
             s.OfferHouseId = r.ReadLong();
             s.OfferAt = r.ReadLong();
+            if (r.Schema >= 15) s.School = SchoolState.ReadFrom(r); // schema 14: no school yet (spec 018 AC-10)
             return s;
         }
     }
