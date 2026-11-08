@@ -387,7 +387,7 @@ namespace Sim.View.Tests
             Assert.That(rows.Count(r => r.IsHeader), Is.EqualTo(4), "the four layers");
             Assert.That(rows.Where(r => !r.IsHeader).All(r => !string.IsNullOrEmpty(r.Note)), Is.True, "every need names its lever");
             Assert.That(rows.Single(r => r.Label == "Steady work").Note, Is.EqualTo("1 of 1 adults work for you"));
-            Assert.That(rows.Single(r => r.Label == "School").Note, Does.Contain("the Village builds one"));
+            Assert.That(rows.Single(r => r.Label == "School").Note, Is.EqualTo("No school yet: build one on the school plot"), "spec 018: the school is yours to build from the Hamlet");
             x.FoodMet = Sim.Core.Maths.Fixed.Parse("0.83");
             sim.State.Citizens.OfHand(h.Id).Job = CitizenJob.Outside;
             rows = NeedsView.Rows(ViewKit2.Context(sim), x);

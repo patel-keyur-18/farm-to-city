@@ -90,6 +90,25 @@ namespace Sim.Core.Tests
         }
 
     
+        // Spec 018 AC-5: a literate adult's outside work earns 10% more, in the budget and each day it's paid.
+        [Test]
+        public void LiteracyPremium()
+        {
+            Simulation sim = Start();
+            Hand h = HireHand(sim);
+            Household x = AddFamily(sim, h.HutId, 30, 30);
+            Citizen reads = sim.State.Citizens.Citizen(x.Members[1]);
+            reads.Education = 1;
+            Assert.That(SchoolRules.WithPremium(sim, reads, HouseholdRules.OutsideDayPay(sim)), Is.EqualTo(4_950_00), "4,500 + 10%");
+            Assert.That(SchoolRules.WithPremium(sim, sim.State.Citizens.Citizen(x.Members[0]), HouseholdRules.OutsideDayPay(sim)), Is.EqualTo(4_500_00));
+
+            long t0 = NextClose(sim);
+            sim.AdvanceTo(t0);
+            Assert.That(x.OutsideExpected, Is.EqualTo(18_000_00 + 19_800_00), "a season: 18,000 and 19,800");
+            sim.AdvanceTo(t0 + TestSim.Day);
+            Assert.That(x.Earned, Is.EqualTo(4_500_00 + 4_950_00), "a day's outside work");
+        }
+
         // AC-12: an adult without a town job earns the day-labour rate × 8 × 0.5 each daily pass; children and elders earn nothing;
         // hired labourers are the town's outside workers first, their household paid the labourer's wage in place of that day's
         // outside work; what was earned beyond the budget's expectation is saved at the close.

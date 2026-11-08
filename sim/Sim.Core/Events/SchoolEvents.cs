@@ -22,4 +22,45 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "SchoolOpened"; }
     }
+
+    /// <summary>How a citizen learned to read (spec 018 §5).</summary>
+    public enum LiterateHow
+    {
+        School = 0,
+        AdultClass = 1,
+    }
+
+    /// <summary>A citizen can read: they finished primary at the village's school or an adult class (spec 018 §5).</summary>
+    public sealed class CitizenLiterate : SimEvent
+    {
+        public long CitizenId { get; }
+        public int Name { get; }
+        public LiterateHow How { get; }
+
+        public CitizenLiterate(long simTime, long citizenId, int name, LiterateHow how) : base(simTime)
+        {
+            CitizenId = citizenId;
+            Name = name;
+            How = how;
+        }
+
+        protected override string Describe() { return "CitizenLiterate(" + CitizenId + ", " + How + ")"; }
+    }
+
+    /// <summary>The founder started an adult class of <see cref="Pupils"/> (ADR 0095 §4), a gift of <see cref="Cost"/>.</summary>
+    public sealed class AdultClassStarted : SimEvent
+    {
+        public int Pupils { get; }
+        public long Cost { get; }
+        public long EndsAt { get; }
+
+        public AdultClassStarted(long simTime, int pupils, long cost, long endsAt) : base(simTime)
+        {
+            Pupils = pupils;
+            Cost = cost;
+            EndsAt = endsAt;
+        }
+
+        protected override string Describe() { return "AdultClassStarted(" + Pupils + ", cost=" + Cost + ")"; }
+    }
 }

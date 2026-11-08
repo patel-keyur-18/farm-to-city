@@ -178,6 +178,14 @@ namespace Sim.Core.Commands
         // Spec 017 (shops)
         /// <summary>Another shop stands on that pitch in the square.</summary>
         PitchTaken,
+
+        // Spec 018 §3.1 (the school's adult class, ADR 0095 §4)
+        /// <summary>There's no open school to hold the class.</summary>
+        NoSchool,
+        /// <summary>A class is running: one at a time.</summary>
+        ClassRunning,
+        /// <summary>Nobody aged 14 or older who can't read.</summary>
+        NobodyToTeach,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

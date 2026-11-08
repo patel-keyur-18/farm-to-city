@@ -351,7 +351,7 @@ namespace Sim.Content
 
             p = "population.school";
             JObject q = Object(Required(Object(Parse(populationJson, "population"), "population"), "population", "school"), p);
-            OnlyFields(q, p, "seatsPerTeacher", "pupilAge", "primaryYears", "upkeepPerSeason", "adultClass", "literatePremium");
+            OnlyFields(q, p, "seatsPerTeacher", "pupilAge", "primaryYears", "upkeepPerSeason", "adultClass", "literatePremium", "literacyFromAge");
             s.SeatsPerTeacher = BoundedInt(q, p, "seatsPerTeacher", 1, 100);
             string ap = Join(p, "pupilAge");
             JObject age = Object(Required(q, p, "pupilAge"), ap);
@@ -369,6 +369,7 @@ namespace Sim.Content
             s.ClassMinAge = BoundedInt(c, cp, "minAge", s.PupilAgeMax + 1, 30); // nobody falls between the school and the class (spec 018 §3.1)
             if (s.ClassMinAge != s.PupilAgeMax + 1) throw new ContentException(Join(cp, "minAge"), "must follow the pupils' oldest age");
             s.LiteratePremium = Bounded(q, p, "literatePremium", "0", "1");
+            s.LiteracyFromAge = BoundedInt(q, p, "literacyFromAge", s.PupilAgeMin, s.ClassMinAge); // the census counts 7 and older
             return s;
         }
 

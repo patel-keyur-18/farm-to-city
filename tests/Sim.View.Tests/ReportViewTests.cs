@@ -17,11 +17,12 @@ namespace Sim.View.Tests
             SeasonReport r = sim.State.Finance.Reports.Last();
             SheetVm sheet = ReportSheet.Build(ctx, r.Period);
             var keys = sheet.Lines.Select(l => l.WhyKey).ToList();
-            Assert.That(keys.Take(8), Is.EqualTo(ReportSheet.Order.Select(k => "report." + k)));
+            string[] order = ReportSheet.Order.Where(k => k != "gifts").ToArray(); // no gifts this season: no line (spec 018, ADR 0095 §5)
+            Assert.That(keys.Take(8), Is.EqualTo(order.Select(k => "report." + k)));
             Assert.That(keys.Skip(8), Is.EqualTo(new[] { "report.cashFlow", "report.netWorth" }));
             for (int i = 0; i < 8; i++)
             {
-                ReportLine l = r.Line(ReportSheet.Order[i]);
+                ReportLine l = r.Line(order[i]);
                 Assert.That(sheet.Lines[i].Label, Is.EqualTo(ctx.Strings.Get(l.LabelKey)));
                 Assert.That(sheet.Lines[i].Value, Is.EqualTo(ctx.Fmt.Coins(l.Amount)));
                 Assert.That(sheet.Lines[i].WhyId, Is.EqualTo(r.Period));

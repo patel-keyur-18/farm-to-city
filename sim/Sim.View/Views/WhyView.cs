@@ -111,6 +111,7 @@ namespace Sim.View.Views
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
             // The school (spec 018).
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
+            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
         };

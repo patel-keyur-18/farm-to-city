@@ -80,7 +80,7 @@ namespace Sim.Core.People
                     Business.Business b = sim.State.Businesses?.Find(c.Employer);
                     if (b != null) income += Business.BusinessRules.Wage(sim, Business.BusinessRules.TypeOf(sim, b)); // spec 016 §3.6
                 }
-                else if (WorksOutside(sim, c)) outside += OutsideSeasonPay(sim);
+                else if (WorksOutside(sim, c)) outside += SchoolRules.WithPremium(sim, c, OutsideSeasonPay(sim)); // literate: 10% more (spec 018 §3.2)
             }
             return income + outside;
         }
@@ -201,7 +201,7 @@ namespace Sim.Core.People
                 {
                     Citizen c = sim.State.Citizens.Citizen(id);
                     if (!WorksOutside(sim, c) || c.LabourUntil > dayStart || c.LabouredUntil > dayStart) continue;
-                    x.Earned += pay;
+                    x.Earned += SchoolRules.WithPremium(sim, c, pay);
                 }
         }
 

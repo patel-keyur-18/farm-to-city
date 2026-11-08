@@ -39,7 +39,12 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(s.Get("school.pupils"), s.Get("school.pupilsValue", "n", ctx.Fmt.Integer(pupils), "seats", ctx.Fmt.Integer(teachers * d.SeatsPerTeacher)),
                     "schoolPupils") { Icon = "person_boy" });
                 vm.Lines.Add(new LineVm(s.Get("school.teachers"), s.Plural("school.teachersValue", teachers), "schoolPupils") { Icon = "person_town_f" });
+                Citizen next = Next(sim);
+                if (next != null)
+                    vm.Lines.Add(new LineVm(s.Get("school.next"), s.Get("school.nextValue", "name", TownWords.Name(ctx, next), "seasons", s.Plural("school.seasons", SchoolRules.SeasonsToFinish(sim, next))),
+                        "schoolPupils"));
                 vm.Lines.Add(new LineVm(s.Get("school.upkeep"), ctx.Fmt.Coins(SchoolRules.Upkeep(sim)), "schoolUpkeep"));
+                AdultClass(ctx, vm);
                 return;
             }
             vm.Subtitle = s.Get(SchoolRules.Unlocked(sim) ? "place.school_plot.line" : "school.lockedLine");
@@ -49,6 +54,38 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("school.upkeep"), ctx.Fmt.Coins(SchoolRules.Upkeep(sim)), "schoolUpkeep"));
             vm.Actions.Add(ActionVm.Checked(ctx, "buildSchool", s.Get("school.buildCash"), ctx.Fmt.Coins(price), ActionKind.Primary, at => new BuildSchool(at)));
             vm.Actions.Add(WithLoan(ctx));
+        }
+
+        /// <summary>The pupil who'll finish primary soonest, first by id among equals; null when none will before they're too old.</summary>
+        private static Citizen Next(Simulation sim)
+        {
+            Citizen next = null;
+            int soonest = int.MaxValue;
+            foreach (Citizen c in SchoolRules.Pupils(sim))
+            {
+                int k = SchoolRules.SeasonsToFinish(sim, c);
+                if (k >= 0 && k < soonest) { next = c; soonest = k; }
+            }
+            return next;
+        }
+
+        /// <summary>The adult class (ADR 0095 §4): who is learning and when it ends, or who would join and Start, greyed with the sim's reason.</summary>
+        private static void AdultClass(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            SchoolState st = SchoolRules.State(sim);
+            vm.Lines.Add(LineVm.Header(s.Get("school.classHeader")));
+            if (SchoolRules.ClassRunning(sim))
+            {
+                vm.Lines.Add(new LineVm(s.Get("school.learning"), s.Get("school.learningValue", "n", ctx.Fmt.Integer(st.Class.Count), "time", ctx.Fmt.Duration(st.ClassEndsAt - ctx.Now)),
+                    "adultClass") { Icon = "person_town_m" });
+                return;
+            }
+            int join = SchoolRules.Learners(sim).Count;
+            vm.Lines.Add(join == 0 ? new LineVm(s.Get("school.nobody"), null, "adultClass")
+                : new LineVm(s.Get("school.wouldJoin"), s.Get("school.wouldJoinValue", "n", ctx.Fmt.Integer(join), "size", ctx.Fmt.Integer(SchoolRules.Def(sim).ClassSize)), "adultClass") { Icon = "person_town_m" });
+            vm.Actions.Add(ActionVm.Checked(ctx, "adultClass", s.Get("school.startClass"), ctx.Fmt.Coins(SchoolRules.ClassCost(sim)), ActionKind.Primary, at => new StartAdultClass(at)));
         }
 
         /// <summary>"With a loan": the bank's terms, greyed with the sim's reason (before the Hamlet, built) or when the bank won't lend.</summary>
@@ -151,6 +188,75 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.schoolPupils.seats", ctx.Fmt.Integer(d.SeatsPerTeacher));
             Row(vm, ctx, "why.schoolPupils.teachers", ctx.Fmt.Integer(SchoolRules.Teachers(sim)));
             Text(vm, ctx, "why.schoolPupils.text", "years", ctx.Fmt.Integer(d.PrimaryYears));
+            foreach (Citizen c in SchoolRules.Pupils(sim))
+            {
+                int k = SchoolRules.SeasonsToFinish(sim, c);
+                vm.Rows.Add(new WhyRowVm(TownWords.NameAge(ctx, c), k < 0 ? ctx.Strings.Get("why.schoolPupils.tooOld")
+                    : ctx.Strings.Get("why.schoolPupils.readsIn", "seasons", ctx.Strings.Plural("school.seasons", k))));
+            }
+            Text(vm, ctx, "why.schoolPupils.whole");
+            return vm;
+        }
+
+        /// <summary>
+        /// The adult class: who is in it (or would join), its rules (ADR 0095 §4), and what reading is worth outside, a season an adult.
+        /// </summary>
+        private static WhyVm AdultClass(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            SchoolDef d = SchoolRules.Def(sim);
+            SchoolState st = SchoolRules.State(sim);
+            WhyVm vm = New(ctx, "why.adultClass.title", Money(ctx, SchoolRules.ClassCost(sim)));
+            bool running = SchoolRules.ClassRunning(sim);
+            Text(vm, ctx, running ? "why.adultClass.in" : "why.adultClass.would");
+            if (running)
+            {
+                foreach (long c in st.Class)
+                    if (sim.State.Citizens.Citizen(c) is Citizen x && x.Living) Row(vm, ctx, "why.adultClass.person", null, "name", TownWords.NameAge(ctx, x));
+            }
+            else foreach (Citizen x in SchoolRules.Learners(sim)) Row(vm, ctx, "why.adultClass.person", null, "name", TownWords.NameAge(ctx, x));
+            Text(vm, ctx, "why.adultClass.rules", "size", ctx.Fmt.Integer(d.ClassSize), "age", ctx.Fmt.Integer(d.ClassMinAge),
+                "elder", ctx.Fmt.Integer(sim.Config.Game.Population.ElderFrom), "time", ctx.Fmt.Duration(d.ClassHours * 3600L));
+            long pay = HouseholdRules.OutsideSeasonPay(sim);
+            Row(vm, ctx, "why.adultClass.premium", Money(ctx, Sim.Core.Finance.Money.MulRate(pay, d.LiteratePremium)), "pct", ctx.Fmt.Percent(d.LiteratePremium));
+            Text(vm, ctx, "why.adultClass.gift");
+            vm.Footnote = ctx.Strings.Get("why.adultClass.lesson");
+            return vm;
+        }
+
+        /// <summary>The town's literacy rate (spec 018 §3.2): who can read among those aged 7 and older, whole percent rounded down.</summary>
+        private static WhyVm Literacy(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            SchoolDef d = SchoolRules.Def(sim);
+            SchoolRules.Literacy(sim, out int literate, out int counted);
+            WhyVm vm = New(ctx, "why.literacy.title", ctx.Strings.Get("town.literacyValue", "pct", ctx.Fmt.Integer(SchoolRules.LiteracyRate(sim))));
+            Row(vm, ctx, "why.literacy.literate", ctx.Fmt.Integer(literate), "age", ctx.Fmt.Integer(d.LiteracyFromAge));
+            Row(vm, ctx, "why.literacy.counted", ctx.Fmt.Integer(counted), "age", ctx.Fmt.Integer(d.LiteracyFromAge));
+            Text(vm, ctx, "why.literacy.rounded");
+            Text(vm, ctx, SchoolRules.IsOpen(sim) ? "why.literacy.how" : "why.literacy.noSchool", "years", ctx.Fmt.Integer(d.PrimaryYears));
+            Text(vm, ctx, "why.literacy.premium", "pct", ctx.Fmt.Percent(d.LiteratePremium));
+            vm.Footnote = ctx.Strings.Get("why.literacy.lesson");
+            return vm;
+        }
+
+        /// <summary>A citizen's schooling: how they learned to read, or where they are with it.</summary>
+        private static WhyVm CitizenSchool(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Citizen c = sim.State.Citizens.Citizen(id);
+            WhyVm vm = New(ctx, "why.citizenSchool.title", CitizenSheet.Schooling(ctx, c));
+            Text(vm, ctx, "why.citizenSchool." + CitizenSheet.SchoolingKey(sim, c), "name", TownWords.Name(ctx, c),
+                "years", ctx.Fmt.Integer(SchoolRules.On(sim) ? SchoolRules.Def(sim).PrimaryYears : 0));
+            if (CitizenSheet.SchoolingKey(sim, c) == "pupil")
+            {
+                int k = SchoolRules.SeasonsToFinish(sim, c);
+                Text(vm, ctx, k < 0 ? "why.citizenSchool.tooOld" : "why.citizenSchool.readsIn", "name", TownWords.Name(ctx, c),
+                    "seasons", k < 0 ? "" : ctx.Strings.Plural("school.seasons", k));
+                Text(vm, ctx, "why.schoolPupils.whole");
+            }
+            if (SchoolRules.On(sim) && c.Literate && !HouseholdRules.IsChild(sim, c))
+                Text(vm, ctx, "why.citizenSchool.premium", "pct", ctx.Fmt.Percent(SchoolRules.Def(sim).LiteratePremium));
             return vm;
         }
     }

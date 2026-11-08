@@ -51,7 +51,8 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 ### 3.2 Literacy (§10 G3, G4)
 
 - **Literate:** a citizen who finished primary school, finished an adult class, or arrived literate (spec 014 draws 60% primary, 40% none for incoming adults).
-- **Literacy rate:** literate citizens aged 7+ ÷ all citizens aged 7+ (whole percent, rounded down). Shown on the Town tab with its *Why?*; it gates the Township (40%, Phase 3).
+- **A year at school (as built, US-132):** at each close a pupil (6–13 by their age in the season that ended, can't read) counts a year if the school was open through the whole season; the season it opened part-way through doesn't count (shown in the pupils' *Why?*). After `primaryYears` 4 they're literate. A child too old to finish ages out to the adult class at 14.
+- **Literacy rate:** literate citizens aged 7+ (`literacyFromAge`, as India's census counts) ÷ all citizens aged 7+ (whole percent, rounded down). Shown on the Town tab with its *Why?*; it gates the Township (40%, Phase 3).
 - **What it changes in Phase 2 (G4).** A literate adult's outside work earns `literatePremium` 10% more (real rural wage premia for literacy are 10–20%; about 1,900 a season an adult today), and the growth need counts the school (below). No skill change: skills come from work and courses (spec 015).
 - **Growth need:** a household with a child of school age counts *School* met (1.0) once the school is open; with no children it counts as met when the school is open (the town has one). Until then spec 014's "No school yet" row stays. The layer is the mean of *School* and leisure (spec 014 §3.8): with leisure 0.3 → 0.65 (+3.5 happiness), without 0 → 0.5 (+5); town happiness about 69 → 72 (ADR 0095 §6).
 
@@ -110,7 +111,7 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 
 **New definitions:**
 - `content/buildings.json`: `school` (cost, equipment, build hours, era hamlet, the plot).
-- `content/population.json`: `school` (seats a teacher, pupil ages, primary years, upkeep, adult class size, cost and length, the literate outside-work premium).
+- `content/population.json`: `school` (seats a teacher, pupil ages, primary years, upkeep, adult class size, cost and length, the literate outside-work premium, `literacyFromAge` 7).
 - `content/codex.json` (new): cards (id, group, trigger kind and parameters, the numbers it quotes) with strings in `strings/en.json`.
 - `content/eras.json`: the Village's gate (households, business seasons, school).
 - `content/ui.json`: advisor caps (a line a sheet, a topic a day).
@@ -118,9 +119,9 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 - A ledger account, **Gifts to the village** (an expense outside farm profit, ADR 0095 §5).
 
 **New state** (save schema 15 in Sprint 17; ADR 0076 numbers schemas by sprint, ADR 0083 and ADR 0084 each shifted them by one):
-- `Citizen`: literate (bool), schooling years, in an adult class until.
+- `Citizen`: schooling years (`SchoolYears`); literate is `Education` above 0 (1 primary, 2 an adult class, as built).
 - `Business`: profitable seasons (ADR 0095 §9).
-- `CitizensState`: the school (status, built at, ready at, teachers), adult classes.
+- `CitizensState`: the school (status, built at, ready at, its cost, the season its upkeep went unpaid) and its adult class (who is in it, when it ends); teachers are counted from pupils, not saved.
 - `GuidanceState`: Codex cards found (ids, found at), advisor topics last spoken.
 
 ## 5. Commands and events
@@ -134,6 +135,7 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 | --- | --- | --- |
 | `SchoolOpened` | at | Away card, notification, the Village gate, Codex (public goods) |
 | `CitizenLiterate` | citizen, how | Away card, the town's literacy |
+| `AdultClassStarted` | pupils, cost, ends at (as built) | The school's sheet |
 | `CodexCardFound` | card | Toast, Menu → Codex |
 | `EraUnlocked(village)` | | The celebration, play log |
 
@@ -190,7 +192,7 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 
 - **G1. The Village gate.** **Closed (owner, 2026-10-27):** 5 households, a business with 2 profitable seasons (not necessarily in a row), and the primary school built and open; the market stall dropped (stalls come with the Village, spec 017); the school buildable from the Hamlet (the school plot's line changes to say so); 2–3 weeks with credit, 4–6 saving (§3.6).
 - **G2. Who pays the teacher.** **Closed (owner, 2026-10-27):** the founder builds the school and gives it to the district (1,05,000, or a co-op loan); the district posts a teacher and pays the wage, as a government primary school; the founder pays upkeep, 2,000 a season (§3.1).
-- **G3. Adult literacy classes.** **Closed (owner, 2026-10-27):** the founder starts an evening class of up to 15 adults for a season and pays the teacher's extra hours, 3,000 a season; everyone in it is literate at the close (§3.1).
+- **G3. Adult literacy classes.** **Closed (owner, 2026-10-27):** the founder starts an evening class of up to 15 adults for a season and pays the teacher's extra hours, 3,000 a season (§3.1). ADR 0095 §4 replaced "literate at the close" with "literate 96 h after it starts".
 - **G4. What literacy changes in Phase 2.** **Closed (owner, 2026-10-27):** a literate adult's outside work earns 10% more (rural India's literacy premium is 10–20%): about 1,900 a season an adult at today's rate (an adult earns about 19,000 a season outside), so a class of 3 pays the town back in under a season; no skill change (skills come from work and courses, spec 015) (§3.2). The question put to the owner said about 450 a season; corrected here.
 - **G5. The Codex set and its moment.** **Closed (owner, 2026-10-27):** about 24 Phase 2 cards in six groups (§3.3), each found the first time its idea is met, after the result; a toast that opens the card and Menu → Codex (unfound cards hidden); never a sheet over play, never in the first session.
 - **G6. Advisors.** **Closed (owner, 2026-10-27):** three people of the village, named, with Blender portraits: an old farmer neighbour (farm), the co-op bank's secretary (accountant), a retired headmaster (people lead); one line on the season report and on an alert whose cause they know; at most one line a sheet, a topic once a game day, none in the first session; they never act (§3.4).

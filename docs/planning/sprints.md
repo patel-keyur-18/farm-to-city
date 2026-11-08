@@ -766,7 +766,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 17 · 12–25 Apr 2027 · Phase 2 (the school and literacy, the Codex and advisors, the Village unlock, rival entry; 2 weeks, ADR 0095)
 
-- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Started 2026-11-07: the school's art approved; US-131 done, for review. Sprint 16 is merged (PR #22)
+- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Started 2026-11-07: the school's art approved; US-131 and US-132 done, for review. Sprint 16 is merged (PR #22)
 - **Branch:** `sprint/17-school-and-village`, from `main` after PR #22
 - **Goal:** Spec 018 built (F14.1, F14.2, US-102): the school on its plot as a gift to the village, literacy from pupils and adult classes, the Codex's cards with the player's numbers, three advisors, and the Village unlocked by its gate. US-122 built (F12.4): newcomers on a gap or when your shop prices above the village's, on a free pitch or as a cart on the lane, and the grocer's and tea stall's price cuts, so that overpricing no longer pays (ADR 0093). Save schema 15 with its migration and fixture.
 - **Points:** 36 (re-pointed, ADR 0095: US-131 5 → 8, US-132 3 → 5, US-133 5 → 8, US-134 3 → 5, US-102 2 → 5, US-122 5)
@@ -777,7 +777,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-131 | First school | [F14.1](features/F14.1-school-and-literacy.md) | 8 | Must | Done (for review) |
-| US-132 | Literacy | [F14.1](features/F14.1-school-and-literacy.md) | 5 | Must | To do |
+| US-132 | Literacy | [F14.1](features/F14.1-school-and-literacy.md) | 5 | Must | Done (for review) |
 | US-122 | Rival entry | [F12.4](features/F12.4-rivals-and-competition.md) | 5 | Should | To do |
 | US-102 | Village unlock | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | To do |
 | US-133 | Codex | [F14.2](features/F14.2-codex-and-advisors.md) | 8 | Must | To do |

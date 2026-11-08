@@ -38,6 +38,9 @@ namespace Sim.Core.Definitions
         /// <summary>A literate adult's outside work earns this much more (spec 018 §3.2).</summary>
         public Fixed LiteratePremium { get; internal set; }
 
+        /// <summary>The literacy rate counts citizens this old and older (spec 018 §3.2, as India's census does).</summary>
+        public int LiteracyFromAge { get; internal set; }
+
         public long Cost { get { return BuildingCost + EquipmentCost; } }
     }
 }

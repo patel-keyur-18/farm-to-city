@@ -369,6 +369,8 @@ namespace Sim.View.Views
             var rows = new List<LineVm>();
             if (sim.State.Citizens == null) return rows;
             LineVm Row(string label, string value, string icon) { return new LineVm(label, value, "away", (long)AwayRow.Town) { Icon = icon }; }
+            var pupils = new List<int>();
+            int adults = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -393,6 +395,8 @@ namespace Sim.View.Views
                         break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
+                    case CitizenLiterate l when l.How == LiterateHow.School: pupils.Add(l.Name); break;
+                    case CitizenLiterate _: adults++; break;
                     case RentMissed m:
                         Sim.Core.People.Household x = sim.State.Citizens.Household(m.HouseholdId);
                         rows.Add(Row(s.Get("away.town"), s.Get("away.rentMissed", "family", x == null ? s.Get("away.aFamily") : TownWords.Household(ctx, x),
@@ -404,6 +408,10 @@ namespace Sim.View.Views
                         break;
                 }
             }
+            // Spec 018 §5: who learned to read, one line for the pupils and one for the adult class.
+            if (pupils.Count == 1) rows.Add(Row(s.Get("away.town"), s.Get("away.literatePupil", "name", PeopleWords.Name(ctx, pupils[0])), "school"));
+            else if (pupils.Count > 1) rows.Add(Row(s.Get("away.town"), s.Plural("away.literatePupils", pupils.Count), "school"));
+            if (adults > 0) rows.Add(Row(s.Get("away.town"), s.Plural("away.literateClass", adults), "school"));
             return rows;
         }
 
@@ -462,7 +470,7 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 013 §3.1.
             { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.

@@ -42,7 +42,7 @@ namespace Sim.Core.Saves
             BuyMachine, LeaseMachine, HireMachine, SellMachine, SetMaintenance,
             PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
             FoundOnPitch, SetShop, SetStallGoods,
-            BuildSchool,
+            BuildSchool, StartAdultClass,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -111,6 +111,7 @@ namespace Sim.Core.Saves
                     At(c, Tag.BuildSchool); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
+                case StartAdultClass c: At(c, Tag.StartAdultClass); break;
                 case PlantOrchard c: At(c, Tag.PlantOrchard); w.WriteInt(c.TileId); w.WriteString(c.TreeId); break;
                 case PickOrchard c: At(c, Tag.PickOrchard); w.WriteInt(c.TileId); w.WriteInt((int)c.Overflow); break;
                 case ClearOrchard c: At(c, Tag.ClearOrchard); w.WriteInt(c.TileId); break;
@@ -304,6 +305,7 @@ namespace Sim.Core.Saves
                 case Tag.SellMachine: return new SellMachine(at, r.ReadLong());
                 case Tag.SetMaintenance: return new SetMaintenance(at, r.ReadLong(), r.ReadBool());
                 case Tag.BuildSchool: return new BuildSchool(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                case Tag.StartAdultClass: return new StartAdultClass(at);
                 case Tag.PlantOrchard: return new PlantOrchard(at, r.ReadInt(), r.ReadString());
                 case Tag.PickOrchard: return new PickOrchard(at, r.ReadInt(), (Overflow)r.ReadInt());
                 case Tag.ClearOrchard: return new ClearOrchard(at, r.ReadInt());

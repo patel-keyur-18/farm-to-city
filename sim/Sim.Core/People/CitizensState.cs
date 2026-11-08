@@ -74,8 +74,13 @@ namespace Sim.Core.People
         public long BornSeason { get; internal set; }
         public long HouseholdId { get; internal set; }
 
-        /// <summary>0 none, 1 primary (§3.3).</summary>
+        /// <summary>0 none, 1 primary (§3.3), 2 an adult class (spec 018 §3.2): literate when above 0.</summary>
         public int Education { get; internal set; }
+
+        /// <summary>Seasons at the village's school (spec 018 §3.2, schema 15): literate after <c>primaryYears</c>.</summary>
+        public int SchoolYears { get; internal set; }
+
+        public bool Literate { get { return Education > 0; } }
 
         /// <summary>Farming 0–100. A hand's own record (<see cref="Hand.Skill"/>) is the live one while he works for you.</summary>
         public Fixed Skill { get; internal set; }
@@ -156,6 +161,7 @@ namespace Sim.Core.People
             }
             if (!(h is SaveWriter sw && sw.Schema < 10) && (!h.Hashing || Employer != 0)) h.WriteLong(Employer); // hashed only once used
             if (!(h is SaveWriter sw11 && sw11.Schema < 11)) h.WriteFixed(Crafting);
+            if (h.Hashing ? SchoolYears != 0 : !(h is SaveWriter sw15 && sw15.Schema < 15)) h.WriteInt(SchoolYears); // hashed only once used
         }
 
         internal static Citizen ReadFrom(SaveReader r)
@@ -171,6 +177,7 @@ namespace Sim.Core.People
             for (int i = 0; i < n; i++) c.Story.Add(new StoryLine((StoryKind)r.ReadInt(), r.ReadLong(), r.ReadLong()));
             if (r.Schema >= 10) c.Employer = r.ReadLong();
             if (r.Schema >= 11) c.Crafting = r.ReadFixed();
+            if (r.Schema >= 15) c.SchoolYears = r.ReadInt();
             return c;
         }
     }
@@ -311,7 +318,17 @@ namespace Sim.Core.People
         /// <summary>The season its upkeep last went unpaid, or −1.</summary>
         public long UpkeepUnpaidPeriod { get; internal set; } = -1;
 
-        internal SchoolState Clone() { return (SchoolState)MemberwiseClone(); }
+        /// <summary>The adult class (ADR 0095 §4): its pupils by id, when it ends (0 when none runs) and its job.</summary>
+        public List<long> Class { get; internal set; } = new List<long>();
+        public long ClassEndsAt { get; internal set; }
+        public long ClassJobId { get; internal set; }
+
+        internal SchoolState Clone()
+        {
+            var c = (SchoolState)MemberwiseClone();
+            c.Class = new List<long>(Class);
+            return c;
+        }
 
         internal void WriteTo(IStateWriter h)
         {
@@ -321,15 +338,24 @@ namespace Sim.Core.People
             h.WriteLong(JobId);
             h.WriteLong(Cost);
             h.WriteLong(UpkeepUnpaidPeriod);
+            h.WriteInt(Class.Count);
+            foreach (long id in Class) h.WriteLong(id);
+            h.WriteLong(ClassEndsAt);
+            h.WriteLong(ClassJobId);
         }
 
         internal static SchoolState ReadFrom(SaveReader r)
         {
-            return new SchoolState
+            var s = new SchoolState
             {
                 Status = (SchoolStatus)r.ReadInt(), StartedAt = r.ReadLong(), ReadyAt = r.ReadLong(), JobId = r.ReadLong(), Cost = r.ReadLong(),
                 UpkeepUnpaidPeriod = r.ReadLong(),
             };
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Class.Add(r.ReadLong());
+            s.ClassEndsAt = r.ReadLong();
+            s.ClassJobId = r.ReadLong();
+            return s;
         }
     }
 

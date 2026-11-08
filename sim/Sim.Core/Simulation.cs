@@ -57,7 +57,11 @@ namespace Sim.Core
             if (config.Game?.People != null) handlers.Add(new PeopleSystem.HutBuild());
             if (config.Game?.Livestock != null) handlers.Add(new Livestock.LivestockSystem.ShedBuild());
             if (config.Game?.Population != null && config.Game.People != null) handlers.Add(new People.HouseRules.Build());
-            if (config.Game?.School != null) handlers.Add(new People.SchoolRules.Build());
+            if (config.Game?.School != null)
+            {
+                handlers.Add(new People.SchoolRules.Build());
+                handlers.Add(new People.SchoolRules.ClassEnds());
+            }
             if (config.Game?.Businesses != null) handlers.Add(new Business.BusinessRules.Build());
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
