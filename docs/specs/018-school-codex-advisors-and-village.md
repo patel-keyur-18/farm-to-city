@@ -81,6 +81,7 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 - **When they speak:** one line on the season report (the most useful of their notes, ranked); one line on an alert whose cause they know ("Your mill's overdraft is near its limit: put cash in before the wage is due."); a *Why?* row may quote them. They warn and explain; they never act or press a choice.
 - **How often:** at most one advisor line a sheet; a warning on the same topic at most once a game day; none in the first session.
 - **The notes (ADR 0095 §8):** twelve, four an advisor, in `content/advisors.json` (id, advisor, condition, priority, the alert it attaches to); the season report shows the highest-priority note whose condition holds; a note's id is its topic. Names (placeholders): Ramdeen Kaka (farm), Sunita Verma (the co-op bank's secretary), Masterji Hariprasad (a retired headmaster). The *Why?* quotes are left out.
+- **As built (ADR 0099):** each note's condition is exact (ADR 0099 §2: the soil and dry field from a `FieldSeasonClosed` at each close, the tired note at fatigue above `sickTiredAbove`), and the lines quote true numbers (the pests line from the outbreak and spray figures). The season report shows its note in a panel under the title; the alert list one line under the alert whose note ranks first. What was said is kept in `GuidanceState` by `HearAdvisors`.
 
 ### 3.5 Conflicts settled (§10 G7, G8)
 
@@ -122,15 +123,14 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 - `content/population.json`: `school` (seats a teacher, pupil ages, primary years, upkeep, adult class size, cost and length, the literate outside-work premium, `literacyFromAge` 7).
 - `content/codex.json` (new): cards (id, group, trigger kind and parameters, the numbers it quotes) with strings in `strings/en.json`.
 - `content/eras.json`: the Village's gate (households, business seasons, school).
-- `content/ui.json`: advisor caps (a line a sheet, a topic a day).
-- `content/advisors.json` (new, ADR 0095 §8): the advisors (names, portraits) and their twelve notes.
+- `content/advisors.json` (new, ADR 0095 §8): the advisors (names, portraits), their twelve notes and the topic cap (`topicHours`, 24; ADR 0099, was `ui.json`).
 - A ledger account, **Gifts to the village** (an expense outside farm profit, ADR 0095 §5).
 
 **New state** (save schema 15 in Sprint 17; ADR 0076 numbers schemas by sprint, ADR 0083 and ADR 0084 each shifted them by one):
 - `Citizen`: schooling years (`SchoolYears`); literate is `Education` above 0 (1 primary, 2 an adult class, as built).
 - `Business`: profitable seasons (ADR 0095 §9).
 - `CitizensState`: the school (status, built at, ready at, its cost, the season its upkeep went unpaid) and its adult class (who is in it, when it ends); teachers are counted from pupils, not saved.
-- `GuidanceState`: Codex cards found (ids, found at), advisor topics last spoken.
+- `GuidanceState`: Codex cards found (ids, found at), advisor topics last spoken (the latest note a topic: when, about what, the report's line, its numbers; ADR 0099). A tile's dry seconds this season.
 
 ## 5. Commands and events
 
@@ -181,7 +181,7 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 | AC-4 | The growth need counts the school once open | `HappinessTests.School` |
 | AC-5 | A literate adult's outside work earns 10% more | `HouseholdTests.LiteracyPremium` |
 | AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay; two or more in a pass get one toast | `CodexTests.Triggers`, `CodexTests.Burst`, `CodexTests.Content` (ADR 0098) |
-| AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session; the season report shows the highest-priority note that holds | `AdvisorTests.Caps`, `AdvisorTests.Priority` |
+| AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session; the season report shows the highest-priority note that holds | `AdvisorTests.Caps`, `AdvisorTests.Priority` (as built also `AdvisorTests.FieldSeason`, `AdvisorTests.Content`; ADR 0099) |
 | AC-8 | The Village unlocks once when its three conditions hold, checked at the close, when the school opens and when a household forms; the progress view shows each | `EraTests.Village`, `EraTests.Village_OnHousehold` |
 | AC-9 | Homes first, the competent bot reaches the Village at a median of day 28–40, the cautious saver 50–64; every order of the three gets there in every run, within 50 days with loans and 80 saving (ADR 0097) | `GateTests.Village` |
 | AC-10 | A schema-14 save loads into 15 with no school, literacy from spec 014's education, no cards found | `MigrationTests.Schema14_School` |

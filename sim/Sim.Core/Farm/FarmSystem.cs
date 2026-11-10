@@ -89,6 +89,8 @@ namespace Sim.Core.Farm
                 c.CareSum += farm.CareRatio.MulRatio(dt, 1);
                 c.WeatherSum += c.WeatherRate.MulRatio(dt, 1);
                 if (c.Wet) c.WetSeconds += dt;
+                Tile tile = sim.State.Land.Tiles[c.TileId];
+                if (tile.Moisture < sim.Config.Game.Farm.Crops[c.Def].MoistureMin) tile.DrySeconds += dt; // the farm advisor's dry field
             }
             if (sim.State.Orchards != null)
                 foreach (Orchard o in sim.State.Orchards.Orchards)

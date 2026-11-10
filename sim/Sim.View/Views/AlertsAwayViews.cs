@@ -26,6 +26,10 @@ namespace Sim.View.Views
 
         /// <summary>The alert's action (Spray, Collect all, Open the store…), or null.</summary>
         public ActionVm Action { get; internal set; }
+
+        /// <summary>The advisor note that can speak under it and what it's about (spec 018 §3.4), or null.</summary>
+        internal string Note { get; set; }
+        internal long NoteKey { get; set; }
     }
 
     /// <summary>Alerts (spec 008 §3.10), derived from the state at each refresh, urgent first.</summary>
@@ -49,13 +53,13 @@ namespace Sim.View.Views
             if (sim.State.Credit != null)
             {
                 if (sim.State.Credit.PendingForeclosure)
-                    list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0, MoneySheet.Wealth)) });
+                    list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.finalNotice"), Note = "missedPayment", Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0, MoneySheet.Wealth)) });
                 foreach (Loan l in sim.State.Credit.Loans)
                     if (l.IsOpen && l.HasArrears && l.BusinessId != 0)
-                        list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.businessMissed", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, sim.State.Businesses.Find(l.BusinessId)))),
+                        list.Add(new AlertVm { Level = AlertLevel.Urgent, Note = "missedPayment", Text = s.Get("alert.businessMissed", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, sim.State.Businesses.Find(l.BusinessId)))),
                             Action = ActionVm.Open("business:" + l.BusinessId, s.Get("action.open"), new SheetRequest("Business", l.BusinessId)) });
                     else if (l.IsOpen && l.HasArrears)
-                        list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.missed", "lender", s.Get(sim.Config.Game.Credit.Lenders[l.Lender].NameKey)), Action = ActionVm.Open("repay:" + l.Id, s.Get("money.repay"), new SheetRequest("Repay", l.Id)) });
+                        list.Add(new AlertVm { Level = AlertLevel.Urgent, Note = "missedPayment", Text = s.Get("alert.missed", "lender", s.Get(sim.Config.Game.Credit.Lenders[l.Lender].NameKey)), Action = ActionVm.Open("repay:" + l.Id, s.Get("money.repay"), new SheetRequest("Repay", l.Id)) });
             }
 
             // A business short of cash (spec 016 §3.10): its card says why and what to do.
@@ -65,6 +69,7 @@ namespace Sim.View.Views
                         list.Add(new AlertVm
                         {
                             Level = AlertLevel.Urgent,
+                            Note = "overdraft", NoteKey = b.Id,
                             Text = s.Get(b.Worker == Sim.Core.Business.WorkerKind.None ? "alert.businessNoWorker" : "alert.businessShort", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, b))),
                             Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id)),
                         });
@@ -76,7 +81,7 @@ namespace Sim.View.Views
                 string crop = s.Get(sim.Config.Game.Farm.Crops[c.Def].NameKey), field = PeopleWords.Field(ctx, c.TileId);
                 int tile = c.TileId;
                 if (c.State == CropState.Growing && c.Outbreak != Outbreak.None && c.Spray == SprayState.None)
-                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.pests", "field", field), Action = ActionVm.Checked(ctx, "spray:" + tile, s.Get("action.spray"), null, ActionKind.Primary, at => new Spray(at, tile)) });
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.pests", "field", field), Note = "pests", NoteKey = tile, Action = ActionVm.Checked(ctx, "spray:" + tile, s.Get("action.spray"), null, ActionKind.Primary, at => new Spray(at, tile)) });
                 long left = c.ReadyAt + grace - t;
                 if (c.State == CropState.Ready && left > 0 && left <= warn)
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.spoiling", "crop", crop, "field", field, "time", ctx.Fmt.Duration(left)), Action = ActionVm.Checked(ctx, "harvest:" + tile, s.Get("action.harvest"), null, ActionKind.Primary, at => new Harvest(at, tile, Overflow.StoreOnly)) });
@@ -113,6 +118,7 @@ namespace Sim.View.Views
                     list.Add(new AlertVm
                     {
                         Level = AlertLevel.Decision,
+                        Note = "feed", NoteKey = good,
                         Text = s.Get("alert.feedLow", "feed", s.Get(sim.Config.Game.Market.Goods[good].NameKey), "days", s.Plural("why.days", days)),
                         Action = ActionVm.Open("fill:" + good, s.Get("shed.fill"), new SheetRequest("BuyInput", good)),
                     });
@@ -152,7 +158,7 @@ namespace Sim.View.Views
             // HR events waiting for an answer (spec 015 §3.7): each opens its sheet with the two choices.
             if (sim.State.People != null)
                 foreach (Sim.Core.People.HrEvent e in sim.State.People.HrEvents)
-                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = HrEventSheet.Title(ctx, e), Action = ActionVm.Open("hr:" + e.Id, s.Get("hr.answer"), new SheetRequest("HrEvent", e.Id)) });
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = HrEventSheet.Title(ctx, e), Note = e.Kind == Sim.Core.People.HrEventKind.RaiseRequest ? "raise" : null, NoteKey = e.Id, Action = ActionVm.Open("hr:" + e.Id, s.Get("hr.answer"), new SheetRequest("HrEvent", e.Id)) });
             // A free family house offered to a hand living alone (spec 014 §3.13): Yes from here, or the card.
             if (sim.State.Citizens != null && sim.State.Citizens.OfferHandId != 0)
             {
@@ -169,8 +175,13 @@ namespace Sim.View.Views
         public static SheetVm Sheet(ViewContext ctx)
         {
             var vm = new SheetVm { Icon = "alert", Title = ctx.Strings.Get("alert.title") };
-            foreach (AlertVm a in Build(ctx))
-                vm.Lines.Add(new LineVm(ctx.Strings.Get("alert.level." + a.Level) + " · " + a.Text, null) { Action = a.Action });
+            List<AlertVm> alerts = Build(ctx);
+            int under = AdvisorWords.ForAlerts(ctx, alerts, out AdvisorVm advisor); // one advisor line a sheet (spec 018 §3.4)
+            for (int i = 0; i < alerts.Count; i++)
+            {
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("alert.level." + alerts[i].Level) + " · " + alerts[i].Text, null) { Action = alerts[i].Action });
+                if (i == under) vm.Lines.Add(new LineVm(advisor.Text, null) { Advisor = advisor });
+            }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("alert.none");
             return vm;
         }
@@ -506,7 +517,7 @@ namespace Sim.View.Views
             { "TruckArrived", Use.Motion }, { "TruckLeft", Use.Away }, { "HandSoldHeld", Use.Away },
             { "OrdersPosted", Use.Alert }, { "OrderDelivered", Use.Motion }, { "OrderLapsed", Use.Away }, { "OrderPaid", Use.Motion }, { "InputsBought", Use.Motion },
             // Spec 005.
-            { "LedgerReconciliationFailed", Use.StateOnly }, { "SeasonClosed", Use.Away }, { "LoanTaken", Use.Motion }, { "LoanRepayment", Use.Motion },
+            { "LedgerReconciliationFailed", Use.StateOnly }, { "SeasonClosed", Use.Away }, { "FieldSeasonClosed", Use.StateOnly }, { "LoanTaken", Use.Motion }, { "LoanRepayment", Use.Motion },
             { "LoanPaymentMissed", Use.Alert }, { "LoanRestructured", Use.StateOnly }, { "LoanDefaulted", Use.Alert }, { "FinalNotice", Use.Alert },
             { "ParcelSeized", Use.Alert }, { "ForeclosureCompleted", Use.Alert }, { "CreditScoreChanged", Use.StateOnly }, { "ObligationPaid", Use.StateOnly },
             { "ObligationUnpaid", Use.Alert },

@@ -18,10 +18,27 @@ namespace Sim.Core.Progress
     }
 
     /// <summary>
+    /// What an advisor last said on a topic (spec 018 §3.4): the note, when, what it's about (the season report's period, or the alert's
+    /// field, loan, business, feed or HR event; 0 for none), whether it was the season report's line, and the player's numbers then.
+    /// </summary>
+    public sealed class AdvisorNote
+    {
+        public string Id { get; internal set; }
+        public long At { get; internal set; }
+        public long Key { get; internal set; }
+        public bool Report { get; internal set; }
+        public long[] Numbers { get; internal set; }
+
+        public AdvisorNote(string id, long key, bool report, long[] numbers) { Id = id; Key = key; Report = report; Numbers = numbers ?? new long[0]; }
+
+        internal AdvisorNote Clone() { return new AdvisorNote(Id, Key, Report, (long[])Numbers.Clone()) { At = At }; }
+    }
+
+    /// <summary>
     /// The first session and the letter (spec 009 §3.7, §4): the current step, the chapters seen (in the order seen) and
-    /// whether the first session was skipped; the Codex's cards found, in the order found (spec 018 §3.3, schema 15). Changed only by
-    /// <c>SeeChapter</c>, <c>CompleteStep</c>, <c>SkipFirstSession</c>, <c>FindCodexCards</c> and <c>ReadCodexCard</c>, so a replay
-    /// reproduces it.
+    /// whether the first session was skipped; the Codex's cards found, in the order found (spec 018 §3.3, schema 15); what the advisors
+    /// last said on each topic (§3.4, schema 15). Changed only by <c>SeeChapter</c>, <c>CompleteStep</c>, <c>SkipFirstSession</c>,
+    /// <c>FindCodexCards</c>, <c>ReadCodexCard</c> and <c>HearAdvisors</c>, so a replay reproduces it.
     /// </summary>
     public sealed class GuidanceState
     {
@@ -39,9 +56,17 @@ namespace Sim.Core.Progress
 
         public CodexFind Found(string id) { return Codex.Find(x => x.Id == id); }
 
+        /// <summary>The latest of each topic, in the order first said.</summary>
+        public List<AdvisorNote> Advice { get; internal set; } = new List<AdvisorNote>();
+
+        public AdvisorNote Said(string id) { return Advice.Find(x => x.Id == id); }
+
         internal GuidanceState Clone()
         {
-            return new GuidanceState { Step = Step, Seen = new List<int>(Seen), Skipped = Skipped, Codex = Codex.ConvertAll(x => x.Clone()) };
+            return new GuidanceState
+            {
+                Step = Step, Seen = new List<int>(Seen), Skipped = Skipped, Codex = Codex.ConvertAll(x => x.Clone()), Advice = Advice.ConvertAll(x => x.Clone()),
+            };
         }
 
         internal void WriteTo(IStateWriter h, int stepCount)
@@ -62,6 +87,19 @@ namespace Sim.Core.Progress
                     foreach (long v in f.Numbers) h.WriteLong(v);
                 }
             }
+            if (h.Hashing ? Advice.Count > 0 : !(h is SaveWriter w2 && w2.Schema < 15)) // schema 15; hashed only once an advisor has spoken
+            {
+                h.WriteInt(Advice.Count);
+                foreach (AdvisorNote a in Advice)
+                {
+                    h.WriteString(a.Id);
+                    h.WriteLong(a.At);
+                    h.WriteLong(a.Key);
+                    h.WriteBool(a.Report);
+                    h.WriteInt(a.Numbers.Length);
+                    foreach (long v in a.Numbers) h.WriteLong(v);
+                }
+            }
         }
 
         internal static GuidanceState ReadFrom(SaveReader r, int stepCount)
@@ -80,6 +118,16 @@ namespace Sim.Core.Progress
                 var numbers = new long[r.ReadCount()];
                 for (int k = 0; k < numbers.Length; k++) numbers[k] = r.ReadLong();
                 g.Codex.Add(new CodexFind(id, numbers) { FoundAt = at, Read = read }); // a card the content dropped stays, unshown
+            }
+            int said = r.ReadCount();
+            for (int i = 0; i < said; i++)
+            {
+                string id = r.ReadString();
+                long at = r.ReadLong(), key = r.ReadLong();
+                bool report = r.ReadBool();
+                var numbers = new long[r.ReadCount()];
+                for (int k = 0; k < numbers.Length; k++) numbers[k] = r.ReadLong();
+                g.Advice.Add(new AdvisorNote(id, key, report, numbers) { At = at });
             }
             return g;
         }

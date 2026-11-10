@@ -368,6 +368,7 @@ namespace Game.Presentation.Ui
         private VisualElement Row(LineVm line)
         {
             if (line.Tree != null) return FamilyTree(line.Tree);
+            if (line.Advisor != null) return AdvisorLine(line.Advisor);
             if (line.Pie == null) return PlainRow(line);
             var box = new VisualElement { pickingMode = PickingMode.Ignore };
             box.Add(PlainRow(line));
@@ -524,6 +525,45 @@ namespace Game.Presentation.Ui
                 strip.Add(b);
             }
             return strip;
+        }
+
+        /// <summary>
+        /// An advisor's line (spec 018 §3.4): on the season report a panel under the title (portrait, name and role, the quote); under an
+        /// alert one indented line, "Name: “…”", with a small portrait. Only words: nothing to tap.
+        /// </summary>
+        private static VisualElement AdvisorLine(AdvisorVm a)
+        {
+            var box = new VisualElement { pickingMode = PickingMode.Ignore, name = "advisor" };
+            box.style.flexDirection = FlexDirection.Row;
+            box.style.alignItems = Align.Center;
+            VisualElement portrait = UiKit.Icon(IconBank.Good(a.Portrait), a.Compact ? 72 : 128);
+            portrait.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            portrait.style.flexShrink = 0;
+            portrait.style.marginRight = a.Compact ? 14 : 24;
+            box.Add(portrait);
+            var words = new VisualElement { pickingMode = PickingMode.Ignore };
+            words.style.flexShrink = 1;
+            words.style.flexGrow = 1;
+            if (!a.Compact) words.Add(UiKit.Text(a.Who, 32, UiKit.Wood, UiKit.Heading));
+            Label text = UiKit.Text(a.Text, a.Compact ? 29 : 31, UiKit.Ink, UiKit.Body);
+            text.style.whiteSpace = WhiteSpace.Normal;
+            words.Add(text);
+            box.Add(words);
+            if (a.Compact)
+            {
+                box.style.marginLeft = 40;
+                box.style.paddingTop = box.style.paddingBottom = 4;
+                box.style.borderBottomWidth = 2;
+                box.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
+                return box;
+            }
+            box.style.backgroundColor = UiKit.CreamDark;
+            UiKit.Border(box, 3, UiKit.Wood);
+            UiKit.Radius(box, 24);
+            UiKit.Padding(box, 14, 24);
+            box.style.marginTop = 6;
+            box.style.marginBottom = 12;
+            return box;
         }
 
         private VisualElement PlainRow(LineVm line)

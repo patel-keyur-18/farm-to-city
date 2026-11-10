@@ -103,4 +103,38 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>
+    /// Records what the advisors said in a pass (spec 018 §3.4, ADR 0095 §8): the view layer sees the moment (a season close, an alert's
+    /// event) and sends every note together, so a replay hears the same. A note replaces the last on its topic. An unknown note, one
+    /// said twice, or one where its content says it can't speak (the season report, an alert) refuses the lot. They never act.
+    /// </summary>
+    public sealed class HearAdvisors : TimedCommand
+    {
+        public IReadOnlyList<AdvisorNote> Notes { get; }
+
+        public HearAdvisors(long at, IReadOnlyList<AdvisorNote> notes) : base(at) { Notes = notes; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            AdvisorDefs d = sim.Config.Game?.Advisors;
+            GuidanceState g = sim.State.Guidance;
+            if (d == null || g == null || Notes == null || Notes.Count == 0) return CommandResult.Reject(RejectReason.UnknownAdvisorNote);
+            var seen = new List<string>();
+            foreach (AdvisorNote a in Notes)
+            {
+                int i = d.IndexOf(a.Id);
+                if (i < 0 || seen.Contains(a.Id) || (a.Report ? !d.Notes[i].Report : d.Notes[i].Alerts.Count == 0) || a.Numbers.Length > 4)
+                    return CommandResult.Reject(RejectReason.UnknownAdvisorNote);
+                seen.Add(a.Id);
+            }
+            long t = sim.State.Clock.SimTime;
+            foreach (AdvisorNote a in Notes)
+            {
+                g.Advice.RemoveAll(x => x.Id == a.Id);
+                g.Advice.Add(new AdvisorNote(a.Id, a.Key, a.Report, (long[])a.Numbers.Clone()) { At = t });
+            }
+            return CommandResult.Ok;
+        }
+    }
 }

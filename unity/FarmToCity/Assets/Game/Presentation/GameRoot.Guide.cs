@@ -32,6 +32,7 @@ namespace Game.Presentation
             _guide.Observe(Sim, events);
             foreach (Command c in _guide.StepCommands(Sim, Sim.State.Clock.SimTime)) Sim.Execute(c);
             CodexAfter(events); // spec 018 §3.3: after the result, never in the first session
+            AdvisorAfter(events); // §3.4: the season report's line and the alerts' (never in the first session)
             int lines = _playLog.Lines.Count;
             _playLog.Guidance(WallNow(), Sim.State.Clock.SimTime, Sim.State.Guidance, Sim.Config.Game.Onboarding);
             if (_playLog.Lines.Count != lines) WritePlayLog();

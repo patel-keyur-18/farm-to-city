@@ -232,6 +232,9 @@ namespace Sim.View.Views
         /// <summary>A small family tree drawn instead of a label and value (the household card), or null.</summary>
         public FamilyTreeVm Tree { get; internal set; }
 
+        /// <summary>An advisor's line drawn instead of a label and value (spec 018 §3.4), or null.</summary>
+        public AdvisorVm Advisor { get; internal set; }
+
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
         public LineVm(string label, string value, string whyKey = null, long whyId = 0)

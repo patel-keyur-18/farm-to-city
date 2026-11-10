@@ -663,7 +663,7 @@ Entries are written in a warm, slightly poetic voice, and they become the emotio
 
 The game teaches in three steps: the player decides, sees the result, and only then gets the concept named. A lesson the player felt lands harder than one they read.
 
-**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision. Phase 2 has the first three, people of the village with portraits (an old farmer neighbour, the co-op bank's secretary, a retired headmaster): one line on the season report and on an alert whose cause they know, at most one a sheet and a topic a day; the town planner comes with the treasury (ADR 0077).
+**Advisors.** Four characters comment on reports in plain language. They warn and explain, but never make the decision. Phase 2 has the first three, people of the village with portraits (an old farmer neighbour, the co-op bank's secretary, a retired headmaster): one line on the season report and on an alert whose cause they know, at most one a sheet and a topic a day; the town planner comes with the treasury (ADR 0077). As built, twelve notes with exact conditions, the season report's line picked at its close (ADR 0099).
 
 - **Farm advisor:** soil, crops, weather risk.
 - **Accountant:** margins, cash flow, loans, assets.

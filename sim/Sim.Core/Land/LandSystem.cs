@@ -1,4 +1,5 @@
 using Sim.Core.Definitions;
+using Sim.Core.Events;
 using Sim.Core.Maths;
 using Sim.Core.Scheduling;
 using Sim.Core.Time;
@@ -156,7 +157,15 @@ namespace Sim.Core.Land
                     foreach (Tile tile in land.Tiles) RecoverFallow(sim, tile, t);
                     break;
                 case ItemClass.Seasonal:
-                    foreach (Tile tile in land.Tiles) System.Array.Clear(tile.Changes, 0, Tile.ReasonCount);
+                    foreach (Tile tile in land.Tiles)
+                    {
+                        Fixed change = Fixed.Zero;
+                        foreach (Fixed f in tile.Changes) change += f;
+                        if ((change < Fixed.Zero || tile.DrySeconds > 0) && tile.Terrain == Terrain.Farm && land.Parcels[tile.ParcelId].Owned)
+                            sim.Emit(new FieldSeasonClosed(t, tile.Id, change, tile.Fertility, tile.DrySeconds / 3600));
+                        System.Array.Clear(tile.Changes, 0, Tile.ReasonCount);
+                        tile.DrySeconds = 0;
+                    }
                     break;
             }
         }

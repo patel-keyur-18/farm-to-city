@@ -2729,6 +2729,27 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "portrait_advisor_bank"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "portrait_advisor_farm"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "portrait_advisor_people"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "portrait_boy"
   },
   {

@@ -71,6 +71,17 @@ namespace Game.Presentation
             FoundCodex(CodexWatch.Observe(Sim, events));
         }
 
+        /// <summary>
+        /// After <see cref="GuideAfter"/>: what the advisors say about this batch (spec 018 §3.4), recorded so the season report (opened
+        /// next tick) and the alert list show it. Their lines are drawn by the sheets; they never act.
+        /// </summary>
+        private void AdvisorAfter(List<SimEvent> events)
+        {
+            if (Sim.Config.Game.Advisors == null || Sim.State.Guidance == null) return;
+            Command c = AdvisorWatch.Command(Sim.State.Clock.SimTime, AdvisorWatch.Observe(_ctx, events));
+            if (c != null) Sim.Execute(c);
+        }
+
         /// <summary>A refused command: short of money with assets in hand (<i>liquidity</i>).</summary>
         private void CodexRejected(RejectReason reason)
         {

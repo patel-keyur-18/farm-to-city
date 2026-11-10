@@ -218,6 +218,8 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             SeasonReport r = sim.State.Finance.Reports.Find(x => x.Period == period);
             var vm = new SheetVm { Icon = "coin", Title = ctx.Strings.Get("report.title", "period", PeriodName(ctx, period)) };
+            LineVm advisor = AdvisorWords.Report(ctx, period); // an advisor's line under the title (spec 018 §3.4)
+            if (advisor != null) vm.Lines.Add(advisor);
             foreach (string key in Order)
             {
                 ReportLine l = r.Line(key);

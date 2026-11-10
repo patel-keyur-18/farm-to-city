@@ -192,6 +192,10 @@ namespace Sim.Core.Commands
         UnknownCodexCard,
         /// <summary>The card was found already (each is found once), or isn't found yet to be read.</summary>
         CodexCardState,
+
+        // Spec 018 §3.4 (advisors)
+        /// <summary>No such advisor note, one said twice in a pass, or said where its content says it can't speak.</summary>
+        UnknownAdvisorNote,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
