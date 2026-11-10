@@ -32,6 +32,9 @@ namespace Sim.Core.Maths
 
         /// <summary>A bought machine breaking down (spec 013 §3.2): key = the machine, counter = the day.</summary>
         Equipment = 18,
+
+        /// <summary>A newcomer setting up at a close (spec 017 §3.7): key = the shop kind, counter = the season that ended.</summary>
+        Rival = 19,
     }
 
     /// <summary>

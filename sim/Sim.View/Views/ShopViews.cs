@@ -18,6 +18,24 @@ namespace Sim.View.Views
 
         public static string Rival(ViewContext ctx, RivalDef d) { return ctx.Strings.Get("shop.rival." + d.Id); }
 
+        /// <summary>A rival's name: the village's own, or "A newcomer's chai cart, on Pitch II" / "by the square" (spec 017 §3.7).</summary>
+        public static string Rival(ViewContext ctx, Rival r)
+        {
+            if (!r.Newcomer) return Rival(ctx, ShopRules.Defs(ctx.Sim).Rivals[r.Def]);
+            return ctx.Strings.Get("shop.newcomer", "name", ctx.Strings.Get("shop.newcomerKind." + KindKey(r.Kind)),
+                "where", r.Pitch >= 0 ? ctx.Strings.Get("shop.newcomerOn", "pitch", Pitch(ctx, r.Pitch)) : ctx.Strings.Get("shop.newcomerCart"));
+        }
+
+        /// <summary>A rival's picture: its place on the map, the halwai's, or a newcomer's cart ("newcomer_chai").</summary>
+        public static string RivalIcon(ViewContext ctx, Rival r)
+        {
+            if (r.Newcomer) return "newcomer_" + KindKey(r.Kind);
+            RivalDef d = ShopRules.Defs(ctx.Sim).Rivals[r.Def];
+            return "place_" + (d.Tile >= 0 ? ShopResearch.PlaceKind(ctx.Sim, d.Tile) : "halwai");
+        }
+
+        public static string KindKey(ShopKind kind) { return kind.ToString().ToLowerInvariant(); }
+
         /// <summary>"10% below", "the reference", "20% above".</summary>
         public static string PriceSetting(ViewContext ctx, Fixed factor)
         {
@@ -87,14 +105,14 @@ namespace Sim.View.Views
                 foreach (int g in ShopRules.KindGoods(sim, t.Kind))
                     vm.Lines.Add(new LineVm(s.Get("research.shopReference", "good", g < 0 ? s.Get("shop.chai") : s.Get(sim.Config.Game.Market.Goods[g].NameKey)),
                         g < 0 ? ShopWords.Price(ctx, t.Kind, Fixed.One) : ctx.Fmt.PricePerKg(ShopRules.Reference(sim, t.Kind, g)), "shopReference", type) { Icon = "coin" });
-            for (int i = 0; i < d.Rivals.Count; i++)
+            List<Rival> rivals = sim.State.Shops.All();
+            for (int i = 0; i < rivals.Count; i++)
             {
-                RivalDef r = d.Rivals[i];
-                if (r.Kind != t.Kind) continue;
-                Rival x = sim.State.Shops.Rivals[i];
-                int metres = ShopRules.Metres(sim, ShopGroup.Village, r.Tile, r.Metres);
-                vm.Lines.Add(new LineVm(ShopWords.Rival(ctx, r), s.Get("research.rivalValue", "terms", ShopWords.Price(ctx, t.Kind, x.PriceFactor) + " · " + ShopWords.Quality(ctx, r.Quality) + " · " + ShopWords.Stars(ctx, x.Stars),
-                    "m", ctx.Fmt.Integer(metres)), "shopShare", ShopWords.ShareId(i)) { Icon = "place_" + (r.Tile >= 0 ? PlaceKind(sim, r.Tile) : "halwai") });
+                Rival x = rivals[i];
+                if (x.Kind != t.Kind) continue;
+                int metres = ShopRules.RivalMetres(sim, x, ShopGroup.Village);
+                vm.Lines.Add(new LineVm(ShopWords.Rival(ctx, x), s.Get("research.rivalValue", "terms", ShopWords.Price(ctx, t.Kind, x.PriceFactor) + " · " + ShopWords.Quality(ctx, ShopRules.RivalQuality(sim, x))
+                    + " · " + ShopWords.Stars(ctx, x.Stars), "m", ctx.Fmt.Integer(metres)), "shopShare", ShopWords.ShareId(i)) { Icon = ShopWords.RivalIcon(ctx, x) });
             }
             vm.Lines.Add(new LineVm(s.Get("research.shopExpected"), ctx.Fmt.Percent(ShopRules.ExpectedShare(sim, t.Kind, ShopGroup.Village, d.SquareTile)), "shopExpected", type) { Icon = "population" });
             vm.Lines.Add(new LineVm(s.Get("research.pitchRent"), s.Get("research.pitchRentValue", "rent", ctx.Fmt.Coins(MarketRules.Indexed(sim, d.PitchRent))), "pitchRent", type) { Icon = "coin" });
@@ -142,9 +160,11 @@ namespace Sim.View.Views
             for (int p = 0; p < d.Pitches; p++)
             {
                 Business there = sim.State.Businesses.OnPitch(p);
+                Rival newcomer = sim.State.Shops.OnPitch(p);
                 var line = new LineVm(ShopWords.Pitch(ctx, p), there != null ? s.Get("shopPlace.taken", "name", BusinessWords.Name(ctx, BusinessRules.TypeOf(sim, there)))
+                    : newcomer != null ? s.Get("shopPlace.takenNewcomer", "name", s.Get("shop.newcomerKind." + ShopWords.KindKey(newcomer.Kind)))
                     : s.Get("shopPlace.free", "rent", ctx.Fmt.Coins(MarketRules.Indexed(sim, d.PitchRent))), "pitchRent", type) { Icon = "pitch" };
-                if (there == null)
+                if (there == null && newcomer == null)
                 {
                     long capital = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t, d.SquareTile), t.Fee, borrow, null, p).CashNeeded - borrow;
                     int pitch = p;
@@ -228,13 +248,13 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(name, ctx.Fmt.Percent(Share(x.CustomersToday, all + lost)), "shopShare", ShopWords.ShareId(x))
                     { Icon = t.Id, Note = ShopWords.Terms(ctx, t.Kind, x.PriceFactor, x.Quality, x.Stars, ShopRules.WaitMinutes(x.LastArrivals, x.LastCapacity)) });
             }
-            for (int i = 0; i < st.Rivals.Count; i++)
+            List<Rival> rivals = st.All();
+            for (int i = 0; i < rivals.Count; i++)
             {
-                Rival r = st.Rivals[i];
-                RivalDef d = ShopRules.Defs(sim).Rivals[r.Def];
-                if (d.Kind != t.Kind) continue;
-                vm.Lines.Add(new LineVm(ShopWords.Rival(ctx, d), ctx.Fmt.Percent(Share(r.CustomersToday, all + lost)), "shopShare", ShopWords.ShareId(i))
-                    { Icon = "place_" + (d.Tile >= 0 ? ShopResearch.PlaceKind(sim, d.Tile) : "halwai"), Note = ShopWords.Terms(ctx, t.Kind, r.PriceFactor, d.Quality, r.Stars, ShopRules.WaitMinutes(r.LastArrivals, d.CapacityPerHour)) });
+                Rival r = rivals[i];
+                if (r.Kind != t.Kind) continue;
+                vm.Lines.Add(new LineVm(ShopWords.Rival(ctx, r), ctx.Fmt.Percent(Share(r.CustomersToday, all + lost)), "shopShare", ShopWords.ShareId(i))
+                    { Icon = ShopWords.RivalIcon(ctx, r), Note = ShopWords.Terms(ctx, t.Kind, r.PriceFactor, ShopRules.RivalQuality(sim, r), r.Stars, ShopRules.WaitMinutes(r.LastArrivals, ShopRules.RivalCapacity(sim, r))) });
             }
             vm.Lines.Add(new LineVm(s.Get("shop.lost"), ShopWords.Amount(ctx, t.Kind, lost), "shopLost", b.Id) { Icon = "population" });
         }
@@ -244,7 +264,7 @@ namespace Sim.View.Views
         {
             long all = sim.State.Shops.LostToday[(int)kind];
             foreach (Business x in sim.State.Businesses.Businesses) if (x.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, x).Kind == kind) all += x.CustomersToday;
-            foreach (Rival r in sim.State.Shops.Rivals) if (ShopRules.Defs(sim).Rivals[r.Def].Kind == kind) all += r.CustomersToday;
+            foreach (Rival r in sim.State.Shops.All()) if (r.Kind == kind) all += r.CustomersToday;
             return all;
         }
 
@@ -336,6 +356,12 @@ namespace Sim.View.Views
                         { Icon = t.Id, Action = ActionVm.Open("pitch:" + p, s.Get("action.see"), new SheetRequest("Business", b.Id)), Note = BusinessSheet.StatusText(ctx, b) });
                     continue;
                 }
+                Rival newcomer = sim.State.Shops.OnPitch(p);
+                if (newcomer != null)
+                {
+                    vm.Lines.Add(NewcomerLine(ctx, ShopWords.Pitch(ctx, p), newcomer));
+                    continue;
+                }
                 bool open = false;
                 foreach (BusinessTypeDef t in BusinessRules.Defs(sim).Types) if (t.IsShop && BusinessRules.Unlocked(sim, t)) open = true;
                 vm.Lines.Add(new LineVm(ShopWords.Pitch(ctx, p), s.Get("square.free", "rent", ctx.Fmt.Coins(MarketRules.Indexed(sim, d.PitchRent))), "pitchRent", 0)
@@ -344,6 +370,20 @@ namespace Sim.View.Views
                     Action = new ActionVm("pitch:" + p, s.Get("square.openShop"), null, ActionKind.Open, open, open ? null : s.Get("businesses.locked.village"), null, new SheetRequest("Businesses", 0)),
                 });
             }
+            Rival cart = sim.State.Shops.Newcomers.Find(x => x.Pitch < 0);
+            if (cart != null) vm.Lines.Add(NewcomerLine(ctx, s.Get("square.cart"), cart)); // ADR 0095 §2: every pitch was taken
+        }
+
+        /// <summary>A newcomer in the square: whose, its terms, its share's *Why?* (spec 017 §3.7).</summary>
+        private static LineVm NewcomerLine(ViewContext ctx, string label, Rival r)
+        {
+            Simulation sim = ctx.Sim;
+            return new LineVm(label, ctx.Strings.Get("square.newcomer", "name", ctx.Strings.Get("shop.newcomerKind." + ShopWords.KindKey(r.Kind))), "shopShare",
+                ShopWords.ShareId(sim.State.Shops.All().IndexOf(r)))
+            {
+                Icon = ShopWords.RivalIcon(ctx, r),
+                Note = ShopWords.Terms(ctx, r.Kind, r.PriceFactor, ShopRules.RivalQuality(sim, r), r.Stars, ShopRules.WaitMinutes(r.LastArrivals, ShopRules.RivalCapacity(sim, r))),
+            };
         }
     }
 }

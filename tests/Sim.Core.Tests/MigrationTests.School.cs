@@ -22,6 +22,8 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Citizens.Citizens.Select(c => c.SchoolYears), Is.All.EqualTo(0), "nobody has been to the village school");
             Assert.That(r.State.Citizens.Citizens.Any(c => c.Literate), Is.True, "literacy from spec 014's education, as saved (AC-10)");
             Assert.That(school.Class, Is.Empty);
+            Assert.That(r.State.Shops.Newcomers, Is.Empty, "no newcomers yet (spec 017 §3.7)");
+            Assert.That(r.State.Shops.Rivals.Select(x => x.LastShare), Is.All.EqualTo(Maths.Fixed.Zero), "the grocer's and tea stall's last share starts at the first close");
 
             Simulation sim = Simulation.FromState(config, r.State);
             sim.State.Era.Current = config.Game.School.UnlockEra;

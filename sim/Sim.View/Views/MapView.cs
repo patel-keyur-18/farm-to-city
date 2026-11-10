@@ -317,6 +317,14 @@ namespace Sim.View.Views
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
         public int Pitches { get; internal set; }
+
+        /// <summary>
+        /// Newcomers (spec 017 §3.7, ADR 0095 §2) by pitch: the kind ("veg", "chai", "sweets") on each pitch, or null; and the cart by the
+        /// square on <see cref="CartTile"/>'s verge, or null.
+        /// </summary>
+        public string[] NewcomerOnPitch { get; internal set; } = new string[0];
+        public string NewcomerCart { get; internal set; }
+        public int CartTile { get; internal set; } = -1;
         public List<PersonVm> People { get; } = new List<PersonVm>();
         public long SimTime { get; internal set; }
         public int Season { get; internal set; }
@@ -715,6 +723,11 @@ namespace Sim.View.Views
             {
                 map.SquareTile = sim.Config.Game.Shops.SquareTile;
                 map.Pitches = sim.Config.Game.Shops.Pitches;
+                map.CartTile = sim.Config.Game.Shops.CartTile;
+                map.NewcomerOnPitch = new string[map.Pitches];
+                foreach (Sim.Core.Business.Rival r in sim.State.Shops?.Newcomers ?? new List<Sim.Core.Business.Rival>())
+                    if (r.Pitch >= 0 && r.Pitch < map.Pitches) map.NewcomerOnPitch[r.Pitch] = ShopWords.KindKey(r.Kind);
+                    else if (r.Pitch < 0) map.NewcomerCart = ShopWords.KindKey(r.Kind);
             }
             int hour = (int)(map.SecondOfDay / 3600);
             foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)

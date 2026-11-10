@@ -1207,6 +1207,7 @@ namespace Tools.Balancer
                 long milk = Sim.Core.Business.BusinessRules.MilkFor(bt, b.Mix);
                 if (b.OwnPerDay != milk || b.BuyFromMarket == OwnMilkOnly) Ok(sim, new SetBusiness(t, b.Id, b.OpenHour, b.CloseHour, b.Fee, milk, !OwnMilkOnly));
             }
+            if (bt.IsShop && b.Status == Sim.Core.Business.BusinessStatus.Open) Restock(sim, t, b, bt);
             if (!_self) Hire(sim, t, b);
             // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
             bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
@@ -1224,6 +1225,44 @@ namespace Tools.Balancer
                 long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;
                 long spare = (b.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
                 if (spare > 0) Ok(sim, new TakeCash(t, b.Id, spare));
+            }
+        }
+
+        // A stall's goods as founded (spec 017 §3.1), and the share of today's goods its customers took, measured at 21:00.
+        private readonly Dictionary<long, long[]> _founded = new Dictionary<long, long[]>();
+        private readonly Dictionary<long, Fixed> _sold = new Dictionary<long, Fixed>();
+
+        /// <summary>
+        /// The vegetable stall's goods and the sweet shop's sweets follow the customers, as a sensible owner's would (US-122): under 80% sold
+        /// in a day, the next morning (5:00) it puts out what sold plus 15%; sold out, the goods as founded again. A newcomer
+        /// or the grocer's cut leaves fewer customers, and goods nobody buys spoil. The tea stall's cups are made to order.
+        /// </summary>
+        private void Restock(Simulation sim, long t, Sim.Core.Business.Business b, Sim.Core.Definitions.BusinessTypeDef bt)
+        {
+            if (bt.TakesMilk) return;
+            bool recipe = bt.ByRecipe;
+            long[] goods = recipe ? b.Mix : b.PutOut;
+            if (!_founded.ContainsKey(b.Id)) _founded[b.Id] = (long[])goods.Clone();
+            long[] f = _founded[b.Id];
+            int hour = (int)(t % 86_400 / 3600);
+            long offered = 0;
+            foreach (long g in goods) offered += g;
+            if (hour == 21)
+            {
+                if (offered > 0) _sold[b.Id] = Fixed.FromRatio(Math.Min(b.ServedToday, offered), offered);
+                return;
+            }
+            if (hour != 5 || !_sold.TryGetValue(b.Id, out Fixed sold)) return;
+            _sold.Remove(b.Id);
+            bool soldOut = sold >= Fixed.Parse("0.98");
+            if (!soldOut && sold >= Fixed.Parse("0.8")) return;
+            for (int g = 0; g < goods.Length; g++)
+            {
+                if (f[g] == 0) continue;
+                long want = soldOut ? f[g] : Math.Min(f[g], Math.Max(f[g] / 5, (sold * Fixed.Parse("1.15")).MulRatio(goods[g], 1).RoundToLong()));
+                if (goods[g] == want) continue;
+                if (recipe) Ok(sim, new SetMix(t, b.Id, sim.Config.Game.Market.Goods[g].Id, want));
+                else Ok(sim, new SetStallGoods(t, b.Id, sim.Config.Game.Market.Goods[g].Id, want));
             }
         }
 

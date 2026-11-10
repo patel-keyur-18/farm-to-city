@@ -44,7 +44,8 @@ namespace Game.Presentation.Map
                 }
             for (int p = 0; p < map.Pitches && p < PitchAt.Length; p++)
             {
-                string name = on[p] != null ? on[p] + "_pitch_" + (p + 1) : "pitch_empty_" + (p + 1);
+                string newcomer = p < map.NewcomerOnPitch.Length ? map.NewcomerOnPitch[p] : null;
+                string name = on[p] != null ? on[p] + "_pitch_" + (p + 1) : newcomer != null ? "newcomer_" + newcomer + "_pitch_" + (p + 1) : "pitch_empty_" + (p + 1);
                 Sprite s = SpriteBank.Rendered(name) ?? SpriteBank.Rendered("pitch_empty_" + (p + 1));
                 if (p == _pitches.Count)
                 {
@@ -56,10 +57,31 @@ namespace Game.Presentation.Map
                 if (pitch.sprite != s)
                 {
                     pitch.sprite = s;
-                    if (animate && on[p] != null) Pop(pitch.transform, PitchScale);
+                    if (animate && (on[p] != null || newcomer != null)) Pop(pitch.transform, PitchScale);
                 }
                 pitch.color = _tint;
             }
+            RefreshCart(map, animate);
+        }
+
+        /// <summary>
+        /// A newcomer's cart by the square when every pitch was taken (ADR 0095 §2, previewed 2026-11-08): on the verge of the lane
+        /// between the village tea stall and the temple, off the lane itself.
+        /// </summary>
+        private static readonly Vector2 CartAt = new Vector2(-0.12f, 0.36f);
+        private SpriteRenderer _cart;
+        private string _cartKind;
+
+        private void RefreshCart(MapVm map, bool animate)
+        {
+            if (map.NewcomerCart == _cartKind) { if (_cart != null) _cart.color = _tint; return; }
+            _cartKind = map.NewcomerCart;
+            if (_cart != null) { Destroy(_cart.gameObject); _cart = null; }
+            if (_cartKind == null || map.CartTile < 0) return;
+            _cart = NewRenderer("newcomerCart", SpriteBank.Rendered("newcomer_" + _cartKind + "_cart_s"), OnAcre(map.CartTile, CartAt), AcreOrder(map.CartTile, CartAt));
+            _cart.transform.localScale = Vector3.one * PitchScale;
+            _cart.color = _tint;
+            if (animate) Pop(_cart.transform, PitchScale);
         }
 
         /// <summary>A spot behind the counter of one of your shops on the square (the founder or worker there), or null off the square.</summary>

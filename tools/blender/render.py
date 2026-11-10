@@ -3987,12 +3987,11 @@ def model_newcomer_cart(kind, on_pitch=False, number=1):
     return group(o, scale=BUILDING_SCALE)
 
 
-# Newcomers (spec 017 §3.7, ADR 0095 §2): each kind's cart on each free pitch, facing as the pitch does, and on the street by the square.
+# Newcomers (spec 017 §3.7, ADR 0095 §2, approved 2026-11-08): each kind's cart on each pitch, facing as the pitch does, and on the lane's verge by the square.
 for _k in ("veg", "chai", "sweets"):
     for _n, _deg in PITCH_FACING.items():
         SPRITES["newcomer_%s_pitch_%d" % (_k, _n)] = (lambda k=_k, n=_n, d=_deg: (lambda: refit(model_newcomer_cart(k, True, n), d)))()
-    for _f, _deg in FACINGS.items():
-        SPRITES["newcomer_%s_cart_%s" % (_k, _f)] = (lambda k=_k, d=_deg: (lambda: refit(model_newcomer_cart(k), d)))()
+    SPRITES["newcomer_%s_cart_s" % _k] = (lambda k=_k: (lambda: refit(model_newcomer_cart(k), 0)))()
 
 def portrait(kind):
     """A card portrait: the villager from the shoulders up, framed as an icon."""

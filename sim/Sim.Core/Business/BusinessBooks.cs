@@ -135,6 +135,7 @@ namespace Sim.Core.Business
             b.OwnSeason = 0;
             b.SeasonCustomers = 0;
             b.SeasonServed = 0;
+            b.SeasonAtPrice = 0;
         }
 
         // ---- the overdraft (§3.8, §3.10) ----

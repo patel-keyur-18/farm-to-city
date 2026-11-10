@@ -119,6 +119,28 @@ namespace Sim.View.Views
                 }
             }
 
+            // The village's shops this season (spec 017 §3.7): a newcomer set up, the grocer or tea stall changed its price; your shop of that kind opens.
+            if (sim.State.Shops != null && sim.State.Businesses != null)
+            {
+                long season = t / S;
+                foreach (Sim.Core.Business.Rival r in sim.State.Shops.All())
+                {
+                    bool came = r.Newcomer && r.OpenedAt / S == season && r.OpenedAt > 0, changed = r.ChangedAt > 0 && r.ChangedAt / S == season;
+                    if (!came && !changed) continue;
+                    Sim.Core.Business.Business mine = sim.State.Businesses.Businesses.Find(b => b.Status == Sim.Core.Business.BusinessStatus.Open
+                        && Sim.Core.Business.BusinessRules.TypeOf(sim, b).Kind == r.Kind);
+                    list.Add(new AlertVm
+                    {
+                        Level = AlertLevel.Info,
+                        Text = came ? ShopAway.Opened(ctx, r.Kind, r.Pitch, r.Gap)
+                            : r.PriceFactor < Sim.Core.Business.ShopRules.Defs(sim).Rivals[r.Def].PriceFactor
+                            ? s.Get("alert.rivalBelow", "name", s.Get("shop.rival." + r.Id), "price", ShopWords.Price(ctx, r.Kind, r.PriceFactor))
+                            : ShopAway.PriceChanged(ctx, r.Id, r.Kind, r.PriceFactor, true),
+                        Action = mine == null ? null : ActionVm.Open("business:" + mine.Id, s.Get("action.open"), new SheetRequest("Business", mine.Id)),
+                    });
+                }
+            }
+
             // Information: ready to collect, a sick day.
             int ready = CollectAll.ReadyCount(sim);
             if (ready > 0) list.Add(new AlertVm { Level = AlertLevel.Info, Text = s.Plural("alert.ready", ready), Action = new ActionVm(CollectId, s.Get("alert.collect"), null, ActionKind.Primary, true, null, null) });
@@ -340,6 +362,7 @@ namespace Sim.View.Views
                     if (l.Label != s.Get("away.dayLabour")) rows.Add(new LineVm(l.Label, l.Value, "away", (long)AwayRow.People) { Icon = "person_hand_m" });
 
             rows.AddRange(TownAway.Rows(ctx, events));
+            rows.AddRange(ShopAway.Rows(ctx, events));
 
             if (fodderBought > 0) rows.Add(new LineVm(s.Get("away.fodderBought"), "−" + ctx.Fmt.Coins(fodderBought), "away", (long)AwayRow.Dairy) { Icon = "green_fodder" });
             if (vetCount > 0) rows.Add(new LineVm(s.Plural("away.vet", vetCount), "−" + ctx.Fmt.Coins(vet), "away", (long)AwayRow.Dairy) { Icon = "coin" });
@@ -353,6 +376,39 @@ namespace Sim.View.Views
             int max = ctx.Ui.AwayRowsMax;
             for (int i = 0; i < rows.Count; i++) (i < max ? vm.Lines : vm.More).Add(rows[i]);
             return rows.Count == 0 ? null : vm;
+        }
+    }
+
+    /// <summary>The village's shops on the away card (spec 017 §3.7): newcomers coming and going, the grocer's and tea stall's price.</summary>
+    public static class ShopAway
+    {
+        public static List<LineVm> Rows(ViewContext ctx, IReadOnlyList<SimEvent> events)
+        {
+            var s = ctx.Strings;
+            var rows = new List<LineVm>();
+            LineVm Row(string value, string icon) { return new LineVm(s.Get("away.shops"), value, "away", (long)AwayRow.Shops) { Icon = icon }; }
+            foreach (SimEvent e in events)
+                switch (e)
+                {
+                    case RivalOpened o: rows.Add(Row(Opened(ctx, o.Kind, o.Pitch, o.Gap), "newcomer_" + ShopWords.KindKey(o.Kind))); break;
+                    case RivalClosed c: rows.Add(Row(s.Get("away.newcomerClosed", "name", s.Get("shop.newcomerKind." + ShopWords.KindKey(c.Kind))), "newcomer_" + ShopWords.KindKey(c.Kind))); break;
+                    case RivalPriceCut p: rows.Add(Row(PriceChanged(ctx, p.RivalId, p.Kind, p.PriceFactor, p.Raised), p.Kind == ShopKind.Veg ? "place_grocery" : "place_tea_stall")); break;
+                }
+            return rows;
+        }
+
+        /// <summary>"A newcomer's chai cart set up by the square: your prices are above the usual."</summary>
+        public static string Opened(ViewContext ctx, Sim.Core.Definitions.ShopKind kind, int pitch, bool gap)
+        {
+            var s = ctx.Strings;
+            string where = pitch >= 0 ? s.Get("shop.newcomerOn", "pitch", ShopWords.Pitch(ctx, pitch)) : s.Get("shop.newcomerCart");
+            return s.Get(gap ? "away.newcomerGap" : "away.newcomerPrice", "name", s.Get("shop.newcomerKind." + ShopWords.KindKey(kind)), "where", where);
+        }
+
+        /// <summary>"The village tea stall cut its price to 11 coins a cup: it lost customers to you."</summary>
+        public static string PriceChanged(ViewContext ctx, string rivalId, Sim.Core.Definitions.ShopKind kind, Fixed factor, bool raised)
+        {
+            return ctx.Strings.Get(raised ? "away.rivalBack" : "away.rivalCut", "name", ctx.Strings.Get("shop.rival." + rivalId), "price", ShopWords.Price(ctx, kind, factor));
         }
     }
 
@@ -470,7 +526,7 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 013 §3.1.
             { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.

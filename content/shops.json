@@ -21,9 +21,11 @@
     "banana": 0.10, "papaya": 0.04, "guava": 0.04, "mango": 0.06
   },
   "rivals": [
-    { "id": "grocer",      "kind": "veg",    "place": "grocery",   "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 7, "closeHour": 21 },
-    { "id": "village_tea", "kind": "chai",   "place": "tea_stall", "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 6, "closeHour": 22, "capacityPerHour": 200 },
+    { "id": "grocer",      "kind": "veg",    "place": "grocery",   "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 7, "closeHour": 21, "reacts": true },
+    { "id": "village_tea", "kind": "chai",   "place": "tea_stall", "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 6, "closeHour": 22, "capacityPerHour": 200, "reacts": true },
     { "id": "town_halwai", "kind": "sweets", "metres": 1500,       "priceFactor": 1.0, "quality": "good",     "stars": 4, "openHour": 8, "closeHour": 20 }
   ],
+  "newcomers": { "gap": 0.8, "chance": 0.5, "exitShare": 0.1, "exitSeasons": 2, "stars": 2.5, "quality": "standard", "cartPlace": "tea_stall", "cartMetres": 100 },
+  "reaction": { "step": 0.05, "floor": 0.85, "change": 0.3333 },
   "chakki": { "metres": 1500, "quality": "good", "stars": 3 }
 }

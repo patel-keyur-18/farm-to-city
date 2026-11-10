@@ -33,6 +33,9 @@ namespace Sim.View.Views
 
         /// <summary>Your godown in the mandi town let to a trader (spec 013 §3.4, ADR 0087).</summary>
         Godown = 15,
+
+        /// <summary>The village's shops (spec 017 §3.7): a newcomer set up or packed up, the grocer or tea stall changed its price.</summary>
+        Shops = 16,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

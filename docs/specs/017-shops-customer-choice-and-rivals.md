@@ -1,6 +1,6 @@
 # 017. Shops, customer choice and rivals
 
-- Status: Approved 2026-10-27 (ADR 0074); every gap closed with the owner, one per message; built in Sprint 16 (ADR 0057); amended as built by ADR 0091 (US-120); rivals (§3.7) built in Sprint 17 (ADR 0088), filled in by ADR 0095
+- Status: Approved 2026-10-27 (ADR 0074); every gap closed with the owner, one per message; built in Sprint 16 (ADR 0057); amended as built by ADR 0091 (US-120); rivals (§3.7) built in Sprint 17 (ADR 0088), filled in by ADR 0095, as built by ADR 0096 (US-122)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (founding flow step 4 location, operating levers, customer choice, competition); Economy (services priced by businesses, §Market scope); Citizens (household budgets)
@@ -88,7 +88,7 @@ share(shop) = attraction(shop) ÷ Σ attraction(open shops of that kind)
 
 | Place | Rent | Location | Notes |
 | --- | --- | --- | --- |
-| **A pitch in the village square** (3 pitches, `MapDef.places` kind `pitch`, round the banyan) | `pitchRent` 3,000 a season, paid upfront at the close to the council (Cr Cash, Dr Rent) | Distance 0 from the village, the town's centre distance from your houses | The village's own sellers keep their places; a rival can take a free pitch |
+| **A pitch in the village square** (3 pitches, `MapDef.places` kind `pitch`, round the banyan) | `pitchRent` 3,000 a season, paid upfront at the close to the council (Cr Cash, Dr Rent); past the overdraft's limit it goes unpaid that season, as a wage does (ADR 0096 §4) | Distance 0 from the village, the town's centre distance from your houses | The village's own sellers keep their places; a rival can take a free pitch |
 | **Your own acre** (spec 016 §3.3 step 4; the pitches are `square` and `pitches` in `shops.json`, ADR 0091 §4) beside the village lane or the farm lane | None | Distance from each group's centre. As built, an inherited acre is 800–1,200 m from the square (ADR 0091 §3), where the village's share is at the attraction's floor, about 5–10% (ADR 0093); the place sheet shows your nearest free acre's share beside the pitches' | Teaches location: cheaper, but fewer pass by |
 
 ### 3.5 Quality and reputation (§10 G4)
@@ -113,6 +113,7 @@ Spec 016 §3.5(b)'s rule (a fee more than 1 above the next village's loses all t
 | **The town's halwai** (off the map, as the next village's chakki) | Sweets at the reference, good quality, 4 stars, 1.5 km from the square, never runs out, never closes. Without your shop, the village buys its sweets there |
 | **A newcomer** | At each season close, for each kind of shop: if the last season's served demand was under 80% of demand (a gap), or one of your shops of that kind sold the season above the reference (its customer-weighted price factor over 1.0: rich margins; ADR 0095 §1, was the mean price over 1.25 × the reference, which no preset reached), a newcomer opens on a free pitch with probability 0.5 (seeded, `rival` stream): reference price, standard, 2.5 stars, the village's hours. With no pitch free it sets up as a cart at one fixed spot on the village lane at the square's edge, 100 m from the square (ADR 0095 §2). It closes when its season's share falls under 10% two seasons running. At most one newcomer of each kind. |
 | **Reaction** (ADR 0095 §3) | At each close, the village grocer or tea stall, if its share fell by more than a third from last season's, cuts its price by 5% of the reference (1.00, 0.95, 0.90, 0.85), never under `rivalFloor` 0.85; a season its share rose by more than a third, it goes back 5%, never above the reference. The town's halwai and newcomers keep their prices |
+| **As built** (ADR 0096) | A newcomer keeps the village's shop hours and serves whoever comes; it comes only once its kind is open to the player, never in the close one of its kind leaves, and remembers whether a gap or your prices drew it; its cart stands on the lane's verge between the village tea stall and the temple. The grocer's and tea stall's prices move in hundredths. Each arrival, departure and price change is alerted that season and told on the away card |
 
 Rivals have no ledgers: their sales and costs are counted for their share and their closing, not booked.
 
@@ -181,7 +182,7 @@ The share's *Why?* lists each part of the attraction in words ("10% below the vi
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| A tea stall on a pitch, hired, good quality, 10% above the reference (ADR 0093: good quality's cost comes back in its price) | 5,000–12,000 a season (a hired mill's level, ADR 0073) | Measured by the business bot |
+| A tea stall on a pitch, hired, at the usual price, standard (ADR 0096 §6: 10% above now draws a newcomer, ADR 0095 §1) | 5,000–12,000 a season (a hired mill's level, ADR 0073); measured 7,335 | Measured by the business bot; each shop at 1.1 earns no more than at 1.0 (`GateTests.Shops`) |
 | A vegetable stall selling your own produce | 15% more for your produce than the market (`retailMarkup` 1.15, ADR 0093), more than the trader, less the wage | Run by you about 17,600 a season, hired about 3,700 (business bot, ADR 0093) |
 | A sweet shop on your own paneer and ghee, hired halwai | 8,000–15,000 a season; the dairy's milk worth more as sweets than at the co-op | Measured by the business bot |
 | Share against the village shop at equal terms | About 50% on the square; about 5–10% of the village from an inherited acre 800–1,200 m out, plus your own town (ADR 0093) | The place sheet shows both |

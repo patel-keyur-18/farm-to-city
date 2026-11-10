@@ -120,6 +120,7 @@ namespace Game.Presentation.Ui
                 case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "school": case "school_building": return IconBank.Good(icon); // spec 018
+                case "newcomer_veg": case "newcomer_chai": case "newcomer_sweets": return IconBank.Good(icon); // spec 017 §3.7
                 case "veg_stall_building": case "tea_stall_building": case "sweet_shop_building": return SpriteBank.Rendered(icon.Substring(0, icon.Length - 9) + "_s") ?? SpriteBank.Hut;
                 case "pitch": return SpriteBank.Rendered("pitch_empty_1");
                 case "star": return IconBank.Star(2); // a shop's stars (spec 017 §3.5)
@@ -750,6 +751,7 @@ namespace Game.Presentation.Ui
             head.style.flexDirection = FlexDirection.Row;
             head.style.justifyContent = Justify.SpaceBetween;
             head.style.alignItems = Align.Center;
+            head.style.flexShrink = 0; // a long title wraps and pushes the rows down; the rows scroll instead (US-122)
             var titles = new VisualElement { pickingMode = PickingMode.Ignore };
             titles.style.flexShrink = 1;
             Label why = UiKit.Text(WhyLabel, 30, UiKit.Wood, UiKit.Heading);
