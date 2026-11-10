@@ -1,10 +1,10 @@
 # 018. The school and literacy, the Codex, advisors and the Village unlock
 
-- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095); the Village unlock as built by ADR 0097 (US-102; its pace with the owner)
+- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095); the Village unlock as built by ADR 0097 (US-102; its pace measured and accepted by the owner, 2026-11-10)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Player journey and eras (Village); Community and civic services (literacy versus skills, education); Learning layer (advisors, the Concept Codex)
-- Related ADRs: 0011 (literacy is separate from skilled graduates; the founder funds the first school), 0028 (the Village at 2–3 weeks), 0030 and 0032 (the Hamlet gate), 0045 (nudges and chapters), 0061 (the village is the town; the school plot), 0063 (spec 014: needs layers, education 5% of a budget), 0071 (5 households by day 16 with the home loan; spec 018 sets the Village from it), 0076 (Sprint 15 plan)
+- Related ADRs: 0011 (literacy is separate from skilled graduates; the founder funds the first school), 0028 (the Village at 2–3 weeks; 4–5 since ADR 0097), 0030 and 0032 (the Hamlet gate), 0045 (nudges and chapters), 0061 (the village is the town; the school plot), 0063 (spec 014: needs layers, education 5% of a budget), 0071 (5 households by day 16 with the home loan; spec 018 sets the Village from it), 0076 (Sprint 15 plan)
 - Depends on specs: 009 (chapters, the Hamlet unlock), 010 (the school plot), 014 (citizens, households, needs), 015 (hiring, roles), 016 (businesses, a profitable season)
 
 ## 1. Goal
@@ -83,7 +83,7 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 ### 3.5 Conflicts settled (§10 G7, G8)
 
 - **The treasury (G7).** The GDD gave the Village "the treasury"; F15.1 is Phase 3. The treasury opens with the Township (Phase 3), with taxes; the Village era row lists larger co-op loans (the bank's cap rises from 5,00,000 to 25,00,000, `lenders.json` already) and the Village businesses and shops instead.
-- **The Phase 2 exit gate (G8).** The roadmap said "a week of play"; ADR 0028 puts the Village at 2–3 weeks. The gate is: the Village reached in 2–3 weeks by a competent player using credit (4–6 weeks saving), the owner's playtest from the Hamlet to the Village, and players can explain profit versus cash.
+- **The Phase 2 exit gate (G8).** The roadmap said "a week of play"; ADR 0028 puts the Village at 2–3 weeks, and ADR 0097 measured 4–5. The gate is: the Village reached in 4–5 weeks by a competent player using credit (about 8 weeks saving), in any order of its three goals, the owner's playtest from the Hamlet to the Village, and players can explain profit versus cash.
 
 ### 3.6 The Village unlock (US-102; §10 G1)
 
@@ -99,13 +99,13 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 - **Checked** at each season close, when the school opens and when a household forms or moves in (ADR 0095 §9; system Population, after Finance); **unlocks once**: `EraUnlocked(village)`, the play-log milestone. A business's profitable seasons are counted on it (an existing one's from its own ledger at the migration).
 - **Progress:** Menu → Letter → "Becoming a Village": households (n of 5), businesses' profitable seasons (n of 2), the school (none, building, open); each row's *Why?* says what to do next ("Build a family house", "Start a flour mill", "Build the school on the school plot"). The Hamlet's celebration names the three goals, so a player knows them from the moment the Hamlet opens.
 - **Celebration:** the `village` chapter (the grandmother's letter's voice), confetti as the Hamlet's, and a list of what opens: the bakery and the dairy (spec 016), shops on the pitches (spec 017), drip and the borewell, the tractor (spec 013), the co-op bank's larger loans.
-- **Target:** the competent bot within 2–3 weeks, the cautious saver within 4–6 (ADR 0028, 0071); measured in the balancer (§9).
+- **Target (ADR 0097, owner 2026-11-10; was 2–3 and 4–6 weeks):** homes first, then a business, then the school, the competent bot at a median of day 28–40 and the cautious saver at 50–64; any order within 50 days with loans and 80 saving, never stuck. The last *Why?* line on the progress sheet tells the player the quickest order.
 - **As built (ADR 0097):**
   - Every household on your land counts. The business with the most profitable seasons counts; a closed one keeps its count, and a schema-14 business is counted from its kept reports.
   - The gate is also checked when a hand is hired into his hut, a family moves into a free house, or a married son moves into one.
   - The co-op bank's cap follows the era reached.
   - The progress sheet is the next era's ("Your Village" once there), and its list of what each era opens is read from the content.
-  - Measured with `VillageBot` (homes, then a hired mill, then the school): the competent bot at a median of day 32 (29–39), the cautious saver at day 56 (52–57). The pace is with the owner (ADR 0097 §8).
+  - Measured with `VillageBot`: homes first at a median of day 32 (29–39), the saver day 56 (52–57); the slowest orders day 47 with loans (the mill, the school, then homes) and 76 saving (the school, homes, then the mill) (ADR 0097 §8).
 
 ### 3.7 Processing order
 
@@ -181,15 +181,15 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 | AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay; two or more in a pass get one toast | `CodexTests.Triggers`, `CodexTests.Burst` |
 | AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session; the season report shows the highest-priority note that holds | `AdvisorTests.Caps`, `AdvisorTests.Priority` |
 | AC-8 | The Village unlocks once when its three conditions hold, checked at the close, when the school opens and when a household forms; the progress view shows each | `EraTests.Village`, `EraTests.Village_OnHousehold` |
-| AC-9 | The competent bot reaches the Village in 14–21 days, the cautious saver in 28–42 | `GateTests.Village` |
+| AC-9 | Homes first, the competent bot reaches the Village at a median of day 28–40, the cautious saver 50–64; every order of the three gets there in every run, within 50 days with loans and 80 saving (ADR 0097) | `GateTests.Village` |
 | AC-10 | A schema-14 save loads into 15 with no school, literacy from spec 014's education, no cards found | `MigrationTests.Schema14_School` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Village day, competent bot (credit) | 14–21 | ADR 0028, 0071 |
-| Village day, cautious saver | 28–42 | |
+| Village day, competent bot (credit), homes first | 28–40 (measured 32) | ADR 0097 (was 14–21, ADR 0028, 0071) |
+| Village day, cautious saver, homes first | 50–64 (measured 56) | Any order: ≤ 50 with loans, ≤ 80 saving |
 | Literacy when the Village unlocks | 50–70% (adults' 60% primary, children not yet finished) | Township needs 40% |
 | Codex cards found by the Village | 12–18 of 24 | Not a flood |
 | The school's cost | About two seasons of a competent Hamlet farm's profit (median 46,000, ADR 0058); a family house is 60,000 | Built by day 21 with the co-op loan (competent bot) and by day 42 from savings (cautious saver) |
@@ -203,7 +203,7 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 - **G5. The Codex set and its moment.** **Closed (owner, 2026-10-27):** about 24 Phase 2 cards in six groups (§3.3), each found the first time its idea is met, after the result; a toast that opens the card and Menu → Codex (unfound cards hidden); never a sheet over play, never in the first session.
 - **G6. Advisors.** **Closed (owner, 2026-10-27):** three people of the village, named, with Blender portraits: an old farmer neighbour (farm), the co-op bank's secretary (accountant), a retired headmaster (people lead); one line on the season report and on an alert whose cause they know; at most one line a sheet, a topic once a game day, none in the first session; they never act (§3.4).
 - **G7. The treasury's era.** **Closed (owner, 2026-10-27):** the treasury opens with the Township (Phase 3), with taxes; the GDD's Village row lists what Phase 2 opens instead: the co-op bank's larger loans (cap 5,00,000 → 25,00,000), the bakery and the dairy, shops on the pitches, drip, the borewell and the tractor (§3.5).
-- **G8. The Phase 2 exit gate.** **Closed (owner, 2026-10-27):** the competent bot reaches the Village in 14–21 days using credit, the cautious saver in 28–42; the owner's Phase 2 playtest plays from the Hamlet to the Village, and players can explain profit versus cash; the roadmap's "a week of play" is replaced (§3.5).
+- **G8. The Phase 2 exit gate.** **Closed (owner, 2026-10-27; pace amended 2026-11-10, ADR 0097):** the competent bot reaches the Village in 28–40 days using credit, the cautious saver in 50–64 (was 14–21 and 28–42); the owner's Phase 2 playtest plays from the Hamlet to the Village, and players can explain profit versus cash; the roadmap's "a week of play" is replaced (§3.5).
 
 ## 11. Cut first
 

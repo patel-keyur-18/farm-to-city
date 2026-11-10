@@ -766,7 +766,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 17 · 12–25 Apr 2027 · Phase 2 (the school and literacy, the Codex and advisors, the Village unlock, rival entry; 2 weeks, ADR 0095)
 
-- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Started 2026-11-07: the school's art approved; US-131 and US-132 approved (2026-11-08); the newcomers' carts and spot approved; US-122 approved (2026-11-10, ADR 0096); the `village` letter approved; US-102 built, its pace with the owner (ADR 0097 §8). Sprint 16 is merged (PR #22)
+- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Started 2026-11-07: the school's art approved; US-131 and US-132 approved (2026-11-08); the newcomers' carts and spot approved; US-122 approved (2026-11-10, ADR 0096); the `village` letter approved; US-102 done, for review (ADR 0097: the Village at 4–5 weeks, owner 2026-11-10). Sprint 16 is merged (PR #22)
 - **Branch:** `sprint/17-school-and-village`, from `main` after PR #22
 - **Goal:** Spec 018 built (F14.1, F14.2, US-102): the school on its plot as a gift to the village, literacy from pupils and adult classes, the Codex's cards with the player's numbers, three advisors, and the Village unlocked by its gate. US-122 built (F12.4): newcomers on a gap or when your shop prices above the village's, on a free pitch or as a cart on the lane, and the grocer's and tea stall's price cuts, so that overpricing no longer pays (ADR 0093). Save schema 15 with its migration and fixture.
 - **Points:** 36 (re-pointed, ADR 0095: US-131 5 → 8, US-132 3 → 5, US-133 5 → 8, US-134 3 → 5, US-102 2 → 5, US-122 5)
@@ -779,11 +779,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-131 | First school | [F14.1](features/F14.1-school-and-literacy.md) | 8 | Must | Done |
 | US-132 | Literacy | [F14.1](features/F14.1-school-and-literacy.md) | 5 | Must | Done |
 | US-122 | Rival entry | [F12.4](features/F12.4-rivals-and-competition.md) | 5 | Should | Done (approved) |
-| US-102 | Village unlock | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Built; the pace with the owner |
+| US-102 | Village unlock | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Done (for review) |
 | US-133 | Codex | [F14.2](features/F14.2-codex-and-advisors.md) | 8 | Must | To do |
 | US-134 | Advisors | [F14.2](features/F14.2-codex-and-advisors.md) | 5 | Must | To do |
 
-**Order of work:** the school's art and its plot's layout previewed → US-131 → US-132 → the newcomer's cart spot previewed → US-122 → the `village` letter's text previewed → US-102 → the Codex's icons previewed → US-133 → the advisors' portraits previewed → US-134 → balance with the bots (`GateTests.Village` 14–21 and 28–42 days; `GateTests.Shops` with newcomers and price cuts, a stall at 1.1 no better than at 1.0; literacy at the Village 50–70%; Codex cards 12–18 by the Village; town happiness about 72) → the whole checklist in the Editor by scripted touch → the device build, writing down both frame-time p95s (ADR 0094: main ≤ 8.3 ms, GPU ≤ 11 ms; about 1.8 ms of GPU room). One stop for the owner's review after each story. Schema 15 grows on this branch and ships once, with the device build.
+**Order of work:** the school's art and its plot's layout previewed → US-131 → US-132 → the newcomer's cart spot previewed → US-122 → the `village` letter's text previewed → US-102 → the Codex's icons previewed → US-133 → the advisors' portraits previewed → US-134 → balance with the bots (`GateTests.Village` homes first 28–40 and 50–64 days, every order reachable, ADR 0097; `GateTests.Shops` with newcomers and price cuts, a stall at 1.1 no better than at 1.0; literacy at the Village 50–70%; Codex cards 12–18 by the Village; town happiness about 72) → the whole checklist in the Editor by scripted touch → the device build, writing down both frame-time p95s (ADR 0094: main ≤ 8.3 ms, GPU ≤ 11 ms; about 1.8 ms of GPU room). One stop for the owner's review after each story. Schema 15 grows on this branch and ships once, with the device build.
 
 **If it runs over,** cut in spec 018 §11's order: the advisors' alert lines, then adult classes, then Codex cards beyond the Money and Business groups. US-122 stays (ADR 0093 needs it).
 

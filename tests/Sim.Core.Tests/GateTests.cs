@@ -288,18 +288,24 @@ namespace Sim.Core.Tests
 
         private static string Days(System.Collections.Generic.List<double> days) { return string.Join(" ", days.Select(d => double.IsNaN(d) ? "-" : d.ToString("0.0"))); }
 
-        // Spec 018 §9, AC-9 (US-102): the competent bot (homes, then a hired mill, then the school on a co-op loan) reaches the Village in
-        // 14–21 days, the cautious saver (no loans) in 28–42 (median of 16 and 8 seeds); each condition's day is printed so a miss shows its cause.
+        // Spec 018 §9, AC-9 (US-102, ADR 0097): the Village is reachable whatever order a player goes for its three (homes, a mill, the
+        // school), with loans or saving, never stuck (every run within 24 seasons). Homes first (then the mill, then the school) is quickest:
+        // the competent bot at a median of day 28–40, the cautious saver at 50–64; any order within 50 with loans and 80 saving. 8 seeds each;
+        // each condition's day is printed so a miss shows its cause.
         [Test]
         public void Village()
         {
-            foreach ((Gate.VillageResult r, double lo, double hi) in new[] { (Gate.Village(Live(), () => new VillageBot(), 16), 14.0, 21.0), (Gate.Village(Live(), () => new VillageBot(true), 8, 24), 28.0, 42.0) })
-            {
-                TestContext.Out.WriteLine(r.Bot + ": Village day " + Days(r.Village) + "; Hamlet " + Days(r.Hamlet) + "; 5 households " + Days(r.Households)
-                    + "; a business's 2 profitable seasons " + Days(r.Business) + "; the school open " + Days(r.School) + "; literacy at the Village " + string.Join(" ", r.Literacy) + "%");
-                double median = r.Village.Select(d => double.IsNaN(d) ? double.MaxValue : d).OrderBy(d => d).ElementAt(r.Village.Count / 2);
-                Assert.That(median, Is.InRange(lo, hi), r.Bot);
-            }
+            foreach (string order in new[] { "HMS", "HSM", "MHS", "MSH", "SHM", "SMH" })
+                foreach (bool saver in new[] { false, true })
+                {
+                    Gate.VillageResult r = Gate.Village(Live(), () => new VillageBot(saver, order), 8, 24);
+                    TestContext.Out.WriteLine(r.Bot + ": Village day " + Days(r.Village) + "; Hamlet " + Days(r.Hamlet) + "; 5 households " + Days(r.Households)
+                        + "; a business's 2 profitable seasons " + Days(r.Business) + "; the school open " + Days(r.School) + "; literacy at the Village " + string.Join(" ", r.Literacy) + "%");
+                    Assert.That(r.Village.Count(double.IsNaN), Is.Zero, r.Bot + ": every run gets there");
+                    double median = r.Village.OrderBy(d => d).ElementAt(r.Village.Count / 2);
+                    if (order == "HMS") Assert.That(median, saver ? Is.InRange(50.0, 64.0) : Is.InRange(28.0, 40.0), r.Bot);
+                    else Assert.That(median, Is.LessThanOrEqualTo(saver ? 80.0 : 50.0), r.Bot);
+                }
         }
 
         // Spec 015 §9 (ADR 0082): the competent bot paying fair wages keeps motivation at 1.0–1.1 and the farm's profit within 2% of Phase 1's

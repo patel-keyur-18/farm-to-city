@@ -1324,31 +1324,58 @@ namespace Tools.Balancer
     }
 
     /// <summary>
-    /// Spec 018 §9 (US-102): the competent founder going for the Village's gate in the order that measured quickest: five homes first
-    /// (on the bank's home loan, ADR 0071), then a hired flour mill on its loan, then the school on a co-op loan as far as the bank's
-    /// room allows. The saver variant borrows nothing, hires as the cautious saver does, and builds from savings.
+    /// Spec 018 §9 (US-102, ADR 0097): the competent founder going for the Village's gate in an order of its three: H five homes (on the
+    /// bank's home loan, ADR 0071), M a hired flour mill on its loan, S the school on a co-op loan as far as the bank's room allows. "HMS"
+    /// measured quickest; the others show a player who goes another way still gets there. The saver variant borrows nothing, hires as
+    /// the cautious saver does, and builds from savings.
     /// </summary>
     public sealed class VillageBot : BusinessBot
     {
         private readonly bool _saver;
+        private readonly string _order;
 
-        public VillageBot(bool saver = false) : base(false, !saver, "flour_mill") { _saver = saver; }
+        public VillageBot(bool saver = false, string order = "HMS") : base(false, !saver, "flour_mill")
+        {
+            _saver = saver;
+            _order = order;
+        }
 
-        public override string Name { get { return _saver ? "village-saver" : "village"; } }
+        public override string Name { get { return (_saver ? "village-saver" : "village") + (_order == "HMS" ? "" : "-" + _order); } }
 
         protected override bool MayBorrow { get { return !_saver; } }
 
         protected override bool ReadyToHire(Simulation sim) { return _saver ? CautiousSaverBot.CanHire(sim) : base.ReadyToHire(sim); }
 
-        private static bool HomesStarted(Simulation sim) { return sim.State.Citizens == null || Town.Homes(sim) >= Town.Households; }
+        private static bool Started(Simulation sim, char c)
+        {
+            switch (c)
+            {
+                case 'H': return sim.State.Citizens == null || Town.Homes(sim) >= Town.Households;
+                case 'M': return sim.State.Businesses == null || sim.State.Businesses.Businesses.Count > 0;
+                default: return SchoolRules.On(sim) && SchoolRules.State(sim).Status != SchoolStatus.None;
+            }
+        }
 
-        /// <summary>The mill once the homes are under way, the school once the mill is founded.</summary>
-        protected override bool MayFound(Simulation sim) { return HomesStarted(sim); }
+        /// <summary>True once everything before <paramref name="c"/> in the order is under way.</summary>
+        private bool Turn(Simulation sim, char c)
+        {
+            foreach (char x in _order)
+            {
+                if (x == c) return true;
+                if (!Started(sim, x)) return false;
+            }
+            return true;
+        }
+
+        protected override bool MayFound(Simulation sim) { return Turn(sim, 'M'); }
+
+        /// <summary>Homes wait their turn: until then, no cash is free for a house.</summary>
+        protected override long HomeReserve(Simulation sim) { return Turn(sim, 'H') ? base.HomeReserve(sim) : long.MaxValue / 4; }
 
         public override void Play(Simulation sim, long t)
         {
             base.Play(sim, t);
-            if (HomesStarted(sim) && sim.State.Businesses?.Businesses.Count > 0) School(sim, t);
+            if (Turn(sim, 'S')) School(sim, t);
         }
 
         private void School(Simulation sim, long t)
@@ -1362,7 +1389,7 @@ namespace Tools.Balancer
                 loan -= loan % (1_000 * Money.Coin);
                 if (loan < sim.Config.Game.Credit.Lenders[bank].MinAmount) loan = 0;
             }
-            if (sim.State.Ledger.Cash < price - loan + HomeReserve(sim)) return;
+            if (sim.State.Ledger.Cash < price - loan + base.HomeReserve(sim)) return; // the next close's costs, and the mill's cash in its turn
             Ok(sim, new BuildSchool(t, loan > 0 ? new Financing("coop_bank", loan, 8) : null));
         }
     }
