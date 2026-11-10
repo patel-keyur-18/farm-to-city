@@ -417,6 +417,14 @@ PEOPLE = {
     "elder_m": dict(sex="m", skin=0x9E6A48, top=0xF3EFE6, bottom=0xF3EFE6, accent=0xC9B48A, wear="kurta", hair=0xD8D4CC, stoop=12, tool="stick"),
     # An elder (woman): a cream saree with a maroon border, grey hair in a bun, head uncovered.
     "elder_f": dict(sex="f", skin=0xA77150, top=0xEFE4CC, bottom=0xEFE4CC, accent=0x8E2A3F, blouse=0xC9B48A, wear="saree", hair=0xBDB6AC, stoop=8),
+    # The advisors (spec 018 §3.4, US-134), card portraits only. Ramdeen Kaka, the old farmer next door: a white kurta and dhoti,
+    # a faded saffron pagdi, a white moustache, a brown shawl over the shoulders.
+    "advisor_farm": dict(sex="m", skin=0x96603F, top=0xF3EFE6, bottom=0xF3EFE6, accent=0xD9822B, vest=0x8A5A2B, wear="dhoti", head="pagdi", hair=0xD8D4CC),
+    # Sunita Verma, the co-op bank's secretary: a navy cotton saree with a teal border, a white blouse, spectacles, hair in a bun.
+    "advisor_bank": dict(sex="f", skin=0xB37853, top=0x2E3F73, bottom=0x2E3F73, accent=0x2FA39A, blouse=0xF3EEE2, wear="saree", glasses=0x3A2A1E),
+    # Masterji Hariprasad, the retired headmaster: a white kurta under a brown Nehru jacket, a maroon gamchha, a white Gandhi topi,
+    # round spectacles.
+    "advisor_people": dict(sex="m", skin=0xA06B49, top=0xF3EFE6, bottom=0xF3EFE6, accent=0x8E3A3A, vest=0x6B4A2B, wear="kurta", head="topi", hair=0xBDB6AC, glasses=0x5A4632),
 }
 
 
@@ -506,6 +514,15 @@ def model_person(kind, facing, pose="stand"):
                 o.append(sphere("moustache", 0.0045, (0, -0.0300, hz - 0.0095), hair, scale=(2.0, 0.55, 0.65), segs=8, rings=6, outline=False))
         else:
             o.append(sphere("bindi", 0.0022, (0, -0.0300, hz + 0.0135), m("bindi", 0xC0262D), segs=6, rings=4, outline=False))
+        if p.get("glasses"):
+            # Spectacles (the advisors): two round rims over the eyes and a bridge, in a thin dark frame.
+            frame, lens = m("frame", p["glasses"]), m("lens", 0xE9F1F2)
+            face = Matrix.Rotation(math.radians(90), 3, "X")
+            for s in (-1, 1):
+                o.append(cylinder("rim%d" % s, 0.0072, 0.0072, 0.0012, (s * 0.0118, -0.0302, hz + 0.003), frame, segs=16, rot=face, outline=False))
+                o.append(cylinder("lens%d" % s, 0.0058, 0.0058, 0.0014, (s * 0.0118, -0.0303, hz + 0.003), lens, segs=16, rot=face, outline=False))
+                o.append(sphere("eyeBehind%d" % s, 0.0030, (s * 0.0118, -0.0312, hz + 0.003), dark, scale=(0.85, 0.4, 1.2), segs=8, rings=5, outline=False))
+            o.append(box("bridge", (0.0055, 0.0015, 0.0012), (0, -0.0305, hz + 0.005), frame, outline=False))
     # Hair and headwear.
     o.append(sphere("hair", 0.0328, (0, 0.0045, hz + 0.0065), hair, scale=(1.0, 0.96, 0.82), segs=20, rings=12))
     if p.get("plaits"):
@@ -521,6 +538,10 @@ def model_person(kind, facing, pose="stand"):
         o.append(cylinder("pagdi", 0.0335, 0.031, 0.020, (0, 0.003, hz + 0.019), accent, segs=18, smooth=True))
         o.append(sphere("pagdicrown", 0.027, (0, 0.004, hz + 0.028), accent, scale=(1, 1, 0.5), segs=16, rings=8))
         o.append(box("pagditail", (0.010, 0.004, 0.026), (0.010, 0.030, hz + 0.004), accent))
+    elif p.get("head") == "topi":
+        # A Gandhi topi: a boat-shaped white cotton cap, its fold along the top.
+        o.append(box("topi", (0.050, 0.030, 0.014), (0, 0.004, hz + 0.027), m("topi", 0xFAF8F2), bevel=0.004))
+        o.append(box("topifold", (0.046, 0.004, 0.008), (0, 0.004, hz + 0.036), m("topiFold", 0xE6E1D6), outline=False))
     if pose.startswith("walk"):
         # Four frames: contact, passing, contact (other foot), passing. Legs swing about the hip, arms against them,
         # a saree sways; the body rises a little when passing.
@@ -4139,7 +4160,7 @@ def model_school(stage):
 SPRITES["village_school_e"] = lambda: refit(model_school("done"), FACINGS["e"])
 SPRITES["village_school_building_e"] = lambda: refit(model_school("building"), FACINGS["e"])
 
-for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f"):
+for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f", "advisor_farm", "advisor_bank", "advisor_people"):
     ICONS["portrait_" + _k] = (lambda k=_k: (lambda: portrait(k)))()
 ICONS["icon_population"] = lambda: icon_people("population")
 ICONS["icon_happiness"] = lambda: icon_people("happiness")
