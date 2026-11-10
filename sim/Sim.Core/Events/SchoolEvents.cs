@@ -63,4 +63,14 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "AdultClassStarted(" + Pupils + ", cost=" + Cost + ")"; }
     }
+
+    /// <summary>A Concept Codex card was found (spec 018 §5): the toast, Menu → Codex.</summary>
+    public sealed class CodexCardFound : SimEvent
+    {
+        public string CardId { get; }
+
+        public CodexCardFound(long simTime, string cardId) : base(simTime) { CardId = cardId; }
+
+        protected override string Describe() { return "CodexCardFound(" + CardId + ")"; }
+    }
 }

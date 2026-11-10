@@ -53,7 +53,10 @@ namespace Sim.Content
             if (livestock != null) game.Orchard = LoadOrchard(read("farming.json"), farm, onboarding); // with the Phase 2 content, like the machines
             // The school comes with a school block in the buildings and citizens to teach (spec 018 §4).
             if (population != null && Object(Parse(read("buildings.json"), "buildings"), "buildings")["school"] != null)
+            {
                 game.School = LoadSchool(read("buildings.json"), read("population.json"), map, onboarding);
+                game.Codex = LoadCodex(read("codex.json")); // the Codex comes with the school (spec 018 §4)
+            }
             return game;
         }
 

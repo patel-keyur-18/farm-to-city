@@ -16,6 +16,7 @@ namespace Game.Presentation.Ui
         public static readonly Color Green = Painter.Hex(0x79C84A), GreenDark = Painter.Hex(0x3F7D20), Red = Painter.Hex(0xE8604C), RedDark = Painter.Hex(0x8F2B1E);
         public static readonly Color Sand = Painter.Hex(0xF3C777), SandDark = Painter.Hex(0x9A6A2A), Grey = Painter.Hex(0xC9C2B0), GreyDark = Painter.Hex(0x8A8372);
         public static readonly Color Warn = Painter.Hex(0xC2410C);
+        public static readonly Color Saffron = Painter.Hex(0xE8892A), CodexGreen = Painter.Hex(0x2E7D5B); // the Codex's New tag and toast (spec 018 §7)
 
         private static Font _heading, _body, _bodyBold;
 

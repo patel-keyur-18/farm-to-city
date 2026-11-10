@@ -1,0 +1,42 @@
+{
+  "groups": [
+    { "id": "farming",  "icon": "wheat" },
+    { "id": "money",    "icon": "coin" },
+    { "id": "business", "icon": "flour_mill" },
+    { "id": "assets",   "icon": "deed" },
+    { "id": "people",   "icon": "population" },
+    { "id": "public",   "icon": "school" }
+  ],
+  "cards": [
+    { "id": "diminishingReturns", "group": "farming",  "numbers": ["factor", "factor"] },
+    { "id": "soilFertility",      "group": "farming",  "threshold": 50, "numbers": ["decimal1", "decimal1"] },
+    { "id": "opportunityCost",    "group": "farming",  "numbers": ["coins", "count"] },
+
+    { "id": "profitNotCash",      "group": "money",    "numbers": ["coins", "coins"] },
+    { "id": "interest",           "group": "money",    "numbers": ["coins", "coins"] },
+    { "id": "creditScore",        "group": "money",    "numbers": ["count", "count"] },
+    { "id": "leverage",           "group": "money",    "numbers": ["coins", "coins"] },
+    { "id": "liquidity",          "group": "money",    "numbers": ["coins", "coins"] },
+    { "id": "inflation",          "group": "money",    "threshold": 1.05, "numbers": ["percent"] },
+    { "id": "workingCapital",     "group": "money",    "numbers": ["coins", "coins"] },
+
+    { "id": "grossMargin",        "group": "business", "numbers": ["coins", "coins", "percent"] },
+    { "id": "fixedVariable",      "group": "business", "numbers": ["coins", "coins", "coins"] },
+    { "id": "breakEven",          "group": "business", "numbers": ["coins", "coins"] },
+    { "id": "forecastActual",     "group": "business", "threshold": 4, "numbers": ["coins", "coins"] },
+    { "id": "unitEconomics",      "group": "business", "numbers": ["coins", "coins"] },
+
+    { "id": "depreciation",       "group": "assets",   "numbers": ["coins", "coins"] },
+    { "id": "appreciation",       "group": "assets",   "numbers": ["coins", "coins"] },
+    { "id": "yield",              "group": "assets",   "numbers": ["coins", "percent"] },
+
+    { "id": "hiringUncertainty",  "group": "people",   "numbers": ["coins"] },
+    { "id": "marketWage",         "group": "people",   "numbers": ["coins", "coins"] },
+    { "id": "retention",          "group": "people",   "numbers": ["coins", "coins"] },
+    { "id": "trainingRoi",        "group": "people",   "numbers": ["count"] },
+    { "id": "employerReputation", "group": "people",   "numbers": ["count"] },
+
+    { "id": "publicGoods",        "group": "public",   "numbers": ["coins", "count"] },
+    { "id": "longTermInvestment", "group": "public",   "numbers": ["count", "coins"] }
+  ]
+}

@@ -136,6 +136,7 @@ namespace Game.Presentation.Ui
                 case "cart": return IconBank.Cart;
                 case "orders": return IconBank.Orders;
                 case "letter": return IconBank.Letter;
+                case "codex": case "deed": return IconBank.Good(icon); // the Codex and its Assets group (spec 018 §7)
                 case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran": case "pav": case "rusk": case "paneer": case "curd": case "ghee":
                 case "rasgulla": case "atta_laddoo":
@@ -258,6 +259,9 @@ namespace Game.Presentation.Ui
             card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
             _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
         }
+
+        /// <summary>True while a Why? popup (or a Codex card) is open: the Codex's toast waits for it.</summary>
+        public bool WhyOpen { get { VisualElement r = _holder.parent; return r != null && r.Q("WhyVeil") != null; } }
 
         /// <summary>True while a card, the away card or a letter page is over the map (the letter waits for it to close).</summary>
         public bool OverlayOpen
@@ -529,10 +533,18 @@ namespace Game.Presentation.Ui
             {
                 // A section heading: a wood title with a rule under it, a little air above.
                 Label h = UiKit.Heading1(line.Label, 40, UiKit.Wood);
-                h.style.marginTop = 18;
-                h.style.borderBottomWidth = 3;
-                h.style.borderBottomColor = UiKit.Wood;
-                return h;
+                if (line.Icon == null)
+                {
+                    h.style.marginTop = 18;
+                    h.style.borderBottomWidth = 3;
+                    h.style.borderBottomColor = UiKit.Wood;
+                    return h;
+                }
+                VisualElement withIcon = WithIcon(line.Icon, 56, h); // a Codex group under its icon (spec 018 §7)
+                withIcon.style.marginTop = 18;
+                withIcon.style.borderBottomWidth = 3;
+                withIcon.style.borderBottomColor = UiKit.Wood;
+                return withIcon;
             }
             var row = new VisualElement { pickingMode = PickingMode.Ignore };
             row.style.flexDirection = FlexDirection.Row;
@@ -567,7 +579,23 @@ namespace Game.Presentation.Ui
             var text = new VisualElement { pickingMode = PickingMode.Ignore };
             text.style.flexShrink = 1;
             text.style.flexGrow = 1; // the full width up to the ? chip: a wrapped note measured narrower than its value spilled into the next row
-            text.Add(UiKit.Heading1(line.Label, 40));
+            if (line.Tag == null) text.Add(UiKit.Heading1(line.Label, 40));
+            else
+            {
+                // Not yet looked at (a Codex card's New): an orange tag right after the name.
+                var named = new VisualElement { pickingMode = PickingMode.Ignore };
+                named.style.flexDirection = FlexDirection.Row;
+                named.style.alignItems = Align.Center;
+                named.Add(UiKit.Heading1(line.Label, 40));
+                Label tag = UiKit.Text(line.Tag, 26, Color.white, UiKit.Heading);
+                tag.name = "tag";
+                tag.style.backgroundColor = UiKit.Saffron;
+                tag.style.marginLeft = 14;
+                UiKit.Radius(tag, 18);
+                UiKit.Padding(tag, 2, 16);
+                named.Add(tag);
+                text.Add(named);
+            }
             if (line.Stars.HasValue)
             {
                 var starLine = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -754,10 +782,10 @@ namespace Game.Presentation.Ui
             head.style.flexShrink = 0; // a long title wraps and pushes the rows down; the rows scroll instead (US-122)
             var titles = new VisualElement { pickingMode = PickingMode.Ignore };
             titles.style.flexShrink = 1;
-            Label why = UiKit.Text(WhyLabel, 30, UiKit.Wood, UiKit.Heading);
+            Label why = UiKit.Text(vm.Kicker ?? WhyLabel, 30, UiKit.Wood, UiKit.Heading);
             titles.Add(why);
             titles.Add(UiKit.Heading1(vm.Title, 48));
-            head.Add(titles);
+            head.Add(vm.Icon == null ? titles : WithIcon(vm.Icon, 84, titles)); // a Codex card: its group's icon
             if (!string.IsNullOrEmpty(vm.Value))
             {
                 Label value = UiKit.Text(vm.Value, 52, UiKit.Ink, UiKit.Heading);
@@ -770,6 +798,14 @@ namespace Game.Presentation.Ui
             scroll.style.marginTop = 8;
             foreach (WhyRowVm r in vm.Rows)
             {
+                if (r.Heading)
+                {
+                    // A Codex card's section: "Your numbers", "In the real world".
+                    Label h = UiKit.Text(r.Label, 32, UiKit.Wood, UiKit.Heading);
+                    h.style.marginTop = 12;
+                    scroll.Add(h);
+                    continue;
+                }
                 var row = new VisualElement { pickingMode = PickingMode.Ignore };
                 row.style.flexDirection = FlexDirection.Row;
                 row.style.justifyContent = Justify.SpaceBetween;
@@ -917,7 +953,7 @@ namespace Game.Presentation.Ui
             {
                 if (l.Pie != null) foreach (PieSliceVm p in l.Pie) key.Append('|').Append(p.Label).Append(p.Percent).Append(p.Value);
                 if (l.Tree != null) foreach (var g in l.Tree.Generations) foreach (TreePersonVm p in g) key.Append('|').Append(p.Text);
-                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
             }

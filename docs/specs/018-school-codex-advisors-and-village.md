@@ -1,6 +1,6 @@
 # 018. The school and literacy, the Codex, advisors and the Village unlock
 
-- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095); the Village unlock as built by ADR 0097 (US-102; its pace measured and accepted by the owner, 2026-11-10)
+- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095); the Codex as built by ADR 0098; the Village unlock as built by ADR 0097 (US-102; its pace measured and accepted by the owner, 2026-11-10)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Player journey and eras (Village); Community and civic services (literacy versus skills, education); Learning layer (advisors, the Concept Codex)
@@ -71,6 +71,8 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 | Assets | Depreciation (the first machine or building's wear), appreciation (land bought, its value up), yield (the first rent received) |
 | People | Hiring under uncertainty (a reference check), market wage (a low offer refused), retention (a poaching offer), training ROI (a course finished), employer reputation (the first step) |
 | Public | Public goods (the school opens), long-term investment (the first child literate from your school) |
+
+- **As built (ADR 0098):** 25 cards; each moment is exact and testable (ADR 0098 §2), and each card keeps the player's numbers from that moment. The toast shows for 6 seconds and then goes, never staying on screen (owner, 2026-11-10); it waits while a sheet, a card, a letter or a *Why?* is open. A card opens as a popup in the *Why?* frame. The Town tab shows the Codex's count.
 
 ### 3.4 Advisors (§10 G6)
 
@@ -178,7 +180,7 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 | AC-3 | The literacy rate counts citizens aged 7+, rounded down, with its *Why?* | `SchoolTests.Rate`, `TownViewTests.Literacy` |
 | AC-4 | The growth need counts the school once open | `HappinessTests.School` |
 | AC-5 | A literate adult's outside work earns 10% more | `HouseholdTests.LiteracyPremium` |
-| AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay; two or more in a pass get one toast | `CodexTests.Triggers`, `CodexTests.Burst` |
+| AC-6 | Each Phase 2 Codex card is found once, by its trigger, after the result, with the player's numbers; found cards are saved and replay; two or more in a pass get one toast | `CodexTests.Triggers`, `CodexTests.Burst`, `CodexTests.Content` (ADR 0098) |
 | AC-7 | Advisors speak at most one line a sheet and once a day a topic, never in the first session; the season report shows the highest-priority note that holds | `AdvisorTests.Caps`, `AdvisorTests.Priority` |
 | AC-8 | The Village unlocks once when its three conditions hold, checked at the close, when the school opens and when a household forms; the progress view shows each | `EraTests.Village`, `EraTests.Village_OnHousehold` |
 | AC-9 | Homes first, the competent bot reaches the Village at a median of day 28–40, the cautious saver 50–64; every order of the three gets there in every run, within 50 days with loans and 80 saving (ADR 0097) | `GateTests.Village` |

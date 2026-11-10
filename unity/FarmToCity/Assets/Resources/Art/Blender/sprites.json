@@ -1238,6 +1238,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_codex"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_coin"
   },
   {
@@ -1246,6 +1253,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_compost"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_deed"
   },
   {
    "w": 256,

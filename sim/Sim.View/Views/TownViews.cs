@@ -239,6 +239,9 @@ namespace Sim.View.Views
                 if (SchoolRules.On(sim))
                     vm.Lines.Add(new LineVm(s.Get("town.literacy"), s.Get("town.literacyValue", "pct", ctx.Fmt.Integer(SchoolRules.LiteracyRate(sim))), "literacy") { Icon = "school" });
             }
+            if (sim.Config.Game.Codex != null && sim.State.Guidance != null) // spec 018 §7: the Codex beside literacy
+                vm.Lines.Add(new LineVm(s.Get("town.codex"), s.Get("codex.subtitle", "n", ctx.Fmt.Integer(CodexSheet.Found(sim)), "of", ctx.Fmt.Integer(sim.Config.Game.Codex.Cards.Count)), "codex")
+                    { Icon = "codex", Action = ActionVm.Open("codex", s.Get("action.open"), new SheetRequest(CodexSheet.Kind, 0)) });
 
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
 

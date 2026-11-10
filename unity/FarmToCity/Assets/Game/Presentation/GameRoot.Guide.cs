@@ -31,6 +31,7 @@ namespace Game.Presentation
             if (Sim.State.Guidance == null) return;
             _guide.Observe(Sim, events);
             foreach (Command c in _guide.StepCommands(Sim, Sim.State.Clock.SimTime)) Sim.Execute(c);
+            CodexAfter(events); // spec 018 §3.3: after the result, never in the first session
             int lines = _playLog.Lines.Count;
             _playLog.Guidance(WallNow(), Sim.State.Clock.SimTime, Sim.State.Guidance, Sim.Config.Game.Onboarding);
             if (_playLog.Lines.Count != lines) WritePlayLog();

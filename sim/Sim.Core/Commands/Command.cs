@@ -186,6 +186,12 @@ namespace Sim.Core.Commands
         ClassRunning,
         /// <summary>Nobody aged 14 or older who can't read.</summary>
         NobodyToTeach,
+
+        // Spec 018 §3.3 (the Codex)
+        /// <summary>No such card in the Codex, or no Codex.</summary>
+        UnknownCodexCard,
+        /// <summary>The card was found already (each is found once), or isn't found yet to be read.</summary>
+        CodexCardState,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
