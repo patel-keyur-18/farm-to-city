@@ -1,6 +1,6 @@
 # 0100. Sprint 17 balance: literacy at the Village is about 45% (the target counted adults only), the rest holds
 
-- Status: Accepted (recorded in the balance step; the owner asked on 2026-11-10 to finish the sprint, so it's for the owner's review with the pull request)
+- Status: Accepted (owner, 2026-11-10, with the Sprint 17 device check)
 - Date: 2026-11-10
 - Deciders: Keyur Patel
 - Amends: spec 018 §9 (literacy when the Village unlocks), spec 017's good-chai *Why?*

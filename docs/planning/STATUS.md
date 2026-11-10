@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 17** (the school and village, 12–25 Apr 2027, 2 weeks, 36 points, ADR 0095): plan check done and **plan approved 2026-11-07** (11 gaps closed one per message); the school's art approved; US-131 and US-132 approved (2026-11-08); US-122 approved (2026-11-10); the `village` letter's text approved (2026-11-10); US-102 approved (2026-11-10; the Village at 4–5 weeks, ADR 0097); the Codex's art approved; US-133 approved (ADR 0098); the advisors' portraits and US-134 approved (ADR 0099); **the balance step (ADR 0100), the checklist in the Editor and the Development build done (2026-11-10); the owner's device check is next**. Sprint 16 is done and merged (PR #22, device check passed 2026-11-07: main p95 4.93 ms, GPU p95 9.21 ms) |
-| Branch with latest work | `sprint/17-school-and-village` (from `main` after PR #22): the plan (ADR 0095; specs 017 and 018, the GDD, F14.1, F14.2, F09.4, F12.4 and `sprints.md` updated) |
+| Sprint | **Sprint 18** (statements, the finance hub, milestones and the Phase 2 playtest; planned 26 Apr – 2 May 2027, length and points set at its plan check): **plan check in progress** (gaps brought to the owner one per message before any code). Sprint 17 is done and merged (PR #23; device check passed 2026-11-10: main p95 5.09 ms, GPU p95 8.72 ms; ADR 0100 accepted) |
+| Branch with latest work | `sprint/18-statements-and-playtest` (from `main` after PR #23): Sprint 17's close recorded; the Sprint 18 plan check |
 | Last updated | 2026-11-10 |
 
 ## Done so far
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 17, the owner's device check passed (2026-11-10):** every check in `docs/test-checklists/s17-school-and-village.md` passed on the iPhone 13, including the town's update from schema 14 to 15, Reduced Motion, text size, notifications, the normal morning and Snapshot and Restore. Frame time (own town, Hamlet, Year 8 Spring, night, whole map): main thread p95 5.09 ms (mean 3.66, max 11.97), GPU p95 8.72 ms (mean 7.73), 60.0 fps, 0.00% over 25 ms: PASS on ADR 0094's lines. The owner accepted ADR 0100 (literacy at the Village about 45%). PR #23 merged; branch `sprint/18-statements-and-playtest` from `main`.
+
 **Sprint 17 wrap-up (2026-11-10): balance, the checklist in the Editor, the Development build.**
 - **Balance (ADR 0100):** the Village's pace holds (homes first median 33 days with loans, 56 saving; every order and run reaches it); the shops hold their targets (tea hired 7,335, sweets 10,944, veg 3,723; at 1.1 each earns less; no newcomer when you open nothing); Codex cards by the Village 13–16, median 15 (`CodexTests.ByTheVillage`, Sim.View.Tests now references the balancer); happiness a season after the Village 72–75 (`Gate.Village` now records it). **Literacy at the Village misses 50–70%:** medians 38–63% by order (about 48% homes first). The band counted adults only: 60% of adults have primary schooling and the village's children can't read until the school (everyone 7+ counts). Content unchanged, the target restated (spec 018 §9), `GateTests.Village` checks 35–65% and happiness 70–76. Good chai's *Why?* no longer says "charge a little more" (a price above the usual draws a newcomer); the thin vegetable stall is its ADR 0093 target.
 - **The checklist in the Editor** (`docs/test-checklists/s17-school-and-village.md`, captures `docs/art/s17-check-*.png`; scripted touch on a copy of the owner's town with session-only test coins, Next era and a tea stall set up by script): 28 checks pass; 9–11 and 14 need a town state shown in their story's tour; 34–41 are for the phone. Found and fixed: a Codex toast that came just before a sheet opened covered its buttons (`GameRoot.CodexCovered`: a sheet, card, letter or *Why?* sends it away; ADR 0098 amended); *Public goods* said "0 children go there" (now "Children at it now, free: 0") and its group repeated the title (now *Community*). Saves restored and identical.
@@ -353,8 +355,7 @@
 
 ## Next up
 
-1. **Sprint 17:** the owner's device check of the Development build with `docs/test-checklists/s17-school-and-village.md` (device checks 1, 34–41: the town's update, reduced motion, text size, rotation, frame time with both p95s, notifications, a normal morning, Snapshot and Restore), the owner's review of ADR 0100 (literacy's target restated), then the merge of the Sprint 17 pull request.
-2. **Sprint 18** (statements, the hub, the Phase 2 playtest, 26 Apr – 2 May 2027): plan it once Sprint 17 is merged. The playtest from the Hamlet to the Village now takes about a month from a fresh Hamlet (ADR 0097): plan it from a town saved part-way through the Hamlet.
+1. **Sprint 18 plan check:** check US-135, US-136 and US-137 (F14.3, F14.4) against spec 019, the GDD, ADRs 0078 and 0083 and the code after Sprint 17; bring each gap to the owner one per message with a recommendation; record the decisions in a plan-check ADR; set the sprint's length and points with the owner; plan the Phase 2 playtest from a town saved part-way through the Hamlet (ADR 0097: the Village takes 4–5 weeks). No code until the plan is approved.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -373,7 +374,8 @@
 | Sprint 15 | Done: device check passed 2026-10-31; PR #20 merged (check 41, for US-223, not yet run on the device) |
 | Sprint 15b | Done: device check passed 2026-11-03; PR #21 merged |
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
-| Sprint 17 | Plan approved 2026-11-07 (ADR 0095); approve each preview and story; device check; merge the PR |
+| Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
+| Sprint 18 | Plan check with the owner; approve the plan, each preview and story; device check; the Phase 2 playtest; merge the PR |
 
 ## Open questions (with the owner)
 
@@ -398,7 +400,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 17: plan approved 2026-11-07 (ADR 0095); US-131 and US-132 approved; US-122 done, for review (ADR 0096). Save schema 15 is open on this branch (the school): later stories add to it and re-pin `saves/schema15` (current schema). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+Sprint 18: the plan check has started; nothing coded. Save schema is 15 (Sprint 17's); spec 019 §4 opens schema 16 with US-137. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 
