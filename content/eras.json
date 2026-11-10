@@ -2,6 +2,6 @@
   "eras": [
     { "id": "homestead" },
     { "id": "hamlet", "conditions": { "acresHarvestedInSeason": 6, "meanCareAtLeast": 0.9, "handHutsAtLeast": 1, "profitableSeasonsAtLeast": 1 } },
-    { "id": "village", "manual": true }
+    { "id": "village", "conditions": { "householdsAtLeast": 5, "businessSeasonsAtLeast": 2, "school": true } }
   ]
 }

@@ -193,6 +193,7 @@ namespace Game.Presentation
         private void Update()
         {
             ApplySafeArea();
+            CodexCovered();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
@@ -348,6 +349,7 @@ namespace Game.Presentation
         /// <summary>A sheet on its own (from the map, the HUD, a card): nothing to go back to.</summary>
         private void OpenSheet(SheetRequest request)
         {
+            if (request.Kind == CodexSheet.CardKind) { ShowCodexCard((int)request.Id); return; } // a popup over what's open (spec 018 §7)
             _back.Clear();
             Display(request);
         }
@@ -355,6 +357,7 @@ namespace Game.Presentation
         /// <summary>A sheet opened from the open one: the back button returns to it.</summary>
         private void Push(SheetRequest request)
         {
+            if (request.Kind == CodexSheet.CardKind) { ShowCodexCard((int)request.Id); return; }
             if (_open.HasValue && _sheet.IsOpen) _back.Add(_open.Value);
             Display(request);
         }
@@ -535,6 +538,7 @@ namespace Game.Presentation
                 if (!result.Accepted)
                 {
                     _guide.Rejected(Sim, command, result.Reason);
+                    CodexRejected(result.Reason);
                     Toast(_ctx.Reject(result.Reason));
                     AfterCommands();
                     return;
@@ -598,7 +602,7 @@ namespace Game.Presentation
             {
                 Command c = build.Create(Sim.State.Clock.SimTime);
                 CommandResult r = Sim.Execute(c);
-                if (!r.Accepted) { _guide.Rejected(Sim, c, r.Reason); Toast(_ctx.Reject(r.Reason)); return; }
+                if (!r.Accepted) { _guide.Rejected(Sim, c, r.Reason); CodexRejected(r.Reason); Toast(_ctx.Reject(r.Reason)); return; }
                 StopPlacing();
                 AfterCommands();
             }, build.Detail, build.Enabled));

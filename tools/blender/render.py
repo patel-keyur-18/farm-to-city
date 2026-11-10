@@ -417,6 +417,14 @@ PEOPLE = {
     "elder_m": dict(sex="m", skin=0x9E6A48, top=0xF3EFE6, bottom=0xF3EFE6, accent=0xC9B48A, wear="kurta", hair=0xD8D4CC, stoop=12, tool="stick"),
     # An elder (woman): a cream saree with a maroon border, grey hair in a bun, head uncovered.
     "elder_f": dict(sex="f", skin=0xA77150, top=0xEFE4CC, bottom=0xEFE4CC, accent=0x8E2A3F, blouse=0xC9B48A, wear="saree", hair=0xBDB6AC, stoop=8),
+    # The advisors (spec 018 §3.4, US-134), card portraits only. Ramdeen Kaka, the old farmer next door: a white kurta and dhoti,
+    # a faded saffron pagdi, a white moustache, a brown shawl over the shoulders.
+    "advisor_farm": dict(sex="m", skin=0x96603F, top=0xF3EFE6, bottom=0xF3EFE6, accent=0xD9822B, vest=0x8A5A2B, wear="dhoti", head="pagdi", hair=0xD8D4CC),
+    # Sunita Verma, the co-op bank's secretary: a navy cotton saree with a teal border, a white blouse, spectacles, hair in a bun.
+    "advisor_bank": dict(sex="f", skin=0xB37853, top=0x2E3F73, bottom=0x2E3F73, accent=0x2FA39A, blouse=0xF3EEE2, wear="saree", glasses=0x3A2A1E),
+    # Masterji Hariprasad, the retired headmaster: a white kurta under a brown Nehru jacket, a maroon gamchha, a white Gandhi topi,
+    # round spectacles.
+    "advisor_people": dict(sex="m", skin=0xA06B49, top=0xF3EFE6, bottom=0xF3EFE6, accent=0x8E3A3A, vest=0x6B4A2B, wear="kurta", head="topi", hair=0xBDB6AC, glasses=0x5A4632),
 }
 
 
@@ -506,6 +514,15 @@ def model_person(kind, facing, pose="stand"):
                 o.append(sphere("moustache", 0.0045, (0, -0.0300, hz - 0.0095), hair, scale=(2.0, 0.55, 0.65), segs=8, rings=6, outline=False))
         else:
             o.append(sphere("bindi", 0.0022, (0, -0.0300, hz + 0.0135), m("bindi", 0xC0262D), segs=6, rings=4, outline=False))
+        if p.get("glasses"):
+            # Spectacles (the advisors): two round rims over the eyes and a bridge, in a thin dark frame.
+            frame, lens = m("frame", p["glasses"]), m("lens", 0xE9F1F2)
+            face = Matrix.Rotation(math.radians(90), 3, "X")
+            for s in (-1, 1):
+                o.append(cylinder("rim%d" % s, 0.0072, 0.0072, 0.0012, (s * 0.0118, -0.0302, hz + 0.003), frame, segs=16, rot=face, outline=False))
+                o.append(cylinder("lens%d" % s, 0.0058, 0.0058, 0.0014, (s * 0.0118, -0.0303, hz + 0.003), lens, segs=16, rot=face, outline=False))
+                o.append(sphere("eyeBehind%d" % s, 0.0030, (s * 0.0118, -0.0312, hz + 0.003), dark, scale=(0.85, 0.4, 1.2), segs=8, rings=5, outline=False))
+            o.append(box("bridge", (0.0055, 0.0015, 0.0012), (0, -0.0305, hz + 0.005), frame, outline=False))
     # Hair and headwear.
     o.append(sphere("hair", 0.0328, (0, 0.0045, hz + 0.0065), hair, scale=(1.0, 0.96, 0.82), segs=20, rings=12))
     if p.get("plaits"):
@@ -521,6 +538,10 @@ def model_person(kind, facing, pose="stand"):
         o.append(cylinder("pagdi", 0.0335, 0.031, 0.020, (0, 0.003, hz + 0.019), accent, segs=18, smooth=True))
         o.append(sphere("pagdicrown", 0.027, (0, 0.004, hz + 0.028), accent, scale=(1, 1, 0.5), segs=16, rings=8))
         o.append(box("pagditail", (0.010, 0.004, 0.026), (0.010, 0.030, hz + 0.004), accent))
+    elif p.get("head") == "topi":
+        # A Gandhi topi: a boat-shaped white cotton cap, its fold along the top.
+        o.append(box("topi", (0.050, 0.030, 0.014), (0, 0.004, hz + 0.027), m("topi", 0xFAF8F2), bevel=0.004))
+        o.append(box("topifold", (0.046, 0.004, 0.008), (0, 0.004, hz + 0.036), m("topiFold", 0xE6E1D6), outline=False))
     if pose.startswith("walk"):
         # Four frames: contact, passing, contact (other foot), passing. Legs swing about the hip, arms against them,
         # a saree sways; the body rises a little when passing.
@@ -1638,6 +1659,34 @@ def icon_ui(kind):
             o.extend(leafy if isinstance(leafy, list) else [leafy])
         o.append(sphere("radish", 0.03, (0.035, 0.0, 0.2), toon("radishRed", 0xE9506A), scale=(1, 1, 1.2), segs=12, rings=8))
         return turn(o, Matrix.Rotation(math.radians(20), 4, "Z"))
+    elif kind == "codex":
+        # The Concept Codex (spec 018 §3.3): a deep green cloth-bound book lying open, its cream pages in a shallow V with lines of
+        # text, a saffron ribbon down the middle and brass corners; green, not the Menu's red khata, so the two never read alike.
+        cloth, clothDark, pages, ink, ribbon, brass = (toon("codexCloth", 0x2E7D5B), toon("codexDark", 0x1F5A41), toon("pages", 0xFFF3D1),
+                                                        toon("codexInk", 0xB89C6A), toon("ribbon", 0xE8892A), toon("brass", 0xE6B33A))
+        for sgn in (-1, 1):
+            m = Matrix.Rotation(sgn * math.radians(12), 3, "Y")
+            o.append(box("cover%d" % sgn, (0.125, 0.19, 0.012), tuple(m @ Vector((sgn * 0.064, 0, 0.0))), cloth, rot=m, bevel=0.004))
+            o.append(box("pages%d" % sgn, (0.112, 0.175, 0.022), tuple(m @ Vector((sgn * 0.058, 0, 0.016))), pages, rot=m, bevel=0.003))
+            for i in range(5):
+                o.append(box("line%d%d" % (sgn, i), (0.07, 0.007, 0.002), tuple(m @ Vector((sgn * 0.058, 0.05 - i * 0.026, 0.028))), ink, rot=m, outline=False))
+            for y in (-0.093, 0.093):
+                o.append(box("corner%d%d" % (sgn, y > 0), (0.026, 0.012, 0.016), tuple(m @ Vector((sgn * 0.116, y, 0.0))), brass, rot=m, outline=False))
+        o.append(box("spine", (0.014, 0.19, 0.016), (0, 0, -0.004), clothDark))
+        o.append(box("ribbon", (0.012, 0.15, 0.004), (0.0, -0.04, 0.03), ribbon, outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.45))
+    elif kind == "deed":
+        # Assets in the Codex: a rolled land deed (a patta) tied with a red cord and stamped with a wax seal.
+        paper, edge, cord, wax = toon("deed", 0xF4E2B8), toon("deedEdge", 0xC9A46A), toon("cord", 0xB8322A), toon("wax", 0xC0392B)
+        roll = Matrix.Rotation(math.radians(90), 3, "Y")
+        o.append(cylinder("scroll", 0.05, 0.05, 0.24, (0, 0, 0.06), paper, segs=24, rot=roll))
+        for x in (-0.121, 0.121):
+            o.append(cylinder("end%d" % (x > 0), 0.05, 0.05, 0.004, (x, 0, 0.06), edge, segs=24, rot=roll, outline=False))
+            o.append(cylinder("curl%d" % (x > 0), 0.02, 0.02, 0.006, (x * 1.02, 0, 0.06), toon("deedCurl", 0xDCC28E), segs=16, rot=roll, outline=False))
+        o.append(cylinder("tie", 0.053, 0.053, 0.022, (0, 0, 0.06), cord, segs=24, rot=roll))
+        o.append(cylinder("seal", 0.028, 0.028, 0.012, (0.065, -0.049, 0.065), wax, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+        o.append(cylinder("sealMark", 0.013, 0.013, 0.014, (0.065, -0.05, 0.065), toon("waxDark", 0x8F2B1E), segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+        return turn(o, Matrix.Rotation(math.radians(25), 4, "Z"))
     elif kind == "close":
         white = toon("x", 0xFFF3D1)
         for a in (45, -45):
@@ -1663,7 +1712,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 
@@ -3922,6 +3971,77 @@ SPRITES["tea_stall_s"] = lambda: refit(model_tea_counter(on_pitch=False), 0)
 SPRITES["sweet_shop_s"] = lambda: refit(model_sweet_shop(on_pitch=False), 0)
 
 
+def model_newcomer_cart(kind, on_pitch=False, number=1):
+    """A newcomer (spec 017 §3.7, ADR 0095 §2): someone from outside sets up a thela, a wooden handcart on four spoked wheels under
+    a big orange-and-yellow umbrella (yours are blue, so the rival reads at a glance). Loaded by kind: heaps of vegetables; a chai
+    cart's stove, patila, kettle and glasses; a sweets cart's glass case of rasgulla and laddoo. On a free pitch it stands on the
+    council's brick pitch, else on the street by the square."""
+    o = []
+    if on_pitch:
+        pitch_base(o, number)
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    z0 = 0.02 if on_pitch else 0.0
+    L, W, H = 0.17, 0.09, 0.07
+    o.append(box("cartBed", (L, W, 0.012), (0, 0, z0 + H), wood, bevel=0.002))
+    o.append(box("cartRim", (L + 0.006, W + 0.006, 0.008), (0, 0, z0 + H + 0.010), dark, outline=False))
+    for i, x in enumerate((-L / 2 + 0.03, L / 2 - 0.03)):
+        for sg in (-1, 1):
+            o.append(cylinder("wheel%d%d" % (i, sg), 0.022, 0.022, 0.006, (x, sg * (W / 2 + 0.006), z0 + 0.022), toon("wheel", 0x3A3A3A),
+                              segs=14, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+            o.append(cylinder("hub%d%d" % (i, sg), 0.007, 0.007, 0.008, (x, sg * (W / 2 + 0.008), z0 + 0.022), toon("hub", 0xC9CDD2),
+                              segs=8, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+    o.append(box("axle", (0.006, W + 0.01, 0.006), (0, 0, z0 + 0.03), dark, outline=False))
+    for sg in (-1, 1):
+        o.append(box("handle%d" % sg, (0.06, 0.006, 0.006), (L / 2 + 0.03, sg * 0.03, z0 + H + 0.004), dark))
+    top = z0 + H + 0.008
+    steel, glass = toon("steel", 0xC9CDD2), toon("jarGlass", 0xD7ECEE)
+    if kind == "veg":
+        veg_heaps(o, 0.0, 0.0, top, L - 0.02, W - 0.01, 13)
+        o.append(box("crate", (0.07, 0.05, 0.035), (-0.02, 0.0, z0 + 0.0175), toon("crateGreen", 0x3F8F3A), bevel=0.003))
+    elif kind == "chai":
+        o.append(box("stove", (0.05, 0.045, 0.014), (0.035, 0.0, top + 0.007), toon("iron", 0x4A4A4A)))
+        o.append(cylinder("patila", 0.021, 0.019, 0.024, (0.035, 0.0, top + 0.026), toon("alu", 0xD5D9DD), segs=14, smooth=True))
+        o.append(cylinder("chai", 0.019, 0.019, 0.003, (0.035, 0.0, top + 0.037), toon("chai", 0xB07A45), segs=14, outline=False))
+        o.append(sphere("kettle", 0.014, (-0.01, 0.018, top + 0.012), toon("alu", 0xD5D9DD), scale=(1, 1, 0.8), segs=10, rings=6))
+        for i in range(6):
+            o.append(cylinder("glass%d" % i, 0.0045, 0.004, 0.012, (-0.05 + (i % 3) * 0.011, -0.015 + (i // 3) * 0.012, top + 0.006), glass, segs=8))
+        o.append(box("board", (0.10, 0.004, 0.022), (0, -W / 2 - 0.004, z0 + H - 0.012), toon("teaBoard", 0xF2C94C), outline=False))
+        o.append(cylinder("gas", 0.014, 0.014, 0.05, (-0.02, 0.0, z0 + 0.025), toon("gasRed", 0xC2412D), segs=12, smooth=True))
+    else:
+        o.append(box("case", (0.13, 0.07, 0.045), (0, 0, top + 0.0225), toon("caseWood", 0x7A4A2A), bevel=0.002))
+        o.append(box("caseGlass", (0.12, 0.004, 0.03), (0, -0.036, top + 0.025), glass, outline=False))
+        syrup, white, laddoo = toon("syrup", 0xEFD9A0), toon("rasgulla", 0xFBF7EC), toon("laddoo", 0xE0A040)
+        o.append(cylinder("thaal", 0.021, 0.018, 0.008, (-0.03, 0.0, top + 0.049), steel, segs=16))
+        o.append(cylinder("syrupTop", 0.019, 0.019, 0.002, (-0.03, 0.0, top + 0.053), syrup, segs=16, outline=False))
+        for j in range(5):
+            a = j * math.tau / 5 + 0.3
+            o.append(sphere("ras%d" % j, 0.0072, (-0.03 + math.cos(a) * 0.009, math.sin(a) * 0.009, top + 0.058), white, segs=8, rings=5,
+                            outline=(j == 0)))
+        o.append(cylinder("tray", 0.022, 0.022, 0.004, (0.03, 0.0, top + 0.047), steel, segs=16))
+        for k, (dx, dy, dz) in enumerate(((-0.011, -0.006, 0), (0.0, -0.011, 0), (0.011, -0.006, 0), (-0.008, 0.007, 0), (0.008, 0.007, 0),
+                                          (-0.005, -0.003, 0.012), (0.006, -0.003, 0.012), (0.0, 0.004, 0.012), (0.0, 0.0, 0.023))):
+            o.append(sphere("laddoo%d" % k, 0.0072, (0.03 + dx, dy, top + 0.056 + dz), laddoo, segs=8, rings=5, outline=(k == 8)))
+    # The umbrella: orange and yellow, on a bamboo pole at the cart's back corner.
+    bam = toon("bamboo", BAMBOO)
+    ux, uy = -L / 2 + 0.005, W / 2 - 0.005
+    o.append(cylinder("umbrellaPole", 0.004, 0.004, 0.22, (ux, uy, z0 + H + 0.11), bam, segs=6))
+    utop = z0 + H + 0.22
+    a_mat, b_mat = toon("umbrellaOrange", 0xE8742A), toon("umbrellaYellow", 0xF2C94C)
+    R, drop = 0.11, 0.04
+    for i in range(8):
+        a0, a1 = i * math.tau / 8, (i + 1) * math.tau / 8
+        cx, cy = ux + 0.02, uy + 0.02
+        o.append(poly_mesh("umb%d" % i, [(cx, cy, utop), (cx + R * math.cos(a0), cy + R * math.sin(a0), utop - drop),
+                                         (cx + R * math.cos(a1), cy + R * math.sin(a1), utop - drop)], [(0, 1, 2)], a_mat if i % 2 else b_mat))
+    return group(o, scale=BUILDING_SCALE)
+
+
+# Newcomers (spec 017 §3.7, ADR 0095 §2, approved 2026-11-08): each kind's cart on each pitch, facing as the pitch does, and on the lane's verge by the square.
+for _k in ("veg", "chai", "sweets"):
+    for _n, _deg in PITCH_FACING.items():
+        SPRITES["newcomer_%s_pitch_%d" % (_k, _n)] = (lambda k=_k, n=_n, d=_deg: (lambda: refit(model_newcomer_cart(k, True, n), d)))()
+    SPRITES["newcomer_%s_cart_s" % _k] = (lambda k=_k: (lambda: refit(model_newcomer_cart(k), 0)))()
+
 def portrait(kind):
     """A card portrait: the villager from the shoulders up, framed as an icon."""
     objs = model_person(kind, "front")
@@ -3972,7 +4092,75 @@ def icon_people(kind):
 for _f, _deg in FACINGS.items():
     SPRITES["family_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("done"), d)))()
     SPRITES["family_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("building"), d)))()
-for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f"):
+# ---------------------------------------------------------------- the school (spec 018, US-131): previewed to the owner first
+
+def model_school(stage):
+    """The village's government primary school on its plot (tile 94): two classrooms under a flat roof, lime-washed with a maroon
+    dado, a pillared verandah, a green signboard, a blackboard painted on the front wall; a low boundary wall with its gate on the
+    main street (the model's +x side, which faces the street once turned to 'e'), the playground in front with the flag on a
+    stepped platform. stage 'done' or 'building' (the plot's brick wall, the plinth, half-raised walls, scaffolding, bricks, sand)."""
+    o = []
+    w, d, cy, h = 0.42, 0.16, 0.17, 0.15        # the classrooms, their doors towards -y, at the back of the plot
+    lime, dado = toon("schoolLime", 0xF4E7C2), toon("schoolDado", 0x9A3B2E)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    wallm = brick if stage == "building" else toon("schoolWall", 0xE9DBB8)
+    o.append(box("ground", (0.54, 0.30, 0.006), (0, -0.10, 0.003), toon("playground", 0xD6BE90), outline=False))
+    # The boundary wall: back and the far side whole, the street side (+x) with a gate gap at the front, the front low.
+    for name, size, loc in (("wallBack", (0.58, 0.025, 0.045), (0, 0.28, 0.0225)), ("wallFar", (0.025, 0.56, 0.045), (-0.28, 0, 0.0225)),
+                            ("wallFront", (0.58, 0.025, 0.035), (0, -0.27, 0.0175)), ("wallStreet", (0.025, 0.36, 0.045), (0.28, 0.10, 0.0225)),
+                            ("wallStreetFront", (0.025, 0.09, 0.045), (0.28, -0.235, 0.0225))):
+        o.append(box(name, size, loc, wallm))
+    if stage == "building":
+        o.append(box("plinth", (w + 0.03, d + 0.10, 0.035), (0, cy - 0.035, 0.0175), plinth, bevel=0.005))
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.08), (sx * (w / 2 - 0.01), cy, 0.075), brick))
+        o.append(box("wallBackHalf", (w, 0.02, 0.10), (0, cy + d / 2 - 0.01, 0.085), brick))
+        o.append(box("wallMid", (0.02, d, 0.06), (0, cy, 0.065), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, 0.0, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.14 + j * 0.055, -0.08, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.05, 0.035, (0.12, -0.10, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+    for i, y in enumerate((-0.08, -0.19)):        # the gate on the main street
+        o.append(box("gatePost%d" % i, (0.03, 0.03, 0.075), (0.28, y, 0.0375), toon("schoolLime", 0xF4E7C2)))
+    o.append(box("plinth", (w + 0.03, d + 0.10, 0.035), (0, cy - 0.035, 0.0175), plinth, bevel=0.005))
+    o.append(box("walls", (w, d, h), (0, cy, 0.035 + h / 2), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.035), (0, cy, 0.0525), dado, outline=False))
+    o.append(box("roof", (w + 0.02, d + 0.02, 0.016), (0, cy, 0.035 + h + 0.008), toon("roofSlab", 0xD8CDB8)))
+    o.append(box("parapet", (w + 0.024, d + 0.024, 0.03), (0, cy, 0.035 + h + 0.03), toon("schoolLimeShade", 0xE6D6AE)))
+    # The school's name painted on the parapet's front: a green band with a cream line.
+    o.append(box("sign", (0.32, 0.006, 0.022), (0, cy - d / 2 - 0.014, 0.035 + h + 0.03), toon("schoolSign", 0x2F5D3A), outline=False))
+    o.append(box("signLine", (0.26, 0.007, 0.005), (0, cy - d / 2 - 0.015, 0.035 + h + 0.03), toon("signText", 0xF2EBDC), outline=False))
+    doorm, win = toon("schoolDoor", 0x2F6E4E), toon("wood_dark", WOOD_DARK)
+    for x in (-0.10, 0.10):                     # two classrooms, a door and a window each
+        o.append(box("door%d" % (x > 0), (0.05, 0.010, 0.10), (x, cy - d / 2 - 0.004, 0.085), doorm))
+        o.append(box("win%d" % (x > 0), (0.05, 0.010, 0.04), (x + (0.065 if x > 0 else -0.065), cy - d / 2 - 0.004, 0.12), win))
+    o.append(box("blackboard", (0.07, 0.008, 0.045), (0, cy - d / 2 - 0.004, 0.11), toon("blackboard", 0x2B3A33)))
+    # The verandah: a lower, thin slab on four pillars, so the doors and the blackboard still show.
+    vy, vh = cy - d / 2 - 0.05, h - 0.035
+    for x in (-0.19, -0.065, 0.065, 0.19):
+        o.append(cylinder("pillar%d" % int(x * 100), 0.010, 0.010, vh, (x, vy, 0.035 + vh / 2), lime, segs=8))
+    o.append(box("verandahRoof", (w + 0.02, 0.10, 0.010), (0, cy - d / 2 - 0.045, 0.035 + vh + 0.005), toon("roofSlab", 0xD8CDB8)))
+    o.append(box("verandahEdge", (w + 0.022, 0.012, 0.016), (0, vy - 0.045, 0.035 + vh + 0.005), dado, outline=False))
+    # The flag on a stepped platform in the playground, a bench of slates by the verandah.
+    fx, fy = -0.13, -0.14
+    for i, r in enumerate((0.05, 0.036, 0.024)):
+        o.append(box("flagStep%d" % i, (r * 2, r * 2, 0.014), (fx, fy, 0.007 + i * 0.014), toon("stone", STONE) if i % 2 == 0 else toon("schoolLime", 0xF4E7C2)))
+    o.append(cylinder("flagpole", 0.004, 0.004, 0.26, (fx, fy, 0.17), toon("steel", 0xC9CDD2), segs=6, outline=False))
+    for i, hexv in enumerate((0xFF9933, 0xFFFFFF, 0x138808)):
+        o.append(box("band%d" % i, (0.0035, 0.06, 0.014), (fx, fy + 0.032, 0.285 - i * 0.014), toon("flag%d" % i, hexv), outline=False))
+    o.append(box("bench", (0.12, 0.03, 0.025), (0.12, vy - 0.07, 0.03), toon("wood", WOOD)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+SPRITES["village_school_e"] = lambda: refit(model_school("done"), FACINGS["e"])
+SPRITES["village_school_building_e"] = lambda: refit(model_school("building"), FACINGS["e"])
+
+for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f", "advisor_farm", "advisor_bank", "advisor_people"):
     ICONS["portrait_" + _k] = (lambda k=_k: (lambda: portrait(k)))()
 ICONS["icon_population"] = lambda: icon_people("population")
 ICONS["icon_happiness"] = lambda: icon_people("happiness")

@@ -220,6 +220,9 @@ namespace Sim.View.Views
         /// <summary>A green tag where a button would be, for something done ("Delivered"), or null.</summary>
         public string Badge { get; internal set; }
 
+        /// <summary>An orange tag right after the label, for something not yet looked at (a Codex card's "New"), or null.</summary>
+        public string Tag { get; internal set; }
+
         /// <summary>A row of big picture buttons side by side instead of a label and value (the Store's shortcuts), or null.</summary>
         public System.Collections.Generic.List<ActionVm> Buttons { get; internal set; }
 
@@ -228,6 +231,9 @@ namespace Sim.View.Views
 
         /// <summary>A small family tree drawn instead of a label and value (the household card), or null.</summary>
         public FamilyTreeVm Tree { get; internal set; }
+
+        /// <summary>An advisor's line drawn instead of a label and value (spec 018 §3.4), or null.</summary>
+        public AdvisorVm Advisor { get; internal set; }
 
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 

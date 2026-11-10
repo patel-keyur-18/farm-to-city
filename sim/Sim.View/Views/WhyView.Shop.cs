@@ -46,11 +46,14 @@ namespace Sim.View.Views
             if (id >= ShopWords.RivalBase)
             {
                 int i = (int)(id - ShopWords.RivalBase);
-                Rival r = sim.State.Shops.Rivals[i];
-                RivalDef d = ShopRules.Defs(sim).Rivals[r.Def];
-                vm = New(ctx, "why.shopShare.title", ctx.Fmt.Percent(ShopSheet.Share(r.CustomersToday, ShopSheet.Everyone(sim, d.Kind))), "name", ShopWords.Rival(ctx, d));
-                foreach (ShopGroup g in new[] { ShopGroup.Village, ShopGroup.Town }) Parts(vm, ctx, ShopRules.Attract(sim, r, g), g, d.Kind, r.PriceFactor, r.Stars, d.Quality);
-                Text(vm, ctx, "why.shopShare.rival." + d.Id);
+                var all = sim.State.Shops.All();
+                if (i >= all.Count) return New(ctx, "why.shopShare.gone", null); // a newcomer packed up since the sheet was drawn
+                Rival r = all[i];
+                vm = New(ctx, "why.shopShare.title", ctx.Fmt.Percent(ShopSheet.Share(r.CustomersToday, ShopSheet.Everyone(sim, r.Kind))), "name", ShopWords.Rival(ctx, r));
+                foreach (ShopGroup g in new[] { ShopGroup.Village, ShopGroup.Town }) Parts(vm, ctx, ShopRules.Attract(sim, r, g), g, r.Kind, r.PriceFactor, r.Stars, ShopRules.RivalQuality(sim, r));
+                Text(vm, ctx, "why.shopShare.rival." + (r.Newcomer ? (r.Pitch >= 0 ? "newcomer" : "newcomerCart") : r.Id));
+                if (!r.Newcomer && ShopRules.Defs(sim).Rivals[r.Def].Reacts) Text(vm, ctx, "why.shopShare.reacts", "pct", ctx.Fmt.Percent(ShopRules.Defs(sim).RivalStep),
+                    "floor", ctx.Fmt.Percent(Fixed.One - ShopRules.Defs(sim).RivalFloor));
             }
             else
             {
@@ -145,6 +148,10 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.shopPrice.setting", ShopWords.PriceSetting(ctx, b.PriceFactor));
             Row(vm, ctx, "why.shopPrice.part", Part(ctx, ShopRules.Defs(sim).WPrice * (Fixed.One - b.PriceFactor)));
             Text(vm, ctx, "why.shopPrice.fewer");
+            // ADR 0095 §1: above the reference a newcomer may come; the village's own cut when they lose customers.
+            ShopDefs sd = ShopRules.Defs(sim);
+            if (b.PriceFactor > Fixed.One)
+                Text(vm, ctx, sim.State.Shops.Newcomers.Exists(x => x.Kind == t.Kind) ? "why.shopPrice.newcomerHere" : "why.shopPrice.newcomer", "pct", ctx.Fmt.Percent(sd.NewcomerChance));
             vm.Footnote = ctx.Strings.Get("why.shopPrice.lesson");
             return vm;
         }
@@ -157,11 +164,8 @@ namespace Sim.View.Views
             ShopDefs d = ShopRules.Defs(sim);
             WhyVm vm = New(ctx, "why.shopExpected.title", ctx.Fmt.Percent(ShopRules.ExpectedShare(sim, t.Kind, ShopGroup.Village, d.SquareTile)));
             Row(vm, ctx, "why.shopExpected.yours", Pull(ctx, ShopRules.Attract(sim, Fixed.One, 1, d.StartStars, 0, Fixed.Zero).Total));
-            foreach (Rival r in sim.State.Shops.Rivals)
-            {
-                RivalDef rd = d.Rivals[r.Def];
-                if (rd.Kind == t.Kind) Row(vm, ctx, "why.shopExpected.rival", Pull(ctx, ShopRules.Attract(sim, r, ShopGroup.Village).Total), "name", ShopWords.Rival(ctx, rd));
-            }
+            foreach (Rival r in sim.State.Shops.All())
+                if (r.Kind == t.Kind) Row(vm, ctx, "why.shopExpected.rival", Pull(ctx, ShopRules.Attract(sim, r, ShopGroup.Village).Total), "name", ShopWords.Rival(ctx, r));
             Text(vm, ctx, "why.shopExpected.how");
             vm.Footnote = ctx.Strings.Get("why.shopShare.lesson");
             return vm;

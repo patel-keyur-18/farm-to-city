@@ -236,7 +236,12 @@ namespace Sim.View.Views
                     adults += a;
                 }
                 vm.Lines.Add(new LineVm(s.Get("town.work"), s.Get("town.workValue", "n", ctx.Fmt.Integer(inTown), "of", ctx.Fmt.Integer(adults)), "employment"));
+                if (SchoolRules.On(sim))
+                    vm.Lines.Add(new LineVm(s.Get("town.literacy"), s.Get("town.literacyValue", "pct", ctx.Fmt.Integer(SchoolRules.LiteracyRate(sim))), "literacy") { Icon = "school" });
             }
+            if (sim.Config.Game.Codex != null && sim.State.Guidance != null) // spec 018 §7: the Codex beside literacy
+                vm.Lines.Add(new LineVm(s.Get("town.codex"), s.Get("codex.subtitle", "n", ctx.Fmt.Integer(CodexSheet.Found(sim)), "of", ctx.Fmt.Integer(sim.Config.Game.Codex.Cards.Count)), "codex")
+                    { Icon = "codex", Action = ActionVm.Open("codex", s.Get("action.open"), new SheetRequest(CodexSheet.Kind, 0)) });
 
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
 
@@ -441,6 +446,31 @@ namespace Sim.View.Views
             return ActionVm.Open("offerWork:" + c.Id, ctx.Strings.Get("citizen.offerWork"), new SheetRequest("TownOffer", c.Id));
         }
 
+        /// <summary>
+        /// Where a citizen is with reading (spec 018 §3.2): primary (arrived with it, or finished at the village school), an adult
+        /// class, in the class now, at school, not yet of school age, no school yet, or none.
+        /// </summary>
+        public static string SchoolingKey(Simulation sim, Citizen c)
+        {
+            bool school = SchoolRules.On(sim);
+            if (c.Education == 2) return "adultClass";
+            if (c.Literate) return school && c.SchoolYears >= SchoolRules.Def(sim).PrimaryYears ? "villagePrimary" : "primary";
+            if (!school || !c.Living) return "none";
+            if (SchoolRules.ClassRunning(sim) && SchoolRules.State(sim).Class.Contains(c.Id)) return "inClass";
+            int age = CitizenRules.Age(sim, c);
+            SchoolDef d = SchoolRules.Def(sim);
+            if (age < d.PupilAgeMin) return "notYet";
+            if (age <= d.PupilAgeMax) return SchoolRules.IsOpen(sim) ? "pupil" : "noSchool";
+            return "none";
+        }
+
+        public static string Schooling(ViewContext ctx, Citizen c)
+        {
+            string key = SchoolingKey(ctx.Sim, c);
+            return key == "pupil" ? ctx.Strings.Get("citizen.schoolPupil", "year", ctx.Fmt.Integer(c.SchoolYears + 1), "years", ctx.Fmt.Integer(SchoolRules.Def(ctx.Sim).PrimaryYears))
+                : ctx.Strings.Get("citizen.school." + key);
+        }
+
         public static SheetVm Build(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;
@@ -471,7 +501,7 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(PeopleWords.Trait(ctx, t), s.Get(sim.Config.Game.People.Traits[t].NameKey + ".why")));
             }
             vm.Lines.Add(new LineVm(s.Get("citizen.health"), ctx.Rating(c.Health), "citizen.health", c.Id));
-            vm.Lines.Add(new LineVm(s.Get("citizen.school"), s.Get(c.Education > 0 ? "citizen.schoolPrimary" : "citizen.schoolNone")));
+            vm.Lines.Add(new LineVm(s.Get("citizen.school"), Schooling(ctx, c), "citizen.school", c.Id));
 
             if (c.Story.Count > 0)
             {

@@ -65,5 +65,14 @@
     "perAcre": 2,
     "rentPerSeason": 6000
   },
-  "villages": ["sitapur", "rampur", "chandanpur", "keshavgarh", "devipur", "bhawanipur"]
+  "villages": ["sitapur", "rampur", "chandanpur", "keshavgarh", "devipur", "bhawanipur"],
+  "school": {
+    "seatsPerTeacher": 30,
+    "pupilAge": { "min": 6, "max": 13 },
+    "primaryYears": 4,
+    "upkeepPerSeason": 2000,
+    "adultClass": { "size": 15, "cost": 3000, "hours": 96, "minAge": 14 },
+    "literatePremium": 0.10,
+    "literacyFromAge": 7
+  }
 }

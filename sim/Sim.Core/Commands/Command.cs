@@ -178,6 +178,24 @@ namespace Sim.Core.Commands
         // Spec 017 (shops)
         /// <summary>Another shop stands on that pitch in the square.</summary>
         PitchTaken,
+
+        // Spec 018 §3.1 (the school's adult class, ADR 0095 §4)
+        /// <summary>There's no open school to hold the class.</summary>
+        NoSchool,
+        /// <summary>A class is running: one at a time.</summary>
+        ClassRunning,
+        /// <summary>Nobody aged 14 or older who can't read.</summary>
+        NobodyToTeach,
+
+        // Spec 018 §3.3 (the Codex)
+        /// <summary>No such card in the Codex, or no Codex.</summary>
+        UnknownCodexCard,
+        /// <summary>The card was found already (each is found once), or isn't found yet to be read.</summary>
+        CodexCardState,
+
+        // Spec 018 §3.4 (advisors)
+        /// <summary>No such advisor note, one said twice in a pass, or said where its content says it can't speak.</summary>
+        UnknownAdvisorNote,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

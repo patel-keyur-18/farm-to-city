@@ -449,8 +449,12 @@ namespace Sim.View.Tests
             Assert.That(vm.Lines.Take(3).Select(l => l.Label + " = " + l.Value), Is.EqualTo(new[]
                 { "This season's harvested acres = 0 of 6", "A house for a hand = Not yet", "A season with farm profit = Not yet" }));
             Assert.That(vm.Lines.Take(3).All(l => l.WhyKey == "era"), Is.True);
-            // Spec 012 §3.13: the Hamlet's reward is listed.
-            Assert.That(vm.Lines.Skip(3).Select(l => l.Label), Is.EqualTo(new[] { "When you're a Hamlet", "A cattle shed: buffalo and cows" }));
+            // Spec 012 §3.13, spec 018 §3.6: what the Hamlet opens, read from the content.
+            Assert.That(vm.Lines.Skip(3).Select(l => l.Label), Is.EqualTo(new[]
+            {
+                "When you're a Hamlet", "A cattle shed: buffalo and cows", "The flour mill", "A pump on the well and canal channels for your fields",
+                "The ox plough", "Family houses for your people", "The school, on the school plot", "Orchards", "A godown in the mandi town",
+            }));
 
             EraRules.OnHarvest(sim, 84, Fixed.Parse("0.9"));
             EraRules.OnHarvest(sim, 85, Fixed.Parse("1.1"));
@@ -467,7 +471,7 @@ namespace Sim.View.Tests
         }
 
         // ADR 0076: each era's chapter fires on its own era only, so the developer panel's Next era (or a later era's gate) never
-        // reopens the Hamlet's page; the progress sheet says Hamlet while the Village's gate isn't built.
+        // reopens the Hamlet's page: the Village's event opens the Village's page; at the Hamlet the progress sheet is the Village's.
         [Test]
         public void EraChapter_OwnEraOnly()
         {
@@ -475,8 +479,45 @@ namespace Sim.View.Tests
             var era = sim.State.Era;
             typeof(Sim.Core.Progress.EraState).GetProperty("Current").SetValue(era, 1); // the Hamlet, its page not yet read
             guide.Observe(sim, new SimEvent[] { new EraUnlocked(sim.State.Clock.SimTime, "village") });
-            Assert.That(guide.Next(sim), Is.Null, "no Hamlet page at the Village");
-            Assert.That(ProgressSheet.Build(ViewKit2.Context(sim)).Subtitle, Is.EqualTo("Your farm is a Hamlet."));
+            Assert.That(guide.Next(sim), Is.EqualTo("village"), "the Village's page, not the Hamlet's");
+            Assert.That(ProgressSheet.Build(ViewKit2.Context(sim)).Subtitle, Is.EqualTo("What your hamlet needs to become a Village"));
+        }
+
+        private static void Set(object o, string property, object value) { o.GetType().GetProperty(property).SetValue(o, value); }
+
+        // Spec 018 §3.6, AC-8: at the Hamlet, "Becoming a Village" shows the households, a business's profitable seasons and the school,
+        // each with a Why? that says what to do, and what the Village opens (read from the content); the Village's page names the business.
+        [Test]
+        public void Village()
+        {
+            Simulation sim = ViewKit.NewGame(edit: (f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j);
+            Set(sim.State.Era, "Current", 1);
+            ViewContext ctx = ViewKit2.Context(sim);
+            SheetVm vm = ProgressSheet.Build(ctx);
+            Assert.That((vm.Title, vm.Subtitle), Is.EqualTo(("Becoming a Village", "What your hamlet needs to become a Village")));
+            Assert.That(vm.Lines.Take(3).Select(l => l.Label + " = " + l.Value), Is.EqualTo(new[]
+                { "Households = 0 of 5", "A business, profitable seasons = 0 of 2", "The school = Not yet" }));
+            foreach (LineVm l in vm.Lines.Take(3)) WhyTests.AssertWords(l.Label, WhyView.Build(ctx, l.WhyKey, l.WhyId));
+            Assert.That(WhyView.Build(ctx, "era", 7).Rows.Any(r => r.Label == "Build the school on the school plot, from cash or with a co-op loan."), Is.True);
+            Assert.That(vm.Lines.Skip(3).Select(l => l.Label), Is.EqualTo(new[]
+            {
+                "When you're a Village", "The bakery and the dairy", "Shops on the square: a vegetable stall, a tea stall and a sweet shop",
+                "Drip and a borewell for your fields", "The tractor", "The cooperative bank lends up to " + ctx.Fmt.Coins(25_00_000_00),
+            }));
+            Assert.That(Letter.List(ctx).Lines.Last().Label, Is.EqualTo("Becoming a Village"));
+
+            GuideKit.Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "flour_mill", 84, 150_000_00, false));
+            Set(sim.State.Businesses.Businesses.Single(), "ProfitableSeasons", 1);
+            GuideKit.Ok(sim, new BuildSchool(sim.State.Clock.SimTime));
+            vm = ProgressSheet.Build(ctx);
+            Assert.That(vm.Lines[1].Value, Is.EqualTo("1 of 2 · Flour mill"));
+            Assert.That(vm.Lines[2].Value, Does.StartWith("Building, ready in"));
+            Assert.That(Letter.Page(ctx, "village", false, GuideKit.Info(sim), 0).Text, Does.Contain("your flour mill has paid its way"));
+            Assert.That(Letter.Page(ctx, "hamlet", false, GuideKit.Info(sim), 0).Text, Does.EndWith("A Village needs more: five households on your land, a business that pays its way two seasons, and a school for the children. Your letter in the Menu keeps count."), "the Hamlet's page names the goals");
+
+            Set(sim.State.Era, "Current", 2);
+            vm = ProgressSheet.Build(ctx);
+            Assert.That((vm.Title, vm.Subtitle, vm.Lines[0].Label), Is.EqualTo(("Your Village", "Your hamlet is a Village.", "Now open to you")));
         }
     }
 }

@@ -227,11 +227,29 @@ namespace Sim.Core.Business
             return Attract(sim, b.PriceFactor, b.Quality, b.Stars, Metres(sim, g, b.TileId), WaitMinutes(b.LastArrivals, b.LastCapacity));
         }
 
-        /// <summary>A rival's attraction to a group now.</summary>
+        /// <summary>A rival's attraction to a group now: the village's on its place, a newcomer on a pitch or as the cart by the square.</summary>
         public static Attraction Attract(Simulation sim, Rival r, ShopGroup g)
         {
-            RivalDef d = Defs(sim).Rivals[r.Def];
-            return Attract(sim, r.PriceFactor, d.Quality, r.Stars, Metres(sim, g, d.Tile, d.Metres), WaitMinutes(r.LastArrivals, d.CapacityPerHour));
+            return Attract(sim, r.PriceFactor, RivalQuality(sim, r), r.Stars, RivalMetres(sim, r, g), WaitMinutes(r.LastArrivals, RivalCapacity(sim, r)));
+        }
+
+        public static int RivalQuality(Simulation sim, Rival r) { return r.Newcomer ? Defs(sim).NewcomerQuality : Defs(sim).Rivals[r.Def].Quality; }
+
+        /// <summary>A rival's customers a real hour (cups or grams), 0 for no limit: a newcomer's cart serves whoever comes.</summary>
+        public static long RivalCapacity(Simulation sim, Rival r) { return r.Newcomer ? 0 : Defs(sim).Rivals[r.Def].CapacityPerHour; }
+
+        /// <summary>Metres from a group to a rival: a newcomer on a pitch stands in the square, its cart <c>cartMetres</c> beyond it.</summary>
+        public static int RivalMetres(Simulation sim, Rival r, ShopGroup g)
+        {
+            if (!r.Newcomer) return Metres(sim, g, Defs(sim).Rivals[r.Def].Tile, Defs(sim).Rivals[r.Def].Metres);
+            return Metres(sim, g, -1, r.Pitch >= 0 ? 0 : Defs(sim).CartMetres);
+        }
+
+        /// <summary>A rival open this hour: the village's by its hours, a newcomer by the village's shop hours.</summary>
+        public static bool RivalOpen(Simulation sim, Rival r, int hour)
+        {
+            if (!r.Newcomer) return RivalOpen(Defs(sim).Rivals[r.Def], hour);
+            return hour >= Defs(sim).OpenHour && hour < Defs(sim).CloseHour;
         }
 
         /// <summary>A shop's most this hour: its rate × its worker's share (spec 015 §3.4), cups or grams.</summary>
@@ -312,10 +330,11 @@ namespace Sim.Core.Business
                         long cap = Capacity(sim, b);
                         outlets.Add(new Outlet { B = b, CapLeft = cap, Capacity = cap });
                     }
-                foreach (Rival r in s.Rivals)
+                List<Rival> rivals = s.All();
+                foreach (Rival r in rivals)
                 {
-                    RivalDef d = Defs(sim).Rivals[r.Def];
-                    if (d.Kind == kind && RivalOpen(d, hour)) outlets.Add(new Outlet { R = r, CapLeft = d.CapacityPerHour > 0 ? d.CapacityPerHour : long.MaxValue, Capacity = d.CapacityPerHour });
+                    long cap = RivalCapacity(sim, r);
+                    if (r.Kind == kind && RivalOpen(sim, r, hour)) outlets.Add(new Outlet { R = r, CapLeft = cap > 0 ? cap : long.MaxValue, Capacity = cap });
                 }
                 if (outlets.Count > 0)
                     foreach (int good in KindGoods(sim, kind))
@@ -324,7 +343,7 @@ namespace Sim.Core.Business
                 foreach (Outlet o in outlets) Close(sim, o);
                 foreach (Business b in sim.State.Businesses.Businesses) // a shop shut this hour has no queue next hour
                     if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind && !outlets.Exists(o => o.B == b)) b.LastArrivals = b.LastCapacity = 0;
-                foreach (Rival r in s.Rivals) if (Defs(sim).Rivals[r.Def].Kind == kind && !outlets.Exists(o => o.R == r)) r.LastArrivals = 0;
+                foreach (Rival r in rivals) if (r.Kind == kind && !outlets.Exists(o => o.R == r)) r.LastArrivals = 0;
             }
         }
 
@@ -345,7 +364,7 @@ namespace Sim.Core.Business
             System.Array.Copy(s.TownToday, s.TownYesterday, s.TownToday.Length);
             System.Array.Clear(s.TownToday, 0, s.TownToday.Length);
             System.Array.Clear(s.LostToday, 0, s.LostToday.Length);
-            foreach (Rival r in s.Rivals) r.CustomersToday = 0;
+            foreach (Rival r in s.All()) r.CustomersToday = 0;
             foreach (Business b in sim.State.Businesses.Businesses)
             {
                 b.CustomersToday = 0;
@@ -393,6 +412,7 @@ namespace Sim.Core.Business
             if (open.Count == 0)
             {
                 s.LostToday[(int)kind] += demand;
+                s.LostSeason[(int)kind] += demand;
                 return;
             }
             // The price response (§3.2): fewer buy when the shops' mean price (by attraction) is above the reference.
@@ -446,6 +466,7 @@ namespace Sim.Core.Business
                 if (!passed) break;
             }
             s.LostToday[(int)kind] += left;
+            s.LostSeason[(int)kind] += left;
             for (int i = 0; i < open.Count; i++)
             {
                 Outlet o = open[i];
@@ -477,6 +498,7 @@ namespace Sim.Core.Business
             b.ServedToday += o.Served;
             b.SeasonCustomers += o.Arrivals;
             b.SeasonServed += o.Served;
+            b.SeasonAtPrice += b.PriceFactor.MulRatio(o.Served, 1).RoundToLong();
             BusinessBooks.Sweep(sim, b);
             if (o.Arrivals > 0) sim.Emit(new ShopSales(sim.State.Clock.SimTime, b.Id, o.Arrivals, o.Served, o.Amount));
         }
@@ -727,21 +749,126 @@ namespace Sim.Core.Business
 
         // ---- the season (§3.4) ----
 
-        /// <summary>A pitch's rent for the season ahead (§3.4), paid upfront to the council: Dr Rent, Cr Cash, on its overdraft if need be.</summary>
+        /// <summary>
+        /// A pitch's rent for the season ahead (§3.4), paid upfront to the council: Dr Rent, Cr Cash, on its overdraft if need be. Past the
+        /// overdraft's limit it goes unpaid that season, as a wage does (spec 016 §3.10): the shop is short and its card says so.
+        /// </summary>
         internal static void PayRent(Simulation sim, Business b, long period)
         {
             if (b.Pitch < 0 || Defs(sim) == null) return;
             long rent = MarketRules.Indexed(sim, Defs(sim).PitchRent);
+            if (rent <= 0) return;
+            if (BusinessBooks.CanSpend(sim, b) < rent)
+            {
+                sim.Emit(new ObligationUnpaid(sim.State.Clock.SimTime, "PitchRent", "business:" + b.Id, rent));
+                return;
+            }
             BusinessBooks.Draw(sim, b, rent, period);
-            if (rent > 0) b.Ledger.Post(sim.State.Clock.SimTime, period, "ledger.pitchRent", "business:" + b.Id, new Posting(Account.Rent, rent), new Posting(Account.Cash, -rent));
+            b.Ledger.Post(sim.State.Clock.SimTime, period, "ledger.pitchRent", "business:" + b.Id, new Posting(Account.Rent, rent), new Posting(Account.Cash, -rent));
         }
 
         /// <summary>The season's counts start again at the close.</summary>
         internal static void CloseSeason(Simulation sim)
         {
             if (sim.State.Shops == null) return;
-            foreach (Rival r in sim.State.Shops.Rivals) r.SeasonServed = 0;
+            foreach (Rival r in sim.State.Shops.All()) r.SeasonServed = 0;
+            System.Array.Clear(sim.State.Shops.LostSeason, 0, sim.State.Shops.LostSeason.Length);
         }
+
+        // ---- rivals at the close (§3.7, ADR 0095 §1–3) ----
+
+        /// <summary>A kind's season: what each shop served (yours and the rivals') and the customers nobody served.</summary>
+        public static void SeasonOf(Simulation sim, ShopKind kind, out long served, out long demand)
+        {
+            served = 0;
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Status != BusinessStatus.Closed && BusinessRules.TypeOf(sim, b).Kind == kind) served += b.SeasonServed;
+            foreach (Rival r in sim.State.Shops.All()) if (r.Kind == kind) served += r.SeasonServed;
+            demand = served + sim.State.Shops.LostSeason[(int)kind];
+        }
+
+        /// <summary>A rival's share of its kind's demand this season, or 0 with no demand.</summary>
+        public static Fixed SeasonShare(Simulation sim, Rival r)
+        {
+            SeasonOf(sim, r.Kind, out _, out long demand);
+            return demand <= 0 ? Fixed.Zero : Fixed.FromRatio(r.SeasonServed, demand);
+        }
+
+        /// <summary>One of your open shops of a kind sold the season above the reference (its customer-weighted price over 1.0, ADR 0095 §1).</summary>
+        public static bool RichPrices(Simulation sim, ShopKind kind)
+        {
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind && b.SeasonServed > 0 && b.SeasonAtPrice > b.SeasonServed) return true;
+            return false;
+        }
+
+        /// <summary>A kind's shops are open to the player (a newcomer comes only then: the village's own serve it before).</summary>
+        public static bool KindUnlocked(Simulation sim, ShopKind kind)
+        {
+            foreach (BusinessTypeDef t in sim.Config.Game.Businesses.Types) if (t.Kind == kind && BusinessRules.Unlocked(sim, t)) return true;
+            return false;
+        }
+
+        /// <summary>The first pitch with neither a shop of yours nor a newcomer, or −1.</summary>
+        public static int FreePitch(Simulation sim)
+        {
+            for (int p = 0; p < Defs(sim).Pitches; p++)
+                if (sim.State.Businesses.OnPitch(p) == null && sim.State.Shops.OnPitch(p) == null) return p;
+            return -1;
+        }
+
+        /// <summary>
+        /// At the close, before the season's counts start again, for each kind in order: the grocer's and tea stall's reaction to their
+        /// share; a newcomer under the exit share for <c>exitSeasons</c> running packs up; then, with none of that kind, a gap or your
+        /// rich prices draws one with the seeded chance, on the first free pitch or as the cart by the square.
+        /// </summary>
+        internal static void Rivals(Simulation sim)
+        {
+            ShopsState s = sim.State.Shops;
+            if (s == null || sim.State.Businesses == null) return;
+            ShopDefs d = Defs(sim);
+            long t = sim.State.Clock.SimTime, season = t / sim.Clock.SecondsPerSeason;
+            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets })
+            {
+                SeasonOf(sim, kind, out long served, out long demand);
+                if (demand <= 0) continue;
+                foreach (Rival r in s.Rivals)
+                {
+                    if (r.Kind != kind || !d.Rivals[r.Def].Reacts) continue;
+                    Fixed share = Fixed.FromRatio(r.SeasonServed, demand), was = r.LastShare, before = r.PriceFactor;
+                    if (was > Fixed.Zero && share < was * (Fixed.One - d.ReactChange))
+                        r.PriceFactor = Hundredths(Max(d.RivalFloor, r.PriceFactor - d.RivalStep));
+                    else if (was > Fixed.Zero && share > was * (Fixed.One + d.ReactChange))
+                        r.PriceFactor = Hundredths(Min(d.Rivals[r.Def].PriceFactor, r.PriceFactor + d.RivalStep));
+                    r.LastShare = share;
+                    if (r.PriceFactor == before) continue;
+                    r.ChangedAt = t;
+                    sim.Emit(new RivalPriceCut(t, r.Id, kind, r.PriceFactor, r.PriceFactor > before));
+                }
+                Rival n = s.Newcomers.Find(x => x.Kind == kind);
+                if (n != null)
+                {
+                    n.LowSeasons = Fixed.FromRatio(n.SeasonServed, demand) < d.NewcomerExitShare ? n.LowSeasons + 1 : 0;
+                    if (n.LowSeasons < d.NewcomerExitSeasons) continue;
+                    s.Newcomers.Remove(n);
+                    sim.Emit(new RivalClosed(t, kind, n.Pitch));
+                    continue; // never one out and another in at the same close
+                }
+                bool gap = served < d.NewcomerGap.MulRatio(demand, 1).RoundToLong();
+                if (!KindUnlocked(sim, kind) || !(gap || RichPrices(sim, kind))) continue;
+                if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), d.NewcomerChance)) continue;
+                int pitch = FreePitch(sim);
+                s.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
+                    PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap });
+                sim.Emit(new RivalOpened(t, kind, pitch, gap));
+            }
+        }
+
+        private static Fixed Max(Fixed a, Fixed b) { return a > b ? a : b; }
+
+        /// <summary>A price factor to the nearest hundredth, so steps of 0.05 land on 0.95, 0.90, 0.85 and back on 1.00 exactly.</summary>
+        private static Fixed Hundredths(Fixed f) { return Fixed.FromRatio(f.MulRatio(100, 1).RoundToLong(), 100); }
+        private static Fixed Min(Fixed a, Fixed b) { return a < b ? a : b; }
 
         // ---- the plan (§3.1, spec 016 §3.3) ----
 
@@ -752,7 +879,7 @@ namespace Sim.Core.Business
         public static Fixed ExpectedShare(Simulation sim, ShopKind kind, ShopGroup g, int tile)
         {
             Fixed yours = Attract(sim, Fixed.One, 1, Defs(sim).StartStars, Metres(sim, g, tile), Fixed.Zero).Total, all = yours;
-            foreach (Rival r in sim.State.Shops.Rivals) if (Defs(sim).Rivals[r.Def].Kind == kind) all += Attract(sim, r, g).Total;
+            foreach (Rival r in sim.State.Shops.All()) if (r.Kind == kind) all += Attract(sim, r, g).Total;
             return yours / all;
         }
 

@@ -129,12 +129,14 @@ namespace Sim.Core.Business
                 sim.Emit(new LedgerReconciliationFailed(sim.State.Clock.SimTime, "business " + b.Id + ": " + failure));
             }
             b.Reports.Add(report);
+            if (NetProfit(report) > 0) b.ProfitableSeasons++;
             if (b.Reports.Count > KeptReports) b.Reports.RemoveAt(0);
             b.SeasonOpeningCash = b.Ledger.Cash;
             b.AreaSeason = 0;
             b.OwnSeason = 0;
             b.SeasonCustomers = 0;
             b.SeasonServed = 0;
+            b.SeasonAtPrice = 0;
         }
 
         // ---- the overdraft (§3.8, §3.10) ----

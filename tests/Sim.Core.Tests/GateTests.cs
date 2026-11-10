@@ -286,6 +286,33 @@ namespace Sim.Core.Tests
             Assert.That(s.Day5.Count(d => !double.IsNaN(d) && d <= 48), Is.GreaterThanOrEqualTo(18), "the cautious saver within 48 days");
         }
 
+        private static string Days(System.Collections.Generic.List<double> days) { return string.Join(" ", days.Select(d => double.IsNaN(d) ? "-" : d.ToString("0.0"))); }
+
+        // Spec 018 §9, AC-9 (US-102, ADR 0097): the Village is reachable whatever order a player goes for its three (homes, a mill, the
+        // school), with loans or saving, never stuck (every run within 24 seasons). Homes first (then the mill, then the school) is quickest:
+        // the competent bot at a median of day 28–40, the cautious saver at 50–64; any order within 50 with loans and 80 saving. 8 seeds each;
+        // each condition's day is printed so a miss shows its cause.
+        [Test]
+        public void Village()
+        {
+            foreach (string order in new[] { "HMS", "HSM", "MHS", "MSH", "SHM", "SMH" })
+                foreach (bool saver in new[] { false, true })
+                {
+                    Gate.VillageResult r = Gate.Village(Live(), () => new VillageBot(saver, order), 8, 24);
+                    TestContext.Out.WriteLine(r.Bot + ": Village day " + Days(r.Village) + "; Hamlet " + Days(r.Hamlet) + "; 5 households " + Days(r.Households)
+                        + "; a business's 2 profitable seasons " + Days(r.Business) + "; the school open " + Days(r.School) + "; literacy at the Village " + string.Join(" ", r.Literacy) + "%; happiness a season on "
+                        + string.Join(" ", r.Happiness.Select(h => h.ToString("0"))));
+                    Assert.That(r.Village.Count(double.IsNaN), Is.Zero, r.Bot + ": every run gets there");
+                    double median = r.Village.OrderBy(d => d).ElementAt(r.Village.Count / 2);
+                    if (order == "HMS") Assert.That(median, saver ? Is.InRange(50.0, 64.0) : Is.InRange(28.0, 40.0), r.Bot);
+                    else Assert.That(median, Is.LessThanOrEqualTo(saver ? 80.0 : 50.0), r.Bot);
+                    // ADR 0100: literacy at the unlock is the adults' 60% over everyone 7+ (the village never had a school): about 45% homes
+                    // first, more when the school came first and pupils finished; happiness a season on, the school open, about 72 (ADR 0095 §6).
+                    Assert.That(Median(r.Literacy.Select(x => (double)x)), Is.InRange(35.0, 65.0), r.Bot + ": literacy at the Village");
+                    Assert.That(Median(r.Happiness), Is.InRange(70.0, 76.0), r.Bot + ": happiness a season on");
+                }
+        }
+
         // Spec 015 §9 (ADR 0082): the competent bot paying fair wages keeps motivation at 1.0–1.1 and the farm's profit within 2% of Phase 1's
         // output; a bot hiring 10% low and refusing every HR event saves on wages but earns less, its hands gone within about 2 seasons; HR
         // events 0–2 a season for 3 workers.
@@ -369,15 +396,20 @@ namespace Sim.Core.Tests
             Assert.That(Mid(results[2].Profit), Is.LessThan(0), "on your own herd's milk alone it loses");
         }
 
-        // Spec 017 §9 (ADR 0093): a bot founds a shop on a free pitch (measured from the Hamlet: the Village gate is spec 018's) and
-        // runs it hired; never stuck, never foreclosed, and its season profit inside the targets: the tea stall at good quality 10%
-        // above the reference, the sweet shop on your paneer and ghee at standard.
+        // Spec 017 §9 (ADR 0093, 0095 §1): a bot founds a shop on a free pitch (measured from the Hamlet: the Village gate is spec 018's) and
+        // runs it hired; never stuck, never foreclosed. Each kind priced 10% above the usual earns no more than at the usual price, since a
+        // newcomer sets up against rich prices (median, 8 seeds × 12 seasons); the tea stall and the sweet shop at the usual price inside their
+        // targets. The bot puts out what its customers take (BusinessBot.Restock), as a sensible owner would.
         [Test]
         public void Shops()
         {
             var config = LiveWith(Gate.ShopsInHamlet);
-            var results = new[] { (Func<Bot>)(() => new BusinessBot(false, false, "tea_stall") { Quality = 2, Price = Fixed.Parse("1.1") }), () => new BusinessBot(false, false, "sweet_shop") }
-                .Select((make, i) => Gate.Business(config, make, 8, i == 0 ? "tea_stall" : "sweet_shop", 12)).ToList();
+            Fixed above = Fixed.Parse("1.1");
+            var runs = new (string Type, int Quality, Fixed Price)[]
+            {
+                ("tea_stall", 1, Fixed.One), ("tea_stall", 1, above), ("sweet_shop", 1, Fixed.One), ("sweet_shop", 1, above), ("veg_stall", 1, Fixed.One), ("veg_stall", 1, above),
+            };
+            var results = runs.Select(x => Gate.Business(config, () => new BusinessBot(false, false, x.Type) { Quality = x.Quality, Price = x.Price }, 8, x.Type, 12)).ToList();
             foreach (Gate.MillResult m in results)
             {
                 TestContext.Out.WriteLine(m.Bot + ": founded " + m.Founded + "/" + m.Seeds + ", profit a season " + string.Join(", ", m.Profit.OrderBy(x => x).Select(x => x.ToString("0")))
@@ -387,8 +419,30 @@ namespace Sim.Core.Tests
                 Assert.That(m.Foreclosed, Is.Zero, m.Bot + ": hired, the farm keeps its founder");
             }
             double Mid(System.Collections.Generic.List<double> v) { return v.OrderBy(x => x).ElementAt(v.Count / 2); }
-            Assert.That(Mid(results[0].Profit), Is.InRange(5_000, 12_000), "the tea stall, good, 10% above");
-            Assert.That(Mid(results[1].Profit), Is.InRange(8_000, 15_000), "the sweet shop, hired");
+            for (int i = 0; i < runs.Length; i += 2)
+                Assert.That(Mid(results[i + 1].Profit), Is.LessThanOrEqualTo(Mid(results[i].Profit)), runs[i].Type + ": 10% above earns no more than the usual price (ADR 0095 §1)");
+            Assert.That(Mid(results[0].Profit), Is.InRange(5_000, 12_000), "the tea stall at the usual price (ADR 0093's target; good chai 10% above is what ADR 0095 §1 stops)");
+            Assert.That(Mid(results[2].Profit), Is.InRange(8_000, 15_000), "the sweet shop, hired");
+        }
+
+        // Spec 017 §9 (ADR 0095 §1): with no shop of yours nobody's prices are rich, so a newcomer comes only for a gap: 0–1 of each kind
+        // in 12 seasons from the Hamlet (the Township's weeks).
+        [Test]
+        public void Newcomers_NoShops()
+        {
+            var config = LiveWith(Gate.ShopsInHamlet);
+            var counts = new System.Collections.Concurrent.ConcurrentBag<int[]>();
+            System.Threading.Tasks.Parallel.For(0, 8, i =>
+            {
+                var opened = new int[4];
+                Economy.RunBot(config, new FarmerBot(), 12, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents) if (e is Sim.Core.Events.RivalOpened o) opened[(int)o.Kind]++;
+                });
+                counts.Add(opened);
+            });
+            TestContext.Out.WriteLine("newcomers by kind (veg, chai, sweets): " + string.Join("; ", counts.Select(c => c[1] + "," + c[2] + "," + c[3])));
+            Assert.That(counts.All(c => c.Max() <= 1), Is.True, "0–1 of each kind");
         }
 
         // Spec 016 §9 (US-117, ADR 0072): a bot founds the flour mill in the Hamlet and runs it, hired, by itself, and on a business loan;

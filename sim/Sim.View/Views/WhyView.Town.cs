@@ -52,7 +52,8 @@ namespace Sim.View.Views
                         "business", BusinessWords.InSentence(ctx, t));
                 }
                 else if (HouseholdRules.WorksOutside(sim, c))
-                    Row(vm, ctx, "why.householdIncome.outside", Money(ctx, HouseholdRules.OutsideSeasonPay(sim)), "name", TownWords.Name(ctx, c));
+                    Row(vm, ctx, c.Literate && SchoolRules.On(sim) ? "why.householdIncome.outsideLiterate" : "why.householdIncome.outside",
+                        Money(ctx, SchoolRules.WithPremium(sim, c, HouseholdRules.OutsideSeasonPay(sim))), "name", TownWords.Name(ctx, c));
             }
             vm.Footnote = ctx.Strings.Get("why.householdIncome.lesson");
             return vm;
@@ -154,7 +155,8 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.citizenJob.title", TownWords.Job(ctx, c));
             if (HouseholdRules.WorksOutside(sim, c))
             {
-                Row(vm, ctx, "why.citizenJob.outside", Money(ctx, HouseholdRules.OutsideDayPay(sim)));
+                Row(vm, ctx, "why.citizenJob.outside", Money(ctx, SchoolRules.WithPremium(sim, c, HouseholdRules.OutsideDayPay(sim))));
+                if (c.Literate && SchoolRules.On(sim)) Text(vm, ctx, "why.citizenJob.literate", "pct", ctx.Fmt.Percent(SchoolRules.Def(sim).LiteratePremium));
                 Text(vm, ctx, "why.citizenJob.hire");
             }
             else Text(vm, ctx, HouseholdRules.IsChild(sim, c) ? "why.citizenJob.child" : "why.citizenJob.elder");

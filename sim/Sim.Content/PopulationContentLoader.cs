@@ -13,7 +13,7 @@ namespace Sim.Content
         {
             const string root = "population";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "life", "budget", "basket", "needs", "flows", "house", "villages");
+            OnlyFields(o, root, "life", "budget", "basket", "needs", "flows", "house", "villages", "school");
             var d = new PopulationDefs { House = house };
 
             string lp = root + ".life";

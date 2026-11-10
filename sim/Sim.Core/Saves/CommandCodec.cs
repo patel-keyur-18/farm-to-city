@@ -42,6 +42,7 @@ namespace Sim.Core.Saves
             BuyMachine, LeaseMachine, HireMachine, SellMachine, SetMaintenance,
             PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
             FoundOnPitch, SetShop, SetStallGoods,
+            BuildSchool, StartAdultClass, FindCodexCards, ReadCodexCard, HearAdvisors,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -106,6 +107,34 @@ namespace Sim.Core.Saves
                 case HireMachine c: At(c, Tag.HireMachine); w.WriteString(c.KindId); break;
                 case SellMachine c: At(c, Tag.SellMachine); w.WriteLong(c.MachineId); break;
                 case SetMaintenance c: At(c, Tag.SetMaintenance); w.WriteLong(c.MachineId); w.WriteBool(c.On); break;
+                case BuildSchool c:
+                    At(c, Tag.BuildSchool); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case StartAdultClass c: At(c, Tag.StartAdultClass); break;
+                case FindCodexCards c:
+                    At(c, Tag.FindCodexCards);
+                    w.WriteInt(c.Cards.Count);
+                    foreach (Progress.CodexFind f in c.Cards)
+                    {
+                        w.WriteString(f.Id);
+                        w.WriteInt(f.Numbers.Length);
+                        foreach (long v in f.Numbers) w.WriteLong(v);
+                    }
+                    break;
+                case ReadCodexCard c: At(c, Tag.ReadCodexCard); w.WriteString(c.CardId); break;
+                case HearAdvisors c:
+                    At(c, Tag.HearAdvisors);
+                    w.WriteInt(c.Notes.Count);
+                    foreach (Progress.AdvisorNote a in c.Notes)
+                    {
+                        w.WriteString(a.Id);
+                        w.WriteLong(a.Key);
+                        w.WriteBool(a.Report);
+                        w.WriteInt(a.Numbers.Length);
+                        foreach (long v in a.Numbers) w.WriteLong(v);
+                    }
+                    break;
                 case PlantOrchard c: At(c, Tag.PlantOrchard); w.WriteInt(c.TileId); w.WriteString(c.TreeId); break;
                 case PickOrchard c: At(c, Tag.PickOrchard); w.WriteInt(c.TileId); w.WriteInt((int)c.Overflow); break;
                 case ClearOrchard c: At(c, Tag.ClearOrchard); w.WriteInt(c.TileId); break;
@@ -298,6 +327,37 @@ namespace Sim.Core.Saves
                 case Tag.HireMachine: return new HireMachine(at, r.ReadString());
                 case Tag.SellMachine: return new SellMachine(at, r.ReadLong());
                 case Tag.SetMaintenance: return new SetMaintenance(at, r.ReadLong(), r.ReadBool());
+                case Tag.BuildSchool: return new BuildSchool(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                case Tag.StartAdultClass: return new StartAdultClass(at);
+                case Tag.FindCodexCards:
+                {
+                    var cards = new System.Collections.Generic.List<Progress.CodexFind>();
+                    int n = r.ReadCount();
+                    for (int i = 0; i < n; i++)
+                    {
+                        string id = r.ReadString();
+                        var numbers = new long[r.ReadCount()];
+                        for (int k = 0; k < numbers.Length; k++) numbers[k] = r.ReadLong();
+                        cards.Add(new Progress.CodexFind(id, numbers));
+                    }
+                    return new FindCodexCards(at, cards);
+                }
+                case Tag.ReadCodexCard: return new ReadCodexCard(at, r.ReadString());
+                case Tag.HearAdvisors:
+                {
+                    var notes = new System.Collections.Generic.List<Progress.AdvisorNote>();
+                    int n = r.ReadCount();
+                    for (int i = 0; i < n; i++)
+                    {
+                        string id = r.ReadString();
+                        long key = r.ReadLong();
+                        bool report = r.ReadBool();
+                        var numbers = new long[r.ReadCount()];
+                        for (int k = 0; k < numbers.Length; k++) numbers[k] = r.ReadLong();
+                        notes.Add(new Progress.AdvisorNote(id, key, report, numbers));
+                    }
+                    return new HearAdvisors(at, notes);
+                }
                 case Tag.PlantOrchard: return new PlantOrchard(at, r.ReadInt(), r.ReadString());
                 case Tag.PickOrchard: return new PickOrchard(at, r.ReadInt(), (Overflow)r.ReadInt());
                 case Tag.ClearOrchard: return new ClearOrchard(at, r.ReadInt());

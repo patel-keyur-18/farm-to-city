@@ -14,7 +14,7 @@ namespace Sim.Content
             const string root = "shops";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "villagePeople", "openHour", "closeHour", "metresPerAcre", "square", "pitches", "pitchRent", "retailMarkup", "pricePresets", "weights",
-                "startStars", "reputation", "kinds", "vegShares", "rivals", "chakki");
+                "startStars", "reputation", "kinds", "vegShares", "rivals", "newcomers", "reaction", "chakki");
             var d = new ShopDefs
             {
                 VillagePeople = BoundedInt(o, root, "villagePeople", 0, 100000),
@@ -93,7 +93,7 @@ namespace Sim.Content
             {
                 string p = Index(root + ".rivals", i);
                 JObject r = Object(rt[i], p);
-                OnlyFields(r, p, "id", "kind", "place", "metres", "priceFactor", "quality", "stars", "openHour", "closeHour", "capacityPerHour");
+                OnlyFields(r, p, "id", "kind", "place", "metres", "priceFactor", "quality", "stars", "openHour", "closeHour", "capacityPerHour", "reacts");
                 var x = new RivalDef { Id = UniqueId(r, p, rivals.ConvertAll(y => y.Id)), Kind = ShopKindOf(String(Required(r, p, "kind"), p + ".kind"), p + ".kind") };
                 if ((r["place"] == null) == (r["metres"] == null)) throw new ContentException(p + ".place", "a rival stands on a place, or at a distance off the map");
                 if (r["place"] != null) x.Tile = PlaceTile(r, p, "place", map);
@@ -104,9 +104,29 @@ namespace Sim.Content
                 x.OpenHour = BoundedInt(r, p, "openHour", 0, 23);
                 x.CloseHour = BoundedInt(r, p, "closeHour", x.OpenHour + 1, 24);
                 x.CapacityPerHour = r["capacityPerHour"] == null ? 0 : BoundedInt(r, p, "capacityPerHour", 1, 100000) * (x.Kind == ShopKind.Chai ? 1L : 1000L);
+                x.Reacts = r["reacts"] != null && Bool(r["reacts"], p + ".reacts");
                 rivals.Add(x);
             }
             d.Rivals = rivals.AsReadOnly();
+
+            string np = root + ".newcomers";
+            JObject n = Object(Required(o, root, "newcomers"), np);
+            OnlyFields(n, np, "gap", "chance", "exitShare", "exitSeasons", "stars", "quality", "cartPlace", "cartMetres");
+            d.NewcomerGap = Bounded(n, np, "gap", "0", "1");
+            d.NewcomerChance = Bounded(n, np, "chance", "0", "1");
+            d.NewcomerExitShare = Bounded(n, np, "exitShare", "0", "1");
+            d.NewcomerExitSeasons = BoundedInt(n, np, "exitSeasons", 1, 20);
+            d.NewcomerStars = Bounded(n, np, "stars", "0", "5");
+            d.NewcomerQuality = Quality(n, np);
+            d.CartTile = PlaceTile(n, np, "cartPlace", map);
+            d.CartMetres = BoundedInt(n, np, "cartMetres", 0, 10000);
+
+            string ap = root + ".reaction";
+            JObject a = Object(Required(o, root, "reaction"), ap);
+            OnlyFields(a, ap, "step", "floor", "change");
+            d.RivalStep = Bounded(a, ap, "step", "0", "0.5");
+            d.RivalFloor = Bounded(a, ap, "floor", "0.5", "1");
+            d.ReactChange = Bounded(a, ap, "change", "0", "1");
 
             string cp = root + ".chakki";
             JObject c = Object(Required(o, root, "chakki"), cp);

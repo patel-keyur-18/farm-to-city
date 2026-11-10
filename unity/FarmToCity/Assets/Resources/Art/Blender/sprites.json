@@ -1238,6 +1238,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_codex"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_coin"
   },
   {
@@ -1246,6 +1253,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_compost"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_deed"
   },
   {
    "w": 256,
@@ -1652,6 +1666,90 @@
    "pivotX": 0.5,
    "pivotY": 0.17816,
    "name": "marker_spoil"
+  },
+  {
+   "w": 196,
+   "h": 260,
+   "pivotX": 0.46933,
+   "pivotY": 0.22088,
+   "name": "newcomer_chai_cart_s"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_chai_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_chai_pitch_2"
+  },
+  {
+   "w": 262,
+   "h": 268,
+   "pivotX": 0.5282,
+   "pivotY": 0.29344,
+   "name": "newcomer_chai_pitch_3"
+  },
+  {
+   "w": 196,
+   "h": 260,
+   "pivotX": 0.46933,
+   "pivotY": 0.22088,
+   "name": "newcomer_sweets_cart_s"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_sweets_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_sweets_pitch_2"
+  },
+  {
+   "w": 262,
+   "h": 268,
+   "pivotX": 0.5282,
+   "pivotY": 0.29344,
+   "name": "newcomer_sweets_pitch_3"
+  },
+  {
+   "w": 196,
+   "h": 260,
+   "pivotX": 0.46933,
+   "pivotY": 0.22088,
+   "name": "newcomer_veg_cart_s"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_veg_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_veg_pitch_2"
+  },
+  {
+   "w": 262,
+   "h": 268,
+   "pivotX": 0.5282,
+   "pivotY": 0.29344,
+   "name": "newcomer_veg_pitch_3"
   },
   {
    "w": 96,
@@ -2631,6 +2729,27 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "portrait_advisor_bank"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "portrait_advisor_farm"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "portrait_advisor_people"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "portrait_boy"
   },
   {
@@ -3318,6 +3437,20 @@
    "pivotX": 0.5,
    "pivotY": 0.49192,
    "name": "village_pond"
+  },
+  {
+   "w": 426,
+   "h": 316,
+   "pivotX": 0.50359,
+   "pivotY": 0.3924,
+   "name": "village_school_building_e"
+  },
+  {
+   "w": 426,
+   "h": 320,
+   "pivotX": 0.50359,
+   "pivotY": 0.38638,
+   "name": "village_school_e"
   },
   {
    "w": 232,

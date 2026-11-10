@@ -334,6 +334,71 @@ namespace Tools.Balancer
             return all;
         }
 
+        // ---- Spec 018 §9 (US-102): the Village a bot reaches ----
+
+        public sealed class VillageResult
+        {
+            public string Bot;
+            public int Seeds;
+
+            /// <summary>Per seed, in days from the new game (NaN if never): the Village, the Hamlet, and each of the Village's three conditions first met.</summary>
+            public List<double> Village = new List<double>(), Hamlet = new List<double>(), Households = new List<double>(), Business = new List<double>(), School = new List<double>();
+
+            /// <summary>Per seed that reached the Village: the literacy rate then (%; spec 018 §9, 50–70).</summary>
+            public List<int> Literacy = new List<int>();
+
+            /// <summary>Per seed that reached the Village: town happiness a season after it, the school open (spec 018 §3.2, about 72).</summary>
+            public List<double> Happiness = new List<double>();
+        }
+
+        /// <summary>Plays a bot for <paramref name="seasons"/> (12: 48 days, past the saver's 42) and records when the Village and each condition come.</summary>
+        public static VillageResult Village(SimConfig config, Func<Bot> make, int seeds, int seasons = 12)
+        {
+            var rows = new VillageResult[seeds];
+            string name = make().Name;
+            Parallel.For(0, seeds, i =>
+            {
+                double village = double.NaN, hamlet = double.NaN, homes = double.NaN, business = double.NaN, school = double.NaN;
+                int literacy = -1;
+                double happiness = double.NaN;
+                Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    double day = sim.State.Clock.SimTime / 86400.0;
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                        if (e is Sim.Core.Events.EraUnlocked u)
+                        {
+                            if (u.EraId == "hamlet") hamlet = e.SimTime / 86400.0;
+                            if (u.EraId == "village") { village = e.SimTime / 86400.0; literacy = Sim.Core.People.SchoolRules.LiteracyRate(sim); }
+                        }
+                    if (double.IsNaN(homes) && Sim.Core.Progress.EraRules.Households(sim) >= 5) homes = day;
+                    if (double.IsNaN(business) && Sim.Core.Progress.EraRules.BusinessSeasons(sim) >= 2) business = day;
+                    if (double.IsNaN(school) && Sim.Core.People.SchoolRules.IsOpen(sim)) school = day;
+                    if (!double.IsNaN(village) && double.IsNaN(happiness) && day >= village + 4) happiness = (double)Sim.Core.People.HappinessRules.Town(sim).Raw / 4294967296.0;
+                });
+                var r = new VillageResult();
+                r.Village.Add(village);
+                r.Hamlet.Add(hamlet);
+                r.Households.Add(homes);
+                r.Business.Add(business);
+                r.School.Add(school);
+                if (literacy >= 0) r.Literacy.Add(literacy);
+                if (!double.IsNaN(happiness)) r.Happiness.Add(happiness);
+                rows[i] = r;
+            });
+            var all = new VillageResult { Bot = name, Seeds = seeds };
+            foreach (VillageResult r in rows)
+            {
+                all.Village.AddRange(r.Village);
+                all.Hamlet.AddRange(r.Hamlet);
+                all.Households.AddRange(r.Households);
+                all.Business.AddRange(r.Business);
+                all.School.AddRange(r.School);
+                all.Literacy.AddRange(r.Literacy);
+                all.Happiness.AddRange(r.Happiness);
+            }
+            return all;
+        }
+
         // ---- Spec 016 §9 (US-117, ADR 0072): the flour mill a bot founds ----
 
         public sealed class MillResult

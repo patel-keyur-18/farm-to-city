@@ -197,6 +197,15 @@ namespace Sim.Core.Business
         public long SeasonCustomers { get; internal set; }
         public long SeasonServed { get; internal set; }
 
+        /// <summary>
+        /// This season's served at its price, in reference units (Σ price factor × served, schema 15): above <see cref="SeasonServed"/>
+        /// it sold the season above the reference, which draws a newcomer (spec 017 §3.7, ADR 0095 §1).
+        /// </summary>
+        public long SeasonAtPrice { get; internal set; }
+
+        /// <summary>Seasons its own P&amp;L closed with a net profit above 0 (schema 15): the Village's gate counts them (spec 018 §3.6).</summary>
+        public int ProfitableSeasons { get; internal set; }
+
         /// <summary>The day (t ÷ day) a stall last took its goods: at 6:00, or the hour it first opens or is first staffed (ADR 0091 §4).</summary>
         public long StockedDay { get; internal set; } = -1;
 
@@ -265,6 +274,8 @@ namespace Sim.Core.Business
             foreach (long v in new[] { LastArrivals, LastCapacity, CustomersToday, ServedToday, SeasonCustomers, SeasonServed, StockedDay }) h.WriteLong(v);
             h.WriteBool(OpenToday);
             h.WriteInt(ShutDays);
+            if (h.Hashing ? SeasonAtPrice != 0 : !(h is SaveWriter s15 && s15.Schema < 15)) h.WriteLong(SeasonAtPrice); // hashed only once used
+            if (h.Hashing ? ProfitableSeasons != 0 : !(h is SaveWriter p15 && p15.Schema < 15)) h.WriteInt(ProfitableSeasons);
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -321,6 +332,12 @@ namespace Sim.Core.Business
             b.StockedDay = r.ReadLong();
             b.OpenToday = r.ReadBool();
             b.ShutDays = r.ReadInt();
+            if (r.Schema >= 15)
+            {
+                b.SeasonAtPrice = r.ReadLong();
+                b.ProfitableSeasons = r.ReadInt();
+            }
+            else foreach (BusinessReport x in b.Reports) if (BusinessBooks.NetProfit(x) > 0) b.ProfitableSeasons++; // from its own books (ADR 0095 §9)
             return b;
         }
     }

@@ -21,5 +21,6 @@
       "seed_methi", "seed_amaranth", "seed_okra", "seed_peas", "seed_maize", "seed_mustard"],
     "warehouseRentPerKgSeason": 0.30, "maxRentTonnes": 20,
     "tenantChance": 0.8, "letRentPerKgSeason": 0.24
-  }
+  },
+  "school": { "unlockEra": "hamlet", "place": "school_plot", "buildingCost": 90000, "equipmentCost": 15000, "buildHours": 48 }
 }

@@ -49,6 +49,9 @@ namespace Sim.Core.Land
 
         internal readonly Fixed[] Changes = new Fixed[ReasonCount];
 
+        /// <summary>This season's seconds with a growing crop on it below the crop's moisture minimum (spec 018 §3.4's dry field); schema 15.</summary>
+        public long DrySeconds { get; internal set; }
+
         /// <summary>This season's applied fertility change for a reason (Why?).</summary>
         public Fixed FertilityChange(FertilityReason reason) { return Changes[(int)reason]; }
 
@@ -59,7 +62,7 @@ namespace Sim.Core.Land
             var c = new Tile
             {
                 Id = Id, Terrain = Terrain, Soil = Soil, Drainage = Drainage, Fertility = Fertility,
-                Moisture = Moisture, WellLift = WellLift, ParcelId = ParcelId, VacantSince = VacantSince,
+                Moisture = Moisture, WellLift = WellLift, ParcelId = ParcelId, VacantSince = VacantSince, DrySeconds = DrySeconds,
             };
             System.Array.Copy(Changes, c.Changes, ReasonCount);
             return c;
@@ -77,6 +80,7 @@ namespace Sim.Core.Land
             h.WriteRef(ContentTable.Parcel, ParcelId);
             h.WriteLong(VacantSince);
             foreach (Fixed f in Changes) h.WriteFixed(f);
+            if (h.Hashing ? DrySeconds != 0 : !(h is SaveWriter w && w.Schema < 15)) h.WriteLong(DrySeconds); // schema 15; hashed once dry
         }
 
         internal static Tile ReadFrom(SaveReader r)
@@ -88,6 +92,7 @@ namespace Sim.Core.Land
                 VacantSince = r.ReadLong(),
             };
             for (int i = 0; i < ReasonCount; i++) t.Changes[i] = r.ReadFixed();
+            if (r.Schema >= 15) t.DrySeconds = r.ReadLong();
             return t;
         }
     }

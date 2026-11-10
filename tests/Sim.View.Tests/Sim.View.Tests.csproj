@@ -16,5 +16,6 @@
     <ProjectReference Include="..\..\sim\Sim.Core\Sim.Core.csproj" />
     <ProjectReference Include="..\..\sim\Sim.Content\Sim.Content.csproj" />
     <ProjectReference Include="..\..\sim\Sim.View\Sim.View.csproj" />
+    <ProjectReference Include="..\..\tools\Tools.Balancer\Tools.Balancer.csproj" />
   </ItemGroup>
 </Project>

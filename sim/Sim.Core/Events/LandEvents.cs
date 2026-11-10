@@ -68,4 +68,26 @@ namespace Sim.Core.Events
                 + ", netWorth=" + Report.NetWorth.Total + ")";
         }
     }
+
+    /// <summary>
+    /// At each season close, a field of yours whose soil fell this season or that sat dry under a crop (spec 018 §3.4: what the farm
+    /// advisor notices): the season's net fertility change, its fertility now, and the hours a crop on it was below its moisture minimum.
+    /// </summary>
+    public sealed class FieldSeasonClosed : SimEvent
+    {
+        public int TileId { get; }
+        public Maths.Fixed FertilityChange { get; }
+        public Maths.Fixed Fertility { get; }
+        public long DryHours { get; }
+
+        public FieldSeasonClosed(long simTime, int tileId, Maths.Fixed fertilityChange, Maths.Fixed fertility, long dryHours) : base(simTime)
+        {
+            TileId = tileId;
+            FertilityChange = fertilityChange;
+            Fertility = fertility;
+            DryHours = dryHours;
+        }
+
+        protected override string Describe() { return "FieldSeasonClosed(tile=" + TileId + ", change=" + FertilityChange + ", dry=" + DryHours + "h)"; }
+    }
 }

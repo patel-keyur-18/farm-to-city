@@ -200,6 +200,7 @@ namespace Sim.Core.People
             Children(sim, x, husband, wife, children, village);
             HouseholdRules.SetBudget(sim, x);
             sim.Emit(new FamilyMovedIn(t, x.Id, house.Id, x.Members.Count, husband.Name, 0));
+            Progress.EraRules.OnTown(sim); // a household moved in: the Village's gate (spec 018 §3.6)
         }
 
         /// <summary>

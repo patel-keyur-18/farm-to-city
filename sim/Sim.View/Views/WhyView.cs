@@ -19,6 +19,9 @@ namespace Sim.View.Views
         /// <summary>A short note under the row, or null.</summary>
         public string Note { get; }
 
+        /// <summary>A section's heading (a Codex card's "Your numbers"), not a cause.</summary>
+        public bool Heading { get; internal set; }
+
         public WhyRowVm(string label, string value, string note = null)
         {
             Label = label;
@@ -34,6 +37,10 @@ namespace Sim.View.Views
         public string Value { get; internal set; }
         public List<WhyRowVm> Rows { get; } = new List<WhyRowVm>();
         public string Footnote { get; internal set; }
+
+        /// <summary>The small line over the title and an icon beside it: a Codex card's group (null: "Why?" and no icon).</summary>
+        public string Kicker { get; internal set; }
+        public string Icon { get; internal set; }
     }
 
     /// <summary>
@@ -109,6 +116,9 @@ namespace Sim.View.Views
             { "shopShare", ShopShare }, { "shopToday", ShopToday }, { "shopLost", ShopLost }, { "shopPeople", ShopPeople }, { "shopDemand", ShopDemand },
             { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
+            // The school (spec 018).
+            { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
+            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
         };

@@ -90,8 +90,8 @@ namespace Sim.Core.Tests
             Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("hamlet"));
             Assert.That(sim.DrainEvents().OfType<EraUnlocked>().Single().EraId, Is.EqualTo("hamlet"));
 
-            // A Hamlet whose Village gate isn't built stays a Hamlet through closes (eras.json: manual).
-            Assert.That(eras[2].Manual, Is.True);
+            // A Hamlet whose Village gate isn't met stays a Hamlet through closes.
+            Assert.That(eras[2].HouseholdsAtLeast, Is.EqualTo(5));
             sim.Execute(new DebugAdvance(sim.Clock.SecondsPerSeason, AdvanceMode.Live));
             Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("hamlet"));
 

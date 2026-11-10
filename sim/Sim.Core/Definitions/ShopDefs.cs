@@ -52,6 +52,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>Customers it serves a real hour (cups or grams), or 0 for no limit.</summary>
         public long CapacityPerHour { get; internal set; }
+
+        /// <summary>Cuts and restores its price as its share moves (ADR 0095 §3): the village grocer and tea stall.</summary>
+        public bool Reacts { get; internal set; }
     }
 
     /// <summary>Shops and customer choice (spec 017, <c>content/shops.json</c>).</summary>
@@ -108,6 +111,25 @@ namespace Sim.Core.Definitions
         public int ChakkiMetres { get; internal set; }
         public int ChakkiQuality { get; internal set; }
         public Fixed ChakkiStars { get; internal set; }
+
+        // Newcomers (spec 017 §3.7, ADR 0095 §1–2): a gap under NewcomerGap served, or one of your shops above the reference, opens one
+        // with NewcomerChance; under NewcomerExitShare for NewcomerExitSeasons running closes it.
+        public Fixed NewcomerGap { get; internal set; }
+        public Fixed NewcomerChance { get; internal set; }
+        public Fixed NewcomerExitShare { get; internal set; }
+        public int NewcomerExitSeasons { get; internal set; }
+        public Fixed NewcomerStars { get; internal set; }
+        public int NewcomerQuality { get; internal set; }
+
+        /// <summary>The acre whose verge the cart stands on (drawn there), and its distance from the square that customers count.</summary>
+        public int CartTile { get; internal set; }
+        public int CartMetres { get; internal set; }
+
+        // The grocer's and tea stall's reaction (ADR 0095 §3): a share down by more than ReactChange cuts RivalStep of the reference,
+        // never under RivalFloor; up by more than ReactChange goes back a step, never above its own price.
+        public Fixed RivalStep { get; internal set; }
+        public Fixed RivalFloor { get; internal set; }
+        public Fixed ReactChange { get; internal set; }
 
         public ShopKindDef Kind(ShopKind k) { return Kinds[(int)k]; }
     }

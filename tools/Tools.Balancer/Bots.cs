@@ -615,7 +615,10 @@ namespace Tools.Balancer
 
         protected override bool MayBorrow { get { return false; } }
 
-        protected override bool ReadyToHire(Simulation sim)
+        protected override bool ReadyToHire(Simulation sim) { return CanHire(sim); }
+
+        /// <summary>Cash covers the hut (if none stands), a season of the hand's market wage and of the household's basic living costs.</summary>
+        public static bool CanHire(Simulation sim)
         {
             GameDefs g = sim.Config.Game;
             long hut = PeopleRules.HutCount(sim) > 0 ? 0 : g.Buildings[g.People.HandHut].Value;
@@ -1148,12 +1151,15 @@ namespace Tools.Balancer
             return mill.OwnPerDay * sim.Clock.DaysPerSeason * 4;
         }
 
+        /// <summary>Whether the next business may be founded now (a bot with other priorities first says no).</summary>
+        protected virtual bool MayFound(Simulation sim) { return true; }
+
         /// <summary>The next business first: until it's founded, its cash is kept back from building houses.</summary>
         protected override long HomeReserve(Simulation sim)
         {
             long reserve = base.HomeReserve(sim);
             int i = Next(sim);
-            if (i < 0) return reserve;
+            if (i < 0 || !MayFound(sim)) return reserve;
             var type = Type(sim, _types[i]);
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
             return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
@@ -1182,7 +1188,7 @@ namespace Tools.Balancer
             base.Play(sim, t);
             if (sim.State.Businesses == null) return;
             int next = Next(sim);
-            if (next >= 0) Found(sim, t, next);
+            if (next >= 0 && MayFound(sim)) Found(sim, t, next);
             foreach (string id in _types)
             {
                 Sim.Core.Business.Business b = Of(sim, id);
@@ -1207,6 +1213,7 @@ namespace Tools.Balancer
                 long milk = Sim.Core.Business.BusinessRules.MilkFor(bt, b.Mix);
                 if (b.OwnPerDay != milk || b.BuyFromMarket == OwnMilkOnly) Ok(sim, new SetBusiness(t, b.Id, b.OpenHour, b.CloseHour, b.Fee, milk, !OwnMilkOnly));
             }
+            if (bt.IsShop && b.Status == Sim.Core.Business.BusinessStatus.Open) Restock(sim, t, b, bt);
             if (!_self) Hire(sim, t, b);
             // Short, or overdrawn at a season's start: cash in to clear it (and pay a worker again), as an owner would.
             bool seasonStart = t % sim.Clock.SecondsPerSeason < 3600 + 600;
@@ -1224,6 +1231,44 @@ namespace Tools.Balancer
                 long keep = Sim.Core.Business.BusinessRules.Wage(sim, type) + 20_000 * Money.Coin;
                 long spare = (b.Ledger.Cash - keep) / (1000 * Money.Coin) * (1000 * Money.Coin);
                 if (spare > 0) Ok(sim, new TakeCash(t, b.Id, spare));
+            }
+        }
+
+        // A stall's goods as founded (spec 017 §3.1), and the share of today's goods its customers took, measured at 21:00.
+        private readonly Dictionary<long, long[]> _founded = new Dictionary<long, long[]>();
+        private readonly Dictionary<long, Fixed> _sold = new Dictionary<long, Fixed>();
+
+        /// <summary>
+        /// The vegetable stall's goods and the sweet shop's sweets follow the customers, as a sensible owner's would (US-122): under 80% sold
+        /// in a day, the next morning (5:00) it puts out what sold plus 15%; sold out, the goods as founded again. A newcomer
+        /// or the grocer's cut leaves fewer customers, and goods nobody buys spoil. The tea stall's cups are made to order.
+        /// </summary>
+        private void Restock(Simulation sim, long t, Sim.Core.Business.Business b, Sim.Core.Definitions.BusinessTypeDef bt)
+        {
+            if (bt.TakesMilk) return;
+            bool recipe = bt.ByRecipe;
+            long[] goods = recipe ? b.Mix : b.PutOut;
+            if (!_founded.ContainsKey(b.Id)) _founded[b.Id] = (long[])goods.Clone();
+            long[] f = _founded[b.Id];
+            int hour = (int)(t % 86_400 / 3600);
+            long offered = 0;
+            foreach (long g in goods) offered += g;
+            if (hour == 21)
+            {
+                if (offered > 0) _sold[b.Id] = Fixed.FromRatio(Math.Min(b.ServedToday, offered), offered);
+                return;
+            }
+            if (hour != 5 || !_sold.TryGetValue(b.Id, out Fixed sold)) return;
+            _sold.Remove(b.Id);
+            bool soldOut = sold >= Fixed.Parse("0.98");
+            if (!soldOut && sold >= Fixed.Parse("0.8")) return;
+            for (int g = 0; g < goods.Length; g++)
+            {
+                if (f[g] == 0) continue;
+                long want = soldOut ? f[g] : Math.Min(f[g], Math.Max(f[g] / 5, (sold * Fixed.Parse("1.15")).MulRatio(goods[g], 1).RoundToLong()));
+                if (goods[g] == want) continue;
+                if (recipe) Ok(sim, new SetMix(t, b.Id, sim.Config.Game.Market.Goods[g].Id, want));
+                else Ok(sim, new SetStallGoods(t, b.Id, sim.Config.Game.Market.Goods[g].Id, want));
             }
         }
 
@@ -1276,5 +1321,76 @@ namespace Tools.Balancer
     public sealed class MillBot : BusinessBot
     {
         public MillBot(bool runsIt, bool borrows = false) : base(runsIt, borrows, "flour_mill") { }
+    }
+
+    /// <summary>
+    /// Spec 018 §9 (US-102, ADR 0097): the competent founder going for the Village's gate in an order of its three: H five homes (on the
+    /// bank's home loan, ADR 0071), M a hired flour mill on its loan, S the school on a co-op loan as far as the bank's room allows. "HMS"
+    /// measured quickest; the others show a player who goes another way still gets there. The saver variant borrows nothing, hires as
+    /// the cautious saver does, and builds from savings.
+    /// </summary>
+    public sealed class VillageBot : BusinessBot
+    {
+        private readonly bool _saver;
+        private readonly string _order;
+
+        public VillageBot(bool saver = false, string order = "HMS") : base(false, !saver, "flour_mill")
+        {
+            _saver = saver;
+            _order = order;
+        }
+
+        public override string Name { get { return (_saver ? "village-saver" : "village") + (_order == "HMS" ? "" : "-" + _order); } }
+
+        protected override bool MayBorrow { get { return !_saver; } }
+
+        protected override bool ReadyToHire(Simulation sim) { return _saver ? CautiousSaverBot.CanHire(sim) : base.ReadyToHire(sim); }
+
+        private static bool Started(Simulation sim, char c)
+        {
+            switch (c)
+            {
+                case 'H': return sim.State.Citizens == null || Town.Homes(sim) >= Town.Households;
+                case 'M': return sim.State.Businesses == null || sim.State.Businesses.Businesses.Count > 0;
+                default: return SchoolRules.On(sim) && SchoolRules.State(sim).Status != SchoolStatus.None;
+            }
+        }
+
+        /// <summary>True once everything before <paramref name="c"/> in the order is under way.</summary>
+        private bool Turn(Simulation sim, char c)
+        {
+            foreach (char x in _order)
+            {
+                if (x == c) return true;
+                if (!Started(sim, x)) return false;
+            }
+            return true;
+        }
+
+        protected override bool MayFound(Simulation sim) { return Turn(sim, 'M'); }
+
+        /// <summary>Homes wait their turn: until then, no cash is free for a house.</summary>
+        protected override long HomeReserve(Simulation sim) { return Turn(sim, 'H') ? base.HomeReserve(sim) : long.MaxValue / 4; }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            if (Turn(sim, 'S')) School(sim, t);
+        }
+
+        private void School(Simulation sim, long t)
+        {
+            if (SchoolRules.CanBuild(sim) != RejectReason.None) return;
+            long price = SchoolRules.Price(sim), loan = 0;
+            if (!_saver && sim.State.Credit != null)
+            {
+                int bank = sim.Config.Game.Credit.IndexOfLender("coop_bank");
+                loan = Math.Min(price, CreditRules.Limit(sim, bank).Limit);
+                loan -= loan % (1_000 * Money.Coin);
+                if (loan < sim.Config.Game.Credit.Lenders[bank].MinAmount) loan = 0;
+            }
+            if (sim.State.Ledger.Cash < price - loan + base.HomeReserve(sim)) return; // the next close's costs, and the mill's cash in its turn
+            Ok(sim, new BuildSchool(t, loan > 0 ? new Financing("coop_bank", loan, 8) : null));
+        }
     }
 }

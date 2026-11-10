@@ -60,6 +60,9 @@ namespace Sim.Core.Finance
         HiredLabour = 5100,
         LivingCosts = 5200,
         HealthCosts = 5250,
+
+        /// <summary>The founder's gifts to the village: the school, its upkeep, adult classes (spec 018, ADR 0095 §5). Outside farm profit.</summary>
+        GiftsToVillage = 5260,
         Rent = 5300,
         Interest = 5400,
         PenaltyInterest = 5410,
@@ -92,13 +95,13 @@ namespace Sim.Core.Finance
             Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.BusinessDrawingsIncome,
             Account.Sales, Account.ServiceIncome, Account.GainOnAssetSales, Account.DebtWrittenOff,
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
-            Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
+            Account.GiftsToVillage, Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
             Account.TransportAndSelling, Account.CostOfGoodsSold, Account.Power, Account.Repairs,
         };
 
         /// <summary>
         /// The save schema each account arrived in (spec 011: 1300 in schema 6; spec 012: the livestock accounts in 7; spec 014: 4200 Rent received in 9;
-        /// spec 016: the business accounts in 10); 0 for the rest.
+        /// spec 016: the business accounts in 10; spec 018: 5260 Gifts to the village in 15); 0 for the rest.
         /// A late account hashes only once used, so the golden replays stay as they were, and an older save reads without it.
         /// </summary>
         internal static int SinceSchema(Account a)
@@ -111,6 +114,7 @@ namespace Sim.Core.Finance
                 case Account.BusinessStock: case Account.Equipment: case Account.InvestmentInBusinesses: case Account.Overdraft: case Account.OwnersCapital:
                 case Account.BusinessDrawingsIncome: case Account.Sales: case Account.ServiceIncome: case Account.CostOfGoodsSold: case Account.Power: case Account.Repairs:
                     return 10;
+                case Account.GiftsToVillage: return 15;
                 default: return 0;
             }
         }

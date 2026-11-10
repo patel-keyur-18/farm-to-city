@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Sim.Core;
+using Sim.Core.Business;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Market;
 using Sim.Core.Maths;
+using Sim.Core.People;
 using Sim.Core.Progress;
 using Sim.Core.Time;
 
@@ -338,7 +340,7 @@ namespace Sim.View.Views
             return vm;
         }
 
-        /// <summary>Menu → Letter: the pages seen, in the order seen, then "Becoming a Hamlet" (AC-12). Reading sends nothing.</summary>
+        /// <summary>Menu → Letter: the pages seen, in the order seen, then the next era's progress, "Becoming a Hamlet" (AC-12) or a Village. Reading sends nothing.</summary>
         public static SheetVm List(ViewContext ctx)
         {
             var s = ctx.Strings;
@@ -349,7 +351,7 @@ namespace Sim.View.Views
                 string id = d.Chapters[c].Id;
                 vm.Lines.Add(new LineVm(s.Get("letterTitle." + id), null) { Action = ActionVm.Open("read:" + id, s.Get("letter.read"), new SheetRequest("LetterPage", c)) });
             }
-            vm.Lines.Add(new LineVm(s.Get("progress.title"), null) { Action = ActionVm.Open("progress", s.Get("action.open"), new SheetRequest("Progress", 0)) });
+            vm.Lines.Add(new LineVm(ProgressSheet.Title(ctx), null) { Action = ActionVm.Open("progress", s.Get("action.open"), new SheetRequest("Progress", 0)) });
             return vm;
         }
 
@@ -423,7 +425,15 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             if (asks) return s.Get("letter.comeBack", "crop", LongCropName(ctx), "time", LongCropTime(ctx, info), "quick", QuickLine(ctx, info));
             if (id.StartsWith("season.", StringComparison.Ordinal)) return Hints.Season(ctx, id.Substring(7));
+            if (id == "village") return s.Get("letter.village", "business", VillageBusiness(ctx));
             return s.Get("letter." + id);
+        }
+
+        /// <summary>The business whose seasons met the Village's gate ("flour mill"), or "business" (the developer panel's Next era).</summary>
+        private static string VillageBusiness(ViewContext ctx)
+        {
+            Business b = EraRules.Business(ctx.Sim);
+            return b == null ? ctx.Strings.Get("letter.yourBusiness") : BusinessWords.InSentence(ctx, BusinessRules.TypeOf(ctx.Sim, b));
         }
 
         private static Crop LongCrop(ViewContext ctx)
@@ -557,43 +567,143 @@ namespace Sim.View.Views
     /// <summary>"Becoming a Hamlet" (spec 009 §3.6, §7, AC-9): this season's acres and their Care, the hut, the profitable seasons.</summary>
     public static class ProgressSheet
     {
+        /// <summary>"Becoming a Village", or once the last era is reached "Your Village".</summary>
+        public static string Title(ViewContext ctx)
+        {
+            var eras = ctx.Sim.Config.Game.Onboarding.Eras;
+            int e = ctx.Sim.State.Era.Current;
+            return e + 1 >= eras.Count ? ctx.Strings.Get("progress.reached." + eras[e].Id) : ctx.Strings.Get("progress.title." + eras[e + 1].Id);
+        }
+
         public static SheetVm Build(ViewContext ctx)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             OnboardingDefs d = sim.Config.Game.Onboarding;
             EraState e = sim.State.Era;
-            var vm = new SheetVm { Icon = "hut", Title = s.Get("progress.title") };
-            if (e.Current + 1 >= d.Eras.Count || d.Eras[e.Current + 1].Manual) // the Village's gate comes with spec 018 (ADR 0076)
+            var vm = new SheetVm { Icon = "hut", Title = Title(ctx) };
+            if (e.Current + 1 >= d.Eras.Count)
             {
-                vm.Subtitle = s.Get("progress.done");
+                vm.Subtitle = s.Get("progress.done." + d.Eras[e.Current].Id);
                 Rewards(ctx, vm, e.Current);
                 return vm;
             }
             EraDef next = d.Eras[e.Current + 1];
-            vm.Subtitle = s.Get("progress.subtitle");
+            vm.Subtitle = s.Get("progress.subtitle." + next.Id);
             long period = sim.Period;
-            vm.Lines.Add(new LineVm(s.Get("progress.acres"), s.Get("progress.acresValue", "n", ctx.Fmt.Integer(EraRules.Acres(sim, period)),
-                "need", ctx.Fmt.Integer(next.AcresHarvestedInSeason)), "era", 1));
-            if (EraRules.Acres(sim, period) > 0)
-                vm.Lines.Add(new LineVm(s.Get("progress.care"), s.Get("progress.careValue", "pct", Percent(ctx, EraRules.MeanCare(sim, period)),
-                    "need", Percent(ctx, next.MeanCareAtLeast)), "era", 2));
-            vm.Lines.Add(new LineVm(s.Get("progress.hut"), HutText(ctx), "era", 3));
-            vm.Lines.Add(new LineVm(s.Get("progress.profit"), ProfitText(ctx), "era", 4));
+            if (next.AcresHarvestedInSeason > 0)
+            {
+                vm.Lines.Add(new LineVm(s.Get("progress.acres"), s.Get("progress.acresValue", "n", ctx.Fmt.Integer(EraRules.Acres(sim, period)),
+                    "need", ctx.Fmt.Integer(next.AcresHarvestedInSeason)), "era", 1));
+                if (EraRules.Acres(sim, period) > 0)
+                    vm.Lines.Add(new LineVm(s.Get("progress.care"), s.Get("progress.careValue", "pct", Percent(ctx, EraRules.MeanCare(sim, period)),
+                        "need", Percent(ctx, next.MeanCareAtLeast)), "era", 2));
+            }
+            if (next.HandHutsAtLeast > 0) vm.Lines.Add(new LineVm(s.Get("progress.hut"), HutText(ctx), "era", 3));
+            if (next.ProfitableSeasonsAtLeast > 0) vm.Lines.Add(new LineVm(s.Get("progress.profit"), ProfitText(ctx), "era", 4));
+            if (next.HouseholdsAtLeast > 0)
+                vm.Lines.Add(new LineVm(s.Get("progress.households"), s.Get("progress.acresValue", "n", ctx.Fmt.Integer(EraRules.Households(sim)),
+                    "need", ctx.Fmt.Integer(next.HouseholdsAtLeast)), "era", 5) { Icon = "population" });
+            if (next.BusinessSeasonsAtLeast > 0) vm.Lines.Add(BusinessLine(ctx, next));
+            if (next.School) vm.Lines.Add(new LineVm(s.Get("progress.school"), SchoolText(ctx), "era", 7) { Icon = "school" });
             Rewards(ctx, vm, e.Current + 1);
             return vm;
         }
 
-        /// <summary>What an era brings (spec 012 §3.13): cattle with the Hamlet; once there, the way to the cattle yard.</summary>
+        private static LineVm BusinessLine(ViewContext ctx, EraDef next)
+        {
+            Business b = EraRules.Business(ctx.Sim);
+            string n = ctx.Strings.Get("progress.acresValue", "n", ctx.Fmt.Integer(EraRules.BusinessSeasons(ctx.Sim)), "need", ctx.Fmt.Integer(next.BusinessSeasonsAtLeast));
+            if (b == null) return new LineVm(ctx.Strings.Get("progress.business"), n, "era", 6) { Icon = "flour_mill" };
+            BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
+            return new LineVm(ctx.Strings.Get("progress.business"), ctx.Strings.Get("progress.businessValue", "n", n, "name", BusinessWords.Name(ctx, t)), "era", 6) { Icon = t.Id };
+        }
+
+        private static string SchoolText(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            if (!SchoolRules.On(sim)) return ctx.Strings.Get("progress.hutNone");
+            SchoolState sc = sim.State.Citizens.School;
+            switch (sc.Status)
+            {
+                case SchoolStatus.Open: return ctx.Strings.Get("progress.schoolOpen");
+                case SchoolStatus.Building: return ctx.Strings.Get("progress.hutBuilding", "time", ctx.Fmt.Duration(Math.Max(0, sc.ReadyAt - ctx.Now)));
+                default: return ctx.Strings.Get("progress.hutNone");
+            }
+        }
+
+        /// <summary>
+        /// What an era brings (spec 012 §3.13, spec 018 §3.6), read from the content: cattle with the Hamlet (once there, the way to the
+        /// cattle yard); the businesses, the shops, water, machines and lenders' larger loans that come with it.
+        /// </summary>
         private static void Rewards(ViewContext ctx, SheetVm vm, int era)
         {
             Simulation sim = ctx.Sim;
-            if (sim.Config.Game.Livestock == null || sim.Config.Game.Livestock.UnlockEra != era) return;
+            GameDefs g = sim.Config.Game;
+            var s = ctx.Strings;
             bool open = sim.State.Era.Current >= era;
-            vm.Lines.Add(LineVm.Header(ctx.Strings.Get(open ? "progress.unlocked" : "progress.rewards")));
-            var cattle = new LineVm(ctx.Strings.Get("progress.cattle"), null) { Icon = "animal_buffalo" };
-            if (open) cattle.Action = ActionVm.Open("shed", ctx.Strings.Get("progress.toYard"), new SheetRequest("Tile", sim.Config.Game.Livestock.Livestock.ShedTile));
-            vm.Lines.Add(cattle);
+            var lines = new List<LineVm>();
+            if (g.Livestock != null && g.Livestock.UnlockEra == era)
+            {
+                var cattle = new LineVm(s.Get("progress.cattle"), null) { Icon = "animal_buffalo" };
+                if (open) cattle.Action = ActionVm.Open("shed", s.Get("progress.toYard"), new SheetRequest("Tile", g.Livestock.Livestock.ShedTile));
+                lines.Add(cattle);
+            }
+            var trades = new List<string>();
+            var shops = new List<string>();
+            string tradeIcon = null, shopIcon = null;
+            if (g.Businesses != null)
+                foreach (BusinessTypeDef t in g.Businesses.Types)
+                {
+                    if (t.Era != era) continue;
+                    (t.IsShop ? shops : trades).Add(s.Get("unlock." + t.Id));
+                    if (t.IsShop) shopIcon = shopIcon ?? t.Id; else tradeIcon = tradeIcon ?? t.Id;
+                }
+            Add(lines, ctx, "progress.open.trades", trades, tradeIcon);
+            Add(lines, ctx, "progress.open.shops", shops, shopIcon);
+            var water = new List<string>();
+            IrrigationDef w = g.Irrigation;
+            if (w != null)
+            {
+                if (w.Pump != null && w.Pump.UnlockEra == era) water.Add(s.Get("unlock.pump"));
+                if (w.Canal != null && w.Canal.UnlockEra == era) water.Add(s.Get("unlock.canal"));
+                if (w.Drip != null && w.Drip.UnlockEra == era) water.Add(s.Get("unlock.drip"));
+                if (w.Borewell != null && w.Borewell.UnlockEra == era) water.Add(s.Get("unlock.borewell"));
+            }
+            Add(lines, ctx, "progress.open.water", water, "drip");
+            var machines = new List<string>();
+            string machineIcon = null;
+            if (g.Equipment != null)
+                foreach (MachineDef m in g.Equipment.Machines)
+                    if (m.UnlockEra == era && era > 0) { machines.Add(s.Get("unlock." + m.Id)); machineIcon = machineIcon ?? EquipmentSheet.Icon(m); }
+            Add(lines, ctx, "progress.open.machines", machines, machineIcon);
+            if (g.Population?.HouseUnlockEra != null && era > 0 && g.Onboarding.Eras[era].Id == g.Population.HouseUnlockEra) One(lines, ctx, "progress.open.houses", "family_house");
+            if (g.School != null && g.School.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.school", "school");
+            if (g.Orchard != null && g.Orchard.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.orchards", "mango");
+            if (g.Godown != null && g.Godown.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.godown", "granary");
+            if (g.Credit != null && g.Onboarding != null)
+                foreach (LenderDef l in g.Credit.Lenders)
+                    if (l.EraCaps.TryGetValue(g.Onboarding.Eras[era].Id, out long cap) && era > 0)
+                        lines.Add(new LineVm(s.Get("progress.open.loan", "lender", s.Get(l.NameKey).ToLowerInvariant(), "cap", ctx.Fmt.Coins(cap)), null) { Icon = "coin" });
+            if (lines.Count == 0) return;
+            vm.Lines.Add(LineVm.Header(s.Get(open ? "progress.unlocked" : "progress.rewards." + g.Onboarding.Eras[era].Id)));
+            vm.Lines.AddRange(lines);
+        }
+
+        private static void One(List<LineVm> lines, ViewContext ctx, string key, string icon) { lines.Add(new LineVm(ctx.Strings.Get(key), null) { Icon = icon }); }
+
+        private static void Add(List<LineVm> lines, ViewContext ctx, string key, List<string> names, string icon)
+        {
+            if (names.Count == 0) return;
+            string text = ctx.Strings.Get(key, "names", And(ctx, names));
+            lines.Add(new LineVm(char.ToUpperInvariant(text[0]) + text.Substring(1), null) { Icon = icon });
+        }
+
+        /// <summary>"a, b and c".</summary>
+        internal static string And(ViewContext ctx, List<string> items)
+        {
+            if (items.Count == 1) return items[0];
+            return string.Join(", ", items.GetRange(0, items.Count - 1)) + " " + ctx.Strings.Get("list.and") + " " + items[items.Count - 1];
         }
 
         internal static string Percent(ViewContext ctx, Fixed f) { return ctx.Fmt.Integer(f.MulRatio(100, 1).RoundToLong()) + "%"; }
@@ -619,9 +729,16 @@ namespace Sim.View.Views
 
     public static partial class WhyView
     {
-        /// <summary>A row of "Becoming a Hamlet": 1 acres, 2 Care, 3 the hut, 4 the profitable season.</summary>
+        /// <summary>A row of the progress sheet: 1 acres, 2 Care, 3 the hut, 4 the profitable season; the Village's 5 households, 6 a business, 7 the school.</summary>
         private static WhyVm EraWhy(ViewContext ctx, long id)
         {
+            if (id >= 5)
+            {
+                WhyVm v = New(ctx, "why.village.title", null);
+                Text(v, ctx, id == 5 ? "why.village.households" : id == 6 ? "why.village.business" : "why.village.school");
+                Text(v, ctx, "why.village.lesson");
+                return v;
+            }
             WhyVm vm = New(ctx, "why.era.title", null);
             Text(vm, ctx, id == 1 ? "why.era.acres" : id == 2 ? "why.era.care" : id == 3 ? "why.era.hut" : "why.era.profit");
             Text(vm, ctx, "why.era.lesson");

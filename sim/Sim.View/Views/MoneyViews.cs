@@ -36,6 +36,7 @@ namespace Sim.View.Views
             Add("calendar", new SheetRequest(CropCalendar.Sheet, 0), "seed_wheat"); // every crop by season (spec 020 §3.6b)
             Add("you", new SheetRequest("Founder", 0), "person_founder");
             if (ctx.Sim.State.Guidance != null) Add("letter", new SheetRequest("Letter", 0), "letter");
+            if (ctx.Sim.State.Guidance != null && ctx.Sim.Config.Game.Codex != null) Add("codex", new SheetRequest(CodexSheet.Kind, 0), "codex"); // spec 018 §3.3
             Add("settings", new SheetRequest("Settings", 0), "gear");
             return vm;
         }
@@ -205,7 +206,7 @@ namespace Sim.View.Views
     /// <summary>The season report (spec 008 §3.8, ADR 0032): every line with its plain label and its Why?.</summary>
     public static class ReportSheet
     {
-        public static readonly string[] Order = { "farmIncome", "farmCosts", "farmProfit", "otherIncome", "household", "finance", "other", "netResult" };
+        public static readonly string[] Order = { "farmIncome", "farmCosts", "farmProfit", "otherIncome", "household", "gifts", "finance", "other", "netResult" };
 
         public static string PeriodName(ViewContext ctx, long period)
         {
@@ -217,10 +218,12 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             SeasonReport r = sim.State.Finance.Reports.Find(x => x.Period == period);
             var vm = new SheetVm { Icon = "coin", Title = ctx.Strings.Get("report.title", "period", PeriodName(ctx, period)) };
+            LineVm advisor = AdvisorWords.Report(ctx, period); // an advisor's line under the title (spec 018 §3.4)
+            if (advisor != null) vm.Lines.Add(advisor);
             foreach (string key in Order)
             {
                 ReportLine l = r.Line(key);
-                if (l == null) continue;
+                if (l == null || (key == "gifts" && l.Amount == 0)) continue; // gifts only in a season that had them
                 vm.Lines.Add(new LineVm(ctx.Strings.Get(l.LabelKey), ctx.Fmt.Coins(l.Amount), "report." + key, period));
             }
             vm.Lines.Add(new LineVm(ctx.Strings.Get("report.cashFlow"),

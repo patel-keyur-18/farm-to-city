@@ -7,7 +7,7 @@ namespace Sim.Core.People
 {
     /// <summary>
     /// Needs and happiness (spec 014 §3.8): survival (the least of food, shelter, water), security (town jobs, health care, rent paid),
-    /// belonging, growth; each layer gated by the one below at 0.8. Needs the game doesn't have yet (the school) aren't counted.
+    /// belonging, growth; each layer gated by the one below at 0.8. The school counts once it opens (spec 018 §3.2), not before.
     /// </summary>
     public static class HappinessRules
     {
@@ -54,7 +54,8 @@ namespace Sim.Core.People
             Fixed survival = Min(Min(x.FoodMet, Shelter(sim, x)), Fixed.One); // water: the well and the pond, always met
             Fixed security = (Job(sim, x) + p.Chemist + (x.RentBehind == 0 ? Fixed.One : Fixed.Zero)).MulRatio(1, 3);
             Fixed belonging = p.Belonging; // the temple and the banyan square
-            Fixed growth = x.Leisure > 0 ? p.Leisure : Fixed.Zero; // the school isn't counted until spec 018 builds one
+            Fixed leisure = x.Leisure > 0 ? p.Leisure : Fixed.Zero;
+            Fixed growth = SchoolRules.IsOpen(sim) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure; // the layer's mean once the school counts (ADR 0095 §6)
             x.Survival = survival;
             x.Security = security;
             x.Belonging = belonging;

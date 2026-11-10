@@ -1,0 +1,24 @@
+{
+  "topicHours": 24,
+  "advisors": [
+    { "id": "accountant", "portrait": "portrait_advisor_bank" },
+    { "id": "farm",       "portrait": "portrait_advisor_farm" },
+    { "id": "people",     "portrait": "portrait_advisor_people" }
+  ],
+  "notes": [
+    { "id": "missedPayment", "advisor": "accountant", "alerts": ["LoanPaymentMissed", "FinalNotice"] },
+    { "id": "debt",          "advisor": "accountant", "report": true, "threshold": 0.5 },
+    { "id": "overdraft",     "advisor": "accountant", "report": true, "alerts": ["WagesMissed"], "threshold": 0.75 },
+    { "id": "profitNotCash", "advisor": "accountant", "report": true },
+
+    { "id": "pests",         "advisor": "farm",       "alerts": ["PestWarning"] },
+    { "id": "feed",          "advisor": "farm",       "alerts": ["FeedLow"] },
+    { "id": "soil",          "advisor": "farm",       "report": true, "threshold": 40 },
+    { "id": "dry",           "advisor": "farm",       "report": true, "threshold": 24 },
+
+    { "id": "raise",         "advisor": "people",     "alerts": ["HrEventRaised"] },
+    { "id": "tired",         "advisor": "people",     "report": true },
+    { "id": "children",      "advisor": "people",     "report": true },
+    { "id": "adultClass",    "advisor": "people",     "report": true }
+  ]
+}

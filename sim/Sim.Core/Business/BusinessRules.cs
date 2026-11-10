@@ -369,7 +369,7 @@ namespace Sim.Core.Business
             {
                 // A pitch in the square (spec 017 §3.4): shops only, one shop a pitch.
                 if (!t.IsShop || sim.Config.Game.Shops == null || pitch >= sim.Config.Game.Shops.Pitches) return CommandResult.Reject(RejectReason.InvalidArgument);
-                if (sim.State.Businesses.OnPitch(pitch) != null) return CommandResult.Reject(RejectReason.PitchTaken);
+                if (sim.State.Businesses.OnPitch(pitch) != null || sim.State.Shops?.OnPitch(pitch) != null) return CommandResult.Reject(RejectReason.PitchTaken);
                 tileId = sim.Config.Game.Shops.SquareTile;
             }
             else
@@ -992,6 +992,7 @@ namespace Sim.Core.Business
         internal static void CloseBooks(Simulation sim, long closing)
         {
             if (sim.State.Businesses == null) return;
+            ShopRules.Rivals(sim); // spec 017 §3.7: on the season's counts, before each business's close starts them again
             foreach (Business b in sim.State.Businesses.Businesses)
             {
                 if (b.Status == BusinessStatus.Closed) continue;
