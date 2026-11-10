@@ -300,11 +300,16 @@ namespace Sim.Core.Tests
                 {
                     Gate.VillageResult r = Gate.Village(Live(), () => new VillageBot(saver, order), 8, 24);
                     TestContext.Out.WriteLine(r.Bot + ": Village day " + Days(r.Village) + "; Hamlet " + Days(r.Hamlet) + "; 5 households " + Days(r.Households)
-                        + "; a business's 2 profitable seasons " + Days(r.Business) + "; the school open " + Days(r.School) + "; literacy at the Village " + string.Join(" ", r.Literacy) + "%");
+                        + "; a business's 2 profitable seasons " + Days(r.Business) + "; the school open " + Days(r.School) + "; literacy at the Village " + string.Join(" ", r.Literacy) + "%; happiness a season on "
+                        + string.Join(" ", r.Happiness.Select(h => h.ToString("0"))));
                     Assert.That(r.Village.Count(double.IsNaN), Is.Zero, r.Bot + ": every run gets there");
                     double median = r.Village.OrderBy(d => d).ElementAt(r.Village.Count / 2);
                     if (order == "HMS") Assert.That(median, saver ? Is.InRange(50.0, 64.0) : Is.InRange(28.0, 40.0), r.Bot);
                     else Assert.That(median, Is.LessThanOrEqualTo(saver ? 80.0 : 50.0), r.Bot);
+                    // ADR 0100: literacy at the unlock is the adults' 60% over everyone 7+ (the village never had a school): about 45% homes
+                    // first, more when the school came first and pupils finished; happiness a season on, the school open, about 72 (ADR 0095 §6).
+                    Assert.That(Median(r.Literacy.Select(x => (double)x)), Is.InRange(35.0, 65.0), r.Bot + ": literacy at the Village");
+                    Assert.That(Median(r.Happiness), Is.InRange(70.0, 76.0), r.Bot + ": happiness a season on");
                 }
         }
 

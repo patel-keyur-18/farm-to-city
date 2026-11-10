@@ -129,6 +129,18 @@ namespace Game.Presentation
                 () => _codexToast.style.display = DisplayStyle.None);
         }
 
+        /// <summary>
+        /// A sheet, card, letter or <i>Why?</i> opened while the toast showed (a tap on the map just after it came): the toast goes at once
+        /// rather than cover the sheet's buttons. Its cards keep their New tag in Menu → Codex.
+        /// </summary>
+        private void CodexCovered()
+        {
+            if (_codexToast == null || _codexToast.style.display == DisplayStyle.None) return;
+            if (!(_letterOpen || _celebrating || _sheet.IsOpen || _sheet.OverlayOpen || _sheet.WhyOpen)) return;
+            if (_codexHide != null) _codexHide.Pause();
+            _codexToast.style.display = DisplayStyle.None;
+        }
+
         private void OnCodexToastTap()
         {
             if (_codexVm == null) return;

@@ -346,6 +346,9 @@ namespace Tools.Balancer
 
             /// <summary>Per seed that reached the Village: the literacy rate then (%; spec 018 §9, 50–70).</summary>
             public List<int> Literacy = new List<int>();
+
+            /// <summary>Per seed that reached the Village: town happiness a season after it, the school open (spec 018 §3.2, about 72).</summary>
+            public List<double> Happiness = new List<double>();
         }
 
         /// <summary>Plays a bot for <paramref name="seasons"/> (12: 48 days, past the saver's 42) and records when the Village and each condition come.</summary>
@@ -357,6 +360,7 @@ namespace Tools.Balancer
             {
                 double village = double.NaN, hamlet = double.NaN, homes = double.NaN, business = double.NaN, school = double.NaN;
                 int literacy = -1;
+                double happiness = double.NaN;
                 Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
                 {
                     double day = sim.State.Clock.SimTime / 86400.0;
@@ -369,6 +373,7 @@ namespace Tools.Balancer
                     if (double.IsNaN(homes) && Sim.Core.Progress.EraRules.Households(sim) >= 5) homes = day;
                     if (double.IsNaN(business) && Sim.Core.Progress.EraRules.BusinessSeasons(sim) >= 2) business = day;
                     if (double.IsNaN(school) && Sim.Core.People.SchoolRules.IsOpen(sim)) school = day;
+                    if (!double.IsNaN(village) && double.IsNaN(happiness) && day >= village + 4) happiness = (double)Sim.Core.People.HappinessRules.Town(sim).Raw / 4294967296.0;
                 });
                 var r = new VillageResult();
                 r.Village.Add(village);
@@ -377,6 +382,7 @@ namespace Tools.Balancer
                 r.Business.Add(business);
                 r.School.Add(school);
                 if (literacy >= 0) r.Literacy.Add(literacy);
+                if (!double.IsNaN(happiness)) r.Happiness.Add(happiness);
                 rows[i] = r;
             });
             var all = new VillageResult { Bot = name, Seeds = seeds };
@@ -388,6 +394,7 @@ namespace Tools.Balancer
                 all.Business.AddRange(r.Business);
                 all.School.AddRange(r.School);
                 all.Literacy.AddRange(r.Literacy);
+                all.Happiness.AddRange(r.Happiness);
             }
             return all;
         }

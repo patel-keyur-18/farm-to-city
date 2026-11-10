@@ -193,6 +193,7 @@ namespace Game.Presentation
         private void Update()
         {
             ApplySafeArea();
+            CodexCovered();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif

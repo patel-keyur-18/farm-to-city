@@ -199,6 +199,31 @@ namespace Sim.View.Tests
             Assert.That(replay.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "found and read cards replay");
         }
 
+        // Spec 018 §9: a player finds 12–18 of the cards by the Village, not a flood. The Village bot (homes, the mill, then the school;
+        // with loans and saving) plays with the Codex watching every hour's events, as the game does; each card counts once.
+        [Test]
+        public void ByTheVillage()
+        {
+            var counts = new List<int>();
+            foreach (bool saver in new[] { false, true })
+                for (ulong seed = 1; seed <= 6; seed++)
+                {
+                    int found = -1;
+                    Tools.Balancer.Economy.RunBot(ViewKit.Config(), new Tools.Balancer.VillageBot(saver), 24, seed, sim =>
+                    {
+                        if (found >= 0) return;
+                        List<CodexFind> cards = CodexWatch.Observe(sim, sim.PendingEvents);
+                        if (cards.Count > 0) sim.Execute(new FindCodexCards(sim.State.Clock.SimTime, cards));
+                        if (sim.PendingEvents.Any(e => e is EraUnlocked u && u.EraId == "village")) found = sim.State.Guidance.Codex.Count;
+                    });
+                    counts.Add(found);
+                }
+            TestContext.Out.WriteLine("Codex cards by the Village (loans, then saving): " + string.Join(" ", counts));
+            Assert.That(counts, Has.None.EqualTo(-1), "every run reaches the Village");
+            counts.Sort();
+            Assert.That(counts[counts.Count / 2], Is.InRange(12, 18), "the median");
+        }
+
         // Spec 018 §4: codex.json loads and is checked: known triggers once each, thresholds where they belong, known formats; every card has its words.
         [Test]
         public void Content()

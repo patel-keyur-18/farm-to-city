@@ -209,6 +209,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0097 | The Village unlock as built: every household on your land; the business with the most profitable seasons (closed ones keep theirs; schema 14 from its kept reports); checked also when a hand, a family or a married son moves in; the co-op bank's cap follows the era; the progress sheet lists what each era opens from content; the Village at 4–5 weeks using credit, about 8 saving (homes first; every order reachable, never stuck) |
 | 0098 | The Codex as built: 25 cards in `codex.json`, each moment exact (events after the result, or a refusal for money) with the player's numbers kept; the toast 6 s, never stays, waits for sheets and letters; a card opens in the *Why?* frame; a green book and a land deed for icons |
 | 0099 | The advisors as built: twelve notes in `advisors.json` (priority order), each condition exact (the soil and dry field from the land at each close, tired at fatigue above 0.30); the report's line picked at the close, one line a sheet, a topic once in 24 h, never in the first session; kept in `GuidanceState` (schema 15); they never act |
+| 0100 | Sprint 17 balance: literacy at the Village about 45% (the 50–70% target counted adults only; the village never had a school), content unchanged; the Village's pace, the shops' targets, Codex cards (median 15) and happiness (about 73) hold; good chai's *Why?* names the newcomer risk |
 
 ## Current status
 

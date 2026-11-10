@@ -766,7 +766,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 17 · 12–25 Apr 2027 · Phase 2 (the school and literacy, the Codex and advisors, the Village unlock, rival entry; 2 weeks, ADR 0095)
 
-- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Started 2026-11-07: the school's art approved; US-131 and US-132 approved (2026-11-08); the newcomers' carts and spot approved; US-122 approved (2026-11-10, ADR 0096); the `village` letter approved; US-102 approved (2026-11-10; ADR 0097: the Village at 4–5 weeks); the Codex's art approved; US-133 approved (2026-11-10, ADR 0098); the advisors' portraits approved; US-134 done, for review (ADR 0099). Sprint 16 is merged (PR #22)
+- **Status:** Plan approved by the owner, 2026-11-07 (plan check: 11 gaps closed one per message, ADR 0095). Started 2026-11-07: the school's art approved; US-131 and US-132 approved (2026-11-08); the newcomers' carts and spot approved; US-122 approved (2026-11-10, ADR 0096); the `village` letter approved; US-102 approved (2026-11-10; ADR 0097: the Village at 4–5 weeks); the Codex's art approved; US-133 approved (2026-11-10, ADR 0098); the advisors' portraits approved; US-134 approved (2026-11-10, ADR 0099); the balance step (ADR 0100), the checklist in the Editor and the Development build done (2026-11-10); the owner's device check next. Sprint 16 is merged (PR #22)
 - **Branch:** `sprint/17-school-and-village`, from `main` after PR #22
 - **Goal:** Spec 018 built (F14.1, F14.2, US-102): the school on its plot as a gift to the village, literacy from pupils and adult classes, the Codex's cards with the player's numbers, three advisors, and the Village unlocked by its gate. US-122 built (F12.4): newcomers on a gap or when your shop prices above the village's, on a free pitch or as a cart on the lane, and the grocer's and tea stall's price cuts, so that overpricing no longer pays (ADR 0093). Save schema 15 with its migration and fixture.
 - **Points:** 36 (re-pointed, ADR 0095: US-131 5 → 8, US-132 3 → 5, US-133 5 → 8, US-134 3 → 5, US-102 2 → 5, US-122 5)
@@ -780,10 +780,10 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-132 | Literacy | [F14.1](features/F14.1-school-and-literacy.md) | 5 | Must | Done |
 | US-122 | Rival entry | [F12.4](features/F12.4-rivals-and-competition.md) | 5 | Should | Done (approved) |
 | US-102 | Village unlock | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Done (approved) |
-| US-133 | Codex | [F14.2](features/F14.2-codex-and-advisors.md) | 8 | Must | Done (for review) |
-| US-134 | Advisors | [F14.2](features/F14.2-codex-and-advisors.md) | 5 | Must | Done (for review) |
+| US-133 | Codex | [F14.2](features/F14.2-codex-and-advisors.md) | 8 | Must | Done (approved) |
+| US-134 | Advisors | [F14.2](features/F14.2-codex-and-advisors.md) | 5 | Must | Done (approved) |
 
-**Order of work:** the school's art and its plot's layout previewed → US-131 → US-132 → the newcomer's cart spot previewed → US-122 → the `village` letter's text previewed → US-102 → the Codex's icons previewed → US-133 → the advisors' portraits previewed → US-134 → balance with the bots (`GateTests.Village` homes first 28–40 and 50–64 days, every order reachable, ADR 0097; `GateTests.Shops` with newcomers and price cuts, a stall at 1.1 no better than at 1.0; literacy at the Village 50–70%; Codex cards 12–18 by the Village; town happiness about 72) → the whole checklist in the Editor by scripted touch → the device build, writing down both frame-time p95s (ADR 0094: main ≤ 8.3 ms, GPU ≤ 11 ms; about 1.8 ms of GPU room). One stop for the owner's review after each story. Schema 15 grows on this branch and ships once, with the device build.
+**Order of work:** the school's art and its plot's layout previewed → US-131 → US-132 → the newcomer's cart spot previewed → US-122 → the `village` letter's text previewed → US-102 → the Codex's icons previewed → US-133 → the advisors' portraits previewed → US-134 → balance with the bots (`GateTests.Village` homes first 28–40 and 50–64 days, every order reachable, ADR 0097; `GateTests.Shops` with newcomers and price cuts, a stall at 1.1 no better than at 1.0; literacy at the Village 50–70% (restated about 45%, ADR 0100); Codex cards 12–18 by the Village; town happiness about 72) → the whole checklist in the Editor by scripted touch → the device build, writing down both frame-time p95s (ADR 0094: main ≤ 8.3 ms, GPU ≤ 11 ms; about 1.8 ms of GPU room). One stop for the owner's review after each story. Schema 15 grows on this branch and ships once, with the device build.
 
 **If it runs over,** cut in spec 018 §11's order: the advisors' alert lines, then adult classes, then Codex cards beyond the Money and Business groups. US-122 stays (ADR 0093 needs it).
 
@@ -795,10 +795,10 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [ ] Save schema 15: migration, `saves/schema15` fixture, every older schema loads
-- [ ] Art and layouts previewed to and approved by the owner before each story's code
-- [ ] Balance: spec 018 §9 and spec 017 §9's newcomers measured with the bots; ADR 0093's overpricing check passes; contradictions flagged to the owner
-- [ ] Test checklist `docs/test-checklists/s17-school-and-village.md`, every non-device check run in the Editor; Development build; the owner's device check with both frame-time p95s written down
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [x] Save schema 15: migration, `saves/schema15` fixture, every older schema loads
+- [x] Art and layouts previewed to and approved by the owner before each story's code
+- [x] Balance: spec 018 §9 and spec 017 §9's newcomers measured with the bots; ADR 0093's overpricing check passes; contradictions flagged to the owner (ADR 0100: literacy's target restated, in the pull request)
+- [ ] Test checklist `docs/test-checklists/s17-school-and-village.md`, every non-device check run in the Editor (done 2026-11-10); Development build (done 2026-11-10); the owner's device check with both frame-time p95s written down
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`

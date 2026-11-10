@@ -192,8 +192,8 @@ Every number has a *Why?*. Advisors' lines appear under the season report's titl
 | --- | --- | --- |
 | Village day, competent bot (credit), homes first | 28–40 (measured 32) | ADR 0097 (was 14–21, ADR 0028, 0071) |
 | Village day, cautious saver, homes first | 50–64 (measured 56) | Any order: ≤ 50 with loans, ≤ 80 saving |
-| Literacy when the Village unlocks | 50–70% (adults' 60% primary, children not yet finished) | Township needs 40% |
-| Codex cards found by the Village | 12–18 of 24 | Not a flood |
+| Literacy when the Village unlocks | About 45% (ADR 0100: adults' 60% primary over everyone 7+, the children with no school yet; single towns 25–70%), rising as pupils finish and with adult classes (was 50–70%, which counted adults only) | Township needs 40% |
+| Codex cards found by the Village | 12–18 of 25 (measured 13–16, median 15; `CodexTests.ByTheVillage`, ADR 0100) | Not a flood |
 | The school's cost | About two seasons of a competent Hamlet farm's profit (median 46,000, ADR 0058); a family house is 60,000 | Built by day 21 with the co-op loan (competent bot) and by day 42 from savings (cautious saver) |
 
 ## 10. Open questions

@@ -49,6 +49,7 @@ US-133 built the Codex from spec 018 §3.3 and ADR 0095 §7. The spec's table na
    - It shows for 6 seconds, then slides away; with reduced motion it simply goes.
    - It waits while a sheet, a card, a letter page or a *Why?* is open: the season report opens with a close, and the away card on return. What's found meanwhile joins the same toast.
    - One card names itself and opens it; two or more say "4 new in your Codex" and open the Codex. A card missed keeps its New tag.
+   - A sheet, card, letter or *Why?* opened while it shows sends it away at once, so it never covers a sheet's buttons (found in the Sprint 17 checklist run, 2026-11-10).
 5. **The card opens as a popup** over what's open, in the *Why?* popup's frame: the group and its icon over the title, the idea, "Your numbers", "In the real world", OK. Menu → Codex lists the found cards by group (groups with none found hidden), each with Read and an orange New tag until read. The Town tab shows "Codex · n of 25 ideas found" with its *Why?*.
 6. **Icons:** the Codex is a green cloth-bound book lying open (not the Menu's red khata), and the Assets group a rolled land deed. The other groups reuse wheat, the coin, the flour mill, the townspeople and the school.
 
@@ -57,3 +58,4 @@ US-133 built the Codex from spec 018 §3.3 and ADR 0095 §7. The spec's table na
 - Save schema 15 adds the found cards; a schema-14 town has none (nothing back-filled) and finds each the next time its moment comes. In the Editor, the owner's town found *Opportunity cost* on its away catch-up and four more at the next close.
 - Tests: `CodexTests.Triggers` stages every card's moment and checks its numbers, that it's found once and that each card reads with no placeholder left. `CodexTests.Burst` covers one toast for several, the first session, the New tag, saves and replays. `CodexTests.Content` covers `codex.json`'s checks and every card's words.
 - The Menu's letter row no longer says "becoming a Hamlet" (left from before ADR 0097).
+- Sprint 17 checklist run: the *Public goods* card's numbers read "Children at it now, free: {n}" (was "{n} children go there", wrong for 0 or 1), and its group is *Community* (it repeated the card's title).
