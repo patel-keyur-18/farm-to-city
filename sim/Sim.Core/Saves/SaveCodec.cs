@@ -146,9 +146,9 @@ namespace Sim.Core.Saves
                     bool ladder = result.Header.Schema < 13 && state.Market != null;
                     // A schema-13 history may predate ADR 0085's drying (shipped within schema 13), so it needn't replay today (spec 013, schema 14).
                     bool farm = result.Header.Schema < 14 && state.Market != null;
-                    // A literate adult earns more outside (spec 018 §3.2) and newcomers and the grocer's cuts change the shops (spec 017
-                    // §3.7), so a schema-14 town's history would replay into another town.
-                    bool literacy = result.Header.Schema < 15 && (state.Citizens != null && config.Game?.School != null || state.Shops != null);
+                    // A literate adult earns more outside (spec 018 §3.2), newcomers and the grocer's cuts change the shops (spec 017
+                    // §3.7) and the Village's gate opens by itself (spec 018 §3.6), so a schema-14 town's history would replay into another town.
+                    bool literacy = result.Header.Schema < 15 && (state.Citizens != null && config.Game?.School != null || state.Shops != null || state.Businesses != null);
                     if (r.OldMap || cattleAcre || citizens || (result.Header.Schema < 6 && config.Game?.Market.Truck != null) || (result.Header.Schema < 7 && config.Game?.Livestock != null) || (result.Header.Schema < 10 && config.Game?.Population != null) || workers || sales || ladder || farm || literacy)
                         state.CommandLog.Checkpoint(Encode(state, config, result.Header.SavedAtWallUtc, result.Header.ContentFingerprint, SchemaVersion, false));
                     result.State = state;

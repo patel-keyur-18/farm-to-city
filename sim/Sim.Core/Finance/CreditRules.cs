@@ -116,7 +116,7 @@ namespace Sim.Core.Finance
                 Houses = def.Secured && def.HouseLtv > Fixed.Zero ? HouseCollateral(sim, extraHouse) : 0,
                 Equipment = def.Secured && def.EquipmentLtv > Fixed.Zero ? Sim.Core.Equipment.EquipmentRules.Collateral(sim, extraEquipment) : 0,
                 AverageFarmProfit = AverageFarmProfit(sim),
-                EraCap = def.EraCaps[LenderDef.HomesteadEra], // the Village cap joins with the era unlock (F09.4)
+                EraCap = EraCap(sim, def),
                 Owed = Owed(sim, lender),
             };
             if (score < def.MinScore) { r.ScoreTooLow = true; r.ScoreFactor = Fixed.Zero; return r; }
@@ -128,6 +128,17 @@ namespace Sim.Core.Finance
             long room = System.Math.Min(r.EraCap, scaled) - r.Owed;
             r.Limit = room <= 0 ? 0 : room - room % HundredCoins;
             return r;
+        }
+
+        /// <summary>The cap of the latest era reached that the lender names (the co-op bank's rises with the Village, spec 018 §3.5).</summary>
+        public static long EraCap(Simulation sim, LenderDef def)
+        {
+            long cap = def.EraCaps[LenderDef.HomesteadEra];
+            var eras = sim.Config.Game.Onboarding?.Eras;
+            if (eras != null && sim.State.Era != null)
+                for (int i = 0; i <= sim.State.Era.Current && i < eras.Count; i++)
+                    if (def.EraCaps.TryGetValue(eras[i].Id, out long c)) cap = c;
+            return cap;
         }
 
         private static Fixed Min1(Fixed v) { return v > Fixed.One ? Fixed.One : v; }

@@ -192,6 +192,7 @@ namespace Sim.Core.People
                 s.JobId = 0;
                 sim.CompleteJob(job);
                 sim.Emit(new SchoolOpened(sim.State.Clock.SimTime));
+                Progress.EraRules.OnTown(sim); // the Village's gate (spec 018 §3.6)
             }
         }
 

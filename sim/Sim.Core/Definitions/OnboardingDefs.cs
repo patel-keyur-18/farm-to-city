@@ -128,20 +128,22 @@ namespace Sim.Core.Definitions
         public int HandHutsAtLeast { get; }
         public int ProfitableSeasonsAtLeast { get; }
 
-        /// <summary>
-        /// An era whose gate isn't built yet (the Village until Sprint 17, ADR 0076): never unlocked by the check, only by the
-        /// developer panel's Next era.
-        /// </summary>
-        public bool Manual { get; }
+        /// <summary>The Village's gate (spec 018 §3.6): households on your land, one business's profitable seasons, the school open.</summary>
+        public int HouseholdsAtLeast { get; }
+        public int BusinessSeasonsAtLeast { get; }
+        public bool School { get; }
 
-        public EraDef(string id, int acresHarvestedInSeason, Fixed meanCareAtLeast, int handHutsAtLeast, int profitableSeasonsAtLeast, bool manual = false)
+        public EraDef(string id, int acresHarvestedInSeason, Fixed meanCareAtLeast, int handHutsAtLeast, int profitableSeasonsAtLeast,
+            int householdsAtLeast = 0, int businessSeasonsAtLeast = 0, bool school = false)
         {
             Id = id;
-            Manual = manual;
             AcresHarvestedInSeason = acresHarvestedInSeason;
             MeanCareAtLeast = meanCareAtLeast;
             HandHutsAtLeast = handHutsAtLeast;
             ProfitableSeasonsAtLeast = profitableSeasonsAtLeast;
+            HouseholdsAtLeast = householdsAtLeast;
+            BusinessSeasonsAtLeast = businessSeasonsAtLeast;
+            School = school;
         }
     }
 

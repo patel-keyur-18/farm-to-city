@@ -6,9 +6,11 @@ using Sim.Core.Maths;
 namespace Sim.Core.Progress
 {
     /// <summary>
-    /// The era check (spec 009 §3.6, ADR 0030, 0032), checked after every field harvest and at every season close, after the
-    /// books. The next era unlocks once, when all its conditions hold: field harvests on enough different owned acres in one
-    /// season with their mean Care at least the bound, enough hands' huts built, and enough seasons with farm profit above 0.
+    /// The era check (spec 009 §3.6, ADR 0030, 0032; spec 018 §3.6, ADR 0095 §9), checked after every field harvest, at every season
+    /// close after the books, when the school opens and when a household forms or moves in. The next era unlocks once, when all its
+    /// conditions hold: the Hamlet's field harvests on enough different owned acres in one season with their mean Care at least the
+    /// bound, hands' huts built and seasons with farm profit above 0; the Village's households, one business's profitable seasons and
+    /// the school open.
     /// </summary>
     public static class EraRules
     {
@@ -45,6 +47,12 @@ namespace Sim.Core.Progress
             else Check(sim, closing);
         }
 
+        /// <summary>The school opened, or a household formed or moved in (spec 018 §3.6): the gate is checked.</summary>
+        internal static void OnTown(Simulation sim)
+        {
+            if (sim.State.Era != null && sim.Config.Game.Onboarding != null) Check(sim, sim.Period);
+        }
+
         private static void Changed(Simulation sim, long period)
         {
             sim.Emit(new EraProgress(sim.State.Clock.SimTime, Acres(sim, period), MeanCare(sim, period), Huts(sim), sim.State.Era.ProfitableSeasons));
@@ -57,7 +65,7 @@ namespace Sim.Core.Progress
             var eras = sim.Config.Game.Onboarding.Eras;
             if (e.Current + 1 >= eras.Count) return;
             EraDef next = eras[e.Current + 1];
-            if (next.Manual || !Met(sim, next, period)) return;
+            if (!Met(sim, next, period)) return;
             Unlock(sim);
         }
 
@@ -82,7 +90,25 @@ namespace Sim.Core.Progress
                 if (Acres(sim, period) < era.AcresHarvestedInSeason) return false;
                 if (e.SeasonCareSum < era.MeanCareAtLeast.MulRatio(e.SeasonHarvests, 1)) return false;
             }
-            return Huts(sim) >= era.HandHutsAtLeast && e.ProfitableSeasons >= era.ProfitableSeasonsAtLeast;
+            return Huts(sim) >= era.HandHutsAtLeast && e.ProfitableSeasons >= era.ProfitableSeasonsAtLeast
+                && Households(sim) >= era.HouseholdsAtLeast && BusinessSeasons(sim) >= era.BusinessSeasonsAtLeast
+                && (!era.School || People.SchoolRules.IsOpen(sim));
+        }
+
+        /// <summary>Households on your land, a hand alone in his hut included (spec 014 §3.13).</summary>
+        public static int Households(Simulation sim) { return sim.State.Citizens?.Households.Count ?? 0; }
+
+        /// <summary>The most profitable seasons any one business of yours has had (closed ones keep theirs; spec 018 §3.6).</summary>
+        public static int BusinessSeasons(Simulation sim) { return Business(sim)?.ProfitableSeasons ?? 0; }
+
+        /// <summary>The business with the most profitable seasons (the first, in id order, on a tie), or null without one.</summary>
+        public static Business.Business Business(Simulation sim)
+        {
+            Business.Business best = null;
+            if (sim.State.Businesses != null)
+                foreach (Business.Business b in sim.State.Businesses.Businesses)
+                    if (best == null || b.ProfitableSeasons > best.ProfitableSeasons) best = b;
+            return best;
         }
 
         /// <summary>The different acres, still owned, with a field harvest in season <paramref name="period"/>.</summary>

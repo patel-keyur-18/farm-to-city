@@ -93,6 +93,7 @@ namespace Sim.Core.People
             Hire(sim, c, h);
             HouseAlone(sim, c, h.HutId);
             HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId)); // his first season's budget (§3.5)
+            Progress.EraRules.OnTown(sim); // a household formed: the Village's gate (spec 018 §3.6)
         }
 
         /// <summary>One of your townspeople becomes your hand (spec 015 §3.1): they stay in their home, their household's budget gets the wage.</summary>

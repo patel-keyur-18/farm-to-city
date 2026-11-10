@@ -179,6 +179,7 @@ namespace Sim.Core.People
             bride.HouseholdId = home.Id;
             InsertMember(home, id);
             sim.Emit(new CitizenMarried(t, son.Id, son.Name, false, id, village, x.Id, home.Id));
+            if (home != x) Progress.EraRules.OnTown(sim); // a new household formed: the Village's gate (spec 018 §3.6)
         }
 
         /// <summary>A family house nobody lives in and not offered to a hand (§3.13), in building order; null if none.</summary>

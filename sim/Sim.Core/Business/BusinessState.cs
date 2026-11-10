@@ -203,6 +203,9 @@ namespace Sim.Core.Business
         /// </summary>
         public long SeasonAtPrice { get; internal set; }
 
+        /// <summary>Seasons its own P&amp;L closed with a net profit above 0 (schema 15): the Village's gate counts them (spec 018 §3.6).</summary>
+        public int ProfitableSeasons { get; internal set; }
+
         /// <summary>The day (t ÷ day) a stall last took its goods: at 6:00, or the hour it first opens or is first staffed (ADR 0091 §4).</summary>
         public long StockedDay { get; internal set; } = -1;
 
@@ -272,6 +275,7 @@ namespace Sim.Core.Business
             h.WriteBool(OpenToday);
             h.WriteInt(ShutDays);
             if (h.Hashing ? SeasonAtPrice != 0 : !(h is SaveWriter s15 && s15.Schema < 15)) h.WriteLong(SeasonAtPrice); // hashed only once used
+            if (h.Hashing ? ProfitableSeasons != 0 : !(h is SaveWriter p15 && p15.Schema < 15)) h.WriteInt(ProfitableSeasons);
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -328,7 +332,12 @@ namespace Sim.Core.Business
             b.StockedDay = r.ReadLong();
             b.OpenToday = r.ReadBool();
             b.ShutDays = r.ReadInt();
-            if (r.Schema >= 15) b.SeasonAtPrice = r.ReadLong();
+            if (r.Schema >= 15)
+            {
+                b.SeasonAtPrice = r.ReadLong();
+                b.ProfitableSeasons = r.ReadInt();
+            }
+            else foreach (BusinessReport x in b.Reports) if (BusinessBooks.NetProfit(x) > 0) b.ProfitableSeasons++; // from its own books (ADR 0095 §9)
             return b;
         }
     }

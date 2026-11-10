@@ -286,6 +286,22 @@ namespace Sim.Core.Tests
             Assert.That(s.Day5.Count(d => !double.IsNaN(d) && d <= 48), Is.GreaterThanOrEqualTo(18), "the cautious saver within 48 days");
         }
 
+        private static string Days(System.Collections.Generic.List<double> days) { return string.Join(" ", days.Select(d => double.IsNaN(d) ? "-" : d.ToString("0.0"))); }
+
+        // Spec 018 §9, AC-9 (US-102): the competent bot (homes, then a hired mill, then the school on a co-op loan) reaches the Village in
+        // 14–21 days, the cautious saver (no loans) in 28–42 (median of 16 and 8 seeds); each condition's day is printed so a miss shows its cause.
+        [Test]
+        public void Village()
+        {
+            foreach ((Gate.VillageResult r, double lo, double hi) in new[] { (Gate.Village(Live(), () => new VillageBot(), 16), 14.0, 21.0), (Gate.Village(Live(), () => new VillageBot(true), 8, 24), 28.0, 42.0) })
+            {
+                TestContext.Out.WriteLine(r.Bot + ": Village day " + Days(r.Village) + "; Hamlet " + Days(r.Hamlet) + "; 5 households " + Days(r.Households)
+                    + "; a business's 2 profitable seasons " + Days(r.Business) + "; the school open " + Days(r.School) + "; literacy at the Village " + string.Join(" ", r.Literacy) + "%");
+                double median = r.Village.Select(d => double.IsNaN(d) ? double.MaxValue : d).OrderBy(d => d).ElementAt(r.Village.Count / 2);
+                Assert.That(median, Is.InRange(lo, hi), r.Bot);
+            }
+        }
+
         // Spec 015 §9 (ADR 0082): the competent bot paying fair wages keeps motivation at 1.0–1.1 and the farm's profit within 2% of Phase 1's
         // output; a bot hiring 10% low and refusing every HR event saves on wages but earns less, its hands gone within about 2 seasons; HR
         // events 0–2 a season for 3 workers.

@@ -5,6 +5,7 @@ using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.Maths;
+using Sim.Core.People;
 using Sim.Core.Progress;
 using Sim.Core.Saves;
 using static Sim.Core.Tests.PeopleKit;
@@ -12,7 +13,7 @@ using static Sim.Core.Tests.TestSim;
 
 namespace Sim.Core.Tests
 {
-    /// <summary>The Hamlet gate (spec 009 §3.6, AC-8; ADR 0030, 0032).</summary>
+    /// <summary>The Hamlet gate (spec 009 §3.6, AC-8; ADR 0030, 0032) and the Village gate (spec 018 §3.6, AC-8; ADR 0095 §9).</summary>
     public class EraTests
     {
         private static readonly int[] SixAcres = { 84, 85, 86, 100, 101, 102 };
@@ -142,6 +143,62 @@ namespace Sim.Core.Tests
             GameState copy = load.State;
             Assert.That(copy.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
             Assert.That(copy.Era.SeasonAcres, Is.EqualTo(new[] { 84, 85, 86, 100 }));
+        }
+
+        private static int Village(Simulation sim) { return sim.Config.Game.Onboarding.Eras.ToList().FindIndex(e => e.Id == "village"); }
+
+        // Spec 018 AC-8: 5 households, a business with 2 profitable seasons (its own P&L, counted at its close) and the school open. Met
+        // at the close but for the school, the Village waits; the school's opening unlocks it, once.
+        [Test]
+        public void Village()
+        {
+            Simulation sim = Start();
+            Business.Business mill = BusinessTests.Mill(sim, runYourself: true, capital: 120_000_00); // a rich Hamlet
+            BusinessTests.GiveWheat(sim, 40_000_000);
+            Hand hand = HireHand(sim);
+            for (int i = 0; i < 4; i++) AddFamily(sim, hand.HutId, 30, 28).Savings = 1_000_000 * Coin; // fed all along, so nobody leaves
+            Assert.That(EraRules.Households(sim), Is.EqualTo(5), "a hand alone in his hut counts");
+            int hamlet = sim.State.Era.Current;
+            for (int i = 0; i < 4 && mill.ProfitableSeasons < 2; i++) sim.AdvanceTo(BusinessTests.NextClose(sim));
+            Assert.That(mill.ProfitableSeasons, Is.EqualTo(2), "two seasons run by you");
+            Assert.That(mill.ProfitableSeasons, Is.EqualTo(mill.Reports.Count(r => Business.BusinessBooks.NetProfit(r) > 0)), "as its books show");
+            Assert.That((EraRules.Business(sim), EraRules.BusinessSeasons(sim)), Is.EqualTo((mill, 2)));
+            Assert.That(sim.State.Era.Current, Is.EqualTo(hamlet), "no school yet");
+
+            sim.DrainEvents();
+            Ok(sim, new BuildSchool(sim.State.Clock.SimTime));
+            long ready = sim.State.Citizens.School.ReadyAt;
+            sim.AdvanceTo(ready - 1);
+            Assert.That(sim.State.Era.Current, Is.EqualTo(hamlet), "the school is still being built");
+            sim.AdvanceTo(ready);
+            Assert.That(sim.State.Era.Current, Is.EqualTo(Village(sim)), "the school opened: a Village");
+            Assert.That(sim.State.Era.UnlockedAt, Is.EqualTo(ready));
+            Assert.That(sim.PendingEvents.OfType<EraUnlocked>().Single().EraId, Is.EqualTo("village"));
+            sim.AdvanceTo(BusinessTests.NextClose(sim));
+            Assert.That(sim.PendingEvents.OfType<EraUnlocked>().Count(), Is.EqualTo(1), "once");
+        }
+
+        // Spec 018 AC-8 (ADR 0095 §9): with the business and the school done, the fifth household forming (a hand hired into his hut) unlocks
+        // the Village at once, not at the next close.
+        [Test]
+        public void Village_OnHousehold()
+        {
+            Simulation sim = Start();
+            Business.Business mill = BusinessTests.Mill(sim, hire: false);
+            mill.ProfitableSeasons = 2;
+            Ok(sim, new BuildSchool(sim.State.Clock.SimTime));
+            sim.AdvanceTo(sim.State.Citizens.School.ReadyAt);
+            int hamlet = Village(sim) - 1;
+            Assert.That(sim.State.Era.Current, Is.EqualTo(hamlet), "the school opened, but nobody lives here");
+            Hand hand = HireHand(sim);
+            for (int i = 0; i < 3; i++) AddFamily(sim, hand.HutId, 30, 28).Savings = 1_000_000 * Coin;
+            Assert.That((EraRules.Households(sim), sim.State.Era.Current), Is.EqualTo((4, hamlet)));
+            sim.DrainEvents();
+            HireHand(sim); // a second hut, then a hand alone in it
+            Assert.That(EraRules.Households(sim), Is.EqualTo(5));
+            Assert.That(sim.State.Era.Current, Is.EqualTo(Village(sim)), "the fifth household: a Village");
+            Assert.That(sim.State.Era.UnlockedAt, Is.EqualTo(sim.State.Clock.SimTime), "when he moved in, not at the close");
+            Assert.That(sim.PendingEvents.OfType<EraUnlocked>().Single().EraId, Is.EqualTo("village"));
         }
     }
 }

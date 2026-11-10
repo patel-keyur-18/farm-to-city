@@ -1,6 +1,6 @@
 # 018. The school and literacy, the Codex, advisors and the Village unlock
 
-- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095)
+- Status: Approved (2026-10-27, ADR 0077; G1–G8 closed with the owner, §10); filled in by Sprint 17's plan check (2026-11-07, ADR 0095); the Village unlock as built by ADR 0097 (US-102; its pace with the owner)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Player journey and eras (Village); Community and civic services (literacy versus skills, education); Learning layer (advisors, the Concept Codex)
@@ -100,6 +100,12 @@ The GDD's gate was 5 households, a market stall, 1 business profitable for 2 sea
 - **Progress:** Menu → Letter → "Becoming a Village": households (n of 5), businesses' profitable seasons (n of 2), the school (none, building, open); each row's *Why?* says what to do next ("Build a family house", "Start a flour mill", "Build the school on the school plot"). The Hamlet's celebration names the three goals, so a player knows them from the moment the Hamlet opens.
 - **Celebration:** the `village` chapter (the grandmother's letter's voice), confetti as the Hamlet's, and a list of what opens: the bakery and the dairy (spec 016), shops on the pitches (spec 017), drip and the borewell, the tractor (spec 013), the co-op bank's larger loans.
 - **Target:** the competent bot within 2–3 weeks, the cautious saver within 4–6 (ADR 0028, 0071); measured in the balancer (§9).
+- **As built (ADR 0097):**
+  - Every household on your land counts. The business with the most profitable seasons counts; a closed one keeps its count, and a schema-14 business is counted from its kept reports.
+  - The gate is also checked when a hand is hired into his hut, a family moves into a free house, or a married son moves into one.
+  - The co-op bank's cap follows the era reached.
+  - The progress sheet is the next era's ("Your Village" once there), and its list of what each era opens is read from the content.
+  - Measured with `VillageBot` (homes, then a hired mill, then the school): the competent bot at a median of day 32 (29–39), the cautious saver at day 56 (52–57). The pace is with the owner (ADR 0097 §8).
 
 ### 3.7 Processing order
 

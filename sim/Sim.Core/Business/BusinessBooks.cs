@@ -129,6 +129,7 @@ namespace Sim.Core.Business
                 sim.Emit(new LedgerReconciliationFailed(sim.State.Clock.SimTime, "business " + b.Id + ": " + failure));
             }
             b.Reports.Add(report);
+            if (NetProfit(report) > 0) b.ProfitableSeasons++;
             if (b.Reports.Count > KeptReports) b.Reports.RemoveAt(0);
             b.SeasonOpeningCash = b.Ledger.Cash;
             b.AreaSeason = 0;

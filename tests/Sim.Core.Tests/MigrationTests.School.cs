@@ -24,6 +24,8 @@ namespace Sim.Core.Tests
             Assert.That(school.Class, Is.Empty);
             Assert.That(r.State.Shops.Newcomers, Is.Empty, "no newcomers yet (spec 017 §3.7)");
             Assert.That(r.State.Shops.Rivals.Select(x => x.LastShare), Is.All.EqualTo(Maths.Fixed.Zero), "the grocer's and tea stall's last share starts at the first close");
+            foreach (Business.Business b in r.State.Businesses.Businesses) // the Village's gate (ADR 0095 §9): counted from its own books
+                Assert.That(b.ProfitableSeasons, Is.EqualTo(b.Reports.Count(x => Business.BusinessBooks.NetProfit(x) > 0)));
 
             Simulation sim = Simulation.FromState(config, r.State);
             sim.State.Era.Current = config.Game.School.UnlockEra;

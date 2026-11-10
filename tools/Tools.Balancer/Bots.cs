@@ -615,7 +615,10 @@ namespace Tools.Balancer
 
         protected override bool MayBorrow { get { return false; } }
 
-        protected override bool ReadyToHire(Simulation sim)
+        protected override bool ReadyToHire(Simulation sim) { return CanHire(sim); }
+
+        /// <summary>Cash covers the hut (if none stands), a season of the hand's market wage and of the household's basic living costs.</summary>
+        public static bool CanHire(Simulation sim)
         {
             GameDefs g = sim.Config.Game;
             long hut = PeopleRules.HutCount(sim) > 0 ? 0 : g.Buildings[g.People.HandHut].Value;
@@ -1148,12 +1151,15 @@ namespace Tools.Balancer
             return mill.OwnPerDay * sim.Clock.DaysPerSeason * 4;
         }
 
+        /// <summary>Whether the next business may be founded now (a bot with other priorities first says no).</summary>
+        protected virtual bool MayFound(Simulation sim) { return true; }
+
         /// <summary>The next business first: until it's founded, its cash is kept back from building houses.</summary>
         protected override long HomeReserve(Simulation sim)
         {
             long reserve = base.HomeReserve(sim);
             int i = Next(sim);
-            if (i < 0) return reserve;
+            if (i < 0 || !MayFound(sim)) return reserve;
             var type = Type(sim, _types[i]);
             long loan = _borrow ? Sim.Core.Business.BusinessBooks.MaxLoan(sim, type) : 0;
             return reserve + Sim.Core.Business.BusinessRules.Projected(sim, type, _self, Sim.Core.Business.BusinessRules.DefaultOwnPerDay(sim, type), type.Fee, loan).CashNeeded - loan;
@@ -1182,7 +1188,7 @@ namespace Tools.Balancer
             base.Play(sim, t);
             if (sim.State.Businesses == null) return;
             int next = Next(sim);
-            if (next >= 0) Found(sim, t, next);
+            if (next >= 0 && MayFound(sim)) Found(sim, t, next);
             foreach (string id in _types)
             {
                 Sim.Core.Business.Business b = Of(sim, id);
@@ -1315,5 +1321,49 @@ namespace Tools.Balancer
     public sealed class MillBot : BusinessBot
     {
         public MillBot(bool runsIt, bool borrows = false) : base(runsIt, borrows, "flour_mill") { }
+    }
+
+    /// <summary>
+    /// Spec 018 §9 (US-102): the competent founder going for the Village's gate in the order that measured quickest: five homes first
+    /// (on the bank's home loan, ADR 0071), then a hired flour mill on its loan, then the school on a co-op loan as far as the bank's
+    /// room allows. The saver variant borrows nothing, hires as the cautious saver does, and builds from savings.
+    /// </summary>
+    public sealed class VillageBot : BusinessBot
+    {
+        private readonly bool _saver;
+
+        public VillageBot(bool saver = false) : base(false, !saver, "flour_mill") { _saver = saver; }
+
+        public override string Name { get { return _saver ? "village-saver" : "village"; } }
+
+        protected override bool MayBorrow { get { return !_saver; } }
+
+        protected override bool ReadyToHire(Simulation sim) { return _saver ? CautiousSaverBot.CanHire(sim) : base.ReadyToHire(sim); }
+
+        private static bool HomesStarted(Simulation sim) { return sim.State.Citizens == null || Town.Homes(sim) >= Town.Households; }
+
+        /// <summary>The mill once the homes are under way, the school once the mill is founded.</summary>
+        protected override bool MayFound(Simulation sim) { return HomesStarted(sim); }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            if (HomesStarted(sim) && sim.State.Businesses?.Businesses.Count > 0) School(sim, t);
+        }
+
+        private void School(Simulation sim, long t)
+        {
+            if (SchoolRules.CanBuild(sim) != RejectReason.None) return;
+            long price = SchoolRules.Price(sim), loan = 0;
+            if (!_saver && sim.State.Credit != null)
+            {
+                int bank = sim.Config.Game.Credit.IndexOfLender("coop_bank");
+                loan = Math.Min(price, CreditRules.Limit(sim, bank).Limit);
+                loan -= loan % (1_000 * Money.Coin);
+                if (loan < sim.Config.Game.Credit.Lenders[bank].MinAmount) loan = 0;
+            }
+            if (sim.State.Ledger.Cash < price - loan + HomeReserve(sim)) return;
+            Ok(sim, new BuildSchool(t, loan > 0 ? new Financing("coop_bank", loan, 8) : null));
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace Sim.Content
         public static readonly string[] OnboardingEvents =
         {
             "GardenPicked", "SoldToTrader", "MarketSales", "MandiTripReturned", "AwayAdvanceCompleted", "CropHarvested",
-            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "OrdersPosted",
+            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "EraUnlocked(village)", "OrdersPosted",
         };
 
         /// <summary>The commands a <c>rejection</c> trigger can name.</summary>
@@ -84,7 +84,7 @@ namespace Sim.Content
             {
                 string p = Index(er + ".eras", i);
                 JObject x = Object(eraTokens[i], p);
-                OnlyFields(x, p, "id", "conditions", "manual");
+                OnlyFields(x, p, "id", "conditions");
                 string id = UniqueId(x, p, eraIds);
                 eraIds.Add(id);
                 if (i == 0)
@@ -93,18 +93,17 @@ namespace Sim.Content
                     eras.Add(new EraDef(id, 0, Fixed.Zero, 0, 0));
                     continue;
                 }
-                if (x["manual"] != null)
-                {
-                    if (!Bool(x["manual"], Join(p, "manual"))) throw new ContentException(Join(p, "manual"), "leave it out instead of false");
-                    if (x["conditions"] != null) throw new ContentException(Join(p, "conditions"), "a manual era has no conditions yet");
-                    eras.Add(new EraDef(id, 0, Fixed.Zero, 0, 0, true));
-                    continue;
-                }
                 string cp = Join(p, "conditions");
                 JObject c = Object(Required(x, p, "conditions"), cp);
-                OnlyFields(c, cp, "acresHarvestedInSeason", "meanCareAtLeast", "handHutsAtLeast", "profitableSeasonsAtLeast");
-                eras.Add(new EraDef(id, BoundedInt(c, cp, "acresHarvestedInSeason", 1, 1000), Bounded(c, cp, "meanCareAtLeast", "0", "2"),
-                    BoundedInt(c, cp, "handHutsAtLeast", 0, 100), BoundedInt(c, cp, "profitableSeasonsAtLeast", 0, 100)));
+                OnlyFields(c, cp, "acresHarvestedInSeason", "meanCareAtLeast", "handHutsAtLeast", "profitableSeasonsAtLeast", "householdsAtLeast", "businessSeasonsAtLeast", "school");
+                if (!c.HasValues) throw new ContentException(cp, "an era needs at least one condition");
+                int Count(string name, int min) { return c[name] == null ? 0 : BoundedInt(c, cp, name, min, 1000); }
+                int acres = Count("acresHarvestedInSeason", 1);
+                Fixed care = c["meanCareAtLeast"] == null ? Fixed.Zero : Bounded(c, cp, "meanCareAtLeast", "0", "2");
+                if (acres == 0 && c["meanCareAtLeast"] != null) throw new ContentException(Join(cp, "meanCareAtLeast"), "Care is of the season's harvested acres: give acresHarvestedInSeason too");
+                bool school = c["school"] != null && Bool(c["school"], Join(cp, "school"));
+                if (c["school"] != null && !school) throw new ContentException(Join(cp, "school"), "leave it out instead of false");
+                eras.Add(new EraDef(id, acres, care, Count("handHutsAtLeast", 0), Count("profitableSeasonsAtLeast", 0), Count("householdsAtLeast", 1), Count("businessSeasonsAtLeast", 1), school));
             }
             return new OnboardingDefs(steps.AsReadOnly(), chapters.AsReadOnly(), eras.AsReadOnly());
         }
