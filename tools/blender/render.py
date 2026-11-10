@@ -1638,6 +1638,34 @@ def icon_ui(kind):
             o.extend(leafy if isinstance(leafy, list) else [leafy])
         o.append(sphere("radish", 0.03, (0.035, 0.0, 0.2), toon("radishRed", 0xE9506A), scale=(1, 1, 1.2), segs=12, rings=8))
         return turn(o, Matrix.Rotation(math.radians(20), 4, "Z"))
+    elif kind == "codex":
+        # The Concept Codex (spec 018 §3.3): a deep green cloth-bound book lying open, its cream pages in a shallow V with lines of
+        # text, a saffron ribbon down the middle and brass corners; green, not the Menu's red khata, so the two never read alike.
+        cloth, clothDark, pages, ink, ribbon, brass = (toon("codexCloth", 0x2E7D5B), toon("codexDark", 0x1F5A41), toon("pages", 0xFFF3D1),
+                                                        toon("codexInk", 0xB89C6A), toon("ribbon", 0xE8892A), toon("brass", 0xE6B33A))
+        for sgn in (-1, 1):
+            m = Matrix.Rotation(sgn * math.radians(12), 3, "Y")
+            o.append(box("cover%d" % sgn, (0.125, 0.19, 0.012), tuple(m @ Vector((sgn * 0.064, 0, 0.0))), cloth, rot=m, bevel=0.004))
+            o.append(box("pages%d" % sgn, (0.112, 0.175, 0.022), tuple(m @ Vector((sgn * 0.058, 0, 0.016))), pages, rot=m, bevel=0.003))
+            for i in range(5):
+                o.append(box("line%d%d" % (sgn, i), (0.07, 0.007, 0.002), tuple(m @ Vector((sgn * 0.058, 0.05 - i * 0.026, 0.028))), ink, rot=m, outline=False))
+            for y in (-0.093, 0.093):
+                o.append(box("corner%d%d" % (sgn, y > 0), (0.026, 0.012, 0.016), tuple(m @ Vector((sgn * 0.116, y, 0.0))), brass, rot=m, outline=False))
+        o.append(box("spine", (0.014, 0.19, 0.016), (0, 0, -0.004), clothDark))
+        o.append(box("ribbon", (0.012, 0.15, 0.004), (0.0, -0.04, 0.03), ribbon, outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.45))
+    elif kind == "deed":
+        # Assets in the Codex: a rolled land deed (a patta) tied with a red cord and stamped with a wax seal.
+        paper, edge, cord, wax = toon("deed", 0xF4E2B8), toon("deedEdge", 0xC9A46A), toon("cord", 0xB8322A), toon("wax", 0xC0392B)
+        roll = Matrix.Rotation(math.radians(90), 3, "Y")
+        o.append(cylinder("scroll", 0.05, 0.05, 0.24, (0, 0, 0.06), paper, segs=24, rot=roll))
+        for x in (-0.121, 0.121):
+            o.append(cylinder("end%d" % (x > 0), 0.05, 0.05, 0.004, (x, 0, 0.06), edge, segs=24, rot=roll, outline=False))
+            o.append(cylinder("curl%d" % (x > 0), 0.02, 0.02, 0.006, (x * 1.02, 0, 0.06), toon("deedCurl", 0xDCC28E), segs=16, rot=roll, outline=False))
+        o.append(cylinder("tie", 0.053, 0.053, 0.022, (0, 0, 0.06), cord, segs=24, rot=roll))
+        o.append(cylinder("seal", 0.028, 0.028, 0.012, (0.065, -0.049, 0.065), wax, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+        o.append(cylinder("sealMark", 0.013, 0.013, 0.014, (0.065, -0.05, 0.065), toon("waxDark", 0x8F2B1E), segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+        return turn(o, Matrix.Rotation(math.radians(25), 4, "Z"))
     elif kind == "close":
         white = toon("x", 0xFFF3D1)
         for a in (45, -45):
@@ -1663,7 +1691,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 
