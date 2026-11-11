@@ -195,4 +195,21 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "CoveredFromSavings(" + Amount + ")"; }
     }
+
+    /// <summary>A wealth milestone was reached (spec 019 §3.6), once each: <see cref="Period"/> is the season it happened in, <see cref="Past"/> when it was found from a report kept before the update.</summary>
+    public sealed class MilestoneReached : SimEvent
+    {
+        public string Id { get; }
+        public long Period { get; }
+        public bool Past { get; }
+
+        public MilestoneReached(long simTime, string id, long period, bool past) : base(simTime)
+        {
+            Id = id;
+            Period = period;
+            Past = past;
+        }
+
+        protected override string Describe() { return "MilestoneReached(" + Id + ", period=" + Period + (Past ? ", past" : "") + ")"; }
+    }
 }

@@ -331,6 +331,26 @@ namespace Sim.Core.Definitions
     }
 
     /// <summary>From <c>content/finance.json</c> (spec 005 §4).</summary>
+    /// <summary>The numbers behind the five wealth milestones (spec 019 §3.6): never a reward, so they never steer play.</summary>
+    public sealed class MilestonesDef
+    {
+        /// <summary>First lakh saved: cash plus the deposit, less what you owe, reaches this.</summary>
+        public long Savings { get; }
+
+        /// <summary>Net worth reaches this many times the inheritance, in today's coins.</summary>
+        public int NetWorthTimes { get; }
+
+        /// <summary>Passive income covers your living: the ratio reaches this percent.</summary>
+        public int PassivePercent { get; }
+
+        public MilestonesDef(long savings, int netWorthTimes, int passivePercent)
+        {
+            Savings = savings;
+            NetWorthTimes = netWorthTimes;
+            PassivePercent = passivePercent;
+        }
+    }
+
     public sealed class LedgerDef
     {
         public int RetainSeasons { get; }
@@ -343,8 +363,12 @@ namespace Sim.Core.Definitions
         public Fixed SavingsInterest { get; }
         public long SavingsMinimum { get; }
 
-        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver, Fixed savingsInterest, long savingsMinimum)
+        /// <summary>The wealth milestones' thresholds (spec 019 §3.6); null when the content has none (the frozen golden content), so no milestone is ever checked.</summary>
+        public MilestonesDef Milestones { get; }
+
+        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver, Fixed savingsInterest, long savingsMinimum, MilestonesDef milestones = null)
         {
+            Milestones = milestones;
             RetainSeasons = retainSeasons;
             DebtComfortableUnder = debtComfortableUnder;
             DebtRiskyOver = debtRiskyOver;

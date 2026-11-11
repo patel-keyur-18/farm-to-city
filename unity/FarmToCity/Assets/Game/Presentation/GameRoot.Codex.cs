@@ -100,7 +100,7 @@ namespace Game.Presentation
         /// <summary>Shows what's waiting once nothing else is on screen.</summary>
         private void ShowPendingCodex()
         {
-            if (_codexPending.Count == 0 || _letterOpen || _celebrating || _sheet.IsOpen || _sheet.OverlayOpen || _sheet.WhyOpen || _placeBar != null) return;
+            if (_codexPending.Count == 0 || _letterOpen || _celebrating || _sheet.IsOpen || _sheet.OverlayOpen || _sheet.WhyOpen || _placeBar != null || MilestoneToastShowing) return;
             ShowCodexToast(CodexToastVm.Build(_ctx, new List<CodexFind>(_codexPending)));
             _codexPending.Clear();
             _codexWait.Pause();

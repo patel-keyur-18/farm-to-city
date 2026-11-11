@@ -69,6 +69,6 @@ Eleven gaps came out of it, and the owner added two requests to the first story.
 
 - Spec 019, spec 008, spec 018 §3.5 and the GDD carry these decisions with a pointer here.
 - New stories: US-235 (F14.4), US-236 (F14.4), US-237–US-239 (F10.2, new).
-- New data: `finance.json` (the bands, the amber line, the deposit's rate, the basic plan as the floor's reference, `retainSeasons` 8), `ui.json` milestones and the hold time (1 s), `advisors.json`'s debt note at 0.6; new accounts 1020 and 4400.
+- New data: `finance.json` (the bands, the amber line, the deposit's rate, the basic plan as the floor's reference, `retainSeasons` 8), the milestones' thresholds (in `finance.json` `ledger.milestones`, built in US-136: the sim checks them, so they can't live in the view's `ui.json`) and `ui.json`'s hold time (1 s), `advisors.json`'s debt note at 0.6; new accounts 1020 and 4400.
 - New tests beyond spec 019's: `MoneyViewTests.NextSeasonDue` (every kind), `DepositTests.Consent`, `DepositTests.Warning`, `StatementTests.NothingUnsorted`, `HubTests.Floors`, `HubTests.TrendTodaysCoins`, `MilestoneTests.FromReports`, `ConfirmTests.EveryCommand`, `LandViewTests.YourLand`.
 - No formula already built changes except *Next season, already due*, which now counts what the close really takes.

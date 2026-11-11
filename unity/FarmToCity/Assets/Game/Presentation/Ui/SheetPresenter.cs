@@ -799,6 +799,7 @@ namespace Game.Presentation.Ui
             }
             VisualElement left = WithIcon(line.Icon, 84, text);
             left.style.flexGrow = 1; // the ? chip and the button sit together on the right
+            if (line.Dim) left.style.opacity = 0.55f; // not yet reached (a milestone)
             row.Add(left);
             AddWhyChip(row, line);
             if (line.Badge != null)

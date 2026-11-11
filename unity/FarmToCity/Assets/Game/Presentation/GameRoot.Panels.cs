@@ -111,6 +111,7 @@ namespace Game.Presentation
             };
             BuildToast();
             BuildCodexToast();
+            BuildMilestoneToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
             {

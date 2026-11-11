@@ -40,6 +40,9 @@ namespace Sim.Core.Tests
             Assert.That((kept.FirstEntry, kept.EndEntry), Is.EqualTo((next.FirstEntry, next.EndEntry)));
             Assert.That(kept.People.Select(x => (x.Name, x.Paid, x.Outcome)), Is.EqualTo(next.People.Select(x => (x.Name, x.Paid, x.Outcome))));
 
+            // Milestones are schema 16: a schema-15 write can't hold them (the older-town pass finds them again), so compare the town without them.
+            sim.State.Finance.Milestones.Reached.Clear();
+            sim.State.Finance.Milestones.InheritedWorth = 0;
             LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 15), config, MinSchema);
             Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
             Assert.That(old.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "a schema-15 write is the same town");

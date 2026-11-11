@@ -194,6 +194,7 @@ namespace Game.Presentation
         {
             ApplySafeArea();
             CodexCovered();
+            MilestoneCovered();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
@@ -225,6 +226,7 @@ namespace Game.Presentation
             HandleEvents(events);
             OnTownEvents(events);
             GuideAfter(events);
+            MilestoneAfter(events);
             Refresh(true);
         }
 

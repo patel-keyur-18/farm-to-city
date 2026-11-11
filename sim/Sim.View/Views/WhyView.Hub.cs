@@ -19,6 +19,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             NetWorthSnapshot worth = Reporting.NetWorth(sim);
             WhyVm vm;
+            if (row >= MilestonesSection.WhyBase) return MilestoneWhy(ctx, row - MilestonesSection.WhyBase, worth);
             switch (row)
             {
                 case HubSheet.Trend:
@@ -95,6 +96,33 @@ namespace Sim.View.Views
                     return vm;
                 }
             }
+        }
+    
+        /// <summary>A milestone, in words: what it needs, the season it was reached in, or where you stand now.</summary>
+        private static WhyVm MilestoneWhy(ViewContext ctx, int index, NetWorthSnapshot worth)
+        {
+            var sim = ctx.Sim;
+            var s = ctx.Strings;
+            string id = MilestoneRules.Ids[index];
+            MilestoneEntry got = MilestoneRules.State(sim).Find(id);
+            Sim.Core.Definitions.MilestonesDef d = sim.Config.Game.Ledger.Milestones;
+            WhyVm vm = New(ctx, "milestone." + id, got != null ? ReportSheet.PeriodName(ctx, got.Period) : s.Get("milestone.notYet"));
+            if (got == null)
+            {
+                if (id == MilestoneRules.FirstLakh)
+                {
+                    Row(vm, ctx, "milestone.why.cash", Money(ctx, worth.Cash));
+                    if (worth.Deposit > 0) Row(vm, ctx, "milestone.why.deposit", Money(ctx, worth.Deposit));
+                    if (Hub.Owed(worth) > 0) Row(vm, ctx, "milestone.why.owe", "−" + Money(ctx, Hub.Owed(worth)));
+                }
+                else if (id == MilestoneRules.Twice)
+                {
+                    Row(vm, ctx, "milestone.why.worth", Money(ctx, worth.Total));
+                    Row(vm, ctx, "milestone.why.inherited", Money(ctx, MilestoneRules.InheritedNow(sim)));
+                }
+            }
+            Text(vm, ctx, "milestone." + id + ".why", "target", Money(ctx, d.Savings), "times", ctx.Fmt.Integer(d.NetWorthTimes), "pct", ctx.Fmt.Integer(d.PassivePercent));
+            return vm;
         }
     }
 }

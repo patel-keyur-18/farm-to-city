@@ -819,8 +819,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-235 | Every amount due, confirm cards, Your land | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 8 | Must | Done (for review) |
 | US-137 | Statements | [F14.3](features/F14.3-financial-statements.md) | 10 | Must | Done (for review) |
 | US-135 | Finance hub | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Must | Done (approved) |
-| US-236 | The savings deposit and the warning before the close | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Must | Done (for review) |
-| US-136 | Wealth milestones | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 3 | Should | To do |
+| US-236 | The savings deposit and the warning before the close | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Must | Done (approved) |
+| US-136 | Wealth milestones | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 3 | Should | Done (for review) |
 | US-237 | The playtest town and the Release build | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | To do |
 
 **Order of work:** the confirm cards and *Your land* previewed → US-235 (every amount due first, so the fix reaches the phone with this sprint's first build) → the season page's three tabs and *Your books* previewed → US-137 → *Your wealth* previewed → US-135 → the savings sheet and the warning card previewed → US-236 → US-136 → balance with the bots (spec 019 §9; the deposit no money loop; `StatementTests.NothingUnsorted` on every bot; the save's size with 8 seasons of entries) → the whole checklist in the Editor by scripted touch → the Development build and the owner's device check (both frame-time p95s, ADR 0094) → US-237: the playtest town shown to the owner, then the Release build. One stop for the owner's review after each story. Schema 16 grows on this branch and ships once.

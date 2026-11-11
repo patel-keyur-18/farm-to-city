@@ -296,7 +296,7 @@ namespace Sim.View.Views
             HubSheet.Add(ctx, vm, worth);
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
 
-            if (sim.State.Credit == null) return vm;
+            if (sim.State.Credit == null) { MilestonesSection.Add(ctx, vm); return vm; }
             vm.Lines.Add(LineVm.Header(s.Get("money.loans")));
             bool any = false;
             foreach (Loan loan in sim.State.Credit.Loans)
@@ -317,6 +317,7 @@ namespace Sim.View.Views
             }
             if (!any) vm.Lines.Add(new LineVm(s.Get("money.noLoans"), s.Get("money.noLoansNote")));
 
+            MilestonesSection.Add(ctx, vm);
             return vm;
         }
     }

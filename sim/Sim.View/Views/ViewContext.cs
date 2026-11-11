@@ -218,6 +218,9 @@ namespace Sim.View.Views
 
         /// <summary>A third line under the value, in <see cref="NoteTone"/>'s colour (an order's state), or null.</summary>
         public string Note { get; internal set; }
+
+        /// <summary>Drawn faded: something not yet reached (a milestone).</summary>
+        public bool Dim { get; internal set; }
         public Tone NoteTone { get; internal set; }
 
         /// <summary>A green tag where a button would be, for something done ("Delivered"), or null.</summary>
