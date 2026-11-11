@@ -57,6 +57,7 @@ namespace Sim.View.Tests
                 Assert.That(why.Rows, Is.Not.Empty);
                 Assert.That(why.Value, Is.EqualTo(StatementSheet.Amount(ctx, r.CashRows[i].Amount)));
             }
+            Assert.That(page.Lines.Where(l => l.IsHeader).Select(l => l.Label), Has.None.Contain(" 0 coins"), "no heading over nothing");
             SeasonReport old = sim.State.Finance.Reports.First();
             SheetVm oldPage = ReportSheet.Build(ctx, old.Period, StatementSheet.CashTab);
             Assert.That(old.CashKept, Is.True, "a town made on this schema keeps every season's rows");
@@ -147,6 +148,30 @@ namespace Sim.View.Tests
                 AccountGroup g = Accounts.GroupOf(a);
                 if (g == AccountGroup.Income || g == AccountGroup.Expenses) Assert.That(table.Has("account." + a), Is.True, a.ToString());
             }
+        }
+
+        // AC-9 (ADR 0101 §4): a schema-15 town's past seasons open at once; their cash flow says it is kept from the next season on, and
+        // the season after a kept one says last year's wasn't itemised.
+        [Test]
+        public void OlderTown_CashFlowKeptFromNext()
+        {
+            string file = System.IO.Path.Combine(ViewKit.RepoRoot, "tests", "Sim.Core.Tests", "saves", "schema15.ftc");
+            var read = Sim.Core.Saves.SaveCodec.Read(System.IO.File.ReadAllBytes(file), ViewKit.Config(), 3);
+            Assert.That(read.Error, Is.EqualTo(Sim.Core.Saves.SaveError.None), read.Detail);
+            Simulation sim = Simulation.FromState(ViewKit.Config(), read.State);
+            ViewContext ctx = ViewKit2.Context(sim);
+            SeasonReport old = sim.State.Finance.Reports.Last();
+            SheetVm page = ReportSheet.Build(ctx, old.Period, StatementSheet.CashTab);
+            Assert.That(page.Lines.Select(l => l.Label), Has.Some.EqualTo(ctx.Strings.Get("stmt.cash.notKept")));
+            Assert.That(page.Lines.Last().Value, Is.EqualTo(ctx.Fmt.Coins(old.CashFlow.Closing)), "its cash summary stays");
+            Assert.That(ReportSheet.Build(ctx, old.Period, StatementSheet.BalanceTab).Lines.Count, Is.GreaterThan(3), "its balance sheet opens");
+            Assert.That(ReportSheet.Build(ctx, old.Period).Lines.Count, Is.GreaterThan(3), "its profit and loss opens");
+            sim.AdvanceTo(sim.State.Clock.SimTime + 5 * sim.Clock.SecondsPerSeason, Sim.Core.Time.AdvanceMode.Away);
+            SeasonReport kept = sim.State.Finance.Reports.First(x => x.CashKept);
+            SeasonReport yearOn = sim.State.Finance.Reports.FirstOrDefault(x => x.CashKept && StatementSheet.LastYear(sim, x.Period) != null && !StatementSheet.LastYear(sim, x.Period).CashKept);
+            if (yearOn != null)
+                Assert.That(ReportSheet.Build(ctx, yearOn.Period, StatementSheet.CashTab).Lines.Where(l => l.Note != null).Select(l => l.Note), Has.Some.Contain("not itemised"));
+            Assert.That(kept.CashRows.Count, Is.GreaterThan(0));
         }
     }
 }

@@ -817,7 +817,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-235 | Every amount due, confirm cards, Your land | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 8 | Must | Done (for review) |
-| US-137 | Statements | [F14.3](features/F14.3-financial-statements.md) | 10 | Must | To do |
+| US-137 | Statements | [F14.3](features/F14.3-financial-statements.md) | 10 | Must | Done (for review) |
 | US-135 | Finance hub | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Must | To do |
 | US-236 | The savings deposit and the warning before the close | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Must | To do |
 | US-136 | Wealth milestones | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 3 | Should | To do |

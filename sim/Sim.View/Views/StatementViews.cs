@@ -96,6 +96,9 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(s.Get(l.LabelKey), Amount(ctx, l.Amount), "report." + key, r.Period) { Note = Beside(ctx, r.Period, prev, before?.Amount ?? 0), Icon = "coin" });
                     continue;
                 }
+                bool any = false;
+                foreach (Account a in l.Accounts) any |= AccountAmount(r, a) != 0;
+                if (!any) continue; // a heading with nothing under it says nothing
                 vm.Lines.Add(LineVm.Header(s.Get("season.head", "head", s.Get(l.LabelKey), "amount", Amount(ctx, l.Amount))));
                 foreach (Account a in l.Accounts)
                 {
@@ -163,7 +166,7 @@ namespace Sim.View.Views
                     CashRow row = r.CashRows[i];
                     if ((int)row.Group != g) continue;
                     total += row.Amount;
-                    group.Add(new LineVm(s.Get(row.LabelKey), Amount(ctx, row.Amount), StatementSheet.CashRowWhy, WhyId(r.Period, i)) { Note = Beside(ctx, r.Period, prev, prev != null && prev.CashKept ? CashAmount(prev, row) : 0) });
+                    group.Add(new LineVm(s.Get(row.LabelKey), Amount(ctx, row.Amount), StatementSheet.CashRowWhy, WhyId(r.Period, i)) { Note = prev != null && !prev.CashKept ? s.Get("stmt.lastNotKept", "season", SeasonName(ctx, r.Period)) : Beside(ctx, r.Period, prev, CashAmount(prev, row)) });
                 }
                 if (group.Count == 0) continue;
                 vm.Lines.Add(LineVm.Header(s.Get("season.head", "head", s.Get("stmt.group." + g), "amount", Amount(ctx, total))));

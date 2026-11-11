@@ -124,6 +124,8 @@ Money and loans opens on the **This season** tab, a switch at its top: **This se
 
 **New state, Sprint 15** (save schema 12, ADR 0083): the sales record (§3.9), on `FinanceState`.
 
+**As built, US-137 (2026-11-11).** A cash flow row is the cash moved against one account in one direction (a land row for land bought, another for land sold); a sale's whole price sits against the asset sold, its gain, loss and depreciation folded in. A season is its ledger entries by id (`FirstEntry` to `EndEntry`), not their period, so what the market paid in the boundary hour counts in the season whose cash it was. Rows, *Your people* (pay against what they'd ask, skill, how the close left them, reputation before and after) and the deposit in net worth are saved but not hashed. The `YearReviewed` event is dropped (nothing consumes it); *Your year* opens after the Winter season page and from its *Your year* row.
+
 **New state, Sprint 18** (save schema 16; ADR 0083 and ADR 0084 each shifted the schemas by one; ADR 0101 §4): no new lists. Each season's report gains its cash flow rows by group, its *Your people* rows (wages against the market wage, who left and why, output, reputation then and its change) and the deposit as a line of net worth; the deposit's balance is ledger account 1020 and its interest account 4400; milestones reached (id, season); the inheritance's value; the standing choice *If cash runs short at the close* and a consent for this close. `finance.json`'s `retainSeasons` goes from 4 to 8.
 
 ## 5. Commands and events

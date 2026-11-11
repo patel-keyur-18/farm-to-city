@@ -4134,6 +4134,7 @@
   "account.Sales": "Sales",
   "account.ServiceIncome": "Service income",
   "account.CostOfGoodsSold": "Cost of goods sold",
+  "stmt.lastNotKept": "Last {season}: not itemised then",
   "stmt.seeYear": "Your year",
   "stmt.seeYearNote": "The year that just ended, beside the one before",
   "stmt.subtitle": "Your books for the season, as a business keeps them",
