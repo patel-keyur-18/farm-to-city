@@ -520,6 +520,14 @@ namespace Game.Presentation
                 Push(action.Opens.Value);
                 return;
             }
+            Command first = action.Create(Sim.State.Clock.SimTime);
+            ConfirmCardVm confirm = first == null ? null : ConfirmCards.For(_ctx, first);
+            if (confirm != null)
+            {
+                // Spending on something that lasts, or selling and ending, asks first with its numbers (spec 008 §3.15, ADR 0101 §12).
+                _sheet.ConfirmCard(confirm, () => Run(new[] { action.Create(Sim.State.Clock.SimTime) }), () => { }, key => _strings.Get(key));
+                return;
+            }
             if (action.Confirm != null)
             {
                 // ADR 0039 §6: an ordered field sown with another crop asks whether the order changes too.
@@ -598,13 +606,20 @@ namespace Game.Presentation
             _placeBar.Add(text);
             ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile) : _placing == PlaceKind.Shed ? ShedPlacement.Confirm(_ctx, tile)
                 : _placing == PlaceKind.Business ? BusinessPlacement.Confirm(_ctx, tile, _placeType, BusinessWords.Self(_placeArg), BusinessWords.Loan(_placeArg)) : HutPlacement.Confirm(_ctx, tile);
-            _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
+            void Build()
             {
                 Command c = build.Create(Sim.State.Clock.SimTime);
                 CommandResult r = Sim.Execute(c);
                 if (!r.Accepted) { _guide.Rejected(Sim, c, r.Reason); CodexRejected(r.Reason); Toast(_ctx.Reject(r.Reason)); return; }
                 StopPlacing();
                 AfterCommands();
+            }
+            _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
+            {
+                // A house, hut, shed or business asks first with its numbers (spec 008 §3.15).
+                ConfirmCardVm card = ConfirmCards.For(_ctx, build.Create(Sim.State.Clock.SimTime));
+                if (card == null) Build();
+                else _sheet.ConfirmCard(card, Build, () => { }, key => _strings.Get(key));
             }, build.Detail, build.Enabled));
             if (_placingHouse)
             {

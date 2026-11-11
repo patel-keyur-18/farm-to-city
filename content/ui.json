@@ -252,5 +252,6 @@
       "frost": { "multiply": [0.812, 0.863, 0.918], "multiplyAlpha": 0.3, "overlay": [0.914, 0.945, 0.984], "overlayAlpha": 0.24,
         "saturation": 0.68, "brightness": 1.0, "rime": 0.55 }
     }
-  }
+  },
+  "confirmHoldMillis": 1000
 }

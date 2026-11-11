@@ -55,7 +55,7 @@ namespace Sim.View.Views
         {
             // Land and crops (specs 002, 003).
             { "fertility", Fertility }, { "moisture", Moisture }, { "irrigation", Irrigation }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
-            { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice },
+            { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice }, { "landTotal", LandTotal }, { "landLoans", LandLoans },
             { "resale", Resale }, { "pests", Pests }, { SowSheet.PerHourWhy, SowPerHour },
             // The crop calendar's crop page (spec 020 §3.6b), by crop index.
             { CropCalendar.GrowsWhy, CropGrows }, { CropCalendar.WaterWhy, CropWater }, { CropCalendar.LabourWhy, CropLabour },

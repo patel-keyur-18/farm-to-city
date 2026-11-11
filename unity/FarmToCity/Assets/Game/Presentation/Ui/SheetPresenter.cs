@@ -222,6 +222,103 @@ namespace Game.Presentation.Ui
             _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
         }
 
+        /// <summary>
+        /// A confirm card (spec 008 §3.15, ADR 0101 §12): the question, its numbers, a large safe button and the action. A tap card's
+        /// action is a normal tap; a hold card's red button fills while it is held and acts when full, and a shorter press does nothing.
+        /// </summary>
+        public void ConfirmCard(ConfirmCardVm vm, Action yes, Action no, Func<string, string> text)
+        {
+            var veil = new VisualElement { name = "Veil" };
+            UiKit.Veil(veil);
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.55f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(32);
+            card.name = "ConfirmCard";
+            UiKit.Padding(card, 26, 40);
+            card.style.width = Length.Percent(70);
+            card.style.maxWidth = 1250;
+            Label title = UiKit.Heading1(vm.Title, 50);
+            title.style.unityTextAlign = TextAnchor.MiddleCenter;
+            card.Add(title);
+            if (!string.IsNullOrEmpty(vm.Subtitle))
+            {
+                Label sub = UiKit.Text(vm.Subtitle, 30, UiKit.Wood, UiKit.Body);
+                sub.style.unityTextAlign = TextAnchor.MiddleCenter;
+                sub.style.whiteSpace = WhiteSpace.Normal;
+                card.Add(sub);
+            }
+            foreach (ConfirmRowVm row in vm.Rows)
+            {
+                var r = new VisualElement { pickingMode = PickingMode.Ignore };
+                r.style.flexDirection = FlexDirection.Row;
+                r.style.justifyContent = Justify.SpaceBetween;
+                r.style.paddingTop = 8; r.style.paddingBottom = 8;
+                r.style.borderBottomWidth = 2; r.style.borderBottomColor = UiKit.CreamDark;
+                if (row.Total) { r.style.backgroundColor = UiKit.CreamDark; UiKit.Radius(r, 14); UiKit.Padding(r, 8, 14); r.style.marginTop = 8; r.style.borderBottomWidth = 0; }
+                Label l = UiKit.Text(row.Label, row.Total ? 36 : 32, UiKit.Ink, row.Total ? UiKit.Heading : UiKit.Body);
+                l.style.whiteSpace = WhiteSpace.Normal; l.style.flexShrink = 1;
+                Label v = UiKit.Text(row.Value, row.Total ? 38 : 34, UiKit.Ink, UiKit.Heading);
+                v.style.whiteSpace = WhiteSpace.NoWrap; v.style.marginLeft = 20;
+                r.Add(l); r.Add(v);
+                card.Add(r);
+            }
+            if (!string.IsNullOrEmpty(vm.Warning))
+            {
+                var warn = new VisualElement { pickingMode = PickingMode.Ignore };
+                warn.style.backgroundColor = new Color(0.98f, 0.89f, 0.85f);
+                UiKit.Radius(warn, 18); UiKit.Padding(warn, 8, 18); warn.style.marginTop = 14;
+                Label w = UiKit.Text(vm.Warning, 30, UiKit.Warn, UiKit.Heading);
+                w.style.whiteSpace = WhiteSpace.Normal; w.style.unityTextAlign = TextAnchor.MiddleCenter;
+                warn.Add(w);
+                card.Add(warn);
+            }
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.marginTop = 14;
+            void Close() { veil.RemoveFromHierarchy(); }
+            Button safe = UiKit.MakeButton(vm.SafeLabel, ActionLook.Primary, () => { Close(); no(); });
+            safe.name = "confirm:safe";
+            safe.style.flexGrow = 1;
+            Button go = UiKit.MakeButton(vm.GoLabel, vm.Hold ? ActionLook.Danger : ActionLook.Primary, vm.Hold ? (Action)(() => { }) : () => { Close(); yes(); });
+            go.name = "confirm:go";
+            go.style.flexGrow = 1;
+            if (vm.Hold) HoldToAct(go, vm.HoldMillis / 1000f, () => { Close(); yes(); });
+            buttons.Add(safe);
+            buttons.Add(go);
+            card.Add(buttons);
+            if (vm.Hold)
+            {
+                Label hint = UiKit.Text(text("confirm.holdHint"), 26, UiKit.Wood, UiKit.Body);
+                hint.style.unityTextAlign = TextAnchor.MiddleCenter; hint.style.marginTop = 6;
+                card.Add(hint);
+            }
+            veil.Add(card);
+            _holder.parent.Add(veil);
+            card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
+            _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
+        /// <summary>The red button fills left to right while it's held; lifted or cancelled early, it empties and nothing is sent.</summary>
+        private void HoldToAct(Button b, float seconds, Action done)
+        {
+            var fill = new VisualElement { pickingMode = PickingMode.Ignore };
+            fill.style.position = Position.Absolute;
+            fill.style.left = 0; fill.style.top = 0; fill.style.bottom = 0;
+            fill.style.width = Length.Percent(0);
+            fill.style.backgroundColor = new Color(0.56f, 0.17f, 0.12f, 0.55f);
+            b.Insert(0, fill);
+            void Reset() { _tweens.Cancel(fill); fill.style.width = Length.Percent(0); }
+            b.RegisterCallback<PointerDownEvent>(e =>
+            {
+                Reset();
+                _tweens.Run(fill, seconds, Ease.Linear, k => fill.style.width = Length.Percent(k * 100f), done);
+            });
+            b.RegisterCallback<PointerUpEvent>(e => Reset());
+            b.RegisterCallback<PointerCancelEvent>(e => Reset());
+            b.RegisterCallback<PointerLeaveEvent>(e => Reset());
+        }
+
         /// <summary>A card over everything (spec 007 §7, ADR 0041): a title, a sentence and its buttons; any button closes it.</summary>
         public void Card(CardVm vm, Action<string> onButton)
         {
@@ -675,9 +772,18 @@ namespace Game.Presentation.Ui
             }
             else if (line.Action != null)
             {
+                if (line.Also != null)
+                {
+                    VisualElement also = ActionColumn(line.Also);
+                    also.style.alignItems = Align.FlexEnd;
+                    also.style.flexShrink = 0;
+                    also.Q<Button>().style.minWidth = 200;
+                    row.Add(also);
+                }
                 VisualElement button = ActionColumn(line.Action);
                 button.style.alignItems = Align.FlexEnd;
                 button.style.flexShrink = 0;
+                if (line.Also != null) button.Q<Button>().style.minWidth = 200;
                 row.Add(button);
             }
             return row;

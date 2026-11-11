@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes", "calendarRungMinutes");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes", "calendarRungMinutes", "confirmHoldMillis");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -70,6 +70,8 @@ namespace Sim.View.Content
             Range(star, 10, 50, root + ".skillStarPoints");
             int acre = Int(Required(o, root, "referenceAcreHours"), root + ".referenceAcreHours");
             Range(acre, 1, 12, root + ".referenceAcreHours");
+            int holdMillis = o["confirmHoldMillis"] == null ? 1000 : Int(o["confirmHoldMillis"], root + ".confirmHoldMillis"); // how long a hold card's button is held (spec 008 §3.15)
+            Range(holdMillis, 300, 3000, root + ".confirmHoldMillis");
             int awayHours = Int(Required(o, root, "awayCardMinHours"), root + ".awayCardMinHours");
             Range(awayHours, 0, 72, root + ".awayCardMinHours");
             int happy = Int(Required(o, root, "happyAbove"), root + ".happyAbove");
@@ -103,7 +105,7 @@ namespace Sim.View.Content
                 rungs.Add(b);
             }
             return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather, keeps,
-                quickFrom, quickTo, rungs);
+                quickFrom, quickTo, rungs, holdMillis);
         }
 
         private static float F(JToken t, string path, string lo, string hi)

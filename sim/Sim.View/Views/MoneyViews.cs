@@ -42,14 +42,35 @@ namespace Sim.View.Views
         }
     }
 
-    /// <summary>Buy land from the Menu: each parcel for sale with its price and Show (ADR 0043 §4).</summary>
+    /// <summary>
+    /// Your land, from the Menu (ADR 0101 §13, spec 008 §3.5): <b>Yours</b>, everything you own (inherited land that can never be sold, then each
+    /// parcel you bought, with <b>Show</b> and <b>Sell</b>, which asks with a hold card), and <b>For sale</b>, the parcels you can buy. Selling lives
+    /// only here: a field's own sheet has no Sell.
+    /// </summary>
     public static class LandsSheet
     {
-        public static SheetVm Build(ViewContext ctx)
+        public const string ForSale = "sale";
+
+        public static SheetVm Build(ViewContext ctx, string tab = null)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            bool sale = tab == ForSale;
+            var vm = new SheetVm { Icon = "land", Title = s.Get("lands.title"), Subtitle = s.Get(sale ? "lands.subtitle" : "lands.subtitleYours") };
+            vm.Tab = sale ? "tab:sale" : "tab:yours";
+            vm.Tabs = new List<ActionVm>
+            {
+                ActionVm.Open("tab:yours", s.Get("lands.tabYours"), new SheetRequest("Lands", 0)),
+                ActionVm.Open("tab:sale", s.Get("lands.tabSale"), new SheetRequest("Lands", 0, ForSale)),
+            };
+            if (sale) ForSaleRows(ctx, vm); else YoursRows(ctx, vm);
+            return vm;
+        }
+
+        private static void ForSaleRows(ViewContext ctx, SheetVm vm)
         {
             Simulation sim = ctx.Sim;
             GameDefs defs = sim.Config.Game;
-            var vm = new SheetVm { Icon = "land", Title = ctx.Strings.Get("lands.title"), Subtitle = ctx.Strings.Get("lands.subtitle") };
             foreach (Parcel p in sim.State.Land.Parcels)
             {
                 if (p.Owned) continue;
@@ -62,9 +83,92 @@ namespace Sim.View.Views
                 vm.Lines.Add(line);
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("lands.none");
-            return vm;
+        }
+
+        private static void YoursRows(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var s = ctx.Strings;
+            long acres = 0, market = 0;
+            foreach (Parcel p in sim.State.Land.Parcels)
+                if (p.Owned) { acres += defs.Map.Parcels[p.Id].Tiles.Count; market += LandRules.ParcelPrice(sim, p); }
+            vm.Lines.Add(new LineVm(s.Get("lands.own"), s.Plural("land.acres", acres), "landTotal", 0) { Icon = "land" });
+            vm.Lines.Add(new LineVm(s.Get("lands.market"), ctx.Fmt.Coins(market), "landTotal", 0));
+            long onLand = LoansOnLand(sim);
+            if (onLand > 0) vm.Lines.Add(new LineVm(s.Get("lands.loans"), ctx.Fmt.Coins(onLand), "landLoans", 0));
+
+            vm.Lines.Add(LineVm.Header(s.Get("lands.inherited")));
+            vm.Lines.Add(new LineVm(s.Get("lands.inheritedNote"), null));
+            foreach (Parcel p in sim.State.Land.Parcels) if (p.Owned && p.Protected) vm.Lines.Add(Row(ctx, p, sellable: false));
+            bool any = false;
+            foreach (Parcel p in sim.State.Land.Parcels)
+            {
+                if (!p.Owned || p.Protected) continue;
+                if (!any) vm.Lines.Add(LineVm.Header(s.Get("lands.bought")));
+                any = true;
+                vm.Lines.Add(Row(ctx, p, sellable: true));
+            }
+            if (!any) vm.Lines.Add(new LineVm(s.Get("lands.noneBought"), null));
+        }
+
+        private static LineVm Row(ViewContext ctx, Parcel p, bool sellable)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var s = ctx.Strings;
+            ParcelDef d = defs.Map.Parcels[p.Id];
+            int tile = d.Tiles[0];
+            string soil = s.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
+            string held = Held(ctx, p.Id);
+            string note = sellable ? s.Get("lands.boughtWhen", "when", ReportSheet.PeriodName(ctx, p.AcquiredAt / sim.Clock.SecondsPerSeason), "held", held) : held;
+            var line = new LineVm(s.Get("lands.parcel", "soil", soil, "acres", s.Plural("land.acres", d.Tiles.Count)), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
+            {
+                Icon = "land", Note = note,
+                Action = ActionVm.Open("show:" + tile, s.Get("action.show"), new SheetRequest("ShowTile", tile)),
+            };
+            if (sellable)
+            {
+                string key = d.Id;
+                long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, p), defs.Land.QuickSaleFactor));
+                line.Also = line.Action;
+                line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
+            }
+            return line;
+        }
+
+        /// <summary>What's on a parcel: crops growing, buildings, or "empty".</summary>
+        private static string Held(ViewContext ctx, int parcelId)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var parts = new List<string>();
+            int crops = 0;
+            foreach (int t in defs.Map.Parcels[parcelId].Tiles)
+                if (sim.State.Farm?.CropOn(t) != null) crops++;
+            if (crops > 0) parts.Add(ctx.Strings.Get("lands.crops", "n", ctx.Fmt.Integer(crops)));
+            var counts = new SortedDictionary<string, int>();
+            foreach (Building b in sim.State.Land.Buildings)
+            {
+                if (b.TileId < 0 || sim.State.Land.Tiles[b.TileId].ParcelId != parcelId) continue;
+                string name = ctx.Strings.Get(defs.Buildings[b.Def].NameKey);
+                counts[name] = counts.TryGetValue(name, out int n) ? n + 1 : 1;
+            }
+            foreach (KeyValuePair<string, int> kv in counts) parts.Add(kv.Value > 1 ? kv.Value + " × " + kv.Key : kv.Key);
+            return parts.Count == 0 ? ctx.Strings.Get("lands.empty") : string.Join(" · ", parts);
+        }
+
+        /// <summary>What you owe on secured loans, the loans the land answers for.</summary>
+        public static long LoansOnLand(Simulation sim)
+        {
+            long owed = 0;
+            if (sim.State.Credit == null) return 0;
+            foreach (Loan l in sim.State.Credit.Loans)
+                if (l.IsOpen && l.BusinessId == 0 && sim.Config.Game.Credit.Lenders[l.Lender].Secured) owed += CreditRules.OwedNow(sim, l);
+            return owed;
         }
     }
+
 
     /// <summary>
     /// Money and loans (ADR 0043 §5, spec 019 §3.9): opens on *This season* (earned, spent, profit, why your cash moved differently,

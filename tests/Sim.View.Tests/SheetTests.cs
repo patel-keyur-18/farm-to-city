@@ -38,7 +38,7 @@ namespace Sim.View.Tests
             Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45.0 / 100"));
             Assert.That(Action(sheet, "sow").Opens.Value.Kind, Is.EqualTo("Sow"));
             Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(86));
-            Assert.That(sheet.Actions.Any(a => a.Id == "sellParcel"), Is.False, "the inherited land can never be sold");
+            Assert.That(sheet.Actions.Any(a => a.Id.StartsWith("sellParcel")), Is.False, "the inherited land can never be sold");
             Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 84).Lines.Single(l => l.Label == "Irrigation").Value, Is.EqualTo("Rain-fed"));
         }
 
@@ -116,8 +116,7 @@ namespace Sim.View.Tests
             Assert.That(rich.Execute(buy).Accepted, Is.True);
             SheetVm bought = FieldSheets.ForTile(ViewKit2.Context(rich), 82);
             Assert.That(bought.Subtitle, Is.EqualTo("Land you bought"));
-            Assert.That(Action(bought, "sellParcel").Enabled, Is.True);
-            Assert.That(Action(bought, "sellParcel").Kind, Is.EqualTo(ActionKind.Danger));
+            Assert.That(bought.Actions.Any(a => a.Id == "sellParcel"), Is.False, "selling lives in Menu → Your land (ADR 0101 §13)");
         }
 
         [Test]

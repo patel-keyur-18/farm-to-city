@@ -201,6 +201,9 @@ namespace Sim.View.Views
         /// <summary>A button on the row itself (the store's Sell per good), or null.</summary>
         public ActionVm Action { get; internal set; }
 
+        /// <summary>A second button on the row, drawn before <see cref="Action"/> (Your land's Show beside Sell), or null.</summary>
+        public ActionVm Also { get; internal set; }
+
         /// <summary>A sheet a tap on the row opens (a good's row opens the good), or null: then the row's tap opens its Why?.</summary>
         public SheetRequest? Opens { get; internal set; }
 

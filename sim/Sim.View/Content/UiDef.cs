@@ -102,6 +102,9 @@ namespace Sim.View.Content
         /// <summary>The crop calendar's rungs (spec 020 §3.2, §3.6b): each rung's upper bound in minutes of growing, ascending; the last rung is everything longer.</summary>
         public IReadOnlyList<int> CalendarRungMinutes { get; }
 
+        /// <summary>How long a hold card's button is held before it acts (spec 008 §3.15).</summary>
+        public int ConfirmHoldMillis { get; }
+
         public int ComeBackQuickMinMinutes { get; }
         public int ComeBackQuickMaxMinutes { get; }
 
@@ -109,8 +112,9 @@ namespace Sim.View.Content
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
             int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60,
             IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null, Fixed? hintKeepsSpoilagePerDay = null,
-            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540, IReadOnlyList<int> calendarRungMinutes = null)
+            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540, IReadOnlyList<int> calendarRungMinutes = null, int confirmHoldMillis = 1000)
         {
+            ConfirmHoldMillis = confirmHoldMillis;
             CalendarRungMinutes = new List<int>(calendarRungMinutes ?? new[] { 60, 180, 300, 540 }).AsReadOnly();
             ComeBackQuickMinMinutes = comeBackQuickMinMinutes;
             ComeBackQuickMaxMinutes = comeBackQuickMaxMinutes;

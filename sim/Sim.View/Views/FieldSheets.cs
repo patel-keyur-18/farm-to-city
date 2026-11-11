@@ -65,7 +65,6 @@ namespace Sim.View.Views
                 if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
-                if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
                 return vm;
             }
 
@@ -119,13 +118,6 @@ namespace Sim.View.Views
             if (orchard != null) OrchardSheet.AddActions(ctx, vm, orchard);
             vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get(orchard != null ? "orchard.clearCrop" : "action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
             return vm;
-        }
-
-        private static ActionVm SellParcelAction(ViewContext ctx, Parcel parcel)
-        {
-            string key = ctx.Sim.Config.Game.Map.Parcels[parcel.Id].Id;
-            long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(ctx.Sim, parcel), ctx.Sim.Config.Game.Land.QuickSaleFactor));
-            return ActionVm.Checked(ctx, "sellParcel", ctx.Strings.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
         }
 
         private static SheetVm Unowned(ViewContext ctx, Tile tile, Parcel parcel)
