@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 18** (statements, the finance hub, milestones and the Phase 2 playtest; planned 26 Apr – 2 May 2027, length and points set at its plan check): **plan check in progress** (gaps brought to the owner one per message before any code). Sprint 17 is done and merged (PR #23; device check passed 2026-11-10: main p95 5.09 ms, GPU p95 8.72 ms; ADR 0100 accepted) |
-| Branch with latest work | `sprint/18-statements-and-playtest` (from `main` after PR #23): Sprint 17's close recorded; the Sprint 18 plan check |
-| Last updated | 2026-11-10 |
+| Sprint | **Sprint 18** (money screens, confirm cards, Your land, the playtest town; 26 Apr – 9 May 2027, 2 weeks, 36 points, ADR 0101): **plan check done 2026-11-11** (G1–G11 and the owner's two requests closed one per message); **the plan is for the owner's approval**; no code yet. Sprint 19 (the Phase 2 playtest, up to 3 weeks) planned. Sprint 17 is done and merged (PR #23; device check passed 2026-11-10: main p95 5.09 ms, GPU p95 8.72 ms) |
+| Branch with latest work | `sprint/18-statements-and-playtest` (from `main` after PR #23): Sprint 17's close; the Sprint 18 plan (ADR 0101; specs 019, 008 and 018, the GDD, `epics.md`, F14.3, F14.4, F10.2 new, `sprints.md` updated) |
+| Last updated | 2026-11-11 |
 
 ## Done so far
 
@@ -205,6 +205,8 @@
 
 ## In progress
 
+**Sprint 18 plan check done (2026-11-11, ADR 0101), for the owner's approval.** Each gap closed one per message: *Next season, already due* missed the close's charges added in Sprints 16–17 (fixed as US-235, with each business's own charges listed outside your total); the savings deposit is warned about a day before a short close and used only with consent (a yes, or a standing *Always*), never collateral or seized (US-236); the cash flow sorted by the other side of each entry, group 2 *What you bought, sold or saved*; no new state lists, every row itemised, `retainSeasons` 8, never an *Other* row (owner: nothing flows without the player knowing); one season page with three tabs, *Your books* the last 8 closed seasons; the hub's floors and the trend in today's coins (the index recomputed from the seed); milestones in today's coins and dated from past reports; the playtest from a `VillageBot` town at the close after its third household (about day 14) on a Release build, up to 3 weeks; the Phase 2 gate split into part A (A1–A6) and part B; Sprint 18 2 weeks, 36 points, Sprint 19 the playtest. **The owner's requests (2026-11-11, folded into US-235):** confirm cards as Hay Day's (everyday one tap; card B a tap for lasting spending; card C held 1 s to sell, close or destroy; every card with its numbers), after selling 4 bought acres by one stray tap; Menu → *Your land* (Yours | For sale) with *Sell* only there, gone from the field sheet. The cards and *Your land* were sketched in a browser mockup (card C chosen); they are previewed in the game's style before code.
+
 **Sprint 17, the owner's device check passed (2026-11-10):** every check in `docs/test-checklists/s17-school-and-village.md` passed on the iPhone 13, including the town's update from schema 14 to 15, Reduced Motion, text size, notifications, the normal morning and Snapshot and Restore. Frame time (own town, Hamlet, Year 8 Spring, night, whole map): main thread p95 5.09 ms (mean 3.66, max 11.97), GPU p95 8.72 ms (mean 7.73), 60.0 fps, 0.00% over 25 ms: PASS on ADR 0094's lines. The owner accepted ADR 0100 (literacy at the Village about 45%). PR #23 merged; branch `sprint/18-statements-and-playtest` from `main`.
 
 **Sprint 17 wrap-up (2026-11-10): balance, the checklist in the Editor, the Development build.**
@@ -355,7 +357,8 @@
 
 ## Next up
 
-1. **Sprint 18 plan check:** check US-135, US-136 and US-137 (F14.3, F14.4) against spec 019, the GDD, ADRs 0078 and 0083 and the code after Sprint 17; bring each gap to the owner one per message with a recommendation; record the decisions in a plan-check ADR; set the sprint's length and points with the owner; plan the Phase 2 playtest from a town saved part-way through the Hamlet (ADR 0097: the Village takes 4–5 weeks). No code until the plan is approved.
+1. **The owner approves the Sprint 18 plan** (ADR 0101; `sprints.md` Sprint 18 and 19).
+2. Then, in `sprints.md`'s order of work: preview the confirm cards (B and C, with their numbers) and *Your land* in the game's style, then US-235 (every amount due first). Save schema 16 opens with US-137.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -375,13 +378,15 @@
 | Sprint 15b | Done: device check passed 2026-11-03; PR #21 merged |
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
 | Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
-| Sprint 18 | Plan check with the owner; approve the plan, each preview and story; device check; the Phase 2 playtest; merge the PR |
+| Sprint 18 | Plan check done 2026-11-11 (ADR 0101); approve the plan, each preview and story; device check; look at the playtest town; merge the PR |
+| Sprint 19 | Play the Phase 2 playtest (Release build, play log on, a diary line a day); the gate decision |
 
 ## Open questions (with the owner)
 
 - **The owner's requests US-219 to US-222 (2026-10-29):** planned into Sprint 15 (55 points), all 18 gaps closed with the owner (ADR 0083). Specs 008, 014, 015 and 019 approved (2026-10-30); the weather look approved and all four stories approved (2026-10-30). Open: the weather's post-processing cost on the iPhone 13 (checklist row 28; fallback: drop the saturation change).
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
+- **Phase 2 gate part B** (ADR 0101 §9): fresh players explain profit versus cash from the screens unprompted; with Phase 1's part B, before Launch.
 
 - ~~**The crop ladder** (owner, 2026-10-26).~~ Settled: spec 020 and ADR 0084 approved 2026-10-31, built as Sprint 15b, device check passed 2026-11-03.
 
@@ -400,7 +405,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 18: the plan check has started; nothing coded. Save schema is 15 (Sprint 17's); spec 019 §4 opens schema 16 with US-137. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+Sprint 18: the plan check is done (ADR 0101), awaiting the owner's approval; nothing coded. Save schema is 15 (Sprint 17's); spec 019 §4 opens schema 16 with US-137. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

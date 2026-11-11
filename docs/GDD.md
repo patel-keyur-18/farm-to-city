@@ -611,12 +611,14 @@ Each lender has a credit limit set by collateral, credit score and recent income
 - the debt-to-asset ratio
 - an emergency fund measured in seasons of costs covered
 
+Its net worth trend is in today's coins, so rising prices don't look like growth (ADR 0101). The co-op bank's **savings deposit** pays 1.5% a season; when cash would run short at a season's close, the game warns a day ahead, and takes the shortfall from the deposit only with the player's consent (a yes, or a standing *Always*); it is never collateral (ADR 0101).
+
 **Wealth milestones** mark progress without telling players what to do: a toast and a list, never a reward (ADR 0078). At rupee scale (ADR 0008):
 
 - first 1 lakh coins of savings (cash and deposit, less what you owe)
-- net worth double the inherited estate
+- net worth double the inherited estate, in today's coins
 - first rental income
-- debt-free
+- debt-free (the last loan repaid, never by a foreclosure's write-off)
 - passive income covering living costs
 
 ## Events, disasters and town history
@@ -784,7 +786,7 @@ The map is the home screen, and any lever is at most three taps away. The UI its
 - Layouts support phone aspect ratios from 16:9 to 21:9, 4:3 tablets, and notch and home-indicator safe areas.
 - Touch targets are at least 44 pt. Every number has a *Why?* in plain words (causes and their effect, never raw factors): tap the **?** beside it (ADR 0043, ADR 0044). A sheet opened from another has a back button. Text size is 80%, 100% or 125%; sounds play only for what happens in the town, never for a tap.
 - Notifications group by importance: urgent (cash, safety), decisions, then information.
-- No decision is ever timed. Big decisions show their consequences before confirming.
+- No decision is ever timed. Big decisions show their consequences before confirming (ADR 0101): everyday play is one tap, as in Hay Day; spending on something that lasts asks with a card of its numbers; selling, closing or destroying something asks with a card held for a second ("This can't be undone"). Your land, with selling it, is in the Menu, never on a field's sheet.
 
 **Accessibility.** Colour-blind-safe overlay palettes, scalable text, reduced-motion mode, haptic feedback that can be switched off, and full play without audio.
 
@@ -1134,7 +1136,7 @@ flowchart TB
 | --- | --- | --- |
 | 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Part A, on the owner's solo playtest week (ADR 0047): a reason to return on at least 4 of days 2–7, notification returns at sensible times, the Hamlet on day 5–9, no blocker, the release candidate and CI passing. Part B, before Launch at the latest: fresh players come back on day 2 and day 3 unprompted (2 of 3) |
-| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | The Village in 4–5 weeks using credit (about 8 saving) for the balancer's bots, any order of its three goals reachable (ADR 0097); the owner's playtest from the Hamlet to the Village; players can explain profit versus cash (ADR 0077) |
+| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | Part A, on the owner's playtest from a town saved part-way through the Hamlet (ADR 0101): the bots reach the Village in 4–5 weeks using credit (about 8 saving), any order of its three goals (ADR 0097); the owner reaches it within 3 weeks of the saved town; a reason to return each day; no blocker; the owner explains profit versus cash from the screens; build health. Part B, before Launch: fresh players explain profit versus cash unprompted |
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle | 4 weeks of play; the balancer finds no exploits |
 | 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
 | 5 · Polish | Localisation, accessibility, Blender art pipeline; store release only if the owner decides | Owner's call |

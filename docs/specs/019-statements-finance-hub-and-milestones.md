@@ -1,6 +1,6 @@
 # 019. Your statements, the finance hub and wealth milestones
 
-- Status: Approved (2026-10-27, ADR 0078; G1–G8 closed with the owner, §10). Amended 2026-10-29 (ADR 0083, G9–G14): Money and loans opens on *This season*; **re-approved by the owner 2026-10-30**
+- Status: Approved (2026-10-27, ADR 0078; G1–G8 closed with the owner, §10). Amended 2026-10-29 (ADR 0083, G9–G14): Money and loans opens on *This season*; **re-approved by the owner 2026-10-30**. Amended 2026-11-11 by the Sprint 18 plan check (ADR 0101, G15–G21 in §10): every amount due, the deposit only with consent, the cash flow groups, itemised statements, the hub's floors and today's coins, milestones from past reports
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Assets and wealth (net worth, the personal finance screen, wealth milestones, asset classes); Learning layer (reports every player can read)
@@ -39,11 +39,12 @@ At each season close the founder's ledger (spec 005) is reported as three statem
 | Statement | Lines | Source |
 | --- | --- | --- |
 | Profit and loss | As spec 005's season report now (money from harvests, what farming cost, did the farm make money, other money, the family's living, interest, losses, what's left) | Unchanged |
-| Cash flow | **Your work** (sales, wages paid, living, interest), **What you bought or sold** (land, buildings, animals, machines, cash put into or taken from businesses), **Borrowing** (loans taken, repaid); opening and closing cash | The ledger's cash postings by account group |
+| Cash flow | **Your work** (every income and expense, gifts to the village and interest paid and earned included; inputs into the store, wages and living paid ahead, the supermarket's payment), **What you bought, sold or saved** (land, buildings, machines, trees and orchards, animals, cash put into or taken back from businesses, the savings deposit on its own row), **Borrowing** (loans taken, principal repaid, foreclosure payments); opening and closing cash (ADR 0101 §3) | Each cash posting by the other side of its entry; a sale's whole price where the thing was bought |
 | Balance sheet | **What you own** (cash, deposit, produce and inputs in store, land at market, buildings and machines at book, animals, businesses at equity, owed to you, each valued as net worth values it); **What you owe** (each loan); **Net worth** | `NetWorthSnapshot` (ADR 0044), at the close |
 
 - Interest is under *Your work* (a cost of running the farm), principal under *Borrowing*.
-- Past seasons: the last 8 kept (2 game years), each opening its three statements.
+- Past seasons: every report is kept (as since spec 005); the screens show the last 8 (2 game years), each opening its three statements (ADR 0101 §4).
+- **Nothing moves without the player seeing it** (owner, ADR 0101 §4): a row is a kind of movement; its *Why?* lists every movement behind it (day, what, from or to whom, amount); the ledger keeps 8 seasons of entries; there is never an *Other* row; the close's own movements are on its report and the away card. The close's payments belong to the new season, so each statement's opening and closing cash are *Your season*'s.
 - **Against last year (G2).** The founder's season report shows each line beside **the same season last year** ("Winter: 46,200 · last Winter 31,900"), with a *Why?* naming the biggest change; before a year has passed it says "First Winter". A farm's seasons differ too much to compare with the season before; a written plan stays with businesses (spec 016).
 
 ### 3.2 The finance hub (§10 G3)
@@ -52,13 +53,13 @@ Money and loans becomes the hub (G3: no new screen, reached from the cash pill a
 
 | Row | Formula | Shown as |
 | --- | --- | --- |
-| Net worth's trend | Net worth at each of the last 8 closes and now | A small line chart; its *Why?* names the biggest change each season |
+| Net worth's trend | Net worth at each of the last 8 closes and now, **restated in today's coins** by the price index at each close (recomputed from the town's seed, ADR 0101 §6) | A small line chart; its *Why?* names the biggest change each season, in today's coins and as counted then |
 | What your wealth is made of | Each asset class's share of what you own | A pie (as the household budget's), legend with amounts |
 | Debt to assets | What you owe ÷ what you own | Percent; under 30% "comfortable", 30–60% "stretched", over 60% "risky" (rural lending norms) |
-| Emergency fund | (cash + deposit) ÷ a season's unavoidable costs (living, wages, loan payments due, upkeep) | Seasons, one decimal ("1.4 seasons"); under 1 in amber |
-| Passive income | Passive income a season ÷ the family's living a season (§3.4) | Percent; 100% is "passive income covers your living" |
+| Emergency fund | (cash + deposit) ÷ everything the next close takes from your cash (§3.9's *Next season, already due*), living never under the basic plan (ADR 0101 §1, §6) | Seasons, one decimal ("1.4 seasons"); under 1 in amber |
+| Passive income | Passive income a season ÷ the family's living a season at the plan you're on, never under the basic plan (§3.4) | Percent, never under 0%; 100% is "passive income covers your living" |
 
-Each row has a *Why?*; the accountant advisor (spec 018) may add one line.
+Each row has a *Why?*; the accountant advisor (spec 018) may add one line. The accountant's debt note fires at the risky band (60%), reading the same number from `finance.json` (ADR 0101 §6).
 
 ### 3.3 Rounding
 
@@ -66,11 +67,16 @@ Percents are whole, rounded down; seasons to one decimal, rounded down (an emerg
 
 ### 3.4 Passive income (§10 G5)
 
-Income that comes without the founder's own labour in a season (G5): rent received from family houses and from your godown in the mandi town (spec 013 §3.4, owner 2026-11-03), interest on the deposit, and the profit of businesses run by a hired worker (not ones you run). The farm, even with hands, isn't counted (you still decide and sow).
+Income that comes without the founder's own labour in a season (G5): rent received from family houses and from your godown in the mandi town (spec 013 §3.4, owner 2026-11-03), interest on the deposit, and the season's net profit of each business with a hired worker at the close (not ones you run), a loss counting against it (ADR 0101 §6). The farm, even with hands, isn't counted (you still decide and sow). The family's living is the plan you're on, never under the basic plan: a family eating from the store has no cash living cost, and the ratio would have no meaning.
 
 ### 3.5 A savings deposit (§10 G4)
 
 The co-op bank takes deposits, as real rural co-op banks do (G4): **Put in** / **Take out** any amount, any time, from Money and loans; interest 1.5% a season (about 6% a year, a rural savings rate) added to the deposit at each close, so it compounds; it counts in the emergency fund and passive income, never as collateral (it's yours to take). Inflation (2–6% a year) is shown beside it, so the player sees cash in hand lose value and the deposit roughly keep it.
+
+Account **1020 Bank deposit**; its interest goes to **4400 Interest on savings** (*Other money*, not farm profit). **When cash runs short at the close** (ADR 0101 §2, owner):
+- At 00:00 of a season's last day, if the close would come up short, an alert (and, while away, a notification held to the end of quiet hours) says what's short and what would go unpaid, with **Pay from my savings**, **Sell from the store**, **People** (let a hand go) and **Borrow**. Something done that day that makes it short again raises it again.
+- Nothing leaves the deposit without consent: a yes covers that close; the savings sheet's standing choice *If cash runs short at the close* is **Ask me** (default) or **Always pay from my savings**. With consent the shortfall comes from the deposit in the close's order and the report and away card say so; without it the close runs as before and the deposit is untouched.
+- Never collateral (lenders' room ignores it) and never seized at a foreclosure.
 
 ### 3.6 Wealth milestones (§10 G6)
 
@@ -79,14 +85,16 @@ The GDD's five (G6), each once: a toast and a line in Money and loans' *Mileston
 | Milestone | When |
 | --- | --- |
 | First lakh saved | Cash + deposit − what you owe reach 1,00,000 at a close (borrowed cash isn't savings) |
-| Twice what you inherited | Net worth reaches twice its first value (the inherited estate) |
+| Twice what you inherited | Net worth reaches twice the inherited estate **in today's coins** (the net worth of a fresh game from the town's seed and content, stored once; ADR 0101 §7) |
 | First rent | The first rent received |
-| Debt-free | Every loan repaid, after having had one |
+| Debt-free | Your own last loan closes by being repaid, after having had one (a foreclosure's write-off doesn't count; businesses' loans are on their books) |
 | Passive income covers your living | The passive income ratio ≥ 100% at a close |
+
+*First lakh saved* stays 1,00,000 as counted: the lakh is its name. Several at once share one toast. An older town's first close after the update records each milestone its kept reports show was reached, with the season it happened, in one toast ("4 milestones from your past seasons"); what the reports can't show waits for its moment (ADR 0101 §7).
 
 ### 3.7 Other GDD reports (§10 G7, G8)
 
-- **The year-end review (G7).** A short sheet after each Winter close, *Your year*: the year's farm profit against last year's, net worth's change, the best and worst season, the biggest cost line; its "what to try next" is the accountant's one line. Best decision and costliest mistake (GDD) need a decision record: Phase 3 with the Chronicle.
+- **The year-end review (G7).** A short sheet after each Winter close (after the season page, before Dadi's letters and the Codex toast; ADR 0101 §5), *Your year*: the year's farm profit against last year's, net worth's change, the best and worst season, the biggest cost line; its "what to try next" is the accountant's one line. Best decision and costliest mistake (GDD) need a decision record: Phase 3 with the Chronicle.
 - **The workforce report (G8).** The season report gets a *Your people* section: wages paid against the market wage, who left and why, each worker's output in words and stars, employer reputation's change, each with a *Why?*; the full workforce report with supervisors in Phase 3.
 
 ### 3.8 Processing order
@@ -103,7 +111,7 @@ Money and loans opens on the **This season** tab, a switch at its top: **This se
 | **Spent** | Seed and planting; fertiliser and sprays; each hand's wage by name; day labourers; feed; the vet; the family's living; health; rent you pay; interest; selling costs (commission, transport); wear on buildings and machines | The ledger's expense accounts as costs are used up (G10); a hand's wage by the `hand:` reference of its accrual |
 | **Profit this season** | Earned − spent: the season report's *what's left*, so it matches the report at the close; its *Why?* names the farm's own profit (the Hamlet gate's) inside it | |
 | **Why your cash moved differently** | Paid ahead (wages and living for the rest of the season, inputs into the store); wear (a cost, no cash); paid back on loans ("paying back what you borrowed, not a cost"); borrowed; bought and still yours, one row each: buildings, animals, trees, land, machines, put into your businesses ("You still own it: it's in *Your wealth*, not a cost"); sold. Cash at the season's start + profit + these = cash now | The ledger's cash postings to prepaid, asset and loan accounts (G10, G14) |
-| **Next season, already due** (this season only) | Each hand's renewal by name (the wage less the house, spec 014 §3.6); each loan's payment as interest and principal; the family's living; rent you pay; all at today's prices (the *Why?*: "the close's price index may add a little"). Then "Cash now covers it", or in amber "Short by 8,400: Ravi's renewal would lapse. Sell from the store, or borrow on *Your wealth*", opening the Store | What the close would take if nothing changed (G12). A business's worker is paid by the business; seed and feed are bought as you go: neither is counted |
+| **Next season, already due** (this season only) | **Everything the close takes from your cash, in its order** (ADR 0101 §1): each loan's payment as interest and principal; the family's living; each hand's renewal by name (the wage less the house, spec 014 §3.6); the warehouse's rent; water (power, the canal's fee, drip's upkeep); the school's upkeep; each machine's lease, diesel and upkeep; all at today's prices (the *Why?*: "the close's price index may add a little"). Then "Cash now covers it", or in amber "Short by 8,400: Ravi's renewal would lapse. Sell from the store, or borrow on *Your wealth*", opening the Store | What the close would take if nothing changed (G12). Seed and feed are bought as you go and aren't counted. Each business's own charges (its worker's wage, loan payment, pitch's rent) are listed below the total with whether its cash covers them, outside your total: the business pays them. Only cash counts as cover; when the deposit could cover the gap it says so, with **Pay from my savings** (§3.5) |
 
 *Last season* shows the same blocks, finished, without *next season due*, and ends with **See the season report** (spec 005's report until US-137 makes it *Your books*). The same season a year earlier stays with *Your books* (G2).
 
@@ -116,7 +124,7 @@ Money and loans opens on the **This season** tab, a switch at its top: **This se
 
 **New state, Sprint 15** (save schema 12, ADR 0083): the sales record (§3.9), on `FinanceState`.
 
-**New state, Sprint 18** (save schema 16; ADR 0083 and ADR 0084 each shifted the schemas by one): the founder's season statements (the last 8: cash flow by group, balance sheet lines), net worth at each close (the last 8), the deposit's balance (an account in the ledger: 1020 Bank deposit), milestones reached (id, at).
+**New state, Sprint 18** (save schema 16; ADR 0083 and ADR 0084 each shifted the schemas by one; ADR 0101 §4): no new lists. Each season's report gains its cash flow rows by group, its *Your people* rows (wages against the market wage, who left and why, output, reputation then and its change) and the deposit as a line of net worth; the deposit's balance is ledger account 1020 and its interest account 4400; milestones reached (id, season); the inheritance's value; the standing choice *If cash runs short at the close* and a consent for this close. `finance.json`'s `retainSeasons` goes from 4 to 8.
 
 ## 5. Commands and events
 
@@ -124,12 +132,16 @@ Money and loans opens on the **This season** tab, a switch at its top: **This se
 | --- | --- | --- | --- |
 | `Deposit` | amount | `InsufficientFunds`, `BelowMinimum` (100) | Cash → 1020 |
 | `Withdraw` | amount | `InsufficientDeposit` | 1020 → cash |
+| `SetSavingsCover` | ask or always | — | The standing choice (§3.5) |
+| `CoverFromSavings` | — | `NothingShort` | Consent for this close: its shortfall from 1020, in the close's order (§3.5) |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
 | `InterestEarned` | amount | Away card, statements |
 | `MilestoneReached` | id | Toast, play log, the hub |
 | `YearReviewed` | year | The *Your year* sheet (G7) |
+| `CloseShortAhead` | short, first unpaid | The alert and the notification a day before the close (§3.5) |
+| `CoveredFromSavings` | amount | The season report, the away card |
 
 ## 6. Decision card
 
@@ -183,8 +195,9 @@ The Your wealth tab (US-135, Sprint 18):
 
 Borrow: a sheet of lenders (pictured rows, each with its limit, rate and Borrow).
 Savings deposit: balance, interest this season, inflation beside it; Put in / Take out amounts.
-Your books: this season so far and past seasons, each opening three tabs as the mill's:
-  Profit and loss | Cash flow | Balance sheet, each line beside the same season last year.
+Your books: the last 8 closed seasons (season, profit, cash at the end, net worth), each opening
+  the season page (ADR 0101 §5): Profit and loss | Cash flow | Balance sheet, each line beside the
+  same season last year. No "this season so far": that is Your season; now is Your wealth.
 ```
 
 ## 8. Acceptance criteria
@@ -199,14 +212,20 @@ Your books: this season so far and past seasons, each opening three tabs as the 
 | AC-6 | Deposit and withdraw move cash and 1020; interest at the close; never collateral | `DepositTests.Interest` |
 | AC-7 | Each milestone fires once, by its condition, saved and replayed | `MilestoneTests.Once` |
 | AC-8 | After each Winter close, *Your year* compares with last year | `MoneyViewTests.YearReview` |
-| AC-9 | A schema-15 save loads into 16 with no deposit, statements from the next close, the trend from its net worth | `MigrationTests.Schema15_Statements` |
+| AC-9 | A schema-15 save loads into 16 with no deposit; its past seasons open with their profit and loss and balance sheet at once, the trend from their net worth, the cash flow rows and *Your people* from the next close (ADR 0101 §4) | `MigrationTests.Schema15_Statements` |
 | AC-10 | The season report's *Your people* section lists wages against the market, who left and why, output and reputation's change | `MoneyViewTests.YourPeople` |
 | AC-11 | Money and loans opens on *This season*; *Your wealth* holds net worth, land, businesses, owed, loans and borrowing | `MoneyViewTests.OpensOnSeason` |
 | AC-12 | Earned − spent equals the season report's *what's left* at the close; cash at the start + profit + every *why your cash moved* line = cash now, to the coin; bought assets and loan principal are never under *Spent* | `MoneyViewTests.Season_Reconciles` |
 | AC-13 | Each good sold has its own line, summing the sales record, with where it sold in its *Why?*; orders have their own line | `MoneyViewTests.Season_ByGood` |
-| AC-14 | *Next season, already due* equals what the next close takes when nothing else changes (hands' renewals less the house, loan payments, living, rent); the cover line warns when cash is short | `MoneyViewTests.NextSeasonDue` |
+| AC-14 | *Next season, already due* equals everything the next close takes from your cash when nothing else changes (loans, living, hands' renewals less the house, the warehouse's rent, water, the school, machines; ADR 0101 §1); businesses' own charges are listed outside the total; the cover line warns when cash is short | `MoneyViewTests.NextSeasonDue` |
 | AC-15 | *Last season* shows the finished season's figures (equal to its report) without *next season due*; before the first close only *This season* shows | `MoneyViewTests.LastSeason` |
 | AC-16 | A schema-11 save loads into 12 with an empty sales record that fills from the next sale, and round-trips | `MigrationTests.Schema11_Sales` |
+| AC-17 | Nothing leaves the deposit without consent: with *Ask me* and no yes, a short close leaves 1020 untouched; with a yes or *Always*, the shortfall comes from it in the close's order and the report says so | `DepositTests.Consent` |
+| AC-18 | When the close would come up short, `CloseShortAhead` is raised at 00:00 of the season's last day and again if it becomes short later that day; the notification never falls in quiet hours | `DepositTests.Warning` |
+| AC-19 | Every cash movement of every season of every bot run falls in one cash flow row; the rows add to the closing cash to the coin; each row's *Why?* lists its movements | `StatementTests.NothingUnsorted` |
+| AC-20 | Passive income and the emergency fund use living never under the basic plan; a business's loss counts against passive income; the ratio never shows under 0% | `HubTests.Floors` |
+| AC-21 | The trend restates past net worth in today's coins with the index recomputed from the seed, equal to the index the town had at each close | `HubTests.TrendTodaysCoins` |
+| AC-22 | An older town's milestones are recorded from its kept reports with their real seasons, in one toast; *Debt-free* never fires on a write-off | `MilestoneTests.FromReports` |
 
 ## 9. Balancing hooks
 
@@ -244,6 +263,16 @@ Your books: this season so far and past seasons, each opening three tabs as the 
   - **Next season, already due:** a bullet loan's row says "interest" until its last close, then "interest and principal". *Rent you pay* has no source yet (nothing posts to 5300 until spec 017's pitch in Sprint 16), so it never shows. The due total's *Why?* lists the supermarket's payment coming at 6:00 but doesn't count it, because it may come after the close.
   - **Found in the end-of-sprint Editor pass (2026-10-30):** a migrated town's *Last season* showed "Land bought: still yours −85,932" and "Other changes +85,932", from the cattle acre the schema 8 migration put on the books (land against opening equity, no cash). An entry that moves neither cash nor profit can't explain a gap between them, so it's left out (`SeasonBook.MovesCashOrProfit`; asserted in `MoneyViewTests.Season_Reconciles`, which fails without the fix).
   - **Golden replays 003, 004 and 005** were shown to hold with the record and the season-start entries left out of the hash, then re-pinned once with them in (005 too: the season-start entries are in every game's hash). The old Money and loans line *This season so far* (farm only) is gone: *Your season* replaces it.
+
+- **Sprint 18 plan check (2026-11-11, ADR 0101; each closed with the owner one per message):**
+  - **G15. Every amount due.** *Next season, already due* lists everything the close takes (it missed Sprints 16–17's charges); businesses' own charges below, outside the total (§3.9). US-235.
+  - **G16. The deposit when cash runs short.** A warning a day before the close with its levers; nothing taken without consent (a yes, or the standing *Always*); never collateral or seized; interest to 4400 (§3.5). US-236.
+  - **G17. The cash flow groups.** By the other side of each entry; group 2 *What you bought, sold or saved* (§3.1).
+  - **G18. What's kept.** No new lists; every report kept, 8 shown; itemised rows, `retainSeasons` 8, no *Other* row (owner: "nothing should flow without the player's knowledge") (§3.1, §4).
+  - **G19. Where they're seen.** One season page with three tabs; *Your books* lists 8 closed seasons, no "this season so far" (§7).
+  - **G20. The hub's numbers.** The debt note at 60%; living's floor; a business's loss; the emergency fund on §3.9's list; the trend in today's coins (§3.2, §3.4).
+  - **G21. Milestones.** Today's coins for the inheritance; dated from past reports; debt-free by repaying (§3.6).
+  - The note above that *rent you pay* has no source is out of date: the warehouse's rent (spec 013, Sprint 16) is one, and §3.9 lists it.
 
 ## 11. Cut first
 

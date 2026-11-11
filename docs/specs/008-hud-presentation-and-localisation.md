@@ -1,6 +1,6 @@
 # 008. HUD, presentation and localisation
 
-- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows; amended by ADR 0083 (2026-10-29): the working day on the map, the weather on the map and its sound, the developer panel's *Weather look* (approved 2026-10-30); amended by spec 020 (ADR 0084): the sow sheet lists this season's crops only, §3.5 and §3.7; the crop calendar on its own sheet; the time card's words
+- Status: Approved (2026-10-18), all eight open questions answered as recommended (§10); Sprint 7 planning review decisions in §10 (ADR 0043); Sprint 7 device review in §10 (ADR 0044); amended by spec 012 (ADR 0056, 0060; Phase 2): the shed sheet, the fodder field sheet, the Care and net worth *Why?* rows; amended by ADR 0083 (2026-10-29): the working day on the map, the weather on the map and its sound, the developer panel's *Weather look* (approved 2026-10-30); amended by spec 020 (ADR 0084): the sow sheet lists this season's crops only, §3.5 and §3.7; the crop calendar on its own sheet; the time card's words; amended by ADR 0101 (owner, 2026-11-11): confirm cards (§3.15) and *Your land* in the Menu, *Sell parcel* gone from the field sheet
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: UI/UX and screens; Art, audio and feel (Motion and feedback); Learning layer (reports); Offline play and saves (While you were away); Localisation
@@ -110,7 +110,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Menu | The Menu button | One row per section with its button (§3.3) |
 | Forecast | The time strip | One row per shown weather run over 72 h (spec 001 §3.6) |
 | Alerts | The **!** button | One row per alert with its action (§3.10) |
-| Field | A farm tile | Spec 002 §7 field panel; a growing or ready crop's panel (spec 003 §7) with Care, Water, Weather, pest risk, time left or "ready · spoils in N h" | Sow, Spray, Harvest, Clear, Sell parcel |
+| Field | A farm tile | Spec 002 §7 field panel; a growing or ready crop's panel (spec 003 §7) with Care, Water, Weather, pest risk, time left or "ready · spoils in N h" | Sow, Spray, Harvest, Clear (*Sell parcel* moved to *Your land*, ADR 0101 §13) |
 | Sow | Field → Sow | The crop-calendar card (§3.7), seed (certified with stock, or saved with age), fertiliser (none, compost, chemical with stock), the expected yield and the cost, what is bought | Sow |
 | Garden | A bed | Spec 003 §7 | Sow (radish, spinach, coriander), Pick |
 | Tree | A slot | Spec 003 §7 plus payback (US-049) | Plant (a sapling list with costs), Pick, Remove |
@@ -122,7 +122,8 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Hiring and hand | Menu → People, or a hut | Spec 006 §7 | Hire, Interview, Offer, Renew, Let go, Orders, Build the hand's hut |
 | Money and loans | Cash, or Menu | Cash, net worth and this season so far; the last season's report (**See report**); one row per loan (owed, next payment, warnings) with **Repay…** (the next payment, all of it, **Ask for more time**); one row per lender (limit, rate) with **Borrow…**: amounts (a quarter, a half, three quarters or all of the limit, rounded down to 1,000, at least the minimum loan), then terms with their payments and total interest (ADR 0043 §5) | TakeLoan, RepayLoan, RestructureLoan |
 | Season report | Each live season close, Money and loans, the away card | §3.8 | — |
-| Buy land | An unowned parcel, or Menu → Buy land → Show | Spec 002 §7 buy sheet | Buy, **Buy with a bank loan** (ADR 0028) |
+| Buy land | An unowned parcel, or Menu → Your land → For sale → Show | Spec 002 §7 buy sheet | Buy, **Buy with a bank loan** (ADR 0028) |
+| Your land | Menu → Your land (was *Buy land*; ADR 0101 §13) | Tab **Yours**: acres owned, their value at market and loans on land (each with *Why?*); inherited land first, "can never be sold or seized"; each bought parcel with its soil, acres, when bought, what's on it, any loan on it and its value at market. Tab **For sale**: each parcel for sale with soil, acres and price | Show; Sell (card C, greyed with the reason when something on it or a loan stops the sale); Buy (card B) |
 | Settings | Menu → Settings | Spec 007 §7 plus number format, text size, reduced motion, sound, haptics (§3.13) | As spec 007 |
 
 ### 3.6 The *Why?* system
@@ -304,6 +305,18 @@ Settings live in the settings file beside the save (spec 007), never in the town
 
 Opened by holding the time strip for 3 seconds, in development builds only (`DEVELOPMENT_BUILD`, or the Editor); the code is excluded from release builds by a compile define. Buttons: +1 hour, +1 day, +1 season, jump to the away cap (`DebugAdvance`), snapshot and restore (in memory), the seed and `isAway`, the golden-replay check (ADR 0035). The number-format and motion switches and the loan button left the panel in Sprint 7: Settings and Money and loans have them (ADR 0043). The Phase 0 spike and style check are removed (ADR 0038); the spike is rebuilt on the real game at each phase end. **Weather look ▸** (ADR 0083): picks the weather the map draws, for tours and frame-time checks; look only (no command, no state), reset on leaving play.
 
+### 3.15 Confirm cards (owner, 2026-11-11, ADR 0101 §12)
+
+As Hay Day: everyday play is one tap; a lasting move asks first. Every player command is sorted into one of three kinds (`ConfirmTests.EveryCommand` fails on a command left unsorted):
+
+| Kind | Commands | The card |
+| --- | --- | --- |
+| Everyday: no card | Sow, harvest, *Collect all*, pick, sell to the trader, deliver an order, the mandi trip, buy inputs and medicine, hire labourers for the day, spray, the garden, settings and orders, cash between you, your savings and your businesses, a reference check, answers to cards | — |
+| **Tap (card B)**: spending on something that lasts | Buy land; build a family house, a hut, the school, a shed; found a business; buy, lease or hire a machine; the pump, a borewell, channels, drip; buy the godown or rent warehouse space; plant an orchard or a tree; buy an animal; take or restructure a loan; offer a season's contract; a course; an adult class | The numbers, then **Not now** (large, safe) and the action with its amount, a normal tap |
+| **Hold (card C)**: selling, closing, destroying, ending | Sell land, a machine or an animal; give a leased machine back; sell an orchard's fruit on the trees; close a business; clear a growing crop or an orchard; remove a tree; let a hand or a worker go | The numbers, "This can't be undone", then **Keep** (large, safe) and the action held for `confirmHoldSeconds` (1 s, `ui.json`) with a filling bar; a shorter press does nothing |
+
+Every card shows the numbers that decide it: what it costs or fetches, a quick sale's discount, a loan repaid first, what goes with it (a channel, a borewell, houses, a crop), and what you'd actually pay or receive. With reduced motion the hold bar fills without easing. The cards are previewed to the owner in the game's style before code.
+
 ## 4. Data
 
 **New definitions:**
@@ -407,6 +420,8 @@ Tests are in `tests/Sim.View.Tests` (new, NUnit, `dotnet test`). Layout, safe ar
 | AC-19 | The map's weather look is the current spell's (or the developer panel's pick), eased over `weatherLook` seconds; with reduced motion no layer moves and there is no glow | `WeatherLookTests.FollowsSpell`, `WeatherLookTests.ReducedMotion_Still` |
 | AC-20 | The lightning glow's timing from `ui.json` never exceeds 3 flashes a second, rises over ≥ 0.3 s and repeats no sooner than 15 s | `WeatherLookTests.Lightning_NoFlash` |
 | AC-21 | With the whole map in storm at night and in heavy rain, main-thread p95 ≤ 8.3 ms, about 60 fps, under 1% dropped on the iPhone 13 | Device checklist (`s15-chains-hr.md`) |
+| AC-22 | Every player command is everyday, tap or hold as §3.15 lists; a tap or hold action opens its card with its numbers; a hold shorter than `confirmHoldSeconds` sends nothing | `ConfirmTests.EveryCommand`, `ConfirmTests.Hold` |
+| AC-23 | *Your land* lists every owned parcel (inherited ones not sellable) and every parcel for sale; the field sheet has no *Sell parcel*; *Sell*'s card shows the quick-sale price, any loan repaid first and the cash you'd receive, equal to what `SellParcel` posts | `LandViewTests.YourLand` |
 
 ## 9. Balancing hooks
 
@@ -533,6 +548,11 @@ The owner's device run passed apart from seven points, all settled in ADR 0044:
 - **Lightning** is scheduled by `WeatherLook` (first glow 15–25 s into a storm, then every 15–25 s); the loader refuses a rise under 0.3 s or glows less than a second apart, so no tuning can make it flash. Thunder follows 1–3 s after each glow, with reduced motion too (Sound decides).
 - **Sound:** our own rain loop (8 s, seamless) and distant thunder (6 s), synthesized from seeded noise by `tools/audio/weather_sounds.py` and dedicated CC0 (`ASSETS_LICENSES.md`); the loop fades in and out with the weather (0.35 in rain, 0.55 in a storm, 0.6 in heavy rain).
 - **Frame time in the Editor** (20 s each, `FrameRecorder`): every weather keeps 60 fps, main thread about 1 ms (p95 1.1–1.4 ms), under 1% over 25 ms. The Editor's GPU timing reads about 43 ms with the weather off too, so it isn't meaningful there; the weather adds about 1.5–2 ms to it, mostly the post-processing pass. The iPhone 13 checks (storm at night, heavy rain) are in `s15-chains-hr.md`.
+
+### Sprint 18 owner requests (2026-11-11, ADR 0101)
+
+1. **Confirm cards** (§3.15): the owner sold 4 bought acres by one stray tap on *Sell parcel* (at 80% of their price); nothing had ever asked first. Hay Day's rule: everyday play one tap, lasting moves a tap card, selling or ending a hold card, every card with its numbers.
+2. **Your land** (§3.5): *Sell parcel* leaves the field sheet; Menu → *Buy land* becomes *Your land* (Yours | For sale). In the Menu, not Settings (Settings holds the app's own things), owner 2026-11-11.
 
 ## 11. Cut first
 

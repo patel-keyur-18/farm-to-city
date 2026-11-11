@@ -86,7 +86,7 @@ Every coin amount is a year-0 price that follows the price index (ADR 0034). Lif
 ### 3.5 Conflicts settled (§10 G7, G8)
 
 - **The treasury (G7).** The GDD gave the Village "the treasury"; F15.1 is Phase 3. The treasury opens with the Township (Phase 3), with taxes; the Village era row lists larger co-op loans (the bank's cap rises from 5,00,000 to 25,00,000, `lenders.json` already) and the Village businesses and shops instead.
-- **The Phase 2 exit gate (G8).** The roadmap said "a week of play"; ADR 0028 puts the Village at 2–3 weeks, and ADR 0097 measured 4–5. The gate is: the Village reached in 4–5 weeks by a competent player using credit (about 8 weeks saving), in any order of its three goals, the owner's playtest from the Hamlet to the Village, and players can explain profit versus cash.
+- **The Phase 2 exit gate (G8).** The roadmap said "a week of play"; ADR 0028 puts the Village at 2–3 weeks, and ADR 0097 measured 4–5. The gate is: the Village reached in 4–5 weeks by a competent player using credit (about 8 weeks saving), in any order of its three goals, the owner's playtest from the Hamlet to the Village, and players can explain profit versus cash. **Split as Phase 1's (ADR 0101 §9):** part A at the end of the owner's playtest from a day-14 Hamlet town (A1 the bots' pace; A2 the Village within 3 weeks; A3 a session every day; A4 no blocker; A5 profit versus cash explained from the screens at three closes; A6 build health); part B, fresh players, before Launch.
 
 ### 3.6 The Village unlock (US-102; §10 G1)
 

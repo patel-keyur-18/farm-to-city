@@ -27,7 +27,8 @@
 | S15b | 22–28 Mar 2027 (ad hoc, owner 2026-10-31) | 2 | The crop ladder: six real crops give every season a crop for about 1, 2, 4, 6–8 and 15 hours; the sow sheet shows when each is ready and what it earns an hour; a crop calendar; clearer time card; no formula changes (F02.5; spec 020, ADR 0084; save schema 13). Ad hoc: dry soil dries slower (US-233, ADR 0085). | 30 | 020, 002 (amended) | Yes |
 | S16 | 29 Mar – 11 Apr 2027 (2 weeks) | 2 | Shops, customer choice and rivals (F12.3, F12.4); irrigation, equipment, orchards and the granary (F13.2, F13.3); save schema 14 (ADR 0076, 0083, 0084). | 37 (re-pointed, ADR 0076) | — | Yes |
 | S17 | 12–25 Apr 2027 (2 weeks, ADR 0095) | 2 | The school and literacy, the Codex and advisors, the Village unlock, rival entry (F14.1, F14.2, US-102, US-122); save schema 15. | 36 (re-pointed, ADR 0095) | — | Yes |
-| S18 | 26 Apr – 2 May 2027 | 2 | Statements, the finance hub and milestones (F14.3, F14.4); Phase 2 playtest and gate review. | 18 (re-pointed, ADR 0078; length decided at its planning) | — | Yes: Phase 2 playtest build |
+| S18 | 26 Apr – 9 May 2027 (2 weeks, ADR 0101) | 2 | Every amount due, confirm cards and Your land (US-235); statements, the finance hub, the savings deposit and milestones (F14.3, F14.4); the playtest town and the Release build (F10.2); save schema 16. | 36 (ADR 0101) | — | Yes: Development build, then the Release playtest build |
+| S19 | 10–30 May 2027 (up to 3 weeks, ADR 0101) | 2 | The Phase 2 playtest from a day-14 Hamlet town, tuning and the gate decision (F10.2); Phase 3's spec writing may start alongside (docs only). | 6 + fixes | Up to 2 (Phase 3) | Fixes only, if needed |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
@@ -802,3 +803,54 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Test checklist `docs/test-checklists/s17-school-and-village.md`, every non-device check run in the Editor (done 2026-11-10); Development build (done 2026-11-10); the owner's device check with both frame-time p95s written down (passed 2026-11-10: main p95 5.09 ms, GPU p95 8.72 ms, 60 fps, 0.00% over 25 ms)
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #23 merged 2026-11-10)
+
+## Sprint 18 · 26 Apr – 9 May 2027 · Phase 2 (statements, the hub, the deposit, milestones; every amount due, confirm cards, Your land; the playtest town; 2 weeks, ADR 0101)
+
+- **Status:** Plan check done (2026-11-11, ADR 0101: G1–G11 and the owner's two requests, each closed one per message); **the plan for the owner's approval**. Sprint 17 is merged (PR #23)
+- **Branch:** `sprint/18-statements-and-playtest`, from `main` after PR #23
+- **Goal:** The money screens finished (spec 019): everything the close takes shown before it takes it; the season page with three statements, every row itemised; *Your wealth* as the hub; a savings deposit used only with the player's consent; milestones. The owner's safety requests: confirm cards as Hay Day's, and *Your land* in the Menu with *Sell* only there. A playtest town and a Release build for Sprint 19. Save schema 16 with its migration and fixture.
+- **Points:** 36 (US-235 8, US-137 10, US-135 7, US-236 5, US-136 3, US-237 3)
+- **Specs for the owner to review:** none (019 approved 2026-10-27 and re-approved 2026-10-30; 019 and 008 amended by ADR 0101)
+- **Device build:** Yes: a Development build for the checklist (`docs/test-checklists/s18-money-and-land.md`), then the Release build with the playtest town (US-237)
+- **Milestone and labels:** `Phase 2 · Hamlet & Village`; `type:feature`, `type:spec`, `type:adr`, `type:bug`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-235 | Every amount due, confirm cards, Your land | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 8 | Must | To do |
+| US-137 | Statements | [F14.3](features/F14.3-financial-statements.md) | 10 | Must | To do |
+| US-135 | Finance hub | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Must | To do |
+| US-236 | The savings deposit and the warning before the close | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Must | To do |
+| US-136 | Wealth milestones | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 3 | Should | To do |
+| US-237 | The playtest town and the Release build | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | To do |
+
+**Order of work:** the confirm cards and *Your land* previewed → US-235 (every amount due first, so the fix reaches the phone with this sprint's first build) → the season page's three tabs and *Your books* previewed → US-137 → *Your wealth* previewed → US-135 → the savings sheet and the warning card previewed → US-236 → US-136 → balance with the bots (spec 019 §9; the deposit no money loop; `StatementTests.NothingUnsorted` on every bot; the save's size with 8 seasons of entries) → the whole checklist in the Editor by scripted touch → the Development build and the owner's device check (both frame-time p95s, ADR 0094) → US-237: the playtest town shown to the owner, then the Release build. One stop for the owner's review after each story. Schema 16 grows on this branch and ships once.
+
+**If it runs over,** cut in spec 019 §11's order: *Your year*, then the trend chart (keep the number), then milestones beyond the first lakh and debt-free. Never cut: US-235, the deposit's consent and warning, statements that reconcile.
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story, task and acceptance criterion checked against spec 019, the GDD, ADRs 0078, 0083 and 0097 and the code after Sprint 17
+- [x] G1–G11 and the owner's two requests answered (2026-11-11, ADR 0101)
+- [x] Each story's acceptance criteria name their tests
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [ ] Save schema 16: migration, `saves/schema16` fixture, every older schema loads
+- [ ] Layouts previewed to and approved by the owner before each story's code
+- [ ] Balance: spec 019 §9 measured with the bots; no money loop through the deposit; contradictions flagged to the owner
+- [ ] Test checklist `docs/test-checklists/s18-money-and-land.md`, every non-device check run in the Editor; Development build; the owner's device check with both frame-time p95s written down
+- [ ] The playtest town shown to the owner; the Release build and its smoke list
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
+
+## Sprint 19 · 10–30 May 2027 · Phase 2 (the Phase 2 playtest and gate; up to 3 weeks, ADR 0101)
+
+- **Status:** Planned (ADR 0101 §9–§10); starts once Sprint 18 is merged and the Release build is on the phone
+- **Goal:** The owner plays from the day-14 Hamlet town to the Village (or 3 weeks) on the Release build, with the play log and a daily diary; findings tuned; the Phase 2 gate's part A decided (A1–A6). Phase 3's spec writing (docs only, at most 2 specs to review) may run alongside; no Phase 3 code before the gate decision.
+- **Points:** 6 (US-238 3, US-239 3) plus fixes as found
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-238 | The Phase 2 playtest | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | To do |
+| US-239 | Tune and the gate decision | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | To do |
