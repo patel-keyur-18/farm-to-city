@@ -205,7 +205,12 @@
 
 ## In progress
 
-**US-136 built and tested (2026-11-11), for the owner's review** (ADR 0101 §7; spec 019 §3.6; the owner approved the screens and calls in a browser preview first).
+**Sprint 18 balance with the bots measured (2026-11-11), for the owner's review** (spec 019 §9; ADR 0102, Proposed).
+- **Measured** (8 seeds, live content; `FinanceGateTests`, `FinanceGate`, `DepositLoopBot`): debt to assets at the Village 6–8% (spec guessed 15–40%: restated to 2–20%, under 60% for every run); the cautious saver's emergency fund on day 30 is 1.0–1.9 seasons (holds); borrowing at the co-op bank to deposit loses in every seed (net worth 94–98.5% of the competent bot's after 12 seasons, even with a bank lending 10,00,000 coins unsecured); the zero-time loop check now includes deposit and withdraw; every bot's books are sorted (27 bots × 2 seeds, 594 reports, 122,810 cash entries); a Village town's save after 24 seasons is 136 KB (under 200 KB).
+- **Open for the owner (ADR 0102 §3): passive income covers the founder's living on day 20–40 at the Village (130–190%, spec said 5–30%).** Five rented houses (6,000 each, a gross yield of 10% a season) plus a hired mill against a living of 18,000 indexed. Options: (a) leave it, it marks the first time rent feeds the household; (b) raise the milestone's bar in `finance.json`; (c) lower the rent (ADR 0063, slows the Village, re-measure ADR 0071). Recommended: (a) now and (c) as its own Phase 3 realism decision. The test prints passive income and asserts nothing until then.
+- Milestones on the bots (median day): First rent 16–28, First lakh saved 16–60, Passive covers living 20–40, Twice what you inherited about 84, Debt-free 72–88.
+
+**US-136 built and tested (2026-11-11), approved by the owner** (ADR 0101 §7; spec 019 §3.6; the owner approved the screens and calls in a browser preview first).
 - **The five:** *First lakh saved* (cash + deposit − loans and interest ≥ 1,00,000 at a close), *Twice what you inherited* (net worth ≥ 2 × the inheritance **in the coins of that close**; the inheritance is a fresh game's net worth from the town's seed, found at the first close and kept), *First rent*, *Debt-free* (your own last loan repaid; never a write-off or a business's loan) and *Passive income covers your living* (≥ 100%). `MilestoneRules.Check` at the end of each close records each once (`MilestoneReached`); the older-town pass reads every kept report oldest first, so a town's first close after the update records what they show with the real seasons ("N milestones from your past seasons"); debt-free waits for the next close there (what happened before the kept reports is unknown), passive income is live only.
 - **Data:** the thresholds are in `finance.json` `ledger.milestones` (optional: no key, no milestone, so the frozen golden content and its hashes are untouched), **not** `ui.json` as spec 019 wrote: the sim checks them and can't read the view's file (spec 019 §4 and ADR 0101 updated). Saved in schema 16 (hashed only once there is something to hash).
 - **Screens:** *Your wealth* ends with *Milestones · n of 5*: reached first with their season and a *Why?*, the rest dimmed (`LineVm.Dim`) with today's number beside the target; a toast like the Codex's (6 s, waits for sheets, letters and the Codex toast; one to three name themselves, more say how many) opens Your wealth.
@@ -396,8 +401,8 @@
 
 ## Next up
 
-1. **The owner reviews US-136** (the milestones list on *Your wealth* and its toast). US-135, US-137 and US-236 are approved.
-2. Then balance with the bots (spec 019 §9), the whole checklist in the Editor (recapture the US-236 screens), the Development build and the device check, US-237.
+1. **The owner decides ADR 0102 §3** (passive income at the Village) and reviews the balance numbers. US-135, US-136, US-137 and US-236 are approved.
+2. Then the whole checklist in the Editor (recapture the US-236 screens), the Development build and the device check, US-237.
 
 ## Owner action checklist (Phases 0–1)
 

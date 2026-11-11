@@ -240,10 +240,12 @@ Your books: the last 8 closed seasons (season, profit, cash at the end, net wort
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Competent bot's debt to assets at the Village | 15–40% | Under 60% |
-| Cautious saver's emergency fund at day 30 | 1–3 seasons | |
-| Passive income at the Village | 5–30% of living (rent, a hired mill) | 100% is a late-game milestone |
-| The deposit | Earns less than a family house's rent (10% a season) | No money loop: borrow at 2.5–3% to deposit at 1.5% loses |
+| Competent bot's debt to assets at the Village | 2–20% (measured 6–8%; was guessed 15–40%, ADR 0102 §1) | Under 60% |
+| Cautious saver's emergency fund at day 30 | 1–3 seasons (measured 1.0–1.9) | |
+| Passive income at the Village | **Measured 130–190% of living (rent from five houses and a hired mill), not 5–30%: awaiting the owner, ADR 0102 §3** | 100% was meant as a late-game milestone |
+| The deposit | Earns less than a family house's rent (10% a season) and than the cheapest loan (2.5%) | No money loop: borrowing to deposit loses (net worth 94–98.5% of the competent bot's after 12 seasons, ADR 0102 §2) |
+| Every bot's books | Nothing unsorted: every cash movement in a row of a group (`FinanceGateTests.NothingUnsorted_EveryBot`) | |
+| Save size with 8 seasons of entries | A Village town after 24 seasons under 200 KB (measured 136 KB, `FinanceGateTests.SaveSize_VillageTown`) | |
 
 ## 10. Open questions
 
