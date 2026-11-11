@@ -309,7 +309,11 @@ namespace Sim.View.Tests
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));
-            foreach (var r in sim.State.Finance.Reports) yield return N("report " + r.Period, ReportSheet.Build(ctx, r.Period));
+            foreach (var r in sim.State.Finance.Reports)
+                foreach (string tab in new[] { StatementSheet.ProfitTab, StatementSheet.CashTab, StatementSheet.BalanceTab })
+                    yield return N("report " + r.Period + " " + tab, ReportSheet.Build(ctx, r.Period, tab));
+            yield return N("books", BooksSheet.Build(ctx));
+            foreach (var r in sim.State.Finance.Reports.Where(x => YearSheet.EndsYear(x.Period))) yield return N("year " + r.Period, YearSheet.Build(ctx, r.Period));
             for (int i = 0; i < sim.Config.Game.Credit.Lenders.Count; i++)
             {
                 SheetVm amounts = BorrowSheet.Build(ctx, i, null);

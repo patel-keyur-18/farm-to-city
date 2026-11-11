@@ -74,6 +74,10 @@ namespace Sim.Core.Finance
             return new SeasonReport
             {
                 Period = period,
+                CashRows = CashRows.Build(l, sim.State.Finance.SeasonStartEntry, l.NextEntryId).AsReadOnly(),
+                FirstEntry = sim.State.Finance.SeasonStartEntry,
+                EndEntry = l.NextEntryId,
+                CashKept = true,
                 ByAccount = byAccount.AsReadOnly(),
                 Lines = LinesFrom(byAccount),
                 CashFlow = cash,

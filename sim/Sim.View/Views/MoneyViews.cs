@@ -277,6 +277,8 @@ namespace Sim.View.Views
             if (worth.Businesses > 0) vm.Lines.Add(new LineVm(s.Get("money.businessPart"), ctx.Fmt.Coins(worth.Businesses), "netWorth"));
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
 
+            if (sim.State.Finance.Reports.Count > 0)
+                vm.Lines.Add(new LineVm(s.Get("money.books"), s.Get("money.booksNote")) { Icon = "coin", Action = ActionVm.Open("books", s.Get("action.open"), new SheetRequest("Books", 0)) });
             if (sim.State.Credit == null) return vm;
             vm.Lines.Add(LineVm.Header(s.Get("money.loans")));
             bool any = false;
@@ -324,22 +326,30 @@ namespace Sim.View.Views
             return ctx.Strings.Get("report.period", "season", FieldSheets.SeasonName(ctx, period), "year", ctx.Fmt.Integer(period / 4 + 1));
         }
 
-        public static SheetVm Build(ViewContext ctx, long period)
+        /// <summary>The season page: three statements on tabs (ADR 0101 §5).</summary>
+        public static SheetVm Build(ViewContext ctx, long period, string tab = null) { return StatementSheet.Build(ctx, period, tab); }
+    }
+
+    /// <summary><em>Your books</em> (spec 019 §7, ADR 0101 §5): the last 8 closed seasons, each opening its season page. Never this season so far.</summary>
+    public static class BooksSheet
+    {
+        public const int Shown = 8;
+
+        public static SheetVm Build(ViewContext ctx)
         {
-            Simulation sim = ctx.Sim;
-            SeasonReport r = sim.State.Finance.Reports.Find(x => x.Period == period);
-            var vm = new SheetVm { Icon = "coin", Title = ctx.Strings.Get("report.title", "period", PeriodName(ctx, period)) };
-            LineVm advisor = AdvisorWords.Report(ctx, period); // an advisor's line under the title (spec 018 §3.4)
-            if (advisor != null) vm.Lines.Add(advisor);
-            foreach (string key in Order)
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "coin", Title = s.Get("ybooks.title"), Subtitle = s.Get("ybooks.subtitle") };
+            List<SeasonReport> reports = ctx.Sim.State.Finance.Reports;
+            if (reports.Count == 0) { vm.Lines.Add(new LineVm(s.Get("ybooks.none"), null)); return vm; }
+            for (int i = reports.Count - 1; i >= 0 && i >= reports.Count - Shown; i--)
             {
-                ReportLine l = r.Line(key);
-                if (l == null || (key == "gifts" && l.Amount == 0)) continue; // gifts only in a season that had them
-                vm.Lines.Add(new LineVm(ctx.Strings.Get(l.LabelKey), ctx.Fmt.Coins(l.Amount), "report." + key, period));
+                SeasonReport r = reports[i];
+                vm.Lines.Add(new LineVm(ReportSheet.PeriodName(ctx, r.Period), s.Get("ybooks.value", "profit", StatementSheet.Amount(ctx, r.NetResult), "cash", ctx.Fmt.Coins(r.CashFlow.Closing)), "report.netResult", r.Period)
+                {
+                    Note = s.Get("ybooks.worth", "worth", ctx.Fmt.Coins(r.NetWorth.Total)), Icon = "coin",
+                    Action = ActionVm.Open("report:" + r.Period, s.Get("action.open"), new SheetRequest("Report", r.Period)),
+                });
             }
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("report.cashFlow"),
-                ctx.Strings.Get("report.cashFlowValue", "start", ctx.Fmt.Coins(r.CashFlow.Opening), "end", ctx.Fmt.Coins(r.CashFlow.Closing)), "report.cashFlow", period));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("report.netWorth"), ctx.Fmt.Coins(r.NetWorth.Total), "report.netWorth", period));
             return vm;
         }
     }

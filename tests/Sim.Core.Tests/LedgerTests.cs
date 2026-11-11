@@ -143,7 +143,7 @@ namespace Sim.Core.Tests
             {
                 Simulation sim = NewFarm(seed: seed, game: TestContent.Game((f, j) =>
                     f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000")
-                    : f == "finance.json" ? j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 16") : j));
+                    : f == "finance.json" ? j.Replace("\"retainSeasons\": 8", "\"retainSeasons\": 16") : j));
                 string[] parcels = sim.Config.Game.Map.Parcels.Select(p => p.Id).ToArray();
                 long end = 3 * sim.Clock.SecondsPerYear;
                 int accepted = 0;
@@ -184,12 +184,12 @@ namespace Sim.Core.Tests
         {
             Simulation sim = NewFarm(game: ParcelTests.Rich());
             long s = sim.Clock.SecondsPerSeason;
-            for (int k = 0; k < 7; k++)
+            for (int k = 0; k < 11; k++)
             {
                 sim.Execute(new BuyParcel(k * s + 3600, k % 2 == 0 ? "w1" : "e1"));
                 sim.Execute(new SellParcel(k * s + 7200, k % 2 == 0 ? "w1" : "e1"));
             }
-            sim.AdvanceTo(7 * s); // the close of season 6; retainSeasons = 4 keeps periods 3–6 and the current one
+            sim.AdvanceTo(11 * s); // the close of season 10; retainSeasons = 8 keeps periods 3–10 and the current one
             Assert.That(sim.State.Ledger.Entries.Min(e => e.Period), Is.EqualTo(3));
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
         }

@@ -154,7 +154,9 @@ namespace Game.Presentation
                 case CropCalendar.Sheet: _sheet.Show(CropCalendar.Build(_ctx), refreshOnly); break; // spec 020 §3.6b
                 case CropCalendar.PageSheet: _sheet.Show(CropCalendar.Page(_ctx, (int)r.Id), refreshOnly); break;
                 case "Money": _sheet.Show(MoneySheet.Build(_ctx, r.Arg), refreshOnly); break;
-                case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id), refreshOnly); break;
+                case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
+                case "Year": _sheet.Show(YearSheet.Build(_ctx, r.Id), refreshOnly); break;
+                case "Books": _sheet.Show(BooksSheet.Build(_ctx), refreshOnly); break;
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Repay":
                     Loan loan = Sim.State.Credit.Loans.Find(l => l.Id == r.Id);

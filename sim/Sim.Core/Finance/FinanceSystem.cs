@@ -94,6 +94,7 @@ namespace Sim.Core.Finance
             Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
 
             // Settle and pay upfront (these entries belong to the new season).
+            People.PeopleSeen seen = People.PeopleSeen.Before(sim); // ADR 0101 §4: Your people, seen before the contracts are settled
             SettlementStats loans = sim.State.Credit == null ? null : CreditSystem.Settle(sim); // step 4: loan payments come first
             Farm.FounderSystem.SettleLiving(sim); // step 5
             if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
@@ -103,6 +104,9 @@ namespace Sim.Core.Finance
             Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
             People.SchoolRules.Close(sim); // spec 018 §3.1: the school's upkeep for the new season, a gift to the village
             Sim.Core.Equipment.EquipmentRules.Close(sim); // spec 013 §3.5: leases, maintenance and diesel for the new season
+            report.People = seen.After(sim).AsReadOnly();
+            report.ReputationBefore = seen.ReputationBefore;
+            report.ReputationAfter = sim.State.People == null ? 0 : sim.State.People.Reputation;
             if (loans != null) report.Credit = CreditSystem.Outcomes(sim, loans); // step 8: the score, defaults and the final notice
 
             sim.Emit(new SeasonClosed(sim.State.Clock.SimTime, closing, report));

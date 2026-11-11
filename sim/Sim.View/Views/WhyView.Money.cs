@@ -286,6 +286,7 @@ namespace Sim.View.Views
         /// <summary>A season-report line (spec 008 §3.8): its plain text, then the accounts behind it. id = the report's period.</summary>
         private static WhyVm ReportLineWhy(ViewContext ctx, string line, long period)
         {
+            if (line == "acct" || line == "cashrow" || line == "bs" || line == "people" || line == "year") return StatementWhy(ctx, line, period);
             SeasonReport r = ctx.Sim.State.Finance.Reports.Find(x => x.Period == period) ?? ctx.Sim.State.Finance.Reports[ctx.Sim.State.Finance.Reports.Count - 1];
             WhyVm vm = new WhyVm { Title = ctx.Strings.Get("report." + line) };
             if (line == "netWorth")
@@ -300,6 +301,8 @@ namespace Sim.View.Views
             if (n.LivestockAtBook != 0) Row(vm, ctx, "why.netWorth.livestock", Money(ctx, n.LivestockAtBook));
                 Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
                 if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
+                if (n.Deposit != 0) Row(vm, ctx, "why.netWorth.deposit", Money(ctx, n.Deposit));
+                BiggestChange(vm, ctx, r, "worth");
                 vm.Footnote = ctx.Strings.Get("why.netWorth.lesson");
                 return vm;
             }
@@ -323,6 +326,7 @@ namespace Sim.View.Views
             if (vm.Rows.Count == 0) Text(vm, ctx, "why.report.none");
             if (line == "farmIncome" && r.HomeUse > 0)
                 Text(vm, ctx, "report.homeUse.why", "homeUse", Money(ctx, r.HomeUse), "garden", Money(ctx, r.GardenHomeUse));
+            if (line == "netResult" || line == "farmProfit") BiggestChange(vm, ctx, r, line);
             vm.Footnote = ctx.Strings.Get("why.report." + line);
             return vm;
         }

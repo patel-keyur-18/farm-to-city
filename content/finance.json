@@ -1,5 +1,5 @@
 {
-  "ledger": { "retainSeasons": 4 },
+  "ledger": { "retainSeasons": 8 },
   "credit": {
     "min": 300, "max": 900, "startScore": 650, "fullScore": 750,
     "onTimeGain": 10, "cleanSeasonGain": 5,

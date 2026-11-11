@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core.Maths;
+using Sim.Core.People;
 using Sim.Core.Saves;
 
 namespace Sim.Core.Finance
@@ -62,12 +63,15 @@ namespace Sim.Core.Finance
         /// <summary>Bought machines at book value (spec 013 §3.2; save schema 14).</summary>
         public long EquipmentAtBook { get; internal set; }
 
+        /// <summary>The savings deposit (account 1020, spec 019 §3.5; save schema 16): never collateral, never seized.</summary>
+        public long Deposit { get; internal set; }
+
         /// <summary>Assets − liabilities on the ledger; the difference from Total is land and stored goods at market value.</summary>
         public long BookEquity { get; internal set; }
 
         public long Total
         {
-            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + EquipmentAtBook + Businesses + StoredGoods - LoanPrincipal - InterestPayable; }
+            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + EquipmentAtBook + Deposit + Businesses + StoredGoods - LoanPrincipal - InterestPayable; }
         }
     }
 
@@ -96,6 +100,22 @@ namespace Sim.Core.Finance
         public IReadOnlyList<ReportLine> Lines { get; internal set; }
 
         public CashFlowSummary CashFlow { get; internal set; }
+
+        /// <summary>
+        /// The cash flow by group, row by row (ADR 0101 §3), adding to <c>Closing − Opening</c> to the coin. Empty on a season kept before schema 16
+        /// (<see cref="CashKept"/> false): its cash summary is all that was recorded.
+        /// </summary>
+        public IReadOnlyList<CashRow> CashRows { get; internal set; } = new CashRow[0];
+        public bool CashKept { get; internal set; }
+
+        /// <summary>The ledger entries of the season, by id (the first, and one past the last): what the rows' <em>Why?</em> lists.</summary>
+        public long FirstEntry { get; internal set; }
+        public long EndEntry { get; internal set; }
+
+        /// <summary><em>Your people</em> (ADR 0101 §4): everyone on your farm and in your businesses at this close, with employer reputation before and after.</summary>
+        public IReadOnlyList<PeopleRow> People { get; internal set; } = new PeopleRow[0];
+        public int ReputationBefore { get; internal set; }
+        public int ReputationAfter { get; internal set; }
         public NetWorthSnapshot NetWorth { get; internal set; }
 
         /// <summary>Home-grown food the household ate this season, and the garden's part (the household line's Why?, ADR 0032).</summary>
@@ -153,6 +173,20 @@ namespace Sim.Core.Finance
                 h.WriteLong(Credit.PrincipalPaid);
                 h.WriteLong(Credit.Missed);
             }
+            if (!h.Hashing && (!(h is SaveWriter xw) || xw.Schema >= 16))
+            {
+                // Save-only, schema 16: derived at the close from the ledger and the people, so the hash leaves them out.
+                h.WriteLong(NetWorth.Deposit);
+                h.WriteBool(CashKept);
+                h.WriteLong(FirstEntry);
+                h.WriteLong(EndEntry);
+                h.WriteInt(CashRows.Count);
+                foreach (CashRow row in CashRows) { h.WriteInt((int)row.Account); h.WriteLong(row.Amount); }
+                h.WriteInt(People.Count);
+                foreach (PeopleRow row in People) row.WriteTo(h);
+                h.WriteInt(ReputationBefore);
+                h.WriteInt(ReputationAfter);
+            }
         }
 
         internal static SeasonReport ReadFrom(SaveReader r)
@@ -176,7 +210,6 @@ namespace Sim.Core.Finance
             if (r.Schema >= 7) worth.LivestockAtBook = r.ReadLong();
             if (r.Schema >= 10) worth.Businesses = r.ReadLong();
             if (r.Schema >= 14) worth.EquipmentAtBook = r.ReadLong();
-            if (worth.Total != total) throw new SaveFormatException("a season report's net worth doesn't add up");
             cash.Closing = r.ReadLong();
             CreditSummary credit = null;
             if (r.ReadBool())
@@ -185,11 +218,28 @@ namespace Sim.Core.Finance
                     Score = r.ReadInt(), ScoreChange = r.ReadInt(), PrincipalOutstanding = r.ReadLong(), InterestPaid = r.ReadLong(),
                     PrincipalPaid = r.ReadLong(), Missed = r.ReadLong(),
                 };
-            return new SeasonReport
+            var report = new SeasonReport
             {
                 Period = period, ByAccount = byAccount.AsReadOnly(), Lines = Reporting.LinesFrom(byAccount), CashFlow = cash, NetWorth = worth,
                 HomeUse = homeUse, GardenHomeUse = gardenHomeUse, Credit = credit,
             };
+            if (r.Schema >= 16)
+            {
+                worth.Deposit = r.ReadLong();
+                report.CashKept = r.ReadBool();
+                report.FirstEntry = r.ReadLong();
+                report.EndEntry = r.ReadLong();
+                var rows = new List<CashRow>();
+                for (int i = 0, k = r.ReadCount(); i < k; i++) rows.Add(new CashRow((Account)r.ReadInt(), r.ReadLong()));
+                report.CashRows = rows.AsReadOnly();
+                var people = new List<PeopleRow>();
+                for (int i = 0, k = r.ReadCount(); i < k; i++) people.Add(PeopleRow.ReadFrom(r));
+                report.People = people.AsReadOnly();
+                report.ReputationBefore = r.ReadInt();
+                report.ReputationAfter = r.ReadInt();
+            }
+            if (worth.Total != total) throw new SaveFormatException("a season report's net worth doesn't add up");
+            return report;
         }
     }
 }

@@ -337,7 +337,7 @@ namespace Sim.Core.Tests
             for (ulong seed = 1; seed <= 6; seed++)
             {
                 bool reckless = seed % 2 == 0;
-                Simulation sim = NewSim(seed: seed, cash: 30_000, freeBank: false, edit: (f, j) => f == "finance.json" ? j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 16") : j);
+                Simulation sim = NewSim(seed: seed, cash: 30_000, freeBank: false, edit: (f, j) => f == "finance.json" ? j.Replace("\"retainSeasons\": 8", "\"retainSeasons\": 16") : j);
                 long end = 3 * sim.Clock.SecondsPerYear;
                 ulong k = 0;
                 foreach (long t in FarmBot.Rounds(0, end))

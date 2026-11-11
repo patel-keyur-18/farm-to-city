@@ -302,7 +302,11 @@ namespace Game.Presentation
             if (produce) { _sounds.Harvest(); Haptic(); }
             if (ready) _sounds.Play("ready");
             if (sown) _sounds.Sow();
-            if (closed >= 0) _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
+            if (closed >= 0)
+            {
+                if (YearSheet.EndsYear(closed)) _yearAfter = closed; // Your year opens once the season page is put away (ADR 0101 §5)
+                _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
+            }
             if (coins)
             {
                 _sounds.CoinsIn(earned / 100);
@@ -481,8 +485,17 @@ namespace Game.Presentation
             _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser), refresh);
         }
 
+        /// <summary>The Winter close whose season page is open: Your year follows it (spec 019 §3.7).</summary>
+        private long? _yearAfter;
+
         private void OnSheetClosed()
         {
+            if (_yearAfter.HasValue && _open.HasValue && _open.Value.Kind == "Report" && _open.Value.Id == _yearAfter.Value)
+            {
+                long winter = _yearAfter.Value;
+                _yearAfter = null;
+                _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Year", winter))); // before Dadi's letters and the Codex toast, which wait for it
+            }
             _open = null;
             _back.Clear();
             _selected = Hit.None;

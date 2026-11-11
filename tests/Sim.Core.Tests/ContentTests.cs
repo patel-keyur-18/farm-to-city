@@ -195,7 +195,7 @@ namespace Sim.Core.Tests
                 Is.EqualTo("start.inheritedParcels[1]"));
             Assert.That(Error("start.json", j => j.Replace("\"tile\": 87 },\n    { \"building\": \"well\"", "\"tile\": 86 },\n    { \"building\": \"well\"")).FieldPath,
                 Is.EqualTo("start.buildings[0].tile"));
-            Assert.That(Error("finance.json", j => j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 0")).FieldPath, Is.EqualTo("finance.ledger.retainSeasons"));
+            Assert.That(Error("finance.json", j => j.Replace("\"retainSeasons\": 8", "\"retainSeasons\": 0")).FieldPath, Is.EqualTo("finance.ledger.retainSeasons"));
         }
 
         // Spec 005 AC-29: lenders.json and the credit block of finance.json fail validation naming the field.
