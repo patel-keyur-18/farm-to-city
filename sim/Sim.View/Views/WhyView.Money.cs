@@ -274,7 +274,7 @@ namespace Sim.View.Views
                 d.Footnote = s.Get("season.due.lesson");
                 return d;
             }
-            List<SeasonLineVm> lines = block == MoneySheet.EarnedBlock ? season.Earned : block == MoneySheet.SpentBlock ? season.Spent : block == MoneySheet.MovedBlock ? season.Moved : season.Due;
+            List<SeasonLineVm> lines = block == MoneySheet.EarnedBlock ? season.Earned : block == MoneySheet.SpentBlock ? season.Spent : block == MoneySheet.MovedBlock ? season.Moved : block == MoneySheet.OwnBlock ? season.Own : season.Due;
             if (line >= lines.Count) return new WhyVm { Title = s.Get("money.title"), Value = "" }; // the season moved on under an open sheet
             SeasonLineVm x = lines[line];
             WhyVm vm = new WhyVm { Title = x.Label, Value = block == MoneySheet.MovedBlock ? MoneySheet.Signed(ctx, x.Amount) : Money(ctx, x.Amount) };

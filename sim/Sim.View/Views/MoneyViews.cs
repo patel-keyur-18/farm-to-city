@@ -75,7 +75,7 @@ namespace Sim.View.Views
         public const string Wealth = "wealth", LastSeason = "last";
 
         /// <summary>A *Your season* line's *Why?* id: last season or this, the block, the line.</summary>
-        public const int EarnedBlock = 0, SpentBlock = 1, MovedBlock = 2, DueBlock = 3, Totals = 9;
+        public const int EarnedBlock = 0, SpentBlock = 1, MovedBlock = 2, DueBlock = 3, OwnBlock = 4, Totals = 9;
         public const int ProfitLine = 0, CashLine = 1, DueLine = 2;
 
         public static long WhyId(bool last, int block, int line) { return (last ? 1_000_000 : 0) + block * 10_000 + line; }
@@ -138,8 +138,8 @@ namespace Sim.View.Views
                 return vm;
             }
             Block(s.Get("season.due"), season.DueTotal, season.Due, DueBlock, false);
-            if (season.Due.Count == 0) { vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null)); return vm; }
-            if (season.Short == 0)
+            if (season.Due.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null));
+            else if (season.Short == 0)
                 vm.Lines.Add(new LineVm(s.Get("season.dueTotal"), ctx.Fmt.Coins(season.DueTotal), "season", WhyId(false, Totals, DueLine)) { Note = s.Get("season.covered"), NoteTone = Tone.Good });
             else
                 vm.Lines.Add(new LineVm(s.Get("season.dueTotal"), ctx.Fmt.Coins(season.DueTotal), "season", WhyId(false, Totals, DueLine))
@@ -147,6 +147,13 @@ namespace Sim.View.Views
                     Note = s.Get("season.short", "amount", ctx.Fmt.Coins(season.Short), "who", season.ShortWho), NoteTone = Tone.Warn,
                     Action = ActionVm.Open("store", s.Get("season.toStore"), new SheetRequest("Store", 0)),
                 });
+            if (season.Own.Count > 0) // beside your total, never in it: each business pays from its own cash
+            {
+                vm.Lines.Add(LineVm.Header(s.Get("season.own")));
+                for (int i = 0; i < season.Own.Count; i++)
+                    vm.Lines.Add(new LineVm(season.Own[i].Label, ctx.Fmt.Coins(season.Own[i].Amount), "season", WhyId(false, OwnBlock, i))
+                        { Icon = season.Own[i].Icon, Note = season.Own[i].Note, NoteTone = season.Own[i].Warn ? Tone.Warn : Tone.Good });
+            }
             return vm;
         }
 
@@ -335,19 +342,7 @@ namespace Sim.View.Views
         public static long NextPayment(Simulation sim, Loan loan) { return NextPayment(sim, loan, out _, out _); }
 
         /// <summary>The next payment as interest (with any late interest) and principal: paying back what you borrowed, not a cost.</summary>
-        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue)
-        {
-            interestDue = principalDue = 0;
-            if (!loan.IsOpen) return 0;
-            long S = sim.Clock.SecondsPerSeason, close = (sim.State.Clock.SimTime / S + 1) * S;
-            CreditRules.AccruedSince(sim, loan, close, out long interest, out long penalty);
-            long principal = loan.FirstClosePartial ? loan.ArrearsPrincipal
-                : loan.Remaining <= 1 ? loan.Principal
-                : loan.ArrearsPrincipal + (loan.Schedule == LoanSchedule.Bullet ? 0 : System.Math.Min(loan.InstalmentBase, loan.Principal - loan.ArrearsPrincipal));
-            interestDue = loan.ArrearsInterest + loan.InterestAccrued + interest + penalty;
-            principalDue = principal;
-            return interestDue + principalDue;
-        }
+        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue) { return CreditRules.NextPayment(sim, loan, out interestDue, out principalDue); }
 
         private static long NextNow(Simulation sim, Loan loan) { return System.Math.Min(NextPayment(sim, loan), CreditRules.OwedNow(sim, loan)); }
 

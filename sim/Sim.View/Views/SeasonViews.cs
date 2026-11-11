@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Definitions;
+using Sim.Core.Business;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
 using Sim.Core.People;
@@ -21,6 +22,10 @@ namespace Sim.View.Views
         public List<WhyRowVm> Why { get; } = new List<WhyRowVm>();
         public string WhyText { get; internal set; }
         public string WhyTitle { get; internal set; }
+
+        /// <summary>A line's own cover note (a business's charges: its cash covers them, or it is short), and whether it warns.</summary>
+        public string Note { get; internal set; }
+        public bool Warn { get; internal set; }
     }
 
     /// <summary>
@@ -35,6 +40,9 @@ namespace Sim.View.Views
         public List<SeasonLineVm> Spent { get; } = new List<SeasonLineVm>();
         public List<SeasonLineVm> Moved { get; } = new List<SeasonLineVm>();
         public List<SeasonLineVm> Due { get; } = new List<SeasonLineVm>();
+
+        /// <summary>Each business's own charges at the close, beside your total, never in it (ADR 0101 §1).</summary>
+        public List<SeasonLineVm> Own { get; } = new List<SeasonLineVm>();
         public long EarnedTotal { get; internal set; }
         public long SpentTotal { get; internal set; }
         public long Profit { get { return EarnedTotal - SpentTotal; } }
@@ -269,42 +277,72 @@ namespace Sim.View.Views
                 if (vm.ShortWho == null && line.Amount > left) vm.ShortWho = who;
                 left -= System.Math.Min(left, line.Amount);
             }
-            if (sim.State.Credit != null)
-                foreach (Loan loan in sim.State.Credit.Loans)
+            foreach (CloseDue due in CloseDues.Next(sim)) // everything the close takes from your cash, in its order (ADR 0101 §1)
+            {
+                switch (due.Kind)
                 {
-                    if (!loan.IsOpen || loan.BusinessId != 0) continue; // a business pays its own loan (spec 016 §3.8)
-                    long total = Repay.NextPayment(sim, loan, out long interest, out long principal);
-                    if (total == 0) continue;
-                    string lender = s.Get(sim.Config.Game.Credit.Lenders[loan.Lender].NameKey);
-                    // A bullet loan pays interest only until its last close: then the row says so, not "and principal".
-                    var line = new SeasonLineVm
+                    case DueKind.Loan:
                     {
-                        Key = "loan:" + loan.Id, Label = s.Get(principal > 0 ? "season.due.loan" : "season.due.loanInterest", "lender", lender), Icon = "coin", Amount = total,
-                        WhyText = s.Get("season.due.loan.why"),
-                    };
-                    line.Why.Add(new WhyRowVm(s.Get("season.due.interest"), ctx.Fmt.Coins(interest)));
-                    if (principal > 0) line.Why.Add(new WhyRowVm(s.Get("season.due.principal"), ctx.Fmt.Coins(principal)));
-                    Owe(line, s.Get("season.short.loan", "lender", lender));
+                        Loan loan = sim.State.Credit.Find(due.Id);
+                        string lender = s.Get(sim.Config.Game.Credit.Lenders[loan.Lender].NameKey);
+                        // A bullet loan pays interest only until its last close: then the row says so, not "and principal".
+                        var line = new SeasonLineVm
+                        {
+                            Key = due.Key, Label = s.Get(due.Principal > 0 ? "season.due.loan" : "season.due.loanInterest", "lender", lender), Icon = "coin", Amount = due.Amount,
+                            WhyText = s.Get("season.due.loan.why"),
+                        };
+                        line.Why.Add(new WhyRowVm(s.Get("season.due.interest"), ctx.Fmt.Coins(due.Interest)));
+                        if (due.Principal > 0) line.Why.Add(new WhyRowVm(s.Get("season.due.principal"), ctx.Fmt.Coins(due.Principal)));
+                        Owe(line, s.Get("season.short.loan", "lender", lender));
+                        break;
+                    }
+                    case DueKind.Living:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.living"), Icon = "person_founder", Amount = due.Amount, WhyText = s.Get("season.due.living.why") },
+                            s.Get("season.short.living"));
+                        break;
+                    case DueKind.Hand:
+                    {
+                        string name = PeopleWords.Name(ctx, sim.State.People.Hand(due.Id).Name);
+                        var line = new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.renewal", "name", name), Icon = "person_hand_m", Amount = due.Amount, WhyText = s.Get("season.due.renewal.why") };
+                        line.Why.Add(new WhyRowVm(s.Get("season.due.wage"), ctx.Fmt.Coins(due.Wage)));
+                        if (due.Housing > 0) line.Why.Add(new WhyRowVm(s.Get("season.due.house"), "−" + ctx.Fmt.Coins(due.Housing)));
+                        if (due.Advance > 0) line.Why.Add(new WhyRowVm(s.Get("season.due.advance"), "−" + ctx.Fmt.Coins(System.Math.Min(due.Wage, due.Advance))));
+                        Owe(line, s.Get("season.short.renewal", "name", name));
+                        break;
+                    }
+                    case DueKind.Warehouse:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.warehouse"), Icon = "sack", Amount = due.Amount, WhyText = s.Get("season.due.warehouse.why") }, s.Get("season.short.warehouse"));
+                        break;
+                    case DueKind.Water:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.water." + due.What), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.water.why") },
+                            s.Get("season.short.water." + due.What));
+                        break;
+                    case DueKind.School:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.school"), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.school.why") }, s.Get("season.short.school"));
+                        break;
+                    case DueKind.Machine:
+                    {
+                        string part = due.Key.Substring(due.Key.LastIndexOf(':') + 1), machine = s.Get("machine." + due.What);
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.machine." + part, "machine", machine), Icon = "tractor", Amount = due.Amount, WhyText = s.Get("season.due.machine." + part + ".why", "machine", machine) },
+                            s.Get("season.short.machine." + part, "machine", machine));
+                        break;
+                    }
                 }
-            FounderState founder = sim.State.Farm.Founder;
-            int plan = founder.AutoSubsistence ? founder.PreviousPlan : founder.DietPlan;
-            long living = Sim.Core.Market.MarketRules.Indexed(sim, sim.Config.Game.Farm.DietPlans[plan].CostPerSeason);
-            if (living > 0)
-                Owe(new SeasonLineVm { Key = "living", Label = s.Get("season.due.living"), Icon = "person_founder", Amount = living, WhyText = s.Get("season.due.living.why") },
-                    s.Get("season.short.living"));
-            if (sim.State.People != null)
-                foreach (Hand h in sim.State.People.Hands)
-                {
-                    if (h.Contract == ContractState.Lapsed || HrRules.Leaves(sim, h) || CitizenRules.Retiring(sim, h)) continue; // not renewed at the close
-                    long wage = PeopleSystem.RenewalWage(sim, h, out long housing), need = System.Math.Max(0, wage - h.Hr.Advance);
-                    string name = PeopleWords.Name(ctx, h.Name);
-                    var line = new SeasonLineVm { Key = "hand:" + h.Id, Label = s.Get("season.due.renewal", "name", name), Icon = "person_hand_m", Amount = need, WhyText = s.Get("season.due.renewal.why") };
-                    line.Why.Add(new WhyRowVm(s.Get("season.due.wage"), ctx.Fmt.Coins(wage + housing)));
-                    if (housing > 0) line.Why.Add(new WhyRowVm(s.Get("season.due.house"), "−" + ctx.Fmt.Coins(housing)));
-                    if (h.Hr.Advance > 0) line.Why.Add(new WhyRowVm(s.Get("season.due.advance"), "−" + ctx.Fmt.Coins(System.Math.Min(wage, h.Hr.Advance))));
-                    Owe(line, s.Get("season.short.renewal", "name", name));
-                }
+            }
             vm.Short = System.Math.Max(0, vm.DueTotal - cash);
+            foreach (BusinessDue due in CloseDues.Businesses(sim)) // a business pays these from its own cash and overdraft (spec 016 §3.10)
+            {
+                Business b = sim.State.Businesses.Find(due.BusinessId);
+                BusinessTypeDef type = sim.Config.Game.Businesses.Types[b.Type];
+                var line = new SeasonLineVm { Key = "business:" + b.Id, Label = s.Get("season.own.business", "name", BusinessWords.Name(ctx, type)), Icon = type.Id, Amount = due.Total, WhyText = s.Get("season.own.why") };
+                if (due.Loan > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.loan"), ctx.Fmt.Coins(due.Loan)));
+                if (due.Wage > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.wage"), ctx.Fmt.Coins(due.Wage)));
+                if (due.Rent > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.rent"), ctx.Fmt.Coins(due.Rent)));
+                line.Why.Add(new WhyRowVm(s.Get("season.own.canSpend"), ctx.Fmt.Coins(due.CanSpend)));
+                line.Warn = !due.Covered;
+                line.Note = due.Covered ? s.Get("season.own.covered") : s.Get("season.own.short", "amount", ctx.Fmt.Coins(due.Short));
+                vm.Own.Add(line);
+            }
         }
 
         public static string GoodName(ViewContext ctx, string good)
