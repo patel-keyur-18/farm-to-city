@@ -806,7 +806,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 18 · 26 Apr – 9 May 2027 · Phase 2 (statements, the hub, the deposit, milestones; every amount due, confirm cards, Your land; the playtest town; 2 weeks, ADR 0101)
 
-- **Status:** Plan check done (2026-11-11, ADR 0101: G1–G11 and the owner's two requests, each closed one per message); **the plan for the owner's approval**. Sprint 17 is merged (PR #23)
+- **Status:** Plan check done (2026-11-11, ADR 0101: G1–G11 and the owner's two requests, each closed one per message); **plan approved by the owner, 2026-11-11**. Sprint 17 is merged (PR #23)
 - **Branch:** `sprint/18-statements-and-playtest`, from `main` after PR #23
 - **Goal:** The money screens finished (spec 019): everything the close takes shown before it takes it; the season page with three statements, every row itemised; *Your wealth* as the hub; a savings deposit used only with the player's consent; milestones. The owner's safety requests: confirm cards as Hay Day's, and *Your land* in the Menu with *Sell* only there. A playtest town and a Release build for Sprint 19. Save schema 16 with its migration and fixture.
 - **Points:** 36 (US-235 8, US-137 10, US-135 7, US-236 5, US-136 3, US-237 3)
