@@ -16,6 +16,7 @@ namespace Sim.View.Views
                 case "acct": return AccountWhy(ctx, id / 10000, (Account)(int)(id % 10000));
                 case "cashrow": return CashRowWhy(ctx, StatementSheet.PeriodOf(id), StatementSheet.IndexOf(id));
                 case "bs": return BalanceWhy(ctx, StatementSheet.PeriodOf(id), StatementSheet.IndexOf(id));
+                case "hub": return HubWhy(ctx, (int)id);
                 case "year": return YearWhy(ctx, StatementSheet.PeriodOf(id), StatementSheet.IndexOf(id));
                 default: return PeopleWhy(ctx, StatementSheet.PeriodOf(id), StatementSheet.IndexOf(id));
             }

@@ -474,9 +474,13 @@ namespace Sim.Content
             OnlyFields(o, root, "ledger", "credit");
             string lp = root + ".ledger";
             JObject l = Object(Required(o, root, "ledger"), lp);
-            OnlyFields(l, lp, "retainSeasons");
+            OnlyFields(l, lp, "retainSeasons", "debtComfortableUnder", "debtRiskyOver");
             int retain = Int(Required(l, lp, "retainSeasons"), lp + ".retainSeasons");
             Range(retain, 1, 16, lp + ".retainSeasons");
+            // Optional, so the frozen golden content (retainSeasons only) still loads: the rural lending norms, 30% and 60%.
+            Fixed comfortable = l["debtComfortableUnder"] == null ? Fixed.FromRatio(3, 10) : Bounded(l, lp, "debtComfortableUnder", "0.05", "0.95");
+            Fixed risky = l["debtRiskyOver"] == null ? Fixed.FromRatio(6, 10) : Bounded(l, lp, "debtRiskyOver", "0.05", "0.95");
+            if (comfortable >= risky) throw new ContentException(lp + ".debtComfortableUnder", "must be below debtRiskyOver");
 
             score = null;
             if (o["credit"] != null)
@@ -497,7 +501,7 @@ namespace Sim.Content
                 Range(notice, 1, 168, Join(cp, "finalNoticeLiveHours"));
                 score = new CreditScoreDef(min, max, start, full, onTime, clean, missed, dflt, restructure, foreclosure, notice);
             }
-            return new LedgerDef(retain);
+            return new LedgerDef(retain, comfortable, risky);
         }
 
         private static List<LenderDef> LoadLenders(string json, CreditScoreDef score)

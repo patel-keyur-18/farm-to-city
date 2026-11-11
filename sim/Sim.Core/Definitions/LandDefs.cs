@@ -335,7 +335,16 @@ namespace Sim.Core.Definitions
     {
         public int RetainSeasons { get; }
 
-        public LedgerDef(int retainSeasons) { RetainSeasons = retainSeasons; }
+        /// <summary>The hub's debt-to-assets bands (spec 019 §3.2): under the first "comfortable", over the second "risky"; the accountant's debt note speaks at the second.</summary>
+        public Fixed DebtComfortableUnder { get; }
+        public Fixed DebtRiskyOver { get; }
+
+        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver)
+        {
+            RetainSeasons = retainSeasons;
+            DebtComfortableUnder = debtComfortableUnder;
+            DebtRiskyOver = debtRiskyOver;
+        }
     }
 
     /// <summary>

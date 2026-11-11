@@ -87,10 +87,10 @@ namespace Sim.View.Views
             SeasonReport r = close.Report;
             switch (n.Id)
             {
-                case "debt": // loans over half of what you own
+                case "debt": // loans over the hub's risky band of what you own (finance.json)
                 {
                     long debt = r.NetWorth.LoanPrincipal + r.NetWorth.InterestPayable, assets = r.NetWorth.Total + debt;
-                    return debt > 0 && debt > n.Threshold.MulRatio(assets, 1).RoundToLong() ? new[] { debt, assets } : null;
+                    return debt > 0 && debt > sim.Config.Game.Ledger.DebtRiskyOver.MulRatio(assets, 1).RoundToLong() ? new[] { debt, assets } : null;
                 }
                 case "overdraft": // a business's overdraft near its limit
                     if (sim.State.Businesses != null)
@@ -206,7 +206,7 @@ namespace Sim.View.Views
             string key = "advisor.note." + a.Id;
             switch (a.Id)
             {
-                case "debt": return s.Get(key, "debt", f.Coins(n[0]), "assets", f.Coins(n[1]));
+                case "debt": return s.Get(key, "debt", f.Coins(n[0]), "assets", f.Coins(n[1]), "band", f.Percent(sim.Config.Game.Ledger.DebtRiskyOver));
                 case "overdraft":
                 {
                     Business b = sim.State.Businesses?.Find(a.Report ? n[0] : a.Key);

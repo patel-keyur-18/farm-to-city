@@ -37,7 +37,7 @@ namespace Sim.View.Tests
                     Assert.That(page.Lines.Count, Is.GreaterThan(2), l.Label + " " + tab);
                     Assert.That(page.Tab, Is.EqualTo("tab:" + tab));
                 }
-            Assert.That(MoneySheet.Build(ctx, MoneySheet.Wealth).Lines.Any(l => l.Action != null && l.Action.Opens.Value.Kind == "Books"), Is.True, "Your wealth opens Your books");
+            Assert.That(MoneySheet.Build(ctx, MoneySheet.Wealth).Lines.Any(l => l.Buttons != null && l.Buttons.Any(b => b.Opens.Value.Kind == "Books")), Is.True, "Your wealth opens Your books");
         }
 
         // The cash flow tab: opening cash, every row by group, and closing cash, adding up to the coin; each row's Why? lists its movements.

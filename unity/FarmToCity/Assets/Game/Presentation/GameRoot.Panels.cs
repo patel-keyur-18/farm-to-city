@@ -156,6 +156,7 @@ namespace Game.Presentation
                 case "Money": _sheet.Show(MoneySheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
                 case "Year": _sheet.Show(YearSheet.Build(_ctx, r.Id), refreshOnly); break;
+                case "Lenders": _sheet.Show(LendersSheet.Build(_ctx), refreshOnly); break;
                 case "Books": _sheet.Show(BooksSheet.Build(_ctx), refreshOnly); break;
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Repay":

@@ -232,6 +232,9 @@ namespace Sim.View.Views
         /// <summary>A pie drawn under the label (a household's budget), slices in order, or null.</summary>
         public System.Collections.Generic.List<PieSliceVm> Pie { get; internal set; }
 
+        /// <summary>A line chart drawn under the label (net worth's trend), or null.</summary>
+        public TrendVm Trend { get; internal set; }
+
         /// <summary>A small family tree drawn instead of a label and value (the household card), or null.</summary>
         public FamilyTreeVm Tree { get; internal set; }
 
@@ -264,6 +267,14 @@ namespace Sim.View.Views
             Value = value;
             Colour = colour;
         }
+    }
+
+    /// <summary>Points of a line chart, oldest first, in coins; the first and last captions are drawn under it.</summary>
+    public sealed class TrendVm
+    {
+        public System.Collections.Generic.List<long> Values { get; } = new System.Collections.Generic.List<long>();
+        public string FirstCaption { get; internal set; }
+        public string LastCaption { get; internal set; }
     }
 
     /// <summary>A person on a small family tree: name and age ("Manoj (38)"), whether they married in, and the card a tap opens.</summary>

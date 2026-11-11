@@ -261,6 +261,8 @@ namespace Sim.View.Views
             return vm;
         }
 
+        private static ActionVm Pictured(ActionVm a, string icon) { a.Icon = icon; return a; }
+
         public static string Signed(ViewContext ctx, long v) { return v > 0 ? "+" + ctx.Fmt.Coins(v) : v < 0 ? "−" + ctx.Fmt.Coins(-v) : ctx.Fmt.Coins(0); }
 
         private static SheetVm BuildWealth(ViewContext ctx)
@@ -270,15 +272,22 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "coin", Title = s.Get("money.title") };
             Tabs(ctx, vm, "tab:wealth");
             vm.Lines.Add(LineVm.Header(s.Get("money.glance")));
-            vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
+            vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash") { Icon = "coin" });
             NetWorthSnapshot worth = Reporting.NetWorth(sim);
-            vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth"));
-            vm.Lines.Add(new LineVm(s.Get("money.landPart"), ctx.Fmt.Coins(worth.LandAtMarket), "netWorth"));
-            if (worth.Businesses > 0) vm.Lines.Add(new LineVm(s.Get("money.businessPart"), ctx.Fmt.Coins(worth.Businesses), "netWorth"));
+            vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth") { Icon = "land" });
+            vm.Lines.Add(new LineVm(s.Get("hub.youOwe"), ctx.Fmt.Coins(Hub.Owed(worth)), StatementSheet.HubWhy, HubSheet.Debt) { Icon = "bank" });
+
+            // Picture buttons (the Store's and People's layout): borrowing and the books.
+            long best = sim.State.Credit == null ? 0 : LendersSheet.Best(sim);
+            var buttons = new List<ActionVm>();
+            if (sim.State.Credit != null)
+                buttons.Add(Pictured(ActionVm.Open("lenders", s.Get("hub.borrow"), new SheetRequest("Lenders", 0), best > 0 ? s.Get("hub.borrowUpTo", "amount", ctx.Fmt.Coins(best)) : s.Get("hub.borrowNone")), "bank"));
+            buttons.Add(Pictured(ActionVm.Open("books", s.Get("hub.books"), new SheetRequest("Books", 0), s.Get("hub.booksDetail")), "menu"));
+            vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
+
+            HubSheet.Add(ctx, vm, worth);
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
 
-            if (sim.State.Finance.Reports.Count > 0)
-                vm.Lines.Add(new LineVm(s.Get("money.books"), s.Get("money.booksNote")) { Icon = "coin", Action = ActionVm.Open("books", s.Get("action.open"), new SheetRequest("Books", 0)) });
             if (sim.State.Credit == null) return vm;
             vm.Lines.Add(LineVm.Header(s.Get("money.loans")));
             bool any = false;
@@ -300,18 +309,6 @@ namespace Sim.View.Views
             }
             if (!any) vm.Lines.Add(new LineVm(s.Get("money.noLoans"), s.Get("money.noLoansNote")));
 
-            vm.Lines.Add(LineVm.Header(s.Get("money.borrow")));
-            for (int i = 0; i < sim.Config.Game.Credit.Lenders.Count; i++)
-            {
-                LenderDef l = sim.Config.Game.Credit.Lenders[i];
-                CreditLimit c = CreditRules.Limit(sim, i);
-                bool can = !c.ScoreTooLow && c.Limit >= l.MinAmount;
-                string why = c.ScoreTooLow ? ctx.Reject(RejectReason.ScoreTooLow) : can ? null : s.Get("money.cantBorrow", "min", ctx.Fmt.Coins(l.MinAmount));
-                vm.Lines.Add(new LineVm(s.Get(l.NameKey), s.Get("money.lenderValue", "limit", ctx.Fmt.Coins(c.Limit), "rate", ctx.Fmt.Percent(CreditRules.Rate(l, sim.State.Credit.Score))), "creditLimit", i)
-                {
-                    Action = new ActionVm("borrow:" + l.Id, s.Get("money.borrowButton"), null, ActionKind.Open, can, why, null, new SheetRequest("Borrow", i)),
-                });
-            }
             return vm;
         }
     }

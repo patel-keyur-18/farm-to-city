@@ -14,7 +14,7 @@ namespace Sim.View.Views
     {
         // Why? keys of the page's rows (built so the string-table scan, which reads dotted literals, doesn't take them for strings).
         private const string Prefix = "report.";
-        public const string AcctWhy = Prefix + "acct", CashRowWhy = Prefix + "cashrow", BalanceWhy = Prefix + "bs", PeopleWhy = Prefix + "people", YearWhy = Prefix + "year";
+        public const string AcctWhy = Prefix + "acct", CashRowWhy = Prefix + "cashrow", BalanceWhy = Prefix + "bs", PeopleWhy = Prefix + "people", YearWhy = Prefix + "year", HubWhy = Prefix + "hub";
 
         public const string ProfitTab = "pl", CashTab = "cash", BalanceTab = "balance";
 

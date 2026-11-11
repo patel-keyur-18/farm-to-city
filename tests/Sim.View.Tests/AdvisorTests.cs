@@ -70,7 +70,7 @@ namespace Sim.View.Tests
             SimEvent soil = new FieldSeasonClosed(close.SimTime, field, Fixed.FromInt(-3), Fixed.FromInt(35), 30);
             AdvisorNote a = Report(ctx, close, soil);
             Assert.That((a.Id, a.Key, a.Numbers), Is.EqualTo(("debt", p, new[] { 60_000 * c, 40_000 * c })), "loans over half of what you own come first");
-            Assert.That(AdvisorWords.Text(ctx, a), Is.EqualTo("You owe 60,000 coins against 40,000 coins you own: over half. One bad season could cost you land."));
+            Assert.That(AdvisorWords.Text(ctx, a), Is.EqualTo("You owe 60,000 coins against 40,000 coins you own: over 60%. One bad season could cost you land."));
 
             close = Closed(sim, p, net: 5_000 * c, opening: 50_000 * c, closing: 40_000 * c, cash: 40_000 * c, loans: 10_000 * c);
             a = Report(ctx, close, soil);

@@ -466,10 +466,11 @@ namespace Game.Presentation.Ui
         {
             if (line.Tree != null) return FamilyTree(line.Tree);
             if (line.Advisor != null) return AdvisorLine(line.Advisor);
-            if (line.Pie == null) return PlainRow(line);
+            if (line.Pie == null && line.Trend == null) return PlainRow(line);
             var box = new VisualElement { pickingMode = PickingMode.Ignore };
             box.Add(PlainRow(line));
-            box.Add(PieChart(line.Pie));
+            if (line.Trend != null) box.Add(TrendChart(line.Trend));
+            if (line.Pie != null) box.Add(PieChart(line.Pie));
             return box;
         }
 
@@ -477,7 +478,49 @@ namespace Game.Presentation.Ui
         {
             { "food", Painter.Hex(0xE8A33C) }, { "rent", Painter.Hex(0x8A5A2B) }, { "clothing", Painter.Hex(0xC2577A) }, { "health", Painter.Hex(0x4FA3A5) },
             { "schooling", Painter.Hex(0x5B7FC7) }, { "leisure", Painter.Hex(0x79C84A) }, { "saved", Painter.Hex(0xFFD968) },
+            { "land", Painter.Hex(0x8A5A2B) }, { "buildings", Painter.Hex(0xE8892A) }, { "livestock", Painter.Hex(0x3F7D20) }, { "goods", Painter.Hex(0x79C84A) },
+            { "cash", Painter.Hex(0xFFD968) }, { "businesses", Painter.Hex(0x5B7FC7) }, { "owed", Painter.Hex(0x4FA3A5) }, // your wealth (spec 019 §3.2)
         };
+
+        /// <summary>Net worth's trend (spec 019 §3.2): a line over a tan field with a dot on each close, the first and last captions under it.</summary>
+        private static VisualElement TrendChart(TrendVm trend)
+        {
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.style.paddingTop = 8; box.style.paddingBottom = 8;
+            var chart = new VisualElement { pickingMode = PickingMode.Ignore };
+            chart.style.height = 190;
+            chart.style.backgroundColor = UiKit.CreamDark;
+            UiKit.Radius(chart, 18);
+            chart.generateVisualContent += mgc =>
+            {
+                var p = mgc.painter2D;
+                Rect r = chart.contentRect;
+                long lo = long.MaxValue, hi = long.MinValue;
+                foreach (long v in trend.Values) { if (v < lo) lo = v; if (v > hi) hi = v; }
+                if (hi == lo) { hi++; lo--; }
+                int n = trend.Values.Count;
+                const float pad = 26f;
+                Vector2 At(int i) => new Vector2(pad + (r.width - 2 * pad) * i / Mathf.Max(1, n - 1), r.height - pad - (r.height - 2 * pad) * (float)(trend.Values[i] - lo) / (hi - lo));
+                p.strokeColor = UiKit.Green;
+                p.lineWidth = 8f;
+                p.lineJoin = LineJoin.Round;
+                p.lineCap = LineCap.Round;
+                p.BeginPath();
+                for (int i = 0; i < n; i++) { if (i == 0) p.MoveTo(At(i)); else p.LineTo(At(i)); }
+                p.Stroke();
+                p.fillColor = UiKit.Green;
+                for (int i = 0; i < n; i++) { p.BeginPath(); p.Arc(At(i), 11f, 0f, 360f); p.Fill(); }
+            };
+            box.Add(chart);
+            var caps = new VisualElement { pickingMode = PickingMode.Ignore };
+            caps.style.flexDirection = FlexDirection.Row;
+            caps.style.justifyContent = Justify.SpaceBetween;
+            caps.style.marginTop = 4;
+            caps.Add(UiKit.Text(trend.FirstCaption, 24, UiKit.Wood, UiKit.Body));
+            caps.Add(UiKit.Text(trend.LastCaption, 24, UiKit.Wood, UiKit.Body));
+            box.Add(caps);
+            return box;
+        }
 
         /// <summary>A household's budget (spec 014 §7): a pie drawn with the vector painter, and its legend beside it.</summary>
         private static VisualElement PieChart(System.Collections.Generic.List<PieSliceVm> slices)
@@ -1097,6 +1140,7 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn);
             foreach (LineVm l in vm.Lines)
             {
+                if (l.Trend != null) foreach (long v in l.Trend.Values) key.Append('|').Append(v);
                 if (l.Pie != null) foreach (PieSliceVm p in l.Pie) key.Append('|').Append(p.Label).Append(p.Percent).Append(p.Value);
                 if (l.Tree != null) foreach (var g in l.Tree.Generations) foreach (TreePersonVm p in g) key.Append('|').Append(p.Text);
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);

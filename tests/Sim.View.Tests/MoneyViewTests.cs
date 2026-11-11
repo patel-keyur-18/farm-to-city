@@ -70,10 +70,12 @@ namespace Sim.View.Tests
 
             SheetVm wealth = MoneySheet.Build(ctx, MoneySheet.Wealth);
             Assert.That(wealth.Tab, Is.EqualTo("tab:wealth"));
-            Assert.That(wealth.Lines.Select(l => l.Label), Is.SupersetOf(new[] { "Cash", "What you own minus what you owe", "Of that, your land", "Your loans", "Borrow" }));
+            Assert.That(wealth.Lines.Select(l => l.Label), Is.SupersetOf(new[] { "Cash", "What you own minus what you owe", "You owe", "Your wealth", "Net worth, in today's coins", "What your wealth is made of", "Debt to assets", "Emergency fund", "Passive income", "Your loans" }));
+            Assert.That(wealth.Lines.Single(l => l.Buttons != null).Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Borrow", "Your books" }), "picture buttons, as the Store's");
+            Assert.That(wealth.Lines.Single(l => l.Trend != null).Trend.Values.Count, Is.GreaterThanOrEqualTo(2), "a season has closed: the line has points");
             Loan loan = sim.State.Credit.Loans.Single();
             Assert.That(wealth.Lines.Any(l => l.Action != null && l.Action.Id == "repay:" + loan.Id), Is.True);
-            Assert.That(wealth.Lines.Count(l => l.WhyKey == "creditLimit"), Is.EqualTo(sim.Config.Game.Credit.Lenders.Count));
+            Assert.That(LendersSheet.Build(ctx).Lines.Count(l => l.WhyKey == "creditLimit"), Is.EqualTo(sim.Config.Game.Credit.Lenders.Count), "Borrow is its own sheet of lenders");
         }
 
         // AC-12: earned − spent is the report's what's left at the close; cash at the start + profit + every why-your-cash-moved line = cash now,

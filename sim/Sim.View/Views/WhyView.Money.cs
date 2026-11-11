@@ -286,7 +286,7 @@ namespace Sim.View.Views
         /// <summary>A season-report line (spec 008 §3.8): its plain text, then the accounts behind it. id = the report's period.</summary>
         private static WhyVm ReportLineWhy(ViewContext ctx, string line, long period)
         {
-            if (line == "acct" || line == "cashrow" || line == "bs" || line == "people" || line == "year") return StatementWhy(ctx, line, period);
+            if (line == "acct" || line == "cashrow" || line == "bs" || line == "people" || line == "year" || line == "hub") return StatementWhy(ctx, line, period);
             SeasonReport r = ctx.Sim.State.Finance.Reports.Find(x => x.Period == period) ?? ctx.Sim.State.Finance.Reports[ctx.Sim.State.Finance.Reports.Count - 1];
             WhyVm vm = new WhyVm { Title = ctx.Strings.Get("report." + line) };
             if (line == "netWorth")

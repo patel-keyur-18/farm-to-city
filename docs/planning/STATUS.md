@@ -205,6 +205,13 @@
 
 ## In progress
 
+**US-135 built and tested (2026-11-11), for the owner's review** (ADR 0101 §6; spec 019 §3.2–§3.4; the owner approved the preview first).
+- **Your wealth** (Money and loans, second tab): glance (cash, net worth, what you owe), picture buttons *Borrow* (up to the best limit; opens its own sheet of lenders, `LendersSheet`) and *Your books*, then the hub: net worth's trend in today's coins (a line, the last 8 closes and now; `Hub.Trend`, the index at each close recomputed from the town's seed by `Hub.IndexAtClose`, equal to the index the town had), what your wealth is made of (the existing pie, 7 classes), debt to assets with its band (comfortable under 30%, risky over 60%, read from `finance.json` `debtComfortableUnder` / `debtRiskyOver`; optional, so the frozen golden content still loads), the emergency fund (cash + deposit over everything the next close takes, living never under the basic plan, tenths rounded down, amber under 1), passive income (last closed season: rent received, the profit of businesses with a hired worker, a loss counting against it; never under 0%), then the loans. Each row has its *Why?* (`report.hub`); the trend's gives both figures ("+43% in today's coins; +48% as counted then; prices rose 3%").
+- The accountant's debt note now speaks at the same band as the hub (`finance.json`, no threshold in `advisors.json`; its text names the band).
+- Not in this story: the *Savings deposit* button, the deposit's interest in passive income (US-236), the milestones list (US-136).
+- Tests: `HubTests` (`Ratios`, `Floors`, `TrendTodaysCoins`), `HubViewTests.Hub_Rows`; the Why? and string sweeps cover the hub; `MoneyViewTests.OpensOnSeason`, `PanelTests.Choices`, `StatementViewTests.PastSeasons` follow the new layout. Editor by scripted touch: Your wealth (glance, buttons, trend, pie, three ratios), a *Why?* chip, Borrow → lenders (with a back arrow), Your books; a coop bank loan taken to see the debt row (1%, comfortable). Captures `docs/art/s18-135-*.png`. Saves restored identical.
+- Learned: Unity did not compile a new `Hub.cs` in `Sim.Core` (it never entered the assembly's file list, even after a refresh, a clean build and `package_resolve`); renaming the file to `HubRules.cs` fixed it. If a new `sim/` file is "not found" in the Editor but builds under `dotnet`, rename it.
+
 **US-137 built and tested (2026-11-11), for the owner's review** (ADR 0101 §3–§5; spec 019 §3.1, §3.7; save schema 16 opens here).
 - **T1, what's kept:** each report keeps `CashRows` (the cash that moved against each account in each direction, grouped *Your work* / *What you bought, sold or saved* / *Borrowing*, adding to closing less opening to the coin), its entry range (`FirstEntry`, `EndEntry`: a season is its entries, so what the market paid in the boundary hour counts in the season whose cash it was), `People` rows (pay against what they'd ask, skill, how the close left them: stayed, wage unpaid, left elsewhere, left unpaid, retired) with employer reputation before and after, and `NetWorth.Deposit` (0 until US-236). A sale's whole price sits against the asset sold (its gain, loss and depreciation folded in). All of it is save-only (not hashed): golden replays unchanged. `retainSeasons` 4 → 8 (a four-year save grows from 45 to 53 KB). Save schema 16, fixture `saves/schema16`; a schema-15 town's past seasons open at once, their cash flow and *Your people* from the next close (`Schema15_Statements`).
 - **T2, the season page:** `ReportSheet` is now Profit and loss | Cash flow | Balance sheet (`StatementSheet`), each line beside the same season last year (*Last Spring: …* / *First Spring*; a season not itemised then says so). The profit and loss is itemised by account under each heading (no heading over nothing), then *Your people*; every cash row's *Why?* lists its movements (day, what, whom, amount; many a day merged); the net result's and net worth's *Why?* name the biggest change from last year. *Your books* (Money → Your wealth → Open) lists the last 8 closed seasons, each opening its page.
@@ -372,8 +379,8 @@
 
 ## Next up
 
-1. **The owner reviews US-137** (statements: the season page's three tabs, Your books, Your year, Your people).
-2. Then US-135 (the finance hub), after previewing *Your wealth* (`sprints.md` order of work).
+1. **The owner reviews US-135** (*Your wealth*: the trend, the pie, the three ratios, Borrow's lenders). US-137 is approved.
+2. Then US-236 (the savings deposit and the warning before the close), after previewing the savings sheet and the warning card (`sprints.md` order of work).
 
 ## Owner action checklist (Phases 0–1)
 
