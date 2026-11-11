@@ -205,6 +205,11 @@
 
 ## In progress
 
+**The whole checklist run in the Editor (2026-11-11, scripted touch), the Development build made** (`docs/test-checklists/s18-statements-savings-milestones.md`; captures `docs/art/s18-check-*.png`).
+- **Run, with a capture looked at each time:** the short-close alert (no deposit: three buttons; with 30,000 in the deposit: *Pay from my savings · 10,844 coins of 30,000 coins* and the other three), *Pay from my savings* → the note with *Take it back*; the close crossed (the deposit grew by its interest, 30,000 → 30,450; the cover wasn't needed because the day's sales covered the close, so the yes was spent for nothing, as designed); the season page: *Profit and loss* (the advisor's line, *Last Spring* beside each line, *Your people* with Geeta's stars, what she was paid against what she asks, and the employer's name 51 up 1), *Cash flow* (every row, *Adds up to the coin*), *Balance sheet* (*Savings deposit* a line); *Your books*; Your wealth, the Savings sheet; the confirm cards: land with a bank loan (cost, loan, you pay now, first payment, cash after = 2,06,590 − 1,07,490; *Not now* left cash and loans), a business (1,34,136; *Not now* left cash and no business), the cattle shed (42,248; the green button built it and cash fell by exactly the card's amount); Menu → Your land is there; text size Large on Your wealth, its Milestones and the savings sheet's buttons (wraps and stays readable), set back to Normal.
+- **Not reachable here:** the hut's card (this town has 2 of 2 huts: *Build a hut* greyed; the same card renderer as the shed's, `ConfirmTests.EveryCommand`); the Winter *Your year* (US-137's tour); reduced motion and the real notification (device).
+- **Found:** nothing new. (This session's earlier finds: editing `sim/` C# during play mode, a toast timing the captures missed.)
+
 **Sprint 18 balance with the bots measured (2026-11-11), approved by the owner** (spec 019 §9; ADR 0102, Accepted).
 - **Measured** (8 seeds, live content; `FinanceGateTests`, `FinanceGate`, `DepositLoopBot`): debt to assets at the Village 6–8% (spec guessed 15–40%: restated to 2–20%, under 60% for every run); the cautious saver's emergency fund on day 30 is 1.0–1.9 seasons (holds); borrowing at the co-op bank to deposit loses in every seed (net worth 94–98.5% of the competent bot's after 12 seasons, even with a bank lending 10,00,000 coins unsecured); the zero-time loop check now includes deposit and withdraw; every bot's books are sorted (27 bots × 2 seeds, 594 reports, 122,810 cash entries); a Village town's save after 24 seasons is 136 KB (under 200 KB).
 - **Decided (owner, 2026-11-11: option (a) now, (c) in the Phase 3 balance; ADR 0102 §3): passive income covers the founder's living on day 20–40 at the Village (130–190%, spec said 5–30%).** Five rented houses (6,000 each, a gross yield of 10% a season) plus a hired mill against a living of 18,000 indexed. Options: (a) leave it, it marks the first time rent feeds the household; (b) raise the milestone's bar in `finance.json`; (c) lower the rent (ADR 0063, slows the Village, re-measure ADR 0071). **Carried to Phase 3:** open the rent's realism with the owner (a rent about a third of today's, house prices nearer the real cost, the Village's pace and ADR 0071's home loan re-measured). The test prints passive income and asserts nothing about it.
@@ -401,7 +406,7 @@
 
 ## Next up
 
-1. The whole checklist in the Editor (recapture the US-236 screens), the Development build and the device check, US-237. US-135, US-136, US-137, US-236 and the balance (ADR 0102) are approved.
+1. **The owner's device check** of the Development build with `docs/test-checklists/s18-statements-savings-milestones.md` (both frame-time p95s); then US-237 (the playtest town shown to the owner, then the Release build) and the Sprint 18 pull request. US-135, US-136, US-137, US-236 and the balance (ADR 0102) are approved.
 
 ## Owner action checklist (Phases 0–1)
 

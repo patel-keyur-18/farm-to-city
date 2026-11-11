@@ -1,10 +1,10 @@
 # Sprint 18 build: your statements, Your wealth, the savings deposit, milestones and confirm cards
 
-- **Build:** the head of branch `sprint/18-statements-and-playtest`, a Development build made from the open Editor on ____ (Unity: ____; the unsigned Xcode Release compile: ____). Rebuild from the merged `main` if you prefer, with the guide in `how-to-build-ios.md`.
+- **Build:** the head of branch `sprint/18-statements-and-playtest`, a Development build made from the open Editor on 2026-11-11 (Unity: Build Succeeded; the one console error is the CLI's 5 s eval timeout; the unsigned Xcode Release compile: BUILD SUCCEEDED). Rebuild from the merged `main` if you prefer, with the guide in `how-to-build-ios.md`.
 - **Device:** iPhone 13, iOS version: ____
 - **Tested by / date:** ____
 - **How to install:** see `how-to-build-ios.md`. This is **a Development build**, so it has the developer panel. Delete `unity/FarmToCity/Builds/iOS` before building (this avoids the macOS 27 crash).
-- **Run in the Editor first (2026-11-11, scripted touch, on a copy of your town):** see the Notes column. Captures are in `docs/art/s18-check-*.png`, and each story's own tour is in `docs/art/s18-135-*`, `s18-136-*`, `s18-137-*` and `s18-235-*`. Set up by script, in the session only: test coins, 30,000 coins put into the deposit, dev time travel. **Only a device can check:** 1 (your own town's update on the phone), 24–27 (reduced motion, text size and rotation on the phone), 28 (frame time), 29 (notifications), 30 (your normal morning) and 31 (Snapshot and Restore).
+- **Run in the Editor first (2026-11-11, scripted touch, on a copy of your town):** see the Notes column. Captures are in `docs/art/s18-check-*.png`, and each story's own tour is in `docs/art/s18-135-*`, `s18-136-*`, `s18-137-*` and `s18-235-*`. Set up by script, in the session only: test coins, 30,000 coins put into the deposit, dev time travel. **Only a device can check:** 1 (your own town's update on the phone), 27 (reduced motion), 28 (frame time), 29 (notifications), 30 (your normal morning), 31 (Snapshot and Restore) and 33 (rotation).
 
 ## Before you install: keep your town safe
 
