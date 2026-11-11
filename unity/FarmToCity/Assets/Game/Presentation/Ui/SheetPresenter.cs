@@ -131,6 +131,7 @@ namespace Game.Presentation.Ui
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
+                case "savings": return SpriteBank.Rendered("icon_savings") ?? IconBank.Coin; // the savings deposit (spec 019 §3.5)
                 case "menu": return IconBank.Ledger;
                 case "alert": return IconBank.Bell;
                 case "cart": return IconBank.Cart;

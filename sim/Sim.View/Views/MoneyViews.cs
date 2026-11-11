@@ -251,6 +251,11 @@ namespace Sim.View.Views
                     Note = s.Get("season.short", "amount", ctx.Fmt.Coins(season.Short), "who", season.ShortWho), NoteTone = Tone.Warn,
                     Action = ActionVm.Open("store", s.Get("season.toStore"), new SheetRequest("Store", 0)),
                 });
+            if (!last && season.Short > 0) // ADR 0101 §2: when the savings could cover the gap it says so, with the lever; nothing leaves them without your yes
+            {
+                LineVm savings = SavingsCover.Row(ctx, season.Short);
+                if (savings != null) vm.Lines.Add(savings);
+            }
             if (season.Own.Count > 0) // beside your total, never in it: each business pays from its own cash
             {
                 vm.Lines.Add(LineVm.Header(s.Get("season.own")));
@@ -282,6 +287,9 @@ namespace Sim.View.Views
             var buttons = new List<ActionVm>();
             if (sim.State.Credit != null)
                 buttons.Add(Pictured(ActionVm.Open("lenders", s.Get("hub.borrow"), new SheetRequest("Lenders", 0), best > 0 ? s.Get("hub.borrowUpTo", "amount", ctx.Fmt.Coins(best)) : s.Get("hub.borrowNone")), "bank"));
+            long deposit = SavingsRules.Balance(sim);
+            buttons.Add(Pictured(ActionVm.Open("savings", s.Get("hub.savings"), new SheetRequest(SavingsSheet.Kind, 0),
+                deposit > 0 ? s.Get("hub.savingsDetail", "amount", ctx.Fmt.Coins(deposit), "rate", ctx.Fmt.Percent(sim.Config.Game.Ledger.SavingsInterest)) : s.Get("hub.savingsNone", "rate", ctx.Fmt.Percent(sim.Config.Game.Ledger.SavingsInterest))), "savings"));
             buttons.Add(Pictured(ActionVm.Open("books", s.Get("hub.books"), new SheetRequest("Books", 0), s.Get("hub.booksDetail")), "menu"));
             vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
 

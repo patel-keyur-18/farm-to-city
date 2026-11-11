@@ -12,7 +12,7 @@ namespace Sim.View.Views
         public const int TrendRows = 8;
 
         /// <summary>The hub rows' <em>Why?</em> ids.</summary>
-        public const int Trend = 0, Made = 1, Debt = 2, Emergency = 3, Passive = 4;
+        public const int Trend = 0, Made = 1, Debt = 2, Emergency = 3, Passive = 4, Savings = 5, Prices = 6, Standing = 7;
 
         /// <summary>The asset classes of the composition, in order: (key, amount).</summary>
         public static List<KeyValuePair<string, long>> Classes(NetWorthSnapshot n)

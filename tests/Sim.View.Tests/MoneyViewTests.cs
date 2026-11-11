@@ -71,7 +71,7 @@ namespace Sim.View.Tests
             SheetVm wealth = MoneySheet.Build(ctx, MoneySheet.Wealth);
             Assert.That(wealth.Tab, Is.EqualTo("tab:wealth"));
             Assert.That(wealth.Lines.Select(l => l.Label), Is.SupersetOf(new[] { "Cash", "What you own minus what you owe", "You owe", "Your wealth", "Net worth, in today's coins", "What your wealth is made of", "Debt to assets", "Emergency fund", "Passive income", "Your loans" }));
-            Assert.That(wealth.Lines.Single(l => l.Buttons != null).Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Borrow", "Your books" }), "picture buttons, as the Store's");
+            Assert.That(wealth.Lines.Single(l => l.Buttons != null).Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Borrow", "Savings deposit", "Your books" }), "picture buttons, as the Store's");
             Assert.That(wealth.Lines.Single(l => l.Trend != null).Trend.Values.Count, Is.GreaterThanOrEqualTo(2), "a season has closed: the line has points");
             Loan loan = sim.State.Credit.Loans.Single();
             Assert.That(wealth.Lines.Any(l => l.Action != null && l.Action.Id == "repay:" + loan.Id), Is.True);

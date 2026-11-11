@@ -159,12 +159,12 @@ namespace Sim.Core.Market
         /// What the next close will charge for warehouse space (ADR 0101 §1), worked out the way the close does it, the tenant's chance
         /// included (it is drawn from the seed and the new season, so the preview and the close agree). 0 when none is needed.
         /// </summary>
-        public static long NextCloseRent(Simulation sim)
+        public static long NextCloseRent(Simulation sim, bool atClose = false)
         {
             GodownState s = sim.State.Godown;
             if (s == null) return 0;
             bool let = s.LetNext && Owned(sim) != null && AllDryGrams(sim) <= s.RentNextTonnes * GramsPerTonne
-                && Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Godown, 0, (ulong)(sim.Period + 1)), Def(sim).TenantChance);
+                && Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Godown, 0, (ulong)(sim.Period + (atClose ? 0 : 1))), Def(sim).TenantChance);
             int tonnes = CloseTonnes(sim, let, UsedGrams(sim));
             return tonnes == 0 ? 0 : SeasonRent(sim, tonnes);
         }

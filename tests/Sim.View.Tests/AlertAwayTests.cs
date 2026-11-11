@@ -56,9 +56,9 @@ namespace Sim.View.Tests
 
             // Cash short on the season's last day.
             Simulation poor = ViewKit.NewGame(seed: 5, edit: (f, j) => f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 1000") : j);
-            Assert.That(Has(poor, "Next season's living costs"), Is.False);
+            Assert.That(Has(poor, "Short at the close"), Is.False);
             poor.AdvanceTo(poor.Clock.SecondsPerSeason - 12 * Hour);
-            Assert.That(Has(poor, "Next season's living costs"), Is.True);
+            Assert.That(Has(poor, "Short at the close by"), Is.True);
             Assert.That(Alerts.Build(ViewKit2.Context(poor))[0].Level, Is.EqualTo(AlertLevel.Urgent), "urgent first");
         }
     }

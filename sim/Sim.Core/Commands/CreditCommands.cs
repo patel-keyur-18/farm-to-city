@@ -112,4 +112,49 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>Puts cash into the savings deposit at the co-op bank (spec 019 §3.5): at least the minimum, any time.</summary>
+    public sealed class DepositSavings : TimedCommand
+    {
+        public long Amount { get; }
+        public DepositSavings(long at, long amount) : base(at) { Amount = amount; }
+        protected override CommandResult ApplyAt(Simulation sim) { return SavingsRules.Put(sim, Amount); }
+    }
+
+    /// <summary>Takes cash out of the savings deposit, any time (spec 019 §3.5).</summary>
+    public sealed class WithdrawSavings : TimedCommand
+    {
+        public long Amount { get; }
+        public WithdrawSavings(long at, long amount) : base(at) { Amount = amount; }
+        protected override CommandResult ApplyAt(Simulation sim) { return SavingsRules.Take(sim, Amount); }
+    }
+
+    /// <summary>The standing choice <em>If cash runs short at the close</em>: ask (the default) or always pay from the savings (spec 019 §3.5).</summary>
+    public sealed class SetSavingsCover : TimedCommand
+    {
+        public bool Always { get; }
+
+        public SetSavingsCover(long at, bool always) : base(at) { Always = always; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (sim.State.Finance == null) return CommandResult.Reject(RejectReason.NothingShort);
+            sim.State.Finance.Savings.Always = Always;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Your yes for the coming close: what it takes beyond your cash comes from the savings (spec 019 §3.5). Refused while the close wouldn't be short.</summary>
+    public sealed class CoverFromSavings : TimedCommand
+    {
+        public CoverFromSavings(long at) : base(at) { }
+        protected override CommandResult ApplyAt(Simulation sim) { return SavingsRules.Consent(sim, true); }
+    }
+
+    /// <summary>Takes the yes back before the close (spec 019 §3.5, as built).</summary>
+    public sealed class TakeBackSavingsCover : TimedCommand
+    {
+        public TakeBackSavingsCover(long at) : base(at) { }
+        protected override CommandResult ApplyAt(Simulation sim) { return SavingsRules.Consent(sim, false); }
+    }
 }

@@ -73,7 +73,7 @@ namespace Sim.View.Views
         internal static readonly string[] MovedOrder =
         {
             "paidAhead", "wear", "owed", "interestOwed", "interestPaid", "repaid", "borrowed", "boughtBuildings", "boughtLivestock", "boughtTrees",
-            "boughtLand", "boughtEquipment", "boughtInvestmentInBusinesses", "sold", "fromBusiness", "other",
+            "boughtLand", "boughtEquipment", "boughtInvestmentInBusinesses", "savedIn", "savedOut", "sold", "fromBusiness", "other",
         };
 
         /// <summary>True once a season has closed: *Last season* can show.</summary>
@@ -157,6 +157,7 @@ namespace Sim.View.Views
                 case Account.Buildings: case Account.Livestock: case Account.Trees: case Account.Land: case Account.Equipment:
                     return p.Amount > 0 ? "bought" + p.Account : "sold";
                 case Account.InvestmentInBusinesses: return p.Amount > 0 ? "bought" + p.Account : "fromBusiness";
+                case Account.BankDeposit: return p.Amount > 0 ? "savedIn" : "savedOut"; // put in (and the interest added to it) or taken out, or paid at the close (spec 019 §3.5)
                 default: return "other";
             }
         }
@@ -244,6 +245,7 @@ namespace Sim.View.Views
                 case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return "animal_buffalo";
                 case Account.RentReceived: return "family_house";
                 case Account.BusinessDrawingsIncome: return "flour_mill";
+                case Account.InterestOnSavings: return "savings";
                 case Account.DayLabourEarnings: case Account.LivingCosts: case Account.HealthCosts: return "person_founder";
                 case Account.SeedsAndPlanting: return "field";
                 case Account.FertiliserAndSpraying: return "compost";
@@ -257,7 +259,7 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             string icon = key == "boughtBuildings" ? "family_house" : key == "boughtLivestock" ? "animal_buffalo" : key == "boughtTrees" ? "tree"
-                : key == "boughtLand" ? "land" : key == "boughtInvestmentInBusinesses" || key == "fromBusiness" ? "flour_mill" : "coin";
+                : key == "boughtLand" ? "land" : key == "boughtInvestmentInBusinesses" || key == "fromBusiness" ? "flour_mill" : key == "savedIn" || key == "savedOut" ? "savings" : "coin";
             return new SeasonLineVm { Key = key, Label = s.Get("season.moved." + key), Icon = icon, Amount = amount, WhyText = s.Get("season.moved." + key + ".why") };
         }
 

@@ -339,11 +339,17 @@ namespace Sim.Core.Definitions
         public Fixed DebtComfortableUnder { get; }
         public Fixed DebtRiskyOver { get; }
 
-        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver)
+        /// <summary>The co-op bank's savings rate a season, added to the deposit at each close, and the least you can put in (spec 019 §3.5).</summary>
+        public Fixed SavingsInterest { get; }
+        public long SavingsMinimum { get; }
+
+        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver, Fixed savingsInterest, long savingsMinimum)
         {
             RetainSeasons = retainSeasons;
             DebtComfortableUnder = debtComfortableUnder;
             DebtRiskyOver = debtRiskyOver;
+            SavingsInterest = savingsInterest;
+            SavingsMinimum = savingsMinimum;
         }
     }
 

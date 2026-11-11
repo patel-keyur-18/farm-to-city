@@ -1,5 +1,5 @@
 {
-  "ledger": { "retainSeasons": 8, "debtComfortableUnder": 0.30, "debtRiskyOver": 0.60 },
+  "ledger": { "retainSeasons": 8, "debtComfortableUnder": 0.30, "debtRiskyOver": 0.60, "savingsInterest": 0.015, "savingsMinimum": 100 },
   "credit": {
     "min": 300, "max": 900, "startScore": 650, "fullScore": 750,
     "onTimeGain": 10, "cleanSeasonGain": 5,

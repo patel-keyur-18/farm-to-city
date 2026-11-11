@@ -43,7 +43,7 @@ namespace Sim.Core.Finance
             switch (a)
             {
                 case Account.Land: case Account.Buildings: case Account.AccumulatedDepreciation: case Account.Equipment: case Account.Trees:
-                case Account.Livestock: case Account.InvestmentInBusinesses:
+                case Account.Livestock: case Account.InvestmentInBusinesses: case Account.BankDeposit:
                     return CashGroup.Bought;
                 case Account.MoneylenderLoans: case Account.Overdraft: case Account.BankLoans:
                     return CashGroup.Borrowing;

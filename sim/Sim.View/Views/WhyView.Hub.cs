@@ -62,6 +62,26 @@ namespace Sim.View.Views
                     Text(vm, ctx, "hub.why.emergencyText");
                     return vm;
                 }
+                case HubSheet.Savings:
+                {
+                    vm = New(ctx, "hub.why.savings", Money(ctx, SavingsRules.Balance(sim)));
+                    Row(vm, ctx, "hub.why.savingsRate", ctx.Fmt.Percent(sim.Config.Game.Ledger.SavingsInterest));
+                    Row(vm, ctx, "hub.why.savingsNext", Money(ctx, SavingsRules.NextInterest(sim)));
+                    Text(vm, ctx, "hub.why.savingsText");
+                    return vm;
+                }
+                case HubSheet.Prices:
+                {
+                    int rose = Hub.PricesRose(sim, out int seasons);
+                    vm = New(ctx, "hub.why.prices", seasons == 0 ? s.Get("savings.pricesNone") : s.Get("savings.pricesValue", "pct", ctx.Fmt.Integer(rose), "seasons", s.Plural("why.seasons", seasons)));
+                    Row(vm, ctx, "hub.why.pricesDeposit", ctx.Fmt.Percent(sim.Config.Game.Ledger.SavingsInterest));
+                    Text(vm, ctx, "hub.why.pricesText");
+                    return vm;
+                }
+                case HubSheet.Standing:
+                    vm = New(ctx, "hub.why.standing", SavingsRules.Always(sim) ? s.Get("savings.standing.always") : s.Get("savings.standing.ask"));
+                    Text(vm, ctx, "hub.why.standingText");
+                    return vm;
                 default:
                 {
                     vm = New(ctx, "hub.why.passive", s.Get("hub.passiveValue", "pct", ctx.Fmt.Integer(Hub.PassivePercent(sim))));

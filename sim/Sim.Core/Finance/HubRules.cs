@@ -66,6 +66,15 @@ namespace Sim.Core.Finance
             return list;
         }
 
+        /// <summary>How much prices rose over the last year (four seasons, or as many as have passed): whole percent rounded down, never bigger than it was. The savings sheet puts it beside the deposit's rate (spec 019 §3.5).</summary>
+        public static int PricesRose(Simulation sim, out int seasons)
+        {
+            seasons = (int)System.Math.Min(4, sim.Period);
+            if (seasons == 0) return 0;
+            Fixed then = IndexAtClose(sim, sim.Period - seasons), now = sim.State.Market.PriceIndex;
+            return then.Raw <= 0 ? 0 : (int)System.Math.Max(0, (long)((new BigInteger(now.Raw) - then.Raw) * 100 / then.Raw));
+        }
+
         /// <summary>A past amount in today's coins: × now ÷ then, rounded to the coin's hundredth.</summary>
         public static long InTodaysCoins(long amount, Fixed then, Fixed now)
         {
@@ -138,7 +147,10 @@ namespace Sim.Core.Finance
             if (reports.Count == 0) return 0;
             SeasonReport last = reports[reports.Count - 1];
             foreach (KeyValuePair<Account, long> kv in last.ByAccount)
-                if (kv.Key == Account.RentReceived) rent = kv.Value; // interest on savings joins with the deposit (US-236)
+            {
+                if (kv.Key == Account.RentReceived) rent = kv.Value;
+                if (kv.Key == Account.InterestOnSavings) interest = kv.Value;
+            }
             if (sim.State.Businesses != null)
                 foreach (Business.Business b in sim.State.Businesses.Businesses)
                 {

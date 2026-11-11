@@ -180,11 +180,12 @@ namespace Sim.Core.Finance
         /// principal due then (none at a part-season first close; all of it at the last; a bank's part of it in between). Paying back
         /// what you borrowed is principal, not a cost.
         /// </summary>
-        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue)
+        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue, bool atClose = false)
         {
             interestDue = principalDue = 0;
             if (!loan.IsOpen) return 0;
-            long S = sim.Clock.SecondsPerSeason, close = (sim.State.Clock.SimTime / S + 1) * S;
+            // atClose: asked inside the close itself, once interest is accrued to the boundary: the close is now, not a season on.
+            long S = sim.Clock.SecondsPerSeason, close = atClose ? sim.State.Clock.SimTime : (sim.State.Clock.SimTime / S + 1) * S;
             AccruedSince(sim, loan, close, out long interest, out long penalty);
             long principal = loan.FirstClosePartial ? loan.ArrearsPrincipal
                 : loan.Remaining <= 1 ? loan.Principal

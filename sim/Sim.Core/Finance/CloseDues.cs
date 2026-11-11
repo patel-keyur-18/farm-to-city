@@ -56,14 +56,15 @@ namespace Sim.Core.Finance
     /// </summary>
     public static class CloseDues
     {
-        public static List<CloseDue> Next(Simulation sim)
+        /// <param name="atClose">True inside the season close itself (the savings cover, ADR 0101 §2): the new season has begun and interest is accrued, so the loans and the godown's tenant are read as the close reads them.</param>
+        public static List<CloseDue> Next(Simulation sim, bool atClose = false)
         {
             var list = new List<CloseDue>();
             if (sim.State.Credit != null)
                 foreach (Loan loan in sim.State.Credit.Loans)
                 {
                     if (!loan.IsOpen || loan.BusinessId != 0) continue; // a business pays its own loan (spec 016 §3.8)
-                    long total = CreditRules.NextPayment(sim, loan, out long interest, out long principal);
+                    long total = CreditRules.NextPayment(sim, loan, out long interest, out long principal, atClose);
                     if (total == 0) continue;
                     list.Add(new CloseDue { Key = "loan:" + loan.Id, Kind = DueKind.Loan, Id = loan.Id, Amount = total, Interest = interest, Principal = principal });
                 }
@@ -85,7 +86,7 @@ namespace Sim.Core.Finance
                         Wage = wage + housing, Housing = housing, Advance = h.Hr.Advance,
                     });
                 }
-            long rent = GodownRules.NextCloseRent(sim);
+            long rent = GodownRules.NextCloseRent(sim, atClose);
             if (rent > 0) list.Add(new CloseDue { Key = "warehouse", Kind = DueKind.Warehouse, Amount = rent });
             if (IrrigationRules.On(sim))
             {
