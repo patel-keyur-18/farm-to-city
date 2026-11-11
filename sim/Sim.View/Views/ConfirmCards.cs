@@ -179,6 +179,11 @@ namespace Sim.View.Views
         private static string Subject(ViewContext ctx, Command c)
         {
             GameDefs defs = ctx.Sim.Config.Game;
+            if (c is DismissHand dh)
+            {
+                Sim.Core.People.Hand hand = ctx.Sim.State.People?.Hand(dh.HandId);
+                return hand == null ? null : Sim.View.Views.PeopleWords.Name(ctx, hand.Name);
+            }
             string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : null;
             int p = id == null ? -1 : defs.Map.IndexOfParcel(id);
             if (p < 0) return null;

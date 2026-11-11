@@ -90,6 +90,22 @@ namespace Sim.View.Tests
             Assert.That(ConfirmCards.For(ViewKit2.Context(sim), new SellParcel(T(sim), "w1")), Is.Null, "not owned");
         }
 
+        // Card C for letting a hand go: what you get back, and the hold; the sim's own refund.
+        [Test]
+        public void Hold_LetGo()
+        {
+            Simulation sim = Situations.Growing();
+            Sim.Core.People.Hand hand = sim.State.People.Hands.Single();
+            ViewContext ctx = ViewKit2.Context(sim);
+            ConfirmCardVm card = ConfirmCards.For(ctx, new DismissHand(T(sim), hand.Id));
+            Assert.That(card, Is.Not.Null);
+            Assert.That((card.Hold, card.SafeLabel), Is.EqualTo((true, "Keep them")));
+            long cash = sim.State.Ledger.Cash;
+            Assert.That(sim.Execute(new DismissHand(T(sim), hand.Id)).Accepted, Is.True);
+            Assert.That(card.CashChange, Is.EqualTo(sim.State.Ledger.Cash - cash), "what you get back");
+            Assert.That(card.Rows.Last().Value, Is.EqualTo(ctx.Fmt.Coins(sim.State.Ledger.Cash - cash)));
+        }
+
         // ADR 0101 §13: Menu → Your land lists what you own (inherited land not sellable) and what's for sale; Sell is only there.
         [Test]
         public void YourLand()

@@ -93,7 +93,7 @@ namespace Sim.View.Views
             long acres = 0, market = 0;
             foreach (Parcel p in sim.State.Land.Parcels)
                 if (p.Owned) { acres += defs.Map.Parcels[p.Id].Tiles.Count; market += LandRules.ParcelPrice(sim, p); }
-            vm.Lines.Add(new LineVm(s.Get("lands.own"), s.Plural("land.acres", acres), "landTotal", 0) { Icon = "land" });
+            vm.Lines.Add(new LineVm(s.Get("lands.own"), s.Plural("land.acres", acres), "landTotal", 0) { });
             vm.Lines.Add(new LineVm(s.Get("lands.market"), ctx.Fmt.Coins(market), "landTotal", 0));
             long onLand = LoansOnLand(sim);
             if (onLand > 0) vm.Lines.Add(new LineVm(s.Get("lands.loans"), ctx.Fmt.Coins(onLand), "landLoans", 0));
@@ -124,7 +124,7 @@ namespace Sim.View.Views
             string note = sellable ? s.Get("lands.boughtWhen", "when", ReportSheet.PeriodName(ctx, p.AcquiredAt / sim.Clock.SecondsPerSeason), "held", held) : held;
             var line = new LineVm(s.Get("lands.parcel", "soil", soil, "acres", s.Plural("land.acres", d.Tiles.Count)), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
             {
-                Icon = "land", Note = note,
+                Note = note,
                 Action = ActionVm.Open("show:" + tile, s.Get("action.show"), new SheetRequest("ShowTile", tile)),
             };
             if (sellable)
