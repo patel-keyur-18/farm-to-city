@@ -54,7 +54,7 @@ git lfs pull
 
 ## Command-line build (what Claude does)
 
-`Game.Editor.BuildCli.IosDevelopment` makes the Xcode project without the Editor window: `Unity -batchmode -nographics -quit -projectPath unity/FarmToCity -buildTarget iOS -executeMethod Game.Editor.BuildCli.IosDevelopment`. **Delete `Builds/iOS` first**: on macOS 27, Unity's post-build step crashes the Editor when it finds an Xcode project already in the folder (it asks Xcode through the scripting bridge, `IsXcodeProjectOpen`). This also affects the Editor's **Build** button: if Unity quits while building over an old project, delete `Builds/iOS` and build again. A compile check without signing: `xcodebuild -project Builds/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO build`.
+`Game.Editor.BuildCli.IosDevelopment` makes the Xcode project without the Editor window: `Unity -batchmode -nographics -quit -projectPath unity/FarmToCity -buildTarget iOS -executeMethod Game.Editor.BuildCli.IosDevelopment`. **Delete `Builds/iOS` first**: on macOS 27, Unity's post-build step crashes the Editor when it finds an Xcode project already in the folder (it asks Xcode through the scripting bridge, `IsXcodeProjectOpen`). Also **quit Xcode before building**: with Xcode open the same step (`FindWorkspaceDocumentForPath`) aborts the Editor (SIGABRT), seen 2026-11-12. This also affects the Editor's **Build** button: if Unity quits while building over an old project, delete `Builds/iOS` and build again. A compile check without signing: `xcodebuild -project Builds/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO build`.
 
 ## Free-account limits
 

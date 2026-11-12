@@ -205,7 +205,9 @@
 
 ## In progress
 
-**US-237 in progress (2026-11-11): the playtest town made and shown, the Release build waits for the owner's yes.**
+**US-237 done (2026-11-12), for review: the owner approved seed 2; the Release build is made.**
+- **Release build (2026-11-12):** from commit `5c650c3`, `Game.Editor.BuildCli.IosRelease` from the open Editor (`BuildOptions.None`, no developer panel; Build Succeeded, the one console error is the CLI's 5 s eval timeout), moved to `unity/FarmToCity/Builds/iOS-release`; the unsigned Xcode compile check says BUILD SUCCEEDED. The build tool writes `Builds/iOS`, so this **replaced the Development build's folder**; make the Development build again (`IosDevelopment`) if the s18 device check needs it. The playtest town is `artifacts/playtest/FarmToCity-playtest.ftc` (seed 2, from `5c650c3`, byte-for-byte the town shown to the owner); it is not committed (artifacts is ignored), regenerate it with `playtest-save 2 <path> 5c650c3`.
+- **Xcode gotcha:** with Xcode open, the Editor crashes (SIGABRT in `FindWorkspaceDocumentForPath`, macOS 27 and the Xcode scripting bridge) at the end of an iOS build. **Quit Xcode before building.**
 - `dotnet run --project tools/Tools.Balancer -- playtest-save <seed> <path> <commit>` (`Playtest.cs`): `VillageBot` (credit, homes first) plays to the close after its third household and writes the save, re-anchored to the wall time it's written, with the town's state printed. `PlaytestTownTests.Town_ImportsAndPlays` reads it back and plays a season on.
 - **Seeds 2, 5 and 8 match the plan** (3 of 5 households, one house being built, no business, no school, 3 seasons closed, day 12; cash 43,000–51,000, 3–5 loans). Seeds 1, 3, 4, 6, 7 and 9 have already founded the mill (day 16, 4 households) and some have almost no cash (seed 1: 1,511 against about 60,000 due at the next close), so they are not offered. **Seed 2:** cash 50,784, net worth 14,16,950, owed 1,64,634 (moneylender 25,002; co-op bank 44,627, 58,002, 37,001), credit score 680, a hand, 3 households and a 4th house being built, 5 fields sown (rice ×3, wheat, potato), 4 parcels, 4 trees, **no cattle** (the bot never keeps any; ADR 0101 §8 said "the cattle": the owner buys them at the shed), no milestones yet. The Village's three: households 3 of 5, no business, no school.
 - `docs/test-checklists/s19-phase-2-playtest.md` is written (export your own town first, import the playtest town, play log on, the diary, the three "why cash moved" sentences, the gate's A1–A6, the smoke list).
@@ -411,7 +413,7 @@
 
 ## Next up
 
-1. **The owner's device check** of the Development build with `docs/test-checklists/s18-statements-savings-milestones.md` (both frame-time p95s); then US-237 (the playtest town shown to the owner, then the Release build) and the Sprint 18 pull request. US-135, US-136, US-137, US-236 and the balance (ADR 0102) are approved.
+1. **The owner's device check** of the Release build with `docs/test-checklists/s19-phase-2-playtest.md` (its smoke list S1–S7; the Sprint 18 checks in `s18-statements-savings-milestones.md` can be done on the same build; both frame-time p95s), then the playtest itself (US-238, Sprint 19). The Sprint 18 pull request is open for the owner's merge. US-135, US-136, US-137, US-236 and the balance (ADR 0102) are approved; US-237 waits for the owner's review.
 
 ## Owner action checklist (Phases 0–1)
 
