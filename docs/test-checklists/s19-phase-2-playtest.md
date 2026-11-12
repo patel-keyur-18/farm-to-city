@@ -4,7 +4,7 @@
 - **Device:** iPhone 13, iOS version: ____
 - **Tested by / dates:** ____ to ____
 - **How to install:** see `how-to-build-ios.md`. **Quit Xcode, and delete `unity/FarmToCity/Builds/iOS-release` before building** (the macOS 27 crash).
-- **Build made:** 2026-11-12, Release, from commit `9279f10` (Xcode unsigned compile BUILD SUCCEEDED), in `unity/FarmToCity/Builds/iOS-release`. Release and Development are the same app (`com.keyurpatel.farmtocity`), so installing over keeps your town.
+- **Build made:** 2026-11-12, Release, from commit `50532f4` (Xcode unsigned compile BUILD SUCCEEDED), in `unity/FarmToCity/Builds/iOS-release`. Release and Development are the same app (`com.keyurpatel.farmtocity`), so installing over keeps your town.
 - **The playtest town:** `FarmToCity-playtest.ftc`, written on the Mac by `dotnet run --project tools/Tools.Balancer -- playtest-save <seed> <path> <commit>`: the Village bot (credit, homes first) plays a new game to the close after its third household (about day 14): Hamlet, 3 of 5 households with a home loan, a hand, the cattle, no business, no school. Its time stamp is when Claude wrote it, so **import it the same day**: the farm doesn't wait for you for more than 72 hours (the away cap) but a card of what happened will show.
 
 ## Before you start: keep your own town safe
