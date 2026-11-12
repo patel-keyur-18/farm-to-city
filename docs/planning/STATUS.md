@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 18** (money screens, confirm cards, Your land, the playtest town; 2 weeks, 36 points, ADR 0101): **code complete and merged (PR #24, 2026-11-12)**, with five owner requests added after review (ADRs 0103–0105, save schema 17). **Open: the owner's device check** (Release build from `9974013`; both frame-time p95s need a Development build) and US-237's review. **Sprint 19** (the Phase 2 playtest, up to 3 weeks) starts once the Release build is on the phone. Sprint 17 is done and merged (PR #23) |
-| Branch with latest work | `main` (PR #24 merged 2026-11-12, merge `082d142`). A new sprint branch starts with Sprint 19's first change |
+| Sprint | **Sprint 19** (the Phase 2 playtest and gate, up to 3 weeks, 6 points + fixes, ADR 0101): **in progress since 2026-11-12**; A1 passed; US-238 is the owner's play on the Release build (`9974013`), US-239 the gate review after it. **Sprint 18 is done and closed** (owner, 2026-11-12: PRs #24 and #25 merged; the Release build is on the iPhone and looks good; both frame-time p95s were not measured and are carried to gate A6). Sprint 17 is done (PR #23) |
+| Branch with latest work | `sprint/19-phase-2-playtest` (from `main` after PR #25): Sprint 18 closed in the docs, the playtest folder `docs/playtest/`, A1's evidence |
 | Last updated | 2026-11-12 |
 
 ## Done so far
@@ -205,7 +205,7 @@
 
 ## In progress
 
-**US-237 done (2026-11-12), for review: the owner approved seed 2; the Release build is made.**
+**US-237 done and approved (2026-11-12): seed 2; the Release build is on the owner's phone.**
 - **Release build (2026-11-12, rebuilt after ADR 0103, 0104 and 0105 (save schema 17)):** from commit `9974013`, `Game.Editor.BuildCli.IosRelease` from the open Editor (`BuildOptions.None`, no developer panel; Build Succeeded, the one console error is the CLI's 5 s eval timeout), moved to `unity/FarmToCity/Builds/iOS-release`; the unsigned Xcode compile check says BUILD SUCCEEDED. The build tool writes `Builds/iOS`, so this **replaced the Development build's folder**; make the Development build again (`IosDevelopment`) if the s18 device check needs it. The playtest town is `artifacts/playtest/FarmToCity-playtest.ftc` (seed 2, from `9974013`, byte-for-byte the town shown to the owner); it is not committed (artifacts is ignored), regenerate it with `playtest-save 2 <path> 9974013`.
 - **Owner request, 2026-11-12 (ADR 0103), on this branch:** the godown had no way to "put goods in" because there is none (they go in by themselves), and the rent had no clear stop. Now: the sheet opens with *How it works*, lists each dry good "here · in the hut" (a harvest counts), the Store rows say what is in town, the rented space has a status line, **Stop renting** and **Keep renting**, and a change that costs nothing shows no confirm card (the Editor pass found "Rent warehouse space? 0 coins" on every reduction). No rule or money change. `GodownViewTests` (6), checklist checks 34–37, captures `docs/art/s18-godown-*.png`. Tests: Core 493 and View 184 pass (View 188 after ADR 0104).
 - **Owner requests, 2026-11-12 (ADR 0104), on this branch:** the Store shows *Mandi trip pays you about X at hh:mm* under the supermarket's line only while a cart is away (`MarketRules.MandiTripPays`; its ? lists the loads); *Your land → For sale* lists only land with `ForSale` (a for-sale parcel not next to your land is marked). No rule or money change. `MandiLandViewTests` (4), checklist checks 38–39, captures `docs/art/s18-store-mandi-trip*.png` and `s18-lands-for-sale.png`.
@@ -416,7 +416,7 @@
 
 ## Next up
 
-1. **The owner's device check** of the Release build (`unity/FarmToCity/Builds/iOS-release`, from `9974013`, save schema 17; export your own town first) with `docs/test-checklists/s19-phase-2-playtest.md` (smoke list S1–S7) and the Sprint 18 checks in `s18-statements-savings-milestones.md` (checks 1–43; 28, 31 and 32 need the developer panel, so a Development build). Then US-237's review and Sprint 19: the playtest itself (US-238) and the gate decision (US-239). Sprint 18's pull request is merged (#24). Open design question: whether hands and labourers may take part-harvests too (ADR 0105 §Consequences).
+1. **Sprint 19, the owner's playtest (US-238):** play the Release build from the imported playtest town (`s19-phase-2-playtest.md`: export your own town first, import `FarmToCity-playtest.ftc`, play log on), a diary line a day, the three *why cash moved* sentences and *Your year*; aim for the Village in 2–2.5 weeks (3 at most). Send Claude the exported play log (Settings → Export play log) and the filled checklist; Claude saves them to `docs/playtest/` (US-238.T3), fixes blockers as found and runs the gate review (US-239: A1 passed 2026-11-12; A2–A5 from the play; A6 needs a Development build for both frame-time p95s and golden replays on the phone). Open design question: whether hands and labourers may take part-harvests too (ADR 0105).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -436,8 +436,8 @@
 | Sprint 15b | Done: device check passed 2026-11-03; PR #21 merged |
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
 | Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
-| Sprint 18 | Code done and merged (PR #24). Remaining: install the Release build, run `s18-statements-savings-milestones.md` and the smoke list in `s19-phase-2-playtest.md`, review US-237. Both frame-time p95s need a Development build (ask Claude for one) |
-| Sprint 19 | Play the Phase 2 playtest (Release build, play log on, a diary line a day); the gate decision |
+| Sprint 18 | Done: device build installed and approved 2026-11-12; PRs #24 and #25 merged. Frame-time p95s not measured (a Development build, at gate A6) |
+| Sprint 19 | **In progress.** Play the Phase 2 playtest (Release build, play log on, a diary line a day, three *why cash moved* sentences); send Claude the play log and the filled checklist; at the end a Development build for both frame-time p95s and golden replays on the phone; the gate decision |
 
 ## Open questions (with the owner)
 

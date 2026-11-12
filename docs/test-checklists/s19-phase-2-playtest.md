@@ -57,7 +57,7 @@ A crash or freeze; a lost, refused or unreadable save; a wrong money amount; **a
 
 | # | Check | Result | Evidence |
 | --- | --- | --- | --- |
-| A1 | The bots' pace: homes first 28–40 days with credit, any order up to 50; saving 50–64, any order up to 80 | | `GateTests.Village` |
+| A1 | The bots' pace: homes first 28–40 days with credit, any order up to 50; saving 50–64, any order up to 80 | **Pass** (2026-11-12) | `GateTests.Village` passes: the homes-first bot with credit reaches the Village on day 28.8–39.0 over 8 seeds, the saver on day 52.3–57.3 |
 | A2 | You reach the Village from the day-14 town within 3 weeks, or the log and diary show why | | |
 | A3 | A session every day; the diary's reason is not only "testing" on most days | | |
 | A4 | No blocker | | |
