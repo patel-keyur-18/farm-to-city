@@ -808,12 +808,12 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 18 · 26 Apr – 9 May 2027 · Phase 2 (statements, the hub, the deposit, milestones; every amount due, confirm cards, Your land; the playtest town; 2 weeks, ADR 0101)
 
-- **Status:** Plan check done (2026-11-11, ADR 0101: G1–G11 and the owner's two requests, each closed one per message); **plan approved by the owner, 2026-11-11**. Sprint 17 is merged (PR #23)
-- **Branch:** `sprint/18-statements-and-playtest`, from `main` after PR #23
+- **Status:** **Code complete and merged** (PR #24, 2026-11-12). Plan check 2026-11-11 (ADR 0101); every story approved by the owner except US-237's review. Owner requests after review: ADRs 0103 (godown), 0104 (mandi line, For sale) and 0105 (the trader's room by crop, part harvest, save schema 17). **Open: the owner's device check** (and both frame-time p95s on a Development build)
+- **Branch:** `sprint/18-statements-and-playtest` (merged to `main`)
 - **Goal:** The money screens finished (spec 019): everything the close takes shown before it takes it; the season page with three statements, every row itemised; *Your wealth* as the hub; a savings deposit used only with the player's consent; milestones. The owner's safety requests: confirm cards as Hay Day's, and *Your land* in the Menu with *Sell* only there. A playtest town and a Release build for Sprint 19. Save schema 16 with its migration and fixture.
 - **Points:** 36 (US-235 8, US-137 10, US-135 7, US-236 5, US-136 3, US-237 3)
 - **Specs for the owner to review:** none (019 approved 2026-10-27 and re-approved 2026-10-30; 019 and 008 amended by ADR 0101)
-- **Device build:** Yes: a Development build for the checklist (`docs/test-checklists/s18-money-and-land.md`), then the Release build with the playtest town (US-237)
+- **Device build:** Yes: a Development build for the checklist (`docs/test-checklists/s18-statements-savings-milestones.md`), then the Release build with the playtest town (US-237)
 - **Milestone and labels:** `Phase 2 · Hamlet & Village`; `type:feature`, `type:spec`, `type:adr`, `type:bug`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
 
 | Story | Title | Feature | Points | Priority | Status |
@@ -837,18 +837,18 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
-- [ ] Save schema 16: migration, `saves/schema16` fixture, every older schema loads
-- [ ] Layouts previewed to and approved by the owner before each story's code
-- [ ] Balance: spec 019 §9 measured with the bots; no money loop through the deposit; contradictions flagged to the owner
-- [ ] Test checklist `docs/test-checklists/s18-money-and-land.md`, every non-device check run in the Editor; Development build; the owner's device check with both frame-time p95s written down
-- [ ] The playtest town shown to the owner; the Release build and its smoke list
-- [ ] `STATUS.md`, feature files and this file updated
-- [ ] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main`
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch
+- [x] Save schemas 16 and 17 (ADR 0105): migrations, `saves/schema16` and `schema17` fixtures, every older schema loads
+- [x] Layouts previewed to and approved by the owner before each story's code
+- [x] Balance: spec 019 §9 measured with the bots; no money loop through the deposit; contradictions flagged to the owner (ADR 0102)
+- [ ] Test checklist `docs/test-checklists/s18-statements-savings-milestones.md`, every non-device check run in the Editor; Development build; the owner's device check with both frame-time p95s written down
+- [x] The playtest town shown to the owner (seed 2, approved); the Release build made; its smoke list is the owner's to run (`s19-phase-2-playtest.md`)
+- [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request with labels, the milestone `Phase 2 · Hamlet & Village` and the project `FarmToCity` (status In Progress); the owner merges it to `main` (PR #24 merged 2026-11-12)
 
 ## Sprint 19 · 10–30 May 2027 · Phase 2 (the Phase 2 playtest and gate; up to 3 weeks, ADR 0101)
 
-- **Status:** Planned (ADR 0101 §9–§10); starts once Sprint 18 is merged and the Release build is on the phone
+- **Status:** Planned (ADR 0101 §9–§10). Sprint 18 is merged; starts once the Release build (from `9974013`, `Builds/iOS-release`) is on the phone and the owner's device check is done
 - **Goal:** The owner plays from the day-14 Hamlet town to the Village (or 3 weeks) on the Release build, with the play log and a daily diary; findings tuned; the Phase 2 gate's part A decided (A1–A6). Phase 3's spec writing (docs only, at most 2 specs to review) may run alongside; no Phase 3 code before the gate decision.
 - **Points:** 6 (US-238 3, US-239 3) plus fixes as found
 

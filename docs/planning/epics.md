@@ -98,8 +98,8 @@
 | [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-129–US-130 | 11 |
 | [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-131–US-132 | 13 |
 | [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-133–US-134 | 13 |
-| [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | Personal finance hub and milestones | E14 | 2 | Spec 019 (ADR 0078, 0083, 0101) | In progress (Sprint 18) | US-135, US-136, US-221, US-235, US-236 | 30 |
-| [F14.3](features/F14.3-financial-statements.md) | Financial statements | E14 | 2 | Spec 019 (ADR 0078, 0101) | Backlog (Sprint 18) | US-137 | 10 |
+| [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | Personal finance hub and milestones | E14 | 2 | Spec 019 (ADR 0078, 0083, 0101) | Done (Sprint 18) | US-135, US-136, US-221, US-235, US-236 | 30 |
+| [F14.3](features/F14.3-financial-statements.md) | Financial statements | E14 | 2 | Spec 019 (ADR 0078, 0101) | Done (Sprint 18) | US-137 | 10 |
 | [F15.1](features/F15.1-treasury-and-budget.md) | Treasury and budget | E15 | 3 | To write at the start of Phase 3 | Backlog | US-138–US-139 | 8 |
 | [F15.2](features/F15.2-taxes-and-policies.md) | Taxes and policies | E15 | 3 | To write at the start of Phase 3 | Backlog | US-140–US-141 | 8 |
 | [F15.3](features/F15.3-zoning-and-land-value.md) | Zoning and land value | E15 | 3 | To write at the start of Phase 3 | Backlog | US-142–US-143 | 8 |
