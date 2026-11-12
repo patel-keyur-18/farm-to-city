@@ -158,6 +158,13 @@ namespace Sim.View.Views
             MandiDef d = ctx.Sim.Config.Game.Market.Mandi;
             WhyVm vm = New(ctx, "why.mandi.title", null);
             Text(vm, ctx, "why.mandi." + id, "hours", ctx.Fmt.Integer(d.TripHours), "pct", Pct(ctx, d.CommissionRate), "kg", ctx.Fmt.Kg(d.CartCapacityGrams));
+            Sim.Core.Market.MandiTrip trip = ctx.Sim.State.Market.Trip;
+            if (id == 5 && trip != null) // the cart that is away: its loads
+                foreach (var load in trip.Carrying)
+                {
+                    GoodDef good = ctx.Sim.Config.Game.Market.Goods[load.Key];
+                    vm.Rows.Add(new WhyRowVm(ctx.Strings.Get(good.NameKey), ctx.Fmt.Kg(Store.WeightGrams(good, load.Value))));
+                }
             vm.Footnote = ctx.Strings.Get("why.mandi.lesson");
             return vm;
         }

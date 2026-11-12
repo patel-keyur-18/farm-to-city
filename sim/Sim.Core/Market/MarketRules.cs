@@ -20,6 +20,19 @@ namespace Sim.Core.Market
             return g.Kind == GoodKind.Produce && !g.PriceControlled ? p * sim.State.Market.DailyFactor[good] : p;
         }
 
+        /// <summary>
+        /// What the cart now at the mandi will pay when it is back, at the prices of this moment (the sale itself is made at the price when
+        /// it arrives, so this is a close estimate): the loads' value less the commission (the cart's hire was paid at departure). 0 with no trip.
+        /// </summary>
+        public static long MandiTripPays(Simulation sim)
+        {
+            MandiTrip trip = sim.State.Market.Trip;
+            if (trip == null) return 0;
+            long gross = 0;
+            foreach (var load in trip.Carrying) gross += Value(sim, load.Key, load.Value, RegionalPrice(sim, load.Key));
+            return gross - Finance.Money.MulRate(gross, sim.Config.Game.Market.Mandi.CommissionRate);
+        }
+
         /// <summary>transportCostPerKg[roadTier] × weightKg × PriceIndex.</summary>
         public static Fixed TransportCost(Simulation sim, int good)
         {

@@ -142,6 +142,8 @@ Examples: 100 kg of radish (0.25 a day) is 75 kg after one day and 31.64 kg afte
 GoToMandi(loads)       loads: (good, q) pairs of produce from the store, total ≤ MandiDef.cartCapacityKg
 cart hire              MandiDef.cartHirePerTrip, paid at departure (Dr 5700, Cr Cash)
 trip                   a job of MandiDef.tripHours; the goods leave the store at departure
+                       as built (ADR 0104): while a cart is away the Store shows "Mandi trip pays you about X at hh:mm" ("tomorrow" past midnight)
+                       under the supermarket's line: the loads at today's mandi price less the commission (`MarketRules.MandiTripPays`); its ? lists the loads
 founder                exactly MandiDef.founderHours of delivered labour: during the trip the founder's rate is cut by
                        founderHours × 24 ÷ tripHours hours a day, never below 0 (time-weighted, spec 003 §3.6; ADR 0034)
 proceeds at return     Σ Value(q, P_regional(good, return time)) × (1 − MandiDef.commissionRate)

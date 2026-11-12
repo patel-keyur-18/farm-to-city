@@ -73,13 +73,14 @@ namespace Sim.View.Views
             GameDefs defs = sim.Config.Game;
             foreach (Parcel p in sim.State.Land.Parcels)
             {
-                if (p.Owned) continue;
                 ParcelDef d = defs.Map.Parcels[p.Id];
+                if (p.Owned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
                 int tile = d.Tiles[0];
                 string soil = ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
                 var line = new LineVm(ctx.Strings.Get("lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
                     ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
                 { Action = ActionVm.Open("show:" + tile, ctx.Strings.Get("action.show"), new SheetRequest("ShowTile", tile)) };
+                if (!LandSystem.IsAdjacentToOwned(sim, p.Id)) { line.Note = ctx.Strings.Get("lands.notNext"); }
                 vm.Lines.Add(line);
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("lands.none");

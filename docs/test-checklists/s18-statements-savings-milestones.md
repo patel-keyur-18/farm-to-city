@@ -82,10 +82,12 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 35 | ADR 0103 | Rent 1 t, then **Collect all** on a ripe field | The rice, wheat or dal is "x kg here" on the godown sheet and "x kg of it is in the godown in town" under its row in the Store | | Editor (`s18-godown-store-row.png`) |
 | 36 | ADR 0103 | With space rented and nothing in it: **Stop renting** | One tap, no card. *Ends · nothing to pay*, **Keep renting n t** appears; Keep brings *Renews* back | | Editor (`s18-godown-stop.png`) |
 | 37 | ADR 0103 | With grain in the rented space | **Stop renting** is greyed: *Your goods stored there need that much space. Sell or use some first.* After a stop and a harvest the status says *Renews anyway* in amber with the rent the close will take | | Editor (`s18-godown-forced.png`) |
+| 38 | ADR 0104 | Store → **Mandi trip**: load something, **Go to the mandi**, then open the Store again | Under *Supermarket pays you* a line *Mandi trip pays you · about N coins at hh:mm* ("tomorrow" if it's back after midnight); its **?** lists the cart's loads. With no cart away there is no such line; once the cart is back it goes and the cash is in | | Editor (`s18-store-mandi-trip.png`, `s18-store-mandi-trip-why.png`, `s18-store-mandi-trip-back.png`) |
+| 39 | ADR 0104 | Menu → **Your land** → **For sale** | Only land that is for sale: the village's land and neighbours who aren't selling are not listed. A parcel that isn't next to your land says *Not next to your land yet* | | Editor (`s18-lands-for-sale.png`) |
 
 ## Report
 
 - **Blockers:** anything that stops play, or anything wrong with your town after the update. Mark it **BLOCKER** and say what you did.
-- **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24, 25, 34 and 36.
+- **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24, 25, 34, 36, 38 and 39.
 - **Numbers:** both frame-time p95s from check 28.
 - **Answers:** to the five questions above.

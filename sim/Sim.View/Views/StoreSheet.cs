@@ -43,6 +43,7 @@ namespace Sim.View.Views
             for (int i = 0; i < buttons.Count; i += perRow)
                 vm.Lines.Add(new LineVm(null, null) { Buttons = buttons.GetRange(i, System.Math.Min(perRow, buttons.Count - i)) });
             if (sim.State.Ledger.Balance(Sim.Core.Finance.Account.OwedByBuyers) > 0) vm.Lines.Add(OrdersSheet.OwedLine(ctx));
+            if (sim.State.Market.Trip != null) vm.Lines.Add(MandiSheet.TripLine(ctx)); // a cart is away: what it pays and when, below the supermarket's line (ADR 0104)
 
             // Selling to the trader: the truck's state (spec 011 §7), then one row per crop with its Sell.
             vm.Lines.Add(LineVm.Header(s.Get("store.sellHeading")));
