@@ -113,6 +113,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string name = c.GetType().Name;
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
+            if (c is RentWarehouse && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
             long owedBefore = Owed(sim), owedAfter = Owed(after);
             long taken = NewLoans(sim, after, out Loan newest);
             long repaid = System.Math.Max(0, owedBefore - owedAfter);

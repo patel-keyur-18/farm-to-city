@@ -78,10 +78,14 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 31 | Restore | **Restore** | Your town is back as it was at the Snapshot | | |
 | 32 | Regression | The away card after a long absence (**Away cap**) | Lines as before; *Interest on savings* when you have a deposit | | Editor (US-236's pass): *Interest on savings 1,137* |
 | 33 | Regression | Rotate or lock the phone | Landscape only (ADR 0005) | | |
+| 34 | ADR 0103 | Store → **Godown in town** | *How it works* first: goods come here by themselves, nothing to press; then *What goes here* lists wheat, rice, lentils, atta, maize, mustard (even at "None yet") and says potatoes, vegetables, fruit and milk stay in the hut | | Editor (`s18-godown-how.png`, `s18-godown-kept.png`) |
+| 35 | ADR 0103 | Rent 1 t, then **Collect all** on a ripe field | The rice, wheat or dal is "x kg here" on the godown sheet and "x kg of it is in the godown in town" under its row in the Store | | Editor (`s18-godown-store-row.png`) |
+| 36 | ADR 0103 | With space rented and nothing in it: **Stop renting** | One tap, no card. *Ends · nothing to pay*, **Keep renting n t** appears; Keep brings *Renews* back | | Editor (`s18-godown-stop.png`) |
+| 37 | ADR 0103 | With grain in the rented space | **Stop renting** is greyed: *Your goods stored there need that much space. Sell or use some first.* After a stop and a harvest the status says *Renews anyway* in amber with the rent the close will take | | Editor (`s18-godown-forced.png`) |
 
 ## Report
 
 - **Blockers:** anything that stops play, or anything wrong with your town after the update. Mark it **BLOCKER** and say what you did.
-- **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24 and 25.
+- **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24, 25, 34 and 36.
 - **Numbers:** both frame-time p95s from check 28.
 - **Answers:** to the five questions above.

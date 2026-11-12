@@ -103,6 +103,8 @@ namespace Sim.View.Views
                     ? ctx.Strings.Get("store.produceOffered", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered), "min", ctx.Fmt.PricePerKg(min.Value))
                     : ctx.Strings.Get("store.produceOfferedAny", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered));
             var line = new LineVm(ctx.Strings.Get(good.NameKey), value, "price", g) { Icon = good.Id, Opens = new SheetRequest("Good", g) };
+            long[] dry = GodownRules.Dry(sim); // where the stock is kept: part of it may be in the godown in town (ADR 0087)
+            if (dry != null && dry[g] > 0) line.Note = ctx.Strings.Get("store.inTown", "kg", ctx.Fmt.Kg(Store.WeightGrams(good, dry[g])));
             string id = good.Id;
             // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
             // Everything on offer at the market (a hand's order puts a harvest there): the way out is to take it back.

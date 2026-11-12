@@ -212,6 +212,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0100 | Sprint 17 balance: literacy at the Village about 45% (the 50–70% target counted adults only; the village never had a school), content unchanged; the Village's pace, the shops' targets, Codex cards (median 15) and happiness (about 73) hold; good chai's *Why?* names the newcomer risk |
 | 0101 | Sprint 18 plan check: everything the close takes shown (businesses' own beside); the savings deposit warned a day ahead and used only with consent, never collateral; cash flow by the other side of each entry, every row itemised, `retainSeasons` 8; one season page, three tabs; the hub's floors and the trend in today's coins; milestones dated from past reports; confirm cards as Hay Day's (tap to spend, hold to sell or end); Your land in the Menu; the Phase 2 playtest from a day-14 Hamlet town, the gate split A and B; Sprint 18 2 weeks, 36 points; Sprint 19 the playtest |
 | 0102 | Sprint 18 balance: debt to assets at the Village 6–8% (target restated 2–20%), the deposit is no money loop, every bot's books sorted, a Village save 136 KB; passive income covers living on day 20–40 (kept; the rent's 10% a season yield goes to the Phase 3 balance) |
+| 0103 | The godown's sheet says goods come in by themselves (a harvest counts; each good "here · in the hut"; potatoes stay home), the rented space has a status line, **Stop renting** and **Keep renting**, and a change that costs nothing asks nothing |
 
 ## Current status
 

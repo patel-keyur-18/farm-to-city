@@ -5,7 +5,7 @@
 - Reviewer: Keyur Patel
 - GDD sections: Farming (irrigation ladder, equipment ladder, fruit trees: whole-acre orchards; storage and selling: the granary); Finance (depreciation, buy or lease, capital versus operating spending)
 - Amends: spec 002 (moisture: canal and drip floors, §3.1), spec 003 (the Tools factor and labour per acre with machines, §3.2; orchards as tree acres, §3.3), spec 004 (the granary's capacity and slower spoilage, §3.4), spec 005 (machines as assets, leases as rent), spec 012 (bullocks take shed places, §3.2)
-- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting), ADR 0088 (the bullocks' own shed; machines drawn at work and at 70%), ADR 0089 (equipment as built: the combine to Phase 3)
+- Amended by: ADR 0086 (the borewell), ADR 0087 (Sprint 16 plan check: the canal, one source an acre, the godown in the mandi town, renting and letting), ADR 0103 (the godown's sheet says how goods get there and the rent can be ended in one step), ADR 0088 (the bullocks' own shed; machines drawn at work and at 70%), ADR 0089 (equipment as built: the combine to Phase 3)
 - Related ADRs: 0032 (the well acres), 0014 (the yield formula and its Tools factor), 0021 and 0033 (trees and their prices), 0024 and 0034 (the store, spoilage), 0037 (the hired tractor-trolley), 0057 (spec order), 0064 (map layouts previewed)
 - Depends on specs: 002, 003, 004, 005, 006, 012
 
@@ -99,6 +99,7 @@ Every coin amount is a year-0 price that follows the price index when charged (A
 | Letting your godown (owner, 2026-11-03) | **Let it out next season** (`LetGodown(on)`): the whole godown, whole seasons, renewed each close until switched off. At each close a grain trader from the town takes it with `godownTenantChance` 0.8 (seeded, `godown` stream) and pays `godownLetRentPerKgSeason` 0.24 × its 10,000 kg = 2,400 upfront (Cr Rent received; under the warehouse's 0.30, so renting space to let your own never pays). While let, your goods fill rented space, then the hut store. If your dry goods (the hut store's too) don't all fit the space you rent for the season that opens, it isn't let that season and the row says why; no tenant, an alert says it is yours to use. Counted as passive income (spec 019 §3.4). About 5% of its cost a season, against about 18% for an acre you farm |
 | Not for | Potato, vegetables, fruit, milk (they need cold storage, Phase 3) |
 | Books | A building (spec 005); the goods are the same stock, valued as now |
+| As built (ADR 0103, owner, 2026-11-12) | There is nothing to press to put goods in or take them out: harvested, bought and saved goods of the six dry kinds (and seed) are in the godown, then the rented space, then the hut, by themselves, and the sheet says so first (*How it works*), lists each good as "x here · y in the hut", and names what stays home. Ending the rent: a status line (*Renews · rent* / *Ends* / *Renews anyway*, from the close's own figures), **Stop renting** and **Keep renting**; no confirm card for a change that costs nothing. Rules and money unchanged |
 
 ### 3.5 Processing order
 
