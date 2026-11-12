@@ -521,7 +521,7 @@
 | US-197 | The Store in sections (device review, ADR 0059) | [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | 3 | Must | Done |
 | US-198 | A hand's field order starts with the sow sheet (device review, ADR 0059) | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done |
 
-**Owner request after the sprint's review (2026-11-12, ADR 0103):** the godown sheet says how goods get there, and the rented space can be stopped from the next season in one tap; no points (a follow-up to US-237's device check, on the sprint branch). Also ADR 0104: the Store's mandi-trip line and *Your land → For sale* only for land that is for sale.
+**Owner request after the sprint's review (2026-11-12, ADR 0103):** the godown sheet says how goods get there, and the rented space can be stopped from the next season in one tap; no points (a follow-up to US-237's device check, on the sprint branch). Also ADR 0105 (the Store's room by crop; part harvest, save schema 17) and ADR 0104: the Store's mandi-trip line and *Your land → For sale* only for land that is for sale.
 
 **Order of work:** US-188 → US-189 (the map and its migration) → US-192 → US-193 → US-194 (the sim) → US-191 → US-190 → US-195 (art and screens) → the device build.
 

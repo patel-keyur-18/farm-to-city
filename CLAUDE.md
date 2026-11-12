@@ -214,6 +214,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0102 | Sprint 18 balance: debt to assets at the Village 6–8% (target restated 2–20%), the deposit is no money loop, every bot's books sorted, a Village save 136 KB; passive income covers living on day 20–40 (kept; the rent's 10% a season yield goes to the Phase 3 balance) |
 | 0103 | The godown's sheet says goods come in by themselves (a harvest counts; each good "here · in the hut"; potatoes stay home), the rented space has a status line, **Stop renting** and **Keep renting**, and a change that costs nothing asks nothing |
 | 0104 | The Store shows "Mandi trip pays you about X at hh:mm" under the supermarket's line while a cart is away; Your land → For sale lists only land that is for sale (not-yet-adjacent marked) |
+| 0105 | A ready field crop can be harvested in parts (the Harvest button and Collect all take what fits, the rest stands ready; `Crop.TakenGrams`, save schema 17); the Store lists what the trader still takes today of each crop sown this season |
 
 ## Current status
 

@@ -14,6 +14,12 @@ namespace Sim.Core.Market
 
         /// <summary>Store what fits, sell the rest to the trader at the floor now; TraderAway or TraderFull if it can't take it.</summary>
         SellRestToTrader = 1,
+
+        /// <summary>
+        /// A field crop's harvest takes what fits and leaves the rest standing in the field, ready (ADR 0105): the player's Harvest and Collect all.
+        /// Rejected with StoreFull only when nothing fits. Only <see cref="Commands.Harvest"/> reads it; everything else treats it as StoreOnly.
+        /// </summary>
+        StorePart = 2,
     }
 
     /// <summary>The hut store's internal operations for specs 003 and 005 (spec 004 §3.4, §3.5).</summary>

@@ -83,7 +83,7 @@ The player sees the farm at a glance, reaches any lever in at most three taps, a
 | Cash | Cash (whole coins) | Money and loans (its *Why?* is the **?** on the Cash row, ADR 0044 §3) |
 | Store | Store fill (% of capacity by weight) | The store and market sheet (its *Why?* is the **?** on the "In the store" row) |
 | Alerts | A round **!** button with the count of open alerts (§3.10), shown only when there are any; red and popping once for an urgent one | The alert list, one row per alert with its action |
-| Collect all | The count of ready things: ready crops, ready garden beds, ripe fruit | Collects them (§3.9) |
+| Collect all | The count of ready things: ready crops, ready garden beds, ripe fruit | Collects them (§3.9); a field crop's harvest takes what fits and leaves the rest ready (ADR 0105) |
 | Menu | — | Store, Money and loans, People, Buy land (each parcel for sale with its price and **Show**), Settings; the letter in Sprint 8. The gear button is gone (ADR 0043) |
 | People | The applicants badge | The People sheet (a shortcut beside Menu) |
 

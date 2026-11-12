@@ -50,6 +50,7 @@ namespace Sim.View.Views
             if (defs.Market.Truck != null)
             {
                 vm.Lines.Add(OrdersSheet.TruckLine(ctx));
+                vm.Lines.AddRange(OrdersSheet.TruckRoomLines(ctx)); // what it still takes of this season's crops (ADR 0105)
                 if (MarketRules.StallClosed(sim)) vm.Lines.Add(new LineVm(s.Get("store.stallClosed"), null));
             }
             int produce = 0;

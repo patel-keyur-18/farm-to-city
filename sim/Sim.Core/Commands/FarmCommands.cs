@@ -106,7 +106,18 @@ namespace Sim.Core.Commands
             if (c.State != CropState.Ready) return CommandResult.Reject(RejectReason.NotReady);
             CropDef def = sim.Config.Game.Farm.Crops[c.Def];
             long grams = c.HarvestGrams;
-            RejectReason r = Store.Add(sim, def.OutputGood, grams, Overflow, "crop:" + c.Id);
+            if (Overflow == Overflow.StorePart && grams > Store.Fits(sim, def.OutputGood))
+            {
+                // Part of it fits (ADR 0105): take that much now; the rest stays standing in the field, ready, until it is taken or spoils.
+                long part = Store.Fits(sim, def.OutputGood);
+                if (part <= 0) return CommandResult.Reject(RejectReason.StoreFull);
+                Store.Add(sim, def.OutputGood, part, Overflow.StoreOnly, "crop:" + c.Id);
+                Livestock.LivestockSystem.AddStraw(sim, def, part);
+                c.TakenGrams += part;
+                sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, part, c.Breakdown));
+                return CommandResult.Ok;
+            }
+            RejectReason r = Store.Add(sim, def.OutputGood, grams, Overflow == Overflow.StorePart ? Overflow.StoreOnly : Overflow, "crop:" + c.Id);
             if (r != RejectReason.None) return CommandResult.Reject(r);
             Livestock.LivestockSystem.AddStraw(sim, def, grams); // wheat and rice give straw to the stack (spec 012 §3.8)
 

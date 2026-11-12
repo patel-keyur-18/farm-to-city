@@ -45,7 +45,7 @@ If anything looks wrong with your town after the update, stop and report it befo
 
 | # | Story / AC | What to try | Expected result | Pass / Fail | Notes |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Migration (schema 16) | Launch with your town | Same cash, fields, people, houses, animals, loans, businesses; Menu → Codex as before. In the Files app: `FarmToCity-before-update-schema15.ftc` | | **Screenshot**. Editor: the owner's town copy loaded; `MigrationTests.Schema15_Statements` covers a schema-15 save |
+| 1 | Migration (schema 17) | Launch with your town | Same cash, fields, people, houses, animals, loans, businesses; Menu → Codex as before. In the Files app: `FarmToCity-before-update-schema15.ftc` | | **Screenshot**. Editor: the owner's town copy loaded; `MigrationTests.Schema15_Statements` covers a schema-15 save |
 | 2 | US-235, AC-1 | Money and loans (tap your cash) | Opens on *Your season*; *Next season, already due* lists loans, living, wages, water, the school… each with its **?**; the total is what the close takes | | Editor: the due block with the pump and the school (`s18-235-due-water-school.png`) |
 | 3 | US-235 | Tap land for sale → **Buy this land** (or **Buy with a bank loan** → a term → **Buy this land**) | A card: *Buy this land?* with cost, bank loan, you pay now, first payment, **cash after**; *Not now* / *Buy for …* | | **Screenshot**. Editor (`s18-check-card-loan.png`): 2,06,590 − 1,07,490 = 99,100; *Not now* left cash and loans as they were |
 | 4 | US-235 | *Not now*, then the same again and **Buy** | *Not now* changes nothing; *Buy* takes exactly the card's amount | | Editor (US-235's tour): cash down by exactly the card's cost |
@@ -84,10 +84,14 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 37 | ADR 0103 | With grain in the rented space | **Stop renting** is greyed: *Your goods stored there need that much space. Sell or use some first.* After a stop and a harvest the status says *Renews anyway* in amber with the rent the close will take | | Editor (`s18-godown-forced.png`) |
 | 38 | ADR 0104 | Store → **Mandi trip**: load something, **Go to the mandi**, then open the Store again | Under *Supermarket pays you* a line *Mandi trip pays you · about N coins at hh:mm* ("tomorrow" if it's back after midnight); its **?** lists the cart's loads. With no cart away there is no such line; once the cart is back it goes and the cash is in | | Editor (`s18-store-mandi-trip.png`, `s18-store-mandi-trip-why.png`, `s18-store-mandi-trip-back.png`) |
 | 39 | ADR 0104 | Menu → **Your land** → **For sale** | Only land that is for sale: the village's land and neighbours who aren't selling are not listed. A parcel that isn't next to your land says *Not next to your land yet* | | Editor (`s18-lands-for-sale.png`) |
+| 40 | ADR 0105 | Store, while the truck is here (6:00 to midnight) | Under *Trader's truck*: *The trader still takes today*, a row for each crop sown this season (not the others) with "N kg more" or "Full for today"; at night the rows are gone. Sell some to the trader: that crop's number drops | | Editor (`s18-truck-room.png`) |
+| 41 | ADR 0105 | A ready field with the store nearly full: open the field | **Harvest** says "40 kg of 1,056 kg" (what fits of the whole); *Store what fits, sell the rest* beside it | | Editor (`s18-harvest-part-before.png`) |
+| 42 | ADR 0105 | Tap **Harvest** | The store goes to 100%; the field stays ready with *Already in your store · 40 kg* and its yield smaller; **Harvest** greyed "The store is full." Sell something, then Harvest again: the rest comes in and the field is free | | Editor (`s18-harvest-part-after.png`) |
+| 43 | ADR 0105 | **Collect all** with a nearly full store | Each ready field gives what fits; what's left stays ready; the card offers to sell the rest to the trader | | Check on the phone |
 
 ## Report
 
 - **Blockers:** anything that stops play, or anything wrong with your town after the update. Mark it **BLOCKER** and say what you did.
-- **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24, 25, 34, 36, 38 and 39.
+- **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24, 25, 34, 36, 38, 39, 40 and 42.
 - **Numbers:** both frame-time p95s from check 28.
 - **Answers:** to the five questions above.

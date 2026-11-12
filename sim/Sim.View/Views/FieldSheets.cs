@@ -106,10 +106,15 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("field.yield"), ctx.Fmt.Kg(crop.HarvestGrams), "yield", tileId));
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("field.waits"),
                     left > 0 ? ctx.Strings.Get("field.spoilsIn", "time", ctx.Fmt.Duration(left)) : ctx.Strings.Get("field.spoiling"), "spoils", tileId));
-                ActionVm store = ActionVm.Checked(ctx, "harvest", ctx.Strings.Get("action.harvest"), ctx.Fmt.Kg(crop.HarvestGrams), ActionKind.Primary,
-                    at => new Harvest(at, tileId, Overflow.StoreOnly));
+                // Harvest takes what fits the store and leaves the rest standing (ADR 0105); with all of it fitting it is the plain harvest.
+                long all = crop.HarvestGrams, part = System.Math.Min(all, Store.Fits(ctx.Sim, ctx.Sim.Config.Game.Farm.Crops[crop.Def].OutputGood));
+                if (crop.TakenGrams > 0)
+                    vm.Lines.Add(new LineVm(ctx.Strings.Get("field.taken"), ctx.Fmt.Kg(crop.TakenGrams), "yield", tileId));
+                ActionVm store = ActionVm.Checked(ctx, "harvest", ctx.Strings.Get("action.harvest"),
+                    part < all ? ctx.Strings.Get("field.harvestPart", "part", ctx.Fmt.Kg(part), "all", ctx.Fmt.Kg(all)) : ctx.Fmt.Kg(all), ActionKind.Primary,
+                    at => new Harvest(at, tileId, Overflow.StorePart));
                 vm.Actions.Add(store);
-                if (!store.Enabled)
+                if (part < all)
                     vm.Actions.Add(ActionVm.Checked(ctx, "harvestSell", ctx.Strings.Get("action.harvestSell"), null, ActionKind.Secondary,
                         at => new Harvest(at, tileId, Overflow.SellRestToTrader)));
             }

@@ -73,7 +73,7 @@ namespace Sim.View.Views
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
             { "season", SeasonWhy },
             // The truck and supermarket orders (spec 011).
-            { "orderPrice", OrderPrice }, { "owed", Owed }, { "truck", Truck },
+            { "orderPrice", OrderPrice }, { "owed", Owed }, { "truck", Truck }, { "truckRoom", TruckRoom },
             // Time and weather (spec 001).
             { "calendar", CalendarWhy }, { "forecast", Forecast }, { "saved", Saved }, { "importFiles", ImportFiles }, { "playLog", PlayLogWhy }, { "textSize", TextSize },
             // The founder (spec 003).

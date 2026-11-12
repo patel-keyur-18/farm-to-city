@@ -287,7 +287,7 @@ Hourly price moves emit no events; the HUD reads prices from state.
 | Offer with a minimum price | None | Sells only at or above it, a little each hour; may not sell at all | Goods keep spoiling | Change or withdraw any time |
 | Go to the mandi | Cart hire, and 0.5 h of the founder's labour over a 6-hour trip | The regional price for a full 2,000 kg load (about 15% over the floor for potato) | Less care on the fields that day | — |
 | Buy inputs ahead | Cash now, store space | Avoids the sowing-season price rise | — | Inputs barely spoil |
-| Harvest when the store is full | Choose: leave the crop waiting, or sell the overflow at the floor | — | Field stays busy if it waits (003) | — |
+| Harvest when the store is full | Choose: leave the crop waiting, or sell the overflow at the floor. As built (ADR 0105): the Harvest button also takes **what fits** ("40 kg of 1,056 kg") and leaves the rest standing ready (`Overflow.StorePart`, `Crop.TakenGrams`, save schema 17) | — | Field stays busy while any is left (003) | — |
 
 ## 7. UI
 

@@ -296,6 +296,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.yield.fertiliser", Effect(ctx, b.Fertiliser), "fert", ctx.Strings.Get("fertiliser." + sim.Config.Game.Farm.Fertilisers[c.Fertiliser].Id));
             Row(vm, ctx, "why.yield.health", Effect(ctx, b.CropHealth));
             if (b.Capped) Row(vm, ctx, "why.yield.cap", Kg(ctx, b.Base * sim.Config.Game.Farm.Farm.YieldCap));
+            if (c.TakenGrams > 0) Row(vm, ctx, "why.yield.taken", "−" + ctx.Fmt.Kg(c.TakenGrams));
             if (c.SpoiledGrams > 0) Row(vm, ctx, "why.yield.spoiled", "−" + ctx.Fmt.Kg(c.SpoiledGrams));
             vm.Footnote = ctx.Strings.Get("why.yield.lesson");
             return vm;
