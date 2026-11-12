@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 18** (money screens, confirm cards, Your land, the playtest town; 26 Apr – 9 May 2027, 2 weeks, 36 points, ADR 0101): **plan check done 2026-11-11** (G1–G11 and the owner's two requests closed one per message); **plan approved by the owner 2026-11-11**; no code yet (previews first). Sprint 19 (the Phase 2 playtest, up to 3 weeks) planned. Sprint 17 is done and merged (PR #23; device check passed 2026-11-10: main p95 5.09 ms, GPU p95 8.72 ms) |
-| Branch with latest work | `sprint/18-statements-and-playtest` (from `main` after PR #23): Sprint 17's close; the Sprint 18 plan (ADR 0101; specs 019, 008 and 018, the GDD, `epics.md`, F14.3, F14.4, F10.2 new, `sprints.md` updated) |
-| Last updated | 2026-11-11 |
+| Sprint | **Sprint 18** (money screens, confirm cards, Your land, the playtest town; 2 weeks, 36 points, ADR 0101): **code complete and merged (PR #24, 2026-11-12)**, with five owner requests added after review (ADRs 0103–0105, save schema 17). **Open: the owner's device check** (Release build from `9974013`; both frame-time p95s need a Development build) and US-237's review. **Sprint 19** (the Phase 2 playtest, up to 3 weeks) starts once the Release build is on the phone. Sprint 17 is done and merged (PR #23) |
+| Branch with latest work | `main` (PR #24 merged 2026-11-12, merge `082d142`). A new sprint branch starts with Sprint 19's first change |
+| Last updated | 2026-11-12 |
 
 ## Done so far
 
@@ -416,7 +416,7 @@
 
 ## Next up
 
-1. **The owner's device check** of the Release build with `docs/test-checklists/s19-phase-2-playtest.md` (its smoke list S1–S7; the Sprint 18 checks in `s18-statements-savings-milestones.md` can be done on the same build; both frame-time p95s), then the playtest itself (US-238, Sprint 19). The Sprint 18 pull request is open for the owner's merge. US-135, US-136, US-137, US-236 and the balance (ADR 0102) are approved; US-237 waits for the owner's review.
+1. **The owner's device check** of the Release build (`unity/FarmToCity/Builds/iOS-release`, from `9974013`, save schema 17; export your own town first) with `docs/test-checklists/s19-phase-2-playtest.md` (smoke list S1–S7) and the Sprint 18 checks in `s18-statements-savings-milestones.md` (checks 1–43; 28, 31 and 32 need the developer panel, so a Development build). Then US-237's review and Sprint 19: the playtest itself (US-238) and the gate decision (US-239). Sprint 18's pull request is merged (#24). Open design question: whether hands and labourers may take part-harvests too (ADR 0105 §Consequences).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -436,7 +436,7 @@
 | Sprint 15b | Done: device check passed 2026-11-03; PR #21 merged |
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
 | Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
-| Sprint 18 | Plan check done 2026-11-11 (ADR 0101); approve the plan, each preview and story; device check; look at the playtest town; merge the PR |
+| Sprint 18 | Code done and merged (PR #24). Remaining: install the Release build, run `s18-statements-savings-milestones.md` and the smoke list in `s19-phase-2-playtest.md`, review US-237. Both frame-time p95s need a Development build (ask Claude for one) |
 | Sprint 19 | Play the Phase 2 playtest (Release build, play log on, a diary line a day); the gate decision |
 
 ## Open questions (with the owner)
