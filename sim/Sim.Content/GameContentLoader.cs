@@ -474,9 +474,33 @@ namespace Sim.Content
             OnlyFields(o, root, "ledger", "credit");
             string lp = root + ".ledger";
             JObject l = Object(Required(o, root, "ledger"), lp);
-            OnlyFields(l, lp, "retainSeasons");
+            OnlyFields(l, lp, "retainSeasons", "debtComfortableUnder", "debtRiskyOver", "savingsInterest", "savingsMinimum", "milestones");
             int retain = Int(Required(l, lp, "retainSeasons"), lp + ".retainSeasons");
             Range(retain, 1, 16, lp + ".retainSeasons");
+            // Optional, so the frozen golden content (retainSeasons only) still loads: the rural lending norms, 30% and 60%.
+            Fixed comfortable = l["debtComfortableUnder"] == null ? Fixed.FromRatio(3, 10) : Bounded(l, lp, "debtComfortableUnder", "0.05", "0.95");
+            Fixed risky = l["debtRiskyOver"] == null ? Fixed.FromRatio(6, 10) : Bounded(l, lp, "debtRiskyOver", "0.05", "0.95");
+            if (comfortable >= risky) throw new ContentException(lp + ".debtComfortableUnder", "must be below debtRiskyOver");
+            // The co-op bank's savings rate a season (1.5%, about 6% a year) and the least you can put in (100 coins); optional like the bands.
+            Fixed savings = l["savingsInterest"] == null ? Fixed.FromRatio(15, 1000) : Bounded(l, lp, "savingsInterest", "0", "0.1");
+            long savingsMin = l["savingsMinimum"] == null ? 100 * Sim.Core.Finance.Money.Coin : Money(l["savingsMinimum"], lp + ".savingsMinimum");
+            if (savingsMin < Sim.Core.Finance.Money.Coin) throw new ContentException(lp + ".savingsMinimum", "must be at least 1 coin");
+
+            // The wealth milestones' numbers (spec 019 §3.6): optional, so content without them checks no milestone.
+            MilestonesDef milestones = null;
+            if (l["milestones"] != null)
+            {
+                string mp = lp + ".milestones";
+                JObject m = Object(l["milestones"], mp);
+                OnlyFields(m, mp, "savings", "netWorthTimes", "passivePercent");
+                long lakh = Money(Required(m, mp, "savings"), mp + ".savings");
+                if (lakh < Sim.Core.Finance.Money.Coin) throw new ContentException(mp + ".savings", "must be at least 1 coin");
+                int times = Int(Required(m, mp, "netWorthTimes"), mp + ".netWorthTimes");
+                Range(times, 2, 100, mp + ".netWorthTimes");
+                int passive = Int(Required(m, mp, "passivePercent"), mp + ".passivePercent");
+                Range(passive, 1, 1000, mp + ".passivePercent");
+                milestones = new MilestonesDef(lakh, times, passive);
+            }
 
             score = null;
             if (o["credit"] != null)
@@ -497,7 +521,7 @@ namespace Sim.Content
                 Range(notice, 1, 168, Join(cp, "finalNoticeLiveHours"));
                 score = new CreditScoreDef(min, max, start, full, onTime, clean, missed, dflt, restructure, foreclosure, notice);
             }
-            return new LedgerDef(retain);
+            return new LedgerDef(retain, comfortable, risky, savings, savingsMin, milestones);
         }
 
         private static List<LenderDef> LoadLenders(string json, CreditScoreDef score)

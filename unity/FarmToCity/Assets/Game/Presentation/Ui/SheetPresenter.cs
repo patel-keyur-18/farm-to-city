@@ -131,6 +131,7 @@ namespace Game.Presentation.Ui
                 case "store": case "sack": return IconBank.Sack;
                 case "gear": return IconBank.Gear;
                 case "coin": return IconBank.Coin;
+                case "savings": return SpriteBank.Rendered("icon_savings") ?? IconBank.Coin; // the savings deposit (spec 019 §3.5)
                 case "menu": return IconBank.Ledger;
                 case "alert": return IconBank.Bell;
                 case "cart": return IconBank.Cart;
@@ -220,6 +221,103 @@ namespace Game.Presentation.Ui
             _holder.parent.Add(veil);
             card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
             _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
+        /// <summary>
+        /// A confirm card (spec 008 §3.15, ADR 0101 §12): the question, its numbers, a large safe button and the action. A tap card's
+        /// action is a normal tap; a hold card's red button fills while it is held and acts when full, and a shorter press does nothing.
+        /// </summary>
+        public void ConfirmCard(ConfirmCardVm vm, Action yes, Action no, Func<string, string> text)
+        {
+            var veil = new VisualElement { name = "Veil" };
+            UiKit.Veil(veil);
+            veil.style.backgroundColor = new Color(0.16f, 0.1f, 0.05f, 0.55f);
+            veil.style.justifyContent = Justify.Center;
+            veil.style.alignItems = Align.Center;
+            VisualElement card = UiKit.Panel(32);
+            card.name = "ConfirmCard";
+            UiKit.Padding(card, 26, 40);
+            card.style.width = Length.Percent(70);
+            card.style.maxWidth = 1250;
+            Label title = UiKit.Heading1(vm.Title, 50);
+            title.style.unityTextAlign = TextAnchor.MiddleCenter;
+            card.Add(title);
+            if (!string.IsNullOrEmpty(vm.Subtitle))
+            {
+                Label sub = UiKit.Text(vm.Subtitle, 30, UiKit.Wood, UiKit.Body);
+                sub.style.unityTextAlign = TextAnchor.MiddleCenter;
+                sub.style.whiteSpace = WhiteSpace.Normal;
+                card.Add(sub);
+            }
+            foreach (ConfirmRowVm row in vm.Rows)
+            {
+                var r = new VisualElement { pickingMode = PickingMode.Ignore };
+                r.style.flexDirection = FlexDirection.Row;
+                r.style.justifyContent = Justify.SpaceBetween;
+                r.style.paddingTop = 8; r.style.paddingBottom = 8;
+                r.style.borderBottomWidth = 2; r.style.borderBottomColor = UiKit.CreamDark;
+                if (row.Total) { r.style.backgroundColor = UiKit.CreamDark; UiKit.Radius(r, 14); UiKit.Padding(r, 8, 14); r.style.marginTop = 8; r.style.borderBottomWidth = 0; }
+                Label l = UiKit.Text(row.Label, row.Total ? 36 : 32, UiKit.Ink, row.Total ? UiKit.Heading : UiKit.Body);
+                l.style.whiteSpace = WhiteSpace.Normal; l.style.flexShrink = 1;
+                Label v = UiKit.Text(row.Value, row.Total ? 38 : 34, UiKit.Ink, UiKit.Heading);
+                v.style.whiteSpace = WhiteSpace.NoWrap; v.style.marginLeft = 20;
+                r.Add(l); r.Add(v);
+                card.Add(r);
+            }
+            if (!string.IsNullOrEmpty(vm.Warning))
+            {
+                var warn = new VisualElement { pickingMode = PickingMode.Ignore };
+                warn.style.backgroundColor = new Color(0.98f, 0.89f, 0.85f);
+                UiKit.Radius(warn, 18); UiKit.Padding(warn, 8, 18); warn.style.marginTop = 14;
+                Label w = UiKit.Text(vm.Warning, 30, UiKit.Warn, UiKit.Heading);
+                w.style.whiteSpace = WhiteSpace.Normal; w.style.unityTextAlign = TextAnchor.MiddleCenter;
+                warn.Add(w);
+                card.Add(warn);
+            }
+            var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.marginTop = 14;
+            void Close() { veil.RemoveFromHierarchy(); }
+            Button safe = UiKit.MakeButton(vm.SafeLabel, ActionLook.Primary, () => { Close(); no(); });
+            safe.name = "confirm:safe";
+            safe.style.flexGrow = 1;
+            Button go = UiKit.MakeButton(vm.GoLabel, vm.Hold ? ActionLook.Danger : ActionLook.Primary, vm.Hold ? (Action)(() => { }) : () => { Close(); yes(); });
+            go.name = "confirm:go";
+            go.style.flexGrow = 1;
+            if (vm.Hold) HoldToAct(go, vm.HoldMillis / 1000f, () => { Close(); yes(); });
+            buttons.Add(safe);
+            buttons.Add(go);
+            card.Add(buttons);
+            if (vm.Hold)
+            {
+                Label hint = UiKit.Text(text("confirm.holdHint"), 26, UiKit.Wood, UiKit.Body);
+                hint.style.unityTextAlign = TextAnchor.MiddleCenter; hint.style.marginTop = 6;
+                card.Add(hint);
+            }
+            veil.Add(card);
+            _holder.parent.Add(veil);
+            card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
+            _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
+        }
+
+        /// <summary>The red button fills left to right while it's held; lifted or cancelled early, it empties and nothing is sent.</summary>
+        private void HoldToAct(Button b, float seconds, Action done)
+        {
+            var fill = new VisualElement { pickingMode = PickingMode.Ignore };
+            fill.style.position = Position.Absolute;
+            fill.style.left = 0; fill.style.top = 0; fill.style.bottom = 0;
+            fill.style.width = Length.Percent(0);
+            fill.style.backgroundColor = new Color(0.56f, 0.17f, 0.12f, 0.55f);
+            b.Insert(0, fill);
+            void Reset() { _tweens.Cancel(fill); fill.style.width = Length.Percent(0); }
+            b.RegisterCallback<PointerDownEvent>(e =>
+            {
+                Reset();
+                _tweens.Run(fill, seconds, Ease.Linear, k => fill.style.width = Length.Percent(k * 100f), done);
+            });
+            b.RegisterCallback<PointerUpEvent>(e => Reset());
+            b.RegisterCallback<PointerCancelEvent>(e => Reset());
+            b.RegisterCallback<PointerLeaveEvent>(e => Reset());
         }
 
         /// <summary>A card over everything (spec 007 §7, ADR 0041): a title, a sentence and its buttons; any button closes it.</summary>
@@ -369,10 +467,11 @@ namespace Game.Presentation.Ui
         {
             if (line.Tree != null) return FamilyTree(line.Tree);
             if (line.Advisor != null) return AdvisorLine(line.Advisor);
-            if (line.Pie == null) return PlainRow(line);
+            if (line.Pie == null && line.Trend == null) return PlainRow(line);
             var box = new VisualElement { pickingMode = PickingMode.Ignore };
             box.Add(PlainRow(line));
-            box.Add(PieChart(line.Pie));
+            if (line.Trend != null) box.Add(TrendChart(line.Trend));
+            if (line.Pie != null) box.Add(PieChart(line.Pie));
             return box;
         }
 
@@ -380,7 +479,49 @@ namespace Game.Presentation.Ui
         {
             { "food", Painter.Hex(0xE8A33C) }, { "rent", Painter.Hex(0x8A5A2B) }, { "clothing", Painter.Hex(0xC2577A) }, { "health", Painter.Hex(0x4FA3A5) },
             { "schooling", Painter.Hex(0x5B7FC7) }, { "leisure", Painter.Hex(0x79C84A) }, { "saved", Painter.Hex(0xFFD968) },
+            { "land", Painter.Hex(0x8A5A2B) }, { "buildings", Painter.Hex(0xE8892A) }, { "livestock", Painter.Hex(0x3F7D20) }, { "goods", Painter.Hex(0x79C84A) },
+            { "cash", Painter.Hex(0xFFD968) }, { "businesses", Painter.Hex(0x5B7FC7) }, { "owed", Painter.Hex(0x4FA3A5) }, // your wealth (spec 019 §3.2)
         };
+
+        /// <summary>Net worth's trend (spec 019 §3.2): a line over a tan field with a dot on each close, the first and last captions under it.</summary>
+        private static VisualElement TrendChart(TrendVm trend)
+        {
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.style.paddingTop = 8; box.style.paddingBottom = 8;
+            var chart = new VisualElement { pickingMode = PickingMode.Ignore };
+            chart.style.height = 190;
+            chart.style.backgroundColor = UiKit.CreamDark;
+            UiKit.Radius(chart, 18);
+            chart.generateVisualContent += mgc =>
+            {
+                var p = mgc.painter2D;
+                Rect r = chart.contentRect;
+                long lo = long.MaxValue, hi = long.MinValue;
+                foreach (long v in trend.Values) { if (v < lo) lo = v; if (v > hi) hi = v; }
+                if (hi == lo) { hi++; lo--; }
+                int n = trend.Values.Count;
+                const float pad = 26f;
+                Vector2 At(int i) => new Vector2(pad + (r.width - 2 * pad) * i / Mathf.Max(1, n - 1), r.height - pad - (r.height - 2 * pad) * (float)(trend.Values[i] - lo) / (hi - lo));
+                p.strokeColor = UiKit.Green;
+                p.lineWidth = 8f;
+                p.lineJoin = LineJoin.Round;
+                p.lineCap = LineCap.Round;
+                p.BeginPath();
+                for (int i = 0; i < n; i++) { if (i == 0) p.MoveTo(At(i)); else p.LineTo(At(i)); }
+                p.Stroke();
+                p.fillColor = UiKit.Green;
+                for (int i = 0; i < n; i++) { p.BeginPath(); p.Arc(At(i), 11f, 0f, 360f); p.Fill(); }
+            };
+            box.Add(chart);
+            var caps = new VisualElement { pickingMode = PickingMode.Ignore };
+            caps.style.flexDirection = FlexDirection.Row;
+            caps.style.justifyContent = Justify.SpaceBetween;
+            caps.style.marginTop = 4;
+            caps.Add(UiKit.Text(trend.FirstCaption, 24, UiKit.Wood, UiKit.Body));
+            caps.Add(UiKit.Text(trend.LastCaption, 24, UiKit.Wood, UiKit.Body));
+            box.Add(caps);
+            return box;
+        }
 
         /// <summary>A household's budget (spec 014 §7): a pie drawn with the vector painter, and its legend beside it.</summary>
         private static VisualElement PieChart(System.Collections.Generic.List<PieSliceVm> slices)
@@ -658,6 +799,7 @@ namespace Game.Presentation.Ui
             }
             VisualElement left = WithIcon(line.Icon, 84, text);
             left.style.flexGrow = 1; // the ? chip and the button sit together on the right
+            if (line.Dim) left.style.opacity = 0.55f; // not yet reached (a milestone)
             row.Add(left);
             AddWhyChip(row, line);
             if (line.Badge != null)
@@ -675,9 +817,18 @@ namespace Game.Presentation.Ui
             }
             else if (line.Action != null)
             {
+                if (line.Also != null)
+                {
+                    VisualElement also = ActionColumn(line.Also);
+                    also.style.alignItems = Align.FlexEnd;
+                    also.style.flexShrink = 0;
+                    also.Q<Button>().style.minWidth = 200;
+                    row.Add(also);
+                }
                 VisualElement button = ActionColumn(line.Action);
                 button.style.alignItems = Align.FlexEnd;
                 button.style.flexShrink = 0;
+                if (line.Also != null) button.Q<Button>().style.minWidth = 200;
                 row.Add(button);
             }
             return row;
@@ -991,6 +1142,7 @@ namespace Game.Presentation.Ui
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn);
             foreach (LineVm l in vm.Lines)
             {
+                if (l.Trend != null) foreach (long v in l.Trend.Values) key.Append('|').Append(v);
                 if (l.Pie != null) foreach (PieSliceVm p in l.Pie) key.Append('|').Append(p.Label).Append(p.Percent).Append(p.Value);
                 if (l.Tree != null) foreach (var g in l.Tree.Generations) foreach (TreePersonVm p in g) key.Append('|').Append(p.Text);
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);

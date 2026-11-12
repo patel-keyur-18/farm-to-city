@@ -270,8 +270,9 @@ Field panel (tap an acre)
 | Soil factor 0.875      [Why?]                     |
 |   loam 1.00 x fertility 0.875 x shade 1.00        |
 | Edge slots  [mango, mature] [empty]               |
-| [Sow]                     [Sell parcel: 94,080]   |
+| [Sow]                                             |
 +---------------------------------------------------+
+(Selling a bought parcel moved to Menu → Your land, behind a hold-to-sell card with its numbers: ADR 0101 §13, spec 008 §3.5, §3.15.)
 
 Buy sheet (tap an unowned parcel next to your land)
 +---------------------------------------------------+

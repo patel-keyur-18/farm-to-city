@@ -147,6 +147,35 @@ namespace Sim.Core.Market
             return (long)(new System.Numerics.BigInteger(SeasonRent(sim, tonnes)) * left / season);
         }
 
+        /// <summary>The tonnes of space the close rents for the new season: what you booked, or what your goods need past your own godown (a let godown holds none of yours).</summary>
+        private static int CloseTonnes(Simulation sim, bool letNow, long usedGrams)
+        {
+            long own = Owned(sim) == null || letNow ? 0 : Def(sim).CapacityKg * 1000;
+            long needed = System.Math.Max(0, usedGrams - own);
+            return System.Math.Max(sim.State.Godown.RentNextTonnes, (int)((needed + GramsPerTonne - 1) / GramsPerTonne));
+        }
+
+        /// <summary>
+        /// The tonnes of warehouse space the next close will rent, worked out the way the close does it, the tenant's chance included (it is
+        /// drawn from the seed and the new season, so the preview and the close agree): what you booked, or what your goods need past your
+        /// own godown, whichever is more. 0 when none is needed.
+        /// </summary>
+        public static int NextCloseTonnes(Simulation sim, bool atClose = false)
+        {
+            GodownState s = sim.State.Godown;
+            if (s == null) return 0;
+            bool let = s.LetNext && Owned(sim) != null && AllDryGrams(sim) <= s.RentNextTonnes * GramsPerTonne
+                && Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Godown, 0, (ulong)(sim.Period + (atClose ? 0 : 1))), Def(sim).TenantChance);
+            return CloseTonnes(sim, let, UsedGrams(sim));
+        }
+
+        /// <summary>What the next close will charge for warehouse space (ADR 0101 §1): <see cref="NextCloseTonnes"/> at the season's rent.</summary>
+        public static long NextCloseRent(Simulation sim, bool atClose = false)
+        {
+            int tonnes = NextCloseTonnes(sim, atClose);
+            return tonnes == 0 ? 0 : SeasonRent(sim, tonnes);
+        }
+
         /// <summary>
         /// At the season close, with the payments that belong to the new season (spec 013 §3.4, ADR 0087): first whether your
         /// godown is let (only if all your dry goods, the hut store's too, fit the space you rent from now; a seeded chance a trader takes it; his rent upfront,
@@ -179,9 +208,7 @@ namespace Sim.Core.Market
             }
 
             if (!s.LetNow) used = UsedGrams(sim); // a godown no longer let takes your goods back
-            long own = Owned(sim) == null || s.LetNow ? 0 : d.CapacityKg * 1000;
-            long needed = System.Math.Max(0, used - own);
-            int tonnes = System.Math.Max(s.RentNextTonnes, (int)((needed + GramsPerTonne - 1) / GramsPerTonne));
+            int tonnes = CloseTonnes(sim, s.LetNow, used);
             s.RentedTonnes = s.RentNextTonnes = 0;
             if (tonnes == 0) return;
             long cost = SeasonRent(sim, tonnes);

@@ -312,6 +312,22 @@ namespace Sim.View.Views
             return string.Join(";", parts);
         }
 
+        /// <summary>
+        /// "Mandi trip pays you about 4,310 coins at 15:00" (or "… tomorrow"), with its Why? (what the cart carries); shown in the Store
+        /// under the supermarket's line only while a cart is away (owner, 2026-11-12, ADR 0104).
+        /// </summary>
+        internal static LineVm TripLine(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            MandiTrip trip = sim.State.Market.Trip;
+            long day = Sim.Core.Definitions.ClockDef.SecondsPerDay;
+            bool today = trip.ReturnAt / day == sim.State.Clock.SimTime / day;
+            string time = Text.Formatter.Clock(Sim.Core.Time.Calendar.From(trip.ReturnAt, sim.Clock));
+            string value = s.Get(today ? "mandi.paysToday" : "mandi.paysTomorrow", "amount", ctx.Fmt.Coins(MarketRules.MandiTripPays(sim)), "time", time);
+            return new LineVm(s.Get("mandi.pays"), value, "mandi", 5); // one line like the supermarket's; what the cart carries is in its Why?
+        }
+
         public static SheetVm Build(ViewContext ctx, string arg)
         {
             Simulation sim = ctx.Sim;

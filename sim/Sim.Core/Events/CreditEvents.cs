@@ -160,4 +160,56 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "CreditScoreChanged(" + Old + "→" + New + ", " + Reason + ")"; }
     }
+
+    /// <summary>The season's interest was added to your savings deposit (spec 019 §3.5).</summary>
+    public sealed class InterestEarned : SimEvent
+    {
+        public long Amount { get; }
+
+        public InterestEarned(long simTime, long amount) : base(simTime) { Amount = amount; }
+
+        protected override string Describe() { return "InterestEarned(" + Amount + ")"; }
+    }
+
+    /// <summary>The close, on the season's last day, would take more than your cash holds: <see cref="Short"/> by this much, <see cref="FirstUnpaid"/> the first charge (its <c>CloseDue</c> key) that would go unpaid (spec 019 §3.5).</summary>
+    public sealed class CloseShortAhead : SimEvent
+    {
+        public long Short { get; }
+        public string FirstUnpaid { get; }
+
+        public CloseShortAhead(long simTime, long @short, string firstUnpaid) : base(simTime)
+        {
+            Short = @short;
+            FirstUnpaid = firstUnpaid;
+        }
+
+        protected override string Describe() { return "CloseShortAhead(short=" + Short + ", first=" + FirstUnpaid + ")"; }
+    }
+
+    /// <summary>With your yes, the savings paid what the close's charges needed beyond your cash (spec 019 §3.5).</summary>
+    public sealed class CoveredFromSavings : SimEvent
+    {
+        public long Amount { get; }
+
+        public CoveredFromSavings(long simTime, long amount) : base(simTime) { Amount = amount; }
+
+        protected override string Describe() { return "CoveredFromSavings(" + Amount + ")"; }
+    }
+
+    /// <summary>A wealth milestone was reached (spec 019 §3.6), once each: <see cref="Period"/> is the season it happened in, <see cref="Past"/> when it was found from a report kept before the update.</summary>
+    public sealed class MilestoneReached : SimEvent
+    {
+        public string Id { get; }
+        public long Period { get; }
+        public bool Past { get; }
+
+        public MilestoneReached(long simTime, string id, long period, bool past) : base(simTime)
+        {
+            Id = id;
+            Period = period;
+            Past = past;
+        }
+
+        protected override string Describe() { return "MilestoneReached(" + Id + ", period=" + Period + (Past ? ", past" : "") + ")"; }
+    }
 }

@@ -65,7 +65,6 @@ namespace Sim.View.Views
                 if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
-                if (!parcel.Protected) vm.Actions.Add(SellParcelAction(ctx, parcel));
                 return vm;
             }
 
@@ -107,10 +106,15 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("field.yield"), ctx.Fmt.Kg(crop.HarvestGrams), "yield", tileId));
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("field.waits"),
                     left > 0 ? ctx.Strings.Get("field.spoilsIn", "time", ctx.Fmt.Duration(left)) : ctx.Strings.Get("field.spoiling"), "spoils", tileId));
-                ActionVm store = ActionVm.Checked(ctx, "harvest", ctx.Strings.Get("action.harvest"), ctx.Fmt.Kg(crop.HarvestGrams), ActionKind.Primary,
-                    at => new Harvest(at, tileId, Overflow.StoreOnly));
+                // Harvest takes what fits the store and leaves the rest standing (ADR 0105); with all of it fitting it is the plain harvest.
+                long all = crop.HarvestGrams, part = System.Math.Min(all, Store.Fits(ctx.Sim, ctx.Sim.Config.Game.Farm.Crops[crop.Def].OutputGood));
+                if (crop.TakenGrams > 0)
+                    vm.Lines.Add(new LineVm(ctx.Strings.Get("field.taken"), ctx.Fmt.Kg(crop.TakenGrams), "yield", tileId));
+                ActionVm store = ActionVm.Checked(ctx, "harvest", ctx.Strings.Get("action.harvest"),
+                    part < all ? ctx.Strings.Get("field.harvestPart", "part", ctx.Fmt.Kg(part), "all", ctx.Fmt.Kg(all)) : ctx.Fmt.Kg(all), ActionKind.Primary,
+                    at => new Harvest(at, tileId, Overflow.StorePart));
                 vm.Actions.Add(store);
-                if (!store.Enabled)
+                if (part < all)
                     vm.Actions.Add(ActionVm.Checked(ctx, "harvestSell", ctx.Strings.Get("action.harvestSell"), null, ActionKind.Secondary,
                         at => new Harvest(at, tileId, Overflow.SellRestToTrader)));
             }
@@ -119,13 +123,6 @@ namespace Sim.View.Views
             if (orchard != null) OrchardSheet.AddActions(ctx, vm, orchard);
             vm.Actions.Add(ActionVm.Checked(ctx, "clear", ctx.Strings.Get(orchard != null ? "orchard.clearCrop" : "action.clear"), null, ActionKind.Danger, at => new ClearField(at, tileId)));
             return vm;
-        }
-
-        private static ActionVm SellParcelAction(ViewContext ctx, Parcel parcel)
-        {
-            string key = ctx.Sim.Config.Game.Map.Parcels[parcel.Id].Id;
-            long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(ctx.Sim, parcel), ctx.Sim.Config.Game.Land.QuickSaleFactor));
-            return ActionVm.Checked(ctx, "sellParcel", ctx.Strings.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
         }
 
         private static SheetVm Unowned(ViewContext ctx, Tile tile, Parcel parcel)

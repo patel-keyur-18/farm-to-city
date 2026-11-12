@@ -568,6 +568,32 @@ namespace Tools.Balancer
     }
 
     /// <summary>
+    /// Stress bot (spec 019 §9, ADR 0101 §2): the money loop the savings deposit must not be. It borrows the co-op bank's limit whenever it has no loan
+    /// and puts the whole loan into the deposit (2.5% and more a season to pay, 1.5% to earn), with <i>Always pay from my savings</i> on so a short close
+    /// is covered. The competent bot's play is otherwise the same, so the two differ by the deposit alone.
+    /// </summary>
+    public sealed class DepositLoopBot : FarmerBot
+    {
+        public override string Name { get { return "deposit-loop"; } }
+
+        public override void Start(Simulation sim)
+        {
+            base.Start(sim);
+            Ok(sim, new SetSavingsCover(sim.State.Clock.SimTime, true));
+        }
+
+        public override void Play(Simulation sim, long t)
+        {
+            base.Play(sim, t);
+            if (sim.State.Credit == null || sim.State.Credit.Loans.Exists(l => l.IsOpen)) return;
+            long room = CreditRules.Limit(sim, 1).Limit;
+            room -= room % Money.Coin;
+            if (room < 1_000_000) return;
+            if (Ok(sim, new TakeLoan(t, "coop_bank", room, 8))) Ok(sim, new DepositSavings(t, room));
+        }
+    }
+
+    /// <summary>
     /// Stress bot (ADR 0016, 0038): strategic default. Borrows the moneylender's limit whenever it can and never repays by choice:
     /// it holds its produce unsold and turns cash into seed before each close, so a default leaves the lender nothing. It tries to
     /// live on debt that foreclosure writes off.

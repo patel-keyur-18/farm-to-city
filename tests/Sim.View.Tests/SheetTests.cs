@@ -38,7 +38,7 @@ namespace Sim.View.Tests
             Assert.That(sheet.Lines.Single(l => l.Label == "Fertility").Value, Is.EqualTo("45.0 / 100"));
             Assert.That(Action(sheet, "sow").Opens.Value.Kind, Is.EqualTo("Sow"));
             Assert.That(Action(sheet, "sow").Opens.Value.Id, Is.EqualTo(86));
-            Assert.That(sheet.Actions.Any(a => a.Id == "sellParcel"), Is.False, "the inherited land can never be sold");
+            Assert.That(sheet.Actions.Any(a => a.Id.StartsWith("sellParcel")), Is.False, "the inherited land can never be sold");
             Assert.That(FieldSheets.ForTile(ViewKit2.Context(sim), 84).Lines.Single(l => l.Label == "Irrigation").Value, Is.EqualTo("Rain-fed"));
         }
 
@@ -77,15 +77,25 @@ namespace Sim.View.Tests
             Assert.That(Action(sheet, "harvest").Enabled, Is.True);
             Assert.That(sheet.Actions.Any(a => a.Id == "harvestSell"), Is.False, "only when the harvest doesn't fit");
 
-            // A nearly full store: Harvest is greyed with the sim's own reason, and the second button sells the rest.
+            // A nearly full store (ADR 0105): Harvest takes what fits ("10 kg of …"), and the second button sells the rest.
             sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("wheat")] += Sim.Core.Market.Store.CapacityGrams(sim) - Sim.Core.Market.Store.UsedGrams(sim) - 10_000;
             sheet = FieldSheets.ForTile(ctx, 86);
-            Assert.That(Action(sheet, "harvest").Enabled, Is.False);
-            Assert.That(Action(sheet, "harvest").DisabledReason, Is.EqualTo("The store is full."));
+            Assert.That(Action(sheet, "harvest").Enabled, Is.True);
+            Assert.That(Action(sheet, "harvest").Detail, Does.StartWith("10.0 kg of "));
+            Assert.That(((Harvest)Action(sheet, "harvest").Create(sim.State.Clock.SimTime)).Overflow, Is.EqualTo(Sim.Core.Market.Overflow.StorePart));
             Assert.That(Action(sheet, "harvestSell").Enabled, Is.True);
             Command c = Action(sheet, "harvestSell").Create(sim.State.Clock.SimTime);
             Assert.That(((Harvest)c).Overflow, Is.EqualTo(Sim.Core.Market.Overflow.SellRestToTrader));
             Assert.That(sim.Execute(c).Accepted, Is.True);
+
+            // Nothing fits at all: Harvest is greyed with the sim's own reason.
+            Simulation full = ViewKit.NewGame();
+            full.Execute(new Sow(full.State.Clock.SimTime, 86, "radish", SeedSource.Certified, "none"));
+            full.AdvanceTo(full.State.Clock.SimTime + 3 * Hour);
+            full.State.Market.Stock[full.Config.Game.Market.IndexOf("wheat")] += Sim.Core.Market.Store.CapacityGrams(full) - Sim.Core.Market.Store.UsedGrams(full);
+            sheet = FieldSheets.ForTile(ViewKit2.Context(full), 86);
+            Assert.That(Action(sheet, "harvest").Enabled, Is.False);
+            Assert.That(Action(sheet, "harvest").DisabledReason, Is.EqualTo("The store is full."));
 
             // Waiting past the grace.
             Simulation late = ViewKit.NewGame();
@@ -116,8 +126,7 @@ namespace Sim.View.Tests
             Assert.That(rich.Execute(buy).Accepted, Is.True);
             SheetVm bought = FieldSheets.ForTile(ViewKit2.Context(rich), 82);
             Assert.That(bought.Subtitle, Is.EqualTo("Land you bought"));
-            Assert.That(Action(bought, "sellParcel").Enabled, Is.True);
-            Assert.That(Action(bought, "sellParcel").Kind, Is.EqualTo(ActionKind.Danger));
+            Assert.That(bought.Actions.Any(a => a.Id == "sellParcel"), Is.False, "selling lives in Menu → Your land (ADR 0101 §13)");
         }
 
         [Test]

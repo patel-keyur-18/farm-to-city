@@ -331,11 +331,50 @@ namespace Sim.Core.Definitions
     }
 
     /// <summary>From <c>content/finance.json</c> (spec 005 §4).</summary>
+    /// <summary>The numbers behind the five wealth milestones (spec 019 §3.6): never a reward, so they never steer play.</summary>
+    public sealed class MilestonesDef
+    {
+        /// <summary>First lakh saved: cash plus the deposit, less what you owe, reaches this.</summary>
+        public long Savings { get; }
+
+        /// <summary>Net worth reaches this many times the inheritance, in today's coins.</summary>
+        public int NetWorthTimes { get; }
+
+        /// <summary>Passive income covers your living: the ratio reaches this percent.</summary>
+        public int PassivePercent { get; }
+
+        public MilestonesDef(long savings, int netWorthTimes, int passivePercent)
+        {
+            Savings = savings;
+            NetWorthTimes = netWorthTimes;
+            PassivePercent = passivePercent;
+        }
+    }
+
     public sealed class LedgerDef
     {
         public int RetainSeasons { get; }
 
-        public LedgerDef(int retainSeasons) { RetainSeasons = retainSeasons; }
+        /// <summary>The hub's debt-to-assets bands (spec 019 §3.2): under the first "comfortable", over the second "risky"; the accountant's debt note speaks at the second.</summary>
+        public Fixed DebtComfortableUnder { get; }
+        public Fixed DebtRiskyOver { get; }
+
+        /// <summary>The co-op bank's savings rate a season, added to the deposit at each close, and the least you can put in (spec 019 §3.5).</summary>
+        public Fixed SavingsInterest { get; }
+        public long SavingsMinimum { get; }
+
+        /// <summary>The wealth milestones' thresholds (spec 019 §3.6); null when the content has none (the frozen golden content), so no milestone is ever checked.</summary>
+        public MilestonesDef Milestones { get; }
+
+        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver, Fixed savingsInterest, long savingsMinimum, MilestonesDef milestones = null)
+        {
+            Milestones = milestones;
+            RetainSeasons = retainSeasons;
+            DebtComfortableUnder = debtComfortableUnder;
+            DebtRiskyOver = debtRiskyOver;
+            SavingsInterest = savingsInterest;
+            SavingsMinimum = savingsMinimum;
+        }
     }
 
     /// <summary>

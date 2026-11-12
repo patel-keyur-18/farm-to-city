@@ -97,8 +97,11 @@ namespace Sim.Core.Farm
         /// <summary>A fodder field's last cut (or its sowing): its accrued sums and its soil change run from here (spec 012 §3.8b).</summary>
         public long LastCut { get; internal set; }
 
+        /// <summary>Grams already taken into the store by part-harvests while the crop stood ready (ADR 0105, save schema 17).</summary>
+        public long TakenGrams { get; internal set; }
+
         /// <summary>What a harvest would move into the store now.</summary>
-        public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams; } }
+        public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams - TakenGrams; } }
 
         internal Crop Clone()
         {
@@ -136,6 +139,7 @@ namespace Sim.Core.Farm
             h.WriteFixed(RolledHealth);
             h.WriteLong(PestJobId);
             if (!h.Hashing || LastCut != 0) h.WriteLong(LastCut); // fodder only (spec 012): other crops hash as before
+            if (h.Hashing ? TakenGrams != 0 : !(h is SaveWriter tw) || tw.Schema >= 17) h.WriteLong(TakenGrams); // a part-harvested crop only: every other crop hashes as before
         }
 
         internal static Crop ReadFrom(SaveReader r)
@@ -158,6 +162,7 @@ namespace Sim.Core.Farm
             c.RolledHealth = r.ReadFixed();
             c.PestJobId = r.ReadLong();
             if (r.Schema >= 7) c.LastCut = r.ReadLong();
+            if (r.Schema >= 17) c.TakenGrams = r.ReadLong();
             return c;
         }
     }

@@ -70,7 +70,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Ledger_And_Chunking()
         {
-            GameDefs game = Game((f, j) => f == "finance.json" ? j.Replace("\"retainSeasons\": 4", "\"retainSeasons\": 16") : j);
+            GameDefs game = Game((f, j) => f == "finance.json" ? j.Replace("\"retainSeasons\": 8", "\"retainSeasons\": 16") : j);
             Simulation one = NewFarm(5, 9 * Hour, game);
             long start = one.State.Clock.SimTime, end = start + 2 * one.Clock.SecondsPerYear;
             foreach (long t in PeopleBot.Rounds(start, end))

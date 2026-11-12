@@ -51,6 +51,9 @@ namespace Sim.Core.Saves
 
         /// <summary>The village's school opened (spec 018 §5). Information.</summary>
         SchoolOpened = 18,
+
+        /// <summary>The close would come up short and you haven't said what pays it (spec 019 §3.5). Needs you.</summary>
+        CloseShort = 19,
     }
 
     public enum NotifyImportance
@@ -131,6 +134,7 @@ namespace Sim.Core.Saves
                 long at = wall + (e.SimTime - simTime);
                 switch (e)
                 {
+                    case CloseShortAhead _: items.Add(new AbsenceItem(at, NotifyKind.CloseShort, null)); break;
                     case LoanPaymentMissed _: items.Add(new AbsenceItem(at, NotifyKind.LoanMissed, null)); break;
                     case FinalNotice _: items.Add(new AbsenceItem(at, NotifyKind.FinalNotice, null)); break;
                     case ContractLapsed _: items.Add(new AbsenceItem(at, NotifyKind.ContractLapsed, null)); break;

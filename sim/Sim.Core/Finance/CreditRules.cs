@@ -176,6 +176,26 @@ namespace Sim.Core.Finance
         }
 
         /// <summary>
+        /// What the next season close will ask (spec 005 §3.6): the interest owed and accruing up to the close, any arrears, and the
+        /// principal due then (none at a part-season first close; all of it at the last; a bank's part of it in between). Paying back
+        /// what you borrowed is principal, not a cost.
+        /// </summary>
+        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue, bool atClose = false)
+        {
+            interestDue = principalDue = 0;
+            if (!loan.IsOpen) return 0;
+            // atClose: asked inside the close itself, once interest is accrued to the boundary: the close is now, not a season on.
+            long S = sim.Clock.SecondsPerSeason, close = atClose ? sim.State.Clock.SimTime : (sim.State.Clock.SimTime / S + 1) * S;
+            AccruedSince(sim, loan, close, out long interest, out long penalty);
+            long principal = loan.FirstClosePartial ? loan.ArrearsPrincipal
+                : loan.Remaining <= 1 ? loan.Principal
+                : loan.ArrearsPrincipal + (loan.Schedule == LoanSchedule.Bullet ? 0 : System.Math.Min(loan.InstalmentBase, loan.Principal - loan.ArrearsPrincipal));
+            interestDue = loan.ArrearsInterest + loan.InterestAccrued + interest + penalty;
+            principalDue = principal;
+            return interestDue + principalDue;
+        }
+
+        /// <summary>
         /// Interest and penalty interest accrued on a loan from its segment start to <paramref name="now"/> (not yet posted).
         /// Scheduled principal accrues at the rate; arrears (unpaid principal and interest) at rate + penalty rate, the penalty
         /// part being penalty interest (spec 005 §3.6).

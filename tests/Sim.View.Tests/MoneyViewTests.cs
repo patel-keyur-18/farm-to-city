@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Events;
+using Sim.Core.Business;
 using Sim.Core.Finance;
 using Sim.Core.Market;
 using Sim.Core.People;
@@ -69,10 +70,12 @@ namespace Sim.View.Tests
 
             SheetVm wealth = MoneySheet.Build(ctx, MoneySheet.Wealth);
             Assert.That(wealth.Tab, Is.EqualTo("tab:wealth"));
-            Assert.That(wealth.Lines.Select(l => l.Label), Is.SupersetOf(new[] { "Cash", "What you own minus what you owe", "Of that, your land", "Your loans", "Borrow" }));
+            Assert.That(wealth.Lines.Select(l => l.Label), Is.SupersetOf(new[] { "Cash", "What you own minus what you owe", "You owe", "Your wealth", "Net worth, in today's coins", "What your wealth is made of", "Debt to assets", "Emergency fund", "Passive income", "Your loans" }));
+            Assert.That(wealth.Lines.Single(l => l.Buttons != null).Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Borrow", "Savings deposit", "Your books" }), "picture buttons, as the Store's");
+            Assert.That(wealth.Lines.Single(l => l.Trend != null).Trend.Values.Count, Is.GreaterThanOrEqualTo(2), "a season has closed: the line has points");
             Loan loan = sim.State.Credit.Loans.Single();
             Assert.That(wealth.Lines.Any(l => l.Action != null && l.Action.Id == "repay:" + loan.Id), Is.True);
-            Assert.That(wealth.Lines.Count(l => l.WhyKey == "creditLimit"), Is.EqualTo(sim.Config.Game.Credit.Lenders.Count));
+            Assert.That(LendersSheet.Build(ctx).Lines.Count(l => l.WhyKey == "creditLimit"), Is.EqualTo(sim.Config.Game.Credit.Lenders.Count), "Borrow is its own sheet of lenders");
         }
 
         // AC-12: earned − spent is the report's what's left at the close; cash at the start + profit + every why-your-cash-moved line = cash now,
@@ -206,6 +209,84 @@ namespace Sim.View.Tests
             Assert.That(cover.Note, Is.EqualTo("Short by " + pc.Fmt.Coins(8_400 * 100) + ": " + p.ShortWho + ". Sell from the store, or borrow on Your wealth"));
             Assert.That(cover.Action.Opens.Value.Kind, Is.EqualTo("Store"));
             Assert.That(MoneySheet.Build(ctx).Lines.Single(l => l.Label == "Due at the season's end").NoteTone, Is.EqualTo(Tone.Good));
+        }
+
+        // AC-14 (ADR 0101 §1): the list holds everything the close takes from your cash: water, the school, machines (and the warehouse),
+        // each equal to what the close then pays, in the close's order.
+        [Test]
+        public void NextSeasonDue_EveryKind()
+        {
+            foreach (Simulation sim in new[] { WithSchool(Situations.Irrigated()), WithSchool(Situations.Equipped()) })
+            {
+                sim.AdvanceTo(NextClose(sim) - 1);
+                SeasonVm s = SeasonBook.Build(ViewKit2.Context(sim), false);
+                long first = sim.State.Ledger.NextEntryId;
+                sim.AdvanceTo(NextClose(sim));
+                string[] keys = { "ledger.pumpPower", "ledger.borewellPower", "ledger.canalFee", "ledger.dripRunning", "ledger.schoolUpkeep", "ledger.machineLease", "ledger.machineUpkeep", "ledger.machineDiesel" };
+                long paid = sim.State.Ledger.Entries.Where(e => e.Id >= first && keys.Contains(e.DescriptionKey)).Sum(e => -e.Postings.Where(p => p.Account == Account.Cash).Sum(p => p.Amount));
+                Assert.That(paid, Is.GreaterThan(0));
+                long due = s.Due.Where(l => l.Key.StartsWith("water:") || l.Key.StartsWith("machine:") || l.Key == "school").Sum(l => l.Amount);
+                Assert.That(due, Is.EqualTo(paid).Within(paid / 30 + 1), "what the close pays, at today's prices");
+                Assert.That(s.Due.Select(l => l.Key.Split(':')[0]).Distinct().Intersect(new[] { "water", "school" }), Is.Not.Empty);
+                Assert.That(s.DueTotal, Is.EqualTo(s.Due.Sum(l => l.Amount)));
+            }
+        }
+
+        // ADR 0101 §1: short of cash, the cover line names the first charge that would go unpaid, in the close's order.
+        [Test]
+        public void NextSeasonDue_ShortNamesWhatStops()
+        {
+            Simulation sim = Situations.Irrigated();
+            ViewContext ctx = ViewKit2.Context(sim);
+            SeasonVm s = SeasonBook.Build(ctx, false);
+            SeasonLineVm pump = s.Due.First(l => l.Key.StartsWith("water:"));
+            long keep = s.DueTotal - s.Due.Where(l => l.Key.StartsWith("water:")).Sum(l => l.Amount);
+            long before = s.Due.TakeWhile(l => !l.Key.StartsWith("water:")).Sum(l => l.Amount);
+            long cash = before + pump.Amount / 2;
+            sim.State.Ledger.Post(T(sim), sim.Period, "test", "test", new Posting(Account.Cash, cash - sim.State.Ledger.Cash), new Posting(Account.OpeningEquity, sim.State.Ledger.Cash - cash));
+            s = SeasonBook.Build(ctx, false);
+            Assert.That(s.ShortWho, Does.Contain("stand idle").Or.Contain("off"));
+            Assert.That(s.Short, Is.GreaterThan(0));
+        }
+
+        // ADR 0101 §1: the warehouse space booked for next season is on the list, equal to the rent the close takes upfront.
+        [Test]
+        public void NextSeasonDue_Warehouse()
+        {
+            Simulation sim = Situations.Irrigated();
+            Ok(sim, new RentWarehouse(T(sim), 2));
+            long close = NextClose(sim);
+            sim.AdvanceTo(close - 1);
+            long due = SeasonBook.Build(ViewKit2.Context(sim), false).Due.Single(l => l.Key == "warehouse").Amount;
+            sim.AdvanceTo(close);
+            long paid = sim.State.Finance.Prepayments.Where(p => p.OwnerRef == "warehouse" && p.Start >= close).Sum(p => p.Total);
+            Assert.That(paid, Is.GreaterThan(0));
+            Assert.That(due, Is.EqualTo(paid).Within(paid / 30 + 1));
+        }
+
+        // ADR 0101 §1: a business's own charges stand below your total, never in it, with whether its cash covers them.
+        [Test]
+        public void NextSeasonDue_BusinessesBesideNotIn()
+        {
+            Simulation sim = Situations.Mill();
+            ViewContext ctx = ViewKit2.Context(sim);
+            SeasonVm s = SeasonBook.Build(ctx, false);
+            Assert.That(s.Own, Is.Not.Empty);
+            Assert.That(s.Due.Any(l => l.Key.StartsWith("business:")), Is.False);
+            Assert.That(s.DueTotal, Is.EqualTo(s.Due.Sum(l => l.Amount)), "your total holds none of theirs");
+            Business b = sim.State.Businesses.Businesses.First(x => x.Status != BusinessStatus.Closed);
+            BusinessDue due = CloseDues.Businesses(sim).Single(x => x.BusinessId == b.Id);
+            Assert.That(s.Own.Single(l => l.Key == "business:" + b.Id).Amount, Is.EqualTo(due.Total));
+            LineVm line = MoneySheet.Build(ctx).Lines.Single(l => l.WhyKey == "season" && l.WhyId == MoneySheet.WhyId(false, MoneySheet.OwnBlock, 0));
+            Assert.That(line.Note, Is.EqualTo(due.Covered ? "Its cash covers it" : "Short by " + ctx.Fmt.Coins(due.Short) + ": put cash in before the season's end"));
+        }
+
+        private static Simulation WithSchool(Simulation sim)
+        {
+            sim.State.Era.Current = sim.Config.Game.School.UnlockEra;
+            Ok(sim, new BuildSchool(T(sim)));
+            sim.AdvanceTo(T(sim) + 49 * Hour);
+            return sim;
         }
 
         // Spec 014 §3.6 in AC-14: a townsperson's renewal is the wage less the house, from the first renewal.

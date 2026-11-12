@@ -10,6 +10,9 @@ namespace Sim.Core.Finance
     public enum Account
     {
         Cash = 1000,
+
+        /// <summary>Your savings at the co-op bank (spec 019 §3.5, ADR 0101 §2): never collateral, never seized.</summary>
+        BankDeposit = 1020,
         PrepaidLivingCosts = 1100,
         PrepaidWages = 1110,
         PrepaidRent = 1120,
@@ -48,6 +51,9 @@ namespace Sim.Core.Finance
 
         /// <summary>Drawings beyond what the founder put into businesses (spec 016 §3.2).</summary>
         BusinessDrawingsIncome = 4300,
+
+        /// <summary>The deposit's interest, added at each close (spec 019 §3.5). Other money, not farm profit.</summary>
+        InterestOnSavings = 4400,
         Sales = 4500,
         ServiceIncome = 4510,
         GainOnAssetSales = 4800,
@@ -88,11 +94,11 @@ namespace Sim.Core.Finance
         /// <summary>Every account in id order: the order balances are kept, hashed and reported in.</summary>
         public static readonly Account[] All =
         {
-            Account.Cash, Account.PrepaidLivingCosts, Account.PrepaidWages, Account.PrepaidRent, Account.InputsInStore, Account.BusinessStock, Account.OwedByBuyers, Account.Land,
+            Account.Cash, Account.BankDeposit, Account.PrepaidLivingCosts, Account.PrepaidWages, Account.PrepaidRent, Account.InputsInStore, Account.BusinessStock, Account.OwedByBuyers, Account.Land,
             Account.Buildings, Account.Equipment, Account.AccumulatedDepreciation, Account.Trees, Account.Livestock, Account.InvestmentInBusinesses,
             Account.MoneylenderLoans, Account.Overdraft, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings, Account.OwnersCapital,
-            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.BusinessDrawingsIncome,
+            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.BusinessDrawingsIncome, Account.InterestOnSavings,
             Account.Sales, Account.ServiceIncome, Account.GainOnAssetSales, Account.DebtWrittenOff,
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
             Account.GiftsToVillage, Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
@@ -101,7 +107,7 @@ namespace Sim.Core.Finance
 
         /// <summary>
         /// The save schema each account arrived in (spec 011: 1300 in schema 6; spec 012: the livestock accounts in 7; spec 014: 4200 Rent received in 9;
-        /// spec 016: the business accounts in 10; spec 018: 5260 Gifts to the village in 15); 0 for the rest.
+        /// spec 016: the business accounts in 10; spec 018: 5260 Gifts to the village in 15; spec 019: 1020 Bank deposit and 4400 Interest on savings in 16); 0 for the rest.
         /// A late account hashes only once used, so the golden replays stay as they were, and an older save reads without it.
         /// </summary>
         internal static int SinceSchema(Account a)
@@ -115,6 +121,7 @@ namespace Sim.Core.Finance
                 case Account.BusinessDrawingsIncome: case Account.Sales: case Account.ServiceIncome: case Account.CostOfGoodsSold: case Account.Power: case Account.Repairs:
                     return 10;
                 case Account.GiftsToVillage: return 15;
+                case Account.BankDeposit: case Account.InterestOnSavings: return 16;
                 default: return 0;
             }
         }

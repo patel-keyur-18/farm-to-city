@@ -168,11 +168,17 @@ namespace Sim.Core
         /// What <see cref="Execute"/> would say about a command right now, without changing anything: it runs on a copy of the
         /// state. The view layer uses it to grey out an action and show why (spec 008 §3.6, "a rejected action"). Never logged.
         /// </summary>
-        public CommandResult Preview(Command command)
+        public CommandResult Preview(Command command) { return Preview(command, out _); }
+
+        /// <summary>
+        /// As <see cref="Preview(Command)"/>, also returning the copy the command ran on, so a confirm card can show what it would change
+        /// (cash, loans) before the player says yes (spec 008 §3.15). The copy is the view's to read and drop.
+        /// </summary>
+        public CommandResult Preview(Command command, out Simulation after)
         {
             if (command == null) throw new ArgumentNullException(nameof(command));
-            var fork = new Simulation(Config, State.Clone(withCommandLog: false));
-            return command.Apply(fork);
+            after = new Simulation(Config, State.Clone(withCommandLog: false));
+            return command.Apply(after);
         }
 
         /// <summary>Shorthand for <c>Execute(new AdvanceTo(target, mode))</c>.</summary>

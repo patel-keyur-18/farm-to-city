@@ -201,6 +201,9 @@ namespace Sim.View.Views
         /// <summary>A button on the row itself (the store's Sell per good), or null.</summary>
         public ActionVm Action { get; internal set; }
 
+        /// <summary>A second button on the row, drawn before <see cref="Action"/> (Your land's Show beside Sell), or null.</summary>
+        public ActionVm Also { get; internal set; }
+
         /// <summary>A sheet a tap on the row opens (a good's row opens the good), or null: then the row's tap opens its Why?.</summary>
         public SheetRequest? Opens { get; internal set; }
 
@@ -215,6 +218,9 @@ namespace Sim.View.Views
 
         /// <summary>A third line under the value, in <see cref="NoteTone"/>'s colour (an order's state), or null.</summary>
         public string Note { get; internal set; }
+
+        /// <summary>Drawn faded: something not yet reached (a milestone).</summary>
+        public bool Dim { get; internal set; }
         public Tone NoteTone { get; internal set; }
 
         /// <summary>A green tag where a button would be, for something done ("Delivered"), or null.</summary>
@@ -228,6 +234,9 @@ namespace Sim.View.Views
 
         /// <summary>A pie drawn under the label (a household's budget), slices in order, or null.</summary>
         public System.Collections.Generic.List<PieSliceVm> Pie { get; internal set; }
+
+        /// <summary>A line chart drawn under the label (net worth's trend), or null.</summary>
+        public TrendVm Trend { get; internal set; }
 
         /// <summary>A small family tree drawn instead of a label and value (the household card), or null.</summary>
         public FamilyTreeVm Tree { get; internal set; }
@@ -261,6 +270,14 @@ namespace Sim.View.Views
             Value = value;
             Colour = colour;
         }
+    }
+
+    /// <summary>Points of a line chart, oldest first, in coins; the first and last captions are drawn under it.</summary>
+    public sealed class TrendVm
+    {
+        public System.Collections.Generic.List<long> Values { get; } = new System.Collections.Generic.List<long>();
+        public string FirstCaption { get; internal set; }
+        public string LastCaption { get; internal set; }
     }
 
     /// <summary>A person on a small family tree: name and age ("Manoj (38)"), whether they married in, and the card a tap opens.</summary>

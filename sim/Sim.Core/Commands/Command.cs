@@ -196,6 +196,14 @@ namespace Sim.Core.Commands
         // Spec 018 §3.4 (advisors)
         /// <summary>No such advisor note, one said twice in a pass, or said where its content says it can't speak.</summary>
         UnknownAdvisorNote,
+
+        // Spec 019 §3.5 (the savings deposit, ADR 0101 §2)
+        /// <summary>More than the deposit holds.</summary>
+        InsufficientDeposit,
+        /// <summary>Less than the bank takes as a deposit (finance.json's savingsMinimum), or nothing.</summary>
+        BelowSavingsMinimum,
+        /// <summary>The close wouldn't come up short, so there is nothing for the savings to cover.</summary>
+        NothingShort,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

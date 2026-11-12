@@ -43,6 +43,7 @@ namespace Sim.Core.Saves
             PlantOrchard, PickOrchard, ClearOrchard, SellOrchardOnTrees,
             FoundOnPitch, SetShop, SetStallGoods,
             BuildSchool, StartAdultClass, FindCodexCards, ReadCodexCard, HearAdvisors,
+            DepositSavings, WithdrawSavings, SetSavingsCover, CoverFromSavings, TakeBackSavingsCover,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -157,6 +158,11 @@ namespace Sim.Core.Saves
                 case SetBusiness c:
                     At(c, Tag.SetBusiness); w.WriteLong(c.BusinessId); w.WriteInt(c.OpenHour); w.WriteInt(c.CloseHour); w.WriteFixed(c.Fee); w.WriteLong(c.OwnPerDay); w.WriteBool(c.BuyFromMarket);
                     break;
+                case DepositSavings c: At(c, Tag.DepositSavings); w.WriteLong(c.Amount); break;
+                case WithdrawSavings c: At(c, Tag.WithdrawSavings); w.WriteLong(c.Amount); break;
+                case SetSavingsCover c: At(c, Tag.SetSavingsCover); w.WriteBool(c.Always); break;
+                case CoverFromSavings c: At(c, Tag.CoverFromSavings); break;
+                case TakeBackSavingsCover c: At(c, Tag.TakeBackSavingsCover); break;
                 case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
@@ -287,6 +293,11 @@ namespace Sim.Core.Saves
                 case Tag.CloseBusiness: return new CloseBusiness(at, r.ReadLong());
                 case Tag.SetMix: return new SetMix(at, r.ReadLong(), r.ReadString(), r.ReadLong());
                 case Tag.SetBusiness: return new SetBusiness(at, r.ReadLong(), r.ReadInt(), r.ReadInt(), r.ReadFixed(), r.ReadLong(), r.ReadBool());
+                case Tag.DepositSavings: return new DepositSavings(at, r.ReadLong());
+                case Tag.WithdrawSavings: return new WithdrawSavings(at, r.ReadLong());
+                case Tag.SetSavingsCover: return new SetSavingsCover(at, r.ReadBool());
+                case Tag.CoverFromSavings: return new CoverFromSavings(at);
+                case Tag.TakeBackSavingsCover: return new TakeBackSavingsCover(at);
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));

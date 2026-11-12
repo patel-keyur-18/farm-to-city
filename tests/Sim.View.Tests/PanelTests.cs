@@ -64,9 +64,8 @@ namespace Sim.View.Tests
             Assert.That(money.Lines.Select(l => l.Label), Does.Contain("No loans"));
 
             // Net worth is mostly land at today's price: the land shows on its own row under it, so the big number explains itself.
-            int worth = money.Lines.FindIndex(l => l.WhyKey == "netWorth");
-            Assert.That(money.Lines[worth + 1].Label, Is.EqualTo("Of that, your land"));
-            Assert.That(money.Lines[worth + 1].Value, Is.EqualTo(ctx.Fmt.Coins(Reporting.NetWorth(sim).LandAtMarket)));
+            LineVm made = money.Lines.Single(l => l.Pie != null);
+            Assert.That(made.Pie.Single(p => p.Colour == "land").Value, Is.EqualTo(ctx.Fmt.Coins(Reporting.NetWorth(sim).LandAtMarket)), "the land is the pie's biggest slice");
 
             // A longer term costs more interest in all (the lesson).
             long amount = 20_000 * Money.Coin;

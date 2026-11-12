@@ -30,7 +30,7 @@ namespace Sim.Core.Definitions
         };
 
         /// <summary>Notes whose condition takes a threshold.</summary>
-        public static readonly string[] WithThreshold = { "debt", "overdraft", "soil", "dry" };
+        public static readonly string[] WithThreshold = { "overdraft", "soil", "dry" };
 
         /// <summary>The alerts a note can attach to (spec 018 §3.4).</summary>
         public static readonly string[] AlertKinds = { "LoanPaymentMissed", "FinalNotice", "WagesMissed", "PestWarning", "FeedLow", "HrEventRaised" };

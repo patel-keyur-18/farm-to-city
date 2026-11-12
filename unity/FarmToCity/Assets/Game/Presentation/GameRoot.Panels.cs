@@ -111,6 +111,7 @@ namespace Game.Presentation
             };
             BuildToast();
             BuildCodexToast();
+            BuildMilestoneToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
             {
@@ -150,11 +151,15 @@ namespace Game.Presentation
                 case "Letter": _sheet.Show(Letter.List(_ctx), refreshOnly); break;
                 case "Progress": _sheet.Show(ProgressSheet.Build(_ctx), refreshOnly); break;
                 case CodexSheet.Kind: _sheet.Show(CodexSheet.Build(_ctx), refreshOnly); break; // spec 018 §7
-                case "Lands": _sheet.Show(LandsSheet.Build(_ctx), refreshOnly); break;
+                case "Lands": _sheet.Show(LandsSheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case CropCalendar.Sheet: _sheet.Show(CropCalendar.Build(_ctx), refreshOnly); break; // spec 020 §3.6b
                 case CropCalendar.PageSheet: _sheet.Show(CropCalendar.Page(_ctx, (int)r.Id), refreshOnly); break;
                 case "Money": _sheet.Show(MoneySheet.Build(_ctx, r.Arg), refreshOnly); break;
-                case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id), refreshOnly); break;
+                case "Report": _sheet.Show(ReportSheet.Build(_ctx, r.Id, r.Arg), refreshOnly); break;
+                case "Year": _sheet.Show(YearSheet.Build(_ctx, r.Id), refreshOnly); break;
+                case "Lenders": _sheet.Show(LendersSheet.Build(_ctx), refreshOnly); break;
+                case SavingsSheet.Kind: _sheet.Show(SavingsSheet.Build(_ctx), refreshOnly); break;
+                case "Books": _sheet.Show(BooksSheet.Build(_ctx), refreshOnly); break;
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Repay":
                     Loan loan = Sim.State.Credit.Loans.Find(l => l.Id == r.Id);
@@ -197,7 +202,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
                 case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books

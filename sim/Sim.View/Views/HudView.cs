@@ -97,7 +97,7 @@ namespace Sim.View.Views
 
     /// <summary>
     /// Collect all (spec 008 §3.9): a harvest or pick for everything ready, the one nearest to spoiling first, each with
-    /// <see cref="Overflow.StoreOnly"/>: what doesn't fit stays where it is. The presentation executes the commands in order.
+    /// <see cref="Overflow.StoreOnly"/> (a field crop <see cref="Overflow.StorePart"/>): what doesn't fit stays where it is. The presentation executes the commands in order.
     /// </summary>
     public static class CollectAll
     {
@@ -117,7 +117,7 @@ namespace Sim.View.Views
             var items = new List<KeyValuePair<long, Command>>();
             long grace = sim.Config.Game.Farm.Farm.ReadyGraceSeconds;
             foreach (Crop c in sim.State.Farm.Crops)
-                if (c.State == CropState.Ready) items.Add(new KeyValuePair<long, Command>(c.ReadyAt + grace, new Harvest(at, c.TileId, Overflow.StoreOnly)));
+                if (c.State == CropState.Ready) items.Add(new KeyValuePair<long, Command>(c.ReadyAt + grace, new Harvest(at, c.TileId, Overflow.StorePart))); // a field crop: what fits, the rest stands ready (ADR 0105)
             foreach (GardenBed b in sim.State.Farm.Beds)
                 if (b.State == BedState.Ready) items.Add(new KeyValuePair<long, Command>(b.ReadyAt + grace, new PickGarden(at, b.Id, Overflow.StoreOnly)));
             foreach (Tree t in sim.State.Farm.Trees)

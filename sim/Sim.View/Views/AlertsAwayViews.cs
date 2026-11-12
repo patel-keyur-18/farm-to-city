@@ -30,11 +30,52 @@ namespace Sim.View.Views
         /// <summary>The advisor note that can speak under it and what it's about (spec 018 §3.4), or null.</summary>
         internal string Note { get; set; }
         internal long NoteKey { get; set; }
+
+        /// <summary>Picture buttons under the alert's line (the levers of a short close), or empty.</summary>
+        public List<ActionVm> Levers { get; } = new List<ActionVm>();
     }
 
     /// <summary>Alerts (spec 008 §3.10), derived from the state at each refresh, urgent first.</summary>
     public static class Alerts
     {
+        /// <summary>
+        /// On the season's last day, when the close would take more than your cash (spec 019 §3.5): what's short and what would go unpaid, with the
+        /// levers (your savings, the store, a hand, a loan). Once you've said yes to your savings it says so, with a way back; with the standing
+        /// choice and enough savings there is nothing to warn of.
+        /// </summary>
+        private static void CloseShort(ViewContext ctx, List<AlertVm> list)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            SeasonVm season = SeasonBook.Build(ctx, false);
+            long shortBy = season.Short;
+            if (shortBy == 0) return;
+            long deposit = SavingsRules.Balance(sim), saved = SavingsRules.WillCover(sim) ? deposit : 0; // what your savings will pay
+            if (saved >= shortBy)
+            {
+                if (!SavingsRules.Consented(sim)) return;
+                ActionVm back = SavingsCover.Lever(ctx, shortBy);
+                var covered = new AlertVm { Level = AlertLevel.Info, Text = s.Get("alert.closeShortCovered", "amount", ctx.Fmt.Coins(shortBy)) };
+                covered.Levers.Add(Pictured(back, "savings"));
+                list.Add(covered);
+                return;
+            }
+            var alert = new AlertVm
+            {
+                Level = AlertLevel.Urgent,
+                Text = saved > 0 ? s.Get("alert.closeShortStill", "saved", ctx.Fmt.Coins(saved), "short", ctx.Fmt.Coins(shortBy - saved)) // your savings can't cover it all
+                    : s.Get("alert.closeShort", "short", ctx.Fmt.Coins(shortBy), "who", season.ShortWho, "total", ctx.Fmt.Coins(season.DueTotal), "cash", ctx.Fmt.Coins(sim.State.Ledger.Cash)),
+            };
+            ActionVm cover = SavingsCover.Lever(ctx, shortBy);
+            if (cover != null) alert.Levers.Add(Pictured(cover, "savings"));
+            alert.Levers.Add(Pictured(ActionVm.Open("lever:store", s.Get("alert.lever.store"), new SheetRequest("Store", 0)), "store"));
+            alert.Levers.Add(Pictured(ActionVm.Open("lever:people", s.Get("alert.lever.people"), new SheetRequest("People", 0)), "person_hand_m"));
+            if (sim.State.Credit != null) alert.Levers.Add(Pictured(ActionVm.Open("lever:borrow", s.Get("alert.lever.borrow"), new SheetRequest("Lenders", 0)), "bank"));
+            list.Add(alert);
+        }
+
+        private static ActionVm Pictured(ActionVm a, string icon) { a.Icon = icon; return a; }
+
         /// <summary>The id of the Collect all action: the presentation runs <see cref="CollectAll"/>.</summary>
         public const string CollectId = "collectAll";
 
@@ -45,11 +86,9 @@ namespace Sim.View.Views
             var list = new List<AlertVm>();
             long t = ctx.Now, S = sim.Clock.SecondsPerSeason;
 
-            // Urgent: living costs at risk on the season's last day; a missed payment or a final notice.
+            // Urgent: the close would take more than your cash on the season's last day (living, loans, hands, rent and the rest: ADR 0101 §2); a missed payment or a final notice.
             FounderState f = sim.State.Farm.Founder;
-            long nextPlan = MarketRules.Indexed(sim, sim.Config.Game.Farm.DietPlans[f.AutoSubsistence ? f.PreviousPlan : f.DietPlan].CostPerSeason);
-            if (S - t % S <= ClockDef.SecondsPerDay && sim.State.Ledger.Cash < nextPlan)
-                list.Add(new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.living", "cost", ctx.Fmt.Coins(nextPlan)), Action = ActionVm.Open("money", s.Get("action.open"), new SheetRequest("Money", 0)) });
+            if (S - t % S <= ClockDef.SecondsPerDay) CloseShort(ctx, list);
             if (sim.State.Credit != null)
             {
                 if (sim.State.Credit.PendingForeclosure)
@@ -180,6 +219,7 @@ namespace Sim.View.Views
             for (int i = 0; i < alerts.Count; i++)
             {
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("alert.level." + alerts[i].Level) + " · " + alerts[i].Text, null) { Action = alerts[i].Action });
+                if (alerts[i].Levers.Count > 0) vm.Lines.Add(new LineVm(null, null) { Buttons = alerts[i].Levers });
                 if (i == under) vm.Lines.Add(new LineVm(advisor.Text, null) { Advisor = advisor });
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("alert.none");
@@ -268,7 +308,7 @@ namespace Sim.View.Views
             var lapsed = new Dictionary<long, long>();
             var orderGood = new Dictionary<long, string>();
             long paid = 0, held = 0;
-            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0;
+            long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0, interest = 0, savingsPaid = 0;
             int calfCount = 0, vetCount = 0;
             foreach (SimEvent e in events)
             {
@@ -304,6 +344,8 @@ namespace Sim.View.Views
                     case AnimalSick sk: vet += sk.Cost; vetCount++; break;
                     case DayLabourPaid d: vm.DayLabour += d.Amount; break;
                     case GodownLet gl: godownRent += gl.Rent; break;
+                    case InterestEarned ie: interest += ie.Amount; break;
+                    case CoveredFromSavings cs: savingsPaid += cs.Amount; break;
                     case HomeUseEaten h: vm.HomeUse += h.Value; break;
                     case GoodsSpoiled g: vm.SpoiledGrams += Store.WeightGrams(sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(g.GoodId)], g.Quantity); break;
                     case PestWarning p: vm.Pests++; string fld = PeopleWords.Field(ctx, p.TileId); if (!pests.Contains(fld)) pests.Add(fld); break;
@@ -336,6 +378,8 @@ namespace Sim.View.Views
                 money.Add(new KeyValuePair<long, LineVm>(calves, new LineVm(s.Plural("away.calves", calfCount), ctx.Fmt.Coins(calves), "away", (long)AwayRow.Dairy) { Icon = "coin" }));
             Money(fodderSold, "away.fodderSold", AwayRow.Dairy, "green_fodder");
             Money(godownRent, "away.godownLet", AwayRow.Godown, "granary");
+            Money(interest, "away.interest", AwayRow.Savings, "savings");
+            Money(savingsPaid, "away.savingsPaid", AwayRow.Savings, "savings"); // ADR 0101 §2: every movement the close makes by itself is on the card
             long rent = TownAway.Rent(events, out int payers);
             if (rent > 0) money.Add(new KeyValuePair<long, LineVm>(rent, new LineVm(s.Plural("away.rent", payers), ctx.Fmt.Coins(rent), "away", (long)AwayRow.Town) { Icon = "coin" }));
             money.Sort((a, b) => b.Key != a.Key ? b.Key.CompareTo(a.Key) : 0);
@@ -537,7 +581,9 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            // Spec 019 §3.5 (the savings deposit).
+            { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.
             { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.

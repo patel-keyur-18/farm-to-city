@@ -1687,6 +1687,24 @@ def icon_ui(kind):
         o.append(cylinder("seal", 0.028, 0.028, 0.012, (0.065, -0.049, 0.065), wax, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "X")))
         o.append(cylinder("sealMark", 0.013, 0.013, 0.014, (0.065, -0.05, 0.065), toon("waxDark", 0x8F2B1E), segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
         return turn(o, Matrix.Rotation(math.radians(25), 4, "Z"))
+    elif kind == "savings":
+        # The savings deposit (spec 019 §3.5): a pink piggy bank with a gold coin dropping into its slot.
+        pink, light, dark = toon("pig", 0xF4A6B7), toon("pigLight", 0xF9C3CF), toon("pigDark", 0xC96A83)
+        o.append(sphere("body", 0.1, (0, 0, 0.115), pink, scale=(1.25, 0.95, 1.0), segs=20, rings=12))
+        o.append(cylinder("snout", 0.042, 0.042, 0.05, (0.128, 0, 0.1), light, segs=16, rot=Matrix.Rotation(math.radians(90), 3, "Y"), smooth=True))
+        for y in (-0.014, 0.014):
+            o.append(sphere("nostril%d" % (y > 0), 0.007, (0.156, y, 0.1), dark, segs=8, rings=6, outline=False))
+        for y in (-0.055, 0.055):
+            o.append(cylinder("ear%d" % (y > 0), 0.032, 0.004, 0.05, (0.06, y, 0.205), pink, segs=10, rot=Matrix.Rotation(math.radians(20 if y > 0 else -20), 3, "X")))
+            o.append(sphere("eye%d" % (y > 0), 0.011, (0.098, y * 0.9, 0.15), toon("pigEye", 0x4A2A22), segs=8, rings=6, outline=False))
+        for x in (-0.06, 0.06):
+            for y in (-0.05, 0.05):
+                o.append(cylinder("leg%d%d" % (x > 0, y > 0), 0.026, 0.024, 0.05, (x, y, 0.025), pink, segs=10, smooth=True))
+        o.append(sphere("tail", 0.016, (-0.128, 0, 0.14), pink, segs=8, rings=6))
+        o.append(box("slot", (0.075, 0.013, 0.006), (0, 0, 0.212), dark, outline=False))
+        o.append(cylinder("coin", 0.038, 0.038, 0.01, (0, 0, 0.245), toon("coin", 0xFFC93C), segs=24, rot=Matrix.Rotation(math.radians(90), 3, "X")))
+        o.append(cylinder("coinRim", 0.028, 0.028, 0.012, (0, 0, 0.245), toon("coinDark", 0xE0A21C), segs=24, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+        return turn(o, Matrix.Rotation(math.radians(-30), 4, "Z"))
     elif kind == "close":
         white = toon("x", 0xFFF3D1)
         for a in (45, -45):
@@ -1712,7 +1730,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed", "savings"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 

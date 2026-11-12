@@ -43,12 +43,14 @@ namespace Sim.View.Views
             for (int i = 0; i < buttons.Count; i += perRow)
                 vm.Lines.Add(new LineVm(null, null) { Buttons = buttons.GetRange(i, System.Math.Min(perRow, buttons.Count - i)) });
             if (sim.State.Ledger.Balance(Sim.Core.Finance.Account.OwedByBuyers) > 0) vm.Lines.Add(OrdersSheet.OwedLine(ctx));
+            if (sim.State.Market.Trip != null) vm.Lines.Add(MandiSheet.TripLine(ctx)); // a cart is away: what it pays and when, below the supermarket's line (ADR 0104)
 
             // Selling to the trader: the truck's state (spec 011 §7), then one row per crop with its Sell.
             vm.Lines.Add(LineVm.Header(s.Get("store.sellHeading")));
             if (defs.Market.Truck != null)
             {
                 vm.Lines.Add(OrdersSheet.TruckLine(ctx));
+                vm.Lines.AddRange(OrdersSheet.TruckRoomLines(ctx)); // what it still takes of this season's crops (ADR 0105)
                 if (MarketRules.StallClosed(sim)) vm.Lines.Add(new LineVm(s.Get("store.stallClosed"), null));
             }
             int produce = 0;
@@ -103,6 +105,8 @@ namespace Sim.View.Views
                     ? ctx.Strings.Get("store.produceOffered", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered), "min", ctx.Fmt.PricePerKg(min.Value))
                     : ctx.Strings.Get("store.produceOfferedAny", "qty", ctx.Fmt.Kg(m.Stock[g]), "offered", ctx.Fmt.Kg(offered));
             var line = new LineVm(ctx.Strings.Get(good.NameKey), value, "price", g) { Icon = good.Id, Opens = new SheetRequest("Good", g) };
+            long[] dry = GodownRules.Dry(sim); // where the stock is kept: part of it may be in the godown in town (ADR 0087)
+            if (dry != null && dry[g] > 0) line.Note = ctx.Strings.Get("store.inTown", "kg", ctx.Fmt.Kg(Store.WeightGrams(good, dry[g])));
             string id = good.Id;
             // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
             // Everything on offer at the market (a hand's order puts a harvest there): the way out is to take it back.

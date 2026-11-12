@@ -36,6 +36,9 @@ namespace Sim.View.Views
 
         /// <summary>The village's shops (spec 017 §3.7): a newcomer set up or packed up, the grocer or tea stall changed its price.</summary>
         Shops = 16,
+
+        /// <summary>The savings deposit: interest added, and what your savings paid at the close (spec 019 §3.5).</summary>
+        Savings = 17,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

@@ -168,6 +168,12 @@ namespace Sim.Core.Finance
         /// <summary>Sales by good and where sold, this season and last (spec 019 §3.9).</summary>
         public SalesRecord Sales { get; private set; } = new SalesRecord();
 
+        /// <summary>The savings deposit's choices (spec 019 §3.5, ADR 0101 §2); the balance is ledger account 1020.</summary>
+        public SavingsState Savings { get; private set; } = new SavingsState();
+
+        /// <summary>The wealth milestones reached (spec 019 §3.6, ADR 0101 §7).</summary>
+        public MilestonesState Milestones { get; private set; } = new MilestonesState();
+
         public Prepayment FindPrepayment(long id) { return Prepayments.Find(p => p.Id == id); }
 
         internal FinanceState Clone()
@@ -175,7 +181,7 @@ namespace Sim.Core.Finance
             var c = new FinanceState
             {
                 NextPrepaymentId = NextPrepaymentId, SeasonOpeningCash = SeasonOpeningCash, SeasonStartEntry = SeasonStartEntry,
-                LastSeasonStartEntry = LastSeasonStartEntry, Sales = Sales.Clone(),
+                LastSeasonStartEntry = LastSeasonStartEntry, Sales = Sales.Clone(), Savings = Savings.Clone(), Milestones = Milestones.Clone(),
             };
             foreach (Prepayment p in Prepayments) c.Prepayments.Add(p.Clone());
             c.Reports.AddRange(Reports);
@@ -196,6 +202,10 @@ namespace Sim.Core.Finance
                 h.WriteLong(LastSeasonStartEntry);
                 Sales.WriteTo(h);
             }
+            // Schema 16 (spec 019 §3.5): the standing choice and a yes. The hash writes them only once the player has made one, so the goldens stay as they were.
+            if (h.Hashing ? !Savings.IsDefault : !(h is SaveWriter vw) || vw.Schema >= 16) Savings.WriteTo(h);
+            // Schema 16 (spec 019 §3.6): the milestones and the inheritance's value; the hash writes them once there is one (content without milestones never has).
+            if (h.Hashing ? !Milestones.IsDefault : !(h is SaveWriter mw) || mw.Schema >= 16) Milestones.WriteTo(h);
         }
 
         internal static FinanceState ReadFrom(SaveReader r)
@@ -211,6 +221,8 @@ namespace Sim.Core.Finance
                 s.LastSeasonStartEntry = r.ReadLong();
                 s.Sales.ReadFrom(r);
             } // schema 11: FinanceSystem.MigrateSeasons after loading
+            if (r.Schema >= 16) s.Savings = SavingsState.ReadFrom(r);
+            if (r.Schema >= 16) s.Milestones = MilestonesState.ReadFrom(r);
             return s;
         }
     }

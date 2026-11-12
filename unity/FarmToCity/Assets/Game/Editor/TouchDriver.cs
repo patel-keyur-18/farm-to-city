@@ -45,6 +45,27 @@ namespace Game.Editor
             return "tap queued at " + p;
         }
 
+        /// <summary>A press held for <paramref name="frames"/> input updates (about 60 a second) before it lifts: a hold card's red button.</summary>
+        public static string Hold(float x, float y, int frames)
+        {
+            var p = new Vector2(x, y);
+            Steps.Enqueue(new Step { Position = p, Phase = TouchPhase.Began });
+            for (int i = 0; i < frames; i++) Steps.Enqueue(new Step { Position = p, Phase = TouchPhase.Stationary });
+            Steps.Enqueue(new Step { Position = p, Phase = TouchPhase.Ended });
+            return "hold queued at " + p + " for " + frames + " frames";
+        }
+
+        /// <summary>Holds the centre of the UI element with this name (the last one shown) for <paramref name="frames"/> frames.</summary>
+        public static string HoldNamed(string name, int frames)
+        {
+            UIDocument doc = Object.FindFirstObjectByType<UIDocument>();
+            VisualElement hit = null;
+            if (doc != null) doc.rootVisualElement.Query(name).ForEach(e => { if (e.worldBound.width > 0f && Shown(e)) hit = e; });
+            if (hit == null) return "no element named '" + name + "'";
+            Vector2 at = ScreenOf(hit);
+            return Hold(at.x, at.y, frames);
+        }
+
         /// <summary>A drag from one screen point to another in <paramref name="steps"/> moves.</summary>
         public static string Drag(float x0, float y0, float x1, float y1, int steps = 12)
         {

@@ -131,6 +131,10 @@ namespace Tools.Balancer
                     int accepted = 0;
                     for (int c = 0; c < 8; c++)
                         if (sim.Execute(RandomCommand(sim, t, Rng.Next(seed, (RngStream)950, (ulong)q, (ulong)c))).Accepted) accepted++;
+                    // The savings deposit (spec 019 §3.5): cash in and out of it never raises net worth.
+                    ulong rs = Rng.Next(seed, (RngStream)956, (ulong)q, 0);
+                    if (sim.Execute(new DepositSavings(t, (long)Rng.Below(rs, 5_000_000) + 1)).Accepted) accepted++;
+                    if (sim.Execute(new WithdrawSavings(t, (long)Rng.Below(Rng.Next(rs, (RngStream)957, 0, 0), 5_000_000) + 1)).Accepted) accepted++;
                     long gain = Reporting.NetWorth(sim).Total - before;
                     lock (gate)
                     {

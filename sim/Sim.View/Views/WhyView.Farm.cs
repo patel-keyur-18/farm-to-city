@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Definitions;
 using Sim.Core.Farm;
+using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.Core.Market;
 using Sim.Core.Maths;
@@ -294,6 +296,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.yield.fertiliser", Effect(ctx, b.Fertiliser), "fert", ctx.Strings.Get("fertiliser." + sim.Config.Game.Farm.Fertilisers[c.Fertiliser].Id));
             Row(vm, ctx, "why.yield.health", Effect(ctx, b.CropHealth));
             if (b.Capped) Row(vm, ctx, "why.yield.cap", Kg(ctx, b.Base * sim.Config.Game.Farm.Farm.YieldCap));
+            if (c.TakenGrams > 0) Row(vm, ctx, "why.yield.taken", "−" + ctx.Fmt.Kg(c.TakenGrams));
             if (c.SpoiledGrams > 0) Row(vm, ctx, "why.yield.spoiled", "−" + ctx.Fmt.Kg(c.SpoiledGrams));
             vm.Footnote = ctx.Strings.Get("why.yield.lesson");
             return vm;
@@ -337,6 +340,41 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.landPrice.fertility", Effect(ctx, LandRules.FertilityPriceFactor(defs.Land, t.Fertility)), "n", ctx.Fmt.Decimal1(t.Fertility));
             Row(vm, ctx, "why.landPrice.location", Effect(ctx, pd.LocationFactor));
             vm.Footnote = ctx.Strings.Get("why.landPrice.lesson");
+            return vm;
+        }
+
+        /// <summary>Your land (ADR 0101 §13): each parcel you own at its market price; what they come to.</summary>
+        private static WhyVm LandTotal(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            long total = 0;
+            var rows = new List<KeyValuePair<string, long>>();
+            foreach (Parcel p in sim.State.Land.Parcels)
+            {
+                if (!p.Owned) continue;
+                ParcelDef pd = defs.Map.Parcels[p.Id];
+                long price = LandRules.ParcelPrice(sim, p);
+                total += price;
+                rows.Add(new KeyValuePair<string, long>(ctx.Strings.Get("lands.parcel", "soil", ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[pd.Tiles[0]].Soil].NameKey), "acres", ctx.Strings.Plural("land.acres", pd.Tiles.Count)), price));
+            }
+            WhyVm vm = New(ctx, "why.landTotal.title", Money(ctx, total));
+            foreach (KeyValuePair<string, long> r in rows) vm.Rows.Add(new WhyRowVm(r.Key, Money(ctx, r.Value)));
+            Text(vm, ctx, "why.landTotal.text");
+            vm.Footnote = ctx.Strings.Get("why.landPrice.lesson");
+            return vm;
+        }
+
+        /// <summary>The secured loans the land answers for, each with what's owed now.</summary>
+        private static WhyVm LandLoans(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            WhyVm vm = New(ctx, "why.landLoans.title", Money(ctx, LandsSheet.LoansOnLand(sim)));
+            if (sim.State.Credit != null)
+                foreach (Loan l in sim.State.Credit.Loans)
+                    if (l.IsOpen && l.BusinessId == 0 && sim.Config.Game.Credit.Lenders[l.Lender].Secured)
+                        vm.Rows.Add(new WhyRowVm(ctx.Strings.Get(sim.Config.Game.Credit.Lenders[l.Lender].NameKey), Money(ctx, CreditRules.OwedNow(sim, l))));
+            Text(vm, ctx, "why.landLoans.text");
             return vm;
         }
 

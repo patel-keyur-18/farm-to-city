@@ -22,6 +22,9 @@ namespace Sim.Core.Market
     {
         /// <summary>(good index, quantity) in the order given.</summary>
         internal List<KeyValuePair<int, long>> Loads { get; } = new List<KeyValuePair<int, long>>();
+
+        /// <summary>What the cart carries: (good index, quantity), for the Store's line about the trip.</summary>
+        public IReadOnlyList<KeyValuePair<int, long>> Carrying { get { return Loads; } }
         public long DepartedAt { get; internal set; }
         public long ReturnAt { get; internal set; }
         public long JobId { get; internal set; }

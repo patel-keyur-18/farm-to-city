@@ -42,29 +42,134 @@ namespace Sim.View.Views
         }
     }
 
-    /// <summary>Buy land from the Menu: each parcel for sale with its price and Show (ADR 0043 §4).</summary>
+    /// <summary>
+    /// Your land, from the Menu (ADR 0101 §13, spec 008 §3.5): <b>Yours</b>, everything you own (inherited land that can never be sold, then each
+    /// parcel you bought, with <b>Show</b> and <b>Sell</b>, which asks with a hold card), and <b>For sale</b>, the parcels you can buy. Selling lives
+    /// only here: a field's own sheet has no Sell.
+    /// </summary>
     public static class LandsSheet
     {
-        public static SheetVm Build(ViewContext ctx)
+        public const string ForSale = "sale";
+
+        public static SheetVm Build(ViewContext ctx, string tab = null)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            bool sale = tab == ForSale;
+            var vm = new SheetVm { Icon = "land", Title = s.Get("lands.title"), Subtitle = s.Get(sale ? "lands.subtitle" : "lands.subtitleYours") };
+            vm.Tab = sale ? "tab:sale" : "tab:yours";
+            vm.Tabs = new List<ActionVm>
+            {
+                ActionVm.Open("tab:yours", s.Get("lands.tabYours"), new SheetRequest("Lands", 0)),
+                ActionVm.Open("tab:sale", s.Get("lands.tabSale"), new SheetRequest("Lands", 0, ForSale)),
+            };
+            if (sale) ForSaleRows(ctx, vm); else YoursRows(ctx, vm);
+            return vm;
+        }
+
+        private static void ForSaleRows(ViewContext ctx, SheetVm vm)
         {
             Simulation sim = ctx.Sim;
             GameDefs defs = sim.Config.Game;
-            var vm = new SheetVm { Icon = "land", Title = ctx.Strings.Get("lands.title"), Subtitle = ctx.Strings.Get("lands.subtitle") };
             foreach (Parcel p in sim.State.Land.Parcels)
             {
-                if (p.Owned) continue;
                 ParcelDef d = defs.Map.Parcels[p.Id];
+                if (p.Owned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
                 int tile = d.Tiles[0];
                 string soil = ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
                 var line = new LineVm(ctx.Strings.Get("lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
                     ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
                 { Action = ActionVm.Open("show:" + tile, ctx.Strings.Get("action.show"), new SheetRequest("ShowTile", tile)) };
+                if (!LandSystem.IsAdjacentToOwned(sim, p.Id)) { line.Note = ctx.Strings.Get("lands.notNext"); }
                 vm.Lines.Add(line);
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("lands.none");
-            return vm;
+        }
+
+        private static void YoursRows(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var s = ctx.Strings;
+            long acres = 0, market = 0;
+            foreach (Parcel p in sim.State.Land.Parcels)
+                if (p.Owned) { acres += defs.Map.Parcels[p.Id].Tiles.Count; market += LandRules.ParcelPrice(sim, p); }
+            vm.Lines.Add(new LineVm(s.Get("lands.own"), s.Plural("land.acres", acres), "landTotal", 0) { });
+            vm.Lines.Add(new LineVm(s.Get("lands.market"), ctx.Fmt.Coins(market), "landTotal", 0));
+            long onLand = LoansOnLand(sim);
+            if (onLand > 0) vm.Lines.Add(new LineVm(s.Get("lands.loans"), ctx.Fmt.Coins(onLand), "landLoans", 0));
+
+            vm.Lines.Add(LineVm.Header(s.Get("lands.inherited")));
+            vm.Lines.Add(new LineVm(s.Get("lands.inheritedNote"), null));
+            foreach (Parcel p in sim.State.Land.Parcels) if (p.Owned && p.Protected) vm.Lines.Add(Row(ctx, p, sellable: false));
+            bool any = false;
+            foreach (Parcel p in sim.State.Land.Parcels)
+            {
+                if (!p.Owned || p.Protected) continue;
+                if (!any) vm.Lines.Add(LineVm.Header(s.Get("lands.bought")));
+                any = true;
+                vm.Lines.Add(Row(ctx, p, sellable: true));
+            }
+            if (!any) vm.Lines.Add(new LineVm(s.Get("lands.noneBought"), null));
+        }
+
+        private static LineVm Row(ViewContext ctx, Parcel p, bool sellable)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var s = ctx.Strings;
+            ParcelDef d = defs.Map.Parcels[p.Id];
+            int tile = d.Tiles[0];
+            string soil = s.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
+            string held = Held(ctx, p.Id);
+            string note = sellable ? s.Get("lands.boughtWhen", "when", ReportSheet.PeriodName(ctx, p.AcquiredAt / sim.Clock.SecondsPerSeason), "held", held) : held;
+            var line = new LineVm(s.Get("lands.parcel", "soil", soil, "acres", s.Plural("land.acres", d.Tiles.Count)), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
+            {
+                Note = note,
+                Action = ActionVm.Open("show:" + tile, s.Get("action.show"), new SheetRequest("ShowTile", tile)),
+            };
+            if (sellable)
+            {
+                string key = d.Id;
+                long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, p), defs.Land.QuickSaleFactor));
+                line.Also = line.Action;
+                line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
+            }
+            return line;
+        }
+
+        /// <summary>What's on a parcel: crops growing, buildings, or "empty".</summary>
+        private static string Held(ViewContext ctx, int parcelId)
+        {
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            var parts = new List<string>();
+            int crops = 0;
+            foreach (int t in defs.Map.Parcels[parcelId].Tiles)
+                if (sim.State.Farm?.CropOn(t) != null) crops++;
+            if (crops > 0) parts.Add(ctx.Strings.Get("lands.crops", "n", ctx.Fmt.Integer(crops)));
+            var counts = new SortedDictionary<string, int>();
+            foreach (Building b in sim.State.Land.Buildings)
+            {
+                if (b.TileId < 0 || sim.State.Land.Tiles[b.TileId].ParcelId != parcelId) continue;
+                string name = ctx.Strings.Get(defs.Buildings[b.Def].NameKey);
+                counts[name] = counts.TryGetValue(name, out int n) ? n + 1 : 1;
+            }
+            foreach (KeyValuePair<string, int> kv in counts) parts.Add(kv.Value > 1 ? kv.Value + " × " + kv.Key : kv.Key);
+            return parts.Count == 0 ? ctx.Strings.Get("lands.empty") : string.Join(" · ", parts);
+        }
+
+        /// <summary>What you owe on secured loans, the loans the land answers for.</summary>
+        public static long LoansOnLand(Simulation sim)
+        {
+            long owed = 0;
+            if (sim.State.Credit == null) return 0;
+            foreach (Loan l in sim.State.Credit.Loans)
+                if (l.IsOpen && l.BusinessId == 0 && sim.Config.Game.Credit.Lenders[l.Lender].Secured) owed += CreditRules.OwedNow(sim, l);
+            return owed;
         }
     }
+
 
     /// <summary>
     /// Money and loans (ADR 0043 §5, spec 019 §3.9): opens on *This season* (earned, spent, profit, why your cash moved differently,
@@ -75,7 +180,7 @@ namespace Sim.View.Views
         public const string Wealth = "wealth", LastSeason = "last";
 
         /// <summary>A *Your season* line's *Why?* id: last season or this, the block, the line.</summary>
-        public const int EarnedBlock = 0, SpentBlock = 1, MovedBlock = 2, DueBlock = 3, Totals = 9;
+        public const int EarnedBlock = 0, SpentBlock = 1, MovedBlock = 2, DueBlock = 3, OwnBlock = 4, Totals = 9;
         public const int ProfitLine = 0, CashLine = 1, DueLine = 2;
 
         public static long WhyId(bool last, int block, int line) { return (last ? 1_000_000 : 0) + block * 10_000 + line; }
@@ -138,8 +243,8 @@ namespace Sim.View.Views
                 return vm;
             }
             Block(s.Get("season.due"), season.DueTotal, season.Due, DueBlock, false);
-            if (season.Due.Count == 0) { vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null)); return vm; }
-            if (season.Short == 0)
+            if (season.Due.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null));
+            else if (season.Short == 0)
                 vm.Lines.Add(new LineVm(s.Get("season.dueTotal"), ctx.Fmt.Coins(season.DueTotal), "season", WhyId(false, Totals, DueLine)) { Note = s.Get("season.covered"), NoteTone = Tone.Good });
             else
                 vm.Lines.Add(new LineVm(s.Get("season.dueTotal"), ctx.Fmt.Coins(season.DueTotal), "season", WhyId(false, Totals, DueLine))
@@ -147,8 +252,22 @@ namespace Sim.View.Views
                     Note = s.Get("season.short", "amount", ctx.Fmt.Coins(season.Short), "who", season.ShortWho), NoteTone = Tone.Warn,
                     Action = ActionVm.Open("store", s.Get("season.toStore"), new SheetRequest("Store", 0)),
                 });
+            if (!last && season.Short > 0) // ADR 0101 §2: when the savings could cover the gap it says so, with the lever; nothing leaves them without your yes
+            {
+                LineVm savings = SavingsCover.Row(ctx, season.Short);
+                if (savings != null) vm.Lines.Add(savings);
+            }
+            if (season.Own.Count > 0) // beside your total, never in it: each business pays from its own cash
+            {
+                vm.Lines.Add(LineVm.Header(s.Get("season.own")));
+                for (int i = 0; i < season.Own.Count; i++)
+                    vm.Lines.Add(new LineVm(season.Own[i].Label, ctx.Fmt.Coins(season.Own[i].Amount), "season", WhyId(false, OwnBlock, i))
+                        { Icon = season.Own[i].Icon, Note = season.Own[i].Note, NoteTone = season.Own[i].Warn ? Tone.Warn : Tone.Good });
+            }
             return vm;
         }
+
+        private static ActionVm Pictured(ActionVm a, string icon) { a.Icon = icon; return a; }
 
         public static string Signed(ViewContext ctx, long v) { return v > 0 ? "+" + ctx.Fmt.Coins(v) : v < 0 ? "−" + ctx.Fmt.Coins(-v) : ctx.Fmt.Coins(0); }
 
@@ -159,14 +278,26 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "coin", Title = s.Get("money.title") };
             Tabs(ctx, vm, "tab:wealth");
             vm.Lines.Add(LineVm.Header(s.Get("money.glance")));
-            vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
+            vm.Lines.Add(new LineVm(s.Get("money.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash") { Icon = "coin" });
             NetWorthSnapshot worth = Reporting.NetWorth(sim);
-            vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth"));
-            vm.Lines.Add(new LineVm(s.Get("money.landPart"), ctx.Fmt.Coins(worth.LandAtMarket), "netWorth"));
-            if (worth.Businesses > 0) vm.Lines.Add(new LineVm(s.Get("money.businessPart"), ctx.Fmt.Coins(worth.Businesses), "netWorth"));
+            vm.Lines.Add(new LineVm(s.Get("report.netWorth"), ctx.Fmt.Coins(worth.Total), "netWorth") { Icon = "land" });
+            vm.Lines.Add(new LineVm(s.Get("hub.youOwe"), ctx.Fmt.Coins(Hub.Owed(worth)), StatementSheet.HubWhy, HubSheet.Debt) { Icon = "bank" });
+
+            // Picture buttons (the Store's and People's layout): borrowing and the books.
+            long best = sim.State.Credit == null ? 0 : LendersSheet.Best(sim);
+            var buttons = new List<ActionVm>();
+            if (sim.State.Credit != null)
+                buttons.Add(Pictured(ActionVm.Open("lenders", s.Get("hub.borrow"), new SheetRequest("Lenders", 0), best > 0 ? s.Get("hub.borrowUpTo", "amount", ctx.Fmt.Coins(best)) : s.Get("hub.borrowNone")), "bank"));
+            long deposit = SavingsRules.Balance(sim);
+            buttons.Add(Pictured(ActionVm.Open("savings", s.Get("hub.savings"), new SheetRequest(SavingsSheet.Kind, 0),
+                deposit > 0 ? s.Get("hub.savingsDetail", "amount", ctx.Fmt.Coins(deposit), "rate", ctx.Fmt.Percent(sim.Config.Game.Ledger.SavingsInterest)) : s.Get("hub.savingsNone", "rate", ctx.Fmt.Percent(sim.Config.Game.Ledger.SavingsInterest))), "savings"));
+            buttons.Add(Pictured(ActionVm.Open("books", s.Get("hub.books"), new SheetRequest("Books", 0), s.Get("hub.booksDetail")), "menu"));
+            vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
+
+            HubSheet.Add(ctx, vm, worth);
             if (worth.OwedByBuyers > 0) vm.Lines.Add(new LineVm(s.Get("money.owed"), ctx.Fmt.Coins(worth.OwedByBuyers), "owed"));
 
-            if (sim.State.Credit == null) return vm;
+            if (sim.State.Credit == null) { MilestonesSection.Add(ctx, vm); return vm; }
             vm.Lines.Add(LineVm.Header(s.Get("money.loans")));
             bool any = false;
             foreach (Loan loan in sim.State.Credit.Loans)
@@ -187,18 +318,7 @@ namespace Sim.View.Views
             }
             if (!any) vm.Lines.Add(new LineVm(s.Get("money.noLoans"), s.Get("money.noLoansNote")));
 
-            vm.Lines.Add(LineVm.Header(s.Get("money.borrow")));
-            for (int i = 0; i < sim.Config.Game.Credit.Lenders.Count; i++)
-            {
-                LenderDef l = sim.Config.Game.Credit.Lenders[i];
-                CreditLimit c = CreditRules.Limit(sim, i);
-                bool can = !c.ScoreTooLow && c.Limit >= l.MinAmount;
-                string why = c.ScoreTooLow ? ctx.Reject(RejectReason.ScoreTooLow) : can ? null : s.Get("money.cantBorrow", "min", ctx.Fmt.Coins(l.MinAmount));
-                vm.Lines.Add(new LineVm(s.Get(l.NameKey), s.Get("money.lenderValue", "limit", ctx.Fmt.Coins(c.Limit), "rate", ctx.Fmt.Percent(CreditRules.Rate(l, sim.State.Credit.Score))), "creditLimit", i)
-                {
-                    Action = new ActionVm("borrow:" + l.Id, s.Get("money.borrowButton"), null, ActionKind.Open, can, why, null, new SheetRequest("Borrow", i)),
-                });
-            }
+            MilestonesSection.Add(ctx, vm);
             return vm;
         }
     }
@@ -213,22 +333,30 @@ namespace Sim.View.Views
             return ctx.Strings.Get("report.period", "season", FieldSheets.SeasonName(ctx, period), "year", ctx.Fmt.Integer(period / 4 + 1));
         }
 
-        public static SheetVm Build(ViewContext ctx, long period)
+        /// <summary>The season page: three statements on tabs (ADR 0101 §5).</summary>
+        public static SheetVm Build(ViewContext ctx, long period, string tab = null) { return StatementSheet.Build(ctx, period, tab); }
+    }
+
+    /// <summary><em>Your books</em> (spec 019 §7, ADR 0101 §5): the last 8 closed seasons, each opening its season page. Never this season so far.</summary>
+    public static class BooksSheet
+    {
+        public const int Shown = 8;
+
+        public static SheetVm Build(ViewContext ctx)
         {
-            Simulation sim = ctx.Sim;
-            SeasonReport r = sim.State.Finance.Reports.Find(x => x.Period == period);
-            var vm = new SheetVm { Icon = "coin", Title = ctx.Strings.Get("report.title", "period", PeriodName(ctx, period)) };
-            LineVm advisor = AdvisorWords.Report(ctx, period); // an advisor's line under the title (spec 018 §3.4)
-            if (advisor != null) vm.Lines.Add(advisor);
-            foreach (string key in Order)
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "coin", Title = s.Get("ybooks.title"), Subtitle = s.Get("ybooks.subtitle") };
+            List<SeasonReport> reports = ctx.Sim.State.Finance.Reports;
+            if (reports.Count == 0) { vm.Lines.Add(new LineVm(s.Get("ybooks.none"), null)); return vm; }
+            for (int i = reports.Count - 1; i >= 0 && i >= reports.Count - Shown; i--)
             {
-                ReportLine l = r.Line(key);
-                if (l == null || (key == "gifts" && l.Amount == 0)) continue; // gifts only in a season that had them
-                vm.Lines.Add(new LineVm(ctx.Strings.Get(l.LabelKey), ctx.Fmt.Coins(l.Amount), "report." + key, period));
+                SeasonReport r = reports[i];
+                vm.Lines.Add(new LineVm(ReportSheet.PeriodName(ctx, r.Period), s.Get("ybooks.value", "profit", StatementSheet.Amount(ctx, r.NetResult), "cash", ctx.Fmt.Coins(r.CashFlow.Closing)), "report.netResult", r.Period)
+                {
+                    Note = s.Get("ybooks.worth", "worth", ctx.Fmt.Coins(r.NetWorth.Total)), Icon = "coin",
+                    Action = ActionVm.Open("report:" + r.Period, s.Get("action.open"), new SheetRequest("Report", r.Period)),
+                });
             }
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("report.cashFlow"),
-                ctx.Strings.Get("report.cashFlowValue", "start", ctx.Fmt.Coins(r.CashFlow.Opening), "end", ctx.Fmt.Coins(r.CashFlow.Closing)), "report.cashFlow", period));
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("report.netWorth"), ctx.Fmt.Coins(r.NetWorth.Total), "report.netWorth", period));
             return vm;
         }
     }
@@ -335,19 +463,7 @@ namespace Sim.View.Views
         public static long NextPayment(Simulation sim, Loan loan) { return NextPayment(sim, loan, out _, out _); }
 
         /// <summary>The next payment as interest (with any late interest) and principal: paying back what you borrowed, not a cost.</summary>
-        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue)
-        {
-            interestDue = principalDue = 0;
-            if (!loan.IsOpen) return 0;
-            long S = sim.Clock.SecondsPerSeason, close = (sim.State.Clock.SimTime / S + 1) * S;
-            CreditRules.AccruedSince(sim, loan, close, out long interest, out long penalty);
-            long principal = loan.FirstClosePartial ? loan.ArrearsPrincipal
-                : loan.Remaining <= 1 ? loan.Principal
-                : loan.ArrearsPrincipal + (loan.Schedule == LoanSchedule.Bullet ? 0 : System.Math.Min(loan.InstalmentBase, loan.Principal - loan.ArrearsPrincipal));
-            interestDue = loan.ArrearsInterest + loan.InterestAccrued + interest + penalty;
-            principalDue = principal;
-            return interestDue + principalDue;
-        }
+        public static long NextPayment(Simulation sim, Loan loan, out long interestDue, out long principalDue) { return CreditRules.NextPayment(sim, loan, out interestDue, out principalDue); }
 
         private static long NextNow(Simulation sim, Loan loan) { return System.Math.Min(NextPayment(sim, loan), CreditRules.OwedNow(sim, loan)); }
 

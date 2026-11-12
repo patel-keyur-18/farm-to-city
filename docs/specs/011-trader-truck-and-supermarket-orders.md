@@ -5,7 +5,7 @@
 - Reviewer: Keyur Patel
 - GDD sections: Land, farming and livestock (Storage and selling); Economy (Regional trader); Offline play (notifications)
 - Amends: spec 004 §3.1 (the daily factor), §3.2 (the night pause), §3.3 (capacity resets at 6:00; the truck); spec 006 §3.8 (the hand delivers first, BestCrop); spec 005 §3.2 (account 1300 Owed by buyers); spec 007 §3.5 (a notification kind); spec 009 (the first sale at any hour, two chapters, the `comeBack` text); spec 003 §3.1 and content (rice and potato times)
-- Related ADRs: 0054 (the trader's truck), 0055 (supermarket orders, rice and potato in 15 h), 0034 (a glut drains hour by hour), 0037 (the mandi trip), 0048 and 0050 (the hand's crop choice), 0053 (the roads)
+- Related ADRs: 0105 (the Store lists what the trader still takes of this season's crops), 0054 (the trader's truck), 0055 (supermarket orders, rice and potato in 15 h), 0034 (a glut drains hour by hour), 0037 (the mandi trip), 0048 and 0050 (the hand's crop choice), 0053 (the roads)
 - Depends on specs: 004 (market and store: amended here), 003 (crops: rice and potato times), 006 (the hand's orders: amended here), 007 (notifications), 010 (the roads and the truck stop)
 
 ## 1. Goal

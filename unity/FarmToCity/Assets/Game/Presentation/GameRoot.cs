@@ -194,6 +194,7 @@ namespace Game.Presentation
         {
             ApplySafeArea();
             CodexCovered();
+            MilestoneCovered();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
@@ -225,6 +226,7 @@ namespace Game.Presentation
             HandleEvents(events);
             OnTownEvents(events);
             GuideAfter(events);
+            MilestoneAfter(events);
             Refresh(true);
         }
 
@@ -302,7 +304,11 @@ namespace Game.Presentation
             if (produce) { _sounds.Harvest(); Haptic(); }
             if (ready) _sounds.Play("ready");
             if (sown) _sounds.Sow();
-            if (closed >= 0) _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
+            if (closed >= 0)
+            {
+                if (YearSheet.EndsYear(closed)) _yearAfter = closed; // Your year opens once the season page is put away (ADR 0101 §5)
+                _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
+            }
             if (coins)
             {
                 _sounds.CoinsIn(earned / 100);
@@ -481,8 +487,17 @@ namespace Game.Presentation
             _sheet.Show(SowSheet.Build(_ctx, tile, _fertiliser), refresh);
         }
 
+        /// <summary>The Winter close whose season page is open: Your year follows it (spec 019 §3.7).</summary>
+        private long? _yearAfter;
+
         private void OnSheetClosed()
         {
+            if (_yearAfter.HasValue && _open.HasValue && _open.Value.Kind == "Report" && _open.Value.Id == _yearAfter.Value)
+            {
+                long winter = _yearAfter.Value;
+                _yearAfter = null;
+                _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Year", winter))); // before Dadi's letters and the Codex toast, which wait for it
+            }
             _open = null;
             _back.Clear();
             _selected = Hit.None;
@@ -518,6 +533,14 @@ namespace Game.Presentation
                 // A tab or a sort changes the sheet in place: nothing new to go back to.
                 if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("switch:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
                 Push(action.Opens.Value);
+                return;
+            }
+            Command first = action.Create(Sim.State.Clock.SimTime);
+            ConfirmCardVm confirm = first == null ? null : ConfirmCards.For(_ctx, first);
+            if (confirm != null)
+            {
+                // Spending on something that lasts, or selling and ending, asks first with its numbers (spec 008 §3.15, ADR 0101 §12).
+                _sheet.ConfirmCard(confirm, () => Run(new[] { action.Create(Sim.State.Clock.SimTime) }), () => { }, key => _strings.Get(key));
                 return;
             }
             if (action.Confirm != null)
@@ -598,13 +621,20 @@ namespace Game.Presentation
             _placeBar.Add(text);
             ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile) : _placing == PlaceKind.Shed ? ShedPlacement.Confirm(_ctx, tile)
                 : _placing == PlaceKind.Business ? BusinessPlacement.Confirm(_ctx, tile, _placeType, BusinessWords.Self(_placeArg), BusinessWords.Loan(_placeArg)) : HutPlacement.Confirm(_ctx, tile);
-            _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
+            void Build()
             {
                 Command c = build.Create(Sim.State.Clock.SimTime);
                 CommandResult r = Sim.Execute(c);
                 if (!r.Accepted) { _guide.Rejected(Sim, c, r.Reason); CodexRejected(r.Reason); Toast(_ctx.Reject(r.Reason)); return; }
                 StopPlacing();
                 AfterCommands();
+            }
+            _placeBar.Add(UiKit.MakeButton(build.Label, ActionLook.Primary, () =>
+            {
+                // A house, hut, shed or business asks first with its numbers (spec 008 §3.15).
+                ConfirmCardVm card = ConfirmCards.For(_ctx, build.Create(Sim.State.Clock.SimTime));
+                if (card == null) Build();
+                else _sheet.ConfirmCard(card, Build, () => { }, key => _strings.Get(key));
             }, build.Detail, build.Enabled));
             if (_placingHouse)
             {

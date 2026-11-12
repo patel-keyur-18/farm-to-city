@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
@@ -112,6 +113,31 @@ namespace Sim.View.Views
             return new LineVm(ctx.Strings.Get("store.truck"), value, "truck");
         }
 
+        /// <summary>
+        /// While the truck is here: what the trader still takes today of each crop sown this season (the day's room for the crop, or the truck's room if
+        /// that is less), in crop order; empty while it is away (owner, 2026-11-12, ADR 0105).
+        /// </summary>
+        public static List<LineVm> TruckRoomLines(ViewContext ctx)
+        {
+            var lines = new List<LineVm>();
+            Simulation sim = ctx.Sim;
+            GameDefs defs = sim.Config.Game;
+            if (defs.Market.Truck == null || !sim.State.Market.TruckHere) return lines;
+            int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
+            var seen = new HashSet<int>();
+            foreach (CropDef crop in defs.Farm.Crops)
+            {
+                int g = crop.OutputGood;
+                if (crop.Fodder || !crop.SowSeasons[season] || !seen.Add(g)) continue;
+                long room = MarketRules.TraderCapacityLeft(sim, g);
+                GoodDef good = defs.Market.Goods[g];
+                lines.Add(new LineVm(ctx.Strings.Get(good.NameKey), room > 0 ? ctx.Strings.Get("store.truckRoomOf", "qty", ctx.Fmt.Kg(Store.WeightGrams(good, room))) : ctx.Strings.Get("store.truckRoomFull"), "truckRoom", g)
+                    { Icon = good.Id });
+            }
+            if (lines.Count > 0) lines.Insert(0, LineVm.Header(ctx.Strings.Get("store.truckRoomHeading")));
+            return lines;
+        }
+
         /// <summary>The good's price today against yesterday's truck price: "5.62 (yesterday 5.30, ▲6%)" (spec 011 §3.1b).</summary>
         internal static string TodayVsYesterday(ViewContext ctx, int g)
         {
@@ -171,6 +197,23 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.truck.load", ctx.Fmt.Kg(truck.LoadGrams));
             Row(vm, ctx, "why.truck.bought", ctx.Fmt.Kg(m.TruckLoadToday));
             Text(vm, ctx, "why.truck.price");
+            vm.Footnote = ctx.Strings.Get("why.truck.lesson");
+            return vm;
+        }
+
+        /// <summary>What the trader still takes of one crop today: the crop's daily room against the truck's. id = the good's index.</summary>
+        private static WhyVm TruckRoom(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            MarketState m = sim.State.Market;
+            int g = (int)id;
+            GoodDef good = sim.Config.Game.Market.Goods[g];
+            TruckDef truck = sim.Config.Game.Market.Truck;
+            WhyVm vm = New(ctx, "why.truckRoom.title", ctx.Fmt.Kg(Store.WeightGrams(good, MarketRules.TraderCapacityLeft(sim, g))), "good", ctx.Strings.Get(good.NameKey));
+            Row(vm, ctx, "why.truckRoom.day", ctx.Fmt.Kg(Store.WeightGrams(good, sim.Config.Game.Market.Region.TraderBuyPerDay(g))));
+            Row(vm, ctx, "why.truckRoom.bought", ctx.Fmt.Kg(Store.WeightGrams(good, m.TraderBoughtToday[g])));
+            Row(vm, ctx, "why.truckRoom.truck", ctx.Fmt.Kg(System.Math.Max(0, truck.LoadGrams - m.TruckLoadToday)));
+            Text(vm, ctx, "why.truckRoom.text");
             vm.Footnote = ctx.Strings.Get("why.truck.lesson");
             return vm;
         }

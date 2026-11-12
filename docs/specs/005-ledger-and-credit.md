@@ -242,7 +242,7 @@ Foreclosure runs when any loan has defaulted and its final notice has run out. A
 
 | Definition | Field | Type | Default | Bounds |
 | --- | --- | --- | --- | --- |
-| `LedgerDef` | `retainSeasons` | int | 4 | 1–16 |
+| `LedgerDef` | `retainSeasons` | int | 8 (4 until ADR 0101) | 1–16 |
 | `CreditScoreDef` | `min`, `max` | int | 300, 900 | min < max |
 | | `startScore` | int | 650 | min–max |
 | | `fullScore` | int | 750 | min–max |
