@@ -808,7 +808,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 18 · 26 Apr – 9 May 2027 · Phase 2 (statements, the hub, the deposit, milestones; every amount due, confirm cards, Your land; the playtest town; 2 weeks, ADR 0101)
 
-- **Status:** **Code complete and merged** (PR #24, 2026-11-12). Plan check 2026-11-11 (ADR 0101); every story approved by the owner except US-237's review. Owner requests after review: ADRs 0103 (godown), 0104 (mandi line, For sale) and 0105 (the trader's room by crop, part harvest, save schema 17). **Open: the owner's device check** (and both frame-time p95s on a Development build)
+- **Status:** **Done and closed (2026-11-12).** Merged in PR #24 (docs close in #25). Plan check 2026-11-11 (ADR 0101); every story approved by the owner, US-237 included; owner requests after review: ADRs 0103 (godown), 0104 (mandi line, For sale) and 0105 (the trader's room by crop, part harvest, save schema 17). The owner installed the Release build (`9974013`) on the iPhone, found everything good, and closed the sprint; later findings are taken up as fixes. **Not measured:** the two frame-time p95s (they need a Development build): carried to Sprint 19's gate A6
 - **Branch:** `sprint/18-statements-and-playtest` (merged to `main`)
 - **Goal:** The money screens finished (spec 019): everything the close takes shown before it takes it; the season page with three statements, every row itemised; *Your wealth* as the hub; a savings deposit used only with the player's consent; milestones. The owner's safety requests: confirm cards as Hay Day's, and *Your land* in the Menu with *Sell* only there. A playtest town and a Release build for Sprint 19. Save schema 16 with its migration and fixture.
 - **Points:** 36 (US-235 8, US-137 10, US-135 7, US-236 5, US-136 3, US-237 3)
@@ -823,7 +823,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-135 | Finance hub | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 7 | Must | Done (approved) |
 | US-236 | The savings deposit and the warning before the close | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 5 | Must | Done (approved) |
 | US-136 | Wealth milestones | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | 3 | Should | Done (approved) |
-| US-237 | The playtest town and the Release build | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | Done (town approved; Release build made, for review) |
+| US-237 | The playtest town and the Release build | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | Done (approved) |
 
 **Order of work:** the confirm cards and *Your land* previewed → US-235 (every amount due first, so the fix reaches the phone with this sprint's first build) → the season page's three tabs and *Your books* previewed → US-137 → *Your wealth* previewed → US-135 → the savings sheet and the warning card previewed → US-236 → US-136 → balance with the bots (spec 019 §9; the deposit no money loop; `StatementTests.NothingUnsorted` on every bot; the save's size with 8 seasons of entries) → the whole checklist in the Editor by scripted touch → the Development build and the owner's device check (both frame-time p95s, ADR 0094) → US-237: the playtest town shown to the owner, then the Release build. One stop for the owner's review after each story. Schema 16 grows on this branch and ships once.
 
@@ -848,7 +848,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 19 · 10–30 May 2027 · Phase 2 (the Phase 2 playtest and gate; up to 3 weeks, ADR 0101)
 
-- **Status:** Planned (ADR 0101 §9–§10). Sprint 18 is merged; starts once the Release build (from `9974013`, `Builds/iOS-release`) is on the phone and the owner's device check is done
+- **Status:** **In progress (started 2026-11-12).** Sprint 18 is closed; the Release build (from `9974013`) is on the owner's phone. **A1 passed** (2026-11-12): `GateTests.Village`. US-238 is the owner's play (up to 3 weeks from the day the playtest town is imported): the diary, three *why cash moved* sentences and *Your year* in `docs/test-checklists/s19-phase-2-playtest.md`, the play log in `docs/playtest/`. US-239 (the gate review and decision) follows. **Sprint 19 cannot finish before the playtest does**
 - **Goal:** The owner plays from the day-14 Hamlet town to the Village (or 3 weeks) on the Release build, with the play log and a daily diary; findings tuned; the Phase 2 gate's part A decided (A1–A6). Phase 3's spec writing (docs only, at most 2 specs to review) may run alongside; no Phase 3 code before the gate decision.
 - **Points:** 6 (US-238 3, US-239 3) plus fixes as found
 
