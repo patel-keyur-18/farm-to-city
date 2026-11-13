@@ -248,17 +248,22 @@ namespace Sim.Core.Market
         }
 
         /// <summary>
-        /// The seasonal inflation step (spec 004 §3.1): i = (min + (max − min) × u) ÷ 4, u a seeded draw for the new
-        /// season; PriceIndex ← PriceIndex × (1 + i).
+        /// The rise in prices as <paramref name="period"/> begins (spec 004 §3.1): i = (min + (max − min) × u) ÷ 4, u the seeded draw
+        /// for that season. Known ahead from the seed, so the next close's bills can be priced as the close will price them (ADR 0101 §1).
         /// </summary>
-        private static void StepIndex(Simulation sim)
+        public static Maths.Fixed Inflation(Simulation sim, long period)
         {
             Definitions.EconomyDef e = sim.Config.Game.Market.Economy;
-            ulong r = Maths.Rng.Next(sim.State.Seed, Maths.RngStream.Inflation, 0, (ulong)sim.Period);
+            ulong r = Maths.Rng.Next(sim.State.Seed, Maths.RngStream.Inflation, 0, (ulong)period);
             Maths.Fixed u = Maths.Fixed.FromRaw((long)(r >> 32));
-            Maths.Fixed i = (e.InflationMinPerYear + (e.InflationMaxPerYear - e.InflationMinPerYear) * u).MulRatio(1, 4);
+            return (e.InflationMinPerYear + (e.InflationMaxPerYear - e.InflationMinPerYear) * u).MulRatio(1, 4);
+        }
+
+        /// <summary>The seasonal inflation step: PriceIndex ← PriceIndex × (1 + <see cref="Inflation"/>).</summary>
+        private static void StepIndex(Simulation sim)
+        {
             Maths.Fixed old = sim.State.Market.PriceIndex;
-            sim.State.Market.PriceIndex = old * (Maths.Fixed.One + i);
+            sim.State.Market.PriceIndex = old * (Maths.Fixed.One + Inflation(sim, sim.Period));
             sim.Emit(new Events.PriceIndexChanged(sim.State.Clock.SimTime, old, sim.State.Market.PriceIndex));
             var goods = sim.Config.Game.Market.Goods;
             for (int g = 0; g < goods.Count; g++)

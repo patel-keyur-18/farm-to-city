@@ -51,13 +51,25 @@ namespace Sim.Core.Finance
 
     /// <summary>
     /// Everything the next season close takes from the founder's own cash, in the order the close takes it (ADR 0101 §1): loans, living, hands'
-    /// renewals, warehouse space, water, the school, machines. Priced as the close prices it, at today's prices (the close's index step may
-    /// add a little). A view of state: it changes nothing. A business's own charges are on its own books and aren't here.
+    /// renewals, warehouse space, water, the school, machines. Priced as the close prices it: at the prices of the season the close opens
+    /// (prices rise at the close, and the rise is known from the seed). A view of state: it changes nothing. A business's own charges are on its own books and aren't here.
     /// </summary>
     public static class CloseDues
     {
         /// <param name="atClose">True inside the season close itself (the savings cover, ADR 0101 §2): the new season has begun and interest is accrued, so the loans and the godown's tenant are read as the close reads them.</param>
         public static List<CloseDue> Next(Simulation sim, bool atClose = false)
+        {
+            if (atClose || sim.State.Market == null || sim.Config.Game?.Market == null) return Priced(sim, atClose);
+            // Before the close: price everything at the index the close will have (its rise is known from the seed), so what is shown is what
+            // is taken (ADR 0101 §1). The index is put back at once; nothing else changes.
+            MarketState m = sim.State.Market;
+            Maths.Fixed today = m.PriceIndex;
+            m.PriceIndex = today * (Maths.Fixed.One + MarketSystem.Inflation(sim, sim.Period + 1));
+            try { return Priced(sim, false); }
+            finally { m.PriceIndex = today; }
+        }
+
+        private static List<CloseDue> Priced(Simulation sim, bool atClose)
         {
             var list = new List<CloseDue>();
             if (sim.State.Credit != null)

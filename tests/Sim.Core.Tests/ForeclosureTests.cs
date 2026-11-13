@@ -71,7 +71,7 @@ namespace Sim.Core.Tests
             ReconcileOk(sim);
 
             // The land covered both debts: the bank and the moneylender are repaid in full and nothing is written off.
-            Assert.That(sim.State.Credit.Loans.All(l => l.State == LoanState.Repaid), Is.True);
+            Assert.That(sim.State.Credit.Loans.All(l => l.State == LoanState.Foreclosed), Is.True, "paid by the seizures, not by the founder");
             Assert.That(done.Proceeds, Is.EqualTo(quickSale), "land at quick-sale value; no produce was needed");
             Assert.That(done.Produce, Is.Empty);
             Assert.That(done.WrittenOff, Is.EqualTo(0));
@@ -93,7 +93,7 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(2 * S + 24 * 3600);
             var events = sim.DrainEvents();
             ForeclosureCompleted done = Last<ForeclosureCompleted>(events);
-            Assert.That(sim.State.Credit.Loans[0].State, Is.EqualTo(LoanState.WrittenOff).Or.EqualTo(LoanState.Repaid), "the bank, paid first");
+            Assert.That(sim.State.Credit.Loans[0].State, Is.EqualTo(LoanState.WrittenOff).Or.EqualTo(LoanState.Foreclosed), "the bank, paid first");
             Loan bank = sim.State.Credit.Loans[0], lender = sim.State.Credit.Loans[1];
             Assert.That(events.OfType<LoanRepayment>().Select(r => r.LoanId).First(), Is.EqualTo(bank.Id), "the bank is paid first");
             Assert.That(done.WrittenOff, Is.GreaterThan(0));
@@ -118,7 +118,7 @@ namespace Sim.Core.Tests
             ForeclosureCompleted done = Last<ForeclosureCompleted>(events);
             long quickSale = events.OfType<ParcelSeized>().Single().QuickSaleValue;
             Assert.That(done.WrittenOff, Is.EqualTo(0));
-            Assert.That(sim.State.Credit.Loans[0].State, Is.EqualTo(LoanState.Repaid));
+            Assert.That(sim.State.Credit.Loans[0].State, Is.EqualTo(LoanState.Foreclosed));
             long owed = Coins(1_000) + sim.State.Finance.Reports.Sum(r => -r.ByAccount.Where(a => a.Key == Account.Interest || a.Key == Account.PenaltyInterest).Sum(a => a.Value));
             Assert.That(Cash(sim), Is.GreaterThan(quickSale - owed - Coins(200)), "the surplus is paid into cash");
             Assert.That(Cash(sim), Is.LessThanOrEqualTo(quickSale));

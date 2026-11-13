@@ -32,15 +32,8 @@ namespace Sim.Core.Finance
         /// </summary>
         public static Fixed IndexAtClose(Simulation sim, long period)
         {
-            EconomyDef e = sim.Config.Game.Market.Economy;
-            Fixed index = e.StartIndex;
-            for (long q = 1; q <= period + CloseStepsAhead; q++)
-            {
-                ulong r = Rng.Next(sim.State.Seed, RngStream.Inflation, 0, (ulong)q);
-                Fixed u = Fixed.FromRaw((long)(r >> 32));
-                Fixed i = (e.InflationMinPerYear + (e.InflationMaxPerYear - e.InflationMinPerYear) * u).MulRatio(1, 4);
-                index = index * (Fixed.One + i);
-            }
+            Fixed index = sim.Config.Game.Market.Economy.StartIndex;
+            for (long q = 1; q <= period + CloseStepsAhead; q++) index = index * (Fixed.One + MarketSystem.Inflation(sim, q));
             return index;
         }
 

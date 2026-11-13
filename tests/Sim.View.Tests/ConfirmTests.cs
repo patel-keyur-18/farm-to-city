@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Commands;
+using Sim.Core.Finance;
 using Sim.Core.Land;
 using Sim.View.Views;
 
@@ -39,6 +40,22 @@ namespace Sim.View.Tests
                 Assert.That(s.Has("confirm." + t.Name + ".title"), Is.True, t.Name + " title");
                 Assert.That(s.Has("confirm." + t.Name + ".verb"), Is.True, t.Name + " verb");
             }
+        }
+
+        // Sprint 18 review: Always pay from my savings is the standing consent, so it asks on card B; Ask me doesn't.
+        [Test]
+        public void Tap_AlwaysPayFromSavings()
+        {
+            Simulation sim = Rich();
+            ViewContext ctx = ViewKit2.Context(sim);
+            Assert.That(sim.Execute(new DepositSavings(T(sim), 50_000_00)).Accepted, Is.True);
+            ConfirmCardVm card = ConfirmCards.For(ctx, new SetSavingsCover(T(sim), true));
+            Assert.That(card.Hold, Is.False);
+            Assert.That(card.Title, Is.EqualTo("Always pay from your savings?"));
+            Assert.That(card.GoLabel, Is.EqualTo("Always pay from savings"));
+            Assert.That(card.Rows.Select(r => (r.Label, r.Value)), Is.EqualTo(new[] { ("Your savings now", ctx.Fmt.Coins(50_000_00)), ("The next close would take from them", ctx.Fmt.Coins(0)) }));
+            Assert.That(card.Warning, Does.Contain("without asking"));
+            Assert.That(ConfirmCards.For(ctx, new SetSavingsCover(T(sim), false)), Is.Null, "back to Ask me asks nothing");
         }
 
         // Card B: buying land shows its cost and the cash after, as the sim has it; an everyday action has no card.

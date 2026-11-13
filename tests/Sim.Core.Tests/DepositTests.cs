@@ -170,6 +170,26 @@ namespace Sim.Core.Tests
             Assert.That(covered.DrainEvents().OfType<CloseShortAhead>().Any(), Is.False, "the savings will cover it: nothing to warn of");
         }
 
+        // Sprint 18 review (F1): the bills are priced as the close prices them, the season's rise included, so cash that only covers them at
+        // today's prices is warned of.
+        [Test]
+        public void Warning_CountsTheRiseInPrices()
+        {
+            Simulation sim = TestSim.NewFarm(seed: 3);
+            sim.AdvanceTo(S - Day - 1);
+            var farm = sim.Config.Game.Farm;
+            long today = Sim.Core.Market.MarketRules.Indexed(sim, farm.DietPlans[sim.State.Farm.Founder.DietPlan].CostPerSeason);
+            long rise = CloseDues.Next(sim).Single(d => d.Key == "living").Amount - today;
+            Assert.That(rise, Is.GreaterThan(0), "the close's prices are higher than today's");
+            long set = today - Cash(sim); // cash enough at today's prices, short by the rise at the close's
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test.set", null, new Posting(Account.Cash, set), new Posting(Account.OpeningEquity, -set));
+            sim.DrainEvents();
+            sim.AdvanceTo(S - Day);
+            CloseShortAhead warning = sim.DrainEvents().OfType<CloseShortAhead>().Single();
+            Assert.That(warning.FirstUnpaid, Is.EqualTo("living"));
+            Assert.That(warning.Short, Is.GreaterThan(0).And.LessThanOrEqualTo(rise));
+        }
+
         // The notification: a short close is planned for a player who'll be away; none when the savings will cover it.
         [Test]
         public void Notification()
