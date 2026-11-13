@@ -29,11 +29,11 @@
 | S17 | 12–25 Apr 2027 (2 weeks, ADR 0095) | 2 | The school and literacy, the Codex and advisors, the Village unlock, rival entry (F14.1, F14.2, US-102, US-122); save schema 15. | 36 (re-pointed, ADR 0095) | — | Yes |
 | S18 | 26 Apr – 9 May 2027 (2 weeks, ADR 0101) | 2 | Every amount due, confirm cards and Your land (US-235); statements, the finance hub, the savings deposit and milestones (F14.3, F14.4); the playtest town and the Release build (F10.2); save schema 16. | 36 (ADR 0101) | — | Yes: Development build, then the Release playtest build |
 | S19 | 10–30 May 2027 (up to 3 weeks, ADR 0101) | 2 | The Phase 2 playtest from a day-14 Hamlet town, tuning and the gate decision (F10.2); Phase 3's spec writing may start alongside (docs only). | 6 + fixes | Up to 2 (Phase 3) | Fixes only, if needed |
-| S20 | 31 May – 13 Jun 2027 (2 weeks, ADR 0107) | 3 | The Phase 3 plan (ADR 0107); specs 021 and 022 approved; rent realism (US-240) and part-harvests for hands (US-241); the archetype bots (US-099); the Editor's rendering statistics and the first Development build's frame times and golden replays on the phone (US-101); save schema 18. | 19 | 021, 022 | Yes: Development build |
+| S20 | 31 May – 13 Jun 2027 (2 weeks, ADR 0107) | 3 | The Phase 3 plan (ADR 0107); specs 021 and 022 approved; rent realism (US-240), part-harvests for hands (US-241) and a mandi trip with several crops (US-252, owner request); the archetype bots (US-099); the Editor's rendering statistics and the first Development build's frame times and golden replays on the phone (US-101); save schema 18. | 22 | 021, 022 | Yes: Development build |
 | S21 | 14–27 Jun 2027 (2 weeks) | 3 | The treasury and the budget cycle, taxes and policies (F15.1, F15.2). | 26 | 023, 024 | Yes |
 | S22 | 28 Jun – 11 Jul 2027 (2 weeks) | 3 | The clinic, the link road, the Township unlock with the old village joining (US-148, US-146, US-103); zoning and land value (US-142, US-143); era-gate reachability (US-100). | 34 | 025, 026 | Yes |
-| S23 | 12–25 Jul 2027 (2 weeks) | 3 | Kutcha to pucca and the overlays (F15.8); utilities and construction with the brick kiln (F15.4, US-243); the map's ring, hills and apples, the cold store (US-147, US-242). | 39 | 027, 028 | Yes: frame time with the ring |
-| S24 | 26 Jul – 8 Aug 2027 (2 weeks) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2). | 27 | 029 | Yes |
+| S23 | 12–25 Jul 2027 (2 weeks) | 3 | Kutcha to pucca and the overlays (F15.8); utilities and construction with the brick kiln (F15.4, US-243); the map's ring (US-253), the cold store (US-242). | 39 | 027, 028 | Yes: frame time with the ring |
+| S24 | 26 Jul – 8 Aug 2027 (2 weeks) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); hill parcels and apples (US-147). | 32 | 029 | Yes |
 | S25 | 9–22 Aug 2027 (2 weeks) | 3 | Invoices, managers, sell or expand, investors and buy-outs (F12.5, F12.6); the tuition centre, tempo and restaurant (F12.7). | 36 | — | Yes |
 | S26 | 23 Aug – 5 Sep 2027 (2 weeks) | 3 | The Chronicle, the Almanac and citizen stories (F16.3, F16.4); the Phase 3 exploit checks (US-248); the playtest town and the Release build (US-249). | 21 | — | Yes: Development, then Release |
 | S27 | 6 Sep – 3 Oct 2027 (4 weeks, ADR 0107 §11) | 3 | The Phase 3 playtest from a town just past the Village, tuning and the gate decision (F10.3). | 6 + fixes | Phase 4's, if the owner says | Fixes only |
@@ -867,30 +867,32 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 20 · 31 May – 13 Jun 2027 · Phase 3 (the plan; specs 021 and 022; rent realism, part-harvests, archetype bots, frame time; 2 weeks, ADR 0107)
 
-- **Status:** Plan check done (ADR 0107, 2026-11-13): 12 gaps closed one per message with the owner; **waiting for the owner's approval of the plan.** Before it: stale docs fixed and Sprint 18's code reviewed (PR #28, merged 2026-11-13)
+- **Status:** Plan check done (ADR 0107, 2026-11-13): 12 gaps closed one per message with the owner; **the plan approved (2026-11-13)**; every story's scope written out and the owner's mandi request added (ADR 0107 §13–§14), for the owner's yes before spec 021. Before it: stale docs fixed and Sprint 18's code reviewed (PR #28, merged 2026-11-13)
 - **Branch:** `sprint/20-treasury-and-taxes`, from `main` after PR #28
-- **Goal:** Phase 3 planned (ADR 0107). Specs 021 (treasury and budget) and 022 (taxes and policies) written and approved, so Sprint 21 can build them. The carried rules built: rents that follow the kind of house, its place and a yearly lease (US-240); hands and labourers taking part-harvests (US-241). The archetype bots for the balance rule (US-099). The Editor's rendering statistics, and the first Development build's frame times and golden replays on the phone, closing Phase 2's deferred items (US-101). Save schema 18 with its migration and fixture.
-- **Points:** 19 (US-240 5, US-241 3, US-099 8, US-101 3) plus two specs
+- **Goal:** Phase 3 planned (ADR 0107). Specs 021 (treasury and budget) and 022 (taxes and policies) written and approved, so Sprint 21 can build them. The carried rules built: rents that follow the kind of house, its place and a yearly lease (US-240); hands and labourers taking part-harvests (US-241); the owner's request, a mandi trip with several crops (US-252). The archetype bots for the balance rule (US-099). The Editor's rendering statistics, and the first Development build's frame times and golden replays on the phone, closing Phase 2's deferred items (US-101). Save schema 18 with its migration and fixture.
+- **Points:** 22 (US-240 5, US-241 3, US-252 3, US-099 8, US-101 3) plus two specs
 - **Specs for the owner to review:** 021, 022 (spec 014 and 006 amended inside US-240 and US-241, as ADR 0107 decided)
 - **Device build:** Yes: a Development build (`docs/test-checklists/s20-rent-harvests-frame-time.md`, device-only rows marked)
 - **Milestone and labels:** `Phase 3 · Township`; `type:adr`, `type:spec`, `type:feature`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
+- **Device-only rows (owner rule, ADR 0107 §11):** both frame-time p95s, golden replays on the phone, the phone's number pad on the savings and mandi sliders; everything else is checked in the Editor in its story
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-240 | Rent: kutcha houses, location, yearly leases | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | To do |
 | US-241 | Hands and labourers take part-harvests | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
+| US-252 | A mandi trip with several crops | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
 | US-099 | Archetype bots | [F20.1](features/F20.1-balancer-and-health-checks.md) | 8 | Must | To do |
 | US-101 | Device performance, and the Editor's rendering statistics | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | To do |
 
-**Order of work:** the plan approved → spec 021 written → spec 022 written (both to the owner for review, alongside the code) → the renewal card previewed → US-240 → US-241 → US-101's Editor helper and its first reading → US-099 → balance (the Village's pace with the new rents, ADR 0107 §8; the archetypes' 20% rule) → the checklist's Editor rows by scripted touch → the Development build (both p95s, golden replays on the phone). One stop for the owner's review after each story and each spec.
+**Order of work:** the plan approved → spec 021 written → spec 022 written (both to the owner for review, alongside the code) → the renewal card previewed → US-240 → US-241 → the mandi sheet previewed → US-252 → US-101's Editor helper and its first reading → US-099 → balance (the Village's pace with the new rents, ADR 0107 §8; the archetypes' 20% rule) → the checklist's Editor rows by scripted touch → the Development build (both p95s, golden replays on the phone). One stop for the owner's review after each story and each spec.
 
-**If it runs over,** US-099 moves to Sprint 21 (it gates nothing until US-248). Never cut: the two specs, US-240.
+**If it runs over,** US-099 moves to Sprint 21 (it gates nothing until US-248). Never cut: the two specs, US-240, US-252.
 
 **Definition of Ready (ADR 0025)**
 
 - [x] Every Phase 3 story, task and acceptance criterion checked against the GDD, the ADRs and the code after PR #28 (ADR 0107)
 - [x] G1–G12 answered (2026-11-13, ADR 0107)
-- [ ] The plan approved by the owner
+- [x] The plan approved by the owner (2026-11-13); §13's scope lines and §14's request added after, for the owner's yes
 - [x] US-240 and US-241's acceptance criteria name their tests (spec 014 and 006 amendments in the stories)
 
 **Sprint end checklist**

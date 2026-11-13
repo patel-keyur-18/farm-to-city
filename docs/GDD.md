@@ -209,7 +209,7 @@ Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2
 - Produce spoils at a rate set per good. From the start, the hut has a small store with limited capacity (ADR 0024). A godown in the mandi town (Hamlet), and from the Township rented cold-store space there (ADR 0107: by the tonne a season, potato and seed potato at about a tenth of their spoilage, fruit about a quarter; milk never, the co-op chills it), adds capacity and slows spoilage: your own godown, bought for 45,000, holds 10,000 kg of grains, pulses, atta and seed (not seed potato, which needs cold storage) at a fifth of their spoilage; warehouse space can be rented by the tonne instead, and an empty godown can be let to a trader for a season as passive income (spec 013, ADR 0075, 0087). Rice and maize gain by waiting from the Monsoon harvest, mustard from Winter; wheat ripens in Winter, its dearest season, so it sells at harvest (ADR 0093).
 - **Sell or store?** Selling at harvest means low prices. Storing until winter means higher prices, but you pay storage and risk spoilage.
 - **Inputs in store** (seed, fertiliser, spray bought ahead) are an asset on the books until they are used (ADR 0034).
-- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, up to a daily limit per crop. **The trader's truck (ADR 0054)** of about 4 t arrives at 6:00 and leaves when full or at midnight; its price is set at 6:00 and held all day, and while it is away selling to the trader is refused. The player's stall pauses from midnight to 6:00. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg to the town market (ADR 0037) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
+- **Where to sell (ADR 0031).** The village trader buys at the farm gate at the floor price, up to a daily limit per crop. **The trader's truck (ADR 0054)** of about 4 t arrives at 6:00 and leaves when full or at midnight; its price is set at 6:00 and held all day, and while it is away selling to the trader is refused. The player's stall pauses from midnight to 6:00. The small local market pays more but drops quickly when flooded; an offer can carry a minimum price. A **mandi trip** takes a hired tractor-trolley of up to 2,000 kg, any mix of your crops, to the town market (ADR 0037; from Phase 3 each crop's load is dragged or typed up to the room left, and *Fill with what pays best* loads the crops the mandi pays most over the trader first, ADR 0107) for the regional price less commission, at the cost of a cart's hire and a little of the founder's labour (a real working day, about half an hour of game labour, ADR 0034): worth it for full loads, and when the trader or the store is full.
 - **Supermarket orders (ADR 0055).** At 6:00 a city supermarket posts 2 orders (a crop, an amount of half to one acre's harvest, a price at 15–30% over the regional price) and a small order for spinach or coriander, to be delivered by midnight, with no penalty when missed. Only produce harvested after 6:00 counts, so orders reward planning the day's sowing; rice and potato grow in 15 hours, so a crop sown by 9:00 can fill one. The hand fills an open order before selling to the trader. Deliveries are paid at 6:00 next morning; orders stay a bonus, about 15% of a good farmer's sales (ADR 0058).
 - **Contracts.** A trader can offer a forward contract: a fixed price for a quantity delivered next season. It protects you if prices fall and costs you if they rise. This introduces hedging.
 
@@ -471,7 +471,7 @@ The player places their own farms, businesses and civic buildings directly. From
 
 The map holds deposits of clay, stone, timber and ore. Land outside the starting plot is bought parcel by parcel, and prices rise as the town develops.
 
-**Zoning (from Township):** residential, commercial, industrial, agricultural and mixed use. Each zone has a density level that rises with land value and with infrastructure.
+**Zoning (from Township):** residential, commercial, industrial, agricultural and mixed use (Phase 3 builds residential, commercial and agricultural; industrial and mixed use come with industry in Phase 4, ADR 0107). Each zone has a density level that rises with land value and with infrastructure.
 
 **Construction is real work.** Every building needs:
 
@@ -487,7 +487,7 @@ The player can buy materials, produce them, or own the construction company. A s
 
 | Utility | Ladder | Without it |
 | --- | --- | --- |
-| Water | Well → tower → treatment plant | Growth capped, disease |
+| Water | Well → tower → treatment plant (Phase 3: to the tower, ADR 0107) | Growth capped, disease |
 | Power | None → diesel generator → grid plant → solar or wind | No factories, no night shifts |
 | Sanitation | Pit → drains → sewage plant | Disease, lower land value |
 | Waste | None → collection → recycling | Pollution, unhappiness |
@@ -510,10 +510,10 @@ From the Township era the player also runs the town treasury (ADR 0077). Public 
 
 - property tax, based on land value
 - business tax on profit
-- sales tax
+- sales tax (Phase 4; Phase 3 has property and business tax and fees, ADR 0107)
 - fees for market stalls, licences and building permits
 - regional grants, which come with conditions
-- municipal bonds and loans
+- municipal bonds and loans (Phase 4)
 
 **Spending**
 
@@ -525,7 +525,7 @@ From the Township era the player also runs the town treasury (ADR 0077). Public 
 
 **Budget cycle.** At the start of each year the player sets an annual budget by department, and can revise it once at midyear. Each season the game reports actual spending against budget, with variances explained. Overspending a department drains the treasury, and underspending lets services decay.
 
-**Policies.** Each policy has a cost, an effect and a lag. The launch set:
+**Policies.** Each policy has a cost, an effect and a lag. Phase 3 builds free school meals, farm input subsidy, small business grant, minimum wage and rent control (a night market if time allows), at most 3 active, never paying your own farm or businesses; tourism promotion and pollution limits wait for Phase 4 (ADR 0107). The launch set:
 
 | Policy | Helps | Costs |
 | --- | --- | --- |
@@ -645,6 +645,7 @@ Events test the player's preparation and always offer a choice. The Chronicle tu
 
 - Every event offers 2–3 choices with visible short-term costs and hinted long-term effects.
 - What the player prepared changes the impact. This shows the value of insurance and reserves.
+- Phase 3 builds every family but river floods and recessions (Phase 4); a minor event while the player is away takes its named, safest default (ADR 0107).
 - Frequency: about one minor event a real day and one major event a game year (16 real days). Disasters are rare and signalled days ahead, and never fire while the player is away.
 - Events are weighted by the town's state. A drought is more likely after a dry season, and a strike more likely after wage cuts.
 

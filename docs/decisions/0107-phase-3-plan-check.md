@@ -1,6 +1,6 @@
 # 0107. Phase 3 plan check: nine specs in eight sprints, the Township gate, the treasury's first day, kutcha and pucca houses, the cold store, part-harvests for hands, and the Phase 3 gate
 
-- Status: Accepted (owner, 2026-11-13: each gap decided one at a time)
+- Status: Accepted (owner, 2026-11-13: each gap decided one at a time; the plan approved the same day; §13's scope lines and §14's request added for the owner's approval)
 - Date: 2026-11-13
 - Deciders: Keyur Patel
 - Amends: the GDD's eras table (the Township's unlock), *Player journey and eras*, *Land, farming and livestock* (the map's ring, houses, storage, standing orders), *Economy* (the road tier), *Businesses* (the Township catalogue), *Community and civic services* (literacy, the clinic), *Governance and public finance* (the treasury's first day), *Roadmap* (the Phase 3 gate); ADR 0011 §3 (who pays the first doctor); ADR 0028 (the Township's pace); ADR 0063 §2 (the family house and its rent); ADR 0102 §3 (c) (decided here); ADR 0105's open question (decided here); spec 013 §3.4 (cold storage); spec 006 (hands' harvests); spec 014 (rent); spec 018 (the Township's literacy)
@@ -34,13 +34,13 @@ Twelve gaps came out of it.
    | 022 Taxes and policies | F15.2 (US-140, US-141) |
    | 023 The Township: the clinic, the link road, coverage, the old village, the unlock | F15.6 US-148, F15.5 US-146, F09.4 US-103 |
    | 024 Zoning, land value, rentals, upgrades, overlays | F15.3, F15.8 (the pucca house, rent by land value) |
-   | 025 Utilities, construction, the map's ring, hills and apples, the cold store | F15.4, F15.5 US-147, US-242, US-243 (the brick kiln) |
+   | 025 Utilities, construction, the map's ring, hills and apples, the cold store | F15.4, F15.5 US-253 and US-147, US-242, US-243 (the brick kiln) |
    | 026 Town life: festivals, petitions, reputation, crime, inequality | US-149, F15.7 |
    | 027 Events, insurance, forward contracts | F16.1, F16.2 |
    | 028 Business growth: invoices, managers, valuation, exit, investors, Township businesses | F12.5, F12.6, F12.7 (but the kiln) |
    | 029 Chronicle, Almanac, citizen stories | F16.3, F16.4 |
 
-   Treasury and taxes go first, together: a treasury with nothing to receive has nothing to budget. The Township gate's spec comes second, before zoning, so its pace is measured early (the Village's was measured only in Sprint 17, ADR 0097). Sprints 20–26 build (2 weeks each), Sprint 27 is the 4-week playtest; 208 points (the plan in `sprints.md`). The first branch is `sprint/20-treasury-and-taxes`.
+   Treasury and taxes go first, together: a treasury with nothing to receive has nothing to budget. The Township gate's spec comes second, before zoning, so its pace is measured early (the Village's was measured only in Sprint 17, ADR 0097). Sprints 20–26 build (2 weeks each), Sprint 27 is the 4-week playtest; 216 points with §13–§14 (the plan in `sprints.md`). The first branch is `sprint/20-treasury-and-taxes`.
 2. **Who counts in the Township's town (G2).** The gate counts **20 of your own households**, as the Village's does. At the unlock **the old village's families join the town as a cohort** (about 30 households and 150 people, `population.json`): they pay taxes and fees, use the clinic and school, count in population and literacy, and are never individual citizens. The town goes from about 100 to about 250 people, inside the Township's 80–500. From the Township, zoning lets private builders add homes (F15.3). **The map grows a ring at the unlock** (ADR 0052): about 24 × 18 acres (from 16 × 12), with land for zoning, the highway link, hill parcels and more of the village drawn; its size and layout are set in spec 025 and previewed first (ADR 0064). The clinic and the road come before the ring and fit today's map.
 3. **The clinic and its doctor (G3, G6).** Built like the school: you build the clinic (about 1,20,000) and a doctor's house (60,000) as a gift to the village, on a village plot. A migrant doctor comes once both stand. **The district pays the doctor's salary**, as it does the teacher's (a rural MBBS doctor costs about 1,80,000–2,25,000 a season, beyond any village's means); what draws the doctor is the house and a **hard-area allowance of about 15%** (about 30,000 a season), which you pay as a gift until the Township and the treasury pays after. A small fee a visit offsets the allowance. The clinic cuts sick days and slows health loss with age; the household card's *Healthcare* row is met. The string `needs.healthCareNotYet` becomes "A clinic is one of the Township's goals" (with US-148).
 4. **The road to the highway (G4).** From the Village with 10 households or more, you petition at the council hall; the district builds a **paved link road** (PMGSY-style) on a community share of about 50,000 (a gift), about 4 days; the district road on the map's south edge is drawn paved and the road tier becomes `road` (1.00 a kg: the trader pays 0.50 a kg more, imports cost 0.50 less; potato +7.7%, wheat +2.1% at the farm gate). The `highway` tier waits for Phase 4's bonds. Each trader price's *Why?* names the road.
@@ -64,6 +64,20 @@ Twelve gaps came out of it.
     - **The owner's rule (2026-11-13): never defer to the device what the Unity Editor can check.** Each story runs every check the Editor can, by scripted touch, before it's done; only device-only checks wait for the phone (frame-time p95s, golden replays on IL2CPP, OS notifications and quiet hours, haptics, real time away in the background, the phone's number pad, rotation and lock, the real safe area, the Release install). Every checklist marks its device-only rows.
 12. **Frame time with the ring and 250 people (G12).** The GPU has about 2 ms of room (Sprint 17: main 5.09 ms, GPU 8.72 ms; limits 8.3 and 11, ADR 0094). Phase 3's **first Development build (Sprint 20)** measures both p95s and the phone's golden replays, closing Phase 2's deferred items; the ring's build measures again. The old village's cohort is drawn as **at most about 40 walkers** (content); ring tiles use the map's chunking and are skipped off screen. Each visible story reads the Editor's rendering statistics (draw calls, batches, sprites) at the most crowded view and flags growth over 10% against the last (**US-101**). Over 10 ms GPU on the phone: cut the edge rings' detail, then walkers, never the farm or the village, and bring the numbers first.
 
+13. **The scope of every Phase 3 story (owner, 2026-11-13: "described without any ambiguity").** Each story in its feature file now says what is in Phase 3, what is not, and what its spec still sets (numbers and wording only). The scope lines that are new decisions, beyond §1–§12:
+    1. **Taxes:** property tax on every house (yours and the old village's too), on land value; business tax on profit (your businesses too); fees. **Sales tax waits for Phase 4** (it moves every shop's price).
+    2. **Policies:** free school meals, farm input subsidy, small business grant, minimum wage, rent control; a night market as Could; **at most 3 active**; tourism promotion and pollution limits wait for Phase 4 (no hotels, no industry yet).
+    3. **The wall, spelled out:** subsidies and grants go to townspeople and neighbours, **never to your own farm or businesses** in Phase 3.
+    4. **Zoning:** residential, commercial and agricultural; a zoned acre of yours is offered to builders at its land value; builders also buy the ring's unowned land; industrial and mixed-use zones wait for Phase 4.
+    5. **Construction:** bricks, cement and timber, masons and time **from the Township on**; buildings before it keep the Phase 2 rule.
+    6. **Utilities' Phase 3 steps:** water tower, diesel generator then the grid, drains, waste collection; plants, recycling and solar wait for Phase 4.
+    7. **Civic buildings:** besides the clinic, a watchman's post, a community hall and a playground, built and staffed by the treasury; the school gets a reach.
+    8. **Events:** weather, economic, business, workforce, social and opportunity families, and fire and epidemic as disasters; river floods and recessions wait for Phase 4; a minor event while you're away takes its named, safest default.
+    9. **The map's ring is its own Must story (US-253, 5 points)**, with gravel lanes the council builds to open zones; hill parcels and apples stay Should (US-147, moved to Sprint 24).
+    10. **Overlays:** fertility, land value, coverage, happiness, crime; pollution and traffic wait for Phase 4.
+    11. **Invoices** cover every business-to-business sale (the village grocer and tea stall too), not the trader or the supermarket; households pay cash.
+14. **A mandi trip with several crops (owner request, 2026-11-13).** The cart already carries any mix (`GoToMandi` takes a list), but the sheet offered each crop only 0, 500, 1,000 or 2,000 kg, ignoring the room the other crops take, and didn't show which crop pays best. Now each crop's load is dragged or typed in kg (the savings sheet's control) up to the room left, the rows are ordered by the mandi's gain over the trader, and *Fill with what pays best* loads the trolley in that order. **US-252**, 3 points, Sprint 20; no save change.
+
 ## New and re-pointed stories
 
 | Story | Feature | Points | Priority |
@@ -77,7 +91,8 @@ Twelve gaps came out of it.
 | US-144 Utilities | F15.4 | 5 → 8 | Must |
 | US-145 Construction (builders with a mason trade) | F15.4 | 5 → 8 | Must |
 | US-146 The link road | F15.5 | 3 → 5 | Must |
-| US-147 Hill parcels and apples (with the ring) | F15.5 | 3 → 5 | Should |
+| US-147 Hill parcels and apples | F15.5 | 3 → 5 | Should |
+| **US-253** The map's ring | F15.5 | 5 | Must |
 | US-148 Civic buildings: the clinic first | F15.6 | 5 → 8 | Must |
 | US-149 Festivals | F15.6 | 3 | Should |
 | US-150 Petitions | F15.7 | 3 | Must |
@@ -109,8 +124,9 @@ Twelve gaps came out of it.
 | **US-249** The playtest town and the Release build | F10.3 (new) | 3 | Must |
 | **US-250** The Phase 3 playtest | F10.3 | 3 | Must |
 | **US-251** Tune and the gate decision | F10.3 | 3 | Must |
+| **US-252** A mandi trip with several crops | F04.1 | 3 | Must |
 
-208 points in all. **If Phase 3 runs over,** cut Could first (the restaurant, vegetables in the cold store), then Should in this order: citizen stories, festivals, forward contracts, the restaurant's siblings (tempo, tuition), investors and buy-outs, sell or expand, hill apples. **Never cut:** the treasury, taxes, the gate's pieces (clinic, road, unlock), rent realism, the exploit checks.
+216 points in all (208 when the plan was approved; US-252 and US-253 added under §13–§14). **If Phase 3 runs over,** cut Could first (the restaurant, vegetables in the cold store), then Should in this order: citizen stories, festivals, forward contracts, tempo, tuition, investors and buy-outs, sell or expand, hill apples. **Never cut:** the treasury, taxes, the gate's pieces (clinic, road, unlock), the map's ring, rent realism, the multi-crop mandi trip, the exploit checks.
 
 ## Consequences
 

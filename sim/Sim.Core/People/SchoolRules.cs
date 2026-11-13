@@ -119,7 +119,7 @@ namespace Sim.Core.People
             }
         }
 
-        /// <summary>The literacy rate in whole percent, rounded down (0 with nobody counted); the Township needs 40 (Phase 3).</summary>
+        /// <summary>The literacy rate in whole percent, rounded down (0 with nobody counted); the Township needs 60 (ADR 0107).</summary>
         public static int LiteracyRate(Simulation sim)
         {
             Literacy(sim, out int literate, out int counted);
