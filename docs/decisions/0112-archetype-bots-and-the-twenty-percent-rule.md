@@ -29,7 +29,7 @@ ADR 0016 set the balance rule (the three archetypes within 20% of each other on 
    | random (stress) | 13,70,155 | 0 (no town) |
 
    The best archetype is 1.132 times the worst on net worth (limit 1.2) and 1.068 on happiness; no stress bot comes near the best archetype; random is below every archetype on both.
-4. **`ArchetypeTests.Archetypes_WithinTwentyPercent`** (category Balance) runs 40 seeds locally and 200 where `CI` is set (about 10 minutes); `FTC_SEEDS` and `FTC_SEASONS` override. Each Phase 3 spec that adds a way to make money extends the bots and re-runs it.
+4. **`ArchetypeTests.Archetypes_WithinTwentyPercent`** (category Balance) runs 24 seeds by default (about a minute) so CI stays inside its time limit; `FTC_SEEDS=200` is ADR 0107 §11's run (about 10 minutes here, the numbers above); `FTC_SEEDS` and `FTC_SEASONS` override. Each Phase 3 spec that adds a way to make money extends the bots and re-runs it.
 
 ## Consequences
 

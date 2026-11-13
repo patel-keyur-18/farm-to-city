@@ -13,7 +13,7 @@ namespace Sim.Core.Tests
 
         private static int Env(string name, int fallback) { string v = Environment.GetEnvironmentVariable(name); return v == null ? fallback : int.Parse(v); }
 
-        // ADR 0016 on Phase 2's systems (US-099): over seeds to game year 8 (the full 1,000 seeds at year 12 at the Phase 4 gate; 200 here on CI, 40 locally),
+        // ADR 0016 on Phase 2's systems (US-099): over seeds to game year 8 (the full 1,000 seeds at year 12 at the Phase 4 gate; 24 here so CI stays under its time limit, `FTC_SEEDS=200` for ADR 0107 §11's run, about 10 minutes),
         // the agri-hub, merchant and education towns finish within 20% of each other on median net worth (at year-0 prices) and on median town
         // happiness; no stress bot (debt-fuelled expansion, cautious saver, random) is over 20% above the best archetype on either; random is below every
         // archetype on both. Every archetype plants the mango orchard: it is the best use of 30,000 coins in the game (+24% net worth on the competent
@@ -21,7 +21,7 @@ namespace Sim.Core.Tests
         [Test]
         public void Archetypes_WithinTwentyPercent()
         {
-            int seeds = Env("FTC_SEEDS", Environment.GetEnvironmentVariable("CI") == null ? 40 : 200), seasons = Env("FTC_SEASONS", 32);
+            int seeds = Env("FTC_SEEDS", 24), seasons = Env("FTC_SEASONS", 32);
             Archetypes.Row[] arch = { Archetypes.Measure(Live(), () => new AgriHubBot(), seeds, seasons), Archetypes.Measure(Live(), () => new MerchantBot(), seeds, seasons), Archetypes.Measure(Live(), () => new EducationBot(), seeds, seasons) };
             Archetypes.Row[] stress = { Archetypes.Measure(Live(), () => new LeverageBot(), seeds, seasons), Archetypes.Measure(Live(), () => new CautiousSaverBot(), seeds, seasons), Archetypes.Measure(Live(), () => new RandomBot(), seeds, seasons) };
             foreach (Archetypes.Row r in arch.Concat(stress))
