@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | **Phase 2 · Hamlet & Village is closed** (owner, 2026-11-13, ADR 0106). **Phase 3 · Township is next but not started**: it waits for the owner's go, then its plan check and specs. Phase 1 complete (Sprint 10, 2026-10-21) |
 | Sprint | **Sprint 19 closed 2026-11-13** (ADR 0106): A1 and CI passed; the owner's phone checks done; A2–A5 continue in parallel (the owner's play, findings ad hoc); the frame-time p95s and golden replays on the phone are deferred. Sprint 18 closed 2026-11-12. No sprint is open |
-| Branch with latest work | `main` (PR #26 merged). The Phase 2 close is on `docs/phase-2-close` until merged; Phase 3's first branch starts with its plan check |
+| Branch with latest work | `main` (PR #27 merged: the Phase 2 close). `fix/phase-2-docs-and-s18-review`: stale docs fixed and the Sprint 18 code review (before Phase 3). Phase 3's first branch, `sprint/20-treasury-and-taxes`, starts with its plan check |
 | Last updated | 2026-11-13 |
 
 ## Done so far
@@ -466,7 +466,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 18: the plan check is done (ADR 0101), approved by the owner; nothing coded. Save schema is 15 (Sprint 17's); spec 019 §4 opens schema 16 with US-137. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+The Phase 3 plan check is under way with the owner (gap G1, the spec order and sprint cut, agreed 2026-11-13); nothing written for Phase 3 yet. Save schema is 17 (ADR 0105). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 
