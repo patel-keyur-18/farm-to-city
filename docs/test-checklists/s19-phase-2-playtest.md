@@ -58,8 +58,8 @@ A crash or freeze; a lost, refused or unreadable save; a wrong money amount; **a
 | # | Check | Result | Evidence |
 | --- | --- | --- | --- |
 | A1 | The bots' pace: homes first 28–40 days with credit, any order up to 50; saving 50–64, any order up to 80 | **Pass** (2026-11-12) | `GateTests.Village` passes: the homes-first bot with credit reaches the Village on day 28.8–39.0 over 8 seeds, the saver on day 52.3–57.3 |
-| A2 | You reach the Village from the day-14 town within 3 weeks, or the log and diary show why | | |
-| A3 | A session every day; the diary's reason is not only "testing" on most days | | |
-| A4 | No blocker | | |
-| A5 | At three closes, your sentence matches the biggest row; once, what *Your year* told you | | |
-| A6 | The Release smoke list, both frame-time p95s (from the Sprint 18 Development build), golden replays on the phone, CI green | | |
+| A2 | You reach the Village from the day-14 town within 3 weeks, or the log and diary show why | **Open, parallel** | The owner plays on; confirms only if it fails (ADR 0106) |
+| A3 | A session every day; the diary's reason is not only "testing" on most days | **Open, parallel** | Same |
+| A4 | No blocker | **No blocker so far** | Reported good on the Release build; findings ad hoc |
+| A5 | At three closes, your sentence matches the biggest row; once, what *Your year* told you | **Open, parallel** | The three sentences and *Your year* above |
+| A6 | The Release smoke list, both frame-time p95s (from the Sprint 18 Development build), golden replays on the phone, CI green | **Partly passed; frame time deferred** | CI green; the phone's device checks done by the owner 2026-11-13 (reduced motion, a normal morning, rotating or locking, Collect all card, the hut card, notifications, sound, haptics, real time away); both frame-time p95s and the phone's golden replays deferred to a Development build |

@@ -848,7 +848,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 19 · 10–30 May 2027 · Phase 2 (the Phase 2 playtest and gate; up to 3 weeks, ADR 0101)
 
-- **Status:** **In progress (started 2026-11-12).** Sprint 18 is closed; the Release build (from `9974013`) is on the owner's phone. **A1 passed** (2026-11-12): `GateTests.Village`. US-238 is the owner's play (up to 3 weeks from the day the playtest town is imported): the diary, three *why cash moved* sentences and *Your year* in `docs/test-checklists/s19-phase-2-playtest.md`, the play log in `docs/playtest/`. US-239 (the gate review and decision) follows. **Sprint 19 cannot finish before the playtest does**
+- **Status:** **Closed 2026-11-13 (ADR 0106).** Started 2026-11-12. **A1 passed** (`GateTests.Village`); CI green; the owner's phone checks done. US-239 done (ADR 0106). US-238, the owner's play, continues in parallel with Phase 3's planning: A2–A5 are confirmed by the owner only if something fails, and findings are ad hoc tasks (`docs/playtest/findings.md`). Deferred: both frame-time p95s and the phone's golden replays (a Development build); gate part B (before Launch)
 - **Goal:** The owner plays from the day-14 Hamlet town to the Village (or 3 weeks) on the Release build, with the play log and a daily diary; findings tuned; the Phase 2 gate's part A decided (A1–A6). Phase 3's spec writing (docs only, at most 2 specs to review) may run alongside; no Phase 3 code before the gate decision.
 - **Points:** 6 (US-238 3, US-239 3) plus fixes as found
 
