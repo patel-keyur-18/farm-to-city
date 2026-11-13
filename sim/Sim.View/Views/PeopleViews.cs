@@ -403,7 +403,7 @@ namespace Sim.View.Views
             Hand housed = home == null ? null : MigrationRules.HousedBy(sim, home);
             if (housed != null)
             {
-                long rent = MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason);
+                long rent = LeaseRules.MarketRentFor(sim, home);
                 string value = housed != h ? ctx.Strings.Get("hand.housingOther", "name", PeopleWords.Name(ctx, housed.Name))
                     : ctx.Strings.Get(h.HousingInKind > 0 ? "hand.housingInPay" : "hand.housingNext", "house", ctx.Fmt.Coins(h.HousingInKind > 0 ? h.HousingInKind : rent));
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.housing"), value, "hand.wage", h.Id));

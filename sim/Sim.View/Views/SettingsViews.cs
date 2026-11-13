@@ -45,11 +45,15 @@ namespace Sim.View.Views
         public string Label { get; }
         public ActionKind Kind { get; }
 
-        public CardButton(string id, string label, ActionKind kind)
+        /// <summary>A second, smaller line inside the button (the renewal card's "a little happier"), or null.</summary>
+        public string Detail { get; }
+
+        public CardButton(string id, string label, ActionKind kind, string detail = null)
         {
             Id = id;
             Label = label;
             Kind = kind;
+            Detail = detail;
         }
     }
 
@@ -254,7 +258,7 @@ namespace Sim.View.Views
             {
                 Title = s.Get(me.Female ? "card.familyTitleF" : "card.familyTitleM", "name", name),
                 Text = s.Get("card.familyText", "home", TownWords.Home(ctx, town.OfferHouseId), "name", name, "village", TownWords.Village(ctx, me) ?? s.Get("citizen.elsewhere"),
-                    "rent", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(ctx.Sim, ctx.Sim.Config.Game.Population.RentPerSeason))),
+                    "rent", ctx.Fmt.Coins(Sim.Core.People.LeaseRules.MarketRent(ctx.Sim, ctx.Sim.State.Land.Buildings.Find(b => b.Id == town.OfferHouseId)?.TileId ?? 0))),
             };
             c.Buttons.Add(new CardButton(SettingsIds.Yes, s.Get("card.familyYes"), ActionKind.Primary));
             c.Buttons.Add(new CardButton(SettingsIds.NotNow, s.Get("card.notNow"), ActionKind.Secondary));

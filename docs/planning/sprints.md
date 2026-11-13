@@ -878,7 +878,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-240 | Rent: kutcha houses, location, yearly leases | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | To do |
+| US-240 | Rent: kutcha houses, location, yearly leases | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | In review (the Village's pace awaits the owner) |
 | US-241 | Hands and labourers take part-harvests | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | To do |
 | US-252 | A mandi trip with several crops | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | To do |
 | US-099 | Archetype bots | [F20.1](features/F20.1-balancer-and-health-checks.md) | 8 | Must | To do |

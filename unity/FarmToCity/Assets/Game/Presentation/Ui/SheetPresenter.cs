@@ -348,12 +348,13 @@ namespace Game.Presentation.Ui
             var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.justifyContent = Justify.Center;
+            buttons.style.flexWrap = Wrap.Wrap; // the renewal card has up to five choices (US-240)
             buttons.style.marginTop = 18;
             foreach (CardButton b in vm.Buttons)
             {
                 ActionLook look = b.Kind == ActionKind.Danger ? ActionLook.Danger : b.Kind == ActionKind.Primary ? ActionLook.Primary : ActionLook.Secondary;
                 string id = b.Id;
-                Button button = UiKit.MakeButton(b.Label, look, () => { veil.RemoveFromHierarchy(); onButton(id); });
+                Button button = UiKit.MakeButton(b.Label, look, () => { veil.RemoveFromHierarchy(); onButton(id); }, b.Detail);
                 button.name = "card:" + id;
                 buttons.Add(button);
             }

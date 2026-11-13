@@ -1,6 +1,6 @@
 # 022. Taxes and policies
 
-- Status: In review (G1–G10 closed with the owner one per message, 2026-11-13, ADR 0109; the layout accepted, to be previewed as an artifact that looks exactly like the game before US-140's and US-141's UI code)
+- Status: Approved (owner, 2026-11-13; G1–G10 closed one per message, ADR 0109; the layout accepted, to be previewed as an artifact that looks exactly like the game before US-140's and US-141's UI code)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Governance and public finance (revenue, policies); Citizens (budgets, happiness, migration); Workforce (wages)

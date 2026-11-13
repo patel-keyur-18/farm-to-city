@@ -226,7 +226,7 @@ namespace Sim.View.Views
         /// <summary>"From next season: 24,000 cash + the house (6,000)".</summary>
         private static string HouseInPay(ViewContext ctx, long wage)
         {
-            long house = MarketRules.Indexed(ctx.Sim, ctx.Sim.Config.Game.Population.RentPerSeason);
+            long house = LeaseRules.TypicalRent(ctx.Sim);
             return ctx.Strings.Get("board.houseInPay", "cash", ctx.Fmt.Coins(System.Math.Max(0, wage - house)), "house", ctx.Fmt.Coins(house));
         }
 

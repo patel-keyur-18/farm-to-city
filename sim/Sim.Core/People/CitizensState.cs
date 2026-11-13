@@ -227,6 +227,22 @@ namespace Sim.Core.People
         /// <summary>The season index through which the household mourns (§3.9), or −1.</summary>
         public long MourningSeason { get; internal set; } = -1;
 
+        // Rent as a lease (US-240, spec 014 §3.14; save schema 18).
+
+        /// <summary>The season the household first lived in the town: its years here make it patient before leaving unhappy (§3.14). −1 until set.</summary>
+        public long SinceSeason { get; internal set; } = -1;
+
+        /// <summary>The season the present lease began, and its fixed rent a season; 0 rent while the house is part of a hand's pay.</summary>
+        public long LeaseStart { get; internal set; } = -1;
+        public long LeaseRent { get; internal set; }
+
+        /// <summary>The player's answer to the renewal offer in the lease's last season (a <see cref="LeaseChoice"/>), or none.</summary>
+        public LeaseChoice Renewal { get; internal set; }
+
+        /// <summary>Happiness a kind rent renewal earned (§3.14), through the season index <see cref="GoodwillUntil"/>.</summary>
+        public int Goodwill { get; internal set; }
+        public long GoodwillUntil { get; internal set; } = -1;
+
         internal Household Clone()
         {
             var c = (Household)MemberwiseClone();
@@ -261,6 +277,15 @@ namespace Sim.Core.People
             h.WriteFixed(Happiness);
             h.WriteInt(LowSeasons);
             h.WriteLong(MourningSeason);
+            if (h.Hashing || !(h is SaveWriter lw) || lw.Schema >= 18)
+            {
+                h.WriteLong(SinceSeason);
+                h.WriteLong(LeaseStart);
+                h.WriteLong(LeaseRent);
+                h.WriteInt((int)Renewal);
+                h.WriteInt(Goodwill);
+                h.WriteLong(GoodwillUntil);
+            }
         }
 
         internal static Household ReadFrom(SaveReader r)
@@ -290,6 +315,15 @@ namespace Sim.Core.People
             x.Happiness = r.ReadFixed();
             x.LowSeasons = r.ReadInt();
             x.MourningSeason = r.ReadLong();
+            if (r.Schema >= 18)
+            {
+                x.SinceSeason = r.ReadLong();
+                x.LeaseStart = r.ReadLong();
+                x.LeaseRent = r.ReadLong();
+                x.Renewal = (LeaseChoice)r.ReadInt();
+                x.Goodwill = r.ReadInt();
+                x.GoodwillUntil = r.ReadLong();
+            }
             return x;
         }
     }

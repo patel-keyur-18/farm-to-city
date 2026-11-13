@@ -116,7 +116,20 @@ namespace Sim.Core.People
             x.Income = income;
             x.Food = Money.MulRate(income, FoodShare(sim, perPerson));
             x.FoodNeed = Money.MulRate(MarketRules.Indexed(sim, p.FoodBasketPerPerson), ae);
-            if (!keepRent) x.Rent = InFamilyHouse(sim, x) && !HasHand(sim, x) ? MarketRules.Indexed(sim, p.RentPerSeason) : 0;
+            if (x.SinceSeason < 0) x.SinceSeason = LeaseRules.Season(sim);
+            if (!keepRent)
+            {
+                if (InFamilyHouse(sim, x) && !HasHand(sim, x))
+                {
+                    LeaseRules.Begin(sim, x); // US-240: a fixed lease rent, set when the family begins to pay rent
+                    x.Rent = x.LeaseRent;
+                }
+                else
+                {
+                    LeaseRules.End(x);
+                    x.Rent = 0;
+                }
+            }
             x.Clothing = Money.MulRate(income, p.ClothingShare);
             x.HealthCare = Money.MulRate(income, p.HealthShare);
             x.Schooling = Money.MulRate(income, p.EducationShare);
@@ -147,7 +160,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>A hand's household in a family house pays no rent: the house is part of his pay (§3.6).</summary>
-        private static bool HasHand(Simulation sim, Household x)
+        public static bool HasHand(Simulation sim, Household x)
         {
             foreach (long id in x.Members) if (sim.State.Citizens.Citizen(id).Job == CitizenJob.Hand) return true;
             return false;
@@ -178,7 +191,9 @@ namespace Sim.Core.People
                 x.Earned = 0;
             }
             PopulationRules.Close(sim);
+            foreach (Household x in s.Households) LeaseRules.AtClose(sim, x); // a lease that ends renews first (US-240)
             foreach (Household x in s.Households) SetBudget(sim, x);
+            LeaseRules.Offer(sim); // the leases now in their last season (US-240)
             MigrationRules.MoveOut(sim);
             CitizenRules.Prune(sim);
         }

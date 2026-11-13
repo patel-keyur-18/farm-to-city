@@ -207,6 +207,13 @@ namespace Sim.View.Views
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get(asks.Female ? "card.familyTitleF" : "card.familyTitleM", "name", TownWords.Name(ctx, asks)),
                         Action = ActionVm.Checked(ctx, "family:" + hand, s.Get("card.familyYes"), null, ActionKind.Primary, at => new AnswerFamilyRequest(at, hand, true)) });
             }
+            // Leases in their last season that you haven't answered (US-240): the household sheet has the choices; the market rise applies if you don't.
+            if (sim.State.Citizens != null)
+                foreach (long lease in Sim.Core.People.LeaseRules.Due(sim))
+                {
+                    Sim.Core.People.Household lh = sim.State.Citizens.Household(lease);
+                    list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("lease.alert", "family", TownWords.Household(ctx, lh)), Action = ActionVm.Open("lease:" + lease, s.Get("lease.answer"), new SheetRequest("Household", lease)) });
+                }
             return list;
         }
 
@@ -508,6 +515,13 @@ namespace Sim.View.Views
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
                     case CitizenLiterate l when l.How == LiterateHow.School: pupils.Add(l.Name); break;
                     case CitizenLiterate _: adults++; break;
+                    case LeaseRenewed lr:
+                    {
+                        Sim.Core.People.Household lh = sim.State.Citizens.Household(lr.HouseholdId);
+                        rows.Add(Row(s.Get("away.town"), s.Get(lr.NewRent == lr.OldRent ? "away.leaseSame" : "away.leaseRenewed", "family", lh == null ? s.Get("away.aFamily") : TownWords.Household(ctx, lh),
+                            "old", ctx.Fmt.Coins(lr.OldRent), "new", ctx.Fmt.Coins(lr.NewRent), "how", s.Get(lr.Answered ? "away.leaseAnswered" : "away.leaseDefault")), "family_house"));
+                        break;
+                    }
                     case RentMissed m:
                         Sim.Core.People.Household x = sim.State.Citizens.Household(m.HouseholdId);
                         rows.Add(Row(s.Get("away.town"), s.Get("away.rentMissed", "family", x == null ? s.Get("away.aFamily") : TownWords.Household(ctx, x),
@@ -572,7 +586,7 @@ namespace Sim.View.Views
             { "ReferenceChecked", Use.Motion }, { "CounterOffer", Use.StateOnly }, { "WorkerHired", Use.Motion }, { "WorkerLeft", Use.StateOnly },
             { "CourseFinished", Use.Away }, { "LongDaysStopped", Use.Away },
             { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
-            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "FamilyMovedIn", Use.Away },
+            { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "LeasesOffered", Use.Alert }, { "LeaseRenewed", Use.Away }, { "FamilyMovedIn", Use.Away },
             { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "ShopSales", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },
             { "OrderWaiting", Use.Away }, { "OrderCompleted", Use.StateOnly },

@@ -428,7 +428,7 @@ namespace Sim.View.Tests
             LineVm budget = card.Lines.Single(l => l.Label == "Budget");
             Assert.That(budget.Pie.First().Label, Is.EqualTo("Food"));
             Assert.That(budget.Pie.Sum(p => p.Percent), Is.InRange(97, 103), "rounded shares");
-            Assert.That(card.Lines.First(l => l.Label == "Rent").Value, Does.Match(@"^6,0\d0 coins a season · paid$"), "6,000 at today's prices");
+            Assert.That(card.Lines.First(l => l.Label == "Rent").Value, Does.Match(@"^2,1\d\d coins a season · paid$"), "2,125 at today's prices: 2,500 × 0.85 for an inner acre");
             Assert.That(card.Lines.Single(l => l.Label == "Happiness").WhyKey, Is.EqualTo("household.happiness"));
             AssertWords(card);
 
@@ -531,7 +531,7 @@ namespace Sim.View.Tests
             CardVm card = Cards.FamilyRequest(ctx, ask.HandId);
             Assert.That(card.Title, Is.EqualTo(name + " asks to bring " + her + " family here"));
             Assert.That(card.Text, Does.StartWith("Family house 2 is free. " + name + "'s family would come from "));
-            Assert.That(card.Text, Does.Contain("the wage is 6,"));
+            Assert.That(card.Text, Does.Contain("the wage is 2,1"));
             Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Yes, bring them", "Not now" }));
             AlertVm alert = Alerts.Build(ctx).Single(a => a.Text == card.Title);
             Assert.That(alert.Action.Label, Is.EqualTo("Yes, bring them"));
@@ -540,7 +540,7 @@ namespace Sim.View.Tests
             Assert.That(Cards.FamilyRequest(ViewKit2.Context(sim), ask.HandId), Is.Null, "answered: no card");
             List<LineVm> away = TownAway.Rows(ViewKit2.Context(sim), sim.DrainEvents().ToList());
             Assert.That(away.Single().Value, Is.EqualTo(name + "'s family came to live in Family house 2"));
-            Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family's house becomes part of the pay at the next renewal: 6,")), Is.True, "before the renewal");
+            Assert.That(WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Any(r => r.Label.StartsWith("The family's house becomes part of the pay at the next renewal: 2,1")), Is.True, "before the renewal");
 
             sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason);
             WhyRowVm cut = WhyView.Build(ViewKit2.Context(sim), "hand.wage", ask.HandId).Rows.Single(r => r.Label.EndsWith("for the family house"));
@@ -630,7 +630,7 @@ namespace Sim.View.Tests
             SheetVm offer = HiringBoard.TownOffer(ctx, manoj.Id);
             LineVm asked = offer.Lines.First(l => l.Action != null && l.Action.Kind == ActionKind.Primary);
             long wage = HiringRules.OfferWage(sim, HiringRules.TownApplicant(sim, manoj, 0), OfferLevel.Asked);
-            long house = Sim.Core.Market.MarketRules.Indexed(sim, 6_000_00);
+            long house = Sim.Core.People.LeaseRules.TypicalRent(sim); // US-240: a typical house's market rent (2,500 × the lane's 1.00 × prices)
             Assert.That(asked.Note, Does.EndWith("From next season: " + ctx.Fmt.Coins(wage - house) + " in cash + the house (worth " + ctx.Fmt.Coins(house) + ")"));
             Ok(sim, asked.Action.Create(sim.State.Clock.SimTime));
             Assert.That(manoj.Job, Is.EqualTo(CitizenJob.Hand));

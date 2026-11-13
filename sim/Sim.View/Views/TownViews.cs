@@ -281,7 +281,7 @@ namespace Sim.View.Views
             long cost = HouseCost(sim);
             bool unlocked = HouseRules.Unlocked(sim), cash = sim.State.Ledger.CanAfford(cost - HouseLoanSheet.Loan(sim, cost)); // a home loan may cover the rest (ADR 0071)
             string reason = !unlocked ? s.Get("town.houseLocked") : !cash ? ctx.Reject(RejectReason.InsufficientFunds) : null;
-            var a = new ActionVm("buildHouse", s.Get("town.buildHouse"), s.Get("town.buildHouseDetail", "cost", ctx.Fmt.Coins(cost), "rent", ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason))),
+            var a = new ActionVm("buildHouse", s.Get("town.buildHouse"), s.Get("town.buildHouseDetail", "cost", ctx.Fmt.Coins(cost), "rent", ctx.Fmt.Coins(LeaseRules.TypicalRent(sim))),
                 ActionKind.Open, reason == null, reason, null, new SheetRequest("HousePlacement", 0));
             a.Icon = "family_house";
             return a;
@@ -356,6 +356,7 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("household.budget"), s.Get("household.budgetValue", "pct", ctx.Fmt.Percent(Share(x.Food, x.Income))), "household.budget", x.Id) { Pie = Pie(ctx, x) });
             vm.Lines.Add(new LineVm(s.Get("household.savings"), ctx.Fmt.Coins(x.Savings), "household.savings", x.Id));
             vm.Lines.Add(new LineVm(s.Get("household.rent"), RentText(ctx, x), "household.rent", x.Id));
+            LeaseViews.SheetRows(ctx, x, vm.Lines); // the lease: when it ends and, in its last season, your answer (US-240)
 
             vm.Lines.Add(LineVm.Header(s.Get("household.needs")));
             vm.Lines.Add(new LineVm(s.Get("household.happiness"), ctx.Fmt.Integer(x.Happiness.RoundToLong()), "household.happiness", x.Id) { Icon = "happiness" });

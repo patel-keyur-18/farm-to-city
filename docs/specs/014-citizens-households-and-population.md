@@ -1,6 +1,6 @@
 # 014. Citizens, households and population
 
-- Status: Approved 2026-10-23 (ADR 0063); amended by ADR 0067 (2026-10-24: 2 family houses an acre, the row-house layout) and the owner's §3.8 decision (the outside-work example scores 68); amended by ADR 0083 (2026-10-29, G11–G12: housing in kind for a tenant hired as a hand, your labourers on screen; approved 2026-10-30)
+- Status: Approved 2026-10-23 (ADR 0063); amended by ADR 0067 (2026-10-24: 2 family houses an acre, the row-house layout) and the owner's §3.8 decision (the outside-work example scores 68); amended by ADR 0083 (2026-10-29, G11–G12: housing in kind for a tenant hired as a hand, your labourers on screen; approved 2026-10-30); **amended by US-240 (2026-11-13, ADR 0107 §8, ADR 0110: rent by the kind of house, its place and a yearly lease; the affordable cap; settled families; approved by the owner in the card's preview)**
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Citizens and workforce (Citizen profile, Population flows); Economy (Household spending); Community and civic services (Needs layers); Time and world simulation (Life clock); UI/UX (People)
@@ -81,12 +81,12 @@ Money is `long` in 1/100 coin; factors `Fixed`; seeded draws from new streams Ci
 | A household | A family sharing a home: a couple, their children, sometimes an elder parent. Each citizen belongs to exactly one | |
 | A hand's hut | Houses one hand alone (spec 006): a household of one whose family stays in his home village; he sends half his wage home (`remitShare`) | 0.5 |
 | The family house | `BuildFamilyHouse(tile)` on an owned acre that isn't growing anything: `BuildingDef(family_house).value` 60,000 (a two-room pucca house), 48 h to build, houses `houseCapacity` people; an acre takes `housesPerAcre` houses and is no longer farmed while any stands; on the map two homes share a wall at the back of the acre, their courtyards opening onto open ground (ADR 0067). Also on the labour quarters' free places | 6 people; 2 an acre (ADR 0067; was 4) |
-| Rent | A household in a family house pays `rentPerSeason` × index at each season close (Dr Cash, Cr 4200 Rent received); a household that can't pay it falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays no rent: the house is part of his pay instead (§3.6) | 6,000 |
+| Rent (US-240) | A household in a family house pays its **lease rent** at each season close (Dr Cash, Cr 4200 Rent received), from what its budget set aside, then from savings; a household that can't pay falls behind and its security need is unmet (§3.8); after 2 seasons behind it leaves (§3.10). A hand's household in a family house pays no rent: the house is part of his pay instead (§3.6). How the lease rent is set: §3.14 | lease, §3.14 |
 | Moving up | A hand whose family house is free can "send for his family" (§3.10) | |
 | The home loan (ADR 0071) | `BuildFamilyHouse(tile, financing)`: the co-op bank lends up to the house's cost, counting family houses at `houseLtv` 0.75 of their book value in its limit (as the dairy loan counts animals); the rest is paid down. A house on inherited land is never seized: the bank carries that risk | 0.75 |
 | Overcrowding | More people than `houseCapacity` leaves shelter partly unmet (§3.8) | |
 
-**Why 60,000 and 6,000:** a two-room rural house costs about ₹3–5 lakh to build and rents for about ₹2,000 a month; the game keeps the founder's houses cheap as it does huts (family labour on the build) and keeps the rent in proportion, so a house pays back in about 10 seasons, like land (ADR 0028).
+**Why 60,000 and 2,500 (US-240, ADR 0107 §8):** a two-room rural house costs about ₹3–5 lakh to build and rents for about ₹2,000 a month (about 6,000 a game season at the game's scale, which was the first rent: a 10% yield a season, too generous to tenants' landlords and unlike real rural yields of 3–6% a year); the founder's family house is now the **kutcha house** (60,000, family labour on the build), rent about 2,500 a season, a yield of about 4% a season. A **pucca house** (about 2,40,000, rent about 7,000) comes with spec 024 (F15.8).
 
 ### 3.5 Household budget: Engel's law (§10 G4)
 
@@ -112,7 +112,7 @@ food        = income × foodShare,  rent,  clothing 8%,  health 5%,  education 5
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | A hand | His wage (spec 006) is his household's income | |
-| Housing in kind (§10 G6, G11) | While a hand's family lives in your family house, his cash wage is cut by the house's rent: `rentPerSeason` × index off the wage asked at each renewal, from the first renewal after they move in or after he's hired from the house (season wages are paid upfront, ADR 0008, so never mid-season: a tenant hired mid-season pays that season's rent and gets his full cash wage, ADR 0083). **Once a house:** the rent is part of the pay of the first hand hired from the household (by hand id); another hand from the same house is paid his full wage, and takes the house into his pay at his next renewal if the first leaves. It applies to a loyal hand's kept wage too. If the family moves out, his full wage returns at the next renewal. The hand's card shows "Housing: family house (worth 6,000 a season)" and the wage's *Why?* shows "30,000 − 6,000 for the family house = 24,000 in cash". Only the house is deducted: the founder gives no food or care. For the founder it is the same as renting the house out (6,000 less rent, 6,000 less wage) | 6,000 |
+| Housing in kind (§10 G6, G11) | While a hand's family lives in your family house, his cash wage is cut by the house's rent: `rentPerSeason` × index off the wage asked at each renewal, from the first renewal after they move in or after he's hired from the house (season wages are paid upfront, ADR 0008, so never mid-season: a tenant hired mid-season pays that season's rent and gets his full cash wage, ADR 0083). **Once a house:** the rent is part of the pay of the first hand hired from the household (by hand id); another hand from the same house is paid his full wage, and takes the house into his pay at his next renewal if the first leaves. It applies to a loyal hand's kept wage too. If the family moves out, his full wage returns at the next renewal. The house's worth is the **market rent of his house** at the renewal (§3.14: base × location × index; about 2,500–3,000), so the hand's card shows "Housing: family house (worth 3,000 a season)" and the wage's *Why?* shows "30,000 − 3,000 for the family house = 27,000 in cash" (US-240). Only the house is deducted: the founder gives no food or care. For the founder it is the same as renting the house out (the rent less, the wage less) | market rent |
 | Works outside (§10 G8) | Every adult 18–59, men and women, without a job in town works as a day labourer in the region: `outsideWage` = the founder's day-labour rate (`dayLabourWagePerHour` × 8 h) × index, × `outsideDaysShare`, paid at each daily pass (the expected share, no daily roll, so luck never swings a family's season). *Why?*: "Finds work about half the days: 9,000 × 0.5". A season: 4 × 0.5 × 9,000 = 18,000 an adult (a hand earns 30,000) | 50%; 9,000 a game day |
 | Your labourers first (amends spec 006) | When the founder hires day labourers, adults in town who work outside are taken first: they earn the labourer's day wage (9,375) for their household, in place of that day's outside work; neighbouring villages fill the rest as before | |
 | Your labourers on screen (§10 G12, ADR 0083) | A townsperson hired as a labourer is drawn as that citizen (their look), walking from their family house to the fields from 7:00 and home at 19:00 (spec 008 §3.4), never also drawn at home; the People sheet counts them with the neighbours and lists each by name (house, till when, opening their card), the neighbours on one row | |
@@ -167,7 +167,7 @@ A Phase 2 household with enough food, a home, a hand's job and rent paid scores 
 | --- | --- | --- |
 | A family moves in | While a family house stands empty, a family arrives every `familyEveryHours` ± seeded jitter: 2–5 people (a couple, 0–3 children, sometimes (`familyElderChance` 0.25) a widowed elder), adults with skills and traits drawn as applicants (spec 006). They move in at once and pay rent from the next close. Live or away | 18 h ± 6 |
 | A hand's family | A hand under contract whose household is just him is offered a family house first when one is finished or falls empty (§3.13; a card: Yes / Not now); yes moves him and a seeded wife and 0–2 children into the house; his hut is free for another hand. The card says what changes: "From his next renewal his wage is 6,000 less: the house is part of his pay" (§3.6) | |
-| Moving out | A household whose happiness stays below `leaveBelow` for `leaveSeasons` season closes, or is 2 seasons behind on rent, leaves (seeded, 50% a close once eligible). A hand's household leaving ends his contract (spec 006 dismissal rules, no severance). Emits `HouseholdLeft` with the reason | 35; 2 |
+| Moving out | A household whose happiness stays below `leaveBelow` for **`leaveSeasons` + 1 for each year it has lived in the town, at most `settledMax`** season closes (US-240: a family that has settled is patient, §3.14), or is 2 seasons behind on rent, leaves (seeded, 50% a close once eligible). A hand's household leaving ends his contract (spec 006 dismissal rules, no severance). Emits `HouseholdLeft` with the reason | 35; 2, +1 a year, at most 6 |
 | Population | Citizens in the town; the HUD shows it with town happiness | |
 
 ### 3.11 Phase 1 hands (save migration)
@@ -197,9 +197,30 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 | Raising happiness | Every lever is shown on the household card's needs *Why?* with what to do: "Give someone here a job (your hand)", "Build another house (7 people live in a house for 6)", "Food: their income buys 83% of what they need" | The player always sees what would help |
 | What can't be changed yet | Rows that the player can't move yet say so: "No school yet: build one on the school plot" (spec 018: from the Hamlet; the row read "the Village builds one" until Sprint 17), "Health care: the chemist (a clinic comes with the Township)" | Never a red number with no way to fix it |
 
+### 3.14 Rent: the kind of house, its place and a yearly lease (US-240, ADR 0107 §8, ADR 0110)
+
+**The market rent of a house** = the kind's base rent × its place × the price index, rounded down to a whole coin (`MarketRent`).
+
+| Rule | Behaviour | Default |
+| --- | --- | --- |
+| The kind | Today's family house is the **kutcha house** (60,000): base rent `baseRent` a season. The pucca house comes with spec 024 | 2,500 |
+| The place | The best road an acre touches by an edge: the **district road** (the south edge) ×1.20, a **lane** (the village lane, the farm lane) ×1.00, otherwise **inner** ×0.85 (`house.location`; the road tiles are listed in `house.roads`). From the Township it is land value (spec 024) | 1.20, 1.00, 0.85 |
+| A lease | A household's rent is fixed for `leaseSeasons` seasons from the season it moves in (or a hand's family stops being his): the **lease rent**, the market rent then. Index rises don't change it inside the lease | 4 |
+| The offer | In the **last season of a lease** (the fourth) the sheet and a card ask for the renewal; at the close that ends it the chosen rent starts the next lease. Nothing waits on the player: with no answer the **market rise** applies (`RenewLease` is optional) | |
+| The rise | The market rise is the **least of three**: the market rent; the lease rent plus `maxRise` (a rise is at most 10% a year); and the rent at which the household would pay `burdenLimit` (30%) of its income (its budget's income). It is never below the current rent: a family that can't bear a raise keeps its rent. (Owner, 2026-11-13: a raise must never be what pushes a family out.) | 10%; 30% |
+| Above the market | A lease rent above today's market rent (a house let at the old 6,000) renews at the market rent, with no card (the sheet says so) | |
+| The choices | The card offers **Raise to the market rise** (the default), **a smaller rise** (half of it, rounded down), **keep the rent**, and, only if the current rent is above the burden limit, **lower it** by `lowerStep` 5%. A card shows only when a raise is possible or lowering is offered; otherwise the lease renews at the current rent and the sheet says so | |
+| Goodwill | A smaller rise gives the household +`goodwillSmaller` (1) happiness, and keeping or lowering the rent when a raise was possible +`goodwillKept` (2), for the next lease (`leaseSeasons`); happiness is the leave rule's measure, so a happier family is less likely to leave | 1; 2 |
+| Settled families | A household that has lived in the town for years is patient before it leaves unhappy: `leaveSeasons` + 1 a year lived, at most `settledMax` (§3.10). Falling behind on rent stays at 2 seasons | +1 a year; 6 |
+| Older towns | A house already built stays a kutcha house at its cost and book value; a household's rent stays its lease rent until the lease renews (a lease starts at the migration for 4 seasons) | |
+| A hand's house | The house in a hand's pay is the **market rent** of his house at his renewal (§3.6) | |
+| Hooks | Spec 022's rent control lowers `maxRise` to 3% a year for renewals; the bank's and the books' rent figures read the lease rent | |
+
+Every rent has a *Why?* showing its parts: "2,500 base × 1.20 district road × 1.04 prices = 3,120 a season today; the lease rent is 2,800 until Spring, year 3".
+
 ## 4. Data
 
-**New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `familyElderChance`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48); the house's rules in `population.json`'s `house` block (`unlockEra` hamlet, `capacity` 6, `perAcre` 4, `rentPerSeason` 6,000); home villages (`villages`, saved by id); names with gender in `people.json`.
+**New definitions** (`content/population.json` unless noted): `lifeYearsPerSeason`, the life stages, `retireAge`, `remitShare`, `outsideDaysShare` (the outside wage is the founder's `dayLabourWagePerHour` × 8), the Engel curve, budget shares, `foodBasketPerPerson`, the basket by good, adult equivalents, the needs weights and gate, `birthChance`, `maxChildren`, `marriageChance`, `deathBase`, `deathDoubling`, `familyEveryHours`, `familyElderChance`, `leaveBelow`, `leaveSeasons`, the education draw; `family_house` in `buildings.json` (`value` 60,000, `buildHours` 48); the house's rules in `population.json`'s `house` block (`unlockEra` hamlet, `capacity` 6, `perAcre` 4, `baseRent` 2,500, `location`, `roads`, `leaseSeasons`, `maxRise`, `burdenLimit`, `lowerStep`, `goodwillSmaller`, `goodwillKept`, `settledPerYear`, `settledMax`: §3.14); home villages (`villages`, saved by id); names with gender in `people.json`.
 
 **New state** (save schema 9, ADR 0064 took 8): `Citizen` (id, name, gender, the season they were 0 (`bornSeason`: age = seasons since × `lifeYearsPerSeason`), householdId, education, skill, traits, health, job and hand, parents, spouse, home village, gone (died or left) and when, story lines), `Household` (id, members, home, income, budget, savings, rentBehind, needs met, happiness, lowSeasons), `CitizensState` (citizens, households, next ids, the next family's time). The departed stay in the record while a living citizen links to them (§3.3), never by a count cap.
 
@@ -209,6 +230,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 | --- | --- | --- | --- |
 | `BuildFamilyHouse` | `tile`, `financing` (optional, ADR 0071) | `EraLocked`, `NotOwned`, `TileOccupied` (growing), `NoRoom`, `InsufficientFunds`; with financing `InvalidAmount` (more than the cost) and the bank's checks | §3.4, §3.13 |
 | `AnswerFamilyRequest` | `handId`, `yes` | `NoOffer`, `NoEmptyHouse` | §3.10 |
+| `RenewLease` (US-240) | `householdId`, `choice` (market, smaller, keep, lower) | `UnknownHousehold`, `NoLease` (a hand's household or a hut), `LeaseNotDue` (not the lease's last season), `NotOffered` (a choice the card doesn't offer) | §3.14: the answer is kept and applied at the close that ends the lease |
 
 | Event | Payload | Consumers |
 | --- | --- | --- |
@@ -216,6 +238,7 @@ A whole-spec review for dead ends an average player could hit. Each row closes o
 | `CitizenBorn`, `CitizenMarried`, `CitizenDied`, `CitizenRetired` | citizen | Away card, the Chronicle later |
 | `FamilyRequest` | hand | A card, alerts |
 | `RentPaid`, `RentMissed` | household, amount | Money, away card |
+| `LeaseRenewed` (US-240) | household, old rent, new rent, choice, answered or default | The house sheet, away card |
 
 ## 6. Decision card
 
@@ -271,6 +294,13 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | AC-17 | A townsperson hired as a labourer is a map person with their look, from their family house, not also at home; the People sheet counts them and lists them by name | `MapViewTests.TownLabourers`, `PeopleViewTests.TownLabourers_Named` |
 | AC-12 | An adult without a town job earns the day-labour rate × 0.5 × index each daily pass; children and elders earn nothing; hired labourers are the town's outside workers first, paid 9,375 in place of that day's outside work | `HouseholdTests.OutsideWork_LabourersFirst` |
 | AC-13 | A departed citizen stays while a living citizen is their spouse, child or grandchild (a daughter who married away, while a parent lives: ADR 0070) and is dropped at the close after the last one goes; a town run for 20 years holds under 1 departed a living citizen | `PopulationTests.FamilyTree_Bounded` |
+| AC-18 | The market rent is the kind's base × the place's factor × the index, rounded down to a whole coin; the place is the best road the acre touches (district road 1.20, lane 1.00, inner 0.85) | `RentTests.KindLocationIndex` |
+| AC-19 | A lease holds its rent for 4 seasons; at the close that ends it the rent moves toward the market, at most 10% up, never above what 30% of the household's income allows, never below the current rent; above the market it renews at the market | `RentTests.YearlyLease`, `RentTests.AffordableCap` |
+| AC-20 | `RenewLease` in the lease's last season is kept and applied at its close (market, smaller, keep, lower); with no answer the market rise applies; a choice not offered or an answer out of season is refused; goodwill follows the choice | `RentTests.RenewalChoice` |
+| AC-21 | A hand's house in his pay is the market rent at his renewal; a household that stops being a hand's starts a new lease at the market rent | `RentTests.HandHouse` |
+| AC-22 | A household unhappy for fewer than `leaveSeasons` + years lived closes doesn't leave; a household behind on rent leaves after 2 seasons whatever its years | `RentTests.SettledFamilies` |
+| AC-23 | A schema-17 save loads into 18 with each tenant's lease at its present rent, starting at the migration, and round-trips | `MigrationTests.Schema17_Leases` |
+| AC-24 | The renewal card, a rent's *Why?* and the house sheet's lease line show the rent's parts, the choices and their effects, and respond to scripted touch in the Editor | `RentViewTests.RenewalCard`, the story's Editor tour |
 | AC-15 | The home loan (ADR 0071): the bank counts family houses at 0.75 of their book value, lends at most the house's cost, the rest is paid down; the financing is kept in the command log | `HouseTests.HomeLoan`, `PeopleViewTests.HomeLoan_Sheet` |
 | AC-14 | Every row of §3.13: houses from the Hamlet; a free house offered to a hand alone first; a retired hand alone frees his hut; a dismissed hand's family stays as tenants; an acre with a house can't be sold; a seized house's household leaves; an elder alone behind on rent leaves; every needs row names its lever or says what isn't possible yet | `MigrationTests2.EveryPath`, `PeopleViewTests.NeedsLevers` |
 
@@ -282,8 +312,8 @@ Never a whole-town tree (it doesn't fit a landscape phone): the Town tab has one
 | 5 households | The competent bot by day 21 (ADR 0028 pacing, on the home loan); the cautious saver, which never borrows, by day 48 | Measured: day 16 (15–22); the saver day 33 (29–43). The random bot never reaches the Hamlet, so it isn't measured (ADR 0071) |
 | Town happiness, competent bot | 65–85 (ADR 0071: renters with outside work score about 68 by §3.8 until businesses bring town jobs) | Measured 69 (68–70) |
 | Households leaving a year, competent bot | Under 1 in 10 | Measured 0 |
-| Rent's share of the founder's income | Under 15% | Measured 12% (at most 14%) |
-| Departed a living citizen over 20 years (AC-13) | About 0.3 | Measured 0.27–0.33, worst 0.58–0.90 (a 6-house town; US-111) |
+| Rent's share of the founder's income | Under 15% | Measured 12% (at most 14%) at 6,000 a house; **US-240: a kutcha house lets for about 2,500 (4% a season on 60,000): the share and the Village's pace are re-measured in Sprint 20's balance (ADR 0110)** |
+| Departed a living citizen over 20 years (AC-13) | About 0.3 | Measured 0.27–0.46 on average, worst 0.60–1.06 (a 6-house town; US-111; US-240: settled families stay longer, so the bound is 1.25) |
 | Town food demand vs the founder's grain | A town of 80 eats about 2 acres' grain a season | |
 
 ## 10. Open questions

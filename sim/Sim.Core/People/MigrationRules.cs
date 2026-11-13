@@ -28,7 +28,7 @@ namespace Sim.Core.People
         {
             Citizen c = sim.State.Citizens?.OfHand(h.Id);
             Household x = c == null ? null : sim.State.Citizens.Household(c.HouseholdId);
-            return x != null && HousedBy(sim, x) == h ? MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason) : 0;
+            return x != null && HousedBy(sim, x) == h ? LeaseRules.MarketRentFor(sim, x) : 0; // the house's market rent at his renewal (US-240, spec 014 §3.14)
         }
 
         /// <summary>The hand whose pay the household's family house is part of: its first hand by id; null if none or not in a house.</summary>
@@ -249,7 +249,7 @@ namespace Sim.Core.People
             {
                 x.LowSeasons = x.Happiness < Fixed.FromInt(p.LeaveBelow) ? x.LowSeasons + 1 : 0;
                 bool rent = x.RentBehind >= p.RentBehindSeasons;
-                if (x.LowSeasons < p.LeaveSeasons && !rent) continue;
+                if (x.LowSeasons < LeaseRules.Patience(sim, x) && !rent) continue; // a settled family is patient (US-240, §3.14)
                 if (!Rng.Chance(PopulationRules.Roll(sim, RngStream.Migration, x.Id, LeaveRoll, season + 4), p.LeaveChance)) continue;
                 bool elderAlone = x.Members.Count == 1 && HouseholdRules.IsElder(sim, s.Citizen(x.Members[0]));
                 HouseRules.Evict(sim, x, !rent ? LeaveReason.Unhappy : elderAlone ? LeaveReason.ToFamily : LeaveReason.RentBehind);

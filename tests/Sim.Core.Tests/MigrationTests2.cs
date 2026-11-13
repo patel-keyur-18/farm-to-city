@@ -72,7 +72,7 @@ namespace Sim.Core.Tests
         }
 
         // AC-11 and §3.13: a finished house is offered to the hand living alone first; no strangers while it's open; yes moves his
-        // family in and frees his hut; no rent; from his next renewal his cash wage is 6,000 × index less (a loyal hand's kept wage
+        // family in and frees his hut; no rent; from his next renewal his cash wage is the house's market rent (2,125 on an inner acre, US-240) less (a loyal hand's kept wage
         // too); his full wage again once they live in a hut.
         [Test]
         public void HandFamily_HousingInKind()
@@ -102,7 +102,7 @@ namespace Sim.Core.Tests
             sim.DrainEvents();
             sim.AdvanceTo(NextClose(sim));
             Assert.That(sim.DrainEvents().OfType<RentPaid>(), Is.Empty, "the house is part of his pay");
-            long house = MarketRules.Indexed(sim, 6_000_00);
+            long house = MarketRules.Indexed(sim, 2_125_00) /* 2,500 base × 0.85 on an inner acre, US-240 */;
             long asked;
             asked = h.Wage + h.HousingInKind;
             Assert.That(h.HousingInKind, Is.EqualTo(house), "from his next renewal");
@@ -115,7 +115,7 @@ namespace Sim.Core.Tests
             h.Trait2 = loyal == 0 ? 1 : 0;
             long kept = h.Wage + h.HousingInKind;
             sim.AdvanceTo(NextClose(sim));
-            Assert.That((h.Wage + h.HousingInKind, h.HousingInKind), Is.EqualTo((kept, MarketRules.Indexed(sim, 6_000_00))));
+            Assert.That((h.Wage + h.HousingInKind, h.HousingInKind), Is.EqualTo((kept, MarketRules.Indexed(sim, 2_125_00) /* 2,500 base × 0.85 on an inner acre, US-240 */)));
 
             // Living in a hut again (as if they had moved out): the full wage at the next renewal.
             x.HomeId = hut;
@@ -158,7 +158,7 @@ namespace Sim.Core.Tests
             sim.DrainEvents();
             sim.AdvanceTo(NextClose(sim));
             Assert.That(sim.DrainEvents().OfType<RentPaid>().Single(e => e.HouseholdId == x.Id).Amount, Is.EqualTo(owed), "the season he was hired in");
-            long house = MarketRules.Indexed(sim, 6_000_00);
+            long house = MarketRules.Indexed(sim, 2_125_00) /* 2,500 base × 0.85 on an inner acre, US-240 */;
             Assert.That((h.HousingInKind, h.Wage), Is.EqualTo((house, asked - house)), "from his first renewal");
             Assert.That(x.Rent, Is.EqualTo(0L));
 
@@ -182,7 +182,7 @@ namespace Sim.Core.Tests
             long secondWage = second.Wage;
 
             sim.AdvanceTo(NextClose(sim));
-            long house = MarketRules.Indexed(sim, 6_000_00);
+            long house = MarketRules.Indexed(sim, 2_125_00) /* 2,500 base × 0.85 on an inner acre, US-240 */;
             Assert.That((first.HousingInKind, second.HousingInKind), Is.EqualTo((house, 0L)), "one house, one rent");
             Assert.That(second.Wage, Is.EqualTo(secondWage), "his full wage in cash");
             Assert.That(MigrationRules.HousedBy(sim, x)?.Id, Is.EqualTo(first.Id), "the card names whose pay the house is in");

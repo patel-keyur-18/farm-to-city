@@ -44,6 +44,7 @@ namespace Sim.Core.Saves
             FoundOnPitch, SetShop, SetStallGoods,
             BuildSchool, StartAdultClass, FindCodexCards, ReadCodexCard, HearAdvisors,
             DepositSavings, WithdrawSavings, SetSavingsCover, CoverFromSavings, TakeBackSavingsCover,
+            RenewLease,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -163,6 +164,7 @@ namespace Sim.Core.Saves
                 case SetSavingsCover c: At(c, Tag.SetSavingsCover); w.WriteBool(c.Always); break;
                 case CoverFromSavings c: At(c, Tag.CoverFromSavings); break;
                 case TakeBackSavingsCover c: At(c, Tag.TakeBackSavingsCover); break;
+                case RenewLease c: At(c, Tag.RenewLease); w.WriteLong(c.HouseholdId); w.WriteInt((int)c.Choice); break;
                 case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
@@ -298,6 +300,7 @@ namespace Sim.Core.Saves
                 case Tag.SetSavingsCover: return new SetSavingsCover(at, r.ReadBool());
                 case Tag.CoverFromSavings: return new CoverFromSavings(at);
                 case Tag.TakeBackSavingsCover: return new TakeBackSavingsCover(at);
+                case Tag.RenewLease: return new RenewLease(at, r.ReadLong(), (LeaseChoice)r.ReadInt());
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));
