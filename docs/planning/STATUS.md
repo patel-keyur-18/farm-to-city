@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | 2 · Hamlet & Village. Phase 1 complete (Sprint 10 passed the owner's device check on 2026-10-21) |
-| Sprint | **Sprint 19** (the Phase 2 playtest and gate, up to 3 weeks, 6 points + fixes, ADR 0101): **in progress since 2026-11-12**; A1 passed; US-238 is the owner's play on the Release build (`9974013`), US-239 the gate review after it. **Sprint 18 is done and closed** (owner, 2026-11-12: PRs #24 and #25 merged; the Release build is on the iPhone and looks good; both frame-time p95s were not measured and are carried to gate A6). Sprint 17 is done (PR #23) |
-| Branch with latest work | `sprint/19-phase-2-playtest` (from `main` after PR #25): Sprint 18 closed in the docs, the playtest folder `docs/playtest/`, A1's evidence |
-| Last updated | 2026-11-12 |
+| Phase | **Phase 2 · Hamlet & Village is closed** (owner, 2026-11-13, ADR 0106). **Phase 3 · Township is next but not started**: it waits for the owner's go, then its plan check and specs. Phase 1 complete (Sprint 10, 2026-10-21) |
+| Sprint | **Sprint 19 closed 2026-11-13** (ADR 0106): A1 and CI passed; the owner's phone checks done; A2–A5 continue in parallel (the owner's play, findings ad hoc); the frame-time p95s and golden replays on the phone are deferred. Sprint 18 closed 2026-11-12. No sprint is open |
+| Branch with latest work | `main` (PR #26 merged). The Phase 2 close is on `docs/phase-2-close` until merged; Phase 3's first branch starts with its plan check |
+| Last updated | 2026-11-13 |
 
 ## Done so far
 
@@ -416,7 +416,9 @@
 
 ## Next up
 
-1. **Sprint 19, the owner's playtest (US-238):** play the Release build from the imported playtest town (`s19-phase-2-playtest.md`: export your own town first, import `FarmToCity-playtest.ftc`, play log on), a diary line a day, the three *why cash moved* sentences and *Your year*; aim for the Village in 2–2.5 weeks (3 at most). Send Claude the exported play log (Settings → Export play log) and the filled checklist; Claude saves them to `docs/playtest/` (US-238.T3), fixes blockers as found and runs the gate review (US-239: A1 passed 2026-11-12; A2–A5 from the play; A6 needs a Development build for both frame-time p95s and golden replays on the phone). Open design question: whether hands and labourers may take part-harvests too (ADR 0105).
+1. **Phase 3 · Township, not started; the owner says when.** What it needs first, in order: (a) the plan check: the Phase 3 scope from the GDD and `epics.md` (E15 and E16, F12.5 and F12.6) cut into sprints with points; (b) its specs written and approved, two to review a sprint (ADR 0019): treasury and budget first (F15.1), then taxes and policies (F15.2); (c) the carried decisions below; (d) its ADR and a branch. No Phase 3 code before its spec is approved.
+2. **Carried into the Phase 3 plan:** rent realism (ADR 0102 §3 (c)); a cold store for potatoes, vegetables, fruit and milk (spec 013 §3.4, Phase 3); whether hands and labourers may take part-harvests (ADR 0105); the owner's Hay Day-style confirm rule for any new spending screen (ADR 0101).
+3. **Deferred, the owner's call, ADR 0106:** both frame-time p95s (ADR 0094) and golden replays on the phone, from a Development build; gate part B for Phases 1 and 2 (fresh players), before Launch; A2–A5 confirmed in parallel (diary, sessions, the Village, profit versus cash). A failure there is a Phase 2 fix.
 
 ## Owner action checklist (Phases 0–1)
 
@@ -437,7 +439,7 @@
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
 | Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
 | Sprint 18 | Done: device build installed and approved 2026-11-12; PRs #24 and #25 merged. Frame-time p95s not measured (a Development build, at gate A6) |
-| Sprint 19 | **In progress.** Play the Phase 2 playtest (Release build, play log on, a diary line a day, three *why cash moved* sentences); send Claude the play log and the filled checklist; at the end a Development build for both frame-time p95s and golden replays on the phone; the gate decision |
+| Sprint 19 | **Closed 2026-11-13 (ADR 0106).** Keep playing: A2–A5 (the Village within 3 weeks, a session each day, no blocker, the three *why cash moved* sentences and *Your year* in `s19-phase-2-playtest.md`); tell Claude only if something fails, or when done; findings are ad hoc tasks. Ask for a Development build when you want the frame-time p95s and golden replays on the phone |
 
 ## Open questions (with the owner)
 
@@ -445,6 +447,7 @@
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 - **Phase 2 gate part B** (ADR 0101 §9): fresh players explain profit versus cash from the screens unprompted; with Phase 1's part B, before Launch.
+- **Phase 2 gate, deferred (ADR 0106, 2026-11-13):** A2–A5 run in parallel with Phase 3's planning (the owner confirms only on a failure); both frame-time p95s and the golden replays on the phone wait for a Development build.
 
 - ~~**The crop ladder** (owner, 2026-10-26).~~ Settled: spec 020 and ADR 0084 approved 2026-10-31, built as Sprint 15b, device check passed 2026-11-03.
 

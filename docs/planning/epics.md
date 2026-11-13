@@ -80,7 +80,7 @@
 | [F09.2](features/F09.2-letter-chapters.md) | Letter chapters | E09 | 1 | Spec 009 (approved) | Done | US-091–US-092 | 6 |
 | [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (approved), GDD eras | Done | US-093–US-094 | 5 |
 | [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate, ADR 0047 | Sprint 9 (planned) | US-095–US-097, US-185 | 12 |
-| [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | Phase 2 playtest and gate | E10 | 2 | GDD Phase 2 gate, ADR 0101 | Sprints 18–19 | US-237–US-239 | 9 |
+| [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | Phase 2 playtest and gate | E10 | 2 | GDD Phase 2 gate, ADR 0101, ADR 0106 | Sprints 18–19 (closed 2026-11-13; A2–A5 in parallel) | US-237–US-239 | 9 |
 | [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016, 0045 | In progress (US-098 done) | US-098–US-101 | 13 |
 | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | Village: spec 018 (to write, ADR 0057); later eras at their phase's start | Backlog | US-102–US-104 | 7 |
 | [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-105, US-106, US-208, US-212 | 18 |

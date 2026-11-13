@@ -71,13 +71,13 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 24 | US-136, AC-7 | Your wealth → scroll to **Milestones** | *Milestones · n of 5*: reached ones with their season and **?**, the rest dimmed with where you stand | | **Screenshot**. Editor (`s18-136-milestones-*.png`) |
 | 25 | US-136 | Play on a season close | A toast above the bottom buttons ("First lakh saved, First rent") for 6 seconds; it waits for letters and the Codex toast; a tap opens Your wealth | | Editor (`s18-136-milestone-toast.png`): fed by script after it timed out; the real one came after the Dadi letter and the Codex toast |
 | 26 | Regression | Settings → Text size **Large** and back to **Normal** | Your wealth, the Savings sheet, the alert and the cards wrap and stay readable | | Editor (`s18-check-large-wealth.png`, `s18-check-large-milestones.png`); set back to Normal |
-| 27 | Regression | Settings → **Reduced motion** on | The toast just appears and goes; no slide | | Check on the phone |
-| 28 | Frame time | Pinch out so the whole village and farm show. Developer panel → **Measure frame time (20 s)**; don't touch the screen | Main thread p95 at or under 8.3 ms, GPU p95 at or under 11 ms (ADR 0094), about 60 fps, under 1% dropped. Write both p95s in Notes | | |
-| 29 | Notifications | Close the app on the last day of a season with the close short and no yes | A notification a day before: "Your close is short" (no amount in it), never at night | | Unit-tested only (`NotificationTests`); the Editor only logs it |
-| 30 | Regression | Play your normal morning on the phone: Collect all, sow, harvest, sell to the trader, hire | As in Sprint 17 | | Editor: Collect all · 0 |
+| 27 | Regression | Settings → **Reduced motion** on | The toast just appears and goes; no slide | Pass (owner, 2026-11-13) | Check on the phone |
+| 28 | Frame time | Pinch out so the whole village and farm show. Developer panel → **Measure frame time (20 s)**; don't touch the screen | Main thread p95 at or under 8.3 ms, GPU p95 at or under 11 ms (ADR 0094), about 60 fps, under 1% dropped. Write both p95s in Notes | Deferred: needs a Development build (ADR 0106) |  |
+| 29 | Notifications | Close the app on the last day of a season with the close short and no yes | A notification a day before: "Your close is short" (no amount in it), never at night | Mostly good (owner, 2026-11-13) | Unit-tested only (`NotificationTests`); the Editor only logs it |
+| 30 | Regression | Play your normal morning on the phone: Collect all, sow, harvest, sell to the trader, hire | As in Sprint 17 | Pass (owner, 2026-11-13) | Editor: Collect all · 0 |
 | 31 | Restore | **Restore** | Your town is back as it was at the Snapshot | | |
 | 32 | Regression | The away card after a long absence (**Away cap**) | Lines as before; *Interest on savings* when you have a deposit | | Editor (US-236's pass): *Interest on savings 1,137* |
-| 33 | Regression | Rotate or lock the phone | Landscape only (ADR 0005) | | |
+| 33 | Regression | Rotate or lock the phone | Landscape only (ADR 0005) | Pass (owner, 2026-11-13) |  |
 | 34 | ADR 0103 | Store → **Godown in town** | *How it works* first: goods come here by themselves, nothing to press; then *What goes here* lists wheat, rice, lentils, atta, maize, mustard (even at "None yet") and says potatoes, vegetables, fruit and milk stay in the hut | | Editor (`s18-godown-how.png`, `s18-godown-kept.png`) |
 | 35 | ADR 0103 | Rent 1 t, then **Collect all** on a ripe field | The rice, wheat or dal is "x kg here" on the godown sheet and "x kg of it is in the godown in town" under its row in the Store | | Editor (`s18-godown-store-row.png`) |
 | 36 | ADR 0103 | With space rented and nothing in it: **Stop renting** | One tap, no card. *Ends · nothing to pay*, **Keep renting n t** appears; Keep brings *Renews* back | | Editor (`s18-godown-stop.png`) |
@@ -87,7 +87,7 @@ If anything looks wrong with your town after the update, stop and report it befo
 | 40 | ADR 0105 | Store, while the truck is here (6:00 to midnight) | Under *Trader's truck*: *The trader still takes today*, a row for each crop sown this season (not the others) with "N kg more" or "Full for today"; at night the rows are gone. Sell some to the trader: that crop's number drops | | Editor (`s18-truck-room.png`) |
 | 41 | ADR 0105 | A ready field with the store nearly full: open the field | **Harvest** says "40 kg of 1,056 kg" (what fits of the whole); *Store what fits, sell the rest* beside it | | Editor (`s18-harvest-part-before.png`) |
 | 42 | ADR 0105 | Tap **Harvest** | The store goes to 100%; the field stays ready with *Already in your store · 40 kg* and its yield smaller; **Harvest** greyed "The store is full." Sell something, then Harvest again: the rest comes in and the field is free | | Editor (`s18-harvest-part-after.png`) |
-| 43 | ADR 0105 | **Collect all** with a nearly full store | Each ready field gives what fits; what's left stays ready; the card offers to sell the rest to the trader | | Check on the phone |
+| 43 | ADR 0105 | **Collect all** with a nearly full store | Each ready field gives what fits; what's left stays ready; the card offers to sell the rest to the trader | Pass (owner, 2026-11-13) | Check on the phone |
 
 ## Report
 
@@ -95,3 +95,7 @@ If anything looks wrong with your town after the update, stop and report it befo
 - **Screenshots:** for checks 1, 2, 3, 5, 11, 12, 15, 16, 18, 20, 21, 22, 24, 25, 34, 36, 38, 39, 40 and 42.
 - **Numbers:** both frame-time p95s from check 28.
 - **Answers:** to the five questions above.
+
+## Result (owner, 2026-11-13)
+
+All Editor checks were run by Claude (captures in `docs/art/s18-*.png`). On the iPhone the owner checked reduced motion, a normal morning of play, rotating or locking the phone, the Collect all card with a nearly full store, the hut's confirm card, notifications, sound, haptics and real time away: good (notifications, sound and haptics "mostly good"). Both frame-time p95s (check 28) and the developer-panel checks (31, 32) wait for a Development build: deferred (ADR 0106). Sprint 18 is closed.
