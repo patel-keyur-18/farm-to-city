@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township: planned and approved** (owner, 2026-11-13, ADR 0107 §1–§15: 243 points, Sprints 20–27). **Sprint 20 not started**: it starts in a new session. Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 20** (31 May – 13 Jun 2027 planned, 2 weeks, 22 points plus specs 021 and 022): planned, nothing started. Sprint 19 closed 2026-11-13 |
-| Branch with latest work | `main` once PR #29 (the Phase 3 plan, docs only) is merged. Sprint 20's work goes on a fresh `sprint/20-treasury-and-taxes` from `main` |
+| Sprint | **Sprint 20** (31 May – 13 Jun 2027 planned, 2 weeks, 22 points plus specs 021 and 022): **started 2026-11-13**; spec 021 written (in review, ADR 0108), spec 022 next. Sprint 19 closed 2026-11-13 |
+| Branch with latest work | `main` once PR #29 (the Phase 3 plan, docs only) is merged. Sprint 20's work is on `sprint/20-treasury-and-taxes` (reset to `main` at the start: the old local and origin branch held the pre-squash plan commits with an identical tree, so the first push needs `--force-with-lease`) |
 | Last updated | 2026-11-13 |
 
 ## Done so far
@@ -425,7 +425,7 @@
 ## Next up
 
 1. **Sprint 20, from the start of its order of work** (`sprints.md`, ADR 0107). Create `sprint/20-treasury-and-taxes` from `main` (after PR #29 is merged), then:
-   1. Write **spec 021 (treasury and budget: US-138, US-139)** from `docs/specs/_TEMPLATE.md`, within the scope in `features/F15.1-treasury-and-budget.md` and ADR 0107 §3, §6, §13. Close its gaps with the owner one per message, each with a recommendation; stop for approval.
+   1. ~~Write spec 021~~ **Written 2026-11-13, in review**: `docs/specs/021-treasury-and-budget.md`, its ten gaps closed with the owner one per message (ADR 0108). Waiting for the owner's approval of the spec. **Standing request (owner): before any UI code, an artifact that looks exactly like the in-game sheet** (memory `preview-as-artifact`).
    2. Write **spec 022 (taxes and policies: US-140, US-141)** the same way (scope in `features/F15.2-taxes-and-policies.md`, ADR 0107 §13).
    3. Code, one story at a time, each stopped for the owner's review: preview the renewal card, then **US-240** (rent: kutcha houses, location, yearly leases; save schema 18; spec 014 amended) → **US-241** (hands' and labourers' part-harvests; spec 006 amended) → confirm the mandi sheet's limits in the Editor and preview the new sheet, then **US-252** (a mandi trip with several crops; spec 004 amended) → **US-101** (the Editor's rendering statistics helper, first reading in STATUS) → **US-099** (archetype bots).
    4. Balance: the Village's pace with the new rents (a slip past 5 weeks with credit goes to the owner with numbers); the archetypes' 20% rule.
