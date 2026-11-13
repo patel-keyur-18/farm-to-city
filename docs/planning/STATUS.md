@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | **Phase 3 · Township: the plan approved** (owner, 2026-11-13, ADR 0107); every story's scope written out and the owner's mandi request added (§13–§14), for the owner's yes before spec 021. Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
+| Phase | **Phase 3 · Township: the plan approved** (owner, 2026-11-13, ADR 0107 §1–§14); §15 (nothing Phase 3 needs left to Phase 4; earlier specs' Phase 3 promises made stories) for the owner's look. 243 points, Sprints 20–27. Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
 | Sprint | **Sprint 20** (31 May – 13 Jun 2027 planned, 2 weeks): the plan check done (ADR 0107: 12 gaps closed one per message); waiting for the plan's approval; then specs 021 and 022, US-240, US-241, US-099, US-101. Sprint 19 closed 2026-11-13 |
 | Branch with latest work | `sprint/20-treasury-and-taxes` (from `main` after PR #28, merged 2026-11-13: stale docs, the Sprint 18 review's fixes, the savings slider) |
 | Last updated | 2026-11-13 |
@@ -424,7 +424,7 @@
 
 ## Next up
 
-1. **The owner's yes to ADR 0107 §13 (each story's scope, 11 new scope lines) and §14 (the multi-crop mandi trip, US-252).** The plan itself is approved (2026-11-13).
+1. **The owner's look at ADR 0107 §15** (the check that nothing Phase 3 needs is left to Phase 4: the generator's smoke, fire softened by water and insurance, slow land sales, the town planner; US-254 to US-261 as Should and Could stories). §1–§14 approved 2026-11-13.
 2. **Then Sprint 20** in its order of work (`sprints.md`): spec 021 (treasury and budget) and spec 022 (taxes and policies) written for review; the renewal card previewed, then US-240 (rent; save schema 18); US-241 (hands' and labourers' part-harvests); the mandi sheet previewed, then US-252 (several crops, kg sliders, *Fill with what pays best*); US-101 (the Editor's rendering statistics); US-099 (archetype bots); balance (the Village's pace with the new rents; a slip past 5 weeks to the owner); the Development build with both frame-time p95s and golden replays on the phone (closing Phase 2's deferred items).
 3. **Standing rule (owner, 2026-11-13, ADR 0107 §11):** never defer to the device what the Unity Editor can check; checklists mark device-only rows.
 4. **Deferred, the owner's call (ADR 0106):** gate part B for Phases 1 and 2, before Launch; Phase 2's A2–A5 continue as the owner's play (a failure is a Phase 2 fix).
@@ -477,7 +477,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-The Phase 3 plan is approved (ADR 0107, 2026-11-13); §13–§14 wait for the owner's yes; no Phase 3 spec or code yet. Save schema is 17 (ADR 0105); Sprint 20 opens 18 with US-240. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+The Phase 3 plan is approved (ADR 0107 §1–§14, 2026-11-13); §15 is for the owner's look; no Phase 3 spec or code yet. Save schema is 17 (ADR 0105); Sprint 20 opens 18 with US-240. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

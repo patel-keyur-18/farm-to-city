@@ -1,6 +1,6 @@
 # 0107. Phase 3 plan check: nine specs in eight sprints, the Township gate, the treasury's first day, kutcha and pucca houses, the cold store, part-harvests for hands, and the Phase 3 gate
 
-- Status: Accepted (owner, 2026-11-13: each gap decided one at a time; the plan approved the same day; §13's scope lines and §14's request added for the owner's approval)
+- Status: Accepted (owner, 2026-11-13: each gap decided one at a time; the plan approved the same day; §13 and §14 approved; §15 from the owner's "nothing Phase 3 needs moved to Phase 4")
 - Date: 2026-11-13
 - Deciders: Keyur Patel
 - Amends: the GDD's eras table (the Township's unlock), *Player journey and eras*, *Land, farming and livestock* (the map's ring, houses, storage, standing orders), *Economy* (the road tier), *Businesses* (the Township catalogue), *Community and civic services* (literacy, the clinic), *Governance and public finance* (the treasury's first day), *Roadmap* (the Phase 3 gate); ADR 0011 §3 (who pays the first doctor); ADR 0028 (the Township's pace); ADR 0063 §2 (the family house and its rent); ADR 0102 §3 (c) (decided here); ADR 0105's open question (decided here); spec 013 §3.4 (cold storage); spec 006 (hands' harvests); spec 014 (rent); spec 018 (the Township's literacy)
@@ -33,14 +33,14 @@ Twelve gaps came out of it.
    | 021 Treasury and budget | F15.1 (US-138, US-139) |
    | 022 Taxes and policies | F15.2 (US-140, US-141) |
    | 023 The Township: the clinic, the link road, coverage, the old village, the unlock | F15.6 US-148, F15.5 US-146, F09.4 US-103 |
-   | 024 Zoning, land value, rentals, upgrades, overlays | F15.3, F15.8 (the pucca house, rent by land value) |
-   | 025 Utilities, construction, the map's ring, hills and apples, the cold store | F15.4, F15.5 US-253 and US-147, US-242, US-243 (the brick kiln) |
+   | 024 Zoning, land value, rentals, upgrades, overlays | F15.3 (with US-261, leasing land out), F15.8 (the pucca house, rent by land value) |
+   | 025 Utilities, construction, the map's ring, hills and apples, the cold store | F15.4, F15.5 US-253 and US-147, US-242, US-243 (the brick kiln), the farm's Phase 3 promises US-254 to US-257 (§15) |
    | 026 Town life: festivals, petitions, reputation, crime, inequality | US-149, F15.7 |
    | 027 Events, insurance, forward contracts | F16.1, F16.2 |
-   | 028 Business growth: invoices, managers, valuation, exit, investors, Township businesses | F12.5, F12.6, F12.7 (but the kiln) |
+   | 028 Business growth: invoices, managers, valuation, exit, investors, Township businesses | F12.5, F12.6, F12.7 (but the kiln), US-258 to US-260 (§15) |
    | 029 Chronicle, Almanac, citizen stories | F16.3, F16.4 |
 
-   Treasury and taxes go first, together: a treasury with nothing to receive has nothing to budget. The Township gate's spec comes second, before zoning, so its pace is measured early (the Village's was measured only in Sprint 17, ADR 0097). Sprints 20–26 build (2 weeks each), Sprint 27 is the 4-week playtest; 216 points with §13–§14 (the plan in `sprints.md`). The first branch is `sprint/20-treasury-and-taxes`.
+   Treasury and taxes go first, together: a treasury with nothing to receive has nothing to budget. The Township gate's spec comes second, before zoning, so its pace is measured early (the Village's was measured only in Sprint 17, ADR 0097). Sprints 20–26 build (2 weeks each), Sprint 27 is the 4-week playtest; 243 points with §13–§15 (the plan in `sprints.md`). The first branch is `sprint/20-treasury-and-taxes`.
 2. **Who counts in the Township's town (G2).** The gate counts **20 of your own households**, as the Village's does. At the unlock **the old village's families join the town as a cohort** (about 30 households and 150 people, `population.json`): they pay taxes and fees, use the clinic and school, count in population and literacy, and are never individual citizens. The town goes from about 100 to about 250 people, inside the Township's 80–500. From the Township, zoning lets private builders add homes (F15.3). **The map grows a ring at the unlock** (ADR 0052): about 24 × 18 acres (from 16 × 12), with land for zoning, the highway link, hill parcels and more of the village drawn; its size and layout are set in spec 025 and previewed first (ADR 0064). The clinic and the road come before the ring and fit today's map.
 3. **The clinic and its doctor (G3, G6).** Built like the school: you build the clinic (about 1,20,000) and a doctor's house (60,000) as a gift to the village, on a village plot. A migrant doctor comes once both stand. **The district pays the doctor's salary**, as it does the teacher's (a rural MBBS doctor costs about 1,80,000–2,25,000 a season, beyond any village's means); what draws the doctor is the house and a **hard-area allowance of about 15%** (about 30,000 a season), which you pay as a gift until the Township and the treasury pays after. A small fee a visit offsets the allowance. The clinic cuts sick days and slows health loss with age; the household card's *Healthcare* row is met. The string `needs.healthCareNotYet` becomes "A clinic is one of the Township's goals" (with US-148).
 4. **The road to the highway (G4).** From the Village with 10 households or more, you petition at the council hall; the district builds a **paved link road** (PMGSY-style) on a community share of about 50,000 (a gift), about 4 days; the district road on the map's south edge is drawn paved and the road tier becomes `road` (1.00 a kg: the trader pays 0.50 a kg more, imports cost 0.50 less; potato +7.7%, wheat +2.1% at the farm gate). The `highway` tier waits for Phase 4's bonds. Each trader price's *Why?* names the road.
@@ -77,6 +77,11 @@ Twelve gaps came out of it.
     10. **Overlays:** fertility, land value, coverage, happiness, crime; pollution and traffic wait for Phase 4.
     11. **Invoices** cover every business-to-business sale (the village grocer and tea stall too), not the trader or the supermarket; households pay cash.
 14. **A mandi trip with several crops (owner request, 2026-11-13).** The cart already carries any mix (`GoToMandi` takes a list), but the sheet offered each crop only 0, 500, 1,000 or 2,000 kg, ignoring the room the other crops take, and didn't show which crop pays best. Now each crop's load is dragged or typed in kg (the savings sheet's control) up to the room left, the rows are ordered by the mandi's gain over the trader, and *Fill with what pays best* loads the trolley in that order. **US-252**, 3 points, Sprint 20; no save change.
+
+15. **Nothing Phase 3 needs is left to Phase 4 (owner, 2026-11-13).** Every "Not in Phase 3" line was checked against what Phase 3's own stories and the Township need, and every Phase 3 promise in specs 001–019 was traced to a story:
+    - **Pulled into Phase 3:** the diesel generator's smoke (it lowers health and land value in its reach, so the grid is worth its cost; the coverage overlay shows it); a fire is softer within the water tower's reach and covered by property insurance (fire is a Phase 3 event, the fire station is the Town's); land can be sold slowly at its land value or at once at 80% (spec 002); shops' location scores from land value (spec 017); the town planner advisor with the treasury (spec 018).
+    - **Phase 3 promises made stories:** raising calves into the herd (US-254, Should; spec 012); silage, a chaff cutter and more sheds (US-255, Could; spec 012); your tractor for neighbours (US-256, Could; spec 013); a tube well an acre and solar pumps (US-257, Could; spec 013); benefits and night shifts (US-258, Should; spec 015); supervisors, worker associations, conflicts and accidents (US-259, Could; spec 015); your kirana, a marketing budget and khata (US-260, Should; spec 017); leasing land out (US-261, Should; spec 019).
+    - **Rightly later, tied to the GDD's eras:** bonds and public debt, elections and council mood, scandal (no Phase 3 system needs them: the treasury never borrows); sales tax; tourism (needs the Town's hotels); industry, pollution limits and industrial zones; treatment and sewage plants, recycling, a power plant (the City's gate); villas and apartments; traffic; the Town's civic buildings (police, fire station, hospital, secondary school); river floods (need an embankment); educated roles and locally trained professionals (ADR 0011: from the Town); franchises, shares, trucks and hotels. The combine harvester stays Won't (§7).
 
 ## New and re-pointed stories
 
@@ -125,8 +130,16 @@ Twelve gaps came out of it.
 | **US-250** The Phase 3 playtest | F10.3 | 3 | Must |
 | **US-251** Tune and the gate decision | F10.3 | 3 | Must |
 | **US-252** A mandi trip with several crops | F04.1 | 3 | Must |
+| **US-254** Raise calves and grow the herd | F13.1 | 3 | Should |
+| **US-255** Silage, a chaff cutter and more sheds | F13.1 | 2 | Could |
+| **US-256** Your tractor for neighbours | F13.2 | 3 | Could |
+| **US-257** A tube well an acre and solar pumps | F13.2 | 3 | Could |
+| **US-258** Benefits and night shifts | F11.4 | 3 | Should |
+| **US-259** Supervisors, worker associations, conflicts and accidents | F11.4 | 5 | Could |
+| **US-260** Your kirana, marketing and khata | F12.3 | 5 | Should |
+| **US-261** Lease land out | F15.3 | 3 | Should |
 
-216 points in all (208 when the plan was approved; US-252 and US-253 added under §13–§14). **If Phase 3 runs over,** cut Could first (the restaurant, vegetables in the cold store), then Should in this order: citizen stories, festivals, forward contracts, tempo, tuition, investors and buy-outs, sell or expand, hill apples. **Never cut:** the treasury, taxes, the gate's pieces (clinic, road, unlock), the map's ring, rent realism, the multi-crop mandi trip, the exploit checks.
+243 points in all (208 when the plan was approved; US-252 and US-253 under §13–§14; US-254 to US-261 under §15). **If Phase 3 runs over,** cut Could first (the restaurant, vegetables in the cold store, US-255, US-256, US-257, US-259), then Should in this order: US-258, US-260, US-261, US-254, citizen stories, festivals, forward contracts, tempo, tuition, investors and buy-outs, sell or expand, hill apples. **Never cut:** the treasury, taxes, the gate's pieces (clinic, road, unlock), the map's ring, rent realism, the multi-crop mandi trip, the exploit checks.
 
 ## Consequences
 
