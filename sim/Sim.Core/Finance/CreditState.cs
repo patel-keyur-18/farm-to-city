@@ -11,6 +11,9 @@ namespace Sim.Core.Finance
         Repaid = 1,
         Defaulted = 2,
         WrittenOff = 3,
+
+        /// <summary>Paid in full by a foreclosure's seizures (Sprint 18 review): closed, but not repaid by you.</summary>
+        Foreclosed = 4,
     }
 
     /// <summary>One loan (spec 005 §4). Money is 1/100 coin; interest is posted to the ledger when it accrues.</summary>

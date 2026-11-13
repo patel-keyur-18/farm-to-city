@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | **Phase 2 · Hamlet & Village is closed** (owner, 2026-11-13, ADR 0106). **Phase 3 · Township is next but not started**: it waits for the owner's go, then its plan check and specs. Phase 1 complete (Sprint 10, 2026-10-21) |
 | Sprint | **Sprint 19 closed 2026-11-13** (ADR 0106): A1 and CI passed; the owner's phone checks done; A2–A5 continue in parallel (the owner's play, findings ad hoc); the frame-time p95s and golden replays on the phone are deferred. Sprint 18 closed 2026-11-12. No sprint is open |
-| Branch with latest work | `main` (PR #26 merged). The Phase 2 close is on `docs/phase-2-close` until merged; Phase 3's first branch starts with its plan check |
+| Branch with latest work | `main` (PR #27 merged: the Phase 2 close). `fix/phase-2-docs-and-s18-review`: stale docs fixed and the Sprint 18 code review (before Phase 3). Phase 3's first branch, `sprint/20-treasury-and-taxes`, starts with its plan check |
 | Last updated | 2026-11-13 |
 
 ## Done so far
@@ -204,6 +204,14 @@
 - **Sprint 13 done (2026-10-25):** the owner's Development build passed every check in `docs/test-checklists/s13-citizens.md` on the iPhone 13: the town migrated to schema 9; the *Your people* pill on one line; the Town and Workers tabs; placing a family house on lit acres; the house built; the household card's pie; the citizen card; frame time main p95 5.32 ms, GPU p95 6.54 ms, 60 fps, 0.08% over 25 ms (PASS). PR #18 for the owner to merge.
 
 ## In progress
+
+**Before Phase 3: stale docs fixed and the Sprint 18 code review (2026-11-13, branch `fix/phase-2-docs-and-s18-review`, Phase 2 milestone).** All approved by the owner:
+- Docs: feature statuses in the feature files and `epics.md`, Sprint 19's table, STATUS's branch row and half-done work, CLAUDE.md's Township pace (provisional), the GDD's business table (`0ed1041`).
+- F1: *Next season, already due*, the emergency fund and the day-before warning price every bill at the index the close will have (`MarketSystem.Inflation`, known from the seed); a shortfall under about 1.5% was missed before (`193f342`).
+- F2: loans paid by a foreclosure's seizures are `LoanState.Foreclosed`, never *Debt-free*; after an older town's first scan only the newest close can mark it (`193f342`).
+- *Always pay from my savings* asks on card B (`193f342`).
+- The savings sheet: a coin slider (the main way) and an amount box (the number pad only when tapped; nothing focused on opening), 1,000 to 1,00,000 a move, never more than you hold; *Put in* starts at what the next close won't need (amber mark); *Take out all* under 1,000 (`finance.json` `savingsMinimum` 1,000, `savingsMaxPerMove`, `savingsStep`). Editor-tested by scripted touch (drag, type, out of range, deposit, withdraw, card B; captures `docs/art/s18r-*.png`); found and fixed in the Editor: a tap on the button while typing was lost (the button was rebuilt on leaving the box), the box's 9-character limit cut "coins", the coin clipped at the ends; the Editor saves restored and diffed.
+- Not run in the Editor: *Take out all* under 1,000 (covered by `SavingsViewTests.Sheet`). Device check: with the next build.
 
 **US-237 done and approved (2026-11-12): seed 2; the Release build is on the owner's phone.**
 - **Release build (2026-11-12, rebuilt after ADR 0103, 0104 and 0105 (save schema 17)):** from commit `9974013`, `Game.Editor.BuildCli.IosRelease` from the open Editor (`BuildOptions.None`, no developer panel; Build Succeeded, the one console error is the CLI's 5 s eval timeout), moved to `unity/FarmToCity/Builds/iOS-release`; the unsigned Xcode compile check says BUILD SUCCEEDED. The build tool writes `Builds/iOS`, so this **replaced the Development build's folder**; make the Development build again (`IosDevelopment`) if the s18 device check needs it. The playtest town is `artifacts/playtest/FarmToCity-playtest.ftc` (seed 2, from `9974013`, byte-for-byte the town shown to the owner); it is not committed (artifacts is ignored), regenerate it with `playtest-save 2 <path> 9974013`.
@@ -466,7 +474,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 18: the plan check is done (ADR 0101), approved by the owner; nothing coded. Save schema is 15 (Sprint 17's); spec 019 §4 opens schema 16 with US-137. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+The Phase 3 plan check is under way with the owner (gap G1, the spec order and sprint cut, agreed 2026-11-13); next is G2 (who counts in the Township's town, and the road to 20 households), after the review PR is merged; nothing written for Phase 3 yet. Save schema is 17 (ADR 0105). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

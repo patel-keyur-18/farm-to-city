@@ -854,5 +854,5 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-238 | The Phase 2 playtest | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | To do |
-| US-239 | Tune and the gate decision | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | To do |
+| US-238 | The Phase 2 playtest | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | Ongoing (the owner's play, ADR 0106) |
+| US-239 | Tune and the gate decision | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | 3 | Must | Done (ADR 0106) |

@@ -272,7 +272,10 @@ Every business is a small company with its own books, staff and customers. The p
 | Era | Businesses |
 | --- | --- |
 | Hamlet | Flour mill (atta chakki), farm stall; the cattle shed is part of the farm (spec 012) |
-| Village | Grocery, bakery, dairy (paneer, curd, ghee), tea stall, tailor, carpenter, brick kiln |
+| Village | Bakery, dairy (paneer, curd, ghee), vegetable stall, tea stall, sweet shop (built in Phase 2; the grocer is the village's own, spec 017); tailor, carpenter, brick kiln (not built yet: their phase is set in a later plan check) |
+| Township | Restaurant, hardware store, private clinic, tuition centre, construction company, transport (tempo or truck) |
+| Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
+| City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |
 
 **The first businesses (spec 016, ADR 0068).**
 - **Own books.** Each business has its own books: you put cash in as owner's capital and take it out as drawings. Your own wheat or milk goes to it at today's market price. Your net worth shows it at its equity.
@@ -281,9 +284,6 @@ Every business is a small company with its own books, staff and customers. The p
 - **Placing and staffing.** A business stands on any acre you own, one an acre. It's worked by a hired townsperson, or by you at the cost of your farm hours.
 - **Funding and trouble.** You fund it with your cash and a co-op bank business loan that you guarantee. A short business draws an overdraft. Closing sells everything, and leftover debt becomes your loan.
 - **Later.** Investors and partner citizens come in Phase 3.
-| Township | Restaurant, hardware store, private clinic, tuition centre, construction company, transport (tempo or truck) |
-| Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
-| City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |
 
 **Founding flow**
 

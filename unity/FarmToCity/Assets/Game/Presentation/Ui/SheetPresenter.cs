@@ -23,6 +23,12 @@ namespace Game.Presentation.Ui
         private bool _closing;
         private string _key;
 
+        /// <summary>The amount each picker on the open sheet is set to, kept across refreshes (cleared when a sheet opens afresh).</summary>
+        private readonly System.Collections.Generic.Dictionary<string, long> _amounts = new System.Collections.Generic.Dictionary<string, long>();
+
+        /// <summary>An amount box has the keyboard: refreshes wait until it's done, so typing is never lost.</summary>
+        private bool _typing;
+
         /// <summary>A button was pressed: the action (the host makes the command with the current sim time, or opens another sheet).</summary>
         public Action<ActionVm> OnAction { get; set; }
 
@@ -465,6 +471,7 @@ namespace Game.Presentation.Ui
 
         private VisualElement Row(LineVm line)
         {
+            if (line.Amount != null) return AmountRow(line);
             if (line.Tree != null) return FamilyTree(line.Tree);
             if (line.Advisor != null) return AdvisorLine(line.Advisor);
             if (line.Pie == null && line.Trend == null) return PlainRow(line);
@@ -472,6 +479,160 @@ namespace Game.Presentation.Ui
             box.Add(PlainRow(line));
             if (line.Trend != null) box.Add(TrendChart(line.Trend));
             if (line.Pie != null) box.Add(PieChart(line.Pie));
+            return box;
+        }
+
+        /// <summary>
+        /// An amount to drag or type (the savings sheet, owner 2026-11-13): the amount box and its button, a slider with a coin to drag (the
+        /// main way), its ends, and the line saying what the amount would do. Nothing is focused when it opens: the number pad comes up only
+        /// when the box is tapped.
+        /// </summary>
+        private VisualElement AmountRow(LineVm line)
+        {
+            AmountVm a = line.Amount;
+            long value = _amounts.TryGetValue(a.Id, out long kept) ? System.Math.Min(a.Max, System.Math.Max(a.Min, kept)) : a.Start;
+            var box = new VisualElement { pickingMode = PickingMode.Ignore, name = "amount:" + a.Id };
+            box.style.paddingTop = 6; box.style.paddingBottom = 10;
+            box.style.borderBottomWidth = 2;
+            box.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
+
+            Label range = UiKit.Text(line.Label, 26, UiKit.Wood, UiKit.Body);
+            range.style.unityTextAlign = TextAnchor.MiddleRight;
+            box.Add(range);
+
+            var top = new VisualElement { pickingMode = PickingMode.Ignore };
+            top.style.flexDirection = FlexDirection.Row;
+            top.style.alignItems = Align.Center;
+            var field = new TextField { name = "amountField:" + a.Id, keyboardType = TouchScreenKeyboardType.NumberPad };
+            field.style.flexGrow = 1;
+            field.style.marginRight = 18;
+            field.style.fontSize = 44;
+            UiKit.SetFont(field, UiKit.Heading);
+            VisualElement input = field.Q(className: TextField.inputUssClassName);
+            if (input != null)
+            {
+                input.style.backgroundColor = Painter.Hex(0xFFFAF0);
+                UiKit.Border(input, 4, UiKit.Wood);
+                UiKit.Radius(input, 20);
+                UiKit.Padding(input, 6, 20);
+                input.style.color = UiKit.Ink;
+            }
+            top.Add(field);
+            var buttonSlot = new VisualElement { pickingMode = PickingMode.Ignore };
+            top.Add(buttonSlot);
+            box.Add(top);
+
+            var slider = new VisualElement { name = "slider:" + a.Id };
+            slider.style.height = 96;
+            slider.style.marginLeft = slider.style.marginRight = 46; // the coin (radius 40) never clipped at either end
+            slider.style.marginTop = 26;
+            box.Add(slider);
+
+            var ends = new VisualElement { pickingMode = PickingMode.Ignore };
+            ends.style.flexDirection = FlexDirection.Row;
+            ends.style.justifyContent = Justify.SpaceBetween;
+            ends.Add(UiKit.Text(a.MinCaption, 25, UiKit.Wood, UiKit.Body));
+            ends.Add(UiKit.Text(a.MaxCaption, 25, UiKit.Wood, UiKit.Body));
+            box.Add(ends);
+            Label note = UiKit.Text("", 28, UiKit.Ink, UiKit.BodyBold);
+            note.style.whiteSpace = WhiteSpace.Normal;
+            note.style.marginTop = 4;
+            box.Add(note);
+
+            string shown = null;
+            string Digits(long v) { return Sim.View.Text.Formatter.WholeCoins(v).ToString(System.Globalization.CultureInfo.InvariantCulture); }
+            float Fraction(long v) { return a.Max <= a.Min ? 1f : Mathf.Clamp01((float)(v - a.Min) / (a.Max - a.Min)); }
+            void Choose(long v, bool fromField)
+            {
+                value = v;
+                _amounts[a.Id] = v;
+                if (!fromField) field.SetValueWithoutNotify(field.focusController?.focusedElement == field ? Digits(v) : a.Words(v));
+                AmountPick pick = a.Pick(v);
+                string look = pick.Action.Label + pick.Action.Enabled;
+                if (look != shown) // rebuilt only when it changes: leaving the box mustn't swap the button under the finger tapping it
+                {
+                    shown = look;
+                    buttonSlot.Clear();
+                    buttonSlot.Add(UiKit.MakeButton(pick.Action.Label, a.Id == "out" ? ActionLook.Secondary : ActionLook.Primary,
+                    () => { ActionVm go = a.Pick(value).Action; _amounts.Remove(a.Id); if (OnAction != null) OnAction(go); }, null, pick.Action.Enabled)); // each move starts afresh
+                }
+                note.text = pick.Note ?? "";
+                note.style.color = pick.Tone == Tone.Warn ? UiKit.Warn : pick.Tone == Tone.Good ? UiKit.GreenDark : UiKit.Ink;
+                slider.MarkDirtyRepaint();
+            }
+
+            Color track = Painter.Hex(0xE2CFA6), fill = a.Id == "out" ? UiKit.Sand : UiKit.Green;
+            Color amber = Painter.Hex(0xC97A12);
+            slider.generateVisualContent += mgc =>
+            {
+                var p = mgc.painter2D;
+                Rect r = slider.contentRect;
+                float y = r.height * 0.62f, x0 = 0f, x1 = r.width, x = Mathf.Lerp(x0, x1, Fraction(value));
+                p.lineCap = LineCap.Round;
+                p.lineWidth = 22f; p.strokeColor = UiKit.SandDark;
+                p.BeginPath(); p.MoveTo(new Vector2(x0, y)); p.LineTo(new Vector2(x1, y)); p.Stroke();
+                p.lineWidth = 16f; p.strokeColor = track;
+                p.BeginPath(); p.MoveTo(new Vector2(x0, y)); p.LineTo(new Vector2(x1, y)); p.Stroke();
+                p.lineWidth = 16f; p.strokeColor = fill;
+                p.BeginPath(); p.MoveTo(new Vector2(x0, y)); p.LineTo(new Vector2(Mathf.Max(x0 + 1f, x), y)); p.Stroke();
+                if (a.Mark >= 0)
+                {
+                    float m = Mathf.Lerp(x0, x1, Fraction(a.Mark));
+                    p.lineCap = LineCap.Butt; p.lineWidth = 6f; p.strokeColor = amber;
+                    p.BeginPath(); p.MoveTo(new Vector2(m, y - 34f)); p.LineTo(new Vector2(m, y + 34f)); p.Stroke();
+                    p.lineCap = LineCap.Round;
+                }
+                p.fillColor = Painter.Hex(0x7A5216);
+                p.BeginPath(); p.Arc(new Vector2(x, y + 4f), 40f, 0f, 360f); p.Fill();
+                p.fillColor = Painter.Hex(0xE8B22E);
+                p.BeginPath(); p.Arc(new Vector2(x, y), 36f, 0f, 360f); p.Fill();
+                p.fillColor = Painter.Hex(0xFFE58A);
+                p.BeginPath(); p.Arc(new Vector2(x - 8f, y - 8f), 16f, 0f, 360f); p.Fill();
+            };
+            if (a.Mark >= 0)
+            {
+                Label mark = UiKit.Text(a.MarkCaption, 24, amber, UiKit.BodyBold);
+                mark.pickingMode = PickingMode.Ignore;
+                mark.style.position = Position.Absolute;
+                mark.style.top = -30;
+                mark.style.left = Length.Percent(Mathf.Clamp(Fraction(a.Mark) * 100f, 0f, 70f));
+                slider.Add(mark);
+            }
+
+            // Drag: the coin follows the finger in steps; the scroll view doesn't take the drag (the pointer is captured).
+            long At(Vector2 local) { return a.Snap(a.Min + (long)((a.Max - a.Min) * (double)Mathf.Clamp01(local.x / Mathf.Max(1f, slider.contentRect.width)))); }
+            slider.RegisterCallback<PointerDownEvent>(e =>
+            {
+                field.Blur();
+                slider.CapturePointer(e.pointerId);
+                Choose(At(e.localPosition), false);
+                e.StopPropagation();
+            });
+            slider.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (!slider.HasPointerCapture(e.pointerId)) return;
+                long v = At(e.localPosition);
+                if (v != value) Choose(v, false);
+                e.StopPropagation();
+            });
+            slider.RegisterCallback<PointerUpEvent>(e => { if (slider.HasPointerCapture(e.pointerId)) slider.ReleasePointer(e.pointerId); e.StopPropagation(); });
+
+            // Type: any whole number of coins; the slider follows. The box only takes focus when tapped.
+            field.RegisterValueChangedCallback(e =>
+            {
+                string digits = System.Text.RegularExpressions.Regex.Replace(e.newValue ?? "", "[^0-9]", "");
+                if (digits.Length > 9) digits = digits.Substring(0, 9); // more than any cash: the line says the most you can
+                if (digits != e.newValue) field.SetValueWithoutNotify(digits);
+                long coins = digits.Length == 0 ? 0 : long.Parse(digits, System.Globalization.CultureInfo.InvariantCulture);
+                Choose(coins * 100, true);
+            });
+            field.RegisterCallback<FocusInEvent>(_ => { _typing = true; field.SetValueWithoutNotify(Digits(value)); }); // plain digits to edit
+            field.RegisterCallback<FocusOutEvent>(_ =>
+            {
+                _typing = false;
+                Choose(string.IsNullOrEmpty(field.value) ? a.Start : value, false); // back to "32,000 coins"
+            });
+            Choose(value, false);
             return box;
         }
 
@@ -1148,8 +1309,11 @@ namespace Game.Presentation.Ui
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
+                if (l.Amount != null) key.Append('|').Append(l.Amount.Id).Append(l.Amount.Min).Append(',').Append(l.Amount.Max).Append(',').Append(l.Amount.Mark);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
+            if (refresh && _typing && IsOpen) return; // the number pad is up: don't rebuild under the player's thumb
+            if (!refresh) _amounts.Clear();
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
             if (vm.Tabs != null) sheet.Add(TabStrip(vm.Tabs, vm.Tab));

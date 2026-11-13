@@ -191,7 +191,7 @@ namespace Sim.View.Tests
             Assert.That(s.Due.Single(l => l.Key == "hand:" + hand.Id).Amount,
                 Is.EqualTo(events.OfType<ObligationPaid>().Single(e => e.Kind == "Wages" && e.OwnerRef == "hand:" + hand.Id).Amount));
             long living = events.OfType<ObligationPaid>().Single(e => e.Kind == "Living").Amount;
-            Assert.That(s.Due.Single(l => l.Key == "living").Amount, Is.EqualTo(living).Within(living / 50), "at today's prices: the close's index may add a little");
+            Assert.That(s.Due.Single(l => l.Key == "living").Amount, Is.EqualTo(living), "priced at the prices the close will have (ADR 0101 §1)");
             Assert.That(s.DueTotal, Is.EqualTo(s.Due.Sum(l => l.Amount)));
 
             // Cash just short of the hand's renewal: the cover line is amber, names him, and opens the Store.
@@ -226,7 +226,7 @@ namespace Sim.View.Tests
                 long paid = sim.State.Ledger.Entries.Where(e => e.Id >= first && keys.Contains(e.DescriptionKey)).Sum(e => -e.Postings.Where(p => p.Account == Account.Cash).Sum(p => p.Amount));
                 Assert.That(paid, Is.GreaterThan(0));
                 long due = s.Due.Where(l => l.Key.StartsWith("water:") || l.Key.StartsWith("machine:") || l.Key == "school").Sum(l => l.Amount);
-                Assert.That(due, Is.EqualTo(paid).Within(paid / 30 + 1), "what the close pays, at today's prices");
+                Assert.That(due, Is.EqualTo(paid), "exactly what the close pays, at its prices");
                 Assert.That(s.Due.Select(l => l.Key.Split(':')[0]).Distinct().Intersect(new[] { "water", "school" }), Is.Not.Empty);
                 Assert.That(s.DueTotal, Is.EqualTo(s.Due.Sum(l => l.Amount)));
             }
@@ -301,7 +301,9 @@ namespace Sim.View.Tests
             SeasonLineVm renewal = SeasonBook.Build(ViewKit2.Context(sim), false).Due.Single(l => l.Key == "hand:" + h.Id);
             long rent = MigrationRules.HousingInKind(sim, h);
             Assert.That(rent, Is.GreaterThan(0));
-            Assert.That(renewal.Amount, Is.EqualTo(h.Wage - rent));
+            long atClose = CloseDues.Next(sim).Single(d => d.Key == "hand:" + h.Id).Housing; // the house is priced as the close prices it
+            Assert.That(atClose, Is.GreaterThanOrEqualTo(rent));
+            Assert.That(renewal.Amount, Is.EqualTo(h.Wage - atClose));
             Assert.That(renewal.Why.Select(r => r.Label), Is.EqualTo(new[] { "Wage", "The house, part of the pay" }));
         }
 

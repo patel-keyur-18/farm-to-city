@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -45,7 +45,7 @@ namespace Sim.View.Views
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
-                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(SetSavingsCover), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(SeeChapter),
+                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors));
             Add(ConfirmKind.System, typeof(AdvanceTo), typeof(DebugAdvance), typeof(DebugNextEra), typeof(LiveRun), typeof(NewGame), typeof(Sync));
             return k;
@@ -114,6 +114,7 @@ namespace Sim.View.Views
             string name = c.GetType().Name;
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
             if (c is RentWarehouse && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
+            if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);
             long taken = NewLoans(sim, after, out Loan newest);
             long repaid = System.Math.Max(0, owedBefore - owedAfter);
@@ -122,7 +123,8 @@ namespace Sim.View.Views
                 Title = s.Get("confirm." + name + ".title"), Subtitle = Subject(ctx, c), Hold = kind == ConfirmKind.Hold, HoldMillis = ctx.Ui.ConfirmHoldMillis,
                 CashChange = cash, LoanTaken = taken, LoanRepaid = repaid,
             };
-            if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
+            if (c is SetSavingsCover) Standing(ctx, vm);
+            else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + ".warn", "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
@@ -155,6 +157,16 @@ namespace Sim.View.Views
                 }
             }
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>The standing consent (Sprint 18 review): your savings, and what the next close would take from them under it.</summary>
+        private static void Standing(ViewContext ctx, ConfirmCardVm vm)
+        {
+            var s = ctx.Strings;
+            long deposit = SavingsRules.Balance(ctx.Sim);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetSavingsCover.savings"), ctx.Fmt.Coins(deposit)));
+            long next = System.Math.Min(deposit, SavingsRules.Shortfall(ctx.Sim, out _));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetSavingsCover.next"), ctx.Fmt.Coins(next), total: true));
         }
 
         /// <summary>What you give up and get: for land, its price at market, the quick sale, what goes with it, the loan repaid first, the cash.</summary>

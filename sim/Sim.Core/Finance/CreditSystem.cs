@@ -393,6 +393,7 @@ namespace Sim.Core.Finance
             }
 
             // 3. Repay: the secured lender first, then the others in proportion to what each is owed.
+            List<Loan> closing = credit.Loans.FindAll(l => l.IsOpen && l.BusinessId == 0); // every loan this foreclosure closes
             long raised = pot;
             // A standing business's loan is its own debt, on its own books: not foreclosed with yours.
             foreach (Loan l in credit.Loans)
@@ -434,6 +435,8 @@ namespace Sim.Core.Finance
                 l.ArrearsCloses = 0;
                 l.State = total > 0 ? LoanState.WrittenOff : LoanState.Repaid;
             }
+            // A loan the seizures paid in full was paid by the foreclosure, not by you: it never counts as repaid (Debt-free, ADR 0101 §7).
+            foreach (Loan l in closing) if (l.State == LoanState.Repaid) l.State = LoanState.Foreclosed;
 
             // 5. Credit damage; the clock stops.
             int old = credit.Score;

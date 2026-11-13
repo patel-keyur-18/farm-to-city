@@ -55,14 +55,14 @@
 | [F01.4](features/F01.4-live-and-away-time.md) | Live and away time | E01 | 1 | Spec 001 §3.4, §3.7 | Done | US-034–US-035 | 4 |
 | [F01.5](features/F01.5-developer-time-travel-sim.md) | Developer time travel (sim) | E01 | 1 | Spec 001 §3.8 | Done | US-036–US-037 | 2 |
 | [F02.1](features/F02.1-land-and-soil.md) | Land and soil | E02 | 1 | [Spec 002](../specs/002-land-and-soil.md) | Done | US-038–US-041 | 10 |
-| [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-042–US-046, US-177 | 20 |
-| [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-047–US-049 | 7 |
-| [F02.4](features/F02.4-village-map.md) | The village map | E02 | 2 | [Spec 010](../specs/010-map-village-and-edge.md) (approved) | Ready | US-188–US-191 | 18 |
+| [F02.2](features/F02.2-crops-and-yield.md) | Crops and yield | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Done | US-042–US-046, US-177 | 20 |
+| [F02.3](features/F02.3-fruit-trees.md) | Fruit trees | E02 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Done | US-047–US-049 | 7 |
+| [F02.4](features/F02.4-village-map.md) | The village map | E02 | 2 | [Spec 010](../specs/010-map-village-and-edge.md) (approved) | Done | US-188–US-191 | 18 |
 | [F02.5](features/F02.5-crop-ladder.md) | The crop ladder | E02 | 2 | [Spec 020](../specs/020-crop-ladder.md) (approved) | Done | US-224–US-232 | 27 |
-| [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | In progress | US-050–US-053 | 11 |
-| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-054–US-056, US-178–US-181 | 17 |
-| [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | In progress | US-057–US-058 | 4 |
-| [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | The trader's truck and supermarket orders | E04 | 2 | [Spec 011](../specs/011-trader-truck-and-supermarket-orders.md) (approved) | Ready | US-192–US-195 | 17 |
+| [F03.1](features/F03.1-founder-labour-and-routine.md) | Founder labour and routine | E03 | 1 | [Spec 003](../specs/003-crops-trees-and-founder-labour.md) (approved) | Done | US-050–US-053 | 11 |
+| [F04.1](features/F04.1-goods-market-and-regional-trader.md) | Goods market and regional trader | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Done | US-054–US-056, US-178–US-181 | 17 |
+| [F04.2](features/F04.2-hut-store-and-spoilage.md) | Hut store and spoilage | E04 | 1 | [Spec 004](../specs/004-goods-market-and-storage.md) (approved) | Done | US-057–US-058 | 4 |
+| [F04.3](features/F04.3-trader-truck-and-supermarket-orders.md) | The trader's truck and supermarket orders | E04 | 2 | [Spec 011](../specs/011-trader-truck-and-supermarket-orders.md) (approved) | Done | US-192–US-195 | 17 |
 | [F05.1](features/F05.1-ledger-and-seasonal-p-l.md) | Ledger and seasonal P&L | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Done | US-059–US-062 | 14 |
 | [F05.2](features/F05.2-credit-and-foreclosure.md) | Credit and foreclosure | E05 | 1 | [Spec 005](../specs/005-ledger-and-credit.md) | Done | US-063–US-065 | 9 |
 | [F06.1](features/F06.1-day-labourers.md) | Day labourers | E06 | 1 | [Spec 006](../specs/006-people.md) (approved) | Done | US-066–US-067 | 5 |
@@ -71,31 +71,31 @@
 | [F07.1](features/F07.1-save-system.md) | Save system | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-073–US-075 | 11 |
 | [F07.2](features/F07.2-local-notifications.md) | Local notifications | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-076–US-076 | 3 |
 | [F07.3](features/F07.3-local-play-log.md) | Local play log | E07 | 1 | [Spec 007](../specs/007-saves-notifications-and-play-log.md) (approved) | Done | US-077–US-077 | 2 |
-| [F08.1](features/F08.1-map-and-field-interaction.md) | Map and field interaction | E08 | 1 | Spec 008 (to write) | Done | US-078–US-079 | 8 |
+| [F08.1](features/F08.1-map-and-field-interaction.md) | Map and field interaction | E08 | 1 | Spec 008 (approved) | Done | US-078–US-079 | 8 |
 | [F08.2](features/F08.2-hud-and-panels.md) | HUD and panels | E08 | 1 | Spec 008 (approved) | Done | US-080–US-084, US-182 | 21 |
-| [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (to write) | Done | US-085–US-086 | 4 |
+| [F08.3](features/F08.3-localisation-and-formatting.md) | Localisation and formatting | E08 | 1 | Spec 008 (approved) | Done | US-085–US-086 | 4 |
 | [F08.5](features/F08.5-basic-feedback-sounds.md) | Basic feedback sounds | E08 | 1 | Spec 008 (approved), ADR 0007 | Done | US-087 | 2 |
 | [F08.4](features/F08.4-developer-panel-unity.md) | Developer panel (Unity) | E08 | 1 | Spec 001 §3.8, ADR 0023 | Done | US-088–US-088 | 2 |
 | [F09.1](features/F09.1-first-session.md) | First session | E09 | 1 | Spec 009 (approved) | Done | US-089–US-090 | 7 |
 | [F09.2](features/F09.2-letter-chapters.md) | Letter chapters | E09 | 1 | Spec 009 (approved) | Done | US-091–US-092 | 6 |
 | [F09.3](features/F09.3-hamlet-unlock.md) | Hamlet unlock | E09 | 1 | Spec 009 (approved), GDD eras | Done | US-093–US-094 | 5 |
-| [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate, ADR 0047 | Sprint 9 (planned) | US-095–US-097, US-185 | 12 |
+| [F10.1](features/F10.1-playtest-and-tuning.md) | Playtest and tuning | E10 | 1 | GDD Phase 1 gate, ADR 0047 | Done (Sprint 9; US-185 before Launch) | US-095–US-097, US-185 | 12 |
 | [F10.2](features/F10.2-phase-2-playtest-and-gate.md) | Phase 2 playtest and gate | E10 | 2 | GDD Phase 2 gate, ADR 0101, ADR 0106 | Sprints 18–19 (closed 2026-11-13; A2–A5 in parallel) | US-237–US-239 | 9 |
-| [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016, 0045 | In progress (US-098 done) | US-098–US-101 | 13 |
-| [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | Village: spec 018 (to write, ADR 0057); later eras at their phase's start | Backlog | US-102–US-104 | 7 |
-| [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-105, US-106, US-208, US-212 | 18 |
-| [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | Spec 014 (approved, ADR 0063) | Backlog | US-107, US-108, US-209, US-210 | 21 |
+| [F20.1](features/F20.1-balancer-and-health-checks.md) | Balancer and health checks | E20 | 0–5 | GDD Balancing, ADR 0016, 0045 | In progress (US-098 done; US-099–US-101 later) | US-098–US-101 | 13 |
+| [F09.4](features/F09.4-era-unlocks-village-to-city.md) | Era unlocks: Village to City | E09 | 2–4 | Village: spec 018 (approved, ADR 0077); Township in Phase 3; Town and City in Phase 4 | In progress (US-102 done; US-103 Phase 3, US-104 Phase 4) | US-102–US-104 | 7 |
+| [F11.1](features/F11.1-citizens-and-life-clock.md) | Citizens and life clock | E11 | 2 | Spec 014 (approved, ADR 0063) | Done | US-105, US-106, US-208, US-212 | 18 |
+| [F11.2](features/F11.2-households-needs-and-happiness.md) | Households, needs and happiness | E11 | 2 | Spec 014 (approved, ADR 0063) | Done | US-107, US-108, US-209, US-210 | 21 |
 | [F11.3](features/F11.3-population-flows-and-family-trees.md) | Population flows and family trees | E11 | 2 | Spec 014 (approved, ADR 0063) | Done | US-109–US-111, US-211 | 19 |
-| [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (approved, ADR 0069) | Backlog | US-112–US-114 | 13 |
+| [F11.4](features/F11.4-full-hiring-and-hr.md) | Full hiring and HR | E11 | 2 | Spec 015 (approved, ADR 0069) | Done | US-112–US-114 | 13 |
 | [F12.1](features/F12.1-business-founding-and-books.md) | Business founding and books | E12 | 2 | Spec 016 (approved, ADR 0068) | Done | US-115–US-117 | 16 |
-| [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | Spec 016 (approved, ADR 0068) | Backlog | US-118, US-119, US-216 | 11 |
-| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-120–US-121 | 11 |
-| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (approved, ADR 0074) | Backlog | US-122–US-122 | 5 |
+| [F12.2](features/F12.2-production-chains.md) | Production chains | E12 | 2 | Spec 016 (approved, ADR 0068) | Done | US-118, US-119, US-216 | 11 |
+| [F12.3](features/F12.3-services-and-customer-choice.md) | Services and customer choice | E12 | 2 | Spec 017 (approved, ADR 0074) | Done | US-120–US-121 | 11 |
+| [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (approved, ADR 0074) | Done | US-122–US-122 | 5 |
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | To write at the start of Phase 3 | Backlog | US-123–US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | To write at the start of Phase 3 | Backlog | US-124–US-125 | 10 |
-| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (to write, ADR 0057) | Backlog | US-126–US-126, US-234 | 10 |
-| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-127–US-128 | 16 |
-| [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075) | Backlog | US-129–US-130 | 11 |
+| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (approved, ADR 0060) | Done | US-126–US-126, US-234 | 10 |
+| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Done | US-127–US-128 | 16 |
+| [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075) | Done | US-129–US-130 | 11 |
 | [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-131–US-132 | 13 |
 | [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-133–US-134 | 13 |
 | [F14.4](features/F14.4-personal-finance-hub-and-milestones.md) | Personal finance hub and milestones | E14 | 2 | Spec 019 (ADR 0078, 0083, 0101) | Done (Sprint 18) | US-135, US-136, US-221, US-235, US-236 | 30 |

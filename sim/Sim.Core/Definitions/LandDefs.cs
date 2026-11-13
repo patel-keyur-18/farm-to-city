@@ -363,11 +363,17 @@ namespace Sim.Core.Definitions
         public Fixed SavingsInterest { get; }
         public long SavingsMinimum { get; }
 
+        /// <summary>The most the savings sheet moves in one go, and the slider's step (Sprint 18 review, owner 2026-11-13). The sheet's limits; the sim refuses only below the minimum.</summary>
+        public long SavingsMaxPerMove { get; }
+        public long SavingsStep { get; }
+
         /// <summary>The wealth milestones' thresholds (spec 019 §3.6); null when the content has none (the frozen golden content), so no milestone is ever checked.</summary>
         public MilestonesDef Milestones { get; }
 
-        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver, Fixed savingsInterest, long savingsMinimum, MilestonesDef milestones = null)
+        public LedgerDef(int retainSeasons, Fixed debtComfortableUnder, Fixed debtRiskyOver, Fixed savingsInterest, long savingsMinimum, MilestonesDef milestones = null, long savingsMaxPerMove = 0, long savingsStep = 0)
         {
+            SavingsMaxPerMove = savingsMaxPerMove > 0 ? savingsMaxPerMove : 1_00_000 * Finance.Money.Coin;
+            SavingsStep = savingsStep > 0 ? savingsStep : 1_000 * Finance.Money.Coin;
             Milestones = milestones;
             RetainSeasons = retainSeasons;
             DebtComfortableUnder = debtComfortableUnder;

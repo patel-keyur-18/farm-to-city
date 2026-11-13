@@ -130,7 +130,8 @@ namespace Sim.Core.Finance
                 if (n.Total >= def.NetWorthTimes * Inherited(sim, r.Period)) Mark(sim, ms, Twice, r.Period, closing);
                 if (HasRent(r)) Mark(sim, ms, FirstRent, r.Period, closing);
                 bool newest = i == reports.Count - 1;
-                if (debtFreeNow && ((newest && !firstScan) || RepaidIn(reports, i))) Mark(sim, ms, DebtFree, r.Period, closing);
+                // After the first scan only the close just made can be the one: an earlier fall to nothing owed may have been a foreclosure.
+                if (debtFreeNow && (firstScan ? RepaidIn(reports, i) : newest)) Mark(sim, ms, DebtFree, r.Period, closing);
             }
             if (Hub.PassivePercent(sim) >= def.PassivePercent) Mark(sim, ms, Passive, closing, closing);
         }

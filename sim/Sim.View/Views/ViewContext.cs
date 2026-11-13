@@ -244,6 +244,9 @@ namespace Sim.View.Views
         /// <summary>An advisor's line drawn instead of a label and value (spec 018 §3.4), or null.</summary>
         public AdvisorVm Advisor { get; internal set; }
 
+        /// <summary>An amount to drag or type, with its button and note, drawn instead of a label and value (the savings sheet), or null.</summary>
+        public AmountVm Amount { get; internal set; }
+
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
         public LineVm(string label, string value, string whyKey = null, long whyId = 0)
@@ -270,6 +273,57 @@ namespace Sim.View.Views
             Value = value;
             Colour = colour;
         }
+    }
+
+    /// <summary>
+    /// An amount of money the player drags on a slider or types (the savings sheet, owner 2026-11-13). Money is 1/100 coin. The slider moves in
+    /// <see cref="Step"/>s and its right end is exactly <see cref="Max"/>; <see cref="Pick"/> says what any amount would do.
+    /// </summary>
+    public sealed class AmountVm
+    {
+        public string Id { get; }
+        public long Min { get; }
+        public long Max { get; }
+        public long Step { get; }
+
+        /// <summary>Where the slider starts.</summary>
+        public long Start { get; }
+
+        /// <summary>An amber mark on the slider and its caption ("keep 18,238 for the close"), or −1.</summary>
+        public long Mark { get; internal set; } = -1;
+        public string MarkCaption { get; internal set; }
+        public string MinCaption { get; internal set; }
+        public string MaxCaption { get; internal set; }
+        private readonly Func<long, AmountPick> _pick;
+        private readonly Func<long, string> _words;
+
+        internal AmountVm(string id, long min, long max, long step, long start, Func<long, AmountPick> pick, Func<long, string> words)
+        {
+            Id = id; Min = min; Max = max; Step = step; Start = Snap(start); _pick = pick; _words = words;
+        }
+
+        /// <summary>The amount as the box shows it while not being typed in ("32,000 coins").</summary>
+        public string Words(long amount) { return _words(amount); }
+
+        /// <summary>A dragged amount on the slider: within Min and Max, to the nearest step, the last half step reaching Max exactly.</summary>
+        public long Snap(long amount)
+        {
+            if (amount <= Min) return Min;
+            if (amount >= Max - Step / 2) return Max;
+            long stepped = (amount + Step / 2) / Step * Step;
+            return System.Math.Min(Max, System.Math.Max(Min, stepped));
+        }
+
+        /// <summary>What this amount would do: the button (greyed with the reason when out of range) and the line under it.</summary>
+        public AmountPick Pick(long amount) { return _pick(amount); }
+    }
+
+    /// <summary>One amount's button and note.</summary>
+    public sealed class AmountPick
+    {
+        public ActionVm Action { get; internal set; }
+        public string Note { get; internal set; }
+        public Tone Tone { get; internal set; }
     }
 
     /// <summary>Points of a line chart, oldest first, in coins; the first and last captions are drawn under it.</summary>

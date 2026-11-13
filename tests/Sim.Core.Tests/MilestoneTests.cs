@@ -96,6 +96,22 @@ namespace Sim.Core.Tests
             Assert.That(MilestoneRules.DebtFreeNow(seized), Is.False, "a foreclosure's write-off is not repaying");
         }
 
+        // Sprint 18 review (F2): a foreclosure whose seizures pay everything leaves you owing nothing, but you didn't repay: no Debt-free.
+        [Test]
+        public void DebtFree_NotByAForeclosure()
+        {
+            Simulation sim = NewSim(cash: 1_000_000, freeBank: false);
+            Assert.That(sim.Execute(new BuyParcel(0, "w1")).Accepted, Is.True);
+            Assert.That(Take(sim, "moneylender", 1_000, 1).Accepted, Is.True);
+            Burn(sim);
+            sim.AdvanceTo(2 * S + 24 * 3600); // defaulted at the close, foreclosed a live day later; the land covers it all
+            Assert.That(sim.State.Credit.Foreclosures, Is.EqualTo(1));
+            Assert.That(Loan(sim).State, Is.EqualTo(LoanState.Foreclosed));
+            Assert.That(MilestoneRules.DebtFreeNow(sim), Is.False);
+            sim.AdvanceTo(3 * S);
+            Assert.That(Ids(sim), Does.Not.Contain(MilestoneRules.DebtFree));
+        }
+
         // AC-22: an older town's first close after the update records what its kept reports show, with their real seasons, in one go.
         [Test]
         public void FromReports()

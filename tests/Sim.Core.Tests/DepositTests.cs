@@ -26,13 +26,13 @@ namespace Sim.Core.Tests
             return sim;
         }
 
-        // The deposit moves cash both ways, within what you hold; the minimum is 100 coins; the books balance.
+        // The deposit moves cash both ways, within what you hold; the minimum is 1,000 coins (owner, 2026-11-13); the books balance.
         [Test]
         public void PutAndTake()
         {
             Simulation sim = NewSim(cash: 20_000);
             long worth = Reporting.NetWorth(sim).Total, coopRoom = CreditRules.Limit(sim, 1).RawLimit, moneylenderRoom = CreditRules.Limit(sim, 0).RawLimit;
-            Assert.That(sim.Execute(new DepositSavings(0, Coins(99))).Reason, Is.EqualTo(RejectReason.BelowSavingsMinimum));
+            Assert.That(sim.Execute(new DepositSavings(0, Coins(999))).Reason, Is.EqualTo(RejectReason.BelowSavingsMinimum));
             Assert.That(sim.Execute(new DepositSavings(0, Coins(20_001))).Reason, Is.EqualTo(RejectReason.InsufficientFunds));
             Assert.That(Put(sim, 5_000).Accepted, Is.True);
             Assert.That(Cash(sim), Is.EqualTo(Coins(15_000)));
@@ -129,13 +129,13 @@ namespace Sim.Core.Tests
 
             Simulation thin = NewSim(cash: 20_000);
             Take(thin, "coop_bank", 10_000, 3);
-            Put(thin, 100);
+            Assert.That(Put(thin, 1_000).Accepted, Is.True, "the least the bank takes");
             Burn(thin);
             thin.Execute(new SetSavingsCover(0, true));
             thin.DrainEvents();
             thin.AdvanceTo(S);
             var thinEvents = thin.DrainEvents();
-            Assert.That(thinEvents.OfType<CoveredFromSavings>().Single().Amount, Is.EqualTo(Coins(100) + Money.MulRate(Coins(100), thin.Config.Game.Ledger.SavingsInterest)), "all it holds, no more");
+            Assert.That(thinEvents.OfType<CoveredFromSavings>().Single().Amount, Is.EqualTo(Coins(1_000) + Money.MulRate(Coins(1_000), thin.Config.Game.Ledger.SavingsInterest)), "all it holds, no more");
             Assert.That(thinEvents.OfType<LoanPaymentMissed>().Any(), Is.True, "and the rest goes unpaid");
             Assert.That(SavingsRules.Balance(thin), Is.EqualTo(0));
             ReconcileOk(thin);
@@ -168,6 +168,26 @@ namespace Sim.Core.Tests
             covered.DrainEvents();
             covered.AdvanceTo(S - 1);
             Assert.That(covered.DrainEvents().OfType<CloseShortAhead>().Any(), Is.False, "the savings will cover it: nothing to warn of");
+        }
+
+        // Sprint 18 review (F1): the bills are priced as the close prices them, the season's rise included, so cash that only covers them at
+        // today's prices is warned of.
+        [Test]
+        public void Warning_CountsTheRiseInPrices()
+        {
+            Simulation sim = TestSim.NewFarm(seed: 3);
+            sim.AdvanceTo(S - Day - 1);
+            var farm = sim.Config.Game.Farm;
+            long today = Sim.Core.Market.MarketRules.Indexed(sim, farm.DietPlans[sim.State.Farm.Founder.DietPlan].CostPerSeason);
+            long rise = CloseDues.Next(sim).Single(d => d.Key == "living").Amount - today;
+            Assert.That(rise, Is.GreaterThan(0), "the close's prices are higher than today's");
+            long set = today - Cash(sim); // cash enough at today's prices, short by the rise at the close's
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test.set", null, new Posting(Account.Cash, set), new Posting(Account.OpeningEquity, -set));
+            sim.DrainEvents();
+            sim.AdvanceTo(S - Day);
+            CloseShortAhead warning = sim.DrainEvents().OfType<CloseShortAhead>().Single();
+            Assert.That(warning.FirstUnpaid, Is.EqualTo("living"));
+            Assert.That(warning.Short, Is.GreaterThan(0).And.LessThanOrEqualTo(rise));
         }
 
         // The notification: a short close is planned for a player who'll be away; none when the savings will cover it.
