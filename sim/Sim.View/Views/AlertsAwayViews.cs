@@ -35,6 +35,33 @@ namespace Sim.View.Views
         public List<ActionVm> Levers { get; } = new List<ActionVm>();
     }
 
+    /// <summary>A ripe field crop that a hand's order or hired labourers would harvest and that does not all fit the store (ADR 0111).</summary>
+    public sealed class StandingHarvest
+    {
+        public int Tile { get; private set; }
+        public string Crop { get; private set; }
+        public string Field { get; private set; }
+        public long Grams { get; private set; }
+        public int Good { get; private set; }
+
+        public static List<StandingHarvest> All(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            var list = new List<StandingHarvest>();
+            if (sim.State.People == null) return list;
+            bool labourers = Sim.Core.People.PeopleRules.DayLabourHours(sim) > Sim.Core.Maths.Fixed.Zero;
+            foreach (Crop c in sim.State.Farm.Crops)
+            {
+                if (c.State != CropState.Ready) continue;
+                Sim.Core.Definitions.CropDef def = sim.Config.Game.Farm.Crops[c.Def];
+                bool taken = labourers || sim.State.People.OrderFor(Sim.Core.People.OrderTargetKind.Field, c.TileId) != null;
+                if (!taken || c.HarvestGrams <= Store.Fits(sim, def.OutputGood)) continue;
+                list.Add(new StandingHarvest { Tile = c.TileId, Crop = ctx.Strings.Get(def.NameKey).ToLowerInvariant(), Field = PeopleWords.Field(ctx, c.TileId), Grams = c.HarvestGrams, Good = def.OutputGood });
+            }
+            return list;
+        }
+    }
+
     /// <summary>Alerts (spec 008 §3.10), derived from the state at each refresh, urgent first.</summary>
     public static class Alerts
     {
@@ -140,6 +167,15 @@ namespace Sim.View.Views
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.orchardSpoiling", "tree", s.Get(sim.Config.Game.Farm.Trees[o.Def].NameKey),
                         "field", PeopleWords.Field(ctx, o.TileId), "time", ctx.Fmt.Duration(left)), Action = ActionVm.Open("orchard:" + o.TileId, s.Get("action.see"), new SheetRequest("Tile", o.TileId)) });
                 }
+            // A ripe field a hand's order or hired labourers would harvest that doesn't all fit: what still stands (ADR 0111).
+            foreach (StandingHarvest st in StandingHarvest.All(ctx))
+            {
+                var standing = new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.standing", "qty", ctx.Fmt.Kg(st.Grams), "crop", st.Crop, "field", st.Field) };
+                standing.Levers.Add(Pictured(ActionVm.Open("lever:sellSome:" + st.Tile, s.Get("alert.lever.sellSome"), new SheetRequest("Store", 0)), "store"));
+                if (GodownRules.Holds(sim, st.Good)) // only for what a godown keeps: potatoes stay home (ADR 0103)
+                    standing.Levers.Add(Pictured(ActionVm.Open("lever:rentSpace:" + st.Tile, s.Get("alert.lever.rentSpace"), new SheetRequest(GodownSheet.Kind, 0)), "granary"));
+                list.Add(standing);
+            }
             long used = Store.UsedGrams(sim), cap = Store.CapacityGrams(sim);
             if (cap > 0 && used * 100 >= cap * ctx.Ui.StoreNearlyFullPercent)
                 list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.storeFull"), Action = ActionVm.Open("store", s.Get("action.open"), new SheetRequest("Store", 0)) });

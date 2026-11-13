@@ -750,7 +750,8 @@ namespace Sim.View.Views
             {
                 Hand h = sim.State.People.Hand(id);
                 string name = h == null ? ctx.Strings.Get("away.formerHand") : PeopleWords.Name(ctx, h.Name);
-                int harvests = 0, sowings = 0, picks = 0;
+                int sowings = 0, picks = 0;
+                var fields = new HashSet<long>(); // a harvest taken in parts counts once
                 long grams = 0, sales = 0, inputs = 0;
                 foreach (SimEvent e in events)
                 {
@@ -758,22 +759,23 @@ namespace Sim.View.Views
                     if (o.Action == OrderAction.Sowed) { sowings++; inputs -= o.Amount; }
                     else
                     {
-                        if (o.Action == OrderAction.Picked) picks++; else harvests++;
+                        if (o.Action == OrderAction.Picked) picks++; else fields.Add(o.Target);
                         grams += o.Quantity;
                         sales += o.Amount;
                     }
                 }
                 vm.OrderSales += sales;
                 vm.OrderInputs += inputs;
-                if (harvests + picks > 0)
-                    vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.collected", harvests + picks, "qty", ctx.Fmt.Kg(grams))));
+                if (fields.Count + picks > 0)
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.collected", fields.Count + picks, "qty", ctx.Fmt.Kg(grams))));
                 if (sales > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Get("away.sold", "amount", ctx.Fmt.Coins(sales))));
                 if (sowings > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.sowed", sowings, "cost", ctx.Fmt.Coins(inputs))));
             }
+            List<StandingHarvest> standing = StandingHarvest.All(ctx);
             var waits = new List<string>();
             foreach (SimEvent e in events)
             {
-                if (e is OrderWaiting w)
+                if (e is OrderWaiting w && !(w.Reason == OrderWait.StoreFull && standing.Exists(x => x.Tile == w.Target))) // a standing field says so already
                 {
                     string text = ctx.Strings.Get("away.waiting", "place", PeopleWords.Target(ctx, w.Kind, w.Target), "reason", ctx.Strings.Get("order.wait." + w.Reason));
                     if (!waits.Contains(text)) waits.Add(text);
@@ -786,6 +788,8 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(StaffName(ctx, cf.Place, cf.WorkerId), ctx.Strings.Get("away.course", "skill", PeopleWords.Band(ctx, (int)cf.Skill.RoundToLong()))));
                 if (e is LongDaysStopped ls) vm.Lines.Add(new LineVm(StaffName(ctx, ls.Place, ls.WorkerId), ctx.Strings.Get("away.longDaysStopped")));
             }
+            foreach (StandingHarvest st in standing)
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("away.standing"), ctx.Strings.Get("away.standingText", "qty", ctx.Fmt.Kg(st.Grams), "crop", st.Crop, "field", st.Field)));
             foreach (string w in waits) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.order"), w));
             if (vm.DayLabourPaid > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.dayLabour"), ctx.Fmt.Coins(vm.DayLabourPaid)));
             if (vm.Lines.Count > ctx.Ui.AwayRowsMax) vm.Lines.RemoveRange(ctx.Ui.AwayRowsMax, vm.Lines.Count - ctx.Ui.AwayRowsMax);

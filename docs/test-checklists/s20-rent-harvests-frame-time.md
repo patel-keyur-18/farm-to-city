@@ -15,6 +15,7 @@
 ## What this build changes
 
 - **Rent (US-240).** A family house is now a *kutcha house*: it lets for about 2,500 a season, by its place (the district road acre 1.20, a lane 1.00, an inner acre 0.85) and the prices. A household's rent is fixed in a **lease of 4 seasons**. In the lease's last season a card asks how to renew it: **the market rise** (the default, applies if you don't answer), **a smaller rise**, **keep the rent**, or, if the family is over 30% of its income, **lower it**. A raise never goes above what 30% of the family's income allows, so a raise never pushes a family out. Smaller rises and kept rents make the family happier. A family that has lived here for years is patient before it leaves unhappy.
+- **Part-harvests (US-241, ADR 0111).** Your hand's orders and hired labourers now take what fits the store each hour and leave the rest standing in the field (it waits under the 72-hour grace); nothing is sold to the trader unless the order's sell rule says so. Labourers you have paid stay and work their paid time even when nothing fits. The bell says "Store full: 1,122 kg of potato still standing on Field 5. It will be taken as room appears." with *Sell some* (and *Rent space* for grain); the away card has a *Still standing* line.
 - **Balance (US-240).** Lower rents slow the Village: the bots reach it about 6 weeks in, not 4½ (the numbers are in the pull request, for your decision).
 
 **Your questions:**
@@ -32,3 +33,6 @@
 | 4 | Tap *Decide later*, then open the family from the bell | The sheet has the same choices as buttons; with no answer the market rise applies at the close | | |
 | 5 | Several leases end at once | The card says "1 of 3"; *Market rise for all 3 left* ends the questions | | |
 | 6 | A family whose rent is over 30% of its income | The card says a raise would not be fair now and offers *Keep it* or *Lower it* | | |
+| 7 | Fill the store, have a hand with a keep-crop order (or hire labourers) and let the crop ripen | The hand takes what fits each hour; the rest stands in the field; the bell says "Store full: … still standing on …" with *Sell some* | | |
+| 8 | Tap *Sell some* in that alert, sell something, wait an hour | The Store opens; after room appears the standing crop is taken (the alert goes) | | |
+| 9 | Come back after being away with the store full | The away card has *Still standing* with the kg and the field | | |

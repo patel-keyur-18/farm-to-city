@@ -10,7 +10,7 @@ using static Sim.Core.Tests.TestSim;
 namespace Sim.Core.Tests
 {
     /// <summary>ADR 0105 (owner, 2026-11-12): a ready field crop can be harvested in parts, up to what the store holds; the rest stands ready.</summary>
-    public class PartHarvestTests
+    public partial class PartHarvestTests
     {
         private const long Hour = 3600;
 

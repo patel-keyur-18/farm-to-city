@@ -136,5 +136,36 @@ namespace Sim.View.Tests
             Assert.That(sim.Execute(h).Accepted, Is.True);
             Assert.That(sim.State.Farm.CropOn(85).TakenGrams, Is.EqualTo(20 * Kg));
         }
+
+        // ADR 0111: a ripe field that hired labourers (or a hand's order) would harvest, and that does not all fit, is an alert with its two
+        // levers and a line on the away card; with nobody to harvest it, and when all of it fits, there is nothing to say.
+        [Test]
+        public void StillStanding()
+        {
+            Simulation sim = ReadyRadish(20 * Kg);
+            Assert.That(Alerts.Build(ViewKit2.Context(sim)).Any(a => a.Text.StartsWith("Store full")), Is.False, "nobody is on it");
+            Assert.That(sim.Execute(new Sow(T(sim), 86, "radish", SeedSource.Certified, "none")).Accepted, Is.True);
+            Assert.That(sim.Execute(new HireLabourers(T(sim), 1)).Accepted, Is.True);
+
+            long left = sim.State.Farm.CropOn(85).HarvestGrams;
+            ViewContext ctx = ViewKit2.Context(sim);
+            AlertVm alert = Alerts.Build(ctx).Single(a => a.Text.StartsWith("Store full"));
+            Assert.That(alert.Text, Is.EqualTo("Store full: " + ctx.Fmt.Kg(left) + " of radish still standing on " + Sim.View.Views.PeopleWords.Field(ctx, 85) + ". It will be taken as room appears."));
+            Assert.That(alert.Levers.Select(l => l.Label), Is.EqualTo(new[] { "Sell some" }), "radish isn't kept in a godown, so no Rent space");
+            Assert.That(alert.Levers.Single().Opens.Value.Kind, Is.EqualTo("Store"));
+            ((bool[])sim.Config.Game.Godown.Holds)[sim.Config.Game.Market.IndexOf("radish")] = true; // were it a grain
+            alert = Alerts.Build(ViewKit2.Context(sim)).Single(a => a.Text.StartsWith("Store full"));
+            Assert.That(alert.Levers.Select(l => l.Label), Is.EqualTo(new[] { "Sell some", "Rent space" }));
+            Assert.That(alert.Levers.Select(l => l.Opens.Value.Kind), Is.EqualTo(new[] { "Store", "Godown" }));
+            ((bool[])sim.Config.Game.Godown.Holds)[sim.Config.Game.Market.IndexOf("radish")] = false;
+
+            AwayVm card = AwayView.People(ctx, new Sim.Core.Events.SimEvent[0]);
+            Assert.That(card.Lines.Single(l => l.Label == "Still standing").Value, Is.EqualTo(ctx.Fmt.Kg(left) + " of radish on " + Sim.View.Views.PeopleWords.Field(ctx, 85) + " (the store was full)"));
+            card = AwayView.People(ctx, new Sim.Core.Events.SimEvent[] { new Sim.Core.Events.OrderWaiting(T(sim), 1, Sim.Core.People.OrderTargetKind.Field, 85, Sim.Core.People.OrderWait.StoreFull) });
+            Assert.That(card.Lines.Any(l => l.Label == "Orders"), Is.False, "the standing line already says it");
+
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("potato")] = 0; // room again
+            Assert.That(Alerts.Build(ViewKit2.Context(sim)).Any(a => a.Text.StartsWith("Store full")), Is.False, "it all fits: nothing to say");
+        }
     }
 }

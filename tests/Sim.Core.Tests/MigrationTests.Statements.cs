@@ -45,6 +45,8 @@ namespace Sim.Core.Tests
             sim.State.Finance.Milestones.InheritedWorth = 0;
             // Leases are schema 18 (US-240): a schema-15 write can't hold them, and the load starts each at the migration, so give this town the same start.
             People.LeaseRules.Migrate(sim);
+            // Part-harvests are schema 17 (ADR 0105): the bots' hands now take parts (ADR 0111), and a schema-15 write can't hold a part taken.
+            foreach (Sim.Core.Farm.Crop c in sim.State.Farm.Crops) c.TakenGrams = 0;
             LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 15), config, MinSchema);
             Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
             Assert.That(old.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "a schema-15 write is the same town");

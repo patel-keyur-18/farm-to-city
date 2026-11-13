@@ -155,6 +155,7 @@ namespace Sim.Core.Tests
             for (int d = 0; P(sim).Roster.Max(n => n.SecondsWorked) < 6 * Day; d++)
             {
                 sim.AdvanceTo(d * Day + 1);
+                sim.State.Market.Stock[FarmTest.Good(sim, "potato")] = 0; // sold at the mandi: labourers take parts now, so a full store would leave the fields standing (ADR 0111)
                 int free = PeopleRules.FreeNow(sim);
                 int tile = new[] { 84, 85, 86, 100, 101, 102 }.First(x => sim.State.Farm.CropOn(x) == null);
                 Ok(sim, new Sow(sim.State.Clock.SimTime, tile, "potato", Farm.SeedSource.Certified, "none"));

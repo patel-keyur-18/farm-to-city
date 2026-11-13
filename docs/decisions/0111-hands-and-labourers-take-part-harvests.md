@@ -23,4 +23,5 @@ Labourers are paid upfront until the last growing crop's ready hour (spec 006 §
 ## Consequences
 
 - The labourers' wage for hours with nothing to harvest is the player's cost of a full store; the alert says why and offers the two levers.
+- **As built:** the alert's *Rent space* shows only for goods a godown keeps (potatoes and radish stay home, ADR 0103); the away card drops a StoreFull waiting line for a field its *Still standing* line already names; the away card counts a harvest taken in parts once. A schema-15 write test clears `TakenGrams` (schema 17) because the bots' hands now take parts.
 - Spec 006 §3.2 and §3.8 carry the rules; AC-27 and AC-28 name the tests (`PartHarvestTests`, `TruckHarvestViewTests`).
