@@ -1049,7 +1049,7 @@ Each runs 1,000 seeds over 15 game years (about 8 months of real time, past the 
 | Milestone | Target real time since start |
 | --- | --- |
 | Hamlet | End of the first week (about 2 seasons) |
-| Village | 4–5 weeks using credit, about 8 saving (ADR 0097) |
+| Village | 4–6 weeks using credit, about 10 saving (ADR 0097; both slower after the lower rents, ADR 0110) |
 | Township | After the Village; re-set with its spec (it was 4–6 weeks before the Village moved, ADR 0097) |
 | Town | 2–3 months |
 | City | 4–6 months (about 10–12 game years) |
@@ -1136,7 +1136,7 @@ flowchart TB
 
     P0 -->|"Gate: no money loops; 2,000 agents at 60 fps; replays match on iPhone"| P1
     P1 -->|"Gate: a reason to return each day, the Hamlet in about a week, nothing broke (ADR 0047)"| P2
-    P2 -->|"Gate: the Village in 4–5 weeks; players can explain profit versus cash"| P3
+    P2 -->|"Gate: the Village in 4–6 weeks; players can explain profit versus cash"| P3
     P3 -->|"Gate: 4 weeks of play from a town past the Village; the Township in 9–11 weeks; no exploits"| P4
     P4 -->|"Gate: 20,000 population at 60 fps on reference phones"| P5
 ```
@@ -1145,7 +1145,7 @@ flowchart TB
 | --- | --- | --- |
 | 0 · Pre-production | Master spec, slice specs, economy model, Unity project and hello-iPhone build, performance spike, on-device determinism check, CC0 art style check | Economy model has no money loops; 2,000 agents at 60 fps (half frame budget on iPhone 13); golden replays match on the iPhone. **Passed 2026-10-18 (ADR 0035)** |
 | 1 · Vertical slice: Homestead to Hamlet unlock | See the Phase 1 scope table below | Part A, on the owner's solo playtest week (ADR 0047): a reason to return on at least 4 of days 2–7, notification returns at sensible times, the Hamlet on day 5–9, no blocker, the release candidate and CI passing. Part B, before Launch at the latest: fresh players come back on day 2 and day 3 unprompted (2 of 3) |
-| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | Part A, on the owner's playtest from a town saved part-way through the Hamlet (ADR 0101): the bots reach the Village in 4–5 weeks using credit (about 8 saving), any order of its three goals (ADR 0097); the owner reaches it within 3 weeks of the saved town; a reason to return each day; no blocker; the owner explains profit versus cash from the screens; build health. Part B, before Launch: fresh players explain profit versus cash unprompted | **Closed 2026-11-13 by the owner (ADR 0106): A1 and CI passed, the phone checks done; A2–A5 continue in parallel; the frame-time p95s and golden replays on the phone are deferred; part B open.**
+| 2 · Hamlet and Village | The 16 × 12 village map, the trader's truck, supermarket orders, buffalo and cows (ADRs 0052–0056); citizens, needs, businesses, school, larger loans, Codex | Part A, on the owner's playtest from a town saved part-way through the Hamlet (ADR 0101): the bots reach the Village in 4–6 weeks using credit (about 8 saving), any order of its three goals (ADR 0097); the owner reaches it within 3 weeks of the saved town; a reason to return each day; no blocker; the owner explains profit versus cash from the screens; build health. Part B, before Launch: fresh players explain profit versus cash unprompted | **Closed 2026-11-13 by the owner (ADR 0106): A1 and CI passed, the phone checks done; A2–A5 continue in parallel; the frame-time p95s and golden replays on the phone are deferred; part B open.**
 | 3 · Township | Zoning, utilities, treasury, taxes, land value, events, Chronicle; the clinic, the link road, rents, the cold store, Township businesses (ADR 0107) | Part A, on the owner's 4 weeks from a town just past the Village (ADR 0107): the bots reach the Township in 9–11 weeks using credit; the owner within 4 weeks; a reason to return each day; no blocker; public versus personal money explained from the screens; build health; no exploits (ADR 0016's rule and Phase 3's checks). Part B, before Launch: fresh players explain public versus personal money |
 | 4 · Town and City | Cohort simulation, transport, industry, investments, elections | 20,000 population at 60 fps on reference phones |
 | 5 · Polish | Localisation, accessibility, Blender art pipeline; store release only if the owner decides | Owner's call |

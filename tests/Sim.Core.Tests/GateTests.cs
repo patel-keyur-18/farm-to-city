@@ -294,7 +294,7 @@ namespace Sim.Core.Tests
 
         // Spec 018 §9, AC-9 (US-102, ADR 0097): the Village is reachable whatever order a player goes for its three (homes, a mill, the
         // school), with loans or saving, never stuck (every run within 24 seasons). Homes first (then the mill, then the school) is quickest:
-        // the competent bot at a median of day 28–40, the cautious saver at 50–64; any order within 50 with loans and 80 saving. 8 seeds each;
+        // the competent bot at a median of day 28–45 (was 28–40 until the rents fell, US-240), the cautious saver at 50–75 (was 50–64); any order within 50 with loans and 80 saving. 8 seeds each;
         // each condition's day is printed so a miss shows its cause.
         [Test]
         public void Village()
@@ -308,7 +308,7 @@ namespace Sim.Core.Tests
                         + string.Join(" ", r.Happiness.Select(h => h.ToString("0"))));
                     Assert.That(r.Village.Count(double.IsNaN), Is.Zero, r.Bot + ": every run gets there");
                     double median = r.Village.OrderBy(d => d).ElementAt(r.Village.Count / 2);
-                    if (order == "HMS") Assert.That(median, saver ? Is.InRange(50.0, 64.0) : Is.InRange(28.0, 40.0), r.Bot);
+                    if (order == "HMS") Assert.That(median, saver ? Is.InRange(50.0, 75.0) : Is.InRange(28.0, 45.0), r.Bot); // US-240, ADR 0110: lower rents moved the competent bot from 28–40 (measured 32) to 28–45 (41) and the saver from 50–64 (56) to 50–75 (69)
                     else Assert.That(median, Is.LessThanOrEqualTo(saver ? 80.0 : 50.0), r.Bot);
                     // ADR 0100: literacy at the unlock is the adults' 60% over everyone 7+ (the village never had a school): about 45% homes
                     // first, more when the school came first and pupils finished; happiness a season on, the school open, about 72 (ADR 0095 §6).
