@@ -205,6 +205,14 @@
 
 ## In progress
 
+**Before Phase 3: stale docs fixed and the Sprint 18 code review (2026-11-13, branch `fix/phase-2-docs-and-s18-review`, Phase 2 milestone).** All approved by the owner:
+- Docs: feature statuses in the feature files and `epics.md`, Sprint 19's table, STATUS's branch row and half-done work, CLAUDE.md's Township pace (provisional), the GDD's business table (`0ed1041`).
+- F1: *Next season, already due*, the emergency fund and the day-before warning price every bill at the index the close will have (`MarketSystem.Inflation`, known from the seed); a shortfall under about 1.5% was missed before (`193f342`).
+- F2: loans paid by a foreclosure's seizures are `LoanState.Foreclosed`, never *Debt-free*; after an older town's first scan only the newest close can mark it (`193f342`).
+- *Always pay from my savings* asks on card B (`193f342`).
+- The savings sheet: a coin slider (the main way) and an amount box (the number pad only when tapped; nothing focused on opening), 1,000 to 1,00,000 a move, never more than you hold; *Put in* starts at what the next close won't need (amber mark); *Take out all* under 1,000 (`finance.json` `savingsMinimum` 1,000, `savingsMaxPerMove`, `savingsStep`). Editor-tested by scripted touch (drag, type, out of range, deposit, withdraw, card B; captures `docs/art/s18r-*.png`); found and fixed in the Editor: a tap on the button while typing was lost (the button was rebuilt on leaving the box), the box's 9-character limit cut "coins", the coin clipped at the ends; the Editor saves restored and diffed.
+- Not run in the Editor: *Take out all* under 1,000 (covered by `SavingsViewTests.Sheet`). Device check: with the next build.
+
 **US-237 done and approved (2026-11-12): seed 2; the Release build is on the owner's phone.**
 - **Release build (2026-11-12, rebuilt after ADR 0103, 0104 and 0105 (save schema 17)):** from commit `9974013`, `Game.Editor.BuildCli.IosRelease` from the open Editor (`BuildOptions.None`, no developer panel; Build Succeeded, the one console error is the CLI's 5 s eval timeout), moved to `unity/FarmToCity/Builds/iOS-release`; the unsigned Xcode compile check says BUILD SUCCEEDED. The build tool writes `Builds/iOS`, so this **replaced the Development build's folder**; make the Development build again (`IosDevelopment`) if the s18 device check needs it. The playtest town is `artifacts/playtest/FarmToCity-playtest.ftc` (seed 2, from `9974013`, byte-for-byte the town shown to the owner); it is not committed (artifacts is ignored), regenerate it with `playtest-save 2 <path> 9974013`.
 - **Owner request, 2026-11-12 (ADR 0103), on this branch:** the godown had no way to "put goods in" because there is none (they go in by themselves), and the rent had no clear stop. Now: the sheet opens with *How it works*, lists each dry good "here · in the hut" (a harvest counts), the Store rows say what is in town, the rented space has a status line, **Stop renting** and **Keep renting**, and a change that costs nothing shows no confirm card (the Editor pass found "Rent warehouse space? 0 coins" on every reduction). No rule or money change. `GodownViewTests` (6), checklist checks 34–37, captures `docs/art/s18-godown-*.png`. Tests: Core 493 and View 184 pass (View 188 after ADR 0104).
@@ -466,7 +474,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-The Phase 3 plan check is under way with the owner (gap G1, the spec order and sprint cut, agreed 2026-11-13); nothing written for Phase 3 yet. Save schema is 17 (ADR 0105). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+The Phase 3 plan check is under way with the owner (gap G1, the spec order and sprint cut, agreed 2026-11-13); next is G2 (who counts in the Township's town, and the road to 20 households), after the review PR is merged; nothing written for Phase 3 yet. Save schema is 17 (ADR 0105). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

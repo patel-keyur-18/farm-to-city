@@ -203,7 +203,7 @@ The Your wealth tab (US-135, Sprint 18):
 |  ⭐ First rent · Spring, year 2                                      |
 
 Borrow: a sheet of lenders (pictured rows, each with its limit, rate and Borrow).
-Savings deposit: balance, interest this season, inflation beside it; Put in / Take out amounts.
+Savings deposit: balance, interest this season, inflation beside it; Put in / Take out amounts. *As built after the Sprint 18 review (owner, 2026-11-13):* each is a coin slider (the main way, steps of 1,000) and an amount box that takes any whole number when tapped (the number pad opens only then; nothing is focused when the sheet opens); 1,000 to 1,00,000 a move, never more than you hold (`finance.json`: `savingsMinimum` 1,000, refused by the sim below it; `savingsMaxPerMove`, `savingsStep`); *Put in* starts at the cash the next close won't need, marked in amber, with a line on what's left in cash against what the close takes; under 1,000 in savings, *Take out all*. *Always pay from my savings* asks on card B.
 Your books: the last 8 closed seasons (season, profit, cash at the end, net worth), each opening
   the season page (ADR 0101 §5): Profit and loss | Cash flow | Balance sheet, each line beside the
   same season last year. No "this season so far": that is Your season; now is Your wealth.

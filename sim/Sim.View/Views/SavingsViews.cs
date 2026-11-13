@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Commands;
+using Sim.Core.Definitions;
 using Sim.Core.Finance;
 
 namespace Sim.View.Views
@@ -12,7 +13,6 @@ namespace Sim.View.Views
     public static class SavingsSheet
     {
         public const string Kind = "Savings";
-        private static readonly long[] Steps = { 5_000_00, 10_000_00, 25_000_00, 50_000_00 };
 
         public static SheetVm Build(ViewContext ctx)
         {
@@ -29,30 +29,9 @@ namespace Sim.View.Views
                 StatementSheet.HubWhy, HubSheet.Prices) { Note = s.Get("savings.pricesNote") });
 
             vm.Lines.Add(LineVm.Header(s.Get("savings.putIn", "cash", ctx.Fmt.Coins(cash))));
-            int shown = 0;
-            foreach (long a in Steps)
-            {
-                long amount = a;
-                if (amount > cash || amount < min) continue;
-                shown++;
-                vm.Lines.Add(new LineVm(ctx.Fmt.Coins(amount), null)
-                    { Action = ActionVm.Checked(ctx, "in:" + amount, s.Get("savings.putButton"), null, ActionKind.Primary, at => new DepositSavings(at, amount)) });
-            }
-            if (shown == 0) vm.Lines.Add(new LineVm(s.Get("savings.putNone"), ctx.Fmt.Coins(cash)));
-
-            vm.Lines.Add(LineVm.Header(s.Get("savings.takeOut")));
-            shown = 0;
-            var outs = new List<long>();
-            foreach (long a in Steps) if (a < balance) outs.Add(a);
-            if (balance > 0) outs.Add(balance); // all of it
-            foreach (long a in outs)
-            {
-                long amount = a;
-                shown++;
-                vm.Lines.Add(new LineVm(amount == balance ? s.Get("savings.all", "amount", ctx.Fmt.Coins(amount)) : ctx.Fmt.Coins(amount), null)
-                    { Action = ActionVm.Checked(ctx, "out:" + amount, s.Get("savings.takeButton"), null, ActionKind.Secondary, at => new WithdrawSavings(at, amount)) });
-            }
-            if (shown == 0) vm.Lines.Add(new LineVm(s.Get("savings.takeNone"), ctx.Fmt.Coins(0)));
+            vm.Lines.Add(PutIn(ctx, cash));
+            vm.Lines.Add(LineVm.Header(s.Get("savings.takeOut", "amount", ctx.Fmt.Coins(balance))));
+            vm.Lines.Add(TakeOut(ctx, balance));
 
             vm.Lines.Add(LineVm.Header(s.Get("savings.standing")));
             bool always = SavingsRules.Always(sim);
@@ -60,6 +39,96 @@ namespace Sim.View.Views
             vm.Lines.Add(StandingRow(ctx, "always", always, true));
             vm.Lines.Add(new LineVm(s.Get("savings.standingNote"), null, StatementSheet.HubWhy, HubSheet.Standing));
             return vm;
+        }
+
+        /// <summary>
+        /// Put in: drag or type 1,000 to 1,00,000 (never more than your cash). It starts at the cash the next close won't need, marked in amber,
+        /// and the line under it says what's left in cash against what the close takes (owner, 2026-11-13).
+        /// </summary>
+        private static LineVm PutIn(ViewContext ctx, long cash)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            LedgerDef d = sim.Config.Game.Ledger;
+            long max = System.Math.Min(cash, d.SavingsMaxPerMove);
+            if (max < d.SavingsMinimum)
+                return new LineVm(s.Get("savings.putNone", "min", ctx.Fmt.Coins(d.SavingsMinimum)), null) { Dim = true };
+            long due = 0;
+            foreach (CloseDue c in CloseDues.Next(sim)) due += c.Amount;
+            long spare = cash - due;
+            var amount = new AmountVm("in", d.SavingsMinimum, max, d.SavingsStep, spare / d.SavingsStep * d.SavingsStep, a => PutPick(ctx, a, cash, due, max), ctx.Fmt.Coins)
+            {
+                MinCaption = ctx.Fmt.Amount(d.SavingsMinimum),
+                MaxCaption = s.Get(max == cash ? "savings.maxCash" : "savings.maxMove", "amount", ctx.Fmt.Amount(max)),
+            };
+            if (due > 0 && spare > d.SavingsMinimum && spare < max)
+            {
+                amount.Mark = spare;
+                amount.MarkCaption = s.Get("savings.keepMark", "amount", ctx.Fmt.Amount(due));
+            }
+            return new LineVm(s.Get("savings.range", "min", ctx.Fmt.Amount(d.SavingsMinimum), "max", ctx.Fmt.Amount(d.SavingsMaxPerMove)), null) { Amount = amount };
+        }
+
+        private static AmountPick PutPick(ViewContext ctx, long amount, long cash, long due, long max)
+        {
+            var s = ctx.Strings;
+            LedgerDef d = ctx.Sim.Config.Game.Ledger;
+            string bad = amount < d.SavingsMinimum ? s.Get("savings.tooLittle", "min", ctx.Fmt.Coins(d.SavingsMinimum))
+                : amount > cash ? s.Get("savings.moreThanCash", "max", ctx.Fmt.Coins(max))
+                : amount > d.SavingsMaxPerMove ? s.Get("savings.tooMuch", "max", ctx.Fmt.Coins(d.SavingsMaxPerMove)) : null;
+            if (bad != null) return Refused("in", s.Get("savings.putButton"), bad);
+            long left = cash - amount;
+            var pick = new AmountPick
+            {
+                Action = ActionVm.Checked(ctx, "in", s.Get("savings.putAmount", "amount", ctx.Fmt.Amount(amount)), null, ActionKind.Primary, at => new DepositSavings(at, amount)),
+            };
+            if (due == 0) { pick.Note = s.Get("savings.leavesCash", "left", ctx.Fmt.Coins(left)); return pick; }
+            bool enough = left >= due;
+            pick.Note = enough ? s.Get("savings.leavesEnough", "left", ctx.Fmt.Coins(left), "due", ctx.Fmt.Coins(due))
+                : s.Get("savings.leavesShort", "left", ctx.Fmt.Coins(left), "short", ctx.Fmt.Coins(due - left));
+            pick.Tone = enough ? Tone.Good : Tone.Warn;
+            return pick;
+        }
+
+        /// <summary>Take out: drag or type 1,000 to 1,00,000 (never more than the deposit), starting at 1,000; under 1,000 left, all of it at once.</summary>
+        private static LineVm TakeOut(ViewContext ctx, long balance)
+        {
+            var s = ctx.Strings;
+            LedgerDef d = ctx.Sim.Config.Game.Ledger;
+            if (balance <= 0) return new LineVm(s.Get("savings.takeNone"), ctx.Fmt.Coins(0)) { Dim = true };
+            if (balance < d.SavingsMinimum)
+                return new LineVm(ctx.Fmt.Coins(balance), null)
+                {
+                    Note = s.Get("savings.allSmall"),
+                    Action = ActionVm.Checked(ctx, "out:all", s.Get("savings.takeAll", "amount", ctx.Fmt.Amount(balance)), null, ActionKind.Secondary, at => new WithdrawSavings(at, balance)),
+                };
+            long max = System.Math.Min(balance, d.SavingsMaxPerMove);
+            var amount = new AmountVm("out", d.SavingsMinimum, max, d.SavingsStep, d.SavingsMinimum, a => TakePick(ctx, a, balance, max), ctx.Fmt.Coins)
+            {
+                MinCaption = ctx.Fmt.Amount(d.SavingsMinimum),
+                MaxCaption = s.Get(max == balance ? "savings.maxSavings" : "savings.maxMove", "amount", ctx.Fmt.Amount(max)),
+            };
+            return new LineVm(s.Get("savings.range", "min", ctx.Fmt.Amount(d.SavingsMinimum), "max", ctx.Fmt.Amount(d.SavingsMaxPerMove)), null) { Amount = amount };
+        }
+
+        private static AmountPick TakePick(ViewContext ctx, long amount, long balance, long max)
+        {
+            var s = ctx.Strings;
+            LedgerDef d = ctx.Sim.Config.Game.Ledger;
+            string bad = amount < d.SavingsMinimum ? s.Get("savings.tooLittle", "min", ctx.Fmt.Coins(d.SavingsMinimum))
+                : amount > balance ? s.Get("savings.moreThanSavings", "max", ctx.Fmt.Coins(max))
+                : amount > d.SavingsMaxPerMove ? s.Get("savings.tooMuch", "max", ctx.Fmt.Coins(d.SavingsMaxPerMove)) : null;
+            if (bad != null) return Refused("out", s.Get("savings.takeButton"), bad);
+            return new AmountPick
+            {
+                Action = ActionVm.Checked(ctx, "out", s.Get("savings.takeAmount", "amount", ctx.Fmt.Amount(amount)), null, ActionKind.Secondary, at => new WithdrawSavings(at, amount)),
+                Note = s.Get("savings.leavesSavings", "left", ctx.Fmt.Coins(balance - amount)),
+            };
+        }
+
+        private static AmountPick Refused(string id, string label, string why)
+        {
+            return new AmountPick { Action = new ActionVm(id, label, null, ActionKind.Primary, false, null, null), Note = why, Tone = Tone.Warn };
         }
 
         private static LineVm StandingRow(ViewContext ctx, string id, bool chosen, bool always)

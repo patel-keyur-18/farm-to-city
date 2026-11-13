@@ -1,5 +1,5 @@
 {
-  "ledger": { "retainSeasons": 8, "debtComfortableUnder": 0.30, "debtRiskyOver": 0.60, "savingsInterest": 0.015, "savingsMinimum": 100, "milestones": { "savings": 100000, "netWorthTimes": 2, "passivePercent": 100 } },
+  "ledger": { "retainSeasons": 8, "debtComfortableUnder": 0.30, "debtRiskyOver": 0.60, "savingsInterest": 0.015, "savingsMinimum": 1000, "savingsMaxPerMove": 100000, "savingsStep": 1000, "milestones": { "savings": 100000, "netWorthTimes": 2, "passivePercent": 100 } },
   "credit": {
     "min": 300, "max": 900, "startScore": 650, "fullScore": 750,
     "onTimeGain": 10, "cleanSeasonGain": 5,

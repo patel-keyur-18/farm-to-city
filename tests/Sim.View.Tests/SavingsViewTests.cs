@@ -33,33 +33,67 @@ namespace Sim.View.Tests
 
         private static List<AlertVm> Alerts(Simulation sim) { return Views.Alerts.Build(ViewKit2.Context(sim)); }
 
-        // The sheet: put in and take out in the steps business cash uses, one tap each; the standing choice.
+        // The sheet (owner, 2026-11-13): put in and take out by dragging or typing 1,000 to 1,00,000, never more than you have; put in starts
+        // at what the close won't need, marked; under 1,000 in savings, all of it at once; the standing choice.
         [Test]
         public void Sheet()
         {
             Simulation sim = ViewKit.NewGame(seed: 5);
-            long topUp = 20_000 * Coin - sim.State.Ledger.Cash;
-            sim.State.Ledger.Post(T(sim), sim.Period, "test", "test", new Posting(Account.Cash, topUp), new Posting(Account.OpeningEquity, -topUp)); // 20,000 coins in hand
+            long topUp = 38_611 * Coin - sim.State.Ledger.Cash;
+            sim.State.Ledger.Post(T(sim), sim.Period, "test", "test", new Posting(Account.Cash, topUp), new Posting(Account.OpeningEquity, -topUp));
             ViewContext ctx = ViewKit2.Context(sim);
+            long due = CloseDues.Next(sim).Sum(d => d.Amount);
+            Assert.That(due, Is.GreaterThan(1_000 * Coin).And.LessThan(37_000 * Coin), "the family's living is due");
             SheetVm vm = SavingsSheet.Build(ctx);
             Assert.That(vm.Title, Is.EqualTo("Savings deposit"));
-            List<ActionVm> actions = vm.Lines.Where(l => l.Action != null).Select(l => l.Action).ToList();
-            Assert.That(actions.Select(a => a.Id), Is.EquivalentTo(new[] { "in:500000", "in:1000000", "standing:always" }), "nothing to take out yet; 25,000 is more than the cash");
-            Run(sim, actions.First(a => a.Id == "in:1000000"));
-            Assert.That(SavingsRules.Balance(sim), Is.EqualTo(10_000 * Coin));
+            AmountVm put = vm.Lines.Single(l => l.Amount != null).Amount;
+            Assert.That(vm.Lines.Single(l => l.Label == "Nothing in the bank yet").Dim, Is.True, "nothing to take out yet");
+            Assert.That((put.Min, put.Max, put.Step), Is.EqualTo((1_000 * Coin, 38_611 * Coin, 1_000 * Coin)), "never more than your cash");
+            long spare = 38_611 * Coin - due;
+            Assert.That(put.Start, Is.EqualTo(put.Snap(spare / (1_000 * Coin) * (1_000 * Coin))), "starts at what the close won't need");
+            Assert.That(put.Mark, Is.EqualTo(spare));
+            Assert.That(put.MaxCaption, Is.EqualTo("38,611 (all your cash)"));
+            Assert.That(put.Words(32_000 * Coin), Is.EqualTo("32,000 coins"), "the box while not being typed in");
+
+            Assert.That(put.Snap(20_400 * Coin), Is.EqualTo(20_000 * Coin), "drags in steps of 1,000");
+            Assert.That(put.Snap(38_200 * Coin), Is.EqualTo(38_611 * Coin), "the end is all of it");
+            Assert.That(put.Snap(10), Is.EqualTo(1_000 * Coin));
+
+            AmountPick ok = put.Pick(2_000 * Coin);
+            Assert.That((ok.Action.Label, ok.Action.Enabled, ok.Tone), Is.EqualTo(("Put in 2,000", true, Tone.Good)));
+            Assert.That(ok.Note, Does.StartWith("Leaves 36,611 coins in cash. The season's close takes"));
+            AmountPick shortPick = put.Pick(38_000 * Coin);
+            Assert.That((shortPick.Tone, shortPick.Note.Contains("short by")), Is.EqualTo((Tone.Warn, true)));
+            AmountPick typed = put.Pick(45_000 * Coin);
+            Assert.That((typed.Action.Enabled, typed.Note), Is.EqualTo((false, "More than your cash: you can put in 38,611 coins at most.")));
+            Assert.That(put.Pick(999 * Coin).Note, Is.EqualTo("At least 1,000 coins at a time."));
+            Run(sim, put.Pick(20_000 * Coin).Action);
+            Assert.That(SavingsRules.Balance(sim), Is.EqualTo(20_000 * Coin));
 
             vm = SavingsSheet.Build(ViewKit2.Context(sim));
-            Assert.That(vm.Lines.Any(l => l.Label == "All 10,000" || l.Label.StartsWith("All ")), Is.True, "take it all out");
-            actions = vm.Lines.Where(l => l.Action != null).Select(l => l.Action).ToList();
-            Run(sim, actions.First(a => a.Id == "out:500000"));
-            Assert.That(SavingsRules.Balance(sim), Is.EqualTo(5_000 * Coin));
+            AmountVm take = vm.Lines.Single(l => l.Amount != null && l.Amount.Id == "out").Amount;
+            Assert.That((take.Min, take.Max, take.Start), Is.EqualTo((1_000 * Coin, 20_000 * Coin, 1_000 * Coin)));
+            Assert.That(take.Pick(25_000 * Coin).Note, Is.EqualTo("More than your savings: you can take out 20,000 coins at most."));
+            Run(sim, take.Pick(19_258 * Coin).Action);
+            Assert.That(SavingsRules.Balance(sim), Is.EqualTo(742 * Coin), "any whole amount can be typed");
 
-            Run(sim, actions.First(a => a.Id == "standing:always"));
+            vm = SavingsSheet.Build(ViewKit2.Context(sim));
+            LineVm small = vm.Lines.Single(l => l.Action != null && l.Action.Id == "out:all");
+            Assert.That(small.Action.Label, Is.EqualTo("Take out all 742"));
+            Run(sim, small.Action);
+            Assert.That(SavingsRules.Balance(sim), Is.EqualTo(0));
+
+            vm = SavingsSheet.Build(ViewKit2.Context(sim));
+            Run(sim, vm.Lines.Single(l => l.Label == "Always pay from my savings").Action);
             Assert.That(SavingsRules.Always(sim), Is.True);
             vm = SavingsSheet.Build(ViewKit2.Context(sim));
             Assert.That(vm.Lines.Single(l => l.Label == "Always pay from my savings").Badge, Is.EqualTo("Chosen"));
             Assert.That(vm.Lines.Single(l => l.Label == "Ask me").Action.Id, Is.EqualTo("standing:ask"));
             Assert.That(vm.Lines.All(l => l.WhyKey == null || WhyView.Has(l.WhyKey)), Is.True);
+
+            Simulation poor = ViewKit.NewGame(seed: 5);
+            poor.State.Ledger.Post(T(poor), poor.Period, "test", "test", new Posting(Account.Cash, 640 * Coin - poor.State.Ledger.Cash), new Posting(Account.OpeningEquity, poor.State.Ledger.Cash - 640 * Coin));
+            Assert.That(SavingsSheet.Build(ViewKit2.Context(poor)).Lines.Any(l => l.Label == "You need at least 1,000 coins in cash to put in."), Is.True);
         }
 
         // Your wealth shows the deposit as a picture button beside Borrow and Your books.
