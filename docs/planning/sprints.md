@@ -881,7 +881,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-240 | Rent: kutcha houses, location, yearly leases | [F11.2](features/F11.2-households-needs-and-happiness.md) | 5 | Must | Done (approved 2026-11-13; the Village at day 28–45, ADR 0110 §8) |
 | US-241 | Hands and labourers take part-harvests | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done (approved 2026-11-13) |
 | US-252 | A mandi trip with several crops | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | In review |
-| US-099 | Archetype bots | [F20.1](features/F20.1-balancer-and-health-checks.md) | 8 | Must | To do |
+| US-099 | Archetype bots | [F20.1](features/F20.1-balancer-and-health-checks.md) | 8 | Must | In review |
 | US-101 | Device performance, and the Editor's rendering statistics | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | T1 in review; T2 with the Development build |
 
 **Order of work:** the plan approved → spec 021 written → spec 022 written (both to the owner for review, alongside the code) → the renewal card previewed → US-240 → US-241 → the mandi sheet previewed → US-252 → US-101's Editor helper and its first reading → US-099 → balance (the Village's pace with the new rents, ADR 0107 §8; the archetypes' 20% rule) → the checklist's Editor rows by scripted touch → the Development build (both p95s, golden replays on the phone). One stop for the owner's review after each story and each spec.

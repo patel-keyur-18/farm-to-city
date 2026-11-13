@@ -996,7 +996,7 @@ namespace Tools.Balancer
     /// <c>drip</c> (on the subsidised pumped acres), <c>mango</c> (an orchard on the last inherited acre, picked or sold on the trees),
     /// <c>tractor</c> (bought on the bank's loan for 70%), <c>tractor-hire</c> (hired on each day there's an acre to sow), <c>granary</c> (your godown, rice kept from the Monsoon to Spring).
     /// </summary>
-    public sealed class FarmToolBot : FarmerBot
+    public class FarmToolBot : FarmerBot
     {
         private readonly string[] _tools;
         public long Spent { get; private set; }
@@ -1355,7 +1355,7 @@ namespace Tools.Balancer
     /// measured quickest; the others show a player who goes another way still gets there. The saver variant borrows nothing, hires as
     /// the cautious saver does, and builds from savings.
     /// </summary>
-    public sealed class VillageBot : BusinessBot
+    public class VillageBot : BusinessBot
     {
         private readonly bool _saver;
         private readonly string _order;
