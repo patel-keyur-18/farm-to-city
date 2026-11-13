@@ -1,6 +1,6 @@
 # 0107. Phase 3 plan check: nine specs in eight sprints, the Township gate, the treasury's first day, kutcha and pucca houses, the cold store, part-harvests for hands, and the Phase 3 gate
 
-- Status: Accepted (owner, 2026-11-13: each gap decided one at a time; the plan approved the same day; §13 and §14 approved; §15 from the owner's "nothing Phase 3 needs moved to Phase 4")
+- Status: Accepted (owner, 2026-11-13: each gap decided one at a time; the plan approved the same day; §13 and §14 approved; §15 written on the owner's "nothing Phase 3 needs moved to Phase 4" and taken forward by the owner the same day)
 - Date: 2026-11-13
 - Deciders: Keyur Patel
 - Amends: the GDD's eras table (the Township's unlock), *Player journey and eras*, *Land, farming and livestock* (the map's ring, houses, storage, standing orders), *Economy* (the road tier), *Businesses* (the Township catalogue), *Community and civic services* (literacy, the clinic), *Governance and public finance* (the treasury's first day), *Roadmap* (the Phase 3 gate); ADR 0011 §3 (who pays the first doctor); ADR 0028 (the Township's pace); ADR 0063 §2 (the family house and its rent); ADR 0102 §3 (c) (decided here); ADR 0105's open question (decided here); spec 013 §3.4 (cold storage); spec 006 (hands' harvests); spec 014 (rent); spec 018 (the Township's literacy)

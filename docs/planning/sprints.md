@@ -867,8 +867,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 20 · 31 May – 13 Jun 2027 · Phase 3 (the plan; specs 021 and 022; rent realism, part-harvests, archetype bots, frame time; 2 weeks, ADR 0107)
 
-- **Status:** Plan check done (ADR 0107, 2026-11-13): 12 gaps closed one per message with the owner; **the plan approved (2026-11-13)**; every story's scope written out and the owner's mandi request added (ADR 0107 §13–§14), for the owner's yes before spec 021. Before it: stale docs fixed and Sprint 18's code reviewed (PR #28, merged 2026-11-13)
-- **Branch:** `sprint/20-treasury-and-taxes`, from `main` after PR #28
+- **Status:** Plan check done and approved (ADR 0107 §1–§15, owner 2026-11-13; the plan merged in PR #29). **Not started**: begins in a new session with spec 021. Before it: stale docs fixed and Sprint 18's code reviewed (PR #28, merged 2026-11-13)
+- **Branch:** `sprint/20-treasury-and-taxes`, made fresh from `main` after PR #29 (the plan) is merged
 - **Goal:** Phase 3 planned (ADR 0107). Specs 021 (treasury and budget) and 022 (taxes and policies) written and approved, so Sprint 21 can build them. The carried rules built: rents that follow the kind of house, its place and a yearly lease (US-240); hands and labourers taking part-harvests (US-241); the owner's request, a mandi trip with several crops (US-252). The archetype bots for the balance rule (US-099). The Editor's rendering statistics, and the first Development build's frame times and golden replays on the phone, closing Phase 2's deferred items (US-101). Save schema 18 with its migration and fixture.
 - **Points:** 22 (US-240 5, US-241 3, US-252 3, US-099 8, US-101 3) plus two specs
 - **Specs for the owner to review:** 021, 022 (spec 014 and 006 amended inside US-240 and US-241, as ADR 0107 decided)
@@ -892,7 +892,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 - [x] Every Phase 3 story, task and acceptance criterion checked against the GDD, the ADRs and the code after PR #28 (ADR 0107)
 - [x] G1–G12 answered (2026-11-13, ADR 0107)
-- [x] The plan approved by the owner (2026-11-13); §13's scope lines and §14's request added after, for the owner's yes
+- [x] The plan approved by the owner (2026-11-13), §13–§15 included
 - [x] US-240 and US-241's acceptance criteria name their tests (spec 014 and 006 amendments in the stories)
 
 **Sprint end checklist**
