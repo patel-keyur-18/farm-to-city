@@ -28,15 +28,18 @@
 
 | # | What to try | What to expect | Device only | Result |
 | --- | --- | --- | --- | --- |
-| 1 | Let a family house; wait for a family to move in; Menu → People → Town → the family | The sheet shows *Rent*, *Lease* ("n a season · n more seasons") and a **?** with the parts of the rent | | |
-| 2 | In the lease's last season, wait for the close of the season before | A card "A lease is ending: …" with the choices; the bell shows the same question | | |
-| 3 | Tap *Raise to … (+5%)* on the card | The family's sheet says "Renews at …, as you chose"; at the close the new rent starts and the away card says so | | |
-| 4 | Tap *Decide later*, then open the family from the bell | The sheet has the same choices as buttons; with no answer the market rise applies at the close | | |
-| 5 | Several leases end at once | The card says "1 of 3"; *Market rise for all 3 left* ends the questions | | |
-| 6 | A family whose rent is over 30% of its income | The card says a raise would not be fair now and offers *Keep it* or *Lower it* | | |
-| 7 | Fill the store, have a hand with a keep-crop order (or hire labourers) and let the crop ripen | The hand takes what fits each hour; the rest stands in the field; the bell says "Store full: … still standing on …" with *Sell some* | | |
-| 8 | Tap *Sell some* in that alert, sell something, wait an hour | The Store opens; after room appears the standing crop is taken (the alert goes) | | |
-| 9 | Come back after being away with the store full | The away card has *Still standing* with the kg and the field | | |
-| 10 | Store → Mandi trip with two or more crops in the store; tap *Fill with what pays best* | The best-paying crops load first until the trolley is full; the bar is full; the sum lists each crop | | |
-| 11 | Drag one crop's coin, then type a kg in another's box | The trolley bar, the other crops' limits and the sum change at once; a typed amount past the room is cut to what fits | | |
-| 12 | Tap *Go to the mandi* | One trip with every load; the hire is taken; the Store shows when it pays | | |
+| 1 | Let a family house; wait for a family to move in; Menu → People → Town → the family | The sheet shows *Rent*, *Lease* ("n a season · n more seasons") and a **?** with the parts of the rent | | Editor ✓ (touch) |
+| 2 | In the lease's last season, wait for the close of the season before | A card "A lease is ending: …" with the choices; the bell shows the same question | | Editor ✓ (the card came at the close, over the season page) |
+| 3 | Tap *Raise to … (+5%)* on the card | The family's sheet says "Renews at …, as you chose"; at the close the new rent starts and the away card says so | | Editor ✓ (touch) |
+| 4 | Tap *Decide later*, then open the family from the bell | The sheet has the same choices as buttons; with no answer the market rise applies at the close | | Editor ✓ (touch: Decide later, the bell row, Answer opened the family) |
+| 5 | Several leases end at once | The card says "1 of 3"; *Market rise for all 3 left* ends the questions | | Unit test only (`RentViewTests`): one lease in the Editor town |
+| 6 | A family whose rent is over 30% of its income | The card says a raise would not be fair now and offers *Keep it* or *Lower it* | | Unit test only (`RentTests.AffordableCap`, `RentViewTests`) |
+| 7 | Fill the store, have a hand with a keep-crop order (or hire labourers) and let the crop ripen | The hand takes what fits each hour; the rest stands in the field; the bell says "Store full: … still standing on …" with *Sell some* | | Editor ✓ (the hand took its 20 kg part, the rest stood; the alert) |
+| 8 | Tap *Sell some* in that alert, sell something, wait an hour | The Store opens; after room appears the standing crop is taken (the alert goes) | | Editor ✓ for the alert and Sell some; the room appearing is `PartHarvestTests` |
+| 9 | Come back after being away with the store full | The away card has *Still standing* with the kg and the field | | Editor ✓ (the away card) |
+| 10 | Store → Mandi trip with two or more crops in the store; tap *Fill with what pays best* | The best-paying crops load first until the trolley is full; the bar is full; the sum lists each crop | | Editor ✓ (touch) |
+| 11 | Drag one crop's coin, then type a kg in another's box | The trolley bar, the other crops' limits and the sum change at once; a typed amount past the room is cut to what fits | | Editor ✓ (a drag; a typed kg set in code) |
+| 12 | Tap *Go to the mandi* | One trip with every load; the hire is taken; the Store shows when it pays | | Editor ✓ (touch: the hire was taken, a trip started) |
+| 13 | Pinch out so the whole map shows (the village, the farm and the ring of land), at night as in Sprint 17. Developer panel → **Measure frame time (20 s)**; don't touch the screen | **Device only.** Main thread p95 ≤ 8.3 ms and GPU p95 ≤ 11 ms (ADR 0094), about 60 fps, under 1% of frames over 25 ms; write both p95s here (Sprint 17: main 5.09, GPU 8.72) | Yes | |
+| 14 | Developer panel → **Golden replays** | **Device only.** All three PASS with the `dotnet test` hashes (Phase 2's deferred check, ADR 0106) | Yes | |
+| 15 | Developer panel → **Away cap (72 h)** | **Device only.** The catch-up finishes in under 2 s (count it; the panel shows the result) | Yes | |
