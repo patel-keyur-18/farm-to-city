@@ -1,6 +1,6 @@
 # 021. The town treasury and its budget
 
-- Status: In review (G1–G10 closed with the owner one per message, 2026-11-13, ADR 0108; the layout accepted, to be previewed as an artifact that looks exactly like the game before US-138's UI code)
+- Status: Approved (owner, 2026-11-13; G1–G10 closed one per message, ADR 0108; the layout accepted, to be previewed as an artifact that looks exactly like the game before US-138's UI code)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Governance and public finance (the treasury's first day, revenue, spending, the budget cycle); Overview (two wallets); Community and civic services (the school, the clinic)
@@ -103,6 +103,7 @@ Grants never follow your wealth: only residents and the price index. A grant onl
 | 4 | Roads | The link road's and lanes' upkeep (specs 023, 025) | The road |
 | 5 | Safety | The watchman's post, the community hall, the playground (spec 023) | Each building |
 | 6 | Utilities | The water tower and the power (spec 025) | Each |
+| 7 | Policies | The farm input subsidy, the small business grant, the night market's lights (spec 022 §3.5, added by spec 022) | Each policy enacted |
 
 A department with no lines shows *Nothing to pay yet*. A department's **needs** are the sum of its lines at today's prices at the close. Spec 021 builds the structure and the lines that exist (office, education); later specs add lines to the same table (`treasury.json` `lines`), each with its wage-or-upkeep kind (§3.5).
 
