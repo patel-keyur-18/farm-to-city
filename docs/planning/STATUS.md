@@ -4,9 +4,9 @@
 
 | Field | Value |
 | --- | --- |
-| Phase | **Phase 2 · Hamlet & Village is closed** (owner, 2026-11-13, ADR 0106). **Phase 3 · Township is next but not started**: it waits for the owner's go, then its plan check and specs. Phase 1 complete (Sprint 10, 2026-10-21) |
-| Sprint | **Sprint 19 closed 2026-11-13** (ADR 0106): A1 and CI passed; the owner's phone checks done; A2–A5 continue in parallel (the owner's play, findings ad hoc); the frame-time p95s and golden replays on the phone are deferred. Sprint 18 closed 2026-11-12. No sprint is open |
-| Branch with latest work | `main` (PR #27 merged: the Phase 2 close). `fix/phase-2-docs-and-s18-review`: stale docs fixed and the Sprint 18 code review (before Phase 3). Phase 3's first branch, `sprint/20-treasury-and-taxes`, starts with its plan check |
+| Phase | **Phase 3 · Township: planned and approved** (owner, 2026-11-13, ADR 0107 §1–§15: 243 points, Sprints 20–27). **Sprint 20 not started**: it starts in a new session. Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
+| Sprint | **Sprint 20** (31 May – 13 Jun 2027 planned, 2 weeks, 22 points plus specs 021 and 022): planned, nothing started. Sprint 19 closed 2026-11-13 |
+| Branch with latest work | `main` once PR #29 (the Phase 3 plan, docs only) is merged. Sprint 20's work goes on a fresh `sprint/20-treasury-and-taxes` from `main` |
 | Last updated | 2026-11-13 |
 
 ## Done so far
@@ -424,9 +424,15 @@
 
 ## Next up
 
-1. **Phase 3 · Township, not started; the owner says when.** What it needs first, in order: (a) the plan check: the Phase 3 scope from the GDD and `epics.md` (E15 and E16, F12.5 and F12.6) cut into sprints with points; (b) its specs written and approved, two to review a sprint (ADR 0019): treasury and budget first (F15.1), then taxes and policies (F15.2); (c) the carried decisions below; (d) its ADR and a branch. No Phase 3 code before its spec is approved.
-2. **Carried into the Phase 3 plan:** rent realism (ADR 0102 §3 (c)); a cold store for potatoes, vegetables, fruit and milk (spec 013 §3.4, Phase 3); whether hands and labourers may take part-harvests (ADR 0105); the owner's Hay Day-style confirm rule for any new spending screen (ADR 0101).
-3. **Deferred, the owner's call, ADR 0106:** both frame-time p95s (ADR 0094) and golden replays on the phone, from a Development build; gate part B for Phases 1 and 2 (fresh players), before Launch; A2–A5 confirmed in parallel (diary, sessions, the Village, profit versus cash). A failure there is a Phase 2 fix.
+1. **Sprint 20, from the start of its order of work** (`sprints.md`, ADR 0107). Create `sprint/20-treasury-and-taxes` from `main` (after PR #29 is merged), then:
+   1. Write **spec 021 (treasury and budget: US-138, US-139)** from `docs/specs/_TEMPLATE.md`, within the scope in `features/F15.1-treasury-and-budget.md` and ADR 0107 §3, §6, §13. Close its gaps with the owner one per message, each with a recommendation; stop for approval.
+   2. Write **spec 022 (taxes and policies: US-140, US-141)** the same way (scope in `features/F15.2-taxes-and-policies.md`, ADR 0107 §13).
+   3. Code, one story at a time, each stopped for the owner's review: preview the renewal card, then **US-240** (rent: kutcha houses, location, yearly leases; save schema 18; spec 014 amended) → **US-241** (hands' and labourers' part-harvests; spec 006 amended) → confirm the mandi sheet's limits in the Editor and preview the new sheet, then **US-252** (a mandi trip with several crops; spec 004 amended) → **US-101** (the Editor's rendering statistics helper, first reading in STATUS) → **US-099** (archetype bots).
+   4. Balance: the Village's pace with the new rents (a slip past 5 weeks with credit goes to the owner with numbers); the archetypes' 20% rule.
+   5. The checklist `docs/test-checklists/s20-rent-harvests-frame-time.md` (device-only rows marked), every other row in the Editor by scripted touch; then a Development build for the owner: both frame-time p95s and golden replays on the phone (closing Phase 2's deferred items, ADR 0106).
+   6. Also check in the Editor this session's two string fixes: the literacy *Why?* (60%) and the healthcare row ("a clinic is one of the Township's goals").
+2. **Standing rules:** never defer to the device what the Unity Editor can check (ADR 0107 §11); back up the Editor saves (`~/Library/Application Support/keyur-patel-18/Farm to City/Saves`) before Editor tests and restore and diff after; never edit C# in play mode; run both test projects and fix every failure; preview art, layouts and text first; confirm cards for new spending (ADR 0101 §12); never commit `Assets/_Recovery/` or `ProjectSettings` changes; every PR gets labels, milestone `Phase 3 · Township` and the FarmToCity project (In Progress).
+3. **Deferred, the owner's call (ADR 0106):** gate part B for Phases 1 and 2, before Launch; Phase 2's A2–A5 continue as the owner's play (a failure is a Phase 2 fix).
 
 ## Owner action checklist (Phases 0–1)
 
@@ -447,6 +453,7 @@
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
 | Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
 | Sprint 18 | Done: device build installed and approved 2026-11-12; PRs #24 and #25 merged. Frame-time p95s not measured (a Development build, at gate A6) |
+| Sprint 20 | **Merge PR #29** (the Phase 3 plan) before the new session; then review specs 021 and 022 and each story; the Development build: both frame-time p95s and golden replays on the phone |
 | Sprint 19 | **Closed 2026-11-13 (ADR 0106).** Keep playing: A2–A5 (the Village within 3 weeks, a session each day, no blocker, the three *why cash moved* sentences and *Your year* in `s19-phase-2-playtest.md`); tell Claude only if something fails, or when done; findings are ad hoc tasks. Ask for a Development build when you want the frame-time p95s and golden replays on the phone |
 
 ## Open questions (with the owner)
@@ -455,7 +462,8 @@
 
 - **Phase 1 gate part B** (ADR 0047 §5, US-185): fresh players' day 2 and day 3 returns are untested until testers are possible; before Phase 5 · Launch at the latest.
 - **Phase 2 gate part B** (ADR 0101 §9): fresh players explain profit versus cash from the screens unprompted; with Phase 1's part B, before Launch.
-- **Phase 2 gate, deferred (ADR 0106, 2026-11-13):** A2–A5 run in parallel with Phase 3's planning (the owner confirms only on a failure); both frame-time p95s and the golden replays on the phone wait for a Development build.
+- **Phase 2 gate, deferred (ADR 0106, 2026-11-13):** A2–A5 run in parallel with Phase 3 (the owner confirms only on a failure); both frame-time p95s and the golden replays on the phone come with Sprint 20's Development build (ADR 0107 §12).
+- **Phase 3 gate part B** (ADR 0107 §11): fresh players explain public versus personal money unprompted; with Phases 1 and 2's, before Launch.
 
 - ~~**The crop ladder** (owner, 2026-10-26).~~ Settled: spec 020 and ADR 0084 approved 2026-10-31, built as Sprint 15b, device check passed 2026-11-03.
 
@@ -474,7 +482,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-The Phase 3 plan check is under way with the owner (gap G1, the spec order and sprint cut, agreed 2026-11-13); next is G2 (who counts in the Township's town, and the road to 20 households), after the review PR is merged; nothing written for Phase 3 yet. Save schema is 17 (ADR 0105). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+The Phase 3 plan is approved (ADR 0107 §1–§15, 2026-11-13) and in PR #29; no Phase 3 spec or code yet. Sprint 20 starts in a new session. Save schema is 17 (ADR 0105); Sprint 20 opens 18 with US-240. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 
