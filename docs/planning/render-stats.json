@@ -1,0 +1,5 @@
+[
+  {"label":"Sprint 20, first reading (after US-252)","view":"all","date":"2026-11-13","drawCalls":1035,"batches":1035,"setPassCalls":12,"triangles":28164,"visibleSprites":1213,"sprites":1470},
+  {"label":"Sprint 20, first reading (after US-252)","view":"village","date":"2026-11-13","drawCalls":597,"batches":597,"setPassCalls":10,"triangles":14914,"visibleSprites":699,"sprites":1470},
+  {"label":"Sprint 20, first reading (after US-252)","view":"farm","date":"2026-11-13","drawCalls":381,"batches":381,"setPassCalls":9,"triangles":10487,"visibleSprites":439,"sprites":1470}
+]
