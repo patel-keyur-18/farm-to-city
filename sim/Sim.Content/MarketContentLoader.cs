@@ -211,7 +211,7 @@ namespace Sim.Content
         {
             string p = root + ".mandi";
             JObject m = Object(Required(o, root, "mandi"), p);
-            OnlyFields(m, p, "tripHours", "cartCapacityKg", "cartHirePerTrip", "commissionRate", "founderHours");
+            OnlyFields(m, p, "tripHours", "cartCapacityKg", "cartHirePerTrip", "commissionRate", "founderHours", "loadStepKg");
             int hours = Int(Required(m, p, "tripHours"), p + ".tripHours");
             Range(hours, 1, 24, p + ".tripHours");
             Fixed cart = Bounded(m, p, "cartCapacityKg", "1", "100000");
@@ -219,7 +219,8 @@ namespace Sim.Content
             if (hire < 0) throw new ContentException(p + ".cartHirePerTrip", "must not be negative");
             Fixed commission = Bounded(m, p, "commissionRate", "0", "0.2");
             Fixed founder = Bounded(m, p, "founderHours", "0", hours.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            return new MandiDef(hours, cart.MulRatio(1000, 1).RoundToLong(), hire, commission, founder);
+            Fixed step = m["loadStepKg"] == null ? Fixed.FromInt(50) : Bounded(m, p, "loadStepKg", "1", "2000"); // the golden's frozen content copy has none
+            return new MandiDef(hours, cart.MulRatio(1000, 1).RoundToLong(), hire, commission, founder, step.MulRatio(1000, 1).RoundToLong());
         }
 
         /// <summary>The supermarket's orders (spec 011 §4); absent in Phase 1 content.</summary>

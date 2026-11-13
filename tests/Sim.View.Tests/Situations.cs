@@ -339,12 +339,10 @@ namespace Sim.View.Tests
             foreach (LineVm l in inputs.Lines) yield return N("input " + l.Label, BuyInputsSheet.One(ctx, (int)l.Action.Opens.Value.Id));
             SheetVm mandi = MandiSheet.Build(ctx, null);
             yield return N("mandi", mandi);
-            foreach (LineVm l in mandi.Lines.Where(x => x.Action != null))
-            {
-                SheetVm load = MandiSheet.Load(ctx, (int)l.Action.Opens.Value.Id, null);
-                yield return N("mandi load " + l.Label, load);
-                foreach (LineVm c in load.Lines) yield return N("mandi with " + l.Label + " " + c.Label, MandiSheet.Build(ctx, c.Action.Opens.Value.Arg));
-            }
+            foreach (LineVm l in mandi.Lines.Where(x => x.Amount != null))
+                yield return N("mandi with " + l.Label, MandiSheet.Build(ctx, l.Amount.Then(l.Amount.Max).Arg));
+            ActionVm fill = mandi.Lines.Select(x => x.Action).FirstOrDefault(x => x != null && x.Id == "replace:fill");
+            if (fill != null && fill.Opens.HasValue) yield return N("mandi filled", MandiSheet.Build(ctx, fill.Opens.Value.Arg));
         }
     }
 }

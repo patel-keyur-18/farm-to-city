@@ -43,6 +43,9 @@ namespace Game.Presentation.Ui
         /// <summary>A row that opens a sheet was tapped (a good in the Store).</summary>
         public Action<SheetRequest> OnOpenRow { get; set; }
 
+        /// <summary>A row with no button of its own (the mandi's crops) was let go or typed: show this sheet again in place (US-252).</summary>
+        public Action<SheetRequest> OnAmountSet { get; set; }
+
         /// <summary>The sheet before this one, if any: the header shows a back button (ADR 0044 §1).</summary>
         public Func<bool> CanGoBack { get; set; }
 
@@ -473,6 +476,13 @@ namespace Game.Presentation.Ui
         private VisualElement Row(LineVm line)
         {
             if (line.Amount != null) return AmountRow(line);
+            if (line.Meter >= 0)
+            {
+                var metered = new VisualElement { pickingMode = PickingMode.Ignore };
+                metered.Add(PlainRow(line));
+                metered.Add(Meter(line.Meter));
+                return metered;
+            }
             if (line.Tree != null) return FamilyTree(line.Tree);
             if (line.Advisor != null) return AdvisorLine(line.Advisor);
             if (line.Pie == null && line.Trend == null) return PlainRow(line);
@@ -483,6 +493,22 @@ namespace Game.Presentation.Ui
             return box;
         }
 
+        /// <summary>A bar under a row, filled this many percent (the mandi trolley).</summary>
+        private static VisualElement Meter(int percent)
+        {
+            var track = new VisualElement { pickingMode = PickingMode.Ignore };
+            track.style.height = 22; track.style.marginTop = 4; track.style.marginBottom = 10;
+            track.style.backgroundColor = Painter.Hex(0xE2CFA6);
+            UiKit.Radius(track, 11);
+            var fill = new VisualElement { pickingMode = PickingMode.Ignore };
+            fill.style.height = Length.Percent(100);
+            fill.style.width = Length.Percent(Mathf.Clamp(percent, 0, 100));
+            fill.style.backgroundColor = UiKit.Green;
+            UiKit.Radius(fill, 11);
+            track.Add(fill);
+            return track;
+        }
+
         /// <summary>
         /// An amount to drag or type (the savings sheet, owner 2026-11-13): the amount box and its button, a slider with a coin to drag (the
         /// main way), its ends, and the line saying what the amount would do. Nothing is focused when it opens: the number pad comes up only
@@ -491,23 +517,40 @@ namespace Game.Presentation.Ui
         private VisualElement AmountRow(LineVm line)
         {
             AmountVm a = line.Amount;
-            long value = _amounts.TryGetValue(a.Id, out long kept) ? System.Math.Min(a.Max, System.Math.Max(a.Min, kept)) : a.Start;
+            bool live = a.Then != null; // a row with no button of its own: the sheet is drawn again when it is let go (US-252)
+            long value = !live && _amounts.TryGetValue(a.Id, out long kept) ? System.Math.Min(a.Max, System.Math.Max(a.Min, kept)) : a.Start;
             var box = new VisualElement { pickingMode = PickingMode.Ignore, name = "amount:" + a.Id };
             box.style.paddingTop = 6; box.style.paddingBottom = 10;
             box.style.borderBottomWidth = 2;
             box.style.borderBottomColor = new Color(UiKit.Wood.r, UiKit.Wood.g, UiKit.Wood.b, 0.25f);
 
-            Label range = UiKit.Text(line.Label, 26, UiKit.Wood, UiKit.Body);
-            range.style.unityTextAlign = TextAnchor.MiddleRight;
-            box.Add(range);
+            if (!live)
+            {
+                Label range = UiKit.Text(line.Label, 26, UiKit.Wood, UiKit.Body);
+                range.style.unityTextAlign = TextAnchor.MiddleRight;
+                box.Add(range);
+            }
 
             var top = new VisualElement { pickingMode = PickingMode.Ignore };
             top.style.flexDirection = FlexDirection.Row;
             top.style.alignItems = Align.Center;
+            if (live)
+            {
+                // A crop: its picture, its name and what it pays over the trader on the left, the kg box on the right.
+                var names = new VisualElement { pickingMode = PickingMode.Ignore };
+                names.style.flexGrow = 1; names.style.flexShrink = 1;
+                names.Add(UiKit.Heading1(line.Label, 40));
+                Label cap = UiKit.Text(line.Note ?? "", 24, UiKit.Wood, UiKit.Body);
+                cap.style.whiteSpace = WhiteSpace.Normal;
+                names.Add(cap);
+                top.Add(WithIcon(line.Icon, 64, names));
+            }
             var field = new TextField { name = "amountField:" + a.Id, keyboardType = TouchScreenKeyboardType.NumberPad };
-            field.style.flexGrow = 1;
-            field.style.marginRight = 18;
-            field.style.fontSize = 44;
+            field.style.flexGrow = live ? 0 : 1;
+            if (live) field.style.width = 250;
+            field.style.marginRight = live ? 0 : 18;
+            field.style.marginLeft = live ? 14 : 0;
+            field.style.fontSize = live ? 36 : 44;
             UiKit.SetFont(field, UiKit.Heading);
             VisualElement input = field.Q(className: TextField.inputUssClassName);
             if (input != null)
@@ -520,7 +563,7 @@ namespace Game.Presentation.Ui
             }
             top.Add(field);
             var buttonSlot = new VisualElement { pickingMode = PickingMode.Ignore };
-            top.Add(buttonSlot);
+            if (!live) top.Add(buttonSlot);
             box.Add(top);
 
             var slider = new VisualElement { name = "slider:" + a.Id };
@@ -541,16 +584,18 @@ namespace Game.Presentation.Ui
             box.Add(note);
 
             string shown = null;
-            string Digits(long v) { return Sim.View.Text.Formatter.WholeCoins(v).ToString(System.Globalization.CultureInfo.InvariantCulture); }
-            float Fraction(long v) { return a.Max <= a.Min ? 1f : Mathf.Clamp01((float)(v - a.Min) / (a.Max - a.Min)); }
+            string Digits(long v) { return (v / a.Scale).ToString(System.Globalization.CultureInfo.InvariantCulture); }
+            float Fraction(long v) { return a.Span <= a.Min ? 1f : Mathf.Clamp01((float)(v - a.Min) / (a.Span - a.Min)); }
+            void Commit() { if (live && value != a.Start && OnAmountSet != null) OnAmountSet(a.Then(value)); } // the sheet again, with the new load
             void Choose(long v, bool fromField)
             {
+                if (live) v = System.Math.Max(a.Min, System.Math.Min(a.Max, v)); // a typed amount never passes the room
                 value = v;
-                _amounts[a.Id] = v;
+                if (!live) _amounts[a.Id] = v;
                 if (!fromField) field.SetValueWithoutNotify(field.focusController?.focusedElement == field ? Digits(v) : a.Words(v));
                 AmountPick pick = a.Pick(v);
-                string look = pick.Action.Label + pick.Action.Enabled;
-                if (look != shown) // rebuilt only when it changes: leaving the box mustn't swap the button under the finger tapping it
+                string look = pick.Action == null ? "" : pick.Action.Label + pick.Action.Enabled;
+                if (pick.Action != null && look != shown) // rebuilt only when it changes: leaving the box mustn't swap the button under the finger tapping it
                 {
                     shown = look;
                     buttonSlot.Clear();
@@ -576,6 +621,12 @@ namespace Game.Presentation.Ui
                 p.BeginPath(); p.MoveTo(new Vector2(x0, y)); p.LineTo(new Vector2(x1, y)); p.Stroke();
                 p.lineWidth = 16f; p.strokeColor = fill;
                 p.BeginPath(); p.MoveTo(new Vector2(x0, y)); p.LineTo(new Vector2(Mathf.Max(x0 + 1f, x), y)); p.Stroke();
+                if (a.Max < a.Span) // room the other loads hold: a darker stretch the coin can't enter
+                {
+                    float held = Mathf.Lerp(x0, x1, Fraction(a.Max));
+                    p.lineWidth = 16f; p.strokeColor = UiKit.Grey;
+                    p.BeginPath(); p.MoveTo(new Vector2(held, y)); p.LineTo(new Vector2(x1, y)); p.Stroke();
+                }
                 if (a.Mark >= 0)
                 {
                     float m = Mathf.Lerp(x0, x1, Fraction(a.Mark));
@@ -601,7 +652,7 @@ namespace Game.Presentation.Ui
             }
 
             // Drag: the coin follows the finger in steps; the scroll view doesn't take the drag (the pointer is captured).
-            long At(Vector2 local) { return a.Snap(a.Min + (long)((a.Max - a.Min) * (double)Mathf.Clamp01(local.x / Mathf.Max(1f, slider.contentRect.width)))); }
+            long At(Vector2 local) { return a.Snap(a.Min + (long)((a.Span - a.Min) * (double)Mathf.Clamp01(local.x / Mathf.Max(1f, slider.contentRect.width)))); }
             slider.RegisterCallback<PointerDownEvent>(e =>
             {
                 field.Blur();
@@ -616,7 +667,7 @@ namespace Game.Presentation.Ui
                 if (v != value) Choose(v, false);
                 e.StopPropagation();
             });
-            slider.RegisterCallback<PointerUpEvent>(e => { if (slider.HasPointerCapture(e.pointerId)) slider.ReleasePointer(e.pointerId); e.StopPropagation(); });
+            slider.RegisterCallback<PointerUpEvent>(e => { if (slider.HasPointerCapture(e.pointerId)) { slider.ReleasePointer(e.pointerId); Commit(); } e.StopPropagation(); });
 
             // Type: any whole number of coins; the slider follows. The box only takes focus when tapped.
             field.RegisterValueChangedCallback(e =>
@@ -624,14 +675,15 @@ namespace Game.Presentation.Ui
                 string digits = System.Text.RegularExpressions.Regex.Replace(e.newValue ?? "", "[^0-9]", "");
                 if (digits.Length > 9) digits = digits.Substring(0, 9); // more than any cash: the line says the most you can
                 if (digits != e.newValue) field.SetValueWithoutNotify(digits);
-                long coins = digits.Length == 0 ? 0 : long.Parse(digits, System.Globalization.CultureInfo.InvariantCulture);
-                Choose(coins * 100, true);
+                long whole = digits.Length == 0 ? 0 : long.Parse(digits, System.Globalization.CultureInfo.InvariantCulture);
+                Choose(whole * a.Scale, true);
             });
             field.RegisterCallback<FocusInEvent>(_ => { _typing = true; field.SetValueWithoutNotify(Digits(value)); }); // plain digits to edit
             field.RegisterCallback<FocusOutEvent>(_ =>
             {
                 _typing = false;
                 Choose(string.IsNullOrEmpty(field.value) ? a.Start : value, false); // back to "32,000 coins"
+                Commit();
             });
             Choose(value, false);
             return box;
@@ -1310,7 +1362,8 @@ namespace Game.Presentation.Ui
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
-                if (l.Amount != null) key.Append('|').Append(l.Amount.Id).Append(l.Amount.Min).Append(',').Append(l.Amount.Max).Append(',').Append(l.Amount.Mark);
+                if (l.Amount != null) key.Append('|').Append(l.Amount.Id).Append(l.Amount.Min).Append(',').Append(l.Amount.Max).Append(',').Append(l.Amount.Mark).Append(',').Append(l.Amount.Span).Append(',').Append(l.Amount.Start);
+                key.Append(l.Meter);
             }
             foreach (ActionVm a in vm.Actions) key.Append('|').Append(a.Label).Append(a.Detail).Append(a.Enabled).Append(a.DisabledReason);
             if (refresh && _typing && IsOpen) return; // the number pad is up: don't rebuild under the player's thumb

@@ -114,13 +114,14 @@ namespace Sim.View.Tests
             Assert.That(Cmd<Buy>(seed.Lines[0].Action, sim).Quantity, Is.EqualTo(Sim.Core.Farm.FarmRules.CycleGrams(sim.Clock, sim.Config.Game.Farm.Crops.First(c => c.Id == "potato"),
                 sim.Config.Game.Farm.Crops.First(c => c.Id == "potato").SeedPerAcrePerSeason)));
 
-            // The mandi: a load per good, and Go sends exactly those loads.
-            int g0 = (int)MandiSheet.Build(ctx, null).Lines.First(l => l.Action != null).Action.Opens.Value.Id;
-            SheetVm load = MandiSheet.Load(ctx, g0, null);
-            SheetVm withLoad = MandiSheet.Build(ctx, load.Lines.Last().Action.Opens.Value.Arg);
+            // The mandi: a slider per crop, and Go sends exactly the loads set (US-252).
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("potato")] += 700_000;
+            LineVm row = MandiSheet.Build(ctx, null).Lines.First(l => l.Amount != null);
+            Assert.That(row.Amount.Min, Is.EqualTo(0));
+            SheetVm withLoad = MandiSheet.Build(ctx, row.Amount.Then(row.Amount.Max).Arg);
             GoToMandi go = Cmd<GoToMandi>(withLoad.Actions.Single(), sim);
             Assert.That(go.Loads.Count, Is.EqualTo(1));
-            Assert.That(go.Loads[0].GoodId, Is.EqualTo(sim.Config.Game.Market.Goods[g0].Id));
+            Assert.That(go.Loads[0].Quantity, Is.EqualTo(row.Amount.Max));
         }
     }
 }

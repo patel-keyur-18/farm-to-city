@@ -247,6 +247,9 @@ namespace Sim.View.Views
         /// <summary>An amount to drag or type, with its button and note, drawn instead of a label and value (the savings sheet), or null.</summary>
         public AmountVm Amount { get; internal set; }
 
+        /// <summary>A bar under the row filled this many percent (the mandi trolley), or −1.</summary>
+        public int Meter { get; internal set; } = -1;
+
         internal static LineVm Header(string text) { return new LineVm(text, null) { IsHeader = true }; }
 
         public LineVm(string label, string value, string whyKey = null, long whyId = 0)
@@ -286,6 +289,15 @@ namespace Sim.View.Views
         public long Max { get; }
         public long Step { get; }
 
+        /// <summary>How many units make the whole number typed in the box: 100 for coins, 1,000 for kg.</summary>
+        public long Scale { get; internal set; } = 100;
+
+        /// <summary>The track's full length when it runs past <see cref="Max"/> (the room the other loads hold, drawn hatched).</summary>
+        public long Span { get; internal set; }
+
+        /// <summary>For a row with no button of its own (the mandi's crops): the sheet to show, in place, once the amount is let go or typed.</summary>
+        public Func<long, SheetRequest> Then { get; internal set; }
+
         /// <summary>Where the slider starts.</summary>
         public long Start { get; }
 
@@ -299,7 +311,7 @@ namespace Sim.View.Views
 
         internal AmountVm(string id, long min, long max, long step, long start, Func<long, AmountPick> pick, Func<long, string> words)
         {
-            Id = id; Min = min; Max = max; Step = step; Start = Snap(start); _pick = pick; _words = words;
+            Id = id; Min = min; Max = max; Step = step; Span = max; Start = Snap(start); _pick = pick; _words = words;
         }
 
         /// <summary>The amount as the box shows it while not being typed in ("32,000 coins").</summary>

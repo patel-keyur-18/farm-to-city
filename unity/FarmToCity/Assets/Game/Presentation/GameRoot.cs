@@ -376,6 +376,13 @@ namespace Game.Presentation
             Display(r);
         }
 
+        /// <summary>The open sheet again with a new request, in place: no new place to go back to, and the scroll stays (the mandi's loads).</summary>
+        private void ReplaceSheet(SheetRequest request)
+        {
+            _open = request;
+            ShowCurrentSheet(refreshOnly: true);
+        }
+
         /// <summary>After a step, back to its hub: the way it came if the hub is behind, otherwise straight to it.</summary>
         private void Return(SheetRequest hub)
         {
@@ -530,6 +537,8 @@ namespace Game.Presentation
                     _safeRoot.schedule.Execute(() => StartPlacing(kind, (int)place.Id, place.Arg));
                     return;
                 }
+                // A new set of loads (the mandi's Fill) changes the sheet in place, keeping its scroll (US-252).
+                if (action.Id.StartsWith("replace:", StringComparison.Ordinal)) { ReplaceSheet(action.Opens.Value); return; }
                 // A tab or a sort changes the sheet in place: nothing new to go back to.
                 if (action.Id.StartsWith("tab:", StringComparison.Ordinal) || action.Id.StartsWith("switch:", StringComparison.Ordinal) || action.Id.StartsWith("sort:", StringComparison.Ordinal)) { Display(action.Opens.Value); return; }
                 Push(action.Opens.Value);
