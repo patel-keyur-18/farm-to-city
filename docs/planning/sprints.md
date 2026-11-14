@@ -867,7 +867,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 20 · 31 May – 13 Jun 2027 · Phase 3 (the plan; specs 021 and 022; rent realism, part-harvests, archetype bots, frame time; 2 weeks, ADR 0107)
 
-- **Status:** Plan check done and approved (ADR 0107 §1–§15, owner 2026-11-13; the plan merged in PR #29). **Built and approved story by story (2026-11-13)**: specs 021 and 022, US-240, US-241, US-252, US-101.T1, US-099; the balance step; the checklist's Editor rows; the Development build (Xcode BUILD SUCCEEDED); CI green. **Left:** the owner's device rows 13–16 (US-101.T2) and merging PR #30
+- **Status:** Plan check done and approved (ADR 0107 §1–§15, owner 2026-11-13; the plan merged in PR #29). **Built and approved story by story (2026-11-13)**: specs 021 and 022, US-240, US-241, US-252, US-101.T1, US-099; the balance step; the checklist's Editor rows; the Development build (Xcode BUILD SUCCEEDED); CI green. **Device rows 13–15 passed on the phone (owner, 2026-11-14): main p95 4.76 ms, GPU p95 8.23 ms, goldens all pass, catch-up fine.** Row 16 (the phone's number pad) is the one check left; the owner's hand-orders bug fixed in the sprint (US-262, ADR 0113). Left: merging PR #30
 - **Branch:** `sprint/20-treasury-and-taxes`, made fresh from `main` after PR #29 (the plan) is merged
 - **Goal:** Phase 3 planned (ADR 0107). Specs 021 (treasury and budget) and 022 (taxes and policies) written and approved, so Sprint 21 can build them. The carried rules built: rents that follow the kind of house, its place and a yearly lease (US-240); hands and labourers taking part-harvests (US-241); the owner's request, a mandi trip with several crops (US-252). The archetype bots for the balance rule (US-099). The Editor's rendering statistics, and the first Development build's frame times and golden replays on the phone, closing Phase 2's deferred items (US-101). Save schema 18 with its migration and fixture.
 - **Points:** 22 (US-240 5, US-241 3, US-252 3, US-099 8, US-101 3) plus two specs
@@ -882,7 +882,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-241 | Hands and labourers take part-harvests | [F06.3](features/F06.3-standing-orders.md) | 3 | Must | Done (approved 2026-11-13) |
 | US-252 | A mandi trip with several crops | [F04.1](features/F04.1-goods-market-and-regional-trader.md) | 3 | Must | Done (approved 2026-11-13) |
 | US-099 | Archetype bots | [F20.1](features/F20.1-balancer-and-health-checks.md) | 8 | Must | Done (approved 2026-11-13; ADR 0112) |
-| US-101 | Device performance, and the Editor's rendering statistics | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | T1 done (approved 2026-11-13); T2 on the phone (checklist rows 13–16) |
+| US-101 | Device performance, and the Editor's rendering statistics | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Done (T1 approved 2026-11-13; T2 passed on the phone 2026-11-14) |
 
 **Order of work:** the plan approved → spec 021 written → spec 022 written (both to the owner for review, alongside the code) → the renewal card previewed → US-240 → US-241 → the mandi sheet previewed → US-252 → US-101's Editor helper and its first reading → US-099 → balance (the Village's pace with the new rents, ADR 0107 §8; the archetypes' 20% rule) → the checklist's Editor rows by scripted touch → the Development build (both p95s, golden replays on the phone). One stop for the owner's review after each story and each spec.
 
@@ -901,6 +901,6 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Specs 021 and 022 approved
 - [x] Save schema 18: migration, `saves/schema18` fixture, every older schema loads
 - [x] Balance: the Village's pace with the new rents (a slip past 5 weeks to the owner), the archetypes, contradictions flagged
-- [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down
+- [x] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down (row 16, the number pad, still to run)
 - [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it

@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township**: Sprint 20, the first of 8 (Sprints 20–27, ADR 0107). Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 20** (2 weeks, 22 points plus specs 021 and 022): **every story built, Editor-checked and approved by the owner (2026-11-13)**: specs 021 and 022, US-240, US-241, US-252, US-101.T1, US-099; balance done; the checklist's Editor rows run. Development build made (Xcode BUILD SUCCEEDED); CI green on `c2b1932`. **Left: the owner's device checks** (checklist rows 13–16: frame-time p95s, golden replays, catch-up, the number pad: US-101.T2) and merging PR #30 |
+| Sprint | **Sprint 20** (2 weeks, 22 points plus specs 021 and 022): **every story built, Editor-checked and approved by the owner (2026-11-13)**: specs 021 and 022, US-240, US-241, US-252, US-101.T1, US-099; balance done; the checklist's Editor rows run. Development build made (Xcode BUILD SUCCEEDED); CI green on `c2b1932`. **Device rows 13–15 passed (owner, 2026-11-14)**: main p95 4.76 ms, GPU p95 8.23 ms, 60 fps, goldens 001/003/004/005 pass, 72 h catch-up 6.5 ms, schema 17→18 migration loaded. **US-262** (owner's bug: orders for a second hand, stars, Care; ADR 0113) fixed in the sprint. **Left:** row 16 (the phone's number pad) and merging PR #30 |
 | Branch with latest work | `sprint/20-treasury-and-taxes` (pull request to `main`; not merged) |
-| Last updated | 2026-11-14 (Sprint 20 reviewed against its plan; stale docs fixed) |
+| Last updated | 2026-11-14 (Sprint 20 closed on the phone; US-262 fixed) |
 
 ## Done so far
 
@@ -423,6 +423,7 @@
 - **Development build (2026-10-29):** `Game.Editor.BuildCli.IosDevelopment` from the open Editor (Build Succeeded; the one console error is the CLI's 5 s eval timeout); unsigned Xcode compile check in the pull request.
 
 - **Sprint 20 (branch `sprint/20-treasury-and-taxes`, 2026-11-13): built and approved story by story, one stop each.** Specs 021 (treasury and budget, ADR 0108) and 022 (taxes and policies, ADR 0109) approved after 20 closed gaps. **US-240** rent by kind, place and a 4-season lease with a renewal card (ADR 0110, spec 014 §3.14, save schema 18); the Village's pace slipped to about 6 weeks and the owner accepted it (competent 28–45, saver 50–75). **US-241** hands and labourers take part-harvests, paid labourers work their paid time, an alert and an away line (ADR 0111, spec 006 AC-27/28). **US-252** a mandi trip with several crops: a slider and kg box for each, best gain first, *Fill with what pays best* (spec 004 AC-25). **US-101.T1** `Game.Editor.RenderStats` and the first reading (Environment notes). **US-099** the archetype bots and the 20% rule (ADR 0112). Tests at the end: Core 510 + the archetype test, View 202; `PerfTests.Advance72h_WithPeople` measures 24 ms locally against the 20 ms guard (CI, where it is measured, is green). Editor saves restored and identical after every tour.
+- **US-262 (2026-11-14, ADR 0113): orders go to the hand you pick.** Owner's bug: a second hand (a tenant hired from their card) could not be given an order, a star did not seem to move, and Care read as ambiguous. Root causes: `PeopleWords.OrderHand` returned the first hand for any field with no order and the hand's sheet had no way to give one; skill grows 3 a season and a star is 20 points with nothing on screen showing it, and the citizen card read the skill the person came with; Care's *Why?* lumped every hand together. Fix (screens previewed as an artifact and approved): *Give an order* on a hand's sheet (a field list, *Give to* moves an order), *Who looks after it?* from a field with two or more hands, the skill's growth line, the citizen card reading the hand's skill, a Care sentence and a *Why?* row for each hand. View and presentation only; no save or golden change. Tests `HandOrdersViewTests` (5); Editor by touch (`docs/art/s20b-*.png`); render statistics flagged triangles +11% with draw calls unchanged (a frost spell and a second hand on screen; no map code changed).
 - **Development build (2026-11-13):** from commit `8c0046f`, `Game.Editor.BuildCli.IosDevelopment` from the open Editor (`Builds/iOS`; the one console error is the CLI's 5 s eval timeout). The unsigned Xcode Release compile (`CODE_SIGNING_ALLOWED=NO`): **BUILD SUCCEEDED**, no errors. Checklist `docs/test-checklists/s20-rent-harvests-frame-time.md` (rows 13–16 are the device-only ones). The town migrates from schema 17 to 18 on load: keep an Export first.
 
 ## Next up
@@ -457,7 +458,7 @@
 | Sprint 16 | Done: device check passed 2026-11-07; PR #22 merged |
 | Sprint 17 | Done: device check passed 2026-11-10; ADR 0100 accepted; PR #23 merged |
 | Sprint 18 | Done: device build installed and approved 2026-11-12; PRs #24 and #25 merged. Frame-time p95s not measured (a Development build, at gate A6) |
-| Sprint 20 | Specs and every story approved (2026-11-13). **Install the Development build** and run rows 13–16 of `s20-rent-harvests-frame-time.md` (both p95s, golden replays, catch-up, the number pad); **merge PR #30** |
+| Sprint 20 | Specs and every story approved (2026-11-13). Rows 13–15 passed on the phone (2026-11-14). Run **row 16** (the number pad on the mandi and savings boxes) when convenient and try rows 17–20 on the hand orders (US-262) in the next build; **merge PR #30** |
 | Sprint 19 | **Closed 2026-11-13 (ADR 0106).** Keep playing: A2–A5 (the Village within 3 weeks, a session each day, no blocker, the three *why cash moved* sentences and *Your year* in `s19-phase-2-playtest.md`); tell Claude only if something fails, or when done; findings are ad hoc tasks. Ask for a Development build when you want the frame-time p95s and golden replays on the phone |
 
 ## Open questions (with the owner)
@@ -488,7 +489,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 20 is built and approved (PR #30, not merged); save schema 18 (ADR 0110). Only the owner's phone checks are left (rows 13–16; US-101.T2 is ticked when the numbers come back). `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+Sprint 20 is built and approved (PR #30, not merged); save schema 18 (ADR 0110). Only row 16 (the phone's number pad) is left on the phone; US-101.T2 is ticked. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

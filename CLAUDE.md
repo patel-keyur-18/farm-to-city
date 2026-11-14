@@ -222,6 +222,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0110 | Rent as built: a kutcha house lets at 2,500 × the place (district road 1.20, lane 1.00, inner 0.85) × prices in a 4-season lease; a raise never exceeds what 30% of the family's income allows, so a raise never pushes a family out; a card in the lease's last season (default: the market rise); settled families are patient before leaving unhappy; save schema 18; the Village at about 6 weeks with credit (day 28–45), about 10 saving |
 | 0111 | Hands and labourers take part-harvests: every hand's field order takes what fits each hour (one action a part), nothing sold to the trader unless the sell rule says; paid labourers stay and work their paid time when nothing fits (no early leave, no refund); an alert and the away card say what still stands; no save change |
 | 0112 | The archetype bots (agri-hub, merchant, education) and ADR 0016's 20% rule measured on 200 seeds at year 8: best/worst net worth 1.13, happiness 1.07; every archetype plants the mango orchard (the best 30,000-coin use, +24%), the stress bots do not; `ArchetypeTests` |
+| 0113 | Orders go to the hand you pick (a *Give an order* list on the hand's sheet, "who looks after it?" from a field when there are two or more hands); a hand's skill shown with its growth, the citizen card reads the hand's skill; Care said to be one pool, one *Why?* row for each hand |
 
 ## Current status
 

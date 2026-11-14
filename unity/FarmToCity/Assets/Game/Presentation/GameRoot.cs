@@ -431,11 +431,16 @@ namespace Game.Presentation
                     _sheet.Show(HandSheet.Build(_ctx, r.Id), refreshOnly);
                     break;
                 case "Order":
-                    bool tree = r.Arg != null && r.Arg.StartsWith("tree", StringComparison.Ordinal);
-                    OrderTargetKind kind = tree ? OrderTargetKind.Tree : OrderTargetKind.Field;
-                    // A field's crop is chosen on the sow sheet, with the fertiliser and every figure (ADR 0059 §3).
-                    if (OrderSheet.IsCropStep(kind, r.Arg) && PeopleWords.OrderHand(Sim, kind, r.Id) != null) _sheet.Show(OrderSheet.Crops(_ctx, r.Id, r.Arg), refreshOnly);
+                    OrderTargetKind kind = OrderSheet.KindOf(r.Arg);
+                    // A field's crop is chosen on the sow sheet, with the fertiliser and every figure (ADR 0059 §3). With several hands and none
+                    // chosen yet, Build asks who first.
+                    if (OrderSheet.IsCropStep(kind, r.Arg) && PeopleWords.OrderHand(Sim, kind, r.Id, OrderSheet.HandIn(r.Arg)) != null) _sheet.Show(OrderSheet.Crops(_ctx, r.Id, r.Arg), refreshOnly);
                     else _sheet.Show(OrderSheet.Build(_ctx, kind, r.Id, r.Arg), refreshOnly);
+                    break;
+                case OrderSheet.WhoSheet: _sheet.Show(OrderSheet.Who(_ctx, OrderSheet.KindOf(r.Arg), r.Id), refreshOnly); break; // which hand looks after it
+                case OrderSheet.FieldsSheet:
+                    if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; }
+                    _sheet.Show(OrderSheet.Fields(_ctx, r.Id), refreshOnly); // a hand's Give an order: which field
                     break;
                 case OrderSheet.OtherSheet: _sheet.Show(OrderSheet.Other(_ctx, r.Id, r.Arg), refreshOnly); break; // another season's crop (spec 020 G22)
                 case "HutPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Hut); break;
@@ -480,7 +485,8 @@ namespace Game.Presentation
         {
             if (_open.Value.Kind == "Order")
             {
-                _open = new SheetRequest("Order", _open.Value.Id, "+" + f);
+                long hand = OrderSheet.HandIn(_open.Value.Arg); // the chosen hand stays chosen
+                _open = new SheetRequest("Order", _open.Value.Id, hand == 0 ? "+" + f : OrderSheet.Tag(hand, "+" + f));
                 ShowCurrentSheet(refreshOnly: true);
                 return;
             }

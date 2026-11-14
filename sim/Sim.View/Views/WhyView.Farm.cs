@@ -238,10 +238,21 @@ namespace Sim.View.Views
             if (herd != null && herd.Animals.Count > 0)
                 Row(vm, ctx, "why.care.animals", Hours(ctx, Sim.Core.Livestock.LivestockRules.LabourDemand(sim)), "n", ctx.Fmt.Integer(herd.Animals.Count));
             Row(vm, ctx, "why.care.founder", Hours(ctx, FounderRules.FieldHours(sim)));
-            Fixed hired = sim.State.People == null ? Fixed.Zero : Sim.Core.People.PeopleRules.HiredHours(sim);
-            if (hired > Fixed.Zero) Row(vm, ctx, "why.care.hired", Hours(ctx, hired));
+            if (sim.State.People != null)
+            {
+                // One row for each hand, so a new hire's effect is plain; then the day labourers together (owner finding, 2026-11-14).
+                foreach (Sim.Core.People.Hand h in sim.State.People.Hands)
+                {
+                    if (h.Contract != Sim.Core.People.ContractState.Active) continue;
+                    string away = h.CourseUntil != 0 ? ctx.Strings.Get("staff.awayOnCourse") : h.Hr.SickUntil != 0 ? ctx.Strings.Get("staff.offSick") : null;
+                    Row(vm, ctx, "why.care.hand", Hours(ctx, Sim.Core.People.PeopleRules.HandHours(sim, h)) + (away == null ? "" : " · " + away), "name", PeopleWords.Name(ctx, h.Name));
+                }
+                Fixed labourers = Sim.Core.People.PeopleRules.DayLabourHours(sim);
+                if (labourers > Fixed.Zero) Row(vm, ctx, "why.care.hired", Hours(ctx, labourers));
+            }
             Row(vm, ctx, "why.care.effect", Effect(ctx, sim.State.Farm.CareRatio));
             if (supply > demand) Text(vm, ctx, "why.care.cap");
+            Text(vm, ctx, "why.care.pool");
             vm.Footnote = ctx.Strings.Get("why.care.lesson");
             return vm;
         }

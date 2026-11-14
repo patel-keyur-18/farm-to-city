@@ -496,7 +496,9 @@ namespace Sim.View.Views
             if (from != null) vm.Lines.Add(new LineVm(s.Get("citizen.from"), from));
             if (!HouseholdRules.IsChild(sim, c))
             {
-                int skill = (int)c.Skill.RoundToLong();
+                // A hand's skill grows on the hand (owner finding, 2026-11-14): while they work for you the card shows that, not the one they came with.
+                Sim.Core.People.Hand job = c.Job == CitizenJob.Hand ? sim.State.People?.Hand(c.HandId) : null;
+                int skill = (int)(job != null ? job.Skill : c.Skill).RoundToLong();
                 vm.Lines.Add(new LineVm(s.Get("hand.skill"), PeopleWords.Band(ctx, skill)) { Stars = PeopleWords.Stars(ctx, skill, skill) });
                 foreach (int t in new[] { c.Trait1, c.Trait2 })
                     vm.Lines.Add(new LineVm(PeopleWords.Trait(ctx, t), s.Get(sim.Config.Game.People.Traits[t].NameKey + ".why")));
