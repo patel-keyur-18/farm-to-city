@@ -161,6 +161,10 @@ namespace Game.Presentation
                 case "Lenders": _sheet.Show(LendersSheet.Build(_ctx), refreshOnly); break;
                 case SavingsSheet.Kind: _sheet.Show(SavingsSheet.Build(_ctx), refreshOnly); break;
                 case "Books": _sheet.Show(BooksSheet.Build(_ctx), refreshOnly); break;
+                case TreasurySheet.Kind: _sheet.Show(TreasurySheet.Build(_ctx), refreshOnly); break; // spec 021 §7
+                case TreasurySheet.GiveKind: _sheet.Show(TreasurySheet.Give(_ctx), refreshOnly); break;
+                case TreasurySheet.BooksKind: _sheet.Show(TreasurySheet.Books(_ctx), refreshOnly); break;
+                case TreasurySheet.StatementKind: _sheet.Show(TreasurySheet.Statement(_ctx, r.Id, r.Arg), refreshOnly); break;
                 case "Borrow": _sheet.Show(BorrowSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Repay":
                     Loan loan = Sim.State.Credit.Loans.Find(l => l.Id == r.Id);
@@ -202,8 +206,9 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
+                case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
                 case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
                 case "BusinessClose": Return(new SheetRequest("Businesses", 0)); return;

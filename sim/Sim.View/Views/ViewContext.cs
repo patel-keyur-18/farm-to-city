@@ -247,6 +247,9 @@ namespace Sim.View.Views
         /// <summary>An amount to drag or type, with its button and note, drawn instead of a label and value (the savings sheet), or null.</summary>
         public AmountVm Amount { get; internal set; }
 
+        /// <summary>A boxed line across the sheet, green or (with <see cref="NoteTone"/> Warn) amber: "Town money: not yours" (spec 021 §7).</summary>
+        public bool Banner { get; internal set; }
+
         /// <summary>A bar under the row filled this many percent (the mandi trolley), or −1.</summary>
         public int Meter { get; internal set; } = -1;
 

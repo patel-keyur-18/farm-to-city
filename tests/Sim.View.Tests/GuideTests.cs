@@ -515,9 +515,15 @@ namespace Sim.View.Tests
             Assert.That(Letter.Page(ctx, "village", false, GuideKit.Info(sim), 0).Text, Does.Contain("your flour mill has paid its way"));
             Assert.That(Letter.Page(ctx, "hamlet", false, GuideKit.Info(sim), 0).Text, Does.EndWith("A Village needs more: five households on your land, a business that pays its way two seasons, and a school for the children. Your letter in the Menu keeps count."), "the Hamlet's page names the goals");
 
+            // The Township has no gate yet (spec 023): its sheet says so and names what it opens (spec 021 §3.1).
             Set(sim.State.Era, "Current", 2);
             vm = ProgressSheet.Build(ctx);
-            Assert.That((vm.Title, vm.Subtitle, vm.Lines[0].Label), Is.EqualTo(("Your Village", "Your hamlet is a Village.", "Now open to you")));
+            Assert.That((vm.Title, vm.Subtitle), Is.EqualTo(("Becoming a Township", "The Township's goals come in a later update")));
+            Assert.That(vm.Lines.Select(l => l.Label), Does.Contain("The town treasury: the town's own money"));
+
+            Set(sim.State.Era, "Current", 3);
+            vm = ProgressSheet.Build(ctx);
+            Assert.That((vm.Title, vm.Subtitle, vm.Lines[0].Label), Is.EqualTo(("Your Township", "Your Village is a Township.", "Now open to you")));
         }
     }
 }

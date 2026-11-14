@@ -549,6 +549,8 @@ namespace Sim.View.Views
                         break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
+                    case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
+                    case DepartmentUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.townUnpaid", "dept", TreasurySheet.Department(ctx, u.Department), "amount", ctx.Fmt.Coins(u.Amount)), "place_council_hall")); break;
                     case CitizenLiterate l when l.How == LiterateHow.School: pupils.Add(l.Name); break;
                     case CitizenLiterate _: adults++; break;
                     case LeaseRenewed lr:
@@ -632,6 +634,9 @@ namespace Sim.View.Views
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
             { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            // Spec 021 (the town treasury).
+            { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
+            { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },
             // Spec 019 §3.5 (the savings deposit).
             { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.

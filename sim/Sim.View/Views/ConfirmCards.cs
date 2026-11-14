@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(CommissionWorks));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -124,6 +124,8 @@ namespace Sim.View.Views
                 CashChange = cash, LoanTaken = taken, LoanRepaid = repaid,
             };
             if (c is SetSavingsCover) Standing(ctx, vm);
+            else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
+            else if (c is CommissionWorks) Works(ctx, vm, sim, after);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + ".warn", "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
             string verb = s.Get("confirm." + name + ".verb");
@@ -157,6 +159,23 @@ namespace Sim.View.Views
                 }
             }
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>A gift to the town (spec 021 §3.8): what you give, the town's balance after, your cash after.</summary>
+        private static void Gift(ViewContext ctx, ConfirmCardVm vm, GiveToTreasury gift, Simulation after)
+        {
+            var s = ctx.Strings;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.GiveToTreasury.gift"), ctx.Fmt.Coins(gift.Amount)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.GiveToTreasury.town"), ctx.Fmt.Coins(after.State.Treasury.Cash)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>Capital works (spec 021 §3.7): the town pays a builder from its own money; yours isn't touched.</summary>
+        private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after)
+        {
+            var s = ctx.Strings;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.cost"), ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.town"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
         }
 
         /// <summary>The standing consent (Sprint 18 review): your savings, and what the next close would take from them under it.</summary>

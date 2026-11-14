@@ -475,6 +475,7 @@ namespace Game.Presentation.Ui
 
         private VisualElement Row(LineVm line)
         {
+            if (line.Banner) return BannerRow(line);
             if (line.Amount != null) return AmountRow(line);
             if (line.Meter >= 0)
             {
@@ -490,6 +491,20 @@ namespace Game.Presentation.Ui
             box.Add(PlainRow(line));
             if (line.Trend != null) box.Add(TrendChart(line.Trend));
             if (line.Pie != null) box.Add(PieChart(line.Pie));
+            return box;
+        }
+
+        /// <summary>A boxed line across the sheet (spec 021 §7): green for "Town money: not yours", amber with a warning tone.</summary>
+        private static VisualElement BannerRow(LineVm line)
+        {
+            bool warn = line.NoteTone == Tone.Warn;
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.style.backgroundColor = warn ? Painter.Hex(0xFBE3C2) : Painter.Hex(0xE9F2D8);
+            UiKit.Border(box, 4, warn ? UiKit.Saffron : Painter.Hex(0x9CC46B));
+            UiKit.Radius(box, 22);
+            UiKit.Padding(box, 12, 22);
+            box.style.marginTop = 8; box.style.marginBottom = 10;
+            box.Add(UiKit.Text(line.Label, 30, warn ? UiKit.Warn : Painter.Hex(0x2F5D14), UiKit.BodyBold));
             return box;
         }
 

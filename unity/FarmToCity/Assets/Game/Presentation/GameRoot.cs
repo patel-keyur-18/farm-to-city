@@ -289,6 +289,8 @@ namespace Game.Presentation
                     case FounderSick _: Toast(_strings.Get("toast.sick")); break;
                     case ApplicantArrived _: Toast(_strings.Get("toast.applicant")); break;
                     case HandHutBuilt _: Toast(_strings.Get("toast.hutBuilt")); break;
+                    case TreasuryOpened t: Toast(_strings.Get("toast.treasuryOpened", "grant", _ctx.Fmt.Coins(t.Grant))); break; // spec 021 §3.1: public money, not yours
+                    case DepartmentUnpaid u: if (!away) Toast(_strings.Get("toast.townUnpaid", "dept", TreasurySheet.Department(_ctx, u.Department))); break;
                     case HandHired hh:
                         // One of your townspeople stays at home (ADR 0083): nobody moved in.
                         Hand hired = Sim.State.People.Hand(hh.HandId);

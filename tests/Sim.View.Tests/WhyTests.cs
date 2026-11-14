@@ -63,6 +63,15 @@ namespace Sim.View.Tests
                         yield return Named("business report " + b.Id + " " + back, BusinessReportSheet.Build(ctx, b.Id, back.ToString(System.Globalization.CultureInfo.InvariantCulture)));
                 }
             }
+            if (Sim.Core.Town.TreasuryRules.IsOpen(sim)) // the town treasury (spec 021)
+            {
+                yield return Named("treasury", TreasurySheet.Build(ctx));
+                yield return Named("treasury give", TreasurySheet.Give(ctx));
+                yield return Named("treasury books", TreasurySheet.Books(ctx));
+                foreach (var r in sim.State.Treasury.Reports)
+                    foreach (string tab in new[] { TreasurySheet.InOut, TreasurySheet.CashFlow, TreasurySheet.Has })
+                        yield return Named("treasury " + r.Period + " " + tab, TreasurySheet.Statement(ctx, r.Period, tab));
+            }
             yield return Named("forecast", ForecastView.Sheet(ctx));
             for (int i = 0; i < sim.Config.Game.Farm.Crops.Count; i++) yield return Named("crop page " + i, CropCalendar.Page(ctx, i)); // spec 020 §3.6b
             if (sim.State.People != null)
