@@ -212,6 +212,14 @@ namespace Sim.Core.Commands
         NoLease,
         /// <summary>The lease isn't in its last season, so there is nothing to answer yet.</summary>
         LeaseNotDue,
+
+        // Spec 021 (the town treasury, ADR 0108)
+        /// <summary>The treasury hasn't opened: the Township comes first.</summary>
+        NoTreasury,
+        /// <summary>A gift smaller than treasury.json's giftMinimum.</summary>
+        BelowGiftMinimum,
+        /// <summary>No such capital work in the content.</summary>
+        UnknownWork,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -70,6 +70,7 @@ namespace Sim.Core.Finance
             if (pass == ItemClass.Daily) Accrual.ExpenseAll(sim, sim.AccrualPeriod);
             if (pass == ItemClass.Hourly) { CreditSystem.Hourly(sim); SavingsRules.Hourly(sim); }
             if (pass != ItemClass.Seasonal) return;
+            Town.TreasuryRules.BeginClose(sim); // spec 021 §3.3: pitch rents paid below are for the new season
 
             Ledger ledger = sim.State.Ledger;
             long closing = sim.Period - 1;

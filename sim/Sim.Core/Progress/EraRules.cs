@@ -78,6 +78,7 @@ namespace Sim.Core.Progress
             e.Current++;
             e.UnlockedAt = sim.State.Clock.SimTime;
             sim.Emit(new EraUnlocked(sim.State.Clock.SimTime, eras[e.Current].Id));
+            Town.TreasuryRules.OnEra(sim); // spec 021 §3.1: the treasury opens once, when the era reaches the Township
             return true;
         }
 
@@ -85,6 +86,7 @@ namespace Sim.Core.Progress
         public static bool Met(Simulation sim, EraDef era, long period)
         {
             EraState e = sim.State.Era;
+            if (era.DeveloperOnly) return false;
             if (era.AcresHarvestedInSeason > 0)
             {
                 if (Acres(sim, period) < era.AcresHarvestedInSeason) return false;

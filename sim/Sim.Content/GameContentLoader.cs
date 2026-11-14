@@ -57,6 +57,8 @@ namespace Sim.Content
                 game.School = LoadSchool(read("buildings.json"), read("population.json"), map, onboarding);
                 game.Codex = LoadCodex(read("codex.json")); // the Codex comes with the school (spec 018 §4)
                 game.Advisors = LoadAdvisors(read("advisors.json")); // and the advisors
+                // The treasury opens in a later era than the school's, so it needs the eras (spec 021 §4).
+                if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
             }
             return game;
         }

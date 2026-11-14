@@ -765,6 +765,7 @@ namespace Sim.Core.Business
             }
             BusinessBooks.Draw(sim, b, rent, period);
             b.Ledger.Post(sim.State.Clock.SimTime, period, "ledger.pitchRent", "business:" + b.Id, new Posting(Account.Rent, rent), new Posting(Account.Cash, -rent));
+            Town.TreasuryRules.CreditPitchRent(sim, b.Id, rent, period); // spec 021 §3.3: the town's income, in the same step
         }
 
         /// <summary>The season's counts start again at the close.</summary>

@@ -1,0 +1,22 @@
+{
+  "era": "township",
+  "startUpGrant": 100000,
+  "grantUntied": 100,
+  "grantTied": 50,
+  "clerkWage": 30000,
+  "doctorAllowance": 30000,
+  "conditionStep": 0.5,
+  "officeBase": 0.70,
+  "officeWeight": 0.30,
+  "healthLeaveBelow": 0.50,
+  "educationMinCondition": 0.50,
+  "budgetMaxOfNeeds": 1.20,
+  "giftMinimum": 1000,
+  "retainSeasons": 8,
+  "lines": [
+    { "id": "clerk", "department": "office", "kind": "wage", "amount": "clerkWage", "requires": "treasury" },
+    { "id": "doctor", "department": "health", "kind": "wage", "amount": "doctorAllowance", "requires": "clinic" },
+    { "id": "school", "department": "education", "kind": "upkeep", "amount": "schoolUpkeep", "requires": "school" }
+  ],
+  "works": []
+}

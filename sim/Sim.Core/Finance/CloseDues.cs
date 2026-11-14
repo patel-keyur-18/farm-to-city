@@ -107,7 +107,7 @@ namespace Sim.Core.Finance
                 Water(list, "canal", IrrigationRules.CanalFee(sim));
                 Water(list, "drip", IrrigationRules.DripPower(sim) + IrrigationRules.DripUpkeep(sim));
             }
-            if (SchoolRules.IsOpen(sim) && SchoolRules.Upkeep(sim) > 0) list.Add(new CloseDue { Key = "school", Kind = DueKind.School, Amount = SchoolRules.Upkeep(sim) });
+            if (SchoolRules.IsOpen(sim) && SchoolRules.Upkeep(sim) > 0 && !Town.TreasuryRules.IsOpen(sim)) list.Add(new CloseDue { Key = "school", Kind = DueKind.School, Amount = SchoolRules.Upkeep(sim) });
             if (EquipmentRules.On(sim))
             {
                 foreach (Machine m in sim.State.Equipment.Machines)

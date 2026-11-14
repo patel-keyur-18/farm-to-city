@@ -50,6 +50,7 @@ namespace Sim.Core
                 if (config.Game.Population != null && config.Game.People != null) AddSystem(new People.PopulationSystem());
                 if (config.Game.Businesses != null) AddSystem(new Business.BusinessSystem());
                 if (config.Game.Equipment != null) AddSystem(new Equipment.EquipmentSystem());
+                if (config.Game.Treasury != null) AddSystem(new Town.TreasurySystem());
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
@@ -103,6 +104,7 @@ namespace Sim.Core
                 if (config.Game.Equipment != null) state.Equipment = new Equipment.EquipmentState { HiredUntil = new long[config.Game.Equipment.Machines.Count] };
                 if (config.Game.Orchard != null) state.Orchards = new Farm.OrchardState();
                 if (config.Game.Shops != null) state.Shops = Business.ShopsState.New(config);
+                if (config.Game.Treasury != null) state.Treasury = new Town.TreasuryState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

@@ -169,6 +169,7 @@ namespace Sim.Core.People
             CountYears(sim);
             long cost = Upkeep(sim), t = sim.State.Clock.SimTime;
             if (cost == 0) return;
+            if (Town.TreasuryRules.TakenOver(sim)) return; // spec 021 §3.1: from the first close after the Township opens, the school's upkeep is the treasury's Education line
             if (!sim.State.Ledger.CanAfford(cost))
             {
                 State(sim).UpkeepUnpaidPeriod = sim.Period;
