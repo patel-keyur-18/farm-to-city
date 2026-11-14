@@ -425,6 +425,9 @@ PEOPLE = {
     # Masterji Hariprasad, the retired headmaster: a white kurta under a brown Nehru jacket, a maroon gamchha, a white Gandhi topi,
     # round spectacles.
     "advisor_people": dict(sex="m", skin=0xA06B49, top=0xF3EFE6, bottom=0xF3EFE6, accent=0x8E3A3A, vest=0x6B4A2B, wear="kurta", head="topi", hair=0xBDB6AC, glasses=0x5A4632),
+    # Meena Rao, the district's town planner (spec 021 §3.12, US-139): a maroon cotton saree with a gold border, a cream blouse, hair in a bun,
+    # no spectacles.
+    "advisor_planner": dict(sex="f", skin=0xA9714C, top=0x7A2E3A, bottom=0x7A2E3A, accent=0xD9A441, blouse=0xF3EEE2, wear="saree"),
 }
 
 
@@ -4178,7 +4181,7 @@ def model_school(stage):
 SPRITES["village_school_e"] = lambda: refit(model_school("done"), FACINGS["e"])
 SPRITES["village_school_building_e"] = lambda: refit(model_school("building"), FACINGS["e"])
 
-for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f", "advisor_farm", "advisor_bank", "advisor_people"):
+for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f", "advisor_farm", "advisor_bank", "advisor_people", "advisor_planner"):
     ICONS["portrait_" + _k] = (lambda k=_k: (lambda: portrait(k)))()
 ICONS["icon_population"] = lambda: icon_people("population")
 ICONS["icon_happiness"] = lambda: icon_people("happiness")

@@ -37,6 +37,9 @@
     { "id": "employerReputation", "group": "people",   "numbers": ["count"] },
 
     { "id": "publicGoods",        "group": "public",   "numbers": ["coins", "count"] },
-    { "id": "longTermInvestment", "group": "public",   "numbers": ["count", "coins"] }
+    { "id": "longTermInvestment", "group": "public",   "numbers": ["count", "coins"] },
+    { "id": "publicMoney",        "group": "public",   "numbers": ["coins"] },
+    { "id": "budgetPriority",     "group": "public",   "numbers": ["coins", "coins"] },
+    { "id": "tiedGrants",         "group": "public",   "numbers": ["coins", "coins"] }
   ]
 }

@@ -9,6 +9,7 @@ using Sim.Core.Land;
 using Sim.Core.Maths;
 using Sim.Core.People;
 using Sim.Core.Progress;
+using Sim.Core.Town;
 
 namespace Sim.View.Views
 {
@@ -55,11 +56,20 @@ namespace Sim.View.Views
             if (close != null)
                 foreach (AdvisorNoteDef n in d.Notes)
                 {
-                    if (!n.Report || Quiet(n.Id)) continue;
+                    if (!n.Report || d.IsPlanner(n) || Quiet(n.Id)) continue;
                     long[] numbers = Holds(ctx, n, close, events);
                     if (numbers == null) continue;
                     said.Add(new AdvisorNote(n.Id, close.Period, true, numbers));
                     break; // one line on the report: the first that holds
+                }
+            if (close != null && TreasuryRules.IsOpen(sim)) // the town planner's one line for the treasury sheet (spec 021 §3.12)
+                foreach (AdvisorNoteDef n in d.Notes)
+                {
+                    if (!n.Report || !d.IsPlanner(n) || Quiet(n.Id)) continue;
+                    long[] numbers = PlannerHolds(sim, n);
+                    if (numbers == null) continue;
+                    said.Add(new AdvisorNote(n.Id, close.Period, true, numbers));
+                    break;
                 }
             return said;
         }
@@ -154,6 +164,40 @@ namespace Sim.View.Views
             }
         }
 
+        /// <summary>
+        /// The town planner's notes (spec 021 §3.12), read from the treasury's last closed season: a department over its budget two closes
+        /// running, a service under the threshold, the tied grant at risk (the doctor unpaid or Health under its threshold), a balance under one
+        /// season's spending with no tax or gift to make it up.
+        /// </summary>
+        private static long[] PlannerHolds(Simulation sim, AdvisorNoteDef n)
+        {
+            TreasuryState t = sim.State.Treasury;
+            if (t == null || !t.Opened || t.Reports.Count == 0) return null;
+            TreasuryReport last = t.Reports[t.Reports.Count - 1];
+            const int Health = 1;
+            switch (n.Id)
+            {
+                case "deptOver":
+                    for (int d = 0; d < TreasuryState.Departments; d++)
+                        if (t.OverBudget[d] >= 2) return new long[] { d, last.Rows[d].Needs, last.Rows[d].Budget };
+                    return null;
+                case "serviceLow":
+                    for (int d = 0; d < TreasuryState.Departments; d++)
+                        if (last.Rows[d].Needs > 0 && t.Condition[d] < n.Threshold) return new long[] { d, t.Condition[d].Raw };
+                    return null;
+                case "grantAtRisk":
+                    return last.Rows[Health].Needs > 0 && (t.Unpaid[Health] > 0 || t.Condition[Health] < n.Threshold) ? new long[] { Health } : null;
+                case "thinBalance":
+                {
+                    long due = TreasuryRules.Forecast(sim).Due;
+                    bool made = last.Balance(Sim.Core.Finance.Account.HouseTaxIncome) != 0 || last.Balance(Sim.Core.Finance.Account.BusinessTaxIncome) != 0
+                        || last.Balance(Sim.Core.Finance.Account.GiftsFromFounder) != 0;
+                    return !made && due > 0 && t.Cash < due ? new long[] { t.Cash, due } : null;
+                }
+                default: return null;
+            }
+        }
+
         /// <summary>No pumped source, canal channel or the well's floor waters it.</summary>
         private static bool RainFed(Simulation sim, int tile)
         {
@@ -233,14 +277,30 @@ namespace Sim.View.Views
                 case "children": return s.Plural(key, n[0]);
                 case "adultClass":
                     return s.Get(key, "n", f.Integer(n[0]), "premium", f.Percent(sim.Config.Game.School.LiteratePremium), "cost", f.Coins(n[1]));
+                case "deptOver": return s.Get(key, "dept", TreasurySheet.Department(ctx, (int)n[0]), "needs", f.Coins(n[1]), "budget", f.Coins(n[2]));
+                case "serviceLow": return s.Get(key, "dept", TreasurySheet.Department(ctx, (int)n[0]), "service", f.Percent(Fixed.FromRaw(n[1])));
+                case "grantAtRisk": return s.Get(key);
+                case "thinBalance": return s.Get(key, "cash", f.Coins(n[0]), "due", f.Coins(n[1]));
                 default: return s.Get(key);
             }
+        }
+
+        /// <summary>The town planner's line for the treasury sheet (spec 021 §3.12): what she said at the last close, if she spoke.</summary>
+        public static AdvisorVm Planner(ViewContext ctx)
+        {
+            AdvisorDefs d = ctx.Sim.Config.Game.Advisors;
+            TreasuryState t = ctx.Sim.State.Treasury;
+            if (d == null || t == null || t.Reports.Count == 0) return null;
+            long period = t.Reports[t.Reports.Count - 1].Period;
+            AdvisorNote a = ctx.Sim.State.Guidance?.Advice.Find(x => x.Report && x.Key == period && d.IndexOf(x.Id) >= 0 && d.IsPlanner(d.Notes[d.IndexOf(x.Id)]));
+            return a == null ? null : Line(ctx, a, false);
         }
 
         /// <summary>The season report's line for <paramref name="period"/>, if an advisor spoke at its close.</summary>
         public static LineVm Report(ViewContext ctx, long period)
         {
-            AdvisorNote a = ctx.Sim.State.Guidance?.Advice.Find(x => x.Report && x.Key == period);
+            AdvisorDefs ad = ctx.Sim.Config.Game.Advisors;
+            AdvisorNote a = ctx.Sim.State.Guidance?.Advice.Find(x => x.Report && x.Key == period && ad != null && ad.IndexOf(x.Id) >= 0 && !ad.IsPlanner(ad.Notes[ad.IndexOf(x.Id)]));
             AdvisorVm vm = a == null || ctx.Sim.Config.Game.Advisors == null ? null : Line(ctx, a, false);
             return vm == null ? null : new LineVm(vm.Text, null) { Advisor = vm };
         }

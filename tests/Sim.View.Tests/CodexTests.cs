@@ -70,7 +70,7 @@ namespace Sim.View.Tests
             sim.State.Guidance.Skipped = true;
             GameDefs g = sim.Config.Game;
             long t = T(sim);
-            Assert.That(g.Codex.Cards.Count, Is.EqualTo(25));
+            Assert.That(g.Codex.Cards.Count, Is.EqualTo(28));
             Assert.That(CodexWatch.Observe(sim, new SimEvent[] { new HourStarted(t) }), Is.Empty, "nothing without its moment");
 
             // Farming.
@@ -144,12 +144,34 @@ namespace Sim.View.Tests
             Finds(sim, "longTermInvestment", new SimEvent[] { new CitizenLiterate(T(sim), 1, 0, LiterateHow.School) }, new[] { (long)g.School.PrimaryYears, SchoolRules.State(sim).Cost });
             Assert.That(CodexWatch.Observe(sim, new SimEvent[] { new CitizenLiterate(T(sim), 1, 0, LiterateHow.AdultClass) }), Is.Empty);
 
-            Assert.That(sim.State.Guidance.Codex.Count, Is.EqualTo(25), "every card");
+            Assert.That(sim.State.Guidance.Codex.Count, Is.EqualTo(25), "every card the Triggers walk through (the three treasury cards have their own test)");
             ViewContext ctx = ViewKit2.Context(sim);
-            for (int i = 0; i < g.Codex.Cards.Count; i++) // each card reads with the player's numbers, no placeholder left
+            for (int i = 0; i < g.Codex.Cards.Count; i++) // each card found reads with the player's numbers, no placeholder left
             {
+                if (sim.State.Guidance.Found(g.Codex.Cards[i].Id) == null) continue;
                 WhyVm card = CodexSheet.Card(ctx, i);
                 Assert.That(card.Rows.Select(r => r.Label), Has.None.Contains("{"), g.Codex.Cards[i].Id);
+                Assert.That(card.Rows.Count, Is.EqualTo(5));
+            }
+        }
+
+        // AC-15 (spec 021 §3.12): the three treasury cards, each at its moment, with the town's numbers.
+        [Test]
+        public void TreasuryCards()
+        {
+            Simulation sim = Situations.Township();
+            Ok(sim, new SkipFirstSession(T(sim)));
+            long t = T(sim);
+            Finds(sim, "publicMoney", new SimEvent[] { new TreasuryOpened(t, 100_000_00) }, new[] { 100_000_00L });
+            Finds(sim, "tiedGrants", new SimEvent[] { new GrantPaid(t, 10_400_00, 0, 5_200_00) }, new[] { 5_200_00L, 10_400_00L });
+            Assert.That(CodexWatch.Observe(sim, new SimEvent[] { new GrantPaid(t, 10_400_00, 5_200_00, 0) }).Any(x => x.Id == "tiedGrants"), Is.False, "a tied grant that was paid teaches nothing");
+            Sim.Core.Town.TreasuryReport last = sim.State.Treasury.Reports.Last();
+            Finds(sim, "budgetPriority", new SimEvent[] { new DepartmentUnpaid(t, 0, 2_000_00) }, new[] { 2_000_00L, last.Rows[0].Needs });
+            ViewContext ctx = ViewKit2.Context(sim);
+            foreach (string id in new[] { "publicMoney", "budgetPriority", "tiedGrants" })
+            {
+                WhyVm card = CodexSheet.Card(ctx, sim.Config.Game.Codex.IndexOf(id));
+                Assert.That(card.Rows.Select(r => r.Label), Has.None.Contains("{"), id);
                 Assert.That(card.Rows.Count, Is.EqualTo(5));
             }
         }
@@ -177,7 +199,7 @@ namespace Sim.View.Tests
             Assert.That(sim.Execute(new FindCodexCards(t, new[] { new CodexFind("nope", new long[0]) })).Reason, Is.EqualTo(RejectReason.UnknownCodexCard));
 
             SheetVm codex = CodexSheet.Build(ctx);
-            Assert.That(codex.Subtitle, Is.EqualTo("3 of 25 ideas found"));
+            Assert.That(codex.Subtitle, Is.EqualTo("3 of 28 ideas found"));
             Assert.That(codex.Lines.Where(l => !l.IsHeader).Select(l => l.Label + "|" + l.Tag), Is.EqualTo(new[] { "Credit score|New", "Inflation|New", "Employer reputation|New" }));
             Assert.That(codex.Lines.Where(l => l.IsHeader).Select(l => l.Label), Is.EqualTo(new[] { "Money", "People" }), "unfound groups hidden");
             int inflation = sim.Config.Game.Codex.IndexOf("inflation");

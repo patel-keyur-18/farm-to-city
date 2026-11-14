@@ -104,4 +104,52 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "WorksCommissioned(work=" + WorkId + ", cost=" + Cost + ")"; }
     }
+
+    /// <summary>A budget window opened (spec 021 §3.6): the set window at the opening and each Spring close, the revision at Monsoon.</summary>
+    public sealed class BudgetWindowOpened : SimEvent
+    {
+        public bool Revision { get; }
+
+        public BudgetWindowOpened(long simTime, bool revision) : base(simTime) { Revision = revision; }
+
+        protected override string Describe() { return "BudgetWindowOpened(revision=" + Revision + ")"; }
+    }
+
+    /// <summary>The player changed a department's budget in an open window (spec 021 §3.6).</summary>
+    public sealed class BudgetSet : SimEvent
+    {
+        public int Department { get; }
+        public long Amount { get; }
+
+        public BudgetSet(long simTime, int department, long amount) : base(simTime)
+        {
+            Department = department;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "BudgetSet(dept=" + Department + ", amount=" + Amount + ")"; }
+    }
+
+    /// <summary>The player took the proposal as it stands, closing the window (spec 021 §3.6).</summary>
+    public sealed class BudgetAccepted : SimEvent
+    {
+        public BudgetAccepted(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "BudgetAccepted"; }
+    }
+
+    /// <summary>On a season's last day the close would leave a department unpaid (spec 021 §3.11).</summary>
+    public sealed class TreasuryShortAhead : SimEvent
+    {
+        public long Short { get; }
+        public int FirstUnpaid { get; }
+
+        public TreasuryShortAhead(long simTime, long @short, int firstUnpaid) : base(simTime)
+        {
+            Short = @short;
+            FirstUnpaid = firstUnpaid;
+        }
+
+        protected override string Describe() { return "TreasuryShortAhead(short=" + Short + ", first=" + FirstUnpaid + ")"; }
+    }
 }

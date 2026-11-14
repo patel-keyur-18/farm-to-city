@@ -54,7 +54,7 @@ namespace Sim.Core.Town
             s.SeasonOpeningCash = 0; // the grant is the first season's first income
             s.LineSeen = new bool[d.Lines.Count];
             for (int i = 0; i < d.Lines.Count; i++)
-                if (LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; s.Budget[d.Lines[i].Department] += LineAmount(sim, d.Lines[i]); } // the first year's budget is its needs (spec 021 §3.6)
+                if (LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; AddToBudget(sim, d.Lines[i]); } // the first year's budget is its needs (spec 021 §3.6)
             s.Window = BudgetWindow.Set;
             s.WindowPeriod = sim.Period;
             s.YearBudgeted = (int)(sim.Period / ClockYear(sim));
@@ -62,6 +62,103 @@ namespace Sim.Core.Town
         }
 
         private static long ClockYear(Simulation sim) { return Definitions.ClockDef.SeasonsPerYear; }
+
+        /// <summary>A new line joins its department's budget at its needs at once (spec 021 §3.6), and its needs count as known when the budget was set.</summary>
+        private static void AddToBudget(Simulation sim, LineDef line)
+        {
+            TreasuryState s = State(sim);
+            long amount = LineAmount(sim, line);
+            s.Budget[line.Department] += amount;
+            s.BudgetNeeds[line.Department] += amount;
+        }
+
+        // ---- the budget (spec 021 §3.6) ----
+
+        /// <summary>The most a department's budget may be: <c>budgetMaxOfNeeds</c> of its needs now (spec 021 §3.6).</summary>
+        public static long MaxBudget(Simulation sim, int department)
+        {
+            return (Def(sim).BudgetMaxOfNeeds * Fixed.FromInt(Needs(sim, department))).RoundToLong();
+        }
+
+        /// <summary>
+        /// The proposal filled in for the player (spec 021 §3.6): last year's actuals at today's prices. A department's needs now, times the
+        /// share of its needs it was paid over the last four closes; with no closes yet, its needs.
+        /// </summary>
+        public static long Proposal(Simulation sim, int department)
+        {
+            TreasuryState s = State(sim);
+            long needs = Needs(sim, department), sumPaid = 0, sumNeeds = 0;
+            for (int i = Math.Max(0, s.Reports.Count - Definitions.ClockDef.SeasonsPerYear); i < s.Reports.Count; i++)
+            {
+                DepartmentRow row = s.Reports[i].Rows[department];
+                sumPaid += row.Paid;
+                sumNeeds += row.Needs;
+            }
+            if (needs <= 0 || sumNeeds <= 0) return needs;
+            return Math.Min(needs, needs * sumPaid / sumNeeds);
+        }
+
+        /// <summary>
+        /// A window opens after a close (spec 021 §3.6): at each Spring close the year's proposal is in force at once and the set window opens;
+        /// at the Monsoon close, if a budget was set earlier this year and not yet revised, the revision window opens. A window lasts until it
+        /// is accepted or the next close.
+        /// </summary>
+        private static void OpenWindows(Simulation sim)
+        {
+            TreasuryState s = State(sim);
+            long now = sim.State.Clock.SimTime;
+            int seasons = Definitions.ClockDef.SeasonsPerYear;
+            int season = (int)(sim.Period % seasons), year = (int)(sim.Period / seasons);
+            s.Window = BudgetWindow.None;
+            if (season == 0)
+            {
+                for (int dept = 0; dept < TreasuryState.Departments; dept++)
+                {
+                    s.Budget[dept] = Proposal(sim, dept);
+                    s.BudgetNeeds[dept] = Needs(sim, dept);
+                }
+                s.Window = BudgetWindow.Set;
+                s.WindowPeriod = sim.Period;
+                s.WindowSeen = false;
+                s.YearBudgeted = year;
+                s.Revised = false;
+                sim.Emit(new BudgetWindowOpened(now, false));
+            }
+            else if (season == 2 && s.YearBudgeted == year && !s.Revised)
+            {
+                s.Window = BudgetWindow.Revise;
+                s.WindowPeriod = sim.Period;
+                s.WindowSeen = false;
+                s.Revised = true;
+                sim.Emit(new BudgetWindowOpened(now, true));
+            }
+        }
+
+        /// <summary>One department's budget changed in an open window (spec 021 §3.6): 0 to <see cref="MaxBudget"/>.</summary>
+        internal static Commands.RejectReason SetBudget(Simulation sim, int department, long amount)
+        {
+            if (!IsOpen(sim)) return Commands.RejectReason.NoTreasury;
+            TreasuryState s = State(sim);
+            if (s.Window == BudgetWindow.None) return Commands.RejectReason.NoWindow;
+            if (department < 0 || department >= TreasuryState.Departments || amount < 0 || amount > MaxBudget(sim, department)) return Commands.RejectReason.OutOfRange;
+            s.Budget[department] = amount;
+            s.BudgetNeeds[department] = Needs(sim, department);
+            s.WindowSeen = true;
+            sim.Emit(new BudgetSet(sim.State.Clock.SimTime, department, amount));
+            return Commands.RejectReason.None;
+        }
+
+        /// <summary>The budget taken as it stands (spec 021 §3.6): the window is marked seen and closes until the next one.</summary>
+        internal static Commands.RejectReason AcceptBudget(Simulation sim)
+        {
+            if (!IsOpen(sim)) return Commands.RejectReason.NoTreasury;
+            TreasuryState s = State(sim);
+            if (s.Window == BudgetWindow.None) return Commands.RejectReason.NoWindow;
+            s.WindowSeen = true;
+            s.Window = BudgetWindow.None;
+            sim.Emit(new BudgetAccepted(sim.State.Clock.SimTime));
+            return Commands.RejectReason.None;
+        }
 
         // ---- what the departments need ----
 
@@ -269,8 +366,9 @@ namespace Sim.Core.Town
             }
 
             // 3. Spending: a new line joins its department's budget at its needs, then the two passes.
+            var newLine = new bool[TreasuryState.Departments];
             for (int i = 0; i < d.Lines.Count; i++)
-                if (!s.LineSeen[i] && LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; s.Budget[d.Lines[i].Department] += LineAmount(sim, d.Lines[i]); }
+                if (!s.LineSeen[i] && LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; AddToBudget(sim, d.Lines[i]); newLine[d.Lines[i].Department] = true; }
             int n = d.Lines.Count;
             var amounts = new long[n];
             var paid = new long[n];
@@ -305,6 +403,7 @@ namespace Sim.Core.Town
                 long deptPaid = 0;
                 for (int i = 0; i < n; i++) if (d.Lines[i].Department == dept) deptPaid += paid[i];
                 var row = new DepartmentRow { Budget = s.Budget[dept], Needs = needs[dept], Paid = deptPaid, PaidInPass2 = paid2[dept] };
+                row.Sentence = (int)Sentence(row, s.BudgetNeeds[dept], newLine[dept]);
                 Fixed from = s.Condition[dept];
                 Fixed to = from + (row.Funding - from) * d.ConditionStep;
                 if (to > Fixed.One) to = Fixed.One;
@@ -343,12 +442,44 @@ namespace Sim.Core.Town
             }
             s.Reports.Add(report);
             if (s.Reports.Count > d.RetainSeasons) s.Reports.RemoveAt(0);
+            OpenWindows(sim);
             s.Closing = false;
             s.SeasonOpeningCash = ledger.Cash; // the new season opens with what the old one left; its pitch rents are its first income
             foreach (KeyValuePair<long, long> r in s.PendingRents) // the new season's pitch rents, now that the old season is shut
                 ledger.Post(now, sim.Period, "ledger.townPitchRent", "business:" + r.Key, new Posting(Account.Cash, r.Value), new Posting(Account.PitchRents, -r.Value));
             s.PendingRents.Clear();
             ledger.DropEntriesBefore(closing - d.RetainSeasons + 1);
+        }
+
+        /// <summary>
+        /// The one sentence that explains a department's variance (spec 021 §3.6), first that holds: a line joined this season, cash ran out, its needs
+        /// passed its budget (the budget was set below its needs, else prices rose since), money was left over.
+        /// </summary>
+        public static VarianceSentence Sentence(DepartmentRow row, long needsWhenSet, bool newLine)
+        {
+            if (newLine) return VarianceSentence.NewLine;
+            if (row.Unpaid > 0) return VarianceSentence.CashRanOut;
+            if (row.Needs > row.Budget) return needsWhenSet > row.Budget ? VarianceSentence.BudgetBelowNeeds : VarianceSentence.PricesRose;
+            if (row.Budget > row.Paid) return VarianceSentence.Unspent;
+            return VarianceSentence.None;
+        }
+
+        /// <summary>
+        /// Hourly, from 00:00 of a season's last day (spec 021 §3.11): once the close would leave a department unpaid, one warning; a change in
+        /// the shortfall later that day warns again.
+        /// </summary>
+        internal static void Hourly(Simulation sim)
+        {
+            if (!IsOpen(sim)) return;
+            TreasuryState s = State(sim);
+            long season = sim.Clock.SecondsPerSeason;
+            if (season - sim.State.Clock.SimTime % season > Definitions.ClockDef.SecondsPerDay) return;
+            CloseForecast f = Forecast(sim);
+            if (f.Short <= 0) { s.ShortWarnedAmount = 0; return; }
+            if (s.ShortWarnedPeriod == sim.Period && s.ShortWarnedAmount == f.Short) return;
+            s.ShortWarnedPeriod = sim.Period;
+            s.ShortWarnedAmount = f.Short;
+            sim.Emit(new TreasuryShortAhead(sim.State.Clock.SimTime, f.Short, f.FirstUnpaid));
         }
 
         /// <summary>A department's lines in payment order: wages before upkeep, each in content order (spec 021 §3.4).</summary>
@@ -367,6 +498,7 @@ namespace Sim.Core.Town
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
+            if (pass == ItemClass.Hourly) TreasuryRules.Hourly(sim);
             if (pass == ItemClass.Seasonal) TreasuryRules.Close(sim);
         }
     }

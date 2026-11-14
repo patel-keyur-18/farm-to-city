@@ -17,6 +17,24 @@ namespace Sim.Core.Tests
 
         private static string[] Types(PlayLog log) { return log.Lines.Select(l => l.Split("\"type\":\"")[1].Split('"')[0]).ToArray(); }
 
+        // AC-15 (spec 021 §3.12): the opening, each window, each unpaid department and each gift, with amounts.
+        [Test]
+        public void Treasury()
+        {
+            var log = new PlayLog(Def(), "") { Enabled = true };
+            log.NewGame(Wall0, 0);
+            log.OnEvents(new Events.SimEvent[]
+            {
+                new Events.TreasuryOpened(10, 100_000_00), new Events.BudgetWindowOpened(10, false), new Events.BudgetWindowOpened(20, true),
+                new Events.DepartmentUnpaid(30, 2, 1_950_00), new Events.GiftGiven(40, 5_000_00),
+            }, Wall0 + 100);
+            Assert.That(Types(log), Is.EqualTo(new[] { "newGame", "treasuryOpened", "budgetWindow", "budgetWindow", "departmentUnpaid", "gift" }));
+            Assert.That(log.Lines[1], Does.Contain("\"grant\":10000000"));
+            Assert.That(log.Lines[3], Does.Contain("\"revision\":true"));
+            Assert.That(log.Lines[4], Does.Contain("\"dept\":2").And.Contain("\"amount\":195000"));
+            Assert.That(log.Lines[5], Does.Contain("\"amount\":500000"));
+        }
+
         [Test]
         public void Entries_OnceAndCapped()
         {

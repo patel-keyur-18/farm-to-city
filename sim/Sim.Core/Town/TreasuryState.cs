@@ -137,6 +137,9 @@ namespace Sim.Core.Town
         /// <summary>The most each department may spend a season, set for the year (spec 021 §3.6).</summary>
         public long[] Budget { get; internal set; } = new long[Departments];
 
+        /// <summary>What each department needed when its budget was last set, so a variance can say whether prices rose or the budget was cut (spec 021 §3.6).</summary>
+        public long[] BudgetNeeds { get; internal set; } = new long[Departments];
+
         /// <summary>Each department's service, 0–1, starting at 1 (spec 021 §3.5).</summary>
         public Fixed[] Condition { get; internal set; } = NewConditions();
 
@@ -186,6 +189,7 @@ namespace Sim.Core.Town
             var c = (TreasuryState)MemberwiseClone();
             c.Ledger = Ledger.Clone();
             c.Budget = (long[])Budget.Clone();
+            c.BudgetNeeds = (long[])BudgetNeeds.Clone();
             c.Condition = (Fixed[])Condition.Clone();
             c.Unpaid = (int[])Unpaid.Clone();
             c.OverBudget = (int[])OverBudget.Clone();
@@ -204,6 +208,7 @@ namespace Sim.Core.Town
             if (!Opened) return;
             Ledger.WriteTo(h);
             foreach (long b in Budget) h.WriteLong(b);
+            foreach (long b in BudgetNeeds) h.WriteLong(b);
             foreach (Fixed c in Condition) h.WriteFixed(c);
             foreach (int u in Unpaid) h.WriteInt(u);
             foreach (int u in OverBudget) h.WriteInt(u);
@@ -229,6 +234,7 @@ namespace Sim.Core.Town
             if (!s.Opened) return s;
             s.Ledger = Ledger.ReadFrom(r);
             for (int i = 0; i < Departments; i++) s.Budget[i] = r.ReadLong();
+            for (int i = 0; i < Departments; i++) s.BudgetNeeds[i] = r.ReadLong();
             for (int i = 0; i < Departments; i++) s.Condition[i] = r.ReadFixed();
             for (int i = 0; i < Departments; i++) s.Unpaid[i] = r.ReadInt();
             for (int i = 0; i < Departments; i++) s.OverBudget[i] = r.ReadInt();

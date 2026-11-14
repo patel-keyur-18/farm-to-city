@@ -220,6 +220,10 @@ namespace Sim.Core.Commands
         BelowGiftMinimum,
         /// <summary>No such capital work in the content.</summary>
         UnknownWork,
+        /// <summary>No budget window is open: the budget is set at the opening and each Spring close, revised once at Monsoon (spec 021 §3.6).</summary>
+        NoWindow,
+        /// <summary>A budget outside 0 to budgetMaxOfNeeds of the department's needs now (spec 021 §3.6).</summary>
+        OutOfRange,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

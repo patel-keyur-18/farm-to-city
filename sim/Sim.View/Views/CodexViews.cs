@@ -10,6 +10,7 @@ using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.People;
 using Sim.Core.Progress;
+using Sim.Core.Town;
 
 namespace Sim.View.Views
 {
@@ -208,6 +209,19 @@ namespace Sim.View.Views
                 case "longTermInvestment":
                     return e is CitizenLiterate cl && cl.How == LiterateHow.School && SchoolRules.On(sim)
                         ? new[] { (long)sim.Config.Game.School.PrimaryYears, SchoolRules.State(sim).Cost } : null;
+                case "publicMoney": // the treasury opened
+                    return e is TreasuryOpened to ? new[] { to.Grant } : null;
+                case "budgetPriority": // a department paid after the others' budgets, or left unpaid: the budget is the order
+                {
+                    TreasuryState t = sim.State.Treasury;
+                    if (t == null || t.Reports.Count == 0) return null;
+                    TreasuryReport last = t.Reports[t.Reports.Count - 1];
+                    if (e is DepartmentPaid dpd && dpd.InPass2) return new[] { last.Rows[dpd.Department].PaidInPass2, dpd.Needs };
+                    if (e is DepartmentUnpaid du) return new[] { du.Amount, last.Rows[du.Department].Needs };
+                    return null;
+                }
+                case "tiedGrants": // the tied part of the district's grant withheld
+                    return e is GrantPaid g && g.TiedWithheld > 0 ? new[] { g.TiedWithheld, g.Untied } : null;
                 default:
                     return null;
             }

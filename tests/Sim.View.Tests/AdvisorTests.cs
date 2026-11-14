@@ -59,8 +59,8 @@ namespace Sim.View.Tests
             Ok(sim, new SkipFirstSession(T(sim)));
             ViewContext ctx = ViewKit2.Context(sim);
             GameDefs g = sim.Config.Game;
-            Assert.That(g.Advisors.Notes.Select(n => n.Id), Is.EqualTo(AdvisorDefs.NoteIds), "twelve notes in ADR 0095 §8's order");
-            Assert.That(g.Advisors.Notes.Count(n => n.Report), Is.EqualTo(8));
+            Assert.That(g.Advisors.Notes.Select(n => n.Id), Is.EqualTo(AdvisorDefs.NoteIds), "twelve notes in ADR 0095 §8's order, then the town planner's four"); // spec 021 §3.12
+            Assert.That(g.Advisors.Notes.Count(n => n.Report), Is.EqualTo(12));
             long p = sim.Period, c = Money.Coin;
             int field = OwnedField(sim, rainFed: true);
             foreach (Hand h in sim.State.People.Hands) h.Fatigue = Fixed.Zero;
@@ -110,7 +110,7 @@ namespace Sim.View.Tests
             // Every note reads whole, alert notes too.
             foreach (AdvisorNoteDef n in g.Advisors.Notes)
             {
-                long[] numbers = n.Id == "profitNotCash" ? new[] { 1L, 2L, 3L } : n.Id == "overdraft" ? new long[] { 0, 1, 2 } : n.Id == "soil" || n.Id == "dry" ? new long[] { field, 4 }
+                long[] numbers = n.Id == "profitNotCash" ? new[] { 1L, 2L, 3L } : n.Id == "overdraft" || n.Id == "deptOver" ? new long[] { 0, 1, 2 } : n.Id == "serviceLow" ? new long[] { 0, Fixed.One.Raw } : n.Id == "soil" || n.Id == "dry" ? new long[] { field, 4 }
                     : new long[] { hand.Name, 2 };
                 AdvisorVm line = AdvisorWords.Line(ctx, new AdvisorNote(n.Id, 0, n.Report, numbers), compact: !n.Report);
                 Assert.That(line.Text + line.Who, Does.Not.Contain("{"), n.Id);
@@ -214,7 +214,7 @@ namespace Sim.View.Tests
         {
             string json = ViewKit.ReadContent("advisors.json");
             AdvisorDefs d = ContentLoader.LoadAdvisors(json);
-            Assert.That((d.Advisors.Count, d.Notes.Count, d.TopicHours), Is.EqualTo((3, 12, 24)));
+            Assert.That((d.Advisors.Count, d.Notes.Count, d.TopicHours), Is.EqualTo((4, 16, 24)));
             Assert.Throws<ContentException>(() => ContentLoader.LoadAdvisors(json.Replace("\"id\": \"raise\"", "\"id\": \"gossip\"")), "a note needs a condition");
             Assert.Throws<ContentException>(() => ContentLoader.LoadAdvisors(json.Replace("[\"PestWarning\"]", "[\"Rain\"]")), "known alerts only");
             Assert.Throws<ContentException>(() => ContentLoader.LoadAdvisors(json.Replace("\"report\": true, \"threshold\": 40", "\"report\": true")), "soil needs its threshold");
