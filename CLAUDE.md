@@ -225,6 +225,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0113 | Orders go to the hand you pick (a *Give an order* list on the hand's sheet, "who looks after it?" from a field when there are two or more hands); a hand's skill shown with its growth, the citizen card reads the hand's skill; Care said to be one pool, one *Why?* row for each hand |
 | 0114 | The treasury as built (US-138): the Township reached by the developer panel only until spec 023 builds its gate, seven departments from the first schema 19, a pitch rent counted in the season it pays for, the first statement holds the start-up grant |
 | 0115 | The budget cycle as built (US-139): the proposal is last year's actuals at today's prices, a window lasts until accepted or the next close, a card only for the first window then the bell, five variance sentences, a day's warning on the grants, the town planner as a fourth advisor |
+| 0116 | The Township's spec (spec 023): the district builds the clinic for a 48,000 share, the doctor's quarters (90,000) are a rented asset and no allowance from you, a 25,000 road share, one coverage rule (reach, capacity, staff), appointments for public posts, an aggregate old village, break-even within two years |
 
 ## Current status
 
