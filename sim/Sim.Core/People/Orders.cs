@@ -163,7 +163,7 @@ namespace Sim.Core.People
             return Collect(sim, h, o, good, new PickFruit(sim.State.Clock.SimTime, o.Target, Overflow.SellRestToTrader), OrderAction.Picked, tree.RipeGrams);
         }
 
-        /// <summary>Harvests or picks (overflow to the trader so a full store never blocks it), then applies the sell rule.</summary>
+        /// <summary>Harvests (a field crop in parts: what fits, ADR 0111) or picks (fruit's overflow to the trader), then applies the sell rule.</summary>
         private static bool Collect(Simulation sim, Hand h, StandingOrder o, int good, TimedCommand collect, OrderAction action, long quantity)
         {
             MarketState m = sim.State.Market;

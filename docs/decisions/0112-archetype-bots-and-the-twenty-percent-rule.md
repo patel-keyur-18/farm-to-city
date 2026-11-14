@@ -1,6 +1,6 @@
 # 0112. The archetype bots and ADR 0016's 20% rule, measured on Phase 2's systems
 
-- Status: Accepted (owner approval pending at the story's review, 2026-11-13)
+- Status: Accepted (owner, 2026-11-13, at US-099's review)
 - Date: 2026-11-13
 - Deciders: Keyur Patel
 - Amends: ADR 0016 (built at last, US-099); ADR 0107 §11 (200 seeds to game year 8)

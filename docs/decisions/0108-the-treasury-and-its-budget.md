@@ -1,6 +1,6 @@
 # 0108. The town treasury: its own books, grants in two parts, a budget that is a priority list, services that decay by condition, and a wall
 
-- Status: Accepted (owner, 2026-11-13: ten gaps decided one at a time while spec 021 was written; the spec itself is in review)
+- Status: Accepted (owner, 2026-11-13: ten gaps decided one at a time while spec 021 was written; spec 021 approved the same day)
 - Date: 2026-11-13
 - Deciders: Keyur Patel
 - Amends: the GDD's *Governance and public finance* (the budget cycle and the treasury's first day, made exact); ADR 0107 §6 (the treasury's first day: the grants' two parts, the order, the condition)

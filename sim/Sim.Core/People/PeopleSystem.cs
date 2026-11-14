@@ -89,7 +89,7 @@ namespace Sim.Core.People
 
         /// <summary>
         /// While labourers are hired (live or away): every ripe field without a hand's order is harvested, in crop id order
-        /// (overflow to the trader, so nothing is lost). Then those whose time is up go home. Runs before the hands' orders.
+        /// (in parts: what fits the store, the rest standing, ADR 0111). Then those whose time is up go home. Runs before the hands' orders.
         /// </summary>
         private static void Release(Simulation sim)
         {

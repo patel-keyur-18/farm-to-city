@@ -1,6 +1,6 @@
 # 0109. Taxes and policies: the owner pays a house tax capped at 15% of rent, a business tax on profit, rates from the next season, five policies with named winners and losers, and hands-off play that always works
 
-- Status: Accepted (owner, 2026-11-13: ten gaps decided one at a time while spec 022 was written; the spec itself is in review)
+- Status: Accepted (owner, 2026-11-13: ten gaps decided one at a time while spec 022 was written; spec 022 approved the same day)
 - Date: 2026-11-13
 - Deciders: Keyur Patel
 - Amends: the GDD's *Governance and public finance* (revenue and policies, made exact); spec 021 §3.4 (a seventh department, *Policies*)
