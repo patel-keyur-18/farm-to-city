@@ -2,5 +2,8 @@
   {"label":"Sprint 20, first reading (after US-252)","view":"all","date":"2026-11-13","drawCalls":1035,"batches":1035,"setPassCalls":12,"triangles":28164,"visibleSprites":1213,"sprites":1470},
   {"label":"Sprint 20, first reading (after US-252)","view":"village","date":"2026-11-13","drawCalls":597,"batches":597,"setPassCalls":10,"triangles":14914,"visibleSprites":699,"sprites":1470},
   {"label":"Sprint 20, first reading (after US-252)","view":"farm","date":"2026-11-13","drawCalls":381,"batches":381,"setPassCalls":9,"triangles":10487,"visibleSprites":439,"sprites":1470},
-  {"label":"Hand orders fix (a frost spell and a second hand on screen; draw calls 1,042, no map code changed)","view":"all","date":"2026-11-14","drawCalls":1042,"batches":1031,"setPassCalls":12,"triangles":31333,"visibleSprites":1202,"sprites":1478}
+  {"label":"Hand orders fix (a frost spell and a second hand on screen; draw calls 1,042, no map code changed)","view":"all","date":"2026-11-14","drawCalls":1042,"batches":1031,"setPassCalls":12,"triangles":31333,"visibleSprites":1202,"sprites":1478},
+  {"label":"US-138","view":"all","date":"2026-11-14","drawCalls":957,"batches":957,"setPassCalls":10,"triangles":17383,"visibleSprites":1144,"sprites":1419},
+  {"label":"US-138","view":"village","date":"2026-11-14","drawCalls":572,"batches":572,"setPassCalls":9,"triangles":10382,"visibleSprites":670,"sprites":1419},
+  {"label":"US-138","view":"farm","date":"2026-11-14","drawCalls":366,"batches":366,"setPassCalls":8,"triangles":7154,"visibleSprites":416,"sprites":1419}
 ]

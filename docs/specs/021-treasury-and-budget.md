@@ -341,3 +341,15 @@ If this spec runs over, drop these first, in order:
 3. The *The town's books* year-on-year columns.
 4. The Budget tab's last-season columns.
 5. The land line on the works card (its numbers need spec 024 anyway).
+
+## 12. As built (US-138, 2026-11-14, ADR 0114)
+
+For your review; none changes a decision.
+
+- **The Township era** is in `eras.json` with the condition `developerOnly` until spec 023 builds the gate; the treasury opens in `EraRules.Unlock`.
+- **Seven departments** are in the state from schema 19 (spec 022's *Policies* is the seventh); the Health line and the tied grant wait for the clinic (`TreasuryRules.ClinicStaffed` is false until spec 023).
+- **Pitch rents** paid at the boundary are credited after the old season's books are shut, in the new season (§3.3); a rent paid mid-season is credited at once.
+- **The first statement** holds the start-up grant as its first income (opening cash 0).
+- **Not in US-138:** the budget's windows, `SetBudget`, `AcceptBudget`, the warning, the planner, the Codex cards and the play log (US-139); taxes (US-140); the land line on a works card (needs spec 024). The condition (§3.5) and the two passes (§3.4) are built, and the budget is the proposal (the first year's needs) until US-139.
+- **The works card:** `CommissionWorks` is a tap card by the standard rules; the content has no works yet, so tests add one by a content edit.
+- **A department's row** shows its service in the label with a bar; its Why? lists its lines, budget and service.

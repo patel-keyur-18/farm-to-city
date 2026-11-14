@@ -223,6 +223,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0111 | Hands and labourers take part-harvests: every hand's field order takes what fits each hour (one action a part), nothing sold to the trader unless the sell rule says; paid labourers stay and work their paid time when nothing fits (no early leave, no refund); an alert and the away card say what still stands; no save change |
 | 0112 | The archetype bots (agri-hub, merchant, education) and ADR 0016's 20% rule measured on 200 seeds at year 8: best/worst net worth 1.13, happiness 1.07; every archetype plants the mango orchard (the best 30,000-coin use, +24%), the stress bots do not; `ArchetypeTests` |
 | 0113 | Orders go to the hand you pick (a *Give an order* list on the hand's sheet, "who looks after it?" from a field when there are two or more hands); a hand's skill shown with its growth, the citizen card reads the hand's skill; Care said to be one pool, one *Why?* row for each hand |
+| 0114 | The treasury as built (US-138): the Township reached by the developer panel only until spec 023 builds its gate, seven departments from the first schema 19, a pitch rent counted in the season it pays for, the first statement holds the start-up grant |
 
 ## Current status
 

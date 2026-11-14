@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township**: Sprint 20, the first of 8 (Sprints 20–27, ADR 0107). Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 21 next** (PR #30, Sprint 20, merged 2026-11-14; branch `sprint/21-treasury-and-taxes` made, nothing built yet). Sprint 20 (2 weeks, 22 points plus specs 021 and 022): **every story built, Editor-checked and approved by the owner (2026-11-13)**: specs 021 and 022, US-240, US-241, US-252, US-101.T1, US-099; balance done; the checklist's Editor rows run. Development build made (Xcode BUILD SUCCEEDED); CI green on `c2b1932`. **Device rows 13–15 passed (owner, 2026-11-14)**: main p95 4.76 ms, GPU p95 8.23 ms, 60 fps, goldens 001/003/004/005 pass, 72 h catch-up 6.5 ms, schema 17→18 migration loaded. **US-262** (owner's bug: orders for a second hand, stars, Care; ADR 0113) fixed in the sprint. **Left:** row 16 (the phone's number pad) and merging PR #30 |
+| Sprint | **Sprint 21 in progress** (branch `sprint/21-treasury-and-taxes`; 26 points; the section is in `sprints.md`, approved 2026-11-14). **US-138 Treasury built and Editor-checked, awaiting the owner's review** (spec 021 as built in §12, ADR 0114 proposed; save schema 19 with `saves/schema19`). Next: the owner's review of US-138, then the Budget tab's preview and US-139. Sprint 20 is merged (PR #30) |
 | Branch with latest work | `sprint/21-treasury-and-taxes` (from `main` after PR #30; Sprint 20 is merged) |
-| Last updated | 2026-11-14 (Sprint 20 closed on the phone; US-262 fixed) |
+| Last updated | 2026-11-14 (Sprint 21 started; US-138 built) |
 
 ## Done so far
 
@@ -428,14 +428,15 @@
 
 ## Next up
 
-1. **Sprint 21 (branch `sprint/21-treasury-and-taxes`, 2 weeks, 26 points; ADR 0107 §1 and `sprints.md`'s overview row): the treasury and the budget cycle, taxes and policies.** Sprint 20 is merged (PR #30; the phone's p95s, goldens and catch-up passed 2026-11-14; row 16 of its checklist, the phone's number pad, is still the owner's).
-   1. **Write the Sprint 21 section in `sprints.md`** (it has only the overview row): goal, the four stories, order of work, Definition of Ready, sprint end checklist, device build Yes. Stories: **US-138 Treasury** (8) and **US-139 Budget cycle** (5), spec 021 (`docs/specs/021-treasury-and-budget.md`, ADR 0108, features F15.1); **US-140 Taxes** (5) and **US-141 Policies** (8), spec 022 (`docs/specs/022-taxes-and-policies.md`, ADR 0109, F15.2). Their scope is written out in the feature files (ADR 0107 §13). Read both specs and both ADRs in full first.
-   2. **Specs 023 and 024** are written and reviewed in this sprint (the overview row: "023, 024"): 023 the Township (the clinic, the link road, coverage, the old village, the unlock; ADR 0107 §2–§5), 024 zoning, land value, rentals and upgrades. Rolling wave: write them after the code is under way, one gap per message with a recommendation.
-   3. **Standing request (owner): before any UI code, an artifact that looks exactly like the in-game sheet** (memory `preview-as-artifact`); the treasury's and the budget's sheets were accepted in layout in spec 021 §7, and the tax and policy sheets in spec 022, but each is previewed again before its code.
-   4. **Owner's rules for both specs:** not a burden on an average player, everything explained on screen with a *Why?*, a town left alone always works (spec 022 §3.7); the treasury never pays you and never goes below zero (ADR 0107 §6, 0108).
-   5. **Balance and gates:** the treasury and taxes on the bots (the 20% rule, `ArchetypeTests` with 24 seeds, `FTC_SEEDS=200` for the full run), the Village's pace stays 28–45 days (ADR 0110 §8); watch the Township's pace (day 63–77, ADR 0107 §5): US-100 in Sprint 22 measures it.
-   6. **Save schema:** 18 now; the treasury opens 19 (a `saves/schema19` fixture, every older schema loads). Never edit C# in play mode.
-   7. **Device build:** a Development build at the end (both frame-time p95s, golden replays; Sprint 20: main 4.76 ms, GPU 8.23 ms). Frame-time room is about 2 ms of GPU (ADR 0107 §12).
+1. **Sprint 21 (branch `sprint/21-treasury-and-taxes`, 2 weeks, 26 points): the treasury and the budget cycle, taxes and policies.** The section in `sprints.md` is written and approved (2026-11-14). Order: **US-138 built (2026-11-14), the owner reviews it** → the Budget tab and the window card previewed as an artifact → US-139 → spec 023 drafted (one gap per message) → the Taxes and Policies tabs previewed → US-140 → US-141 → spec 024 drafted → balance → the whole checklist (`docs/test-checklists/s21-treasury-taxes-policies.md`) in the Editor → the Development build.
+   1. **US-138 as built:** `content/treasury.json`; `Sim.Core/Town/` (`TreasuryState`, `TreasuryRules`, the system at order 9); accounts 4600–4670, 5910–5970; `GiveToTreasury`, `CommissionWorks`; the Township era (`developerOnly`) in `eras.json`; `Sim.View/Views/TreasuryViews.cs` and `WhyView.Treasury.cs`; strings; the Menu row. Tests: `TreasuryTests` (12), `MigrationTests.Schema18_Treasury`, `TreasuryViewTests` (6). Editor tour by touch with captures `docs/art/s21-138-*.png`; render statistics flat (957 / 572 / 366 draw calls). Notes for the owner in spec 021 §12 and ADR 0114.
+   2. **To raise at US-139** (owner asked for no burden on the average player): the budget window card only at the first window (the teaching one); later windows as a bell alert plus a badge on the sheet (the proposal stays in force). A UI change to spec 021 §3.6, so it needs a yes.
+   3. **Spec 023 must keep a default town solvent** with the clinic's and the road's upkeep added (spec 022 §9: about 67,000 in against 62,000 out before them). The Editor town (1 resident, no clinic) is in deficit by design until then; the start-up grant carries it about 25 seasons.
+   4. **Standing request (owner): before any UI code, an artifact that looks exactly like the in-game sheet** (memory `preview-as-artifact`); the Town treasury sheet's was approved (2026-11-14, preview `https://claude.ai/artifact/L7A4k3EhiN5r6bszg2zenX`).
+   5. **Owner's rules for both specs:** not a burden on an average player, everything explained on screen with a *Why?*, a town left alone always works (spec 022 §3.7); the treasury never pays you and never goes below zero (ADR 0107 §6, 0108).
+   6. **Balance and gates:** the treasury and taxes on the bots (the 20% rule, `ArchetypeTests` with 24 seeds, `FTC_SEEDS=200` for the full run), the Village's pace stays 28–45 days (ADR 0110 §8); the Township's pace (day 63–77, ADR 0107 §5): US-100 in Sprint 22 measures it.
+   7. **Save schema:** 19 (the treasury; spec 022's rates and policies join it on this branch, shipped once). Never edit C# in play mode (I did once in the US-138 tour: stopped play, restored the saves, diffed, and re-ran).
+   8. **Device build:** a Development build at the end (both frame-time p95s, golden replays; Sprint 20: main 4.76 ms, GPU 8.23 ms). Frame-time room is about 2 ms of GPU (ADR 0107 §12).
 2. **Standing rules:** never defer to the device what the Unity Editor can check (ADR 0107 §11); back up the Editor saves (`~/Library/Application Support/keyur-patel-18/Farm to City/Saves`) before Editor tests and restore and diff after (wait about 10 s after `editor_stop`); run both test projects and fix every failure; preview art, layouts and text first; confirm cards for new spending (ADR 0101 §12); every number gets a *Why?*; never commit `Assets/_Recovery/` or `ProjectSettings` changes; every PR gets labels, milestone `Phase 3 · Township` and the FarmToCity project (In Progress); one stop for the owner's review after each story.
 3. **Deferred, the owner's call (ADR 0106):** gate part B for Phases 1 and 2, before Launch; Phase 2's A2–A5 continue as the owner's play (a failure is a Phase 2 fix).
 
@@ -489,7 +490,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Nothing half-done. Sprint 20 is merged (PR #30); save schema 18 (ADR 0110). Only row 16 of its checklist (the phone's number pad) is left with the owner. `unity/FarmToCity/Assets/_Recovery/` is untracked on the owner's Mac: never commit it. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+Sprint 21 is in progress: US-138 is built and waits for the owner's review; nothing else half-done. Save schema 19 (unreleased, grows on this branch). Only row 16 of Sprint 20's checklist (the phone's number pad) is left with the owner. `unity/FarmToCity/Assets/_Recovery/` is untracked on the owner's Mac: never commit it. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 
