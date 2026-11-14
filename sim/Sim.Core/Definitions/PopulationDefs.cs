@@ -109,7 +109,28 @@ namespace Sim.Core.Definitions
         public string HouseUnlockEra { get; internal set; }
         public int HouseCapacity { get; internal set; }
         public int HousesPerAcre { get; internal set; }
-        public long RentPerSeason { get; internal set; }
+
+        /// <summary>The kutcha house's base rent a season (US-240, spec 014 §3.14); the market rent is this × the place's factor × the index.</summary>
+        public long BaseRent { get; internal set; }
+
+        /// <summary>The place factors (§3.14): an acre touching the district road, a lane, or neither (inner).</summary>
+        public Fixed RentDistrict { get; internal set; }
+        public Fixed RentLane { get; internal set; }
+        public Fixed RentInner { get; internal set; }
+
+        /// <summary>The road tiles by kind (§3.14): the district road's and the lanes'.</summary>
+        public IReadOnlyList<int> DistrictRoadTiles { get; internal set; }
+        public IReadOnlyList<int> LaneRoadTiles { get; internal set; }
+
+        /// <summary>A lease's length in seasons, the most a rent may rise at a renewal, the share of income a rent may take, how far a rent may be lowered, the goodwill a smaller rise and a kept rent earn, and the patience a settled family has (§3.14).</summary>
+        public int LeaseSeasons { get; internal set; }
+        public Fixed MaxRise { get; internal set; }
+        public Fixed BurdenLimit { get; internal set; }
+        public Fixed LowerStep { get; internal set; }
+        public int GoodwillSmaller { get; internal set; }
+        public int GoodwillKept { get; internal set; }
+        public int SettledPerYear { get; internal set; }
+        public int SettledMax { get; internal set; }
 
         /// <summary>Home villages' ids ("from Sitapur"); their names are <c>village.&lt;id&gt;</c> strings.</summary>
         public IReadOnlyList<string> Villages { get; internal set; }

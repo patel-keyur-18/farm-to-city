@@ -375,7 +375,15 @@ namespace Sim.View.Views
             Sim.Core.People.PeopleState p = sim.State.People;
             if (p == null) return;
             Sim.Core.People.Hand hand = PeopleWords.OrderHand(sim, kind, target);
-            if (hand == null) return;
+            if (hand == null)
+            {
+                // Two or more hands and nobody has it yet: ask who (the order used to go to the first hand hired, always).
+                if (p.Hands.Count < 2) return;
+                var who = new LineVm(ctx.Strings.Get("field.handsOrders"), ctx.Strings.Get("field.noOrder"));
+                who.Action = ActionVm.Open("order", ctx.Strings.Get("action.giveOrder"), new SheetRequest(OrderSheet.WhoSheet, target, kind == Sim.Core.People.OrderTargetKind.Tree ? "tree" : null));
+                vm.Lines.Add(who);
+                return;
+            }
             Sim.Core.People.StandingOrder o = p.OrderFor(kind, target);
             string name = PeopleWords.Name(ctx, hand.Name);
             var line = new LineVm(ctx.Strings.Get("field.handLooksAfter", "name", name),

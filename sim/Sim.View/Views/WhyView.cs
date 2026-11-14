@@ -97,7 +97,7 @@ namespace Sim.View.Views
             { "feedStock", FeedStock }, { "animalWork", AnimalWork }, { "fodderCut", FodderCut },
             // Your people (spec 014 §7).
             { "townHappiness", TownHappiness }, { "employment", Employment }, { "household.income", HouseholdIncome }, { "household.budget", HouseholdBudget },
-            { "household.savings", HouseholdSavings }, { "household.rent", HouseholdRent }, { "household.happiness", HouseholdHappiness }, { "household.home", HouseholdHome },
+            { "household.savings", HouseholdSavings }, { "household.rent", HouseholdRent }, { "household.lease", HouseholdRent }, { "household.happiness", HouseholdHappiness }, { "household.home", HouseholdHome },
             { "citizen.age", CitizenAge }, { "citizen.health", CitizenHealth }, { "citizen.job", CitizenWork }, { "hand.home", HandHome },
             // Businesses (spec 016 §7).
             { "businessArea", BusinessArea }, { "businessFee", BusinessFee }, { "businessTrader", BusinessTrader }, { "businessWage", BusinessWage },

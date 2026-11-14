@@ -1,0 +1,6 @@
+[
+  {"label":"Sprint 20, first reading (after US-252)","view":"all","date":"2026-11-13","drawCalls":1035,"batches":1035,"setPassCalls":12,"triangles":28164,"visibleSprites":1213,"sprites":1470},
+  {"label":"Sprint 20, first reading (after US-252)","view":"village","date":"2026-11-13","drawCalls":597,"batches":597,"setPassCalls":10,"triangles":14914,"visibleSprites":699,"sprites":1470},
+  {"label":"Sprint 20, first reading (after US-252)","view":"farm","date":"2026-11-13","drawCalls":381,"batches":381,"setPassCalls":9,"triangles":10487,"visibleSprites":439,"sprites":1470},
+  {"label":"Hand orders fix (a frost spell and a second hand on screen; draw calls 1,042, no map code changed)","view":"all","date":"2026-11-14","drawCalls":1042,"batches":1031,"setPassCalls":12,"triangles":31333,"visibleSprites":1202,"sprites":1478}
+]

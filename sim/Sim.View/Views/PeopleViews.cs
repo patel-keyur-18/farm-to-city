@@ -117,13 +117,26 @@ namespace Sim.View.Views
                 : ctx.Strings.Get(o.LastAction == OrderAction.Picked ? "order.lastPicked" : "order.lastHarvested", "qty", ctx.Fmt.Kg(o.LastQuantity), "ago", ago);
         }
 
-        /// <summary>The hand who takes orders for a target: the one holding it, else the first hand.</summary>
-        public static Hand OrderHand(Simulation sim, OrderTargetKind kind, long target)
+        /// <summary>
+        /// The hand who takes orders for a target: the one the player chose (<paramref name="chosen"/>), else the one holding it, else
+        /// the only hand. With several hands and none chosen it is null: the player is asked who (<see cref="OrderSheet.Who"/>).
+        /// </summary>
+        public static Hand OrderHand(Simulation sim, OrderTargetKind kind, long target, long chosen = 0)
         {
             PeopleState p = sim.State.People;
             if (p == null || p.Hands.Count == 0) return null;
+            Hand pick = chosen == 0 ? null : p.Hand(chosen);
+            if (pick != null) return pick;
             StandingOrder o = p.OrderFor(kind, target);
-            return o != null ? p.Hand(o.HandId) : p.Hands[0];
+            if (o != null) return p.Hand(o.HandId);
+            return p.Hands.Count == 1 ? p.Hands[0] : null;
+        }
+
+        /// <summary>The farm's Care in a sentence: what the crops need and what you and your helpers give, in hours a day.</summary>
+        public static string CareNote(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            return ctx.Strings.Get("care.note", "need", ctx.Fmt.Decimal1(FarmSystem.LabourDemand(sim)), "give", ctx.Fmt.Decimal1(PeopleRules.CareSupply(sim)));
         }
 
         /// <summary>Care today as a word, with <paramref name="extraHours"/> more hours a day in the pool.</summary>
@@ -156,7 +169,7 @@ namespace Sim.View.Views
                     "max", ctx.Fmt.Integer(defs.Hand.MaxHandHuts)),
             };
             TownSheet.Tabs(ctx, vm, "tab:workers");
-            vm.Lines.Add(new LineVm(s.Get("people.care"), ctx.Rating(sim.State.Farm.CareRatio), "care"));
+            vm.Lines.Add(new LineVm(s.Get("people.care"), ctx.Rating(sim.State.Farm.CareRatio), "care") { Note = PeopleWords.CareNote(ctx) });
             vm.Lines.Add(new LineVm(s.Get("people.reputation"), StaffView.Reputation(ctx), "reputation"));
 
             // The hub's picture buttons, each saying what it opens.
@@ -375,6 +388,25 @@ namespace Sim.View.Views
 
     public static class HandSheet
     {
+        /// <summary>"41 of 100 · grows 3 a season · the next star at 50, in 3 seasons": where the skill is, how fast it grows, when a star comes.</summary>
+        internal static string SkillGrowth(ViewContext ctx, Hand h)
+        {
+            Simulation sim = ctx.Sim;
+            PeopleDefs p = sim.Config.Game.People;
+            var s = ctx.Strings;
+            int per = ctx.Ui.SkillStarPoints;
+            long skill = h.Skill.RoundToLong();
+            int solid = (int)System.Math.Min(5, (skill + per / 2) / per);
+            Fixed gain = p.Hand.SkillGainPerSeason * p.Traits[h.Trait1].SkillGainFactor * p.Traits[h.Trait2].SkillGainFactor;
+            string rate = gain == Fixed.FromInt((int)gain.RoundToLong()) ? ctx.Fmt.Integer(gain.RoundToLong()) : ctx.Fmt.Decimal1(gain);
+            if (solid >= 5 || gain.Raw <= 0) return s.Get("hand.skillTop", "skill", ctx.Fmt.Integer(skill), "rate", rate);
+            int next = (solid + 1) * per - per / 2;
+            Fixed diff = Fixed.FromInt(next) - h.Skill;
+            long seasons = diff.Raw <= 0 ? 1 : (diff.Raw + gain.Raw - 1) / gain.Raw;
+            return s.Get("hand.skillGrowth", "skill", ctx.Fmt.Integer(skill), "rate", rate, "next", ctx.Fmt.Integer(next),
+                "when", seasons <= 1 ? s.Get("hand.skillIn1") : s.Get("hand.skillInN", "n", ctx.Fmt.Integer(seasons)));
+        }
+
         public static SheetVm Build(ViewContext ctx, long handId)
         {
             Simulation sim = ctx.Sim;
@@ -386,13 +418,15 @@ namespace Sim.View.Views
                 Icon = PeopleWords.Female(ctx, h.Name) ? "person_hand_f" : "person_hand_m", Title = PeopleWords.Name(ctx, h.Name),
                 Subtitle = ctx.Strings.Get("hand.subtitle", "time", ctx.Fmt.Duration(ctx.Now - h.HiredAt)),
             };
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.skill"), PeopleWords.Band(ctx, skill), "hand.skill", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill) });
-            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Work(ctx, h), "hand.hours", h.Id));
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.skill"), PeopleWords.Band(ctx, skill), "hand.skill", h.Id) { Stars = PeopleWords.Stars(ctx, skill, skill), Note = SkillGrowth(ctx, h) });
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.work"), PeopleWords.Work(ctx, h), "hand.hours", h.Id) { Note = ctx.Strings.Get("hand.workNote", "hours", ctx.Fmt.Decimal1(PeopleRules.HandHours(sim, h))) });
             if (h.Contract == ContractState.Active)
             {
                 vm.Lines.Add(StaffView.Output(ctx, 0, h));
                 vm.Lines.Add(StaffView.LongDays(ctx, h));
             }
+            // Care is one pool for the whole farm: their hours join everyone's (owner finding, 2026-11-14).
+            vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.care"), ctx.Rating(sim.State.Farm.CareRatio), "care") { Note = ctx.Strings.Get("hand.careNote") + " " + PeopleWords.CareNote(ctx) });
             // Where he lives and with whom (spec 014 §7): his hut alone, sending half his wage home, or his family's house.
             Citizen me = sim.State.Citizens?.OfHand(h.Id);
             Household home = me == null ? null : sim.State.Citizens.Household(me.HouseholdId);
@@ -403,7 +437,7 @@ namespace Sim.View.Views
             Hand housed = home == null ? null : MigrationRules.HousedBy(sim, home);
             if (housed != null)
             {
-                long rent = MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason);
+                long rent = LeaseRules.MarketRentFor(sim, home);
                 string value = housed != h ? ctx.Strings.Get("hand.housingOther", "name", PeopleWords.Name(ctx, housed.Name))
                     : ctx.Strings.Get(h.HousingInKind > 0 ? "hand.housingInPay" : "hand.housingNext", "house", ctx.Fmt.Coins(h.HousingInKind > 0 ? h.HousingInKind : rent));
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.housing"), value, "hand.wage", h.Id));
@@ -424,7 +458,8 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.contract"), ctx.Strings.Get("hand.contractUnpaid", "time", ctx.Fmt.Duration(grace), "wage", ctx.Fmt.Coins(h.Wage)), "hand.lapse", h.Id));
             }
 
-            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("hand.orders")));
+            int max = sim.Config.Game.People.Hand.MaxOrders, count = sim.State.People.Orders.FindAll(x => x.HandId == h.Id).Count;
+            vm.Lines.Add(LineVm.Header(ctx.Strings.Get("hand.ordersN", "n", ctx.Fmt.Integer(count), "max", ctx.Fmt.Integer(max))));
             bool any = false;
             foreach (StandingOrder o in sim.State.People.Orders)
             {
@@ -438,6 +473,15 @@ namespace Sim.View.Views
                 vm.Lines.Add(line);
             }
             if (!any) vm.Lines.Add(new LineVm(ctx.Strings.Get("hand.noOrders"), ctx.Strings.Get("hand.noOrdersHint")));
+            if (h.Contract == ContractState.Active)
+            {
+                // The one way in from a hand: a list of fields (the map's field sheet still works too).
+                var give = new LineVm(ctx.Strings.Get("hand.giveOrder"), ctx.Strings.Get("hand.giveOrderNote", "name", PeopleWords.Name(ctx, h.Name)));
+                bool room = count < max;
+                give.Action = new ActionVm("giveOrder", ctx.Strings.Get("action.giveOrderHere"), room ? ctx.Strings.Get("hand.giveOrderLeft", "n", ctx.Fmt.Integer(max - count)) : null,
+                    ActionKind.Primary, room, room ? null : ctx.Strings.Get("order.who.full", "max", ctx.Fmt.Integer(max)), null, new SheetRequest(OrderSheet.FieldsSheet, h.Id));
+                vm.Lines.Add(give);
+            }
             if (Sim.Core.Livestock.LivestockRules.Shed(sim) != null && sim.State.People.OrderFor(OrderTargetKind.Animals, 0) == null)
             {
                 var shed = new LineVm(ctx.Strings.Get("order.shed"), ctx.Strings.Get("order.lookAfterOffer"));
@@ -466,10 +510,45 @@ namespace Sim.View.Views
     /// </summary>
     public static class OrderSheet
     {
+        /// <summary>
+        /// The hand an order is for travels at the front of Arg: "@12;radish+compost|once". Without it the field's own hand (or the only
+        /// hand) takes it, so a single hand never meets the tag. Owner finding, 2026-11-14: with a second hand no order could reach them.
+        /// </summary>
+        public static string Tag(long handId, string arg)
+        {
+            return "@" + handId.ToString(System.Globalization.CultureInfo.InvariantCulture) + ";" + (arg ?? "");
+        }
+
+        /// <summary>The steps of Arg without the hand's tag; <paramref name="hand"/> is 0 when there is none.</summary>
+        public static string Untag(string arg, out long hand)
+        {
+            hand = 0;
+            if (arg == null || arg.Length < 3 || arg[0] != '@') return arg;
+            int end = arg.IndexOf(';');
+            if (end < 2 || !long.TryParse(arg.Substring(1, end - 1), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out hand)) return arg;
+            return arg.Substring(end + 1);
+        }
+
+        public static long HandIn(string arg) { Untag(arg, out long hand); return hand; }
+
+        /// <summary>A tree's order carries "tree" in its steps; everything else is a field's.</summary>
+        public static OrderTargetKind KindOf(string arg)
+        {
+            string steps = Untag(arg, out _);
+            return steps != null && steps.StartsWith("tree", System.StringComparison.Ordinal) ? OrderTargetKind.Tree : OrderTargetKind.Field;
+        }
+
+        /// <summary>A request for the order steps, for this hand; the tag only when the target would not go to him anyway.</summary>
+        private static SheetRequest Req(Simulation sim, Hand h, long target, string steps)
+        {
+            bool implied = ReferenceEquals(PeopleWords.OrderHand(sim, KindOf(steps), target), h);
+            return new SheetRequest("Order", target, implied ? steps : Tag(h.Id, steps));
+        }
+
         /// <summary>The crop step: a field order with no crop chosen yet (shown by <see cref="Crops"/>).</summary>
         public static bool IsCropStep(OrderTargetKind kind, string arg)
         {
-            return kind == OrderTargetKind.Field && Head(arg).Split('+')[0].Length == 0;
+            return kind == OrderTargetKind.Field && Head(Untag(arg, out _)).Split('+')[0].Length == 0;
         }
 
         private static string Head(string arg) { return string.IsNullOrEmpty(arg) ? "" : arg.Split('|')[0]; }
@@ -491,11 +570,12 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             GameDefs defs = sim.Config.Game;
             var s = ctx.Strings;
+            arg = Untag(arg, out long chosen);
             // A changed order starts from its own fertiliser until another is tapped.
             StandingOrder existing = sim.State.People?.OrderFor(OrderTargetKind.Field, target);
             string fert = existing != null && Head(arg).IndexOf('+') < 0 ? defs.Farm.Fertilisers[existing.Fertiliser].Id : FertiliserOf(arg);
             SowSheetVm vm = SowSheet.Build(ctx, (int)target, fert);
-            Hand h = PeopleWords.OrderHand(sim, OrderTargetKind.Field, target);
+            Hand h = PeopleWords.OrderHand(sim, OrderTargetKind.Field, target, chosen);
             if (h == null)
             {
                 vm.Title = s.Get("order.noHand");
@@ -512,17 +592,17 @@ namespace Sim.View.Views
             int best = FarmRules.BestCrop(sim, sim.State.Land.Tiles[(int)target], defs.Farm.Fertilisers[defs.Farm.IndexOfFertiliser(fert)]);
             var choice = new LineVm(s.Get("order.handChooses", "name", name),
                 best < 0 ? s.Get("order.handChoosesWhy") : s.Get("order.handChoosesNow", "crop", s.Get(defs.Farm.Crops[best].NameKey)));
-            choice.Action = ActionVm.Open("crop:" + OrderSpec.HandChooses, s.Get("action.choose"), new SheetRequest("Order", target, OrderSpec.HandChooses + "+" + fert));
+            choice.Action = ActionVm.Open("crop:" + OrderSpec.HandChooses, s.Get("action.choose"), Req(sim, h, target, OrderSpec.HandChooses + "+" + fert));
             vm.Lines.Add(choice);
             // Another season's crop, set now (ADR 0048: his best in-season pick till then), behind one row (spec 020 §3.6, G22).
             if (OtherSeasonCrops(ctx).Count > 0)
             {
                 var other = new LineVm(s.Get("order.otherSeasons"), s.Get("order.otherSeasonsNote", "name", name));
-                other.Action = ActionVm.Open("otherSeasons", s.Get("action.see"), new SheetRequest(OtherSheet, target, "+" + fert));
+                other.Action = ActionVm.Open("otherSeasons", s.Get("action.see"), new SheetRequest(OtherSheet, target, ReferenceEquals(PeopleWords.OrderHand(sim, OrderTargetKind.Field, target), h) ? "+" + fert : Tag(h.Id, "+" + fert)));
                 vm.Lines.Add(other);
             }
             foreach (CropRowVm r in vm.Rows)
-                r.Sow = ActionVm.Open("crop:" + r.CropId, s.Get("action.choose"), new SheetRequest("Order", target, r.CropId + "+" + fert));
+                r.Sow = ActionVm.Open("crop:" + r.CropId, s.Get("action.choose"), Req(sim, h, target, r.CropId + "+" + fert));
             vm.AllCrops = null; // the order's own Other seasons row instead
             if (existing != null)
             {
@@ -564,7 +644,8 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             var vm = new SheetVm { Icon = "people" };
-            Hand h = PeopleWords.OrderHand(sim, OrderTargetKind.Field, target);
+            arg = Untag(arg, out long chosen);
+            Hand h = PeopleWords.OrderHand(sim, OrderTargetKind.Field, target, chosen);
             if (h == null)
             {
                 vm.Title = s.Get("order.noHand");
@@ -579,7 +660,7 @@ namespace Sim.View.Views
                 CropDef c = farm.Crops[i];
                 var line = new LineVm(s.Get(c.NameKey), s.Get("order.otherLine", "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons), "time", ctx.Fmt.Duration(c.GrowthSeconds)),
                     CropCalendar.GrowsWhy, i) { Icon = c.Id };
-                line.Action = ActionVm.Open("crop:" + c.Id, s.Get("action.choose"), new SheetRequest("Order", target, c.Id + "+" + fert));
+                line.Action = ActionVm.Open("crop:" + c.Id, s.Get("action.choose"), Req(sim, h, target, c.Id + "+" + fert));
                 vm.Lines.Add(line);
             }
             return vm;
@@ -589,14 +670,17 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             GameDefs defs = sim.Config.Game;
-            Hand h = PeopleWords.OrderHand(sim, kind, target);
+            string tagged = arg;
+            arg = Untag(arg, out long chosen);
+            Hand h = PeopleWords.OrderHand(sim, kind, target, chosen);
             var vm = new SheetVm { Icon = "people" };
             if (h == null)
             {
+                if (sim.State.People != null && sim.State.People.Hands.Count > 1) return Who(ctx, kind, target); // several hands: who first
                 vm.Title = ctx.Strings.Get("order.noHand");
                 return vm;
             }
-            if (IsCropStep(kind, arg)) throw new System.ArgumentException("a field's crop is chosen on OrderSheet.Crops");
+            if (IsCropStep(kind, tagged)) throw new System.ArgumentException("a field's crop is chosen on OrderSheet.Crops");
             string name = PeopleWords.Name(ctx, h.Name);
             vm.Title = ctx.Strings.Get("order.title", "name", name, "place", PeopleWords.Target(ctx, kind, target));
             StandingOrder existing = sim.State.People.OrderFor(kind, target);
@@ -616,7 +700,7 @@ namespace Sim.View.Views
                 foreach (string how in new[] { "once", "every" })
                 {
                     var line = new LineVm(ctx.Strings.Get("order." + how), ctx.Strings.Get("order." + how + "Why"));
-                    line.Action = ActionVm.Open("how:" + how, ctx.Strings.Get("action.choose"), new SheetRequest("Order", target, head + "|" + how));
+                    line.Action = ActionVm.Open("how:" + how, ctx.Strings.Get("action.choose"), Req(sim, h, target, head + "|" + how));
                     vm.Lines.Add(line);
                 }
                 AddClear(ctx, vm, h, existing, kind, target);
@@ -658,16 +742,120 @@ namespace Sim.View.Views
                 string prefix = head + "|" + parts[1] + "|";
                 var lower = new LineVm(ctx.Strings.Get("order.lower"), ctx.Strings.Get("order.minNow", "min", ctx.Fmt.Integer(minimum)));
                 lower.Action = new ActionVm("min:down", "−", null, ActionKind.Open, minimum > 1, minimum > 1 ? null : ctx.Reject(RejectReason.InvalidArgument), null,
-                    new SheetRequest("Order", target, prefix + (minimum - 1)));
+                    Req(sim, h, target, prefix + (minimum - 1)));
                 vm.Lines.Add(lower);
                 var raise = new LineVm(ctx.Strings.Get("order.raise"), ctx.Strings.Get("order.minNow", "min", ctx.Fmt.Integer(minimum)));
-                raise.Action = ActionVm.Open("min:up", "+", new SheetRequest("Order", target, prefix + (minimum + 1)));
+                raise.Action = ActionVm.Open("min:up", "+", Req(sim, h, target, prefix + (minimum + 1)));
                 vm.Lines.Add(raise);
             }
             var trader = new LineVm(ctx.Strings.Get("order.sellTrader"), ctx.Strings.Get("order.sellTraderWhy"));
             trader.Action = ActionVm.Checked(ctx, "set:trader", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Trader, 0)));
             vm.Lines.Add(trader);
             AddClear(ctx, vm, h, existing, kind, target);
+            return vm;
+        }
+
+        /// <summary>The sheet kind of "Who looks after it?" (Id the target; Arg "tree" for a tree).</summary>
+        public const string WhoSheet = "OrderWho";
+
+        /// <summary>The sheet kind of a hand's "Give an order: which field?" (Id the hand).</summary>
+        public const string FieldsSheet = "OrderFields";
+
+        private static string OrdersOf(ViewContext ctx, Hand h)
+        {
+            PeopleDefs defs = ctx.Sim.Config.Game.People;
+            int n = ctx.Sim.State.People.Orders.FindAll(o => o.HandId == h.Id).Count;
+            return ctx.Strings.Get("order.ordersOf", "n", ctx.Fmt.Integer(n), "max", ctx.Fmt.Integer(defs.Hand.MaxOrders));
+        }
+
+        /// <summary>
+        /// With two or more hands, a field or tree with no order asks who looks after it: each hand with their stars, how many orders they
+        /// have and how much they tend; one with all their orders is greyed with the reason. Choose goes on to the crop step for that hand.
+        /// </summary>
+        public static SheetVm Who(ViewContext ctx, OrderTargetKind kind, long target)
+        {
+            Simulation sim = ctx.Sim;
+            PeopleState p = sim.State.People;
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "people", Title = s.Get("order.who.title", "place", PeopleWords.Target(ctx, kind, target)), Subtitle = s.Get("order.who.subtitle") };
+            StandingOrder existing = p.OrderFor(kind, target);
+            int max = sim.Config.Game.People.Hand.MaxOrders;
+            foreach (Hand h in p.Hands)
+            {
+                if (h.Contract != ContractState.Active) continue;
+                Hand hand = h;
+                int skill = (int)h.Skill.RoundToLong();
+                bool holds = existing != null && existing.HandId == h.Id;
+                bool full = !holds && p.Orders.FindAll(o => o.HandId == hand.Id).Count >= max;
+                var line = new LineVm(PeopleWords.Name(ctx, h.Name), holds ? s.Get("order.who.now") : null)
+                {
+                    Stars = PeopleWords.Stars(ctx, skill, skill), Icon = PeopleWords.Female(ctx, h.Name) ? "person_hand_f" : "person_hand_m",
+                    Note = PeopleWords.Band(ctx, skill) + " · " + OrdersOf(ctx, h) + " · " + PeopleWords.Work(ctx, h),
+                };
+                SheetRequest next = Req(sim, h, target, kind == OrderTargetKind.Tree ? "tree" : null);
+                line.Action = full ? new ActionVm("who:" + h.Id, s.Get("action.choose"), null, ActionKind.Open, false, s.Get("order.who.full", "max", ctx.Fmt.Integer(max)), null, next)
+                    : ActionVm.Open("who:" + h.Id, s.Get("action.choose"), next);
+                vm.Lines.Add(line);
+            }
+            return vm;
+        }
+
+        /// <summary>
+        /// A hand's "Give an order": the farm's fields nobody looks after first (Choose), then those another hand has (Give to, which
+        /// moves the order). Fields the hand already has are on his own sheet. Choose and Give to go on to the crop step for him.
+        /// </summary>
+        public static SheetVm Fields(ViewContext ctx, long handId)
+        {
+            Simulation sim = ctx.Sim;
+            PeopleState p = sim.State.People;
+            var s = ctx.Strings;
+            Hand h = p.Hand(handId);
+            if (h == null) return new SheetVm { Icon = "people", Title = s.Get("order.noHand") };
+            string name = PeopleWords.Name(ctx, h.Name);
+            int max = sim.Config.Game.People.Hand.MaxOrders, mine = p.Orders.FindAll(o => o.HandId == h.Id).Count, left = max - mine;
+            var vm = new SheetVm
+            {
+                Icon = PeopleWords.Female(ctx, h.Name) ? "person_hand_f" : "person_hand_m", Title = s.Get("order.fields.title", "name", name),
+                Subtitle = left > 0 ? s.Get("order.fields.subtitle", "n", ctx.Fmt.Integer(left)) : s.Get("order.who.full", "max", ctx.Fmt.Integer(max)),
+            };
+            string full = left > 0 ? null : s.Get("order.who.full", "max", ctx.Fmt.Integer(max));
+            var free = new List<LineVm>();
+            var others = new List<LineVm>();
+            foreach (Tile t in sim.State.Land.Tiles)
+            {
+                if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                StandingOrder o = p.OrderFor(OrderTargetKind.Field, t.Id);
+                if (o != null && o.HandId == h.Id) continue;
+                Crop crop = sim.State.Farm.CropOn(t.Id);
+                string state = crop == null ? (sim.State.Orchards != null && sim.State.Orchards.Orchards.Exists(x => x.TileId == t.Id) ? s.Get("order.fields.orchard") : s.Get("order.fields.empty"))
+                    : s.Get(crop.State == CropState.Ready ? "order.fields.ready" : "order.fields.growing", "crop", s.Get(sim.Config.Game.Farm.Crops[crop.Def].NameKey),
+                        "time", crop.State == CropState.Ready ? "" : ctx.Fmt.Duration(crop.ReadyAt - ctx.Now));
+                string icon = crop == null ? null : sim.Config.Game.Farm.Crops[crop.Def].Id;
+                SheetRequest next = Req(sim, h, t.Id, null);
+                if (o == null)
+                {
+                    var line = new LineVm(PeopleWords.Field(ctx, t.Id), state + " · " + s.Get("order.fields.nobody")) { Icon = icon };
+                    line.Action = full != null ? new ActionVm("field:" + t.Id, s.Get("action.choose"), null, ActionKind.Open, false, full, null, next) : ActionVm.Open("field:" + t.Id, s.Get("action.choose"), next);
+                    free.Add(line);
+                }
+                else
+                {
+                    Hand other = p.Hand(o.HandId);
+                    string otherName = other == null ? "" : PeopleWords.Name(ctx, other.Name);
+                    var line = new LineVm(PeopleWords.Field(ctx, t.Id), otherName + ": " + PeopleWords.Order(ctx, o)) { Icon = icon };
+                    string label = s.Get("order.fields.take", "name", name);
+                    string detail = s.Get("order.fields.stops", "name", otherName);
+                    line.Action = full != null ? new ActionVm("take:" + t.Id, label, detail, ActionKind.Open, false, full, null, next) : ActionVm.Open("take:" + t.Id, label, next, detail);
+                    others.Add(line);
+                }
+            }
+            vm.Lines.AddRange(free);
+            if (others.Count > 0)
+            {
+                vm.Lines.Add(LineVm.Header(s.Get("order.fields.others")));
+                vm.Lines.AddRange(others);
+            }
+            if (free.Count + others.Count == 0) vm.Lines.Add(new LineVm(s.Get("order.fields.none"), s.Get("order.fields.noneHint")));
             return vm;
         }
 
@@ -750,7 +938,8 @@ namespace Sim.View.Views
             {
                 Hand h = sim.State.People.Hand(id);
                 string name = h == null ? ctx.Strings.Get("away.formerHand") : PeopleWords.Name(ctx, h.Name);
-                int harvests = 0, sowings = 0, picks = 0;
+                int sowings = 0, picks = 0;
+                var fields = new HashSet<long>(); // a harvest taken in parts counts once
                 long grams = 0, sales = 0, inputs = 0;
                 foreach (SimEvent e in events)
                 {
@@ -758,22 +947,23 @@ namespace Sim.View.Views
                     if (o.Action == OrderAction.Sowed) { sowings++; inputs -= o.Amount; }
                     else
                     {
-                        if (o.Action == OrderAction.Picked) picks++; else harvests++;
+                        if (o.Action == OrderAction.Picked) picks++; else fields.Add(o.Target);
                         grams += o.Quantity;
                         sales += o.Amount;
                     }
                 }
                 vm.OrderSales += sales;
                 vm.OrderInputs += inputs;
-                if (harvests + picks > 0)
-                    vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.collected", harvests + picks, "qty", ctx.Fmt.Kg(grams))));
+                if (fields.Count + picks > 0)
+                    vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.collected", fields.Count + picks, "qty", ctx.Fmt.Kg(grams))));
                 if (sales > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Get("away.sold", "amount", ctx.Fmt.Coins(sales))));
                 if (sowings > 0) vm.Lines.Add(new LineVm(name, ctx.Strings.Plural("away.sowed", sowings, "cost", ctx.Fmt.Coins(inputs))));
             }
+            List<StandingHarvest> standing = StandingHarvest.All(ctx);
             var waits = new List<string>();
             foreach (SimEvent e in events)
             {
-                if (e is OrderWaiting w)
+                if (e is OrderWaiting w && !(w.Reason == OrderWait.StoreFull && standing.Exists(x => x.Tile == w.Target))) // a standing field says so already
                 {
                     string text = ctx.Strings.Get("away.waiting", "place", PeopleWords.Target(ctx, w.Kind, w.Target), "reason", ctx.Strings.Get("order.wait." + w.Reason));
                     if (!waits.Contains(text)) waits.Add(text);
@@ -786,6 +976,8 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(StaffName(ctx, cf.Place, cf.WorkerId), ctx.Strings.Get("away.course", "skill", PeopleWords.Band(ctx, (int)cf.Skill.RoundToLong()))));
                 if (e is LongDaysStopped ls) vm.Lines.Add(new LineVm(StaffName(ctx, ls.Place, ls.WorkerId), ctx.Strings.Get("away.longDaysStopped")));
             }
+            foreach (StandingHarvest st in standing)
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("away.standing"), ctx.Strings.Get("away.standingText", "qty", ctx.Fmt.Kg(st.Grams), "crop", st.Crop, "field", st.Field)));
             foreach (string w in waits) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.order"), w));
             if (vm.DayLabourPaid > 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("away.dayLabour"), ctx.Fmt.Coins(vm.DayLabourPaid)));
             if (vm.Lines.Count > ctx.Ui.AwayRowsMax) vm.Lines.RemoveRange(ctx.Ui.AwayRowsMax, vm.Lines.Count - ctx.Ui.AwayRowsMax);

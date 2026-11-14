@@ -36,6 +36,37 @@ namespace Sim.Core.Events
         protected override string Describe() { return "FamilyHouseBuilt(building=" + BuildingId + ", tile=" + TileId + ")"; }
     }
 
+    /// <summary>A household's lease was renewed (spec 014 §3.14, US-240): at the player's answer or, with none, the market rise.</summary>
+    public sealed class LeaseRenewed : SimEvent
+    {
+        public long HouseholdId { get; }
+        public long OldRent { get; }
+        public long NewRent { get; }
+        public LeaseChoice Choice { get; }
+        public bool Answered { get; }
+
+        public LeaseRenewed(long simTime, long householdId, long oldRent, long newRent, LeaseChoice choice, bool answered) : base(simTime)
+        {
+            HouseholdId = householdId;
+            OldRent = oldRent;
+            NewRent = newRent;
+            Choice = choice;
+            Answered = answered;
+        }
+
+        protected override string Describe() { return "LeaseRenewed(household=" + HouseholdId + ", " + OldRent + "→" + NewRent + ", " + Choice + (Answered ? ", answered" : ", default") + ")"; }
+    }
+
+    /// <summary>A lease enters its last season and a renewal card is due (spec 014 §3.14, US-240): the households asked, in id order, one event for the close.</summary>
+    public sealed class LeasesOffered : SimEvent
+    {
+        public System.Collections.Generic.IReadOnlyList<long> HouseholdIds { get; }
+
+        public LeasesOffered(long simTime, System.Collections.Generic.IReadOnlyList<long> householdIds) : base(simTime) { HouseholdIds = householdIds; }
+
+        protected override string Describe() { return "LeasesOffered(" + string.Join(",", HouseholdIds) + ")"; }
+    }
+
     /// <summary>A household paid the season's rent (spec 014 §3.4), Cr 4200.</summary>
     public sealed class RentPaid : SimEvent
     {

@@ -129,7 +129,8 @@ namespace Sim.Content
 
             string hp = root + ".house";
             JObject h = Object(Required(o, root, "house"), hp);
-            OnlyFields(h, hp, "unlockEra", "capacity", "perAcre", "rentPerSeason");
+            OnlyFields(h, hp, "unlockEra", "capacity", "perAcre", "baseRent", "location", "roads", "leaseSeasons", "maxRise", "burdenLimit", "lowerStep", "goodwillSmaller", "goodwillKept",
+                "settledPerYear", "settledMax");
             d.HouseUnlockEra = String(Required(h, hp, "unlockEra"), Join(hp, "unlockEra"));
             bool known = onboarding == null;
             if (onboarding != null) foreach (EraDef e in onboarding.Eras) if (e.Id == d.HouseUnlockEra) known = true;
@@ -138,7 +139,26 @@ namespace Sim.Content
             d.HouseCapacity = BoundedInt(h, hp, "capacity", 1, 20);
             if (d.HouseCapacity < d.FamilySizeMax) throw new ContentException(Join(hp, "capacity"), "a house must hold the largest arriving family");
             d.HousesPerAcre = BoundedInt(h, hp, "perAcre", 1, 8);
-            d.RentPerSeason = Money(Required(h, hp, "rentPerSeason"), Join(hp, "rentPerSeason"));
+            d.BaseRent = Money(Required(h, hp, "baseRent"), Join(hp, "baseRent"));
+            string locp = hp + ".location";
+            JObject loc = Object(Required(h, hp, "location"), locp);
+            OnlyFields(loc, locp, "district", "lane", "inner");
+            d.RentDistrict = Bounded(loc, locp, "district", "0.1", "3");
+            d.RentLane = Bounded(loc, locp, "lane", "0.1", "3");
+            d.RentInner = Bounded(loc, locp, "inner", "0.1", "3");
+            string rp = hp + ".roads";
+            JObject roads = Object(Required(h, hp, "roads"), rp);
+            OnlyFields(roads, rp, "district", "lane");
+            d.DistrictRoadTiles = TileIds(roads, rp, "district");
+            d.LaneRoadTiles = TileIds(roads, rp, "lane");
+            d.LeaseSeasons = BoundedInt(h, hp, "leaseSeasons", 1, 16);
+            d.MaxRise = Bounded(h, hp, "maxRise", "0", "1");
+            d.BurdenLimit = Bounded(h, hp, "burdenLimit", "0.05", "1");
+            d.LowerStep = Bounded(h, hp, "lowerStep", "0", "0.5");
+            d.GoodwillSmaller = BoundedInt(h, hp, "goodwillSmaller", 0, 10);
+            d.GoodwillKept = BoundedInt(h, hp, "goodwillKept", 0, 10);
+            d.SettledPerYear = BoundedInt(h, hp, "settledPerYear", 0, 4);
+            d.SettledMax = BoundedInt(h, hp, "settledMax", d.LeaveSeasons, 20);
 
             string vp = root + ".villages";
             List<JToken> villages = Array(Required(o, root, "villages"), vp);
@@ -152,6 +172,22 @@ namespace Sim.Content
             }
             d.Villages = ids.AsReadOnly();
             return d;
+        }
+
+        /// <summary>A list of tile ids (US-240): whole numbers from 0, none twice.</summary>
+        private static IReadOnlyList<int> TileIds(JObject o, string path, string name)
+        {
+            string p = Join(path, name);
+            List<JToken> list = Array(Required(o, path, name), p);
+            var ids = new List<int>();
+            for (int i = 0; i < list.Count; i++)
+            {
+                int id = Int(list[i], Index(p, i));
+                if (id < 0) throw new ContentException(Index(p, i), "a tile id is 0 or more");
+                if (ids.Contains(id)) throw new ContentException(Index(p, i), "tile " + id + " twice");
+                ids.Add(id);
+            }
+            return ids;
         }
 
         private static void AgeRange(JObject o, string path, string name, int low, int high, out int min, out int max)

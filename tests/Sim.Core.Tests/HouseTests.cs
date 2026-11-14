@@ -76,7 +76,7 @@ namespace Sim.Core.Tests
 
         private static long NextClose(Simulation sim) { return (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason; }
 
-        // AC-3 (rent): a household in a family house pays 6,000 at each close (Cr 4200); one that can't falls behind (RentMissed),
+        // AC-3 (rent): a household in a family house pays its lease rent (2,125 on an inner acre, US-240) at each close (Cr 4200); one that can't falls behind (RentMissed),
         // and its security need shows it.
         [Test]
         public void Rent()
@@ -85,13 +85,13 @@ namespace Sim.Core.Tests
             Building house = BuiltHouse(sim, HomeTile);
             Household working = AddFamily(sim, house.Id, 32, 30);
             HouseholdRules.SetBudget(sim, working);
-            Assert.That(working.Rent, Is.EqualTo(6_000_00));
+            Assert.That(working.Rent, Is.EqualTo(2_125_00), "2,500 base × 0.85 inner acre");
             Household poor = AddFamily(sim, BuiltHouse(sim, HomeTile).Id, 70, 68); // elders: no income, no savings
             HouseholdRules.SetBudget(sim, poor);
             sim.DrainEvents();
             sim.AdvanceTo(NextClose(sim));
             Assert.That(sim.PendingEvents.OfType<RentPaid>().Single().HouseholdId, Is.EqualTo(working.Id));
-            Assert.That(sim.State.Ledger.Balance(Account.RentReceived), Is.EqualTo(-6_000_00), "4200 Rent received, in the new season");
+            Assert.That(sim.State.Ledger.Balance(Account.RentReceived), Is.EqualTo(-2_125_00), "4200 Rent received, in the new season");
             RentMissed missed = sim.PendingEvents.OfType<RentMissed>().Single();
             Assert.That((missed.HouseholdId, missed.Behind), Is.EqualTo((poor.Id, 1)));
             Assert.That(poor.RentBehind, Is.EqualTo(1));

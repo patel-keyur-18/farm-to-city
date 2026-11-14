@@ -72,7 +72,7 @@ namespace Sim.Core.People
             if (c != null && c.State == CropState.Ready)
             {
                 int good = defs.Farm.Crops[c.Def].OutputGood;
-                return Collect(sim, h, o, good, new Harvest(t, tile, Overflow.SellRestToTrader), OrderAction.Harvested, c.HarvestGrams);
+                return Collect(sim, h, o, good, new Harvest(t, tile, Overflow.StorePart), OrderAction.Harvested, c.HarvestGrams); // in parts: what fits, the rest stands (ADR 0111)
             }
             if (c != null) return false; // growing: nothing to do
             if (orchard != null && orchard.State != TreeState.Growing) return false; // bearing trees: nothing to sow between them
@@ -163,7 +163,7 @@ namespace Sim.Core.People
             return Collect(sim, h, o, good, new PickFruit(sim.State.Clock.SimTime, o.Target, Overflow.SellRestToTrader), OrderAction.Picked, tree.RipeGrams);
         }
 
-        /// <summary>Harvests or picks (overflow to the trader so a full store never blocks it), then applies the sell rule.</summary>
+        /// <summary>Harvests (a field crop in parts: what fits, ADR 0111) or picks (fruit's overflow to the trader), then applies the sell rule.</summary>
         private static bool Collect(Simulation sim, Hand h, StandingOrder o, int good, TimedCommand collect, OrderAction action, long quantity)
         {
             MarketState m = sim.State.Market;
@@ -175,6 +175,7 @@ namespace Sim.Core.People
                 return false;
             }
             long stored = m.Stock[good] - before;
+            if (collect is Harvest) quantity = stored; // a part: what went into the store this hour
             string goodId = sim.Config.Game.Market.Goods[good].Id;
             bool careless = PeopleRules.HasTrait(sim, h, x => x.Careless);
             // An open supermarket order is filled first when he sells (a careless hand too); STORE keeps it (spec 011 §3.3).
@@ -210,7 +211,7 @@ namespace Sim.Core.People
                 }
             }
             Done(sim, h, o, action, goodId, quantity, sim.State.Ledger.Cash - cash);
-            if (o.Once)
+            if (o.Once && !(collect is Harvest hv && sim.State.Farm.CropOn(hv.TileId) != null)) // not while a part still stands (ADR 0111)
             {
                 // A this-season-only order is finished once its crop is in: the field is the player's again.
                 sim.State.People.Orders.Remove(o);

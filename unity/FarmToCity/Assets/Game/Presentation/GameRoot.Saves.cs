@@ -145,6 +145,7 @@ namespace Game.Presentation
                     long id = hr.EventId;
                     if (card != null) ShowCard(card, b => Run(new Command[] { new AnswerHrEvent(Sim.State.Clock.SimTime, id, b == SettingsIds.Yes ? 0 : 1) }));
                 }
+                if (e is LeasesOffered lo) ShowLeaseCards(lo.HouseholdIds, 0); // leases in their last season: a card each (US-240)
                 if (e is FamilyRequest f)
                 {
                     // Spec 014 §3.13: a free house is offered to a hand living alone first; the card asks (null once it has lapsed).
@@ -355,6 +356,29 @@ namespace Game.Presentation
         }
 
         /// <summary>Shows a card on the next UI tick: built inside a click handler it wouldn't get touch clicks (STATUS, Editor quirks).</summary>
+        /// <summary>
+        /// The renewal cards (US-240, spec 014 §3.14), one after another: an answer is a command, <i>Decide later</i> leaves the lease to the market
+        /// rise at the close (the alert and the household sheet keep the question), and <i>Market rise for all</i> leaves this and the rest to it.
+        /// </summary>
+        private void ShowLeaseCards(IReadOnlyList<long> ids, int index)
+        {
+            for (; index < ids.Count; index++)
+            {
+                CardVm card = LeaseViews.Card(_ctx, ids[index], index, ids.Count);
+                if (card == null) continue;
+                long household = ids[index];
+                int next = index + 1;
+                ShowCard(card, button =>
+                {
+                    if (button == LeaseIds.Rest) return;
+                    if (button != LeaseIds.Later)
+                        Run(new Command[] { new RenewLease(Sim.State.Clock.SimTime, household, LeaseIds.ChoiceOf(button)) });
+                    ShowLeaseCards(ids, next);
+                });
+                return;
+            }
+        }
+
         private void ShowCard(CardVm card, Action<string> onButton)
         {
             _safeRoot.schedule.Execute(() => _sheet.Card(card, onButton));

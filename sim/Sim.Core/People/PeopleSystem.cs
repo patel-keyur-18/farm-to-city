@@ -89,7 +89,7 @@ namespace Sim.Core.People
 
         /// <summary>
         /// While labourers are hired (live or away): every ripe field without a hand's order is harvested, in crop id order
-        /// (overflow to the trader, so nothing is lost). Then those whose time is up go home. Runs before the hands' orders.
+        /// (in parts: what fits the store, the rest standing, ADR 0111). Then those whose time is up go home. Runs before the hands' orders.
         /// </summary>
         private static void Release(Simulation sim)
         {
@@ -111,7 +111,9 @@ namespace Sim.Core.People
             foreach (Crop c in sim.State.Farm.Crops.ToArray())
             {
                 if (c.State != CropState.Ready || s.OrderFor(OrderTargetKind.Field, c.TileId) != null) continue;
-                if (new Harvest(t, c.TileId, Overflow.SellRestToTrader).ApplyNow(sim).Accepted) sim.Emit(new LabourersHarvested(t, c.TileId, c.HarvestGrams));
+                // In parts (ADR 0111): what fits the store; with nothing fitting they stay and work their paid time, and the field waits.
+                long part = System.Math.Min(c.HarvestGrams, Store.Fits(sim, sim.Config.Game.Farm.Crops[c.Def].OutputGood));
+                if (new Harvest(t, c.TileId, Overflow.StorePart).ApplyNow(sim).Accepted) sim.Emit(new LabourersHarvested(t, c.TileId, part));
             }
             if (sim.State.Orchards != null)
                 foreach (Orchard o in sim.State.Orchards.Orchards.ToArray()) // and pick a ripe orchard with no hand's order (spec 013 §3.3)

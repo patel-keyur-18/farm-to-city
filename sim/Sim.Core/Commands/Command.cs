@@ -204,6 +204,14 @@ namespace Sim.Core.Commands
         BelowSavingsMinimum,
         /// <summary>The close wouldn't come up short, so there is nothing for the savings to cover.</summary>
         NothingShort,
+
+        // Spec 014 §3.14 (leases, US-240)
+        /// <summary>No such household.</summary>
+        UnknownHousehold,
+        /// <summary>The household has no lease: it lives in a hut, or the house is part of a hand's pay.</summary>
+        NoLease,
+        /// <summary>The lease isn't in its last season, so there is nothing to answer yet.</summary>
+        LeaseNotDue,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -3,7 +3,9 @@
     "rootNamespace": "Game.Editor",
     "references": [
         "Unity.InputSystem",
-        "Unity.Notifications"
+        "Unity.Notifications",
+        "Game.Presentation",
+        "Sim.View"
     ],
     "includePlatforms": [
         "Editor"

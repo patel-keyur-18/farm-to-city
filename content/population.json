@@ -63,7 +63,17 @@
     "unlockEra": "hamlet",
     "capacity": 6,
     "perAcre": 2,
-    "rentPerSeason": 6000
+    "baseRent": 2500,
+    "location": { "district": 1.20, "lane": 1.00, "inner": 0.85 },
+    "roads": { "district": [176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191], "lane": [58, 74, 90, 106, 122, 135, 138, 151, 154, 167, 170] },
+    "leaseSeasons": 4,
+    "maxRise": 0.10,
+    "burdenLimit": 0.30,
+    "lowerStep": 0.05,
+    "goodwillSmaller": 1,
+    "goodwillKept": 2,
+    "settledPerYear": 1,
+    "settledMax": 6
   },
   "villages": ["sitapur", "rampur", "chandanpur", "keshavgarh", "devipur", "bhawanipur"],
   "school": {

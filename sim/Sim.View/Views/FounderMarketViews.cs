@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Sim.Core;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
@@ -283,11 +284,13 @@ namespace Sim.View.Views
         }
     }
 
-    /// <summary>The mandi trip (spec 004 §3.7, ADR 0037, ADR 0043 §7): loads per good, the sum written out against the trader.</summary>
+    /// <summary>
+    /// The mandi trip (spec 004 §3.7, ADR 0037, ADR 0043 §7, US-252 / ADR 0107 §14): a slider for each crop in the store, best gain over the
+    /// trader first, each stopping at the room the other crops leave in the trolley; Fill loads the best-paying crops; the sum written out
+    /// against the trader. The loads travel in the request's Arg ("goodIndex:grams;…"), so a move re-draws the sheet in place.
+    /// </summary>
     public static class MandiSheet
     {
-        public static readonly long[] Loads = { 0, 500_000, 1_000_000, 2_000_000 };
-
         /// <summary>The load per good from the sheet's Arg ("goodIndex:grams;…").</summary>
         public static Dictionary<int, long> Parse(string arg)
         {
@@ -328,67 +331,140 @@ namespace Sim.View.Views
             return new LineVm(s.Get("mandi.pays"), value, "mandi", 5); // one line like the supermarket's; what the cart carries is in its Why?
         }
 
+        /// <summary>What the mandi pays a kg after its commission, less what the trader pays: the order of the rows and of Fill.</summary>
+        public static Fixed Gain(Simulation sim, int g)
+        {
+            Fixed mandi = MarketRules.RegionalPrice(sim, g) * (Fixed.One - sim.Config.Game.Market.Mandi.CommissionRate);
+            return mandi - MarketRules.Floor(sim, g);
+        }
+
+        /// <summary>The most of a good that fits <paramref name="roomGrams"/> of the trolley's weight.</summary>
+        private static long FitsWeight(GoodDef good, long roomGrams)
+        {
+            long perThousand = System.Math.Max(1, Store.WeightGrams(good, 1000));
+            return System.Math.Max(0, roomGrams * 1000 / perThousand);
+        }
+
+        private sealed class Row
+        {
+            public int G;
+            public long Free, Load;
+            public Fixed Gain;
+        }
+
         public static SheetVm Build(ViewContext ctx, string arg)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             MarketDefs defs = sim.Config.Game.Market;
             MarketState m = sim.State.Market;
-            Dictionary<int, long> loads = Parse(arg);
-            var vm = new SheetVm { Icon = "cart", Title = s.Get("mandi.title"), Subtitle = s.Get("mandi.subtitle", "kg", ctx.Fmt.Kg(defs.Mandi.CartCapacityGrams), "hours", ctx.Fmt.Integer(defs.Mandi.TripHours)) };
-            long gross = 0, trader = 0, weight = 0;
-            var commands = new List<MandiLoad>();
+            MandiDef md = defs.Mandi;
+            Dictionary<int, long> given = Parse(arg);
+            var vm = new SheetVm { Icon = "cart", Title = s.Get("mandi.title"), Subtitle = s.Get("mandi.subtitle", "kg", ctx.Fmt.Kg(md.CartCapacityGrams), "hours", ctx.Fmt.Integer(md.TripHours)) };
+
+            // The crops in the store, best gain first (ties by good), each load kept within what's free and the room the earlier rows leave.
+            var rows = new List<Row>();
             for (int g = 0; g < defs.Goods.Count; g++)
             {
                 if (defs.Goods[g].Kind != GoodKind.Produce) continue;
                 long free = m.InStore(g) - m.OnOffer(g);
-                loads.TryGetValue(g, out long load);
-                if (free <= 0 && load == 0) continue;
-                load = System.Math.Min(load, free);
-                vm.Lines.Add(new LineVm(s.Get(defs.Goods[g].NameKey), s.Get("mandi.load", "load", ctx.Fmt.Kg(load), "free", ctx.Fmt.Kg(free)), "mandi", 0)
-                { Icon = defs.Goods[g].Id, Action = ActionVm.Open("load:" + g, s.Get("mandi.change"), new SheetRequest("MandiLoad", g, arg)) });
-                if (load <= 0) continue;
-                gross += MarketRules.Value(sim, g, load, MarketRules.RegionalPrice(sim, g));
-                trader += MarketRules.Value(sim, g, System.Math.Min(load, MarketRules.TraderCapacityLeft(sim, g)), MarketRules.Floor(sim, g));
-                weight += Store.WeightGrams(defs.Goods[g], load);
-                commands.Add(new MandiLoad(defs.Goods[g].Id, load));
+                if (free > 0) rows.Add(new Row { G = g, Free = free, Gain = Gain(sim, g) });
             }
-            long commission = Sim.Core.Finance.Money.MulRate(gross, defs.Mandi.CommissionRate);
-            long hire = MarketRules.Indexed(sim, defs.Mandi.CartHirePerTrip);
+            rows = rows.OrderByDescending(r => r.Gain.Raw).ThenBy(r => r.G).ToList();
+            long weight = 0;
+            foreach (Row r in rows)
+            {
+                given.TryGetValue(r.G, out long want);
+                long room = md.CartCapacityGrams - weight;
+                r.Load = System.Math.Max(0, System.Math.Min(System.Math.Min(want, r.Free), FitsWeight(defs.Goods[r.G], room)));
+                weight += Store.WeightGrams(defs.Goods[r.G], r.Load);
+            }
+            var loads = new Dictionary<int, long>();
+            foreach (Row r in rows) if (r.Load > 0) loads[r.G] = r.Load;
+
+            // The trolley, and Fill (what pays best, until the trolley is full; a crop the trader pays as much for stays out).
+            vm.Lines.Add(new LineVm(s.Get("mandi.trolley"), s.Get("mandi.trolleyValue", "load", ctx.Fmt.Kg(weight), "cap", ctx.Fmt.Kg(md.CartCapacityGrams), "room", ctx.Fmt.Kg(md.CartCapacityGrams - weight)), "mandi", 2)
+            { Meter = (int)(weight * 100 / md.CartCapacityGrams) });
+            var fill = new Dictionary<int, long>();
+            long fillWeight = 0;
+            foreach (Row r in rows)
+            {
+                if (r.Gain.Raw <= 0) continue;
+                long q = System.Math.Min(r.Free, FitsWeight(defs.Goods[r.G], md.CartCapacityGrams - fillWeight));
+                if (q <= 0) continue;
+                fill[r.G] = q;
+                fillWeight += Store.WeightGrams(defs.Goods[r.G], q);
+            }
+            string fillArg = With(sim, fill, -1, 0);
+            string label = s.Get("mandi.fill");
+            ActionVm fillAction = fill.Count == 0
+                ? new ActionVm("replace:fill", label, null, ActionKind.Secondary, false, s.Get("mandi.fillNone"), null)
+                : new ActionVm("replace:fill", label, null, ActionKind.Secondary, true, null, null, new SheetRequest("Mandi", 0, fillArg));
+            vm.Lines.Add(new LineVm(s.Get("mandi.fillNote"), null) { Action = fillAction });
+
+            long gross = 0, trader = 0;
+            var commands = new List<MandiLoad>();
+            var sums = new List<LineVm>();
+            foreach (Row r in rows)
+            {
+                int g = r.G;
+                GoodDef good = defs.Goods[g];
+                Fixed mandiPrice = MarketRules.RegionalPrice(sim, g), floor = MarketRules.Floor(sim, g);
+                long roomLeft = md.CartCapacityGrams - (weight - Store.WeightGrams(good, r.Load)); // the cart's room if this crop were the only one moved
+                long max = System.Math.Min(r.Free, FitsWeight(good, roomLeft));
+                string caption = r.Gain.Raw > 0
+                    ? s.Get("mandi.rowCaption", "mandi", ctx.Fmt.Decimal2(mandiPrice * (Fixed.One - md.CommissionRate)), "trader", ctx.Fmt.Decimal2(floor), "gain", ctx.Fmt.Decimal2(r.Gain))
+                    : s.Get("mandi.rowCaptionLoss", "mandi", ctx.Fmt.Decimal2(mandiPrice * (Fixed.One - md.CommissionRate)), "trader", ctx.Fmt.Decimal2(floor));
+                int gi = g;
+                var amount = new AmountVm("load:" + g, 0, max, md.LoadStepGrams, r.Load, a => RowPick(ctx, gi, a), ctx.Fmt.Kg)
+                {
+                    Scale = 1000,
+                    Span = r.Free,
+                    Then = a => new SheetRequest("Mandi", 0, With(sim, loads, gi, a)),
+                    MinCaption = "0",
+                    MaxCaption = max < r.Free ? s.Get("mandi.mostRoom", "kg", ctx.Fmt.Kg(max)) : s.Get("mandi.allInStore", "kg", ctx.Fmt.Kg(r.Free)),
+                };
+                vm.Lines.Add(new LineVm(s.Get(good.NameKey), null) { Icon = good.Id, Note = caption, Amount = amount });
+                if (r.Load <= 0) continue;
+                long value = MarketRules.Value(sim, g, r.Load, mandiPrice);
+                gross += value;
+                trader += MarketRules.Value(sim, g, System.Math.Min(r.Load, MarketRules.TraderCapacityLeft(sim, g)), floor);
+                commands.Add(new MandiLoad(good.Id, r.Load));
+                sums.Add(new LineVm(s.Get("mandi.cropLine", "good", s.Get(good.NameKey), "kg", ctx.Fmt.Kg(r.Load), "price", ctx.Fmt.PricePerKg(mandiPrice)), ctx.Fmt.Coins(value), "mandi", 0));
+            }
+
+            long commission = Sim.Core.Finance.Money.MulRate(gross, md.CommissionRate);
+            // Your own cart or tractor-trolley takes the load if it fits: no trolley to hire (spec 013 §3.2), as GoToMandi charges it.
+            long hire = weight <= Sim.Core.Equipment.EquipmentRules.CartGrams(sim) ? 0 : MarketRules.Indexed(sim, md.CartHirePerTrip);
             long net = gross - commission - hire;
             vm.Lines.Add(LineVm.Header(s.Get("mandi.sum")));
+            vm.Lines.AddRange(sums);
             vm.Lines.Add(new LineVm(s.Get("mandi.atMandi"), ctx.Fmt.Coins(gross), "mandi", 0));
             vm.Lines.Add(new LineVm(s.Get("mandi.commission"), (commission > 0 ? "−" : "") + ctx.Fmt.Coins(commission), "mandi", 1));
             vm.Lines.Add(new LineVm(s.Get("mandi.hire"), "−" + ctx.Fmt.Coins(hire), "mandi", 2));
             vm.Lines.Add(new LineVm(s.Get("mandi.time"), s.Get("mandi.timeValue"), "mandi", 3));
-            vm.Lines.Add(new LineVm(s.Get("mandi.youGet"), ctx.Fmt.Coins(net), "mandi", 0));
-            vm.Lines.Add(new LineVm(s.Get("mandi.trader"), ctx.Fmt.Coins(trader), "mandi", 4));
-            vm.Lines.Add(new LineVm(s.Get(net >= trader ? "mandi.better" : "mandi.worse"), ctx.Fmt.Coins(System.Math.Abs(net - trader)), "mandi", 4));
+            vm.Lines.Add(new LineVm(s.Get("mandi.youGet"), ctx.Fmt.Coins(commands.Count == 0 ? 0 : net), "mandi", 0));
+            if (MarketRules.TraderBuys(sim))
+            {
+                vm.Lines.Add(new LineVm(s.Get("mandi.trader"), ctx.Fmt.Coins(trader), "mandi", 4));
+                vm.Lines.Add(new LineVm(s.Get(net >= trader ? "mandi.better" : "mandi.worse"), ctx.Fmt.Coins(commands.Count == 0 ? 0 : System.Math.Abs(net - trader)), "mandi", 4));
+            }
+            else vm.Lines.Add(new LineVm(s.Get("mandi.trader"), s.Get("mandi.traderAway", "hour", ctx.Fmt.Integer(defs.Truck == null ? 6 : defs.Truck.ArriveHour)), "mandi", 4)); // no trader's figure to compare with
             vm.Actions.Add(commands.Count == 0
                 ? new ActionVm("go", s.Get("mandi.go"), null, ActionKind.Primary, false, s.Get("mandi.empty"), null)
                 : ActionVm.Checked(ctx, "go", s.Get("mandi.go"), ctx.Fmt.Kg(weight), ActionKind.Primary, at => new GoToMandi(at, commands)));
             return vm;
         }
 
-        /// <summary>One good's load: none, 500, 1,000 or 2,000 kg, capped by the trolley and what's free in the store.</summary>
-        public static SheetVm Load(ViewContext ctx, int g, string arg)
+        /// <summary>What a load of this crop would pay at the mandi, under its slider.</summary>
+        private static AmountPick RowPick(ViewContext ctx, int g, long grams)
         {
             Simulation sim = ctx.Sim;
-            var s = ctx.Strings;
-            GoodDef good = sim.Config.Game.Market.Goods[g];
-            long free = sim.State.Market.InStore(g) - sim.State.Market.OnOffer(g);
-            Dictionary<int, long> loads = Parse(arg);
-            var vm = new SheetVm { Icon = good.Id, Title = s.Get("mandi.loadTitle", "good", s.Get(good.NameKey).ToLowerInvariant()) };
-            var seen = new List<long>();
-            foreach (long l in Loads)
-            {
-                long q = System.Math.Min(System.Math.Min(l, free), sim.Config.Game.Market.Mandi.CartCapacityGrams);
-                if (seen.Contains(q)) continue;
-                seen.Add(q);
-                vm.Lines.Add(new LineVm(q == 0 ? s.Get("mandi.none") : ctx.Fmt.Kg(q), q == 0 ? s.Get("mandi.noneNote") : s.Get("mandi.loadNote"), q == 0 ? null : "mandi", 2)
-                { Action = ActionVm.Open("set:" + q, s.Get("borrow.choose"), new SheetRequest("Mandi", 0, With(sim, loads, g, q))) });
-            }
-            return vm;
+            if (grams <= 0) return new AmountPick { Note = ctx.Strings.Get("mandi.rowNone") };
+            long mandi = MarketRules.Value(sim, g, grams, MarketRules.RegionalPrice(sim, g));
+            if (!MarketRules.TraderBuys(sim)) return new AmountPick { Note = ctx.Strings.Get("mandi.rowSumAway", "mandi", ctx.Fmt.Coins(mandi)) }; // the truck is away: no figure to set beside it
+            long trader = MarketRules.Value(sim, g, System.Math.Min(grams, MarketRules.TraderCapacityLeft(sim, g)), MarketRules.Floor(sim, g));
+            return new AmountPick { Note = ctx.Strings.Get("mandi.rowSum", "mandi", ctx.Fmt.Coins(mandi), "trader", ctx.Fmt.Coins(trader)) };
         }
     }
 }

@@ -157,6 +157,7 @@ proceeds at return     Σ Value(q, P_regional(good, return time)) × (1 − Mand
 | Price | The town market's regional price: one cart doesn't move it (Phase 1). It isn't capped by the trader's capacity, which is the point of going |
 | Why it pays | Transport is a fixed hire for a tractor-trolley (ADR 0037), not per kg, so full loads beat the trader's floor and small loads don't. Example, potato in Spring: 2,000 kg gives 6.80 × 0.97 × 2,000 − 1,000 = 12,192 (trader: 10,600); 1,000 kg gives 5,596 (trader: 5,300) before the founder's 0.5 h (about 560 coins), so only a full cart pays |
 | Away | A trip started live completes while away like any job; its proceeds appear in *While you were away* |
+| As built (US-252, ADR 0107 §14) | The sheet lists every produce good in your store with a slider (and a kg box) for its load, in steps of `loadStepKg`, best gain first: the mandi's price a kg after commission less the trader's floor (`MandiSheet.Gain`). Each slider stops at the least of what is free in the store and the trolley's room left after the other crops (the rest of the track is drawn grey); a typed amount is cut to that. *Fill with what pays best* loads the crops in that order until the trolley is full and leaves out any crop whose gain is not above 0. The sum has a line for each crop, the commission, the hire (none when your own cart carries the load), what you get, and the trader's figure now ("Away till 6:00" while the truck is away, with no comparison). The loads travel in the sheet's request, so a move redraws the sheet in place. `GoToMandi` is unchanged |
 
 ### 3.7 Fixed-point powers
 
@@ -230,6 +231,7 @@ Other `GoodDef` fields: `id`, `nameKey`, `edible` (produce: true), `weightKg` pe
 | | `cartHirePerTrip` | 1,000 coins | ≥ 0 |
 | | `commissionRate` | 0.03 (commission and market fee) | 0–0.2 |
 | | `founderHours` | 0.5 (one real working day under per-season scaling) | 0–`tripHours` |
+| | `loadStepKg` | 50 (the mandi sheet's slider step, US-252) | 1–2,000 |
 | `EconomyDef` | `startIndex` | 1.00 | > 0 |
 | | `inflationMinPerYear`, `inflationMaxPerYear` | 0.02, 0.06 | 0–0.5, min ≤ max |
 
@@ -343,6 +345,7 @@ All tests are in `tests/Sim.Core.Tests`.
 | AC-21 | A mandi trip with 2,000 kg of potato in Spring pays exactly `Value(2,000 kg, P_regional at return) × 0.97` net of commission, charges 1,000 coins of cart hire at departure (both to 5700), returns after exactly 6 h, and reduces the founder's delivered labour by exactly 0.5 h, whatever the departure time | `MandiTests.Trip_PaysAndCosts` |
 | AC-22 | `GoToMandi` rejects more than 2,000 kg, a second trip the same day, a trip while one is under way, a sick day, and stock that isn't there or is on offer, without changing state | `MandiTests.Trip_Rejections` |
 | AC-23 | A new game's store holds exactly the inherited goods of `StartDef.store`, and loading a `store` that doesn't fit the hut fails validation | `StoreTests.InheritedStore` |
+| AC-25 | (US-252) The mandi sheet lists every crop in the store, best gain over the trader first, with the mandi's price a kg after commission beside the trader's; each load's slider stops at the room the other crops leave in the trolley; Fill loads in order of gain until full and leaves out a crop the trader pays as much for; Go sends one trip with every load | `MandiViewTests.SeveralCrops`, `RoomLeft`, `FillBest`, `FillBest_LeavesOutACropTheTraderPaysAsMuchFor`, `SumLines` |
 | AC-24 | Every indexed coin amount (land, buildings, living costs, wages, day labour, medicine, cart hire) is charged at exactly `MulRate(amount, PriceIndex)`; price-controlled goods and loans ignore the index | `PriceTests.Indexed_CoinAmounts` |
 
 ## 9. Balancing hooks

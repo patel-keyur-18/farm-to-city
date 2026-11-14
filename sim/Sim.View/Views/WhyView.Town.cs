@@ -89,7 +89,11 @@ namespace Sim.View.Views
             else if (x.Rent == 0) Text(vm, ctx, "why.householdRent.inKind");
             else
             {
-                Row(vm, ctx, "why.householdRent.season", Money(ctx, MarketRules.Indexed(sim, sim.Config.Game.Population.RentPerSeason)));
+                Row(vm, ctx, "why.householdRent.season", Money(ctx, x.LeaseRent));
+                Row(vm, ctx, "why.householdRent.market", Money(ctx, LeaseRules.MarketRentFor(sim, x)));
+                Text(vm, ctx, "why.householdRent.parts", "parts", LeaseViews.Parts(ctx, x));
+                Text(vm, ctx, LeaseRules.SeasonsLeft(sim, x) <= 1 ? "why.householdRent.lease" : "why.householdRent.leaseMany", "n", ctx.Fmt.Integer(LeaseRules.SeasonsLeft(sim, x)),
+                    "cap", ctx.Fmt.Integer(sim.Config.Game.Population.MaxRise.MulRatio(100, 1).RoundToLong()), "pct", ctx.Fmt.Integer(sim.Config.Game.Population.BurdenLimit.MulRatio(100, 1).RoundToLong()));
                 Text(vm, ctx, "why.householdRent.how");
                 Text(vm, ctx, "why.householdRent.leave", "n", ctx.Fmt.Integer(sim.Config.Game.Population.RentBehindSeasons));
             }

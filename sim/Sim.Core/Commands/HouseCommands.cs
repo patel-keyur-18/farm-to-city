@@ -72,4 +72,22 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return MigrationRules.Answer(sim, HandId, Yes); }
     }
+
+    /// <summary>
+    /// The answer to a lease's renewal (US-240, spec 014 §3.14): asked in the lease's last season, applied at the close that ends it.
+    /// With no answer the market rise applies.
+    /// </summary>
+    public sealed class RenewLease : TimedCommand
+    {
+        public long HouseholdId { get; }
+        public LeaseChoice Choice { get; }
+
+        public RenewLease(long at, long householdId, LeaseChoice choice) : base(at)
+        {
+            HouseholdId = householdId;
+            Choice = choice;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return LeaseRules.Answer(sim, HouseholdId, Choice); }
+    }
 }

@@ -192,8 +192,12 @@ namespace Sim.Core.Definitions
         /// <summary>The founder's delivered labour the trip takes, in hours (ADR 0034).</summary>
         public Fixed FounderHours { get; }
 
-        public MandiDef(int tripHours, long cartCapacityGrams, long cartHirePerTrip, Fixed commissionRate, Fixed founderHours)
+        /// <summary>The mandi sheet's slider moves in steps of this many grams (US-252: 50 kg).</summary>
+        public long LoadStepGrams { get; }
+
+        public MandiDef(int tripHours, long cartCapacityGrams, long cartHirePerTrip, Fixed commissionRate, Fixed founderHours, long loadStepGrams = 50_000)
         {
+            LoadStepGrams = loadStepGrams;
             TripHours = tripHours;
             CartCapacityGrams = cartCapacityGrams;
             CartHirePerTrip = cartHirePerTrip;

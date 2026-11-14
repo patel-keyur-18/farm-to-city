@@ -104,6 +104,7 @@ namespace Game.Presentation
                 OnClosed = OnSheetClosed,
                 OnWhy = ShowWhy,
                 OnOpenRow = Push,
+                OnAmountSet = ReplaceSheet,
                 CanGoBack = () => _back.Count > 0,
                 OnBack = Back,
                 OkLabel = _strings.Get("action.ok"),
@@ -174,7 +175,6 @@ namespace Game.Presentation
                 case "BuyInput": _sheet.Show(BuyInputsSheet.One(_ctx, (int)r.Id), refreshOnly); break;
                 case "Mandi": _sheet.Show(MandiSheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case GodownSheet.Kind: _sheet.Show(GodownSheet.Build(_ctx), refreshOnly); break;
-                case "MandiLoad": _sheet.Show(MandiSheet.Load(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
                 case "Forecast": _sheet.Show(ForecastView.Sheet(_ctx), refreshOnly); break;
                 case "Alerts": _sheet.Show(Alerts.Sheet(_ctx), refreshOnly); break;
                 case "Orders": _sheet.Show(OrdersSheet.Build(_ctx), refreshOnly); break;
