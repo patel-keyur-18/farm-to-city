@@ -903,4 +903,47 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Balance: the Village's pace with the new rents (a slip past 5 weeks to the owner), the archetypes, contradictions flagged
 - [x] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down (row 16, the number pad, still to run)
 - [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it (PR #30 merged 2026-11-14)
+
+## Sprint 21 · 14–27 Jun 2027 · Phase 3 (the treasury and the budget cycle, taxes and policies; specs 023 and 024 written; 2 weeks, ADR 0107)
+
+- **Status:** Started 2026-11-14 (Sprint 20 merged, PR #30). This section written and shown to the owner before any code
+- **Branch:** `sprint/21-treasury-and-taxes`, from `main` after PR #30
+- **Goal:** The town has a second wallet that isn't the player's (spec 021, ADR 0108): a treasury that lives on grants, pitch rents and taxes, pays six departments in a priority order the player sets, and lets a service decay when it can't pay, with its own three statements and a budget with its windows. The player sets a house tax and a business tax and up to three policies (spec 022, ADR 0109), seeing before every change who pays and what it does, and a town left alone always works. The treasury never pays the player and never goes below zero. Specs 023 (the Township) and 024 (zoning, land value, rentals, upgrades) written and approved. Save schema 19 with its migration and fixture.
+- **Points:** 26 (US-138 8, US-139 5, US-140 5, US-141 8) plus two specs
+- **Specs for the owner to review:** 023, 024 (021 and 022 approved in Sprint 20; spec 021 §3.4 gains its seventh department, *Policies*, by spec 022 §10, so the state holds seven from the start)
+- **Device build:** Yes: a Development build (`docs/test-checklists/s21-treasury-taxes-policies.md`, device-only rows marked: both frame-time p95s, golden replays, 72 h catch-up on the phone; everything else checked in the Editor)
+- **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
+- **Device-only rows (ADR 0107 §11):** both frame-time p95s (main ≤ 8.3 ms, GPU ≤ 11 ms; Sprint 20: 4.76 and 8.23), golden replays on IL2CPP, the 72 h catch-up with a treasury open
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-138 | Treasury | [F15.1](features/F15.1-treasury-and-budget.md) | 8 | Must | To do |
+| US-139 | Budget cycle | [F15.1](features/F15.1-treasury-and-budget.md) | 5 | Must | To do |
+| US-140 | Taxes | [F15.2](features/F15.2-taxes-and-policies.md) | 5 | Must | To do |
+| US-141 | Policies | [F15.2](features/F15.2-taxes-and-policies.md) | 8 | Must | To do |
+
+**Order of work:** the Town treasury sheet previewed as an artifact that looks exactly like the game → US-138 (content and loader, accounts, `TreasuryState` and schema 19, the opening on the Township era, the close's two passes, gifts, works, the wall's sweep, the three statements, then the sheet and cards by scripted touch) → the Budget tab and the window card previewed → US-139 → **spec 023 drafted once the sim for US-138 and US-139 is under way** (one gap per message with a recommendation) → the Taxes and Policies tabs previewed → US-140 (house tax, business tax, owed tax, your side's rows) → US-141 (the five policies' effects and their hooks into specs 014, 006, 015, 017 and US-240; the night market last) → **spec 024 drafted** (same way) → balance with the bots (spec 021 §9, spec 022 §9: `TaxGateTests`, hands-off town, the 20% rule in `ArchetypeTests`, the Village at 28–45 days) → the whole checklist in the Editor by scripted touch, reading the render statistics for each of the three views → the Development build. One stop for the owner's review after each story and each spec. Schema 19 grows on this branch and ships once, with the device build.
+
+**If it runs over,** cut in spec 021 §11's order (the Codex cards, the planner's notes, the books' year-on-year columns, the Budget tab's last-season columns, the land line), then spec 022 §11's (the night market, the second tour chapter, the subsidy's hangover, the preview's happiness estimate). Never cut: the wall, never below zero, the warning, a hands-off town that works, every number's *Why?*.
+
+**Carried risks:** the Township's pace (day 63–77, ADR 0107 §5) after the lower rents (ADR 0110 §8): US-100 measures it in Sprint 22, and this sprint's bots must not slow the Village past day 45. The treasury opens by the developer panel's *Next era* until spec 023 builds the gate, so the town planner, taxes and policies are checked there in the Editor.
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story, task and acceptance criterion checked against specs 021 and 022, ADRs 0107 to 0113 and the code after PR #30
+- [x] Specs 021 and 022 approved (2026-11-13), their gaps closed (ADR 0108, 0109)
+- [x] Each story's acceptance criteria name their tests (spec 021 §8, spec 022 §8)
+- [x] This section approved by the owner (2026-11-14)
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [ ] Specs 023 and 024 approved; their ADR (0114 onward)
+- [ ] Save schema 19: migration, `saves/schema19` fixture, every older schema loads
+- [ ] Sheets and cards previewed to and approved by the owner before each story's code
+- [ ] Balance: treasury and taxes on the bots (20% rule on 24 seeds, 200 with `FTC_SEEDS=200`; the stress bots of spec 022 §9; the Village at 28–45 days); contradictions flagged to the owner
+- [ ] Render statistics read for the three views and any growth over 10% reported
+- [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down
+- [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it
