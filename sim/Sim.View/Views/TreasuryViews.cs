@@ -19,6 +19,8 @@ namespace Sim.View.Views
         public const string GiveKind = "TreasuryGive";
         public const string BooksKind = "TreasuryBooks";
         public const string StatementKind = "TreasuryStatement";
+        public const string BudgetKind = "TreasuryBudget";
+        public const string BudgetTab = "budget", SeasonTab = "season";
 
         /// <summary>The department's name ("Council's office").</summary>
         public static string Department(ViewContext ctx, int dept)
@@ -26,7 +28,7 @@ namespace Sim.View.Views
             return ctx.Strings.Get("dept." + ctx.Sim.Config.Game.Treasury.Departments[dept].Id);
         }
 
-        public static SheetVm Build(ViewContext ctx)
+        public static SheetVm Build(ViewContext ctx, string tab = null)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
@@ -39,6 +41,8 @@ namespace Sim.View.Views
             if (f.Short > 0)
                 vm.Lines.Add(new LineVm(s.Get("treasury.shortBanner", "short", ctx.Fmt.Coins(f.Short), "dept", Department(ctx, f.FirstUnpaid)), null) { Banner = true, NoteTone = Tone.Warn });
 
+            AdvisorVm planner = AdvisorWords.Planner(ctx); // the town planner's line for the last close (spec 021 §3.12)
+            if (planner != null) vm.Lines.Add(new LineVm(planner.Text, null) { Advisor = planner });
             vm.Lines.Add(new LineVm(s.Get("treasury.balance"), ctx.Fmt.Coins(st.Cash), "treasuryBalance", 0));
             vm.Lines.Add(new LineVm(s.Get("treasury.atClose"), f.Short > 0 ? s.Get("treasury.short", "short", ctx.Fmt.Coins(f.Short)) : s.Get("treasury.covered"), "treasuryDue", 0)
                 { NoteTone = f.Short > 0 ? Tone.Warn : Tone.Good });
@@ -49,6 +53,23 @@ namespace Sim.View.Views
                 Pictured(ActionVm.Open("books", s.Get("treasury.books"), new SheetRequest(BooksKind, 0), s.Get("treasury.booksDetail")), "menu"),
             };
             vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
+
+            tab = tab ?? SeasonTab;
+            bool unseen = st.Window != BudgetWindow.None && !st.WindowSeen;
+            vm.Lines.Add(new LineVm(null, null)
+            {
+                TabOn = "tab:" + tab,
+                Tabs = new List<ActionVm>
+                {
+                    ActionVm.Open("tab:" + SeasonTab, s.Get("treasury.tabSeason"), new SheetRequest(Kind, 0, SeasonTab)),
+                    ActionVm.Open("tab:" + BudgetTab, s.Get(unseen ? "treasury.tabBudgetNew" : "treasury.tabBudget"), new SheetRequest(Kind, 0, BudgetTab)),
+                },
+            });
+            if (tab == BudgetTab)
+            {
+                BudgetRows(ctx, vm, st, f);
+                return vm;
+            }
 
             // Money in: the grants as the close will pay them, the rents and gifts already in.
             TreasuryRules.GrantsNow(sim, out long untied, out long tied, out long withheld);
@@ -76,6 +97,138 @@ namespace Sim.View.Views
                 vm.Lines.Add(row);
             }
             return vm;
+        }
+
+        // ---- the budget (spec 021 §3.6, US-139) ----
+
+        /// <summary>The year the budget is for, as the player counts it ("Year 2").</summary>
+        private static string YearName(ViewContext ctx, TreasuryState st) { return ctx.Fmt.Integer(st.YearBudgeted + 1); }
+
+        /// <summary>The next window's season: Monsoon while a revision is still to come this year, else Spring.</summary>
+        private static string NextWindow(ViewContext ctx, TreasuryState st)
+        {
+            int seasons = Sim.Core.Definitions.ClockDef.SeasonsPerYear;
+            long period = ctx.Sim.Period;
+            bool revisionAhead = !st.Revised && st.YearBudgeted == period / seasons && period % seasons < 2;
+            return FieldSheets.SeasonName(ctx, revisionAhead ? period - period % seasons + 2 : (period / seasons + 1) * seasons);
+        }
+
+        /// <summary>The next window's season name, for a locked lever's reason.</summary>
+        public static string NextWindowName(ViewContext ctx) { return NextWindow(ctx, TreasuryRules.State(ctx.Sim)); }
+
+        private static void BudgetRows(ViewContext ctx, SheetVm vm, TreasuryState st, TreasuryRules.CloseForecast f)
+        {
+            var s = ctx.Strings;
+            bool open = st.Window != BudgetWindow.None, revise = st.Window == BudgetWindow.Revise, looked = st.WindowSeen;
+            string title = revise ? s.Get("budget.titleRevision") : s.Get("budget.titleYear", "n", YearName(ctx, st));
+            string state = s.Get(!open ? "budget.stateLocked" : looked ? "budget.stateOpen" : revise ? "budget.stateOpen" : "budget.stateProposed");
+            string text = !open ? s.Get("budget.winLocked", "next", NextWindow(ctx, st))
+                : revise ? s.Get(looked ? "budget.winRevise" : "budget.winReviseNew")
+                : s.Get(looked ? "budget.winOpen" : "budget.winProposed");
+            var strip = new LineVm(title + " · " + state, null, "treasuryWindow", 0) { Banner = true, Note = text, NoteTone = open ? Tone.Plain : Tone.Good, Dim = !open };
+            if (open) strip.Action = ActionVm.Checked(ctx, "accept", s.Get("budget.accept"), null, ActionKind.Primary, at => new AcceptBudget(at));
+            vm.Lines.Add(strip);
+
+            long total = 0;
+            for (int i = 0; i < TreasuryState.Departments; i++) if (f.Needs[i] > 0) total += st.Budget[i];
+            vm.Lines.Add(LineVm.Header(s.Get("budget.header", "total", ctx.Fmt.Coins(total))));
+            TreasuryReport last = st.Reports.Count == 0 ? null : st.Reports[st.Reports.Count - 1];
+            for (int i = 0; i < TreasuryState.Departments; i++)
+            {
+                if (f.Needs[i] == 0)
+                {
+                    vm.Lines.Add(new LineVm(Department(ctx, i), null) { Note = s.Get("treasury.nothingYet"), Dim = true });
+                    continue;
+                }
+                var row = new LineVm(Department(ctx, i), s.Get("budget.rowValue", "budget", ctx.Fmt.Coins(st.Budget[i]), "needs", ctx.Fmt.Coins(f.Needs[i])), "treasuryDept", i);
+                DepartmentRow r = last == null || i >= last.Rows.Count || last.Rows[i].Needs == 0 ? null : last.Rows[i];
+                if (r != null) { row.Note = Variance(ctx, r, out Tone tone); row.NoteTone = tone; }
+                if (open && f.Needs[i] > 0) row.Action = ActionVm.Open("budget:" + i, s.Get("budget.change"), new SheetRequest(BudgetKind, i));
+                vm.Lines.Add(row);
+            }
+            vm.Lines.Add(new LineVm(s.Get(last == null ? "budget.firstHint" : "budget.lastHint"), null) { Dim = true });
+        }
+
+        /// <summary>The one sentence for a department's last close (spec 021 §3.6): what it was budgeted against what it needed and was paid.</summary>
+        public static string Variance(ViewContext ctx, DepartmentRow r, out Tone tone)
+        {
+            var s = ctx.Strings;
+            var f = ctx.Fmt;
+            tone = Tone.Plain;
+            switch ((VarianceSentence)r.Sentence)
+            {
+                case VarianceSentence.PricesRose: return s.Get("budget.var.pricesRose", "extra", f.Coins(r.Needs - r.Budget), "budget", f.Coins(r.Budget));
+                case VarianceSentence.NewLine: return s.Get("budget.var.newLine");
+                case VarianceSentence.CashRanOut: tone = Tone.Warn; return s.Get("budget.var.cashRanOut", "unpaid", f.Coins(r.Unpaid));
+                case VarianceSentence.BudgetBelowNeeds: tone = Tone.Warn; return s.Get("budget.var.belowNeeds", "gap", f.Coins(r.Needs - r.Budget));
+                case VarianceSentence.Unspent: return s.Get("budget.var.unspent", "left", f.Coins(r.Budget - r.Paid));
+                default: tone = Tone.Good; return s.Get("budget.var.none");
+            }
+        }
+
+        /// <summary>
+        /// <em>Change a department's budget</em> (spec 021 §3.6): drag or type 0 to 120% of its needs now, with its needs marked on the slider.
+        /// Under its needs it is paid after the other departments' budgets, which the note says.
+        /// </summary>
+        public static SheetVm BudgetSet(ViewContext ctx, int dept)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            var vm = new SheetVm { Icon = "place_council_hall", Title = s.Get("budget.setTitle", "dept", Department(ctx, dept)), Subtitle = s.Get("budget.setSubtitle") };
+            TreasuryState st = TreasuryRules.State(sim);
+            if (!TreasuryRules.IsOpen(sim) || dept < 0 || dept >= TreasuryState.Departments) return vm;
+            long needs = TreasuryRules.Needs(sim, dept), max = TreasuryRules.MaxBudget(sim, dept);
+            if (st.Window == BudgetWindow.None || needs == 0)
+            {
+                vm.Lines.Add(new LineVm(s.Get("budget.setLocked", "next", NextWindow(ctx, st)), null) { Dim = true });
+                return vm;
+            }
+            vm.Lines.Add(new LineVm(s.Get("budget.setNeeds", "needs", ctx.Fmt.Coins(needs)), null, "treasuryDept", dept));
+            long step = Money.Coin; // a whole coin, so the slider can stand exactly on the department's needs
+            var amount = new AmountVm("budget:" + dept, 0, max, step, st.Budget[dept], a => BudgetPick(ctx, dept, a, needs, max), ctx.Fmt.Coins)
+            {
+                Mark = needs, MarkCaption = s.Get("budget.setMark", "needs", ctx.Fmt.Amount(needs)),
+                MinCaption = ctx.Fmt.Amount(0),
+                MaxCaption = s.Get("budget.setMax", "max", ctx.Fmt.Amount(max)),
+            };
+            vm.Lines.Add(new LineVm(s.Get("budget.setRange", "max", ctx.Fmt.Amount(max)), null) { Amount = amount });
+            return vm;
+        }
+
+        private static AmountPick BudgetPick(ViewContext ctx, int dept, long amount, long needs, long max)
+        {
+            var s = ctx.Strings;
+            if (System.Math.Abs(amount - needs) < Money.Coin) amount = needs; // within a coin of its needs the slider stands on them: the whole-coin step can't land on a fraction of a coin
+            if (amount < 0 || amount > max)
+                return new AmountPick { Action = new ActionVm("budget", s.Get("budget.setButton"), null, ActionKind.Primary, false, null, null), Note = s.Get("budget.setTooMuch", "max", ctx.Fmt.Coins(max)), Tone = Tone.Warn };
+            string note = amount < needs ? s.Get("budget.setUnder", "gap", ctx.Fmt.Coins(needs - amount), "dept", Department(ctx, dept))
+                : amount > needs ? s.Get("budget.setOver", "extra", ctx.Fmt.Coins(amount - needs)) : s.Get("budget.setExact");
+            return new AmountPick
+            {
+                Action = ActionVm.Checked(ctx, "budget", s.Get("budget.setAmount", "amount", ctx.Fmt.Amount(amount)), null, ActionKind.Primary, at => new SetBudget(at, dept, amount)),
+                Note = note, Tone = amount < needs ? Tone.Warn : Tone.Plain,
+            };
+        }
+
+        /// <summary>
+        /// The first window's card (spec 021 §3.6, ADR 0115): the proposal as it stands, <em>Accept</em> or <em>Change</em>. Later windows come by the bell.
+        /// </summary>
+        public static ConfirmCardVm WindowCard(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            TreasuryState st = TreasuryRules.State(sim);
+            if (st == null || st.Window != BudgetWindow.Set || st.WindowSeen) return null;
+            TreasuryRules.CloseForecast f = TreasuryRules.Forecast(sim);
+            var card = new ConfirmCardVm
+            {
+                Title = s.Get("budget.cardTitle"), Subtitle = s.Get("budget.cardSubtitle", "n", YearName(ctx, st)),
+                SafeLabel = s.Get("budget.change"), GoLabel = s.Get("budget.accept"), Warning = s.Get("budget.cardNote"), Reassure = true,
+            };
+            for (int i = 0; i < TreasuryState.Departments; i++)
+                if (f.Needs[i] > 0) card.Rows.Add(new ConfirmRowVm(Department(ctx, i), s.Get("budget.cardRow", "amount", ctx.Fmt.Coins(st.Budget[i]))));
+            card.Rows.Add(new ConfirmRowVm(s.Get("budget.cardHolds", "cash", ctx.Fmt.Coins(st.Cash)), s.Get("budget.cardDue", "due", ctx.Fmt.Coins(f.Due)), true));
+            return card;
         }
 
         private static ActionVm Pictured(ActionVm a, string icon) { a.Icon = icon; return a; }

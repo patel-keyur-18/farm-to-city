@@ -161,7 +161,8 @@ namespace Game.Presentation
                 case "Lenders": _sheet.Show(LendersSheet.Build(_ctx), refreshOnly); break;
                 case SavingsSheet.Kind: _sheet.Show(SavingsSheet.Build(_ctx), refreshOnly); break;
                 case "Books": _sheet.Show(BooksSheet.Build(_ctx), refreshOnly); break;
-                case TreasurySheet.Kind: _sheet.Show(TreasurySheet.Build(_ctx), refreshOnly); break; // spec 021 §7
+                case TreasurySheet.Kind: _sheet.Show(TreasurySheet.Build(_ctx, r.Arg), refreshOnly); break; // spec 021 §7
+                case TreasurySheet.BudgetKind: _sheet.Show(TreasurySheet.BudgetSet(_ctx, (int)r.Id), refreshOnly); break; // US-139
                 case TreasurySheet.GiveKind: _sheet.Show(TreasurySheet.Give(_ctx), refreshOnly); break;
                 case TreasurySheet.BooksKind: _sheet.Show(TreasurySheet.Books(_ctx), refreshOnly); break;
                 case TreasurySheet.StatementKind: _sheet.Show(TreasurySheet.Statement(_ctx, r.Id, r.Arg), refreshOnly); break;
@@ -209,6 +210,7 @@ namespace Game.Presentation
                 case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
+                case TreasurySheet.BudgetKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)); return; // set: back to the Budget tab, the new figure there
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
                 case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
                 case "BusinessClose": Return(new SheetRequest("Businesses", 0)); return;

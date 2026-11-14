@@ -919,7 +919,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-138 | Treasury | [F15.1](features/F15.1-treasury-and-budget.md) | 8 | Must | Built and Editor-checked (2026-11-14); awaiting the owner's review |
-| US-139 | Budget cycle | [F15.1](features/F15.1-treasury-and-budget.md) | 5 | Must | Sim, content and tests built (2026-11-14); the Budget tab and window card previewed, awaiting the owner's look before the UI code |
+| US-139 | Budget cycle | [F15.1](features/F15.1-treasury-and-budget.md) | 5 | Must | Built and Editor-checked (2026-11-14; preview approved, ADR 0115); awaiting the owner's review |
 | US-140 | Taxes | [F15.2](features/F15.2-taxes-and-policies.md) | 5 | Must | To do |
 | US-141 | Policies | [F15.2](features/F15.2-taxes-and-policies.md) | 8 | Must | To do |
 

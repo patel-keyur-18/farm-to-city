@@ -109,8 +109,29 @@ namespace Sim.View.Views
                     vm.Rows.Add(new WhyRowVm(ctx.Strings.Get("treasury.line." + l.Id), Money(ctx, TreasuryRules.LineAmount(ctx.Sim, l))));
             Row(vm, ctx, "why.treasury.budget", Money(ctx, st.Budget[dept]));
             Row(vm, ctx, "why.treasury.service", ctx.Fmt.Percent(st.Condition[dept]));
+            if (st.Reports.Count > 0 && st.Reports[st.Reports.Count - 1].Rows[dept].Needs > 0) // last close: what it was paid against its budget
+            {
+                DepartmentRow last = st.Reports[st.Reports.Count - 1].Rows[dept];
+                Row(vm, ctx, "why.treasury.lastBudget", Money(ctx, last.Budget));
+                Row(vm, ctx, "why.treasury.lastNeeded", Money(ctx, last.Needs));
+                Row(vm, ctx, "why.treasury.lastPaid", Money(ctx, last.Paid));
+                vm.Rows.Add(new WhyRowVm(TreasurySheet.Variance(ctx, last, out _), ""));
+            }
             Text(vm, ctx, "why.treasury.dept." + d.Departments[dept].Id);
             Text(vm, ctx, "why.treasury.dept.text");
+            return vm;
+        }
+
+        /// <summary>The budget window (spec 021 §3.6): when it opens and what ignoring it does.</summary>
+        private static WhyVm TreasuryWindow(ViewContext ctx, long id)
+        {
+            TreasuryState st = Town(ctx);
+            WhyVm vm = New(ctx, "why.treasury.window.title", ctx.Strings.Get(st.Window == BudgetWindow.None ? "budget.stateLocked" : "budget.stateOpen"));
+            Row(vm, ctx, "why.treasury.window.opens", ctx.Strings.Get("why.treasury.window.opensValue"));
+            Row(vm, ctx, "why.treasury.window.revision", ctx.Strings.Get("why.treasury.window.revisionValue"));
+            Row(vm, ctx, "why.treasury.window.until", ctx.Strings.Get("why.treasury.window.untilValue"));
+            Row(vm, ctx, "why.treasury.window.ignore", ctx.Strings.Get("why.treasury.window.ignoreValue"));
+            Text(vm, ctx, "why.treasury.window.text");
             return vm;
         }
 

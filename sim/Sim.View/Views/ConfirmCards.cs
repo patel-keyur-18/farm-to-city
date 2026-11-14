@@ -85,6 +85,9 @@ namespace Sim.View.Views
         public List<ConfirmRowVm> Rows { get; } = new List<ConfirmRowVm>();
         public string Warning { get; internal set; }
 
+        /// <summary>The note is good news in green, not a warning (the budget card's "nothing breaks").</summary>
+        public bool Reassure { get; internal set; }
+
         /// <summary>The big safe button ("Not now", "Keep my land").</summary>
         public string SafeLabel { get; internal set; }
 

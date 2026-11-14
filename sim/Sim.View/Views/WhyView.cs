@@ -121,7 +121,7 @@ namespace Sim.View.Views
             { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
             // The town treasury (spec 021).
             { "treasuryBalance", TreasuryBalance }, { "treasuryUntied", TreasuryUntied }, { "treasuryTied", TreasuryTied }, { "treasuryRents", TreasuryRents },
-            { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryAccount", TreasuryAccount },
+            { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "treasuryAccount", TreasuryAccount },
             { "treasuryFund", TreasuryFund },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },

@@ -160,7 +160,7 @@ namespace Sim.View.Tests
         }
 
         /// <summary>A test-only command that takes the town's cash away, so the next close can't be covered.</summary>
-        private sealed class DrainTreasury : Command
+        internal sealed class DrainTreasury : Command
         {
             internal override CommandResult Apply(Simulation sim)
             {

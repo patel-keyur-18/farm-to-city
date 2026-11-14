@@ -276,9 +276,9 @@ namespace Game.Presentation.Ui
             if (!string.IsNullOrEmpty(vm.Warning))
             {
                 var warn = new VisualElement { pickingMode = PickingMode.Ignore };
-                warn.style.backgroundColor = new Color(0.98f, 0.89f, 0.85f);
+                warn.style.backgroundColor = vm.Reassure ? Painter.Hex(0xE9F2D8) : new Color(0.98f, 0.89f, 0.85f);
                 UiKit.Radius(warn, 18); UiKit.Padding(warn, 8, 18); warn.style.marginTop = 14;
-                Label w = UiKit.Text(vm.Warning, 30, UiKit.Warn, UiKit.Heading);
+                Label w = UiKit.Text(vm.Warning, 30, vm.Reassure ? Painter.Hex(0x2F5D14) : UiKit.Warn, UiKit.Heading);
                 w.style.whiteSpace = WhiteSpace.Normal; w.style.unityTextAlign = TextAnchor.MiddleCenter;
                 warn.Add(w);
                 card.Add(warn);
@@ -287,7 +287,7 @@ namespace Game.Presentation.Ui
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.marginTop = 14;
             void Close() { veil.RemoveFromHierarchy(); }
-            Button safe = UiKit.MakeButton(vm.SafeLabel, ActionLook.Primary, () => { Close(); no(); });
+            Button safe = UiKit.MakeButton(vm.SafeLabel, vm.Reassure ? ActionLook.Secondary : ActionLook.Primary, () => { Close(); no(); });
             safe.name = "confirm:safe";
             safe.style.flexGrow = 1;
             Button go = UiKit.MakeButton(vm.GoLabel, vm.Hold ? ActionLook.Danger : ActionLook.Primary, vm.Hold ? (Action)(() => { }) : () => { Close(); yes(); });
@@ -476,6 +476,7 @@ namespace Game.Presentation.Ui
         private VisualElement Row(LineVm line)
         {
             if (line.Banner) return BannerRow(line);
+            if (line.Tabs != null) return TabStrip(line.Tabs, line.TabOn);
             if (line.Amount != null) return AmountRow(line);
             if (line.Meter >= 0)
             {
@@ -494,17 +495,42 @@ namespace Game.Presentation.Ui
             return box;
         }
 
-        /// <summary>A boxed line across the sheet (spec 021 §7): green for "Town money: not yours", amber with a warning tone.</summary>
-        private static VisualElement BannerRow(LineVm line)
+        /// <summary>
+        /// A boxed line across the sheet (spec 021 §7): green for "Town money: not yours", amber with a warning tone. With a note, an action and a
+        /// ? it is the budget window's strip: its state, what it means, and Accept.
+        /// </summary>
+        private VisualElement BannerRow(LineVm line)
         {
-            bool warn = line.NoteTone == Tone.Warn;
+            bool warn = line.NoteTone == Tone.Warn && line.Note == null;
             var box = new VisualElement { pickingMode = PickingMode.Ignore };
-            box.style.backgroundColor = warn ? Painter.Hex(0xFBE3C2) : Painter.Hex(0xE9F2D8);
-            UiKit.Border(box, 4, warn ? UiKit.Saffron : Painter.Hex(0x9CC46B));
+            box.style.backgroundColor = warn ? Painter.Hex(0xFBE3C2) : line.Dim ? Painter.Hex(0xEFE8D4) : Painter.Hex(0xE9F2D8);
+            UiKit.Border(box, 4, warn ? UiKit.Saffron : line.Dim ? Painter.Hex(0xCDBF9C) : Painter.Hex(0x9CC46B));
             UiKit.Radius(box, 22);
             UiKit.Padding(box, 12, 22);
             box.style.marginTop = 8; box.style.marginBottom = 10;
-            box.Add(UiKit.Text(line.Label, 30, warn ? UiKit.Warn : Painter.Hex(0x2F5D14), UiKit.BodyBold));
+            if (line.Note == null && line.Action == null)
+            {
+                box.Add(UiKit.Text(line.Label, 30, warn ? UiKit.Warn : Painter.Hex(0x2F5D14), UiKit.BodyBold));
+                return box;
+            }
+            box.style.flexDirection = FlexDirection.Row;
+            box.style.alignItems = Align.Center;
+            var text = new VisualElement { pickingMode = PickingMode.Ignore };
+            text.style.flexGrow = 1; text.style.flexShrink = 1;
+            text.Add(UiKit.Text(line.Label, 32, UiKit.Ink, UiKit.BodyBold));
+            Label note = UiKit.Text(line.Note ?? "", 28, UiKit.Wood, UiKit.Body);
+            note.style.whiteSpace = WhiteSpace.Normal;
+            text.Add(note);
+            box.Add(text);
+            if (line.Action != null)
+            {
+                ActionVm a = line.Action;
+                Button b = UiKit.MakeButton(a.Label, ActionLook.Primary, () => { if (OnAction != null) OnAction(a); }, null, a.Enabled);
+                b.name = "banner:" + a.Id;
+                b.style.marginLeft = 14; b.style.flexShrink = 0;
+                box.Add(b);
+            }
+            AddWhyChip(box, line);
             return box;
         }
 
@@ -1375,6 +1401,7 @@ namespace Game.Presentation.Ui
                 if (l.Pie != null) foreach (PieSliceVm p in l.Pie) key.Append('|').Append(p.Label).Append(p.Percent).Append(p.Value);
                 if (l.Tree != null) foreach (var g in l.Tree.Generations) foreach (TreePersonVm p in g) key.Append('|').Append(p.Text);
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
+                if (l.Tabs != null) foreach (ActionVm t in l.Tabs) key.Append('|').Append(t.Label).Append(l.TabOn);
                 if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
                 if (l.Amount != null) key.Append('|').Append(l.Amount.Id).Append(l.Amount.Min).Append(',').Append(l.Amount.Max).Append(',').Append(l.Amount.Mark).Append(',').Append(l.Amount.Span).Append(',').Append(l.Amount.Start);

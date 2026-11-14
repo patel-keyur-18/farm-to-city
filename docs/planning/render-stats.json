@@ -5,5 +5,8 @@
   {"label":"Hand orders fix (a frost spell and a second hand on screen; draw calls 1,042, no map code changed)","view":"all","date":"2026-11-14","drawCalls":1042,"batches":1031,"setPassCalls":12,"triangles":31333,"visibleSprites":1202,"sprites":1478},
   {"label":"US-138","view":"all","date":"2026-11-14","drawCalls":957,"batches":957,"setPassCalls":10,"triangles":17383,"visibleSprites":1144,"sprites":1419},
   {"label":"US-138","view":"village","date":"2026-11-14","drawCalls":572,"batches":572,"setPassCalls":9,"triangles":10382,"visibleSprites":670,"sprites":1419},
-  {"label":"US-138","view":"farm","date":"2026-11-14","drawCalls":366,"batches":366,"setPassCalls":8,"triangles":7154,"visibleSprites":416,"sprites":1419}
+  {"label":"US-138","view":"farm","date":"2026-11-14","drawCalls":366,"batches":366,"setPassCalls":8,"triangles":7154,"visibleSprites":416,"sprites":1419},
+  {"label":"US-139","view":"all","date":"2026-11-14","drawCalls":1038,"batches":1038,"setPassCalls":12,"triangles":20772,"visibleSprites":1217,"sprites":1473},
+  {"label":"US-139","view":"village","date":"2026-11-14","drawCalls":558,"batches":558,"setPassCalls":10,"triangles":12541,"visibleSprites":647,"sprites":1473},
+  {"label":"US-139","view":"farm","date":"2026-11-14","drawCalls":346,"batches":346,"setPassCalls":9,"triangles":9138,"visibleSprites":390,"sprites":1473}
 ]

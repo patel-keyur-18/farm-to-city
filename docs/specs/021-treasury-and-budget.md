@@ -353,3 +353,10 @@ For your review; none changes a decision.
 - **Not in US-138:** the budget's windows, `SetBudget`, `AcceptBudget`, the warning, the planner, the Codex cards and the play log (US-139); taxes (US-140); the land line on a works card (needs spec 024). The condition (§3.5) and the two passes (§3.4) are built, and the budget is the proposal (the first year's needs) until US-139.
 - **The works card:** `CommissionWorks` is a tap card by the standard rules; the content has no works yet, so tests add one by a content edit.
 - **A department's row** shows its service in the label with a bar; its Why? lists its lines, budget and service.
+
+### As built (US-139, 2026-11-14, ADR 0115)
+
+- **§3.6 the proposal** is last year's actuals at today's prices: a department's needs now × the share of its needs paid over the last four closes. **A window** lasts until `AcceptBudget` or the next close; `SetBudget` leaves it open. **The card** shows only for the first window (the opening); later windows are a *Decide* row on the bell and a dot on the Budget tab.
+- **§3.11** the warning counts the grants only until spec 022 adds the tax bills; the *Change a tax* lever is greyed until then.
+- **§3.12** the planner speaks on the treasury sheet only (there is no season-page treasury section). Her four notes and the three Codex cards are in `advisors.json` and `codex.json`.
+- **§7** a department row shows "Budget … · needs …", the last close's sentence and a *Change* button while the window is open.

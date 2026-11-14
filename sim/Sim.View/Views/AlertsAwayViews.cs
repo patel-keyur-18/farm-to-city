@@ -6,6 +6,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
+using Sim.Core.Town;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Time;
@@ -250,7 +251,38 @@ namespace Sim.View.Views
                     Sim.Core.People.Household lh = sim.State.Citizens.Household(lease);
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("lease.alert", "family", TownWords.Household(ctx, lh)), Action = ActionVm.Open("lease:" + lease, s.Get("lease.answer"), new SheetRequest("Household", lease)) });
                 }
+            TreasuryAlerts(ctx, list);
             return list;
+        }
+
+        /// <summary>
+        /// The town's money (spec 021 §3.6, §3.11): on a season's last day a close that would leave a department unpaid, with its levers (give,
+        /// change a tax, revise the budget in its window); and a later budget window, proposed and in force, waiting for a look (ADR 0115).
+        /// </summary>
+        private static void TreasuryAlerts(ViewContext ctx, List<AlertVm> list)
+        {
+            Simulation sim = ctx.Sim;
+            if (!TreasuryRules.IsOpen(sim)) return;
+            var s = ctx.Strings;
+            TreasuryState st = TreasuryRules.State(sim);
+            long season = sim.Clock.SecondsPerSeason;
+            TreasuryRules.CloseForecast f = TreasuryRules.Forecast(sim);
+            if (season - ctx.Now % season <= ClockDef.SecondsPerDay && f.Short > 0)
+            {
+                var alert = new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.treasuryShort", "short", ctx.Fmt.Coins(f.Short), "dept", TreasurySheet.Department(ctx, f.FirstUnpaid)) };
+                alert.Levers.Add(Pictured(ActionVm.Open("lever:give", s.Get("treasury.give"), new SheetRequest(TreasurySheet.GiveKind, 0)), "coin"));
+                alert.Levers.Add(Pictured(new ActionVm("lever:tax", s.Get("alert.lever.tax"), null, ActionKind.Secondary, false, s.Get("alert.lever.taxLater"), null), "deed"));
+                alert.Levers.Add(Pictured(st.Window != BudgetWindow.None
+                    ? ActionVm.Open("lever:budget", s.Get("alert.lever.budget"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab))
+                    : new ActionVm("lever:budget", s.Get("alert.lever.budget"), null, ActionKind.Secondary, false, s.Get("alert.lever.budgetLocked", "next", TreasurySheet.NextWindowName(ctx)), null), "menu"));
+                list.Add(alert);
+            }
+            if (st.Window != BudgetWindow.None && !st.WindowSeen && st.Reports.Count > 0) // the first window has its card
+                list.Add(new AlertVm
+                {
+                    Level = AlertLevel.Decision, Text = s.Get(st.Window == BudgetWindow.Revise ? "alert.budgetRevise" : "alert.budgetSet"),
+                    Action = ActionVm.Open("budget", s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)),
+                });
         }
 
         /// <summary>The alert list sheet: one row per alert with its action.</summary>

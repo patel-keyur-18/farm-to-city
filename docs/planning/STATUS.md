@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township**: Sprint 20, the first of 8 (Sprints 20–27, ADR 0107). Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 21 in progress** (branch `sprint/21-treasury-and-taxes`; 26 points; the section is in `sprints.md`, approved 2026-11-14). **US-138 Treasury built and Editor-checked, awaiting the owner's review** (spec 021 as built in §12, ADR 0114 proposed; save schema 19 with `saves/schema19`). Next: the owner's review of US-138, then the Budget tab's preview and US-139. Sprint 20 is merged (PR #30) |
+| Sprint | **Sprint 21 in progress** (branch `sprint/21-treasury-and-taxes`; 26 points; the section is in `sprints.md`, approved 2026-11-14). **US-138 approved; US-139 Budget cycle built and Editor-checked, awaiting the owner's review** (spec 021 as built in §12, ADR 0114 and 0115 proposed; save schema 19 with `saves/schema19`). Next: the owner's review of US-139, then spec 023 (one gap per message), the Taxes and Policies preview and US-140. Sprint 20 is merged (PR #30) |
 | Branch with latest work | `sprint/21-treasury-and-taxes` (from `main` after PR #30; Sprint 20 is merged) |
 | Last updated | 2026-11-14 (Sprint 21 started; US-138 built) |
 
@@ -428,9 +428,9 @@
 
 ## Next up
 
-1. **Sprint 21 (branch `sprint/21-treasury-and-taxes`, 2 weeks, 26 points): the treasury and the budget cycle, taxes and policies.** The section in `sprints.md` is written and approved (2026-11-14). Order: **US-138 built (2026-11-14), the owner reviews it** → the Budget tab and the window card previewed as an artifact → US-139 → spec 023 drafted (one gap per message) → the Taxes and Policies tabs previewed → US-140 → US-141 → spec 024 drafted → balance → the whole checklist (`docs/test-checklists/s21-treasury-taxes-policies.md`) in the Editor → the Development build.
+1. **Sprint 21 (branch `sprint/21-treasury-and-taxes`, 2 weeks, 26 points): the treasury and the budget cycle, taxes and policies.** The section in `sprints.md` is written and approved (2026-11-14). Order: US-138 approved → **US-139 built (2026-11-14), the owner reviews it** → spec 023 drafted (one gap per message) → the Taxes and Policies tabs previewed → US-140 → US-141 → spec 024 drafted → balance → the whole checklist (`docs/test-checklists/s21-treasury-taxes-policies.md`) in the Editor → the Development build.
    1. **US-138 as built:** `content/treasury.json`; `Sim.Core/Town/` (`TreasuryState`, `TreasuryRules`, the system at order 9); accounts 4600–4670, 5910–5970; `GiveToTreasury`, `CommissionWorks`; the Township era (`developerOnly`) in `eras.json`; `Sim.View/Views/TreasuryViews.cs` and `WhyView.Treasury.cs`; strings; the Menu row. Tests: `TreasuryTests` (12), `MigrationTests.Schema18_Treasury`, `TreasuryViewTests` (6). Editor tour by touch with captures `docs/art/s21-138-*.png`; render statistics flat (957 / 572 / 366 draw calls). Notes for the owner in spec 021 §12 and ADR 0114.
-   2. **To raise at US-139** (owner asked for no burden on the average player): the budget window card only at the first window (the teaching one); later windows as a bell alert plus a badge on the sheet (the proposal stays in force). A UI change to spec 021 §3.6, so it needs a yes.
+   2. **US-139 as built (ADR 0115, approved preview 2026-11-14):** `SetBudget`, `AcceptBudget`, the windows and the proposal (last year's actuals at today's prices); five variance sentences; `TreasuryShortAhead` a day before a short close with its bell alert and levers; the town planner (Meena Rao, `portrait_advisor_planner`, four notes on the treasury sheet); three Codex cards (`publicMoney`, `budgetPriority`, `tiedGrants`); play-log lines; the Budget tab, the set-a-budget sheet and the first window's card (later windows: a Decide row on the bell and a dot on the tab). Tests: `BudgetTests` (8), `TreasuryAdvisorTests`, `BudgetViewTests` (4), Codex and play-log additions. Editor tour by touch, captures `docs/art/s21-139-*.png`. Open: the *Change a tax* lever is greyed until US-140.
    3. **Spec 023 must keep a default town solvent** with the clinic's and the road's upkeep added (spec 022 §9: about 67,000 in against 62,000 out before them). The Editor town (1 resident, no clinic) is in deficit by design until then; the start-up grant carries it about 25 seasons.
    4. **Standing request (owner): before any UI code, an artifact that looks exactly like the in-game sheet** (memory `preview-as-artifact`); the Town treasury sheet's was approved (2026-11-14, preview `https://claude.ai/artifact/L7A4k3EhiN5r6bszg2zenX`).
    5. **Owner's rules for both specs:** not a burden on an average player, everything explained on screen with a *Why?*, a town left alone always works (spec 022 §3.7); the treasury never pays you and never goes below zero (ADR 0107 §6, 0108).
@@ -490,7 +490,7 @@ Otherwise none. Sprint 3: 9 planning gaps (ADR 0034), 14 spec questions (ADR 003
 
 ## Half-done work
 
-Sprint 21 is in progress: US-138 is built and waits for the owner's review; nothing else half-done. Save schema 19 (unreleased, grows on this branch). Only row 16 of Sprint 20's checklist (the phone's number pad) is left with the owner. `unity/FarmToCity/Assets/_Recovery/` is untracked on the owner's Mac: never commit it. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
+Sprint 21 is in progress: US-138 approved, US-139 built and waiting for the owner's review; nothing else half-done. Save schema 19 (unreleased, grows on this branch). Only row 16 of Sprint 20's checklist (the phone's number pad) is left with the owner. `unity/FarmToCity/Assets/_Recovery/` is untracked on the owner's Mac: never commit it. `unity/FarmToCity/Assets/_Recovery/` (Unity's crash-recovery scenes) is untracked on the owner's Mac: never commit it.
 
 ## Environment notes
 

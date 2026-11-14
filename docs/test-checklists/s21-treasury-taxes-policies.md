@@ -27,8 +27,16 @@
 | 5 | Advance one season (panel); close the season page and the letter; Town treasury → The town's books → the season → three tabs | One season listed with its surplus and cash; money in and out, cash flow and what the town has, each row "First year", each with a **?** | | Editor ✓ (`s21-138-books.png`, `-statement.png`, `-has.png`) |
 | 6 | A town whose treasury would come up short at the close | A banner and "At the close: Short by …" name the department that would go unpaid | | `TreasuryViewTests.Sheet_Short`; the Editor town is never short |
 | 7 | Build the school, then reach the Township and wait for the close | The school's upkeep is the town's Education line: your *Next season, already due* has no school row and you are not charged | | `TreasuryTests.SchoolTakeover` |
+| 10 | Developer panel → Next era until Township | A card "Set the town's budget" with each department's budget, what the town holds, a green note ("ignore this and nothing breaks"), **Change** and **Accept** | | Editor ✓ (`s21-139-window-card.png`) |
+| 11 | Card → **Change**, or Town treasury → **Budget** tab | A strip "Year n budget · proposed" with **Accept** and a **?**; a row for each department with budget, needs, a **Change** button and a **?** | | Editor ✓ (`s21-139-budget-tab.png`) |
+| 12 | **Change** on the office; drag or type; *Set …* | A slider 0 to 120% of its needs with the needs marked; under its needs an amber line saying it is paid last; the tab shows the new figure and "open" | | Editor ✓ (`s21-139-set-budget.png`) |
+| 13 | **Accept** | The strip reads "locked until the Monsoon close"; no Change buttons | | Editor ✓ (`s21-139-locked.png`) |
+| 14 | The strip's **?** and a department's **?** | The window's rules in words; the department's budget, need, pay and the sentence for the last close | | Editor ✓ (`s21-139-window-why.png`, `-dept-why.png`) |
+| 15 | Last day of a season with the town short; open the bell | An urgent row with Give to the town, Change a tax (greyed, with its reason) and Revise the budget (greyed with "Locked until the Monsoon close") | | Editor ✓ (`s21-139-short-alert.png`) |
+| 16 | After that close: the treasury sheet and the Budget tab | Meena Rao, the town planner, speaks under the banners; the office row says "Cash ran out: … went unpaid" | | Editor ✓ (`s21-139-planner.png`, `-variance.png`) |
+| 17 | The Monsoon close | The bell has a Decide row "The midyear budget revision is open"; **Open** shows "Midyear revision · open" | | Editor ✓ (`s21-139-window-bell.png`, `-revision.png`) |
 | 8 | Both frame-time p95s (main ≤ 8.3 ms, GPU ≤ 11 ms), golden replays, a 72 h catch-up with a treasury open | Pass | **Device only** | |
-| 9 | Render statistics at the three views (all, village, farm) | No metric over 10% above the last reading | | Editor ✓ (957 / 572 / 366 draw calls; none grew) |
+| 9 | Render statistics at the three views (all, village, farm) | No metric over 10% above the last reading | | Editor ✓ for US-138 (957 / 572 / 366 draw calls); US-139: 1038 / 558 / 346, set-pass calls +11–20% and triangles +19–28% flagged (a Monsoon map against a Spring reading; the sheets are UI Toolkit) |
 
 **Your questions:**
 1. Does the sheet read as the preview you approved? (The service bar is under the department's row, not beside it.)

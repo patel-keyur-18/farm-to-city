@@ -59,6 +59,7 @@ namespace Sim.Core.Town
             s.WindowPeriod = sim.Period;
             s.YearBudgeted = (int)(sim.Period / ClockYear(sim));
             sim.Emit(new TreasuryOpened(now, grant));
+            sim.Emit(new BudgetWindowOpened(now, false));
         }
 
         private static long ClockYear(Simulation sim) { return Definitions.ClockDef.SeasonsPerYear; }

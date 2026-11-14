@@ -250,6 +250,10 @@ namespace Sim.View.Views
         /// <summary>A boxed line across the sheet, green or (with <see cref="NoteTone"/> Warn) amber: "Town money: not yours" (spec 021 §7).</summary>
         public bool Banner { get; internal set; }
 
+        /// <summary>Tabs drawn as a row among the lines (the treasury's This season | Budget, under its picture buttons), with the id of the one showing.</summary>
+        public System.Collections.Generic.List<ActionVm> Tabs { get; internal set; }
+        public string TabOn { get; internal set; }
+
         /// <summary>A bar under the row filled this many percent (the mandi trolley), or −1.</summary>
         public int Meter { get; internal set; } = -1;
 

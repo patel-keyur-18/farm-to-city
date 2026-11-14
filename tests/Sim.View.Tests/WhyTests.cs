@@ -66,6 +66,8 @@ namespace Sim.View.Tests
             if (Sim.Core.Town.TreasuryRules.IsOpen(sim)) // the town treasury (spec 021)
             {
                 yield return Named("treasury", TreasurySheet.Build(ctx));
+                yield return Named("treasury budget", TreasurySheet.Build(ctx, TreasurySheet.BudgetTab));
+                yield return Named("treasury budget set", TreasurySheet.BudgetSet(ctx, 0));
                 yield return Named("treasury give", TreasurySheet.Give(ctx));
                 yield return Named("treasury books", TreasurySheet.Books(ctx));
                 foreach (var r in sim.State.Treasury.Reports)
