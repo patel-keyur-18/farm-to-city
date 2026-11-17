@@ -87,6 +87,9 @@ namespace Sim.Core
         /// <summary>The town treasury (spec 021, ADR 0108), or null in content without it; hashed only once it has opened.</summary>
         public Town.TreasuryState Treasury { get; internal set; }
 
+        /// <summary>The Township's road, clinic, gate and cohort (spec 023, save schema 20), or null in content without it; hashed only once something has started.</summary>
+        public Town.TownshipState Township { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -135,6 +138,8 @@ namespace Sim.Core
             if (Shops != null && !(h is SaveWriter hw && hw.Schema < 14)) Shops.WriteTo(h);
             // Spec 021 (schema 19), last: a town whose treasury hasn't opened hashes as before.
             if (Treasury != null && !(h is SaveWriter tw && tw.Schema < 19)) Treasury.WriteTo(h);
+            // Spec 023 (schema 20), last: a town that hasn't started the Township hashes as before.
+            if (Township != null && !(h is SaveWriter tsw && tsw.Schema < 20)) Township.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -187,6 +192,7 @@ namespace Sim.Core
             if (g.Orchard != null) s.Orchards = r.Schema >= 14 ? Sim.Core.Farm.OrchardState.ReadFrom(r) : new Sim.Core.Farm.OrchardState(); // schema 13: none
             if (g.Shops != null) s.Shops = r.Schema >= 14 ? Business.ShopsState.ReadFrom(r, config) : Business.ShopsState.New(config); // schema 13: the village's rivals, no shops of yours
             if (g.Treasury != null) s.Treasury = r.Schema >= 19 ? Town.TreasuryState.ReadFrom(r) : new Town.TreasuryState(); // schema 18: no treasury yet
+            if (g.Township != null) s.Township = r.Schema >= 20 ? Town.TownshipState.ReadFrom(r) : new Town.TownshipState(); // schema 19: nothing of the Township started
             return s;
         }
 
@@ -226,6 +232,7 @@ namespace Sim.Core
                 Orchards = Orchards?.Clone(),
                 Shops = Shops?.Clone(),
                 Treasury = Treasury?.Clone(),
+                Township = Township?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

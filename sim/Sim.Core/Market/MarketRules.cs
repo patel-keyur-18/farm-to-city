@@ -33,11 +33,11 @@ namespace Sim.Core.Market
             return gross - Finance.Money.MulRate(gross, sim.Config.Game.Market.Mandi.CommissionRate);
         }
 
-        /// <summary>transportCostPerKg[roadTier] × weightKg × PriceIndex.</summary>
+        /// <summary>transportCostPerKg[roadTier] × weightKg × PriceIndex; the tier is the paved link road's once it is built (spec 023 §3.3).</summary>
         public static Fixed TransportCost(Simulation sim, int good)
         {
             MarketDefs defs = sim.Config.Game.Market;
-            return defs.Region.TransportCostPerKg * defs.Goods[good].WeightKg * sim.State.Market.PriceIndex;
+            return Town.RoadRules.TransportPerKg(sim) * defs.Goods[good].WeightKg * sim.State.Market.PriceIndex;
         }
 
         /// <summary>The trader's buying price: P_regional − TransportCost.</summary>

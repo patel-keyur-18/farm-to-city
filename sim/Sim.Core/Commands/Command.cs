@@ -241,6 +241,10 @@ namespace Sim.Core.Commands
 
         /// <summary>The policy isn't enacted, so there is nothing to repeal.</summary>
         NotActive,
+
+        // Spec 023 (the Township, ADR 0116)
+        /// <summary>Fewer households of yours than the petition needs (township.json's road.petitionHouseholds).</summary>
+        TooFewHouseholds,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

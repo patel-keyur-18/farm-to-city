@@ -46,6 +46,7 @@ namespace Sim.Core.Saves
             DepositSavings, WithdrawSavings, SetSavingsCover, CoverFromSavings, TakeBackSavingsCover,
             RenewLease,
             GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget, SetTaxRate, UndoTaxRate, SeeTaxTour, EnactPolicy, RepealPolicy, SeePolicyTour,
+            PetitionRoad,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -176,6 +177,10 @@ namespace Sim.Core.Saves
                 case EnactPolicy c: At(c, Tag.EnactPolicy); w.WriteInt((int)c.Policy); break;
                 case RepealPolicy c: At(c, Tag.RepealPolicy); w.WriteInt((int)c.Policy); break;
                 case SeePolicyTour c: At(c, Tag.SeePolicyTour); break;
+                case PetitionRoad c:
+                    At(c, Tag.PetitionRoad); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
                 case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
@@ -322,6 +327,7 @@ namespace Sim.Core.Saves
                 case Tag.EnactPolicy: return new EnactPolicy(at, (Town.PolicyId)r.ReadInt());
                 case Tag.RepealPolicy: return new RepealPolicy(at, (Town.PolicyId)r.ReadInt());
                 case Tag.SeePolicyTour: return new SeePolicyTour(at);
+                case Tag.PetitionRoad: return new PetitionRoad(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));

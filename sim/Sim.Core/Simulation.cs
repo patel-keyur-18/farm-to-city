@@ -64,6 +64,7 @@ namespace Sim.Core
                 handlers.Add(new People.SchoolRules.ClassEnds());
             }
             if (config.Game?.Businesses != null) handlers.Add(new Business.BusinessRules.Build());
+            if (config.Game?.Township != null) handlers.Add(new Town.RoadRules.Build());
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {
@@ -105,6 +106,7 @@ namespace Sim.Core
                 if (config.Game.Orchard != null) state.Orchards = new Farm.OrchardState();
                 if (config.Game.Shops != null) state.Shops = Business.ShopsState.New(config);
                 if (config.Game.Treasury != null) state.Treasury = new Town.TreasuryState();
+                if (config.Game.Township != null) state.Township = new Town.TownshipState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();

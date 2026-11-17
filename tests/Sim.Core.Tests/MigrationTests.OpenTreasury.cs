@@ -73,6 +73,7 @@ namespace Sim.Core.Tests
             Assert.That(tr.Ledger.Reconcile(), Is.Null);
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             Assert.That(-r.State.Ledger.Balance(Account.TaxOwed), Is.GreaterThan(0), "owed tax");
+            Assert.That(r.State.Township?.Road.Status, Is.EqualTo(RoadStatus.None), "schema 20 migrates it with nothing of the Township started");
 
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);
