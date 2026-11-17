@@ -73,8 +73,8 @@ A household's **effect** is `e = condition × covered × scale`: the Health depa
 | Petition | A row on the council hall's sheet, *Petition for a paved road*, from the Village and enabled at 10 households of yours (`road.petitionHouseholds`); disabled with its reason otherwise | 10 |
 | Share | A gift on a tap card (cash before and after; "the district builds it in 4 days, the road is not yours"); a co-op loan may pay it | 25,000 |
 | Build | The district builds it in `road.days` | 4 days |
-| Effect | `roadTier` becomes `road` (`transportCostPerKg` 1.50 → 1.00): the trader pays 0.50 a kg more at the farm gate (potato about +7.7%, wheat about +2.1%) and bought inputs cost 0.50 a kg less. Every trader price's *Why?* names the road | |
-| Benefit shown | Your season page gains "The road earned you about +n this season" = kilos sold × 0.50 × price index, with its *Why?* | |
+| Effect | `roadTier` becomes `road` (`transportCostPerKg` 1.50 → 1.00): the trader pays 0.50 a kg more at the farm gate (potato about +7.7% to +9.5% and wheat about +2.1%, depending on the day's price; the *Why?* works them out live). **Bought inputs cost the same:** the dealer's price already includes delivery (spec 004 §3.1), so the road helps only what you sell (corrected while building US-146; the first draft said inputs would be 0.50 a kg cheaper). Every trader price's *Why?* names the road | |
+| Benefit shown | Your season page gains "Of that, the paved road earned you about +n" = each sale's kilos × 0.50 × price index, added up as the founder sells to the trader (`RoadState.EarnedThis`, rolled at each close; businesses' sales are their own books and don't count), with its *Why?* | |
 | Upkeep | The district's until the Township, then the treasury's Roads line | 1,500 |
 | Map | The district road on the south edge is drawn paved once built (previewed first, ADR 0064) | |
 

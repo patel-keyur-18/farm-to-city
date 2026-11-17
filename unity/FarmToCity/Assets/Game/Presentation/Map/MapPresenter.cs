@@ -333,6 +333,7 @@ namespace Game.Presentation.Map
             foreach (EdgeSpot e in _edge)
             {
                 e.Ground.color = _tint;
+                if (e.Tile.Kind == EdgeKind.Road && e.Tile.Y == _height - 1) e.Ground.sprite = SpriteBank.Rendered(map.RoadPaved ? "edge_paved" : "edge_road"); // the district road past the map's edge
                 if (e.Crop != null)
                 {
                     string crop = Sim.View.Views.EdgeView.Crop(e.Tile.X, e.Tile.Y, map.Season);
@@ -357,7 +358,7 @@ namespace Game.Presentation.Map
                         NeighbourGround(tv, ground, detail);
                         break;
                     case TileKind.Road:
-                        ground.sprite = SpriteBank.Rendered("ground_road_" + tv.RoadLinks) ?? SpriteBank.Rendered("ground_road_3");
+                        ground.sprite = (tv.Paved ? SpriteBank.Rendered("ground_paved_" + tv.RoadLinks) : null) ?? SpriteBank.Rendered("ground_road_" + tv.RoadLinks) ?? SpriteBank.Rendered("ground_road_3");
                         ground.color = _tint;
                         detail.sprite = null;
                         break;

@@ -14,5 +14,8 @@
   {"label":"US-140","view":"farm","date":"2026-11-17","drawCalls":368,"batches":368,"setPassCalls":9,"triangles":7645,"visibleSprites":417,"sprites":1419},
   {"label":"US-141","view":"all","date":"2026-11-17","drawCalls":1092,"batches":1092,"setPassCalls":12,"triangles":19759,"visibleSprites":1272,"sprites":1477},
   {"label":"US-141","view":"village","date":"2026-11-17","drawCalls":609,"batches":609,"setPassCalls":10,"triangles":11368,"visibleSprites":709,"sprites":1477},
-  {"label":"US-141","view":"farm","date":"2026-11-17","drawCalls":392,"batches":392,"setPassCalls":9,"triangles":7996,"visibleSprites":448,"sprites":1477}
+  {"label":"US-141","view":"farm","date":"2026-11-17","drawCalls":392,"batches":392,"setPassCalls":9,"triangles":7996,"visibleSprites":448,"sprites":1477},
+  {"label":"US-146 road","view":"all","date":"2026-11-17","drawCalls":1038,"batches":1038,"setPassCalls":12,"triangles":17409,"visibleSprites":1216,"sprites":1472},
+  {"label":"US-146 road","view":"village","date":"2026-11-17","drawCalls":602,"batches":602,"setPassCalls":10,"triangles":10143,"visibleSprites":704,"sprites":1472},
+  {"label":"US-146 road","view":"farm","date":"2026-11-17","drawCalls":384,"batches":384,"setPassCalls":9,"triangles":6825,"visibleSprites":442,"sprites":1472}
 ]

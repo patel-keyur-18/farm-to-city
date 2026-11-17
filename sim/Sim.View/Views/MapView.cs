@@ -97,6 +97,9 @@ namespace Sim.View.Views
         /// <summary>A road acre's links to the road acres beside it: 1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1 (and off the map's edge).</summary>
         public int RoadLinks { get; internal set; }
 
+        /// <summary>The district road on the south edge is drawn paved once the link road is built (spec 023 §3.3); lanes stay dirt.</summary>
+        public bool Paved { get; internal set; }
+
         /// <summary>The place on a village tile (<c>house</c>, <c>temple</c>, …), else null (spec 010 §3.3).</summary>
         public string Place { get; internal set; }
 
@@ -297,6 +300,9 @@ namespace Sim.View.Views
     {
         public int Width { get; internal set; }
         public int Height { get; internal set; }
+
+        /// <summary>The paved link road is built: the district road's row (the last) is tar, here and past the map's edges (spec 023 §3.3).</summary>
+        public bool RoadPaved { get; internal set; }
         public List<TileVm> Tiles { get; } = new List<TileVm>();
         public List<SlotVm> Slots { get; } = new List<SlotVm>();
         public List<OrchardVm> Orchards { get; } = new List<OrchardVm>();
@@ -412,7 +418,7 @@ namespace Sim.View.Views
             var map = new MapVm
             {
                 Width = defs.Map.Width, Height = defs.Map.Height, SimTime = now,
-                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400,
+                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400, RoadPaved = Sim.Core.Town.RoadRules.IsBuilt(sim),
             };
 
             var places = new Dictionary<int, string>();
@@ -433,7 +439,7 @@ namespace Sim.View.Views
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
                 if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
                 if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map.Width, defs.Map.Height, t.ParcelId, !pdef.ForSale, map.Season);
-                if (vm.Kind == TileKind.Road) vm.RoadLinks = RoadLinks(land, defs.Map, t.Id);
+                if (vm.Kind == TileKind.Road) { vm.RoadLinks = RoadLinks(land, defs.Map, t.Id); vm.Paved = map.RoadPaved && vm.Y == defs.Map.Height - 1; }
                 if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
                 Crop crop = sim.State.Farm.CropOn(t.Id);

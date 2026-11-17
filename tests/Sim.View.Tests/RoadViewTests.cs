@@ -46,6 +46,7 @@ namespace Sim.View.Tests
             SheetVm vm = Hall(sim);
             LineVm[] rows = vm.Lines.Where(l => l.WhyKey == "road").ToArray();
             Assert.That(rows.Select(r => r.Label), Is.EqualTo(new[] { "Paved link road", "Households of yours", "The community share, a gift to the village", "The district builds it in", "The trader pays at your farm gate" }));
+            Assert.That(vm.Subtitle, Does.Contain("district builds roads"), "a village now, not a hamlet");
             Assert.That(rows[0].Value, Is.EqualTo("Not yet"));
             Assert.That(rows[1].Value, Is.EqualTo("3 of 10"));
             Assert.That(rows[3].Value, Is.EqualTo("4 days"));
@@ -130,6 +131,23 @@ namespace Sim.View.Tests
                 WhyVm price = WhyView.Build(ctx, "traderPrice", wheat);
                 Assert.That(string.Join(" ", price.Rows.Select(r => r.Label)), Does.Contain(state == 2 ? "paved" : "dirt track"), "the trader's price names the road");
             }
+        }
+
+        // The district road on the south edge is drawn paved once built; the lanes stay dirt.
+        [Test]
+        public void MapPaves()
+        {
+            Simulation sim = Village(12);
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Cash, 5_000_000), new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.Sales, -5_000_000));
+            Assert.That(MapView.Build(ViewKit2.Context(sim)).Tiles.Any(t => t.Paved), Is.False);
+            Ok(sim, new PetitionRoad(sim.State.Clock.SimTime));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 4 * 86400);
+            MapVm map = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(map.RoadPaved, Is.True);
+            var paved = map.Tiles.Where(t => t.Paved).ToList();
+            Assert.That(paved.Count, Is.EqualTo(map.Width), "the whole south row");
+            Assert.That(paved.All(t => t.Y == map.Height - 1 && t.Kind == TileKind.Road), Is.True);
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Road && t.Y < map.Height - 1).All(t => !t.Paved), Is.True, "the village lane stays dirt");
         }
     }
 }

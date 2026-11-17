@@ -961,7 +961,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-263 | Carried from Sprint 21 (the items below) | [F15.2](features/F15.2-taxes-and-policies.md) | 6 | Must | To do |
-| US-146 | Roads and highway: the paved link road | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | To do |
+| US-146 | Roads and highway: the paved link road | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | Built and Editor-checked (2026-11-17); the owner's review |
 | US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | To do |
 | US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | To do |
 | US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | To do |

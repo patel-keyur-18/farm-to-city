@@ -1741,15 +1741,18 @@ SPRITES.update(ICONS)
 # ---------------------------------------------------------------- the village and the valley (spec 010, ADR 0052, 0053)
 
 ROAD, ROAD_RUT, VERGE = 0xC9A574, 0xB08A5A, 0x7FA843
+ASPHALT, ASPHALT_EDGE, ROAD_LINE = 0x6E6E75, 0x58585F, 0xEFEBD8   # the paved link road (spec 023 §3.3): tar, its shoulder and the centre dashes
 LIME, LIME_SHADE = 0xF2EBDC, 0xD8CDB8
 SAFFRON = 0xE8892A
 
 
-def model_road(links):
-    """A road acre: a grass verge, a dirt road from the middle to each linked edge (1 = +x, 2 = -x, 4 = +y, 8 = -y), wheel ruts."""
+def model_road(links, paved=False):
+    """A road acre: a grass verge, a dirt road from the middle to each linked edge (1 = +x, 2 = -x, 4 = +y, 8 = -y), wheel ruts; paved: tar with a shoulder and dashed centre line."""
     o = ground_block("road", GRASS, GRASS_EDGE)
-    b = Batch("road")
+    b = Batch("paved" if paved else "road")
     dirt, rut = toon("road", ROAD), toon("rut", ROAD_RUT)
+    if paved:
+        dirt, rut = toon("asphalt", ASPHALT), toon("roadLine", ROAD_LINE)
     half = 0.5 + SEAM
     w = 0.40
     b.box(dirt, (w, w, 0.004), Matrix.Translation((0, 0, 0.003)))
@@ -1760,6 +1763,13 @@ def model_road(links):
         cx, cy = dx * length / 2, dy * length / 2
         size = (length, w, 0.004) if dx else (w, length, 0.004)
         b.box(dirt, size, Matrix.Translation((cx, cy, 0.003)))
+        if paved:
+            n = 3
+            for i in range(n):   # dashes along the middle of the lane
+                t = (i + 0.5) / n * length
+                ds = (0.11, 0.03, 0.002) if dx else (0.03, 0.11, 0.002)
+                b.box(rut, ds, Matrix.Translation((dx * t, dy * t, 0.0055)))
+            continue
         for k in (-0.09, 0.09):
             rs = (length, 0.035, 0.002) if dx else (0.035, length, 0.002)
             b.box(rut, rs, Matrix.Translation((cx + (0 if dx else k), cy + (k if dx else 0), 0.0055)))
@@ -1772,7 +1782,7 @@ def model_road(links):
 
 def model_flat(kind):
     """An edge tile past the map: a flat top with no sides, so it fades into the meadow behind it (spec 010 §3.6)."""
-    top = {"grass": GRASS, "water": WATER_TOP, "soil": SOIL_GROOVE, "earth": EARTH, "road": GRASS}[kind]
+    top = {"grass": GRASS, "water": WATER_TOP, "soil": SOIL_GROOVE, "earth": EARTH, "road": GRASS, "paved": GRASS}[kind]
     s = 1.0 + SEAM
     o = [box("flat" + kind, (s, s, 0.004), (0, 0, -0.002), toon("flat" + kind, top), outline=False)]
     if kind == "water":
@@ -1784,6 +1794,12 @@ def model_flat(kind):
     if kind == "soil":
         b = Batch("ridges")
         soil_ridges(b, top_z=0.0)
+        o += b.objects()
+    if kind == "paved":
+        b = Batch("flatPaved")
+        b.box(toon("asphalt", ASPHALT), (s, 0.40, 0.004), Matrix.Translation((0, 0, 0.001)))
+        for i in range(4):
+            b.box(toon("roadLine", ROAD_LINE), (0.11, 0.03, 0.002), Matrix.Translation((-0.375 + i * 0.25, 0, 0.0035)))
         o += b.objects()
     if kind == "road":
         b = Batch("flatRoad")
@@ -2023,7 +2039,9 @@ SPRITES["bund_x"] = lambda: model_bund("x")
 SPRITES["bund_y"] = lambda: model_bund("y")
 for _m in (3, 12, 11, 4, 8):
     SPRITES["ground_road_%d" % _m] = (lambda m=_m: (lambda: model_road(m)))()
-for _k in ("grass", "water", "soil", "earth", "road"):
+for _m in (3, 12, 11, 4, 8):
+    SPRITES["ground_paved_%d" % _m] = (lambda m=_m: (lambda: model_road(m, True)))()
+for _k in ("grass", "water", "soil", "earth", "road", "paved"):
     SPRITES["edge_" + _k] = (lambda k=_k: (lambda: model_flat(k)))()
 SPRITES.update({
     "ground_bank_0": lambda: model_bank(0), "ground_bank_1": lambda: model_bank(1), "ground_commons": model_commons,

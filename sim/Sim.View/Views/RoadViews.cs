@@ -27,6 +27,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             RoadState st = RoadRules.State(sim);
             RoadDef d = RoadRules.Def(sim);
+            vm.Subtitle = s.Get("road.hallLine"); // a village now: what the hall does
             vm.Lines.Add(LineVm.Header(s.Get("road.header")));
             vm.Lines.Add(new LineVm(s.Get("road.link"), s.Get(st.Status == RoadStatus.None ? "road.linkNone" : st.Status == RoadStatus.Building ? "road.linkBuilding" : "road.linkBuilt"), "road", Status));
             if (st.Status == RoadStatus.None)

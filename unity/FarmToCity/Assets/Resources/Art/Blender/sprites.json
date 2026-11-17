@@ -804,6 +804,13 @@
    "h": 332,
    "pivotX": 0.5,
    "pivotY": 0.50195,
+   "name": "edge_paved"
+  },
+  {
+   "w": 596,
+   "h": 332,
+   "pivotX": 0.5,
+   "pivotY": 0.50195,
    "name": "edge_road"
   },
   {
@@ -1015,6 +1022,41 @@
    "pivotX": 0.5,
    "pivotY": 0.64285,
    "name": "ground_grass"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_paved_11"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_paved_12"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_paved_3"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_paved_4"
+  },
+  {
+   "w": 596,
+   "h": 464,
+   "pivotX": 0.5,
+   "pivotY": 0.64285,
+   "name": "ground_paved_8"
   },
   {
    "w": 596,
