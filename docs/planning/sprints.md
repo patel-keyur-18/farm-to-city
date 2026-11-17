@@ -31,7 +31,7 @@
 | S19 | 10–30 May 2027 (up to 3 weeks, ADR 0101) | 2 | The Phase 2 playtest from a day-14 Hamlet town, tuning and the gate decision (F10.2); Phase 3's spec writing may start alongside (docs only). | 6 + fixes | Up to 2 (Phase 3) | Fixes only, if needed |
 | S20 | 31 May – 13 Jun 2027 (2 weeks, ADR 0107) | 3 | The Phase 3 plan (ADR 0107); specs 021 and 022 approved; rent realism (US-240), part-harvests for hands (US-241) and a mandi trip with several crops (US-252, owner request); the archetype bots (US-099); the Editor's rendering statistics and the first Development build's frame times and golden replays on the phone (US-101); save schema 18. | 22 | 021, 022 | Yes: Development build |
 | S21 | 14–27 Jun 2027 (2 weeks) | 3 | The treasury and the budget cycle, taxes and policies (F15.1, F15.2). | 26 | 023, 024 | Yes |
-| S22 | 28 Jun – 11 Jul 2027 (2 weeks) | 3 | The clinic, the link road, the Township unlock with the old village joining (US-148, US-146, US-103); zoning, land value and leasing land out (US-142, US-143, US-261); era-gate reachability (US-100). | 37 | 025, 026 | Yes |
+| S22 | 28 Jun – 11 Jul 2027 (2 weeks) | 3 | The clinic, the link road, the Township unlock with the old village joining (US-148, US-146, US-103); zoning, land value and leasing land out (US-142, US-143, US-261); era-gate reachability (US-100); the carried items (US-263). | 43 | 025 (026 in S23) | Yes |
 | S23 | 12–25 Jul 2027 (2 weeks) | 3 | Kutcha to pucca and the overlays (F15.8); utilities and construction with the brick kiln (F15.4, US-243); the map's ring (US-253), the cold store (US-242). | 39 | 027, 028 | Yes: frame time with the ring |
 | S24 | 26 Jul – 8 Aug 2027 (2 weeks) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); hill parcels and apples (US-147); the farm's Phase 3 promises: calves, silage and sheds, custom hiring, tube wells and solar pumps (US-254 to US-257, Should and Could). | 43 | 029 | Yes |
 | S25 | 9–22 Aug 2027 (2 weeks) | 3 | Invoices, managers, sell or expand, investors and buy-outs (F12.5, F12.6); the tuition centre, tempo and restaurant (F12.7); benefits and night shifts (US-258). | 39 | — | Yes |
@@ -939,11 +939,90 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 **Sprint end checklist**
 
 - [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
-- [ ] Specs 023 and 024 approved; their ADRs (0116 accepted; 0119 for spec 024 proposed, the owner reviews at the pull request)
+- [~] Spec 023 approved (ADR 0116); spec 024 still a draft: its eight gaps are closed one per message in Sprint 22 (ADR 0119 proposed)
 - [x] Save schema 19: migration, `saves/schema19` fixture, every older schema loads (an open-treasury fixture is a Sprint 22 task)
 - [x] Sheets and cards previewed to and approved by the owner before each story's code (the Policies sheet's artifact is the Editor's own captures, 2026-11-17)
 - [x] Balance: the 20% rule on 24 seeds (in the full run) and 200 seeds (1.13× net worth, 1.07× happiness, ADR 0112's numbers); the Village at 28–45 days (`GateTests`); the stress checks of spec 022 §9 that need no clinic (`TaxGateTests`); the rest carried to spec 023 §12
 - [x] Render statistics read for the three views and any growth over 10% reported (US-141: 1092 / 609 / 392, the village +10%)
 - [ ] Test checklist with device-only rows marked (done); Development build (done 2026-11-17, Xcode compile passed); both frame-time p95s and golden replays on the phone written down (the owner)
 - [x] `STATUS.md`, feature files and this file updated
+- [x] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merged it (PR #31, 2026-11-17)
+
+## Sprint 22 · 28 Jun – 11 Jul 2027 · Phase 3 (the Township: road, clinic, unlock and old village, civic buildings, era-gate reachability; then land value, zoning and leasing out; 2 weeks, ADR 0107)
+
+- **Status:** Started 2026-11-17 (Sprint 21 merged, PR #31). **Plan shown to the owner before any code and approved 2026-11-17** (size 43, order, cut line; my recommendations on spec 026 in Sprint 23 and on measuring the policy balance first stand).
+- **Branch:** `sprint/22-the-township`, from `main` after PR #31
+- **Goal:** The village can earn the Township (spec 023, ADR 0116): a paved link road on the player's petition, a clinic with its doctor, the gate with its progress sheet and letter, the old village joining as a cohort, the treasury opening on the real gate (the developer panel's *Next era* stays), and the watchman's post, hall and playground. Every service has reach, capacity and staff. Then land has a value you can explain, and the player can zone it, lease it out or sell it slowly (spec 024, once its gaps are closed). The carried items from Sprint 21 are closed. Save schema 20 ships once, with a fixture for every new part.
+- **Points:** 43 = US-103 5, US-146 5, US-148 8, US-100 3, US-142 8, US-143 5, US-261 3 (ADR 0107's 37) + **US-263 6** (new: the carried items below, ADR 0118 §18–20 and spec 023 §12)
+- **Specs for the owner to review:** spec 024's eight gaps (G1–G8) plus three new ones found while planning (below), one per message with a recommendation, **before any zoning, land value or leasing code**; spec 025 (utilities, construction, the ring, hills, the cold store) is written in this sprint for Sprint 23. Spec 026 (festivals, town life) waits for Sprint 23's start (one sprint before its code, ADR 0057), which keeps this sprint's review load to one new spec and spec 024's gaps. *The owner may say write both.*
+- **Device build:** Yes: a Development build (`docs/test-checklists/s22-township.md`; device-only rows: both frame-time p95s, golden replays, a 72 h catch-up with a Township open)
+- **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-263 | Carried from Sprint 21 (the items below) | [F15.2](features/F15.2-taxes-and-policies.md) | 6 | Must | To do |
+| US-146 | Roads and highway: the paved link road | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | To do |
+| US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | To do |
+| US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | To do |
+| US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | To do |
+| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | Blocked on spec 024's gaps |
+| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | Blocked on spec 024's gaps |
+| US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | Blocked on spec 024's gaps |
+
+**US-263, the carried items (6 points; each is also ticked in its own story's tasks):**
+
+| # | Item | Where it lands |
+| --- | --- | --- |
+| 1 | A schema-19 save fixture with an **open treasury, policies enacted and owed tax**, added **before** schema 20 is begun, so the 19 → 20 migration is tested on a real open treasury (`MigrationTests.Schema19_OpenTreasury`) | the first commit of the sprint |
+| 2 | **Owed tax in net worth**: a field in the report's net-worth snapshot (schema 20) and the net-worth row | with US-103 (schema 20's first write) |
+| 3 | **Health and tenant-happiness hooks**: tenants feel Health and Education through their *Healthcare* and *School* rows (spec 022 §3.3.2); **the doctor leaves at `healthLeaveBelow`** | with the clinic (US-148 T1, T2, T4) |
+| 4 | **`TaxTests.Burden`**: the old village's tax comes from leisure and savings before food | with the cohort (US-103 T3) |
+| 5 | **A planner note for a paused policy**, and **a *Why?* that names the minimum wage** wherever a wage is asked | with the civic buildings (US-148 T3, the planner's notes) |
+| 6 | **Builders' houses billed to their owner, not you**: `TaxRules.YourHouseBill` gets an owner check (a building's `Owner`, schema 20) | with zoning (US-142) |
+| 7 | **`TaxGateTests`: every tax at 0** (services decay, happiness at least 5 lower within 8 seasons, never stuck), **every tax at the cap**, and **the 200-seed hands-off Township** with every service at 100% on default rates and no policy (the full run, in the background, no content edits while it runs) | with US-100 |
+| 8 | **The policy-affordability balance** (decided with the owner, see "Decisions I need" below) | with US-100's measurements |
+
+**Order of work** (one stop for the owner's review after each story and each spec; every sheet previewed as an artifact that looks exactly like the game before its UI code):
+
+1. **Branch and fixture:** item 1 above; the schema-19 fixture is committed before any schema change.
+2. **Preview 1 (spec 023 §7):** the map with the clinic, quarters and the three civic plots and the paved road; the owner fixes the plots (ADR 0064) before any code.
+3. **US-146** the link road (`RoadState`, `PetitionRoad`, the share as a gift, 4 days, the tier and every price's *Why?*, the season page's line, the council hall's row and card). Schema 20 begins here.
+4. **US-148, part 1: the clinic** (`ClinicState`, the clinic and quarters, the doctor, the five effects, the coverage rule for the school and the clinic, appointments, the doctor leaving and returning; items 3).
+5. **US-103** the gate, the *Becoming a Township* sheet, the letter, the unlock in its order (treasury, cohort, takeover), the cohort and the Town sheet's row, `TaxTests.Burden`, owed tax in net worth (items 2, 4); the `schema20` fixture.
+6. **US-148, part 2: the civic buildings** (watchman's post, hall, playground, *Safety*, the budget guard on the commission card, appointments), the planner note and the minimum-wage *Why?* (item 5).
+7. **US-100** `TownshipBot` and its saver, `GateTests.Township` (competent day 63–77, saver about 100–110, never stuck), `TaxGateTests` (item 7), `TownshipSolvent`, the exploit checks, **the policy-affordability numbers** (item 8). **The Township's pace is measured here, before spec 024's code**: a slip past the target comes to the owner with its numbers (ADR 0110 §8).
+8. **Spec 024's gaps** are closed one per message *in parallel with steps 3–7* (so the owner is never waiting on me); the three stories start only when all are closed: **US-143** land value (rent's place, the house tax's base, land price), **US-142** zoning and builders (item 6), **US-261** leasing out.
+9. **Spec 025** written for the owner's review.
+10. **Balance** (the 20% rule on 24 seeds and 200 seeds, the Village still 28–45 days, the Township's pace), **the checklist in the Editor by scripted touch**, render statistics at the most crowded views, Editor saves backed up before and restored and diffed after, **Development build**, **an independent Opus 5.5 high-effort review** (what it reviewed, found and fixed, written in the pull request), ADRs 0120+ (the Township as built; spec 024's decisions as closed), `STATUS.md`, feature files, this file, the pull request.
+
+**If it runs over,** cut in this order: US-261 (Should), then spec 024 §11's (the commercial zone's shops, builders' pucca, the slow sale's cancel), then spec 023 §11's (the soft reach ring on the map, the old-village *Why?* rows beyond happiness, the playground, the road's season-page line), then the second half of US-143 (the house tax's base on land value, kept as the kind's value). **Never cut:** the gate, the unlock, the doctor's rules, the coverage rule, a hands-off town that works, the carried items 1, 2, 7, every number's *Why?*. US-142 and US-143 may slide to Sprint 23 *as a pair* if the owner would rather spend this sprint on the Township alone (Sprint 23 is 39 points already, so that would move a Should out of it).
+
+**Decisions I need from the owner** (details in the reply that showed this plan):
+
+1. Approve the sprint's size (43), the order and the cut line.
+2. Spec 024's gaps, one per message: G1–G8 of spec 024 §10, plus **G9** land value starts with the Township (so Phases 1–2's prices, the Village's pace and the goldens are untouched), **G10** AC-7 (*a town left alone grows on the ring*) cannot pass before the ring (US-253, Sprint 23): until then builders buy the neighbours' acres on the current map and the ring joins in Sprint 23, **G11** "water" for a builder before spec 025's tower: a well within 300 m, any tower once it exists.
+3. The map preview's plots (step 2).
+4. The policy-affordability balance (item 8): my recommendation is to measure first and decide with numbers at step 7.
+5. Spec 026 now or in Sprint 23.
+
+**Carried risks:** the Township's pace (day 63–77) after the lower rents (ADR 0110 §8) is measured in step 7, with the road and clinic built for real; the 200-seed hands-off run takes about 15 minutes (the full `Sim.Core` suite likewise), run in the background; the ring's frame cost is Sprint 23's.
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story checked against specs 023 and 024, ADRs 0107, 0116, 0118, 0119 and the code at `main` (00474ac)
+- [x] Spec 023 approved (ADR 0116)
+- [ ] Spec 024's gaps closed (G1–G11) before US-143, US-142, US-261
+- [x] This section approved by the owner (2026-11-17)
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [ ] Spec 024 approved and ADR 0119 accepted (or superseded by the as-built ADR)
+- [ ] Save schema 20: migration, `schema19` open-treasury fixture, `schema20` fixture (clinic, road, cohort, posts, gate, owed tax, zones, leases, owners), every older schema loads
+- [ ] Sheets and cards previewed to and approved by the owner before each story's code
+- [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, `TownshipSolvent`, the tax extremes, the 200-seed hands-off Township, contradictions flagged
+- [ ] Render statistics read for each visible story and any growth over 10% reported
+- [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down (the owner)
+- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request
+- [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it
