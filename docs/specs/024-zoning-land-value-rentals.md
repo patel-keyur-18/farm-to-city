@@ -1,6 +1,6 @@
 # 024. Zoning, land value, rentals, upgrades and overlays
 
-- Status: Draft (2026-11-17). The eight gaps below carry **recommendations**; they were not yet closed one per message with the owner (the owner asked for the sprint to be finished in one go and will review at the pull request). Nothing here is coded until the owner approves; every sheet is previewed as an artifact that looks exactly like the game before any UI code.
+- Status: Approved by the owner (2026-11-17): G1–G11 closed one per message, each with a recommendation; ADR 0119 (accepted). Every sheet is previewed as an artifact that looks exactly like the game before any UI code.
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Land and soil, Community and civic services, Governance and public finance, Economy (rent, land and property)
@@ -42,26 +42,26 @@ An acre's **land value multiplier** `LV` starts at **1.00** and adds, each from 
 | Smoke | within the diesel generator's reach: −0.10 | −0.10 to 0 |
 | Crime | from spec 027, −0.15 at the worst; 0 until it exists | −0.15 to 0 |
 
-`LV` is held between **0.80 and 1.80** and re-read once a season at the close, so it never jumps while the player is looking.
+`LV` is held between **0.80 and 1.80** and re-read once a season at the close, so it never jumps while the player is looking. **It exists from the Township on (G9):** before it, price, rent and tax are exactly as Phases 1–2 built them, so the Village's pace and the golden hashes are untouched. **Water** (G11) is the village pond, any well, or (from Sprint 23) a water tower within 300 m; pumps and borewells don't count (they irrigate fields). One rule serves land value and builders.
 **Land value in coins** = `ParcelPrice` (spec 002: soil, drainage, fertility, location) × `LV`. Rounding: whole coins, once.
 
 ### 3.2 Rent and tax follow land value (G1, G8)
 
 - **Rent's place** from the Township is `0.85 + 0.35 × (LV − 1.00) ÷ 0.20`, between **0.85 and 1.50** (an inner acre 0.85; the district road with a school and a clinic about 1.50). It replaces ADR 0110's three constants; a lease still renews at the lower of the market, the 10% cap (or rent control's 3%) and what 30% of the family's income allows, so a rise never pushes a family out.
-- **House tax's base** (spec 022 §3.1) becomes the house's value × `LV` (its kind's value until the Township), and the 15%-of-rent guard still holds at every rate.
+- **House tax's base** (spec 022 §3.1, G8) becomes the house's value at today's prices × `LV` of its acre (its kind's value until the Township), and the 15%-of-rent guard still holds at every rate. The bill moves only at the close (`LV` is read then; rates apply from the next close). Your own home is taxed as a kutcha house at its acre's `LV`; huts stay exempt; builders' houses are billed to the builder (below).
 
 ### 3.3 Zoning and builders (G2, G3)
 
 - **Zone** an acre you own: *Residential*, *Commercial* or *Agricultural* (the default; it stays farmland). **Un-zone** any time before it is sold.
-- **Residential:** builders buy a zoned acre at its land value when **households want homes**: at least one family waiting (a migrant or a growing family with no empty house) and the acre has road access and water. At most **1 acre a season** is bought across the whole town; the closer to the square, the earlier (value order, then id). The acre leaves your land and you receive its land value; the builder builds **2 homes** (kutcha, or pucca when §3.7's thresholds hold). A builder's house is the builder's: you receive no rent, and its house tax is the builder's to pay (spec 022's owner pays; `TaxRules.YourHouseBill` must bill only houses whose owner is you before builders exist). Builders weigh the house tax and rent control when they decide to build: rent control multiplies the builders' pace by 0.7 (spec 022 §3.5), and a tax above the default slows it in proportion.
+- **Residential:** builders buy a zoned acre at its land value when **households want homes** (G2). The sim keeps a **turned-away counter**: when the hourly migration draw (spec 014) finds no free family house, one family is turned away. The draw runs from the Township even if you have built no house. An acre holds 2 homes, so a purchase needs **2 turned-away families** and uses them up; the sheet says "2 families found no home this season". The acre must have road access and water (§3.1). At most **1 acre a season** is bought across the whole town; the closer to the square, the earlier (value order, then id). The acre leaves your land and you receive its land value; the builder builds **2 homes** (kutcha, or pucca when §3.7's thresholds hold). A builder's house is the builder's and its families are **residents** of the town (grants, shop demand, happiness) but **not "your households"** (they do not count for the Village's or the Township's gates and pay their rent to the builder): you receive no rent, and its house tax is the builder's to pay (spec 022's owner pays; `TaxRules.YourHouseBill` must bill only houses whose owner is you before builders exist). Builders weigh the house tax and rent control when they decide to build: rent control multiplies the builders' pace by 0.7 (spec 022 §3.5), and a tax above the default slows it in proportion.
 - **Commercial:** an acre zoned commercial gives a newcomer's shop (spec 017) a pitch there; a shop opens by spec 017's rules (a gap or rich prices), run by a townsperson. The acre stays yours; the shop pays the acre's rent (its land value × `leaseYield` of §3.6) to you.
-- **The ring** (spec 023/025): builders buy the ring's unowned land from its owner at land value on the same pace (counted inside the 1 acre a season), so a town you never zone still grows, slowly.
-- **Permit fee:** each build pays the treasury `permitFee` **2%** of the acre's land value (income *Permits*, spec 021's intake), so growth funds the town.
+- **The pool of acres a town left alone grows on (G10).** Until the ring exists (US-253, Sprint 23), builders buy **neighbours' acres that are for sale**, touching the district road or the village lane and working outward from the square (never road acres, never not-for-sale ones); the money goes to the neighbour, not to you. The ring's unowned land joins the same pool in Sprint 23 with no rule change. All of it is inside the one acre a season. The builders' clusters are previewed on the map first (ADR 0064).
+- **Permit fee** (G3): each build pays the treasury `permitFee` **2%** of the acre's land value (income *Permits*, spec 021's intake). It is small (about 2,400–3,200 a season, about 4% of the treasury's income) and comes from outside the town like the district's grants; what a new household brings is its grants and tax every season, and the *Why?* says so.
 - **A town left alone works:** nothing needs zoning; the ring alone adds a family house every few seasons; unzoned land is farmed or left as it is.
 
 ### 3.4 Selling land, quick or slow (G4)
 
-`SellParcel` keeps spec 002's quick sale (80% of the price, now). Added: **Sell slowly** lists the acre for `slowSaleSeconds` (**2 days**) at **100% of its land value**; it can be taken off the market before it sells, and a slow sale never sells a protected parcel or one with a crop, tree or building (spec 002's refusals). The card shows both with the difference in coins.
+`SellParcel` keeps spec 002's quick sale (80% of the price, now). Added: **Sell slowly** lists the acre for `slowSaleSeconds` (**2 days**) at **100% of its land value**; it can be taken off the market before it sells, and a slow sale never sells a protected parcel or one with a crop, tree or building (spec 002's refusals). The card shows both with the difference in coins. Decided (G4): the quick sale is 80% × land value from the Township (before it, as spec 002); the slow sale exists from the Township only. **The price is the land value at listing**, so the card's figure is what you get. **A listed acre is locked** (no sowing, zoning, leasing, building or second listing); cancelling unlocks it. Loan-secured, leased and stranding acres are refused with a named reason, as the quick sale. The land-flipper stress bot gains a slow-sale variant and must stay within ADR 0016's 20%.
 
 ### 3.5 Land's price follows the town (G1)
 
@@ -69,8 +69,8 @@ A parcel's price (what you pay) is spec 002's price × `LV`, so land near a grow
 
 ### 3.6 Leasing land out (US-261, G5)
 
-- `LeaseOutLand(parcel)`: an acre you own, empty of crops, trees and buildings, is leased to a neighbour farmer for **one season**, renewing each season until you **End lease** (it ends at the next close).
-- **Rent** = land value × `leaseYield` **2.5%** a season (about 3,000 for an average acre), paid upfront at the close into your cash (account *Rent received: land*, passive income, spec 019). It sits between a hired acre's net (2,000–5,000) and an owner-operated acre's (8,000–15,000): leasing is the safe, small choice.
+- `LeaseOutLand(parcel)` (from the Township): an acre you own, empty of crops, trees, buildings and standing orders and not a pump or borewell source, is leased to a neighbour farmer for **one season**, renewing each season until you **End lease**. **Tapping *Lease out* locks the acre at once and the lease starts at the next close** (G5), when the first rent arrives; *End lease* also ends at the next close. The card names a refusal ("take the order off first"; orders are never removed silently, ADR 0039). The tenant is no person in the sim: **the soil stays as it was** (fertility neither used up nor built up, as land you don't own, ADR 0030).
+- **Rent** = land value × `leaseYield` **2.5%** a season (about 3,000 for an average acre; the owner kept the spec's 2.5% over my 2.0%, which would have kept it under an average hired acre's net of about 2,600), paid upfront at the close into your cash (account *Rent received: land*, passive income outside farm profit, spec 019, so the Hamlet and Village gates are unaffected). If the bots show leasing beating hiring, the value is tuned (ADR 0027) after telling the owner. It sits between a hired acre's net (2,000–5,000) and an owner-operated acre's (8,000–15,000): leasing is the safe, small choice.
 - While leased the acre can't be farmed, built on, zoned or sold; the inherited acres can be leased, never sold (spec 002).
 
 ### 3.7 Upgrades (US-152, G6)
@@ -78,13 +78,13 @@ A parcel's price (what you pay) is spec 002's price × `LV`, so land near a grow
 | Upgrade | Cost | When it is offered |
 | --- | --- | --- |
 | Hand's hut → kutcha house | the difference in value (**45,000**) | the hut's household is a family and a family house is allowed (spec 014) |
-| Kutcha → pucca house | the difference (**1,80,000** of the pucca house's 2,40,000) | `LV` ≥ **1.15**, water, and the household's income allows the pucca rent: rent 7,000 ≤ 30% of its income |
+| Kutcha → pucca house | the difference (**1,80,000** of the pucca house's 2,40,000) | `LV` ≥ **1.15**, water (§3.1), and the household's income allows the pucca rent: the rent (7,000 × the rent's place, as kutcha's 2,500) ≤ 30% of its income |
 
-A builder upgrades its own houses by the same thresholds, by itself. Yours is a tap card (spec 008): cost, the new rent at the lease's next renewal, who pays. The tenant's rent moves at the renewal (spec 014 §3.14), never at once.
+(G6) The upgrade takes 48 h and the family stays; the card shows the cost, the new rent at the renewal and "pays back in about 48 seasons" (a slow, low-yield choice, said plainly); there is no extra pucca benefit now. A builder upgrades its own houses by the same thresholds, by itself: that is how the town's houses become pucca. Yours is a tap card (spec 008): cost, the new rent at the lease's next renewal, who pays. The tenant's rent moves at the renewal (spec 014 §3.14), never at once.
 
 ### 3.8 Overlays (US-153, G7)
 
-A button on the map opens one overlay at a time: **fertility**, **land value**, **coverage** (school, clinic, watchman, water; the generator's smoke in red), **happiness**, **crime** (a grey "no crime yet" until spec 027). Each is a five-step colour scale from cool to warm with a key; a tap on an acre shows its number and its *Why?* (the parts of §3.1). An overlay changes nothing and costs no time; it closes with the button.
+A button on the map opens one overlay at a time: **fertility**, **land value**, **coverage** (school, clinic, watchman, water; the generator's smoke in red), **happiness**, **crime** (a grey "no crime yet" until spec 027). Decided (G7): the button appears from the Township; each overlay is **one hue in five light-to-dark steps** (not blue-to-red, for colour-blind players) with the numbers on the key; coverage shows how many services reach the acre (0–4) with the generator's smoke hatched red; happiness tints only acres with a household of yours (the key says "no household"). **With an overlay open a tap opens a small card** (the acre's number, its *Why?* in words, **Open the acre**), not the acre's sheet. An overlay changes nothing and costs no time; it closes with the button.
 
 ### 3.9 Processing order
 
@@ -114,6 +114,8 @@ At each season close, after the treasury (spec 021 §3.10): re-read `LV` for eve
 | `zoning.permitFee` | 0.02 | 0–0.1 | treasury income |
 | `sale.slowSeconds`, `sale.quickFactor` | 2 days, 0.80 | | spec 002 |
 | `lease.yield` | 0.025 | 0–0.1 | a season |
+| `landValue.waterReach` | 300 m | 100–500 | the pond, any well, a tower |
+| `zoning.familiesPerAcre` | 2 | 1–4 | turned-away families a purchase uses |
 | `upgrade.hutToKutcha`, `kutchaToPucca` | 45,000, 1,80,000 | | |
 | `upgrade.puccaMinLandValue`, `puccaRent` | 1.15, 7,000 | | |
 | `buildings.json` `pucca_house` | 2,40,000, life 120 seasons | | spec 025 prices its materials |
@@ -160,10 +162,10 @@ Previewed as artifacts that look exactly like the game before any UI code: the *
 | AC-1 | An acre's `LV` is 1.00 plus each part of §3.1, held between 0.80 and 1.80, read once a season | `LandValueTests.Parts`, `LandValueTests.Bounds` |
 | AC-2 | Rent's place follows `LV` between 0.85 and 1.50; a lease's rise is still capped and never pushes a family out | `LandValueTests.RentPlace`, `LeaseTests` (spec 014) |
 | AC-3 | The house tax's base follows `LV` and never passes 15% of the rent | `TaxTests.HouseTax_Guard` (extended) |
-| AC-4 | A residential acre sells to a builder at its land value when a family waits, road and water present; at most one acre a season; the builder's 2 homes are the builder's | `ZoningTests.BuilderBuys`, `ZoningTests.Pace` |
+| AC-4 | A residential acre sells to a builder at its land value when 2 families were turned away, road and water present; at most one acre a season; the builder's 2 homes are the builder's | `ZoningTests.BuilderBuys`, `ZoningTests.Pace` |
 | AC-5 | A commercial acre gives a newcomer's shop a pitch and pays you its rent | `ZoningTests.Commercial` |
 | AC-6 | The permit fee is 2% of land value into the treasury | `ZoningTests.PermitFee` |
-| AC-7 | A town with no zoning still grows on the ring, slowly; nothing breaks | `ZoningTests.LeftAlone` |
+| AC-7 | A town with no zoning still grows by builders buying neighbours' for-sale road acres (the ring's land too from Sprint 23), slowly; nothing breaks | `ZoningTests.LeftAlone` |
 | AC-8 | A quick sale pays 80%; a slow sale pays 100% after 2 days and can be cancelled | `SaleTests.Slow`, `SaleTests.Cancel` |
 | AC-9 | Leasing out pays upfront at the close, blocks farming, building and selling, and ends at the next close | `LeaseOutTests.*` |
 | AC-10 | Upgrades are offered only past the thresholds; the rent moves at the renewal | `UpgradeTests.*` |
@@ -182,16 +184,19 @@ Previewed as artifacts that look exactly like the game before any UI code: the *
 | A town left alone | grows on the ring; solvent | 200 seeds to year 8 |
 | The Township's pace | unchanged (zoning starts after the unlock) | |
 
-## 10. Open questions and clarifications (recommendations to the owner)
+## 10. Open questions and clarifications
 
-1. **G1. Land value.** *Recommended:* the parts and weights of §3.1; rent's place and the house tax follow. *Why:* the one idea "what is near it makes it worth more" explains rent, tax, price and overlays, all from one number.
-2. **G2. Builders' demand.** *Recommended:* one acre a season while a family waits, road and water present. *Why:* the town grows by itself, never floods the map, and the owner is never forced.
-3. **G3. Permit fee.** *Recommended:* 2% of land value to the treasury. *Why:* growth pays for the town without a new tax.
-4. **G4. Selling.** *Recommended:* quick 80% now, or slow 100% in 2 days, cancellable. *Why:* teaches that liquidity costs; spec 002 promised it.
-5. **G5. Leasing out.** *Recommended:* 2.5% of land value a season, upfront, one season at a time. *Why:* a safe small passive income that is never the best use of land.
-6. **G6. Pucca thresholds.** *Recommended:* `LV` ≥ 1.15, water, rent ≤ 30% of the household's income; yours for the difference. *Why:* a better house is for the families who can afford it, never a push on a family that cannot.
-7. **G7. Overlays.** *Recommended:* five, one at a time, five-step scales, a tap shows the number and its *Why?*. *Why:* the hidden numbers become visible without a table.
-8. **G8. House tax's base.** *Recommended:* house value × `LV`, still capped at 15% of rent. *Why:* the spec 022 promise ("by land value once it exists"), with the owner's rule kept.
+All eleven gaps were closed with the owner one per message on 2026-11-17, each with a recommendation (ADR 0119):
+- **G1** land value (§3.1, rent's place, the house tax's base, land price); **G9** land value exists from the Township on.
+- **G2** builders' demand: a turned-away counter, 2 families an acre, builders' families are residents but not your households.
+- **G3** the permit fee: 2%, small by design.
+- **G4** selling: quick 80% now or slow 100% in 2 days, the price fixed at listing, a listed acre locked.
+- **G5** leasing out: **2.5%** (the owner kept the spec's value), starts at the next close, soil untouched.
+- **G6** pucca: thresholds as written, base rent × the place, 48 h, an honest payback line.
+- **G7** overlays: one hue five steps, a tap card, from the Township.
+- **G8** the house tax follows land value, capped at 15% of rent.
+- **G10** until the ring, builders buy neighbours' for-sale acres by the road, outward from the square.
+- **G11** water: the pond, any well or a tower within 300 m.
 
 ## 11. Cut first
 

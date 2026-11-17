@@ -1,4 +1,4 @@
-# 0119. Spec 024: zoning, land value, rentals, upgrades and overlays (recommendations)
+# 0119. Spec 024: zoning, land value, rentals, upgrades and overlays
 
 - Status: Proposed (2026-11-17). The owner reviews spec 024 at the Sprint 21 pull request; the gaps were not closed one per message because the sprint was finished in one go at the owner's request.
 - Date: 2026-11-17
@@ -24,3 +24,15 @@ ADR 0107 §3, §8 and §13 fixed the scope of zoning, land value, rents by land 
 - Spec 023's reach (1,500 / 2,000 m) is reused for land value's services, so one set of reaches serves coverage and value.
 - ADR 0028's land payback is re-measured by the bots once land value moves prices; a slip past the 8–15 seasons target comes to the owner.
 - Nothing is coded; the sheets are previewed first.
+
+## Decisions added when the gaps were closed (2026-11-17)
+
+8. **Land value exists from the Township on** (G9): Phases 1–2's prices, rents, the Village's pace and the golden hashes are untouched.
+9. **Builders' demand is a turned-away counter** (G2, G10): the hourly migration draw counts a family when no free house exists, from the Township; a purchase needs 2 families (an acre holds 2 homes) and uses them up; one acre a season. Builders' families are residents (grants, shops, happiness) but not "your households" (the gates). Before the ring they buy neighbours' for-sale acres touching the road or lane, outward from the square.
+10. **The permit fee is 2%**, small by design (about 4% of the treasury's income); a household's grants and tax are the real growth income (G3).
+11. **A slow sale is priced at listing and locks the acre** (G4); quick 80% × land value from the Township.
+12. **Leasing out starts at the next close**, pays 2.5% (the spec's value; recommended 2.0%, kept by the owner), the soil stays as it was, orders are never removed silently, the rent is passive income outside farm profit (G5).
+13. **Pucca upgrade**: thresholds as written, base rent × the place, 48 h with the family in, an honest payback line, no extra benefit now (G6).
+14. **Overlays**: one hue in five steps for colour-blind players, a tap card, from the Township, view-only (G7).
+15. **The house tax** is value at today's prices × land value, billed at the close, capped at 15% of rent (G8).
+16. **Water** is the pond, any well or a tower within 300 m, for builders and land value alike (G11).

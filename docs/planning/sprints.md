@@ -965,9 +965,9 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | To do |
 | US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | To do |
 | US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | To do |
-| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | Blocked on spec 024's gaps |
-| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | Blocked on spec 024's gaps |
-| US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | Blocked on spec 024's gaps |
+| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | To do (spec 024 approved) |
+| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | To do (spec 024 approved) |
+| US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | To do (spec 024 approved) |
 
 **US-263, the carried items (6 points; each is also ticked in its own story's tasks):**
 
@@ -1011,13 +1011,13 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 - [x] Every story checked against specs 023 and 024, ADRs 0107, 0116, 0118, 0119 and the code at `main` (00474ac)
 - [x] Spec 023 approved (ADR 0116)
-- [ ] Spec 024's gaps closed (G1–G11) before US-143, US-142, US-261
+- [x] Spec 024's gaps closed (G1–G11, owner, 2026-11-17, ADR 0119 accepted) before US-143, US-142, US-261
 - [x] This section approved by the owner (2026-11-17)
 
 **Sprint end checklist**
 
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
-- [ ] Spec 024 approved and ADR 0119 accepted (or superseded by the as-built ADR)
+- [x] Spec 024 approved and ADR 0119 accepted (2026-11-17)
 - [ ] Save schema 20: migration, `schema19` open-treasury fixture, `schema20` fixture (clinic, road, cohort, posts, gate, owed tax, zones, leases, owners), every older schema loads
 - [ ] Sheets and cards previewed to and approved by the owner before each story's code
 - [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, `TownshipSolvent`, the tax extremes, the 200-seed hands-off Township, contradictions flagged
