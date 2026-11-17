@@ -581,6 +581,7 @@ namespace Sim.View.Views
                         break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
+                    case RoadBuilt _: rows.Add(Row(s.Get("away.town"), s.Get("away.roadBuilt"), "place_council_hall")); break; // spec 023 §3.3
                     case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
                     case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
                     case PolicyPaused pp: rows.Add(Row(s.Get("away.town"), s.Get("away.policyPaused", "policy", PolicySheet.Name(ctx, pp.Policy)), "place_council_hall")); break;
@@ -670,6 +671,8 @@ namespace Sim.View.Views
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
             { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            // Spec 023 (the Township).
+            { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },

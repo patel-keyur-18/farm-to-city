@@ -82,6 +82,7 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, "why.traderPrice.title", Price(ctx, MarketRules.Floor(sim, g)), "good", ctx.Strings.Get(sim.Config.Game.Market.Goods[g].NameKey));
             Regional(ctx, vm, g);
             Row(vm, ctx, "why.price.transport", "−" + Price(ctx, MarketRules.TransportCost(sim, g)));
+            RoadNote(ctx, vm); // spec 023 §3.3: every trader price names the road
             vm.Footnote = ctx.Strings.Get("why.traderPrice.lesson");
             return vm;
         }
@@ -94,6 +95,7 @@ namespace Sim.View.Views
             Regional(ctx, vm, g);
             Row(vm, ctx, "why.marketPrice.floor", Price(ctx, MarketRules.Floor(sim, g)));
             Row(vm, ctx, "why.marketPrice.ceiling", Price(ctx, MarketRules.Ceiling(sim, g)));
+            RoadNote(ctx, vm);
             long town = Sim.Core.People.HouseholdRules.TownDemandPerDay(sim, g);
             if (town > 0) Row(vm, ctx, "why.marketPrice.town", ctx.Fmt.Kg(town)); // spec 014 §3.7: your people buy here too
             Text(vm, ctx, sim.State.Market.OnOffer(g) > 0 ? "why.marketPrice.offered" : "why.marketPrice.demand");

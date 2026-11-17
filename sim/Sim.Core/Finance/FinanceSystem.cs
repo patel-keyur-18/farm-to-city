@@ -93,6 +93,7 @@ namespace Sim.Core.Finance
             sim.State.Finance.LastSeasonStartEntry = sim.State.Finance.SeasonStartEntry; // spec 019 §3.9: your season starts here
             sim.State.Finance.SeasonStartEntry = ledger.NextEntryId;
             sim.State.Finance.Sales.Roll();
+            Town.RoadRules.RollSeason(sim);
             Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
 
             // Settle and pay upfront (these entries belong to the new season).

@@ -219,7 +219,7 @@ namespace Sim.Core.Market
                 sim.State.Finance.Sales.Add(sim, g, Finance.SoldTo.Market, local);
                 sim.State.Finance.Sales.Add(sim, g, Finance.SoldTo.Trader, trader);
                 sim.Emit(new Events.MarketSales(sim.State.Clock.SimTime, defs.Goods[g].Id, r.Sold, r.Price, r.ToTrader, floor, amount));
-                if (r.ToTrader > 0) Store.CountTraderPurchase(sim, g, r.ToTrader);
+                if (r.ToTrader > 0) { Town.RoadRules.Earn(sim, g, r.ToTrader); Store.CountTraderPurchase(sim, g, r.ToTrader); }
             }
             m.UnmetHead = (m.UnmetHead + 1) % defs.Market.UnmetWindowHours;
             m.Hours++;

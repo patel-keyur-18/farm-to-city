@@ -228,6 +228,8 @@ namespace Sim.View.Views
             }
             Block(s.Get("season.earned"), season.EarnedTotal, season.Earned, EarnedBlock, false);
             if (season.Earned.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingEarned"), null));
+            if (Sim.Core.Town.RoadRules.IsBuilt(sim)) // spec 023 §3.3: of what the trader paid, what the paved road added (inside the figures above, not on top)
+                vm.Lines.Add(new LineVm(s.Get("season.roadEarned"), ctx.Fmt.Coins(last ? Sim.Core.Town.RoadRules.State(sim).EarnedLast : Sim.Core.Town.RoadRules.State(sim).EarnedThis), "road", RoadSheet.Earned) { Icon = "place_council_hall" });
             Block(s.Get("season.spent"), season.SpentTotal, season.Spent, SpentBlock, false);
             if (season.Spent.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingSpent"), null));
             vm.Lines.Add(LineVm.Header(s.Get(last ? "season.profitLast" : "season.profit")));

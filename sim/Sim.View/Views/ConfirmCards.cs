@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(CommissionWorks), typeof(EnactPolicy));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(CommissionWorks), typeof(PetitionRoad), typeof(EnactPolicy));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -132,6 +132,7 @@ namespace Sim.View.Views
             else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
             else if (c is CommissionWorks) Works(ctx, vm, sim, after);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
+            else if (c is PetitionRoad) Road(ctx, vm, cash, taken, after, newest);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + ".warn", "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
@@ -165,6 +166,26 @@ namespace Sim.View.Views
                     if (first > 0) vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.firstPayment"), ctx.Fmt.Coins(first)));
                 }
             }
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>The petition for the road (spec 023 §3.3): your cash now, the share, any loan, the days it takes, your cash after; the road is not yours and the share is not repaid.</summary>
+        private static void Road(ViewContext ctx, ConfirmCardVm vm, long cash, long taken, Simulation after, Loan newest)
+        {
+            var s = ctx.Strings;
+            long pay = System.Math.Max(0, -cash);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.PetitionRoad.now"), ctx.Fmt.Coins(after.State.Ledger.Cash + pay)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.PetitionRoad.share"), "− " + ctx.Fmt.Coins(pay + taken)));
+            if (taken > 0)
+            {
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.loan"), ctx.Fmt.Coins(taken)));
+                if (newest != null)
+                {
+                    long first = CreditRules.NextPayment(after, newest, out _, out _);
+                    if (first > 0) vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.firstPayment"), ctx.Fmt.Coins(first)));
+                }
+            }
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.PetitionRoad.days"), s.Plural("road.daysValue", Sim.Core.Town.RoadRules.Def(after).Days)));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
         }
 

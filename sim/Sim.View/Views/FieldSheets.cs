@@ -166,6 +166,7 @@ namespace Sim.View.Views
             if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
             if (kind == "dairy") Dairy(ctx, vm);
             if (kind == "school_plot") SchoolSheet.Fill(ctx, vm); // spec 018 §7
+            if (kind == "council_hall") RoadSheet.Fill(ctx, vm); // spec 023 §3.3
             if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
             return vm;
         }

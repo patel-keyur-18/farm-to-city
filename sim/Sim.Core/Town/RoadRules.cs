@@ -65,6 +65,28 @@ namespace Sim.Core.Town
             return IsBuilt(sim) ? region.TransportCostPerKg - TransportPerKg(sim) : Fixed.Zero;
         }
 
+        /// <summary>
+        /// What a sale to the trader earned because of the road (spec 023 §3.3): the saving a kg × the good's weight × the price index, valued
+        /// like the sale itself. Counted for the founder's own sales only, so the season page's line is exact.
+        /// </summary>
+        internal static void Earn(Simulation sim, int good, long quantity)
+        {
+            if (!IsBuilt(sim)) return;
+            Fixed perKg = SavingPerKg(sim);
+            if (perKg == Fixed.Zero) return;
+            Fixed perUnit = perKg * sim.Config.Game.Market.Goods[good].WeightKg * sim.State.Market.PriceIndex;
+            State(sim).EarnedThis += MarketRules.Value(sim, good, quantity, perUnit);
+        }
+
+        /// <summary>At the season close: this season's earnings become last season's.</summary>
+        internal static void RollSeason(Simulation sim)
+        {
+            RoadState s = State(sim);
+            if (s == null) return;
+            s.EarnedLast = s.EarnedThis;
+            s.EarnedThis = 0;
+        }
+
         /// <summary>The road is finished: the tier changes for every price (spec 023 §3.3).</summary>
         internal sealed class Build : IJobHandler
         {

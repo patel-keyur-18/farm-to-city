@@ -44,6 +44,10 @@ namespace Sim.Core.Town
         /// <summary>The share given, indexed at the press.</summary>
         public long Share { get; internal set; }
 
+        /// <summary>What the road earned you at the trader, this season and last (spec 023 §3.3): each sale's extra, kilos × the saving a kg × the price index.</summary>
+        public long EarnedThis { get; internal set; }
+        public long EarnedLast { get; internal set; }
+
         internal RoadState Clone() { return (RoadState)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -53,11 +57,13 @@ namespace Sim.Core.Town
             h.WriteLong(ReadyAt);
             h.WriteLong(JobId);
             h.WriteLong(Share);
+            h.WriteLong(EarnedThis);
+            h.WriteLong(EarnedLast);
         }
 
         internal static RoadState ReadFrom(SaveReader r)
         {
-            return new RoadState { Status = (RoadStatus)r.ReadInt(), StartedAt = r.ReadLong(), ReadyAt = r.ReadLong(), JobId = r.ReadLong(), Share = r.ReadLong() };
+            return new RoadState { Status = (RoadStatus)r.ReadInt(), StartedAt = r.ReadLong(), ReadyAt = r.ReadLong(), JobId = r.ReadLong(), Share = r.ReadLong(), EarnedThis = r.ReadLong(), EarnedLast = r.ReadLong() };
         }
     }
 }
