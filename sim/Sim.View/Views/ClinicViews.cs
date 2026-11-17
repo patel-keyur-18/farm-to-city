@@ -52,6 +52,7 @@ namespace Sim.View.Views
                     vm.Lines.Add(Row(ctx, "clinic.builtIn", ctx.Fmt.Duration(d.BuildHours * 3600L), Days));
                     vm.Lines.Add(LineVm.Header(s.Get("clinic.hdrDoctor")));
                     vm.Lines.Add(QuartersRow(ctx));
+                    if (st.Quarters == QuartersStatus.None) vm.Lines.Add(new LineVm(s.Get("clinic.quartersNoteNone"), null));
                     vm.Lines.Add(Row(ctx, "clinic.arrives", s.Get("clinic.arrivesValue", "h", ctx.Fmt.Integer(d.DoctorArrivesHours)), Arrives));
                     Effects(ctx, vm, Fixed.Zero, false);
                     vm.Lines.Add(new LineVm(s.Get("clinic.note"), null));
@@ -70,6 +71,7 @@ namespace Sim.View.Views
                 vm.Lines.Add(Row(ctx, "clinic.readyIn", ctx.Fmt.Duration(st.ReadyAt - ctx.Now), Days));
                 vm.Lines.Add(Row(ctx, "clinic.shareGave", ctx.Fmt.Coins(st.Share), Share));
                 vm.Lines.Add(QuartersRow(ctx));
+                if (st.Quarters == QuartersStatus.None) vm.Lines.Add(new LineVm(s.Get("clinic.quartersNoteNone"), null));
                 vm.Lines.Add(new LineVm(s.Get("clinic.buildingNote"), null));
                 return;
             }
@@ -80,7 +82,11 @@ namespace Sim.View.Views
             vm.Subtitle = inPost && doc != null ? s.Get("clinic.lineDoctor", "name", TownWords.Name(ctx, doc)) : s.Get(st.Doctor == DoctorStatus.Left ? "clinic.lineLeft" : "clinic.lineNone");
             vm.Lines.Add(LineVm.Header(s.Get("clinic.hdrDoctor")));
             vm.Lines.Add(Row(ctx, "clinic.doctor", DoctorText(ctx, st, doc), Doctor));
-            if (!inPost) vm.Lines.Add(QuartersRow(ctx));
+            if (!inPost)
+            {
+                vm.Lines.Add(QuartersRow(ctx));
+                if (st.Quarters == QuartersStatus.None) vm.Lines.Add(new LineVm(s.Get("clinic.quartersNoteNone"), null));
+            }
             else vm.Lines.Add(Row(ctx, "clinic.pays", PaysText(ctx), Pays));
             Fixed condition = ClinicRules.Condition(sim);
             bool unpaid = inPost && TreasuryRules.IsOpen(sim) && TreasuryRules.State(sim).Unpaid[1] > 0;
@@ -125,9 +131,7 @@ namespace Sim.View.Views
             ClinicState st = ClinicRules.State(ctx.Sim);
             string v = st.Quarters == QuartersStatus.Built ? s.Get("clinic.quartersBuilt") : st.Quarters == QuartersStatus.Building
                 ? s.Get("clinic.quartersBuilding", "time", ctx.Fmt.Duration(st.QuartersReadyAt - ctx.Now)) : s.Get("clinic.quartersNone");
-            var line = Row(ctx, "clinic.quarters", v, Quarters);
-            if (st.Quarters == QuartersStatus.None) { line.Note = s.Get("clinic.quartersNoteNone"); line.NoteTone = Tone.Warn; }
-            return line;
+            return Row(ctx, "clinic.quarters", v, Quarters);
         }
 
         private static string DoctorText(ViewContext ctx, ClinicState st, Citizen doc)
@@ -136,7 +140,7 @@ namespace Sim.View.Views
             if (st.Doctor == DoctorStatus.InPost && doc != null)
             {
                 Household x = ctx.Sim.State.Citizens.Household(st.HouseholdId);
-                return s.Get("clinic.doctorValue", "name", TownWords.Name(ctx, doc), "n", ctx.Fmt.Integer(x == null ? 1 : x.Members.Count), "season", FieldSheets.SeasonName(ctx, st.SinceSeason));
+                return s.Get("clinic.doctorValue", "name", TownWords.Name(ctx, doc), "people", s.Plural("clinic.people", x == null ? 1 : x.Members.Count), "season", FieldSheets.SeasonName(ctx, st.SinceSeason));
             }
             if (st.Doctor == DoctorStatus.Coming) return s.Get("clinic.doctorComing", "time", ctx.Fmt.Duration(st.ArrivesAt - ctx.Now));
             if (st.Doctor == DoctorStatus.Left) return s.Get("clinic.doctorLeft");
@@ -193,7 +197,7 @@ namespace Sim.View.Views
                 if (ClinicRules.Unlocked(sim))
                 {
                     vm.Lines.Add(Row(ctx, "quarters.cost", ctx.Fmt.Coins(price), QCost));
-                    vm.Lines.Add(Row(ctx, "clinic.builtIn", ctx.Fmt.Duration(q.BuildHours * 3600L), QDays));
+                    vm.Lines.Add(Row(ctx, "quarters.builtIn", ctx.Fmt.Duration(q.BuildHours * 3600L), QDays));
                     vm.Lines.Add(Row(ctx, "quarters.rent", s.Get("quarters.rentValue", "amount", ctx.Fmt.Coins(ClinicRules.Rent(sim))), QRent));
                     vm.Lines.Add(Row(ctx, "quarters.pays", s.Get("quarters.paysValue"), Pays));
                     vm.Lines.Add(Row(ctx, "quarters.clinic", s.Get(st.Status == ClinicStatus.None ? "clinic.notBuilt" : st.Status == ClinicStatus.Building ? "clinic.building" : "clinic.stands"), Status));
@@ -400,7 +404,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             Fixed condition = ClinicRules.Condition(sim), scale = ClinicRules.Scale(sim);
-            WhyVm vm = New(ctx, "why.clinic.e." + key + ".title", Pct(ctx, cut * condition * scale));
+            WhyVm vm = New(ctx, "why.clinic.e." + key + ".title", (key == "care" ? "+" : "") + Pct(ctx, cut * condition * scale));
             Row(vm, ctx, "why.clinic.e.full", Pct(ctx, cut));
             Row(vm, ctx, "why.clinic.e.service", Pct(ctx, condition));
             Row(vm, ctx, "why.clinic.e.scale", Pct(ctx, scale));
