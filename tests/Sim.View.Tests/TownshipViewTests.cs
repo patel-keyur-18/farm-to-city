@@ -51,6 +51,18 @@ namespace Sim.View.Tests
             Assert.That(ProgressSheet.Build(ctx).Lines[2].Badge, Is.EqualTo("Done"), "a goal met for good");
         }
 
+        // Every era's celebration needs its banner (a missing string stalled the Township's letter in the Editor).
+        [Test]
+        public void EraBanners()
+        {
+            var strings = ViewKit.Strings();
+            foreach (var era in Situations.Town().Config.Game.Onboarding.Eras.Skip(1))
+            {
+                Assert.That(strings.Has(era.Id + ".banner"), Is.True, era.Id);
+                Assert.That(strings.Has(era.Id + ".bannerSub"), Is.True, era.Id);
+            }
+        }
+
         [Test]
         public void Letter()
         {
