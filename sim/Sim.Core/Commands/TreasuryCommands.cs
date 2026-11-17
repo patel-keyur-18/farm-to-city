@@ -60,4 +60,46 @@ namespace Sim.Core.Commands
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
+
+    /// <summary>Sets a tax rate for the next season (spec 022 §3.4): 0 to its bound; the rate in force isn't touched. No card: a rate spends nothing now.</summary>
+    public sealed class SetTaxRate : TimedCommand
+    {
+        public Town.TaxKind Tax { get; }
+        public Maths.Fixed Rate { get; }
+
+        public SetTaxRate(long at, Town.TaxKind tax, Maths.Fixed rate) : base(at) { Tax = tax; Rate = rate; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.TaxRules.SetRate(sim, Tax, Rate);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Takes back a rate set for the next season (spec 022 §3.4).</summary>
+    public sealed class UndoTaxRate : TimedCommand
+    {
+        public Town.TaxKind Tax { get; }
+
+        public UndoTaxRate(long at, Town.TaxKind tax) : base(at) { Tax = tax; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.TaxRules.UndoRate(sim, Tax);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>The player has read the Taxes sheet's first-visit note (spec 022 §3.7): it doesn't show again.</summary>
+    public sealed class SeeTaxTour : TimedCommand
+    {
+        public SeeTaxTour(long at) : base(at) { }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!Town.TreasuryRules.IsOpen(sim)) return CommandResult.Reject(RejectReason.NoTreasury);
+            sim.State.Treasury.TaxTourSeen = true;
+            return CommandResult.Ok;
+        }
+    }
 }

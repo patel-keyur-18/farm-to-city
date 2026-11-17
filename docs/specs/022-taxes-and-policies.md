@@ -262,3 +262,11 @@ All ten gaps were closed with the owner one per message on 2026-11-13 (ADR 0109)
 2. The first-visit tour's second chapter (*Taxes and policies*); the treasury's tour stays.
 3. The subsidy's hangover (keep the policy).
 4. The preview row's happiness estimate (keep revenue and who pays).
+
+## 12. As built (US-140, 2026-11-17, ADR 0117)
+
+- **Content** `taxes` is in `treasury.json` (rates, bounds, `maxShareOfRent`, `homeAssessedAs`, `referenceProfit`), not `shops.json` and `buildings.json`. The guard is checked at load.
+- **Rates** are set in tenths of a percent (house) and whole percents (business), pending until the close; `SeeTaxTour` keeps the first-visit note from showing again (a banner on the sheet).
+- **The bill** follows the office; the treasury is paid what is paid; unpaid tax is carried (2400) and paid first at the next close.
+- **Status line:** *Covered ✓*, *From the balance: lasts about n seasons*, or *Short by n*.
+- **Not yet:** the old village's rows (spec 023), AC-8's burden test (needs the cohort), the Policies tab (US-141).

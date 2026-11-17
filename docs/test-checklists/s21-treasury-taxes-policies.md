@@ -35,6 +35,12 @@
 | 15 | Last day of a season with the town short; open the bell | An urgent row with Give to the town, Change a tax (greyed, with its reason) and Revise the budget (greyed with "Locked until the Monsoon close") | | Editor ✓ (`s21-139-short-alert.png`) |
 | 16 | After that close: the treasury sheet and the Budget tab | Meena Rao, the town planner, speaks under the banners; the office row says "Cash ran out: … went unpaid" | | Editor ✓ (`s21-139-planner.png`, `-variance.png`) |
 | 17 | The Monsoon close | The bell has a Decide row "The midyear budget revision is open"; **Open** shows "Midyear revision · open" | | Editor ✓ (`s21-139-window-bell.png`, `-revision.png`) |
+| 18 | Town treasury → **Taxes and policies** (the middle picture button) | A note "Taxes you set apply from next season" with **Got it** (once); the town's cash, "At the close"; a slider for the house tax and one for the business tax, each with its **?** | | Editor ✓ (`s21-140-tour.png`, `-taxes.png`) |
+| 19 | Drag the house tax slider and let go | Under it: the change a season and who pays ("+125 · you 125"), the house still leaves you a profit, and whether the close is covered; a line "From Summer: 2.4% a year · now 1.6% a year" with **Undo** | | Editor ✓ (`s21-140-pending.png`) |
+| 20 | **Undo** | The pending line goes; the slider stands on the rate in force | | Editor ✓ |
+| 21 | Money and loans → Your season → *Next season, already due* | A row "House tax, n houses" with its **?** | | Editor ✓ (`s21-140-due.png`) |
+| 22 | Advance one season; Town treasury → The town's books → the season | *House tax* and *Business tax* rows in the money in, each with a **?** | | Editor ✓ (`s21-140-statement.png`) |
+| 23 | The **?** on a tax | Your houses and what the office collected, "never more than 15% of a house's rent", and why you pay it | | Editor ✓ (`s21-140-why.png`) |
 | 8 | Both frame-time p95s (main ≤ 8.3 ms, GPU ≤ 11 ms), golden replays, a 72 h catch-up with a treasury open | Pass | **Device only** | |
 | 9 | Render statistics at the three views (all, village, farm) | No metric over 10% above the last reading | | Editor ✓ for US-138 (957 / 572 / 366 draw calls); US-139: 1038 / 558 / 346, set-pass calls +11–20% and triangles +19–28% flagged (a Monsoon map against a Spring reading; the sheets are UI Toolkit) |
 

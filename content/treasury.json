@@ -13,6 +13,12 @@
   "budgetMaxOfNeeds": 1.20,
   "giftMinimum": 1000,
   "retainSeasons": 8,
+  "taxes": {
+    "house": { "rate": 0.016, "max": 0.024, "maxShareOfRent": 0.15 },
+    "business": { "rate": 0.10, "max": 0.20 },
+    "homeAssessedAs": "family_house",
+    "referenceProfit": { "grocer": 15000, "village_tea": 7000, "newcomer": 5000 }
+  },
   "lines": [
     { "id": "clerk", "department": "office", "kind": "wage", "amount": "clerkWage", "requires": "treasury" },
     { "id": "doctor", "department": "health", "kind": "wage", "amount": "doctorAllowance", "requires": "clinic" },

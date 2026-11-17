@@ -55,6 +55,7 @@ namespace Sim.Core.Town
             s.LineSeen = new bool[d.Lines.Count];
             for (int i = 0; i < d.Lines.Count; i++)
                 if (LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; AddToBudget(sim, d.Lines[i]); } // the first year's budget is its needs (spec 021 §3.6)
+            s.HouseRate = d.Taxes.HouseRate; s.BusinessRate = d.Taxes.BusinessRate; // spec 022 §3.4: the defaults at the opening
             s.Window = BudgetWindow.Set;
             s.WindowPeriod = sim.Period;
             s.YearBudgeted = (int)(sim.Period / ClockYear(sim));
@@ -215,15 +216,18 @@ namespace Sim.Core.Town
         /// </summary>
         public static long CollectTax(Simulation sim, TaxKind kind, string payer, long billed)
         {
-            TreasuryDef d = Def(sim);
-            TreasuryState s = State(sim);
             if (!IsOpen(sim) || billed <= 0) return 0;
-            Fixed factor = d.OfficeBase + d.OfficeWeight * s.Condition[0];
-            long collected = Math.Min(billed, (factor * Fixed.FromInt(billed)).FloorToLong());
-            if (collected <= 0) return 0;
-            s.Ledger.Post(sim.State.Clock.SimTime, sim.AccrualPeriod, "ledger.townTax", "tax:" + payer,
-                new Posting(Account.Cash, collected), new Posting(kind == TaxKind.House ? Account.HouseTaxIncome : Account.BusinessTaxIncome, -collected));
+            long collected = TaxRules.Collected(sim, billed);
+            ReceiveTax(sim, kind, payer, collected);
             return collected;
+        }
+
+        /// <summary>Tax money the treasury is paid (spec 021 §3.3): income of the season that ended, posted as it comes in.</summary>
+        internal static void ReceiveTax(Simulation sim, TaxKind kind, string payer, long amount)
+        {
+            if (!IsOpen(sim) || amount <= 0) return;
+            State(sim).Ledger.Post(sim.State.Clock.SimTime, sim.AccrualPeriod, "ledger.townTax", "tax:" + payer,
+                new Posting(Account.Cash, amount), new Posting(kind == TaxKind.House ? Account.HouseTaxIncome : Account.BusinessTaxIncome, -amount));
         }
 
         /// <summary>A permit fee (spec 021 §3.3, for spec 024): straight to Fees. The payer is a builder or a townsperson, never the treasury's own.</summary>
@@ -300,7 +304,7 @@ namespace Sim.Core.Town
             var f = new CloseForecast { Needs = new long[TreasuryState.Departments], Paid = new long[TreasuryState.Departments] };
             GrantsNow(sim, out long untied, out long tied, out _);
             f.Cash = s.Cash;
-            f.Income = untied + tied;
+            f.Income = untied + tied + TaxRules.Certain(sim); // spec 021 §3.11: the grants and the tax bills certain by the close
             long remaining = f.Cash + f.Income;
             for (int d = 0; d < f.Needs.Length; d++) { f.Needs[d] = Needs(sim, d); f.Due += f.Needs[d]; }
             for (int pass = 1; pass <= 2; pass++)
@@ -317,6 +321,19 @@ namespace Sim.Core.Town
                 if (f.FirstUnpaid < 0 && f.Paid[d] < f.Needs[d]) f.FirstUnpaid = d;
             }
             return f;
+        }
+
+        /// <summary>
+        /// What the next close is expected to bring in, for the sheets' "At the close" line (not the warning, which uses only what is certain): the
+        /// grants, the pitch rents already paid this season, and the taxes at the rates that will bill it (your businesses' on last season's profit).
+        /// </summary>
+        public static long ExpectedIncome(Simulation sim, Fixed? houseRate = null, Fixed? businessRate = null)
+        {
+            TreasuryState s = State(sim);
+            GrantsNow(sim, out long untied, out long tied, out _);
+            long rents = -s.Ledger.Balance(Account.PitchRents);
+            long taxes = TaxRules.Expected(sim, houseRate ?? s.HouseRate, businessRate ?? s.BusinessRate, out _, out _, out _, out _);
+            return untied + tied + rents + taxes;
         }
 
         // ---- the close (spec 021 §3.10) ----
@@ -348,6 +365,7 @@ namespace Sim.Core.Town
             long now = sim.State.Clock.SimTime, closing = sim.Period - 1;
             Ledger ledger = s.Ledger;
             long opening = s.SeasonOpeningCash;
+            TaxRules.RollRates(sim); // the bills were made at the rate in force; a rate set for the next season takes effect now (spec 022 §3.4)
 
             // 1. Income: the grants (rents and taxes were posted as they were paid; gifts when given).
             GrantsNow(sim, out long untied, out long tied, out long withheld);

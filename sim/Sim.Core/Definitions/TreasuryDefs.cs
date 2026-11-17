@@ -84,6 +84,34 @@ namespace Sim.Core.Definitions
     /// <c>treasury.json</c> (spec 021 §4, ADR 0108): the town's second wallet. Optional content: without it there is no treasury, so
     /// the frozen golden content is unchanged. Every coin amount is year-0 coins, indexed when charged (ADR 0034).
     /// </summary>
+    /// <summary>The two taxes' defaults and bounds, and the village shops' reference profits (spec 022 §3.1, §3.2, §4).</summary>
+    public sealed class TaxDef
+    {
+        /// <summary>A year's rate on a house's assessed value, its bound, and the most a house's tax may be of its rent.</summary>
+        public Fixed HouseRate { get; }
+        public Fixed HouseMax { get; }
+        public Fixed MaxShareOfRent { get; }
+        public Fixed BusinessRate { get; }
+        public Fixed BusinessMax { get; }
+
+        /// <summary>The building your own home is assessed as (a kutcha house).</summary>
+        public string HomeAssessedAs { get; }
+
+        /// <summary>Each rival shop's reference profit by its id, and a newcomer's (indexed when billed).</summary>
+        public IReadOnlyDictionary<string, long> ReferenceProfit { get; }
+
+        public TaxDef(Fixed houseRate, Fixed houseMax, Fixed maxShareOfRent, Fixed businessRate, Fixed businessMax, string homeAssessedAs, IReadOnlyDictionary<string, long> referenceProfit)
+        {
+            HouseRate = houseRate;
+            HouseMax = houseMax;
+            MaxShareOfRent = maxShareOfRent;
+            BusinessRate = businessRate;
+            BusinessMax = businessMax;
+            HomeAssessedAs = homeAssessedAs;
+            ReferenceProfit = referenceProfit;
+        }
+    }
+
     public sealed class TreasuryDef
     {
         /// <summary>Index of the era it opens in (the Township).</summary>
@@ -106,11 +134,13 @@ namespace Sim.Core.Definitions
         public Fixed BudgetMaxOfNeeds { get; }
         public long GiftMinimum { get; }
         public int RetainSeasons { get; }
+        public TaxDef Taxes { get; }
 
         public TreasuryDef(int era, long startUpGrant, long grantUntied, long grantTied, long clerkWage, long doctorAllowance, IReadOnlyList<DepartmentDef> departments,
             IReadOnlyList<LineDef> lines, IReadOnlyList<TownWorkDef> works, Fixed conditionStep, Fixed officeBase, Fixed officeWeight, Fixed healthLeaveBelow,
-            Fixed educationMinCondition, Fixed budgetMaxOfNeeds, long giftMinimum, int retainSeasons)
+            Fixed educationMinCondition, Fixed budgetMaxOfNeeds, long giftMinimum, int retainSeasons, TaxDef taxes)
         {
+            Taxes = taxes;
             Era = era;
             StartUpGrant = startUpGrant;
             GrantUntied = grantUntied;

@@ -16,12 +16,13 @@ namespace Sim.View.Views
         // The lines of a statement, for the *Why?* id.
         public const int Fees = 0, Sales = 1, Goods = 2, Margin = 3, Wages = 4, Power = 5, Repairs = 6, Depreciation = 7, Interest = 8, Profit = 9,
             CashStart = 10, CashIn = 11, CashOut = 12, CashEnd = 13, Cash = 14, Stock = 15, Fixed = 16, Debts = 17, Capital = 18, Kept = 19, Worth = 20,
-            Rent = 21; // a shop's pitch (spec 017 §3.4)
+            Rent = 21, // a shop's pitch (spec 017 §3.4)
+            Tax = 22, Before = 23, Owed = 24; // spec 022 §3.2: the business tax, profit before it, tax owed to the town
 
         internal static readonly string[] Names =
         {
             "fees", "sales", "goods", "margin", "wages", "power", "repairs", "depreciation", "interest", "profit",
-            "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth", "rent",
+            "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth", "rent", "tax", "before", "owed",
         };
 
         private static readonly int[] PlanLines = { Fees, Sales, Goods, Wages, Power, Repairs, Depreciation, Interest, Profit };
@@ -68,6 +69,9 @@ namespace Sim.View.Views
                 case Capital: return -r.Balance(Account.OwnersCapital);
                 case Kept: return -r.Balance(Account.RetainedEarnings) + BusinessBooks.NetProfit(r);
                 case Rent: return r.Balance(Account.Rent);
+                case Tax: return r.Balance(Account.BusinessTax);
+                case Before: return BusinessBooks.NetProfit(r) + r.Balance(Account.BusinessTax);
+                case Owed: return -r.Balance(Account.TaxOwed);
                 default: return Total(r, AccountGroup.Assets) - Total(r, AccountGroup.Liabilities);
             }
         }
@@ -86,7 +90,7 @@ namespace Sim.View.Views
             return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe || t.Input < 0 ? "" : BusinessWords.Good(ctx, t.Input));
         }
 
-        private static bool IsCost(int line) { return line == Goods || (line >= Wages && line <= Interest) || line == CashOut || line == Debts; }
+        private static bool IsCost(int line) { return line == Goods || line == Tax || (line >= Wages && line <= Interest) || line == CashOut || line == Debts; }
 
         private static string Value(ViewContext ctx, int line, long amount) { return (IsCost(line) && amount != 0 ? "−" : "") + ctx.Fmt.Coins(amount); }
 
@@ -112,6 +116,7 @@ namespace Sim.View.Views
             foreach (int line in new[] { Power, Repairs, Depreciation })
                 Add(ctx, vm, b, r, back, line);
             if (Amount(r, Interest) != 0) Add(ctx, vm, b, r, back, Interest);
+            if (Amount(r, Tax) != 0) { Add(ctx, vm, b, r, back, Before); Add(ctx, vm, b, r, back, Tax); } // spec 022 §3.2: profit before tax, then the tax
             Add(ctx, vm, b, r, back, Profit);
             vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.cashFlowNow" : "books.cashFlow")));
             foreach (int line in new[] { CashStart, CashIn, CashOut, CashEnd })
@@ -120,6 +125,7 @@ namespace Sim.View.Views
             foreach (int line in new[] { Cash, Stock, Fixed })
                 Add(ctx, vm, b, r, back, line);
             if (Amount(r, Debts) != 0) Add(ctx, vm, b, r, back, Debts);
+            if (Amount(r, Owed) != 0) Add(ctx, vm, b, r, back, Owed);
             foreach (int line in new[] { Capital, Kept, Worth })
                 Add(ctx, vm, b, r, back, line);
         }

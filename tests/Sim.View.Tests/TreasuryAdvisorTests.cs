@@ -33,6 +33,7 @@ namespace Sim.View.Tests
         public void Notes()
         {
             Simulation sim = Situations.Township(); // its first close had the founder's gift in it, which makes up a thin balance
+            sim.State.Treasury.HouseRate = Fixed.Zero; sim.State.Treasury.BusinessRate = Fixed.Zero; // a tax coming in makes up a thin balance too
             sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + 2 * 3600);
             sim.DrainEvents();
             TreasuryState t = sim.State.Treasury;

@@ -224,6 +224,8 @@ namespace Sim.Core.Commands
         NoWindow,
         /// <summary>A budget outside 0 to budgetMaxOfNeeds of the department's needs now (spec 021 §3.6).</summary>
         OutOfRange,
+        /// <summary>No rate has been set for the next season, so there is nothing to undo (spec 022 §3.4).</summary>
+        NothingPending,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

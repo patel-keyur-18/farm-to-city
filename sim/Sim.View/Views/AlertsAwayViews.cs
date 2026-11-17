@@ -670,6 +670,7 @@ namespace Sim.View.Views
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },
             { "BudgetWindowOpened", Use.Alert }, { "BudgetSet", Use.StateOnly }, { "BudgetAccepted", Use.StateOnly }, { "TreasuryShortAhead", Use.Alert },
+            { "TaxBilled", Use.StateOnly }, { "TaxOwed", Use.StateOnly }, { "TaxRateSet", Use.StateOnly },
             // Spec 019 §3.5 (the savings deposit).
             { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.

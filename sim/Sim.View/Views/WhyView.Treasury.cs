@@ -1,3 +1,4 @@
+using Sim.Core;
 using Sim.Core.Definitions;
 using Sim.Core.Finance;
 using Sim.Core.Maths;
@@ -132,6 +133,43 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.treasury.window.until", ctx.Strings.Get("why.treasury.window.untilValue"));
             Row(vm, ctx, "why.treasury.window.ignore", ctx.Strings.Get("why.treasury.window.ignoreValue"));
             Text(vm, ctx, "why.treasury.window.text");
+            return vm;
+        }
+
+        private static WhyVm TaxHouseWhy(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Fixed rate = TaxRules.Rate(sim, TaxKind.House);
+            long bill = TaxRules.YourHouseBill(sim, rate, out int houses);
+            WhyVm vm = New(ctx, "why.tax.house.title", ctx.Strings.Get("tax.houseRate", "rate", ctx.Fmt.Decimal1(rate * Fixed.FromInt(100))));
+            Row(vm, ctx, "why.tax.house.yours", ctx.Strings.Plural("why.tax.house.yoursValue", houses, "amount", Money(ctx, bill)));
+            Row(vm, ctx, "why.tax.house.rule", ctx.Strings.Get("why.tax.house.ruleValue", "pct", ctx.Fmt.Percent(sim.Config.Game.Treasury.Taxes.MaxShareOfRent)));
+            Row(vm, ctx, "why.tax.house.office", Money(ctx, TaxRules.Collected(sim, bill)));
+            Text(vm, ctx, "why.tax.house.text");
+            return vm;
+        }
+
+        private static WhyVm TaxBusinessWhy(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            Fixed rate = TaxRules.Rate(sim, TaxKind.Business);
+            TaxRules.Expected(sim, TaxRules.Rate(sim, TaxKind.House), rate, out _, out long shops, out _, out long yours);
+            WhyVm vm = New(ctx, "why.tax.business.title", ctx.Strings.Get("tax.businessRate", "rate", ctx.Fmt.Integer((rate * Fixed.FromInt(100)).RoundToLong())));
+            Row(vm, ctx, "why.tax.business.yours", Money(ctx, yours));
+            Row(vm, ctx, "why.tax.business.shops", Money(ctx, shops));
+            Text(vm, ctx, "why.tax.business.text");
+            return vm;
+        }
+
+        private static WhyVm TaxCollectedWhy(ViewContext ctx, long id)
+        {
+            TreasuryState st = Town(ctx);
+            TreasuryReport last = st.Reports.Count == 0 ? null : st.Reports[st.Reports.Count - 1];
+            long house = last == null ? 0 : -last.Balance(Account.HouseTaxIncome), biz = last == null ? 0 : -last.Balance(Account.BusinessTaxIncome);
+            WhyVm vm = New(ctx, "why.tax.collected.title", Money(ctx, house + biz));
+            Row(vm, ctx, "why.tax.collected.house", Money(ctx, house));
+            Row(vm, ctx, "why.tax.collected.business", Money(ctx, biz));
+            Text(vm, ctx, "why.tax.collected.text");
             return vm;
         }
 

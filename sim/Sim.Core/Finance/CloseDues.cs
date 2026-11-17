@@ -8,7 +8,7 @@ using Sim.Core.People;
 
 namespace Sim.Core.Finance
 {
-    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine }
+    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine, HouseTax }
 
     /// <summary>One charge the next season close takes from the founder's cash (ADR 0101 §1).</summary>
     public sealed class CloseDue
@@ -108,6 +108,8 @@ namespace Sim.Core.Finance
                 Water(list, "drip", IrrigationRules.DripPower(sim) + IrrigationRules.DripUpkeep(sim));
             }
             if (SchoolRules.IsOpen(sim) && SchoolRules.Upkeep(sim) > 0 && !Town.TreasuryRules.IsOpen(sim)) list.Add(new CloseDue { Key = "school", Kind = DueKind.School, Amount = SchoolRules.Upkeep(sim) });
+            long houseTax = Town.TaxRules.NextHouseDue(sim, out int houses);
+            if (houseTax > 0) list.Add(new CloseDue { Key = "houseTax", Kind = DueKind.HouseTax, Id = houses, Amount = houseTax });
             if (EquipmentRules.On(sim))
             {
                 foreach (Machine m in sim.State.Equipment.Machines)

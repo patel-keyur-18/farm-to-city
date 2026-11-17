@@ -1013,6 +1013,7 @@ namespace Sim.Core.Business
                 }
                 long interest = Money.MulRate(BusinessBooks.Overdrawn(b), Defs(sim).OverdraftRate);
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
+                Town.TaxRules.BillBusiness(sim, b, closing); // spec 022 §3.2: tax on the season's profit, from its own cash
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
             ShopRules.CloseSeason(sim);

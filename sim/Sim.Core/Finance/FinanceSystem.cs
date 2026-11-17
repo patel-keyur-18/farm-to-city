@@ -106,6 +106,8 @@ namespace Sim.Core.Finance
             Market.GodownRules.Close(sim); // spec 013 §3.4, ADR 0087: your godown let or not, then the warehouse's rent upfront
             Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
             People.SchoolRules.Close(sim); // spec 018 §3.1: the school's upkeep for the new season, a gift to the village
+            Town.TaxRules.BillFounder(sim); // spec 022 §3.1: your house tax, the office's share, what's unpaid carried
+            Town.TaxRules.BillShops(sim); // spec 022 §3.2: the village's shops on a reference profit
             Sim.Core.Equipment.EquipmentRules.Close(sim); // spec 013 §3.5: leases, maintenance and diesel for the new season
             report.People = seen.After(sim).AsReadOnly();
             report.ReputationBefore = seen.ReputationBefore;

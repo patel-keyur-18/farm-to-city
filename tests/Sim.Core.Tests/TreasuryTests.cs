@@ -19,14 +19,20 @@ namespace Sim.Core.Tests
         private const long Clerk = 30_000 * Coin;
 
         /// <summary>A rich town with dev commands on, at the Village, so <c>DebugNextEra</c> reaches the Township.</summary>
+        /// <summary>The treasury's tests count grants and departments only: both tax rates at 0 (the tax tests start their own towns).</summary>
+        internal static string NoTaxes(string file, string json)
+        {
+            return file == "treasury.json" ? json.Replace("\"rate\": 0.016", "\"rate\": 0").Replace("\"rate\": 0.10", "\"rate\": 0") : json;
+        }
+
         internal static Simulation Start(System.Func<string, string, string> edit = null)
         {
-            Simulation sim = NewFarm(game: Game(edit), options: new SimOptions { DevCommandsEnabled = true });
+            Simulation sim = NewFarm(game: Game((f, j) => NoTaxes(f, edit == null ? j : edit(f, j))), options: new SimOptions { DevCommandsEnabled = true });
             Era(sim, "village");
             return sim;
         }
 
-        private static void Era(Simulation sim, string id)
+        internal static void Era(Simulation sim, string id)
         {
             var eras = sim.Config.Game.Onboarding.Eras;
             for (int i = 0; i < eras.Count; i++) if (eras[i].Id == id) sim.State.Era.Current = i;
@@ -34,7 +40,7 @@ namespace Sim.Core.Tests
 
         internal static void Township(Simulation sim) { Ok(sim, new DebugNextEra()); }
 
-        private static long NextClose(Simulation sim) { return (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason; }
+        internal static long NextClose(Simulation sim) { return (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason; }
 
         private static TreasuryState T(Simulation sim) { return sim.State.Treasury; }
 
@@ -50,7 +56,7 @@ namespace Sim.Core.Tests
         }
 
         /// <summary>A house of yours and one family in it, so the town has residents.</summary>
-        private static Household Family(Simulation sim, int tile = HomeTile)
+        internal static Household Family(Simulation sim, int tile = HomeTile)
         {
             Era(sim, "hamlet");
             long t = sim.State.Clock.SimTime;

@@ -226,6 +226,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0114 | The treasury as built (US-138): the Township reached by the developer panel only until spec 023 builds its gate, seven departments from the first schema 19, a pitch rent counted in the season it pays for, the first statement holds the start-up grant |
 | 0115 | The budget cycle as built (US-139): the proposal is last year's actuals at today's prices, a window lasts until accepted or the next close, a card only for the first window then the bell, five variance sentences, a day's warning on the grants, the town planner as a fourth advisor |
 | 0116 | The Township's spec (spec 023): the district builds the clinic for a 48,000 share, the doctor's quarters (90,000) are a rented asset and no allowance from you, a 25,000 road share, one coverage rule (reach, capacity, staff), appointments for public posts, an aggregate old village, break-even within two years |
+| 0117 | Taxes as built (US-140): a rate in whole units and pending until the close, the bill follows the office and the treasury is paid what is paid, unpaid tax carried, the village's shops on a reference profit, the guard checked at load, a three-state close status |
 
 ## Current status
 

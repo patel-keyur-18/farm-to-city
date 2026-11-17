@@ -24,7 +24,7 @@ namespace Sim.Content
             const string root = "treasury";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "era", "startUpGrant", "grantUntied", "grantTied", "clerkWage", "doctorAllowance", "conditionStep", "officeBase", "officeWeight",
-                "healthLeaveBelow", "educationMinCondition", "budgetMaxOfNeeds", "giftMinimum", "retainSeasons", "lines", "works");
+                "healthLeaveBelow", "educationMinCondition", "budgetMaxOfNeeds", "giftMinimum", "retainSeasons", "taxes", "lines", "works");
             string eraId = String(Required(o, root, "era"), Join(root, "era"));
             int era = onboarding.Eras.Count;
             for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == eraId) era = i;
@@ -41,6 +41,8 @@ namespace Sim.Content
             long gift = Coins("giftMinimum");
             if (gift < 1) throw new ContentException(Join(root, "giftMinimum"), "must be at least 1 coin hundredth");
             int retain = BoundedInt(o, root, "retainSeasons", 4, 16);
+
+            TaxDef taxes = LoadTaxes(Object(Required(o, root, "taxes"), Join(root, "taxes")), Join(root, "taxes"));
 
             var departments = new List<DepartmentDef>();
             for (int i = 0; i < DepartmentIds.Length; i++) departments.Add(new DepartmentDef(DepartmentIds[i], DepartmentAccounts[i]));
@@ -103,7 +105,26 @@ namespace Sim.Content
                     works.Add(new TownWorkDef(id, cost, BoundedInt(w, p, "lifeSeasons", 1, 400)));
                 }
             }
-            return new TreasuryDef(era, startUp, untied, tied, clerk, doctor, departments.AsReadOnly(), lines.AsReadOnly(), works.AsReadOnly(), step, officeBase, officeWeight, leave, minEdu, maxBudget, gift, retain);
+            return new TreasuryDef(era, startUp, untied, tied, clerk, doctor, departments.AsReadOnly(), lines.AsReadOnly(), works.AsReadOnly(), step, officeBase, officeWeight, leave, minEdu, maxBudget, gift, retain, taxes);
+        }
+
+        private static TaxDef LoadTaxes(JObject t, string p)
+        {
+            OnlyFields(t, p, "house", "business", "homeAssessedAs", "referenceProfit");
+            JObject h = Object(Required(t, p, "house"), Join(p, "house"));
+            OnlyFields(h, Join(p, "house"), "rate", "max", "maxShareOfRent");
+            JObject b = Object(Required(t, p, "business"), Join(p, "business"));
+            OnlyFields(b, Join(p, "business"), "rate", "max");
+            Fixed hMax = Bounded(h, Join(p, "house"), "max", "0", "0.1"), hRate = Bounded(h, Join(p, "house"), "rate", "0", "0.1");
+            if (hRate > hMax) throw new ContentException(Join(Join(p, "house"), "rate"), "the default rate is above the bound");
+            Fixed bMax = Bounded(b, Join(p, "business"), "max", "0", "0.5"), bRate = Bounded(b, Join(p, "business"), "rate", "0", "0.5");
+            if (bRate > bMax) throw new ContentException(Join(Join(p, "business"), "rate"), "the default rate is above the bound");
+            string home = String(Required(t, p, "homeAssessedAs"), Join(p, "homeAssessedAs"));
+            JObject rp = Object(Required(t, p, "referenceProfit"), Join(p, "referenceProfit"));
+            var profits = new SortedDictionary<string, long>(System.StringComparer.Ordinal);
+            foreach (JProperty prop in rp.Properties()) profits[prop.Name] = Money(prop.Value, Join(Join(p, "referenceProfit"), prop.Name));
+            if (!profits.ContainsKey("newcomer")) throw new ContentException(Join(p, "referenceProfit"), "needs a newcomer's reference profit");
+            return new TaxDef(hRate, hMax, Bounded(h, Join(p, "house"), "maxShareOfRent", "0", "0.5"), bRate, bMax, home, profits);
         }
     }
 }

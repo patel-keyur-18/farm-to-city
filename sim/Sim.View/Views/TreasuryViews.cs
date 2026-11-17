@@ -44,12 +44,14 @@ namespace Sim.View.Views
             AdvisorVm planner = AdvisorWords.Planner(ctx); // the town planner's line for the last close (spec 021 §3.12)
             if (planner != null) vm.Lines.Add(new LineVm(planner.Text, null) { Advisor = planner });
             vm.Lines.Add(new LineVm(s.Get("treasury.balance"), ctx.Fmt.Coins(st.Cash), "treasuryBalance", 0));
-            vm.Lines.Add(new LineVm(s.Get("treasury.atClose"), f.Short > 0 ? s.Get("treasury.short", "short", ctx.Fmt.Coins(f.Short)) : s.Get("treasury.covered"), "treasuryDue", 0)
-                { NoteTone = f.Short > 0 ? Tone.Warn : Tone.Good });
+            string closeStatus = CloseStatus(ctx, TreasuryRules.ExpectedIncome(sim), f.Due, st.Cash, out Tone closeTone);
+            vm.Lines.Add(new LineVm(s.Get("treasury.atClose"), f.Short > 0 ? s.Get("treasury.short", "short", ctx.Fmt.Coins(f.Short)) : closeStatus, "treasuryDue", 0)
+                { NoteTone = f.Short > 0 ? Tone.Warn : closeTone });
 
             var buttons = new List<ActionVm>
             {
                 Pictured(ActionVm.Open("give", s.Get("treasury.give"), new SheetRequest(GiveKind, 0), s.Get("treasury.giveDetail")), "coin"),
+                Pictured(ActionVm.Open("taxes", s.Get("treasury.taxes"), new SheetRequest(TaxSheet.Kind, 0), s.Get("treasury.taxesDetail")), "deed"),
                 Pictured(ActionVm.Open("books", s.Get("treasury.books"), new SheetRequest(BooksKind, 0), s.Get("treasury.booksDetail")), "menu"),
             };
             vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
@@ -229,6 +231,24 @@ namespace Sim.View.Views
                 if (f.Needs[i] > 0) card.Rows.Add(new ConfirmRowVm(Department(ctx, i), s.Get("budget.cardRow", "amount", ctx.Fmt.Coins(st.Budget[i]))));
             card.Rows.Add(new ConfirmRowVm(s.Get("budget.cardHolds", "cash", ctx.Fmt.Coins(st.Cash)), s.Get("budget.cardDue", "due", ctx.Fmt.Coins(f.Due)), true));
             return card;
+        }
+
+        /// <summary>
+        /// The "At the close" line (spec 021 §3.11, ADR 0116's preview): covered by the close's own income with something to spare; covered from the
+        /// balance, which says for about how many seasons; or short by what neither covers.
+        /// </summary>
+        public static string CloseStatus(ViewContext ctx, long income, long due, long cash, out Tone tone)
+        {
+            var s = ctx.Strings;
+            if (income >= due) { tone = Tone.Good; return s.Get("treasury.status.ok", "spare", ctx.Fmt.Coins(income - due)); }
+            if (income + cash >= due)
+            {
+                tone = Tone.Warn;
+                long seasons = System.Math.Max(1, cash / (due - income));
+                return s.Plural("treasury.status.balance", seasons);
+            }
+            tone = Tone.Warn;
+            return s.Get("treasury.status.short", "short", ctx.Fmt.Coins(due - income - cash));
         }
 
         private static ActionVm Pictured(ActionVm a, string icon) { a.Icon = icon; return a; }

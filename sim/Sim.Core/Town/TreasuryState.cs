@@ -165,6 +165,15 @@ namespace Sim.Core.Town
         public long ShortWarnedAmount { get; internal set; }
 
         public long SeasonOpeningCash { get; internal set; }
+
+        /// <summary>The house and business tax rates in force for the season now, and the rate set for the next one or −1 (spec 022 §3.4).</summary>
+        public Fixed HouseRate { get; internal set; }
+        public Fixed BusinessRate { get; internal set; }
+        public Fixed PendingHouse { get; internal set; } = Fixed.FromInt(-1);
+        public Fixed PendingBusiness { get; internal set; } = Fixed.FromInt(-1);
+
+        /// <summary>The player has read the Taxes sheet's first-visit note (spec 022 §3.7).</summary>
+        public bool TaxTourSeen { get; internal set; }
         public List<WorkRecord> Works { get; internal set; } = new List<WorkRecord>();
         public List<TreasuryReport> Reports { get; internal set; } = new List<TreasuryReport>();
 
@@ -226,6 +235,8 @@ namespace Sim.Core.Town
             foreach (WorkRecord w in Works) w.WriteTo(h);
             h.WriteInt(Reports.Count);
             foreach (TreasuryReport r in Reports) r.WriteTo(h);
+            h.WriteFixed(HouseRate); h.WriteFixed(BusinessRate); h.WriteFixed(PendingHouse); h.WriteFixed(PendingBusiness);
+            h.WriteBool(TaxTourSeen);
         }
 
         internal static TreasuryState ReadFrom(SaveReader r)
@@ -252,6 +263,8 @@ namespace Sim.Core.Town
             for (int i = 0; i < n; i++) s.Works.Add(WorkRecord.ReadFrom(r));
             n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Reports.Add(TreasuryReport.ReadFrom(r));
+            s.HouseRate = r.ReadFixed(); s.BusinessRate = r.ReadFixed(); s.PendingHouse = r.ReadFixed(); s.PendingBusiness = r.ReadFixed();
+            s.TaxTourSeen = r.ReadBool();
             return s;
         }
     }

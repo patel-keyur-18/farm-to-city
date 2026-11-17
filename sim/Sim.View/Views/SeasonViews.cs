@@ -322,6 +322,10 @@ namespace Sim.View.Views
                     case DueKind.School:
                         Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.school"), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.school.why") }, s.Get("season.short.school"));
                         break;
+                    case DueKind.HouseTax:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Plural("season.due.houseTax", due.Id), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.houseTax.why") },
+                            s.Get("season.short.houseTax"));
+                        break;
                     case DueKind.Machine:
                     {
                         string part = due.Key.Substring(due.Key.LastIndexOf(':') + 1), machine = s.Get("machine." + due.What);

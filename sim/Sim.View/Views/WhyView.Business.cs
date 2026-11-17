@@ -194,7 +194,7 @@ namespace Sim.View.Views
                 Row(vm, ctx, "why.books.rowOut", "−" + Money(ctx, r.Outflows));
                 vm.Footnote = ctx.Strings.Get("why.books.cashLesson");
             }
-            else if (line >= BusinessBooksSheet.Cash && line != BusinessBooksSheet.Rent)
+            else if (line >= BusinessBooksSheet.Cash && line != BusinessBooksSheet.Rent && line != BusinessBooksSheet.Tax && line != BusinessBooksSheet.Before)
             {
                 Row(vm, ctx, "why.books.rowOwns", Money(ctx, Amount(BusinessBooksSheet.Cash) + Amount(BusinessBooksSheet.Stock) + Amount(BusinessBooksSheet.Fixed)));
                 Row(vm, ctx, "why.books.rowOwes", "−" + Money(ctx, Amount(BusinessBooksSheet.Debts)));

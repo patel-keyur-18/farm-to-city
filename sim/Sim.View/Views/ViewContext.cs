@@ -305,6 +305,9 @@ namespace Sim.View.Views
         /// <summary>For a row with no button of its own (the mandi's crops): the sheet to show, in place, once the amount is let go or typed.</summary>
         public Func<long, SheetRequest> Then { get; internal set; }
 
+        /// <summary>For a row with no button of its own that sends a command when the amount is let go or typed (a tax rate, spec 022 §3.4): the action for that amount.</summary>
+        public Func<long, ActionVm> Set { get; internal set; }
+
         /// <summary>Where the slider starts.</summary>
         public long Start { get; }
 

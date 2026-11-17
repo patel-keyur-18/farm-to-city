@@ -327,7 +327,7 @@ namespace Sim.View.Views
     /// <summary>The season report (spec 008 §3.8, ADR 0032): every line with its plain label and its Why?.</summary>
     public static class ReportSheet
     {
-        public static readonly string[] Order = { "farmIncome", "farmCosts", "farmProfit", "otherIncome", "household", "gifts", "finance", "other", "netResult" };
+        public static readonly string[] Order = { "farmIncome", "farmCosts", "farmProfit", "otherIncome", "household", "gifts", "taxes", "finance", "other", "netResult" };
 
         public static string PeriodName(ViewContext ctx, long period)
         {

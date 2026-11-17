@@ -45,7 +45,7 @@ namespace Sim.Core.Saves
             BuildSchool, StartAdultClass, FindCodexCards, ReadCodexCard, HearAdvisors,
             DepositSavings, WithdrawSavings, SetSavingsCover, CoverFromSavings, TakeBackSavingsCover,
             RenewLease,
-            GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget,
+            GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget, SetTaxRate, UndoTaxRate, SeeTaxTour,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -170,6 +170,9 @@ namespace Sim.Core.Saves
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
                 case SetBudget c: At(c, Tag.SetBudget); w.WriteInt(c.Department); w.WriteLong(c.Amount); break;
                 case AcceptBudget c: At(c, Tag.AcceptBudget); break;
+                case SetTaxRate c: At(c, Tag.SetTaxRate); w.WriteInt((int)c.Tax); w.WriteLong(c.Rate.Raw); break;
+                case UndoTaxRate c: At(c, Tag.UndoTaxRate); w.WriteInt((int)c.Tax); break;
+                case SeeTaxTour c: At(c, Tag.SeeTaxTour); break;
                 case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
@@ -310,6 +313,9 @@ namespace Sim.Core.Saves
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
                 case Tag.SetBudget: return new SetBudget(at, r.ReadInt(), r.ReadLong());
                 case Tag.AcceptBudget: return new AcceptBudget(at);
+                case Tag.SetTaxRate: return new SetTaxRate(at, (Town.TaxKind)r.ReadInt(), Maths.Fixed.FromRaw(r.ReadLong()));
+                case Tag.UndoTaxRate: return new UndoTaxRate(at, (Town.TaxKind)r.ReadInt());
+                case Tag.SeeTaxTour: return new SeeTaxTour(at);
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));

@@ -36,6 +36,9 @@ namespace Sim.Core.Finance
         BankLoans = 2200,
         InterestPayable = 2300,
 
+        /// <summary>Tax billed and not yet paid, to the town (spec 022 §3.1, §3.2): paid first at the next close. The founder's and each business's own.</summary>
+        TaxOwed = 2400,
+
         OpeningEquity = 3000,
         RetainedEarnings = 3100,
 
@@ -67,6 +70,9 @@ namespace Sim.Core.Finance
         LivingCosts = 5200,
         HealthCosts = 5250,
 
+        /// <summary>The house tax you pay as the owner of the town's houses (spec 022 §3.1). Not farm profit.</summary>
+        HouseTax = 5270,
+
         /// <summary>The founder's gifts to the village: the school, its upkeep, adult classes (spec 018, ADR 0095 §5). Outside farm profit.</summary>
         GiftsToVillage = 5260,
         Rent = 5300,
@@ -78,6 +84,9 @@ namespace Sim.Core.Finance
         CostOfGoodsSold = 5800,
         Power = 5810,
         Repairs = 5820,
+
+        /// <summary>A business's tax on its season profit (spec 022 §3.2), on its own books.</summary>
+        BusinessTax = 5830,
 
         // The town treasury's accounts (spec 021 §3.2, ADR 0108; save schema 19): its own ledger, never the founder's.
         /// <summary>The district's one-off start-up grant at the Township's opening.</summary>
@@ -129,6 +138,7 @@ namespace Sim.Core.Finance
             Account.TransportAndSelling, Account.CostOfGoodsSold, Account.Power, Account.Repairs,
             Account.StartUpGrant, Account.GrantUntied, Account.GrantTied, Account.PitchRents, Account.HouseTaxIncome, Account.BusinessTaxIncome, Account.Fees, Account.GiftsFromFounder,
             Account.DeptOffice, Account.DeptHealth, Account.DeptEducation, Account.DeptRoads, Account.DeptSafety, Account.DeptUtilities, Account.DeptPolicies,
+            Account.TaxOwed, Account.HouseTax, Account.BusinessTax, // spec 022 (save schema 19, after the treasury's)
         };
 
         /// <summary>
@@ -150,7 +160,7 @@ namespace Sim.Core.Finance
                 case Account.BankDeposit: case Account.InterestOnSavings: return 16;
                 case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
-                case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: return 19;
+                case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
                 default: return 0;
             }
         }

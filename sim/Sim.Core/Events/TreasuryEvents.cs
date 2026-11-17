@@ -152,4 +152,55 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "TreasuryShortAhead(short=" + Short + ", first=" + FirstUnpaid + ")"; }
     }
+
+    /// <summary>A tax was billed at the close (spec 022 §3.8): what was billed and what the office collected (and the payer paid or owes).</summary>
+    public sealed class TaxBilled : SimEvent
+    {
+        public int Tax { get; }
+        public string Payer { get; }
+        public long Billed { get; }
+        public long Collected { get; }
+
+        public TaxBilled(long simTime, int tax, string payer, long billed, long collected) : base(simTime)
+        {
+            Tax = tax;
+            Payer = payer;
+            Billed = billed;
+            Collected = collected;
+        }
+
+        protected override string Describe() { return "TaxBilled(tax=" + Tax + ", payer=" + Payer + ", billed=" + Billed + ", collected=" + Collected + ")"; }
+    }
+
+    /// <summary>A payer couldn't pay all it owed the town at the close: the rest is carried and paid first at the next one (spec 022 §3.1).</summary>
+    public sealed class TaxOwed : SimEvent
+    {
+        public string Payer { get; }
+        public long Amount { get; }
+
+        public TaxOwed(long simTime, string payer, long amount) : base(simTime)
+        {
+            Payer = payer;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "TaxOwed(payer=" + Payer + ", amount=" + Amount + ")"; }
+    }
+
+    /// <summary>A tax rate was set for the next season, or the pending one undone (spec 022 §3.4).</summary>
+    public sealed class TaxRateSet : SimEvent
+    {
+        public int Tax { get; }
+        public Fixed From { get; }
+        public Fixed To { get; }
+
+        public TaxRateSet(long simTime, int tax, Fixed from, Fixed to) : base(simTime)
+        {
+            Tax = tax;
+            From = from;
+            To = to;
+        }
+
+        protected override string Describe() { return "TaxRateSet(tax=" + Tax + ", from=" + From + ", to=" + To + ")"; }
+    }
 }

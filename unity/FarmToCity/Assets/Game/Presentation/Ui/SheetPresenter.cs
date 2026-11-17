@@ -558,7 +558,7 @@ namespace Game.Presentation.Ui
         private VisualElement AmountRow(LineVm line)
         {
             AmountVm a = line.Amount;
-            bool live = a.Then != null; // a row with no button of its own: the sheet is drawn again when it is let go (US-252)
+            bool live = a.Then != null || a.Set != null; // a row with no button of its own: the sheet is drawn again when it is let go (US-252)
             long value = !live && _amounts.TryGetValue(a.Id, out long kept) ? System.Math.Min(a.Max, System.Math.Max(a.Min, kept)) : a.Start;
             var box = new VisualElement { pickingMode = PickingMode.Ignore, name = "amount:" + a.Id };
             box.style.paddingTop = 6; box.style.paddingBottom = 10;
@@ -603,6 +603,7 @@ namespace Game.Presentation.Ui
                 input.style.color = UiKit.Ink;
             }
             top.Add(field);
+            if (live && a.Set != null) AddWhyChip(top, line.WhyKey, line.WhyId); // a tax's ? beside its box (spec 022 §7)
             var buttonSlot = new VisualElement { pickingMode = PickingMode.Ignore };
             if (!live) top.Add(buttonSlot);
             box.Add(top);
@@ -627,7 +628,12 @@ namespace Game.Presentation.Ui
             string shown = null;
             string Digits(long v) { return (v / a.Scale).ToString(System.Globalization.CultureInfo.InvariantCulture); }
             float Fraction(long v) { return a.Span <= a.Min ? 1f : Mathf.Clamp01((float)(v - a.Min) / (a.Span - a.Min)); }
-            void Commit() { if (live && value != a.Start && OnAmountSet != null) OnAmountSet(a.Then(value)); } // the sheet again, with the new load
+            void Commit()
+            {
+                if (!live || value == a.Start) return;
+                if (a.Set != null) { if (OnAction != null) OnAction(a.Set(value)); } // a tax rate: sent when let go, from the next season (spec 022 §3.4)
+                else if (OnAmountSet != null) OnAmountSet(a.Then(value));
+            } // the sheet again, with the new load
             void Choose(long v, bool fromField)
             {
                 if (live) v = System.Math.Max(a.Min, System.Math.Min(a.Max, v)); // a typed amount never passes the room

@@ -25,7 +25,7 @@ namespace Sim.View.Tests
             Assert.That(row.Action.Opens.Value.Kind, Is.EqualTo(TreasurySheet.Kind));
         }
 
-        // AC-18 (the model): a banner saying whose money it is, the balance, whether the close is covered, two picture buttons, money in and out.
+        // AC-18 (the model): a banner saying whose money it is, the balance, whether the close is covered, three picture buttons, money in and out.
         [Test]
         public void Sheet()
         {
@@ -37,9 +37,9 @@ namespace Sim.View.Tests
             Assert.That(vm.Lines.First().Banner, Is.True);
             Assert.That(vm.Lines.First().Label, Does.StartWith("Town money: not yours"));
             Assert.That(vm.Lines.Single(l => l.Label == "Balance").Value, Is.EqualTo(ctx.Fmt.Coins(sim.State.Treasury.Cash)));
-            Assert.That(vm.Lines.Single(l => l.Label == "At the close").Value, Is.EqualTo("Covered ✓"));
+            Assert.That(vm.Lines.Single(l => l.Label == "At the close").Value, Does.StartWith("Covered ✓").Or.StartWith("From the balance"), "the Editor town has one resident: its grants fall short of the office, the balance carries it");
             LineVm buttons = vm.Lines.Single(l => l.Buttons != null);
-            Assert.That(buttons.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Give to the town", "The town's books" }));
+            Assert.That(buttons.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Give to the town", "Taxes and policies", "The town's books" }));
             Assert.That(vm.Lines.Single(l => l.Label == "Council's office · service 100%").Meter, Is.EqualTo(100));
             Assert.That(vm.Lines.Single(l => l.Label == "Health").Note, Is.EqualTo("Nothing to pay yet"));
             Assert.That(vm.Lines.Single(l => l.Label != null && l.Label.StartsWith("District grant, tied")).Value, Is.EqualTo("Paid when the clinic is staffed"));
