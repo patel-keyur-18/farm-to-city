@@ -1,6 +1,6 @@
 # 0117. Taxes as built (US-140): rates in whole units, a bill that follows the office, tax carried when unpaid, a first-visit note on the sheet
 
-- Status: Proposed (for the owner's review of US-140, 2026-11-17)
+- Status: Accepted (owner, 2026-11-17, US-140 approved)
 - Date: 2026-11-17
 - Deciders: Keyur Patel
 - Amends: spec 022 §3.1 (where the guard and the assessed-as live), §3.2 (when the treasury is paid), §3.7 (the first-visit tour's form), §7 (the status line)

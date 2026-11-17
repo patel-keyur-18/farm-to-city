@@ -150,7 +150,17 @@ namespace Sim.Core.Town
         public int[] OverBudget { get; internal set; } = new int[Departments];
 
         /// <summary>Which of the content's lines have appeared, so a new line is added to its budget once (spec 021 §3.6).</summary>
-        public bool[] LineSeen { get; internal set; } = new bool[0];
+        public List<string> SeenLines { get; internal set; } = new List<string>();
+
+        /// <summary>A line has been seen: saved by its id, so lines added to the content later (spec 023's) never shift the ones before them.</summary>
+        internal bool Seen(string id) { return SeenLines.BinarySearch(id, System.StringComparer.Ordinal) >= 0; }
+
+        internal void SetSeen(string id, bool seen)
+        {
+            int at = SeenLines.BinarySearch(id, System.StringComparer.Ordinal);
+            if (seen && at < 0) SeenLines.Insert(~at, id);
+            else if (!seen && at >= 0) SeenLines.RemoveAt(at);
+        }
 
         public BudgetWindow Window { get; internal set; }
 
@@ -213,7 +223,7 @@ namespace Sim.Core.Town
             c.Condition = (Fixed[])Condition.Clone();
             c.Unpaid = (int[])Unpaid.Clone();
             c.OverBudget = (int[])OverBudget.Clone();
-            c.LineSeen = (bool[])LineSeen.Clone();
+            c.SeenLines = new List<string>(SeenLines);
             c.Policies = System.Array.ConvertAll(Policies, x => x.Clone());
             c.Works = Works.ConvertAll(x => x.Clone());
             c.PendingRents = new List<KeyValuePair<long, long>>(PendingRents);
@@ -233,8 +243,8 @@ namespace Sim.Core.Town
             foreach (Fixed c in Condition) h.WriteFixed(c);
             foreach (int u in Unpaid) h.WriteInt(u);
             foreach (int u in OverBudget) h.WriteInt(u);
-            h.WriteInt(LineSeen.Length);
-            foreach (bool b in LineSeen) h.WriteBool(b);
+            h.WriteInt(SeenLines.Count);
+            foreach (string id in SeenLines) h.WriteString(id);
             h.WriteInt((int)Window);
             h.WriteLong(WindowPeriod);
             h.WriteBool(WindowSeen);
@@ -263,8 +273,8 @@ namespace Sim.Core.Town
             for (int i = 0; i < Departments; i++) s.Condition[i] = r.ReadFixed();
             for (int i = 0; i < Departments; i++) s.Unpaid[i] = r.ReadInt();
             for (int i = 0; i < Departments; i++) s.OverBudget[i] = r.ReadInt();
-            s.LineSeen = new bool[r.ReadCount()];
-            for (int i = 0; i < s.LineSeen.Length; i++) s.LineSeen[i] = r.ReadBool();
+            int seen = r.ReadCount();
+            for (int i = 0; i < seen; i++) s.SeenLines.Add(r.ReadString());
             s.Window = (BudgetWindow)r.ReadInt();
             s.WindowPeriod = r.ReadLong();
             s.WindowSeen = r.ReadBool();

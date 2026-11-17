@@ -242,10 +242,11 @@ namespace Sim.Core.Business
                     new Posting(Account.Buildings, -building), new Posting(Account.Equipment, -equipment), new Posting(Account.LossOnAssetSales, book - sale));
 
             long overdraft = Overdrawn(b), owed = loan != null && loan.IsOpen ? CreditRules.OwedNow(sim, loan) : 0;
+            long taxOwed = -l.Balance(Account.TaxOwed); // spec 022 §3.2: closing the business never wipes the tax it still owes
             long guaranteed = 0;
-            if (overdraft + owed > l.Cash)
+            if (overdraft + owed + taxOwed > l.Cash)
             {
-                long shortfall = overdraft + owed - l.Cash;
+                long shortfall = overdraft + owed + taxOwed - l.Cash;
                 guaranteed = (shortfall + Money.Coin - 1) / Money.Coin * Money.Coin;
                 CreditSystem.Create(sim, sim.Config.Game.Credit.IndexOfLender(d.LenderId), guaranteed, d.GuaranteeTermSeasons);
                 sim.State.Ledger.Post(now, sim.Period, "ledger.guarantee", reference, new Posting(Account.InvestmentInBusinesses, guaranteed), new Posting(Account.Cash, -guaranteed));
@@ -253,6 +254,7 @@ namespace Sim.Core.Business
             }
             if (overdraft > 0) l.Post(now, sim.Period, "ledger.overdraftRepaid", reference, new Posting(Account.Overdraft, overdraft), new Posting(Account.Cash, -overdraft));
             if (owed > 0) CreditSystem.Pay(sim, loan, owed, "ledger.loanPayment", out _, out _, out _);
+            if (taxOwed > 0) Town.TaxRules.PayOwed(sim, l, reference, Town.TaxKind.Business, now);
 
             long toYou = l.Cash;
             if (toYou > 0) Withdraw(sim, b, toYou);

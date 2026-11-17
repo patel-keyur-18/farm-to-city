@@ -52,9 +52,8 @@ namespace Sim.Core.Town
             long grant = MarketRules.Indexed(sim, d.StartUpGrant);
             if (grant > 0) s.Ledger.Post(now, sim.Period, "ledger.townStartUpGrant", "district", new Posting(Account.Cash, grant), new Posting(Account.StartUpGrant, -grant));
             s.SeasonOpeningCash = 0; // the grant is the first season's first income
-            s.LineSeen = new bool[d.Lines.Count];
             for (int i = 0; i < d.Lines.Count; i++)
-                if (LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; AddToBudget(sim, d.Lines[i]); } // the first year's budget is its needs (spec 021 §3.6)
+                if (LineActive(sim, d.Lines[i])) { s.SetSeen(d.Lines[i].Id, true); AddToBudget(sim, d.Lines[i]); } // the first year's budget is its needs (spec 021 §3.6)
             s.HouseRate = d.Taxes.HouseRate; s.BusinessRate = d.Taxes.BusinessRate; // spec 022 §3.4: the defaults at the opening
             s.Window = BudgetWindow.Set;
             s.WindowPeriod = sim.Period;
@@ -207,6 +206,14 @@ namespace Sim.Core.Town
             long sum = 0;
             foreach (LineDef l in d.Lines) if (l.Department == department && LineActive(sim, l)) sum += LineAmount(sim, l);
             return sum;
+        }
+
+        private const int EducationDept = 2; // the third department, in payment order (spec 021 §3.4)
+
+        /// <summary>The Education service is at or above its minimum (or there is no treasury): a school year counts (spec 021 §3.5).</summary>
+        public static bool EducationServes(Simulation sim)
+        {
+            return !IsOpen(sim) || State(sim).Condition[EducationDept] >= Def(sim).EducationMinCondition;
         }
 
         /// <summary>The treasury's residents: your citizens, and the old village's cohort once it has joined (spec 023).</summary>
@@ -391,7 +398,7 @@ namespace Sim.Core.Town
             // 3. Spending: a new line joins its department's budget at its needs, then the two passes.
             var newLine = new bool[TreasuryState.Departments];
             for (int i = 0; i < d.Lines.Count; i++)
-                if (!s.LineSeen[i] && LineActive(sim, d.Lines[i])) { s.LineSeen[i] = true; AddToBudget(sim, d.Lines[i]); newLine[d.Lines[i].Department] = true; }
+                if (!s.Seen(d.Lines[i].Id) && LineActive(sim, d.Lines[i])) { s.SetSeen(d.Lines[i].Id, true); AddToBudget(sim, d.Lines[i]); newLine[d.Lines[i].Department] = true; }
             int n = d.Lines.Count;
             var amounts = new long[n];
             var paid = new long[n];
@@ -425,9 +432,9 @@ namespace Sim.Core.Town
             for (int i = 0; i < n; i++) if (d.Lines[i].Policy >= 0) fullyPaid[d.Lines[i].Policy] = LineActive(sim, d.Lines[i]) && paid[i] >= amounts[i];
             PolicyRules.AtClose(sim, fullyPaid);
             for (int i = 0; i < n; i++)
-                if (d.Lines[i].Policy >= 0 && s.LineSeen[i] && !LineActive(sim, d.Lines[i]))
+                if (d.Lines[i].Policy >= 0 && s.Seen(d.Lines[i].Id) && !LineActive(sim, d.Lines[i]))
                 {
-                    s.LineSeen[i] = false;
+                    s.SetSeen(d.Lines[i].Id, false);
                     int dp = d.Lines[i].Department;
                     long gone = LineAmount(sim, d.Lines[i]);
                     s.Budget[dp] = Math.Max(0, s.Budget[dp] - gone);

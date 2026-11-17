@@ -99,7 +99,7 @@ namespace Sim.View.Tests
             AlertVm alert = Alerts.Build(ViewKit2.Context(sim)).Single(a => a.Level == AlertLevel.Urgent && a.Text.Contains("short at the close"));
             Assert.That(alert.Levers.Select(l => l.Label), Is.EqualTo(new[] { "Give to the town", "Change a tax", "Revise the budget" }));
             Assert.That(alert.Levers[0].Opens.Value.Kind, Is.EqualTo(TreasurySheet.GiveKind));
-            Assert.That(alert.Levers[1].Enabled, Is.False);
+            Assert.That(alert.Levers[1].Opens.Value.Kind, Is.EqualTo(TaxSheet.Kind), "Change a tax opens the Taxes sheet (US-140)");
             Assert.That(alert.Levers[2].Enabled, Is.False);
             Assert.That(alert.Levers[2].DisabledReason, Does.StartWith("Locked until the"));
         }

@@ -41,6 +41,7 @@ namespace Sim.Core.Town
         internal static RejectReason SetRate(Simulation sim, TaxKind kind, Fixed rate)
         {
             if (!TreasuryRules.IsOpen(sim)) return RejectReason.NoTreasury;
+            if (kind != TaxKind.House && kind != TaxKind.Business) return RejectReason.OutOfRange;
             if (rate < Fixed.Zero || rate > Bound(sim, kind)) return RejectReason.OutOfRange;
             TreasuryState s = State(sim);
             Fixed from = Next(sim, kind);
@@ -54,6 +55,7 @@ namespace Sim.Core.Town
         internal static RejectReason UndoRate(Simulation sim, TaxKind kind)
         {
             if (!TreasuryRules.IsOpen(sim)) return RejectReason.NoTreasury;
+            if (kind != TaxKind.House && kind != TaxKind.Business) return RejectReason.NothingPending;
             TreasuryState s = State(sim);
             if (Pending(sim, kind) < Fixed.Zero) return RejectReason.NothingPending;
             Fixed from = Next(sim, kind);
@@ -140,7 +142,9 @@ namespace Sim.Core.Town
             ShopDefs sd = sim.Config.Game.Shops;
             if (shops == null || sd == null) return list;
             TaxDef d = Def(sim);
-            foreach (Rival r in shops.Rivals)
+            var all = new List<Rival>(shops.Rivals);
+            all.AddRange(shops.Newcomers); // a newcomer pays on its own reference profit too
+            foreach (Rival r in all)
             {
                 string key = r.Newcomer ? "newcomer" : r.Id;
                 if (!d.ReferenceProfit.TryGetValue(key, out long profit)) continue; // the town's halwai is not the village's
@@ -161,7 +165,7 @@ namespace Sim.Core.Town
             if (!TreasuryRules.IsOpen(sim)) return;
             Ledger l = sim.State.Ledger;
             long now = sim.State.Clock.SimTime;
-            PayOwed(sim, l, "founder", TaxKind.House, now);
+            PayOwed(sim, l, "you", TaxKind.House, now);
             long billed = YourHouseBill(sim, Rate(sim, TaxKind.House), out int houses);
             if (billed <= 0) return;
             long collected = Collected(sim, billed), pay = Math.Min(collected, Math.Max(0, l.Cash));
@@ -217,7 +221,7 @@ namespace Sim.Core.Town
         }
 
         /// <summary>What a payer still owes the town is paid first, from cash (spec 022 §3.1); drawings before a close never reduce it.</summary>
-        private static void PayOwed(Simulation sim, Ledger l, string payer, TaxKind kind, long now, long period = -1)
+        internal static void PayOwed(Simulation sim, Ledger l, string payer, TaxKind kind, long now, long period = -1)
         {
             long owed = -l.Balance(Account.TaxOwed);
             if (owed <= 0) return;

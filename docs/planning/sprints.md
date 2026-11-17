@@ -938,12 +938,12 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
-- [ ] Specs 023 and 024 approved; their ADR (0114 onward)
-- [ ] Save schema 19: migration, `saves/schema19` fixture, every older schema loads
-- [ ] Sheets and cards previewed to and approved by the owner before each story's code
-- [ ] Balance: treasury and taxes on the bots (20% rule on 24 seeds, 200 with `FTC_SEEDS=200`; the stress bots of spec 022 §9; the Village at 28–45 days); contradictions flagged to the owner
-- [ ] Render statistics read for the three views and any growth over 10% reported
-- [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [ ] Specs 023 and 024 approved; their ADRs (0116 accepted; 0119 for spec 024 proposed, the owner reviews at the pull request)
+- [x] Save schema 19: migration, `saves/schema19` fixture, every older schema loads (an open-treasury fixture is a Sprint 22 task)
+- [x] Sheets and cards previewed to and approved by the owner before each story's code (the Policies sheet's artifact is the Editor's own captures, 2026-11-17)
+- [x] Balance: the 20% rule on 24 seeds (in the full run) and 200 seeds (1.13× net worth, 1.07× happiness, ADR 0112's numbers); the Village at 28–45 days (`GateTests`); the stress checks of spec 022 §9 that need no clinic (`TaxGateTests`); the rest carried to spec 023 §12
+- [x] Render statistics read for the three views and any growth over 10% reported (US-141: 1092 / 609 / 392, the village +10%)
+- [ ] Test checklist with device-only rows marked (done); Development build (done 2026-11-17, Xcode compile passed); both frame-time p95s and golden replays on the phone written down (the owner)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it

@@ -65,7 +65,9 @@ namespace Sim.View.Views
             string note = (state == null ? "" : state + "\n") + s.Get("policy.helps", "text", s.Get("policy." + Keys[i] + ".helps")) + "\n" + s.Get("policy.costs", "text", s.Get("policy." + Keys[i] + ".costs"));
             ActionVm action = PolicyRules.Holds(st)
                 ? ActionVm.Checked(ctx, "repeal:" + Keys[i], s.Get("policy.repeal"), null, ActionKind.Secondary, at => new RepealPolicy(at, p))
-                : ActionVm.Checked(ctx, "enact:" + Keys[i], s.Get("policy.enact"), null, ActionKind.Primary, at => new EnactPolicy(at, p));
+                : st.Repealing && st.Status != PolicyStatus.None
+                    ? ActionVm.Checked(ctx, "keep:" + Keys[i], s.Get("policy.keep"), null, ActionKind.Primary, at => new EnactPolicy(at, p)) // it ends at the close: change your mind, keep what was paid
+                    : ActionVm.Checked(ctx, "enact:" + Keys[i], s.Get("policy.enact"), null, ActionKind.Primary, at => new EnactPolicy(at, p));
             return new LineVm(Name(ctx, i), CostText(ctx, p, cost), "policy", i) { Icon = Icons[i], Note = note, NoteTone = tone, Action = action };
         }
 

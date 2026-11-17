@@ -73,7 +73,7 @@ namespace Sim.Content
             BuildingDef home = buildings.Find(b => b.Id == taxes.HomeAssessedAs);
             if (home == null) throw new ContentException("treasury.taxes.homeAssessedAs", "unknown building '" + taxes.HomeAssessedAs + "'");
             BuildingDef house = buildings[population.House];
-            long tax = (taxes.HouseMax * Fixed.FromInt(house.Value)).FloorToLong() / 4, cap = (taxes.MaxShareOfRent * Fixed.FromInt(population.BaseRent)).FloorToLong();
+            long tax = Sim.Core.Finance.Money.MulRate(house.Value, taxes.HouseMax) / 4, cap = Sim.Core.Finance.Money.MulRate(population.BaseRent, taxes.MaxShareOfRent); // ADR 0117 §5: money rounds once, never by flooring a Fixed
             if (tax > cap) throw new ContentException("treasury.taxes.house.max", "a house's tax at the top rate (" + tax + ") is above " + taxes.MaxShareOfRent + " of its rent (" + cap + ")");
         }
 

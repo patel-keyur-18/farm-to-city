@@ -1,6 +1,6 @@
 # 0115. The budget cycle as built: a proposal that follows prices, a window until accepted, five variance sentences, a day's warning and the town planner
 
-- Status: Proposed (for the owner's review of US-139, 2026-11-14)
+- Status: Accepted (owner, 2026-11-14, US-139 approved)
 - Date: 2026-11-14
 - Deciders: Keyur Patel
 - Amends: spec 021 §3.6 (the proposal's formula, what ends a window, the window card), §3.11 (what the warning counts before taxes exist), §3.12 (where the planner speaks)

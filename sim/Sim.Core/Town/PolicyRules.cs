@@ -58,7 +58,9 @@ namespace Sim.Core.Town
         public static RejectReason CanEnact(Simulation sim, PolicyId p)
         {
             if (!TreasuryRules.IsOpen(sim)) return RejectReason.NoTreasury;
+            if (!Enum.IsDefined(typeof(PolicyId), p)) return RejectReason.NotActive;
             PolicyState s = Of(sim, p);
+            if (s.Repealing && s.Status != PolicyStatus.None) return Used(sim) >= Def(sim).MaxActive ? RejectReason.SlotsFull : RejectReason.None; // changing your mind: keep it
             if (Holds(s)) return RejectReason.AlreadyActive;
             if (Wait(sim, p) > 0) return RejectReason.WaitAfterRepeal;
             if (Used(sim) >= Def(sim).MaxActive) return RejectReason.SlotsFull;
@@ -71,6 +73,7 @@ namespace Sim.Core.Town
             RejectReason r = CanEnact(sim, p);
             if (r != RejectReason.None) return r;
             PolicyState s = Of(sim, p);
+            if (s.Repealing) { s.Repealing = false; sim.Emit(new PolicyEnacted(sim.State.Clock.SimTime, (int)p)); return RejectReason.None; } // keep what has been paid for
             s.Status = PolicyStatus.Enacted;
             s.EnactedPeriod = sim.Period;
             s.PaidCloses = 0;
@@ -84,6 +87,7 @@ namespace Sim.Core.Town
         internal static RejectReason Repeal(Simulation sim, PolicyId p)
         {
             if (!TreasuryRules.IsOpen(sim)) return RejectReason.NoTreasury;
+            if (!Enum.IsDefined(typeof(PolicyId), p)) return RejectReason.NotActive;
             PolicyState s = Of(sim, p);
             if (!Holds(s)) return RejectReason.NotActive;
             if (s.PaidCloses == 0) { Reset(sim, s, false); sim.Emit(new PolicyRepealed(sim.State.Clock.SimTime, (int)p)); return RejectReason.None; }
@@ -122,7 +126,7 @@ namespace Sim.Core.Town
 
         /// <summary>The children of school age who can't read yet (spec 018): the school's pupils.</summary>
         public static int Pupils(Simulation sim) { return SchoolRules.Pupils(sim).Count; }
-        private static int Residents(Simulation sim) { return sim.State.Citizens?.Population ?? 0; }
+        private static int Residents(Simulation sim) { return TreasuryRules.Residents(sim); }
 
         /// <summary>The acres your neighbours farm: farm land on the map that isn't yours (spec 022 §3.5).</summary>
         public static int NeighbourAcres(Simulation sim)
@@ -162,10 +166,10 @@ namespace Sim.Core.Town
                     s.Boost = false;
                     continue;
                 }
-                bool starting = s.Status != PolicyStatus.Active && s.PaidCloses + 1 > d.Lag[i];
+                bool wasOn = s.Status == PolicyStatus.Active && s.PaidCloses > d.Lag[i];
                 s.Status = PolicyStatus.Active;
                 s.PaidCloses++;
-                if (starting && s.PaidCloses > d.Lag[i]) sim.Emit(new PolicyStarted(now, i));
+                if (!wasOn && s.PaidCloses > d.Lag[i]) sim.Emit(new PolicyStarted(now, i));
                 if (id == PolicyId.Grant && Effective(sim, id)) RollGrant(sim, s);
             }
         }
@@ -173,6 +177,7 @@ namespace Sim.Core.Town
         /// <summary>The grant, once it is running: 40% come to nothing (spent, no shop), the rest open a door for a newcomer (spec 022 §3.5).</summary>
         private static void RollGrant(Simulation sim, PolicyState s)
         {
+            if (s.Boost) sim.Emit(new GrantWasted(sim.State.Clock.SimTime)); // last season's door found no taker: every kind already has its newcomer
             ulong r = Rng.Next(sim.State.Seed, RngStream.Grants, 0, (ulong)sim.Period);
             if (Rng.Chance(r, Def(sim).GrantWasted)) { s.Boost = false; sim.Emit(new GrantWasted(sim.State.Clock.SimTime)); return; }
             s.Boost = true;
@@ -222,6 +227,21 @@ namespace Sim.Core.Town
         public static Fixed MealHealth(Simulation sim)
         {
             return Effective(sim, PolicyId.Meals) ? Def(sim).MealHealth : Fixed.Zero;
+        }
+
+        /// <summary>A newcomer shop's chance under the minimum wage: wages cost it more, so fewer open (spec 022 §3.5).</summary>
+        public static Fixed NewcomerFactor(Simulation sim)
+        {
+            return Effective(sim, PolicyId.MinWage) ? Def(sim).MinWageNewcomerChance : Fixed.One;
+        }
+
+        /// <summary>What the minimum wage adds to the town's own clerk's pay a season (the card says it: the policy's price is more than the inspector's).</summary>
+        public static long ClerkRaise(Simulation sim)
+        {
+            TreasuryDef t = TreasuryRules.Def(sim);
+            long usual = MarketRules.Indexed(sim, t.ClerkWage);
+            long floor = Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(sim.Config.Game.People.Hand.MarketWage, Fixed.One + Def(sim).MinWageAbove)));
+            return Math.Max(0, Math.Max(usual, floor) - usual);
         }
 
         /// <summary>A newcomer's chance is multiplied while the grant has opened a door; the door shuts at the close it is used or not (spec 022 §3.5).</summary>

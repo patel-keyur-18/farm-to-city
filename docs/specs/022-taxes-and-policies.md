@@ -81,7 +81,7 @@ Each policy's cost is a line in a department (spec 021 §3.4's table, so the bud
 | Policy | Cost a season | Lag | Effect | Helps | Costs |
 | --- | --- | --- | --- | --- | --- |
 | **Free school meals** | `mealPerPupil` 700 × pupils (yours and, from spec 023, the old village's): about 28,000 | 1 | Each pupil's household needs 25% less of a child's food basket (`mealShare` 0.25): food met rises; children's health +0.05 a season to their cap. The food comes from the district's supplier at the regional price, never from your store, stall or businesses | Poorer families (+2 to +4 happiness when short of food), children's health | The treasury |
-| **Farm input subsidy** | `subsidyPerAcre` 250 × neighbours' farmed acres on the map (not yours, not scrub or roads): about 15,000 | 1 | The valley's supply of every field crop × 1.05 (`region.json` `valleySupplyPerDay`): the local price about −1 to −2%. **On repeal**, × 0.97 for 2 seasons (dependency), then normal | Neighbours, the town's food budgets | The treasury; **you, at the local market**. The trader and mandi follow the region |
+| **Farm input subsidy** | `subsidyPerAcre` 125 (ADR 0118 §5) × neighbours' farm acres on the map (not yours, not scrub or roads): about 15,000 | 1 | The valley's supply of every field crop × 1.05 (`region.json` `valleySupplyPerDay`): the local price about −1 to −2%. **On repeal**, × 0.97 for 2 seasons (dependency), then normal | Neighbours, the town's food budgets | The treasury; **you, at the local market**. The trader and mandi follow the region |
 | **Small business grant** | `grantAmount` 10,000, at most one a season | 1 | Offered each season to the first adult (by id) among your townspeople with no town job; with it, spec 017's newcomer may open without a price gap (chance × 1.5), run by that person (a town job). **40% come to nothing** (`grantWasted` 0.40, seeded stream `Grants`): spent, no shop | That household (security need, employment rate), shoppers | The treasury; **your shops** (a competitor). Pays back about 500 a season in business tax if it opens |
 | **Minimum wage** | 2,000 (an inspector, on the office's line) | At each contract's next renewal; labourers' day wage from the next day; asks at once | A floor at `minWageAbove` +10% over today's market wage: a hand at least 33,000 a season, a labourer's day 10,300, a business worker's ask at least their kind's market + 10%; **the treasury's clerk too**. Newcomers open less often (chance × 0.8). On repeal, wages stay until each renewal | Your hands, your businesses' workers, labourers from your town (+2 happiness a household at the market wage) | **You and your businesses**; fewer jobs at the margin (from your own choices and fewer newcomers) |
 | **Rent control** | 1,000 (a rent officer, on the office's line) | At each lease's next renewal | A renewal's rise is capped at `rentControlCap` 3% a year (US-240's cap is 10%); a new family moving into an empty house still pays the market rent; a rent never goes down. On repeal, renewals move toward the market, capped at 10% | Tenants (lower burden, fewer leave over rent) | **You, as a landlord** (a capped rent falls behind inflation); builders build fewer rentals (spec 024: × 0.7). The renewal card's *Why?* says turnover pays you more |
@@ -121,9 +121,9 @@ At each season close, inside spec 021 §3.10's step 1: house tax (your houses, t
 | `policies[]` | list | the six of §3.5 | | id, department, cost, lag, effect fields, `could` |
 | `maxActive`, `reenactAfterSeasons` | int | 3, 1 | | |
 | `mealPerPupil`, `mealShare` | long, Fixed | 700, 0.25 | | |
-| `subsidyPerAcre`, `subsidySupply`, `subsidyHangover`, `subsidyHangoverSeasons` | | 250, 1.05, 0.97, 2 | | |
+| `subsidyPerAcre`, `subsidySupply`, `subsidyHangover`, `subsidyHangoverSeasons` | | 125, 1.05, 0.97, 2 | | |
 | `grantAmount`, `grantWasted`, `grantNewcomerChance` | | 10,000, 0.40, 1.5 | | |
-| `minWageAbove`, `minWageNewcomerChance`, `inspectorCost` | | 0.10, 0.8, 2,000 | | |
+| `minWageAbove`, `minWageNewcomerChance`, `inspectorCost` (content: `minWage.above`, `.newcomerChance`, `.inspector`) | | 0.10, 0.8, 2,000 | | |
 | `rentControlCap`, `rentOfficerCost`, `builderFactor` | | 0.03, 1,000, 0.7 | | |
 | `nightMarket` | | lights 2,000, safety 3,000, hours 20–23, demand 1.10 | | Could |
 | `buildings.json` `assessAs` | string | | | Your home as a kutcha house |
@@ -203,20 +203,20 @@ Policies tab:
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
 | AC-1 | The house tax bills each owner base × rate ÷ 4 a season in arrears, huts exempt, your home as a kutcha house; posted on both sides | `TaxTests.HouseTax` |
-| AC-2 | A house's tax never exceeds 15% of its kind's base rent or of a let house's actual rent; the loader refuses content past it | `TaxTests.HouseTax_Guard`, `ContentTests.TaxGuard` |
+| AC-2 | A house's tax never exceeds 15% of its kind's base rent or of a let house's actual rent; the loader refuses content past it | `TaxTests.HouseTax_Guard` (the per-house cap and the loader's refusal) |
 | AC-3 | The business tax bills each business's positive season profit × rate, yours from their own cash, the village's shops on their reference profit; a loss pays nothing | `TaxTests.BusinessTax` |
 | AC-4 | A tax that can't be paid is carried as owed (2400) and paid first at the next close; drawings before a close don't reduce it | `TaxTests.Owed_NoDodge` |
 | AC-5 | A rate change applies from the next season; pending can be undone; a cut before a close saves nothing | `TaxTests.RateFromNextSeason` |
 | AC-6 | Collection follows the office's condition; the payer pays only what's collected; the treasury shows billed and collected | `TaxTests.Collection` |
-| AC-7 | The preview row shows revenue, who pays, the old village's happiness and whether the budget is covered, equal to what the next close does with nothing else changed | `TaxViewTests.Preview` |
-| AC-8 | The old village's tax comes from leisure and savings before food; your tenants' budgets don't change | `TaxTests.Burden` |
+| AC-7 | The preview row shows revenue, who pays, the old village's happiness and whether the budget is covered, equal to what the next close does with nothing else changed | `TaxViewTests.Preview` (the verdict is priced at the rate that will bill; the slider's effect is the steady-state season) |
+| AC-8 | The old village's tax comes from leisure and savings before food; your tenants' budgets don't change | `TaxTests.Burden` (**carried to spec 023 §8**: it needs the cohort) |
 | AC-9 | Each policy charges its department, starts after its lag, has its effect (meals' food need; the subsidy's supply and hangover; the grant's 40% waste; the minimum wage's floor at renewal, the clerk included; rent control's 3% cap on renewals only) | `PolicyTests.Meals`, `PolicyTests.Subsidy`, `PolicyTests.Grant`, `PolicyTests.MinimumWage`, `PolicyTests.RentControl` |
 | AC-10 | At most 3 active; enacting is a tap-to-spend card, repealing hold-to-end; a repealed policy waits a season; an unpaid one pauses | `PolicyTests.Slots`, `PolicyTests.PauseAndWait`, `PolicyViewTests.Cards` |
 | AC-11 | No subsidy, grant or meal reaches your farm, household or businesses | `TreasuryTests.NeverPaysYou` (spec 021) |
-| AC-12 | A town left alone (no treasury sheet ever opened) stays solvent with every service at 100% on defaults | `TaxGateTests.HandsOff` |
-| AC-13 | The stress bots of §9 pass | `TaxGateTests.*` |
-| AC-14 | Your house tax and businesses' tax are on *Next season, already due*, *Spent* and the books; every number has a *Why?* | `MoneyViewTests.HouseTax`, `WhyTests.EveryTaxNumberHasWhy` |
-| AC-15 | The tour runs once on each sheet's first open; the sheets, sliders and cards respond to scripted touch in the Editor | `GuideTests.TreasuryTour`, the story's Editor tour |
+| AC-12 | A town left alone (no treasury sheet ever opened) stays solvent with every service at 100% on defaults | `TaxGateTests.HandsOff` (never below zero, every book reconciles, no policy unenacted; "every service at 100%" is checked in spec 023 with the clinic's and road's upkeep) |
+| AC-13 | The stress bots of §9 pass | `TaxGateTests.HandsOff`, `RateDodger`, `PolicyFlipper`, `MilkTheTreasury`, `TaxTests.ClosingPaysTaxOwed` (the business emptier); *every tax at 0*, *every tax at the cap* and the 200 seeds are **carried to spec 023 §8** (they need the clinic and the cohort to mean anything) |
+| AC-14 | Your house tax and businesses' tax are on *Next season, already due*, *Spent* and the books; every number has a *Why?* | `TaxViewTests.YourSide`, `WhyTests.EveryNumberHasWhy` (includes the Taxes and Policies sheets). A business's own tax is on its books, not on *Next season, already due* |
+| AC-15 | The tour runs once on each sheet's first open; the sheets, sliders and cards respond to scripted touch in the Editor | `PolicyViewTests.Tour`, `TaxViewTests.Sheet` (the Taxes note), the stories' Editor tours |
 | AC-16 | Saves round-trip rates, pending rates, policies' states and owed tax; replay gives the same state | `TaxTests.SaveRoundTrip` |
 
 ## 9. Balancing hooks
@@ -269,7 +269,7 @@ All ten gaps were closed with the owner one per message on 2026-11-13 (ADR 0109)
 - **Rates** are set in tenths of a percent (house) and whole percents (business), pending until the close; `SeeTaxTour` keeps the first-visit note from showing again (a banner on the sheet).
 - **The bill** follows the office; the treasury is paid what is paid; unpaid tax is carried (2400) and paid first at the next close.
 - **Status line:** *Covered ✓*, *From the balance: lasts about n seasons*, or *Short by n*.
-- **Not yet:** the old village's rows (spec 023), AC-8's burden test (needs the cohort), the Policies tab (US-141).
+- **Not yet:** the old village's rows (spec 023), AC-8's burden test (needs the cohort). *Billed against collected* is shown only as what was collected (the treasury's rows); the billed figure is in the events and the books.
 
 ## 13. As built (US-141, 2026-11-17, ADR 0118)
 
@@ -281,3 +281,4 @@ All ten gaps were closed with the owner one per message on 2026-11-13 (ADR 0109)
 - **The sheet:** a *Policies · n of 3* tab beside *Taxes*; each row the cost, where it stands, *Helps* and *Costs*; enact is a tap card, repeal a hold card; a first-visit note.
 - **Not built:** the night market (needs the watchman's post, spec 023). **Gate checks** that need no bot are in `TaxGateTests`; the 200-seed hands-off solvency waits for spec 023's cohort and clinic.
 
+- **Review fixes (2026-11-17, ADR 0118 amended):** a closed business pays the tax it owes first; newcomer shops pay on their reference profit; the Education service gates school years (`TreasuryRules.EducationServes`); a policy that is ending can be kept; the subsidy lowers field crops only; the minimum wage binds a low offer, the clerk, and cuts newcomers' chance × 0.8; `PolicyStarted` fires at the end of the lag; the tax lever on the short-town alert opens the Taxes sheet; the renewal card names rent control. **Deferred to spec 023:** the happiness hooks (tenants feel Health and Education through their *Healthcare* and *School* rows, §3.3.2), the owed tax in the net-worth statement, and a *Why?* naming the minimum wage where a wage is asked.

@@ -134,14 +134,14 @@ namespace Sim.Content
             OnlyFields(blocks[0], m, "lag", "department", "perPupil", "share", "health");
             OnlyFields(blocks[1], s, "lag", "department", "perAcre", "supply", "hangover", "hangoverSeasons");
             OnlyFields(blocks[2], g, "lag", "department", "amount", "wasted", "newcomerChance");
-            OnlyFields(blocks[3], w, "lag", "department", "above", "inspector");
+            OnlyFields(blocks[3], w, "lag", "department", "above", "newcomerChance", "inspector");
             OnlyFields(blocks[4], r, "lag", "department", "cap", "officer");
             long Coins(JObject b, string q, string name) { long v = Money(Required(b, q, name), Join(q, name)); if (v <= 0) throw new ContentException(Join(q, name), "must be above 0"); return v; }
             return new PolicyDefs(BoundedInt(t, p, "maxActive", 1, 5), BoundedInt(t, p, "reenactAfterSeasons", 0, 8), lag, dept,
                 Coins(blocks[0], m, "perPupil"), Bounded(blocks[0], m, "share", "0", "1"), Bounded(blocks[0], m, "health", "0", "1"),
                 Coins(blocks[1], s, "perAcre"), Bounded(blocks[1], s, "supply", "1", "2"), Bounded(blocks[1], s, "hangover", "0.5", "1"), BoundedInt(blocks[1], s, "hangoverSeasons", 0, 8),
                 Coins(blocks[2], g, "amount"), Bounded(blocks[2], g, "wasted", "0", "1"), Bounded(blocks[2], g, "newcomerChance", "1", "3"),
-                Bounded(blocks[3], w, "above", "0", "1"), Coins(blocks[3], w, "inspector"),
+                Bounded(blocks[3], w, "above", "0", "1"), Bounded(blocks[3], w, "newcomerChance", "0", "1"), Coins(blocks[3], w, "inspector"),
                 Bounded(blocks[4], r, "cap", "0", "0.1"), Coins(blocks[4], r, "officer"));
         }
 

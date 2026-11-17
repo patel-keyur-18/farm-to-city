@@ -101,6 +101,33 @@ namespace Sim.Core.Tests
             Assert.That(T(sim).Ledger.Reconcile(), Is.Null);
         }
 
+        // AC-3: a newcomer's shop pays the rate × the newcomer's reference profit like the village's others.
+        [Test]
+        public void NewcomerShopPays()
+        {
+            Simulation sim = Start();
+            sim.State.Shops.Newcomers.Add(new Sim.Core.Business.Rival { Def = -1, Id = "newcomer_veg", Kind = ShopKind.Veg, Pitch = 0, OpenedAt = 123, PriceFactor = Fixed.One });
+            var bills = TaxRules.ShopBills(sim, Fixed.Parse("0.10"));
+            Assert.That(bills.Single(x => x.Key == "newcomer:123").Value, Is.EqualTo(Money.MulRate(MarketRules.Indexed(sim, 5_000 * Coin), Fixed.Parse("0.10"))));
+        }
+
+        // The business emptier: a business that owes tax and is closed pays it first; closing never wipes the debt or sends the town's share to you.
+        [Test]
+        public void ClosingPaysTaxOwed()
+        {
+            Simulation sim = NewFarm(game: Game(), options: new SimOptions { DevCommandsEnabled = true });
+            Sim.Core.Business.Business b = ShopTests.Shop(sim, "tea_stall");
+            TreasuryTests.Township(sim);
+            long now = sim.State.Clock.SimTime;
+            b.Ledger.Post(now, sim.Period, "test", "test", new Posting(Account.Cash, 20_000 * Coin), new Posting(Account.Sales, -20_000 * Coin));
+            b.Ledger.Post(now, sim.Period, "test", "test", new Posting(Account.BusinessTax, 5_000 * Coin), new Posting(Account.TaxOwed, -5_000 * Coin));
+            long town = T(sim).Cash;
+            Ok(sim, new CloseBusiness(now, b.Id));
+            Assert.That(b.Ledger.Balance(Account.TaxOwed), Is.EqualTo(0), "the debt is paid, not wiped");
+            Assert.That(T(sim).Cash - town, Is.EqualTo(5_000 * Coin), "the town received it");
+            Assert.That(T(sim).Ledger.Reconcile(), Is.Null);
+        }
+
         // AC-4: a tax that can't be paid is carried as owed (2400) and paid first at the next close; the founder's cash before a close doesn't reduce it.
         [Test]
         public void Owed_NoDodge()

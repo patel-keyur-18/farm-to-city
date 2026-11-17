@@ -283,3 +283,11 @@ All ten gaps were closed with the owner one per message on 2026-11-14:
 3. The playground (its effect is the smallest).
 4. The road's season-page line (its *Why?* on prices stays).
 Never cut: the gate, the unlock, the doctor's rules, the coverage rule, a hands-off town that works, every number's *Why?*.
+
+## 12. Carried from spec 022 (ADR 0118)
+
+- `TaxTests.Burden` (AC-8: the old village's tax comes from leisure and savings before food) once the cohort exists.
+- `TaxGateTests`: **every tax at 0** (services decay, happiness at least 5 lower within 8 seasons, never stuck), **every tax at the cap**, and the **200-seed hands-off Township** with every service at 100% on the default rates and no policy, which needs the clinic's and road's upkeep in the lines.
+- The services' hooks: tenants feel Health and Education through their *Healthcare* and *School* rows (spec 022 §3.3.2); the doctor leaves by `healthLeaveBelow`; the owed tax in net worth; a *Why?* naming the minimum wage on a wage ask; a planner note for a paused policy.
+- The cohort feeds the house tax's bill, the residents count (`TreasuryRules.Residents`) and the meals' pupils; builders' houses (spec 024) are billed to their owner, never to you.
+

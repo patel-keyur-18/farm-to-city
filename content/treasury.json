@@ -25,7 +25,7 @@
     "meals": { "lag": 1, "department": "education", "perPupil": 700, "share": 0.25, "health": 0.05 },
     "subsidy": { "lag": 1, "department": "policies", "perAcre": 125, "supply": 1.05, "hangover": 0.97, "hangoverSeasons": 2 },
     "grant": { "lag": 1, "department": "policies", "amount": 10000, "wasted": 0.40, "newcomerChance": 1.5 },
-    "minWage": { "lag": 0, "department": "office", "above": 0.10, "inspector": 2000 },
+    "minWage": { "lag": 0, "department": "office", "above": 0.10, "newcomerChance": 0.8, "inspector": 2000 },
     "rentControl": { "lag": 0, "department": "office", "cap": 0.03, "officer": 1000 }
   },
   "lines": [

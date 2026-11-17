@@ -13,7 +13,7 @@ Building US-141 (spec 022 §3.5–§3.6, AC-9 to AC-11, AC-13, AC-15, AC-16) rai
 ## Decisions
 
 1. **A policy is a line in its department.** The treasury's close already pays lines in two passes (a budget is a priority list), so each policy is one more line (`policy:meals` and so on) in Education, the Council's office or Policies, as the spec says. Nothing new pays money.
-2. **Paid in full or paused.** A policy line is paid whole or not at all: a close that cannot pay it in full *pauses* it (no effect, nothing charged, the slot kept, the planner and the away card say so); it tries again at the next close. A repealed policy is never paused into silence: it ends.
+2. **Paid in full or paused.** A policy line is paid whole or not at all: a close that cannot pay it in full *pauses* it (no effect, nothing charged, the slot kept; the row and the away card say so, and the planner's notes do not yet, which waits for spec 023's planner); it tries again at the next close. A repealed policy is never paused into silence: it ends.
 3. **Lag counts from the first payment.** A policy is paid at the next close for the season ahead, and its effect starts after `lag` more closes (lag 1: "Setting up: works from Monsoon"; lag 0 for the minimum wage and rent control, which work at renewals anyway). A policy repealed before its first payment ends at once and owes no wait; one that has run ends at the next close and waits a season.
 4. **A repealing policy frees its slot at once** (it still runs to the close), so "three at a time" never makes the player wait to swap one.
 5. **The subsidy costs 125 an acre, not 250.** Spec 022 priced it at 250 an acre on "neighbours' farmed acres" and quoted about 15,000 a season; the map counts 123 acres of farm land you don't own, so 250 would be 30,750. The cost an acre is content: 125 gives about 15,400. The count is farm land not owned by you.
@@ -29,4 +29,15 @@ Building US-141 (spec 022 §3.5–§3.6, AC-9 to AC-11, AC-13, AC-15, AC-16) rai
 
 - Save schema 19 grows once more (five policy states and the tour flag) and has not shipped; no fixture change was needed because no fixture holds an open treasury.
 - Six new events (`PolicyEnacted`, `PolicyRepealed`, `PolicyStarted`, `PolicyPaused`, `GrantWasted`, `GrantOpenedShop`), three commands (`EnactPolicy`, `RepealPolicy`, `SeePolicyTour`), five reject reasons, one RNG stream.
-- A town with three policies at once pays about 33,000 a season in lines on top of the clerk and the school; spec 023's income must carry that or the planner will say so (policies pause first: they are the last department).
+- The three dearest policies together (meals about 28,000, subsidy about 15,400, grant about 10,000) cost about 53,400 a season on top of the clerk and the school. At a default Township income roughly equals spending, so **most policies need higher taxes or a gift to be paid**, and otherwise pause (they are the last department). The Policies tab and the tour say so plainly; spec 023's balance decides whether the default Township leaves room for one.
+
+## Amendments after the independent review (2026-11-17)
+
+13. **Keep it.** A policy that is ending (repealed, still running to the close) shows *Keep it* and keeps its paid seasons and lag; taking back a policy that was never paid is free and at once, with no card.
+14. **The subsidy lowers field crops only** (`SalesKind.Crop`), not atta, milk or sweets.
+15. **The minimum wage** also binds the low offer (10% less than the ask), cuts a newcomer shop's chance × 0.8 (`minWage.newcomerChance`), and its card names the clerk's raise (the town's own clerk is paid the minimum: about 3,000 more a season than the inspector's 2,000).
+16. **`PolicyStarted`** fires when the lag ends. **An unused grant** (every kind has its newcomer already) says so in the away card instead of paying for nothing silently.
+17. **The seen-lines flags are saved by line id**, so spec 023's new lines never shift them.
+18. **Education gates school years** at the minimum condition (0.5): a school the treasury lets decay teaches nothing that year. Health's and tenants' happiness hooks, and a *Why?* naming the minimum wage on a wage ask, come with spec 023.
+19. **A closed business pays its owed tax first**; newcomer shops pay tax on their reference profit.
+20. **Known gap:** the founder's owed tax is not subtracted in net worth (it needs a field in the report's net-worth snapshot and a schema change); the amount is small and rare. It is listed for spec 023.

@@ -147,19 +147,20 @@ namespace Sim.Core.Definitions
         public Fixed GrantWasted { get; }
         public Fixed GrantNewcomerChance { get; }
         public Fixed MinWageAbove { get; }
+        public Fixed MinWageNewcomerChance { get; }
         public long InspectorCost { get; }
         public Fixed RentControlCap { get; }
         public long RentOfficerCost { get; }
 
         public PolicyDefs(int maxActive, int reenactAfterSeasons, IReadOnlyList<int> lag, IReadOnlyList<int> department, long mealPerPupil, Fixed mealShare, Fixed mealHealth,
             long subsidyPerAcre, Fixed subsidySupply, Fixed subsidyHangover, int subsidyHangoverSeasons, long grantAmount, Fixed grantWasted, Fixed grantNewcomerChance,
-            Fixed minWageAbove, long inspectorCost, Fixed rentControlCap, long rentOfficerCost)
+            Fixed minWageAbove, Fixed minWageNewcomerChance, long inspectorCost, Fixed rentControlCap, long rentOfficerCost)
         {
             MaxActive = maxActive; ReenactAfterSeasons = reenactAfterSeasons; Lag = lag; Department = department;
             MealPerPupil = mealPerPupil; MealShare = mealShare; MealHealth = mealHealth;
             SubsidyPerAcre = subsidyPerAcre; SubsidySupply = subsidySupply; SubsidyHangover = subsidyHangover; SubsidyHangoverSeasons = subsidyHangoverSeasons;
             GrantAmount = grantAmount; GrantWasted = grantWasted; GrantNewcomerChance = grantNewcomerChance;
-            MinWageAbove = minWageAbove; InspectorCost = inspectorCost; RentControlCap = rentControlCap; RentOfficerCost = rentOfficerCost;
+            MinWageAbove = minWageAbove; MinWageNewcomerChance = minWageNewcomerChance; InspectorCost = inspectorCost; RentControlCap = rentControlCap; RentOfficerCost = rentOfficerCost;
         }
     }
 

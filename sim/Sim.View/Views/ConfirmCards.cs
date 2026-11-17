@@ -110,6 +110,8 @@ namespace Sim.View.Views
         {
             ConfirmKind kind = ConfirmRules.Of(c);
             if (kind != ConfirmKind.Tap && kind != ConfirmKind.Hold) return null;
+            if (c is RepealPolicy undo && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)undo.Policy].PaidCloses == 0) return null; // never paid: taking it back costs nothing and ends at once
+            if (c is EnactPolicy keep && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)keep.Policy].Repealing) return null; // keeping a policy that is ending costs nothing new
             Simulation sim = ctx.Sim;
             CommandResult result = sim.Preview(c, out Simulation after);
             if (!result.Accepted) return null;
@@ -195,10 +197,14 @@ namespace Sim.View.Views
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.paid"), FieldSheets.SeasonName(ctx, sim.Period)));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.starts"), FieldSheets.SeasonName(ctx, sim.Period + left)));
             Sim.Core.Town.TreasuryRules.CloseForecast before = Sim.Core.Town.TreasuryRules.Forecast(sim), now = Sim.Core.Town.TreasuryRules.Forecast(after);
+            long raise = p == Sim.Core.Town.PolicyId.MinWage ? Sim.Core.Town.PolicyRules.ClerkRaise(sim) : 0;
+            if (raise > 0) vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.clerk"), "+" + ctx.Fmt.Coins(raise))); // the town's own clerk is paid the minimum too
+            long due = now.Due + raise;
             long income = Sim.Core.Town.TreasuryRules.ExpectedIncome(sim), balance = sim.State.Treasury.Cash;
-            bool covered = income + balance >= now.Due;
-            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.bill"), ctx.Fmt.Coins(before.Due) + " → " + ctx.Fmt.Coins(now.Due) + (covered ? " ✓" : ""), total: true));
-            vm.Warning = covered ? null : s.Get("confirm.EnactPolicy.short");
+            string status = TreasurySheet.CloseStatus(ctx, income, due, balance, out Tone tone);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.bill"), ctx.Fmt.Coins(before.Due) + " → " + ctx.Fmt.Coins(due), total: true));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.status"), status));
+            vm.Warning = tone == Tone.Warn ? s.Get("confirm.EnactPolicy.short") : null;
             vm.Reassure = false;
         }
 

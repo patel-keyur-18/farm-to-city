@@ -271,7 +271,7 @@ namespace Sim.View.Views
             {
                 var alert = new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.treasuryShort", "short", ctx.Fmt.Coins(f.Short), "dept", TreasurySheet.Department(ctx, f.FirstUnpaid)) };
                 alert.Levers.Add(Pictured(ActionVm.Open("lever:give", s.Get("treasury.give"), new SheetRequest(TreasurySheet.GiveKind, 0)), "coin"));
-                alert.Levers.Add(Pictured(new ActionVm("lever:tax", s.Get("alert.lever.tax"), null, ActionKind.Secondary, false, s.Get("alert.lever.taxLater"), null), "deed"));
+                alert.Levers.Add(Pictured(ActionVm.Open("lever:tax", s.Get("alert.lever.tax"), new SheetRequest(TaxSheet.Kind, 0)), "deed"));
                 alert.Levers.Add(Pictured(st.Window != BudgetWindow.None
                     ? ActionVm.Open("lever:budget", s.Get("alert.lever.budget"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab))
                     : new ActionVm("lever:budget", s.Get("alert.lever.budget"), null, ActionKind.Secondary, false, s.Get("alert.lever.budgetLocked", "next", TreasurySheet.NextWindowName(ctx)), null), "menu"));

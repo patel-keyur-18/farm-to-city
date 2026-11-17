@@ -190,9 +190,8 @@ namespace Sim.View.Views
                 case "thinBalance":
                 {
                     long due = TreasuryRules.Forecast(sim).Due;
-                    bool made = last.Balance(Sim.Core.Finance.Account.HouseTaxIncome) != 0 || last.Balance(Sim.Core.Finance.Account.BusinessTaxIncome) != 0
-                        || last.Balance(Sim.Core.Finance.Account.GiftsFromFounder) != 0;
-                    return !made && due > 0 && t.Cash < due ? new long[] { t.Cash, due } : null;
+                    // the balance is thin when it can't pay the close and what is expected in (grants, rents, taxes) doesn't either
+                    return due > 0 && t.Cash < due && TreasuryRules.ExpectedIncome(sim) < due ? new long[] { t.Cash, due } : null;
                 }
                 default: return null;
             }

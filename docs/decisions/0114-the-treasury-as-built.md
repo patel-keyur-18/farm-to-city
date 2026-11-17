@@ -1,6 +1,6 @@
 # 0114. The treasury as built: the Township reached by the developer panel only, seven departments from the start, pitch rents counted in the season they are paid for, and the books' first statement
 
-- Status: Proposed (for the owner's review of US-138, 2026-11-14)
+- Status: Accepted (owner, 2026-11-14, US-138 approved)
 - Date: 2026-11-14
 - Deciders: Keyur Patel
 - Amends: spec 021 §3.1 (how the Township is reached before spec 023), §3.2 and §3.3 (when a pitch rent is the town's income), §4 (seven departments in the state); spec 022 §3.5 (the seventh department, already added there)

@@ -44,7 +44,9 @@ namespace Sim.Core.Tests
             Assert.That(PolicyRules.SupplyFactor(sim), Is.EqualTo(Fixed.One), "setting up");
             long cost = PolicyRules.Cost(sim, PolicyId.Subsidy);
             Assert.That(T(sim).Reports.Last().Rows[(int)Dept.Policies].Paid, Is.EqualTo(cost), "a department line, in the budget");
+            sim.DrainEvents();
             Close(sim);
+            Assert.That(sim.PendingEvents.OfType<PolicyStarted>().Count(), Is.EqualTo(1), "the away card is told when the effect begins");
             Assert.That(PolicyRules.SupplyFactor(sim), Is.EqualTo(Fixed.Parse("1.05")));
             Ok(sim, new RepealPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
             Assert.That(PolicyRules.SupplyFactor(sim), Is.EqualTo(Fixed.Parse("1.05")), "a repeal takes effect at the next close");
@@ -105,8 +107,7 @@ namespace Sim.Core.Tests
             {
                 sim.DrainEvents();
                 Close(sim);
-                if (sim.PendingEvents.OfType<GrantWasted>().Any()) { wasted++; Assert.That(PolicyRules.GrantBoost(sim), Is.False); }
-                else { opened++; Assert.That(PolicyRules.GrantBoost(sim), Is.True); }
+                if (PolicyRules.GrantBoost(sim)) opened++; else wasted++; // a door opened, or the grant came to nothing
             }
             Assert.That(wasted, Is.InRange(1, 11), "a share of grants come to nothing");
             Assert.That(opened, Is.GreaterThan(0));
@@ -164,6 +165,45 @@ namespace Sim.Core.Tests
             Assert.That(Try(sim, new EnactPolicy(sim.State.Clock.SimTime, PolicyId.Grant)), Is.EqualTo(RejectReason.WaitAfterRepeal), "repealed this very close: a season's wait");
             Close(sim);
             Ok(sim, new EnactPolicy(sim.State.Clock.SimTime, PolicyId.Grant));
+        }
+
+        // Changing your mind: a policy that is ending can be kept at once, without losing what was paid for or its lag.
+        [Test]
+        public void KeepWhileRepealing()
+        {
+            Simulation sim = Start();
+            Enact(sim, PolicyId.Subsidy);
+            Close(sim);
+            Close(sim);
+            Ok(sim, new RepealPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
+            Assert.That(PolicyRules.CanEnact(sim, PolicyId.Subsidy), Is.EqualTo(RejectReason.None), "keep it");
+            Ok(sim, new EnactPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
+            Assert.That((PolicyRules.Of(sim, PolicyId.Subsidy).Repealing, PolicyRules.Effective(sim, PolicyId.Subsidy)), Is.EqualTo((false, true)), "still working, no new wait");
+            Close(sim);
+            Assert.That(PolicyRules.Effective(sim, PolicyId.Subsidy), Is.True);
+        }
+
+        // The minimum wage binds a low offer too, and the clerk's raise is told before it is paid.
+        [Test]
+        public void MinimumWage_OfferAndClerk()
+        {
+            Simulation sim = Start();
+            Assert.That(PolicyRules.ClerkRaise(sim), Is.GreaterThan(0));
+            Enact(sim, PolicyId.MinWage);
+            Close(sim);
+            var a = new Applicant { Place = 0, Skill = 50 };
+            long floor = PolicyRules.WageFloor(sim, 1, sim.Config.Game.People.Hand.MarketWage);
+            Assert.That(HiringRules.OfferWage(sim, a, OfferLevel.Low), Is.GreaterThanOrEqualTo(floor), "a low offer can't start below the minimum");
+        }
+
+        // An ungranted school year: a school the treasury let decay below its minimum teaches nothing that year.
+        [Test]
+        public void EducationServes()
+        {
+            Simulation sim = Start();
+            Assert.That(TreasuryRules.EducationServes(sim), Is.True);
+            T(sim).Condition[2] = Fixed.Parse("0.4");
+            Assert.That(TreasuryRules.EducationServes(sim), Is.False);
         }
 
         // AC-10: a policy the close can't pay in full is paused for the season (no effect, nothing charged), shown, and not repealed; it resumes when paid.

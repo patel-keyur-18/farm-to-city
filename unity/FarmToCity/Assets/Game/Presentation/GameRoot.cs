@@ -355,7 +355,6 @@ namespace Game.Presentation
             }
         }
 
-        /// <summary>A sheet on its own (from the map, the HUD, a card): nothing to go back to.</summary>
         /// <summary>The first budget window's card (spec 021 §3.6, ADR 0115): Accept takes the proposal, Change opens the Budget tab. Shown on the next UI tick.</summary>
         private void ShowBudgetCard()
         {
@@ -365,6 +364,7 @@ namespace Game.Presentation
                 () => OpenSheet(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)), key => _strings.Get(key)));
         }
 
+        /// <summary>A sheet on its own (from the map, the HUD, a card): nothing to go back to.</summary>
         private void OpenSheet(SheetRequest request)
         {
             if (request.Kind == CodexSheet.CardKind) { ShowCodexCard((int)request.Id); return; } // a popup over what's open (spec 018 §7)

@@ -144,6 +144,7 @@ namespace Sim.Core.People
             long t = sim.State.Clock.SimTime, closing = CitizenRules.SeasonOf(sim, t) - 1;
             if (State(sim).ReadyAt > t - sim.Clock.SecondsPerSeason) return; // opened part-way through the season: years count from the next
             SchoolDef d = Def(sim);
+            if (!Town.TreasuryRules.EducationServes(sim)) return; // spec 021 §3.5: a school the treasury has let decay below the minimum teaches nothing that year
             int perSeason = sim.Config.Game.Population.LifeYearsPerSeason;
             foreach (Citizen c in sim.State.Citizens.Citizens)
             {

@@ -84,10 +84,10 @@ namespace Sim.Core.Tests
             long paid = 0;
             for (int i = 0; i < 12; i++)
             {
-                if (PolicyRules.CanEnact(sim, PolicyId.Subsidy) == RejectReason.None) Ok(sim, new EnactPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
+                if (!PolicyRules.Of(sim, PolicyId.Subsidy).Repealing && PolicyRules.CanEnact(sim, PolicyId.Subsidy) == RejectReason.None) Ok(sim, new EnactPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
                 Close(sim);
                 paid += T(sim).Reports.Last().Rows[PolicyDept].Paid;
-                if (PolicyRules.Of(sim, PolicyId.Subsidy).Status == PolicyStatus.Active) Ok(sim, new RepealPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
+                if (PolicyRules.Of(sim, PolicyId.Subsidy).Status == PolicyStatus.Active && !PolicyRules.Of(sim, PolicyId.Subsidy).Repealing) Ok(sim, new RepealPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
                 if (PolicyRules.Effective(sim, PolicyId.Subsidy)) effective++;
             }
             Assert.That(paid, Is.GreaterThan(0), "it paid for the subsidy");

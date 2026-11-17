@@ -64,14 +64,20 @@ namespace Sim.View.Tests
             Assert.That(enact.Hold, Is.False);
             Assert.That(enact.Title, Is.EqualTo("Enact this policy?"));
             Assert.That(enact.Subtitle, Is.EqualTo("Farm input subsidy"));
-            Assert.That(enact.Rows.Select(r => r.Label), Is.EqualTo(new[] { "Costs the town", "First paid at the close of", "Works from", "The town's bill at the close" }));
+            Assert.That(enact.Rows.Select(r => r.Label), Is.EqualTo(new[] { "Costs the town", "First paid at the close of", "Works from", "The town's bill at the close", "The close" }));
             Assert.That(enact.GoLabel, Is.EqualTo("Enact"));
             Ok(sim, new EnactPolicy(ctx.Now, PolicyId.Subsidy));
+            Assert.That(ConfirmCards.For(ViewKit2.Context(sim), new RepealPolicy(ctx.Now, PolicyId.Subsidy)), Is.Null, "never paid: taking it back is free and at once");
+            sim.AdvanceTo(sim.State.Clock.SimTime + sim.Clock.SecondsPerSeason);
             ConfirmCardVm repeal = ConfirmCards.For(ViewKit2.Context(sim), new RepealPolicy(ctx.Now, PolicyId.Subsidy));
             Assert.That(repeal, Is.Not.Null);
             Assert.That(repeal.Hold, Is.True);
             Assert.That(repeal.SafeLabel, Is.EqualTo("Keep it"));
             Assert.That(repeal.Rows.Last().Value, Does.Contain("dip"));
+            Ok(sim, new RepealPolicy(ctx.Now, PolicyId.Subsidy));
+            LineVm row = PolicySheet.Build(ViewKit2.Context(sim)).Lines.Single(l => l.Label == "Farm input subsidy");
+            Assert.That(row.Action.Label, Is.EqualTo("Keep it"), "changing your mind while it is ending");
+            Assert.That(ConfirmCards.For(ViewKit2.Context(sim), new EnactPolicy(ctx.Now, PolicyId.Subsidy)), Is.Null, "keeping it asks nothing");
         }
 
         // While you are away the close pays, starts and pauses policies: the away card says so in words.

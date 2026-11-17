@@ -39,7 +39,7 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(s.Get("tax.tourTitle"), null) { Banner = true, Note = s.Get("tax.tour"), Action = ActionVm.Checked(ctx, "tour", s.Get("tax.tourGotIt"), null, ActionKind.Primary, at => new SeeTaxTour(at)) });
 
             TreasuryRules.CloseForecast f = TreasuryRules.Forecast(sim);
-            long income = TreasuryRules.ExpectedIncome(sim, TaxRules.Next(sim, TaxKind.House), TaxRules.Next(sim, TaxKind.Business));
+            long income = TreasuryRules.ExpectedIncome(sim); // the next close bills at the rate in force; a rate set now applies the season after
             vm.Lines.Add(new LineVm(s.Get("tax.cash"), ctx.Fmt.Coins(st.Cash), "treasuryBalance", 0));
             vm.Lines.Add(new LineVm(s.Get("treasury.atClose"), TreasurySheet.CloseStatus(ctx, income, f.Due, st.Cash, out Tone tone), "treasuryDue", 0) { NoteTone = tone });
 
