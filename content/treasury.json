@@ -31,7 +31,9 @@
   "lines": [
     { "id": "clerk", "department": "office", "kind": "wage", "amount": "clerkWage", "requires": "treasury" },
     { "id": "doctor", "department": "health", "kind": "wage", "amount": "doctorAllowance", "requires": "clinic" },
-    { "id": "school", "department": "education", "kind": "upkeep", "amount": "schoolUpkeep", "requires": "school" }
+    { "id": "clinic", "department": "health", "kind": "upkeep", "amount": 3000, "requires": "clinicOpen" },
+    { "id": "school", "department": "education", "kind": "upkeep", "amount": "schoolUpkeep", "requires": "school" },
+    { "id": "road", "department": "roads", "kind": "upkeep", "amount": 1500, "requires": "road" }
   ],
   "works": []
 }

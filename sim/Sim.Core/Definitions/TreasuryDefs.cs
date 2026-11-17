@@ -31,6 +31,12 @@ namespace Sim.Core.Definitions
 
         /// <summary>While its policy is enacted (spec 022 §3.6).</summary>
         Policy = 3,
+
+        /// <summary>While the clinic stands, doctor or not (spec 023 §3.8's upkeep).</summary>
+        ClinicOpen = 4,
+
+        /// <summary>Once the paved link road is built (spec 023 §3.8's road upkeep).</summary>
+        Road = 5,
     }
 
     /// <summary>One of the seven departments, in the order they are paid (spec 021 §3.4, spec 022 §3.5).</summary>

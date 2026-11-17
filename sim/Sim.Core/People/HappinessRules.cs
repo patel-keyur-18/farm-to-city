@@ -23,7 +23,7 @@ namespace Sim.Core.People
         {
             Building b = sim.State.Land.Buildings.Find(y => y.Id == x.HomeId);
             if (b == null) return x.Members.Count;
-            if (b.Def == sim.Config.Game.Population.House) return sim.Config.Game.Population.HouseCapacity;
+            if (b.Def == sim.Config.Game.Population.House || Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) return sim.Config.Game.Population.HouseCapacity;
             return System.Math.Max(1, sim.Config.Game.Buildings[b.Def].HousesHands);
         }
 
@@ -52,7 +52,7 @@ namespace Sim.Core.People
         {
             PopulationDefs p = sim.Config.Game.Population;
             Fixed survival = Min(Min(x.FoodMet, Shelter(sim, x)), Fixed.One); // water: the well and the pond, always met
-            Fixed security = (Job(sim, x) + p.Chemist + (x.RentBehind == 0 ? Fixed.One : Fixed.Zero)).MulRatio(1, 3);
+            Fixed security = (Job(sim, x) + Sim.Core.Town.ClinicRules.HealthCareMet(sim, x, p.Chemist) + (x.RentBehind == 0 ? Fixed.One : Fixed.Zero)).MulRatio(1, 3);
             Fixed belonging = p.Belonging; // the temple and the banyan square
             Fixed leisure = x.Leisure > 0 ? p.Leisure : Fixed.Zero;
             Fixed growth = SchoolRules.IsOpen(sim) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure; // the layer's mean once the school counts (ADR 0095 §6)

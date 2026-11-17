@@ -24,6 +24,15 @@ namespace Sim.Core.People
         /// <summary>An elder's chance of passing away this season (§3.9): base × 2^((age − 60) ÷ doubling), capped, × 1.5 in poor health.</summary>
         public static Fixed DeathChance(Simulation sim, Citizen c)
         {
+            Fixed chance = DeathChanceWithout(sim, c);
+            if (chance == Fixed.Zero) return chance;
+            Fixed e = Town.ClinicRules.Effect(sim, sim.State.Citizens.Household(c.HouseholdId));
+            return e == Fixed.Zero ? chance : chance * (Fixed.One - Town.ClinicRules.Def(sim).DeathCut * e); // spec 023 §3.2: the clinic's cut
+        }
+
+        /// <summary>The same chance without the clinic's cut: what the roll would have been, to count the elders who stayed well (spec 023 §3.2).</summary>
+        public static Fixed DeathChanceWithout(Simulation sim, Citizen c)
+        {
             PopulationDefs p = sim.Config.Game.Population;
             int age = CitizenRules.Age(sim, c);
             if (age < p.ElderFrom || c.Job == CitizenJob.Hand) return Fixed.Zero; // a hand retires at 60, never dies under contract
@@ -67,7 +76,13 @@ namespace Sim.Core.People
             {
                 if (!c.Living) continue;
                 Fixed chance = DeathChance(sim, c);
-                if (chance == Fixed.Zero || !Rng.Chance(Roll(sim, RngStream.Deaths, c.Id, DeathRoll, season), chance)) continue;
+                if (chance == Fixed.Zero) continue;
+                ulong roll = Roll(sim, RngStream.Deaths, c.Id, DeathRoll, season);
+                if (!Rng.Chance(roll, chance))
+                {
+                    if (Rng.Chance(roll, DeathChanceWithout(sim, c))) Town.ClinicRules.CountElderWell(sim); // the clinic's cut saved this one
+                    continue;
+                }
                 int age = CitizenRules.Age(sim, c);
                 Household x = s.Household(c.HouseholdId);
                 c.Gone = CitizenGone.Died;

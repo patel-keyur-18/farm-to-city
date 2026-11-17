@@ -46,7 +46,7 @@ namespace Sim.Core.Saves
             DepositSavings, WithdrawSavings, SetSavingsCover, CoverFromSavings, TakeBackSavingsCover,
             RenewLease,
             GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget, SetTaxRate, UndoTaxRate, SeeTaxTour, EnactPolicy, RepealPolicy, SeePolicyTour,
-            PetitionRoad,
+            PetitionRoad, BuildClinic, BuildDoctorQuarters,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -179,6 +179,14 @@ namespace Sim.Core.Saves
                 case SeePolicyTour c: At(c, Tag.SeePolicyTour); break;
                 case PetitionRoad c:
                     At(c, Tag.PetitionRoad); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case BuildClinic c:
+                    At(c, Tag.BuildClinic); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case BuildDoctorQuarters c:
+                    At(c, Tag.BuildDoctorQuarters); w.WriteBool(c.Financing != null);
                     if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
                     break;
                 case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
@@ -328,6 +336,8 @@ namespace Sim.Core.Saves
                 case Tag.RepealPolicy: return new RepealPolicy(at, (Town.PolicyId)r.ReadInt());
                 case Tag.SeePolicyTour: return new SeePolicyTour(at);
                 case Tag.PetitionRoad: return new PetitionRoad(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                case Tag.BuildClinic: return new BuildClinic(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                case Tag.BuildDoctorQuarters: return new BuildDoctorQuarters(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));

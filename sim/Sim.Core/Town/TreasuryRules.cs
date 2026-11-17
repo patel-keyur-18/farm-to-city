@@ -188,16 +188,15 @@ namespace Sim.Core.Town
             {
                 case LineRequires.School: return SchoolRules.IsOpen(sim);
                 case LineRequires.Clinic: return ClinicStaffed(sim);
+                case LineRequires.ClinicOpen: return ClinicRules.IsOpen(sim);
+                case LineRequires.Road: return RoadRules.IsBuilt(sim);
                 case LineRequires.Policy: return PolicyRules.LineActive(sim, line.Policy);
                 default: return true;
             }
         }
 
-        /// <summary>
-        /// A doctor is in post at a clinic (spec 021 §3.3). The clinic comes with spec 023; until then it counts as not staffed, so the
-        /// town gets the untied grant only and the Health department has no line.
-        /// </summary>
-        public static bool ClinicStaffed(Simulation sim) { return false; }
+        /// <summary>A doctor is in post at an open clinic (spec 021 §3.3, spec 023 §3.1): without one the town gets the untied grant only and the doctor's line is closed.</summary>
+        public static bool ClinicStaffed(Simulation sim) { return ClinicRules.InPost(sim); }
 
         /// <summary>A department's needs now: the sum of its active lines (spec 021 §3.4).</summary>
         public static long Needs(Simulation sim, int department)
@@ -544,7 +543,9 @@ namespace Sim.Core.Town
         public void OnPass(Simulation sim, ItemClass pass)
         {
             if (pass == ItemClass.Hourly) TreasuryRules.Hourly(sim);
-            if (pass == ItemClass.Seasonal) TreasuryRules.Close(sim);
+            if (pass != ItemClass.Seasonal) return;
+            TreasuryRules.Close(sim);
+            ClinicRules.Close(sim); // spec 023 §3.10: after the treasury's close, the doctor's leaving and return
         }
     }
 }

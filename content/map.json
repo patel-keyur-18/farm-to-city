@@ -264,11 +264,11 @@
     { "id": "banyan", "kind": "banyan", "tile": 78 },
     { "id": "house_2", "kind": "house", "tile": 91 },
     { "id": "chemist", "kind": "chemist", "tile": 92 },
-    { "id": "house_3", "kind": "house", "tile": 93 },
+    { "id": "clinic_plot", "kind": "clinic_plot", "tile": 93 },
     { "id": "school_plot", "kind": "school_plot", "tile": 94 },
     { "id": "house_4", "kind": "house", "tile": 107 },
     { "id": "dairy", "kind": "dairy", "tile": 108 },
-    { "id": "house_5", "kind": "house", "tile": 109 },
+    { "id": "quarters_plot", "kind": "quarters_plot", "tile": 109 },
     { "id": "house_6", "kind": "house", "tile": 110 }
   ]
 }

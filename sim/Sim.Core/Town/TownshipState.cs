@@ -11,25 +11,28 @@ namespace Sim.Core.Town
     }
 
     /// <summary>
-    /// The Township's own state (spec 023 §4, save schema 20): the link road now; the clinic, the gate, the cohort and the civic posts join it
+    /// The Township's own state (spec 023 §4, save schema 20): the link road and the clinic with its doctor; the gate, the cohort and the civic posts join it
     /// by story. A town that has started nothing hashes as before, so the golden replays and older towns are unchanged.
     /// </summary>
     public sealed class TownshipState
     {
         public RoadState Road { get; internal set; } = new RoadState();
 
-        /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None; } }
+        public ClinicState Clinic { get; internal set; } = new ClinicState();
 
-        internal TownshipState Clone() { return new TownshipState { Road = Road.Clone() }; }
+        /// <summary>Nothing of the Township has started.</summary>
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault; } }
+
+        internal TownshipState Clone() { return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone() }; }
 
         internal void WriteTo(IStateWriter h)
         {
             if (h.Hashing && IsDefault) return;
             Road.WriteTo(h);
+            Clinic.WriteTo(h);
         }
 
-        internal static TownshipState ReadFrom(SaveReader r) { return new TownshipState { Road = RoadState.ReadFrom(r) }; }
+        internal static TownshipState ReadFrom(SaveReader r) { return new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r) }; }
     }
 
     /// <summary>The paved link road (spec 023 §3.3): petitioned, built by the district in <c>days</c>, never the player's.</summary>

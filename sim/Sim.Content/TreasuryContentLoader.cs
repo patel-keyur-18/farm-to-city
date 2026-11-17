@@ -86,7 +86,9 @@ namespace Sim.Content
                 if (req == "treasury") requires = LineRequires.Treasury;
                 else if (req == "school") requires = LineRequires.School;
                 else if (req == "clinic") requires = LineRequires.Clinic;
-                else throw new ContentException(Join(p, "requires"), "must be treasury, school or clinic");
+                else if (req == "clinicOpen") requires = LineRequires.ClinicOpen;
+                else if (req == "road") requires = LineRequires.Road;
+                else throw new ContentException(Join(p, "requires"), "must be treasury, school, clinic, clinicOpen or road");
                 lines.Add(new LineDef(id, d, kind == "wage", source, amount, requires));
             }
 

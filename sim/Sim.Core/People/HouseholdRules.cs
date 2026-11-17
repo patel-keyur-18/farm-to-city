@@ -76,6 +76,7 @@ namespace Sim.Core.People
             bool hut = InHut(sim, x);
             long income = 0;
             outside = 0;
+            if (Town.ClinicRules.IsDoctorHome(sim, x)) return Town.ClinicRules.Salary(sim); // the district's pay (spec 023 §3.1); no outside work
             foreach (long id in x.Members)
             {
                 Citizen c = sim.State.Citizens.Citizen(id);
@@ -134,6 +135,11 @@ namespace Sim.Core.People
                     LeaseRules.Begin(sim, x); // US-240: a fixed lease rent, set when the family begins to pay rent
                     x.Rent = x.LeaseRent;
                 }
+                else if (Town.ClinicRules.IsDoctorHome(sim, x))
+                {
+                    LeaseRules.End(x);
+                    x.Rent = Town.ClinicRules.Rent(sim); // spec 023 §3.1: the quarters are let to him at a fixed rent, paid from the district's salary
+                }
                 else
                 {
                     LeaseRules.End(x);
@@ -169,6 +175,20 @@ namespace Sim.Core.People
             return false;
         }
 
+        /// <summary>
+        /// A citizen's health after the season's food (§3.12): down by the shortfall, up when fed; with the clinic's effect <paramref name="e"/> the
+        /// loss is cut and the recovery boosted (spec 023 §3.2). Clamped.
+        /// </summary>
+        private static Fixed Next(Simulation sim, PopulationDefs p, Citizen c, Household x, Fixed e)
+        {
+            Definitions.ClinicDef clinic = e == Fixed.Zero ? null : Town.ClinicRules.Def(sim);
+            Fixed loss = clinic == null ? p.HealthLossPerSeason : p.HealthLossPerSeason * (Fixed.One - clinic.LossCut * e);
+            Fixed gain = clinic == null ? p.HealthGainPerSeason : p.HealthGainPerSeason * (Fixed.One + clinic.GainBoost * e);
+            Fixed health = x.FoodMet < Fixed.One ? c.Health - loss * (Fixed.One - x.FoodMet) : c.Health + gain;
+            if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
+            return health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
+        }
+
         /// <summary>A hand's household in a family house pays no rent: the house is part of his pay (§3.6).</summary>
         public static bool HasHand(Simulation sim, Household x)
         {
@@ -190,12 +210,13 @@ namespace Sim.Core.People
             foreach (Household x in s.Households) HouseRules.CollectRent(sim, x); // first, for the season that ended (§3.12)
             foreach (Household x in s.Households)
             {
+                Fixed e = Town.ClinicRules.Effect(sim, x); // spec 023 §3.2: the clinic's reach, capacity and the Health service
                 foreach (long id in x.Members)
                 {
                     Citizen c = s.Citizen(id);
-                    Fixed health = x.FoodMet < Fixed.One ? c.Health - p.HealthLossPerSeason * (Fixed.One - x.FoodMet) : c.Health + p.HealthGainPerSeason;
-                    if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
-                    c.Health = health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
+                    Fixed health = Next(sim, p, c, x, Fixed.Zero), withClinic = e == Fixed.Zero ? health : Next(sim, p, c, x, e);
+                    c.Health = withClinic;
+                    if (withClinic > health) Town.ClinicRules.CountRegained(sim); // an exact count: health that stands higher because of the clinic
                 }
                 // The season's saving, plus what outside work and labour paid beyond what the budget expected (or less).
                 x.Savings = System.Math.Max(0, x.Savings + x.Saved + x.Earned - x.OutsideExpected);

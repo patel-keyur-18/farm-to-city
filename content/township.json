@@ -1,3 +1,9 @@
 {
-  "road": { "petitionHouseholds": 10, "share": 25000, "days": 4, "tier": "road" }
+  "road": { "petitionHouseholds": 10, "share": 25000, "days": 4, "tier": "road" },
+  "clinic": {
+    "unlockEra": "village", "place": "clinic_plot", "share": 48000, "buildHours": 48, "doctorArrivesHours": 24,
+    "sickCut": 0.5, "lossCut": 0.5, "gainBoost": 0.5, "deathCut": 0.25, "reach": 2000, "capacity": 400
+  },
+  "quarters": { "place": "quarters_plot", "building": "doctor_quarters", "rent": 3750, "buildHours": 48 },
+  "doctor": { "salary": 30000, "leaveCloses": 2, "returnCondition": 0.70 }
 }
