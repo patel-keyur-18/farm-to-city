@@ -247,6 +247,13 @@ namespace Sim.View.Views
         /// <summary>An amount to drag or type, with its button and note, drawn instead of a label and value (the savings sheet), or null.</summary>
         public AmountVm Amount { get; internal set; }
 
+        /// <summary>A boxed line across the sheet, green or (with <see cref="NoteTone"/> Warn) amber: "Town money: not yours" (spec 021 §7).</summary>
+        public bool Banner { get; internal set; }
+
+        /// <summary>Tabs drawn as a row among the lines (the treasury's This season | Budget, under its picture buttons), with the id of the one showing.</summary>
+        public System.Collections.Generic.List<ActionVm> Tabs { get; internal set; }
+        public string TabOn { get; internal set; }
+
         /// <summary>A bar under the row filled this many percent (the mandi trolley), or −1.</summary>
         public int Meter { get; internal set; } = -1;
 
@@ -297,6 +304,9 @@ namespace Sim.View.Views
 
         /// <summary>For a row with no button of its own (the mandi's crops): the sheet to show, in place, once the amount is let go or typed.</summary>
         public Func<long, SheetRequest> Then { get; internal set; }
+
+        /// <summary>For a row with no button of its own that sends a command when the amount is let go or typed (a tax rate, spec 022 §3.4): the action for that amount.</summary>
+        public Func<long, ActionVm> Set { get; internal set; }
 
         /// <summary>Where the slider starts.</summary>
         public long Start { get; }

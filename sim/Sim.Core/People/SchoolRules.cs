@@ -51,6 +51,9 @@ namespace Sim.Core.People
             return list;
         }
 
+        /// <summary>A school pupil now: a child of school age who can't read yet, while the school is open.</summary>
+        public static bool IsPupil(Simulation sim, Citizen c) { return IsOpen(sim) && IsPupilAge(Def(sim), c, CitizenRules.Age(sim, c)); }
+
         private static bool IsPupilAge(SchoolDef d, Citizen c, int age) { return c.Living && !c.Literate && age >= d.PupilAgeMin && age <= d.PupilAgeMax; }
 
         /// <summary>
@@ -141,6 +144,7 @@ namespace Sim.Core.People
             long t = sim.State.Clock.SimTime, closing = CitizenRules.SeasonOf(sim, t) - 1;
             if (State(sim).ReadyAt > t - sim.Clock.SecondsPerSeason) return; // opened part-way through the season: years count from the next
             SchoolDef d = Def(sim);
+            if (!Town.TreasuryRules.EducationServes(sim)) return; // spec 021 §3.5: a school the treasury has let decay below the minimum teaches nothing that year
             int perSeason = sim.Config.Game.Population.LifeYearsPerSeason;
             foreach (Citizen c in sim.State.Citizens.Citizens)
             {
@@ -169,6 +173,7 @@ namespace Sim.Core.People
             CountYears(sim);
             long cost = Upkeep(sim), t = sim.State.Clock.SimTime;
             if (cost == 0) return;
+            if (Town.TreasuryRules.TakenOver(sim)) return; // spec 021 §3.1: from the first close after the Township opens, the school's upkeep is the treasury's Education line
             if (!sim.State.Ledger.CanAfford(cost))
             {
                 State(sim).UpkeepUnpaidPeriod = sim.Period;

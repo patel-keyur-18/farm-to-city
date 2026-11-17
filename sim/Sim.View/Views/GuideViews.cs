@@ -681,6 +681,7 @@ namespace Sim.View.Views
             if (g.School != null && g.School.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.school", "school");
             if (g.Orchard != null && g.Orchard.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.orchards", "mango");
             if (g.Godown != null && g.Godown.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.godown", "granary");
+            if (g.Treasury != null && g.Treasury.Era == era) One(lines, ctx, "progress.open.treasury", "place_council_hall"); // spec 021 §3.1
             if (g.Credit != null && g.Onboarding != null)
                 foreach (LenderDef l in g.Credit.Lenders)
                     if (l.EraCaps.TryGetValue(g.Onboarding.Eras[era].Id, out long cap) && era > 0)

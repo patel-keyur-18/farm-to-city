@@ -57,8 +57,24 @@ namespace Sim.Content
                 game.School = LoadSchool(read("buildings.json"), read("population.json"), map, onboarding);
                 game.Codex = LoadCodex(read("codex.json")); // the Codex comes with the school (spec 018 §4)
                 game.Advisors = LoadAdvisors(read("advisors.json")); // and the advisors
+                // The treasury opens in a later era than the school's, so it needs the eras (spec 021 §4).
+                if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
+                if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);
             }
             return game;
+        }
+
+        /// <summary>
+        /// The owner's guard (spec 022 §3.1, owner 2026-11-13): at the highest rate a house's tax a season is no more than <c>maxShareOfRent</c> of its
+        /// kind's base rent, so a house always leaves its owner a profit. Content past it is refused.
+        /// </summary>
+        private static void CheckTaxGuard(TaxDef taxes, List<BuildingDef> buildings, PopulationDefs population)
+        {
+            BuildingDef home = buildings.Find(b => b.Id == taxes.HomeAssessedAs);
+            if (home == null) throw new ContentException("treasury.taxes.homeAssessedAs", "unknown building '" + taxes.HomeAssessedAs + "'");
+            BuildingDef house = buildings[population.House];
+            long tax = Sim.Core.Finance.Money.MulRate(house.Value, taxes.HouseMax) / 4, cap = Sim.Core.Finance.Money.MulRate(population.BaseRent, taxes.MaxShareOfRent); // ADR 0117 §5: money rounds once, never by flooring a Fixed
+            if (tax > cap) throw new ContentException("treasury.taxes.house.max", "a house's tax at the top rate (" + tax + ") is above " + taxes.MaxShareOfRent + " of its rent (" + cap + ")");
         }
 
         private static LandDef LoadLand(string json, WeatherSet weather, List<SoilDef> soils, List<DrainageDef> drainages)

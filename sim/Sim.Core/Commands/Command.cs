@@ -212,6 +212,35 @@ namespace Sim.Core.Commands
         NoLease,
         /// <summary>The lease isn't in its last season, so there is nothing to answer yet.</summary>
         LeaseNotDue,
+
+        // Spec 021 (the town treasury, ADR 0108)
+        /// <summary>The treasury hasn't opened: the Township comes first.</summary>
+        NoTreasury,
+        /// <summary>A gift smaller than treasury.json's giftMinimum.</summary>
+        BelowGiftMinimum,
+        /// <summary>No such capital work in the content.</summary>
+        UnknownWork,
+        /// <summary>No budget window is open: the budget is set at the opening and each Spring close, revised once at Monsoon (spec 021 §3.6).</summary>
+        NoWindow,
+        /// <summary>A budget outside 0 to budgetMaxOfNeeds of the department's needs now (spec 021 §3.6).</summary>
+        OutOfRange,
+        /// <summary>No rate has been set for the next season, so there is nothing to undo (spec 022 §3.4).</summary>
+        NothingPending,
+
+        /// <summary>Three policies are active already: repeal one first (spec 022 §3.6).</summary>
+        SlotsFull,
+
+        /// <summary>The policy is already enacted.</summary>
+        AlreadyActive,
+
+        /// <summary>A repealed policy waits a season before it can be enacted again.</summary>
+        WaitAfterRepeal,
+
+        /// <summary>The policy needs a building you haven't got (free meals need the school).</summary>
+        NeedsBuilding,
+
+        /// <summary>The policy isn't enacted, so there is nothing to repeal.</summary>
+        NotActive,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

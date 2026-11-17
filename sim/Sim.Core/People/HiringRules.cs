@@ -63,7 +63,7 @@ namespace Sim.Core.People
             long asked = AskedWage(sim, a.Place, Fixed.FromInt(a.Skill), a.AboveMarket);
             HiringDef h = sim.Config.Game.People.Hiring;
             if (level == OfferLevel.Asked) return asked;
-            return Money.RoundToCoin(Money.MulRate(asked, level == OfferLevel.Low ? h.LowFactor : h.HighFactor));
+            return Town.PolicyRules.WageFloor(sim, Money.RoundToCoin(Money.MulRate(asked, level == OfferLevel.Low ? h.LowFactor : h.HighFactor)), MarketWage(sim, a.Place)); // the minimum wage binds a low offer too
         }
 
         /// <summary>

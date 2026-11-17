@@ -110,6 +110,11 @@ namespace Sim.Core.Saves
                     case AnimalBought _: Milestone(wallUtc, e.SimTime, "firstAnimal"); break;
                     case MilkCollected m when m.Amount > 0: Milestone(wallUtc, e.SimTime, "firstMilk"); break;
                     case CalfBorn _: Milestone(wallUtc, e.SimTime, "firstCalf"); break;
+                    // The town treasury (spec 021 §3.12): the opening, each budget window, each unpaid department and each gift, with amounts.
+                    case TreasuryOpened o: Write(wallUtc, e.SimTime, "treasuryOpened", ",\"grant\":" + o.Grant); break;
+                    case BudgetWindowOpened w: Write(wallUtc, e.SimTime, "budgetWindow", ",\"revision\":" + (w.Revision ? "true" : "false")); break;
+                    case DepartmentUnpaid u: Write(wallUtc, e.SimTime, "departmentUnpaid", ",\"dept\":" + u.Department + ",\"amount\":" + u.Amount); break;
+                    case GiftGiven g: Write(wallUtc, e.SimTime, "gift", ",\"amount\":" + g.Amount); break;
                 }
             }
         }

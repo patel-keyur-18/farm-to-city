@@ -8,7 +8,7 @@ using Sim.Core.People;
 
 namespace Sim.Core.Finance
 {
-    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine }
+    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine, HouseTax }
 
     /// <summary>One charge the next season close takes from the founder's cash (ADR 0101 §1).</summary>
     public sealed class CloseDue
@@ -107,7 +107,9 @@ namespace Sim.Core.Finance
                 Water(list, "canal", IrrigationRules.CanalFee(sim));
                 Water(list, "drip", IrrigationRules.DripPower(sim) + IrrigationRules.DripUpkeep(sim));
             }
-            if (SchoolRules.IsOpen(sim) && SchoolRules.Upkeep(sim) > 0) list.Add(new CloseDue { Key = "school", Kind = DueKind.School, Amount = SchoolRules.Upkeep(sim) });
+            if (SchoolRules.IsOpen(sim) && SchoolRules.Upkeep(sim) > 0 && !Town.TreasuryRules.IsOpen(sim)) list.Add(new CloseDue { Key = "school", Kind = DueKind.School, Amount = SchoolRules.Upkeep(sim) });
+            long houseTax = Town.TaxRules.NextHouseDue(sim, out int houses);
+            if (houseTax > 0) list.Add(new CloseDue { Key = "houseTax", Kind = DueKind.HouseTax, Id = houses, Amount = houseTax });
             if (EquipmentRules.On(sim))
             {
                 foreach (Machine m in sim.State.Equipment.Machines)
@@ -140,7 +142,7 @@ namespace Sim.Core.Finance
                 Loan loan = b.LoanId == 0 || sim.State.Credit == null ? null : sim.State.Credit.Find(b.LoanId);
                 if (loan != null && loan.IsOpen) due.Loan = CreditRules.NextPayment(sim, loan, out _, out _);
                 Worker w = sim.State.People?.WorkerAt(b.Id);
-                if (b.Status == BusinessStatus.Open && w != null && !HrRules.Leaves(sim, w)) due.Wage = System.Math.Max(0, w.Wage - w.Hr.Advance);
+                if (b.Status == BusinessStatus.Open && w != null && !HrRules.Leaves(sim, w)) due.Wage = System.Math.Max(0, Town.PolicyRules.WageFloor(sim, w.Wage, People.HiringRules.MarketWage(sim, b.Id)) - w.Hr.Advance);
                 if (b.Pitch >= 0 && sim.Config.Game.Shops != null) due.Rent = MarketRules.Indexed(sim, sim.Config.Game.Shops.PitchRent);
                 if (due.Total > 0) list.Add(due);
             }

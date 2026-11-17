@@ -35,6 +35,9 @@ namespace Sim.Core.Maths
 
         /// <summary>A newcomer setting up at a close (spec 017 §3.7): key = the shop kind, counter = the season that ended.</summary>
         Rival = 19,
+
+        /// <summary>The small business grant's 40% that come to nothing (spec 022 §3.5): key 0, counter = the season that ended.</summary>
+        Grants = 20,
     }
 
     /// <summary>

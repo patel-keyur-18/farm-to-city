@@ -289,6 +289,9 @@ namespace Game.Presentation
                     case FounderSick _: Toast(_strings.Get("toast.sick")); break;
                     case ApplicantArrived _: Toast(_strings.Get("toast.applicant")); break;
                     case HandHutBuilt _: Toast(_strings.Get("toast.hutBuilt")); break;
+                    case TreasuryOpened t: Toast(_strings.Get("toast.treasuryOpened", "grant", _ctx.Fmt.Coins(t.Grant))); break; // spec 021 §3.1: public money, not yours
+                    case BudgetWindowOpened bw: if (!away && !bw.Revision && Sim.State.Treasury.Reports.Count == 0) ShowBudgetCard(); break; // the first window's card (ADR 0115)
+                    case DepartmentUnpaid u: if (!away) Toast(_strings.Get("toast.townUnpaid", "dept", TreasurySheet.Department(_ctx, u.Department))); break;
                     case HandHired hh:
                         // One of your townspeople stays at home (ADR 0083): nobody moved in.
                         Hand hired = Sim.State.People.Hand(hh.HandId);
@@ -350,6 +353,15 @@ namespace Game.Presentation
                 case HitKind.Bed: OpenSheet(new SheetRequest("Bed", hit.Id)); break;
                 default: OpenSheet(new SheetRequest("Tile", hit.Id)); break;
             }
+        }
+
+        /// <summary>The first budget window's card (spec 021 §3.6, ADR 0115): Accept takes the proposal, Change opens the Budget tab. Shown on the next UI tick.</summary>
+        private void ShowBudgetCard()
+        {
+            ConfirmCardVm card = TreasurySheet.WindowCard(_ctx);
+            if (card == null) return;
+            _safeRoot.schedule.Execute(() => _sheet.ConfirmCard(card, () => Run(new Command[] { new AcceptBudget(Sim.State.Clock.SimTime) }),
+                () => OpenSheet(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)), key => _strings.Get(key)));
         }
 
         /// <summary>A sheet on its own (from the map, the HUD, a card): nothing to go back to.</summary>

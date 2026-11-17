@@ -95,7 +95,7 @@ namespace Sim.Content
                 }
                 string cp = Join(p, "conditions");
                 JObject c = Object(Required(x, p, "conditions"), cp);
-                OnlyFields(c, cp, "acresHarvestedInSeason", "meanCareAtLeast", "handHutsAtLeast", "profitableSeasonsAtLeast", "householdsAtLeast", "businessSeasonsAtLeast", "school");
+                OnlyFields(c, cp, "acresHarvestedInSeason", "meanCareAtLeast", "handHutsAtLeast", "profitableSeasonsAtLeast", "householdsAtLeast", "businessSeasonsAtLeast", "school", "developerOnly");
                 if (!c.HasValues) throw new ContentException(cp, "an era needs at least one condition");
                 int Count(string name, int min) { return c[name] == null ? 0 : BoundedInt(c, cp, name, min, 1000); }
                 int acres = Count("acresHarvestedInSeason", 1);
@@ -103,7 +103,9 @@ namespace Sim.Content
                 if (acres == 0 && c["meanCareAtLeast"] != null) throw new ContentException(Join(cp, "meanCareAtLeast"), "Care is of the season's harvested acres: give acresHarvestedInSeason too");
                 bool school = c["school"] != null && Bool(c["school"], Join(cp, "school"));
                 if (c["school"] != null && !school) throw new ContentException(Join(cp, "school"), "leave it out instead of false");
-                eras.Add(new EraDef(id, acres, care, Count("handHutsAtLeast", 0), Count("profitableSeasonsAtLeast", 0), Count("householdsAtLeast", 1), Count("businessSeasonsAtLeast", 1), school));
+                bool developerOnly = c["developerOnly"] != null && Bool(c["developerOnly"], Join(cp, "developerOnly"));
+                if (c["developerOnly"] != null && !developerOnly) throw new ContentException(Join(cp, "developerOnly"), "leave it out instead of false");
+                eras.Add(new EraDef(id, acres, care, Count("handHutsAtLeast", 0), Count("profitableSeasonsAtLeast", 0), Count("householdsAtLeast", 1), Count("businessSeasonsAtLeast", 1), school, developerOnly));
             }
             return new OnboardingDefs(steps.AsReadOnly(), chapters.AsReadOnly(), eras.AsReadOnly());
         }

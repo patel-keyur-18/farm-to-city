@@ -15,6 +15,7 @@ namespace Sim.Core.Finance
         private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.GainOnAssetSales, Account.DebtWrittenOff, Account.BusinessDrawingsIncome, Account.InterestOnSavings }; // rent: not farming (spec 014)
         private static readonly Account[] Household = { Account.LivingCosts, Account.HealthCosts };
         private static readonly Account[] Gifts = { Account.GiftsToVillage }; // the school and its classes (ADR 0095 §5): never farm profit
+        private static readonly Account[] Taxes = { Account.HouseTax }; // spec 022 §3.1: the owner's house tax, outside farm profit
         private static readonly Account[] FinanceCosts = { Account.Interest, Account.PenaltyInterest };
         private static readonly Account[] Other = { Account.LossOnAssetSales };
 
@@ -105,11 +106,12 @@ namespace Sim.Core.Finance
             ReportLine other = Line("otherIncome", OtherIncome);
             ReportLine household = Line("household", Household);
             ReportLine gifts = Line("gifts", Gifts);
+            ReportLine taxes = Line("taxes", Taxes);
             ReportLine finance = Line("finance", FinanceCosts);
             ReportLine losses = Line("other", Other);
-            var net = new ReportLine("netResult", farmProfit.Amount + other.Amount + household.Amount + gifts.Amount + finance.Amount + losses.Amount,
+            var net = new ReportLine("netResult", farmProfit.Amount + other.Amount + household.Amount + gifts.Amount + taxes.Amount + finance.Amount + losses.Amount,
                 new Account[0]);
-            return new List<ReportLine> { farmIncome, farmCosts, farmProfit, other, household, gifts, finance, losses, net }.AsReadOnly();
+            return new List<ReportLine> { farmIncome, farmCosts, farmProfit, other, household, gifts, taxes, finance, losses, net }.AsReadOnly();
         }
 
         private static Account[] Concat(Account[] a, Account[] b)

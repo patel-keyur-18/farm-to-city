@@ -84,6 +84,9 @@ namespace Sim.Core
         /// <summary>Customer choice: the rivals and today's figures (spec 017), or null in content without shops.</summary>
         public Business.ShopsState Shops { get; internal set; }
 
+        /// <summary>The town treasury (spec 021, ADR 0108), or null in content without it; hashed only once it has opened.</summary>
+        public Town.TreasuryState Treasury { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -130,6 +133,8 @@ namespace Sim.Core
             if (Orchards != null && !(h is SaveWriter ow && ow.Schema < 14)) Orchards.WriteTo(h);
             // Spec 017 (schema 14), last: content without shops hashes as before.
             if (Shops != null && !(h is SaveWriter hw && hw.Schema < 14)) Shops.WriteTo(h);
+            // Spec 021 (schema 19), last: a town whose treasury hasn't opened hashes as before.
+            if (Treasury != null && !(h is SaveWriter tw && tw.Schema < 19)) Treasury.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -181,6 +186,7 @@ namespace Sim.Core
                     : new Sim.Core.Equipment.EquipmentState { HiredUntil = new long[g.Equipment.Machines.Count] };
             if (g.Orchard != null) s.Orchards = r.Schema >= 14 ? Sim.Core.Farm.OrchardState.ReadFrom(r) : new Sim.Core.Farm.OrchardState(); // schema 13: none
             if (g.Shops != null) s.Shops = r.Schema >= 14 ? Business.ShopsState.ReadFrom(r, config) : Business.ShopsState.New(config); // schema 13: the village's rivals, no shops of yours
+            if (g.Treasury != null) s.Treasury = r.Schema >= 19 ? Town.TreasuryState.ReadFrom(r) : new Town.TreasuryState(); // schema 18: no treasury yet
             return s;
         }
 
@@ -219,6 +225,7 @@ namespace Sim.Core
                 Equipment = Equipment?.Clone(),
                 Orchards = Orchards?.Clone(),
                 Shops = Shops?.Clone(),
+                Treasury = Treasury?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

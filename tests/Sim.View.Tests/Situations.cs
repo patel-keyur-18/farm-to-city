@@ -269,6 +269,21 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>A Township (spec 021): the treasury open, a family in town, a school open, a season closed and a gift given.</summary>
+        public static Simulation Township()
+        {
+            Simulation sim = Town();
+            var eras = sim.Config.Game.Onboarding.Eras;
+            sim.State.Era.Current = eras.ToList().FindIndex(e => e.Id == "village");
+            Assert.That(Sim.Core.Progress.EraRules.Unlock(sim), Is.True);
+            Ok(sim, new GiveToTreasury(T(sim), 5_000 * 100));
+            long next = (T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason;
+            sim.AdvanceTo(next + 2 * Hour);
+            sim.DrainEvents();
+            Assert.That(sim.State.Treasury.Reports.Count, Is.GreaterThan(0));
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -283,6 +298,7 @@ namespace Sim.View.Tests
             yield return Board();
             yield return Irrigated();
             yield return Equipped();
+            yield return Township();
         }
     }
 }

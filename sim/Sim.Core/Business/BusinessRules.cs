@@ -1013,6 +1013,7 @@ namespace Sim.Core.Business
                 }
                 long interest = Money.MulRate(BusinessBooks.Overdrawn(b), Defs(sim).OverdraftRate);
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
+                Town.TaxRules.BillBusiness(sim, b, closing); // spec 022 §3.2: tax on the season's profit, from its own cash
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
             ShopRules.CloseSeason(sim);
@@ -1036,7 +1037,8 @@ namespace Sim.Core.Business
                 }
                 else if (b.Status == BusinessStatus.Open && w != null)
                 {
-                    long wage = w.Wage;
+                    long wage = Town.PolicyRules.WageFloor(sim, w.Wage, HiringRules.MarketWage(sim, b.Id)); // spec 022 §3.5: a renewal can't go below the minimum wage
+                    w.Wage = wage;
                     if (BusinessBooks.CanSpend(sim, b) >= wage - w.Hr.Advance)
                     {
                         HrRules.RepayAdvance(sim, w, b.Ledger, "business:" + b.Id);

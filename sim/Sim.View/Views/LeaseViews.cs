@@ -61,9 +61,10 @@ namespace Sim.View.Views
                     "share", ctx.Fmt.Integer(o.Income <= 0 ? 0 : o.Current * 100 / o.Income));
             string limit = o.Allowed == o.Market ? "lease.limitMarket" : o.Allowed == o.Bearable ? "lease.limitBear" : "lease.limitCap";
             return head + " " + s.Get(limit, "market", ctx.Fmt.Coins(o.Market), "most", ctx.Fmt.Coins(o.Allowed), "income", ctx.Fmt.Coins(o.Income),
-                "cap", ctx.Fmt.Integer(ctx.Sim.Config.Game.Population.MaxRise.MulRatio(100, 1).RoundToLong()),
+                "cap", ctx.Fmt.Integer(Sim.Core.Town.PolicyRules.RentCap(ctx.Sim, ctx.Sim.Config.Game.Population.MaxRise).MulRatio(100, 1).RoundToLong()),
                 "pct", ctx.Fmt.Integer(ctx.Sim.Config.Game.Population.BurdenLimit.MulRatio(100, 1).RoundToLong()))
-                + " " + s.Get("lease.burden", "most", ctx.Fmt.Coins(o.Allowed), "share", ctx.Fmt.Integer(o.Income <= 0 ? 0 : o.Allowed * 100 / o.Income));
+                + " " + s.Get("lease.burden", "most", ctx.Fmt.Coins(o.Allowed), "share", ctx.Fmt.Integer(o.Income <= 0 ? 0 : o.Allowed * 100 / o.Income))
+                + (Sim.Core.Town.PolicyRules.Effective(ctx.Sim, Sim.Core.Town.PolicyId.RentControl) ? " " + s.Get("lease.rentControl") : "");
         }
 
         /// <summary>The choices a lease offers, as buttons: a label and a second line, in the order of the card.</summary>

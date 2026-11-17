@@ -6,6 +6,7 @@ using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
+using Sim.Core.Town;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.Time;
@@ -250,7 +251,38 @@ namespace Sim.View.Views
                     Sim.Core.People.Household lh = sim.State.Citizens.Household(lease);
                     list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("lease.alert", "family", TownWords.Household(ctx, lh)), Action = ActionVm.Open("lease:" + lease, s.Get("lease.answer"), new SheetRequest("Household", lease)) });
                 }
+            TreasuryAlerts(ctx, list);
             return list;
+        }
+
+        /// <summary>
+        /// The town's money (spec 021 §3.6, §3.11): on a season's last day a close that would leave a department unpaid, with its levers (give,
+        /// change a tax, revise the budget in its window); and a later budget window, proposed and in force, waiting for a look (ADR 0115).
+        /// </summary>
+        private static void TreasuryAlerts(ViewContext ctx, List<AlertVm> list)
+        {
+            Simulation sim = ctx.Sim;
+            if (!TreasuryRules.IsOpen(sim)) return;
+            var s = ctx.Strings;
+            TreasuryState st = TreasuryRules.State(sim);
+            long season = sim.Clock.SecondsPerSeason;
+            TreasuryRules.CloseForecast f = TreasuryRules.Forecast(sim);
+            if (season - ctx.Now % season <= ClockDef.SecondsPerDay && f.Short > 0)
+            {
+                var alert = new AlertVm { Level = AlertLevel.Urgent, Text = s.Get("alert.treasuryShort", "short", ctx.Fmt.Coins(f.Short), "dept", TreasurySheet.Department(ctx, f.FirstUnpaid)) };
+                alert.Levers.Add(Pictured(ActionVm.Open("lever:give", s.Get("treasury.give"), new SheetRequest(TreasurySheet.GiveKind, 0)), "coin"));
+                alert.Levers.Add(Pictured(ActionVm.Open("lever:tax", s.Get("alert.lever.tax"), new SheetRequest(TaxSheet.Kind, 0)), "deed"));
+                alert.Levers.Add(Pictured(st.Window != BudgetWindow.None
+                    ? ActionVm.Open("lever:budget", s.Get("alert.lever.budget"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab))
+                    : new ActionVm("lever:budget", s.Get("alert.lever.budget"), null, ActionKind.Secondary, false, s.Get("alert.lever.budgetLocked", "next", TreasurySheet.NextWindowName(ctx)), null), "menu"));
+                list.Add(alert);
+            }
+            if (st.Window != BudgetWindow.None && !st.WindowSeen && st.Reports.Count > 0) // the first window has its card
+                list.Add(new AlertVm
+                {
+                    Level = AlertLevel.Decision, Text = s.Get(st.Window == BudgetWindow.Revise ? "alert.budgetRevise" : "alert.budgetSet"),
+                    Action = ActionVm.Open("budget", s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)),
+                });
         }
 
         /// <summary>The alert list sheet: one row per alert with its action.</summary>
@@ -549,6 +581,12 @@ namespace Sim.View.Views
                         break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
+                    case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
+                    case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
+                    case PolicyPaused pp: rows.Add(Row(s.Get("away.town"), s.Get("away.policyPaused", "policy", PolicySheet.Name(ctx, pp.Policy)), "place_council_hall")); break;
+                    case GrantWasted _: rows.Add(Row(s.Get("away.town"), s.Get("away.grantWasted"), "place_council_hall")); break;
+                    case GrantOpenedShop _: rows.Add(Row(s.Get("away.town"), s.Get("away.grantOpened"), "place_council_hall")); break;
+                    case DepartmentUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.townUnpaid", "dept", TreasurySheet.Department(ctx, u.Department), "amount", ctx.Fmt.Coins(u.Amount)), "place_council_hall")); break;
                     case CitizenLiterate l when l.How == LiterateHow.School: pupils.Add(l.Name); break;
                     case CitizenLiterate _: adults++; break;
                     case LeaseRenewed lr:
@@ -632,6 +670,12 @@ namespace Sim.View.Views
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
             { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            // Spec 021 (the town treasury).
+            { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
+            { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },
+            { "BudgetWindowOpened", Use.Alert }, { "BudgetSet", Use.StateOnly }, { "BudgetAccepted", Use.StateOnly }, { "TreasuryShortAhead", Use.Alert },
+            { "TaxBilled", Use.StateOnly }, { "TaxOwed", Use.StateOnly }, { "TaxRateSet", Use.StateOnly },
+            { "PolicyEnacted", Use.StateOnly }, { "PolicyRepealed", Use.StateOnly }, { "PolicyStarted", Use.Away }, { "PolicyPaused", Use.Away }, { "GrantWasted", Use.Away }, { "GrantOpenedShop", Use.Away },
             // Spec 019 §3.5 (the savings deposit).
             { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.

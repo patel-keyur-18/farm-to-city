@@ -197,7 +197,7 @@ namespace Sim.Core.Market
                 {
                     Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = MarketRules.Ceiling(sim, g),
                     Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + TownAtMarket(sim, g), // spec 014 §3.7
-                    OtherSupplyPerDay = defs.Region.ValleySupplyPerDay(g) + defs.Region.ImportCapacityPerDay(g),
+                    OtherSupplyPerDay = (defs.Goods[g].Sales == Definitions.SalesKind.Crop ? (Maths.Fixed.FromInt((int)defs.Region.ValleySupplyPerDay(g)) * Town.PolicyRules.SupplyFactor(sim)).RoundToLong() : defs.Region.ValleySupplyPerDay(g)) + defs.Region.ImportCapacityPerDay(g), // spec 022 §3.5: the subsidy, on field crops only
                     Eligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
                     TraderMayTake = !hasMin || m.MinPrice[g] <= floor,
                     TraderCapacityLeft = defs.Truck != null && !m.TruckHere ? 0 : MarketRules.TraderCapacityLeft(sim, g),

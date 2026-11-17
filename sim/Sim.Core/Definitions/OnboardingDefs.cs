@@ -133,9 +133,13 @@ namespace Sim.Core.Definitions
         public int BusinessSeasonsAtLeast { get; }
         public bool School { get; }
 
+        /// <summary>No gate yet: only the developer panel's Next era reaches it (the Township before spec 023 builds its gate, spec 021 §3.1).</summary>
+        public bool DeveloperOnly { get; }
+
         public EraDef(string id, int acresHarvestedInSeason, Fixed meanCareAtLeast, int handHutsAtLeast, int profitableSeasonsAtLeast,
-            int householdsAtLeast = 0, int businessSeasonsAtLeast = 0, bool school = false)
+            int householdsAtLeast = 0, int businessSeasonsAtLeast = 0, bool school = false, bool developerOnly = false)
         {
+            DeveloperOnly = developerOnly;
             Id = id;
             AcresHarvestedInSeason = acresHarvestedInSeason;
             MeanCareAtLeast = meanCareAtLeast;

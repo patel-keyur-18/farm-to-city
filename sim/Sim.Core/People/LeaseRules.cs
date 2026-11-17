@@ -155,7 +155,7 @@ namespace Sim.Core.People
                 o.Allowed = market;
                 return o;
             }
-            long cap = current + Money.MulRate(current, p.MaxRise) / Money.Coin * Money.Coin;
+            long cap = current + Money.MulRate(current, Town.PolicyRules.RentCap(sim, p.MaxRise)) / Money.Coin * Money.Coin; // spec 022 §3.5: rent control
             long allowed = System.Math.Min(market, System.Math.Min(cap, o.Bearable));
             o.Allowed = System.Math.Max(current, allowed);
             if (o.Allowed > current) o.Smaller = current + (o.Allowed - current) / 2 / Money.Coin * Money.Coin;

@@ -27,10 +27,16 @@ namespace Sim.Core.Definitions
         public static readonly string[] NoteIds =
         {
             "missedPayment", "debt", "overdraft", "profitNotCash", "pests", "feed", "soil", "dry", "raise", "tired", "children", "adultClass",
+            "deptOver", "serviceLow", "grantAtRisk", "thinBalance",
         };
 
         /// <summary>Notes whose condition takes a threshold.</summary>
-        public static readonly string[] WithThreshold = { "overdraft", "soil", "dry" };
+        public static readonly string[] WithThreshold = { "overdraft", "soil", "dry", "serviceLow", "grantAtRisk" };
+
+        /// <summary>The town planner (spec 021 §3.12): her notes are about the town's money and show on the treasury sheet, not the founder's season report.</summary>
+        public const string PlannerId = "planner";
+
+        public bool IsPlanner(AdvisorNoteDef n) { return Advisors[n.Advisor] == PlannerId; }
 
         /// <summary>The alerts a note can attach to (spec 018 §3.4).</summary>
         public static readonly string[] AlertKinds = { "LoanPaymentMissed", "FinalNotice", "WagesMissed", "PestWarning", "FeedLow", "HrEventRaised" };

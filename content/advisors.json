@@ -3,7 +3,8 @@
   "advisors": [
     { "id": "accountant", "portrait": "portrait_advisor_bank" },
     { "id": "farm",       "portrait": "portrait_advisor_farm" },
-    { "id": "people",     "portrait": "portrait_advisor_people" }
+    { "id": "people",     "portrait": "portrait_advisor_people" },
+    { "id": "planner",    "portrait": "portrait_advisor_planner" }
   ],
   "notes": [
     { "id": "missedPayment", "advisor": "accountant", "alerts": ["LoanPaymentMissed", "FinalNotice"] },
@@ -19,6 +20,11 @@
     { "id": "raise",         "advisor": "people",     "alerts": ["HrEventRaised"] },
     { "id": "tired",         "advisor": "people",     "report": true },
     { "id": "children",      "advisor": "people",     "report": true },
-    { "id": "adultClass",    "advisor": "people",     "report": true }
+    { "id": "adultClass",    "advisor": "people",     "report": true },
+
+    { "id": "deptOver",      "advisor": "planner",    "report": true },
+    { "id": "serviceLow",    "advisor": "planner",    "report": true, "threshold": 0.70 },
+    { "id": "grantAtRisk",   "advisor": "planner",    "report": true, "threshold": 0.50 },
+    { "id": "thinBalance",   "advisor": "planner",    "report": true }
   ]
 }

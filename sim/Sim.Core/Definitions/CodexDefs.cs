@@ -39,6 +39,7 @@ namespace Sim.Core.Definitions
             "depreciation", "appreciation", "yield",
             "hiringUncertainty", "marketWage", "retention", "trainingRoi", "employerReputation",
             "publicGoods", "longTermInvestment",
+            "publicMoney", "budgetPriority", "tiedGrants",
         };
 
         /// <summary>Kinds that take a threshold.</summary>

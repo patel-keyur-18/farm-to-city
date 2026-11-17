@@ -1,0 +1,372 @@
+using System.Collections.Generic;
+using Sim.Core.Finance;
+using Sim.Core.Maths;
+using Sim.Core.Saves;
+
+namespace Sim.Core.Town
+{
+    /// <summary>The budget's window (spec 021 §3.6): the set window at the opening and each Spring close, one revision at the Monsoon close.</summary>
+    public enum BudgetWindow
+    {
+        None = 0,
+        Set = 1,
+        Revise = 2,
+    }
+
+    /// <summary>One department's row of a closed season (spec 021 §3.6): what it was budgeted, what it needed and what it was paid.</summary>
+    public sealed class DepartmentRow
+    {
+        public long Budget { get; internal set; }
+        public long Needs { get; internal set; }
+        public long Paid { get; internal set; }
+
+        /// <summary>Of <see cref="Paid"/>, what pass 2 paid: the overspend (spec 021 §3.4).</summary>
+        public long PaidInPass2 { get; internal set; }
+
+        /// <summary>The service's condition after the close.</summary>
+        public Fixed Condition { get; internal set; }
+
+        /// <summary>The variance sentence (spec 021 §3.6), a <see cref="VarianceSentence"/>.</summary>
+        public int Sentence { get; internal set; }
+
+        public long Unpaid { get { return Needs - Paid; } }
+
+        /// <summary>Paid ÷ needs, 1 when nothing was needed (spec 021 §3.4).</summary>
+        public Fixed Funding { get { return Needs <= 0 ? Fixed.One : Fixed.FromRatio(Paid, Needs); } }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Budget); h.WriteLong(Needs); h.WriteLong(Paid); h.WriteLong(PaidInPass2); h.WriteFixed(Condition); h.WriteInt(Sentence);
+        }
+
+        internal static DepartmentRow ReadFrom(SaveReader r)
+        {
+            return new DepartmentRow { Budget = r.ReadLong(), Needs = r.ReadLong(), Paid = r.ReadLong(), PaidInPass2 = r.ReadLong(), Condition = r.ReadFixed(), Sentence = r.ReadInt() };
+        }
+    }
+
+    /// <summary>
+    /// A closed season of the town's books (spec 021 §3.2, §3.6): every account's balance before the close (the money in and out and what
+    /// the town has), the cash that moved, and each department's row. Immutable once added.
+    /// </summary>
+    public sealed class TreasuryReport
+    {
+        public long Period { get; internal set; }
+        public IReadOnlyList<KeyValuePair<Account, long>> Balances { get; internal set; }
+        public long Opening { get; internal set; }
+        public long Inflows { get; internal set; }
+        public long Outflows { get; internal set; }
+        public long Closing { get { return Opening + Inflows - Outflows; } }
+        public IReadOnlyList<DepartmentRow> Rows { get; internal set; }
+
+        /// <summary>What the clinic's tied grant would have been but wasn't paid, in hundredths (0 when paid or when there is no clinic yet).</summary>
+        public long TiedWithheld { get; internal set; }
+
+        public long Balance(Account a)
+        {
+            foreach (KeyValuePair<Account, long> kv in Balances) if (kv.Key == a) return kv.Value;
+            return 0;
+        }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Period);
+            h.WriteInt(Balances.Count);
+            foreach (KeyValuePair<Account, long> kv in Balances) { h.WriteInt((int)kv.Key); h.WriteLong(kv.Value); }
+            h.WriteLong(Opening); h.WriteLong(Inflows); h.WriteLong(Outflows); h.WriteLong(TiedWithheld);
+            h.WriteInt(Rows.Count);
+            foreach (DepartmentRow row in Rows) row.WriteTo(h);
+        }
+
+        internal static TreasuryReport ReadFrom(SaveReader r)
+        {
+            var report = new TreasuryReport { Period = r.ReadLong() };
+            var balances = new List<KeyValuePair<Account, long>>();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) balances.Add(new KeyValuePair<Account, long>((Account)r.ReadInt(), r.ReadLong()));
+            report.Balances = balances.AsReadOnly();
+            report.Opening = r.ReadLong();
+            report.Inflows = r.ReadLong();
+            report.Outflows = r.ReadLong();
+            report.TiedWithheld = r.ReadLong();
+            var rows = new List<DepartmentRow>();
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) rows.Add(DepartmentRow.ReadFrom(r));
+            report.Rows = rows.AsReadOnly();
+            return report;
+        }
+    }
+
+    /// <summary>A capital work the treasury commissioned (spec 021 §3.7): held at cost and depreciated straight-line at each close.</summary>
+    public sealed class WorkRecord
+    {
+        public string WorkId { get; internal set; }
+        public long Cost { get; internal set; }
+        public int LifeSeasons { get; internal set; }
+        public int SeasonsDepreciated { get; internal set; }
+        public long Depreciated { get; internal set; }
+        public long At { get; internal set; }
+
+        internal WorkRecord Clone() { return (WorkRecord)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteString(WorkId); h.WriteLong(Cost); h.WriteInt(LifeSeasons); h.WriteInt(SeasonsDepreciated); h.WriteLong(Depreciated); h.WriteLong(At);
+        }
+
+        internal static WorkRecord ReadFrom(SaveReader r)
+        {
+            return new WorkRecord { WorkId = r.ReadString(), Cost = r.ReadLong(), LifeSeasons = r.ReadInt(), SeasonsDepreciated = r.ReadInt(), Depreciated = r.ReadLong(), At = r.ReadLong() };
+        }
+    }
+
+    /// <summary>
+    /// The town treasury (spec 021 §4, ADR 0108): a second wallet with its own ledger. It exists in a town whose content has
+    /// <c>treasury.json</c>, but hashes only once it has opened, so a town before the Township hashes as it did.
+    /// </summary>
+    public sealed class TreasuryState
+    {
+        public const int Departments = 7;
+
+        /// <summary>When the Township opened it; -1 until it does.</summary>
+        public long OpenedAt { get; internal set; } = -1;
+        public bool Opened { get { return OpenedAt >= 0; } }
+
+        public Ledger Ledger { get; internal set; } = new Ledger();
+
+        /// <summary>The most each department may spend a season, set for the year (spec 021 §3.6).</summary>
+        public long[] Budget { get; internal set; } = new long[Departments];
+
+        /// <summary>What each department needed when its budget was last set, so a variance can say whether prices rose or the budget was cut (spec 021 §3.6).</summary>
+        public long[] BudgetNeeds { get; internal set; } = new long[Departments];
+
+        /// <summary>Each department's service, 0–1, starting at 1 (spec 021 §3.5).</summary>
+        public Fixed[] Condition { get; internal set; } = NewConditions();
+
+        /// <summary>Closes a department has gone unpaid in a row, for the advisor and the doctor's rule (spec 021 §4).</summary>
+        public int[] Unpaid { get; internal set; } = new int[Departments];
+
+        /// <summary>Closes a department has been over its budget in a row (the planner's note).</summary>
+        public int[] OverBudget { get; internal set; } = new int[Departments];
+
+        /// <summary>Which of the content's lines have appeared, so a new line is added to its budget once (spec 021 §3.6).</summary>
+        public List<string> SeenLines { get; internal set; } = new List<string>();
+
+        /// <summary>A line has been seen: saved by its id, so lines added to the content later (spec 023's) never shift the ones before them.</summary>
+        internal bool Seen(string id) { return SeenLines.BinarySearch(id, System.StringComparer.Ordinal) >= 0; }
+
+        internal void SetSeen(string id, bool seen)
+        {
+            int at = SeenLines.BinarySearch(id, System.StringComparer.Ordinal);
+            if (seen && at < 0) SeenLines.Insert(~at, id);
+            else if (!seen && at >= 0) SeenLines.RemoveAt(at);
+        }
+
+        public BudgetWindow Window { get; internal set; }
+
+        /// <summary>The season the window opened in, and whether the player has looked at it (the proposal is in force either way).</summary>
+        public long WindowPeriod { get; internal set; }
+        public bool WindowSeen { get; internal set; }
+        public int YearBudgeted { get; internal set; }
+        public bool Revised { get; internal set; }
+
+        /// <summary>The warning of a close that would leave a department unpaid was raised for this season (spec 021 §3.11).</summary>
+        public long ShortWarnedPeriod { get; internal set; } = -1;
+        public long ShortWarnedAmount { get; internal set; }
+
+        public long SeasonOpeningCash { get; internal set; }
+
+        /// <summary>The house and business tax rates in force for the season now, and the rate set for the next one or −1 (spec 022 §3.4).</summary>
+        public Fixed HouseRate { get; internal set; }
+        public Fixed BusinessRate { get; internal set; }
+        public Fixed PendingHouse { get; internal set; } = Fixed.FromInt(-1);
+        public Fixed PendingBusiness { get; internal set; } = Fixed.FromInt(-1);
+
+        /// <summary>The player has read the Taxes sheet's first-visit note (spec 022 §3.7).</summary>
+        public bool TaxTourSeen { get; internal set; }
+
+        /// <summary>The five policies' states (spec 022 §4), and whether the player has read the Policies tab's first-visit note.</summary>
+        public PolicyState[] Policies { get; internal set; } = NewPolicies();
+        public bool PolicyTourSeen { get; internal set; }
+
+        private static PolicyState[] NewPolicies()
+        {
+            var p = new PolicyState[PolicyState.Count];
+            for (int i = 0; i < p.Length; i++) p[i] = new PolicyState();
+            return p;
+        }
+        public List<WorkRecord> Works { get; internal set; } = new List<WorkRecord>();
+        public List<TreasuryReport> Reports { get; internal set; } = new List<TreasuryReport>();
+
+        public long Cash { get { return Ledger.Cash; } }
+
+        /// <summary>
+        /// Inside a season close, before the treasury's own pass: pitch rents paid at the boundary are for the new season, so they wait and are
+        /// credited after the closing season's books are shut (spec 021 §3.3, §3.10). Never saved: they last one pass.
+        /// </summary>
+        internal bool Closing { get; set; }
+        internal List<KeyValuePair<long, long>> PendingRents { get; set; } = new List<KeyValuePair<long, long>>();
+
+        private static Fixed[] NewConditions()
+        {
+            var c = new Fixed[Departments];
+            for (int i = 0; i < c.Length; i++) c[i] = Fixed.One;
+            return c;
+        }
+
+        internal TreasuryState Clone()
+        {
+            var c = (TreasuryState)MemberwiseClone();
+            c.Ledger = Ledger.Clone();
+            c.Budget = (long[])Budget.Clone();
+            c.BudgetNeeds = (long[])BudgetNeeds.Clone();
+            c.Condition = (Fixed[])Condition.Clone();
+            c.Unpaid = (int[])Unpaid.Clone();
+            c.OverBudget = (int[])OverBudget.Clone();
+            c.SeenLines = new List<string>(SeenLines);
+            c.Policies = System.Array.ConvertAll(Policies, x => x.Clone());
+            c.Works = Works.ConvertAll(x => x.Clone());
+            c.PendingRents = new List<KeyValuePair<long, long>>(PendingRents);
+            c.Reports = new List<TreasuryReport>(Reports); // reports are immutable
+            return c;
+        }
+
+        /// <summary>A save writes the opening time always; the hash writes nothing until the treasury opens (the goldens are unchanged).</summary>
+        internal void WriteTo(IStateWriter h)
+        {
+            if (h.Hashing && !Opened) return;
+            h.WriteLong(OpenedAt);
+            if (!Opened) return;
+            Ledger.WriteTo(h);
+            foreach (long b in Budget) h.WriteLong(b);
+            foreach (long b in BudgetNeeds) h.WriteLong(b);
+            foreach (Fixed c in Condition) h.WriteFixed(c);
+            foreach (int u in Unpaid) h.WriteInt(u);
+            foreach (int u in OverBudget) h.WriteInt(u);
+            h.WriteInt(SeenLines.Count);
+            foreach (string id in SeenLines) h.WriteString(id);
+            h.WriteInt((int)Window);
+            h.WriteLong(WindowPeriod);
+            h.WriteBool(WindowSeen);
+            h.WriteInt(YearBudgeted);
+            h.WriteBool(Revised);
+            h.WriteLong(ShortWarnedPeriod);
+            h.WriteLong(ShortWarnedAmount);
+            h.WriteLong(SeasonOpeningCash);
+            h.WriteInt(Works.Count);
+            foreach (WorkRecord w in Works) w.WriteTo(h);
+            h.WriteInt(Reports.Count);
+            foreach (TreasuryReport r in Reports) r.WriteTo(h);
+            h.WriteFixed(HouseRate); h.WriteFixed(BusinessRate); h.WriteFixed(PendingHouse); h.WriteFixed(PendingBusiness);
+            h.WriteBool(TaxTourSeen);
+            foreach (PolicyState p in Policies) p.WriteTo(h);
+            h.WriteBool(PolicyTourSeen);
+        }
+
+        internal static TreasuryState ReadFrom(SaveReader r)
+        {
+            var s = new TreasuryState { OpenedAt = r.ReadLong() };
+            if (!s.Opened) return s;
+            s.Ledger = Ledger.ReadFrom(r);
+            for (int i = 0; i < Departments; i++) s.Budget[i] = r.ReadLong();
+            for (int i = 0; i < Departments; i++) s.BudgetNeeds[i] = r.ReadLong();
+            for (int i = 0; i < Departments; i++) s.Condition[i] = r.ReadFixed();
+            for (int i = 0; i < Departments; i++) s.Unpaid[i] = r.ReadInt();
+            for (int i = 0; i < Departments; i++) s.OverBudget[i] = r.ReadInt();
+            int seen = r.ReadCount();
+            for (int i = 0; i < seen; i++) s.SeenLines.Add(r.ReadString());
+            s.Window = (BudgetWindow)r.ReadInt();
+            s.WindowPeriod = r.ReadLong();
+            s.WindowSeen = r.ReadBool();
+            s.YearBudgeted = r.ReadInt();
+            s.Revised = r.ReadBool();
+            s.ShortWarnedPeriod = r.ReadLong();
+            s.ShortWarnedAmount = r.ReadLong();
+            s.SeasonOpeningCash = r.ReadLong();
+            int n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Works.Add(WorkRecord.ReadFrom(r));
+            n = r.ReadCount();
+            for (int i = 0; i < n; i++) s.Reports.Add(TreasuryReport.ReadFrom(r));
+            s.HouseRate = r.ReadFixed(); s.BusinessRate = r.ReadFixed(); s.PendingHouse = r.ReadFixed(); s.PendingBusiness = r.ReadFixed();
+            s.TaxTourSeen = r.ReadBool();
+            for (int i = 0; i < PolicyState.Count; i++) s.Policies[i] = PolicyState.ReadFrom(r);
+            s.PolicyTourSeen = r.ReadBool();
+            return s;
+        }
+    }
+
+    /// <summary>The five launch policies, in the order of <c>treasury.json</c>'s <c>policies</c> block (spec 022 §3.5).</summary>
+    public enum PolicyId
+    {
+        Meals = 0,
+        Subsidy = 1,
+        Grant = 2,
+        MinWage = 3,
+        RentControl = 4,
+    }
+
+    /// <summary>Where a policy stands (spec 022 §3.6). A repealed policy is <see cref="None"/> with a repeal period, and waits a season.</summary>
+    public enum PolicyStatus
+    {
+        None = 0,
+
+        /// <summary>Enacted, first paid at the next close.</summary>
+        Enacted = 1,
+
+        /// <summary>Paid at the last close.</summary>
+        Active = 2,
+
+        /// <summary>The last close couldn't pay it: no effect, nothing charged, not repealed.</summary>
+        Paused = 3,
+    }
+
+    /// <summary>One policy's state (spec 022 §4).</summary>
+    public sealed class PolicyState
+    {
+        public const int Count = 5;
+        public PolicyStatus Status { get; internal set; }
+
+        /// <summary>The season it was enacted in, or -1.</summary>
+        public long EnactedPeriod { get; internal set; } = -1;
+
+        /// <summary>Closes it has been paid, in all.</summary>
+        public int PaidCloses { get; internal set; }
+
+        /// <summary>The player has repealed it: it ends at the next close.</summary>
+        public bool Repealing { get; internal set; }
+
+        /// <summary>The season it was repealed in (the wait to enact it again counts from here), or -1.</summary>
+        public long RepealedPeriod { get; internal set; } = -1;
+
+        /// <summary>The subsidy's hangover: seasons left.</summary>
+        public int Hangover { get; internal set; }
+
+        /// <summary>The grant paid last close and opened a door: the next newcomer's chance is higher.</summary>
+        public bool Boost { get; internal set; }
+
+        internal PolicyState Clone() { return (PolicyState)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteInt((int)Status); h.WriteLong(EnactedPeriod); h.WriteInt(PaidCloses); h.WriteBool(Repealing);
+            h.WriteLong(RepealedPeriod); h.WriteInt(Hangover); h.WriteBool(Boost);
+        }
+
+        internal static PolicyState ReadFrom(SaveReader r)
+        {
+            return new PolicyState { Status = (PolicyStatus)r.ReadInt(), EnactedPeriod = r.ReadLong(), PaidCloses = r.ReadInt(), Repealing = r.ReadBool(),
+                RepealedPeriod = r.ReadLong(), Hangover = r.ReadInt(), Boost = r.ReadBool() };
+        }
+    }
+
+    /// <summary>The five sentences a department's variance can take (spec 021 §3.6).</summary>
+    public enum VarianceSentence
+    {
+        None = 0,
+        PricesRose = 1,
+        NewLine = 2,
+        CashRanOut = 3,
+        BudgetBelowNeeds = 4,
+        Unspent = 5,
+    }
+}

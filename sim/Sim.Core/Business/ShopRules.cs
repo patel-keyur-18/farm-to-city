@@ -765,6 +765,7 @@ namespace Sim.Core.Business
             }
             BusinessBooks.Draw(sim, b, rent, period);
             b.Ledger.Post(sim.State.Clock.SimTime, period, "ledger.pitchRent", "business:" + b.Id, new Posting(Account.Rent, rent), new Posting(Account.Cash, -rent));
+            Town.TreasuryRules.CreditPitchRent(sim, b.Id, rent, period); // spec 021 §3.3: the town's income, in the same step
         }
 
         /// <summary>The season's counts start again at the close.</summary>
@@ -855,8 +856,11 @@ namespace Sim.Core.Business
                     continue; // never one out and another in at the same close
                 }
                 bool gap = served < d.NewcomerGap.MulRatio(demand, 1).RoundToLong();
-                if (!KindUnlocked(sim, kind) || !(gap || RichPrices(sim, kind))) continue;
-                if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), d.NewcomerChance)) continue;
+                bool grant = Town.PolicyRules.GrantBoost(sim); // spec 022 §3.5: a small business grant opens the door
+                if (!KindUnlocked(sim, kind) || !(gap || RichPrices(sim, kind) || grant)) continue;
+                Fixed chance = (grant ? d.NewcomerChance * Town.PolicyRules.Def(sim).GrantNewcomerChance : d.NewcomerChance) * Town.PolicyRules.NewcomerFactor(sim);
+                if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), chance)) continue;
+                if (grant) Town.PolicyRules.UseGrantBoost(sim, true);
                 int pitch = FreePitch(sim);
                 s.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
                     PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap });

@@ -37,15 +37,15 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(CommissionWorks), typeof(EnactPolicy));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
-                typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo));
+                typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
                 typeof(SellToTrader), typeof(DeliverOrder), typeof(GoToMandi), typeof(Buy), typeof(BuyMedicine), typeof(HireLabourers), typeof(Offer), typeof(Withdraw),
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
-                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(SeeChapter),
+                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors));
             Add(ConfirmKind.System, typeof(AdvanceTo), typeof(DebugAdvance), typeof(DebugNextEra), typeof(LiveRun), typeof(NewGame), typeof(Sync));
             return k;
@@ -85,6 +85,9 @@ namespace Sim.View.Views
         public List<ConfirmRowVm> Rows { get; } = new List<ConfirmRowVm>();
         public string Warning { get; internal set; }
 
+        /// <summary>The note is good news in green, not a warning (the budget card's "nothing breaks").</summary>
+        public bool Reassure { get; internal set; }
+
         /// <summary>The big safe button ("Not now", "Keep my land").</summary>
         public string SafeLabel { get; internal set; }
 
@@ -107,6 +110,8 @@ namespace Sim.View.Views
         {
             ConfirmKind kind = ConfirmRules.Of(c);
             if (kind != ConfirmKind.Tap && kind != ConfirmKind.Hold) return null;
+            if (c is RepealPolicy undo && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)undo.Policy].PaidCloses == 0) return null; // never paid: taking it back costs nothing and ends at once
+            if (c is EnactPolicy keep && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)keep.Policy].Repealing) return null; // keeping a policy that is ending costs nothing new
             Simulation sim = ctx.Sim;
             CommandResult result = sim.Preview(c, out Simulation after);
             if (!result.Accepted) return null;
@@ -124,6 +129,10 @@ namespace Sim.View.Views
                 CashChange = cash, LoanTaken = taken, LoanRepaid = repaid,
             };
             if (c is SetSavingsCover) Standing(ctx, vm);
+            else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
+            else if (c is CommissionWorks) Works(ctx, vm, sim, after);
+            else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
+            else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + ".warn", "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
             string verb = s.Get("confirm." + name + ".verb");
@@ -157,6 +166,56 @@ namespace Sim.View.Views
                 }
             }
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>A gift to the town (spec 021 §3.8): what you give, the town's balance after, your cash after.</summary>
+        private static void Gift(ViewContext ctx, ConfirmCardVm vm, GiveToTreasury gift, Simulation after)
+        {
+            var s = ctx.Strings;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.GiveToTreasury.gift"), ctx.Fmt.Coins(gift.Amount)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.GiveToTreasury.town"), ctx.Fmt.Coins(after.State.Treasury.Cash)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>Capital works (spec 021 §3.7): the town pays a builder from its own money; yours isn't touched.</summary>
+        private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after)
+        {
+            var s = ctx.Strings;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.cost"), ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.town"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
+        }
+
+        /// <summary>Enacting a policy (spec 022 §3.6): what it costs the town a season, when it is paid and starts, and the town's bill at the close before and after.</summary>
+        private static void Enacting(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, EnactPolicy c)
+        {
+            var s = ctx.Strings;
+            var p = c.Policy;
+            long cost = Sim.Core.Town.PolicyRules.Cost(sim, p);
+            int left = Sim.Core.Town.PolicyRules.SettingUp(after, p);
+            vm.Subtitle = PolicySheet.Name(ctx, (int)p);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.cost"), PolicySheet.CostText(ctx, p, cost)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.paid"), FieldSheets.SeasonName(ctx, sim.Period)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.starts"), FieldSheets.SeasonName(ctx, sim.Period + left)));
+            Sim.Core.Town.TreasuryRules.CloseForecast before = Sim.Core.Town.TreasuryRules.Forecast(sim), now = Sim.Core.Town.TreasuryRules.Forecast(after);
+            long raise = p == Sim.Core.Town.PolicyId.MinWage ? Sim.Core.Town.PolicyRules.ClerkRaise(sim) : 0;
+            if (raise > 0) vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.clerk"), "+" + ctx.Fmt.Coins(raise))); // the town's own clerk is paid the minimum too
+            long due = now.Due + raise;
+            long income = Sim.Core.Town.TreasuryRules.ExpectedIncome(sim), balance = sim.State.Treasury.Cash;
+            string status = TreasurySheet.CloseStatus(ctx, income, due, balance, out Tone tone);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.bill"), ctx.Fmt.Coins(before.Due) + " → " + ctx.Fmt.Coins(due), total: true));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EnactPolicy.status"), status));
+            vm.Warning = tone == Tone.Warn ? s.Get("confirm.EnactPolicy.short") : null;
+            vm.Reassure = false;
+        }
+
+        /// <summary>Repealing a policy (spec 022 §3.6): what stops, and anything that stays behind (the subsidy's dip, wages and rents until each renewal).</summary>
+        private static void Repealing(ViewContext ctx, ConfirmCardVm vm, Simulation sim, RepealPolicy c)
+        {
+            var s = ctx.Strings;
+            vm.Subtitle = PolicySheet.Name(ctx, (int)c.Policy);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.RepealPolicy.stops"), s.Get("confirm.RepealPolicy.stopsValue")));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.RepealPolicy.saves"), PolicySheet.CostText(ctx, c.Policy, Sim.Core.Town.PolicyRules.Cost(sim, c.Policy))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.RepealPolicy.after"), s.Get("policy." + PolicySheet.Key((int)c.Policy) + ".afterRepeal"), total: true));
         }
 
         /// <summary>The standing consent (Sprint 18 review): your savings, and what the next close would take from them under it.</summary>

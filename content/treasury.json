@@ -1,0 +1,37 @@
+{
+  "era": "township",
+  "startUpGrant": 100000,
+  "grantUntied": 100,
+  "grantTied": 50,
+  "clerkWage": 30000,
+  "doctorAllowance": 30000,
+  "conditionStep": 0.5,
+  "officeBase": 0.70,
+  "officeWeight": 0.30,
+  "healthLeaveBelow": 0.50,
+  "educationMinCondition": 0.50,
+  "budgetMaxOfNeeds": 1.20,
+  "giftMinimum": 1000,
+  "retainSeasons": 8,
+  "taxes": {
+    "house": { "rate": 0.016, "max": 0.024, "maxShareOfRent": 0.15 },
+    "business": { "rate": 0.10, "max": 0.20 },
+    "homeAssessedAs": "family_house",
+    "referenceProfit": { "grocer": 15000, "village_tea": 7000, "newcomer": 5000 }
+  },
+  "policies": {
+    "maxActive": 3,
+    "reenactAfterSeasons": 1,
+    "meals": { "lag": 1, "department": "education", "perPupil": 700, "share": 0.25, "health": 0.05 },
+    "subsidy": { "lag": 1, "department": "policies", "perAcre": 125, "supply": 1.05, "hangover": 0.97, "hangoverSeasons": 2 },
+    "grant": { "lag": 1, "department": "policies", "amount": 10000, "wasted": 0.40, "newcomerChance": 1.5 },
+    "minWage": { "lag": 0, "department": "office", "above": 0.10, "newcomerChance": 0.8, "inspector": 2000 },
+    "rentControl": { "lag": 0, "department": "office", "cap": 0.03, "officer": 1000 }
+  },
+  "lines": [
+    { "id": "clerk", "department": "office", "kind": "wage", "amount": "clerkWage", "requires": "treasury" },
+    { "id": "doctor", "department": "health", "kind": "wage", "amount": "doctorAllowance", "requires": "clinic" },
+    { "id": "school", "department": "education", "kind": "upkeep", "amount": "schoolUpkeep", "requires": "school" }
+  ],
+  "works": []
+}

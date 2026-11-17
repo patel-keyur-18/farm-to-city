@@ -36,6 +36,9 @@ namespace Sim.Core.Finance
         BankLoans = 2200,
         InterestPayable = 2300,
 
+        /// <summary>Tax billed and not yet paid, to the town (spec 022 §3.1, §3.2): paid first at the next close. The founder's and each business's own.</summary>
+        TaxOwed = 2400,
+
         OpeningEquity = 3000,
         RetainedEarnings = 3100,
 
@@ -67,6 +70,9 @@ namespace Sim.Core.Finance
         LivingCosts = 5200,
         HealthCosts = 5250,
 
+        /// <summary>The house tax you pay as the owner of the town's houses (spec 022 §3.1). Not farm profit.</summary>
+        HouseTax = 5270,
+
         /// <summary>The founder's gifts to the village: the school, its upkeep, adult classes (spec 018, ADR 0095 §5). Outside farm profit.</summary>
         GiftsToVillage = 5260,
         Rent = 5300,
@@ -78,6 +84,33 @@ namespace Sim.Core.Finance
         CostOfGoodsSold = 5800,
         Power = 5810,
         Repairs = 5820,
+
+        /// <summary>A business's tax on its season profit (spec 022 §3.2), on its own books.</summary>
+        BusinessTax = 5830,
+
+        // The town treasury's accounts (spec 021 §3.2, ADR 0108; save schema 19): its own ledger, never the founder's.
+        /// <summary>The district's one-off start-up grant at the Township's opening.</summary>
+        StartUpGrant = 4600,
+        GrantUntied = 4610,
+
+        /// <summary>The per-resident grant tied to the clinic being staffed.</summary>
+        GrantTied = 4620,
+        PitchRents = 4630,
+        HouseTaxIncome = 4640,
+        BusinessTaxIncome = 4650,
+
+        /// <summary>Permit fees (spec 024).</summary>
+        Fees = 4660,
+        GiftsFromFounder = 4670,
+
+        // One expense account a department, in the order they are paid (spec 021 §3.4; the seventh, Policies, is spec 022 §3.5's).
+        DeptOffice = 5910,
+        DeptHealth = 5920,
+        DeptEducation = 5930,
+        DeptRoads = 5940,
+        DeptSafety = 5950,
+        DeptUtilities = 5960,
+        DeptPolicies = 5970,
     }
 
     public enum AccountGroup
@@ -103,11 +136,14 @@ namespace Sim.Core.Finance
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
             Account.GiftsToVillage, Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
             Account.TransportAndSelling, Account.CostOfGoodsSold, Account.Power, Account.Repairs,
+            Account.StartUpGrant, Account.GrantUntied, Account.GrantTied, Account.PitchRents, Account.HouseTaxIncome, Account.BusinessTaxIncome, Account.Fees, Account.GiftsFromFounder,
+            Account.DeptOffice, Account.DeptHealth, Account.DeptEducation, Account.DeptRoads, Account.DeptSafety, Account.DeptUtilities, Account.DeptPolicies,
+            Account.TaxOwed, Account.HouseTax, Account.BusinessTax, // spec 022 (save schema 19, after the treasury's)
         };
 
         /// <summary>
         /// The save schema each account arrived in (spec 011: 1300 in schema 6; spec 012: the livestock accounts in 7; spec 014: 4200 Rent received in 9;
-        /// spec 016: the business accounts in 10; spec 018: 5260 Gifts to the village in 15; spec 019: 1020 Bank deposit and 4400 Interest on savings in 16); 0 for the rest.
+        /// spec 016: the business accounts in 10; spec 018: 5260 Gifts to the village in 15; spec 019: 1020 Bank deposit and 4400 Interest on savings in 16; spec 021: the treasury's accounts in 19); 0 for the rest.
         /// A late account hashes only once used, so the golden replays stay as they were, and an older save reads without it.
         /// </summary>
         internal static int SinceSchema(Account a)
@@ -122,6 +158,9 @@ namespace Sim.Core.Finance
                     return 10;
                 case Account.GiftsToVillage: return 15;
                 case Account.BankDeposit: case Account.InterestOnSavings: return 16;
+                case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
+                case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
+                case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
                 default: return 0;
             }
         }
