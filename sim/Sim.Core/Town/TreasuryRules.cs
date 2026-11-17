@@ -216,7 +216,7 @@ namespace Sim.Core.Town
         }
 
         /// <summary>The treasury's residents: your citizens, and the old village's cohort once it has joined (spec 023).</summary>
-        public static int Residents(Simulation sim) { return sim.State.Citizens?.Population ?? 0; }
+        public static int Residents(Simulation sim) { return (sim.State.Citizens?.Population ?? 0) + CohortRules.People(sim); }
 
         // ---- income ----
 
@@ -546,6 +546,7 @@ namespace Sim.Core.Town
             if (pass != ItemClass.Seasonal) return;
             TreasuryRules.Close(sim);
             ClinicRules.Close(sim); // spec 023 §3.10: after the treasury's close, the doctor's leaving and return
+            CohortRules.AtClose(sim); // the old village's happiness and leaving
         }
     }
 }

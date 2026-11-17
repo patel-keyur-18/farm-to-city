@@ -118,4 +118,39 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "DoctorLeft"; }
     }
+
+    /// <summary>One of the Township's gate goals is met for good (spec 023 §3.4): <see cref="Goal"/> is a <c>TownshipGoal</c> bit.</summary>
+    public sealed class GateGoalMet : SimEvent
+    {
+        public int Goal { get; }
+
+        public GateGoalMet(long simTime, int goal) : base(simTime) { Goal = goal; }
+
+        protected override string Describe() { return "GateGoalMet(" + Goal + ")"; }
+    }
+
+    /// <summary>The old village joined the town at the Township's unlock (spec 023 §3.5).</summary>
+    public sealed class CohortJoined : SimEvent
+    {
+        public int Households { get; }
+        public int People { get; }
+
+        public CohortJoined(long simTime, int households, int people) : base(simTime)
+        {
+            Households = households;
+            People = people;
+        }
+
+        protected override string Describe() { return "CohortJoined(" + Households + " households, " + People + " people)"; }
+    }
+
+    /// <summary>A household of the old village left after two closes under 35 (spec 023 §3.5).</summary>
+    public sealed class CohortHouseholdLeft : SimEvent
+    {
+        public int Households { get; }
+
+        public CohortHouseholdLeft(long simTime, int households) : base(simTime) { Households = households; }
+
+        protected override string Describe() { return "CohortHouseholdLeft(" + Households + " left)"; }
+    }
 }

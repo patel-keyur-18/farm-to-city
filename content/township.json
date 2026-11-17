@@ -5,5 +5,10 @@
     "sickCut": 0.5, "lossCut": 0.5, "gainBoost": 0.5, "deathCut": 0.25, "reach": 2000, "capacity": 400
   },
   "quarters": { "place": "quarters_plot", "building": "doctor_quarters", "rent": 3750, "buildHours": 48 },
-  "doctor": { "salary": 30000, "leaveCloses": 2, "returnCondition": 0.70 }
+  "doctor": { "salary": 30000, "leaveCloses": 2, "returnCondition": 0.70 },
+  "gate": { "households": 20, "businesses": 3, "literacy": 0.60 },
+  "cohort": {
+    "households": 30, "peoplePerHousehold": 5, "literacy": 0.65, "income": 36000, "leaveBelow": 35, "leaveCloses": 2,
+    "childShare": 0.30, "elderShare": 0.10, "pupilShare": 0.0667
+  }
 }

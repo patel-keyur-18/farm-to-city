@@ -5406,5 +5406,9 @@
   "why.quarters.book.title": "Book value",
   "why.quarters.book.text": "What the quarters cost, less the depreciation so far: a little each season over their life.",
   "why.quarters.household.title": "The doctor's household",
-  "why.quarters.household.text": "One to three people. They count as one of your households and are literate, so they count toward the Township's literacy goal."
+  "why.quarters.household.text": "One to three people. They count as one of your households and are literate, so they count toward the Township's literacy goal.",
+  "event.GateGoalMet": "A goal of the Township's gate is met.",
+  "event.CohortJoined": "The old village joined the town.",
+  "event.CohortHouseholdLeft": "A household of the old village left.",
+  "away.cohortLeft": "A household of the old village left: they were unhappy for two seasons. Look at their happiness on the Town sheet."
 }

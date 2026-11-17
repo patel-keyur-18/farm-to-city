@@ -37,7 +37,14 @@ namespace Sim.Core.Tests
         /// </summary>
         public static GameDefs Game(Func<string, string, string> edit = null, WeatherSet weather = null)
         {
-            return ContentLoader.LoadGame(f => edit == null ? ReadContent(f) : edit(f, ReadContent(f)), weather ?? Weather());
+            // Tests of the treasury, taxes and policies count your own town only: the old village (30 households at the Township's unlock,
+            // spec 023 §3.5) is left out unless the test asks for it with <see cref="WithCohort"/>.
+            return ContentLoader.LoadGame(f => { string j = edit == null ? ReadContent(f) : edit(f, ReadContent(f)); return f == "township.json" && !WithCohort ? NoCohort(j) : j; }, weather ?? Weather());
         }
+
+        /// <summary>True while a test wants the old village at the unlock (set and cleared by the cohort's tests).</summary>
+        public static bool WithCohort;
+
+        internal static string NoCohort(string json) { return json.Replace("\"households\": 30,", "\"households\": 0,"); }
     }
 }

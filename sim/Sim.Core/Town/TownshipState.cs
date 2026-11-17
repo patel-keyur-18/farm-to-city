@@ -20,19 +20,27 @@ namespace Sim.Core.Town
 
         public ClinicState Clinic { get; internal set; } = new ClinicState();
 
-        /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault; } }
+        /// <summary>The gate's goals met so far, a <see cref="TownshipGoal"/> mask (spec 023 §3.4): a goal never un-meets.</summary>
+        public int GateMet { get; internal set; }
 
-        internal TownshipState Clone() { return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone() }; }
+        /// <summary>The old village (spec 023 §3.5), from the unlock.</summary>
+        public CohortState Cohort { get; internal set; } = new CohortState();
+
+        /// <summary>Nothing of the Township has started.</summary>
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined; } }
+
+        internal TownshipState Clone() { return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone() }; }
 
         internal void WriteTo(IStateWriter h)
         {
             if (h.Hashing && IsDefault) return;
             Road.WriteTo(h);
             Clinic.WriteTo(h);
+            h.WriteInt(GateMet);
+            Cohort.WriteTo(h);
         }
 
-        internal static TownshipState ReadFrom(SaveReader r) { return new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r) }; }
+        internal static TownshipState ReadFrom(SaveReader r) { return new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r), GateMet = r.ReadInt(), Cohort = CohortState.ReadFrom(r) }; }
     }
 
     /// <summary>The paved link road (spec 023 §3.3): petitioned, built by the district in <c>days</c>, never the player's.</summary>

@@ -154,6 +154,7 @@ namespace Sim.Core.People
                 c.Education = 1;
                 sim.Emit(new CitizenLiterate(t, c.Id, c.Name, LiterateHow.School));
             }
+            Progress.EraRules.OnTown(sim); // a child learned to read: the Township's literacy goal (spec 023 §3.4)
         }
 
         /// <summary>The citizen's home is within the school's reach (spec 023 §3.6, one rule for every civic building).</summary>
@@ -168,7 +169,7 @@ namespace Sim.Core.People
         public static int Teachers(Simulation sim)
         {
             if (!IsOpen(sim)) return 0;
-            int n = Pupils(sim).Count, seats = Def(sim).SeatsPerTeacher;
+            int n = Pupils(sim).Count + Town.CohortRules.Pupils(sim), seats = Def(sim).SeatsPerTeacher; // the old village's unlettered children join free (spec 023 §3.5)
             return System.Math.Max(1, (n + seats - 1) / seats);
         }
 
@@ -231,6 +232,7 @@ namespace Sim.Core.People
                 s.ClassEndsAt = 0;
                 s.ClassJobId = 0;
                 sim.CompleteJob(job);
+                Progress.EraRules.OnTown(sim); // a class ended: the Township's literacy goal (spec 023 §3.4)
             }
         }
     }

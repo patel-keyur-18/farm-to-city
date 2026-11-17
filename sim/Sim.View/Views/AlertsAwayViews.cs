@@ -592,6 +592,7 @@ namespace Sim.View.Views
                     case QuartersBuilt _: rows.Add(Row(s.Get("away.town"), s.Get("away.quartersBuilt"), "family_house")); break;
                     case DoctorArrived d: rows.Add(Row(s.Get("away.town"), s.Get(d.Returned ? "away.doctorReturned" : "away.doctorArrived"), "portrait_town_m")); break;
                     case DoctorUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorUnpaid"), "place_clinic_plot")); break; // spec 023 §3.9
+                    case CohortHouseholdLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.cohortLeft"), "place_council_hall")); break; // spec 023 §3.5
                     case DoctorLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorLeft"), "place_clinic_plot")); break;
                     case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
                     case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
@@ -685,6 +686,7 @@ namespace Sim.View.Views
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
+            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },

@@ -9,9 +9,13 @@ namespace Sim.Core.Definitions
         public ClinicDef Clinic { get; }
         public QuartersDef Quarters { get; }
         public DoctorDef Doctor { get; }
+        public GateDef Gate { get; }
+        public CohortDef Cohort { get; }
 
-        public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor)
+        public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort)
         {
+            Gate = gate;
+            Cohort = cohort;
             Road = road;
             Clinic = clinic;
             Quarters = quarters;
@@ -93,5 +97,37 @@ namespace Sim.Core.Definitions
             Days = days;
             Tier = tier;
         }
+    }
+
+    /// <summary>The Township's gate (spec 023 §3.4): households of yours (the doctor's counts), open businesses with a profitable season, and literacy of the people aged 7 and over.</summary>
+    public sealed class GateDef
+    {
+        public int Households { get; internal set; }
+        public int Businesses { get; internal set; }
+
+        /// <summary>The share of your households' people aged 7 and over who can read (0.60).</summary>
+        public Fixed Literacy { get; internal set; }
+    }
+
+    /// <summary>The old village as one record (spec 023 §3.5): never citizens, no cards, no portraits.</summary>
+    public sealed class CohortDef
+    {
+        public int Households { get; internal set; }
+        public int PeoplePerHousehold { get; internal set; }
+
+        /// <summary>The share of those aged 7 and over who can read (0.65), for the statistics.</summary>
+        public Fixed Literacy { get; internal set; }
+
+        /// <summary>A household's income a season (year-0 coins, indexed): the base of its budget.</summary>
+        public long Income { get; internal set; }
+
+        /// <summary>Happiness under this at <see cref="LeaveCloses"/> closes in a row sends one household away.</summary>
+        public int LeaveBelow { get; internal set; }
+        public int LeaveCloses { get; internal set; }
+
+        /// <summary>Shares of the people: children, elders (the rest are adults), and the school-age children who can't read yet and join the school free.</summary>
+        public Fixed ChildShare { get; internal set; }
+        public Fixed ElderShare { get; internal set; }
+        public Fixed PupilShare { get; internal set; }
     }
 }

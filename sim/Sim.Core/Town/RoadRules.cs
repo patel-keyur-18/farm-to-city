@@ -100,6 +100,7 @@ namespace Sim.Core.Town
                 s.JobId = 0;
                 sim.CompleteJob(job);
                 sim.Emit(new RoadBuilt(sim.State.Clock.SimTime));
+                EraRules.OnTown(sim); // a goal of the Township's gate (spec 023 §3.4)
             }
         }
     }

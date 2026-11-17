@@ -41,6 +41,7 @@ namespace Sim.Core.Finance
                 StoredGoods = Market.Store.Value(sim),
                 LoanPrincipal = -(l.Balance(Account.MoneylenderLoans) + l.Balance(Account.BankLoans)),
                 InterestPayable = -l.Balance(Account.InterestPayable) + CreditRules.AccruedUnposted(sim),
+                TaxOwed = -l.Balance(Account.TaxOwed),
                 BookEquity = l.TotalOf(AccountGroup.Assets) - l.TotalOf(AccountGroup.Liabilities),
             };
         }

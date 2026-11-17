@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -71,7 +71,24 @@ namespace Sim.Content
                 LeaveCloses = BoundedInt(d, dp, "leaveCloses", 1, 20),
                 ReturnCondition = Bounded(d, dp, "returnCondition", "0", "1"),
             };
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor);
+
+            string gp = Join(root, "gate");
+            JObject gj = Object(Required(o, root, "gate"), gp);
+            OnlyFields(gj, gp, "households", "businesses", "literacy");
+            var gate = new GateDef { Households = BoundedInt(gj, gp, "households", 1, 1000), Businesses = BoundedInt(gj, gp, "businesses", 0, 20), Literacy = Bounded(gj, gp, "literacy", "0", "1") };
+
+            string hp = Join(root, "cohort");
+            JObject hj = Object(Required(o, root, "cohort"), hp);
+            OnlyFields(hj, hp, "households", "peoplePerHousehold", "literacy", "income", "leaveBelow", "leaveCloses", "childShare", "elderShare", "pupilShare");
+            var cohort = new CohortDef
+            {
+                Households = BoundedInt(hj, hp, "households", 0, 1000), PeoplePerHousehold = BoundedInt(hj, hp, "peoplePerHousehold", 1, 20),
+                Literacy = Bounded(hj, hp, "literacy", "0", "1"), Income = Money(Required(hj, hp, "income"), Join(hp, "income")),
+                LeaveBelow = BoundedInt(hj, hp, "leaveBelow", 0, 100), LeaveCloses = BoundedInt(hj, hp, "leaveCloses", 1, 20),
+                ChildShare = Bounded(hj, hp, "childShare", "0", "1"), ElderShare = Bounded(hj, hp, "elderShare", "0", "1"), PupilShare = Bounded(hj, hp, "pupilShare", "0", "1"),
+            };
+            if (cohort.ChildShare + cohort.ElderShare > Sim.Core.Maths.Fixed.One) throw new ContentException(Join(hp, "childShare"), "children and elders can't be more than everyone");
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort);
         }
 
         private static int PlotTile(JObject o, string path, string kind, MapDef map)

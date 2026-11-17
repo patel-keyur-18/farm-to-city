@@ -65,6 +65,7 @@ namespace Sim.Core.Progress
             var eras = sim.Config.Game.Onboarding.Eras;
             if (e.Current + 1 >= eras.Count) return;
             EraDef next = eras[e.Current + 1];
+            if (next.TownshipGate) Town.TownshipRules.Latch(sim); // spec 023 §3.4: a goal once met stays met
             if (!Met(sim, next, period)) return;
             Unlock(sim);
         }
@@ -79,6 +80,7 @@ namespace Sim.Core.Progress
             e.UnlockedAt = sim.State.Clock.SimTime;
             sim.Emit(new EraUnlocked(sim.State.Clock.SimTime, eras[e.Current].Id));
             Town.TreasuryRules.OnEra(sim); // spec 021 §3.1: the treasury opens once, when the era reaches the Township
+            if (eras[e.Current].TownshipGate || eras[e.Current].Id == "township") Town.CohortRules.Join(sim); // spec 023 §3.4: then the old village joins
             return true;
         }
 
@@ -87,6 +89,7 @@ namespace Sim.Core.Progress
         {
             EraState e = sim.State.Era;
             if (era.DeveloperOnly) return false;
+            if (era.TownshipGate) return Town.TownshipRules.Met(sim);
             if (era.AcresHarvestedInSeason > 0)
             {
                 if (Acres(sim, period) < era.AcresHarvestedInSeason) return false;

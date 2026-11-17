@@ -104,7 +104,7 @@ namespace Sim.Core.Town
         }
 
         /// <summary>People the clinic serves: every citizen of your households (the old village's cohort joins them by spec 023 §3.5).</summary>
-        public static int Served(Simulation sim) { return sim.State.Citizens?.Population ?? 0; }
+        public static int Served(Simulation sim) { return (sim.State.Citizens?.Population ?? 0) + CohortRules.People(sim); }
 
         /// <summary><c>min(1, capacity ÷ people served)</c>: a slow decline, never a cliff (spec 023 §3.6).</summary>
         public static Fixed Scale(Simulation sim)
@@ -143,6 +143,13 @@ namespace Sim.Core.Town
         public static Fixed HealthCareMet(Simulation sim, Household x, Fixed chemist)
         {
             Fixed e = Effect(sim, x);
+            return e == Fixed.Zero ? chemist : chemist + (Fixed.One - chemist) * e;
+        }
+
+        /// <summary>The old village's Health care need met (spec 023 §3.5): the chemist's share, and the rest by the town's effect (the cohort lives inside the reach).</summary>
+        public static Fixed HealthCareMetTown(Simulation sim, Fixed chemist)
+        {
+            Fixed e = EffectTown(sim);
             return e == Fixed.Zero ? chemist : chemist + (Fixed.One - chemist) * e;
         }
 
