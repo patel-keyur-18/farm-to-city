@@ -973,7 +973,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | # | Item | Where it lands |
 | --- | --- | --- |
-| 1 | A schema-19 save fixture with an **open treasury, policies enacted and owed tax**, added **before** schema 20 is begun, so the 19 → 20 migration is tested on a real open treasury (`MigrationTests.Schema19_OpenTreasury`) | the first commit of the sprint |
+| 1 | A schema-19 save fixture with an **open treasury, policies enacted and owed tax**, added **before** schema 20 is begun, so the 19 → 20 migration is tested on a real open treasury (`MigrationTests.Schema19_OpenTreasury`) | **Done 2026-11-17** (`saves/schema19-open.ftc`, `FTC_UPDATE_OPEN=1` writes it once at schema 19) |
 | 2 | **Owed tax in net worth**: a field in the report's net-worth snapshot (schema 20) and the net-worth row | with US-103 (schema 20's first write) |
 | 3 | **Health and tenant-happiness hooks**: tenants feel Health and Education through their *Healthcare* and *School* rows (spec 022 §3.3.2); **the doctor leaves at `healthLeaveBelow`** | with the clinic (US-148 T1, T2, T4) |
 | 4 | **`TaxTests.Burden`**: the old village's tax comes from leisure and savings before food | with the cohort (US-103 T3) |
