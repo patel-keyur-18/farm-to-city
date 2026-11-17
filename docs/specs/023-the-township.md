@@ -43,7 +43,7 @@ Money is `long` in 1/100 coin, indexed by `MarketRules.Indexed`, except the figu
 | Rule | Behaviour | Default |
 | --- | --- | --- |
 | When | From the Village; it is one of the Township's goals | |
-| Where | Two new public plots in the village centre beside the school and the chemist: the clinic plot and the doctor's quarters plot. Their tiles are fixed with the owner from a map preview before the code (ADR 0064) | |
+| Where | Two new public plots in the village centre: the clinic on **tile 93** (between the chemist and the school) and the doctor's quarters on **tile 109** (beside the dairy). Fixed with the owner from the map preview (Sprint 22 Preview 1, 2026-11-17, ADR 0064): the centre had no free tile, so the plots take the old families' houses' tiles (decoration only) | |
 | The clinic | The district builds it; you pay a community share, a gift (Gifts to the village, outside farm profit, ADR 0095 §5), by tap card. A co-op loan within your room may pay it, as for the school | Share 48,000 (40% of 1,20,000); 48 h |
 | The quarters | A larger family house on its plot, yours (an asset at cost, depreciated like any house), reserved for the doctor | Cost 90,000; rent 3,750 a season (the same 4.17% a season yield as a 60,000 kutcha house at 2,500); 48 h |
 | The doctor | A migrant arrives 24 h after both stand and moves into the quarters. He is a literate household of one to three and counts as one of your households (the gate's 20) and for literacy (§3.4) | |
@@ -127,7 +127,7 @@ On today's 16 × 12 map every home is inside the school's and the clinic's reach
 
 ### 3.7 Civic buildings and their staff (G7, G7b)
 
-From the Township the treasury builds three buildings on fixed public plots, previewed on the map first (spec 025's ring adds plots). Each is commissioned through spec 021 §3.7's confirm card (`CommissionWorks`), which gains a **budget guard** row: the added cost a season and whether the town would be short ("This adds 25,500 a season to Safety. With today's income the town would be short by 6,000.").
+From the Township the treasury builds three buildings on fixed public plots (approved from the map preview, 2026-11-17: the **watchman's post on tile 91**, the **community hall on tile 59**, the **playground on tile 107**; chosen for reach, the watchman and playground in the west column nearest the farm; the old house on tile 110 stays and the other five old houses make way, drawn again in the ring; spec 025's ring adds plots). Each is commissioned through spec 021 §3.7's confirm card (`CommissionWorks`), which gains a **budget guard** row: the added cost a season and whether the town would be short ("This adds 25,500 a season to Safety. With today's income the town would be short by 6,000.").
 
 | | Watchman's post | Community hall | Playground |
 | --- | --- | --- | --- |
