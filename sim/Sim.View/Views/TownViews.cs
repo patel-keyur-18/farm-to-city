@@ -215,6 +215,23 @@ namespace Sim.View.Views
             };
         }
 
+        /// <summary>The old village as one section (spec 023 §3.5): its households and people, happiness, the children at your school, who can read, the house tax it paid.</summary>
+        private static void OldVillage(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            if (!Sim.Core.Town.CohortRules.Joined(sim)) return;
+            var s = ctx.Strings;
+            Sim.Core.Town.CohortState c = Sim.Core.Town.CohortRules.State(sim);
+            int people = Sim.Core.Town.CohortRules.People(sim);
+            vm.Lines.Add(LineVm.Header(s.Get("cohort.header")));
+            vm.Lines.Add(new LineVm(s.Get("cohort.village"), s.Get("cohort.villageValue", "households", ctx.Fmt.Integer(c.Households), "people", ctx.Fmt.Integer(people)), "cohort", CohortWhy.Village) { Icon = "population" });
+            vm.Lines.Add(new LineVm(s.Get("cohort.happiness"), ctx.Fmt.Integer(c.Happiness.RoundToLong()), "cohort", CohortWhy.Happiness) { Icon = "happiness" });
+            if (SchoolRules.IsOpen(sim))
+                vm.Lines.Add(new LineVm(s.Get("cohort.pupils"), s.Get("cohort.pupilsValue", "n", ctx.Fmt.Integer(Sim.Core.Town.CohortRules.Pupils(sim)), "people", ctx.Fmt.Integer(people)), "cohort", CohortWhy.Pupils) { Icon = "school" });
+            vm.Lines.Add(new LineVm(s.Get("cohort.literacy"), ctx.Fmt.Percent(Sim.Core.Town.CohortRules.Literacy(sim)), "cohort", CohortWhy.Literacy));
+            vm.Lines.Add(new LineVm(s.Get("cohort.tax"), ctx.Fmt.Coins(c.TaxThis), "cohort", CohortWhy.Tax) { Icon = "coin" });
+        }
+
         public static SheetVm Build(ViewContext ctx, string sort = null)
         {
             Simulation sim = ctx.Sim;
@@ -244,6 +261,7 @@ namespace Sim.View.Views
                     { Icon = "codex", Action = ActionVm.Open("codex", s.Get("action.open"), new SheetRequest(CodexSheet.Kind, 0)) });
 
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
+            OldVillage(ctx, vm); // spec 023 §3.5
 
             List<string> news = TownNews.ThisSeason(ctx);
             if (news.Count > 0)

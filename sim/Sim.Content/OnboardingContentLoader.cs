@@ -12,7 +12,7 @@ namespace Sim.Content
         public static readonly string[] OnboardingEvents =
         {
             "GardenPicked", "SoldToTrader", "MarketSales", "MandiTripReturned", "AwayAdvanceCompleted", "CropHarvested",
-            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "EraUnlocked(village)", "OrdersPosted",
+            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "EraUnlocked(village)", "EraUnlocked(township)", "OrdersPosted",
         };
 
         /// <summary>The commands a <c>rejection</c> trigger can name.</summary>

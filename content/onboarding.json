@@ -32,6 +32,7 @@
     { "id": "sick",              "triggers": [{ "kind": "event", "events": ["FounderSick"] }], "action": "founder" },
     { "id": "hamlet",            "triggers": [{ "kind": "event", "events": ["EraUnlocked(hamlet)"] }], "action": "progress" },
     { "id": "village",           "triggers": [{ "kind": "event", "events": ["EraUnlocked(village)"] }], "action": "progress" },
+    { "id": "township",          "triggers": [{ "kind": "event", "events": ["EraUnlocked(township)"] }], "action": "progress" },
     { "id": "firstOrders",       "triggers": [{ "kind": "event", "events": ["OrdersPosted"] }], "action": "orders" },
     { "id": "truckAway",         "triggers": [{ "kind": "storeTruckAway" }, { "kind": "rejection", "reason": "TraderAway", "commands": ["SellToTrader", "Harvest", "PickGarden", "PickFruit"] }], "action": "store" },
     { "id": "cattle",            "triggers": [{ "kind": "cattleAcre" }], "action": "shed" }

@@ -185,6 +185,7 @@ namespace Sim.View.Views
             if (n.Businesses != 0) Row(vm, ctx, "why.netWorth.businesses", Money(ctx, n.Businesses));
             Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
             if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
+            if (n.TaxOwed != 0) Row(vm, ctx, "why.netWorth.taxOwed", "−" + Money(ctx, n.TaxOwed));
             Row(vm, ctx, "why.netWorth.book", Money(ctx, n.BookEquity));
             vm.Footnote = ctx.Strings.Get("why.netWorth.lesson");
             return vm;
@@ -310,6 +311,7 @@ namespace Sim.View.Views
             if (n.LivestockAtBook != 0) Row(vm, ctx, "why.netWorth.livestock", Money(ctx, n.LivestockAtBook));
                 Row(vm, ctx, "why.netWorth.goods", Money(ctx, n.StoredGoods));
                 if (n.LoanPrincipal + n.InterestPayable != 0) Row(vm, ctx, "why.netWorth.loans", "−" + Money(ctx, n.LoanPrincipal + n.InterestPayable));
+                if (n.TaxOwed != 0) Row(vm, ctx, "why.netWorth.taxOwed", "−" + Money(ctx, n.TaxOwed));
                 if (n.Deposit != 0) Row(vm, ctx, "why.netWorth.deposit", Money(ctx, n.Deposit));
                 BiggestChange(vm, ctx, r, "worth");
                 vm.Footnote = ctx.Strings.Get("why.netWorth.lesson");
