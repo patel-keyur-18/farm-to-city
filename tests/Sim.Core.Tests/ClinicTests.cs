@@ -180,6 +180,33 @@ namespace Sim.Core.Tests
             Assert.That(CoverageRules.Metres(far, 29, 93), Is.EqualTo((13 - 13) * 100 + (5 - 1) * 100 + 0), "the yard (13, 1) to the clinic (13, 5)");
         }
 
+        // AC-7: the school follows the same rule: a home out of its 1,500 m reach earns its children no school year.
+        [Test]
+        public void SchoolReach()
+        {
+            Simulation sim = Start(delegate(string f, string j) { return f == "population.json" ? j.Replace("\"reach\": 1500", "\"reach\": 100") : j; });
+            Ok(sim, new BuildSchool(sim.State.Clock.SimTime));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 49 * Hour);
+            Household fam = sim.State.Citizens.Households[0];
+            Citizen child = new Citizen { Id = sim.State.Citizens.NextCitizenId++, BornSeason = CitizenRules.BornFor(sim, 8), HouseholdId = fam.Id, Health = Fixed.One };
+            sim.State.Citizens.Citizens.Add(child);
+            fam.Members.Add(child.Id);
+            Assert.That(SchoolRules.Covered(sim, child), Is.False, "the family's acre is farther than 100 m from the school");
+            for (int i = 0; i < 3; i++) sim.AdvanceTo(TreasuryTests.NextClose(sim) + 1);
+            Assert.That(child.SchoolYears, Is.EqualTo(0), "no year counts out of reach");
+
+            Simulation near = Start();
+            Ok(near, new BuildSchool(near.State.Clock.SimTime));
+            near.AdvanceTo(near.State.Clock.SimTime + 49 * Hour);
+            Household home = near.State.Citizens.Households[0];
+            Citizen kid = new Citizen { Id = near.State.Citizens.NextCitizenId++, BornSeason = CitizenRules.BornFor(near, 8), HouseholdId = home.Id, Health = Fixed.One };
+            near.State.Citizens.Citizens.Add(kid);
+            home.Members.Add(kid.Id);
+            Assert.That(SchoolRules.Covered(near, kid), Is.True, "every home is inside 1,500 m on today's map");
+            for (int i = 0; i < 3; i++) near.AdvanceTo(TreasuryTests.NextClose(near) + 1);
+            Assert.That(kid.SchoolYears, Is.GreaterThan(0));
+        }
+
         // AC-7: a building with no doctor covers nobody.
         [Test]
         public void Staff()

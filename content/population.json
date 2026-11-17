@@ -78,6 +78,7 @@
   "villages": ["sitapur", "rampur", "chandanpur", "keshavgarh", "devipur", "bhawanipur"],
   "school": {
     "seatsPerTeacher": 30,
+    "reach": 1500,
     "pupilAge": { "min": 6, "max": 13 },
     "primaryYears": 4,
     "upkeepPerSeason": 2000,

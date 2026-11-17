@@ -149,10 +149,19 @@ namespace Sim.Core.People
             foreach (Citizen c in sim.State.Citizens.Citizens)
             {
                 if (!IsPupilAge(d, c, (int)((closing - c.BornSeason) * perSeason))) continue;
+                if (!Covered(sim, c)) continue; // spec 023 §3.6: out of the school's reach, no school year
                 if (++c.SchoolYears < d.PrimaryYears) continue;
                 c.Education = 1;
                 sim.Emit(new CitizenLiterate(t, c.Id, c.Name, LiterateHow.School));
             }
+        }
+
+        /// <summary>The citizen's home is within the school's reach (spec 023 §3.6, one rule for every civic building).</summary>
+        public static bool Covered(Simulation sim, Citizen c)
+        {
+            Household x = sim.State.Citizens.Household(c.HouseholdId);
+            Land.Building home = x == null ? null : sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            return home == null || Town.CoverageRules.Within(sim, home.TileId, Def(sim).Tile, Def(sim).Reach);
         }
 
         /// <summary>The district's teachers: one for every <c>seatsPerTeacher</c> pupils, at least one once open.</summary>
