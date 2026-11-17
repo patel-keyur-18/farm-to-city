@@ -283,6 +283,12 @@ namespace Sim.View.Views
                     Level = AlertLevel.Decision, Text = s.Get(st.Window == BudgetWindow.Revise ? "alert.budgetRevise" : "alert.budgetSet"),
                     Action = ActionVm.Open("budget", s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)),
                 });
+            if (ClinicRules.InPost(sim) && st.Unpaid[1] > 0) // spec 023 §3.9: the doctor's allowance went unpaid
+                list.Add(new AlertVm
+                {
+                    Level = AlertLevel.Urgent, Text = s.Get("alert.doctorUnpaid"),
+                    Action = ActionVm.Open("clinic", s.Get("action.open"), new SheetRequest("Tile", ClinicRules.Def(sim).Tile)),
+                });
         }
 
         /// <summary>The alert list sheet: one row per alert with its action.</summary>

@@ -2704,6 +2704,13 @@
    "name": "place_chemist"
   },
   {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_clinic_plot"
+  },
+  {
    "w": 374,
    "h": 326,
    "pivotX": 0.50447,
@@ -2744,6 +2751,13 @@
    "pivotX": 0.5,
    "pivotY": 0.48415,
    "name": "place_pond"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_quarters_plot"
   },
   {
    "w": 470,
@@ -3264,6 +3278,20 @@
    "name": "village_chemist_w"
   },
   {
+   "w": 426,
+   "h": 314,
+   "pivotX": 0.50359,
+   "pivotY": 0.39415,
+   "name": "village_clinic_building_e"
+  },
+  {
+   "w": 426,
+   "h": 320,
+   "pivotX": 0.50359,
+   "pivotY": 0.38878,
+   "name": "village_clinic_e"
+  },
+  {
    "w": 314,
    "h": 326,
    "pivotX": 0.49541,
@@ -3493,6 +3521,20 @@
    "pivotX": 0.5,
    "pivotY": 0.49192,
    "name": "village_pond"
+  },
+  {
+   "w": 426,
+   "h": 318,
+   "pivotX": 0.50359,
+   "pivotY": 0.39067,
+   "name": "village_quarters_building_e"
+  },
+  {
+   "w": 426,
+   "h": 300,
+   "pivotX": 0.50359,
+   "pivotY": 0.41275,
+   "name": "village_quarters_e"
   },
   {
    "w": 426,

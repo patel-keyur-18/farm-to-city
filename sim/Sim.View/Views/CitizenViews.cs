@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Sim.Core;
 using Sim.Core.Maths;
 using Sim.Core.People;
+using Sim.Core.Town;
 
 namespace Sim.View.Views
 {
@@ -32,7 +33,7 @@ namespace Sim.View.Views
             rows.Add(Row(ctx, x.Id, "needs.job", job, adults == 0 ? s.Get("needs.jobNone")
                 : inTown == adults ? s.Get("needs.jobMet", "n", ctx.Fmt.Integer(inTown), "of", ctx.Fmt.Integer(adults))
                 : s.Get("needs.jobShort", "n", ctx.Fmt.Integer(inTown), "of", ctx.Fmt.Integer(adults))));
-            rows.Add(Row(ctx, x.Id, "needs.healthCare", sim.Config.Game.Population.Chemist, s.Get("needs.healthCareNotYet")));
+            rows.Add(Row(ctx, x.Id, "needs.healthCare", ClinicRules.HealthCareMet(sim, x, sim.Config.Game.Population.Chemist), HealthCareNote(ctx, x)));
             rows.Add(Row(ctx, x.Id, "needs.rent", x.RentBehind == 0 ? Fixed.One : Fixed.Zero, x.RentBehind == 0 ? s.Get("needs.rentMet")
                 : s.Plural("needs.rentBehind", x.RentBehind)));
 
@@ -44,6 +45,19 @@ namespace Sim.View.Views
             else rows.Add(new LineVm(s.Get("needs.school"), s.Get("needs.notCounted")) { Note = s.Get("needs.schoolNotYet") });
             rows.Add(Row(ctx, x.Id, "needs.leisure", x.Leisure > 0 ? Fixed.One : Fixed.Zero, x.Leisure > 0 ? s.Get("needs.leisureMet") : s.Get("needs.leisureShort")));
             return rows;
+        }
+
+        /// <summary>The Health care row's words (spec 023 §3.6): the chemist alone, the clinic with no doctor, the clinic out of reach, or the clinic at work.</summary>
+        private static string HealthCareNote(ViewContext ctx, Household x)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            if (!ClinicRules.On(sim) || !ClinicRules.IsOpen(sim)) return s.Get(ClinicRules.On(sim) && ClinicRules.Unlocked(sim) ? "needs.healthCareNoClinic" : "needs.healthCareNotYet");
+            if (!ClinicRules.InPost(sim)) return s.Get("needs.healthCareNoDoctor");
+            Sim.Core.Land.Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            if (home != null && !ClinicRules.Covered(sim, home.TileId))
+                return s.Get("needs.healthCareFar", "m", ctx.Fmt.Integer(CoverageRules.Metres(sim, home.TileId, ClinicRules.Def(sim).Tile)), "reach", ctx.Fmt.Integer(ClinicRules.Def(sim).Reach));
+            return s.Get("needs.healthCareClinic");
         }
 
         // Each need's Why? is the household's happiness, layer by layer.

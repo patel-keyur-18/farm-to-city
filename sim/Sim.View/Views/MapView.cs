@@ -320,6 +320,12 @@ namespace Sim.View.Views
         public int SchoolTile { get; internal set; } = -1;
         public int SchoolStage { get; internal set; }
 
+        /// <summary>The clinic's and the doctor's quarters' plots (spec 023 §3.1, from the Village), or −1; their stage: 0 the empty plot, 1 being built, 2 standing.</summary>
+        public int ClinicTile { get; internal set; } = -1;
+        public int ClinicStage { get; internal set; }
+        public int QuartersTile { get; internal set; } = -1;
+        public int QuartersStage { get; internal set; }
+
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
         public int Pitches { get; internal set; }
@@ -519,8 +525,9 @@ namespace Sim.View.Views
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)
-                if (b.TileId >= 0) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
+                if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
             AddSchool(ctx, map);
+            AddClinic(ctx, map);
             AddHouses(ctx, map);
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
@@ -817,6 +824,18 @@ namespace Sim.View.Views
 
         /// <summary>School hours on the map, 9:00 to 14:00 (spec 018 preview, owner 2026-11-07).</summary>
         public static bool SchoolHours(long secondOfDay) { return secondOfDay >= 9 * 3600 && secondOfDay < 14 * 3600; }
+
+        /// <summary>The clinic's and the quarters' plots and stages (spec 023 §3.1): the empty plot, the site, the building.</summary>
+        private static void AddClinic(ViewContext ctx, MapVm map)
+        {
+            Simulation sim = ctx.Sim;
+            if (!Sim.Core.Town.ClinicRules.On(sim)) return;
+            Sim.Core.Town.ClinicState st = Sim.Core.Town.ClinicRules.State(sim);
+            map.ClinicTile = Sim.Core.Town.ClinicRules.Def(sim).Tile;
+            map.ClinicStage = st.Status == Sim.Core.Town.ClinicStatus.Open ? 2 : st.Status == Sim.Core.Town.ClinicStatus.Building ? 1 : 0;
+            map.QuartersTile = Sim.Core.Town.ClinicRules.QuartersDef(sim).Tile;
+            map.QuartersStage = st.Quarters == Sim.Core.Town.QuartersStatus.Built ? 2 : st.Quarters == Sim.Core.Town.QuartersStatus.Building ? 1 : 0;
+        }
 
         /// <summary>The school plot and its stage, and in school hours the first pupils (by id) and the teacher in its yard.</summary>
         private static void AddSchool(ViewContext ctx, MapVm map)

@@ -167,6 +167,8 @@ namespace Sim.View.Views
             if (kind == "dairy") Dairy(ctx, vm);
             if (kind == "school_plot") SchoolSheet.Fill(ctx, vm); // spec 018 §7
             if (kind == "council_hall") RoadSheet.Fill(ctx, vm); // spec 023 §3.3
+            if (kind == "clinic_plot") ClinicSheet.Fill(ctx, vm); // spec 023 §3.1, US-148
+            if (kind == "quarters_plot") ClinicSheet.FillQuarters(ctx, vm);
             if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
             return vm;
         }

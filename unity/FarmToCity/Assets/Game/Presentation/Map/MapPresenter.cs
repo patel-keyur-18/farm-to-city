@@ -472,6 +472,7 @@ namespace Game.Presentation.Map
             RefreshBusinesses(map, animate);
             RefreshPitches(map, animate);
             RefreshSchool(map);
+            RefreshClinic(map);
             RefreshPeople(map, animate);
             RefreshVehicles(map, animate);
             RefreshCattleAcre(map, animate);
