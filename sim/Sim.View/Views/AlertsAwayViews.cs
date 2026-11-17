@@ -582,6 +582,10 @@ namespace Sim.View.Views
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
                     case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
+                    case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
+                    case PolicyPaused pp: rows.Add(Row(s.Get("away.town"), s.Get("away.policyPaused", "policy", PolicySheet.Name(ctx, pp.Policy)), "place_council_hall")); break;
+                    case GrantWasted _: rows.Add(Row(s.Get("away.town"), s.Get("away.grantWasted"), "place_council_hall")); break;
+                    case GrantOpenedShop _: rows.Add(Row(s.Get("away.town"), s.Get("away.grantOpened"), "place_council_hall")); break;
                     case DepartmentUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.townUnpaid", "dept", TreasurySheet.Department(ctx, u.Department), "amount", ctx.Fmt.Coins(u.Amount)), "place_council_hall")); break;
                     case CitizenLiterate l when l.How == LiterateHow.School: pupils.Add(l.Name); break;
                     case CitizenLiterate _: adults++; break;
@@ -671,6 +675,7 @@ namespace Sim.View.Views
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },
             { "BudgetWindowOpened", Use.Alert }, { "BudgetSet", Use.StateOnly }, { "BudgetAccepted", Use.StateOnly }, { "TreasuryShortAhead", Use.Alert },
             { "TaxBilled", Use.StateOnly }, { "TaxOwed", Use.StateOnly }, { "TaxRateSet", Use.StateOnly },
+            { "PolicyEnacted", Use.StateOnly }, { "PolicyRepealed", Use.StateOnly }, { "PolicyStarted", Use.Away }, { "PolicyPaused", Use.Away }, { "GrantWasted", Use.Away }, { "GrantOpenedShop", Use.Away },
             // Spec 019 §3.5 (the savings deposit).
             { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.

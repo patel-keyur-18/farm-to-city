@@ -32,6 +32,16 @@ namespace Sim.Core.People
             return ae;
         }
 
+        /// <summary>Adult equivalents a household's pupils don't need fed at home: the free meals' share of each child's food (spec 022 §3.5).</summary>
+        public static Fixed MealsEaten(Simulation sim, Household x)
+        {
+            Fixed share = Town.PolicyRules.MealShare(sim);
+            if (share == Fixed.Zero) return Fixed.Zero;
+            int pupils = 0;
+            foreach (long id in x.Members) if (SchoolRules.IsPupil(sim, sim.State.Citizens.Citizen(id))) pupils++;
+            return sim.Config.Game.Population.ChildEquivalent * share * Fixed.FromInt(pupils);
+        }
+
         /// <summary>A season's expected outside earnings for one adult (§3.6): the founder's day-labour rate × 8 h × index × days × share.</summary>
         public static long OutsideSeasonPay(Simulation sim)
         {
@@ -115,7 +125,7 @@ namespace Sim.Core.People
             long perPerson = ae == Fixed.Zero ? income : Money.MulRate(income, Fixed.One / ae);
             x.Income = income;
             x.Food = Money.MulRate(income, FoodShare(sim, perPerson));
-            x.FoodNeed = Money.MulRate(MarketRules.Indexed(sim, p.FoodBasketPerPerson), ae);
+            x.FoodNeed = Money.MulRate(MarketRules.Indexed(sim, p.FoodBasketPerPerson), ae - MealsEaten(sim, x)); // spec 022 §3.5: free school meals
             if (x.SinceSeason < 0) x.SinceSeason = LeaseRules.Season(sim);
             if (!keepRent)
             {
@@ -184,6 +194,7 @@ namespace Sim.Core.People
                 {
                     Citizen c = s.Citizen(id);
                     Fixed health = x.FoodMet < Fixed.One ? c.Health - p.HealthLossPerSeason * (Fixed.One - x.FoodMet) : c.Health + p.HealthGainPerSeason;
+                    if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
                     c.Health = health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
                 }
                 // The season's saving, plus what outside work and labour paid beyond what the budget expected (or less).

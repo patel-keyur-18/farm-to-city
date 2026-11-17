@@ -69,6 +69,7 @@ namespace Sim.View.Tests
                 yield return Named("treasury budget", TreasurySheet.Build(ctx, TreasurySheet.BudgetTab));
                 yield return Named("treasury budget set", TreasurySheet.BudgetSet(ctx, 0));
                 yield return Named("taxes", TaxSheet.Build(ctx));
+                yield return Named("policies", PolicySheet.Build(ctx));
                 yield return Named("treasury give", TreasurySheet.Give(ctx));
                 yield return Named("treasury books", TreasurySheet.Books(ctx));
                 foreach (var r in sim.State.Treasury.Reports)

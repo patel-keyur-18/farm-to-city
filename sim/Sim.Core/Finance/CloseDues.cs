@@ -142,7 +142,7 @@ namespace Sim.Core.Finance
                 Loan loan = b.LoanId == 0 || sim.State.Credit == null ? null : sim.State.Credit.Find(b.LoanId);
                 if (loan != null && loan.IsOpen) due.Loan = CreditRules.NextPayment(sim, loan, out _, out _);
                 Worker w = sim.State.People?.WorkerAt(b.Id);
-                if (b.Status == BusinessStatus.Open && w != null && !HrRules.Leaves(sim, w)) due.Wage = System.Math.Max(0, w.Wage - w.Hr.Advance);
+                if (b.Status == BusinessStatus.Open && w != null && !HrRules.Leaves(sim, w)) due.Wage = System.Math.Max(0, Town.PolicyRules.WageFloor(sim, w.Wage, People.HiringRules.MarketWage(sim, b.Id)) - w.Hr.Advance);
                 if (b.Pitch >= 0 && sim.Config.Game.Shops != null) due.Rent = MarketRules.Indexed(sim, sim.Config.Game.Shops.PitchRent);
                 if (due.Total > 0) list.Add(due);
             }

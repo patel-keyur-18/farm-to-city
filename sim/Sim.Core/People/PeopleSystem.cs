@@ -410,7 +410,7 @@ namespace Sim.Core.People
         /// </summary>
         internal static long RenewalWage(Simulation sim, Hand h, out long housing)
         {
-            long wage = h.Wage + h.HousingInKind;
+            long wage = Town.PolicyRules.WageFloor(sim, h.Wage + h.HousingInKind, sim.Config.Game.People.Hand.MarketWage); // spec 022 §3.5: a renewal can't go below the minimum wage
             housing = System.Math.Min(wage, MigrationRules.HousingInKind(sim, h));
             return wage - housing;
         }

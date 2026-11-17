@@ -174,9 +174,12 @@ namespace Sim.Core.Town
                 case Definitions.LineAmount.ClerkWage: baseAmount = d.ClerkWage; break;
                 case Definitions.LineAmount.DoctorAllowance: baseAmount = d.DoctorAllowance; break;
                 case Definitions.LineAmount.SchoolUpkeep: return SchoolRules.Upkeep(sim);
+                case Definitions.LineAmount.Policy: return PolicyRules.Cost(sim, (PolicyId)line.Policy);
                 default: baseAmount = line.Amount; break;
             }
-            return MarketRules.Indexed(sim, baseAmount);
+            long amount = MarketRules.Indexed(sim, baseAmount);
+            // spec 022 §3.5: the minimum wage binds the town's own clerk too
+            return line.Source == Definitions.LineAmount.ClerkWage ? PolicyRules.WageFloor(sim, amount, sim.Config.Game.People.Hand.MarketWage) : amount;
         }
 
         /// <summary>Whether a line exists now (spec 021 §3.4's "Opens with").</summary>
@@ -186,6 +189,7 @@ namespace Sim.Core.Town
             {
                 case LineRequires.School: return SchoolRules.IsOpen(sim);
                 case LineRequires.Clinic: return ClinicStaffed(sim);
+                case LineRequires.Policy: return PolicyRules.LineActive(sim, line.Policy);
                 default: return true;
             }
         }
@@ -406,13 +410,28 @@ namespace Sim.Core.Town
                     foreach (int i in InPayOrder(d, dept))
                     {
                         if (room <= 0 || ledger.Cash <= 0) break;
-                        long pay = Math.Min(Math.Min(amounts[i] - paid[i], room), ledger.Cash);
-                        if (pay <= 0) continue;
+                        long want = amounts[i] - paid[i];
+                        long pay = Math.Min(Math.Min(want, room), ledger.Cash);
+                        if (pay <= 0 || (d.Lines[i].Policy >= 0 && pay < want)) continue; // a policy is paid in full or not at all (spec 022 §3.6)
                         ledger.Post(now, closing, "ledger.townLine", "line:" + d.Lines[i].Id + (pass == 2 ? ":2" : ""), new Posting(d.Departments[dept].Account, pay), new Posting(Account.Cash, -pay));
                         paid[i] += pay;
                         if (pass == 2) paid2[dept] += pay;
                         if (pass == 1) room -= pay;
                     }
+                }
+
+            // The policies move on: paid ones start or go on, unpaid ones pause, repealed ones end (spec 022 §3.6); an ended one leaves its budget.
+            var fullyPaid = new bool[PolicyState.Count];
+            for (int i = 0; i < n; i++) if (d.Lines[i].Policy >= 0) fullyPaid[d.Lines[i].Policy] = LineActive(sim, d.Lines[i]) && paid[i] >= amounts[i];
+            PolicyRules.AtClose(sim, fullyPaid);
+            for (int i = 0; i < n; i++)
+                if (d.Lines[i].Policy >= 0 && s.LineSeen[i] && !LineActive(sim, d.Lines[i]))
+                {
+                    s.LineSeen[i] = false;
+                    int dp = d.Lines[i].Department;
+                    long gone = LineAmount(sim, d.Lines[i]);
+                    s.Budget[dp] = Math.Max(0, s.Budget[dp] - gone);
+                    s.BudgetNeeds[dp] = Math.Max(0, s.BudgetNeeds[dp] - gone);
                 }
 
             // 4. The conditions move halfway toward each department's funding; the report records the row.

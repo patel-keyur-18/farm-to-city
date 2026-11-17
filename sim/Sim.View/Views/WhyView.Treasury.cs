@@ -136,6 +136,29 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>One policy (spec 022 §3.5): its cost and how it is worked out, its lag, who it helps, who pays and what it never does.</summary>
+        private static WhyVm PolicyWhy(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            var p = (PolicyId)id;
+            string key = PolicySheet.Key((int)id);
+            WhyVm vm = New(ctx, "why.policy.title", PolicySheet.Name(ctx, (int)id));
+            Row(vm, ctx, "why.policy.cost", PolicySheet.CostText(ctx, p, PolicyRules.Cost(sim, p)));
+            Row(vm, ctx, "why.policy.how", s.Get("policy." + key + ".how", "n", ctx.Fmt.Integer(HowMany(sim, p))));
+            Row(vm, ctx, "why.policy.lag", s.Plural("why.policy.lagValue", sim.Config.Game.Treasury.Policies.Lag[(int)id] + 1));
+            Row(vm, ctx, "why.policy.helps", s.Get("policy." + key + ".helps"));
+            Row(vm, ctx, "why.policy.costs", s.Get("policy." + key + ".costs"));
+            Text(vm, ctx, "policy." + key + ".why");
+            return vm;
+        }
+
+        /// <summary>What a policy's cost is counted on: pupils, neighbours' acres, residents, or nothing.</summary>
+        private static long HowMany(Simulation sim, PolicyId p)
+        {
+            return p == PolicyId.Meals ? PolicyRules.Pupils(sim) : p == PolicyId.Subsidy ? PolicyRules.NeighbourAcres(sim) : 0;
+        }
+
         private static WhyVm TaxHouseWhy(ViewContext ctx, long id)
         {
             Simulation sim = ctx.Sim;

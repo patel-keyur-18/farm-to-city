@@ -11,5 +11,8 @@
   {"label":"US-139","view":"farm","date":"2026-11-14","drawCalls":346,"batches":346,"setPassCalls":9,"triangles":9138,"visibleSprites":390,"sprites":1473},
   {"label":"US-140","view":"all","date":"2026-11-17","drawCalls":1041,"batches":1041,"setPassCalls":12,"triangles":19421,"visibleSprites":1237,"sprites":1419},
   {"label":"US-140","view":"village","date":"2026-11-17","drawCalls":552,"batches":552,"setPassCalls":10,"triangles":10565,"visibleSprites":642,"sprites":1419},
-  {"label":"US-140","view":"farm","date":"2026-11-17","drawCalls":368,"batches":368,"setPassCalls":9,"triangles":7645,"visibleSprites":417,"sprites":1419}
+  {"label":"US-140","view":"farm","date":"2026-11-17","drawCalls":368,"batches":368,"setPassCalls":9,"triangles":7645,"visibleSprites":417,"sprites":1419},
+  {"label":"US-141","view":"all","date":"2026-11-17","drawCalls":1092,"batches":1092,"setPassCalls":12,"triangles":19759,"visibleSprites":1272,"sprites":1477},
+  {"label":"US-141","view":"village","date":"2026-11-17","drawCalls":609,"batches":609,"setPassCalls":10,"triangles":11368,"visibleSprites":709,"sprites":1477},
+  {"label":"US-141","view":"farm","date":"2026-11-17","drawCalls":392,"batches":392,"setPassCalls":9,"triangles":7996,"visibleSprites":448,"sprites":1477}
 ]

@@ -9,7 +9,7 @@ namespace Sim.View.Views
 {
     /// <summary>
     /// <em>Taxes and policies</em> (spec 022 §7, US-140): a slider for each tax with its preview, who pays and whether the close is covered;
-    /// the policies' tab arrives with US-141. The rates apply from the next season, so a change shows as pending, with <em>Undo</em>.
+    /// the policies are the next tab (<see cref="PolicySheet"/>). The rates apply from the next season, so a change shows as pending, with <em>Undo</em>.
     /// </summary>
     public static class TaxSheet
     {
@@ -33,6 +33,7 @@ namespace Sim.View.Views
             var vm = new SheetVm { Icon = "place_council_hall", Title = s.Get("tax.title"), Subtitle = ReportSheet.PeriodName(ctx, sim.Period) };
             if (!TreasuryRules.IsOpen(sim)) return vm;
             TreasuryState st = TreasuryRules.State(sim);
+            PolicySheet.Tabs(ctx, vm, "tab:taxes");
             vm.Lines.Add(new LineVm(s.Get("tax.notYours"), null) { Banner = true });
             if (!st.TaxTourSeen) // the first-visit note (spec 022 §3.7): once
                 vm.Lines.Add(new LineVm(s.Get("tax.tourTitle"), null) { Banner = true, Note = s.Get("tax.tour"), Action = ActionVm.Checked(ctx, "tour", s.Get("tax.tourGotIt"), null, ActionKind.Primary, at => new SeeTaxTour(at)) });

@@ -174,6 +174,17 @@ namespace Sim.Core.Town
 
         /// <summary>The player has read the Taxes sheet's first-visit note (spec 022 §3.7).</summary>
         public bool TaxTourSeen { get; internal set; }
+
+        /// <summary>The five policies' states (spec 022 §4), and whether the player has read the Policies tab's first-visit note.</summary>
+        public PolicyState[] Policies { get; internal set; } = NewPolicies();
+        public bool PolicyTourSeen { get; internal set; }
+
+        private static PolicyState[] NewPolicies()
+        {
+            var p = new PolicyState[PolicyState.Count];
+            for (int i = 0; i < p.Length; i++) p[i] = new PolicyState();
+            return p;
+        }
         public List<WorkRecord> Works { get; internal set; } = new List<WorkRecord>();
         public List<TreasuryReport> Reports { get; internal set; } = new List<TreasuryReport>();
 
@@ -203,6 +214,7 @@ namespace Sim.Core.Town
             c.Unpaid = (int[])Unpaid.Clone();
             c.OverBudget = (int[])OverBudget.Clone();
             c.LineSeen = (bool[])LineSeen.Clone();
+            c.Policies = System.Array.ConvertAll(Policies, x => x.Clone());
             c.Works = Works.ConvertAll(x => x.Clone());
             c.PendingRents = new List<KeyValuePair<long, long>>(PendingRents);
             c.Reports = new List<TreasuryReport>(Reports); // reports are immutable
@@ -237,6 +249,8 @@ namespace Sim.Core.Town
             foreach (TreasuryReport r in Reports) r.WriteTo(h);
             h.WriteFixed(HouseRate); h.WriteFixed(BusinessRate); h.WriteFixed(PendingHouse); h.WriteFixed(PendingBusiness);
             h.WriteBool(TaxTourSeen);
+            foreach (PolicyState p in Policies) p.WriteTo(h);
+            h.WriteBool(PolicyTourSeen);
         }
 
         internal static TreasuryState ReadFrom(SaveReader r)
@@ -265,7 +279,73 @@ namespace Sim.Core.Town
             for (int i = 0; i < n; i++) s.Reports.Add(TreasuryReport.ReadFrom(r));
             s.HouseRate = r.ReadFixed(); s.BusinessRate = r.ReadFixed(); s.PendingHouse = r.ReadFixed(); s.PendingBusiness = r.ReadFixed();
             s.TaxTourSeen = r.ReadBool();
+            for (int i = 0; i < PolicyState.Count; i++) s.Policies[i] = PolicyState.ReadFrom(r);
+            s.PolicyTourSeen = r.ReadBool();
             return s;
+        }
+    }
+
+    /// <summary>The five launch policies, in the order of <c>treasury.json</c>'s <c>policies</c> block (spec 022 §3.5).</summary>
+    public enum PolicyId
+    {
+        Meals = 0,
+        Subsidy = 1,
+        Grant = 2,
+        MinWage = 3,
+        RentControl = 4,
+    }
+
+    /// <summary>Where a policy stands (spec 022 §3.6). A repealed policy is <see cref="None"/> with a repeal period, and waits a season.</summary>
+    public enum PolicyStatus
+    {
+        None = 0,
+
+        /// <summary>Enacted, first paid at the next close.</summary>
+        Enacted = 1,
+
+        /// <summary>Paid at the last close.</summary>
+        Active = 2,
+
+        /// <summary>The last close couldn't pay it: no effect, nothing charged, not repealed.</summary>
+        Paused = 3,
+    }
+
+    /// <summary>One policy's state (spec 022 §4).</summary>
+    public sealed class PolicyState
+    {
+        public const int Count = 5;
+        public PolicyStatus Status { get; internal set; }
+
+        /// <summary>The season it was enacted in, or -1.</summary>
+        public long EnactedPeriod { get; internal set; } = -1;
+
+        /// <summary>Closes it has been paid, in all.</summary>
+        public int PaidCloses { get; internal set; }
+
+        /// <summary>The player has repealed it: it ends at the next close.</summary>
+        public bool Repealing { get; internal set; }
+
+        /// <summary>The season it was repealed in (the wait to enact it again counts from here), or -1.</summary>
+        public long RepealedPeriod { get; internal set; } = -1;
+
+        /// <summary>The subsidy's hangover: seasons left.</summary>
+        public int Hangover { get; internal set; }
+
+        /// <summary>The grant paid last close and opened a door: the next newcomer's chance is higher.</summary>
+        public bool Boost { get; internal set; }
+
+        internal PolicyState Clone() { return (PolicyState)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteInt((int)Status); h.WriteLong(EnactedPeriod); h.WriteInt(PaidCloses); h.WriteBool(Repealing);
+            h.WriteLong(RepealedPeriod); h.WriteInt(Hangover); h.WriteBool(Boost);
+        }
+
+        internal static PolicyState ReadFrom(SaveReader r)
+        {
+            return new PolicyState { Status = (PolicyStatus)r.ReadInt(), EnactedPeriod = r.ReadLong(), PaidCloses = r.ReadInt(), Repealing = r.ReadBool(),
+                RepealedPeriod = r.ReadLong(), Hangover = r.ReadInt(), Boost = r.ReadBool() };
         }
     }
 

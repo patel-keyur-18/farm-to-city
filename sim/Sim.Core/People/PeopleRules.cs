@@ -81,7 +81,7 @@ namespace Sim.Core.People
             HandDef h = sim.Config.Game.People.Hand;
             Fixed factor = h.WageBase + h.WagePerSkill * skill.MulRatio(1, 100);
             if (aboveMarket) factor = factor * sim.Config.Game.People.JobPost.AboveMarketFactor;
-            return Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(marketWage, factor)));
+            return Town.PolicyRules.WageFloor(sim, Money.RoundToCoin(MarketRules.Indexed(sim, Money.MulRate(marketWage, factor))), marketWage); // spec 022 §3.5: the minimum wage
         }
 
         /// <summary>The shown skill range: skill ± skillRangeHalfWidth, clamped to 0–100 (a regular's is exact).</summary>
@@ -111,7 +111,7 @@ namespace Sim.Core.People
         public static long LabourCost(Simulation sim, int count, long until)
         {
             long t = sim.State.Clock.SimTime;
-            long wage = MarketRules.Indexed(sim, sim.Config.Game.People.Pool.DailyWage);
+            long wage = Town.PolicyRules.DayWageFloor(sim, MarketRules.Indexed(sim, sim.Config.Game.People.Pool.DailyWage), sim.Config.Game.People.Pool.DailyWage);
             return (long)((BigInteger)wage * count * System.Math.Max(0, until - t) / Day);
         }
 

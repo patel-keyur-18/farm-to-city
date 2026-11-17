@@ -24,7 +24,7 @@ namespace Sim.Content
             const string root = "treasury";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "era", "startUpGrant", "grantUntied", "grantTied", "clerkWage", "doctorAllowance", "conditionStep", "officeBase", "officeWeight",
-                "healthLeaveBelow", "educationMinCondition", "budgetMaxOfNeeds", "giftMinimum", "retainSeasons", "taxes", "lines", "works");
+                "healthLeaveBelow", "educationMinCondition", "budgetMaxOfNeeds", "giftMinimum", "retainSeasons", "taxes", "policies", "lines", "works");
             string eraId = String(Required(o, root, "era"), Join(root, "era"));
             int era = onboarding.Eras.Count;
             for (int i = 0; i < onboarding.Eras.Count; i++) if (onboarding.Eras[i].Id == eraId) era = i;
@@ -43,6 +43,8 @@ namespace Sim.Content
             int retain = BoundedInt(o, root, "retainSeasons", 4, 16);
 
             TaxDef taxes = LoadTaxes(Object(Required(o, root, "taxes"), Join(root, "taxes")), Join(root, "taxes"));
+
+            PolicyDefs policies = LoadPolicies(Object(Required(o, root, "policies"), Join(root, "policies")), Join(root, "policies"));
 
             var departments = new List<DepartmentDef>();
             for (int i = 0; i < DepartmentIds.Length; i++) departments.Add(new DepartmentDef(DepartmentIds[i], DepartmentAccounts[i]));
@@ -88,6 +90,9 @@ namespace Sim.Content
                 lines.Add(new LineDef(id, d, kind == "wage", source, amount, requires));
             }
 
+            for (int i = 0; i < PolicyIds.Length; i++) // each policy's cost is a line in its department (spec 022 §3.5)
+                lines.Add(new LineDef("policy:" + PolicyIds[i], policies.Department[i], false, LineAmount.Policy, 0, LineRequires.Policy, i));
+
             var works = new List<TownWorkDef>();
             var workIds = new List<string>();
             if (o["works"] != null)
@@ -105,7 +110,39 @@ namespace Sim.Content
                     works.Add(new TownWorkDef(id, cost, BoundedInt(w, p, "lifeSeasons", 1, 400)));
                 }
             }
-            return new TreasuryDef(era, startUp, untied, tied, clerk, doctor, departments.AsReadOnly(), lines.AsReadOnly(), works.AsReadOnly(), step, officeBase, officeWeight, leave, minEdu, maxBudget, gift, retain, taxes);
+            return new TreasuryDef(era, startUp, untied, tied, clerk, doctor, departments.AsReadOnly(), lines.AsReadOnly(), works.AsReadOnly(), step, officeBase, officeWeight, leave, minEdu, maxBudget, gift, retain, taxes, policies);
+        }
+
+        private static readonly string[] PolicyIds = { "meals", "subsidy", "grant", "minWage", "rentControl" };
+
+        private static PolicyDefs LoadPolicies(JObject t, string p)
+        {
+            OnlyFields(t, p, "maxActive", "reenactAfterSeasons", "meals", "subsidy", "grant", "minWage", "rentControl");
+            var lag = new int[PolicyIds.Length];
+            var dept = new int[PolicyIds.Length];
+            var blocks = new JObject[PolicyIds.Length];
+            for (int i = 0; i < PolicyIds.Length; i++)
+            {
+                string q = Join(p, PolicyIds[i]);
+                blocks[i] = Object(Required(t, p, PolicyIds[i]), q);
+                lag[i] = BoundedInt(blocks[i], q, "lag", 0, 4);
+                string dep = String(Required(blocks[i], q, "department"), Join(q, "department"));
+                dept[i] = System.Array.IndexOf(DepartmentIds, dep);
+                if (dept[i] < 0) throw new ContentException(Join(q, "department"), "unknown department '" + dep + "'");
+            }
+            string m = Join(p, "meals"), s = Join(p, "subsidy"), g = Join(p, "grant"), w = Join(p, "minWage"), r = Join(p, "rentControl");
+            OnlyFields(blocks[0], m, "lag", "department", "perPupil", "share", "health");
+            OnlyFields(blocks[1], s, "lag", "department", "perAcre", "supply", "hangover", "hangoverSeasons");
+            OnlyFields(blocks[2], g, "lag", "department", "amount", "wasted", "newcomerChance");
+            OnlyFields(blocks[3], w, "lag", "department", "above", "inspector");
+            OnlyFields(blocks[4], r, "lag", "department", "cap", "officer");
+            long Coins(JObject b, string q, string name) { long v = Money(Required(b, q, name), Join(q, name)); if (v <= 0) throw new ContentException(Join(q, name), "must be above 0"); return v; }
+            return new PolicyDefs(BoundedInt(t, p, "maxActive", 1, 5), BoundedInt(t, p, "reenactAfterSeasons", 0, 8), lag, dept,
+                Coins(blocks[0], m, "perPupil"), Bounded(blocks[0], m, "share", "0", "1"), Bounded(blocks[0], m, "health", "0", "1"),
+                Coins(blocks[1], s, "perAcre"), Bounded(blocks[1], s, "supply", "1", "2"), Bounded(blocks[1], s, "hangover", "0.5", "1"), BoundedInt(blocks[1], s, "hangoverSeasons", 0, 8),
+                Coins(blocks[2], g, "amount"), Bounded(blocks[2], g, "wasted", "0", "1"), Bounded(blocks[2], g, "newcomerChance", "1", "3"),
+                Bounded(blocks[3], w, "above", "0", "1"), Coins(blocks[3], w, "inspector"),
+                Bounded(blocks[4], r, "cap", "0", "0.1"), Coins(blocks[4], r, "officer"));
         }
 
         private static TaxDef LoadTaxes(JObject t, string p)

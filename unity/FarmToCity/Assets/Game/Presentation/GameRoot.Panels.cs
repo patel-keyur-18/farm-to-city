@@ -164,6 +164,7 @@ namespace Game.Presentation
                 case TreasurySheet.Kind: _sheet.Show(TreasurySheet.Build(_ctx, r.Arg), refreshOnly); break; // spec 021 §7
                 case TreasurySheet.BudgetKind: _sheet.Show(TreasurySheet.BudgetSet(_ctx, (int)r.Id), refreshOnly); break; // US-139
                 case TaxSheet.Kind: _sheet.Show(TaxSheet.Build(_ctx), refreshOnly); break; // spec 022 §7, US-140
+                case PolicySheet.Kind: _sheet.Show(PolicySheet.Build(_ctx), refreshOnly); break; // spec 022 §7, US-141
                 case TreasurySheet.GiveKind: _sheet.Show(TreasurySheet.Give(_ctx), refreshOnly); break;
                 case TreasurySheet.BooksKind: _sheet.Show(TreasurySheet.Books(_ctx), refreshOnly); break;
                 case TreasurySheet.StatementKind: _sheet.Show(TreasurySheet.Statement(_ctx, r.Id, r.Arg), refreshOnly); break;
@@ -208,7 +209,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case PolicySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
                 case TreasurySheet.BudgetKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)); return; // set: back to the Budget tab, the new figure there

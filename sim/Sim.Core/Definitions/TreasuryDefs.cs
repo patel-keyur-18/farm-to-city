@@ -14,6 +14,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>The school's upkeep in <c>population.json</c> (the founder's gift becomes the treasury's line, spec 021 §3.1).</summary>
         SchoolUpkeep = 3,
+
+        /// <summary>A policy's cost a season (spec 022 §3.5), from <see cref="LineDef.Policy"/>.</summary>
+        Policy = 4,
     }
 
     /// <summary>When a line exists (spec 021 §3.4's "Opens with").</summary>
@@ -25,6 +28,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>A staffed clinic (spec 023); until it is built the line never opens.</summary>
         Clinic = 2,
+
+        /// <summary>While its policy is enacted (spec 022 §3.6).</summary>
+        Policy = 3,
     }
 
     /// <summary>One of the seven departments, in the order they are paid (spec 021 §3.4, spec 022 §3.5).</summary>
@@ -52,8 +58,12 @@ namespace Sim.Core.Definitions
         public long Amount { get; }
         public LineRequires Requires { get; }
 
-        public LineDef(string id, int department, bool wage, LineAmount source, long amount, LineRequires requires)
+        /// <summary>The policy a <see cref="LineAmount.Policy"/> line pays for (an index into the five), else -1.</summary>
+        public int Policy { get; }
+
+        public LineDef(string id, int department, bool wage, LineAmount source, long amount, LineRequires requires, int policy = -1)
         {
+            Policy = policy;
             Id = id;
             Department = department;
             Wage = wage;
@@ -112,6 +122,47 @@ namespace Sim.Core.Definitions
         }
     }
 
+    /// <summary>
+    /// The five launch policies' numbers (spec 022 §3.5, §4). Their effects are code; their costs, lags and sizes are content. Money is year-0 coins,
+    /// indexed when charged.
+    /// </summary>
+    public sealed class PolicyDefs
+    {
+        public int MaxActive { get; }
+
+        /// <summary>A repealed policy can be enacted again after this many full seasons.</summary>
+        public int ReenactAfterSeasons { get; }
+
+        /// <summary>By policy (meals, subsidy, grant, minimum wage, rent control): the closes after the first payment before the effect starts, and the department that pays.</summary>
+        public IReadOnlyList<int> Lag { get; }
+        public IReadOnlyList<int> Department { get; }
+        public long MealPerPupil { get; }
+        public Fixed MealShare { get; }
+        public Fixed MealHealth { get; }
+        public long SubsidyPerAcre { get; }
+        public Fixed SubsidySupply { get; }
+        public Fixed SubsidyHangover { get; }
+        public int SubsidyHangoverSeasons { get; }
+        public long GrantAmount { get; }
+        public Fixed GrantWasted { get; }
+        public Fixed GrantNewcomerChance { get; }
+        public Fixed MinWageAbove { get; }
+        public long InspectorCost { get; }
+        public Fixed RentControlCap { get; }
+        public long RentOfficerCost { get; }
+
+        public PolicyDefs(int maxActive, int reenactAfterSeasons, IReadOnlyList<int> lag, IReadOnlyList<int> department, long mealPerPupil, Fixed mealShare, Fixed mealHealth,
+            long subsidyPerAcre, Fixed subsidySupply, Fixed subsidyHangover, int subsidyHangoverSeasons, long grantAmount, Fixed grantWasted, Fixed grantNewcomerChance,
+            Fixed minWageAbove, long inspectorCost, Fixed rentControlCap, long rentOfficerCost)
+        {
+            MaxActive = maxActive; ReenactAfterSeasons = reenactAfterSeasons; Lag = lag; Department = department;
+            MealPerPupil = mealPerPupil; MealShare = mealShare; MealHealth = mealHealth;
+            SubsidyPerAcre = subsidyPerAcre; SubsidySupply = subsidySupply; SubsidyHangover = subsidyHangover; SubsidyHangoverSeasons = subsidyHangoverSeasons;
+            GrantAmount = grantAmount; GrantWasted = grantWasted; GrantNewcomerChance = grantNewcomerChance;
+            MinWageAbove = minWageAbove; InspectorCost = inspectorCost; RentControlCap = rentControlCap; RentOfficerCost = rentOfficerCost;
+        }
+    }
+
     public sealed class TreasuryDef
     {
         /// <summary>Index of the era it opens in (the Township).</summary>
@@ -135,12 +186,14 @@ namespace Sim.Core.Definitions
         public long GiftMinimum { get; }
         public int RetainSeasons { get; }
         public TaxDef Taxes { get; }
+        public PolicyDefs Policies { get; }
 
         public TreasuryDef(int era, long startUpGrant, long grantUntied, long grantTied, long clerkWage, long doctorAllowance, IReadOnlyList<DepartmentDef> departments,
             IReadOnlyList<LineDef> lines, IReadOnlyList<TownWorkDef> works, Fixed conditionStep, Fixed officeBase, Fixed officeWeight, Fixed healthLeaveBelow,
-            Fixed educationMinCondition, Fixed budgetMaxOfNeeds, long giftMinimum, int retainSeasons, TaxDef taxes)
+            Fixed educationMinCondition, Fixed budgetMaxOfNeeds, long giftMinimum, int retainSeasons, TaxDef taxes, PolicyDefs policies)
         {
             Taxes = taxes;
+            Policies = policies;
             Era = era;
             StartUpGrant = startUpGrant;
             GrantUntied = grantUntied;

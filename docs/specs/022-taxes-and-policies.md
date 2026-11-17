@@ -270,3 +270,14 @@ All ten gaps were closed with the owner one per message on 2026-11-13 (ADR 0109)
 - **The bill** follows the office; the treasury is paid what is paid; unpaid tax is carried (2400) and paid first at the next close.
 - **Status line:** *Covered ✓*, *From the balance: lasts about n seasons*, or *Short by n*.
 - **Not yet:** the old village's rows (spec 023), AC-8's burden test (needs the cohort), the Policies tab (US-141).
+
+## 13. As built (US-141, 2026-11-17, ADR 0118)
+
+- **A policy is a line** in its department (`policy:meals` … `policy:rentControl`), paid whole or paused; a paused policy keeps its slot and tries again at the next close.
+- **Lag** counts from the first payment: the effect starts `lag` closes after it (meals, subsidy, grant 1; minimum wage and rent control 0, which act at renewals). Repeal before the first payment is at once; after it, at the next close, with a season's wait.
+- **Numbers tuned:** the subsidy is 125 an acre (the map has 123 acres of farm land you don't own, about 15,400 a season, as §3.5 quoted).
+- **The grant** rolls its 40% waste each close once running (stream `Grants`): a success lets a newcomer open (chance × 1.5, no price gap needed), a failure is spent for nothing. No named person yet.
+- **The minimum wage** is one floor (market wage + 10%) on every ask and renewal, the clerk and the labourers' day wage; **rent control** caps a renewal's rise at 3%; **meals** need the school and cut a pupil's household's food need by a quarter of a child's food and add 0.05 a season to the children's health.
+- **The sheet:** a *Policies · n of 3* tab beside *Taxes*; each row the cost, where it stands, *Helps* and *Costs*; enact is a tap card, repeal a hold card; a first-visit note.
+- **Not built:** the night market (needs the watchman's post, spec 023). **Gate checks** that need no bot are in `TaxGateTests`; the 200-seed hands-off solvency waits for spec 023's cohort and clinic.
+

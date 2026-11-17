@@ -23,7 +23,8 @@ namespace Sim.Core.Tests
             Assert.That(d.Departments.Count, Is.EqualTo(7));
             Assert.That(d.Departments[0].Id, Is.EqualTo("office"));
             Assert.That(d.Departments[6].Id, Is.EqualTo("policies"));
-            Assert.That(d.Lines.Count, Is.EqualTo(3));
+            Assert.That(d.Lines.Count, Is.EqualTo(3 + 5), "the clerk, the doctor and the school, and one line for each policy (spec 022 §3.5)");
+            Assert.That((d.Policies.MaxActive, d.Policies.ReenactAfterSeasons, d.Policies.Lag[(int)Sim.Core.Town.PolicyId.Subsidy]), Is.EqualTo((3, 1, 1)));
             Assert.That(d.StartUpGrant, Is.EqualTo(100_000_00L));
             Assert.That(d.ClerkWage, Is.EqualTo(30_000_00L));
             Assert.That(Onboarding().Eras[d.Era].Id, Is.EqualTo("township"));
@@ -37,6 +38,9 @@ namespace Sim.Core.Tests
         [TestCase("\"requires\": \"treasury\"", "\"requires\": \"never\"", "treasury, school or clinic")]
         [TestCase("\"retainSeasons\": 8", "\"retainSeasons\": 2", "between 4 and 16")]
         [TestCase("\"conditionStep\": 0.5", "\"conditionStep\": 1.5", "between")]
+        [TestCase("\"maxActive\": 3", "\"maxActive\": 9", "between")]
+        [TestCase("\"supply\": 1.05", "\"supply\": 0.9", "between")]
+        [TestCase("\"rentControl\": { \"lag\": 0, \"department\": \"office\"", "\"rentControl\": { \"lag\": 0, \"department\": \"mayor\"", "unknown department")]
         public void Refuses(string find, string replace, string message)
         {
             ContentException e = Assert.Throws<ContentException>(() => Load(replace, find));

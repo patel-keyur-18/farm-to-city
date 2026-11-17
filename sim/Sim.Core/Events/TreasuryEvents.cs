@@ -203,4 +203,50 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "TaxRateSet(tax=" + Tax + ", from=" + From + ", to=" + To + ")"; }
     }
+
+    /// <summary>A policy was enacted (spec 022 §3.6).</summary>
+    public sealed class PolicyEnacted : SimEvent
+    {
+        public int Policy { get; }
+        public PolicyEnacted(long simTime, int policy) : base(simTime) { Policy = policy; }
+        protected override string Describe() { return "PolicyEnacted(policy=" + Policy + ")"; }
+    }
+
+    /// <summary>A policy was repealed: it ends at the next close (spec 022 §3.6).</summary>
+    public sealed class PolicyRepealed : SimEvent
+    {
+        public int Policy { get; }
+        public PolicyRepealed(long simTime, int policy) : base(simTime) { Policy = policy; }
+        protected override string Describe() { return "PolicyRepealed(policy=" + Policy + ")"; }
+    }
+
+    /// <summary>A policy's lag is over and its effect has begun (spec 022 §3.6).</summary>
+    public sealed class PolicyStarted : SimEvent
+    {
+        public int Policy { get; }
+        public PolicyStarted(long simTime, int policy) : base(simTime) { Policy = policy; }
+        protected override string Describe() { return "PolicyStarted(policy=" + Policy + ")"; }
+    }
+
+    /// <summary>The close couldn't pay a policy in full: it is paused for the season (spec 022 §3.6).</summary>
+    public sealed class PolicyPaused : SimEvent
+    {
+        public int Policy { get; }
+        public PolicyPaused(long simTime, int policy) : base(simTime) { Policy = policy; }
+        protected override string Describe() { return "PolicyPaused(policy=" + Policy + ")"; }
+    }
+
+    /// <summary>A small business grant came to nothing: spent, no shop (spec 022 §3.5).</summary>
+    public sealed class GrantWasted : SimEvent
+    {
+        public GrantWasted(long simTime) : base(simTime) { }
+        protected override string Describe() { return "GrantWasted()"; }
+    }
+
+    /// <summary>A small business grant helped a newcomer open a shop (spec 022 §3.5).</summary>
+    public sealed class GrantOpenedShop : SimEvent
+    {
+        public GrantOpenedShop(long simTime) : base(simTime) { }
+        protected override string Describe() { return "GrantOpenedShop()"; }
+    }
 }

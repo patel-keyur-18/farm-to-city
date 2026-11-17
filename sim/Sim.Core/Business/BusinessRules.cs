@@ -1037,7 +1037,8 @@ namespace Sim.Core.Business
                 }
                 else if (b.Status == BusinessStatus.Open && w != null)
                 {
-                    long wage = w.Wage;
+                    long wage = Town.PolicyRules.WageFloor(sim, w.Wage, HiringRules.MarketWage(sim, b.Id)); // spec 022 §3.5: a renewal can't go below the minimum wage
+                    w.Wage = wage;
                     if (BusinessBooks.CanSpend(sim, b) >= wage - w.Hr.Advance)
                     {
                         HrRules.RepayAdvance(sim, w, b.Ledger, "business:" + b.Id);

@@ -102,4 +102,45 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>Enact a policy (spec 022 §3.6): paid from the next close, the effect after its lag.</summary>
+    public sealed class EnactPolicy : TimedCommand
+    {
+        public Town.PolicyId Policy { get; }
+
+        public EnactPolicy(long at, Town.PolicyId policy) : base(at) { Policy = policy; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.PolicyRules.Enact(sim, Policy);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Repeal a policy (spec 022 §3.6): it ends at the next close, and can't be enacted again for a season.</summary>
+    public sealed class RepealPolicy : TimedCommand
+    {
+        public Town.PolicyId Policy { get; }
+
+        public RepealPolicy(long at, Town.PolicyId policy) : base(at) { Policy = policy; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.PolicyRules.Repeal(sim, Policy);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>The player has read the Policies tab's first-visit note (spec 022 §3.7): it doesn't show again.</summary>
+    public sealed class SeePolicyTour : TimedCommand
+    {
+        public SeePolicyTour(long at) : base(at) { }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!Town.TreasuryRules.IsOpen(sim)) return CommandResult.Reject(RejectReason.NoTreasury);
+            sim.State.Treasury.PolicyTourSeen = true;
+            return CommandResult.Ok;
+        }
+    }
 }

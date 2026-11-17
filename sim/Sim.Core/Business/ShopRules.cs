@@ -856,8 +856,11 @@ namespace Sim.Core.Business
                     continue; // never one out and another in at the same close
                 }
                 bool gap = served < d.NewcomerGap.MulRatio(demand, 1).RoundToLong();
-                if (!KindUnlocked(sim, kind) || !(gap || RichPrices(sim, kind))) continue;
-                if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), d.NewcomerChance)) continue;
+                bool grant = Town.PolicyRules.GrantBoost(sim); // spec 022 §3.5: a small business grant opens the door
+                if (!KindUnlocked(sim, kind) || !(gap || RichPrices(sim, kind) || grant)) continue;
+                Fixed chance = grant ? d.NewcomerChance * Town.PolicyRules.Def(sim).GrantNewcomerChance : d.NewcomerChance;
+                if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), chance)) continue;
+                if (grant) Town.PolicyRules.UseGrantBoost(sim, true);
                 int pitch = FreePitch(sim);
                 s.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
                     PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap });

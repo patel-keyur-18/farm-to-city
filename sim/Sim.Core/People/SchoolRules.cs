@@ -51,6 +51,9 @@ namespace Sim.Core.People
             return list;
         }
 
+        /// <summary>A school pupil now: a child of school age who can't read yet, while the school is open.</summary>
+        public static bool IsPupil(Simulation sim, Citizen c) { return IsOpen(sim) && IsPupilAge(Def(sim), c, CitizenRules.Age(sim, c)); }
+
         private static bool IsPupilAge(SchoolDef d, Citizen c, int age) { return c.Living && !c.Literate && age >= d.PupilAgeMin && age <= d.PupilAgeMax; }
 
         /// <summary>

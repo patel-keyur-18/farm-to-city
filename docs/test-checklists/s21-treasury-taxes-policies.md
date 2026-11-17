@@ -41,6 +41,13 @@
 | 21 | Money and loans → Your season → *Next season, already due* | A row "House tax, n houses" with its **?** | | Editor ✓ (`s21-140-due.png`) |
 | 22 | Advance one season; Town treasury → The town's books → the season | *House tax* and *Business tax* rows in the money in, each with a **?** | | Editor ✓ (`s21-140-statement.png`) |
 | 23 | The **?** on a tax | Your houses and what the office collected, "never more than 15% of a house's rent", and why you pay it | | Editor ✓ (`s21-140-why.png`) |
+| 24 | Town treasury → **Taxes and policies** → the **Policies** tab | Two tabs, *Taxes* and *Policies · 0 of 3*; a note "Policies: a trade, never a gift" with **Got it** (once); five rows, each with a cost a season, *Helps:* and *Costs:*, a **?** and **Enact** (greyed with a reason when it cannot) | | Editor ✓ (`s21-141-policies-tab.png`, `-rows.png`) |
+| 25 | **Enact** on the Farm input subsidy | A card: costs the town, first paid at the close of (this season), works from (the season after the next), the town's bill at the close before and after with a ✓; **Enact** | | Editor ✓ (`s21-141-enact-card.png`) |
+| 26 | After enacting | The row says "Paid at the next close; works from Monsoon" with **Repeal**; the tab says *Policies · 1 of 3* | | Editor ✓ (`s21-141-enacted.png`) |
+| 27 | Advance two seasons | The row says *Working*; the valley's supply of each crop is 1.05 × | | Editor ✓ (`s21-141-working.png`) |
+| 28 | **Repeal**, hold the red button | A card: stops at the next close, saves the town, afterwards "crop prices dip a little for two seasons"; hold a second to repeal; the policy waits a season before it can be enacted again | | Editor ✓ (card, `s21-141-repeal-card.png`) |
+| 29 | The **?** on a policy | Its cost and how it is counted, when it starts, who it helps, who pays, and a plain paragraph | | Editor ✓ (`s21-141-why.png`) |
+| 30 | Enact three, then try a fourth; enact free school meals with no school | The fourth is greyed: "Three policies are enacted already. Repeal one first." Meals: "Free school meals need the school." | | Sim and view tests ✓ (`PolicyTests.Slots`, `PolicyViewTests.States`) |
 | 8 | Both frame-time p95s (main ≤ 8.3 ms, GPU ≤ 11 ms), golden replays, a 72 h catch-up with a treasury open | Pass | **Device only** | |
 | 9 | Render statistics at the three views (all, village, farm) | No metric over 10% above the last reading | | Editor ✓ for US-138 (957 / 572 / 366 draw calls); US-139: 1038 / 558 / 346, set-pass calls +11–20% and triangles +19–28% flagged (a Monsoon map against a Spring reading; the sheets are UI Toolkit) |
 

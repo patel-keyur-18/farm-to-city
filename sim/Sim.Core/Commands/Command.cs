@@ -226,6 +226,21 @@ namespace Sim.Core.Commands
         OutOfRange,
         /// <summary>No rate has been set for the next season, so there is nothing to undo (spec 022 §3.4).</summary>
         NothingPending,
+
+        /// <summary>Three policies are active already: repeal one first (spec 022 §3.6).</summary>
+        SlotsFull,
+
+        /// <summary>The policy is already enacted.</summary>
+        AlreadyActive,
+
+        /// <summary>A repealed policy waits a season before it can be enacted again.</summary>
+        WaitAfterRepeal,
+
+        /// <summary>The policy needs a building you haven't got (free meals need the school).</summary>
+        NeedsBuilding,
+
+        /// <summary>The policy isn't enacted, so there is nothing to repeal.</summary>
+        NotActive,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>
