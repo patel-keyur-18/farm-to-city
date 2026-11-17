@@ -153,7 +153,7 @@ From the Township the treasury builds three buildings on fixed public plots, pre
 | Roads | the link road's upkeep | 1,500 | the road is built |
 | Safety | each civic building's upkeep, the watchman's and the caretaker's wages | §3.7 | each commissioned (and staffed) |
 
-The takeover from the district begins at the first close after the unlock (spec 021 §3.1). A default Township (about 250 residents, 3 shops, default taxes) has about 63,100 in and 66,500 out: a gap of about 3,400 that the start-up grant carries while each new household adds about 500 in grants and 250 in tax. **Rule: the median Township bot's treasury must break even within two years of the unlock at default taxes and no civic buildings.** If a measurement misses, the levers in order: the doctor's allowance (30,000 toward 24,000), then the clinic's upkeep; never the grants or the default taxes (specs 021 and 022).
+The takeover from the district begins at the first close after the unlock (spec 021 §3.1). A default Township (about 250 residents, 3 shops, default taxes) has about 66,700 in (grants 37,500, pitch rents 9,000, house tax about 11,500, business tax about 8,700, as spec 022 §9) and 66,500 out: about break-even, with the start-up grant as a cushion while each new household adds about 500 in grants and 250 in tax. **Rule: the median Township bot's treasury must break even within two years of the unlock at default taxes and no civic buildings.** If a measurement misses, the levers in order: the doctor's allowance (30,000 toward 24,000), then the clinic's upkeep; never the grants or the default taxes (specs 021 and 022).
 
 ### 3.9 The doctor leaving and returning (G9)
 
@@ -256,7 +256,7 @@ Every number has a *Why?* (`WhyTests` sweeps them).
 | --- | --- | --- |
 | Township pace, competent bot | Day 63–77 | A median under 55 or over 77 goes to the owner with its numbers before anything changes; under 55 proposes tightening a goal (for example 25 households) |
 | Saver | About day 100–110 | Slowest order within 130 days with credit |
-| The treasury at the unlock | In about 63,100, out about 66,500; break even within two years | Levers in §3.8's order |
+| The treasury at the unlock | In about 66,700, out about 66,500; break even within two years | Levers in §3.8's order |
 | The road's gain | About +1,500–3,000 a season | Measured with the bots |
 | Cohort | Stays at 30 households at default taxes | Under 35 happiness only when neglected |
 | Frame cost | The cohort is one record; render statistics read at each visible story | Growth over 10% reported |
