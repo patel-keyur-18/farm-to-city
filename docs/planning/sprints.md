@@ -1025,4 +1025,4 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Test checklist with device-only rows marked; Development build (2026-11-18, Xcode compile BUILD SUCCEEDED); both frame-time p95s and golden replays on the phone written down (the owner)
 - [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and ADR 0124
 - [x] `STATUS.md`, feature files and this file updated
-- [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it
+- [x] Pull request (#32) with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it
