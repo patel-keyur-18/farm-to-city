@@ -86,7 +86,7 @@ A parcel's price (what you pay) is spec 002's price × `LV`, so land near a grow
 
 ### 3.8 Overlays (US-153, G7)
 
-A button on the map opens one overlay at a time: **fertility**, **land value**, **coverage** (school, clinic, watchman, water; the generator's smoke in red), **happiness**, **crime** (a grey "no crime yet" until spec 027). Decided (G7): the button appears from the Township; each overlay is **one hue in five light-to-dark steps** (not blue-to-red, for colour-blind players) with the numbers on the key; coverage shows how many services reach the acre (0–4) with the generator's smoke hatched red; happiness tints only acres with a household of yours (the key says "no household"). **With an overlay open a tap opens a small card** (the acre's number, its *Why?* in words, **Open the acre**), not the acre's sheet. An overlay changes nothing and costs no time; it closes with the button.
+A button on the map opens one overlay at a time: **fertility**, **land value**, **coverage** (school, clinic, watchman, water; the generator's smoke in red), **happiness**, **crime** (a grey "no crime yet" until spec 026 (Sprint 24)). Decided (G7): the button appears from the Township; each overlay is **one hue in five light-to-dark steps** (not blue-to-red, for colour-blind players) with the numbers on the key; coverage shows how many services reach the acre (0–4) with the generator's smoke hatched red; happiness tints only acres with a household of yours (the key says "no household"). **With an overlay open a tap opens a small card** (the acre's number, its *Why?* in words, **Open the acre**), not the acre's sheet. An overlay changes nothing and costs no time; it closes with the button.
 
 ### 3.9 Processing order
 
