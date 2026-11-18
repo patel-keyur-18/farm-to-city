@@ -236,7 +236,7 @@ The **Town hall** sheet (Menu) gets a **Town life** tab: approval and its last s
 
 Each is closed with the owner, one per message, with my recommendation, before code.
 
-- **G1 Festivals.** Four named festivals, kind fixed by the season, the owner picks venue, payer and day; cost per person; the lift of 8 and 3 points for one day; shops +30%/+10%. Recommendation: as written.
+- **G1 Festivals. Closed (owner, 2026-11-18, my recommendation):** four named festivals, kind fixed by the season, the owner picks venue, payer and day; cost per person; the lift of 8 and 3 points for one day; shops +30%/+10%; no undo.
 - **G2 Petitions.** Nine topics, a threshold of 3 families or a fifth, answers *Promise* (1, 2 or 4 closes) or *Decline*, "do it" answering by itself. Recommendation: as written, and no third button.
 - **G3 Approval.** Starts at 50, moves ±4 a close with happiness, plus the petition endings; changes migration only. Recommendation: as written.
 - **G4 Reputation.** The five scores' parts and weights (§3.4), the pull and the grant bonus (up to 10%). Recommendation: as written.
