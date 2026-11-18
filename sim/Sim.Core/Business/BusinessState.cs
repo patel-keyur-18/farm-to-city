@@ -213,6 +213,20 @@ namespace Sim.Core.Business
         public bool OpenToday { get; internal set; }
         public int ShutDays { get; internal set; }
 
+        // The brick kiln's own (US-243; save schema 21): the bricks in its yard and what they cost to fire, and today's and this season's counts.
+
+        /// <summary>Bricks in the yard and what they cost (1/100 coin).</summary>
+        public long Yard { get; internal set; }
+        public long YardCost { get; internal set; }
+
+        /// <summary>Today's bricks fired, sent to your builds and sold to the trader, and this season's fired.</summary>
+        public long KilnMade { get; internal set; }
+        public long KilnToBuilds { get; internal set; }
+        public long KilnSold { get; internal set; }
+        public long KilnSeason { get; internal set; }
+
+        private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
+
         internal Business Clone()
         {
             var c = (Business)MemberwiseClone();
@@ -276,6 +290,8 @@ namespace Sim.Core.Business
             h.WriteInt(ShutDays);
             if (h.Hashing ? SeasonAtPrice != 0 : !(h is SaveWriter s15 && s15.Schema < 15)) h.WriteLong(SeasonAtPrice); // hashed only once used
             if (h.Hashing ? ProfitableSeasons != 0 : !(h is SaveWriter p15 && p15.Schema < 15)) h.WriteInt(ProfitableSeasons);
+            if (h.Hashing ? KilnUsed : !(h is SaveWriter k21 && k21.Schema < Saves.MapMigration.RingSchema)) // schema 21; hashed once a kiln has fired
+                foreach (long v in new[] { Yard, YardCost, KilnMade, KilnToBuilds, KilnSold, KilnSeason }) h.WriteLong(v);
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -338,6 +354,10 @@ namespace Sim.Core.Business
                 b.ProfitableSeasons = r.ReadInt();
             }
             else foreach (BusinessReport x in b.Reports) if (BusinessBooks.NetProfit(x) > 0) b.ProfitableSeasons++; // from its own books (ADR 0095 §9)
+            if (r.Schema >= Saves.MapMigration.RingSchema)
+            {
+                b.Yard = r.ReadLong(); b.YardCost = r.ReadLong(); b.KilnMade = r.ReadLong(); b.KilnToBuilds = r.ReadLong(); b.KilnSold = r.ReadLong(); b.KilnSeason = r.ReadLong();
+            }
             return b;
         }
     }

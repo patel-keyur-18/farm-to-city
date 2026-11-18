@@ -43,7 +43,7 @@ namespace Sim.Content
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "workerSkill", "wage", "kgPerHour", "powerPerKg", "repairsShare",
                     "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium",
-                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good");
+                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good", "kiln");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
                 x.Era = -1;
@@ -62,6 +62,18 @@ namespace Sim.Content
                 x.Wage = Money(Required(t, p, "wage"), p + ".wage");
                 Shop(x, t, p, market);
                 // A stall or tea stall sells what it's given, at its own rate (capacityPerHour); the others work kg an hour.
+                if (t["kiln"] != null)
+                {
+                    if (t["recipes"] != null || t["input"] != null || t["outputs"] != null || t["kind"] != null) throw new ContentException(p + ".kiln", "a kiln fires bricks: no recipes, input, outputs or shop kind");
+                    x.Kiln = Kiln(t, p);
+                    x.GramsPerHour = 0;
+                    x.PowerPerKg = Fixed.Zero;
+                    x.RepairsShare = Bounded(t, p, "repairsShare", "0", "1");
+                    x.OpenHour = BoundedInt(t, p, "openHour", 0, 23);
+                    x.CloseHour = BoundedInt(t, p, "closeHour", x.OpenHour + 1, 24);
+                    types.Add(x);
+                    continue;
+                }
                 x.GramsPerHour = x.IsShop && t["recipes"] == null && t["kgPerHour"] == null ? x.Kind == ShopKind.Veg ? x.CapacityPerHour : 0
                     : (Bounded(t, p, "kgPerHour", "1", "10000") * Fixed.FromInt(1000)).RoundToLong();
                 x.PowerPerKg = t["powerPerKg"] == null ? Fixed.Zero : Bounded(t, p, "powerPerKg", "0", "100");
@@ -105,6 +117,19 @@ namespace Sim.Content
             }
             d.Types = types.AsReadOnly();
             return d;
+        }
+
+        /// <summary>The brick kiln's fields (US-243): its rate, fuel, yard, what the trader takes and its smoke.</summary>
+        private static KilnDef Kiln(JObject t, string p)
+        {
+            string kp = p + ".kiln";
+            JObject k = Object(t["kiln"], kp);
+            OnlyFields(k, kp, "bricksPerHour", "fuelKg", "fuelPrice", "yardMax", "traderPerDay", "traderShare");
+            return new KilnDef
+            {
+                BricksPerHour = BoundedInt(k, kp, "bricksPerHour", 1, 100000), FuelKg = Bounded(k, kp, "fuelKg", "0", "20"), FuelPrice = Bounded(k, kp, "fuelPrice", "0", "1000"),
+                YardMax = BoundedInt(k, kp, "yardMax", 1, 10000000), TraderPerDay = BoundedInt(k, kp, "traderPerDay", 0, 10000000), TraderShare = Bounded(k, kp, "traderShare", "0", "1"),
+            };
         }
 
         /// <summary>A shop's fields (spec 017 §3.1): its kind, a pitch's building, its rate a real hour, the goods it may put out, a cup of chai.</summary>

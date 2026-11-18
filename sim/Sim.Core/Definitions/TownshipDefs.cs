@@ -27,6 +27,9 @@ namespace Sim.Core.Definitions
         /// <summary>What a new building takes from the Township: materials, masons and time (spec 025 §3.2).</summary>
         public ConstructionDef Construction { get; set; }
 
+        /// <summary>What a smoking building does to the land and the homes near it (spec 025 §3.4, §3.3): the generator's and the kiln's.</summary>
+        public SmokeDef Smoke { get; set; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {
@@ -254,6 +257,28 @@ namespace Sim.Core.Definitions
 
 namespace Sim.Core.Definitions
 {
+    /// <summary>One smoking building's reach (metres, an acre is 100), the land value it takes from each acre within it and the health it takes from each home.</summary>
+    public sealed class SmokeSource
+    {
+        public string Id { get; internal set; }
+        public int Reach { get; internal set; }
+        public Fixed LandValue { get; internal set; }
+        public Fixed Health { get; internal set; }
+    }
+
+    /// <summary>Smoke (spec 025): the sources by id and the most land value smoke takes from one acre in all.</summary>
+    public sealed class SmokeDef
+    {
+        public System.Collections.Generic.IReadOnlyList<SmokeSource> Sources { get; internal set; }
+        public Fixed LandValueCap { get; internal set; }
+
+        public SmokeSource Source(string id)
+        {
+            foreach (SmokeSource s in Sources) if (s.Id == id) return s;
+            return null;
+        }
+    }
+
     /// <summary>
     /// Construction from the Township (spec 025 §3.2, US-145): bricks, cement and timber from the trader up to a daily limit for the whole town,
     /// masons at a price by the mason-day (or the district's gang at <see cref="GangPrice"/> and <see cref="GangHours"/>), and build time.

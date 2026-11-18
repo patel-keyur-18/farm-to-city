@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sim.Core.Business;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Finance;
@@ -22,6 +23,10 @@ namespace Sim.Core.Town
 
         /// <summary>The materials at today's trader's prices (1/100 coin).</summary>
         public long Materials { get; internal set; }
+
+        /// <summary>Of the bricks, those your kiln gives at what they cost it (your own build only), and what that is (1/100 coin; part of <see cref="Materials"/>).</summary>
+        public long KilnBricks { get; internal set; }
+        public long KilnCost { get; internal set; }
         public int MasonDays { get; internal set; }
 
         /// <summary>The masons' part: at 1,000 a mason-day, or the district's gang at one and a half times.</summary>
@@ -144,7 +149,12 @@ namespace Sim.Core.Town
             ConstructionDef d = Def(sim);
             BuildKindDef k = d.Kind(kindId);
             var q = new BuildQuote { Kind = k, Units = units, Bricks = k.Bricks * units, Cement = k.Cement * units, Timber = k.Timber * units, MasonDays = k.MasonDays * units };
-            q.Materials = MarketRules.Indexed(sim, q.Bricks * d.BrickPrice + q.Cement * d.CementPrice + q.Timber * d.TimberPrice);
+            if (owner == BuildProject.Yours && sim.State.Businesses != null)
+            {
+                q.KilnBricks = Math.Min(q.Bricks, KilnRules.Yards(sim)); // your own kiln's bricks first, at what they cost it (US-243)
+                q.KilnCost = KilnRules.CostOf(sim, q.KilnBricks);
+            }
+            q.Materials = MarketRules.Indexed(sim, (q.Bricks - q.KilnBricks) * d.BrickPrice + q.Cement * d.CementPrice + q.Timber * d.TimberPrice) + q.KilnCost;
             if (owner == BuildProject.Builders)
             {
                 q.Hours = (int)(Fixed.FromInt(k.Hours) * d.GangHours).RoundToLong();
@@ -176,19 +186,36 @@ namespace Sim.Core.Town
             s.TakenBricks = s.TakenCement = s.TakenTimber = 0;
         }
 
+        /// <summary>The trader's day (from his hour): the key his stock and your kiln's sales to him are kept by.</summary>
+        public static long TraderDay(Simulation sim) { return DayOf(sim); }
+
+        /// <summary>Bricks your kiln sold the trader this morning: his stock for the whole town is that much more today.</summary>
+        public static long KilnToday(Simulation sim)
+        {
+            TownshipState s = sim.State.Township;
+            return s.KilnDay == DayOf(sim) ? s.KilnBricks : 0;
+        }
+
+        internal static void KilnDelivered(Simulation sim, long bricks)
+        {
+            TownshipState s = sim.State.Township;
+            s.KilnBricks = bricks;
+            s.KilnDay = DayOf(sim);
+        }
+
         /// <summary>What the trader still sells today of a good (0 bricks, 1 cement, 2 timber).</summary>
         public static long Left(Simulation sim, int good)
         {
             Rollover(sim);
             ConstructionDef d = Def(sim);
             TownshipState s = sim.State.Township;
-            return good == 0 ? d.DailyBricks - s.TakenBricks : good == 1 ? d.DailyCement - s.TakenCement : d.DailyTimber - s.TakenTimber;
+            return good == 0 ? d.DailyBricks + KilnToday(sim) - s.TakenBricks : good == 1 ? d.DailyCement - s.TakenCement : d.DailyTimber - s.TakenTimber;
         }
 
         public static long Limit(Simulation sim, int good)
         {
             ConstructionDef d = Def(sim);
-            return good == 0 ? d.DailyBricks : good == 1 ? d.DailyCement : d.DailyTimber;
+            return good == 0 ? d.DailyBricks + KilnToday(sim) : good == 1 ? d.DailyCement : d.DailyTimber;
         }
 
         public static long Need(Simulation sim, BuildProject p, int good)
@@ -227,6 +254,11 @@ namespace Sim.Core.Town
                 Masons = new List<long>(q.Masons), Hours = q.Hours,
             };
             s.Projects.Add(p);
+            if (q.KilnBricks > 0) // the bricks come from your yard now, and your kiln is paid what they cost it
+            {
+                KilnRules.TakeForBuild(sim, q.KilnBricks);
+                p.Bricks += q.KilnBricks;
+            }
             sim.Emit(new BuildStarted(sim.State.Clock.SimTime, p.Id, kindId, owner, tile));
             Draw(sim);
             return p;

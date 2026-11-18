@@ -149,7 +149,7 @@ namespace Sim.View.Views
             Fixed index = ctx.Sim.State.Market.PriceIndex;
             int days = ctx.Sim.Clock.DaysPerSeason;
             long value = line == "loan" ? (p.Loan > 0 ? p.Loan : BusinessBooks.MaxLoan(ctx.Sim, t)) : line == "interest" ? p.Interest : line == "cash" ? p.CashNeeded - p.Loan : line == "fees" ? p.Fees : line == "sales" ? p.Sales : line == "wheat" ? p.Wheat : line == "power" ? p.Power : line == "repairs" ? p.Repairs
-                : line == "depreciation" ? p.Depreciation : line == "wage" ? p.Wage : line == "rent" ? p.Rent : line == "profit" ? p.Profit : line == "cost" ? p.Cost : p.CashNeeded;
+                : line == "depreciation" ? p.Depreciation : line == "monsoon" ? p.Off : line == "wage" ? p.Wage : line == "rent" ? p.Rent : line == "profit" ? p.Profit : line == "cost" ? p.Cost : p.CashNeeded;
             RecipeDef first = t.ByRecipe ? BusinessRules.First(t, t.Products[0]) : null;
             WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.plan." + line + ".title", t), line == "payback" ? BusinessPlanSheet.Payback(ctx, p) : ctx.Fmt.Coins(value),
                 "role", ctx.Strings.Get("business.role." + t.Worker));
@@ -160,7 +160,7 @@ namespace Sim.View.Views
                 "rate", ctx.Fmt.Percent(p.Loan > 0 ? Fixed.FromRatio(p.Interest, p.Loan) : Fixed.Zero),
                 "batch", first == null ? "" : ctx.Fmt.Kg(first.OutputGrams), "fuel", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Fuel * index)),
                 "supplies", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Supplies * index)),
-                "rent", ctx.Fmt.Coins(p.Rent), "wage", ctx.Fmt.Coins(p.Wage));
+                "rent", ctx.Fmt.Coins(p.Rent), "wage", ctx.Fmt.Coins(p.Wage), "kg", t.IsKiln ? ctx.Fmt.Decimal1(t.Kiln.FuelKg) : "");
             if (line == "profit" || line == "payback") vm.Footnote = ctx.Strings.Get(BusinessWords.Key(ctx, "why.plan.lesson", t));
             return vm;
         }

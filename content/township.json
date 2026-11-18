@@ -23,6 +23,13 @@
     "slowSaleSeconds": 172800,
     "leaseYield": 0.025
   },
+  "smoke": {
+    "landValueCap": 0.10,
+    "sources": {
+      "generator": { "reach": 250, "landValue": 0.06, "health": 0.05 },
+      "kiln": { "reach": 150, "landValue": 0.04, "health": 0.03 }
+    }
+  },
   "construction": {
     "daily": { "bricks": 2000, "cement": 30, "timber": 30 },
     "price": { "brick": 8, "cement": 400, "timber": 1200 },

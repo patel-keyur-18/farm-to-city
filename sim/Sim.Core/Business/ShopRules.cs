@@ -573,7 +573,7 @@ namespace Sim.Core.Business
         // ---- quality and stars (§3.5, ADR 0092) ----
 
         /// <summary>Whether a business earns stars: the shops and the mill (the bakery and dairy sell at the morning round, chosen by nobody).</summary>
-        public static bool Rated(BusinessTypeDef t) { return t.IsShop || !t.ByRecipe; }
+        public static bool Rated(BusinessTypeDef t) { return !t.IsKiln && (t.IsShop || !t.ByRecipe); }
 
         /// <summary>Whether it keeps nothing overnight: good quality at the vegetable stall and the sweet shop.</summary>
         public static bool Fresh(BusinessTypeDef t, Business b) { return b.Quality == 2 && t.GoodFresh; }

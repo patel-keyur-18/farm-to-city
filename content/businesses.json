@@ -88,6 +88,14 @@
         { "id": "atta_laddoo", "inputs": { "atta": 0.45, "ghee": 0.20 }, "output": "atta_laddoo", "outputKg": 1, "fuel": 4, "supplies": 16 }
       ],
       "good": { "recipeCost": 0.08, "fresh": true }
+    },
+    {
+      "id": "brick_kiln", "nameKey": "business.brick_kiln", "era": "village",
+      "building": { "value": 160000, "lifeSeasons": 80 },
+      "equipment": { "value": 140000, "lifeSeasons": 40 },
+      "buildHours": 72, "worker": "kiln_hand", "workerSkill": "crafting", "wage": 30000,
+      "repairsShare": 0.02, "openHour": 8, "closeHour": 18,
+      "kiln": { "bricksPerHour": 500, "fuelKg": 0.4, "fuelPrice": 4, "yardMax": 10000, "traderPerDay": 5000, "traderShare": 0.9 }
     }
   ]
 }

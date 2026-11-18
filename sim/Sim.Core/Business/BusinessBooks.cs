@@ -133,6 +133,7 @@ namespace Sim.Core.Business
             if (b.Reports.Count > KeptReports) b.Reports.RemoveAt(0);
             b.SeasonOpeningCash = b.Ledger.Cash;
             b.AreaSeason = 0;
+            b.KilnSeason = 0;
             b.OwnSeason = 0;
             b.SeasonCustomers = 0;
             b.SeasonServed = 0;
@@ -232,6 +233,7 @@ namespace Sim.Core.Business
             if (loan != null && loan.IsOpen) CreditSystem.Accrue(sim, loan, sim.Period);
             BusinessRules.LoseWorker(sim, b);
 
+            KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
             for (int g = 0; g < b.Stock.Length; g++)
                 if (b.Stock[g] > 0) BusinessRules.Sold(sim, b, g, b.Stock[g], MarketRules.Value(sim, g, b.Stock[g], MarketRules.Floor(sim, g)));
 

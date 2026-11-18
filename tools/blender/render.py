@@ -3782,6 +3782,62 @@ for _f, _deg in FACINGS.items():
     SPRITES["bakery_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("building"), d)))()
 
 
+# ---------------------------------------------------------------- the brick kiln (US-243, Preview 3): a clamp kiln with a chimney
+
+def model_brick_kiln(stage):
+    """A village brick kiln (spec 025 §3.3): a stepped clamp of red bricks with three arched fire mouths and a tall chimney, a
+    stack of fired bricks and a heap of clay with a wooden mould beside it, firewood at the front. stage 'done' (smoke rising
+    from the chimney) or 'building' (the plinth, the first courses, bamboo poles, a pile of bricks)."""
+    o = []
+    brick, brick_dark, plinth = toon("brick", BRICK), toon("brickDark", BRICK_DARK), toon("plinth", PLINTH)
+    clay, soot = toon("clay", 0xB9663F), toon("soot", 0x3A2A22)
+    cy = 0.06
+    yard_pad(o, 0.5, 0.22, -0.16)
+    o.append(box("plinth", (0.34, 0.26, 0.03), (0, cy, 0.015), plinth, bevel=0.005))
+    if stage == "building":
+        o.append(box("course1", (0.30, 0.22, 0.05), (0, cy, 0.055), brick))
+        o.append(box("course2", (0.24, 0.18, 0.04), (0, cy, 0.1), brick_dark))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-0.17, 0.17):
+            for y in (cy - 0.13, cy + 0.13):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("pile%d%d" % (i, j), (0.05, 0.025, 0.018), (0.18 + j * 0.055, -0.1, 0.009 + i * 0.018), brick))
+        o.append(dome("heap", 0.06, 0.04, (-0.2, -0.1, 0.006), clay))
+        return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+    # The stepped clamp: wide at the foot, narrowing up, a flat top under the chimney.
+    o.append(box("base", (0.30, 0.22, 0.07), (0, cy, 0.065), brick, bevel=0.006))
+    o.append(box("mid", (0.25, 0.18, 0.06), (0, cy, 0.13), brick_dark, bevel=0.005))
+    o.append(box("top", (0.20, 0.14, 0.05), (0, cy, 0.185), brick, bevel=0.005))
+    # Three arched fire mouths along the front, black inside with an orange glow.
+    for i, x in enumerate((-0.09, 0.0, 0.09)):
+        o.append(box("mouth%d" % i, (0.05, 0.008, 0.04), (x, cy - 0.113, 0.06), soot, outline=False))
+        o.append(cylinder("arch%d" % i, 0.025, 0.025, 0.008, (x, cy - 0.113, 0.08), soot, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+        o.append(box("glow%d" % i, (0.032, 0.009, 0.014), (x, cy - 0.114, 0.05), toon("glow", 0xF39A2B), outline=False))
+    # The chimney up from the top, sooty at its mouth, with smoke.
+    o.append(box("chimney", (0.06, 0.06, 0.2), (0.04, cy + 0.02, 0.31), brick, bevel=0.004))
+    o.append(box("chimneyCap", (0.075, 0.075, 0.012), (0.04, cy + 0.02, 0.416), brick_dark))
+    smoke = toon("smoke", 0xB9B4AE)
+    for i, (dx, dz, r) in enumerate(((0.0, 0.445, 0.03), (0.02, 0.49, 0.038), (0.05, 0.545, 0.046))):
+        o.append(sphere("smoke%d" % i, r, (0.04 + dx, cy + 0.02, dz), smoke, segs=10, rings=6, outline=False))
+    # A stack of fired bricks at the right, a heap of clay and a wooden mould on the left, firewood at the front.
+    for i in range(4):
+        for j in range(3):
+            o.append(box("stack%d%d" % (i, j), (0.05, 0.026, 0.016), (0.22 + (j % 2) * 0.006, cy - 0.09 + j * 0.028, 0.008 + i * 0.016), brick if (i + j) % 2 else brick_dark))
+    o.append(dome("clay", 0.08, 0.05, (-0.22, cy - 0.06, 0.006), clay))
+    o.append(box("mould", (0.07, 0.035, 0.012), (-0.12, cy - 0.17, 0.006), toon("wood", WOOD)))
+    wood = toon("wood_dark", WOOD_DARK)
+    for i in range(5):
+        o.append(cylinder("log%d" % i, 0.012, 0.012, 0.1, (0.06 + (i % 3) * 0.026, cy - 0.17, 0.012 + (i // 3) * 0.022), wood, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["brick_kiln_%s" % _f] = (lambda d=_deg: (lambda: refit(model_brick_kiln("done"), d)))()
+    SPRITES["brick_kiln_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_brick_kiln("building"), d)))()
+
+
 # ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
 # Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
 

@@ -54,7 +54,13 @@ namespace Sim.Core.Town
         public long TakenCement { get; internal set; }
         public long TakenTimber { get; internal set; }
 
-        private bool ConstructionDefault { get { return Projects.Count == 0 && NextProjectId == 0 && StockDay == -1 && TakenBricks == 0 && TakenCement == 0 && TakenTimber == 0; } }
+        /// <summary>Bricks your kiln sold the trader this trader's day: they add to his stock for the whole town (US-243).</summary>
+        public long KilnBricks { get; internal set; }
+
+        /// <summary>The trader's day those bricks were sold on (−1 none yet).</summary>
+        public long KilnDay { get; internal set; } = -1;
+
+        private bool ConstructionDefault { get { return Projects.Count == 0 && NextProjectId == 0 && StockDay == -1 && TakenBricks == 0 && TakenCement == 0 && TakenTimber == 0 && KilnBricks == 0 && KilnDay == -1; } }
 
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
 
@@ -67,7 +73,7 @@ namespace Sim.Core.Town
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -95,6 +101,8 @@ namespace Sim.Core.Town
                 h.WriteLong(TakenBricks);
                 h.WriteLong(TakenCement);
                 h.WriteLong(TakenTimber);
+                h.WriteLong(KilnBricks);
+                h.WriteLong(KilnDay);
             }
         }
 
@@ -114,7 +122,7 @@ namespace Sim.Core.Town
                 s.LanesBuilt = r.ReadInt();
                 int n = r.ReadCount();
                 for (int i = 0; i < n; i++) s.Projects.Add(BuildProject.ReadFrom(r));
-                s.NextProjectId = r.ReadLong(); s.StockDay = r.ReadLong(); s.TakenBricks = r.ReadLong(); s.TakenCement = r.ReadLong(); s.TakenTimber = r.ReadLong();
+                s.NextProjectId = r.ReadLong(); s.StockDay = r.ReadLong(); s.TakenBricks = r.ReadLong(); s.TakenCement = r.ReadLong(); s.TakenTimber = r.ReadLong(); s.KilnBricks = r.ReadLong(); s.KilnDay = r.ReadLong();
             }
             return s;
         }

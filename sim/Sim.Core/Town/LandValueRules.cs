@@ -68,6 +68,8 @@ namespace Sim.Core.Town
             Fixed size = d.SizePer10 * Fixed.FromInt(steps);
             if (size > d.SizeMax) size = d.SizeMax;
             if (size > Fixed.Zero) list.Add(new LandPart("size", size, hh));
+            Fixed smoke = SmokeRules.LandValue(sim, tileId, out int smokers);
+            if (smoke > Fixed.Zero) list.Add(new LandPart("smoke", Fixed.Zero - smoke, smokers)); // a kiln or a generator's smoke (spec 025)
             return list;
         }
 

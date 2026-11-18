@@ -142,7 +142,9 @@ namespace Sim.View.Views
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
             if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
-            if (c is BuildFamilyHouse bf && Sim.Core.Town.ConstructionRules.On(sim)) vm.Warning = BuildingSheet.Timing(ctx, after, true); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
+            if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
+                vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
+            if (c is BuildFamilyHouse bf && Sim.Core.Town.ConstructionRules.On(sim)) vm.Warning = BuildingSheet.Timing(ctx, after, true) + BuildingSheet.KilnSaving(ctx, Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1)); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
             {

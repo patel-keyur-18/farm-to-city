@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +113,25 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury) };
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root) };
+        }
+
+        /// <summary>Smoke (spec 025 §3.3, §3.4): each source's reach, land value and health, and the cap on an acre's total.</summary>
+        private static SmokeDef LoadSmoke(JObject o, string root)
+        {
+            string p = Join(root, "smoke");
+            JObject j = Object(Required(o, root, "smoke"), p);
+            OnlyFields(j, p, "landValueCap", "sources");
+            JObject src = Object(Required(j, p, "sources"), Join(p, "sources"));
+            var list = new System.Collections.Generic.List<SmokeSource>();
+            foreach (JProperty prop in src.Properties())
+            {
+                string sp = Join(Join(p, "sources"), prop.Name);
+                JObject x = Object(prop.Value, sp);
+                OnlyFields(x, sp, "reach", "landValue", "health");
+                list.Add(new SmokeSource { Id = prop.Name, Reach = BoundedInt(x, sp, "reach", 0, 5000), LandValue = Bounded(x, sp, "landValue", "0", "1"), Health = Bounded(x, sp, "health", "0", "1") });
+            }
+            return new SmokeDef { Sources = list.AsReadOnly(), LandValueCap = Bounded(j, p, "landValueCap", "0", "1") };
         }
 
         /// <summary>Construction from the Township (spec 025 §3.2): daily limits, prices, masons and the buildings' materials, mason-days and hours.</summary>

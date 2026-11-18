@@ -36,6 +36,20 @@ namespace Sim.Core.Definitions
         }
     }
 
+    /// <summary>
+    /// The brick kiln's own numbers (spec 025 §3.3, US-243, Preview 3): bricks fired an hour, the fuel a brick takes and its price a kg
+    /// (year-0 coins), the yard's size, the most the trader buys a day and the share of his price he pays. Its smoke is in <c>township.json</c>.
+    /// </summary>
+    public sealed class KilnDef
+    {
+        public long BricksPerHour { get; internal set; }
+        public Fixed FuelKg { get; internal set; }
+        public Fixed FuelPrice { get; internal set; }
+        public long YardMax { get; internal set; }
+        public long TraderPerDay { get; internal set; }
+        public Fixed TraderShare { get; internal set; }
+    }
+
     /// <summary>A business type from <c>content/businesses.json</c> (spec 016 §3.1): the flour mill (Hamlet), the bakery and the dairy (Village).</summary>
     public sealed class BusinessTypeDef
     {
@@ -95,6 +109,11 @@ namespace Sim.Core.Definitions
         public Fixed NeighbourMilkPremium { get; internal set; }
 
         public bool ByRecipe { get { return Recipes.Count > 0; } }
+
+        /// <summary>The brick kiln's numbers (US-243), or null: it fires bricks, not grams of goods.</summary>
+        public KilnDef Kiln { get; internal set; }
+
+        public bool IsKiln { get { return Kiln != null; } }
 
         /// <summary>What kind of shop it is (spec 017 §3.1), or None for the mill, bakery and dairy.</summary>
         public ShopKind Kind { get; internal set; }

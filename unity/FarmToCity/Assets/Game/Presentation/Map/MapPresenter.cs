@@ -849,6 +849,26 @@ namespace Game.Presentation.Map
         {
             foreach (SpriteRenderer r in _lit) Destroy(r.gameObject);
             _lit.Clear();
+            foreach (SpriteRenderer r in _smoke) Destroy(r.gameObject);
+            _smoke.Clear();
+        }
+
+        private readonly List<SpriteRenderer> _smoke = new List<SpriteRenderer>();
+
+        /// <summary>While placing a kiln (US-243): a red wash and ring on every acre its smoke would reach, so the player sees what it touches before building.</summary>
+        public void ShowSmoke(IEnumerable<int> tiles)
+        {
+            foreach (SpriteRenderer r in _smoke) Destroy(r.gameObject);
+            _smoke.Clear();
+            foreach (int t in tiles)
+            {
+                SpriteRenderer fill = NewRenderer("smoke" + t, SpriteBank.TileFill, TileCentre(t), 9099);
+                fill.color = new Color(0.9f, 0.2f, 0.15f, 0.4f);
+                _smoke.Add(fill);
+                SpriteRenderer ring = NewRenderer("smokeRing" + t, SpriteBank.SelectionRing, TileCentre(t), 9099);
+                ring.color = new Color(0.8f, 0.15f, 0.1f, 0.9f);
+                _smoke.Add(ring);
+            }
         }
 
         public void HideGhost()

@@ -82,6 +82,9 @@ namespace Sim.Core.Business
         public sealed class Projection
         {
             public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Rent, Interest, Loan, Revenue, Costs, Profit, Cost, CashNeeded;
+
+            /// <summary>The costs a season with no work still brings (the kiln's Monsoon: wage, repairs, wear and interest, US-243), or 0.</summary>
+            public long Off;
         }
 
         /// <summary>
@@ -105,6 +108,7 @@ namespace Sim.Core.Business
             if (tile < 0 && pitch < 0 && t.IsShop) pitch = 0; // a shop's plan reckons on a pitch in the square
             if (tile < 0 && pitch < 0) tile = PlanTile(sim);
             if (t.IsShop) return ShopRules.Projected(sim, t, runYourself, loan, pitch, tile);
+            if (t.IsKiln) return KilnRules.Projected(sim, t, runYourself, loan);
             if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t), ownPerDay);
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
@@ -399,7 +403,7 @@ namespace Sim.Core.Business
                 OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
-                BuyFromMarket = t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
+                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
                 Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
@@ -492,6 +496,7 @@ namespace Sim.Core.Business
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
+                KilnRules.Morning(sim); // the trader's stock, with what your kiln sells him, is set first: a build draws on it all day
                 // A new day's batches for every maker first (so what your shops still need is counted), then the stalls fill up from your
                 // store and businesses before the village shops buy what's left (spec 017 §5, ADR 0091 §2).
                 foreach (Business b in sim.State.Businesses.Businesses)
@@ -503,7 +508,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b))) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -579,6 +584,7 @@ namespace Sim.Core.Business
                 b.Day = start / Day;
                 b.OwnToday = 0;
                 b.AreaToday = 0;
+                b.KilnMade = b.KilnToBuilds = b.KilnSold = 0;
             }
             int hour = (int)(start % Day / Hour);
             KeepStaffed(sim, b);
@@ -587,6 +593,12 @@ namespace Sim.Core.Business
             Worker hired = HiredWorker(sim, b);
             if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
             if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
+            if (t.IsKiln)
+            {
+                KilnRules.Fire(sim, b);
+                BusinessBooks.Sweep(sim, b);
+                return;
+            }
             if (t.ByRecipe)
             {
                 long made = 0;

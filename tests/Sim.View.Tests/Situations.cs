@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Sim.Core;
+using Sim.Core.Business;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
@@ -222,6 +223,20 @@ namespace Sim.View.Tests
             Applicant migrant = sim.State.People.ApplicantsFor(mill.Id).FirstOrDefault(x => x.CitizenId == 0);
             if (migrant != null) Ok(sim, new CheckReference(T(sim), migrant.Id));
             sim.Execute(new PostJob(T(sim), 0, false));
+            return sim;
+        }
+
+        /// <summary>The Township with a brick kiln founded on a free acre, a hand hired and built (US-243), the clock at the first moment it is open.</summary>
+        public static Simulation Kiln()
+        {
+            Simulation sim = Township();
+            SetCash(sim, 2_000_000 * 100);
+            int tile = -1;
+            foreach (Tile t in sim.State.Land.Tiles) if (tile < 0 && BusinessRules.Place(sim, t.Id) == RejectReason.None && HouseRules.Place(sim, t.Id) == RejectReason.None) tile = t.Id;
+            Ok(sim, new FoundBusiness(T(sim), "brick_kiln", tile, 400_000 * 100, false));
+            Hire(sim);
+            var b = sim.State.Businesses.Businesses.Last();
+            sim.AdvanceTo(b.ReadyAt + 60);
             return sim;
         }
 

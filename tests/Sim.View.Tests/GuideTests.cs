@@ -501,7 +501,7 @@ namespace Sim.View.Tests
             Assert.That(WhyView.Build(ctx, "era", 7).Rows.Any(r => r.Label == "Build the school on the school plot, from cash or with a co-op loan."), Is.True);
             Assert.That(vm.Lines.Skip(3).Select(l => l.Label), Is.EqualTo(new[]
             {
-                "When you're a Village", "The bakery and the dairy", "Shops on the square: a vegetable stall, a tea stall and a sweet shop",
+                "When you're a Village", "The bakery, the dairy and a brick kiln", "Shops on the square: a vegetable stall, a tea stall and a sweet shop",
                 "Drip and a borewell for your fields", "The tractor", "The cooperative bank lends up to " + ctx.Fmt.Coins(25_00_000_00),
             }));
             Assert.That(Letter.List(ctx).Lines.Last().Label, Is.EqualTo("Becoming a Village"));

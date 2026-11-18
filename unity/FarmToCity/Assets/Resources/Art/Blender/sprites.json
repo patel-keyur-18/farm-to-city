@@ -212,6 +212,62 @@
    "name": "bed_garden_spinach_ready"
   },
   {
+   "w": 380,
+   "h": 314,
+   "pivotX": 0.43206,
+   "pivotY": 0.39381,
+   "name": "brick_kiln_building_e"
+  },
+  {
+   "w": 380,
+   "h": 270,
+   "pivotX": 0.43206,
+   "pivotY": 0.37139,
+   "name": "brick_kiln_building_n"
+  },
+  {
+   "w": 380,
+   "h": 314,
+   "pivotX": 0.56794,
+   "pivotY": 0.39381,
+   "name": "brick_kiln_building_s"
+  },
+  {
+   "w": 380,
+   "h": 270,
+   "pivotX": 0.56794,
+   "pivotY": 0.37139,
+   "name": "brick_kiln_building_w"
+  },
+  {
+   "w": 376,
+   "h": 444,
+   "pivotX": 0.4259,
+   "pivotY": 0.27896,
+   "name": "brick_kiln_e"
+  },
+  {
+   "w": 376,
+   "h": 390,
+   "pivotX": 0.4259,
+   "pivotY": 0.24965,
+   "name": "brick_kiln_n"
+  },
+  {
+   "w": 376,
+   "h": 412,
+   "pivotX": 0.5741,
+   "pivotY": 0.30026,
+   "name": "brick_kiln_s"
+  },
+  {
+   "w": 376,
+   "h": 358,
+   "pivotX": 0.5741,
+   "pivotY": 0.27154,
+   "name": "brick_kiln_w"
+  },
+  {
    "w": 352,
    "h": 218,
    "pivotX": 0.5,

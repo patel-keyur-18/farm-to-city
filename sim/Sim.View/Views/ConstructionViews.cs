@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Core;
+using Sim.Core.Business;
 using Sim.Core.People;
 using Sim.Core.Town;
 
@@ -13,7 +14,7 @@ namespace Sim.View.Views
     public static class BuildingSheet
     {
         public const string Kind = "Building";
-        public const int Bricks = 1, Cement = 2, Timber = 3, Masons = 4, Ready = 5, Status = 6, StockBricks = 7, StockCement = 8, StockTimber = 9, MasonsTown = 10, BuildersHomes = 11;
+        public const int Bricks = 1, Cement = 2, Timber = 3, Masons = 4, Ready = 5, Status = 6, StockBricks = 7, StockCement = 8, StockTimber = 9, MasonsTown = 10, BuildersHomes = 11, FromKiln = 12;
         private const string Why = "build";
 
         public static string Good(ViewContext ctx, int g) { return ctx.Strings.Get("build.good." + g); }
@@ -77,6 +78,15 @@ namespace Sim.View.Views
             for (int g = 0; g < 3; g++)
                 vm.Lines.Add(new LineVm(Good(ctx, g).Substring(0, 1).ToUpperInvariant() + Good(ctx, g).Substring(1),
                     s.Get("build.left", "left", Plain(ctx, g, ConstructionRules.Left(sim, g)), "limit", Amount(ctx, g, ConstructionRules.Limit(sim, g))), Why, StockBricks + g));
+            long fromKiln = ConstructionRules.KilnToday(sim);
+            if (fromKiln > 0) vm.Lines.Add(new LineVm(s.Get("build.fromKiln"), Plain(ctx, 0, fromKiln), Why, FromKiln));
+            var kilns = KilnRules.Open(sim);
+            if (kilns.Count > 0)
+            {
+                vm.Lines.Add(LineVm.Header(s.Get("build.hdrKiln")));
+                foreach (Sim.Core.Business.Business b in kilns)
+                    vm.Lines.Add(new LineVm(s.Get("kiln.yard"), s.Get("kiln.yardValue", "n", ctx.Fmt.Integer(b.Yard), "of", ctx.Fmt.Integer(KilnRules.Def(sim, b).YardMax)), KilnSheet.Why, b.Id * 100 + KilnSheet.Yard) { Icon = "brick_kiln" });
+            }
             vm.Lines.Add(LineVm.Header(s.Get("build.hdrQueue")));
             int n = 0;
             foreach (BuildProject p in sim.State.Township.Projects)
@@ -120,9 +130,22 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             vm.Rows.Add(new ConfirmRowVm(s.Get(nowKey), ctx.Fmt.Coins(now)));
-            vm.Rows.Add(new ConfirmRowVm(s.Get("build.cardMaterials"), "− " + ctx.Fmt.Coins(q.Materials)));
+            if (q.KilnBricks > 0) // your own kiln's bricks at what they cost it (US-243), the rest from the trader
+            {
+                vm.Rows.Add(new ConfirmRowVm(s.Get("build.cardKilnBricks", "n", ctx.Fmt.Integer(q.KilnBricks)), "− " + ctx.Fmt.Coins(q.KilnCost)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get(q.KilnBricks == q.Bricks ? "build.cardKilnRest" : "build.cardKilnRestAll"), "− " + ctx.Fmt.Coins(q.Materials - q.KilnCost)));
+            }
+            else vm.Rows.Add(new ConfirmRowVm(s.Get("build.cardMaterials"), "− " + ctx.Fmt.Coins(q.Materials)));
             vm.Rows.Add(new ConfirmRowVm(q.Gang ? s.Get("build.cardGang", "days", ctx.Fmt.Integer(q.MasonDays)) : s.Get("build.cardMasons", "days", ctx.Fmt.Integer(q.MasonDays), "n", ctx.Fmt.Integer(q.Masons.Count)), "− " + ctx.Fmt.Coins(q.MasonPay)));
             vm.Rows.Add(new ConfirmRowVm(s.Get(afterKey), ctx.Fmt.Coins(after), total: true));
+        }
+
+        /// <summary>What your kiln's bricks save on a build: the trader's price less what they cost it, in words ("" without a kiln's bricks).</summary>
+        internal static string KilnSaving(ViewContext ctx, BuildQuote q)
+        {
+            if (q.KilnBricks <= 0) return "";
+            long saving = Sim.Core.Market.MarketRules.Indexed(ctx.Sim, q.KilnBricks * ConstructionRules.Def(ctx.Sim).BrickPrice) - q.KilnCost;
+            return saving > 0 ? " " + ctx.Strings.Get("build.kilnSaving", "saving", ctx.Fmt.Coins(saving)) : "";
         }
 
         /// <summary>When the building just started will be ready, in words: what it waits for, or that the masons start now.</summary>
@@ -174,6 +197,12 @@ namespace Sim.View.Views
                 Row(vm, ctx, "why.build.stock.limit", BuildingSheet.Amount(ctx, g, ConstructionRules.Limit(sim, g)));
                 Row(vm, ctx, "why.build.stock.taken", BuildingSheet.Amount(ctx, g, ConstructionRules.Limit(sim, g) - ConstructionRules.Left(sim, g)));
                 Text(vm, ctx, "why.build.stock.text", "hour", ctx.Fmt.Integer(d.RestockHour));
+                return vm;
+            }
+            if (row == BuildingSheet.FromKiln)
+            {
+                vm = New(ctx, "why.build.kiln.title", ctx.Fmt.Integer(ConstructionRules.KilnToday(sim)));
+                Text(vm, ctx, "why.build.kiln.text");
                 return vm;
             }
             if (row == BuildingSheet.MasonsTown)
