@@ -966,7 +966,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Built and Editor-checked (2026-11-17); T5 (`TownshipBot`, `GateTests.Township`) with US-100; the owner's review |
 | US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Built (2026-11-18): Township pace and solvency measured, gate eased to 15 households and the treasury's costs lowered with the owner (ADR 0120); the owner's review |
 | US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | Built and Editor-checked (2026-11-18, ADR 0121); balance with US-142 and US-261; the owner's review |
-| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | To do (spec 024 approved) |
+| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | Built and Editor-checked (2026-11-18, ADR 0122); the commercial zone and builders' pucca cut; the owner's review |
 | US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | To do (spec 024 approved) |
 
 **US-263, the carried items (6 points; each is also ticked in its own story's tasks):**
@@ -978,7 +978,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | 3 | **Health and tenant-happiness hooks**: tenants feel Health and Education through their *Healthcare* and *School* rows (spec 022 §3.3.2); **the doctor leaves at `healthLeaveBelow`** | with the clinic (US-148 T1, T2, T4) |
 | 4 | **`TaxTests.Burden`**: the old village's tax comes from leisure and savings before food | with the cohort (US-103 T3) |
 | 5 | **A planner note for a paused policy**, and **a *Why?* that names the minimum wage** wherever a wage is asked | with the civic buildings (US-148 T3, the planner's notes) |
-| 6 | **Builders' houses billed to their owner, not you**: `TaxRules.YourHouseBill` gets an owner check (a building's `Owner`, schema 20) | with zoning (US-142) |
+| 6 | **Builders' houses billed to their owner, not you**: `TaxRules.YourHouseBill` gets an owner check (a building's `Owner`, schema 20) | **Done 2026-11-18** with zoning (US-142) |
 | 7 | **`TaxGateTests`: every tax at 0** (services decay, happiness at least 5 lower within 8 seasons, never stuck), **every tax at the cap**, and **the 200-seed hands-off Township** with every service at 100% on default rates and no policy (the full run, in the background, no content edits while it runs) | with US-100 |
 | 8 | **The policy-affordability balance** (decided with the owner, see "Decisions I need" below) | with US-100's measurements |
 

@@ -231,6 +231,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0119 | Spec 024 (recommendations, not yet closed with the owner): one land value from what is near an acre, builders buy one acre a season, quick or slow sale, leasing out 2.5% a season, pucca at land value 1.15 and a 30% burden, five overlays |
 | 0120 | The Township as built: the gate asks 15 households (competent median day 101, saver 134), clerk 20,000, doctor 20,000 and clinic upkeep 1,500 so a Township left alone levels, safety a fourth part of security only once a watchman's post stands, wages the old village's income |
 | 0121 | Land value as built (US-143): from the Township, per acre, read at the close; road, school, clinic, square, water, jobs and size (no smoke or crime yet); price, rent's place and the house tax follow it; a slow sale by `ListParcel`/`CancelSale` that locks the acre; its *Why?* in words |
+| 0122 | Zoning and builders as built (US-142): zoning per parcel, residential only (commercial and pucca cut), builders buy one parcel a season when 2 families an acre were turned away, build 2 homes an acre that are not yours (no rent, no tax, not your households), permit fee 2% to the treasury |
 
 ## Current status
 

@@ -75,7 +75,7 @@ namespace Sim.View.Views
             foreach (Parcel p in sim.State.Land.Parcels)
             {
                 ParcelDef d = defs.Map.Parcels[p.Id];
-                if (p.Owned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
+                if (p.Owned || p.BuilderOwned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
                 int tile = d.Tiles[0];
                 string soil = ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
                 var line = new LineVm(ctx.Strings.Get("lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),

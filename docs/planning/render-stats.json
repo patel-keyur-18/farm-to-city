@@ -26,5 +26,8 @@
   {"label":"US-148 part 2 (civic buildings)","view":"farm","date":"2026-11-18","drawCalls":387,"batches":387,"setPassCalls":8,"triangles":7065,"visibleSprites":445,"sprites":1471},
   {"label":"US-143","view":"all","date":"2026-11-18","drawCalls":988,"batches":988,"setPassCalls":11,"triangles":18760,"visibleSprites":1177,"sprites":1412},
   {"label":"US-143","view":"village","date":"2026-11-18","drawCalls":567,"batches":567,"setPassCalls":10,"triangles":11012,"visibleSprites":662,"sprites":1412},
-  {"label":"US-143","view":"farm","date":"2026-11-18","drawCalls":368,"batches":368,"setPassCalls":9,"triangles":7827,"visibleSprites":415,"sprites":1412}
+  {"label":"US-143","view":"farm","date":"2026-11-18","drawCalls":368,"batches":368,"setPassCalls":9,"triangles":7827,"visibleSprites":415,"sprites":1412},
+  {"label":"US-142","view":"all","date":"2026-11-18","drawCalls":1011,"batches":1011,"setPassCalls":10,"triangles":18269,"visibleSprites":1202,"sprites":1438},
+  {"label":"US-142","view":"village","date":"2026-11-18","drawCalls":591,"batches":591,"setPassCalls":9,"triangles":10526,"visibleSprites":688,"sprites":1438},
+  {"label":"US-142","view":"farm","date":"2026-11-18","drawCalls":391,"batches":391,"setPassCalls":8,"triangles":7339,"visibleSprites":440,"sprites":1438}
 ]

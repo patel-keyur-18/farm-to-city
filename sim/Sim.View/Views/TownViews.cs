@@ -262,6 +262,7 @@ namespace Sim.View.Views
 
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
             OldVillage(ctx, vm); // spec 023 §3.5
+            ZoningViews.TownRows(ctx, vm); // spec 024 §3.3
 
             List<string> news = TownNews.ThisSeason(ctx);
             if (news.Count > 0)
@@ -326,6 +327,7 @@ namespace Sim.View.Views
             string label = x.Members.Count == 1 ? TownWords.Household(ctx, x) : s.Get("town.familyN", "name", TownWords.Household(ctx, x), "n", ctx.Fmt.Integer(x.Members.Count));
             var note = new List<string> { s.Get("town.rowHappiness", "n", ctx.Fmt.Integer(x.Happiness.RoundToLong())) };
             if (x.RentBehind > 0) note.Add(s.Plural("needs.rentBehind", x.RentBehind));
+            if (HouseholdRules.InBuildersHome(sim, x)) note.Add(s.Get("town.builderHome")); // a resident, not one of yours (spec 024 §3.3)
             var related = new List<string>();
             foreach (Household r in Kin.Related(sim, x)) related.Add(TownWords.Household(ctx, r));
             if (related.Count > 0) note.Add(s.Get("town.related", "list", string.Join(", ", related)));
@@ -390,6 +392,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             if (HouseholdRules.InHut(sim, x)) return s.Get("household.rentHut");
             if (x.Rent == 0) return s.Get("household.rentInKind");
+            if (HouseholdRules.InBuildersHome(sim, x) && x.RentBehind == 0) return s.Get("household.rentBuilder", "rent", ctx.Fmt.Coins(x.Rent)); // paid to the builder
             return x.RentBehind > 0 ? s.Plural("needs.rentBehind", x.RentBehind) : s.Get("household.rentPaid", "rent", ctx.Fmt.Coins(x.Rent));
         }
 

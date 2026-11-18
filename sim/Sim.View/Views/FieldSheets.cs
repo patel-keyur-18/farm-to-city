@@ -30,6 +30,7 @@ namespace Sim.View.Views
                 case Terrain.Village: return Place(ctx, tile);
                 case Terrain.Road: case Terrain.Commons: case Terrain.Bank: return VillageLand(ctx, tile);
             }
+            if (parcel.BuilderOwned) return ZoningViews.BuildersAcre(ctx, tile, parcel); // spec 024 §3.3
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
@@ -60,11 +61,13 @@ namespace Sim.View.Views
             }
             if (crop == null)
             {
+                ZoningViews.AddFieldRows(ctx, vm, tileId); // land value and the zone, from the Township (spec 024 §3.3)
                 AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
                 if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
+                ZoningViews.AddFieldActions(ctx, vm, tileId);
                 return vm;
             }
 

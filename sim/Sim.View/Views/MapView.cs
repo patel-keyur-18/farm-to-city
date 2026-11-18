@@ -447,8 +447,9 @@ namespace Sim.View.Views
                     WellAcre = LandSystem.IsWellTile(defs, t.Id) && !IrrigationRules.Pumped(sim, t.Id), Pumped = IrrigationRules.Pumped(sim, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
-                if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
+                if (!parcel.Owned && !parcel.BuilderOwned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
                 if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map.Width, defs.Map.Height, t.ParcelId, !pdef.ForSale, map.Season);
+                if (parcel.BuilderOwned) { vm.Neighbour = NeighbourLand.Fallow; vm.NeighbourCrop = null; vm.TubeWell = false; vm.Haystack = false; } // builders' homes stand on bare ground (spec 024 §3.3)
                 if (vm.Kind == TileKind.Road) { vm.RoadLinks = RoadLinks(land, defs.Map, t.Id); vm.Paved = map.RoadPaved && vm.Y == defs.Map.Height - 1; }
                 if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }

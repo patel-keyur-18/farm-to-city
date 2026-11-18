@@ -197,16 +197,22 @@ namespace Sim.Core.People
             if (home != x) Progress.EraRules.OnTown(sim); // a new household formed: the Village's gate (spec 018 §3.6)
         }
 
-        /// <summary>A family house nobody lives in and not offered to a hand (§3.13), in building order; null if none.</summary>
+        /// <summary>
+        /// A family house nobody lives in and not offered to a hand (§3.13), in building order, yours before a builder's (builders build for the families
+        /// who found no home; a house you built is filled first, spec 024 §3.3); null if none.
+        /// </summary>
         public static Building FreeHouse(Simulation sim)
         {
             CitizensState s = sim.State.Citizens;
+            Building builders = null;
             foreach (Building b in sim.State.Land.Buildings)
             {
                 if (!HouseRules.IsHouse(sim, b) || b.Id == s.OfferHouseId) continue;
-                if (s.Households.Find(x => x.HomeId == b.Id) == null) return b;
+                if (s.Households.Find(x => x.HomeId == b.Id) != null) continue;
+                if (!b.Builders) return b;
+                if (builders == null) builders = b;
             }
-            return null;
+            return builders;
         }
 
         /// <summary>A seeded name of the gender, one no living citizen has if any is left.</summary>

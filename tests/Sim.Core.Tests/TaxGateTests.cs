@@ -119,12 +119,13 @@ namespace Sim.Core.Tests
             return file == "treasury.json" ? json.Replace("\"rate\": 0.016", "\"rate\": " + house).Replace("\"rate\": 0.10", "\"rate\": " + business) : json;
         }
 
-        private static Gate.TownshipResult Run(string house, string business, int seeds, int closes = 8)
+        /// <summary>The tax rates in force; <paramref name="builders"/> false takes the builders out (a family count they can never reach) to isolate the tax lever.</summary>
+        private static Gate.TownshipResult Run(string house, string business, int seeds, int closes = 8, bool builders = true)
         {
             TestContent.WithCohort = true;
             try
             {
-                var config = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game((f, j) => Rates(house, business, f, j)));
+                var config = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game((f, j) => f == "township.json" && !builders ? j.Replace("\"turnedAwayMax\": 16", "\"turnedAwayMax\": 1") : Rates(house, business, f, j)));
                 return Gate.Township(config, () => new TownshipBot(false), seeds, 80, closes);
             }
             finally { TestContent.WithCohort = false; }
@@ -139,7 +140,7 @@ namespace Sim.Core.Tests
         [Test]
         public void EveryTaxAtZero()
         {
-            Gate.TownshipResult normal = Run("0.016", "0.10", Seeds, 16), zero = Run("0", "0", Seeds, 16);
+            Gate.TownshipResult normal = Run("0.016", "0.10", Seeds, 16, builders: false), zero = Run("0", "0", Seeds, 16, builders: false); // without builders: their families' grants would carry the town (below)
             TestContext.Out.WriteLine("ZERO: treasury two years on " + string.Join(" ", zero.TreasuryAfter.Select(c => c / Money.Coin)) + "; lowest service " + string.Join(" ", zero.LowestService.Select(x => x.ToString("0.00")))
                 + "; happiness " + Median(zero.Happiness).ToString("0.0") + " (default taxes " + Median(normal.Happiness).ToString("0.0") + "); old village happiness " + Median(zero.OldVillageHappiness).ToString("0.0") + " (" + Median(normal.OldVillageHappiness).ToString("0.0") + "); households left " + string.Join(" ", zero.OldVillageLeft) + "; your households " + string.Join(" ", zero.HouseholdsAfter) + " (default " + string.Join(" ", normal.HouseholdsAfter) + ")");
             Assert.That(zero.Broken, Is.EqualTo(0), "the treasury is never below zero and its books reconcile");
@@ -149,6 +150,17 @@ namespace Sim.Core.Tests
             Assert.That(Median(zero.Happiness), Is.LessThan(Median(normal.Happiness) - 1), "the town is less happy for it (spec 022 §9 said 5; measured 1.8: the services weigh little against food, work and rent)");
             Assert.That(zero.OldVillageLeft.All(n => n == 0), Is.True, "the old village stays");
             Assert.That(zero.HouseholdsAfter.Min(), Is.GreaterThanOrEqualTo(14), "yours stay too");
+        }
+
+        // With builders in the town (US-142) a left-alone town grows: their families are residents, and each brings the district's grants, so even
+        // with every tax at 0 the treasury carries the services (measured: about 100,000 two years on, every service at 100%).
+        [Test]
+        public void BuildersCarryAZeroTaxTown()
+        {
+            Gate.TownshipResult zero = Run("0", "0", Seeds, 16);
+            TestContext.Out.WriteLine("ZERO WITH BUILDERS: treasury " + string.Join(" ", zero.TreasuryAfter.Select(c => c / Money.Coin)) + "; lowest service " + string.Join(" ", zero.LowestService.Select(x => x.ToString("0.00"))));
+            Assert.That(zero.Broken, Is.EqualTo(0));
+            Assert.That(Median(zero.LowestService), Is.GreaterThan(0.9), "growth pays for the services even with no tax");
         }
 
         // Every tax at its cap: the treasury is the better for it, nobody is stuck, no old household is driven away.
