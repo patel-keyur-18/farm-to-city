@@ -593,6 +593,10 @@ namespace Sim.View.Views
                     case DoctorArrived d: rows.Add(Row(s.Get("away.town"), s.Get(d.Returned ? "away.doctorReturned" : "away.doctorArrived"), "portrait_town_m")); break;
                     case DoctorUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorUnpaid"), "place_clinic_plot")); break; // spec 023 §3.9
                     case CohortHouseholdLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.cohortLeft"), "place_council_hall")); break; // spec 023 §3.5
+                    case CivicBuilt cb: rows.Add(Row(s.Get("away.town"), s.Get("away.civicBuilt"), "place_" + CivicSheet.Ids[cb.Civic] + "_plot")); break; // spec 023 §3.7
+                    case PostFilled pf: rows.Add(Row(s.Get("away.town"), s.Get("away.postFilled"), "place_" + CivicSheet.Ids[pf.Civic] + "_plot")); break;
+                    case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
+                    case PostVacated pv: rows.Add(Row(s.Get("away.town"), s.Get("away.postVacated"), "place_" + CivicSheet.Ids[pv.Civic] + "_plot")); break;
                     case DoctorLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorLeft"), "place_clinic_plot")); break;
                     case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
                     case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
@@ -688,6 +692,7 @@ namespace Sim.View.Views
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
             { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
+            { "CivicBuilt", Use.Away }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },

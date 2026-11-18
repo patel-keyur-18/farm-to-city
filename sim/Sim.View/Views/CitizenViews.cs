@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Sim.Core;
+using Sim.Core.Definitions;
+using Sim.Core.Land;
 using Sim.Core.Maths;
 using Sim.Core.People;
 using Sim.Core.Town;
@@ -37,14 +39,40 @@ namespace Sim.View.Views
             rows.Add(Row(ctx, x.Id, "needs.rent", x.RentBehind == 0 ? Fixed.One : Fixed.Zero, x.RentBehind == 0 ? s.Get("needs.rentMet")
                 : s.Plural("needs.rentBehind", x.RentBehind)));
 
+            if (CivicRules.On(sim) && CivicRules.SafetyCounts(sim))
+                rows.Add(Row(ctx, x.Id, "needs.safety", CivicRules.Safety(sim, x), CivicNote(ctx, x, CivicDef.Watchman)));
+
             rows.Add(LineVm.Header(s.Get("needs.belonging")));
             rows.Add(Row(ctx, x.Id, "needs.worship", sim.Config.Game.Population.Belonging, s.Get("needs.worshipNotYet")));
+            if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Hall))
+                rows.Add(Row(ctx, x.Id, "needs.hall", CivicRules.Belonging(sim, x, sim.Config.Game.Population.Belonging), CivicNote(ctx, x, CivicDef.Hall)));
 
             rows.Add(LineVm.Header(s.Get("needs.growth")));
             if (SchoolRules.IsOpen(sim)) rows.Add(Row(ctx, x.Id, "needs.school", Fixed.One, s.Get("needs.schoolMet"))); // spec 018 §3.2
             else rows.Add(new LineVm(s.Get("needs.school"), s.Get("needs.notCounted")) { Note = s.Get("needs.schoolNotYet") });
             rows.Add(Row(ctx, x.Id, "needs.leisure", x.Leisure > 0 ? Fixed.One : Fixed.Zero, x.Leisure > 0 ? s.Get("needs.leisureMet") : s.Get("needs.leisureShort")));
+            if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Playground) && HasChildren(sim, x))
+                rows.Add(Row(ctx, x.Id, "needs.play", CivicRules.Leisure(sim, x, Fixed.Zero), CivicNote(ctx, x, CivicDef.Playground)));
             return rows;
+        }
+
+        private static bool HasChildren(Simulation sim, Household x)
+        {
+            foreach (long id in x.Members) if (HouseholdRules.IsChild(sim, sim.State.Citizens.Citizen(id))) return true;
+            return false;
+        }
+
+        /// <summary>A civic building's row words (spec 023 §3.6, §3.7): nobody in post, out of reach, a service that has slipped, or at work.</summary>
+        private static string CivicNote(ViewContext ctx, Household x, int civic)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            string id = CivicSheet.Ids[civic];
+            if (!CivicRules.Staffed(sim, civic)) return s.Get("needs." + id + "NoPost");
+            Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            if (home != null && !CivicRules.Covered(sim, civic, home.TileId))
+                return s.Get("needs.civicFar", "what", s.Get("civic." + id + ".name"), "m", ctx.Fmt.Integer(CoverageRules.Metres(sim, home.TileId, CivicRules.Def(sim, civic).Tile)), "reach", ctx.Fmt.Integer(CivicRules.Def(sim, civic).Reach));
+            return CivicRules.Condition(sim) < Fixed.One ? s.Get("needs.civicSlipped", "what", s.Get("civic." + id + ".name"), "pct", ctx.Fmt.Percent(CivicRules.Condition(sim))) : s.Get("needs." + id + "Works");
         }
 
         /// <summary>The Health care row's words (spec 023 §3.6): the chemist alone, the clinic with no doctor, the clinic out of reach, or the clinic at work.</summary>

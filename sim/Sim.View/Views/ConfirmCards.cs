@@ -45,7 +45,7 @@ namespace Sim.View.Views
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
-                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
+                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors));
             Add(ConfirmKind.System, typeof(AdvanceTo), typeof(DebugAdvance), typeof(DebugNextEra), typeof(LiveRun), typeof(NewGame), typeof(Sync));
             return k;
@@ -130,12 +130,13 @@ namespace Sim.View.Views
             };
             if (c is SetSavingsCover) Standing(ctx, vm);
             else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
-            else if (c is CommissionWorks) Works(ctx, vm, sim, after);
+            else if (c is CommissionWorks works) Works(ctx, vm, sim, after, works);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + ".warn", "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
+            if (c is CommissionWorks cw) CivicSheet.Guard(ctx, vm, cw.WorkId); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
             {
@@ -207,9 +208,20 @@ namespace Sim.View.Views
         }
 
         /// <summary>Capital works (spec 021 §3.7): the town pays a builder from its own money; yours isn't touched.</summary>
-        private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after)
+        private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, CommissionWorks works)
         {
             var s = ctx.Strings;
+            int civic = Sim.Core.Town.CivicRules.OfWork(sim, works.WorkId);
+            if (civic >= 0) // a civic building (spec 023 §3.7): the town's cash now and after, and the budget guard
+            {
+                string id = CivicSheet.Ids[civic];
+                vm.Title = s.Get("civic." + id + ".cardTitle");
+                vm.Subtitle = s.Get("civic.cardSub");
+                vm.Rows.Add(new ConfirmRowVm(s.Get("civic.cardNow"), ctx.Fmt.Coins(sim.State.Treasury.Cash)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("civic." + id + ".cardRow"), "− " + ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("civic.cardAfter"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
+                return;
+            }
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.cost"), ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash)));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.town"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
         }

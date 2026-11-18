@@ -82,6 +82,7 @@ namespace Sim.View.Views
             Text(vm, ctx, "why.businessWage.paid");
             Text(vm, ctx, "why.businessWage.who");
             Text(vm, ctx, "why.businessWage.you");
+            MinWage(vm, ctx, t.Wage, BusinessRules.Wage(ctx.Sim, t));
             return vm;
         }
 

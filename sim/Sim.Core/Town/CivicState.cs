@@ -34,6 +34,10 @@ namespace Sim.Core.Town
         /// <summary>Season closes in a row his wage went unpaid in full (spec 023 §3.7: he leaves at <c>leaveCloses</c>).</summary>
         public int UnpaidCloses { get; internal set; }
 
+        /// <summary>He left at the last vacancy because his wage went unpaid (not let go), and the season he left.</summary>
+        public bool LeftUnpaid { get; internal set; }
+        public long LeftSeason { get; internal set; }
+
         /// <summary>The wage the old village received at the last close, and the one before.</summary>
         public long WageLast { get; internal set; }
         public long WageBefore { get; internal set; }
@@ -56,6 +60,8 @@ namespace Sim.Core.Town
             h.WriteInt(UnpaidCloses);
             h.WriteLong(WageLast);
             h.WriteLong(WageBefore);
+            h.WriteBool(LeftUnpaid);
+            h.WriteLong(LeftSeason);
         }
 
         internal static CivicPost ReadFrom(SaveReader r)
@@ -63,7 +69,7 @@ namespace Sim.Core.Town
             return new CivicPost
             {
                 Built = r.ReadBool(), BuiltAt = r.ReadLong(), Cost = r.ReadLong(), Status = (PostStatus)r.ReadInt(), ArrivesAt = r.ReadLong(), JobId = r.ReadLong(),
-                StaffName = r.ReadInt(), Hired = r.ReadInt(), SinceSeason = r.ReadLong(), UnpaidCloses = r.ReadInt(), WageLast = r.ReadLong(), WageBefore = r.ReadLong(),
+                StaffName = r.ReadInt(), Hired = r.ReadInt(), SinceSeason = r.ReadLong(), UnpaidCloses = r.ReadInt(), WageLast = r.ReadLong(), WageBefore = r.ReadLong(), LeftUnpaid = r.ReadBool(), LeftSeason = r.ReadLong(),
             };
         }
     }

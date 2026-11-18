@@ -211,6 +211,8 @@ namespace Sim.Core.Town
             p.Status = PostStatus.Vacant;
             p.UnpaidCloses = 0;
             p.ArrivesAt = 0;
+            p.LeftUnpaid = unpaid;
+            p.LeftSeason = CitizenRules.SeasonOf(sim, sim.State.Clock.SimTime);
             sim.Emit(new PostVacated(sim.State.Clock.SimTime, i, p.StaffName, unpaid));
         }
 
