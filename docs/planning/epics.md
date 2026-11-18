@@ -95,8 +95,8 @@
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | Spec 028 (to write, ADR 0107) | Backlog | US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | Spec 028 (to write, ADR 0107) | Backlog | US-124, US-125, US-247 | 18 |
 | [F12.7](features/F12.7-township-businesses.md) | Township businesses | E12 | 3 | Specs 025 and 028 (to write, ADR 0107 §7) | Backlog | US-243, US-244, US-245, US-246 | 18 |
-| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (approved, ADR 0060) | Done; US-254, US-255 Phase 3 (S24) | US-126, US-199, US-200, US-201, US-202, US-203, US-204, US-205, US-213, US-234, US-254, US-255 | 49 |
-| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Done; US-256, US-257 Phase 3 (S24) | US-127, US-128, US-256, US-257 | 22 |
+| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (approved, ADR 0060) | Done; US-254, US-255 Phase 3 (S23) | US-126, US-199, US-200, US-201, US-202, US-203, US-204, US-205, US-213, US-234, US-254, US-255 | 49 |
+| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Done; US-256, US-257 Phase 3 (S23) | US-127, US-128, US-256, US-257 | 22 |
 | [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075); US-242 spec 025 (ADR 0107 §9) | Done; US-242 Phase 3 (S23) | US-129, US-130, US-242 | 14 |
 | [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-131–US-132 | 13 |
 | [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-133–US-134 | 13 |

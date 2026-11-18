@@ -32,9 +32,9 @@
 | S20 | 31 May – 13 Jun 2027 (2 weeks, ADR 0107) | 3 | The Phase 3 plan (ADR 0107); specs 021 and 022 approved; rent realism (US-240), part-harvests for hands (US-241) and a mandi trip with several crops (US-252, owner request); the archetype bots (US-099); the Editor's rendering statistics and the first Development build's frame times and golden replays on the phone (US-101); save schema 18. | 22 | 021, 022 | Yes: Development build |
 | S21 | 14–27 Jun 2027 (2 weeks) | 3 | The treasury and the budget cycle, taxes and policies (F15.1, F15.2). | 26 | 023, 024 | Yes |
 | S22 | 28 Jun – 11 Jul 2027 (2 weeks) | 3 | The clinic, the link road, the Township unlock with the old village joining (US-148, US-146, US-103); zoning, land value and leasing land out (US-142, US-143, US-261); era-gate reachability (US-100); the carried items (US-263). | 43 | 025 (026 in S23) | Yes |
-| S23 | 12–25 Jul 2027 (2 weeks) | 3 | Kutcha to pucca and the overlays (F15.8); utilities and construction with the brick kiln (F15.4, US-243); the map's ring (US-253), the cold store (US-242). | 39 | 027, 028 | Yes: frame time with the ring |
-| S24 | 26 Jul – 8 Aug 2027 (2 weeks) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); hill parcels and apples (US-147); the farm's Phase 3 promises: calves, silage and sheds, custom hiring, tube wells and solar pumps (US-254 to US-257, Should and Could). | 43 | 029 | Yes |
-| S25 | 9–22 Aug 2027 (2 weeks) | 3 | Invoices, managers, sell or expand, investors and buy-outs (F12.5, F12.6); the tuition centre, tempo and restaurant (F12.7); benefits and night shifts (US-258). | 39 | — | Yes |
+| S23 | 12–25 Jul 2027 (2 weeks, ADR 0125, 0126) | 3 | The map's ring (US-253); construction and the brick kiln (US-145, US-243); utilities (US-144); kutcha to pucca and the overlays (F15.8); the cold store (US-242); the farm's promises moved in by the owner: calves, silage and sheds, your tractor for neighbours, solar pumps (US-254 to US-257, cut first). | 49 | 026, 027 | Yes: frame time with the ring |
+| S24 | 26 Jul – 8 Aug 2027 (2 weeks) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); hill parcels and apples (US-147). | 32 | 028 | Yes |
+| S25 | 9–22 Aug 2027 (2 weeks) | 3 | Invoices, managers, sell or expand, investors and buy-outs (F12.5, F12.6); the tuition centre, tempo and restaurant (F12.7); benefits and night shifts (US-258). | 39 | 029 | Yes |
 | S26 | 23 Aug – 5 Sep 2027 (2 weeks) | 3 | The Chronicle, the Almanac and citizen stories (F16.3, F16.4); the Phase 3 exploit checks (US-248); the playtest town and the Release build (US-249); your kirana, marketing and khata (US-260); supervisors, associations, conflicts and accidents (US-259, Could). | 31 | — | Yes: Development, then Release |
 | S27 | 6 Sep – 3 Oct 2027 (4 weeks, ADR 0107 §11) | 3 | The Phase 3 playtest from a town just past the Village, tuning and the gate decision (F10.3). | 6 + fixes | Phase 4's, if the owner says | Fixes only |
 
@@ -1026,3 +1026,66 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and ADR 0124
 - [x] `STATUS.md`, feature files and this file updated
 - [x] Pull request (#32) with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it
+
+
+## Sprint 23 · 12–25 Jul 2027 · Phase 3 (the ring, construction and the kiln, utilities, pucca houses and overlays, the cold store, the farm's promises; 2 weeks, ADR 0125 and 0126)
+
+- **Status:** Started 2026-11-18 (Sprint 22 merged, PR #32). Spec 025's gaps G1–G8 closed with the owner one per message (ADR 0125). **Plan shown to the owner before any code and approved 2026-11-18** (size 49, order, cut line, and the builders' neighbour rule; ADR 0126).
+- **Branch:** `sprint/23-utilities-ring`, from `main` after PR #32
+- **Goal:** The town runs into what it cannot see on a plan: bricks, masons, water, power, drains and room. The map's ring is in the map and opens with the Township; every new building needs materials and says why when it is held; the treasury builds utilities on a confirm card that counts their upkeep; the generator's smoke lowers the land around it; homes upgrade to pucca; overlays show what is hidden; the cold store keeps potato. The farm's Phase 3 promises (calves, silage, your tractor for neighbours, solar pumps) ride at the end, cut first. Save schema 21 ships once, with a fixture for every new part.
+- **Points:** 49 = US-253 5, US-145 8, US-243 5, US-144 8, US-152 5, US-153 5, US-242 3 (the table's 39) + US-254 3, US-255 2, US-256 3, US-257 2 (the owner moved them in from Sprint 24, a few points more being fine). **The committed core is 42** (39 + US-254); US-255, US-256 and US-257 are the stretch.
+- **Specs to write and review:** spec 025 (amended, for approval with this plan); **spec 026 (festivals, petitions, reputation, crime, inequality)** and **spec 027 (events, insurance, forward contracts)** written in this sprint for Sprint 24 (ADR 0057); spec 028 goes to Sprint 24.
+- **Device build:** Yes: a Development build (frame time with the ring; both p95s; golden replays; a 72 h catch-up with a Township open)
+- **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`, `area:art`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-253 | The map's ring (24 × 18, locked until the Township, lanes, hills drawn and locked) | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | To do |
+| US-145 | Construction: bricks, cement, timber, masons, held builds | [F15.4](features/F15.4-utilities-and-construction.md) | 8 | Must | To do |
+| US-243 | Brick kiln | [F12.7](features/F12.7-township-businesses.md) | 5 | Must | To do |
+| US-144 | Utilities | [F15.4](features/F15.4-utilities-and-construction.md) | 8 | Must | To do |
+| US-152 | Building upgrades: kutcha to pucca | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | 5 | Must | To do |
+| US-153 | Overlays | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | 5 | Must | To do |
+| US-242 | The cold store | [F13.3](features/F13.3-orchards-and-granary.md) | 3 | Should | To do |
+| US-254 | Raise calves and grow the herd | [F13.1](features/F13.1-livestock.md) | 3 | Should | To do |
+| US-255 | Silage, a chaff cutter and more sheds | [F13.1](features/F13.1-livestock.md) | 2 | Could | To do |
+| US-256 | Your tractor for neighbours (with a demand cap) | [F13.2](features/F13.2-irrigation-and-equipment.md) | 3 | Could | To do |
+| US-257 | Solar pumps (the tube well is the borewell) | [F13.2](features/F13.2-irrigation-and-equipment.md) | 2 | Could | To do |
+
+**Order of work** (one stop for the owner's review after each story and each spec; every sheet previewed as an artifact that looks exactly like the game before its UI code):
+
+1. **Branch, ADR 0125 (done), this section, ADR 0126.**
+2. **Preview 1:** the 24 × 18 map with the ring's lanes, hills (locked), meadow, highway, and every new plot (water tower, drains, collection post, generator on an edge plot, grid on the highway side, the kiln's suggested acres); the owner fixes the plots before any code (ADR 0064). Spec 026 is written in parallel.
+3. **US-253** the ring: schema 21 begins (the map at 24 × 18 from the start, the migration `id = (y + 3) × 24 + (x + 4)`, locked tiles not simulated, the camera cap, `BuildLane`, `RingOpened` at the unlock, hill parcels locked); frame time read.
+4. **US-145** construction (goods *brick*, *cement*, *timber*, *kiln fuel*; the trader's daily limit shared in order; masons on the hiring board; the gang at 1.5×; held builds with a day's number; builders wait; AC-5 walks every building).
+5. **US-243** the kiln (smoke footprint on the ghost, the card's list, the fuel good; targets set by the bots).
+6. **US-144** utilities (four ladders; the top-up card and the upkeep-aware budget guard; the smoke; one water reach; the Infrastructure section).
+7. **US-152** pucca upgrades (needs materials and water), then **US-153** overlays (the coverage overlay shows the smoke).
+8. **US-242** the cold store.
+9. **US-254, US-255, US-256, US-257** (the stretch, in this order; US-257 only if its payback holds).
+10. **Spec 027** written and reviewed.
+11. **The builders' neighbour rule** (ADR 0126 §2) lands with US-145, where builders first wait for bricks.
+12. **Balance** (the 20% rule on 24 and 200 seeds; the Village 28–45 days; the Township's pace; the kiln's, generator's and cold store's targets; land payback at the land value actually paid on ring acres; the zone-and-flip and buy-and-hold bots acting, with a developer cash command; `BuildersCarryAZeroTaxTown` re-run; the 200-seed hands-off Township on the ring), **the checklist in the Editor by scripted touch**, render statistics at the three views, Editor saves backed up before and restored and diffed after, **Development build**, **an independent Opus 5.5 high-effort review**, ADRs (as built), `STATUS.md`, feature files, this file, the pull request.
+
+**If it runs over,** cut in this order: US-257, US-256, US-255, US-254, then the cold store's fruit, the kiln's trader sales, the collection ladder, the soft ring on utilities, the happiness overlay. **Never cut:** water, construction's *held with a reason*, the ring, a town left alone that works, every number's *Why?*, the schema 21 fixtures.
+
+**Carried risks:** the ring's migration and construction both touch every tile-keyed and every build path (schema 21 is written once at the end); the full `Sim.Core` run and the 200-seed hands-off run take about 15–20 minutes each (background, no content edits while they run); the ring's frame cost (zoom cap first, baked ground as the fallback); the kiln's economics at the hand's wage (set by the bots; a miss comes to the owner).
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story checked against spec 025 (amended), spec 024 (upgrades, overlays), ADRs 0107, 0124, 0125 and the code at `main` (9a3bdaf)
+- [x] Spec 025's gaps closed (G1–G8, owner, 2026-11-18, ADR 0125)
+- [x] This section approved by the owner (2026-11-18)
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [ ] Spec 025 approved; specs 026 and 027 written and approved
+- [ ] Save schema 21: migration, fixtures for every new part, every older schema loads
+- [ ] Sheets, cards and the ring's layout previewed to and approved by the owner before each story's code
+- [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, the kiln, the generator and grid, the cold store, land payback, the land stress bots, contradictions flagged
+- [ ] Render statistics read for each visible story, growth over 10% reported
+- [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone (the owner)
+- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
