@@ -1022,7 +1022,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Sheets and cards previewed to and approved by the owner before each story's code
 - [x] Balance (ADR 0124): the 20% rule, the Village 28–45 days, the Township's pace, `TownshipSolvent`, the tax extremes, the 200-seed hands-off Township, contradictions flagged
 - [x] Render statistics read for each visible story and any growth over 10% reported (none grew; row 19)
-- [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down (the owner)
+- [x] Test checklist with device-only rows marked; Development build (2026-11-18, Xcode compile BUILD SUCCEEDED); both frame-time p95s and golden replays on the phone written down (the owner)
 - [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and ADR 0124
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it
