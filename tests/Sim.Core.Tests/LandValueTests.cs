@@ -61,7 +61,7 @@ namespace Sim.Core.Tests
                 Assert.That(LandValueRules.Of(sim, t.Id), Is.InRange(d.Floor, d.Ceiling));
                 checkedTiles++;
             }
-            Assert.That(checkedTiles, Is.EqualTo(192));
+            Assert.That(checkedTiles, Is.EqualTo(432), "the ring is read too: it is open from the Township");
 
             // The square's acre is within 500 m of the square and 300 m of the pond; the pond's neighbour touches the lane, so it is worth more than a far field.
             int square = d.SquareTile;

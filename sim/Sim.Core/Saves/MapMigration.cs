@@ -28,6 +28,9 @@ namespace Sim.Core.Saves
     public static class MapMigration
     {
         public const int Schema = 5;
+
+        /// <summary>Save schema 21 (spec 025 §3.4, ADR 0125): the 24 × 18 map. Tile ids stay; an older save's 192 tiles are the map's first and the ring's tiles and parcels start from content, locked.</summary>
+        public const int RingSchema = 21;
         public const int OldTiles = 48;
         public const string FarmLane = "s5";
         private const int OldWidth = 8, NewWidth = 16, OffsetX = 2, OffsetY = 3;

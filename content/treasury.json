@@ -43,6 +43,13 @@
   "works": [
     { "id": "watchman_post", "cost": 30000, "lifeSeasons": 100 },
     { "id": "community_hall", "cost": 80000, "lifeSeasons": 100 },
-    { "id": "playground", "cost": 20000, "lifeSeasons": 60 }
+    { "id": "playground", "cost": 20000, "lifeSeasons": 60 },
+    { "id": "lane_w1", "cost": 20000, "lifeSeasons": 80 },
+    { "id": "lane_w2", "cost": 20000, "lifeSeasons": 80 },
+    { "id": "lane_w3", "cost": 20000, "lifeSeasons": 80 },
+    { "id": "lane_w4", "cost": 20000, "lifeSeasons": 80 },
+    { "id": "lane_e1", "cost": 20000, "lifeSeasons": 80 },
+    { "id": "lane_e2", "cost": 20000, "lifeSeasons": 80 },
+    { "id": "lane_e3", "cost": 20000, "lifeSeasons": 80 }
   ]
 }

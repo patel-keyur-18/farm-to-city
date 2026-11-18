@@ -141,6 +141,7 @@ namespace Game.Presentation
             _map = MapPresenter.Create(transform, _tweens, _ui);
             _map.Refresh(_mapVm, false);
             _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
+            _input.ApplyRing(_mapVm);
             _input.Focus(_mapVm.HomeX, _mapVm.HomeY); // the yard (spec 010 §3.5)
 
             _sounds = new Sounds(gameObject);
@@ -235,6 +236,7 @@ namespace Game.Presentation
             _ctx.LocalNow = DateTime.Now;
             _mapVm = MapView.Build(_ctx);
             _map.Refresh(_mapVm, animate);
+            if (_input != null) _input.ApplyRing(_mapVm); // the Township opens the ring (spec 025 §3.4)
             _hud.Refresh(HudView.Build(_ctx), animate);
             if (_open.HasValue && _sheet.IsOpen) ShowCurrentSheet(refreshOnly: true);
         }
@@ -613,7 +615,7 @@ namespace Game.Presentation
             HutPlaceVm first = places.Find(p => p.Allowed) ?? (places.Count > 0 ? places[0] : null);
             if (first == null) return;
             if (kind != PlaceKind.Hut) _map.LightPlaces(places.FindAll(p => p.Allowed).ConvertAll(p => p.TileId));
-            _input.Placing = w => { int tile = _map.Grid.Pick(w.x, w.y); if (tile >= 0) MoveGhost(tile); };
+            _input.Placing = w => { int tile = _map.TileOfCell(_map.Grid.Pick(w.x, w.y)); if (tile >= 0) MoveGhost(tile); };
             MoveGhost(first.TileId);
             _input.Reveal(_map.WorldOf(new Hit(HitKind.Tile, first.TileId)));
         }

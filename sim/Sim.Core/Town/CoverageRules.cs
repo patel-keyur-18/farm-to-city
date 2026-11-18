@@ -10,8 +10,8 @@ namespace Sim.Core.Town
         /// <summary>Metres between two tiles: Manhattan distance in acres × 100.</summary>
         public static int Metres(Simulation sim, int tileA, int tileB)
         {
-            int w = sim.Config.Game.Map.Width;
-            int dx = System.Math.Abs(tileA % w - tileB % w), dy = System.Math.Abs(tileA / w - tileB / w);
+            Definitions.MapDef map = sim.Config.Game.Map;
+            int dx = System.Math.Abs(map.X(tileA) - map.X(tileB)), dy = System.Math.Abs(map.Y(tileA) - map.Y(tileB));
             return (dx + dy) * 100;
         }
 

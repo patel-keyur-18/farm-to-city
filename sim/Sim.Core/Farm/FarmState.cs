@@ -361,7 +361,7 @@ namespace Sim.Core.Farm
             s.TileRunCrop = new int[tiles];
             s.TileRun = new int[tiles];
             for (int i = 0; i < tiles; i++) s.TileRunCrop[i] = -1;
-            int saved = r.OldMap ? Saves.MapMigration.OldTiles : tiles;
+            int saved = r.OldMap ? Saves.MapMigration.OldTiles : r.SavedTiles;
             for (int i = 0; i < saved; i++)
             {
                 int at = r.OldMap ? Saves.MapMigration.Remap(i) : i;

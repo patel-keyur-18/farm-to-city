@@ -78,7 +78,7 @@ namespace Sim.View.Tests
             Simulation sim = Game("hamlet");
             sim.Execute(new BuildChannel(sim.State.Clock.SimTime, 85));
             MapVm spring = MapView.Build(ViewKit2.Context(sim));
-            Assert.That(spring.CanalRow, Is.EqualTo(4));
+            Assert.That(spring.CanalRow, Is.EqualTo(7)); // row 4 of the 16 × 12 map, in the 24 × 18 grid
             Assert.That((spring.CanalDry, spring.Tiles[85].ChannelDry, spring.Tiles[84].ChannelDry), Is.EqualTo((false, false, false)));
             sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason); // Summer: closed for repairs
             MapVm summer = MapView.Build(ViewKit2.Context(sim));

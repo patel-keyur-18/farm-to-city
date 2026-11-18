@@ -35,6 +35,9 @@ namespace Sim.Core.Saves
         /// <summary>Set by the land reader when a schema-4 save holds the 8 × 6 map (spec 010 §3.4): tile ids are remapped.</summary>
         internal bool OldMap { get; set; }
 
+        /// <summary>The number of tiles the save's land held: 48 or 192 for an older save (the rest of a larger map starts from content).</summary>
+        internal int SavedTiles { get; set; }
+
         /// <summary>A tile id, remapped to the 16 × 12 map for an old save; −1 (no tile) stays −1.</summary>
         internal int ReadTile()
         {

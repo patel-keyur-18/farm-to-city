@@ -349,6 +349,7 @@ namespace Game.Presentation
             _sheet.Close();
             _open = null;
             _selected = Hit.None;
+            _input.ApplyRing(_mapVm);
             if (focus) _input.Focus(_mapVm.HomeX, _mapVm.HomeY);
             SaveNow();
             StartSession(WallNow()); // the new town's first session starts here in the play log (ADR 0047 §2)

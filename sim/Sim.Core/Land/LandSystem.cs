@@ -233,11 +233,11 @@ namespace Sim.Core.Land
         /// <summary>The 4 edge neighbours of a tile that are on the map, in a fixed order.</summary>
         private static System.Collections.Generic.IEnumerable<int> Neighbours(MapDef map, int tile)
         {
-            int x = tile % map.Width, y = tile / map.Width;
-            if (y > 0) yield return tile - map.Width;
-            if (x > 0) yield return tile - 1;
-            if (x < map.Width - 1) yield return tile + 1;
-            if (y < map.Height - 1) yield return tile + map.Width;
+            int x = map.X(tile), y = map.Y(tile), n;
+            if ((n = map.TileAt(x, y - 1)) >= 0) yield return n;
+            if ((n = map.TileAt(x - 1, y)) >= 0) yield return n;
+            if ((n = map.TileAt(x + 1, y)) >= 0) yield return n;
+            if ((n = map.TileAt(x, y + 1)) >= 0) yield return n;
         }
 
         private static void AddSlot(LandState land, SlotKind kind, int tileId)
@@ -253,11 +253,13 @@ namespace Sim.Core.Land
             {
                 case ItemClass.Hourly:
                     Fixed[] floors = IrrigationRules.Floors(sim); // once an hour: the pumped, canal and drip floors (spec 013 §3.1)
-                    foreach (Tile tile in land.Tiles) UpdateMoisture(sim, tile, land.HourWeather, floors[tile.Id]);
+                    bool[] locked = LandRules.LockedParcels(sim);
+                    foreach (Tile tile in land.Tiles) if (locked == null || !locked[tile.ParcelId]) UpdateMoisture(sim, tile, land.HourWeather, floors[tile.Id]);
                     land.HourWeather = sim.State.Weather.WeatherOf(Calendar.SpellAt(t, sim.Clock));
                     break;
                 case ItemClass.Daily:
-                    foreach (Tile tile in land.Tiles) RecoverFallow(sim, tile, t);
+                    bool[] lockedDaily = LandRules.LockedParcels(sim);
+                    foreach (Tile tile in land.Tiles) if (lockedDaily == null || !lockedDaily[tile.ParcelId]) RecoverFallow(sim, tile, t);
                     break;
                 case ItemClass.Seasonal:
                     foreach (Tile tile in land.Tiles)

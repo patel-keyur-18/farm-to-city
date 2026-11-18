@@ -67,13 +67,13 @@ namespace Game.Presentation.Map
             int row = minY + 1, col = minX + 1;
             for (int x = minX - 1; x <= maxX; x++)
             {
-                int tile = row * _width + x;
+                int tile = TileAt(x, row);
                 Vector2 at = x < minX ? new Vector2(0.5f, -0.5f) : new Vector2(0f, -0.5f); // from the lane's middle to the centre
                 _villageProps.Add(NewRenderer("street", SpriteBank.Rendered("street_x"), OnTile(tile, at), GroundBase + Order(tile, _width, 3)));
             }
             for (int y = minY; y <= maxY; y++)
             {
-                int tile = y * _width + col;
+                int tile = TileAt(col, y);
                 _villageProps.Add(NewRenderer("lane", SpriteBank.Rendered("street_y"), OnTile(tile, new Vector2(0.5f, 0f)), GroundBase + Order(tile, _width, 3)));
             }
         }

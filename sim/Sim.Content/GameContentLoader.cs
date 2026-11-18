@@ -177,29 +177,54 @@ namespace Sim.Content
                 l["dryingSlowsBelow"] == null ? Fixed.Zero : Bounded(l, lp, "dryingSlowsBelow", "0", "100"));
         }
 
-        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank", "cattle" };
+        private static readonly string[] TerrainNames = { "farm", "yard", "quarters", "road", "village", "commons", "bank", "cattle", "hill", "river", "scrub", "lane", "highway" };
 
-        private static bool IsVillageLand(Terrain t) { return t == Terrain.Road || t == Terrain.Village || t == Terrain.Commons || t == Terrain.Bank; }
+        private static bool IsVillageLand(Terrain t) { return t == Terrain.Road || t == Terrain.Village || t == Terrain.Commons || t == Terrain.Bank || t == Terrain.River || t == Terrain.Scrub || t == Terrain.Lane || t == Terrain.Highway; }
 
         private static MapDef LoadMap(string json, List<SoilDef> soils, List<DrainageDef> drainages)
         {
             const string root = "map";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "width", "height", "tiles", "parcels", "places");
+            OnlyFields(o, root, "width", "height", "legacyWidth", "offsetX", "offsetY", "tiles", "parcels", "places", "lanes");
             int width = Int(Required(o, root, "width"), root + ".width");
-            Range(width, 2, 16, root + ".width");
+            Range(width, 2, 24, root + ".width");
             int height = Int(Required(o, root, "height"), root + ".height");
-            Range(height, 2, 16, root + ".height");
+            Range(height, 2, 18, root + ".height");
+            // The 16 × 12 map's tiles keep ids 0–191 and stand at (id % legacyWidth + offsetX, id / legacyWidth + offsetY); the ring's tiles follow, with "x" and "y" (spec 025 §3.4, ADR 0125).
+            int legacyWidth = o["legacyWidth"] == null ? 0 : Int(o["legacyWidth"], root + ".legacyWidth");
+            int offsetX = o["offsetX"] == null ? 0 : Int(o["offsetX"], root + ".offsetX"), offsetY = o["offsetY"] == null ? 0 : Int(o["offsetY"], root + ".offsetY");
+            if (legacyWidth != 0) Range(legacyWidth, 2, width, root + ".legacyWidth");
 
             List<JToken> tileTokens = Array(Required(o, root, "tiles"), root + ".tiles");
             if (tileTokens.Count != width * height)
                 throw new ContentException(root + ".tiles", "needs width × height = " + width * height + " tiles, has " + tileTokens.Count);
             var tiles = new List<TileDef>();
+            var xs = new int[tileTokens.Count];
+            var ys = new int[tileTokens.Count];
+            var taken = new bool[width * height];
+            int legacyTiles = 0;
             for (int i = 0; i < tileTokens.Count; i++)
             {
                 string p = Index(root + ".tiles", i);
                 JObject t = Object(tileTokens[i], p);
-                OnlyFields(t, p, "terrain", "soil", "drainage", "fertility", "moisture");
+                OnlyFields(t, p, "terrain", "soil", "drainage", "fertility", "moisture", "x", "y");
+                if (t["x"] != null || t["y"] != null)
+                {
+                    xs[i] = Int(Required(t, p, "x"), p + ".x");
+                    ys[i] = Int(Required(t, p, "y"), p + ".y");
+                    if (legacyTiles == 0) legacyTiles = i;
+                }
+                else if (legacyWidth != 0)
+                {
+                    if (legacyTiles != 0) throw new ContentException(p, "a tile after the ring's tiles needs x and y");
+                    xs[i] = i % legacyWidth + offsetX;
+                    ys[i] = i / legacyWidth + offsetY;
+                }
+                else { xs[i] = i % width; ys[i] = i / width; }
+                Range(xs[i], 0, width - 1, p + ".x");
+                Range(ys[i], 0, height - 1, p + ".y");
+                if (taken[ys[i] * width + xs[i]]) throw new ContentException(p, "two tiles stand at (" + xs[i] + ", " + ys[i] + ")");
+                taken[ys[i] * width + xs[i]] = true;
                 string terrain = String(Required(t, p, "terrain"), p + ".terrain");
                 int kind = System.Array.IndexOf(TerrainNames, terrain);
                 if (kind < 0) throw new ContentException(p + ".terrain", "expected " + string.Join(", ", TerrainNames));
@@ -216,7 +241,7 @@ namespace Sim.Content
             {
                 string p = Index(root + ".parcels", i);
                 JObject pa = Object(parcelTokens[i], p);
-                OnlyFields(pa, p, "id", "tiles", "locationFactor", "forSale", "owner");
+                OnlyFields(pa, p, "id", "tiles", "locationFactor", "forSale", "owner", "opens");
                 string id = UniqueId(pa, p, parcels.ConvertAll(x => x.Id));
                 bool forSale = pa["forSale"] == null || Bool(pa["forSale"], p + ".forSale");
                 List<JToken> ids = Array(Required(pa, p, "tiles"), p + ".tiles");
@@ -239,7 +264,9 @@ namespace Sim.Content
                 if (village && forSale) throw new ContentException(p + ".forSale", "the village's land is never for sale");
                 string ownerKey = pa["owner"] == null ? null : String(pa["owner"], p + ".owner");
                 Fixed location = pa["locationFactor"] == null && village ? Fixed.One : Bounded(pa, p, "locationFactor", "0.5", "2");
-                parcels.Add(new ParcelDef(id, list, location, forSale, ownerKey));
+                string opens = pa["opens"] == null ? null : String(pa["opens"], p + ".opens");
+                if (opens != null && opens != "township" && opens != "hills") throw new ContentException(p + ".opens", "expected township or hills");
+                parcels.Add(new ParcelDef(id, list, location, forSale, ownerKey, opens));
             }
             for (int t = 0; t < owner.Length; t++)
                 if (owner[t] < 0) throw new ContentException(Index(root + ".tiles", t), "the tile is in no parcel");
@@ -258,7 +285,28 @@ namespace Sim.Content
                 places.Add(new PlaceDef(id, String(Required(pl, p, "kind"), p + ".kind"), tile));
             }
 
-            return new MapDef(width, height, tiles, parcels, places);
+            var lanes = new List<LaneDef>();
+            List<JToken> laneTokens = o["lanes"] == null ? new List<JToken>() : Array(o["lanes"], root + ".lanes");
+            if (laneTokens.Count > 30) throw new ContentException(root + ".lanes", "at most 30 lane sections (a built lane is a bit of the Township's state)");
+            for (int i = 0; i < laneTokens.Count; i++)
+            {
+                string p = Index(root + ".lanes", i);
+                JObject ln = Object(laneTokens[i], p);
+                OnlyFields(ln, p, "id", "tiles");
+                string id = UniqueId(ln, p, lanes.ConvertAll(x => x.Id));
+                var lt = new List<int>();
+                List<JToken> ids = Array(Required(ln, p, "tiles"), p + ".tiles");
+                for (int k = 0; k < ids.Count; k++)
+                {
+                    int tile = Int(ids[k], Index(p + ".tiles", k));
+                    Range(tile, 0, tiles.Count - 1, Index(p + ".tiles", k));
+                    if (tiles[tile].Terrain != Terrain.Lane) throw new ContentException(Index(p + ".tiles", k), "a lane section stands on lane acres");
+                    lt.Add(tile);
+                }
+                if (lt.Count == 0) throw new ContentException(p + ".tiles", "a lane section has at least one acre");
+                lanes.Add(new LaneDef(id, lt));
+            }
+            return new MapDef(width, height, tiles, parcels, places, xs, ys, legacyWidth != 0 ? legacyTiles == 0 ? tiles.Count : legacyTiles : 0, legacyWidth, lanes);
         }
 
         private static List<BuildingDef> LoadBuildings(string json)

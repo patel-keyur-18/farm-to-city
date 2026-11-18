@@ -45,17 +45,20 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             MapVm map = MapView.Build(ViewKit2.Context(sim));
-            Assert.That(map.Width, Is.EqualTo(16));
-            Assert.That(map.Height, Is.EqualTo(12));
-            Assert.That(map.Tiles.Count, Is.EqualTo(192));
+            Assert.That(map.Width, Is.EqualTo(24));
+            Assert.That(map.Height, Is.EqualTo(18));
+            Assert.That(map.Tiles.Count, Is.EqualTo(432), "the 16 × 12 map's 192 and the ring's 240");
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Farm), Is.EqualTo(6));
             Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Yard), Is.EqualTo(2));
-            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(123), "neighbours' farms: 77 for sale, 46 not yet");
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Unowned), Is.EqualTo(123 + 53), "neighbours' farms (77 for sale, 46 not yet) and the ring's 53 acres for sale");
+            Assert.That(map.Tiles.Count(t => t.Kind == TileKind.Hill), Is.EqualTo(42), "the hills, locked until Sprint 24");
+            Assert.That(map.Tiles.Where(t => t.Id >= 192).All(t => t.Locked), Is.True, "the ring is closed before the Township");
+            Assert.That(map.Tiles.Where(t => t.Id < 192).Any(t => t.Locked), Is.False);
             Assert.That(map.Tiles.Single(t => t.Kind == TileKind.Cattle).Id, Is.EqualTo(104), "the cattle acre (ADR 0064)");
             Assert.That(map.Tiles.Where(t => t.WellAcre).Select(t => t.Id), Is.EqualTo(new[] { 86, 102 }));
             Assert.That(map.Tiles[87].Kind, Is.EqualTo(TileKind.Yard));
-            Assert.That(map.Tiles[86].X, Is.EqualTo(6));
-            Assert.That(map.Tiles[86].Y, Is.EqualTo(5));
+            Assert.That(map.Tiles[86].X, Is.EqualTo(10), "the old map's column 6, four columns in");
+            Assert.That(map.Tiles[86].Y, Is.EqualTo(8), "the old map's row 5, three rows in");
             Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Farm || t.Kind == TileKind.Yard || t.Kind == TileKind.Quarters || t.Kind == TileKind.Cattle).All(t => t.Protected), Is.True);
             Assert.That(map.Buildings.Select(b => b.DefId), Is.EqualTo(new[] { "hut", "well" }));
             Assert.That(map.Slots.Count(s => s.Yard), Is.EqualTo(4));
@@ -207,6 +210,31 @@ namespace Sim.View.Tests
             float offBefore = px - cam2.CentreX;
             cam2.Zoom(0.5f, px, py);
             Assert.That(px - cam2.CentreX, Is.EqualTo(offBefore * 0.5f).Within(0.05f));
+        }
+
+        // Spec 025 §3.4 (ADR 0125): before the Township the camera stays in the 16 × 12 map; after it the whole 24 × 18 map is reachable but the
+        // furthest zoom-out is 90% of the old window, so the ring adds no draw calls.
+        [Test]
+        public void MapCamera_RingLimit()
+        {
+            var old = new MapCamera(new IsoGrid(16, 12, 1f), 16f / 9f);
+            var g = new IsoGrid(24, 18, 1f);
+            var cam = new MapCamera(g, 16f / 9f);
+            cam.Limit(4, 3, 19, 14, 16, 12, 1f);
+            Assert.That(cam.MaxHalfHeight, Is.EqualTo(old.MaxHalfHeight).Within(1e-4f), "closed: the same furthest zoom as the 16 × 12 map had");
+            cam.Zoom(100f, cam.CentreX, cam.CentreY);
+            (float cx, float cy) = g.Centre(11, 8);
+            Assert.That(cam.CentreX, Is.EqualTo(g.Centre(11, 8).x).Within(0.6f), "the old map's middle");
+            cam.Focus(11, 8, cam.MinHalfHeight);
+            cam.Pan(-10000, 0);
+            Assert.That(cam.CentreX - cam.HalfHeight * 16f / 9f, Is.GreaterThanOrEqualTo(g.Centre(4, 14).x - 1f - 1e-3f), "it cannot pan into the ring");
+            cam.Pan(10000, 0);
+            Assert.That(cam.CentreX + cam.HalfHeight * 16f / 9f, Is.LessThanOrEqualTo(g.Centre(19, 3).x + 1f + 1e-3f));
+            cam.Limit(0, 0, 23, 17, 16, 12, 0.9f);
+            Assert.That(cam.MaxHalfHeight, Is.EqualTo(old.MaxHalfHeight * 0.9f).Within(1e-4f), "open: 90% of the old window");
+            cam.Focus(0, 17, cam.MinHalfHeight);
+            Assert.That(cam.CentreX, Is.LessThan(g.Centre(4, 14).x), "now it reaches the west ring");
+            _ = cx; _ = cy;
         }
 
         // ---- tints and the look data ----

@@ -145,9 +145,10 @@ namespace Sim.View.Tests
             MapVm map = MapView.Build(ViewKit2.Context(sim));
             Assert.That(map.RoadPaved, Is.True);
             var paved = map.Tiles.Where(t => t.Paved).ToList();
-            Assert.That(paved.Count, Is.EqualTo(map.Width), "the whole south row");
-            Assert.That(paved.All(t => t.Y == map.Height - 1 && t.Kind == TileKind.Road), Is.True);
-            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Road && t.Y < map.Height - 1).All(t => !t.Paved), Is.True, "the village lane stays dirt");
+            Assert.That(paved.Count, Is.EqualTo(map.Width + 2), "the district road across the whole map (24 acres, row 14) and the link road's two acres to the highway");
+            Assert.That(paved.All(t => t.Kind == TileKind.Road), Is.True);
+            Assert.That(paved.Count(t => t.Y == 14), Is.EqualTo(map.Width));
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Road && !paved.Contains(t)).All(t => !t.Paved), Is.True, "the village lane stays dirt");
         }
     }
 }

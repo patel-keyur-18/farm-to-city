@@ -82,7 +82,8 @@ namespace Sim.Core.Land
         {
             if (!On(sim)) return false;
             CanalDef c = Def(sim).Canal;
-            int w = sim.Config.Game.Map.Width, x = tile % w, y = tile / w;
+            MapDef map = sim.Config.Game.Map;
+            int x = map.X(tile), y = map.Y(tile);
             return x >= c.FromColumn && x <= c.ToColumn && (y == c.Row || y == c.Row + 1);
         }
 
@@ -95,16 +96,17 @@ namespace Sim.Core.Land
             int n = sim.State.Land.Tiles.Count;
             var reached = new bool[n];
             if (!On(sim)) return reached;
-            int def = Def(sim).Canal.Building, w = sim.Config.Game.Map.Width;
+            int def = Def(sim).Canal.Building;
+            MapDef map = sim.Config.Game.Map;
             var channel = new bool[n];
             foreach (Building b in sim.State.Land.Buildings) if (b.Def == def && b.TileId >= 0) channel[b.TileId] = true;
             var queue = new Queue<int>();
             for (int t = 0; t < n; t++) if (channel[t] && BordersCanal(sim, t)) { reached[t] = true; queue.Enqueue(t); }
             while (queue.Count > 0)
             {
-                int t = queue.Dequeue(), x = t % w;
-                foreach (int m in new[] { t - w, x > 0 ? t - 1 : -1, x < w - 1 ? t + 1 : -1, t + w })
-                    if (m >= 0 && m < n && channel[m] && !reached[m]) { reached[m] = true; queue.Enqueue(m); }
+                int t = queue.Dequeue(), tx = map.X(t), ty = map.Y(t);
+                foreach (int m in new[] { map.TileAt(tx, ty - 1), map.TileAt(tx - 1, ty), map.TileAt(tx + 1, ty), map.TileAt(tx, ty + 1) })
+                    if (m >= 0 && channel[m] && !reached[m]) { reached[m] = true; queue.Enqueue(m); }
             }
             return reached;
         }
@@ -114,9 +116,10 @@ namespace Sim.Core.Land
         {
             if (BordersCanal(sim, tile)) return true;
             bool[] reached = Reached(sim);
-            int w = sim.Config.Game.Map.Width, x = tile % w, n = reached.Length;
-            foreach (int m in new[] { tile - w, x > 0 ? tile - 1 : -1, x < w - 1 ? tile + 1 : -1, tile + w })
-                if (m >= 0 && m < n && reached[m]) return true;
+            MapDef map = sim.Config.Game.Map;
+            int x = map.X(tile), y = map.Y(tile);
+            foreach (int m in new[] { map.TileAt(x, y - 1), map.TileAt(x - 1, y), map.TileAt(x + 1, y), map.TileAt(x, y + 1) })
+                if (m >= 0 && reached[m]) return true;
             return false;
         }
 

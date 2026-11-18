@@ -28,6 +28,7 @@ namespace Sim.Core.Commands
             if (id < 0) return CommandResult.Reject(RejectReason.UnknownParcel);
             Parcel parcel = sim.State.Land.Parcels[id];
             if (parcel.Owned) return CommandResult.Reject(RejectReason.AlreadyOwned);
+            if (LandRules.Locked(sim, id)) return CommandResult.Reject(RejectReason.LandClosed); // the ring opens with the Township (spec 025 §3.4)
             if (!sim.Config.Game.Map.Parcels[id].ForSale || parcel.BuilderOwned) return CommandResult.Reject(RejectReason.NotForSale); // a builder has it (spec 024 §3.3)
             if (!LandSystem.IsAdjacentToOwned(sim, id)) return CommandResult.Reject(RejectReason.NotAdjacent);
             long price = LandRules.ParcelPrice(sim, parcel);

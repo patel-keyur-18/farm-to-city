@@ -43,18 +43,21 @@ namespace Sim.Core.Town
         public int BuilderParcels { get; internal set; }
         public int BuilderHomes { get; internal set; }
 
+        /// <summary>The ring's gravel lane sections the treasury has built, a bit for each <see cref="Definitions.LaneDef"/> in map order (spec 025 §3.4; schema 21).</summary>
+        public int LanesBuilt { get; internal set; }
+
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
 
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -72,6 +75,7 @@ namespace Sim.Core.Town
             h.WriteLong(BuiltSeason);
             h.WriteInt(BuilderParcels);
             h.WriteInt(BuilderHomes);
+            if (h.Hashing ? LanesBuilt != 0 : !(h is SaveWriter lw && lw.Schema < MapMigration.RingSchema)) h.WriteInt(LanesBuilt); // schema 21; hashed once a lane stands
         }
 
         internal static TownshipState ReadFrom(SaveReader r)
@@ -85,6 +89,7 @@ namespace Sim.Core.Town
             s.BuiltSeason = r.ReadLong();
             s.BuilderParcels = r.ReadInt();
             s.BuilderHomes = r.ReadInt();
+            if (r.Schema >= MapMigration.RingSchema) s.LanesBuilt = r.ReadInt();
             return s;
         }
     }

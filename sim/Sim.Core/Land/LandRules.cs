@@ -7,6 +7,31 @@ namespace Sim.Core.Land
     /// <summary>Spec 002's pure formulas: the Soil factor (§3.4) and parcel prices (§3.5).</summary>
     public static class LandRules
     {
+        /// <summary>
+        /// True while a parcel is closed (spec 025 §3.4): the ring's land until the Township, the hills until Sprint 24. A closed parcel
+        /// can't be bought, built on, zoned or leased, a builder skips it, and its tiles are not simulated.
+        /// </summary>
+        public static bool Locked(Simulation sim, int parcelId)
+        {
+            string opens = sim.Config.Game.Map.Parcels[parcelId].Opens;
+            if (opens == null) return false;
+            return opens == "hills" || !Town.TownshipRules.Reached(sim);
+        }
+
+        /// <summary>The closed parcels, by id, or null when the map has none (so the hourly pass pays nothing for them).</summary>
+        public static bool[] LockedParcels(Simulation sim)
+        {
+            MapDef map = sim.Config.Game.Map;
+            bool[] locked = null;
+            for (int p = 0; p < map.Parcels.Count; p++)
+            {
+                if (map.Parcels[p].Opens == null) continue;
+                if (locked == null) locked = new bool[map.Parcels.Count];
+                locked[p] = Locked(sim, p);
+            }
+            return locked;
+        }
+
         private static readonly Fixed Hundred = Fixed.FromInt(100);
 
         /// <summary>SoilDef.yieldFactor × FertilityFactor(fertility) × ShadeFactor (spec 002 §3.4), used by the yield formula.</summary>

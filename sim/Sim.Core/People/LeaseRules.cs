@@ -95,20 +95,22 @@ namespace Sim.Core.People
             return road == 2 ? p.RentDistrict : road == 1 ? p.RentLane : p.RentInner;
         }
 
+        /// <summary>The acre is on the district road (the paved link road's way, spec 023 §3.3).</summary>
+        public static bool IsDistrictRoad(Simulation sim, int tileId) { return Contains(P(sim).DistrictRoadTiles, tileId); }
+
         /// <summary>The best road an acre touches by an edge: 2 the district road, 1 the village lane, 0 none (inner).</summary>
         public static int RoadAccess(Simulation sim, int tileId)
         {
             PopulationDefs p = P(sim);
             MapDef map = sim.Config.Game.Map;
-            int x = tileId % map.Width, y = tileId / map.Width;
+            int x = map.X(tileId), y = map.Y(tileId);
             bool district = false, lane = false;
             for (int i = 0; i < 4; i++)
             {
-                int nx = x + (i == 1 ? -1 : i == 2 ? 1 : 0), ny = y + (i == 0 ? -1 : i == 3 ? 1 : 0);
-                if (nx < 0 || ny < 0 || nx >= map.Width || ny >= map.Height) continue;
-                int n = ny * map.Width + nx;
+                int n = map.TileAt(x + (i == 1 ? -1 : i == 2 ? 1 : 0), y + (i == 0 ? -1 : i == 3 ? 1 : 0));
+                if (n < 0) continue;
                 if (Contains(p.DistrictRoadTiles, n)) district = true;
-                else if (Contains(p.LaneRoadTiles, n)) lane = true;
+                else if (Contains(p.LaneRoadTiles, n) || Town.LaneRules.BuiltLane(sim, n)) lane = true;
             }
             return district ? 2 : lane ? 1 : 0;
         }

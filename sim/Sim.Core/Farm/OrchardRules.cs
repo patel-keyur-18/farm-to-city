@@ -82,12 +82,12 @@ namespace Sim.Core.Farm
         {
             if (!On(sim) || sim.State.Orchards.Orchards.Count == 0) return Fixed.Zero;
             MapDef map = sim.Config.Game.Map;
-            int x = tileId % map.Width, y = tileId / map.Width;
+            int x = map.X(tileId), y = map.Y(tileId);
             Fixed shade = Fixed.Zero;
             foreach (Orchard o in sim.State.Orchards.Orchards)
             {
                 if (o.State == TreeState.Growing) continue;
-                int ox = o.TileId % map.Width, oy = o.TileId / map.Width;
+                int ox = map.X(o.TileId), oy = map.Y(o.TileId);
                 if (System.Math.Abs(ox - x) + System.Math.Abs(oy - y) == 1) shade += sim.Config.Game.Farm.Trees[o.Def].Shade;
             }
             return shade;

@@ -697,7 +697,7 @@ namespace Sim.View.Views
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
             { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
-            { "CivicBuilt", Use.Away }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
+            { "CivicBuilt", Use.Away }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },

@@ -282,14 +282,17 @@ namespace Sim.Core.Town
             TownWorkDef work = null;
             foreach (TownWorkDef w in Def(sim).Works) if (w.Id == workId) work = w;
             if (work == null) return Commands.RejectReason.UnknownWork;
-            if (CivicRules.CanCommission(sim, workId) != Commands.RejectReason.None) return Commands.RejectReason.PlotTaken;
+            int lane = LaneRules.OfWork(sim, workId);
+            if (lane >= 0) { Commands.RejectReason why = LaneRules.CanCommission(sim, lane); if (why != Commands.RejectReason.None) return why; }
+            else if (CivicRules.CanCommission(sim, workId) != Commands.RejectReason.None) return Commands.RejectReason.PlotTaken;
             long cost = MarketRules.Indexed(sim, work.Cost), now = sim.State.Clock.SimTime;
             TreasuryState s = State(sim);
             if (!s.Ledger.CanAfford(cost)) return Commands.RejectReason.InsufficientFunds;
             s.Ledger.Post(now, sim.Period, "ledger.townWorks", "works:" + workId, new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
             s.Works.Add(new WorkRecord { WorkId = workId, Cost = cost, LifeSeasons = work.LifeSeasons, At = now });
             sim.Emit(new WorksCommissioned(now, workId, cost));
-            CivicRules.OnCommissioned(sim, workId, cost);
+            if (lane >= 0) LaneRules.OnCommissioned(sim, lane);
+            else CivicRules.OnCommissioned(sim, workId, cost);
             return Commands.RejectReason.None;
         }
 

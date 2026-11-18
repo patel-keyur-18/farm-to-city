@@ -53,7 +53,7 @@ namespace Sim.Core.Tests
             LoadResult r = Load(out Pins pins);
             GameDefs defs = SaveTests.Config().Game;
             LandState land = r.State.Land;
-            Assert.That(land.Tiles.Count, Is.EqualTo(192));
+            Assert.That(land.Tiles.Count, Is.EqualTo(432), "the 16 × 12 map's 192 and the closed ring's 240 from content");
             var old = new HashSet<int>();
             for (int i = 0; i < 48; i++)
             {

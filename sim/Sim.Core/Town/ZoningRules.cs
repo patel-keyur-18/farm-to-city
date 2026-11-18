@@ -122,7 +122,7 @@ namespace Sim.Core.Town
             for (int i = 0; i < defs.Map.Parcels.Count; i++)
             {
                 Parcel p = sim.State.Land.Parcels[i];
-                if (p.BuilderOwned || p.Protected) continue;
+                if (p.BuilderOwned || p.Protected || LandRules.Locked(sim, i)) continue;
                 if (HomeTiles(sim, i).Count == 0 || !Serviced(sim, i)) continue;
                 if (p.Owned)
                 {

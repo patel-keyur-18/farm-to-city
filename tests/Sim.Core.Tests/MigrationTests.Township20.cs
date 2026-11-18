@@ -75,7 +75,7 @@ namespace Sim.Core.Tests
             Assert.That((t.Cohort.Joined, t.Cohort.Households), Is.EqualTo((true, 30)));
             Assert.That(r.State.Treasury.Opened, Is.True);
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
-            Assert.That(t.LandValues.Length, Is.EqualTo(r.State.Land.Tiles.Count), "land values read");
+            Assert.That(t.LandValues.Length, Is.EqualTo(192), "land values read, on the 16 × 12 map: the next close reads the ring too (schema 21)");
             Assert.That(r.State.Land.Parcels.Count(p => p.Listed), Is.EqualTo(1), "a parcel listed for a slow sale");
             Assert.That(r.State.Land.Parcels.Count(p => p.Lease == (int)Sim.Core.Land.LeaseStatus.Active), Is.EqualTo(1), "a parcel leased out and paying");
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

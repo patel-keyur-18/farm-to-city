@@ -279,6 +279,9 @@ namespace Sim.Core.Commands
 
         /// <summary>The parcel is not leased out.</summary>
         NotLeased,
+
+        /// <summary>The land is closed: the ring until the Township, the hills until they open (spec 025 §3.4).</summary>
+        LandClosed,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -127,7 +127,7 @@ namespace Sim.Core.Tests
                 int season = (int)Time.Calendar.SeasonAt(t - 1, sim.Clock);
                 foreach (Tile tile in sim.State.Land.Tiles)
                 {
-                    if (tile.Terrain != Terrain.Farm || sim.State.Land.Parcels[tile.ParcelId].Owned) continue;
+                    if (tile.Terrain != Terrain.Farm || sim.State.Land.Parcels[tile.ParcelId].Owned || Sim.Core.Land.LandRules.Locked(sim, tile.ParcelId)) continue; // a closed acre is not simulated
                     if (sim.Config.Game.Soils[tile.Soil].Id != "loam") continue;
                     sum[season] += tile.Moisture.Raw / 4294967296.0;
                     n[season]++;

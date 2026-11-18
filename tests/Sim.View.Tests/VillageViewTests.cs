@@ -30,7 +30,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = ViewKit.NewGame();
             MapVm map = MapView.Build(ViewKit2.Context(sim));
-            Assert.That((map.HomeX, map.HomeY), Is.EqualTo((7f, 5.5f)), "the middle of the 2-acre yard (tiles 87 and 103)");
+            Assert.That((map.HomeX, map.HomeY), Is.EqualTo((11f, 8.5f)), "the middle of the 2-acre yard (tiles 87 and 103)");
             var grid = new IsoGrid(map.Width, map.Height, 0.5f);
             var cam = new MapCamera(grid, 16f / 9f);
             cam.Focus(7, 5, cam.MinHalfHeight * 2);
@@ -126,9 +126,9 @@ namespace Sim.View.Tests
 
             MapVm map = MapView.Build(ctx);
             Assert.That(map.Tiles.Where(t => t.ForSaleSign).All(t => sim.Config.Game.Map.Parcels[t.ParcelId].ForSale), Is.True, "signs only on land for sale");
-            Assert.That(map.Tiles.Count(t => t.ForSaleSign), Is.EqualTo(sim.Config.Game.Map.Parcels.Count(p => p.ForSale) - 4), "one sign a parcel for sale (not the inherited four)");
+            Assert.That(map.Tiles.Count(t => t.ForSaleSign), Is.EqualTo(sim.Config.Game.Map.Parcels.Count(p => p.ForSale && p.Opens == null) - 4), "one sign a parcel for sale (not the inherited four, not the closed ring)");
             Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Unowned).All(t => t.NeighbourCrop == null || t.NeighbourCrop == "potato" || t.NeighbourCrop == "radish" || t.NeighbourCrop == "maize" || t.NeighbourCrop == "sugarcane"), Is.True, "Spring: potato, radish or maize (sugarcane all year)");
-            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Village).Count(t => t.Place != null), Is.EqualTo(16));
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Village).Count(t => t.Place != null), Is.EqualTo(29), "the village's 16 places and the ring's 13 (the public plots, the old village's houses and wells)");
             Assert.That(map.Tiles.Single(t => t.Id == 176).RoadLinks, Is.EqualTo(2 | 1), "the district road's west end runs on off the map");
         }
 

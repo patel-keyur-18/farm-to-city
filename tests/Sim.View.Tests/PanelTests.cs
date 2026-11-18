@@ -73,7 +73,7 @@ namespace Sim.View.Tests
 
             // Buying with a bank loan needs land you could buy: it shares Buy's reason unless only cash is short.
             int checkedLand = 0;
-            foreach (var tile in sim.State.Land.Tiles.Where(t => !sim.State.Land.Parcels[t.ParcelId].Owned && sim.Config.Game.Map.Parcels[t.ParcelId].ForSale))
+            foreach (var tile in sim.State.Land.Tiles.Where(t => !sim.State.Land.Parcels[t.ParcelId].Owned && sim.Config.Game.Map.Parcels[t.ParcelId].ForSale && !Sim.Core.Land.LandRules.Locked(sim, t.ParcelId)))
             {
                 SheetVm land = FieldSheets.ForTile(ctx, tile.Id);
                 ActionVm buy = land.Actions.Single(x => x.Id == "buy"), viaLoan = land.Actions.Single(x => x.Id == "buyLoan");

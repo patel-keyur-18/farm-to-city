@@ -164,6 +164,24 @@ namespace Sim.Core.Events
         protected override string Describe() { return "CivicBuilt " + Civic; }
     }
 
+    /// <summary>The treasury built a section of a ring lane (spec 025 §3.4): <see cref="Section"/> is an index of the map's lanes.</summary>
+    public sealed class LaneBuilt : SimEvent
+    {
+        public int Section { get; }
+
+        public LaneBuilt(long simTime, int section) : base(simTime) { Section = section; }
+
+        protected override string Describe() { return "LaneBuilt " + Section; }
+    }
+
+    /// <summary>The Township opened the ring (spec 025 §3.4): the land past the village can be bought and built on.</summary>
+    public sealed class RingOpened : SimEvent
+    {
+        public RingOpened(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "RingOpened"; }
+    }
+
     /// <summary>A post was advertised; a villager takes it at <see cref="At"/> (spec 023 §3.7).</summary>
     public sealed class PostAdvertised : SimEvent
     {

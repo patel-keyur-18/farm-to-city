@@ -33,6 +33,21 @@ namespace Game.Presentation.Map
 
         public MapCamera View { get { return _view; } }
 
+        private int _ringApplied = -1;
+
+        /// <summary>
+        /// Before the Township the camera stays inside the 16 × 12 map; from it the whole 24 × 18 map is reachable, but the furthest zoom-out
+        /// is 90% of the old window, so the ring adds no draw calls (spec 025 §3.4, ADR 0125). Applied when it changes.
+        /// </summary>
+        public void ApplyRing(MapVm map)
+        {
+            int open = map.RingOpen ? 1 : 0;
+            if (_ringApplied == open) return;
+            _ringApplied = open;
+            if (map.RingOpen) _view.Limit(0, 0, map.Width - 1, map.Height - 1, map.LegacyW, map.LegacyH, map.LegacyW == map.Width ? 1f : 0.9f);
+            else _view.Limit(map.LegacyX, map.LegacyY, map.LegacyX + map.LegacyW - 1, map.LegacyY + map.LegacyH - 1, map.LegacyW, map.LegacyH, 1f);
+        }
+
         /// <summary>
         /// Placement mode (the hand's hut ghost, ADR 0039 §2): while set, a finger on the map moves the ghost to the world point under
         /// it instead of panning, and a tap places it there. Pinch still zooms.
