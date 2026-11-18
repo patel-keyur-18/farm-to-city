@@ -64,6 +64,7 @@ namespace Sim.Core
                 handlers.Add(new People.SchoolRules.ClassEnds());
             }
             if (config.Game?.Businesses != null) handlers.Add(new Business.BusinessRules.Build());
+            if (config.Game?.Township != null) handlers.Add(new Land.LandSystem.SlowSaleDue());
             if (config.Game?.Township != null)
             {
                 handlers.Add(new Town.RoadRules.Build());
@@ -277,6 +278,9 @@ namespace Sim.Core
             State.Scheduler.Schedule(dueTime, ItemClass.Job, handler.System, targetId, job.Id);
             return job;
         }
+
+        /// <summary>Removes a job that has not run; the scheduler skips its item when it comes (a listing taken off the market).</summary>
+        internal void CancelJob(long jobId) { State.Jobs.Remove(jobId); }
 
         /// <summary>Marks a job Done and removes it from the job table.</summary>
         internal void CompleteJob(Job job)

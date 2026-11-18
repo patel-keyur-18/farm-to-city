@@ -57,6 +57,7 @@ namespace Sim.Core.People
             if (!Unlocked(sim)) return RejectReason.EraLocked;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
+            if (sim.State.Land.Parcels[tile.ParcelId].Listed) return RejectReason.Listed; // a listed acre is locked (spec 024 §3.4)
             if (tile.Terrain == Terrain.Quarters)
                 return PeopleRules.HutsOn(sim, tileId) + HousesOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre ? RejectReason.NoRoom : RejectReason.None;
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;

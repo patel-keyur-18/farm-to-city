@@ -208,6 +208,7 @@ namespace Sim.Core.People
             if (s == null) return;
             PopulationDefs p = sim.Config.Game.Population;
             foreach (Household x in s.Households) HouseRules.CollectRent(sim, x); // first, for the season that ended (§3.12)
+            Town.LandValueRules.Read(sim); // spec 024 §3.9: land value is read once, before this season's leases renew
             foreach (Household x in s.Households)
             {
                 Fixed e = Town.ClinicRules.Effect(sim, x); // spec 023 §3.2: the clinic's reach, capacity and the Health service

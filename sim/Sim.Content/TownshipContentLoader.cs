@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +113,50 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase);
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map));
+        }
+
+        private static LandValueDef LoadLandValue(JObject o, string root, MapDef map)
+        {
+            string p = Join(root, "landValue");
+            JObject j = Object(Required(o, root, "landValue"), p);
+            OnlyFields(j, p, "square", "water", "squareReach", "waterReach", "road", "service", "jobs", "size", "floor", "ceiling", "rentPlace", "slowSaleSeconds");
+            JObject road = Sub(j, p, "road", out string rp, "district", "lane");
+            JObject svc = Sub(j, p, "service", out string sp, "school", "clinic", "square", "water");
+            JObject jobs = Sub(j, p, "jobs", out string jp, "each", "max", "reach");
+            JObject size = Sub(j, p, "size", out string zp, "over", "per10", "max");
+            JObject rent = Sub(j, p, "rentPlace", out string tp, "base", "slope", "min", "max");
+            var d = new LandValueDef
+            {
+                SquareTile = NamedPlace(j, p, "square", map), WaterTile = NamedPlace(j, p, "water", map),
+                SquareReach = BoundedInt(j, p, "squareReach", 100, 5000), WaterReach = BoundedInt(j, p, "waterReach", 100, 500),
+                RoadDistrict = Bounded(road, rp, "district", "0", "0.5"), RoadLane = Bounded(road, rp, "lane", "0", "0.5"),
+                School = Bounded(svc, sp, "school", "0", "0.3"), Clinic = Bounded(svc, sp, "clinic", "0", "0.3"),
+                Square = Bounded(svc, sp, "square", "0", "0.3"), Water = Bounded(svc, sp, "water", "0", "0.3"),
+                JobEach = Bounded(jobs, jp, "each", "0", "0.1"), JobMax = BoundedInt(jobs, jp, "max", 0, 20), JobReach = BoundedInt(jobs, jp, "reach", 100, 5000),
+                SizeOver = BoundedInt(size, zp, "over", 0, 1000), SizePer10 = Bounded(size, zp, "per10", "0", "0.2"), SizeMax = Bounded(size, zp, "max", "0", "1"),
+                Floor = Bounded(j, p, "floor", "0.5", "1"), Ceiling = Bounded(j, p, "ceiling", "1", "3"),
+                RentBase = Bounded(rent, tp, "base", "0.1", "3"), RentSlope = Bounded(rent, tp, "slope", "0", "5"),
+                RentMin = Bounded(rent, tp, "min", "0.1", "3"), RentMax = Bounded(rent, tp, "max", "0.1", "3"),
+                SlowSaleSeconds = BoundedInt(j, p, "slowSaleSeconds", 3600, 86400 * 30),
+            };
+            if (d.RentMin > d.RentMax) throw new ContentException(Join(tp, "min"), "can't be above max");
+            return d;
+        }
+
+        private static JObject Sub(JObject o, string path, string name, out string subPath, params string[] fields)
+        {
+            subPath = Join(path, name);
+            JObject s = Object(Required(o, path, name), subPath);
+            OnlyFields(s, subPath, fields);
+            return s;
+        }
+
+        private static int NamedPlace(JObject o, string path, string field, MapDef map)
+        {
+            string id = String(Required(o, path, field), Join(path, field));
+            foreach (PlaceDef x in map.Places) if (x.Id == id) return x.Tile;
+            throw new ContentException(Join(path, field), "no map place '" + id + "'");
         }
 
         /// <summary>The treasury line a civic building names for its upkeep or its post: it must be a Safety line that opens with this very building.</summary>

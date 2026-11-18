@@ -5648,5 +5648,14 @@
   "event.PostAdvertised": "A civic post was advertised.",
   "event.PostFilled": "A villager took a civic post.",
   "event.PostUnpaid": "A civic post's wage went unpaid.",
-  "event.PostVacated": "A civic post fell vacant."
+  "event.PostVacated": "A civic post fell vacant.",
+  "reject.NoTownship": "That begins with the Township.",
+  "reject.Listed": "That acre is for sale. Take it off the market first.",
+  "reject.NotListed": "That land isn't for sale.",
+  "event.ParcelListed": "Land listed for sale.",
+  "event.SaleCancelled": "A sale was taken off the market.",
+  "event.SaleFailed": "A sale didn't go through.",
+  "away.landSold": "Your land for sale sold for {price}.",
+  "away.saleFailed": "A sale of your land didn't go through, and the land is yours again.",
+  "away.land": "Your land"
 }

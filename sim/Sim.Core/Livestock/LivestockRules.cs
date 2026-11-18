@@ -83,6 +83,7 @@ namespace Sim.Core.Livestock
             if (SecondShedTile(sim) >= 0) return RejectReason.AlreadyBuilt;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
+            if (sim.State.Land.Parcels[tile.ParcelId].Listed) return RejectReason.Listed; // a listed acre is locked (spec 024 §3.4)
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
             if (tile.Occupied || sim.State.Farm.CropOn(tileId) != null || People.HouseRules.HousesOn(sim, tileId) > 0 || Business.BusinessRules.On(sim, tileId) != null
                 || Farm.OrchardRules.Of(sim, tileId) != null)

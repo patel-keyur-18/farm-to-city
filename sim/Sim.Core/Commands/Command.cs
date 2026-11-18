@@ -257,6 +257,16 @@ namespace Sim.Core.Commands
 
         /// <summary>Nobody holds the post, so there is nobody to let go.</summary>
         NoStaff,
+
+        // Spec 024 (land value, zoning, selling and leasing)
+        /// <summary>Before the Township: land value, slow sales, zoning and leasing out begin with it (spec 024 §3.1).</summary>
+        NoTownship,
+
+        /// <summary>The acre is listed for sale: it is locked until it sells or the listing is taken off (spec 024 §3.4).</summary>
+        Listed,
+
+        /// <summary>The parcel is not listed for sale.</summary>
+        NotListed,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

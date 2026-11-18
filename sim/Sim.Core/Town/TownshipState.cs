@@ -29,18 +29,21 @@ namespace Sim.Core.Town
         /// <summary>The watchman's post, the community hall and the playground (spec 023 §3.7), in <see cref="Definitions.CivicDef"/> order.</summary>
         public CivicPost[] Civic { get; internal set; } = NewCivic();
 
+        /// <summary>Each acre's land value multiplier as last read (spec 024 §3.1); empty until the Township's unlock reads it.</summary>
+        public Fixed[] LandValues { get; internal set; } = new Fixed[0];
+
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
 
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone() };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -51,12 +54,16 @@ namespace Sim.Core.Town
             h.WriteInt(GateMet);
             Cohort.WriteTo(h);
             foreach (CivicPost p in Civic) p.WriteTo(h);
+            h.WriteInt(LandValues.Length);
+            foreach (Fixed f in LandValues) h.WriteFixed(f);
         }
 
         internal static TownshipState ReadFrom(SaveReader r)
         {
             var s = new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r), GateMet = r.ReadInt(), Cohort = CohortState.ReadFrom(r) };
             for (int i = 0; i < s.Civic.Length; i++) s.Civic[i] = CivicPost.ReadFrom(r);
+            s.LandValues = new Fixed[r.ReadInt()];
+            for (int i = 0; i < s.LandValues.Length; i++) s.LandValues[i] = r.ReadFixed();
             return s;
         }
     }

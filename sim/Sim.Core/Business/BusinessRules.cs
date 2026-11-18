@@ -35,6 +35,7 @@ namespace Sim.Core.Business
             if (sim.State.Businesses == null || tileId < 0 || tileId >= sim.State.Land.Tiles.Count) return RejectReason.UnknownTile;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
+            if (sim.State.Land.Parcels[tile.ParcelId].Listed) return RejectReason.Listed; // a listed acre is locked (spec 024 §3.4)
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
             if (sim.State.Farm.CropOn(tileId) != null || HouseRules.HousesOn(sim, tileId) > 0 || Livestock.LivestockRules.SecondShedTile(sim) == tileId
                 || Farm.OrchardRules.Of(sim, tileId) != null)

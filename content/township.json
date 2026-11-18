@@ -12,6 +12,16 @@
     "childShare": 0.30, "elderShare": 0.10, "pupilShare": 0.0667
   },
   "safetyBase": 0.5,
+  "landValue": {
+    "square": "banyan", "water": "pond", "squareReach": 500, "waterReach": 300,
+    "road": { "district": 0.20, "lane": 0.10 },
+    "service": { "school": 0.08, "clinic": 0.08, "square": 0.06, "water": 0.04 },
+    "jobs": { "each": 0.02, "max": 5, "reach": 1000 },
+    "size": { "over": 20, "per10": 0.02, "max": 0.20 },
+    "floor": 0.80, "ceiling": 1.80,
+    "rentPlace": { "base": 0.85, "slope": 1.75, "min": 0.85, "max": 1.50 },
+    "slowSaleSeconds": 172800
+  },
   "civic": {
     "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },
     "hall": { "place": "hall_plot", "work": "community_hall", "upkeepLine": "hall", "wageLine": "caretaker", "reach": 1000, "capacity": 250, "gain": 0.2, "staffHours": 24, "leaveCloses": 2 },

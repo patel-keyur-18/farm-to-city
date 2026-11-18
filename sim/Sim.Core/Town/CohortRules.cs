@@ -150,6 +150,7 @@ namespace Sim.Core.Town
             s.Joined = true;
             s.JoinedAt = sim.State.Clock.SimTime;
             s.Households = d.Households;
+            LandValueRules.Read(sim); // land value exists from the Township on (spec 024 §3.1)
             Refresh(sim);
             sim.Emit(new CohortJoined(s.JoinedAt, s.Households, People(sim)));
         }

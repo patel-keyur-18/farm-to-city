@@ -38,9 +38,12 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(t + 4 * Day);
             TreasuryTests.Township(sim);
             Ok(sim, new EnactPolicy(sim.State.Clock.SimTime, PolicyId.Subsidy));
+            string bought = sim.Config.Game.Map.Parcels.First(p => p.ForSale && !sim.State.Land.Parcels[sim.Config.Game.Map.IndexOfParcel(p.Id)].Owned && Sim.Core.Land.LandSystem.IsAdjacentToOwned(sim, sim.Config.Game.Map.IndexOfParcel(p.Id))).Id;
+            Ok(sim, new BuyParcel(sim.State.Clock.SimTime, bought)); // a parcel listed for a slow sale, with the land values read (US-143)
             sim.AdvanceTo(TreasuryTests.NextClose(sim) - 3600);
             long cash = sim.State.Ledger.Cash;
             sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.LivingCosts, cash - 10 * Coin), new Posting(Account.Cash, -(cash - 10 * Coin)));
+            Ok(sim, new ListParcel(sim.State.Clock.SimTime, bought));
             sim.AdvanceTo(TreasuryTests.NextClose(sim) + 3 * Hour);
             sim.DrainEvents();
             Assert.That(CohortRules.Joined(sim), Is.True);
@@ -70,6 +73,8 @@ namespace Sim.Core.Tests
             Assert.That((t.Cohort.Joined, t.Cohort.Households), Is.EqualTo((true, 30)));
             Assert.That(r.State.Treasury.Opened, Is.True);
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
+            Assert.That(t.LandValues.Length, Is.EqualTo(r.State.Land.Tiles.Count), "land values read");
+            Assert.That(r.State.Land.Parcels.Count(p => p.Listed), Is.EqualTo(1), "a parcel listed for a slow sale");
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "round-trips");
             Assert.That(again.State.Township.Cohort.Happiness, Is.EqualTo(t.Cohort.Happiness));

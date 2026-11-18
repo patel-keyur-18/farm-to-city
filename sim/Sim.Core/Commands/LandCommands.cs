@@ -73,25 +73,42 @@ namespace Sim.Core.Commands
             if (LandSystem.InUse(sim, id)) return CommandResult.Reject(RejectReason.ParcelInUse);
             if (LandSystem.WouldStrand(sim, id)) return CommandResult.Reject(RejectReason.WouldStrandLand);
 
-            long t = sim.State.Clock.SimTime;
+            if (parcel.Listed) return CommandResult.Reject(RejectReason.Listed);
             long price = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, parcel), defs.Land.QuickSaleFactor));
-            // Land that secures a bank loan: the proceeds repay the bank first, or the sale is refused (ADR 0038).
-            long required = CreditSystem.RequiredOnSale(sim, id);
-            if (price < required) return CommandResult.Reject(RejectReason.LoanSecured);
-            long basis = parcel.CostBasis;
-            long gain = price - basis;
-            sim.State.Ledger.Post(t, sim.Period, "ledger.sellParcel", "parcel:" + ParcelId,
-                new Posting(Account.Cash, price),
-                new Posting(Account.Land, -basis),
-                gain >= 0 ? new Posting(Account.GainOnAssetSales, -gain) : new Posting(Account.LossOnAssetSales, -gain));
-            price += IrrigationRules.Release(sim, id, sim.Period, "ledger.irrigationSold"); // channels, drip, a borewell: with the land at book value
-            FarmSystem.Accrue(sim);
-            price += OrchardRules.Release(sim, id, sim.Period, "ledger.orchardSold"); // and its orchards (ADR 0090)
-            FarmSystem.Refresh(sim);
-            LandSystem.Release(sim, parcel);
-            if (required > 0) CreditSystem.RepaySecured(sim, required);
-            sim.Emit(new ParcelSold(t, ParcelId, price, basis));
+            if (price < CreditSystem.RequiredOnSale(sim, id)) return CommandResult.Reject(RejectReason.LoanSecured); // land that secures a bank loan (ADR 0038)
+            LandSystem.Sell(sim, parcel, price);
             return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Lists a bought parcel for a slow sale (US-143, spec 024 §3.4): it sells in <c>slowSaleSeconds</c> at 100% of its land value as it stands now, the
+    /// price fixed at listing; the acre is locked until it sells or <see cref="CancelSale"/> takes it off. From the Township.
+    /// </summary>
+    public sealed class ListParcel : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public ListParcel(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = LandSystem.List(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Takes a parcel off the market before it sells (spec 024 §3.4); the acre is yours again, unlocked.</summary>
+    public sealed class CancelSale : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public CancelSale(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = LandSystem.Unlist(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
 }

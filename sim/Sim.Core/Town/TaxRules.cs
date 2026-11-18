@@ -94,7 +94,7 @@ namespace Sim.Core.Town
             else if (def.Id == HomeBuildingId) { assessed = null; foreach (BuildingDef bd in g.Buildings) if (bd.Id == d.HomeAssessedAs) assessed = bd; }
             else return 0; // a hand's hut and every other building: exempt
             if (assessed == null) return 0;
-            long value = MarketRules.Indexed(sim, assessed.Value);
+            long value = Money.MulRate(MarketRules.Indexed(sim, assessed.Value), LandValueRules.Of(sim, b.TileId)); // × land value from the Township (spec 024 §3.2)
             long tax = Money.MulRate(value, rate) / 4;
             long rent = MarketRules.Indexed(sim, g.Population.BaseRent);
             Household x = sim.State.Citizens?.Households.Find(h => h.HomeId == b.Id);

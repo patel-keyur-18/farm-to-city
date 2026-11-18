@@ -1,9 +1,9 @@
 {
   "Schema": 20,
-  "Hash": "0xA9AFF56FB3E4E8BB",
+  "Hash": "0xA648AC09E5B679D7",
   "Facts": {
     "buildings": 3,
-    "cash": 355335,
+    "cash": 352406,
     "chaptersSeen": 0,
     "crops": 0,
     "era": 3,
@@ -12,7 +12,7 @@
     "hands": 0,
     "loansOpen": 0,
     "orders": 0,
-    "parcelsOwned": 4,
+    "parcelsOwned": 5,
     "profitableSeasons": 1,
     "roster": 8,
     "seasonReports": 2,

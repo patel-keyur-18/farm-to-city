@@ -110,9 +110,17 @@ namespace Sim.Core.Land
         public long CostBasis { get; internal set; }
         public long AcquiredAt { get; internal set; }
 
+        /// <summary>A slow sale (spec 024 §3.4): when it completes (0 = not listed), the price fixed at listing, and its job. A listed acre is locked.</summary>
+        public long SlowSaleEnds { get; internal set; }
+        public long SlowSalePrice { get; internal set; }
+        public long SlowSaleJobId { get; internal set; }
+
+        /// <summary>Listed for sale: no sowing, building or second listing until it sells or is taken off.</summary>
+        public bool Listed { get { return SlowSaleEnds != 0; } }
+
         internal Parcel Clone()
         {
-            return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt };
+            return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt, SlowSaleEnds = SlowSaleEnds, SlowSalePrice = SlowSalePrice, SlowSaleJobId = SlowSaleJobId };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -122,11 +130,19 @@ namespace Sim.Core.Land
             h.WriteBool(Protected);
             h.WriteLong(CostBasis);
             h.WriteLong(AcquiredAt);
+            if (h.Hashing ? SlowSaleEnds != 0 : !(h is SaveWriter w && w.Schema < 20)) // schema 20; hashed once listed
+            {
+                h.WriteLong(SlowSaleEnds);
+                h.WriteLong(SlowSalePrice);
+                h.WriteLong(SlowSaleJobId);
+            }
         }
 
         internal static Parcel ReadFrom(SaveReader r)
         {
-            return new Parcel { Id = r.ReadRef(ContentTable.Parcel), Owned = r.ReadBool(), Protected = r.ReadBool(), CostBasis = r.ReadLong(), AcquiredAt = r.ReadLong() };
+            var p = new Parcel { Id = r.ReadRef(ContentTable.Parcel), Owned = r.ReadBool(), Protected = r.ReadBool(), CostBasis = r.ReadLong(), AcquiredAt = r.ReadLong() };
+            if (r.Schema >= 20) { p.SlowSaleEnds = r.ReadLong(); p.SlowSalePrice = r.ReadLong(); p.SlowSaleJobId = r.ReadLong(); }
+            return p;
         }
     }
 

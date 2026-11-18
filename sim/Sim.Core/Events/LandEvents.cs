@@ -34,6 +34,39 @@ namespace Sim.Core.Events
         protected override string Describe() { return "ParcelSold(parcel=" + ParcelId + ", price=" + Price + ", costBasis=" + CostBasis + ")"; }
     }
 
+    /// <summary>A parcel was listed for a slow sale (spec 024 §3.4): it sells at the price fixed now when its days are up.</summary>
+    public sealed class ParcelListed : SimEvent
+    {
+        public string ParcelId { get; }
+        public long Price { get; }
+        public long EndsAt { get; }
+
+        public ParcelListed(long simTime, string parcelId, long price, long endsAt) : base(simTime) { ParcelId = parcelId; Price = price; EndsAt = endsAt; }
+
+        protected override string Describe() { return "ParcelListed(parcel=" + ParcelId + ", price=" + Price + ", endsAt=" + EndsAt + ")"; }
+    }
+
+    /// <summary>A listing was taken off the market before it sold.</summary>
+    public sealed class SaleCancelled : SimEvent
+    {
+        public string ParcelId { get; }
+
+        public SaleCancelled(long simTime, string parcelId) : base(simTime) { ParcelId = parcelId; }
+
+        protected override string Describe() { return "SaleCancelled(parcel=" + ParcelId + ")"; }
+    }
+
+    /// <summary>A slow sale's days came and the acre could not be sold (a loan now secured on it, or selling it would strand land): the listing is off, nothing was sold.</summary>
+    public sealed class SaleFailed : SimEvent
+    {
+        public string ParcelId { get; }
+        public string Reason { get; }
+
+        public SaleFailed(long simTime, string parcelId, string reason) : base(simTime) { ParcelId = parcelId; Reason = reason; }
+
+        protected override string Describe() { return "SaleFailed(parcel=" + ParcelId + ", reason=" + Reason + ")"; }
+    }
+
     /// <summary>
     /// The season-close reconciliation failed (spec 005 §3.1): a bug. With <c>SimOptions.StrictChecks</c> the sim
     /// throws instead; player builds log this event.

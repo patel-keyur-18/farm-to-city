@@ -89,6 +89,15 @@ namespace Sim.Core.People
         /// <summary>The place factor of an acre (§3.14): the best road it touches by an edge, district road, lane, or none (inner).</summary>
         public static Fixed Place(Simulation sim, int tileId)
         {
+            if (Town.LandValueRules.On(sim)) return Town.LandValueRules.RentPlace(sim, tileId); // from the Township: land value sets the place (spec 024 §3.2)
+            PopulationDefs p = P(sim);
+            int road = RoadAccess(sim, tileId);
+            return road == 2 ? p.RentDistrict : road == 1 ? p.RentLane : p.RentInner;
+        }
+
+        /// <summary>The best road an acre touches by an edge: 2 the district road, 1 the village lane, 0 none (inner).</summary>
+        public static int RoadAccess(Simulation sim, int tileId)
+        {
             PopulationDefs p = P(sim);
             MapDef map = sim.Config.Game.Map;
             int x = tileId % map.Width, y = tileId / map.Width;
@@ -101,7 +110,7 @@ namespace Sim.Core.People
                 if (Contains(p.DistrictRoadTiles, n)) district = true;
                 else if (Contains(p.LaneRoadTiles, n)) lane = true;
             }
-            return district ? p.RentDistrict : lane ? p.RentLane : p.RentInner;
+            return district ? 2 : lane ? 1 : 0;
         }
 
         private static bool Contains(IReadOnlyList<int> list, int id)

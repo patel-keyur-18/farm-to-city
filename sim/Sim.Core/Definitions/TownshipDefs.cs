@@ -18,9 +18,13 @@ namespace Sim.Core.Definitions
         /// <summary>The safety a town has with a post built but nobody in it or out of reach (spec 023 §3.7: 0.5).</summary>
         public Fixed SafetyBase { get; }
 
+        /// <summary>What makes an acre valuable (spec 024 §3.1) and how rent and a slow sale follow it.</summary>
+        public LandValueDef LandValue { get; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
-            System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase)
+            System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue)
         {
+            LandValue = landValue;
             Civic = civic;
             SafetyBase = safetyBase;
             Gate = gate;
@@ -170,5 +174,50 @@ namespace Sim.Core.Definitions
         public int LeaveCloses { get; internal set; }
 
         public bool HasPost { get { return WageLine >= 0; } }
+    }
+}
+
+namespace Sim.Core.Definitions
+{
+    /// <summary>Land value (spec 024 §3.1, <c>township.json</c> <c>landValue</c>): <c>LV</c> starts at 1.00 and adds what is near an acre, held between the floor and the ceiling.</summary>
+    public sealed class LandValueDef
+    {
+        /// <summary>The square's and the pond's tiles (map places) and the metres within which each counts.</summary>
+        public int SquareTile { get; internal set; }
+        public int WaterTile { get; internal set; }
+        public int SquareReach { get; internal set; }
+        public int WaterReach { get; internal set; }
+
+        /// <summary>The road an acre touches: the district road and the village lane.</summary>
+        public Fixed RoadDistrict { get; internal set; }
+        public Fixed RoadLane { get; internal set; }
+
+        /// <summary>The services within reach: the school (its own reach, spec 023), the clinic, the square and water.</summary>
+        public Fixed School { get; internal set; }
+        public Fixed Clinic { get; internal set; }
+        public Fixed Square { get; internal set; }
+        public Fixed Water { get; internal set; }
+
+        /// <summary>Each open business with a hired worker within <see cref="JobReach"/> metres adds <see cref="JobEach"/>, at most <see cref="JobMax"/> of them.</summary>
+        public Fixed JobEach { get; internal set; }
+        public int JobMax { get; internal set; }
+        public int JobReach { get; internal set; }
+
+        /// <summary>The town's size: <see cref="SizePer10"/> for each 10 households of yours over <see cref="SizeOver"/>, at most <see cref="SizeMax"/>.</summary>
+        public int SizeOver { get; internal set; }
+        public Fixed SizePer10 { get; internal set; }
+        public Fixed SizeMax { get; internal set; }
+
+        public Fixed Floor { get; internal set; }
+        public Fixed Ceiling { get; internal set; }
+
+        /// <summary>Rent's place from the Township: <c>base + slope × (LV − 1)</c>, between min and max (replaces ADR 0110's three constants).</summary>
+        public Fixed RentBase { get; internal set; }
+        public Fixed RentSlope { get; internal set; }
+        public Fixed RentMin { get; internal set; }
+        public Fixed RentMax { get; internal set; }
+
+        /// <summary>Seconds a slow sale waits (spec 024 §3.4).</summary>
+        public long SlowSaleSeconds { get; internal set; }
     }
 }
