@@ -1,6 +1,6 @@
 # 026. Town life: festivals, petitions, approval, reputation, crime and inequality
 
-- Status: Draft for the owner's review (written 2026-11-18, Sprint 23, ADR 0057). Gaps G1–G8 (§10) are closed one per message, each with a recommendation, before any code (Sprint 24). Every sheet is previewed as an artifact that looks exactly like the game before any UI code.
+- Status: Approved by the owner (2026-11-18): G1–G8 (§10) closed one per message on my recommendations; ADR 0127. Every sheet is previewed as an artifact that looks exactly like the game before any UI code.
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: People and the town (Safety and fairness, Festivals, Town reputation, Citizen voice); Government (Approval); Map overlays
@@ -243,7 +243,7 @@ Each is closed with the owner, one per message, with my recommendation, before c
 - **G5 Crime. Closed (owner, 2026-11-18, my recommendation):** the formula, the Safety part rewritten as `1 − crimeAt ÷ 100` (the same at 50), the land-value term and the overlay; crime is a pressure, never a theft.
 - **G6 Inequality. Closed (owner, 2026-11-18, my recommendation):** the decile ratio from your households only; −1 point a whole point above 4 below the median, the poorest leave a season sooner from 6.
 - **G7 Screens. Closed (owner, 2026-11-18, my recommendation):** a *Town life* tab on the Town hall, *Hold a festival* on the hall and the square, the crime overlay; previewed first.
-- **G8 Scale in Sprint 24.** 11 points of stories plus the hills and the farm's items; schema 22 shared. Recommendation: keep; the cut line is §11.
+- **G8 Scale in Sprint 24. Closed (owner, 2026-11-18, my recommendation):** 11 points of stories with spec 027 and the hills; schema 22 shared; the cut line is §11.
 
 ## 11. Cut first
 
