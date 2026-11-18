@@ -267,6 +267,12 @@ namespace Sim.Core.Commands
 
         /// <summary>The parcel is not listed for sale.</summary>
         NotListed,
+
+        /// <summary>The parcel is not zoned for anything but farming.</summary>
+        NotZoned,
+
+        /// <summary>The parcel is already zoned so.</summary>
+        AlreadyZoned,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

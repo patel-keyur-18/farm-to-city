@@ -22,6 +22,7 @@
     "rentPlace": { "base": 0.85, "slope": 1.75, "min": 0.85, "max": 1.50 },
     "slowSaleSeconds": 172800
   },
+  "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {
     "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },
     "hall": { "place": "hall_plot", "work": "community_hall", "upkeepLine": "hall", "wageLine": "caretaker", "reach": 1000, "capacity": 250, "gain": 0.2, "staffHours": 24, "leaveCloses": 2 },

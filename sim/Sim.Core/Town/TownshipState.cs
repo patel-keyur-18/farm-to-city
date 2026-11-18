@@ -32,18 +32,29 @@ namespace Sim.Core.Town
         /// <summary>Each acre's land value multiplier as last read (spec 024 §3.1); empty until the Township's unlock reads it.</summary>
         public Fixed[] LandValues { get; internal set; } = new Fixed[0];
 
+        /// <summary>Families the migration draw found no home for, remembered for the builders (spec 024 §3.3); when the next is due.</summary>
+        public int TurnedAway { get; internal set; }
+        public long NextTurnedAwayAt { get; internal set; }
+
+        /// <summary>The season in which builders last bought a parcel (one a season across the town), or −1.</summary>
+        public long BuiltSeason { get; internal set; } = -1;
+
+        /// <summary>Parcels builders have bought so far and the homes they built, for the sheets.</summary>
+        public int BuilderParcels { get; internal set; }
+        public int BuilderHomes { get; internal set; }
+
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
 
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone() };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -56,6 +67,11 @@ namespace Sim.Core.Town
             foreach (CivicPost p in Civic) p.WriteTo(h);
             h.WriteInt(LandValues.Length);
             foreach (Fixed f in LandValues) h.WriteFixed(f);
+            h.WriteInt(TurnedAway);
+            h.WriteLong(NextTurnedAwayAt);
+            h.WriteLong(BuiltSeason);
+            h.WriteInt(BuilderParcels);
+            h.WriteInt(BuilderHomes);
         }
 
         internal static TownshipState ReadFrom(SaveReader r)
@@ -64,6 +80,11 @@ namespace Sim.Core.Town
             for (int i = 0; i < s.Civic.Length; i++) s.Civic[i] = CivicPost.ReadFrom(r);
             s.LandValues = new Fixed[r.ReadInt()];
             for (int i = 0; i < s.LandValues.Length; i++) s.LandValues[i] = r.ReadFixed();
+            s.TurnedAway = r.ReadInt();
+            s.NextTurnedAwayAt = r.ReadLong();
+            s.BuiltSeason = r.ReadLong();
+            s.BuilderParcels = r.ReadInt();
+            s.BuilderHomes = r.ReadInt();
             return s;
         }
     }

@@ -48,7 +48,7 @@ namespace Sim.Core.Saves
             GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget, SetTaxRate, UndoTaxRate, SeeTaxTour, EnactPolicy, RepealPolicy, SeePolicyTour,
             PetitionRoad, BuildClinic, BuildDoctorQuarters,
             PostCivicJob, DismissStaff,
-            ListParcel, CancelSale,
+            ListParcel, CancelSale, ZoneParcel, UnzoneParcel,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -175,6 +175,8 @@ namespace Sim.Core.Saves
                 case DismissStaff c: At(c, Tag.DismissStaff); w.WriteInt(c.Civic); break;
                 case ListParcel c: At(c, Tag.ListParcel); w.WriteString(c.ParcelId); break;
                 case CancelSale c: At(c, Tag.CancelSale); w.WriteString(c.ParcelId); break;
+                case ZoneParcel c: At(c, Tag.ZoneParcel); w.WriteString(c.ParcelId); break;
+                case UnzoneParcel c: At(c, Tag.UnzoneParcel); w.WriteString(c.ParcelId); break;
                 case SetBudget c: At(c, Tag.SetBudget); w.WriteInt(c.Department); w.WriteLong(c.Amount); break;
                 case AcceptBudget c: At(c, Tag.AcceptBudget); break;
                 case SetTaxRate c: At(c, Tag.SetTaxRate); w.WriteInt((int)c.Tax); w.WriteLong(c.Rate.Raw); break;
@@ -337,6 +339,8 @@ namespace Sim.Core.Saves
                 case Tag.DismissStaff: return new DismissStaff(at, r.ReadInt());
                 case Tag.ListParcel: return new ListParcel(at, r.ReadString());
                 case Tag.CancelSale: return new CancelSale(at, r.ReadString());
+                case Tag.ZoneParcel: return new ZoneParcel(at, r.ReadString());
+                case Tag.UnzoneParcel: return new UnzoneParcel(at, r.ReadString());
                 case Tag.SetBudget: return new SetBudget(at, r.ReadInt(), r.ReadLong());
                 case Tag.AcceptBudget: return new AcceptBudget(at);
                 case Tag.SetTaxRate: return new SetTaxRate(at, (Town.TaxKind)r.ReadInt(), Maths.Fixed.FromRaw(r.ReadLong()));

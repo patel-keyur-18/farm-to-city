@@ -194,7 +194,7 @@ namespace Sim.Core.People
         {
             Household x = sim.State.Citizens?.Household(householdId);
             if (x == null) return CommandResult.Reject(RejectReason.UnknownHousehold);
-            if (!Applies(sim, x)) return CommandResult.Reject(RejectReason.NoLease);
+            if (!Applies(sim, x) || HouseholdRules.InBuildersHome(sim, x)) return CommandResult.Reject(RejectReason.NoLease); // a builder's tenants renew at the market rise by themselves
             if (!InLastSeason(sim, x)) return CommandResult.Reject(RejectReason.LeaseNotDue);
             LeaseOptions o = Options(sim, x);
             if (!o.CardDue || !o.Offers(choice)) return CommandResult.Reject(RejectReason.NotOffered);
@@ -232,7 +232,7 @@ namespace Sim.Core.People
             CitizensState s = sim.State.Citizens;
             if (s == null) return due;
             foreach (Household x in s.Households)
-                if (Applies(sim, x) && InLastSeason(sim, x) && x.Renewal == LeaseChoice.None && Options(sim, x).CardDue) due.Add(x.Id);
+                if (Applies(sim, x) && !HouseholdRules.InBuildersHome(sim, x) && InLastSeason(sim, x) && x.Renewal == LeaseChoice.None && Options(sim, x).CardDue) due.Add(x.Id);
             return due;
         }
 

@@ -28,7 +28,7 @@ namespace Sim.Core.Commands
             if (id < 0) return CommandResult.Reject(RejectReason.UnknownParcel);
             Parcel parcel = sim.State.Land.Parcels[id];
             if (parcel.Owned) return CommandResult.Reject(RejectReason.AlreadyOwned);
-            if (!sim.Config.Game.Map.Parcels[id].ForSale) return CommandResult.Reject(RejectReason.NotForSale);
+            if (!sim.Config.Game.Map.Parcels[id].ForSale || parcel.BuilderOwned) return CommandResult.Reject(RejectReason.NotForSale); // a builder has it (spec 024 §3.3)
             if (!LandSystem.IsAdjacentToOwned(sim, id)) return CommandResult.Reject(RejectReason.NotAdjacent);
             long price = LandRules.ParcelPrice(sim, parcel);
             int lender = -1;
@@ -108,6 +108,34 @@ namespace Sim.Core.Commands
         protected override CommandResult ApplyAt(Simulation sim)
         {
             RejectReason r = LandSystem.Unlist(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Zones a parcel you own residential, so builders may buy it when families are waiting for homes (US-142, spec 024 §3.3).</summary>
+    public sealed class ZoneParcel : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public ZoneParcel(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.ZoningRules.Set(sim, ParcelId, Town.Zone.Residential);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Takes a parcel back to farming before a builder buys it.</summary>
+    public sealed class UnzoneParcel : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public UnzoneParcel(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.ZoningRules.Set(sim, ParcelId, Town.Zone.Agricultural);
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }

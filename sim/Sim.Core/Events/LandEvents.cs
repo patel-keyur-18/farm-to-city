@@ -46,6 +46,40 @@ namespace Sim.Core.Events
         protected override string Describe() { return "ParcelListed(parcel=" + ParcelId + ", price=" + Price + ", endsAt=" + EndsAt + ")"; }
     }
 
+    /// <summary>You zoned a parcel (spec 024 §3.3): <see cref="Town.Zone"/> as an int; 0 is farming again.</summary>
+    public sealed class AcreZoned : SimEvent
+    {
+        public string ParcelId { get; }
+        public int Zone { get; }
+
+        public AcreZoned(long simTime, string parcelId, int zone) : base(simTime) { ParcelId = parcelId; Zone = zone; }
+
+        protected override string Describe() { return "AcreZoned(parcel=" + ParcelId + ", zone=" + Zone + ")"; }
+    }
+
+    /// <summary>Builders bought a parcel (spec 024 §3.3): what you received if it was yours, else 0 (a neighbour's).</summary>
+    public sealed class AcreSoldToBuilder : SimEvent
+    {
+        public string ParcelId { get; }
+        public long Price { get; }
+        public bool Yours { get; }
+
+        public AcreSoldToBuilder(long simTime, string parcelId, long price, bool yours) : base(simTime) { ParcelId = parcelId; Price = price; Yours = yours; }
+
+        protected override string Describe() { return "AcreSoldToBuilder(parcel=" + ParcelId + ", price=" + Price + ", yours=" + Yours + ")"; }
+    }
+
+    /// <summary>The builders' homes stand on a parcel they bought.</summary>
+    public sealed class HomesBuilt : SimEvent
+    {
+        public string ParcelId { get; }
+        public int Homes { get; }
+
+        public HomesBuilt(long simTime, string parcelId, int homes) : base(simTime) { ParcelId = parcelId; Homes = homes; }
+
+        protected override string Describe() { return "HomesBuilt(parcel=" + ParcelId + ", homes=" + Homes + ")"; }
+    }
+
     /// <summary>A listing was taken off the market before it sold.</summary>
     public sealed class SaleCancelled : SimEvent
     {

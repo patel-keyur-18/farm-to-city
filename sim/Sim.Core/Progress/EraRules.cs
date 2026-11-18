@@ -101,7 +101,14 @@ namespace Sim.Core.Progress
         }
 
         /// <summary>Households on your land, a hand alone in his hut included (spec 014 §3.13).</summary>
-        public static int Households(Simulation sim) { return sim.State.Citizens?.Households.Count ?? 0; }
+        public static int Households(Simulation sim)
+        {
+            People.CitizensState c = sim.State.Citizens;
+            if (c == null) return 0;
+            int n = 0;
+            foreach (People.Household x in c.Households) if (!People.HouseholdRules.InBuildersHome(sim, x)) n++; // a builder's families are residents, not yours (spec 024 §3.3)
+            return n;
+        }
 
         /// <summary>The most profitable seasons any one business of yours has had (closed ones keep theirs; spec 018 §3.6).</summary>
         public static int BusinessSeasons(Simulation sim) { return Business(sim)?.ProfitableSeasons ?? 0; }

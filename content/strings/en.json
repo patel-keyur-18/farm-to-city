@@ -5712,5 +5712,20 @@
   "confirm.CancelSale.cost": "Cost",
   "confirm.CancelSale.costValue": "nothing",
   "why.landValue.plain": "a plain acre",
-  "confirm.BuyParcel.warnTownship": "Selling it quickly fetches {quick} of its price; selling slowly, over 2 days, fetches all of it."
+  "confirm.BuyParcel.warnTownship": "Selling it quickly fetches {quick} of its price; selling slowly, over 2 days, fetches all of it.",
+  "reject.NotZoned": "That land is farmland already.",
+  "reject.AlreadyZoned": "That land is zoned so already.",
+  "event.AcreZoned": "Land was zoned.",
+  "event.AcreSoldToBuilder": "Builders bought land.",
+  "event.HomesBuilt": "Builders built homes.",
+  "away.builderYours": "A builder bought your land for {price} and built homes on it.",
+  "away.builderTheirs": "Builders bought a neighbour's land by the road and built homes on it.",
+  "confirm.ZoneParcel.title": "Offer to builders?",
+  "confirm.ZoneParcel.verb": "Offer to builders",
+  "confirm.ZoneParcel.warn": "The land leaves yours when it sells, and homes are built on it. Nothing happens until families are waiting. You can take it back to farming before then.",
+  "confirm.ZoneParcel.value": "Its land value today",
+  "confirm.ZoneParcel.when": "A builder buys it when",
+  "confirm.ZoneParcel.families.one": "{n} family is waiting",
+  "confirm.ZoneParcel.families.other": "{n} families are waiting",
+  "confirm.ZoneParcel.receive": "You receive then"
 }

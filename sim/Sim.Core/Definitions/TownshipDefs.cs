@@ -21,9 +21,13 @@ namespace Sim.Core.Definitions
         /// <summary>What makes an acre valuable (spec 024 §3.1) and how rent and a slow sale follow it.</summary>
         public LandValueDef LandValue { get; }
 
+        /// <summary>Zoning and the builders (spec 024 §3.3).</summary>
+        public ZoningDef Zoning { get; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
-            System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue)
+            System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {
+            Zoning = zoning;
             LandValue = landValue;
             Civic = civic;
             SafetyBase = safetyBase;
@@ -219,5 +223,25 @@ namespace Sim.Core.Definitions
 
         /// <summary>Seconds a slow sale waits (spec 024 §3.4).</summary>
         public long SlowSaleSeconds { get; internal set; }
+    }
+}
+
+namespace Sim.Core.Definitions
+{
+    /// <summary>Zoning and builders (spec 024 §3.3, <c>township.json</c> <c>zoning</c>).</summary>
+    public sealed class ZoningDef
+    {
+        /// <summary>Families that found no home that a builder needs for each acre it buys; and the homes it builds on each acre.</summary>
+        public int FamiliesPerAcre { get; internal set; }
+        public int HomesPerAcre { get; internal set; }
+
+        /// <summary>Parcels builders buy across the whole town in a season.</summary>
+        public int ParcelsPerSeason { get; internal set; }
+
+        /// <summary>The permit fee, a share of the land's value, paid into the town's purse (income <c>Fees</c>).</summary>
+        public Fixed PermitFee { get; internal set; }
+
+        /// <summary>The most families the counter remembers.</summary>
+        public int TurnedAwayMax { get; internal set; }
     }
 }

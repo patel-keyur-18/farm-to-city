@@ -599,6 +599,7 @@ namespace Sim.View.Views
                     case PostVacated pv: rows.Add(Row(s.Get("away.town"), s.Get("away.postVacated"), "place_" + CivicSheet.Ids[pv.Civic] + "_plot")); break;
                     case DoctorLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorLeft"), "place_clinic_plot")); break;
                     case ParcelSold ps: rows.Add(Row(s.Get("away.land"), s.Get("away.landSold", "price", ctx.Fmt.Coins(ps.Price)), "land")); break; // a slow sale's days came (spec 024 §3.4)
+                    case AcreSoldToBuilder ab: rows.Add(Row(s.Get("away.land"), ab.Yours ? s.Get("away.builderYours", "price", ctx.Fmt.Coins(ab.Price)) : s.Get("away.builderTheirs"), "family_house")); break; // spec 024 §3.3
                     case SaleFailed _: rows.Add(Row(s.Get("away.land"), s.Get("away.saleFailed"), "land")); break;
                     case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
                     case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
@@ -657,7 +658,7 @@ namespace Sim.View.Views
             { "HourStarted", Use.StateOnly }, { "DayStarted", Use.StateOnly }, { "SeasonStarted", Use.StateOnly }, { "YearStarted", Use.StateOnly },
             { "WeatherSpellStarted", Use.StateOnly }, { "ForecastRevised", Use.StateOnly }, { "AwayAdvanceCompleted", Use.Away }, { "ClockAnomalyDetected", Use.StateOnly },
             // Specs 002, 003.
-            { "ParcelBought", Use.Motion }, { "ParcelSold", Use.Motion }, { "ParcelListed", Use.StateOnly }, { "SaleCancelled", Use.StateOnly }, { "SaleFailed", Use.Away }, { "CropSown", Use.Motion }, { "CropReady", Use.Motion }, { "CropHarvested", Use.Motion },
+            { "ParcelBought", Use.Motion }, { "ParcelSold", Use.Motion }, { "ParcelListed", Use.StateOnly }, { "SaleCancelled", Use.StateOnly }, { "SaleFailed", Use.Away }, { "AcreZoned", Use.StateOnly }, { "AcreSoldToBuilder", Use.Away }, { "HomesBuilt", Use.StateOnly }, { "CropSown", Use.Motion }, { "CropReady", Use.Motion }, { "CropHarvested", Use.Motion },
             { "FounderSick", Use.Alert }, { "PestWarning", Use.Alert }, { "FieldCleared", Use.StateOnly }, { "BedReady", Use.Motion }, { "GardenPicked", Use.Motion },
             { "DayLabourPaid", Use.Away }, { "DietPlanChanged", Use.StateOnly }, { "HomeUseEaten", Use.Away }, { "TreePlanted", Use.Motion }, { "TreeMatured", Use.Motion },
             { "FruitRipe", Use.Motion }, { "FruitPicked", Use.Motion }, { "TreeRemoved", Use.StateOnly }, { "TreeSpent", Use.StateOnly }, 

@@ -115,12 +115,18 @@ namespace Sim.Core.Land
         public long SlowSalePrice { get; internal set; }
         public long SlowSaleJobId { get; internal set; }
 
+        /// <summary>The zone you set (spec 024 §3.3): <see cref="Zone"/> as an int; Agricultural (0) is the default and stays farmland.</summary>
+        public int Zone { get; internal set; }
+
+        /// <summary>Bought by a builder (spec 024 §3.3): no longer for sale, built over with the builder's homes; never yours again.</summary>
+        public bool BuilderOwned { get; internal set; }
+
         /// <summary>Listed for sale: no sowing, building or second listing until it sells or is taken off.</summary>
         public bool Listed { get { return SlowSaleEnds != 0; } }
 
         internal Parcel Clone()
         {
-            return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt, SlowSaleEnds = SlowSaleEnds, SlowSalePrice = SlowSalePrice, SlowSaleJobId = SlowSaleJobId };
+            return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt, SlowSaleEnds = SlowSaleEnds, SlowSalePrice = SlowSalePrice, SlowSaleJobId = SlowSaleJobId, Zone = Zone, BuilderOwned = BuilderOwned };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -136,12 +142,17 @@ namespace Sim.Core.Land
                 h.WriteLong(SlowSalePrice);
                 h.WriteLong(SlowSaleJobId);
             }
+            if (h.Hashing ? Zone != 0 || BuilderOwned : !(h is SaveWriter z && z.Schema < 20)) // schema 20; hashed once zoned or sold to a builder
+            {
+                h.WriteInt(Zone);
+                h.WriteBool(BuilderOwned);
+            }
         }
 
         internal static Parcel ReadFrom(SaveReader r)
         {
             var p = new Parcel { Id = r.ReadRef(ContentTable.Parcel), Owned = r.ReadBool(), Protected = r.ReadBool(), CostBasis = r.ReadLong(), AcquiredAt = r.ReadLong() };
-            if (r.Schema >= 20) { p.SlowSaleEnds = r.ReadLong(); p.SlowSalePrice = r.ReadLong(); p.SlowSaleJobId = r.ReadLong(); }
+            if (r.Schema >= 20) { p.SlowSaleEnds = r.ReadLong(); p.SlowSalePrice = r.ReadLong(); p.SlowSaleJobId = r.ReadLong(); p.Zone = r.ReadInt(); p.BuilderOwned = r.ReadBool(); }
             return p;
         }
     }
@@ -163,9 +174,14 @@ namespace Sim.Core.Land
 
         public long BookValue { get { return Cost - Depreciated; } }
 
+        /// <summary>Whose it is (spec 024 §3.3): 0 you, 1 a builder. A builder's home is off your books (cost 0), pays you no rent and is taxed to its owner.</summary>
+        public int Owner { get; internal set; }
+
+        public bool Builders { get { return Owner == 1; } }
+
         internal Building Clone()
         {
-            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated };
+            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated, Owner = Owner };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -176,15 +192,18 @@ namespace Sim.Core.Land
             h.WriteLong(Cost);
             h.WriteLong(Depreciated);
             h.WriteInt(SeasonsDepreciated);
+            if (h.Hashing ? Owner != 0 : !(h is SaveWriter w && w.Schema < 20)) h.WriteInt(Owner); // schema 20; hashed once a builder's
         }
 
         internal static Building ReadFrom(SaveReader r)
         {
-            return new Building
+            var b = new Building
             {
                 Id = r.ReadLong(), Def = r.ReadRef(ContentTable.Building), TileId = r.ReadTile(), Cost = r.ReadLong(), Depreciated = r.ReadLong(),
                 SeasonsDepreciated = r.ReadInt(),
             };
+            if (r.Schema >= 20) b.Owner = r.ReadInt();
+            return b;
         }
     }
 

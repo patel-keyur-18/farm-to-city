@@ -88,11 +88,13 @@ namespace Sim.Core.People
             if (free == null)
             {
                 s.NextFamilyAt = 0;
+                Town.ZoningRules.TurnAway(sim, t); // from the Township a family that finds no home is remembered for the builders (spec 024 §3.3)
                 return;
             }
+            Town.ZoningRules.HousesFree(sim);
             if (s.NextFamilyAt == 0)
             {
-                Hand alone = HandAlone(sim);
+                Hand alone = free.Builders ? null : HandAlone(sim); // a hand is offered only your own houses
                 if (alone != null)
                 {
                     s.OfferHandId = alone.Id;
@@ -116,7 +118,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>18 ± 6 h in seconds, seeded.</summary>
-        private static long Wait(Simulation sim, long t)
+        internal static long Wait(Simulation sim, long t)
         {
             PopulationDefs p = sim.Config.Game.Population;
             int jitter = p.FamilyJitterHours;

@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +113,20 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map));
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root));
+        }
+
+        private static ZoningDef LoadZoning(JObject o, string root)
+        {
+            string p = Join(root, "zoning");
+            JObject j = Object(Required(o, root, "zoning"), p);
+            OnlyFields(j, p, "familiesPerAcre", "homesPerAcre", "parcelsPerSeason", "permitFee", "turnedAwayMax");
+            return new ZoningDef
+            {
+                FamiliesPerAcre = BoundedInt(j, p, "familiesPerAcre", 1, 4), HomesPerAcre = BoundedInt(j, p, "homesPerAcre", 1, 4),
+                ParcelsPerSeason = BoundedInt(j, p, "parcelsPerSeason", 1, 4), PermitFee = Bounded(j, p, "permitFee", "0", "0.1"),
+                TurnedAwayMax = BoundedInt(j, p, "turnedAwayMax", 1, 100),
+            };
         }
 
         private static LandValueDef LoadLandValue(JObject o, string root, MapDef map)

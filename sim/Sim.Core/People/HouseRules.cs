@@ -104,6 +104,7 @@ namespace Sim.Core.People
             }
             x.Savings -= fromSavings;
             x.RentBehind = 0;
+            if (HouseholdRules.InBuildersHome(sim, x)) return; // paid to the builder: you receive nothing (spec 024 §3.3)
             sim.State.Ledger.Post(t, sim.Period, "ledger.rent", "household:" + x.Id, new Posting(Account.Cash, x.Rent), new Posting(Account.RentReceived, -x.Rent));
             sim.Emit(new RentPaid(t, x.Id, x.Rent));
         }
