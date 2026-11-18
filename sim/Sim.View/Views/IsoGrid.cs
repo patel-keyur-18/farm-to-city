@@ -78,6 +78,12 @@ namespace Sim.View.Views
         /// <summary>Zoomed in all the way: about three acres across the screen.</summary>
         public float MinHalfHeight { get; private set; }
 
+        /// <summary>
+        /// The furthest zoom-out once the ring is open, as a share of the old 16 × 12 window. Preview 1 estimated 90% at +4% draw calls; the Editor's
+        /// render statistics measured 90% at +13.5%, 85% at +9% and 80% at +2% (Sprint 23), so it is 85%: inside the 10% budget (ADR 0125).
+        /// </summary>
+        public const float RingZoomOut = 0.85f;
+
         public MapCamera(IsoGrid grid, float aspect)
         {
             _grid = grid;

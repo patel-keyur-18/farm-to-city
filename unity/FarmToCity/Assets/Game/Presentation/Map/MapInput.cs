@@ -37,15 +37,16 @@ namespace Game.Presentation.Map
 
         /// <summary>
         /// Before the Township the camera stays inside the 16 × 12 map; from it the whole 24 × 18 map is reachable, but the furthest zoom-out
-        /// is 90% of the old window, so the ring adds no draw calls (spec 025 §3.4, ADR 0125). Applied when it changes.
+        /// is 85% of the old window, so the ring adds no draw calls (spec 025 §3.4, ADR 0125). Applied when it changes.
         /// </summary>
         public void ApplyRing(MapVm map)
         {
             int open = map.RingOpen ? 1 : 0;
             if (_ringApplied == open) return;
             _ringApplied = open;
-            if (map.RingOpen) _view.Limit(0, 0, map.Width - 1, map.Height - 1, map.LegacyW, map.LegacyH, map.LegacyW == map.Width ? 1f : 0.9f);
+            if (map.RingOpen) _view.Limit(0, 0, map.Width - 1, map.Height - 1, map.LegacyW, map.LegacyH, map.LegacyW == map.Width ? 1f : MapCamera.RingZoomOut);
             else _view.Limit(map.LegacyX, map.LegacyY, map.LegacyX + map.LegacyW - 1, map.LegacyY + map.LegacyH - 1, map.LegacyW, map.LegacyH, 1f);
+            Apply();
         }
 
         /// <summary>

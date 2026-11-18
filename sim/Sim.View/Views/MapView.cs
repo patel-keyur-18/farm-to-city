@@ -61,6 +61,9 @@ namespace Sim.View.Views
 
         /// <summary>A lane acre whose section the treasury has built (spec 025 §3.4).</summary>
         public bool LaneBuilt { get; internal set; }
+
+        /// <summary>The ring's land for sale (spec 025 §3.4): meadow, drawn with at most a bush so the ring adds few sprites.</summary>
+        public bool Meadow { get; internal set; }
         public TileKind Kind { get; internal set; }
         public string SoilId { get; internal set; }
         public int ParcelId { get; internal set; }
@@ -483,6 +486,13 @@ namespace Sim.View.Views
                 if (!parcel.Owned && !parcel.BuilderOwned && pdef.ForSale && !vm.Locked && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
                 if (t.Terrain == Terrain.Lane) vm.LaneBuilt = Sim.Core.Town.LaneRules.BuiltLane(sim, t.Id);
                 if (vm.Kind == TileKind.Unowned && vm.Locked) { vm.Draw = Draw(vm.Id); vm.Neighbour = NeighbourLand.Scrub; } // closed land is plain scrub (spec 025 §3.4)
+                else if (vm.Kind == TileKind.Unowned && pdef.Opens != null)
+                {
+                    // The ring's land for sale is meadow, not a neighbour's field (preview 1): grass, a bush here and there, never a crop.
+                    vm.Draw = Draw(vm.Id);
+                    vm.Neighbour = NeighbourLand.Fallow;
+                    vm.Meadow = true;
+                }
                 else if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map, t.ParcelId, !pdef.ForSale, map.Season);
                 if (parcel.BuilderOwned) { vm.Neighbour = NeighbourLand.Fallow; vm.NeighbourCrop = null; vm.TubeWell = false; vm.Haystack = false; } // builders' homes stand on bare ground (spec 024 §3.3)
                 if (vm.Kind == TileKind.Road) { vm.RoadLinks = RoadLinks(land, defs.Map, t.Id); vm.Paved = map.RoadPaved && Sim.Core.People.LeaseRules.IsDistrictRoad(sim, t.Id); }

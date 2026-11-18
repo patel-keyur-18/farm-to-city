@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township**: Sprints 20–22 built and merged, **Sprint 23 started** (Sprints 20–27, ADR 0107). Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 23 started 2026-11-18** (branch `sprint/23-utilities-ring`; 49 points, committed core 42; the section is in `sprints.md`). Spec 025's gaps G1–G8 closed (ADR 0125); plan approved (ADR 0126). **Now: Preview 1 (the ring map and every new plot) for the owner, and spec 026 written in parallel.** No Sprint 23 code yet. Save schema 21 is the sprint's, shipped once at the end. Sprint 22 is merged (PR #32) |
-| Branch with latest work | `sprint/23-utilities-ring` (from `main` at `9a3bdaf`): docs only so far (ADR 0125, ADR 0126, the Sprint 23 section, spec 025 amended) |
-| Last updated | 2026-11-18 (Sprint 23 started; plan approved; docs committed, not pushed) |
+| Sprint | **Sprint 23 started 2026-11-18** (branch `sprint/23-utilities-ring`; 49 points, committed core 42; the section is in `sprints.md`). Spec 025's gaps closed (ADR 0125 and its addendum); plan approved (ADR 0126); Preview 1 (the ring) approved. **US-253 the ring is built and Editor-tested; it waits for the owner's review. Its lane build card is not built yet: it needs its artifact preview first.** Spec 026 and 027 are still to write. Save schema 21 is the sprint's (fixtures `schema21.ftc`, `schema21-ring.ftc`). Sprint 22 is merged (PR #32) |
+| Branch with latest work | `sprint/23-utilities-ring` (from `main` at `9a3bdaf`): ADR 0125 and 0126, the Sprint 23 section, spec 025 amended, Preview 1, US-253 (the 24 × 18 map, closed ring, lanes, camera) |
+| Last updated | 2026-11-18 (US-253 built; Core 659/659, View 269/269; Editor saves restored and identical) |
 
 ## Done so far
 

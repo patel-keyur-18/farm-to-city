@@ -78,7 +78,7 @@ namespace Game.Presentation.Map
         {
             foreach (TileVm tv in map.Tiles)
             {
-                string key = tv.Kind == TileKind.Hill || tv.Kind == TileKind.Scrub ? "ring" : tv.Kind != TileKind.Unowned ? "" : tv.Locked ? "closed" : tv.Neighbour + ":" + tv.TubeWell + ":" + tv.Haystack;
+                string key = tv.Kind == TileKind.Hill || tv.Kind == TileKind.Scrub ? "ring" : tv.Meadow ? "meadow" : tv.Kind != TileKind.Unowned ? "" : tv.Locked ? "closed" : tv.Neighbour + ":" + tv.TubeWell + ":" + tv.Haystack;
                 _valleyKey.TryGetValue(tv.Id, out string was);
                 if (key != (was ?? ""))
                 {
@@ -96,7 +96,8 @@ namespace Game.Presentation.Map
             var list = new List<SpriteRenderer>();
             var pieces = new List<Piece>();
             // The ring's hills and scrub (spec 025 §3.4): a mound, or a bush and a tree; and closed land waiting for the Township is plain scrub.
-            if (tv.Kind == TileKind.Hill) { list.Add(PieceOn(tv.Id, new Piece("hill_" + (tv.Id % 3), 0f, 0f))); return list; }
+            // A mound on one hill acre in three, as the valley's edge does: the render statistics showed a mound on every acre doubled the triangles.
+            if (tv.Kind == TileKind.Hill) { if ((tv.X + tv.Y * 2) % 3 == 0) list.Add(PieceOn(tv.Id, new Piece("hill_" + (tv.Id % 3), 0f, 0f))); return list; }
             if (tv.Kind == TileKind.Scrub || tv.Kind == TileKind.Unowned && tv.Locked)
             {
                 pieces.Add(new Piece("scrub", 0.2f, -0.12f));
@@ -105,6 +106,7 @@ namespace Game.Presentation.Map
                 return list;
             }
             if (tv.Kind != TileKind.Unowned) return list;
+            if (tv.Meadow) { if (tv.Draw % 4 == 0) list.Add(PieceOn(tv.Id, new Piece("scrub", 0.2f, -0.12f))); return list; } // the ring's meadow: a bush on one acre in four (the render statistics)
             switch (tv.Neighbour)
             {
                 case NeighbourLand.Farmstead: pieces.AddRange(Farmsteads[tv.Draw % Farmsteads.Length]); break;

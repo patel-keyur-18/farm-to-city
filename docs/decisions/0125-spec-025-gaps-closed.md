@@ -17,6 +17,13 @@
 7. **G7 The farm's promises** (US-254 to US-257) are in **Sprint 23**, cut first (owner: a few more points are fine). The tube well is dropped (the borewell is it), the solar pump stays only if its payback is under about 20 seasons, the tractor for neighbours gets a demand cap and an exploit check.
 8. **G8 The cold store.** Rent 1.00 a kg a season, 20 t cap. Potato nets about +0.24 a kg (0.85 to 1.15 in the seasonal factor, less rent 2.00 and about 0.16 of spoilage), about 2.5% a season on the money locked, no loop. Only mango clearly pays among fruit. The sheet says "keeps X of every 100 kg".
 
+## Addendum (2026-11-18, US-253 as built)
+
+- **Tile ids stay, not renumbered.** Renumbering to (y + 3) × 24 + (x + 4) would have touched about 130 test files, every fixture save and about fifty presenter sites. Instead the 16 × 12 map's tiles keep ids 0–191 and the ring's 240 tiles follow with explicit coordinates; `MapDef` has `X`, `Y` and `TileAt`. An older save's land is padded from content, closed.
+- **The zoom cap is 85%, not 90%.** Measured in the Editor against the Sprint 22 readings: 90% is +13.5% draw calls at the "all" view, 85% +9%, 80% +2%. The farm and village views are lighter than before. Visible sprites grew 15% (ring ground and scrub) and the scene holds 2,250 sprites against 1,492; triangle counts moved with the weather as in earlier sprints, so they are reported and not trusted.
+- **Lanes are works**, `CommissionWorks` on `lane_w1`–`lane_e3` (20,000 each); there is no separate `BuildLane` command.
+- **A closed parcel** (`opens` in `map.json`: `township` or `hills`) cannot be bought (`LandClosed`), is not simulated, is skipped by builders and shows as scrub. The ring's land for sale draws as meadow.
+
 ## Consequences
 
 - Spec 025 is amended; it goes to the owner for approval as a whole with the Sprint 23 plan.

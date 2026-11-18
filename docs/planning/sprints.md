@@ -1040,7 +1040,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-253 | The map's ring (24 × 18, locked until the Township, lanes, hills drawn and locked) | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | To do |
+| US-253 | The map's ring (24 × 18, locked until the Township, lanes, hills drawn and locked) | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | Built (2026-11-18); waits for the owner's review |
 | US-145 | Construction: bricks, cement, timber, masons, held builds | [F15.4](features/F15.4-utilities-and-construction.md) | 8 | Must | To do |
 | US-243 | Brick kiln | [F12.7](features/F12.7-township-businesses.md) | 5 | Must | To do |
 | US-144 | Utilities | [F15.4](features/F15.4-utilities-and-construction.md) | 8 | Must | To do |
@@ -1056,7 +1056,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 1. **Branch, ADR 0125 (done), this section, ADR 0126.**
 2. **Preview 1:** the 24 × 18 map with the ring's lanes, hills (locked), meadow, highway, and every new plot (water tower, drains, collection post, generator on an edge plot, grid on the highway side, the kiln's suggested acres); the owner fixes the plots before any code (ADR 0064). Spec 026 is written in parallel.
-3. **US-253** the ring: schema 21 begins (the map at 24 × 18 from the start, the migration `id = (y + 3) × 24 + (x + 4)`, locked tiles not simulated, the camera cap, `BuildLane`, `RingOpened` at the unlock, hill parcels locked); frame time read.
+3. **US-253** the ring: schema 21 begins (the map at 24 × 18 from the start, tile ids stay and the ring's tiles follow (ADR 0125 addendum), locked parcels not simulated, the camera cap at 85%, lane sections as treasury works, `RingOpened` at the unlock, hill parcels locked); frame time read.
 4. **US-145** construction (goods *brick*, *cement*, *timber*, *kiln fuel*; the trader's daily limit shared in order; masons on the hiring board; the gang at 1.5×; held builds with a day's number; builders wait; AC-5 walks every building).
 5. **US-243** the kiln (smoke footprint on the ghost, the card's list, the fuel good; targets set by the bots).
 6. **US-144** utilities (four ladders; the top-up card and the upkeep-aware budget guard; the smoke; one water reach; the Infrastructure section).

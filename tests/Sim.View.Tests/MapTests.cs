@@ -230,8 +230,8 @@ namespace Sim.View.Tests
             Assert.That(cam.CentreX - cam.HalfHeight * 16f / 9f, Is.GreaterThanOrEqualTo(g.Centre(4, 14).x - 1f - 1e-3f), "it cannot pan into the ring");
             cam.Pan(10000, 0);
             Assert.That(cam.CentreX + cam.HalfHeight * 16f / 9f, Is.LessThanOrEqualTo(g.Centre(19, 3).x + 1f + 1e-3f));
-            cam.Limit(0, 0, 23, 17, 16, 12, 0.9f);
-            Assert.That(cam.MaxHalfHeight, Is.EqualTo(old.MaxHalfHeight * 0.9f).Within(1e-4f), "open: 90% of the old window");
+            cam.Limit(0, 0, 23, 17, 16, 12, MapCamera.RingZoomOut);
+            Assert.That(cam.MaxHalfHeight, Is.EqualTo(old.MaxHalfHeight * 0.85f).Within(1e-4f), "open: 85% of the old window");
             cam.Focus(0, 17, cam.MinHalfHeight);
             Assert.That(cam.CentreX, Is.LessThan(g.Centre(4, 14).x), "now it reaches the west ring");
             _ = cx; _ = cy;
