@@ -20,5 +20,8 @@
   {"label":"US-146 road","view":"farm","date":"2026-11-17","drawCalls":384,"batches":384,"setPassCalls":9,"triangles":6825,"visibleSprites":442,"sprites":1472},
   {"label":"US-148 clinic","view":"all","date":"2026-11-17","drawCalls":891,"batches":891,"setPassCalls":11,"triangles":16261,"visibleSprites":1071,"sprites":1413},
   {"label":"US-148 clinic","view":"village","date":"2026-11-17","drawCalls":565,"batches":565,"setPassCalls":10,"triangles":10461,"visibleSprites":663,"sprites":1413},
-  {"label":"US-148 clinic","view":"farm","date":"2026-11-17","drawCalls":364,"batches":364,"setPassCalls":9,"triangles":7256,"visibleSprites":414,"sprites":1413}
+  {"label":"US-148 clinic","view":"farm","date":"2026-11-17","drawCalls":364,"batches":364,"setPassCalls":9,"triangles":7256,"visibleSprites":414,"sprites":1413},
+  {"label":"US-148 part 2 (civic buildings)","view":"all","date":"2026-11-18","drawCalls":1057,"batches":1057,"setPassCalls":11,"triangles":18359,"visibleSprites":1237,"sprites":1471},
+  {"label":"US-148 part 2 (civic buildings)","view":"village","date":"2026-11-18","drawCalls":601,"batches":601,"setPassCalls":9,"triangles":10403,"visibleSprites":703,"sprites":1471},
+  {"label":"US-148 part 2 (civic buildings)","view":"farm","date":"2026-11-18","drawCalls":387,"batches":387,"setPassCalls":8,"triangles":7065,"visibleSprites":445,"sprites":1471}
 ]

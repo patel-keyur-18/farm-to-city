@@ -2732,6 +2732,13 @@
    "name": "place_grocery"
   },
   {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_hall_plot"
+  },
+  {
    "w": 378,
    "h": 322,
    "pivotX": 0.5,
@@ -2744,6 +2751,13 @@
    "pivotX": 0.5,
    "pivotY": 0.3255,
    "name": "place_house_1"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_playground_plot"
   },
   {
    "w": 322,
@@ -2779,6 +2793,13 @@
    "pivotX": 0.5,
    "pivotY": 0.24832,
    "name": "place_temple"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_watchman_plot"
   },
   {
    "w": 208,
@@ -3411,6 +3432,13 @@
    "name": "village_grocery_w"
   },
   {
+   "w": 426,
+   "h": 308,
+   "pivotX": 0.50359,
+   "pivotY": 0.40388,
+   "name": "village_hall_e"
+  },
+  {
    "w": 148,
    "h": 158,
    "pivotX": 0.55783,
@@ -3516,6 +3544,13 @@
    "name": "village_peepal"
   },
   {
+   "w": 426,
+   "h": 266,
+   "pivotX": 0.50359,
+   "pivotY": 0.46563,
+   "name": "village_playground_e"
+  },
+  {
    "w": 398,
    "h": 240,
    "pivotX": 0.5,
@@ -3612,6 +3647,13 @@
    "pivotX": 0.50632,
    "pivotY": 0.28669,
    "name": "village_tree"
+  },
+  {
+   "w": 426,
+   "h": 270,
+   "pivotX": 0.50359,
+   "pivotY": 0.45988,
+   "name": "village_watchman_e"
   },
   {
    "w": 124,

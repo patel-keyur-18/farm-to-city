@@ -11,6 +11,9 @@ namespace Game.Presentation.Map
     public sealed partial class MapPresenter
     {
         private int _clinicStage = -1, _quartersStage = -1;
+        private readonly int[] _civicStage = { -1, -1, -1 };
+        private static readonly string[] CivicBuilt = { "village_watchman_e", "village_hall_e", "village_playground_e" };
+        private static readonly string[] CivicPlot = { "place_watchman_plot", "place_hall_plot", "place_playground_plot" };
 
         private void RefreshClinic(MapVm map)
         {
@@ -24,6 +27,12 @@ namespace Game.Presentation.Map
                 _quartersStage = map.QuartersStage;
                 q.sprite = SpriteBank.Rendered(map.QuartersStage == 2 ? "village_quarters_e" : map.QuartersStage == 1 ? "village_quarters_building_e" : "place_quarters_plot");
             }
+            for (int i = 0; i < _civicStage.Length; i++) // the civic buildings (spec 023 §3.7): the plot, then the building
+                if (map.CivicTile[i] >= 0 && map.CivicStage[i] != _civicStage[i] && _places.TryGetValue(map.CivicTile[i], out SpriteRenderer p))
+                {
+                    _civicStage[i] = map.CivicStage[i];
+                    p.sprite = SpriteBank.Rendered(map.CivicStage[i] == 2 ? CivicBuilt[i] : CivicPlot[i]);
+                }
         }
     }
 }

@@ -962,7 +962,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | --- | --- | --- | --- | --- | --- |
 | US-263 | Carried from Sprint 21 (the items below) | [F15.2](features/F15.2-taxes-and-policies.md) | 6 | Must | To do |
 | US-146 | Roads and highway: the paved link road | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | Approved (2026-11-17) |
-| US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | Part 1 (the clinic) built and Editor-checked (2026-11-17); the owner's review; part 2 (the civic buildings) after US-103 |
+| US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | Part 1 (the clinic) approved; part 2 (the civic buildings, appointments, planner note, minimum-wage *Why?*) built and Editor-checked (2026-11-18), waiting for the owner's review |
 | US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Built and Editor-checked (2026-11-17); T5 (`TownshipBot`, `GateTests.Township`) with US-100; the owner's review |
 | US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | To do |
 | US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | To do (spec 024 approved) |

@@ -138,7 +138,7 @@ From the Township the treasury builds three buildings on fixed public plots (app
 | Effect in reach | *Safety* 0.5 → 1.0 | *Belonging* 0.8 → 1.0; festivals held here (spec 026) | *Leisure* of households with children 0.30 → 0.60 |
 | Department | Safety | Safety | Safety |
 
-- **Safety** is a new part of the security layer from the Township: security = mean(job, health care, rent, safety), with safety 0.5 without a watchman. At today's numbers this doesn't lower anyone's happiness at the unlock.
+- **Safety** is a new part of the security layer from the day a watchman's post stands (owner-approved, 2026-11-18): security = mean(job, health care, rent, safety), with safety 0.5 while the post has nobody in it or is out of reach and 1.0 with a watchman in reach (× the Safety service × the share it can serve). **Before a post is built security is the mean of three, as it was**: a fourth part at 0.5 would take a fully secure home from 1.0 to 0.875 (about −3.75 happiness) at the unlock, so a town that builds nothing loses nothing. The playground and hall only add.
 - **Staff are appointed, not hired from the board** (ADR 0116): the building's sheet has **Post the job**; within 24 h a villager from the old village takes it, his name shown on the sheet ("Hari Singh, watchman since Spring") but part of the cohort. The pay is a fixed scale from content, indexed, no negotiation, a budget line in Safety, and the cohort's income. Unpaid at two closes running he leaves and the post covers nobody until posted again. **Let him go** frees it.
 - The buildings are optional: a town that builds none works as §3.8 says.
 
@@ -201,7 +201,7 @@ Systems `Population` and `Civic` (new, after Finance, before `Treasury`, spec 02
 | `BuildClinic` | `NotUnlocked`, `PlotTaken`, `InsufficientFunds` | §3.1, the share is a gift |
 | `BuildDoctorQuarters` | same | §3.1, a house of yours |
 | `PetitionRoad` | `NotUnlocked`, `TooFewHouseholds`, `AlreadyBuilt`, `InsufficientFunds` | §3.3 |
-| `PostJob(building)` | `NoBuilding`, `AlreadyFilled` | §3.7 |
+| `PostCivicJob(building)` (named so because `PostJob` is the hiring board's) | `NoBuilding`, `AlreadyFilled` | §3.7 |
 | `DismissStaff(building)` | `NoStaff` | §3.7 |
 | `CommissionWorks(workId)` (spec 021) | gains `PlotTaken` | the civic buildings |
 

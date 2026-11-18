@@ -4335,6 +4335,129 @@ SPRITES["village_clinic_building_e"] = lambda: refit(model_clinic("building"), F
 SPRITES["village_quarters_e"] = lambda: refit(model_quarters("done"), FACINGS["e"])
 SPRITES["village_quarters_building_e"] = lambda: refit(model_quarters("building"), FACINGS["e"])
 
+# ---------------------------------------------------------------- the civic buildings (spec 023 §3.7, US-148 part 2): previewed to the owner first
+
+def _plot_board(o, glyph):
+    """The empty civic plot: the low brick wall with its gate gap, and a signboard on a post carrying the building's glyph."""
+    brick = toon("brick", 0xB4572E)
+    for x, y, w, d in ((0, 0.30, 0.62, 0.03), (0, -0.30, 0.62, 0.03), (-0.30, 0, 0.03, 0.62), (0.30, 0.15, 0.03, 0.30)):
+        o.append(box("wall%d%d" % (int(x * 10), int(y * 10)), (w, d, 0.04), (x, y, 0.02), brick))
+    o.append(box("post", (0.014, 0.014, 0.16), (0.22, -0.22, 0.08), toon("wood", WOOD)))
+    o.append(box("board", (0.12, 0.010, 0.09), (0.22, -0.23, 0.17), toon("signBoard", 0xF2DFB0), bevel=0.003))
+    glyph(o)
+
+
+def model_watchman_plot():
+    def glyph(o):
+        o.append(cylinder("lampGlyph", 0.017, 0.017, 0.012, (0.22, -0.24, 0.17), toon("lamp", 0xF2C14E), segs=10, rot=Matrix.Rotation(1.5708, 3, "X")))
+        o.append(box("lampCap", (0.040, 0.012, 0.008), (0.22, -0.24, 0.205), toon("wood_dark", WOOD_DARK), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_hall_plot():
+    def glyph(o):
+        for dx in (-0.032, 0, 0.032):
+            o.append(box("arch%d" % int(dx * 1000), (0.018, 0.012, 0.04), (0.22 + dx, -0.24, 0.16), toon("hallArch", 0x8A5A2E), outline=False))
+        o.append(box("archRoof", (0.10, 0.012, 0.012), (0.22, -0.24, 0.195), toon("quartersTile", 0xB8462A), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_playground_plot():
+    def glyph(o):
+        o.append(box("swingBar", (0.08, 0.012, 0.008), (0.22, -0.24, 0.205), toon("wood_dark", WOOD_DARK), outline=False))
+        for dx in (-0.018, 0.018):
+            o.append(box("rope%d" % (dx > 0), (0.004, 0.012, 0.04), (0.22 + dx, -0.24, 0.18), toon("wood_dark", WOOD_DARK), outline=False))
+        o.append(box("seat", (0.05, 0.012, 0.008), (0.22, -0.24, 0.158), toon("lamp", 0xF2C14E), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_watchman():
+    """The watchman's post (tile 91): a small brick chowki with a tiled gable, an open front with a charpai, a lantern on a pole and a
+    cycle-bell; the plot's low wall with its gate on the street (+x)."""
+    o = []
+    w, d, cy, h = 0.26, 0.20, 0.14, 0.11
+    brick, tile, plinth = toon("chowkiWall", 0xD9A878), toon("quartersTile", 0xB8462A), toon("plinth", PLINTH)
+    o.append(box("ground", (0.54, 0.34, 0.006), (0, -0.07, 0.003), toon("playground", 0xD6BE90), outline=False))
+    _boundary(o, toon("clinicWall", 0xE9E1C8), 0.035)
+    o.append(box("plinth", (w + 0.03, d + 0.08, 0.03), (0, cy - 0.025, 0.015), plinth, bevel=0.005))
+    o.append(box("backWall", (w, 0.02, h), (0, cy + d / 2 - 0.01, 0.03 + h / 2), brick))
+    for sx in (-1, 1):
+        o.append(box("sideWall%d" % sx, (0.02, d, h), (sx * (w / 2 - 0.01), cy, 0.03 + h / 2), brick))
+    o.append(gable_roof("roof", w, d + 0.02, 0.08, 0.03 + h, tile, overhang=0.025))
+    o.append(box("charpai", (0.12, 0.06, 0.02), (0, cy - 0.02, 0.04), toon("wood", WOOD)))
+    o.append(box("charpaiNet", (0.11, 0.05, 0.006), (0, cy - 0.02, 0.052), toon("rope", 0xD9C48F), outline=False))
+    o.append(cylinder("lampPole", 0.006, 0.006, 0.20, (0.2, -0.12, 0.10), toon("wood", WOOD), segs=6))
+    o.append(box("lampBox", (0.03, 0.03, 0.035), (0.2, -0.12, 0.215), toon("lamp", 0xF2C14E)))
+    o.append(box("lampCap", (0.04, 0.04, 0.010), (0.2, -0.12, 0.2375), toon("wood_dark", WOOD_DARK)))
+    for i, y in enumerate((-0.08, -0.19)):
+        o.append(box("gatePost%d" % i, (0.03, 0.03, 0.065), (0.28, y, 0.0325), toon("clinicWall", 0xE9E1C8)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+def model_hall():
+    """The community hall (tile 59): a long open hall on a raised plinth, a row of arches along the front, a tiled gable with a small flag,
+    steps up from the street, and a banyan-shade neem beside it; the plot's low wall with its gate (+x)."""
+    o = []
+    w, d, cy, h = 0.48, 0.22, 0.14, 0.12
+    wall, tile, plinth = toon("hallWall", 0xEFE0BC), toon("quartersTile", 0xB8462A), toon("plinth", PLINTH)
+    o.append(box("ground", (0.54, 0.36, 0.006), (0, -0.07, 0.003), toon("playground", 0xD6BE90), outline=False))
+    _boundary(o, toon("clinicWall", 0xE9E1C8), 0.035)
+    o.append(box("plinth", (w + 0.03, d + 0.10, 0.04), (0, cy - 0.04, 0.02), plinth, bevel=0.005))
+    o.append(box("backWall", (w, 0.02, h), (0, cy + d / 2 - 0.01, 0.04 + h / 2), wall))
+    for sx in (-1, 1):
+        o.append(box("sideWall%d" % sx, (0.02, d, h), (sx * (w / 2 - 0.01), cy, 0.04 + h / 2), wall))
+    for x in (-0.20, -0.10, 0.0, 0.10, 0.20):
+        o.append(cylinder("pillar%d" % int(x * 100), 0.011, 0.011, h, (x, cy - d / 2, 0.04 + h / 2), wall, segs=8))
+    o.append(box("beam", (w, 0.025, 0.02), (0, cy - d / 2, 0.04 + h), toon("wood", WOOD)))
+    o.append(gable_roof("roof", w, d + 0.02, 0.09, 0.04 + h + 0.01, tile, overhang=0.03))
+    o.append(box("steps", (0.14, 0.06, 0.02), (0, cy - d / 2 - 0.06, 0.012), plinth))
+    o.append(cylinder("flagPole", 0.004, 0.004, 0.10, (0, cy, 0.04 + h + 0.12), toon("wood", WOOD), segs=6))
+    o.append(box("flag", (0.045, 0.004, 0.028), (0.026, cy, 0.04 + h + 0.15), toon("flag", 0xF29A2E), outline=False))
+    o.append(cylinder("neemTrunk", 0.012, 0.010, 0.10, (-0.235, 0.0, 0.05), toon("bark", 0x7A4E2E), segs=8))
+    o.append(sphere("neemCanopy", 0.075, (-0.235, 0.0, 0.16), toon("neem", 0x4E9A3E), scale=(1, 1, 0.8), segs=12, rings=8))
+    for i, y in enumerate((-0.08, -0.19)):
+        o.append(box("gatePost%d" % i, (0.03, 0.03, 0.065), (0.28, y, 0.0325), toon("clinicWall", 0xE9E1C8)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+def model_playground():
+    """The playground (tile 107): swept earth with a swing frame and two swings, a slide and a see-saw, a low wall and a gate (+x)."""
+    o = []
+    wood, dark, bright = toon("wood", WOOD), toon("wood_dark", WOOD_DARK), toon("lamp", 0xF2C14E)
+    o.append(box("ground", (0.54, 0.50, 0.006), (0, -0.0, 0.003), toon("playground", 0xD6BE90), outline=False))
+    _boundary(o, toon("clinicWall", 0xE9E1C8), 0.03)
+    for sx in (-1, 1):
+        o.append(box("swingLegA%d" % sx, (0.010, 0.010, 0.16), (sx * 0.11, 0.12, 0.08), wood))
+        o.append(box("swingLegB%d" % sx, (0.010, 0.010, 0.16), (sx * 0.11, 0.18, 0.08), wood))
+    o.append(box("swingBar", (0.24, 0.012, 0.012), (0, 0.15, 0.16), dark))
+    for dx in (-0.05, 0.05):
+        for sx in (-0.008, 0.008):
+            o.append(box("rope%d%d" % (int(dx * 100), int(sx * 1000)), (0.003, 0.003, 0.11), (dx + sx, 0.15, 0.10), dark, outline=False))
+        o.append(box("seat%d" % int(dx * 100), (0.05, 0.02, 0.008), (dx, 0.15, 0.04), bright))
+    # a slide: a ladder post and a tilted chute
+    o.append(box("slideTower", (0.05, 0.05, 0.10), (-0.17, -0.10, 0.05), wood))
+    o.append(box("slideChute", (0.05, 0.20, 0.010), (-0.17, -0.20, 0.06), bright, rot=Matrix.Rotation(0.55, 3, "X")))
+    # a see-saw
+    o.append(box("seesawBase", (0.03, 0.03, 0.04), (0.08, -0.12, 0.02), dark))
+    o.append(box("seesawPlank", (0.22, 0.03, 0.008), (0.08, -0.12, 0.048), toon("seesaw", 0xD6603A), rot=Matrix.Rotation(0.18, 3, "Y")))
+    for i, y in enumerate((-0.08, -0.19)):
+        o.append(box("gatePost%d" % i, (0.03, 0.03, 0.055), (0.28, y, 0.0275), toon("clinicWall", 0xE9E1C8)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+SPRITES["place_watchman_plot"] = model_watchman_plot
+SPRITES["place_hall_plot"] = model_hall_plot
+SPRITES["place_playground_plot"] = model_playground_plot
+SPRITES["village_watchman_e"] = lambda: refit(model_watchman(), FACINGS["e"])
+SPRITES["village_hall_e"] = lambda: refit(model_hall(), FACINGS["e"])
+SPRITES["village_playground_e"] = lambda: refit(model_playground(), FACINGS["e"])
+
 for _k in ("founder", "hand_m", "hand_f", "town_m", "town_f", "boy", "girl", "elder_m", "elder_f", "advisor_farm", "advisor_bank", "advisor_people", "advisor_planner"):
     ICONS["portrait_" + _k] = (lambda k=_k: (lambda: portrait(k)))()
 ICONS["icon_population"] = lambda: icon_people("population")

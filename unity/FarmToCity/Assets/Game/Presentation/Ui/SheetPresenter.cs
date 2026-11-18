@@ -129,6 +129,7 @@ namespace Game.Presentation.Ui
                 case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "school": case "school_building": return IconBank.Good(icon); // spec 018
+                case "watchman_post": case "community_hall": case "playground": return IconBank.Good(icon); // spec 023 §3.7
                 case "clinic": case "clinic_building": case "doctor_quarters": case "doctor_quarters_building": return IconBank.Good(icon); // spec 023 §3.1
                 case "newcomer_veg": case "newcomer_chai": case "newcomer_sweets": return IconBank.Good(icon); // spec 017 §3.7
                 case "veg_stall_building": case "tea_stall_building": case "sweet_shop_building": return SpriteBank.Rendered(icon.Substring(0, icon.Length - 9) + "_s") ?? SpriteBank.Hut;

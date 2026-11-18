@@ -326,6 +326,10 @@ namespace Sim.View.Views
         public int QuartersTile { get; internal set; } = -1;
         public int QuartersStage { get; internal set; }
 
+        /// <summary>The civic plots' tiles (watchman's post, hall, playground; spec 023 §3.7) and whether each stands (0 the empty plot, 2 built), in <c>CivicDef</c> order.</summary>
+        public int[] CivicTile { get; internal set; } = { -1, -1, -1 };
+        public int[] CivicStage { get; internal set; } = { 0, 0, 0 };
+
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
         public int Pitches { get; internal set; }
@@ -835,6 +839,12 @@ namespace Sim.View.Views
             map.ClinicStage = st.Status == Sim.Core.Town.ClinicStatus.Open ? 2 : st.Status == Sim.Core.Town.ClinicStatus.Building ? 1 : 0;
             map.QuartersTile = Sim.Core.Town.ClinicRules.QuartersDef(sim).Tile;
             map.QuartersStage = st.Quarters == Sim.Core.Town.QuartersStatus.Built ? 2 : st.Quarters == Sim.Core.Town.QuartersStatus.Building ? 1 : 0;
+            if (!Sim.Core.Town.CivicRules.On(sim)) return;
+            for (int i = 0; i < Sim.Core.Definitions.CivicDef.Count; i++)
+            {
+                map.CivicTile[i] = Sim.Core.Town.CivicRules.Def(sim, i).Tile;
+                map.CivicStage[i] = Sim.Core.Town.CivicRules.Post(sim, i).Built ? 2 : 0;
+            }
         }
 
         /// <summary>The school plot and its stage, and in school hours the first pupils (by id) and the teacher in its yard.</summary>
