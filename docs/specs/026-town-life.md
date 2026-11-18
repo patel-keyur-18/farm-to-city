@@ -238,7 +238,7 @@ Each is closed with the owner, one per message, with my recommendation, before c
 
 - **G1 Festivals. Closed (owner, 2026-11-18, my recommendation):** four named festivals, kind fixed by the season, the owner picks venue, payer and day; cost per person; the lift of 8 and 3 points for one day; shops +30%/+10%; no undo.
 - **G2 Petitions. Closed (owner, 2026-11-18, my recommendation):** nine topics, a threshold of 3 families or a fifth, answers *Promise* (1, 2 or 4 closes) or *Decline*, "do it" answering by itself, no third button.
-- **G3 Approval.** Starts at 50, moves ±4 a close with happiness, plus the petition endings; changes migration only. Recommendation: as written.
+- **G3 Approval. Closed (owner, 2026-11-18, my recommendation):** starts at 50, moves ±4 a close with happiness, plus the petition endings; changes migration only.
 - **G4 Reputation.** The five scores' parts and weights (§3.4), the pull and the grant bonus (up to 10%). Recommendation: as written.
 - **G5 Crime.** The formula, the Safety part rewritten as `1 − crimeAt ÷ 100` (the same at 50), the land-value term and the overlay; crime is a pressure, never a theft. Recommendation: as written.
 - **G6 Inequality.** The decile ratio from your households only; −1 point a whole point above 4 below the median, the poorest leave a season sooner from 6. Recommendation: as written.
