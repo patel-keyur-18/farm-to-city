@@ -242,7 +242,7 @@ Each is closed with the owner, one per message, with my recommendation, before c
 - **G4 Reputation. Closed (owner, 2026-11-18, my recommendation):** the five scores' parts and weights (§3.4), the pull and the grant bonus (up to 10%).
 - **G5 Crime. Closed (owner, 2026-11-18, my recommendation):** the formula, the Safety part rewritten as `1 − crimeAt ÷ 100` (the same at 50), the land-value term and the overlay; crime is a pressure, never a theft.
 - **G6 Inequality. Closed (owner, 2026-11-18, my recommendation):** the decile ratio from your households only; −1 point a whole point above 4 below the median, the poorest leave a season sooner from 6.
-- **G7 Screens.** A *Town life* tab on the Town hall, *Hold a festival* on the hall and the square, the crime overlay. Recommendation: as written, previewed first.
+- **G7 Screens. Closed (owner, 2026-11-18, my recommendation):** a *Town life* tab on the Town hall, *Hold a festival* on the hall and the square, the crime overlay; previewed first.
 - **G8 Scale in Sprint 24.** 11 points of stories plus the hills and the farm's items; schema 22 shared. Recommendation: keep; the cut line is §11.
 
 ## 11. Cut first
