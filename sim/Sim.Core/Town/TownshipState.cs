@@ -26,10 +26,22 @@ namespace Sim.Core.Town
         /// <summary>The old village (spec 023 §3.5), from the unlock.</summary>
         public CohortState Cohort { get; internal set; } = new CohortState();
 
-        /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined; } }
+        /// <summary>The watchman's post, the community hall and the playground (spec 023 §3.7), in <see cref="Definitions.CivicDef"/> order.</summary>
+        public CivicPost[] Civic { get; internal set; } = NewCivic();
 
-        internal TownshipState Clone() { return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone() }; }
+        private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
+
+        private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
+
+        /// <summary>Nothing of the Township has started.</summary>
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault; } }
+
+        internal TownshipState Clone()
+        {
+            var civic = new CivicPost[Civic.Length];
+            for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic };
+        }
 
         internal void WriteTo(IStateWriter h)
         {
@@ -38,9 +50,15 @@ namespace Sim.Core.Town
             Clinic.WriteTo(h);
             h.WriteInt(GateMet);
             Cohort.WriteTo(h);
+            foreach (CivicPost p in Civic) p.WriteTo(h);
         }
 
-        internal static TownshipState ReadFrom(SaveReader r) { return new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r), GateMet = r.ReadInt(), Cohort = CohortState.ReadFrom(r) }; }
+        internal static TownshipState ReadFrom(SaveReader r)
+        {
+            var s = new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r), GateMet = r.ReadInt(), Cohort = CohortState.ReadFrom(r) };
+            for (int i = 0; i < s.Civic.Length; i++) s.Civic[i] = CivicPost.ReadFrom(r);
+            return s;
+        }
     }
 
     /// <summary>The paved link road (spec 023 §3.3): petitioned, built by the district in <c>days</c>, never the player's.</summary>

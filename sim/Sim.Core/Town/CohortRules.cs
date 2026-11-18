@@ -73,6 +73,12 @@ namespace Sim.Core.Town
             return b;
         }
 
+        /// <summary>Wages from the town's civic posts reach the old village as income, into its savings (spec 023 §3.7).</summary>
+        internal static void Earn(Simulation sim, long amount)
+        {
+            if (Joined(sim)) State(sim).Savings += amount;
+        }
+
         /// <summary>The house tax of the old village at a rate: a standard kutcha house each (spec 022 §3.1), the office's share collected.</summary>
         public static long TaxBill(Simulation sim, Fixed rate)
         {
@@ -111,11 +117,14 @@ namespace Sim.Core.Town
             PopulationDefs p = sim.Config.Game.Population;
             Budget b = BudgetOf(sim);
             Fixed survival = b.FoodMet < Fixed.One ? b.FoodMet : Fixed.One;
-            Fixed security = (Fixed.One + ClinicRules.HealthCareMetTown(sim, p.Chemist) + Fixed.One).MulRatio(1, 3);
-            Fixed belonging = p.Belonging;
+            Fixed three = Fixed.One + ClinicRules.HealthCareMetTown(sim, p.Chemist) + Fixed.One;
+            Fixed security = CivicRules.On(sim) && CivicRules.SafetyCounts(sim) ? (three + CivicRules.SafetyTown(sim)).MulRatio(1, 4) : three.MulRatio(1, 3);
+            Fixed belonging = CivicRules.BelongingTown(sim, p.Belonging);
             long taxFromLeisure = System.Math.Min(s.TaxThis, b.Leisure * s.Households);
             Fixed kept = b.Leisure <= 0 ? Fixed.Zero : Fixed.FromRatio(b.Leisure * s.Households - taxFromLeisure, b.Leisure * s.Households);
             Fixed leisure = b.Leisure > 0 && kept > Fixed.Zero ? p.Leisure * kept : Fixed.Zero;
+            if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Playground)) leisure += CivicRules.Def(sim, CivicDef.Playground).Gain * CivicRules.EffectTown(sim, CivicDef.Playground); // children in the old village play too
+            if (leisure > Fixed.One) leisure = Fixed.One;
             Fixed growth = SchoolRules.IsOpen(sim) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure;
             s.Survival = survival; s.Security = security; s.Belonging = belonging; s.Growth = growth;
             Fixed score = p.SurvivalWeight * survival + p.SecurityWeight * security * Gate(p, survival)

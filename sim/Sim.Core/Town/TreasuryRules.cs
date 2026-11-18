@@ -191,6 +191,8 @@ namespace Sim.Core.Town
                 case LineRequires.ClinicOpen: return ClinicRules.IsOpen(sim);
                 case LineRequires.Road: return RoadRules.IsBuilt(sim);
                 case LineRequires.Policy: return PolicyRules.LineActive(sim, line.Policy);
+                case LineRequires.CivicBuilt: return CivicRules.Built(sim, line.Civic);
+                case LineRequires.CivicStaffed: return CivicRules.Staffed(sim, line.Civic) && CivicRules.Post(sim, line.Civic).Status == PostStatus.InPost;
                 default: return true;
             }
         }
@@ -280,12 +282,14 @@ namespace Sim.Core.Town
             TownWorkDef work = null;
             foreach (TownWorkDef w in Def(sim).Works) if (w.Id == workId) work = w;
             if (work == null) return Commands.RejectReason.UnknownWork;
+            if (CivicRules.CanCommission(sim, workId) != Commands.RejectReason.None) return Commands.RejectReason.PlotTaken;
             long cost = MarketRules.Indexed(sim, work.Cost), now = sim.State.Clock.SimTime;
             TreasuryState s = State(sim);
             if (!s.Ledger.CanAfford(cost)) return Commands.RejectReason.InsufficientFunds;
             s.Ledger.Post(now, sim.Period, "ledger.townWorks", "works:" + workId, new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
             s.Works.Add(new WorkRecord { WorkId = workId, Cost = cost, LifeSeasons = work.LifeSeasons, At = now });
             sim.Emit(new WorksCommissioned(now, workId, cost));
+            CivicRules.OnCommissioned(sim, workId, cost);
             return Commands.RejectReason.None;
         }
 
@@ -425,6 +429,8 @@ namespace Sim.Core.Town
                         if (pass == 1) room -= pay;
                     }
                 }
+
+            CivicRules.NotePaid(sim, amounts, paid); // spec 023 §3.7: the wages reach the old village; an unpaid post falls vacant
 
             // The policies move on: paid ones start or go on, unpaid ones pause, repealed ones end (spec 022 §3.6); an ended one leaves its budget.
             var fullyPaid = new bool[PolicyState.Count];

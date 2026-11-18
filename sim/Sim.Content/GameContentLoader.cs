@@ -60,7 +60,7 @@ namespace Sim.Content
                 // The treasury opens in a later era than the school's, so it needs the eras (spec 021 §4).
                 if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
                 if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);
-                if (game.Treasury != null) game.Township = LoadTownship(read("township.json"), market.Region, map, buildings, onboarding); // the Township's road comes with the treasury (spec 023 §4)
+                if (game.Treasury != null) game.Township = LoadTownship(read("township.json"), market.Region, map, buildings, onboarding, game.Treasury); // the Township's road comes with the treasury (spec 023 §4)
             }
             return game;
         }

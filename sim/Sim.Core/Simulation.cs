@@ -70,6 +70,7 @@ namespace Sim.Core
                 handlers.Add(new Town.ClinicRules.Build());
                 handlers.Add(new Town.ClinicRules.BuildQuarters());
                 handlers.Add(new Town.ClinicRules.Arrive());
+                handlers.Add(new Town.CivicRules.Arrive());
             }
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)

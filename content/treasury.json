@@ -33,7 +33,16 @@
     { "id": "doctor", "department": "health", "kind": "wage", "amount": "doctorAllowance", "requires": "clinic" },
     { "id": "clinic", "department": "health", "kind": "upkeep", "amount": 3000, "requires": "clinicOpen" },
     { "id": "school", "department": "education", "kind": "upkeep", "amount": "schoolUpkeep", "requires": "school" },
-    { "id": "road", "department": "roads", "kind": "upkeep", "amount": 1500, "requires": "road" }
+    { "id": "road", "department": "roads", "kind": "upkeep", "amount": 1500, "requires": "road" },
+    { "id": "watchman", "department": "safety", "kind": "wage", "amount": 24000, "requires": "civicStaffed", "civic": "watchman" },
+    { "id": "caretaker", "department": "safety", "kind": "wage", "amount": 15000, "requires": "civicStaffed", "civic": "hall" },
+    { "id": "watchmanPost", "department": "safety", "kind": "upkeep", "amount": 1500, "requires": "civic", "civic": "watchman" },
+    { "id": "hall", "department": "safety", "kind": "upkeep", "amount": 3000, "requires": "civic", "civic": "hall" },
+    { "id": "playground", "department": "safety", "kind": "upkeep", "amount": 1000, "requires": "civic", "civic": "playground" }
   ],
-  "works": []
+  "works": [
+    { "id": "watchman_post", "cost": 30000, "lifeSeasons": 100 },
+    { "id": "community_hall", "cost": 80000, "lifeSeasons": 100 },
+    { "id": "playground", "cost": 20000, "lifeSeasons": 60 }
+  ]
 }

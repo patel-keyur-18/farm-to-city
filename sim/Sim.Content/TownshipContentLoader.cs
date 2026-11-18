@@ -10,11 +10,11 @@ namespace Sim.Content
         /// <c>township.json</c> (spec 023 §4): the paved link road's petition, share, build days and tier; the clinic, the doctor's quarters and the
         /// doctor (US-148), on the map's <c>clinic_plot</c> and <c>quarters_plot</c>.
         /// </summary>
-        public static TownshipDef LoadTownship(string json, RegionDef region, MapDef map, System.Collections.Generic.IReadOnlyList<BuildingDef> buildings, OnboardingDefs onboarding)
+        public static TownshipDef LoadTownship(string json, RegionDef region, MapDef map, System.Collections.Generic.IReadOnlyList<BuildingDef> buildings, OnboardingDefs onboarding, TreasuryDef treasury)
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -88,7 +88,51 @@ namespace Sim.Content
                 ChildShare = Bounded(hj, hp, "childShare", "0", "1"), ElderShare = Bounded(hj, hp, "elderShare", "0", "1"), PupilShare = Bounded(hj, hp, "pupilShare", "0", "1"),
             };
             if (cohort.ChildShare + cohort.ElderShare > Sim.Core.Maths.Fixed.One) throw new ContentException(Join(hp, "childShare"), "children and elders can't be more than everyone");
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort);
+
+            Sim.Core.Maths.Fixed safetyBase = Bounded(o, root, "safetyBase", "0", "1");
+            var civic = new System.Collections.Generic.List<CivicDef>();
+            string vp = Join(root, "civic");
+            JObject cj = Object(Required(o, root, "civic"), vp);
+            OnlyFields(cj, vp, CivicIds);
+            for (int i = 0; i < CivicIds.Length; i++)
+            {
+                string ip = Join(vp, CivicIds[i]);
+                JObject b = Object(Required(cj, vp, CivicIds[i]), ip);
+                OnlyFields(b, ip, "place", "work", "upkeepLine", "wageLine", "reach", "capacity", "gain", "staffHours", "leaveCloses");
+                string work = String(Required(b, ip, "work"), Join(ip, "work"));
+                bool known = false;
+                foreach (TownWorkDef w in treasury.Works) if (w.Id == work) known = true;
+                if (!known) throw new ContentException(Join(ip, "work"), "unknown work '" + work + "' (treasury.json works)");
+                var def = new CivicDef
+                {
+                    Index = i, Id = CivicIds[i], Tile = PlotTile(b, ip, CivicIds[i] + "_plot", map), Work = work,
+                    Reach = BoundedInt(b, ip, "reach", 100, 100000), Capacity = BoundedInt(b, ip, "capacity", 1, 100000),
+                    Gain = Bounded(b, ip, "gain", "0", "1"), StaffHours = BoundedInt(b, ip, "staffHours", 0, 24 * 30), LeaveCloses = BoundedInt(b, ip, "leaveCloses", 1, 20),
+                    UpkeepLine = LineOf(treasury, b, ip, "upkeepLine", i, LineRequires.CivicBuilt, true),
+                    WageLine = LineOf(treasury, b, ip, "wageLine", i, LineRequires.CivicStaffed, false),
+                };
+                civic.Add(def);
+            }
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase);
+        }
+
+        /// <summary>The treasury line a civic building names for its upkeep or its post: it must be a Safety line that opens with this very building.</summary>
+        private static int LineOf(TreasuryDef treasury, JObject b, string path, string field, int civic, LineRequires requires, bool required)
+        {
+            if (b[field] == null)
+            {
+                if (required) throw new ContentException(Join(path, field), "required");
+                return -1;
+            }
+            string id = String(b[field], Join(path, field));
+            for (int i = 0; i < treasury.Lines.Count; i++)
+            {
+                LineDef l = treasury.Lines[i];
+                if (l.Id != id) continue;
+                if (l.Requires != requires || l.Civic != civic) throw new ContentException(Join(path, field), "line '" + id + "' doesn't open with this building");
+                return i;
+            }
+            throw new ContentException(Join(path, field), "unknown line '" + id + "'");
         }
 
         private static int PlotTile(JObject o, string path, string kind, MapDef map)

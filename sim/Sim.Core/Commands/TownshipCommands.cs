@@ -46,4 +46,33 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>Advertise a civic post (spec 023 §3.7): within <c>staffHours</c> a villager of the old village takes it. No negotiation; the pay is the content's.</summary>
+    public sealed class PostCivicJob : TimedCommand
+    {
+        /// <summary>The building, an index of <c>CivicDef</c> (0 watchman's post, 1 community hall).</summary>
+        public int Civic { get; }
+
+        public PostCivicJob(long at, int civic) : base(at) { Civic = civic; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = CivicRules.PostJob(sim, Civic);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Let the villager go (spec 023 §3.7): the post is free and covers nobody until it is advertised again.</summary>
+    public sealed class DismissStaff : TimedCommand
+    {
+        public int Civic { get; }
+
+        public DismissStaff(long at, int civic) : base(at) { Civic = civic; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = CivicRules.Dismiss(sim, Civic);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
 }

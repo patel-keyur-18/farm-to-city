@@ -245,6 +245,18 @@ namespace Sim.Core.Commands
         // Spec 023 (the Township, ADR 0116)
         /// <summary>Fewer households of yours than the petition needs (township.json's road.petitionHouseholds).</summary>
         TooFewHouseholds,
+
+        /// <summary>The civic building's plot is taken: it is commissioned already (spec 023 §3.7).</summary>
+        PlotTaken,
+
+        /// <summary>The post's building isn't built, or has no post (spec 023 §3.7).</summary>
+        NoBuilding,
+
+        /// <summary>The post is advertised or filled already.</summary>
+        AlreadyFilled,
+
+        /// <summary>Nobody holds the post, so there is nobody to let go.</summary>
+        NoStaff,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

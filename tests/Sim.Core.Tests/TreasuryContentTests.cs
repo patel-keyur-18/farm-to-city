@@ -23,7 +23,7 @@ namespace Sim.Core.Tests
             Assert.That(d.Departments.Count, Is.EqualTo(7));
             Assert.That(d.Departments[0].Id, Is.EqualTo("office"));
             Assert.That(d.Departments[6].Id, Is.EqualTo("policies"));
-            Assert.That(d.Lines.Count, Is.EqualTo(5 + 5), "the clerk, the doctor, the clinic, the school and the road, and one line for each policy (spec 022 §3.5, spec 023 §3.8)");
+            Assert.That(d.Lines.Count, Is.EqualTo(10 + 5), "the clerk, the doctor, the clinic, the school and the road, the watchman and caretaker, the three civic upkeeps, and one line for each policy (spec 022 §3.5, spec 023 §3.8)");
             Assert.That((d.Policies.MaxActive, d.Policies.ReenactAfterSeasons, d.Policies.Lag[(int)Sim.Core.Town.PolicyId.Subsidy]), Is.EqualTo((3, 1, 1)));
             Assert.That(d.StartUpGrant, Is.EqualTo(100_000_00L));
             Assert.That(d.ClerkWage, Is.EqualTo(30_000_00L));
@@ -35,7 +35,7 @@ namespace Sim.Core.Tests
         [TestCase("\"officeWeight\": 0.30", "\"officeWeight\": 0.40", "add up to 1")]
         [TestCase("\"department\": \"office\"", "\"department\": \"mayor\"", "unknown department")]
         [TestCase("\"amount\": \"clerkWage\"", "\"amount\": \"mayorWage\"", "unknown amount")]
-        [TestCase("\"requires\": \"treasury\"", "\"requires\": \"never\"", "treasury, school, clinic, clinicOpen or road")]
+        [TestCase("\"requires\": \"treasury\"", "\"requires\": \"never\"", "treasury, school, clinic, clinicOpen, road, civic or civicStaffed")]
         [TestCase("\"retainSeasons\": 8", "\"retainSeasons\": 2", "between 4 and 16")]
         [TestCase("\"conditionStep\": 0.5", "\"conditionStep\": 1.5", "between")]
         [TestCase("\"maxActive\": 3", "\"maxActive\": 9", "between")]

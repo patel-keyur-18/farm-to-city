@@ -65,7 +65,7 @@ namespace Sim.View.Tests
         [Test]
         public void WorksCard()
         {
-            Simulation sim = ViewKit.NewGame(edit: (f, j) => f == "treasury.json" ? j.Replace("\"works\": []", "\"works\": [ { \"id\": \"fixture\", \"cost\": 24000, \"lifeSeasons\": 4 } ]") : f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j,
+            Simulation sim = ViewKit.NewGame(edit: (f, j) => f == "treasury.json" ? j.Replace("\"works\": [", "\"works\": [ { \"id\": \"fixture\", \"cost\": 24000, \"lifeSeasons\": 4 },") : f == "start.json" ? j.Replace("\"startingCash\": 20000", "\"startingCash\": 2000000") : j,
                 options: new SimOptions { DevCommandsEnabled = true });
             var eras = sim.Config.Game.Onboarding.Eras;
             sim.State.Era.Current = eras.ToList().FindIndex(e => e.Id == "village");

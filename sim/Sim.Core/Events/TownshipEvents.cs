@@ -153,4 +153,60 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "CohortHouseholdLeft(" + Households + " left)"; }
     }
+
+    /// <summary>The treasury commissioned a civic building (spec 023 §3.7): <see cref="Civic"/> is an index of <c>CivicDef</c>.</summary>
+    public sealed class CivicBuilt : SimEvent
+    {
+        public int Civic { get; }
+
+        public CivicBuilt(long simTime, int civic) : base(simTime) { Civic = civic; }
+
+        protected override string Describe() { return "CivicBuilt " + Civic; }
+    }
+
+    /// <summary>A post was advertised; a villager takes it at <see cref="At"/> (spec 023 §3.7).</summary>
+    public sealed class PostAdvertised : SimEvent
+    {
+        public int Civic { get; }
+        public long At { get; }
+
+        public PostAdvertised(long simTime, int civic, long at) : base(simTime) { Civic = civic; At = at; }
+
+        protected override string Describe() { return "PostAdvertised " + Civic + " " + At; }
+    }
+
+    /// <summary>A villager took a civic post (spec 023 §3.7).</summary>
+    public sealed class PostFilled : SimEvent
+    {
+        public int Civic { get; }
+        public int Name { get; }
+
+        public PostFilled(long simTime, int civic, int name) : base(simTime) { Civic = civic; Name = name; }
+
+        protected override string Describe() { return "PostFilled " + Civic + " " + Name; }
+    }
+
+    /// <summary>A civic post's wage went unpaid in full at a close; he leaves at the limit (spec 023 §3.7).</summary>
+    public sealed class PostUnpaid : SimEvent
+    {
+        public int Civic { get; }
+        public int Closes { get; }
+        public int Limit { get; }
+
+        public PostUnpaid(long simTime, int civic, int closes, int limit) : base(simTime) { Civic = civic; Closes = closes; Limit = limit; }
+
+        protected override string Describe() { return "PostUnpaid " + Civic + " " + Closes + "/" + Limit; }
+    }
+
+    /// <summary>A civic post fell vacant (spec 023 §3.7): the villager left unpaid, or was let go.</summary>
+    public sealed class PostVacated : SimEvent
+    {
+        public int Civic { get; }
+        public int Name { get; }
+        public bool Unpaid { get; }
+
+        public PostVacated(long simTime, int civic, int name, bool unpaid) : base(simTime) { Civic = civic; Name = name; Unpaid = unpaid; }
+
+        protected override string Describe() { return "PostVacated " + Civic + (Unpaid ? " unpaid" : " let go"); }
+    }
 }

@@ -52,9 +52,12 @@ namespace Sim.Core.People
         {
             PopulationDefs p = sim.Config.Game.Population;
             Fixed survival = Min(Min(x.FoodMet, Shelter(sim, x)), Fixed.One); // water: the well and the pond, always met
-            Fixed security = (Job(sim, x) + Sim.Core.Town.ClinicRules.HealthCareMet(sim, x, p.Chemist) + (x.RentBehind == 0 ? Fixed.One : Fixed.Zero)).MulRatio(1, 3);
-            Fixed belonging = p.Belonging; // the temple and the banyan square
-            Fixed leisure = x.Leisure > 0 ? p.Leisure : Fixed.Zero;
+            Fixed three = Job(sim, x) + Sim.Core.Town.ClinicRules.HealthCareMet(sim, x, p.Chemist) + (x.RentBehind == 0 ? Fixed.One : Fixed.Zero);
+            Fixed security = Sim.Core.Town.CivicRules.On(sim) && Sim.Core.Town.CivicRules.SafetyCounts(sim)
+                ? (three + Sim.Core.Town.CivicRules.Safety(sim, x)).MulRatio(1, 4) // spec 023 §3.7: the Township's fourth part
+                : three.MulRatio(1, 3);
+            Fixed belonging = Sim.Core.Town.CivicRules.Belonging(sim, x, p.Belonging); // the temple and the banyan square, and the community hall
+            Fixed leisure = Sim.Core.Town.CivicRules.Leisure(sim, x, x.Leisure > 0 ? p.Leisure : Fixed.Zero);
             Fixed growth = SchoolRules.IsOpen(sim) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure; // the layer's mean once the school counts (ADR 0095 §6)
             x.Survival = survival;
             x.Security = security;

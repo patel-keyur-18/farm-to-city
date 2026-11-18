@@ -52,7 +52,7 @@ namespace Sim.Core.Tests
 
         private static string WithWork(string file, string json)
         {
-            return file == "treasury.json" ? json.Replace("\"works\": []", "\"works\": [ { \"id\": \"fixture\", \"cost\": 24000, \"lifeSeasons\": 4 } ]") : json;
+            return file == "treasury.json" ? json.Replace("\"works\": [", "\"works\": [ { \"id\": \"fixture\", \"cost\": 24000, \"lifeSeasons\": 4 },") : json;
         }
 
         /// <summary>A house of yours and one family in it, so the town has residents.</summary>

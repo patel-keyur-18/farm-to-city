@@ -12,8 +12,17 @@ namespace Sim.Core.Definitions
         public GateDef Gate { get; }
         public CohortDef Cohort { get; }
 
-        public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort)
+        /// <summary>The three civic buildings (spec 023 §3.7) in index order: the watchman's post, the community hall, the playground.</summary>
+        public System.Collections.Generic.IReadOnlyList<CivicDef> Civic { get; }
+
+        /// <summary>The safety a town has with a post built but nobody in it or out of reach (spec 023 §3.7: 0.5).</summary>
+        public Fixed SafetyBase { get; }
+
+        public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
+            System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase)
         {
+            Civic = civic;
+            SafetyBase = safetyBase;
             Gate = gate;
             Cohort = cohort;
             Road = road;
@@ -129,5 +138,37 @@ namespace Sim.Core.Definitions
         public Fixed ChildShare { get; internal set; }
         public Fixed ElderShare { get; internal set; }
         public Fixed PupilShare { get; internal set; }
+    }
+
+    /// <summary>
+    /// A civic building (spec 023 §3.7): commissioned by the treasury on a fixed public plot, paid as <see cref="Work"/>, with an upkeep line and,
+    /// if it has a post, a wage line (both in <c>treasury.json</c>'s lines, Safety). Its benefit is <c>gain × e</c> where <c>e = condition × covered × scale</c>.
+    /// </summary>
+    public sealed class CivicDef
+    {
+        public const int Watchman = 0, Hall = 1, Playground = 2, Count = 3;
+
+        public int Index { get; internal set; }
+        public string Id { get; internal set; }
+
+        /// <summary>The plot's tile (the map's <c>watchman_plot</c>, <c>hall_plot</c> or <c>playground_plot</c>).</summary>
+        public int Tile { get; internal set; }
+
+        /// <summary>The capital work (<c>treasury.json</c> works) and the lines that pay its upkeep and its post (an index into the lines, or -1).</summary>
+        public string Work { get; internal set; }
+        public int UpkeepLine { get; internal set; } = -1;
+        public int WageLine { get; internal set; } = -1;
+
+        public int Reach { get; internal set; }
+        public int Capacity { get; internal set; }
+
+        /// <summary>What it adds at full strength: the watchman's safety, the hall's belonging, the playground's leisure for households with children.</summary>
+        public Fixed Gain { get; internal set; }
+
+        /// <summary>Hours from the post being advertised to a villager taking it, and the unpaid closes in a row before he leaves.</summary>
+        public int StaffHours { get; internal set; }
+        public int LeaveCloses { get; internal set; }
+
+        public bool HasPost { get { return WageLine >= 0; } }
     }
 }

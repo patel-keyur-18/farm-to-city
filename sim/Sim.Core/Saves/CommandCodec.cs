@@ -47,6 +47,7 @@ namespace Sim.Core.Saves
             RenewLease,
             GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget, SetTaxRate, UndoTaxRate, SeeTaxTour, EnactPolicy, RepealPolicy, SeePolicyTour,
             PetitionRoad, BuildClinic, BuildDoctorQuarters,
+            PostCivicJob, DismissStaff,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -169,6 +170,8 @@ namespace Sim.Core.Saves
                 case RenewLease c: At(c, Tag.RenewLease); w.WriteLong(c.HouseholdId); w.WriteInt((int)c.Choice); break;
                 case GiveToTreasury c: At(c, Tag.GiveToTreasury); w.WriteLong(c.Amount); break;
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
+                case PostCivicJob c: At(c, Tag.PostCivicJob); w.WriteInt(c.Civic); break;
+                case DismissStaff c: At(c, Tag.DismissStaff); w.WriteInt(c.Civic); break;
                 case SetBudget c: At(c, Tag.SetBudget); w.WriteInt(c.Department); w.WriteLong(c.Amount); break;
                 case AcceptBudget c: At(c, Tag.AcceptBudget); break;
                 case SetTaxRate c: At(c, Tag.SetTaxRate); w.WriteInt((int)c.Tax); w.WriteLong(c.Rate.Raw); break;
@@ -327,6 +330,8 @@ namespace Sim.Core.Saves
                 case Tag.RenewLease: return new RenewLease(at, r.ReadLong(), (LeaseChoice)r.ReadInt());
                 case Tag.GiveToTreasury: return new GiveToTreasury(at, r.ReadLong());
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
+                case Tag.PostCivicJob: return new PostCivicJob(at, r.ReadInt());
+                case Tag.DismissStaff: return new DismissStaff(at, r.ReadInt());
                 case Tag.SetBudget: return new SetBudget(at, r.ReadInt(), r.ReadLong());
                 case Tag.AcceptBudget: return new AcceptBudget(at);
                 case Tag.SetTaxRate: return new SetTaxRate(at, (Town.TaxKind)r.ReadInt(), Maths.Fixed.FromRaw(r.ReadLong()));
