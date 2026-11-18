@@ -42,7 +42,7 @@ An acre's **land value multiplier** `LV` starts at **1.00** and adds, each from 
 | Smoke | within the diesel generator's reach: −0.10 | −0.10 to 0 |
 | Crime | from spec 027, −0.15 at the worst; 0 until it exists | −0.15 to 0 |
 
-`LV` is held between **0.80 and 1.80** and re-read once a season at the close, so it never jumps while the player is looking. **It exists from the Township on (G9):** before it, price, rent and tax are exactly as Phases 1–2 built them, so the Village's pace and the golden hashes are untouched. **Water** (G11) is the village pond, any well, or (from Sprint 23) a water tower within 300 m; pumps and borewells don't count (they irrigate fields). One rule serves land value and builders.
+**As built (US-143, ADR 0121):** the smoke and crime rows join with the generator (spec 025) and spec 027, which don't exist yet; a service counts once it stands; a job is an open business with a hired worker; the content is in `township.json` `landValue`. `LV` is held between **0.80 and 1.80** and re-read once a season at the close, so it never jumps while the player is looking. **It exists from the Township on (G9):** before it, price, rent and tax are exactly as Phases 1–2 built them, so the Village's pace and the golden hashes are untouched. **Water** (G11) is the village pond, any well, or (from Sprint 23) a water tower within 300 m; pumps and borewells don't count (they irrigate fields). One rule serves land value and builders.
 **Land value in coins** = `ParcelPrice` (spec 002: soil, drainage, fertility, location) × `LV`. Rounding: whole coins, once.
 
 ### 3.2 Rent and tax follow land value (G1, G8)
@@ -61,7 +61,7 @@ An acre's **land value multiplier** `LV` starts at **1.00** and adds, each from 
 
 ### 3.4 Selling land, quick or slow (G4)
 
-`SellParcel` keeps spec 002's quick sale (80% of the price, now). Added: **Sell slowly** lists the acre for `slowSaleSeconds` (**2 days**) at **100% of its land value**; it can be taken off the market before it sells, and a slow sale never sells a protected parcel or one with a crop, tree or building (spec 002's refusals). The card shows both with the difference in coins. Decided (G4): the quick sale is 80% × land value from the Township (before it, as spec 002); the slow sale exists from the Township only. **The price is the land value at listing**, so the card's figure is what you get. **A listed acre is locked** (no sowing, zoning, leasing, building or second listing); cancelling unlocks it. Loan-secured, leased and stranding acres are refused with a named reason, as the quick sale. The land-flipper stress bot gains a slow-sale variant and must stay within ADR 0016's 20%.
+**As built:** two commands, `ListParcel` and `CancelSale`; "Sell this land" opens a choice sheet in the Township; a failed sale (a loan now secured on the acre, or stranding land) cancels the listing and says so on the away card. `SellParcel` keeps spec 002's quick sale (80% of the price, now). Added: **Sell slowly** lists the acre for `slowSaleSeconds` (**2 days**) at **100% of its land value**; it can be taken off the market before it sells, and a slow sale never sells a protected parcel or one with a crop, tree or building (spec 002's refusals). The card shows both with the difference in coins. Decided (G4): the quick sale is 80% × land value from the Township (before it, as spec 002); the slow sale exists from the Township only. **The price is the land value at listing**, so the card's figure is what you get. **A listed acre is locked** (no sowing, zoning, leasing, building or second listing); cancelling unlocks it. Loan-secured, leased and stranding acres are refused with a named reason, as the quick sale. The land-flipper stress bot gains a slow-sale variant and must stay within ADR 0016's 20%.
 
 ### 3.5 Land's price follows the town (G1)
 
@@ -128,7 +128,7 @@ At each season close, after the treasury (spec 021 §3.10): re-read `LV` for eve
 | --- | --- | --- | --- |
 | `ZoneAcre` | tile, zone | `NotOwned`, `NoTownship`, `HasBuilding`, `Leased` | §3.3 |
 | `UnzoneAcre` | tile | `NotZoned` | back to agricultural |
-| `SellParcel` (slow) | parcel, slow | the quick sale's | §3.4 |
+| `ListParcel` (the slow sale) | parcel | the quick sale's, `NoTownship`, `Listed`, `LoanSecured` | §3.4 |
 | `CancelSale` | parcel | `NotListed` | |
 | `LeaseOutLand` / `EndLease` | parcel | `NotOwned`, `InUse`, `Protected` (sale only) | §3.6 |
 | `UpgradeHouse` | building | `NotOffered`, `CantAfford` | §3.7 |
@@ -153,7 +153,7 @@ At each season close, after the treasury (spec 021 §3.10): re-read `LV` for eve
 
 ## 7. UI
 
-Previewed as artifacts that look exactly like the game before any UI code: the **zoning card** (an acre's tap card: farm, zone, sell, lease, with each line's coins), the **land value** *Why?*, the **overlay button and key**, the **upgrade card**. The slow-sale option joins the existing sell card.
+**Built for US-143 (Preview 6, approved 2026-11-18; Editor captures `docs/art/s22-143-*.png`):** the acre's land value row and *Why?* (in words, not a factor: ADR 0043), the price's *Why?* row, Your land with the sale choice, the slow-sale card, a listed parcel and the take-off card. Previewed as artifacts that look exactly like the game before any UI code: the **zoning card** (an acre's tap card: farm, zone, sell, lease, with each line's coins), the **land value** *Why?*, the **overlay button and key**, the **upgrade card**. The slow-sale option joins the existing sell card.
 
 ## 8. Acceptance criteria
 

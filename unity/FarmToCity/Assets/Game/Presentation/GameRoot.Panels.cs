@@ -175,6 +175,7 @@ namespace Game.Presentation
                     _sheet.Show(Repay.Build(_ctx, r.Id), refreshOnly);
                     break;
                 case "LandLoan": _sheet.Show(LandLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case "SellLand": _sheet.Show(SellLandSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Founder": _sheet.Show(FounderSheet.Build(_ctx), refreshOnly); break;
                 case "Good": _sheet.Show(GoodSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Offer": _sheet.Show(GoodSheet.Offer(_ctx, (int)r.Id, r.Arg), refreshOnly); break;

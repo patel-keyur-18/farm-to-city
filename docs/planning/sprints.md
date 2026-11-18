@@ -965,7 +965,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | Part 1 (the clinic) approved; part 2 (the civic buildings, appointments, planner note, minimum-wage *Why?*) built and Editor-checked (2026-11-18), waiting for the owner's review |
 | US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Built and Editor-checked (2026-11-17); T5 (`TownshipBot`, `GateTests.Township`) with US-100; the owner's review |
 | US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Built (2026-11-18): Township pace and solvency measured, gate eased to 15 households and the treasury's costs lowered with the owner (ADR 0120); the owner's review |
-| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | To do (spec 024 approved) |
+| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | Built and Editor-checked (2026-11-18, ADR 0121); balance with US-142 and US-261; the owner's review |
 | US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | To do (spec 024 approved) |
 | US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | To do (spec 024 approved) |
 

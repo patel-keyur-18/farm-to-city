@@ -40,6 +40,9 @@ namespace Sim.View.Views
             var d = sim.Config.Game.Population;
             string where = place == d.RentDistrict ? "lease.placeDistrict" : place == d.RentLane ? "lease.placeLane" : "lease.placeInner";
             Fixed shift = place > Fixed.One ? place - Fixed.One : Fixed.One - place; // words, not factors: "20% more", "15% less"
+            if (Sim.Core.Town.LandValueRules.On(sim)) // from the Township the place is the acre's land value (spec 024 §3.2)
+                return ctx.Strings.Get("lease.parts", "base", ctx.Fmt.Coins(d.BaseRent), "where", ctx.Strings.Get(place >= Fixed.One ? "lease.placeValueMore" : "lease.placeValueLess",
+                    "pct", ctx.Fmt.Percent(shift)), "prices", ctx.Fmt.Percent(sim.State.Market.PriceIndex - Fixed.One));
             return ctx.Strings.Get("lease.parts", "base", ctx.Fmt.Coins(d.BaseRent), "where", ctx.Strings.Get(where, "pct", ctx.Fmt.Percent(shift)),
                 "prices", ctx.Fmt.Percent(sim.State.Market.PriceIndex - Fixed.One));
         }

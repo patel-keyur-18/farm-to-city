@@ -124,6 +124,9 @@ namespace Sim.View.Views
             string soil = s.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
             string held = Held(ctx, p.Id);
             string note = sellable ? s.Get("lands.boughtWhen", "when", ReportSheet.PeriodName(ctx, p.AcquiredAt / sim.Clock.SecondsPerSeason), "held", held) : held;
+            bool township = Sim.Core.Town.LandValueRules.On(sim);
+            if (township) note += " · " + s.Get("lands.value", "n", LandValueViews.Mult(ctx, LandValueViews.Average(sim, p.Id)));
+            if (p.Listed) note = LandValueViews.ListedNote(ctx, p);
             var line = new LineVm(s.Get("lands.parcel", "soil", soil, "acres", s.Plural("land.acres", d.Tiles.Count)), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
             {
                 Note = note,
@@ -134,7 +137,9 @@ namespace Sim.View.Views
                 string key = d.Id;
                 long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, p), defs.Land.QuickSaleFactor));
                 line.Also = line.Action;
-                line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
+                if (p.Listed) line.Action = ActionVm.Checked(ctx, "cancelSale:" + key, s.Get("action.cancelSale"), null, ActionKind.Secondary, at => new CancelSale(at, key)); // locked until it sells or is taken off (spec 024 §3.4)
+                else if (township) line.Action = ActionVm.Open("sellLand:" + key, s.Get("action.sellParcel"), new SheetRequest("SellLand", tile)); // two ways to sell: the choice sheet
+                else line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
             }
             return line;
         }

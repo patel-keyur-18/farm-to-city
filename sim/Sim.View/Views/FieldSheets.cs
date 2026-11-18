@@ -134,6 +134,8 @@ namespace Sim.View.Views
             long resale = Money.RoundToCoin(Money.MulRate(price, defs.Land.QuickSaleFactor));
             var vm = new SheetVm { Icon = "land", Title = ctx.Strings.Get("land.title"), Subtitle = ctx.Strings.Plural("land.acres", def.Tiles.Count) };
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.price"), ctx.Fmt.Coins(price), "landPrice", tile.Id));
+            LineVm value = LandValueViews.AcreRow(ctx, tile.Id); // from the Township (spec 024 §3.1)
+            if (value != null) vm.Lines.Add(value);
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.resale"), ctx.Fmt.Coins(resale), "resale", tile.Id));
             vm.Actions.Add(ActionVm.Checked(ctx, "buy", ctx.Strings.Get("action.buy"), ctx.Fmt.Coins(price), ActionKind.Primary, at => new BuyParcel(at, def.Id)));
