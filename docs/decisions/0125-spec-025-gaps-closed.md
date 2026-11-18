@@ -23,6 +23,7 @@
 - **The zoom cap is 85%, not 90%.** Measured in the Editor against the Sprint 22 readings: 90% is +13.5% draw calls at the "all" view, 85% +9%, 80% +2%. The farm and village views are lighter than before. Visible sprites grew 15% (ring ground and scrub) and the scene holds 2,250 sprites against 1,492; triangle counts moved with the weather as in earlier sprints, so they are reported and not trusted.
 - **Lanes are works**, `CommissionWorks` on `lane_w1`–`lane_e3` (20,000 each); there is no separate `BuildLane` command.
 - **A closed parcel** (`opens` in `map.json`: `township` or `hills`) cannot be bought (`LandClosed`), is not simulated, is skipped by builders and shows as scrub. The ring's land for sale draws as meadow.
+- **Construction's money and masons (US-145 design check, 2026-11-18).** You pay in full when you start, at that day's prices; the build waits for the trader's daily limit when short. Masons are townspeople with a mason trade listed on the hiring board; their pay is part of the build's price, to their households; none free means the district's gang at 1.5 times the price of the masons' part and 1.5 times the hours. *Why:* no surprise bills, loans unchanged, one rule for you, the treasury and builders; a town left alone still builds.
 
 ## Consequences
 
