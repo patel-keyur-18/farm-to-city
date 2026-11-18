@@ -1,6 +1,6 @@
 # 0128. Builders take the acres beside yours last, not never
 
-- Status: Proposed (Sprint 23, US-145; the owner is asked to confirm in the story review)
+- Status: Accepted (owner, 2026-11-18: "Approved" at the US-145 review)
 - Date: 2026-11-18
 - Deciders: Keyur Patel
 - Amends: ADR 0126 §2
