@@ -140,7 +140,7 @@ namespace Sim.View.Views
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
-            if (c is CommissionWorks cw) CivicSheet.Guard(ctx, vm, cw.WorkId); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
+            if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else CivicSheet.Guard(ctx, vm, cw.WorkId); } // spec 023 §3.7: the budget guard replaces the generic line for a civic building
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
             {
@@ -152,6 +152,7 @@ namespace Sim.View.Views
                 vm.SafeLabel = s.Has("confirm." + name + ".keep") ? s.Get("confirm." + name + ".keep") : s.Get("confirm.notNow");
                 vm.GoLabel = cash < 0 ? s.Get("confirm.verbFor", "verb", verb, "amount", ctx.Fmt.Coins(-cash)) : verb;
             }
+            if (c is CommissionWorks lw && Sim.Core.Town.LaneRules.OfWork(sim, lw.WorkId) >= 0) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
             return vm;
         }
 
@@ -270,6 +271,8 @@ namespace Sim.View.Views
         private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, CommissionWorks works)
         {
             var s = ctx.Strings;
+            int lane = Sim.Core.Town.LaneRules.OfWork(sim, works.WorkId);
+            if (lane >= 0) { LaneSheet.Card(ctx, vm, after, lane); return; }
             int civic = Sim.Core.Town.CivicRules.OfWork(sim, works.WorkId);
             if (civic >= 0) // a civic building (spec 023 §3.7): the town's cash now and after, and the budget guard
             {

@@ -45,6 +45,46 @@ namespace Sim.Core.Town
             return sim.State.Land.Tiles[tile].Terrain == Terrain.Road || BuiltLane(sim, tile);
         }
 
+
+        /// <summary>The section a lane acre belongs to, or −1.</summary>
+        public static int OfTile(Simulation sim, int tile)
+        {
+            var lanes = sim.Config.Game?.Map.Lanes;
+            if (lanes == null) return -1;
+            for (int i = 0; i < lanes.Count; i++) foreach (int t in lanes[i].Tiles) if (t == tile) return i;
+            return -1;
+        }
+
+        /// <summary>A section's cost today: its work's price moved by the price index.</summary>
+        public static long Cost(Simulation sim, int section)
+        {
+            string id = sim.Config.Game.Map.Lanes[section].Id;
+            foreach (Definitions.TownWorkDef w in TreasuryRules.Def(sim).Works) if (w.Id == id) return Market.MarketRules.Indexed(sim, w.Cost);
+            return 0;
+        }
+
+        /// <summary>A section's work price before prices.</summary>
+        public static long BaseCost(Simulation sim, int section)
+        {
+            string id = sim.Config.Game.Map.Lanes[section].Id;
+            foreach (Definitions.TownWorkDef w in TreasuryRules.Def(sim).Works) if (w.Id == id) return w.Cost;
+            return 0;
+        }
+
+        /// <summary>How many sections the section's lane has (the west lane's four, the east lane's three, told by the id without its number) and how many are built.</summary>
+        public static void Progress(Simulation sim, int section, out int built, out int total)
+        {
+            var lanes = sim.Config.Game.Map.Lanes;
+            string stem = lanes[section].Id.Substring(0, lanes[section].Id.Length - 1);
+            built = 0; total = 0;
+            for (int i = 0; i < lanes.Count; i++)
+            {
+                if (!lanes[i].Id.StartsWith(stem)) continue;
+                total++;
+                if (BuiltSection(sim, i)) built++;
+            }
+        }
+
         internal static Commands.RejectReason CanCommission(Simulation sim, int section)
         {
             if (!TownshipRules.Reached(sim)) return Commands.RejectReason.NoTownship;

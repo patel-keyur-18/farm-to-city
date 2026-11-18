@@ -246,7 +246,9 @@ namespace Sim.View.Views
         {
             string key = tile.Terrain == Terrain.Road ? "road" : tile.Terrain == Terrain.Commons ? "commons" : tile.Terrain == Terrain.River ? "river" : tile.Terrain == Terrain.Scrub ? "scrub"
                 : tile.Terrain == Terrain.Lane ? (Sim.Core.Town.LaneRules.Built(ctx.Sim, tile.Id) ? "laneBuilt" : "lane") : tile.Terrain == Terrain.Highway ? "highway" : "bank";
-            return new SheetVm { Icon = key, Title = ctx.Strings.Get("village." + key), Subtitle = ctx.Strings.Get("village." + key + ".line") };
+            var vm = new SheetVm { Icon = key, Title = ctx.Strings.Get("village." + key), Subtitle = ctx.Strings.Get("village." + key + ".line") };
+            if (key == "lane") LaneSheet.Fill(ctx, vm, tile.Id);
+            return vm;
         }
 
         /// <summary>Land that is closed (spec 025 §3.4): the ring until the Township, the hills until they open. No price, no buy.</summary>

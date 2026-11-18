@@ -181,7 +181,7 @@ Previewed as artifacts that look exactly like the game before any code: the **In
 | AC-5 | A building's cost is materials at today's price plus masons, within ±10% of the Phase 2 cost at the base index | `ConstructionTests.Cost` |
 | AC-6 | Builders take materials after you and the treasury; a shortage slows zoning | `ConstructionTests.BuildersWait` |
 | AC-7 | The kiln makes bricks, supplies your builds at cost and sells the rest to the trader at 90% | `KilnTests.*` |
-| AC-8 | The ring is in the map from schema 21 and opens at the unlock, tile ids stay, every older schema loads with the ring closed, the farm and village are where they were | `RingTests.*`, `MigrationTests.Schema21_Ring`, `MigrationTests.Schema21` |
+| AC-8 | The ring is in the map from schema 21 and opens at the unlock, tile ids stay, every older schema loads with the ring closed, the farm and village are where they were | `RingTests.*`, `MigrationTests.Schema21_Ring`, `MigrationTests.Schema21`, `LaneViewTests.*` (the lane card and its sheet) |
 | AC-9 | A town left alone grows on the ring, slowly, solvent (spec 024 AC-7) | `ZoningTests.LeftAlone` on the ring |
 | AC-10 | Apple orchards only on hill land; fruit keeps in the cold store | `TreeTests.Apple`, `ColdStoreTests.*` |
 | AC-11 | The cold store keeps potato at a tenth of its spoilage; the margin is thin | `ColdStoreTests.Potato`, `GateTests.ColdStore` |
