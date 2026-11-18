@@ -135,7 +135,8 @@ namespace Sim.Core.People
                 if (land.Tiles[c.TileId].ParcelId != parcelId) continue;
                 sim.State.Ledger.Post(t, period, "ledger.houseSeized", "construction:" + c.Id, new Posting(Account.Cash, c.Cost), new Posting(Account.Buildings, -c.Cost));
                 raised += c.Cost;
-                sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
+                if (Town.ConstructionRules.On(sim) && sim.State.Township.Projects.Exists(x => x.House == c.Id)) Town.ConstructionRules.Cancel(sim, c.Id);
+                else sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
                 sim.State.Citizens.Constructions.Remove(c);
                 LandSystem.SetOccupied(sim, c.TileId, false);
             }

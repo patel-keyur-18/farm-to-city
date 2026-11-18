@@ -114,11 +114,12 @@ namespace Sim.View.Tests
 
             SheetVm acre = FieldSheets.ForTile(ctx, sim.Config.Game.Map.Parcels[first].Tiles[0]);
             Assert.That(acre.Title, Is.EqualTo("Builders' homes"));
-            Assert.That(acre.Lines.Single(l => l.Label == "Homes here").Value, Is.EqualTo(ctx.Fmt.Integer(2 * ZoningRules.HomeTiles(sim, first).Count)));
+            Assert.That(acre.Lines.Single(l => l.Label == "The builders").Value, Does.StartWith("Waiting for bricks"), "their homes take bricks like yours (spec 025 §3.2)");
+            Assert.That(acre.Lines.Single(l => l.Label == "Homes here").Value, Is.EqualTo("0"), "none stands until the materials are in and the builders are done");
             Assert.That(LandsSheet.Build(ctx, LandsSheet.ForSale).Lines.Count(l => l.Action != null && l.Action.Id.StartsWith("show:")), Is.EqualTo(forSale - 1), "a builder's parcel is no longer for sale");
             Assert.That(MapView.Build(ctx).Tiles.First(t => t.Id == sim.Config.Game.Map.Parcels[first].Tiles[0]).ForSaleSign, Is.False);
 
-            sim.AdvanceTo(sim.State.Clock.SimTime + 12 * 86400);
+            for (int day = 0; day < 120 && !sim.State.Citizens.Households.Exists(h => HouseholdRules.InBuildersHome(sim, h)); day++) sim.AdvanceTo(sim.State.Clock.SimTime + 86400); // bricks, masons' hours, then a family
             ctx = ViewKit2.Context(sim);
             SheetVm town = TownSheet.Build(ctx);
             Assert.That(town.Lines.Select(l => l.Label), Does.Contain("Homes built by builders"));

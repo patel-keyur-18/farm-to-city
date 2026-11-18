@@ -24,6 +24,9 @@ namespace Sim.Core.Definitions
         /// <summary>Zoning and the builders (spec 024 §3.3).</summary>
         public ZoningDef Zoning { get; }
 
+        /// <summary>What a new building takes from the Township: materials, masons and time (spec 025 §3.2).</summary>
+        public ConstructionDef Construction { get; set; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {
@@ -246,5 +249,69 @@ namespace Sim.Core.Definitions
 
         /// <summary>The most families the counter remembers.</summary>
         public int TurnedAwayMax { get; internal set; }
+    }
+}
+
+namespace Sim.Core.Definitions
+{
+    /// <summary>
+    /// Construction from the Township (spec 025 §3.2, US-145): bricks, cement and timber from the trader up to a daily limit for the whole town,
+    /// masons at a price by the mason-day (or the district's gang at <see cref="GangPrice"/> and <see cref="GangHours"/>), and build time.
+    /// Timber is in tenths of a cubic metre.
+    /// </summary>
+    public sealed class ConstructionDef
+    {
+        public long DailyBricks { get; set; }
+        public long DailyCement { get; set; }
+        public long DailyTimber { get; set; }
+
+        /// <summary>The price of one brick, one bag of cement and a tenth of a cubic metre of timber, at the base index (1/100 coin).</summary>
+        public long BrickPrice { get; set; }
+        public long CementPrice { get; set; }
+        public long TimberPrice { get; set; }
+
+        /// <summary>A mason's day, at the base index.</summary>
+        public long MasonDay { get; set; }
+        public Fixed GangPrice { get; set; }
+        public Fixed GangHours { get; set; }
+        public int MaxMasons { get; set; }
+
+        /// <summary>The hour the trader's stock fills again.</summary>
+        public int RestockHour { get; set; }
+
+        /// <summary>Out of a hundred, the share of grown-ups with no town job who have the mason's trade (a fixed draw for each person).</summary>
+        public int MasonShare { get; set; }
+
+        public System.Collections.Generic.IReadOnlyList<BuildKindDef> Kinds { get; set; }
+
+        public BuildKindDef Kind(string id)
+        {
+            foreach (BuildKindDef k in Kinds) if (k.Id == id) return k;
+            return null;
+        }
+
+        public BuildKindDef KindOfWork(string work)
+        {
+            foreach (BuildKindDef k in Kinds) if (k.Work == work) return k;
+            return null;
+        }
+
+        public int IndexOf(string id)
+        {
+            for (int i = 0; i < Kinds.Count; i++) if (Kinds[i].Id == id) return i;
+            return -1;
+        }
+    }
+
+    /// <summary>One kind of building: its materials, mason-days and hours; <see cref="Work"/> is the treasury's work that builds it, or null (a family house).</summary>
+    public sealed class BuildKindDef
+    {
+        public string Id { get; set; }
+        public string Work { get; set; }
+        public long Bricks { get; set; }
+        public long Cement { get; set; }
+        public long Timber { get; set; }
+        public int MasonDays { get; set; }
+        public int Hours { get; set; }
     }
 }

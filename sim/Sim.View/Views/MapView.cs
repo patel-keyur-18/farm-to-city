@@ -855,10 +855,19 @@ namespace Sim.View.Views
             long total = System.Math.Max(1, sim.Config.Game.Buildings[sim.Config.Game.Population.House].BuildHours * 3600L);
             foreach (Sim.Core.People.Construction c in s.Constructions)
             {
-                float progress = 1f - (c.ReadyAt - ctx.Now) / (float)total;
+                float progress = c.ReadyAt == 0 ? 0f : 1f - (c.ReadyAt - ctx.Now) / (float)total; // 0: still waiting for its materials (spec 025 §3.2)
+                Sim.Core.Town.BuildProject made = Sim.Core.Town.ConstructionRules.On(sim) ? BuildingSheet.Of(sim, c) : null;
+                if (made != null && made.Working) progress = 1f - (made.ReadyAt - ctx.Now) / (float)System.Math.Max(1, made.ReadyAt - made.StartedAt);
                 map.HouseSites.Add(new ConstructionVm { Id = c.Id, TileId = c.TileId, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
                 map.Tiles[c.TileId].Houses++;
             }
+            if (Sim.Core.Town.ConstructionRules.On(sim)) // a civic building being made shows its site on its plot
+                foreach (Sim.Core.Town.BuildProject bp in sim.State.Township.Projects)
+                {
+                    if (bp.Owner != Sim.Core.Town.BuildProject.Town) continue;
+                    float progress = bp.Working ? 1f - (bp.ReadyAt - ctx.Now) / (float)System.Math.Max(1, bp.ReadyAt - bp.StartedAt) : 0f;
+                    map.HouseSites.Add(new ConstructionVm { Id = -bp.Id, TileId = bp.Tile, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
+                }
             if (!WorkingHours(map.SecondOfDay)) return;
             foreach (Sim.Core.People.Household x in s.Households)
             {

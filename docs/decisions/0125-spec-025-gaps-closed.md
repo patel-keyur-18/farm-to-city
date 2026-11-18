@@ -24,6 +24,7 @@
 - **Lanes are works**, `CommissionWorks` on `lane_w1`–`lane_e3` (20,000 each); there is no separate `BuildLane` command.
 - **A closed parcel** (`opens` in `map.json`: `township` or `hills`) cannot be bought (`LandClosed`), is not simulated, is skipped by builders and shows as scrub. The ring's land for sale draws as meadow.
 - **Construction's money and masons (US-145 design check, 2026-11-18).** You pay in full when you start, at that day's prices; the build waits for the trader's daily limit when short. Masons are townspeople with a mason trade listed on the hiring board; their pay is part of the build's price, to their households; none free means the district's gang at 1.5 times the price of the masons' part and 1.5 times the hours. *Why:* no surprise bills, loans unchanged, one rule for you, the treasury and builders; a town left alone still builds.
+- **Construction as built (US-145).** The materials' prices, the daily limits and each building's bricks, cement, timber (in tenths of a cubic metre), mason-days and hours live in `township.json` `construction`, not as goods in `goods.json`: a good there brings per-good market state, seasonal factors and a saved price series that a trader's fixed daily stock does not need, and a brick price moves with the price index like every other price. A masons' trade is a fixed draw for each grown-up with no town job (a quarter of them), so nothing is saved for it. Builders' homes are one project a parcel, built by the gang's hours, paying nothing to your books.
 
 ## Consequences
 

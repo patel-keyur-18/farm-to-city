@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +113,49 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root));
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury) };
+        }
+
+        /// <summary>Construction from the Township (spec 025 §3.2): daily limits, prices, masons and the buildings' materials, mason-days and hours.</summary>
+        private static ConstructionDef LoadConstruction(JObject o, string root, TreasuryDef treasury)
+        {
+            string p = Join(root, "construction");
+            JObject j = Object(Required(o, root, "construction"), p);
+            OnlyFields(j, p, "daily", "price", "masonDay", "gangPrice", "gangHours", "maxMasons", "restockHour", "masonShare", "kinds");
+            string dp = Join(p, "daily");
+            JObject d = Object(Required(j, p, "daily"), dp);
+            OnlyFields(d, dp, "bricks", "cement", "timber");
+            string pp = Join(p, "price");
+            JObject pr = Object(Required(j, p, "price"), pp);
+            OnlyFields(pr, pp, "brick", "cement", "timber");
+            var kinds = new System.Collections.Generic.List<BuildKindDef>();
+            string kp = Join(p, "kinds");
+            var ka = Array(Required(j, p, "kinds"), kp);
+            for (int i = 0; i < ka.Count; i++)
+            {
+                string ip = Join(kp, i.ToString());
+                JObject k = Object(ka[i], ip);
+                OnlyFields(k, ip, "id", "work", "bricks", "cement", "timber", "masonDays", "hours");
+                string work = k["work"] == null ? null : String(k["work"], Join(ip, "work"));
+                if (work != null)
+                {
+                    bool known = false;
+                    foreach (TownWorkDef w in treasury.Works) if (w.Id == work) known = true;
+                    if (!known) throw new ContentException(Join(ip, "work"), "unknown work '" + work + "' (treasury.json works)");
+                }
+                kinds.Add(new BuildKindDef
+                {
+                    Id = String(Required(k, ip, "id"), Join(ip, "id")), Work = work, Bricks = BoundedInt(k, ip, "bricks", 0, 100000), Cement = BoundedInt(k, ip, "cement", 0, 10000),
+                    Timber = BoundedInt(k, ip, "timber", 0, 10000), MasonDays = BoundedInt(k, ip, "masonDays", 1, 1000), Hours = BoundedInt(k, ip, "hours", 1, 24 * 30),
+                });
+            }
+            return new ConstructionDef
+            {
+                DailyBricks = BoundedInt(d, dp, "bricks", 1, 1000000), DailyCement = BoundedInt(d, dp, "cement", 1, 100000), DailyTimber = BoundedInt(d, dp, "timber", 1, 100000),
+                BrickPrice = Money(Required(pr, pp, "brick"), Join(pp, "brick")), CementPrice = Money(Required(pr, pp, "cement"), Join(pp, "cement")), TimberPrice = Money(Required(pr, pp, "timber"), Join(pp, "timber")),
+                MasonDay = Money(Required(j, p, "masonDay"), Join(p, "masonDay")), GangPrice = Bounded(j, p, "gangPrice", "1", "3"), GangHours = Bounded(j, p, "gangHours", "1", "3"),
+                MaxMasons = BoundedInt(j, p, "maxMasons", 1, 10), RestockHour = BoundedInt(j, p, "restockHour", 0, 23), MasonShare = BoundedInt(j, p, "masonShare", 0, 100), Kinds = kinds,
+            };
         }
 
         private static ZoningDef LoadZoning(JObject o, string root)

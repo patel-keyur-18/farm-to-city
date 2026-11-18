@@ -288,7 +288,7 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(TownWords.Home(ctx, b.Id), s.Get("town.houseEmpty")) { Icon = "family_house", Note = s.Get("town.houseEmptyNote") });
             }
             foreach (Construction c in town.Constructions)
-                vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), s.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))) { Icon = "family_house_building" });
+                vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), BuildingSheet.HouseValue(ctx, c)) { Icon = "family_house_building" });
             return vm;
         }
 
@@ -306,7 +306,11 @@ namespace Sim.View.Views
             return a;
         }
 
-        public static long HouseCost(Simulation sim) { return MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value); }
+        public static long HouseCost(Simulation sim)
+        {
+            if (Sim.Core.Town.ConstructionRules.On(sim)) return Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1).Total; // spec 025 §3.2: materials and masons
+            return MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value);
+        }
 
         private static List<Household> Sorted(Simulation sim, string sort)
         {
@@ -724,7 +728,11 @@ namespace Sim.View.Views
             }
             foreach (Construction c in sim.State.Citizens.Constructions)
                 if (c.TileId == tileId)
-                    vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), s.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))) { Icon = "family_house_building" });
+                {
+                    vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), BuildingSheet.HouseValue(ctx, c)) { Icon = "family_house_building" });
+                    Sim.Core.Town.BuildProject site = BuildingSheet.Of(sim, c);
+                    if (site != null) BuildingSheet.Site(ctx, vm, site);
+                }
         }
 
         /// <summary>

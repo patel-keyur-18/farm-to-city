@@ -155,6 +155,9 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>Your cash set to <paramref name="amount"/> (1/100 coin) with a balanced test entry.</summary>
+        public static void SetCash(Simulation sim, long amount) { sim.Execute(new SetCashForTest(T(sim), amount)); }
+
         /// <summary>Sets cash with a balanced test entry against opening equity.</summary>
         private sealed class SetCashForTest : TimedCommand
         {

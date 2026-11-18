@@ -34,6 +34,17 @@ namespace Sim.View.Tests
 
         private static string C(Simulation sim, long coins) { return ViewKit2.Context(sim).Fmt.Coins(At(sim, coins)); }
 
+        /// <summary>A civic work's cost from the Township: materials and masons (spec 025 §3.2), the district's gang when no mason is free.</summary>
+        private static string Cost(Simulation sim, int civic) { return ViewKit2.Context(sim).Fmt.Coins(CivicRules.Cost(sim, civic)); }
+
+        /// <summary>Commissions a work and waits (bricks, then the masons' hours) until it stands.</summary>
+        private static void Build(Simulation sim, string work, int civic)
+        {
+            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, work));
+            for (int i = 0; i < 400 && !CivicRules.Built(sim, civic); i++) sim.AdvanceTo(sim.State.Clock.SimTime + 6 * Hour);
+            Assert.That(CivicRules.Built(sim, civic), Is.True, work + " stands");
+        }
+
         private static SheetVm Plot(Simulation sim, int civic)
         {
             return FieldSheets.ForTile(ViewKit2.Context(sim), CivicRules.Def(sim, civic).Tile);
@@ -80,7 +91,7 @@ namespace Sim.View.Tests
             }));
             Assert.That(vm.Lines.First(l => l.Label == "Safety for homes in reach").Value, Is.EqualTo("50% → 100%"));
             ActionVm go = vm.Actions.Single(a => a.Id == "commission");
-            Assert.That((go.Enabled, go.Label, go.Detail), Is.EqualTo((true, "Commission the post", C(sim, 30_000) + " from the town")));
+            Assert.That((go.Enabled, go.Label, go.Detail), Is.EqualTo((true, "Commission the post", Cost(sim, CivicDef.Watchman) + " from the town")));
             AssertWhys(sim, vm);
             Assert.That(sim.State.ComputeHash(), Is.EqualTo(hash), "a view reads and never changes");
 
@@ -103,7 +114,7 @@ namespace Sim.View.Tests
             SheetVm vm = Plot(sim, CivicDef.Watchman);
             ActionVm go = vm.Actions.Single(a => a.Id == "commission");
             Assert.That(go.Enabled, Is.False);
-            Assert.That(go.DisabledReason, Does.Contain("12,400 coins").And.Contain(C(sim, 30_000)));
+            Assert.That(go.DisabledReason, Does.Contain("12,400 coins").And.Contain(Cost(sim, CivicDef.Watchman)));
             Assert.That(vm.Actions.Any(a => a.Id == "give"), Is.True);
             Assert.That(vm.Lines.First(l => l.Label == "The town's cash").NoteTone, Is.EqualTo(Tone.Warn));
         }
@@ -117,15 +128,15 @@ namespace Sim.View.Tests
             ConfirmCardVm card = ConfirmCards.For(ctx, new CommissionWorks(ctx.Now, "watchman_post"));
             Assert.That(card, Is.Not.Null);
             Assert.That(card.Title, Is.EqualTo("The watchman's post?"));
-            Assert.That(card.Rows.Select(r => r.Label), Is.EqualTo(new[] { "The town's cash now", "The post", "The town's cash after" }));
+            Assert.That(card.Rows.Select(r => r.Label).ToArray(), Is.EqualTo(new[] { "The town's cash now", "Materials: bricks, cement, timber", "The gang: 9 days at one and a half times", "The town's cash after" }), "no mason is free: the district's gang builds (spec 025 §3.2)");
             Assert.That(card.CashChange, Is.EqualTo(0), "your own cash isn't touched");
-            Assert.That(card.Warning, Does.StartWith("This adds " + C(sim, 25_500) + " a season to Safety (" + C(sim, 1_500) + " upkeep and a " + C(sim, 24_000) + " wage)."));
+            Assert.That(card.Warning, Does.Contain("This adds " + C(sim, 25_500) + " a season to Safety (" + C(sim, 1_500) + " upkeep and a " + C(sim, 24_000) + " wage)."));
             CivicRules.Guard(sim, "watchman_post", out _, out long shortBy);
             Assert.That(card.Warning, shortBy > 0 ? Does.Contain("short by") : Does.Contain("can pay it"));
             Assert.That(card.Reassure, Is.EqualTo(shortBy == 0));
 
             ConfirmCardVm play = ConfirmCards.For(ctx, new CommissionWorks(ctx.Now, "playground"));
-            Assert.That(play.Warning, Does.StartWith("This adds " + C(sim, 1_000) + " a season to Safety."));
+            Assert.That(play.Warning, Does.Contain("This adds " + C(sim, 1_000) + " a season to Safety."));
         }
 
         // The card is orange when the town would be short: with the taxes at 0 and little income, the shortfall shows.
@@ -146,6 +157,11 @@ namespace Sim.View.Tests
         {
             Simulation sim = Township();
             Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, "watchman_post"));
+            SheetVm site = Plot(sim, CivicDef.Watchman);
+            Assert.That(site.Subtitle, Is.EqualTo("The town is building it from its own money."), "being built: its site, with what it waits for");
+            Assert.That(site.Lines.Select(l => l.Label), Does.Contain("Status"));
+            AssertWhys(sim, site);
+            for (int i = 0; i < 400 && !CivicRules.Built(sim, CivicDef.Watchman); i++) sim.AdvanceTo(sim.State.Clock.SimTime + 6 * Hour);
             SheetVm vm = Plot(sim, CivicDef.Watchman);
             Assert.That(vm.Title, Is.EqualTo("The watchman's post"));
             Assert.That(vm.Subtitle, Does.Contain("nobody"));
@@ -186,8 +202,8 @@ namespace Sim.View.Tests
         public void Hall_And_Playground()
         {
             Simulation sim = Township();
-            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, "community_hall"));
-            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, "playground"));
+            Build(sim, "community_hall", CivicDef.Hall);
+            Build(sim, "playground", CivicDef.Playground);
             Ok(sim, new PostCivicJob(sim.State.Clock.SimTime, CivicDef.Hall));
             sim.AdvanceTo(sim.State.Clock.SimTime + 24 * Hour);
             SheetVm hall = Plot(sim, CivicDef.Hall);
@@ -211,8 +227,8 @@ namespace Sim.View.Tests
             Household x = sim.State.Citizens.Households[0];
             var before = NeedsView.Rows(ViewKit2.Context(sim), x);
             Assert.That(before.Any(l => l.Label == "Safety"), Is.False, "a town that builds nothing shows nothing");
-            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, "watchman_post"));
-            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, "community_hall"));
+            Build(sim, "watchman_post", CivicDef.Watchman);
+            Build(sim, "community_hall", CivicDef.Hall);
             var rows = NeedsView.Rows(ViewKit2.Context(sim), x);
             Assert.That(rows.First(l => l.Label == "Safety").Note, Is.EqualTo("The watchman's post has nobody in it"));
             Assert.That(rows.First(l => l.Label == "The community hall").Note, Is.EqualTo("The hall has nobody to keep it"));

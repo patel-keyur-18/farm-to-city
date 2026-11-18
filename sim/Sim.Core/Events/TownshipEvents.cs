@@ -228,3 +228,46 @@ namespace Sim.Core.Events
         protected override string Describe() { return "PostVacated " + Civic + (Unpaid ? " unpaid" : " let go"); }
     }
 }
+
+namespace Sim.Core.Events
+{
+    /// <summary>A building began (spec 025 §3.2): <see cref="Owner"/> 0 yours, 1 the treasury's, 2 the builders'.</summary>
+    public sealed class BuildStarted : SimEvent
+    {
+        public long ProjectId { get; }
+        public string Kind { get; }
+        public int Owner { get; }
+        public int TileId { get; }
+
+        public BuildStarted(long simTime, long projectId, string kind, int owner, int tileId) : base(simTime) { ProjectId = projectId; Kind = kind; Owner = owner; TileId = tileId; }
+
+        protected override string Describe() { return "BuildStarted(" + ProjectId + ", " + Kind + ", owner=" + Owner + ", tile=" + TileId + ")"; }
+    }
+
+    /// <summary>A building is held: it is waiting for <see cref="Good"/> (0 bricks, 1 cement, 2 timber); raised once for each building (spec 025 §3.2).</summary>
+    public sealed class BuildHeld : SimEvent
+    {
+        public long ProjectId { get; }
+        public string Kind { get; }
+        public int Owner { get; }
+        public int TileId { get; }
+        public int Good { get; }
+
+        public BuildHeld(long simTime, long projectId, string kind, int owner, int tileId, int good) : base(simTime) { ProjectId = projectId; Kind = kind; Owner = owner; TileId = tileId; Good = good; }
+
+        protected override string Describe() { return "BuildHeld(" + ProjectId + ", " + Kind + ", good=" + Good + ")"; }
+    }
+
+    /// <summary>A building is finished and its masons are paid (spec 025 §3.2).</summary>
+    public sealed class BuildFinished : SimEvent
+    {
+        public long ProjectId { get; }
+        public string Kind { get; }
+        public int Owner { get; }
+        public int TileId { get; }
+
+        public BuildFinished(long simTime, long projectId, string kind, int owner, int tileId) : base(simTime) { ProjectId = projectId; Kind = kind; Owner = owner; TileId = tileId; }
+
+        protected override string Describe() { return "BuildFinished(" + ProjectId + ", " + Kind + ", owner=" + Owner + ", tile=" + TileId + ")"; }
+    }
+}

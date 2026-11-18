@@ -28,7 +28,9 @@ namespace Sim.Core.Commands
             RejectReason place = HouseRules.Place(sim, TileId);
             if (place != RejectReason.None) return CommandResult.Reject(place);
             Definitions.BuildingDef def = sim.Config.Game.Buildings[sim.Config.Game.Population.House];
-            long cost = MarketRules.Indexed(sim, def.Value);
+            bool made = Town.ConstructionRules.On(sim); // from the Township a house takes materials and masons (spec 025 §3.2)
+            Town.BuildQuote quote = made ? Town.ConstructionRules.Quote(sim, "family_house", Town.BuildProject.Yours, 1) : null;
+            long cost = made ? quote.Total : MarketRules.Indexed(sim, def.Value);
             int lender = -1;
             long loan = 0;
             if (Financing != null)
@@ -44,16 +46,17 @@ namespace Sim.Core.Commands
 
             long t = sim.State.Clock.SimTime;
             CitizensState s = sim.State.Citizens;
-            var c = new Construction { Id = s.NextConstructionId++, TileId = TileId, Cost = cost, ReadyAt = t + def.BuildHours * 3600L };
+            var c = new Construction { Id = s.NextConstructionId++, TileId = TileId, Cost = cost, ReadyAt = made ? 0 : t + def.BuildHours * 3600L };
             sim.State.Ledger.Post(t, sim.Period, "ledger.buildHouse", "house:" + c.Id, new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
-            c.JobId = sim.ScheduleJob(HouseRules.Job, c.Id, c.ReadyAt).Id;
             s.Constructions.Add(c);
+            if (!made) c.JobId = sim.ScheduleJob(HouseRules.Job, c.Id, c.ReadyAt).Id;
             if (sim.State.Land.Tiles[TileId].Terrain == Definitions.Terrain.Farm)
             {
                 LandSystem.SetOccupied(sim, TileId, true);
                 sim.State.People.Orders.RemoveAll(o => o.Kind == OrderTargetKind.Field && o.Target == TileId);
             }
             sim.Emit(new FamilyHouseStarted(t, c.Id, TileId, cost, c.ReadyAt));
+            if (made) Town.ConstructionRules.Start(sim, "family_house", Town.BuildProject.Yours, TileId, 1, -1, quote, cost, c.Id);
             return CommandResult.Ok;
         }
     }

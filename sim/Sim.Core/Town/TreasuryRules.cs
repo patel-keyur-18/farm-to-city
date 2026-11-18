@@ -285,13 +285,16 @@ namespace Sim.Core.Town
             int lane = LaneRules.OfWork(sim, workId);
             if (lane >= 0) { Commands.RejectReason why = LaneRules.CanCommission(sim, lane); if (why != Commands.RejectReason.None) return why; }
             else if (CivicRules.CanCommission(sim, workId) != Commands.RejectReason.None) return Commands.RejectReason.PlotTaken;
-            long cost = MarketRules.Indexed(sim, work.Cost), now = sim.State.Clock.SimTime;
+            BuildKindDef made = lane < 0 && ConstructionRules.On(sim) ? ConstructionRules.Def(sim).KindOfWork(workId) : null; // from the Township a civic building takes materials and masons (spec 025 §3.2)
+            BuildQuote quote = made == null ? null : ConstructionRules.Quote(sim, made.Id, BuildProject.Town, 1);
+            long cost = quote != null ? quote.Total : MarketRules.Indexed(sim, work.Cost), now = sim.State.Clock.SimTime;
             TreasuryState s = State(sim);
             if (!s.Ledger.CanAfford(cost)) return Commands.RejectReason.InsufficientFunds;
             s.Ledger.Post(now, sim.Period, "ledger.townWorks", "works:" + workId, new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
             s.Works.Add(new WorkRecord { WorkId = workId, Cost = cost, LifeSeasons = work.LifeSeasons, At = now });
             sim.Emit(new WorksCommissioned(now, workId, cost));
             if (lane >= 0) LaneRules.OnCommissioned(sim, lane);
+            else if (quote != null) ConstructionRules.Start(sim, made.Id, BuildProject.Town, CivicRules.Def(sim, CivicRules.OfWork(sim, workId)).Tile, 1, -1, quote, cost, 0);
             else CivicRules.OnCommissioned(sim, workId, cost);
             return Commands.RejectReason.None;
         }
@@ -551,7 +554,7 @@ namespace Sim.Core.Town
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
-            if (pass == ItemClass.Hourly) TreasuryRules.Hourly(sim);
+            if (pass == ItemClass.Hourly) { TreasuryRules.Hourly(sim); ConstructionRules.Hourly(sim); }
             if (pass != ItemClass.Seasonal) return;
             TreasuryRules.Close(sim);
             ClinicRules.Close(sim); // spec 023 §3.10: after the treasury's close, the doctor's leaving and return

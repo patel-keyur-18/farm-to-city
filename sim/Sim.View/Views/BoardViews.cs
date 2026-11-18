@@ -17,6 +17,7 @@ namespace Sim.View.Views
         /// <summary>The job's name: "Farm hand", "Miller".</summary>
         public static string Role(ViewContext ctx, long place)
         {
+            if (place < 0) return ctx.Strings.Get("board.masons");
             if (place == 0) return ctx.Strings.Get("board.hand");
             Business b = ctx.Sim.State.Businesses.Find(place);
             string role = ctx.Strings.Get("business.role." + BusinessRules.TypeOf(ctx.Sim, b).Worker);
@@ -27,8 +28,9 @@ namespace Sim.View.Views
         public static List<long> Places(Simulation sim)
         {
             var list = new List<long> { 0 };
-            if (sim.State.Businesses == null) return list;
+            if (sim.State.Businesses == null) { if (Sim.Core.Town.ConstructionRules.On(sim)) list.Add(-1); return list; }
             foreach (Business b in sim.State.Businesses.Businesses) if (b.Status != BusinessStatus.Closed) list.Add(b.Id);
+            if (Sim.Core.Town.ConstructionRules.On(sim)) list.Add(-1); // the town's masons (spec 025 §3.2)
             return list;
         }
 
@@ -45,6 +47,7 @@ namespace Sim.View.Views
                 vm.Tabs = new List<ActionVm>();
                 foreach (long x in places) vm.Tabs.Add(ActionVm.Open("tab:" + x, Role(ctx, x), new SheetRequest("Word", x)));
             }
+            if (place < 0) { BuildingSheet.MasonList(ctx, vm); return vm; }
             AddJob(ctx, vm, place);
             AddPost(ctx, vm, place);
             AddApplicants(ctx, vm, place);

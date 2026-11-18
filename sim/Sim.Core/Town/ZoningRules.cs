@@ -119,6 +119,7 @@ namespace Sim.Core.Town
             GameDefs defs = sim.Config.Game;
             var mine = new List<int>();
             var theirs = new List<int>();
+            var beside = new List<int>();
             for (int i = 0; i < defs.Map.Parcels.Count; i++)
             {
                 Parcel p = sim.State.Land.Parcels[i];
@@ -130,7 +131,7 @@ namespace Sim.Core.Town
                     if (LandRules.ParcelPrice(sim, p) < Finance.CreditSystem.RequiredOnSale(sim, i)) continue;
                     mine.Add(i);
                 }
-                else if (defs.Map.Parcels[i].ForSale) theirs.Add(i);
+                else if (defs.Map.Parcels[i].ForSale) (LandSystem.IsAdjacentToOwned(sim, i) ? beside : theirs).Add(i); // builders try the acres beside yours last (ADR 0126 §2, amended by ADR 0128)
             }
             Comparison<int> byDistance = (a, b) =>
             {
@@ -139,7 +140,9 @@ namespace Sim.Core.Town
             };
             mine.Sort(byDistance);
             theirs.Sort(byDistance);
+            beside.Sort(byDistance);
             mine.AddRange(theirs);
+            mine.AddRange(beside);
             return mine;
         }
 
@@ -170,25 +173,46 @@ namespace Sim.Core.Town
                 if (yours) LandSystem.Sell(sim, p, price);
                 p.BuilderOwned = true;
                 p.Zone = 0;
-                int homes = 0;
-                LandState land = sim.State.Land;
-                foreach (int tile in HomeTiles(sim, id))
-                    for (int k = 0; k < d.HomesPerAcre; k++)
-                    {
-                        land.Buildings.Add(new Building { Id = land.NextBuildingId++, Def = sim.Config.Game.Population.House, TileId = tile, Cost = 0, Owner = 1 });
-                        homes++;
-                    }
                 s.TurnedAway -= need;
                 s.BuiltSeason = season;
                 s.BuilderParcels++;
-                s.BuilderHomes += homes;
                 TreasuryRules.CollectFee(sim, "builder", Money.MulRate(price, d.PermitFee));
                 sim.Emit(new AcreSoldToBuilder(t, parcelId, yours ? price : 0, yours));
-                sim.Emit(new HomesBuilt(t, parcelId, homes));
-                CitizensState cs = sim.State.Citizens;
-                if (cs != null) cs.NextFamilyAt = 0; // houses are free now: families come at the usual pace
+                List<int> tiles = HomeTiles(sim, id);
+                if (ConstructionRules.On(sim)) // from the Township the homes take materials and masons, after yours and the treasury's (spec 025 §3.2)
+                {
+                    int count = tiles.Count * d.HomesPerAcre;
+                    ConstructionRules.Start(sim, "family_house", BuildProject.Builders, tiles[0], count, id, ConstructionRules.Quote(sim, "family_house", BuildProject.Builders, count), 0, 0);
+                    return;
+                }
+                BuildHomes(sim, id, parcelId);
                 return;
             }
+        }
+
+        /// <summary>The builders' homes stand (no materials before the Township, or when their materials and masons are done): two an acre, off your books.</summary>
+        private static void BuildHomes(Simulation sim, int id, string parcelId)
+        {
+            TownshipState s = TownshipRules.State(sim);
+            ZoningDef d = Def(sim);
+            int homes = 0;
+            LandState land = sim.State.Land;
+            foreach (int tile in HomeTiles(sim, id))
+                for (int k = 0; k < d.HomesPerAcre; k++)
+                {
+                    land.Buildings.Add(new Building { Id = land.NextBuildingId++, Def = sim.Config.Game.Population.House, TileId = tile, Cost = 0, Owner = 1 });
+                    homes++;
+                }
+            s.BuilderHomes += homes;
+            sim.Emit(new HomesBuilt(sim.State.Clock.SimTime, parcelId, homes));
+            CitizensState cs = sim.State.Citizens;
+            if (cs != null) cs.NextFamilyAt = 0; // houses are free now: families come at the usual pace
+        }
+
+        /// <summary>The builders' materials and masons are done: their parcel's homes stand.</summary>
+        internal static void FinishHomes(Simulation sim, BuildProject p)
+        {
+            BuildHomes(sim, p.Parcel, sim.Config.Game.Map.Parcels[p.Parcel].Id);
         }
     }
 }

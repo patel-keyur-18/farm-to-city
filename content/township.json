@@ -23,6 +23,17 @@
     "slowSaleSeconds": 172800,
     "leaseYield": 0.025
   },
+  "construction": {
+    "daily": { "bricks": 2000, "cement": 30, "timber": 30 },
+    "price": { "brick": 8, "cement": 400, "timber": 1200 },
+    "masonDay": 1000, "gangPrice": 1.5, "gangHours": 1.5, "maxMasons": 3, "restockHour": 6, "masonShare": 25,
+    "kinds": [
+      { "id": "family_house", "bricks": 2400, "cement": 16, "timber": 12, "masonDays": 20, "hours": 48 },
+      { "id": "watchman_post", "work": "watchman_post", "bricks": 1200, "cement": 8, "timber": 7, "masonDays": 9, "hours": 48 },
+      { "id": "playground", "work": "playground", "bricks": 300, "cement": 4, "timber": 6, "masonDays": 9, "hours": 24 },
+      { "id": "community_hall", "work": "community_hall", "bricks": 4000, "cement": 30, "timber": 15, "masonDays": 18, "hours": 72 }
+    ]
+  },
   "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {
     "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },
