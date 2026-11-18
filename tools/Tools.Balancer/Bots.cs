@@ -240,7 +240,10 @@ namespace Tools.Balancer
         /// bought feed for the herd after the purchase, and a margin, so the household is never left short at a close.
         /// </summary>
         /// <summary>Cash kept back before building a family house: the next close's living costs and hands' wages.</summary>
-        protected virtual long HomeReserve(Simulation sim)
+        protected virtual long HomeReserve(Simulation sim) { return LivingCosts(sim); }
+
+        /// <summary>The next close's living costs and hands' wages: what any building keeps back.</summary>
+        protected long LivingCosts(Simulation sim)
         {
             DietPlanDef plan = sim.Config.Game.Farm.DietPlans[sim.State.Farm.Founder.DietPlan];
             long wages = 0;
@@ -1360,11 +1363,16 @@ namespace Tools.Balancer
         private readonly bool _saver;
         private readonly string _order;
 
-        public VillageBot(bool saver = false, string order = "HMS") : base(false, !saver, "flour_mill")
+        public VillageBot(bool saver = false, string order = "HMS") : this(saver, order, "flour_mill") { }
+
+        /// <summary>A village bot that founds these businesses in this order (the Township's bot founds three, spec 023 §3.4).</summary>
+        protected VillageBot(bool saver, string order, params string[] types) : base(false, !saver, types)
         {
             _saver = saver;
             _order = order;
         }
+
+        protected bool Saver { get { return _saver; } }
 
         public override string Name { get { return (_saver ? "village-saver" : "village") + (_order == "HMS" ? "" : "-" + _order); } }
 

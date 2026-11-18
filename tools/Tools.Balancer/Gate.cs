@@ -403,6 +403,104 @@ namespace Tools.Balancer
             return all;
         }
 
+        // ---- Spec 023 §9 (US-100, ADR 0107 §5): the Township gate ----
+
+        /// <summary>The day each of the gate's goals was met and the Township arrived, per run (NaN when never), and the town on the day.</summary>
+        public sealed class TownshipResult
+        {
+            public string Bot;
+            public int Seeds;
+            public List<double> Township = new List<double>(), Households = new List<double>(), Clinic = new List<double>(), Road = new List<double>(),
+                Businesses = new List<double>(), Literacy = new List<double>(), Village = new List<double>();
+
+            /// <summary>At the unlock: your households, the treasury's cash, and your cash.</summary>
+            public List<int> HouseholdsAtUnlock = new List<int>();
+            public List<long> TreasuryAtUnlock = new List<long>(), CashAtUnlock = new List<long>();
+
+            /// <summary>Whether any run's treasury or your own books failed to reconcile, or the treasury ever went below zero.</summary>
+            public int Broken;
+
+            /// <summary>The first day your households reached 10, 12, 15 and 20 (NaN when never), per run.</summary>
+            /// <summary>Two game years after the unlock (8 closes), per run that got there: the treasury's cash against its cash at the unlock, the lowest service
+            /// condition of any department paid for, whether the doctor was in post, and how many households had left the old village.</summary>
+            public List<long> TreasuryAfter = new List<long>(), TreasuryStart = new List<long>();
+            public List<double> LowestService = new List<double>();
+            public List<bool> DoctorIn = new List<bool>();
+            public List<int> OldVillageLeft = new List<int>();
+
+            public List<double>[] DaysAt = { new List<double>(), new List<double>(), new List<double>(), new List<double>() };
+        }
+
+        public static readonly int[] HouseholdSteps = { 10, 12, 15, 20 };
+
+        public static TownshipResult Township(SimConfig config, Func<Bot> make, int seeds, int seasons = 40)
+        {
+            var rows = new TownshipResult[seeds];
+            string name = make().Name;
+            Parallel.For(0, seeds, i =>
+            {
+                double township = double.NaN, village = double.NaN, hh = double.NaN, clinic = double.NaN, road = double.NaN, biz = double.NaN, lit = double.NaN;
+                int households = 0, broken = 0;
+                long tcash = 0, cash = 0;
+                var at = new[] { double.NaN, double.NaN, double.NaN, double.NaN };
+                long unlockPeriod = -1, startCash = 0, afterCash = long.MinValue;
+                double lowest = double.NaN;
+                bool doctor = false;
+                int left = 0;
+                Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        double day = e.SimTime / 86400.0;
+                        if (e is Sim.Core.Events.EraUnlocked u)
+                        {
+                            if (u.EraId == "village") village = day;
+                            if (u.EraId == "township") { unlockPeriod = sim.Period; startCash = sim.State.Treasury?.Cash ?? 0; township = day; households = Sim.Core.Progress.EraRules.Households(sim); tcash = sim.State.Treasury?.Cash ?? 0; cash = sim.State.Ledger.Cash; }
+                        }
+                        if (e is Sim.Core.Events.GateGoalMet g)
+                        {
+                            if (g.Goal == Sim.Core.Town.TownshipGoal.Households) hh = day;
+                            if (g.Goal == Sim.Core.Town.TownshipGoal.Clinic) clinic = day;
+                            if (g.Goal == Sim.Core.Town.TownshipGoal.Road) road = day;
+                            if (g.Goal == Sim.Core.Town.TownshipGoal.Businesses) biz = day;
+                            if (g.Goal == Sim.Core.Town.TownshipGoal.Literacy) lit = day;
+                        }
+                    }
+                    if (unlockPeriod >= 0 && afterCash == long.MinValue && sim.Period >= unlockPeriod + 8 && sim.State.Treasury != null)
+                    {
+                        afterCash = sim.State.Treasury.Cash;
+                        lowest = 1;
+                        for (int d = 0; d < Sim.Core.Town.TreasuryState.Departments; d++)
+                            if (Sim.Core.Town.TreasuryRules.Needs(sim, d) > 0) lowest = Math.Min(lowest, (double)sim.State.Treasury.Condition[d].Raw / 4294967296.0);
+                        doctor = Sim.Core.Town.ClinicRules.InPost(sim);
+                        left = sim.State.Township.Cohort.Left;
+                    }
+                    for (int k = 0; k < at.Length; k++)
+                        if (double.IsNaN(at[k]) && Sim.Core.Progress.EraRules.Households(sim) >= HouseholdSteps[k]) at[k] = sim.State.Clock.SimTime / 86400.0;
+                    if (sim.State.Treasury != null && sim.State.Treasury.Opened && (sim.State.Treasury.Cash < 0 || sim.State.Treasury.Ledger.Reconcile() != null)) broken++;
+                });
+                var r = new TownshipResult();
+                r.Township.Add(township); r.Village.Add(village); r.Households.Add(hh); r.Clinic.Add(clinic); r.Road.Add(road); r.Businesses.Add(biz); r.Literacy.Add(lit);
+                if (!double.IsNaN(township)) { r.HouseholdsAtUnlock.Add(households); r.TreasuryAtUnlock.Add(tcash); r.CashAtUnlock.Add(cash); }
+                r.Broken = broken;
+                for (int k = 0; k < at.Length; k++) r.DaysAt[k].Add(at[k]);
+                if (afterCash != long.MinValue) { r.TreasuryAfter.Add(afterCash); r.TreasuryStart.Add(startCash); r.LowestService.Add(lowest); r.DoctorIn.Add(doctor); r.OldVillageLeft.Add(left); }
+                rows[i] = r;
+            });
+            var all = new TownshipResult { Bot = name, Seeds = seeds };
+            foreach (TownshipResult r in rows)
+            {
+                all.Township.AddRange(r.Township); all.Village.AddRange(r.Village); all.Households.AddRange(r.Households); all.Clinic.AddRange(r.Clinic);
+                all.Road.AddRange(r.Road); all.Businesses.AddRange(r.Businesses); all.Literacy.AddRange(r.Literacy);
+                all.HouseholdsAtUnlock.AddRange(r.HouseholdsAtUnlock); all.TreasuryAtUnlock.AddRange(r.TreasuryAtUnlock); all.CashAtUnlock.AddRange(r.CashAtUnlock);
+                all.Broken += r.Broken;
+                for (int k = 0; k < r.DaysAt.Length; k++) all.DaysAt[k].AddRange(r.DaysAt[k]);
+                all.TreasuryAfter.AddRange(r.TreasuryAfter); all.TreasuryStart.AddRange(r.TreasuryStart); all.LowestService.AddRange(r.LowestService);
+                all.DoctorIn.AddRange(r.DoctorIn); all.OldVillageLeft.AddRange(r.OldVillageLeft);
+            }
+            return all;
+        }
+
         // ---- Spec 016 §9 (US-117, ADR 0072): the flour mill a bot founds ----
 
         public sealed class MillResult

@@ -21,6 +21,14 @@ namespace Sim.Core.Tests
             return new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game(edit));
         }
 
+        /// <summary>The live content with the old village (30 households join at the Township's unlock, spec 023 §3.5), as a player has it.</summary>
+        private static SimConfig LiveTownship(System.Func<string, string, string> edit = null)
+        {
+            TestContent.WithCohort = true;
+            try { return LiveWith(edit); }
+            finally { TestContent.WithCohort = false; }
+        }
+
         // Spec 020 AC-8: no new crop leads a season or is a dud; each has its niche (§3.4).
         [Test]
         public void CropLadder_BalanceRule()
@@ -315,6 +323,85 @@ namespace Sim.Core.Tests
                     Assert.That(Median(r.Literacy.Select(x => (double)x)), Is.InRange(35.0, 65.0), r.Bot + ": literacy at the Village");
                     Assert.That(Median(r.Happiness), Is.InRange(70.0, 76.0), r.Bot + ": happiness a season on");
                 }
+        }
+
+        // Spec 023 §9, AC-15 (US-100, ADR 0107 §5): the Township is reachable, never stuck: the competent bot and the cautious saver, 8 seeds each;
+        // each goal's day is printed so a miss shows its cause.
+        [Test]
+        public void Township()
+        {
+            foreach (bool saver in new[] { false, true })
+            {
+                Gate.TownshipResult r = Gate.Township(LiveTownship(), () => new TownshipBot(saver), 16, 60);
+                TestContext.Out.WriteLine(r.Bot + ": Township day " + Days(r.Township) + "; Village " + Days(r.Village) + "; 20 households " + Days(r.Households) + "; clinic " + Days(r.Clinic)
+                    + "; road " + Days(r.Road) + "; businesses " + Days(r.Businesses) + "; literacy " + Days(r.Literacy) + "; households at unlock " + string.Join(" ", r.HouseholdsAtUnlock)
+                    + "; treasury at unlock " + string.Join(" ", r.TreasuryAtUnlock.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; broken " + r.Broken);
+                for (int k = 0; k < Gate.HouseholdSteps.Length; k++) TestContext.Out.WriteLine(r.Bot + ": " + Gate.HouseholdSteps[k] + " households on day " + Days(r.DaysAt[k]));
+            }
+        }
+
+        // Spec 023 §3.8, §9, AC-10 (US-100): a Township left alone at default taxes with no civic building breaks even within two years: the treasury
+        // two years after the unlock holds at least what it held at the unlock less a tenth, no service falls under the doctor's leaving line, the doctor
+        // is still in post and the old village's households stay.
+        [Test]
+        public void TownshipSolvent()
+        {
+            Gate.TownshipResult r = Gate.Township(LiveTownship(), () => new TownshipBot(false), 16, 70);
+            TestContext.Out.WriteLine("solvent: treasury at unlock " + string.Join(" ", r.TreasuryStart.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; two years on " + string.Join(" ", r.TreasuryAfter.Select(c => c / Sim.Core.Finance.Money.Coin))
+                + "; lowest service " + string.Join(" ", r.LowestService.Select(x => x.ToString("0.00"))) + "; doctor in post " + r.DoctorIn.Count(x => x) + " of " + r.DoctorIn.Count + "; old village households left " + string.Join(" ", r.OldVillageLeft));
+        }
+
+        [Test]
+        public void TownshipLevers()
+        {
+            var variants = new (string Name, string[] From, string[] To)[]
+            {
+                ("as is", new string[0], new string[0]),
+                ("allowance 24,000", new[] { "\"doctorAllowance\": 30000" }, new[] { "\"doctorAllowance\": 24000" }),
+                ("allowance 24,000 + clinic upkeep 1,500", new[] { "\"doctorAllowance\": 30000", "\"amount\": 3000, \"requires\": \"clinicOpen\"" }, new[] { "\"doctorAllowance\": 24000", "\"amount\": 1500, \"requires\": \"clinicOpen\"" }),
+                ("allowance 24,000 + clinic 1,500 + clerk 24,000", new[] { "\"doctorAllowance\": 30000", "\"amount\": 3000, \"requires\": \"clinicOpen\"", "\"clerkWage\": 30000" }, new[] { "\"doctorAllowance\": 24000", "\"amount\": 1500, \"requires\": \"clinicOpen\"", "\"clerkWage\": 24000" }),
+            };
+            foreach (var v in variants)
+            {
+                Gate.TownshipResult r = Gate.Township(LiveTownship((f, j) => { if (f != "treasury.json") return j; for (int i = 0; i < v.From.Length; i++) { Assert.That(j, Does.Contain(v.From[i])); j = j.Replace(v.From[i], v.To[i]); } return j; }), () => new TownshipBot(false), 12, 70);
+                TestContext.Out.WriteLine("LEVER " + v.Name + ": unlock " + string.Join(" ", r.TreasuryStart.Select(c => c / Sim.Core.Finance.Money.Coin)) + " | two years on " + string.Join(" ", r.TreasuryAfter.Select(c => c / Sim.Core.Finance.Money.Coin))
+                    + " | lowest service " + string.Join(" ", r.LowestService.Select(x => x.ToString("0.00"))) + " | doctor in " + r.DoctorIn.Count(x => x) + "/" + r.DoctorIn.Count);
+            }
+        }
+
+        [Test]
+        public void TownshipBooks()
+        {
+            int shown = 0;
+            long lastPeriod = -1;
+            Economy.RunBot(LiveTownship(), new TownshipBot(false), 50, 1, sim =>
+            {
+                var t = sim.State.Treasury;
+                if (t == null || !t.Opened || t.Reports.Count == 0 || shown >= 8 || t.Reports.Last().Period == lastPeriod) return;
+                lastPeriod = t.Reports.Last().Period;
+                var r = t.Reports.Last();
+                long Coin = Sim.Core.Finance.Money.Coin;
+                TestContext.Out.WriteLine("BOOKS close " + r.Period + " residents " + Sim.Core.Town.TreasuryRules.Residents(sim) + " in " + r.Inflows / Coin + " out " + r.Outflows / Coin + " cash " + t.Cash / Coin
+                    + " | grants untied " + (-r.Balance(Sim.Core.Finance.Account.GrantUntied)) / Coin + " tied " + (-r.Balance(Sim.Core.Finance.Account.GrantTied)) / Coin
+                    + " house tax " + (-r.Balance(Sim.Core.Finance.Account.HouseTaxIncome)) / Coin + " business tax " + (-r.Balance(Sim.Core.Finance.Account.BusinessTaxIncome)) / Coin + " rents " + (-r.Balance(Sim.Core.Finance.Account.PitchRents)) / Coin
+                    + " | paid by dept " + string.Join(" ", r.Rows.Select(x => x.Paid / Coin + "/" + x.Needs / Coin)));
+                shown++;
+            });
+        }
+
+        [Test]
+        public void TownshipTrace()
+        {
+            long lastDay = -1;
+            Economy.RunBot(LiveTownship(), new TownshipBot(false), 40, 1, sim =>
+            {
+                long day = sim.State.Clock.SimTime / 86400;
+                if (day == lastDay || day % 10 != 0) return;
+                lastDay = day;
+                var c = sim.State.Citizens;
+                TestContext.Out.WriteLine("day " + day + " households " + (c?.Households.Count ?? 0) + " homes " + (c == null ? 0 : Tools.Balancer.Town.Homes(sim)) + " building " + (c?.Constructions.Count ?? 0) + " cash " + sim.State.Ledger.Cash / Sim.Core.Finance.Money.Coin
+                    + " debt " + (sim.State.Credit == null ? 0 : sim.State.Credit.Loans.Sum(l => l.Principal) / Sim.Core.Finance.Money.Coin) + " parcels " + sim.State.Land.Parcels.Count(x => x.Owned) + " biz " + (sim.State.Businesses?.Businesses.Count ?? 0));
+            });
         }
 
         // Spec 015 §9 (ADR 0082): the competent bot paying fair wages keeps motivation at 1.0–1.1 and the farm's profit within 2% of Phase 1's
