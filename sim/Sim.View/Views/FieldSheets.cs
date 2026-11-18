@@ -47,8 +47,11 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Decimal1(tile.Fertility) + " / 100", "fertility", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100", "moisture", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
-            IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
-            EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
+            if (!parcel.Leased) // a leased acre is the tenant's: no water to install, no tools
+            {
+                IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
+                EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
+            }
 
             if (crop == null && orchard != null)
             {

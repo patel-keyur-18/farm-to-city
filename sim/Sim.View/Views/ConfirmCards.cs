@@ -149,7 +149,7 @@ namespace Sim.View.Views
             }
             else
             {
-                vm.SafeLabel = s.Get("confirm.notNow");
+                vm.SafeLabel = s.Has("confirm." + name + ".keep") ? s.Get("confirm." + name + ".keep") : s.Get("confirm.notNow");
                 vm.GoLabel = cash < 0 ? s.Get("confirm.verbFor", "verb", verb, "amount", ctx.Fmt.Coins(-cash)) : verb;
             }
             return vm;

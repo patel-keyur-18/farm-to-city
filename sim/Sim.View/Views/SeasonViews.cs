@@ -244,6 +244,7 @@ namespace Sim.View.Views
                 case Account.MilkSales: return "milk";
                 case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return "animal_buffalo";
                 case Account.RentReceived: return "family_house";
+                case Account.LandRentReceived: return "land";
                 case Account.BusinessDrawingsIncome: return "flour_mill";
                 case Account.InterestOnSavings: return "savings";
                 case Account.DayLabourEarnings: case Account.LivingCosts: case Account.HealthCosts: return "person_founder";

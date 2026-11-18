@@ -115,7 +115,7 @@ namespace Sim.Core.Town
                 p.Lease = (int)LeaseStatus.Active;
                 long rent = Rent(sim, p);
                 if (rent <= 0) continue;
-                sim.State.Ledger.Post(t, sim.Period, "ledger.landLeased", "parcel:" + parcelId, new Posting(Account.Cash, rent), new Posting(Account.RentReceived, -rent));
+                sim.State.Ledger.Post(t, sim.Period, "ledger.landLeased", "parcel:" + parcelId, new Posting(Account.Cash, rent), new Posting(Account.LandRentReceived, -rent));
                 sim.Emit(new LandRentPaid(t, parcelId, rent));
             }
         }

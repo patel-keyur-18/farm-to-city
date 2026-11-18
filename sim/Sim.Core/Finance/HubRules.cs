@@ -141,7 +141,7 @@ namespace Sim.Core.Finance
             SeasonReport last = reports[reports.Count - 1];
             foreach (KeyValuePair<Account, long> kv in last.ByAccount)
             {
-                if (kv.Key == Account.RentReceived) rent = kv.Value;
+                if (kv.Key == Account.RentReceived || kv.Key == Account.LandRentReceived) rent += kv.Value; // houses, the godown and leased land
                 if (kv.Key == Account.InterestOnSavings) interest = kv.Value;
             }
             if (sim.State.Businesses != null)

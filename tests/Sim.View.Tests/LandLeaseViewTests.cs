@@ -120,6 +120,24 @@ namespace Sim.View.Tests
             Assert.That(yours.Lines.Any(l => l.Action != null && l.Action.Id.StartsWith("lease:")), Is.True, "an inherited acre can be leased");
         }
 
+        // An ending lease leaves Show only on Your land (nothing to sell or press), and the End card's safe button says Keep leasing.
+        [Test]
+        public void EndingRowAndCard()
+        {
+            Simulation sim = Situations.Township();
+            string id = Bought(sim);
+            Ok(sim, new LeaseOutLand(sim.State.Clock.SimTime, id));
+            sim.AdvanceTo(sim.State.Clock.SimTime + sim.Clock.SecondsPerSeason);
+            ViewContext ctx = ViewKit2.Context(sim);
+            Assert.That(ConfirmCards.For(ctx, new EndLease(ctx.Now, id)).SafeLabel, Is.EqualTo("Keep leasing"));
+            Ok(sim, new EndLease(sim.State.Clock.SimTime, id));
+            LineVm row = LandsSheet.Build(ViewKit2.Context(sim)).Lines.First(l => l.Note != null && l.Note.StartsWith("Lease ends"));
+            Assert.That(row.Action.Id, Does.StartWith("show:"));
+            Assert.That(row.Also, Is.Null);
+            SheetVm field = FieldSheets.ForTile(ViewKit2.Context(sim), Tile(sim, id));
+            Assert.That(field.Lines.Any(l => l.Label == "Irrigation"), Is.False, "a leased acre has no water to install");
+        }
+
         // The away card names the rent and the end of a lease.
         [Test]
         public void AwayLines()

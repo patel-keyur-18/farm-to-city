@@ -139,7 +139,7 @@ namespace Sim.Core.Finance
         private static bool HasRent(SeasonReport r)
         {
             foreach (KeyValuePair<Account, long> kv in r.ByAccount)
-                if (kv.Key == Account.RentReceived && kv.Value > 0) return true;
+                if ((kv.Key == Account.RentReceived || kv.Key == Account.LandRentReceived) && kv.Value > 0) return true;
             return false;
         }
 

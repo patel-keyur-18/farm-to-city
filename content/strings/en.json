@@ -4645,7 +4645,7 @@
   "hub.why.emergencyDue": "Everything the next close takes",
   "hub.why.emergencyText": "Cash and savings divided by what the next season close takes, rounded down. Your family's living counts at the basic plan at least. Under one season is amber.",
   "hub.why.passive": "Passive income",
-  "hub.why.passiveRent": "Rent from your houses and godown",
+  "hub.why.passiveRent": "Rent from your houses, land and godown",
   "hub.why.passiveInterest": "Interest on savings",
   "hub.why.passiveBusiness": "Profit of businesses run by a hired worker",
   "hub.why.passiveLiving": "Your family's living a season",
@@ -5828,5 +5828,10 @@
   "why.landRent.soil": "The soil",
   "why.landRent.soilValue": "stays as it was: a tenant neither wears it out nor builds it up",
   "why.landRent.text": "A tenant farms the land and pays you rent. If the town makes your land worth more, the rent rises with it at the next close.",
-  "why.landRent.lesson": "Land earns even when you don't work it. Rent is a safe, small return on what the land is worth. Farming it yourself, or with a hand, can earn more, and takes work and risk."
+  "why.landRent.lesson": "Land earns even when you don't work it. Rent is a safe, small return on what the land is worth. Farming it yourself, or with a hand, can earn more, and takes work and risk.",
+  "account.LandRentReceived": "Rent from your leased land",
+  "season.account.LandRentReceived": "Rent from your leased land",
+  "cash.row.4210.in": "Rent from your leased land",
+  "cash.row.4210.out": "Rent from your leased land, given back",
+  "confirm.EndLease.keep": "Keep leasing"
 }

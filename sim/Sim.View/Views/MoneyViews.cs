@@ -147,6 +147,7 @@ namespace Sim.View.Views
                 // A leased parcel can't be sold, so the lease buttons take Sell's place; the inherited acres, never sold, get Lease out (spec 024 §3.6).
                 ActionVm lease = LandLeaseViews.RowAction(ctx, p);
                 if (lease != null) { if (line.Also == null) line.Also = line.Action; line.Action = lease; }
+                else if (p.Leased) { line.Action = line.Also ?? line.Action; line.Also = null; } // an ending lease: Show only, there is nothing to sell or press
             }
             return line;
         }

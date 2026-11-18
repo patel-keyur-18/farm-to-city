@@ -72,7 +72,7 @@ namespace Sim.Core.Tests
             Assert.That(rent, Is.EqualTo(Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, P(sim, "e1")), Fixed.Parse("0.025")))), "2.5% of the land value, to the coin");
             Assert.That(rent, Is.GreaterThan(0));
             Assert.That(LandLeaseRules.StatusOf(P(sim, "e1")), Is.EqualTo(LeaseStatus.Active));
-            Assert.That(sim.State.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.landLeased" && e.Postings.Any(p => p.Account == Account.RentReceived && p.Amount == -rent)), Is.True);
+            Assert.That(sim.State.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.landLeased" && e.Postings.Any(p => p.Account == Account.LandRentReceived && p.Amount == -rent)), Is.True);
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
             sim.DrainEvents();
             Close(sim);
