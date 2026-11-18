@@ -22,7 +22,7 @@ namespace Sim.Core.Tests
         /// <summary>The treasury's tests count grants and departments only: both tax rates at 0 (the tax tests start their own towns).</summary>
         internal static string NoTaxes(string file, string json)
         {
-            return file == "treasury.json" ? json.Replace("\"rate\": 0.016", "\"rate\": 0").Replace("\"rate\": 0.10", "\"rate\": 0") : json;
+            return file == "treasury.json" ? json.Replace("\"rate\": 0.016", "\"rate\": 0").Replace("\"rate\": 0.10", "\"rate\": 0").Replace("\"clerkWage\": 20000", "\"clerkWage\": 30000") : json; // these tests count the mechanics at the spec's old round 30,000 clerk; the real wage is TreasuryContentTests.Loads's
         }
 
         internal static Simulation Start(System.Func<string, string, string> edit = null)

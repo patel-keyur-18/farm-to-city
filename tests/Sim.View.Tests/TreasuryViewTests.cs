@@ -54,6 +54,7 @@ namespace Sim.View.Tests
             TreasuryState t = sim.State.Treasury;
             var drain = new DrainTreasury();
             Assert.That(sim.Execute(drain).Accepted, Is.True);
+            EmptyOldVillage(sim);
             ViewContext ctx = ViewKit2.Context(sim);
             SheetVm vm = TreasurySheet.Build(ctx);
             LineVm banner = vm.Lines.Single(l => l.Banner && l.NoteTone == Tone.Warn);
@@ -157,6 +158,13 @@ namespace Sim.View.Tests
                     checkedRows++;
                 }
             Assert.That(checkedRows, Is.GreaterThan(12));
+        }
+
+        /// <summary>The old village's grants and tax would carry the clerk's pay; with it gone the close can fall short (the Editor town of one resident).</summary>
+        internal static void EmptyOldVillage(Simulation sim)
+        {
+            var c = sim.State.Township.Cohort;
+            c.GetType().GetProperty("Households").GetSetMethod(true).Invoke(c, new object[] { 0 });
         }
 
         /// <summary>A test-only command that takes the town's cash away, so the next close can't be covered.</summary>

@@ -22,15 +22,15 @@ namespace Tools.Balancer
     /// </summary>
     public sealed class TownshipBot : VillageBot
     {
-        /// <summary>Homes wanted: 20 households and the doctor's.</summary>
-        public const int Homes = 21;
+        /// <summary>Homes wanted: 15 households and the doctor's.</summary>
+        public const int Homes = 16;
 
         /// <summary>Houses being built at once.</summary>
         public int Concurrent { get; set; } = 1;
 
         private readonly List<int> _houseAcres = new List<int>();
 
-        public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "bakery", "veg_stall") { }
+        public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "tea_stall", "veg_stall") { }
 
         public override string Name { get { return Saver ? "township-saver" : "township"; } }
 

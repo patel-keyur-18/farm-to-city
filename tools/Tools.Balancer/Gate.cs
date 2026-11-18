@@ -423,17 +423,21 @@ namespace Tools.Balancer
             /// <summary>The first day your households reached 10, 12, 15 and 20 (NaN when never), per run.</summary>
             /// <summary>Two game years after the unlock (8 closes), per run that got there: the treasury's cash against its cash at the unlock, the lowest service
             /// condition of any department paid for, whether the doctor was in post, and how many households had left the old village.</summary>
-            public List<long> TreasuryAfter = new List<long>(), TreasuryStart = new List<long>();
+            public List<long> TreasuryAfter = new List<long>(), TreasuryStart = new List<long>(), TreasuryMid = new List<long>();
             public List<double> LowestService = new List<double>();
             public List<bool> DoctorIn = new List<bool>();
             public List<int> OldVillageLeft = new List<int>();
 
+            /// <summary>At the same time: the town's happiness (your people), the old village's, and your households.</summary>
+            public List<double> Happiness = new List<double>(), OldVillageHappiness = new List<double>();
+            public List<int> HouseholdsAfter = new List<int>();
+
             public List<double>[] DaysAt = { new List<double>(), new List<double>(), new List<double>(), new List<double>() };
         }
 
-        public static readonly int[] HouseholdSteps = { 10, 12, 15, 20 };
+        public static readonly int[] HouseholdSteps = { 10, 12, 15, 18 };
 
-        public static TownshipResult Township(SimConfig config, Func<Bot> make, int seeds, int seasons = 40)
+        public static TownshipResult Township(SimConfig config, Func<Bot> make, int seeds, int seasons = 40, int closesAfter = 8)
         {
             var rows = new TownshipResult[seeds];
             string name = make().Name;
@@ -443,8 +447,9 @@ namespace Tools.Balancer
                 int households = 0, broken = 0;
                 long tcash = 0, cash = 0;
                 var at = new[] { double.NaN, double.NaN, double.NaN, double.NaN };
-                long unlockPeriod = -1, startCash = 0, afterCash = long.MinValue;
-                double lowest = double.NaN;
+                long unlockPeriod = -1, startCash = 0, afterCash = long.MinValue, midCash = long.MinValue;
+                double lowest = double.NaN, happy = double.NaN, oldHappy = double.NaN;
+                int ownAfter = 0;
                 bool doctor = false;
                 int left = 0;
                 Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
@@ -466,7 +471,8 @@ namespace Tools.Balancer
                             if (g.Goal == Sim.Core.Town.TownshipGoal.Literacy) lit = day;
                         }
                     }
-                    if (unlockPeriod >= 0 && afterCash == long.MinValue && sim.Period >= unlockPeriod + 8 && sim.State.Treasury != null)
+                    if (unlockPeriod >= 0 && midCash == long.MinValue && sim.Period >= unlockPeriod + closesAfter / 2 && sim.State.Treasury != null) midCash = sim.State.Treasury.Cash;
+                    if (unlockPeriod >= 0 && afterCash == long.MinValue && sim.Period >= unlockPeriod + closesAfter && sim.State.Treasury != null)
                     {
                         afterCash = sim.State.Treasury.Cash;
                         lowest = 1;
@@ -474,6 +480,9 @@ namespace Tools.Balancer
                             if (Sim.Core.Town.TreasuryRules.Needs(sim, d) > 0) lowest = Math.Min(lowest, (double)sim.State.Treasury.Condition[d].Raw / 4294967296.0);
                         doctor = Sim.Core.Town.ClinicRules.InPost(sim);
                         left = sim.State.Township.Cohort.Left;
+                        happy = (double)Sim.Core.People.HappinessRules.Town(sim).Raw / 4294967296.0;
+                        oldHappy = (double)sim.State.Township.Cohort.Happiness.Raw / 4294967296.0;
+                        ownAfter = Sim.Core.Progress.EraRules.Households(sim);
                     }
                     for (int k = 0; k < at.Length; k++)
                         if (double.IsNaN(at[k]) && Sim.Core.Progress.EraRules.Households(sim) >= HouseholdSteps[k]) at[k] = sim.State.Clock.SimTime / 86400.0;
@@ -484,7 +493,7 @@ namespace Tools.Balancer
                 if (!double.IsNaN(township)) { r.HouseholdsAtUnlock.Add(households); r.TreasuryAtUnlock.Add(tcash); r.CashAtUnlock.Add(cash); }
                 r.Broken = broken;
                 for (int k = 0; k < at.Length; k++) r.DaysAt[k].Add(at[k]);
-                if (afterCash != long.MinValue) { r.TreasuryAfter.Add(afterCash); r.TreasuryStart.Add(startCash); r.LowestService.Add(lowest); r.DoctorIn.Add(doctor); r.OldVillageLeft.Add(left); }
+                if (afterCash != long.MinValue) { r.TreasuryAfter.Add(afterCash); r.TreasuryStart.Add(startCash); r.TreasuryMid.Add(midCash); r.LowestService.Add(lowest); r.DoctorIn.Add(doctor); r.OldVillageLeft.Add(left); r.Happiness.Add(happy); r.OldVillageHappiness.Add(oldHappy); r.HouseholdsAfter.Add(ownAfter); }
                 rows[i] = r;
             });
             var all = new TownshipResult { Bot = name, Seeds = seeds };
@@ -495,8 +504,8 @@ namespace Tools.Balancer
                 all.HouseholdsAtUnlock.AddRange(r.HouseholdsAtUnlock); all.TreasuryAtUnlock.AddRange(r.TreasuryAtUnlock); all.CashAtUnlock.AddRange(r.CashAtUnlock);
                 all.Broken += r.Broken;
                 for (int k = 0; k < r.DaysAt.Length; k++) all.DaysAt[k].AddRange(r.DaysAt[k]);
-                all.TreasuryAfter.AddRange(r.TreasuryAfter); all.TreasuryStart.AddRange(r.TreasuryStart); all.LowestService.AddRange(r.LowestService);
-                all.DoctorIn.AddRange(r.DoctorIn); all.OldVillageLeft.AddRange(r.OldVillageLeft);
+                all.TreasuryAfter.AddRange(r.TreasuryAfter); all.TreasuryMid.AddRange(r.TreasuryMid); all.TreasuryStart.AddRange(r.TreasuryStart); all.LowestService.AddRange(r.LowestService);
+                all.DoctorIn.AddRange(r.DoctorIn); all.OldVillageLeft.AddRange(r.OldVillageLeft); all.Happiness.AddRange(r.Happiness); all.OldVillageHappiness.AddRange(r.OldVillageHappiness); all.HouseholdsAfter.AddRange(r.HouseholdsAfter);
             }
             return all;
         }

@@ -1,5 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
+using Sim.Core;
+using Tools.Balancer;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Finance;
@@ -108,6 +110,57 @@ namespace Sim.Core.Tests
             foreach (JournalEntry e in sim.State.Ledger.Entries)
                 Assert.That(e.DescriptionKey.StartsWith("ledger.town") || e.DescriptionKey.Contains("grant") && e.Postings.Any(p => p.Account == Account.Cash && p.Amount > 0 && e.Reference == "district"), Is.False, e.DescriptionKey);
             Assert.That(T(sim).Cash, Is.GreaterThanOrEqualTo(0));
+        }
+    
+        // ---- spec 023 §12: the Township's taxes on a bot-built town (US-100) ----
+
+        private static string Rates(string house, string business, string file, string json)
+        {
+            return file == "treasury.json" ? json.Replace("\"rate\": 0.016", "\"rate\": " + house).Replace("\"rate\": 0.10", "\"rate\": " + business) : json;
+        }
+
+        private static Gate.TownshipResult Run(string house, string business, int seeds, int closes = 8)
+        {
+            TestContent.WithCohort = true;
+            try
+            {
+                var config = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game((f, j) => Rates(house, business, f, j)));
+                return Gate.Township(config, () => new TownshipBot(false), seeds, 80, closes);
+            }
+            finally { TestContent.WithCohort = false; }
+        }
+
+        private static double Median(System.Collections.Generic.IEnumerable<double> xs) { var l = xs.OrderBy(x => x).ToList(); return l[l.Count / 2]; }
+
+        private static int Seeds { get { string v = System.Environment.GetEnvironmentVariable("FTC_SEEDS"); return v == null ? 12 : int.Parse(v); } }
+
+        // Every tax at 0 (spec 022 §9): the town left alone with no tax at all: the treasury runs dry, services decay (never below zero for the
+        // treasury), the old village and your households stay, and nothing is stuck: the Township is still reached and the town goes on.
+        [Test]
+        public void EveryTaxAtZero()
+        {
+            Gate.TownshipResult normal = Run("0.016", "0.10", Seeds, 16), zero = Run("0", "0", Seeds, 16);
+            TestContext.Out.WriteLine("ZERO: treasury two years on " + string.Join(" ", zero.TreasuryAfter.Select(c => c / Money.Coin)) + "; lowest service " + string.Join(" ", zero.LowestService.Select(x => x.ToString("0.00")))
+                + "; happiness " + Median(zero.Happiness).ToString("0.0") + " (default taxes " + Median(normal.Happiness).ToString("0.0") + "); old village happiness " + Median(zero.OldVillageHappiness).ToString("0.0") + " (" + Median(normal.OldVillageHappiness).ToString("0.0") + "); households left " + string.Join(" ", zero.OldVillageLeft) + "; your households " + string.Join(" ", zero.HouseholdsAfter) + " (default " + string.Join(" ", normal.HouseholdsAfter) + ")");
+            Assert.That(zero.Broken, Is.EqualTo(0), "the treasury is never below zero and its books reconcile");
+            Assert.That(zero.Township.Count(double.IsNaN), Is.EqualTo(normal.Township.Count(double.IsNaN)), "no tax doesn't stop the Township");
+            Assert.That(Median(zero.LowestService), Is.LessThan(0.3), "four years with no tax and the services have wasted away");
+            Assert.That(Median(normal.LowestService), Is.GreaterThan(0.9), "and with the default rates they have not");
+            Assert.That(Median(zero.Happiness), Is.LessThan(Median(normal.Happiness) - 1), "the town is less happy for it (spec 022 §9 said 5; measured 1.8: the services weigh little against food, work and rent)");
+            Assert.That(zero.OldVillageLeft.All(n => n == 0), Is.True, "the old village stays");
+            Assert.That(zero.HouseholdsAfter.Min(), Is.GreaterThanOrEqualTo(14), "yours stay too");
+        }
+
+        // Every tax at its cap: the treasury is the better for it, nobody is stuck, no old household is driven away.
+        [Test]
+        public void EveryTaxAtTheCap()
+        {
+            Gate.TownshipResult normal = Run("0.016", "0.10", Seeds), cap = Run("0.024", "0.2", Seeds);
+            TestContext.Out.WriteLine("CAP: treasury two years on " + Median(cap.TreasuryAfter.Select(c => (double)c / Money.Coin)).ToString("0") + " (default " + Median(normal.TreasuryAfter.Select(c => (double)c / Money.Coin)).ToString("0")
+                + "); happiness " + Median(cap.Happiness).ToString("0.0") + " (" + Median(normal.Happiness).ToString("0.0") + "); old village happiness " + Median(cap.OldVillageHappiness).ToString("0.0") + " (" + Median(normal.OldVillageHappiness).ToString("0.0") + "); old households left " + string.Join(" ", cap.OldVillageLeft)
+                + "; your households " + string.Join(" ", cap.HouseholdsAfter));
+            Assert.That(cap.Broken, Is.EqualTo(0));
+            Assert.That(Median(cap.TreasuryAfter.Select(c => (double)c)), Is.GreaterThan(Median(normal.TreasuryAfter.Select(c => (double)c))), "a higher rate brings the town more");
         }
     }
 }

@@ -63,10 +63,10 @@ namespace Sim.Core.Tests
             Assert.That(TownshipRules.Met(sim), Is.False);
             Assert.That(TownshipRules.Holds(sim, TownshipGoal.Households), Is.False);
             int have = EraRules.Households(sim);
-            Families(sim, 19 - have);
-            Assert.That(TownshipRules.Holds(sim, TownshipGoal.Households), Is.False, "19 households");
+            Families(sim, 14 - have);
+            Assert.That(TownshipRules.Holds(sim, TownshipGoal.Households), Is.False, "14 households");
             Families(sim, 1);
-            Assert.That(TownshipRules.Holds(sim, TownshipGoal.Households), Is.True, "20 households");
+            Assert.That(TownshipRules.Holds(sim, TownshipGoal.Households), Is.True, "15 households");
             Assert.That(TownshipRules.Holds(sim, TownshipGoal.Literacy), Is.True);
             Assert.That(TownshipRules.Holds(sim, TownshipGoal.Clinic), Is.False);
             Assert.That(TownshipRules.Holds(sim, TownshipGoal.Road), Is.False);
@@ -138,7 +138,7 @@ namespace Sim.Core.Tests
             Families(sim, 20);
             EraRules.OnTown(sim);
             Assert.That(sim.State.Township.GateMet & TownshipGoal.Households, Is.Not.EqualTo(0));
-            sim.State.Citizens.Households.RemoveRange(0, 5);
+            sim.State.Citizens.Households.RemoveRange(0, 8);
             Assert.That(TownshipRules.Holds(sim, TownshipGoal.Households), Is.False);
             Assert.That(TownshipRules.IsMet(sim, TownshipGoal.Households), Is.True, "met for good");
             Assert.That(sim.PendingEvents.OfType<GateGoalMet>().Count(e => e.Goal == TownshipGoal.Households), Is.LessThanOrEqualTo(1), "announced once");

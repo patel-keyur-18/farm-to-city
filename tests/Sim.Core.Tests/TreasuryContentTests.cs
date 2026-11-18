@@ -26,7 +26,7 @@ namespace Sim.Core.Tests
             Assert.That(d.Lines.Count, Is.EqualTo(10 + 5), "the clerk, the doctor, the clinic, the school and the road, the watchman and caretaker, the three civic upkeeps, and one line for each policy (spec 022 §3.5, spec 023 §3.8)");
             Assert.That((d.Policies.MaxActive, d.Policies.ReenactAfterSeasons, d.Policies.Lag[(int)Sim.Core.Town.PolicyId.Subsidy]), Is.EqualTo((3, 1, 1)));
             Assert.That(d.StartUpGrant, Is.EqualTo(100_000_00L));
-            Assert.That(d.ClerkWage, Is.EqualTo(30_000_00L));
+            Assert.That(d.ClerkWage, Is.EqualTo(20_000_00L));
             Assert.That(Onboarding().Eras[d.Era].Id, Is.EqualTo("township"));
         }
 

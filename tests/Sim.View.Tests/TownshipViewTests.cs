@@ -39,7 +39,7 @@ namespace Sim.View.Tests
             Assert.That(vm.Title, Is.EqualTo("Becoming a Township"));
             string[] labels = { "Households of yours", "The village clinic", "The paved link road", "Businesses with a profitable season", "Literate: people aged 7 and over" };
             Assert.That(vm.Lines.Take(5).Select(l => l.Label), Is.EqualTo(labels));
-            Assert.That(vm.Lines[0].Value, Does.EndWith(" of 20"));
+            Assert.That(vm.Lines[0].Value, Does.EndWith(" of 15"));
             Assert.That(vm.Lines[1].Value, Is.EqualTo("Not yet"));
             Assert.That(vm.Lines[3].Value, Is.EqualTo("0 of 3"));
             Assert.That(vm.Lines[4].Value, Does.EndWith("% of 60%"));
