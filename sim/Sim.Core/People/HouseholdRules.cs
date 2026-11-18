@@ -216,6 +216,7 @@ namespace Sim.Core.People
             PopulationDefs p = sim.Config.Game.Population;
             foreach (Household x in s.Households) HouseRules.CollectRent(sim, x); // first, for the season that ended (§3.12)
             Town.LandValueRules.Read(sim); // spec 024 §3.9: land value is read once, before this season's leases renew
+            Town.LandLeaseRules.Close(sim); // leases end or pay their rent upfront (spec 024 §3.6)
             Town.ZoningRules.Close(sim); // then builders buy a parcel if families are waiting (spec 024 §3.3)
             foreach (Household x in s.Households)
             {

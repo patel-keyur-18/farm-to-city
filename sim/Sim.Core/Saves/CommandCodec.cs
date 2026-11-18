@@ -49,6 +49,7 @@ namespace Sim.Core.Saves
             PetitionRoad, BuildClinic, BuildDoctorQuarters,
             PostCivicJob, DismissStaff,
             ListParcel, CancelSale, ZoneParcel, UnzoneParcel,
+            LeaseOutLand, EndLease,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -177,6 +178,8 @@ namespace Sim.Core.Saves
                 case CancelSale c: At(c, Tag.CancelSale); w.WriteString(c.ParcelId); break;
                 case ZoneParcel c: At(c, Tag.ZoneParcel); w.WriteString(c.ParcelId); break;
                 case UnzoneParcel c: At(c, Tag.UnzoneParcel); w.WriteString(c.ParcelId); break;
+                case LeaseOutLand c: At(c, Tag.LeaseOutLand); w.WriteString(c.ParcelId); break;
+                case EndLease c: At(c, Tag.EndLease); w.WriteString(c.ParcelId); break;
                 case SetBudget c: At(c, Tag.SetBudget); w.WriteInt(c.Department); w.WriteLong(c.Amount); break;
                 case AcceptBudget c: At(c, Tag.AcceptBudget); break;
                 case SetTaxRate c: At(c, Tag.SetTaxRate); w.WriteInt((int)c.Tax); w.WriteLong(c.Rate.Raw); break;
@@ -341,6 +344,8 @@ namespace Sim.Core.Saves
                 case Tag.CancelSale: return new CancelSale(at, r.ReadString());
                 case Tag.ZoneParcel: return new ZoneParcel(at, r.ReadString());
                 case Tag.UnzoneParcel: return new UnzoneParcel(at, r.ReadString());
+                case Tag.LeaseOutLand: return new LeaseOutLand(at, r.ReadString());
+                case Tag.EndLease: return new EndLease(at, r.ReadString());
                 case Tag.SetBudget: return new SetBudget(at, r.ReadInt(), r.ReadLong());
                 case Tag.AcceptBudget: return new AcceptBudget(at);
                 case Tag.SetTaxRate: return new SetTaxRate(at, (Town.TaxKind)r.ReadInt(), Maths.Fixed.FromRaw(r.ReadLong()));

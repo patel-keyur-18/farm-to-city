@@ -59,6 +59,16 @@ namespace Sim.View.Views
                 OrchardSheet.AddActions(ctx, vm, orchard);
                 return vm;
             }
+            if (crop == null && parcel.Leased)
+            {
+                // Leased out (spec 024 §3.6): the tenant has it; no sowing, building or zoning, only the rent and the way to end the lease.
+                vm.Subtitle = ctx.Strings.Get(Sim.Core.Town.LandLeaseRules.StatusOf(parcel) == Sim.Core.Land.LeaseStatus.Starting ? "lease.subLocked" : "lease.subLeased", "what", vm.Subtitle);
+                LineVm value = LandValueViews.AcreRow(ctx, tileId);
+                if (value != null) vm.Lines.Add(value);
+                LandLeaseViews.AddFieldRows(ctx, vm, tileId);
+                LandLeaseViews.AddActions(ctx, vm, tileId);
+                return vm;
+            }
             if (crop == null)
             {
                 ZoningViews.AddFieldRows(ctx, vm, tileId); // land value and the zone, from the Township (spec 024 §3.3)
@@ -67,6 +77,7 @@ namespace Sim.View.Views
                 if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
+                LandLeaseViews.AddActions(ctx, vm, tileId); // lease it out, from the Township (spec 024 §3.6)
                 ZoningViews.AddFieldActions(ctx, vm, tileId);
                 return vm;
             }

@@ -62,7 +62,7 @@ namespace Sim.Core.Town
             Parcel p = sim.State.Land.Parcels[parcelId];
             if (!p.Owned) return RejectReason.NotOwned;
             if (p.Protected) return RejectReason.Protected;
-            if (p.Listed) return RejectReason.Listed;
+            if (p.Locked) return p.LockReason;
             if (HomeTiles(sim, parcelId).Count == 0) return RejectReason.NotFarmTile;
             if (LandSystem.InUse(sim, parcelId)) return RejectReason.ParcelInUse;
             return RejectReason.None;
@@ -126,7 +126,7 @@ namespace Sim.Core.Town
                 if (HomeTiles(sim, i).Count == 0 || !Serviced(sim, i)) continue;
                 if (p.Owned)
                 {
-                    if (p.Zone != (int)Zone.Residential || p.Listed || LandSystem.InUse(sim, i) || LandSystem.WouldStrand(sim, i)) continue;
+                    if (p.Zone != (int)Zone.Residential || p.Locked || LandSystem.InUse(sim, i) || LandSystem.WouldStrand(sim, i)) continue;
                     if (LandRules.ParcelPrice(sim, p) < Finance.CreditSystem.RequiredOnSale(sim, i)) continue;
                     mine.Add(i);
                 }

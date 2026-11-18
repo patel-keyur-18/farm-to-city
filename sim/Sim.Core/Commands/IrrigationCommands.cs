@@ -17,7 +17,7 @@ namespace Sim.Core.Commands
             if (tile < 0 || tile >= land.Tiles.Count) return RejectReason.UnknownTile;
             if (land.Tiles[tile].Terrain != Terrain.Farm) return RejectReason.NotFarmTile;
             if (!land.Parcels[land.Tiles[tile].ParcelId].Owned) return RejectReason.NotOwned;
-            if (land.Parcels[land.Tiles[tile].ParcelId].Listed) return RejectReason.Listed; // a listed acre is locked (spec 024 §3.4)
+            if (land.Parcels[land.Tiles[tile].ParcelId].Locked) return land.Parcels[land.Tiles[tile].ParcelId].LockReason; // a listed acre is locked (spec 024 §3.4)
             return RejectReason.None;
         }
 

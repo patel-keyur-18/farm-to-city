@@ -44,6 +44,8 @@ namespace Sim.Core.Tests
             long cash = sim.State.Ledger.Cash;
             sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.LivingCosts, cash - 10 * Coin), new Posting(Account.Cash, -(cash - 10 * Coin)));
             Ok(sim, new ListParcel(sim.State.Clock.SimTime, bought));
+            int idle = sim.Config.Game.Start.InheritedParcels.First(p => Sim.Core.Town.LandLeaseRules.CanLease(sim, p) == RejectReason.None);
+            Ok(sim, new LeaseOutLand(sim.State.Clock.SimTime, sim.Config.Game.Map.Parcels[idle].Id)); // an inherited acre leased out: running by the close (US-261)
             sim.AdvanceTo(TreasuryTests.NextClose(sim) + 3 * Hour);
             sim.DrainEvents();
             Assert.That(CohortRules.Joined(sim), Is.True);
@@ -75,6 +77,7 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             Assert.That(t.LandValues.Length, Is.EqualTo(r.State.Land.Tiles.Count), "land values read");
             Assert.That(r.State.Land.Parcels.Count(p => p.Listed), Is.EqualTo(1), "a parcel listed for a slow sale");
+            Assert.That(r.State.Land.Parcels.Count(p => p.Lease == (int)Sim.Core.Land.LeaseStatus.Active), Is.EqualTo(1), "a parcel leased out and paying");
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "round-trips");
             Assert.That(again.State.Township.Cohort.Happiness, Is.EqualTo(t.Cohort.Happiness));

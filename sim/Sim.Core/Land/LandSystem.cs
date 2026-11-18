@@ -101,6 +101,7 @@ namespace Sim.Core.Land
         {
             if (!parcel.Owned) return Commands.RejectReason.NotOwned;
             if (parcel.Protected) return Commands.RejectReason.Protected;
+            if (parcel.Leased) return Commands.RejectReason.Leased; // end the lease first (spec 024 §3.6)
             if (InUse(sim, parcel.Id)) return Commands.RejectReason.ParcelInUse;
             if (WouldStrand(sim, parcel.Id)) return Commands.RejectReason.WouldStrandLand;
             return Commands.RejectReason.None;
@@ -171,6 +172,7 @@ namespace Sim.Core.Land
         {
             LandState land = sim.State.Land;
             parcel.Owned = false;
+            parcel.Lease = 0; // a seized acre's lease goes with it
             parcel.CostBasis = 0;
             parcel.AcquiredAt = 0;
             land.Slots.RemoveAll(slot => land.Tiles[slot.TileId].ParcelId == parcel.Id);
@@ -333,7 +335,7 @@ namespace Sim.Core.Land
         private static void RecoverFallow(Simulation sim, Tile tile, long t)
         {
             if (tile.Terrain != Terrain.Farm || tile.Occupied || tile.VacantSince > t - ClockDef.SecondsPerDay) return;
-            if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return;
+            if (!sim.State.Land.Parcels[tile.ParcelId].Owned || sim.State.Land.Parcels[tile.ParcelId].Leased) return; // a tenant neither wears the soil out nor builds it up (spec 024 §3.6)
             GameDefs defs = sim.Config.Game;
             Fixed cap = defs.Soils[tile.Soil].FallowCap;
             if (tile.Fertility >= cap) return;

@@ -80,6 +80,38 @@ namespace Sim.Core.Events
         protected override string Describe() { return "HomesBuilt(parcel=" + ParcelId + ", homes=" + Homes + ")"; }
     }
 
+    /// <summary>You leased a parcel out: it is locked now and the first rent comes at the next close.</summary>
+    public sealed class LeaseOut : SimEvent
+    {
+        public string ParcelId { get; }
+        public long Rent { get; }
+
+        public LeaseOut(long simTime, string parcelId, long rent) : base(simTime) { ParcelId = parcelId; Rent = rent; }
+
+        protected override string Describe() { return "LeaseOut(parcel=" + ParcelId + ", rent=" + Rent + ")"; }
+    }
+
+    /// <summary>A lease ended (or was cancelled before it began): the parcel is yours to use again.</summary>
+    public sealed class LeaseEnded : SimEvent
+    {
+        public string ParcelId { get; }
+
+        public LeaseEnded(long simTime, string parcelId) : base(simTime) { ParcelId = parcelId; }
+
+        protected override string Describe() { return "LeaseEnded(parcel=" + ParcelId + ")"; }
+    }
+
+    /// <summary>The rent of a lease reached your cash, at a close.</summary>
+    public sealed class LandRentPaid : SimEvent
+    {
+        public string ParcelId { get; }
+        public long Amount { get; }
+
+        public LandRentPaid(long simTime, string parcelId, long amount) : base(simTime) { ParcelId = parcelId; Amount = amount; }
+
+        protected override string Describe() { return "LandRentPaid(parcel=" + ParcelId + ", amount=" + Amount + ")"; }
+    }
+
     /// <summary>A listing was taken off the market before it sold.</summary>
     public sealed class SaleCancelled : SimEvent
     {

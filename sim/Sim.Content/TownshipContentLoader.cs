@@ -133,7 +133,7 @@ namespace Sim.Content
         {
             string p = Join(root, "landValue");
             JObject j = Object(Required(o, root, "landValue"), p);
-            OnlyFields(j, p, "square", "water", "squareReach", "waterReach", "road", "service", "jobs", "size", "floor", "ceiling", "rentPlace", "slowSaleSeconds");
+            OnlyFields(j, p, "square", "water", "squareReach", "waterReach", "road", "service", "jobs", "size", "floor", "ceiling", "rentPlace", "slowSaleSeconds", "leaseYield");
             JObject road = Sub(j, p, "road", out string rp, "district", "lane");
             JObject svc = Sub(j, p, "service", out string sp, "school", "clinic", "square", "water");
             JObject jobs = Sub(j, p, "jobs", out string jp, "each", "max", "reach");
@@ -151,7 +151,7 @@ namespace Sim.Content
                 Floor = Bounded(j, p, "floor", "0.5", "1"), Ceiling = Bounded(j, p, "ceiling", "1", "3"),
                 RentBase = Bounded(rent, tp, "base", "0.1", "3"), RentSlope = Bounded(rent, tp, "slope", "0", "5"),
                 RentMin = Bounded(rent, tp, "min", "0.1", "3"), RentMax = Bounded(rent, tp, "max", "0.1", "3"),
-                SlowSaleSeconds = BoundedInt(j, p, "slowSaleSeconds", 3600, 86400 * 30),
+                SlowSaleSeconds = BoundedInt(j, p, "slowSaleSeconds", 3600, 86400 * 30), LeaseYield = Bounded(j, p, "leaseYield", "0", "0.1"),
             };
             if (d.RentMin > d.RentMax) throw new ContentException(Join(tp, "min"), "can't be above max");
             return d;

@@ -273,6 +273,12 @@ namespace Sim.Core.Commands
 
         /// <summary>The parcel is already zoned so.</summary>
         AlreadyZoned,
+
+        /// <summary>The parcel is leased out (or about to be): it is locked until the lease ends (spec 024 §3.6).</summary>
+        Leased,
+
+        /// <summary>The parcel is not leased out.</summary>
+        NotLeased,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

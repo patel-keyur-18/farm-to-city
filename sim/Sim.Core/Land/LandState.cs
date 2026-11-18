@@ -97,6 +97,9 @@ namespace Sim.Core.Land
         }
     }
 
+    /// <summary>A lease out (spec 024 §3.6): starts at the next close, rent upfront at each close, ends at a close.</summary>
+    public enum LeaseStatus { None = 0, Starting = 1, Active = 2, Ending = 3 }
+
     public sealed class Parcel
     {
         /// <summary>Index into <see cref="MapDef.Parcels"/>.</summary>
@@ -121,12 +124,24 @@ namespace Sim.Core.Land
         /// <summary>Bought by a builder (spec 024 §3.3): no longer for sale, built over with the builder's homes; never yours again.</summary>
         public bool BuilderOwned { get; internal set; }
 
+        /// <summary>Leased out to a neighbour farmer (spec 024 §3.6): a <see cref="LeaseStatus"/> as an int.</summary>
+        public int Lease { get; internal set; }
+
         /// <summary>Listed for sale: no sowing, building or second listing until it sells or is taken off.</summary>
         public bool Listed { get { return SlowSaleEnds != 0; } }
 
+        /// <summary>Leased, or about to be: no farming, building, zoning or selling.</summary>
+        public bool Leased { get { return Lease != (int)LeaseStatus.None; } }
+
+        /// <summary>Listed or leased: the acre is locked.</summary>
+        public bool Locked { get { return Listed || Leased; } }
+
+        /// <summary>Why a locked acre can't be used (None if it isn't locked).</summary>
+        public Commands.RejectReason LockReason { get { return Listed ? Commands.RejectReason.Listed : Leased ? Commands.RejectReason.Leased : Commands.RejectReason.None; } }
+
         internal Parcel Clone()
         {
-            return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt, SlowSaleEnds = SlowSaleEnds, SlowSalePrice = SlowSalePrice, SlowSaleJobId = SlowSaleJobId, Zone = Zone, BuilderOwned = BuilderOwned };
+            return new Parcel { Id = Id, Owned = Owned, Protected = Protected, CostBasis = CostBasis, AcquiredAt = AcquiredAt, SlowSaleEnds = SlowSaleEnds, SlowSalePrice = SlowSalePrice, SlowSaleJobId = SlowSaleJobId, Zone = Zone, BuilderOwned = BuilderOwned, Lease = Lease };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -142,17 +157,18 @@ namespace Sim.Core.Land
                 h.WriteLong(SlowSalePrice);
                 h.WriteLong(SlowSaleJobId);
             }
-            if (h.Hashing ? Zone != 0 || BuilderOwned : !(h is SaveWriter z && z.Schema < 20)) // schema 20; hashed once zoned or sold to a builder
+            if (h.Hashing ? Zone != 0 || BuilderOwned || Lease != 0 : !(h is SaveWriter z && z.Schema < 20)) // schema 20; hashed once zoned, leased or sold to a builder
             {
                 h.WriteInt(Zone);
                 h.WriteBool(BuilderOwned);
+                h.WriteInt(Lease);
             }
         }
 
         internal static Parcel ReadFrom(SaveReader r)
         {
             var p = new Parcel { Id = r.ReadRef(ContentTable.Parcel), Owned = r.ReadBool(), Protected = r.ReadBool(), CostBasis = r.ReadLong(), AcquiredAt = r.ReadLong() };
-            if (r.Schema >= 20) { p.SlowSaleEnds = r.ReadLong(); p.SlowSalePrice = r.ReadLong(); p.SlowSaleJobId = r.ReadLong(); p.Zone = r.ReadInt(); p.BuilderOwned = r.ReadBool(); }
+            if (r.Schema >= 20) { p.SlowSaleEnds = r.ReadLong(); p.SlowSalePrice = r.ReadLong(); p.SlowSaleJobId = r.ReadLong(); p.Zone = r.ReadInt(); p.BuilderOwned = r.ReadBool(); p.Lease = r.ReadInt(); }
             return p;
         }
     }

@@ -127,6 +127,7 @@ namespace Sim.View.Views
             bool township = Sim.Core.Town.LandValueRules.On(sim);
             if (township) note += " · " + s.Get("lands.value", "n", LandValueViews.Mult(ctx, LandValueViews.Average(sim, p.Id)));
             if (p.Listed) note = LandValueViews.ListedNote(ctx, p);
+            if (p.Leased) note = LandLeaseViews.Note(ctx, p); // rented to a neighbour (spec 024 §3.6)
             var line = new LineVm(s.Get("lands.parcel", "soil", soil, "acres", s.Plural("land.acres", d.Tiles.Count)), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
             {
                 Note = note,
@@ -140,6 +141,12 @@ namespace Sim.View.Views
                 if (p.Listed) line.Action = ActionVm.Checked(ctx, "cancelSale:" + key, s.Get("action.cancelSale"), null, ActionKind.Secondary, at => new CancelSale(at, key)); // locked until it sells or is taken off (spec 024 §3.4)
                 else if (township) line.Action = ActionVm.Open("sellLand:" + key, s.Get("action.sellParcel"), new SheetRequest("SellLand", tile)); // two ways to sell: the choice sheet
                 else line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
+            }
+            if (p.Leased || !sellable)
+            {
+                // A leased parcel can't be sold, so the lease buttons take Sell's place; the inherited acres, never sold, get Lease out (spec 024 §3.6).
+                ActionVm lease = LandLeaseViews.RowAction(ctx, p);
+                if (lease != null) { if (line.Also == null) line.Also = line.Action; line.Action = lease; }
             }
             return line;
         }

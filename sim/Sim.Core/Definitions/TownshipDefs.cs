@@ -221,6 +221,9 @@ namespace Sim.Core.Definitions
         public Fixed RentMin { get; internal set; }
         public Fixed RentMax { get; internal set; }
 
+        /// <summary>The rent of a leased-out parcel each season, as a part of its land value (spec 024 §3.6).</summary>
+        public Fixed LeaseYield { get; internal set; }
+
         /// <summary>Seconds a slow sale waits (spec 024 §3.4).</summary>
         public long SlowSaleSeconds { get; internal set; }
     }

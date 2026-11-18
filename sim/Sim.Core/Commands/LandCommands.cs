@@ -70,6 +70,7 @@ namespace Sim.Core.Commands
             Parcel parcel = sim.State.Land.Parcels[id];
             if (!parcel.Owned) return CommandResult.Reject(RejectReason.NotOwned);
             if (parcel.Protected) return CommandResult.Reject(RejectReason.Protected);
+            if (parcel.Leased) return CommandResult.Reject(RejectReason.Leased); // end the lease first (spec 024 §3.6)
             if (LandSystem.InUse(sim, id)) return CommandResult.Reject(RejectReason.ParcelInUse);
             if (LandSystem.WouldStrand(sim, id)) return CommandResult.Reject(RejectReason.WouldStrandLand);
 
@@ -136,6 +137,37 @@ namespace Sim.Core.Commands
         protected override CommandResult ApplyAt(Simulation sim)
         {
             RejectReason r = Town.ZoningRules.Set(sim, ParcelId, Town.Zone.Agricultural);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>
+    /// Leases a parcel you own out to a neighbour farmer (US-261, spec 024 §3.6): the acre is locked at once, the lease starts at the next close when the
+    /// first rent arrives, and it renews each season until <see cref="EndLease"/>. From the Township.
+    /// </summary>
+    public sealed class LeaseOutLand : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public LeaseOutLand(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.LandLeaseRules.Lease(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Ends a lease at the next close; one that has not started yet is cancelled at once, free.</summary>
+    public sealed class EndLease : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public EndLease(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.LandLeaseRules.End(sim, ParcelId);
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
