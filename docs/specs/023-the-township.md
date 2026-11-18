@@ -46,7 +46,7 @@ Money is `long` in 1/100 coin, indexed by `MarketRules.Indexed`, except the figu
 | Where | Two new public plots in the village centre: the clinic on **tile 93** (between the chemist and the school) and the doctor's quarters on **tile 109** (beside the dairy). Fixed with the owner from the map preview (Sprint 22 Preview 1, 2026-11-17, ADR 0064): the centre had no free tile, so the plots take the old families' houses' tiles (decoration only) | |
 | The clinic | The district builds it; you pay a community share, a gift (Gifts to the village, outside farm profit, ADR 0095 §5), by tap card. A co-op loan within your room may pay it, as for the school | Share 48,000 (40% of 1,20,000); 48 h |
 | The quarters | A larger family house on its plot, yours (an asset at cost, depreciated like any house), reserved for the doctor | Cost 90,000; rent 3,750 a season (the same 4.17% a season yield as a 60,000 kutcha house at 2,500); 48 h |
-| The doctor | A migrant arrives 24 h after both stand and moves into the quarters. He is a literate household of one to three and counts as one of your households (the gate's 20) and for literacy (§3.4) | |
+| The doctor | A migrant arrives 24 h after both stand and moves into the quarters. He is a literate household of one to three and counts as one of your households (the gate's 15) and for literacy (§3.4) | |
 | Who pays | **Before the Township the district pays his salary, his allowance and the clinic's upkeep: you owe nothing recurring.** From the Township the treasury pays the allowance and the upkeep (§3.8) | |
 | Rent | He pays the quarters' rent from his salary through spec 014's rent flow | |
 
@@ -82,7 +82,7 @@ A household's **effect** is `e = condition × covered × scale`: the Health depa
 
 | Condition | Gate |
 | --- | --- |
-| Households | 20 households on your land (the doctor's counts) |
+| Households | **15** households on your land (the doctor's counts) (20 until 2026-11-18: owner-approved after US-100 measured 20 at about 1.8 million coins; ADR 0120) |
 | The clinic | Built and open, the doctor in post |
 | The road | The paved link road built |
 | Businesses | 3 different businesses open at the check, each with at least one profitable season (net profit above 0 on its own books); a closed business doesn't count; hired or run by you both count |
@@ -92,7 +92,7 @@ A household's **effect** is `e = condition × covered × scale`: the Health depa
 - **Progress:** the *Becoming a Township* sheet (Menu → Letter): a row for each goal, "n of target", each with a *Why?* naming the next step ("Petition for a paved road at the council hall"); a last line names the quickest order (road and homes first, the clinic last, as the cohort and doctor need the rest).
 - **Celebration:** the `township` chapter (the grandmother's letter's voice), confetti, and what opens, read from content: the treasury and its budget, taxes and policies, zoning (spec 024), the cold store, pucca houses, the Township businesses and the map's ring (specs 025, 028).
 - **At the unlock** (in order): `TreasuryRules.OnEra` opens the treasury (spec 021 §3.1); the cohort joins (§3.5); the takeover of lines begins at the first close (spec 021 §3.1); a Codex card *Public money* is found.
-- **Target:** the competent bot at a median of day 63–77, the saver about day 100–110; every order reachable, never stuck (§9).
+- **Target (restated 2026-11-18, ADR 0120):** the competent bot at a median of day 85–125 (measured 101), the saver 115–160 (measured 134); every order reachable, never stuck (§9). The first target, day 63–77 and 100–110, was out of reach: 20 households cost about 1.8 million coins.
 
 ### 3.5 The old village as a cohort (G5)
 
@@ -146,14 +146,14 @@ From the Township the treasury builds three buildings on fixed public plots (app
 
 | Department | Line | A season | From |
 | --- | --- | --- | --- |
-| Office | clerk's wage | 30,000 | the opening |
-| Health | doctor's allowance | 30,000 | the doctor in post |
-| Health | clinic's upkeep | 3,000 | the clinic stands |
+| Office | clerk's wage (part-time) | 20,000 | the opening |
+| Health | doctor's allowance (the rest of his pay is his patients') | 20,000 | the doctor in post |
+| Health | clinic's upkeep | 1,500 | the clinic stands |
 | Education | school's upkeep | 2,000 | the school is open |
 | Roads | the link road's upkeep | 1,500 | the road is built |
 | Safety | each civic building's upkeep, the watchman's and the caretaker's wages | §3.7 | each commissioned (and staffed) |
 
-The takeover from the district begins at the first close after the unlock (spec 021 §3.1). A default Township (about 250 residents, 3 shops, default taxes) has about 66,700 in (grants 37,500, pitch rents 9,000, house tax about 11,500, business tax about 8,700, as spec 022 §9) and 66,500 out: about break-even, with the start-up grant as a cushion while each new household adds about 500 in grants and 250 in tax. **Rule: the median Township bot's treasury must break even within two years of the unlock at default taxes and no civic buildings.** If a measurement misses, the levers in order: the doctor's allowance (30,000 toward 24,000), then the clinic's upkeep; never the grants or the default taxes (specs 021 and 022).
+The takeover from the district begins at the first close after the unlock (spec 021 §3.1). **Measured (US-100, 2026-11-18, 16 and 200 seeds):** a default Township has about 215 residents (about 65 of yours and the old village's 150), not 250, and two shop pitches, not three: about 54,000 in a season (grants 32,000, house tax 9,000, business tax 5,000, pitch rents 6,000, at today's prices before inflation) against 67,000 out at the first figures (clerk 30,000, doctor 30,000, clinic 3,000, school 2,000, road 1,500). It ran dry in two years. **Applied, in the spec's lever order and one more (owner-approved, ADR 0120):** the doctor's allowance 30,000 → 20,000 (his household still has 30,000: the rest is his patients'), the clinic's upkeep 3,000 → 1,500, and the clerk's wage 30,000 → 20,000 (a part-time village clerk). Out is then about 47,000 and the median Township's treasury ends its second year level or higher (−5,000 to +54,000), every service at 100%, the doctor in post. **Rule: the median Township bot's treasury must break even within two years of the unlock at default taxes and no civic buildings** (`GateTests.TownshipSolvent`, 200 seeds with `FTC_SEEDS=200`); the grants and the default taxes are never the lever (specs 021 and 022).
 
 ### 3.9 The doctor leaving and returning (G9)
 
@@ -176,8 +176,8 @@ Systems `Population` and `Civic` (new, after Finance, before `Treasury`, spec 02
 | `clinic` | `share` 48,000; `buildHours` 48; `doctorArrivesHours` 24; `sickCut` 0.5; `lossCut` 0.5; `gainBoost` 0.5; `deathCut` 0.25; `reach` 2,000 m; `capacity` 400 | | |
 | `quarters` | `cost` 90,000; `rent` 3,750 | | the house kind and its plot |
 | `road` | `petitionHouseholds` 10; `share` 25,000; `days` 4 | | |
-| `gate` | `households` 20; `businesses` 3; `literacy` 0.60 | | replaces `developerOnly` in `eras.json` |
-| `cohort` | `households` 30; `peoplePerHousehold` 5; `literacy` 0.65; `income` 20,000; `leaveBelow` 35; `leaveCloses` 2 | | |
+| `gate` | `households` 15; `businesses` 3; `literacy` 0.60 | | replaces `developerOnly` in `eras.json` |
+| `cohort` | `households` 30; `peoplePerHousehold` 5; `literacy` 0.65; `income` 36,000 (20,000 left 61% of them under-fed: measured in US-103); `leaveBelow` 35; `leaveCloses` 2 | | |
 | `school` | `reach` 1,500 m | | `population.json` `school` |
 | `civic` | the three buildings of §3.7: cost, upkeep, staff wage, reach, capacity, effect, plot | | `treasury.json` `works` |
 | `treasury.json` `lines` | clinic upkeep, doctor's allowance, road upkeep, the civic lines | §3.8 | `LineRequires` gains Road, Quarters/Doctor, Post |
@@ -247,16 +247,16 @@ Every number has a *Why?* (`WhyTests` sweeps them).
 | AC-12 | A schema-19 save loads into 20 with none of this and round-trips; a town with all of it saves and loads to the same hash | `MigrationTests.Schema19_Township`, `TownshipTests.SaveRoundTrip` |
 | AC-13 | Every number on the new sheets has a *Why?*; strings are complete | `WhyTests.EveryTownshipNumberHasWhy` |
 | AC-14 | Each sheet and card renders and responds to scripted touch in the Editor | the stories' Editor tours (checklist) |
-| AC-15 | The competent bot unlocks at a median of day 63–77, the saver about 100–110, every order reachable, none stuck | `GateTests.Township` |
+| AC-15 | The competent bot unlocks at a median of day 85–125, the saver 115–160, every run gets there | `GateTests.Township` |
 | AC-16 | The exploit checks hold: padding households, business churn, adult-class loops, milking the treasury | `GateTests.TownshipExploits` |
 
 ## 9. Balancing hooks
 
 | Metric | Expected | Tolerance |
 | --- | --- | --- |
-| Township pace, competent bot | Day 63–77 | A median under 55 or over 77 goes to the owner with its numbers before anything changes; under 55 proposes tightening a goal (for example 25 households) |
-| Saver | About day 100–110 | Slowest order within 130 days with credit |
-| The treasury at the unlock | In about 66,700, out about 66,500; break even within two years | Levers in §3.8's order |
+| Township pace, competent bot | Day 85–125 (measured 101; was 63–77, ADR 0120) | A median under 70 or over 125 goes to the owner with its numbers before anything changes |
+| Saver | Day 115–160 (measured 134) | Every run within 240 days with no credit |
+| The treasury at the unlock | In about 54,000, out about 47,000 (§3.8); level or higher in the second year | Levers in §3.8's order |
 | The road's gain | About +1,500–3,000 a season | Measured with the bots |
 | Cohort | Stays at 30 households at default taxes | Under 35 happiness only when neglected |
 | Frame cost | The cohort is one record; render statistics read at each visible story | Growth over 10% reported |

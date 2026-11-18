@@ -229,6 +229,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0117 | Taxes as built (US-140): a rate in whole units and pending until the close, the bill follows the office and the treasury is paid what is paid, unpaid tax carried, the village's shops on a reference profit, the guard checked at load, a three-state close status |
 | 0118 | Policies as built (US-141): a policy is a line in a department paid in full or paused, the lag counts from its first payment, the subsidy 125 an acre, the grant a seeded roll, the minimum wage one floor in four places, the night market left for spec 023 |
 | 0119 | Spec 024 (recommendations, not yet closed with the owner): one land value from what is near an acre, builders buy one acre a season, quick or slow sale, leasing out 2.5% a season, pucca at land value 1.15 and a 30% burden, five overlays |
+| 0120 | The Township as built: the gate asks 15 households (competent median day 101, saver 134), clerk 20,000, doctor 20,000 and clinic upkeep 1,500 so a Township left alone levels, safety a fourth part of security only once a watchman's post stands, wages the old village's income |
 
 ## Current status
 
