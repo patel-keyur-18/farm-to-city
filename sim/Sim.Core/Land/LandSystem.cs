@@ -69,11 +69,114 @@ namespace Sim.Core.Land
             }
         }
 
+        public const string SlowSaleJob = "land.slowSale";
+
+        /// <summary>
+        /// Completes a sale of a parcel at <paramref name="price"/>: the cash, the land off the books at cost with the gain or loss, its irrigation and
+        /// orchards at book value, any bank loan it secures repaid first (spec 002 §3.5, ADR 0038). The caller has checked every refusal.
+        /// </summary>
+        internal static void Sell(Simulation sim, Parcel parcel, long price)
+        {
+            GameDefs defs = sim.Config.Game;
+            string parcelId = defs.Map.Parcels[parcel.Id].Id;
+            long t = sim.State.Clock.SimTime;
+            long required = Finance.CreditSystem.RequiredOnSale(sim, parcel.Id);
+            long basis = parcel.CostBasis;
+            long gain = price - basis;
+            sim.State.Ledger.Post(t, sim.Period, "ledger.sellParcel", "parcel:" + parcelId,
+                new Finance.Posting(Finance.Account.Cash, price),
+                new Finance.Posting(Finance.Account.Land, -basis),
+                gain >= 0 ? new Finance.Posting(Finance.Account.GainOnAssetSales, -gain) : new Finance.Posting(Finance.Account.LossOnAssetSales, -gain));
+            price += IrrigationRules.Release(sim, parcel.Id, sim.Period, "ledger.irrigationSold"); // channels, drip, a borewell: with the land at book value
+            Farm.FarmSystem.Accrue(sim);
+            price += Farm.OrchardRules.Release(sim, parcel.Id, sim.Period, "ledger.orchardSold"); // and its orchards (ADR 0090)
+            Farm.FarmSystem.Refresh(sim);
+            Release(sim, parcel);
+            if (required > 0) Finance.CreditSystem.RepaySecured(sim, required);
+            sim.Emit(new ParcelSold(t, parcelId, price, basis));
+        }
+
+        /// <summary>The refusals a sale shares, quick or slow (spec 002 §3.5, spec 024 §3.4).</summary>
+        internal static Commands.RejectReason CanSell(Simulation sim, Parcel parcel)
+        {
+            if (!parcel.Owned) return Commands.RejectReason.NotOwned;
+            if (parcel.Protected) return Commands.RejectReason.Protected;
+            if (parcel.Leased) return Commands.RejectReason.Leased; // end the lease first (spec 024 §3.6)
+            if (InUse(sim, parcel.Id)) return Commands.RejectReason.ParcelInUse;
+            if (WouldStrand(sim, parcel.Id)) return Commands.RejectReason.WouldStrandLand;
+            return Commands.RejectReason.None;
+        }
+
+        /// <summary>The price a slow sale asks today: 100% of the parcel's land value.</summary>
+        public static long SlowPrice(Simulation sim, Parcel parcel) { return ParcelPrice(sim, parcel); }
+
+        private static long ParcelPrice(Simulation sim, Parcel parcel) { return LandRules.ParcelPrice(sim, parcel); }
+
+        /// <summary>Lists a parcel for a slow sale (spec 024 §3.4).</summary>
+        internal static Commands.RejectReason List(Simulation sim, string parcelId)
+        {
+            if (sim.Config.Game == null) return Commands.RejectReason.UnknownParcel;
+            int id = sim.Config.Game.Map.IndexOfParcel(parcelId);
+            if (id < 0) return Commands.RejectReason.UnknownParcel;
+            if (!Town.LandValueRules.On(sim)) return Commands.RejectReason.NoTownship;
+            Parcel parcel = sim.State.Land.Parcels[id];
+            if (parcel.Listed) return Commands.RejectReason.Listed;
+            Commands.RejectReason r = CanSell(sim, parcel);
+            if (r != Commands.RejectReason.None) return r;
+            if (Town.LandLeaseRules.HasOrder(sim, id)) return Commands.RejectReason.ParcelInUse; // a hand's order is never taken off silently (ADR 0039)
+            long price = SlowPrice(sim, parcel);
+            if (price < Finance.CreditSystem.RequiredOnSale(sim, id)) return Commands.RejectReason.LoanSecured;
+            long t = sim.State.Clock.SimTime;
+            parcel.SlowSalePrice = price;
+            parcel.SlowSaleEnds = t + sim.Config.Game.Township.LandValue.SlowSaleSeconds;
+            parcel.SlowSaleJobId = sim.ScheduleJob(SlowSaleJob, id, parcel.SlowSaleEnds).Id;
+            sim.Emit(new ParcelListed(t, parcelId, price, parcel.SlowSaleEnds));
+            return Commands.RejectReason.None;
+        }
+
+        /// <summary>Takes a parcel off the market (spec 024 §3.4).</summary>
+        internal static Commands.RejectReason Unlist(Simulation sim, string parcelId)
+        {
+            if (sim.Config.Game == null) return Commands.RejectReason.UnknownParcel;
+            int id = sim.Config.Game.Map.IndexOfParcel(parcelId);
+            if (id < 0) return Commands.RejectReason.UnknownParcel;
+            Parcel parcel = sim.State.Land.Parcels[id];
+            if (!parcel.Listed) return Commands.RejectReason.NotListed;
+            sim.CancelJob(parcel.SlowSaleJobId);
+            parcel.SlowSaleEnds = 0; parcel.SlowSalePrice = 0; parcel.SlowSaleJobId = 0;
+            sim.Emit(new SaleCancelled(sim.State.Clock.SimTime, parcelId));
+            return Commands.RejectReason.None;
+        }
+
+        /// <summary>A slow sale's days are up: the acre sells at the price fixed at listing, unless something changed that the sale can't survive.</summary>
+        internal sealed class SlowSaleDue : IJobHandler
+        {
+            public string JobType { get { return SlowSaleJob; } }
+            public SystemOrder System { get { return SystemOrder.Agriculture; } }
+
+            public void OnDue(Simulation sim, Job job)
+            {
+                Parcel parcel = sim.State.Land.Parcels[(int)job.TargetId];
+                string parcelId = sim.Config.Game.Map.Parcels[parcel.Id].Id;
+                long price = parcel.SlowSalePrice;
+                parcel.SlowSaleEnds = 0; parcel.SlowSalePrice = 0; parcel.SlowSaleJobId = 0;
+                sim.CompleteJob(job);
+                Commands.RejectReason r = CanSell(sim, parcel);
+                if (r == Commands.RejectReason.None && price < Finance.CreditSystem.RequiredOnSale(sim, parcel.Id)) r = Commands.RejectReason.LoanSecured;
+                if (r != Commands.RejectReason.None) { sim.Emit(new SaleFailed(sim.State.Clock.SimTime, parcelId, r.ToString())); return; }
+                Sell(sim, parcel, price);
+            }
+        }
+
         /// <summary>Marks a parcel unowned and removes its slots (they are empty: spec 002 §3.5).</summary>
         internal static void Release(Simulation sim, Parcel parcel)
         {
             LandState land = sim.State.Land;
             parcel.Owned = false;
+            parcel.Lease = 0; // a seized acre's lease goes with it
+            parcel.Zone = 0; // and its zone: whoever buys it next decides again (spec 024 §3.3)
+            if (parcel.SlowSaleJobId != 0) sim.CancelJob(parcel.SlowSaleJobId); // and a slow sale that was waiting
+            parcel.SlowSaleEnds = 0; parcel.SlowSalePrice = 0; parcel.SlowSaleJobId = 0;
             parcel.CostBasis = 0;
             parcel.AcquiredAt = 0;
             land.Slots.RemoveAll(slot => land.Tiles[slot.TileId].ParcelId == parcel.Id);
@@ -236,7 +339,7 @@ namespace Sim.Core.Land
         private static void RecoverFallow(Simulation sim, Tile tile, long t)
         {
             if (tile.Terrain != Terrain.Farm || tile.Occupied || tile.VacantSince > t - ClockDef.SecondsPerDay) return;
-            if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return;
+            if (!sim.State.Land.Parcels[tile.ParcelId].Owned || sim.State.Land.Parcels[tile.ParcelId].Leased) return; // a tenant neither wears the soil out nor builds it up (spec 024 §3.6)
             GameDefs defs = sim.Config.Game;
             Fixed cap = defs.Soils[tile.Soil].FallowCap;
             if (tile.Fertility >= cap) return;

@@ -98,8 +98,8 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new DebugNextEra()).Accepted, Is.True);
             Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("village"));
 
-            // The Township has no gate until spec 023: only Next era reaches it, and it opens the town treasury (spec 021 §3.1).
-            Assert.That(eras[3].DeveloperOnly, Is.True);
+            // The Township's gate (spec 023 §3.4) is not met by a bare village; Next era steps over it and opens the town treasury (spec 021 §3.1).
+            Assert.That(eras[3].TownshipGate, Is.True);
             sim.Execute(new DebugAdvance(sim.Clock.SecondsPerSeason, AdvanceMode.Live));
             Assert.That(eras[sim.State.Era.Current].Id, Is.EqualTo("village"), "no gate is met by itself");
             Assert.That(sim.State.Treasury.Opened, Is.False);

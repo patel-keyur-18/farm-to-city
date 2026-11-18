@@ -9,6 +9,12 @@ namespace Sim.Core.People
     /// <summary>Households' budgets by Engel's law, food met, savings and health (spec 014 §3.4–3.6).</summary>
     public static class HouseholdRules
     {
+        public static bool HasChildren(Simulation sim, Household x)
+        {
+            foreach (long id in x.Members) if (IsChild(sim, sim.State.Citizens.Citizen(id))) return true;
+            return false;
+        }
+
         public static bool IsChild(Simulation sim, Citizen c) { return CitizenRules.Age(sim, c) < sim.Config.Game.Population.AdultFrom; }
 
         public static bool IsElder(Simulation sim, Citizen c) { return CitizenRules.Age(sim, c) >= sim.Config.Game.Population.ElderFrom; }
@@ -57,6 +63,13 @@ namespace Sim.Core.People
             return b != null && PeopleRules.IsHandHut(sim, b);
         }
 
+        /// <summary>The household lives in a builder's home (spec 024 §3.3): a resident of the town, not one of your households; its rent is the builder's.</summary>
+        public static bool InBuildersHome(Simulation sim, Household x)
+        {
+            Building b = sim.State.Land.Buildings.Find(y => y.Id == x.HomeId);
+            return b != null && b.Builders;
+        }
+
         /// <summary>A family house the founder rents out (§3.4).</summary>
         public static bool InFamilyHouse(Simulation sim, Household x)
         {
@@ -76,6 +89,7 @@ namespace Sim.Core.People
             bool hut = InHut(sim, x);
             long income = 0;
             outside = 0;
+            if (Town.ClinicRules.IsDoctorHome(sim, x)) return Town.ClinicRules.Salary(sim); // the district's pay (spec 023 §3.1); no outside work
             foreach (long id in x.Members)
             {
                 Citizen c = sim.State.Citizens.Citizen(id);
@@ -134,6 +148,11 @@ namespace Sim.Core.People
                     LeaseRules.Begin(sim, x); // US-240: a fixed lease rent, set when the family begins to pay rent
                     x.Rent = x.LeaseRent;
                 }
+                else if (Town.ClinicRules.IsDoctorHome(sim, x))
+                {
+                    LeaseRules.End(x);
+                    x.Rent = Town.ClinicRules.Rent(sim); // spec 023 §3.1: the quarters are let to him at a fixed rent, paid from the district's salary
+                }
                 else
                 {
                     LeaseRules.End(x);
@@ -169,6 +188,20 @@ namespace Sim.Core.People
             return false;
         }
 
+        /// <summary>
+        /// A citizen's health after the season's food (§3.12): down by the shortfall, up when fed; with the clinic's effect <paramref name="e"/> the
+        /// loss is cut and the recovery boosted (spec 023 §3.2). Clamped.
+        /// </summary>
+        private static Fixed Next(Simulation sim, PopulationDefs p, Citizen c, Household x, Fixed e)
+        {
+            Definitions.ClinicDef clinic = e == Fixed.Zero ? null : Town.ClinicRules.Def(sim);
+            Fixed loss = clinic == null ? p.HealthLossPerSeason : p.HealthLossPerSeason * (Fixed.One - clinic.LossCut * e);
+            Fixed gain = clinic == null ? p.HealthGainPerSeason : p.HealthGainPerSeason * (Fixed.One + clinic.GainBoost * e);
+            Fixed health = x.FoodMet < Fixed.One ? c.Health - loss * (Fixed.One - x.FoodMet) : c.Health + gain;
+            if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
+            return health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
+        }
+
         /// <summary>A hand's household in a family house pays no rent: the house is part of his pay (§3.6).</summary>
         public static bool HasHand(Simulation sim, Household x)
         {
@@ -188,14 +221,19 @@ namespace Sim.Core.People
             if (s == null) return;
             PopulationDefs p = sim.Config.Game.Population;
             foreach (Household x in s.Households) HouseRules.CollectRent(sim, x); // first, for the season that ended (§3.12)
+            Town.CohortRules.EnsureJoined(sim); // a Township reached before the old village could join (an older save)
+            Town.LandValueRules.Read(sim); // spec 024 §3.9: land value is read once, before this season's leases renew
+            Town.LandLeaseRules.Close(sim); // leases end or pay their rent upfront (spec 024 §3.6)
+            Town.ZoningRules.Close(sim); // then builders buy a parcel if families are waiting (spec 024 §3.3)
             foreach (Household x in s.Households)
             {
+                Fixed e = Town.ClinicRules.Effect(sim, x); // spec 023 §3.2: the clinic's reach, capacity and the Health service
                 foreach (long id in x.Members)
                 {
                     Citizen c = s.Citizen(id);
-                    Fixed health = x.FoodMet < Fixed.One ? c.Health - p.HealthLossPerSeason * (Fixed.One - x.FoodMet) : c.Health + p.HealthGainPerSeason;
-                    if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
-                    c.Health = health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
+                    Fixed health = Next(sim, p, c, x, Fixed.Zero), withClinic = e == Fixed.Zero ? health : Next(sim, p, c, x, e);
+                    c.Health = withClinic;
+                    if (withClinic > health) Town.ClinicRules.CountRegained(sim); // an exact count: health that stands higher because of the clinic
                 }
                 // The season's saving, plus what outside work and labour paid beyond what the budget expected (or less).
                 x.Savings = System.Math.Max(0, x.Savings + x.Saved + x.Earned - x.OutsideExpected);

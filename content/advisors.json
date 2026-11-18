@@ -24,6 +24,7 @@
 
     { "id": "deptOver",      "advisor": "planner",    "report": true },
     { "id": "serviceLow",    "advisor": "planner",    "report": true, "threshold": 0.70 },
+    { "id": "policyPaused", "advisor": "planner",    "report": true },
     { "id": "grantAtRisk",   "advisor": "planner",    "report": true, "threshold": 0.50 },
     { "id": "thinBalance",   "advisor": "planner",    "report": true }
   ]

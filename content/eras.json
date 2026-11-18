@@ -3,6 +3,6 @@
     { "id": "homestead" },
     { "id": "hamlet", "conditions": { "acresHarvestedInSeason": 6, "meanCareAtLeast": 0.9, "handHutsAtLeast": 1, "profitableSeasonsAtLeast": 1 } },
     { "id": "village", "conditions": { "householdsAtLeast": 5, "businessSeasonsAtLeast": 2, "school": true } },
-    { "id": "township", "conditions": { "developerOnly": true } }
+    { "id": "township", "conditions": { "townshipGate": true } }
   ]
 }

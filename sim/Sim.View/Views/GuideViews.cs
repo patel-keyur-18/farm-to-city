@@ -606,8 +606,41 @@ namespace Sim.View.Views
                     "need", ctx.Fmt.Integer(next.HouseholdsAtLeast)), "era", 5) { Icon = "population" });
             if (next.BusinessSeasonsAtLeast > 0) vm.Lines.Add(BusinessLine(ctx, next));
             if (next.School) vm.Lines.Add(new LineVm(s.Get("progress.school"), SchoolText(ctx), "era", 7) { Icon = "school" });
+            if (next.TownshipGate && Sim.Core.Town.TownshipRules.On(sim)) TownshipGoals(ctx, vm);
             Rewards(ctx, vm, e.Current + 1);
             return vm;
+        }
+
+        /// <summary>
+        /// The Township's five goals (spec 023 §3.4): what you have and what is needed, a green Done once a goal is met for good, and the usual
+        /// order. Each row's *Why?* names its next step (<c>era</c> ids 8 to 12).
+        /// </summary>
+        private static void TownshipGoals(ViewContext ctx, SheetVm vm)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            Sim.Core.Definitions.GateDef g = Sim.Core.Town.TownshipRules.Def(sim);
+            Sim.Core.Town.ClinicState clinic = Sim.Core.Town.ClinicRules.State(sim);
+            LineVm Goal(int bit, string key, string value, int why, string icon)
+            {
+                var line = new LineVm(s.Get(key), value, "era", why) { Icon = icon };
+                if (Sim.Core.Town.TownshipRules.IsMet(sim, bit)) line.Badge = s.Get("progress.doneTag");
+                return line;
+            }
+            string n(int have, int need) { return s.Get("progress.acresValue", "n", ctx.Fmt.Integer(have), "need", ctx.Fmt.Integer(need)); }
+            vm.Lines.Add(Goal(Sim.Core.Town.TownshipGoal.Households, "progress.householdsYours", n(Sim.Core.Town.TownshipRules.Households(sim), g.Households), 8, "population"));
+            string clinicText = clinic.Doctor == Sim.Core.Town.DoctorStatus.InPost && Sim.Core.Town.ClinicRules.Doctor(sim) != null
+                ? s.Get("progress.clinicDoctor", "name", TownWords.Name(ctx, Sim.Core.Town.ClinicRules.Doctor(sim)))
+                : clinic.Status == Sim.Core.Town.ClinicStatus.Building ? s.Get("progress.hutBuilding", "time", ctx.Fmt.Duration(Math.Max(0, clinic.ReadyAt - ctx.Now)))
+                : clinic.Status == Sim.Core.Town.ClinicStatus.Open ? s.Get("progress.clinicNoDoctor") : s.Get("progress.hutNone");
+            vm.Lines.Add(Goal(Sim.Core.Town.TownshipGoal.Clinic, "progress.clinic", clinicText, 9, "clinic"));
+            Sim.Core.Town.RoadState road = Sim.Core.Town.RoadRules.State(sim);
+            string roadText = road.Status == Sim.Core.Town.RoadStatus.Built ? s.Get("road.linkBuilt") : road.Status == Sim.Core.Town.RoadStatus.Building
+                ? s.Get("progress.hutBuilding", "time", ctx.Fmt.Duration(Math.Max(0, road.ReadyAt - ctx.Now))) : s.Get("progress.hutNone");
+            vm.Lines.Add(Goal(Sim.Core.Town.TownshipGoal.Road, "progress.road", roadText, 10, "place_council_hall"));
+            vm.Lines.Add(Goal(Sim.Core.Town.TownshipGoal.Businesses, "progress.businesses", n(Sim.Core.Town.TownshipRules.Businesses(sim), g.Businesses), 11, "flour_mill"));
+            vm.Lines.Add(Goal(Sim.Core.Town.TownshipGoal.Literacy, "progress.literacy", s.Get("progress.literacyValue", "n", ctx.Fmt.Integer(Sim.Core.Town.TownshipRules.Literacy(sim)), "need", ctx.Fmt.Integer(Sim.Core.Town.TownshipRules.LiteracyNeed(sim))), 12, "school"));
+            vm.Lines.Add(new LineVm(s.Get("progress.townshipOrder"), null));
         }
 
         private static LineVm BusinessLine(ViewContext ctx, EraDef next)
@@ -681,7 +714,12 @@ namespace Sim.View.Views
             if (g.School != null && g.School.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.school", "school");
             if (g.Orchard != null && g.Orchard.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.orchards", "mango");
             if (g.Godown != null && g.Godown.UnlockEra == era && era > 0) One(lines, ctx, "progress.open.godown", "granary");
-            if (g.Treasury != null && g.Treasury.Era == era) One(lines, ctx, "progress.open.treasury", "place_council_hall"); // spec 021 §3.1
+            if (g.Treasury != null && g.Treasury.Era == era)
+            {
+                One(lines, ctx, "progress.open.treasury", "place_council_hall"); // spec 021 §3.1
+                One(lines, ctx, "progress.open.taxes", "coin"); // spec 022
+                if (g.Township != null && g.Township.Cohort.Households > 0) lines.Add(new LineVm(s.Get("progress.open.cohort", "n", ctx.Fmt.Integer(g.Township.Cohort.Households), "people", ctx.Fmt.Integer(g.Township.Cohort.Households * g.Township.Cohort.PeoplePerHousehold)), null) { Icon = "population" }); // spec 023 §3.5
+            }
             if (g.Credit != null && g.Onboarding != null)
                 foreach (LenderDef l in g.Credit.Lenders)
                     if (l.EraCaps.TryGetValue(g.Onboarding.Eras[era].Id, out long cap) && era > 0)
@@ -733,6 +771,15 @@ namespace Sim.View.Views
         /// <summary>A row of the progress sheet: 1 acres, 2 Care, 3 the hut, 4 the profitable season; the Village's 5 households, 6 a business, 7 the school.</summary>
         private static WhyVm EraWhy(ViewContext ctx, long id)
         {
+            if (id >= 8) // the Township's goals (spec 023 §3.4)
+            {
+                string key = id == 8 ? "households" : id == 9 ? "clinic" : id == 10 ? "road" : id == 11 ? "businesses" : "literacy";
+                WhyVm t = New(ctx, "why.township." + key + ".title", null);
+                Text(t, ctx, "why.township." + key + ".text");
+                Text(t, ctx, "why.township." + key + ".next");
+                Text(t, ctx, "why.township.lesson");
+                return t;
+            }
             if (id >= 5)
             {
                 WhyVm v = New(ctx, "why.village.title", null);

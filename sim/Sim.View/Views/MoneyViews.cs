@@ -75,7 +75,7 @@ namespace Sim.View.Views
             foreach (Parcel p in sim.State.Land.Parcels)
             {
                 ParcelDef d = defs.Map.Parcels[p.Id];
-                if (p.Owned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
+                if (p.Owned || p.BuilderOwned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
                 int tile = d.Tiles[0];
                 string soil = ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
                 var line = new LineVm(ctx.Strings.Get("lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
@@ -124,6 +124,10 @@ namespace Sim.View.Views
             string soil = s.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
             string held = Held(ctx, p.Id);
             string note = sellable ? s.Get("lands.boughtWhen", "when", ReportSheet.PeriodName(ctx, p.AcquiredAt / sim.Clock.SecondsPerSeason), "held", held) : held;
+            bool township = Sim.Core.Town.LandValueRules.On(sim);
+            if (township) note += " · " + s.Get("lands.value", "n", LandValueViews.Mult(ctx, LandValueViews.Average(sim, p.Id)));
+            if (p.Listed) note = LandValueViews.ListedNote(ctx, p);
+            if (p.Leased) note = LandLeaseViews.Note(ctx, p); // rented to a neighbour (spec 024 §3.6)
             var line = new LineVm(s.Get("lands.parcel", "soil", soil, "acres", s.Plural("land.acres", d.Tiles.Count)), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
             {
                 Note = note,
@@ -134,7 +138,16 @@ namespace Sim.View.Views
                 string key = d.Id;
                 long value = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, p), defs.Land.QuickSaleFactor));
                 line.Also = line.Action;
-                line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
+                if (p.Listed) line.Action = ActionVm.Checked(ctx, "cancelSale:" + key, s.Get("action.cancelSale"), null, ActionKind.Secondary, at => new CancelSale(at, key)); // locked until it sells or is taken off (spec 024 §3.4)
+                else if (township) line.Action = ActionVm.Open("sellLand:" + key, s.Get("action.sellParcel"), new SheetRequest("SellLand", tile)); // two ways to sell: the choice sheet
+                else line.Action = ActionVm.Checked(ctx, "sellParcel:" + key, s.Get("action.sellParcel"), ctx.Fmt.Coins(value), ActionKind.Danger, at => new SellParcel(at, key));
+            }
+            if (p.Leased || !sellable)
+            {
+                // A leased parcel can't be sold, so the lease buttons take Sell's place; the inherited acres, never sold, get Lease out (spec 024 §3.6).
+                ActionVm lease = LandLeaseViews.RowAction(ctx, p);
+                if (lease != null) { if (line.Also == null) line.Also = line.Action; line.Action = lease; }
+                else if (p.Leased) { line.Action = line.Also ?? line.Action; line.Also = null; } // an ending lease: Show only, there is nothing to sell or press
             }
             return line;
         }
@@ -228,6 +241,8 @@ namespace Sim.View.Views
             }
             Block(s.Get("season.earned"), season.EarnedTotal, season.Earned, EarnedBlock, false);
             if (season.Earned.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingEarned"), null));
+            if (Sim.Core.Town.RoadRules.IsBuilt(sim)) // spec 023 §3.3: of what the trader paid, what the paved road added (inside the figures above, not on top)
+                vm.Lines.Add(new LineVm(s.Get("season.roadEarned"), ctx.Fmt.Coins(last ? Sim.Core.Town.RoadRules.State(sim).EarnedLast : Sim.Core.Town.RoadRules.State(sim).EarnedThis), "road", RoadSheet.Earned) { Icon = "place_council_hall" });
             Block(s.Get("season.spent"), season.SpentTotal, season.Spent, SpentBlock, false);
             if (season.Spent.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingSpent"), null));
             vm.Lines.Add(LineVm.Header(s.Get(last ? "season.profitLast" : "season.profit")));

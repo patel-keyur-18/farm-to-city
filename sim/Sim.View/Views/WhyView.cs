@@ -55,7 +55,7 @@ namespace Sim.View.Views
         {
             // Land and crops (specs 002, 003).
             { "fertility", Fertility }, { "moisture", Moisture }, { "irrigation", Irrigation }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
-            { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice }, { "landTotal", LandTotal }, { "landLoans", LandLoans },
+            { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice }, { "landTotal", LandTotal }, { "landLoans", LandLoans }, { "landValue", (c, id) => LandValueViews.Why(c, (int)id) }, { ZoningViews.WaitingWhy, ZoningViews.Why }, { LandLeaseViews.RentWhy, LandLeaseViews.Why },
             { "resale", Resale }, { "pests", Pests }, { SowSheet.PerHourWhy, SowPerHour },
             // The crop calendar's crop page (spec 020 §3.6b), by crop index.
             { CropCalendar.GrowsWhy, CropGrows }, { CropCalendar.WaterWhy, CropWater }, { CropCalendar.LabourWhy, CropLabour },
@@ -117,6 +117,7 @@ namespace Sim.View.Views
             { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
             // The school (spec 018).
+            { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
             { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
             // The town treasury (spec 021).

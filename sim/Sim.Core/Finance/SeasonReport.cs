@@ -66,12 +66,15 @@ namespace Sim.Core.Finance
         /// <summary>The savings deposit (account 1020, spec 019 §3.5; save schema 16): never collateral, never seized.</summary>
         public long Deposit { get; internal set; }
 
+        /// <summary>House tax you owe the town, carried from a close you couldn't pay (account 2400, spec 022 §3.1; save schema 20).</summary>
+        public long TaxOwed { get; internal set; }
+
         /// <summary>Assets − liabilities on the ledger; the difference from Total is land and stored goods at market value.</summary>
         public long BookEquity { get; internal set; }
 
         public long Total
         {
-            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + EquipmentAtBook + Deposit + Businesses + StoredGoods - LoanPrincipal - InterestPayable; }
+            get { return Cash + Prepaid + OwedByBuyers + LandAtMarket + BuildingsAtBook + TreesAtBook + LivestockAtBook + EquipmentAtBook + Deposit + Businesses + StoredGoods - LoanPrincipal - InterestPayable - TaxOwed; }
         }
     }
 
@@ -161,6 +164,7 @@ namespace Sim.Core.Finance
                 h.WriteLong(n.LivestockAtBook);
                 if (!(h is SaveWriter sw) || sw.Schema >= 10) h.WriteLong(n.Businesses);
                 if (!(h is SaveWriter ew) || ew.Schema >= 14) h.WriteLong(n.EquipmentAtBook);
+                if (!(h is SaveWriter tw) || tw.Schema >= 20) h.WriteLong(n.TaxOwed);
                 h.WriteLong(CashFlow.Closing);
                 h.WriteBool(Credit != null);
             }
@@ -210,6 +214,7 @@ namespace Sim.Core.Finance
             if (r.Schema >= 7) worth.LivestockAtBook = r.ReadLong();
             if (r.Schema >= 10) worth.Businesses = r.ReadLong();
             if (r.Schema >= 14) worth.EquipmentAtBook = r.ReadLong();
+            if (r.Schema >= 20) worth.TaxOwed = r.ReadLong();
             cash.Closing = r.ReadLong();
             CreditSummary credit = null;
             if (r.ReadBool())

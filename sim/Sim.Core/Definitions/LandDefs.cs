@@ -448,6 +448,9 @@ namespace Sim.Core.Definitions
         /// <summary>The town treasury (spec 021, ADR 0108), with <c>treasury.json</c> beside the school and the eras; else null.</summary>
         public TreasuryDef Treasury { get; internal set; }
 
+        /// <summary>The Township's road, with <c>township.json</c> beside the treasury (spec 023 §4); else null.</summary>
+        public TownshipDef Township { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

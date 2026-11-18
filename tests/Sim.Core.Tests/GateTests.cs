@@ -21,6 +21,14 @@ namespace Sim.Core.Tests
             return new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game(edit));
         }
 
+        /// <summary>The live content with the old village (30 households join at the Township's unlock, spec 023 §3.5), as a player has it.</summary>
+        private static SimConfig LiveTownship(System.Func<string, string, string> edit = null)
+        {
+            TestContent.WithCohort = true;
+            try { return LiveWith(edit); }
+            finally { TestContent.WithCohort = false; }
+        }
+
         // Spec 020 AC-8: no new crop leads a season or is a dud; each has its niche (§3.4).
         [Test]
         public void CropLadder_BalanceRule()
@@ -315,6 +323,138 @@ namespace Sim.Core.Tests
                     Assert.That(Median(r.Literacy.Select(x => (double)x)), Is.InRange(35.0, 65.0), r.Bot + ": literacy at the Village");
                     Assert.That(Median(r.Happiness), Is.InRange(70.0, 76.0), r.Bot + ": happiness a season on");
                 }
+        }
+
+        // Spec 023 §9, AC-15 (US-100, ADR 0107 §5): the Township is reachable, never stuck: the competent bot and the cautious saver, 8 seeds each;
+        // each goal's day is printed so a miss shows its cause.
+        [Test]
+        public void Township()
+        {
+            foreach (bool saver in new[] { false, true })
+            {
+                Gate.TownshipResult r = Gate.Township(LiveTownship(), () => new TownshipBot(saver), 16, 80);
+                TestContext.Out.WriteLine(r.Bot + ": Township day " + Days(r.Township) + "; Village " + Days(r.Village) + "; 20 households " + Days(r.Households) + "; clinic " + Days(r.Clinic)
+                    + "; road " + Days(r.Road) + "; businesses " + Days(r.Businesses) + "; literacy " + Days(r.Literacy) + "; households at unlock " + string.Join(" ", r.HouseholdsAtUnlock)
+                    + "; treasury at unlock " + string.Join(" ", r.TreasuryAtUnlock.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; broken " + r.Broken);
+                for (int k = 0; k < Gate.HouseholdSteps.Length; k++) TestContext.Out.WriteLine(r.Bot + ": " + Gate.HouseholdSteps[k] + " households on day " + Days(r.DaysAt[k]));
+                Assert.That(r.Township.Count(double.IsNaN), Is.Zero, r.Bot + ": every run gets there (the 15 households are the last goal)");
+                double median = r.Township.OrderBy(d => d).ElementAt(r.Township.Count / 2);
+                Assert.That(median, saver ? Is.InRange(115.0, 160.0) : Is.InRange(85.0, 125.0), r.Bot + ": the Township's day (owner-approved 2026-11-18: ADR 0107's day 63–77 and 100–110 were out of reach: 20 households cost about 1.8 million)");
+                Assert.That(r.HouseholdsAtUnlock.Min(), Is.GreaterThanOrEqualTo(15), r.Bot);
+                Assert.That(r.Broken, Is.Zero, r.Bot + ": the treasury never goes below zero and its books reconcile");
+            }
+        }
+
+        // US-263 item 8 (spec 022 §9, decided with the numbers): can a default Township carry each policy on its own? The Township bot enacts one policy as
+        // soon as it can; the treasury never goes below zero, every book reconciles, and the median town ends two years on still holding cash, though a policy
+        // may be paused at a close it can't pay (that is the rule, not a failure: a policy is paid in full or paused, ADR 0118). Printed: the treasury and the
+        // lowest service, to read how much each policy costs the town.
+        [Test]
+        public void PolicyAffordability()
+        {
+            SimConfig config = LiveTownship();
+            foreach (Sim.Core.Town.PolicyId policy in new[] { Sim.Core.Town.PolicyId.Meals, Sim.Core.Town.PolicyId.Subsidy, Sim.Core.Town.PolicyId.Grant, Sim.Core.Town.PolicyId.MinWage, Sim.Core.Town.PolicyId.RentControl })
+            {
+                Gate.TownshipResult r = Gate.Township(config, () => new TownshipBot(false) { Policy = policy }, 12, 80);
+                var after = r.TreasuryAfter.OrderBy(c => c).ToList();
+                TestContext.Out.WriteLine("POLICY " + policy + ": treasury two years on " + string.Join(" ", r.TreasuryAfter.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; lowest service " + string.Join(" ", r.LowestService.Select(x => x.ToString("0.00"))) + "; broken " + r.Broken);
+                Assert.That(r.Broken, Is.Zero, policy + ": never below zero, books reconcile");
+                Assert.That(after[after.Count / 2], Is.GreaterThan(0), policy + ": the median town still holds cash two years on");
+            }
+        }
+
+        // Spec 024 §9 (US-142, US-143, US-261): the land stress bots. The same Township bot that leases every idle parcel out, zones every idle bought
+        // parcel for builders, or buys a serviced parcel a season and sells it slowly once its land value has risen a tenth, over 16 seeds to 60 seasons
+        // (the Township about season 25, so about 35 seasons of it): none ends above 1.2 × the plain bot's net worth (ADR 0016's 20%), so land is never
+        // the best use of money. Leasing's rent is 2.5% of land value against 5,800 an acre a season from a hired hand and 20,000 farmed by you
+        // (`economy`: an acre costs 6.0 seasons of an owner-operated acre's net at land value 1.0).
+        [Test]
+        public void LandStress()
+        {
+            SimConfig config = LiveTownship();
+            double Worth(TownshipBot.LandUse use)
+            {
+                var worth = new double[16];
+                var extra = new int[16]; // parcels beyond the inherited six that the bot ended up owning or sold to builders: a stress bot that does nothing proves nothing
+                System.Threading.Tasks.Parallel.For(0, 16, i =>
+                {
+                    var bot = new TownshipBot(false) { Land = use };
+                    Economy.Run run = Economy.RunBot(config, bot, 60, (ulong)(i + 1), null);
+                    worth[i] = (double)Sim.Core.Finance.Reporting.NetWorth(run.Sim).Total / 100.0 / ((double)run.Sim.State.Market.PriceIndex.Raw / 4294967296.0);
+                    extra[i] = run.Sim.State.Land.Parcels.Count(p => p.Owned && !p.Protected) + run.Sim.State.Land.Parcels.Count(p => p.BuilderOwned);
+                });
+                TestContext.Out.WriteLine("LAND " + use + ": extra parcels owned or sold on, median " + extra.OrderBy(x => x).ElementAt(8) + ", most " + extra.Max());
+                return worth.OrderBy(w => w).ElementAt(8);
+            }
+            double plain = Worth(TownshipBot.LandUse.None);
+            TestContext.Out.WriteLine("LAND plain net worth median " + plain.ToString("0"));
+            foreach (TownshipBot.LandUse use in new[] { TownshipBot.LandUse.Lease, TownshipBot.LandUse.Zone, TownshipBot.LandUse.Hold })
+            {
+                double w = Worth(use);
+                TestContext.Out.WriteLine("LAND " + use + " net worth median " + w.ToString("0") + " = " + (w / plain).ToString("0.000") + " × plain");
+                Assert.That(w, Is.LessThanOrEqualTo(plain * 1.2), use + ": land is never the best use of money (ADR 0016)");
+            }
+        }
+
+        // Spec 023 §3.8, §9, AC-10 (US-100): a Township left alone at default taxes with no civic building breaks even within two years: the treasury
+        // takes in what it pays out in the second year (measured −5,000 to +54,000 a second year, owner-approved 2026-11-18 with the clerk's wage 20,000, the
+        // doctor's allowance 20,000 and the clinic's upkeep 1,500), every service stays at 100%, the doctor is in post and the old village stays.
+        // `FTC_SEEDS=200` is the 200-seed hands-off run of spec 023 §12.
+        [Test]
+        public void TownshipSolvent()
+        {
+            string env = System.Environment.GetEnvironmentVariable("FTC_SEEDS");
+            Gate.TownshipResult r = Gate.Township(LiveTownship(), () => new TownshipBot(false), env == null ? 16 : int.Parse(env), 80);
+            TestContext.Out.WriteLine("solvent: treasury at unlock " + string.Join(" ", r.TreasuryStart.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; one year on " + string.Join(" ", r.TreasuryMid.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; two years on " + string.Join(" ", r.TreasuryAfter.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; second year's change " + string.Join(" ", r.TreasuryAfter.Select((c, i) => (c - r.TreasuryMid[i]) / Sim.Core.Finance.Money.Coin))
+                + "; lowest service " + string.Join(" ", r.LowestService.Select(x => x.ToString("0.00"))) + "; doctor in post " + r.DoctorIn.Count(x => x) + " of " + r.DoctorIn.Count + "; old village households left " + string.Join(" ", r.OldVillageLeft));
+            Assert.That(r.Broken, Is.Zero, "never below zero, books reconcile");
+            Assert.That(r.TreasuryAfter.Count, Is.GreaterThan(0));
+            var change = r.TreasuryAfter.Select((c, i) => c - r.TreasuryMid[i]).OrderBy(c => c).ToList();
+            Assert.That(change[change.Count / 2], Is.GreaterThanOrEqualTo(0), "the median town takes in what it pays out in its second year");
+            Assert.That(change[0], Is.GreaterThanOrEqualTo(-10_000 * Sim.Core.Finance.Money.Coin), "and the worst loses a little against a cushion of 100,000 or more");
+            Assert.That(r.LowestService.Min(), Is.GreaterThanOrEqualTo(0.99), "every service at 100%");
+            Assert.That(r.DoctorIn.All(x => x), Is.True, "the doctor stays");
+            Assert.That(r.OldVillageLeft.All(n => n == 0), Is.True, "so does the old village");
+        }
+
+        // Spec 023 AC-16 (US-100, ADR 0107 §11): the exploits of the gate. Padding: empty houses are not households. Churn: a business that closes takes its
+        // profitable season out of the count. Adult-class loops: a class needs someone to teach and costs coins each time. Milking the treasury is
+        // TaxGateTests.MilkTheTreasury; rate dodging and policy flipping are TaxGateTests.RateDodger and PolicyFlipper.
+        [Test]
+        public void TownshipExploits()
+        {
+            Simulation sim = TownshipTests.Start();
+            int before = Sim.Core.Town.TownshipRules.Households(sim);
+            for (int i = 0; i < 20; i++) sim.State.Land.Buildings.Add(new Sim.Core.Land.Building { Id = sim.State.Land.NextBuildingId++, Def = sim.Config.Game.Population.House, TileId = 0 });
+            Assert.That(Sim.Core.Town.TownshipRules.Households(sim), Is.EqualTo(before), "twenty empty houses are not twenty households");
+
+            TownshipTests.Businesses(sim, 3);
+            Assert.That(Sim.Core.Town.TownshipRules.Businesses(sim), Is.EqualTo(3));
+            foreach (var b in sim.State.Businesses.Businesses) b.Status = Sim.Core.Business.BusinessStatus.Closed;
+            Assert.That(Sim.Core.Town.TownshipRules.Businesses(sim), Is.EqualTo(0), "closing them takes them out: open ones only");
+
+            long cash = sim.State.Ledger.Cash;
+            Assert.That(sim.Execute(new Sim.Core.Commands.StartAdultClass(sim.State.Clock.SimTime)).Accepted, Is.False, "no school, no class");
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash), "and nothing spent");
+        }
+
+        [Test, Explicit("measure")]
+        public void TownshipLevers()
+        {
+            var variants = new (string Name, string[] From, string[] To)[]
+            {
+                ("as is (24,000 / 24,000 / 1,500)", new string[0], new string[0]),
+                ("clerk 20,000", new[] { "\"clerkWage\": 24000" }, new[] { "\"clerkWage\": 20000" }),
+                ("doctor 20,000", new[] { "\"doctorAllowance\": 24000" }, new[] { "\"doctorAllowance\": 20000" }),
+                ("clerk 20,000 + doctor 20,000", new[] { "\"clerkWage\": 24000", "\"doctorAllowance\": 24000" }, new[] { "\"clerkWage\": 20000", "\"doctorAllowance\": 20000" }),
+                ("untied grant 110", new[] { "\"grantUntied\": 100" }, new[] { "\"grantUntied\": 110" }),
+            };
+            foreach (var v in variants)
+            {
+                Gate.TownshipResult r = Gate.Township(LiveTownship((f, j) => { if (f != "treasury.json") return j; for (int i = 0; i < v.From.Length; i++) { Assert.That(j, Does.Contain(v.From[i])); j = j.Replace(v.From[i], v.To[i]); } return j; }), () => new TownshipBot(false), 12, 70);
+                TestContext.Out.WriteLine("LEVER " + v.Name + ": unlock " + string.Join(" ", r.TreasuryStart.Select(c => c / Sim.Core.Finance.Money.Coin)) + " | second year's change " + string.Join(" ", r.TreasuryAfter.Select((c, i) => (c - r.TreasuryMid[i]) / Sim.Core.Finance.Money.Coin))
+                    + " | lowest service " + string.Join(" ", r.LowestService.Select(x => x.ToString("0.00"))) + " | doctor in " + r.DoctorIn.Count(x => x) + "/" + r.DoctorIn.Count);
+            }
         }
 
         // Spec 015 §9 (ADR 0082): the competent bot paying fair wages keeps motivation at 1.0–1.1 and the farm's profit within 2% of Phase 1's

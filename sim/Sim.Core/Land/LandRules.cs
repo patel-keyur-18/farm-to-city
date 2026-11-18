@@ -51,7 +51,8 @@ namespace Sim.Core.Land
         {
             GameDefs defs = sim.Config.Game;
             Fixed factor = defs.Soils[tile.Soil].PriceFactor * defs.Drainages[tile.Drainage].PriceFactor
-                * FertilityPriceFactor(defs.Land, tile.Fertility) * defs.Map.Parcels[tile.ParcelId].LocationFactor;
+                * FertilityPriceFactor(defs.Land, tile.Fertility) * defs.Map.Parcels[tile.ParcelId].LocationFactor
+                * Town.LandValueRules.Of(sim, tile.Id); // land value from the Township (1.00 before it; spec 024 §3.5)
             return Money.RoundToCoin(Money.MulRate(Market.MarketRules.Indexed(sim, defs.Land.AcreBasePrice), factor));
         }
 

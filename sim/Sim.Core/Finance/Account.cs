@@ -52,6 +52,9 @@ namespace Sim.Core.Finance
         DayLabourEarnings = 4100,
         RentReceived = 4200,
 
+        /// <summary>The rent of land you lease out (spec 024 §3.6): passive income like a house's rent, outside farm profit. Schema 20.</summary>
+        LandRentReceived = 4210,
+
         /// <summary>Drawings beyond what the founder put into businesses (spec 016 §3.2).</summary>
         BusinessDrawingsIncome = 4300,
 
@@ -131,7 +134,7 @@ namespace Sim.Core.Finance
             Account.Buildings, Account.Equipment, Account.AccumulatedDepreciation, Account.Trees, Account.Livestock, Account.InvestmentInBusinesses,
             Account.MoneylenderLoans, Account.Overdraft, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings, Account.OwnersCapital,
-            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.BusinessDrawingsIncome, Account.InterestOnSavings,
+            Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.BusinessDrawingsIncome, Account.InterestOnSavings, Account.LandRentReceived,
             Account.Sales, Account.ServiceIncome, Account.GainOnAssetSales, Account.DebtWrittenOff,
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
             Account.GiftsToVillage, Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
@@ -158,6 +161,7 @@ namespace Sim.Core.Finance
                     return 10;
                 case Account.GiftsToVillage: return 15;
                 case Account.BankDeposit: case Account.InterestOnSavings: return 16;
+                case Account.LandRentReceived: return 20;
                 case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;

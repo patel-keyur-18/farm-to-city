@@ -46,7 +46,10 @@ namespace Sim.Core.Farm
             // A sick day (spec 003 §3.11): sickChance = atMinHealth × (1 − health) ÷ (1 − minHealth), seeded per day.
             Fixed chance = def.SickChanceAtMinHealth * (Fixed.One - s.Health) / (Fixed.One - def.MinHealth);
             long day = t / ClockDef.SecondsPerDay;
-            s.SickToday = Rng.Chance(Rng.Next(sim.State.Seed, RngStream.FounderSick, 0, (ulong)day), chance);
+            ulong sickRoll = Rng.Next(sim.State.Seed, RngStream.FounderSick, 0, (ulong)day);
+            Fixed clinic = Town.ClinicRules.EffectTown(sim); // spec 023 §3.2: the clinic cuts the sick chance
+            s.SickToday = Rng.Chance(sickRoll, Town.ClinicRules.SickChance(sim, chance, clinic));
+            if (!s.SickToday && clinic != Fixed.Zero && Rng.Chance(sickRoll, chance)) Town.ClinicRules.CountSickAvoided(sim); // a sick day the same roll would have been
 
             // The day ahead: the chosen hours live, normal hours while away (ADR 0010); a sick day counts as rest.
             s.TodayOption = s.SickToday ? farm.IndexOfWorkHours("rest")

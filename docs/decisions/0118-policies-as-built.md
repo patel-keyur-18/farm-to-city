@@ -1,6 +1,6 @@
 # 0118. Policies as built (US-141): a policy is a line in a department, paid in full or paused, one effect each, the night market left out
 
-- Status: Proposed (for the owner's review of US-141, 2026-11-17)
+- Status: Accepted (owner, 2026-11-17, US-141 approved)
 - Date: 2026-11-17
 - Deciders: Keyur Patel
 - Amends: spec 022 §3.5 (the subsidy's price an acre, the grant's winner, the night market), §3.6 (when a slot is free), §7 (the sheet's shape)

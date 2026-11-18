@@ -125,7 +125,7 @@ namespace Sim.Core.Town
         }
 
         /// <summary>The children of school age who can't read yet (spec 018): the school's pupils.</summary>
-        public static int Pupils(Simulation sim) { return SchoolRules.Pupils(sim).Count; }
+        public static int Pupils(Simulation sim) { return SchoolRules.Pupils(sim).Count + CohortRules.Pupils(sim); }
         private static int Residents(Simulation sim) { return TreasuryRules.Residents(sim); }
 
         /// <summary>The acres your neighbours farm: farm land on the map that isn't yours (spec 022 §3.5).</summary>

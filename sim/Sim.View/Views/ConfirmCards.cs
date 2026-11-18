@@ -37,15 +37,15 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(CommissionWorks), typeof(EnactPolicy));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
                 typeof(SellToTrader), typeof(DeliverOrder), typeof(GoToMandi), typeof(Buy), typeof(BuyMedicine), typeof(HireLabourers), typeof(Offer), typeof(Withdraw),
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
-                typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
-                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
+                typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
+                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors));
             Add(ConfirmKind.System, typeof(AdvanceTo), typeof(DebugAdvance), typeof(DebugNextEra), typeof(LiveRun), typeof(NewGame), typeof(Sync));
             return k;
@@ -111,6 +111,7 @@ namespace Sim.View.Views
             ConfirmKind kind = ConfirmRules.Of(c);
             if (kind != ConfirmKind.Tap && kind != ConfirmKind.Hold) return null;
             if (c is RepealPolicy undo && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)undo.Policy].PaidCloses == 0) return null; // never paid: taking it back costs nothing and ends at once
+            if (c is EndLease cancel && Sim.Core.Town.LandLeaseRules.StatusOf(ctx.Sim.State.Land.Parcels[ctx.Sim.Config.Game.Map.IndexOfParcel(cancel.ParcelId)]) == Sim.Core.Land.LeaseStatus.Starting) return null; // not started: cancelling costs nothing and ends at once
             if (c is EnactPolicy keep && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)keep.Policy].Repealing) return null; // keeping a policy that is ending costs nothing new
             Simulation sim = ctx.Sim;
             CommandResult result = sim.Preview(c, out Simulation after);
@@ -130,11 +131,16 @@ namespace Sim.View.Views
             };
             if (c is SetSavingsCover) Standing(ctx, vm);
             else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
-            else if (c is CommissionWorks) Works(ctx, vm, sim, after);
+            else if (c is CommissionWorks works) Works(ctx, vm, sim, after, works);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
+            else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
+            else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
+            else if (c is ZoneParcel zp) Zoning(ctx, vm, zp);
+            else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
-            vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + ".warn", "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
+            vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
+            if (c is CommissionWorks cw) CivicSheet.Guard(ctx, vm, cw.WorkId); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
             {
@@ -143,7 +149,7 @@ namespace Sim.View.Views
             }
             else
             {
-                vm.SafeLabel = s.Get("confirm.notNow");
+                vm.SafeLabel = s.Has("confirm." + name + ".keep") ? s.Get("confirm." + name + ".keep") : s.Get("confirm.notNow");
                 vm.GoLabel = cash < 0 ? s.Get("confirm.verbFor", "verb", verb, "amount", ctx.Fmt.Coins(-cash)) : verb;
             }
             return vm;
@@ -168,6 +174,89 @@ namespace Sim.View.Views
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
         }
 
+        /// <summary>A slow sale's card (spec 024 §3.4): the land value now, the wait, what comes then; or the listing taken off. A tap, and good news: nothing is lost either way.</summary>
+        private static void Listing(ViewContext ctx, ConfirmCardVm vm, Command c)
+        {
+            var s = ctx.Strings;
+            vm.Reassure = true;
+            if (c is ListParcel lp)
+            {
+                Parcel parcel = ctx.Sim.State.Land.Parcels[ctx.Sim.Config.Game.Map.IndexOfParcel(lp.ParcelId)];
+                long value = LandRules.ParcelPrice(ctx.Sim, parcel);
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListParcel.value"), ctx.Fmt.Coins(value)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListParcel.wait"), LandValueViews.Days(ctx, Sim.Core.Town.LandValueRules.Def(ctx.Sim).SlowSaleSeconds)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListParcel.receive"), ctx.Fmt.Coins(value), total: true));
+            }
+            else
+            {
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CancelSale.back"), s.Get("confirm.CancelSale.backValue")));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CancelSale.cost"), s.Get("confirm.CancelSale.costValue"), total: true));
+            }
+        }
+
+        /// <summary>Offering a parcel to builders (spec 024 §3.3): its land value, the families a builder waits for, what you receive; nothing is paid by you and it can be taken back.</summary>
+        private static void Zoning(ViewContext ctx, ConfirmCardVm vm, ZoneParcel c)
+        {
+            var s = ctx.Strings;
+            vm.Reassure = true;
+            int id = ctx.Sim.Config.Game.Map.IndexOfParcel(c.ParcelId);
+            long value = LandRules.ParcelPrice(ctx.Sim, ctx.Sim.State.Land.Parcels[id]);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ZoneParcel.value"), ctx.Fmt.Coins(value)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ZoneParcel.when"), s.Plural("confirm.ZoneParcel.families", Sim.Core.Town.ZoningRules.Need(ctx.Sim, id))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ZoneParcel.receive"), ctx.Fmt.Coins(value), total: true));
+        }
+
+        /// <summary>Leasing a parcel out (spec 024 §3.6): its land value, the rent, when the first rent comes; or ending it at the close. Nothing is paid by you.</summary>
+        private static void Leasing(ViewContext ctx, ConfirmCardVm vm, Command c)
+        {
+            var s = ctx.Strings;
+            Simulation sim = ctx.Sim;
+            vm.Reassure = c is LeaseOutLand;
+            string left = ctx.Fmt.Duration(System.Math.Max(0, Sim.Core.Town.LandLeaseRules.NextClose(sim) - ctx.Now));
+            if (c is LeaseOutLand lo)
+            {
+                Parcel parcel = sim.State.Land.Parcels[sim.Config.Game.Map.IndexOfParcel(lo.ParcelId)];
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.LeaseOutLand.value"), ctx.Fmt.Coins(LandRules.ParcelPrice(sim, parcel))));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.LeaseOutLand.rent"), ctx.Fmt.Coins(Sim.Core.Town.LandLeaseRules.Rent(sim, parcel))));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.LeaseOutLand.first"), s.Get("confirm.LeaseOutLand.firstValue", "left", left), total: true));
+            }
+            else
+            {
+                Parcel parcel = sim.State.Land.Parcels[sim.Config.Game.Map.IndexOfParcel(((EndLease)c).ParcelId)];
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EndLease.paid"), s.Get("confirm.EndLease.paidValue", "rent", ctx.Fmt.Coins(Sim.Core.Town.LandLeaseRules.Rent(sim, parcel)))));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EndLease.leaves"), s.Get("confirm.EndLease.leavesValue", "left", left)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.EndLease.after"), s.Get("confirm.EndLease.afterValue"), total: true));
+            }
+        }
+
+        /// <summary>The petition for the road (spec 023 §3.3): your cash now, the share, any loan, the days it takes, your cash after; the road is not yours and the share is not repaid.</summary>
+        private static void Road(ViewContext ctx, ConfirmCardVm vm, long cash, long taken, Simulation after, Loan newest, string name)
+        {
+            var s = ctx.Strings;
+            long pay = System.Math.Max(0, -cash);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm." + name + ".now"), ctx.Fmt.Coins(after.State.Ledger.Cash + pay)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm." + name + ".share"), "− " + ctx.Fmt.Coins(pay + taken)));
+            if (taken > 0)
+            {
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.loan"), ctx.Fmt.Coins(taken)));
+                if (newest != null)
+                {
+                    long first = CreditRules.NextPayment(after, newest, out _, out _);
+                    if (first > 0) vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.firstPayment"), ctx.Fmt.Coins(first)));
+                }
+            }
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm." + name + ".days"), s.Plural("road.daysValue", Days(after, name))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>Days the district or the builders take for what a card starts: the road's, or the clinic's and the quarters' hours rounded up to days.</summary>
+        private static int Days(Simulation after, string name)
+        {
+            if (name == "BuildClinic") return (Sim.Core.Town.ClinicRules.Def(after).BuildHours + 23) / 24;
+            if (name == "BuildDoctorQuarters") return (Sim.Core.Town.ClinicRules.QuartersDef(after).BuildHours + 23) / 24;
+            return Sim.Core.Town.RoadRules.Def(after).Days;
+        }
+
         /// <summary>A gift to the town (spec 021 §3.8): what you give, the town's balance after, your cash after.</summary>
         private static void Gift(ViewContext ctx, ConfirmCardVm vm, GiveToTreasury gift, Simulation after)
         {
@@ -178,9 +267,20 @@ namespace Sim.View.Views
         }
 
         /// <summary>Capital works (spec 021 §3.7): the town pays a builder from its own money; yours isn't touched.</summary>
-        private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after)
+        private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, CommissionWorks works)
         {
             var s = ctx.Strings;
+            int civic = Sim.Core.Town.CivicRules.OfWork(sim, works.WorkId);
+            if (civic >= 0) // a civic building (spec 023 §3.7): the town's cash now and after, and the budget guard
+            {
+                string id = CivicSheet.Ids[civic];
+                vm.Title = s.Get("civic." + id + ".cardTitle");
+                vm.Subtitle = s.Get("civic.cardSub");
+                vm.Rows.Add(new ConfirmRowVm(s.Get("civic.cardNow"), ctx.Fmt.Coins(sim.State.Treasury.Cash)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("civic." + id + ".cardRow"), "− " + ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("civic.cardAfter"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
+                return;
+            }
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.cost"), ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash)));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.CommissionWorks.town"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
         }
@@ -256,7 +356,7 @@ namespace Sim.View.Views
                 Sim.Core.People.Hand hand = ctx.Sim.State.People?.Hand(dh.HandId);
                 return hand == null ? null : Sim.View.Views.PeopleWords.Name(ctx, hand.Name);
             }
-            string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : null;
+            string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : c is ListParcel lp ? lp.ParcelId : c is CancelSale cs ? cs.ParcelId : c is ZoneParcel zp2 ? zp2.ParcelId : c is LeaseOutLand lo ? lo.ParcelId : c is EndLease el ? el.ParcelId : null;
             int p = id == null ? -1 : defs.Map.IndexOfParcel(id);
             if (p < 0) return null;
             ParcelDef d = defs.Map.Parcels[p];

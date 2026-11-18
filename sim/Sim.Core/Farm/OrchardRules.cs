@@ -41,6 +41,7 @@ namespace Sim.Core.Farm
             if (!Unlocked(sim)) return RejectReason.EraLocked;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
+            if (sim.State.Land.Parcels[tile.ParcelId].Locked) return sim.State.Land.Parcels[tile.ParcelId].LockReason; // a listed acre is locked (spec 024 §3.4)
             if (tile.Terrain != Terrain.Farm) return RejectReason.NotFarmTile;
             if (tile.Occupied || sim.State.Farm.CropOn(tileId) != null || Of(sim, tileId) != null || People.HouseRules.HousesOn(sim, tileId) > 0
                 || Business.BusinessRules.On(sim, tileId) != null || Livestock.LivestockRules.SecondShedTile(sim) == tileId)

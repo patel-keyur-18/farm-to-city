@@ -10,6 +10,7 @@ namespace Sim.Content
     public static partial class ContentLoader
     {
         /// <summary>The seven departments in the order they are paid (spec 021 §3.4; spec 022 §3.5's seventh, Policies).</summary>
+        internal static readonly string[] CivicIds = { "watchman", "hall", "playground" };
         private static readonly string[] DepartmentIds = { "office", "health", "education", "roads", "safety", "utilities", "policies" };
 
         private static readonly Account[] DepartmentAccounts =
@@ -56,7 +57,7 @@ namespace Sim.Content
             {
                 string p = Index(Join(root, "lines"), i);
                 JObject l = Object(ls[i], p);
-                OnlyFields(l, p, "id", "department", "kind", "amount", "requires");
+                OnlyFields(l, p, "id", "department", "kind", "amount", "requires", "civic");
                 string id = UniqueId(l, p, ids);
                 ids.Add(id);
                 string dep = String(Required(l, p, "department"), Join(p, "department"));
@@ -86,8 +87,20 @@ namespace Sim.Content
                 if (req == "treasury") requires = LineRequires.Treasury;
                 else if (req == "school") requires = LineRequires.School;
                 else if (req == "clinic") requires = LineRequires.Clinic;
-                else throw new ContentException(Join(p, "requires"), "must be treasury, school or clinic");
-                lines.Add(new LineDef(id, d, kind == "wage", source, amount, requires));
+                else if (req == "clinicOpen") requires = LineRequires.ClinicOpen;
+                else if (req == "road") requires = LineRequires.Road;
+                else if (req == "civic") requires = LineRequires.CivicBuilt;
+                else if (req == "civicStaffed") requires = LineRequires.CivicStaffed;
+                else throw new ContentException(Join(p, "requires"), "must be treasury, school, clinic, clinicOpen, road, civic or civicStaffed");
+                int civic = -1;
+                if (requires == LineRequires.CivicBuilt || requires == LineRequires.CivicStaffed)
+                {
+                    string cid = String(Required(l, p, "civic"), Join(p, "civic"));
+                    civic = System.Array.IndexOf(CivicIds, cid);
+                    if (civic < 0) throw new ContentException(Join(p, "civic"), "must be watchman, hall or playground");
+                }
+                else if (l["civic"] != null) throw new ContentException(Join(p, "civic"), "only civic lines name a civic building");
+                lines.Add(new LineDef(id, d, kind == "wage", source, amount, requires, -1, civic));
             }
 
             for (int i = 0; i < PolicyIds.Length; i++) // each policy's cost is a line in its department (spec 022 §3.5)

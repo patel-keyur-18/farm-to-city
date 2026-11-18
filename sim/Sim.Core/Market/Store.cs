@@ -175,6 +175,7 @@ namespace Sim.Core.Market
                 sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.soldToTrader", reference,
                     new Posting(Account.Cash, amount), new Posting(SalesAccount(sim, good), -amount));
             sim.State.Finance.Sales.Add(sim, good, SoldTo.Trader, amount);
+            Town.RoadRules.Earn(sim, good, quantity);
             sim.Emit(new SoldToTrader(sim.State.Clock.SimTime, sim.Config.Game.Market.Goods[good].Id, quantity, floor, amount));
             CountTraderPurchase(sim, good, quantity); // after the sale's event, so a full truck leaves after it
             return amount;

@@ -57,6 +57,7 @@ namespace Sim.Core.People
             if (!Unlocked(sim)) return RejectReason.EraLocked;
             Tile tile = sim.State.Land.Tiles[tileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return RejectReason.NotOwned;
+            if (sim.State.Land.Parcels[tile.ParcelId].Locked) return sim.State.Land.Parcels[tile.ParcelId].LockReason; // a listed acre is locked (spec 024 §3.4)
             if (tile.Terrain == Terrain.Quarters)
                 return PeopleRules.HutsOn(sim, tileId) + HousesOn(sim, tileId) >= sim.Config.Game.People.HutPlacesPerAcre ? RejectReason.NoRoom : RejectReason.None;
             if (tile.Terrain != Terrain.Farm) return RejectReason.TerrainNotAllowed;
@@ -98,11 +99,12 @@ namespace Sim.Core.People
             if (fromSavings > x.Savings)
             {
                 x.RentBehind++;
-                sim.Emit(new RentMissed(t, x.Id, x.Rent, x.RentBehind));
+                if (!HouseholdRules.InBuildersHome(sim, x)) sim.Emit(new RentMissed(t, x.Id, x.Rent, x.RentBehind)); // a builder's tenant is the builder's worry, not your alert
                 return;
             }
             x.Savings -= fromSavings;
             x.RentBehind = 0;
+            if (HouseholdRules.InBuildersHome(sim, x)) return; // paid to the builder: you receive nothing (spec 024 §3.3)
             sim.State.Ledger.Post(t, sim.Period, "ledger.rent", "household:" + x.Id, new Posting(Account.Cash, x.Rent), new Posting(Account.RentReceived, -x.Rent));
             sim.Emit(new RentPaid(t, x.Id, x.Rent));
         }

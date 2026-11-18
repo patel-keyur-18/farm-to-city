@@ -94,7 +94,7 @@ namespace Sim.Core.Town
             else if (def.Id == HomeBuildingId) { assessed = null; foreach (BuildingDef bd in g.Buildings) if (bd.Id == d.HomeAssessedAs) assessed = bd; }
             else return 0; // a hand's hut and every other building: exempt
             if (assessed == null) return 0;
-            long value = MarketRules.Indexed(sim, assessed.Value);
+            long value = Money.MulRate(MarketRules.Indexed(sim, assessed.Value), LandValueRules.Of(sim, b.TileId)); // × land value from the Township (spec 024 §3.2)
             long tax = Money.MulRate(value, rate) / 4;
             long rent = MarketRules.Indexed(sim, g.Population.BaseRent);
             Household x = sim.State.Citizens?.Households.Find(h => h.HomeId == b.Id);
@@ -120,7 +120,7 @@ namespace Sim.Core.Town
 
         private static bool IsTaxed(Simulation sim, Building b)
         {
-            return HouseRules.IsHouse(sim, b) || sim.Config.Game.Buildings[b.Def].Id == HomeBuildingId;
+            return (HouseRules.IsHouse(sim, b) && !b.Builders) || sim.Config.Game.Buildings[b.Def].Id == HomeBuildingId; // a builder's house is off your bill: the builder's tax is not modelled (spec 024 §3.2)
         }
 
         /// <summary>The office's share of what is billed (spec 021 §3.3): the payer pays only this.</summary>
@@ -261,7 +261,7 @@ namespace Sim.Core.Town
             shops = 0;
             foreach (KeyValuePair<string, long> bill in ShopBills(sim, businessRate)) shops += Collected(sim, bill.Value);
             yours = houseYou + businessYou;
-            return houseYou + businessYou + shops;
+            return houseYou + businessYou + shops + CohortRules.TaxCollected(sim, houseRate); // the old village pays too (spec 023 §3.5)
         }
 
         /// <summary>The tax certain by the close: your houses (collected share) and the village's shops (spec 021 §3.11).</summary>
@@ -270,7 +270,7 @@ namespace Sim.Core.Town
             if (!TreasuryRules.IsOpen(sim)) return 0;
             long shops = 0;
             foreach (KeyValuePair<string, long> bill in ShopBills(sim, Rate(sim, TaxKind.Business))) shops += Collected(sim, bill.Value);
-            return Collected(sim, YourHouseBill(sim, Rate(sim, TaxKind.House), out _)) + shops;
+            return Collected(sim, YourHouseBill(sim, Rate(sim, TaxKind.House), out _)) + shops + CohortRules.TaxCollected(sim, Rate(sim, TaxKind.House));
         }
     }
 }

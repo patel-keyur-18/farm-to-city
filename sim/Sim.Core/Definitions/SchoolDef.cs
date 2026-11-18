@@ -20,6 +20,9 @@ namespace Sim.Core.Definitions
         public long EquipmentCost { get; internal set; }
         public int BuildHours { get; internal set; }
 
+        /// <summary>Metres within which a home is covered by the school (spec 023 §3.6): farther, its children earn no school year.</summary>
+        public int Reach { get; internal set; }
+
         /// <summary>Pupils a teacher (the Right to Education norm); the district posts another above it.</summary>
         public int SeatsPerTeacher { get; internal set; }
         public int PupilAgeMin { get; internal set; }

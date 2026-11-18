@@ -71,6 +71,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.businessTrader.regional", ctx.Fmt.PricePerKg(MarketRules.RegionalPrice(sim, g)));
             Row(vm, ctx, "why.businessTrader.transport", ctx.Fmt.PricePerKg(MarketRules.TransportCost(sim, g)));
             Row(vm, ctx, "why.businessTrader.day", ctx.Fmt.Kg(sim.Config.Game.Market.Region.TraderBuyPerDay(g)));
+            RoadNote(ctx, vm);
             return vm;
         }
 
@@ -81,6 +82,7 @@ namespace Sim.View.Views
             Text(vm, ctx, "why.businessWage.paid");
             Text(vm, ctx, "why.businessWage.who");
             Text(vm, ctx, "why.businessWage.you");
+            MinWage(vm, ctx, t.Wage, BusinessRules.Wage(ctx.Sim, t));
             return vm;
         }
 

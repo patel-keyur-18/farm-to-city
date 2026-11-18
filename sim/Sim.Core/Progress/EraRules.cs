@@ -65,6 +65,7 @@ namespace Sim.Core.Progress
             var eras = sim.Config.Game.Onboarding.Eras;
             if (e.Current + 1 >= eras.Count) return;
             EraDef next = eras[e.Current + 1];
+            if (next.TownshipGate) Town.TownshipRules.Latch(sim); // spec 023 §3.4: a goal once met stays met
             if (!Met(sim, next, period)) return;
             Unlock(sim);
         }
@@ -79,6 +80,7 @@ namespace Sim.Core.Progress
             e.UnlockedAt = sim.State.Clock.SimTime;
             sim.Emit(new EraUnlocked(sim.State.Clock.SimTime, eras[e.Current].Id));
             Town.TreasuryRules.OnEra(sim); // spec 021 §3.1: the treasury opens once, when the era reaches the Township
+            if (eras[e.Current].TownshipGate || eras[e.Current].Id == "township") Town.CohortRules.Join(sim); // spec 023 §3.4: then the old village joins
             return true;
         }
 
@@ -87,6 +89,7 @@ namespace Sim.Core.Progress
         {
             EraState e = sim.State.Era;
             if (era.DeveloperOnly) return false;
+            if (era.TownshipGate) return Town.TownshipRules.Met(sim);
             if (era.AcresHarvestedInSeason > 0)
             {
                 if (Acres(sim, period) < era.AcresHarvestedInSeason) return false;
@@ -98,7 +101,14 @@ namespace Sim.Core.Progress
         }
 
         /// <summary>Households on your land, a hand alone in his hut included (spec 014 §3.13).</summary>
-        public static int Households(Simulation sim) { return sim.State.Citizens?.Households.Count ?? 0; }
+        public static int Households(Simulation sim)
+        {
+            People.CitizensState c = sim.State.Citizens;
+            if (c == null) return 0;
+            int n = 0;
+            foreach (People.Household x in c.Households) if (!People.HouseholdRules.InBuildersHome(sim, x)) n++; // a builder's families are residents, not yours (spec 024 §3.3)
+            return n;
+        }
 
         /// <summary>The most profitable seasons any one business of yours has had (closed ones keep theirs; spec 018 §3.6).</summary>
         public static int BusinessSeasons(Simulation sim) { return Business(sim)?.ProfitableSeasons ?? 0; }

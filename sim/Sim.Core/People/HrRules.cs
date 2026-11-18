@@ -157,11 +157,14 @@ namespace Sim.Core.People
             {
                 if (w.CourseUntil != 0 || w.Hr.SickUntil != 0 || Waiting(sim, w)) continue;
                 Fixed sick = d.SickChance.MulRatio(w.Fatigue > d.SickTiredAbove ? d.SickTiredFactor : 1, days);
-                if (Rng.Chance(Roll(sim, w, day, SickDraw), sick))
+                ulong sickRoll = Roll(sim, w, day, SickDraw);
+                Fixed clinic = Town.ClinicRules.EffectTown(sim); // spec 023 §3.2: the clinic cuts sick leave too
+                if (Rng.Chance(sickRoll, Town.ClinicRules.SickChance(sim, sick, clinic)))
                 {
                     FallSick(sim, w);
                     continue;
                 }
+                if (clinic != Fixed.Zero && Rng.Chance(sickRoll, sick)) Town.ClinicRules.CountSickAvoided(sim);
                 if (Rng.Chance(Roll(sim, w, day, EmergencyDraw), d.EmergencyChance.MulRatio(1, days)))
                     Raise(sim, HrEventKind.FamilyEmergency, w, Money.RoundToCoin(Money.MulRate(w.Wage, d.AdvanceShare)));
             }

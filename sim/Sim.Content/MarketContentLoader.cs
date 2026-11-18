@@ -101,10 +101,14 @@ namespace Sim.Content
             JObject tiers = Object(Required(o, root, "transportCostPerKg"), tp);
             Fixed transport = Fixed.Zero;
             bool found = false;
+            var tierNames = new List<string>();
+            var tierCosts = new List<Fixed>();
             foreach (JProperty prop in tiers.Properties())
             {
                 Fixed v = Number(prop.Value, Join(tp, prop.Name));
                 Range(v, Fixed.Zero, Fixed.FromInt(100), Join(tp, prop.Name));
+                tierNames.Add(prop.Name);
+                tierCosts.Add(v);
                 if (prop.Name == tier) { transport = v; found = true; }
             }
             if (!found) throw new ContentException(root + ".roadTier", "unknown road tier '" + tier + "'");
@@ -133,7 +137,7 @@ namespace Sim.Content
             long[] demand = ProducePerDay(o, root, "demandPerDay", goods, true);
             long[] valley = ProducePerDay(o, root, "valleySupplyPerDay", goods, false);
             long[] imports = ProducePerDay(o, root, "importCapacityPerDay", goods, true); // > 0: S is never zero (ADR 0013)
-            return new RegionDef(tier, transport, factors, trader, demand, valley, imports);
+            return new RegionDef(tier, transport, tierNames.ToArray(), tierCosts.ToArray(), factors, trader, demand, valley, imports);
         }
 
         /// <summary>A map produce good id → kg a day, every produce good present, stored in grams in good order.</summary>

@@ -28,7 +28,7 @@ namespace Sim.Core.Commands
             if (id < 0) return CommandResult.Reject(RejectReason.UnknownParcel);
             Parcel parcel = sim.State.Land.Parcels[id];
             if (parcel.Owned) return CommandResult.Reject(RejectReason.AlreadyOwned);
-            if (!sim.Config.Game.Map.Parcels[id].ForSale) return CommandResult.Reject(RejectReason.NotForSale);
+            if (!sim.Config.Game.Map.Parcels[id].ForSale || parcel.BuilderOwned) return CommandResult.Reject(RejectReason.NotForSale); // a builder has it (spec 024 §3.3)
             if (!LandSystem.IsAdjacentToOwned(sim, id)) return CommandResult.Reject(RejectReason.NotAdjacent);
             long price = LandRules.ParcelPrice(sim, parcel);
             int lender = -1;
@@ -70,28 +70,105 @@ namespace Sim.Core.Commands
             Parcel parcel = sim.State.Land.Parcels[id];
             if (!parcel.Owned) return CommandResult.Reject(RejectReason.NotOwned);
             if (parcel.Protected) return CommandResult.Reject(RejectReason.Protected);
+            if (parcel.Leased) return CommandResult.Reject(RejectReason.Leased); // end the lease first (spec 024 §3.6)
             if (LandSystem.InUse(sim, id)) return CommandResult.Reject(RejectReason.ParcelInUse);
             if (LandSystem.WouldStrand(sim, id)) return CommandResult.Reject(RejectReason.WouldStrandLand);
 
-            long t = sim.State.Clock.SimTime;
+            if (parcel.Listed) return CommandResult.Reject(RejectReason.Listed);
             long price = Money.RoundToCoin(Money.MulRate(LandRules.ParcelPrice(sim, parcel), defs.Land.QuickSaleFactor));
-            // Land that secures a bank loan: the proceeds repay the bank first, or the sale is refused (ADR 0038).
-            long required = CreditSystem.RequiredOnSale(sim, id);
-            if (price < required) return CommandResult.Reject(RejectReason.LoanSecured);
-            long basis = parcel.CostBasis;
-            long gain = price - basis;
-            sim.State.Ledger.Post(t, sim.Period, "ledger.sellParcel", "parcel:" + ParcelId,
-                new Posting(Account.Cash, price),
-                new Posting(Account.Land, -basis),
-                gain >= 0 ? new Posting(Account.GainOnAssetSales, -gain) : new Posting(Account.LossOnAssetSales, -gain));
-            price += IrrigationRules.Release(sim, id, sim.Period, "ledger.irrigationSold"); // channels, drip, a borewell: with the land at book value
-            FarmSystem.Accrue(sim);
-            price += OrchardRules.Release(sim, id, sim.Period, "ledger.orchardSold"); // and its orchards (ADR 0090)
-            FarmSystem.Refresh(sim);
-            LandSystem.Release(sim, parcel);
-            if (required > 0) CreditSystem.RepaySecured(sim, required);
-            sim.Emit(new ParcelSold(t, ParcelId, price, basis));
+            if (price < CreditSystem.RequiredOnSale(sim, id)) return CommandResult.Reject(RejectReason.LoanSecured); // land that secures a bank loan (ADR 0038)
+            LandSystem.Sell(sim, parcel, price);
             return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Lists a bought parcel for a slow sale (US-143, spec 024 §3.4): it sells in <c>slowSaleSeconds</c> at 100% of its land value as it stands now, the
+    /// price fixed at listing; the acre is locked until it sells or <see cref="CancelSale"/> takes it off. From the Township.
+    /// </summary>
+    public sealed class ListParcel : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public ListParcel(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = LandSystem.List(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Takes a parcel off the market before it sells (spec 024 §3.4); the acre is yours again, unlocked.</summary>
+    public sealed class CancelSale : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public CancelSale(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = LandSystem.Unlist(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Zones a parcel you own residential, so builders may buy it when families are waiting for homes (US-142, spec 024 §3.3).</summary>
+    public sealed class ZoneParcel : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public ZoneParcel(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.ZoningRules.Set(sim, ParcelId, Town.Zone.Residential);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Takes a parcel back to farming before a builder buys it.</summary>
+    public sealed class UnzoneParcel : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public UnzoneParcel(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.ZoningRules.Set(sim, ParcelId, Town.Zone.Agricultural);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>
+    /// Leases a parcel you own out to a neighbour farmer (US-261, spec 024 §3.6): the acre is locked at once, the lease starts at the next close when the
+    /// first rent arrives, and it renews each season until <see cref="EndLease"/>. From the Township.
+    /// </summary>
+    public sealed class LeaseOutLand : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public LeaseOutLand(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.LandLeaseRules.Lease(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
+
+    /// <summary>Ends a lease at the next close; one that has not started yet is cancelled at once, free.</summary>
+    public sealed class EndLease : TimedCommand
+    {
+        public string ParcelId { get; }
+
+        public EndLease(long at, string parcelId) : base(at) { ParcelId = parcelId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = Town.LandLeaseRules.End(sim, ParcelId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
 }

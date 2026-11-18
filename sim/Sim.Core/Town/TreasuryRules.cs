@@ -188,16 +188,17 @@ namespace Sim.Core.Town
             {
                 case LineRequires.School: return SchoolRules.IsOpen(sim);
                 case LineRequires.Clinic: return ClinicStaffed(sim);
+                case LineRequires.ClinicOpen: return ClinicRules.IsOpen(sim);
+                case LineRequires.Road: return RoadRules.IsBuilt(sim);
                 case LineRequires.Policy: return PolicyRules.LineActive(sim, line.Policy);
+                case LineRequires.CivicBuilt: return CivicRules.Built(sim, line.Civic);
+                case LineRequires.CivicStaffed: return CivicRules.Staffed(sim, line.Civic) && CivicRules.Post(sim, line.Civic).Status == PostStatus.InPost;
                 default: return true;
             }
         }
 
-        /// <summary>
-        /// A doctor is in post at a clinic (spec 021 §3.3). The clinic comes with spec 023; until then it counts as not staffed, so the
-        /// town gets the untied grant only and the Health department has no line.
-        /// </summary>
-        public static bool ClinicStaffed(Simulation sim) { return false; }
+        /// <summary>A doctor is in post at an open clinic (spec 021 §3.3, spec 023 §3.1): without one the town gets the untied grant only and the doctor's line is closed.</summary>
+        public static bool ClinicStaffed(Simulation sim) { return ClinicRules.InPost(sim); }
 
         /// <summary>A department's needs now: the sum of its active lines (spec 021 §3.4).</summary>
         public static long Needs(Simulation sim, int department)
@@ -217,7 +218,7 @@ namespace Sim.Core.Town
         }
 
         /// <summary>The treasury's residents: your citizens, and the old village's cohort once it has joined (spec 023).</summary>
-        public static int Residents(Simulation sim) { return sim.State.Citizens?.Population ?? 0; }
+        public static int Residents(Simulation sim) { return (sim.State.Citizens?.Population ?? 0) + CohortRules.People(sim); }
 
         // ---- income ----
 
@@ -281,12 +282,14 @@ namespace Sim.Core.Town
             TownWorkDef work = null;
             foreach (TownWorkDef w in Def(sim).Works) if (w.Id == workId) work = w;
             if (work == null) return Commands.RejectReason.UnknownWork;
+            if (CivicRules.CanCommission(sim, workId) != Commands.RejectReason.None) return Commands.RejectReason.PlotTaken;
             long cost = MarketRules.Indexed(sim, work.Cost), now = sim.State.Clock.SimTime;
             TreasuryState s = State(sim);
             if (!s.Ledger.CanAfford(cost)) return Commands.RejectReason.InsufficientFunds;
             s.Ledger.Post(now, sim.Period, "ledger.townWorks", "works:" + workId, new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
             s.Works.Add(new WorkRecord { WorkId = workId, Cost = cost, LifeSeasons = work.LifeSeasons, At = now });
             sim.Emit(new WorksCommissioned(now, workId, cost));
+            CivicRules.OnCommissioned(sim, workId, cost);
             return Commands.RejectReason.None;
         }
 
@@ -427,6 +430,8 @@ namespace Sim.Core.Town
                     }
                 }
 
+            CivicRules.NotePaid(sim, amounts, paid); // spec 023 §3.7: the wages reach the old village; an unpaid post falls vacant
+
             // The policies move on: paid ones start or go on, unpaid ones pause, repealed ones end (spec 022 §3.6); an ended one leaves its budget.
             var fullyPaid = new bool[PolicyState.Count];
             for (int i = 0; i < n; i++) if (d.Lines[i].Policy >= 0) fullyPaid[d.Lines[i].Policy] = LineActive(sim, d.Lines[i]) && paid[i] >= amounts[i];
@@ -544,7 +549,10 @@ namespace Sim.Core.Town
         public void OnPass(Simulation sim, ItemClass pass)
         {
             if (pass == ItemClass.Hourly) TreasuryRules.Hourly(sim);
-            if (pass == ItemClass.Seasonal) TreasuryRules.Close(sim);
+            if (pass != ItemClass.Seasonal) return;
+            TreasuryRules.Close(sim);
+            ClinicRules.Close(sim); // spec 023 §3.10: after the treasury's close, the doctor's leaving and return
+            CohortRules.AtClose(sim); // the old village's happiness and leaving
         }
     }
 }

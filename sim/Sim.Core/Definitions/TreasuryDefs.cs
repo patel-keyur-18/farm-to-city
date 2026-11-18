@@ -31,6 +31,18 @@ namespace Sim.Core.Definitions
 
         /// <summary>While its policy is enacted (spec 022 §3.6).</summary>
         Policy = 3,
+
+        /// <summary>While the clinic stands, doctor or not (spec 023 §3.8's upkeep).</summary>
+        ClinicOpen = 4,
+
+        /// <summary>Once the paved link road is built (spec 023 §3.8's road upkeep).</summary>
+        Road = 5,
+
+        /// <summary>While a civic building stands (spec 023 §3.7): its upkeep.</summary>
+        CivicBuilt = 6,
+
+        /// <summary>While a civic building's post is filled (spec 023 §3.7): the watchman's or caretaker's wage.</summary>
+        CivicStaffed = 7,
     }
 
     /// <summary>One of the seven departments, in the order they are paid (spec 021 §3.4, spec 022 §3.5).</summary>
@@ -61,8 +73,12 @@ namespace Sim.Core.Definitions
         /// <summary>The policy a <see cref="LineAmount.Policy"/> line pays for (an index into the five), else -1.</summary>
         public int Policy { get; }
 
-        public LineDef(string id, int department, bool wage, LineAmount source, long amount, LineRequires requires, int policy = -1)
+        /// <summary>The civic building a <see cref="LineRequires.CivicBuilt"/> or <see cref="LineRequires.CivicStaffed"/> line belongs to (an index of <see cref="CivicDef"/>), else -1.</summary>
+        public int Civic { get; }
+
+        public LineDef(string id, int department, bool wage, LineAmount source, long amount, LineRequires requires, int policy = -1, int civic = -1)
         {
+            Civic = civic;
             Policy = policy;
             Id = id;
             Department = department;

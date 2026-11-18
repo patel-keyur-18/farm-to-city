@@ -51,7 +51,7 @@ namespace Sim.View.Views
             SeasonReport r = ReportOf(ctx, period);
             string key = StatementSheet.KeyAt(index);
             SeasonReport prev = StatementSheet.LastYear(ctx.Sim, r.Period);
-            bool owe = key == "loans" || key == "interest" || key == "owe";
+            bool owe = key == "loans" || key == "interest" || key == "taxOwed" || key == "owe";
             long now = StatementSheet.Item(r.NetWorth, key) * (owe ? -1 : 1);
             WhyVm vm = new WhyVm { Title = ctx.Strings.Get("stmt.bs." + key), Value = StatementSheet.Amount(ctx, now) };
             Compare(vm, ctx, r, prev, now, prev == null ? 0 : StatementSheet.Item(prev.NetWorth, key) * (owe ? -1 : 1));

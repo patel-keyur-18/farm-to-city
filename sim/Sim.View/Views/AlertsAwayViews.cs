@@ -283,6 +283,12 @@ namespace Sim.View.Views
                     Level = AlertLevel.Decision, Text = s.Get(st.Window == BudgetWindow.Revise ? "alert.budgetRevise" : "alert.budgetSet"),
                     Action = ActionVm.Open("budget", s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)),
                 });
+            if (ClinicRules.InPost(sim) && st.Unpaid[1] > 0) // spec 023 §3.9: the doctor's allowance went unpaid
+                list.Add(new AlertVm
+                {
+                    Level = AlertLevel.Urgent, Text = s.Get("alert.doctorUnpaid"),
+                    Action = ActionVm.Open("clinic", s.Get("action.open"), new SheetRequest("Tile", ClinicRules.Def(sim).Tile)),
+                });
         }
 
         /// <summary>The alert list sheet: one row per alert with its action.</summary>
@@ -581,6 +587,22 @@ namespace Sim.View.Views
                         break;
                     case FamilyHouseBuilt b: rows.Add(Row(s.Get("away.town"), s.Get("away.houseBuilt", "home", TownWords.Home(ctx, b.BuildingId)), "family_house")); break;
                     case SchoolOpened _: rows.Add(Row(s.Get("away.town"), s.Get("away.schoolOpened"), "school")); break;
+                    case RoadBuilt _: rows.Add(Row(s.Get("away.town"), s.Get("away.roadBuilt"), "place_council_hall")); break; // spec 023 §3.3
+                    case ClinicBuilt _: rows.Add(Row(s.Get("away.town"), s.Get("away.clinicBuilt"), "place_clinic_plot")); break; // spec 023 §3.1
+                    case QuartersBuilt _: rows.Add(Row(s.Get("away.town"), s.Get("away.quartersBuilt"), "family_house")); break;
+                    case DoctorArrived d: rows.Add(Row(s.Get("away.town"), s.Get(d.Returned ? "away.doctorReturned" : "away.doctorArrived"), "portrait_town_m")); break;
+                    case DoctorUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorUnpaid"), "place_clinic_plot")); break; // spec 023 §3.9
+                    case CohortHouseholdLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.cohortLeft"), "place_council_hall")); break; // spec 023 §3.5
+                    case CivicBuilt cb: rows.Add(Row(s.Get("away.town"), s.Get("away.civicBuilt"), "place_" + CivicSheet.Ids[cb.Civic] + "_plot")); break; // spec 023 §3.7
+                    case PostFilled pf: rows.Add(Row(s.Get("away.town"), s.Get("away.postFilled"), "place_" + CivicSheet.Ids[pf.Civic] + "_plot")); break;
+                    case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
+                    case PostVacated pv: rows.Add(Row(s.Get("away.town"), s.Get("away.postVacated"), "place_" + CivicSheet.Ids[pv.Civic] + "_plot")); break;
+                    case DoctorLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorLeft"), "place_clinic_plot")); break;
+                    case ParcelSold ps: rows.Add(Row(s.Get("away.land"), s.Get("away.landSold", "price", ctx.Fmt.Coins(ps.Price)), "land")); break; // a slow sale's days came (spec 024 §3.4)
+                    case AcreSoldToBuilder ab: rows.Add(Row(s.Get("away.land"), ab.Yours ? s.Get("away.builderYours", "price", ctx.Fmt.Coins(ab.Price)) : s.Get("away.builderTheirs"), "family_house")); break; // spec 024 §3.3
+                    case SaleFailed _: rows.Add(Row(s.Get("away.land"), s.Get("away.saleFailed"), "land")); break;
+                    case LandRentPaid lr: rows.Add(Row(s.Get("away.land"), s.Get("away.leaseRent", "what", LandLeaseViews.Label(ctx, lr.ParcelId), "amount", ctx.Fmt.Coins(lr.Amount)), "land")); break; // spec 024 §3.6
+                    case LeaseEnded le: rows.Add(Row(s.Get("away.land"), s.Get("away.leaseEnded", "what", LandLeaseViews.Label(ctx, le.ParcelId)), "land")); break;
                     case TreasuryOpened t: rows.Add(Row(s.Get("away.town"), s.Get("away.treasuryOpened", "grant", ctx.Fmt.Coins(t.Grant)), "place_council_hall")); break; // spec 021 §3.1
                     case PolicyStarted ps: rows.Add(Row(s.Get("away.town"), s.Get("away.policyStarted", "policy", PolicySheet.Name(ctx, ps.Policy)), "place_council_hall")); break;
                     case PolicyPaused pp: rows.Add(Row(s.Get("away.town"), s.Get("away.policyPaused", "policy", PolicySheet.Name(ctx, pp.Policy)), "place_council_hall")); break;
@@ -638,7 +660,7 @@ namespace Sim.View.Views
             { "HourStarted", Use.StateOnly }, { "DayStarted", Use.StateOnly }, { "SeasonStarted", Use.StateOnly }, { "YearStarted", Use.StateOnly },
             { "WeatherSpellStarted", Use.StateOnly }, { "ForecastRevised", Use.StateOnly }, { "AwayAdvanceCompleted", Use.Away }, { "ClockAnomalyDetected", Use.StateOnly },
             // Specs 002, 003.
-            { "ParcelBought", Use.Motion }, { "ParcelSold", Use.Motion }, { "CropSown", Use.Motion }, { "CropReady", Use.Motion }, { "CropHarvested", Use.Motion },
+            { "ParcelBought", Use.Motion }, { "ParcelSold", Use.Motion }, { "ParcelListed", Use.StateOnly }, { "SaleCancelled", Use.StateOnly }, { "SaleFailed", Use.Away }, { "LeaseOut", Use.StateOnly }, { "LeaseEnded", Use.Away }, { "LandRentPaid", Use.Away }, { "AcreZoned", Use.StateOnly }, { "AcreSoldToBuilder", Use.Away }, { "HomesBuilt", Use.StateOnly }, { "CropSown", Use.Motion }, { "CropReady", Use.Motion }, { "CropHarvested", Use.Motion },
             { "FounderSick", Use.Alert }, { "PestWarning", Use.Alert }, { "FieldCleared", Use.StateOnly }, { "BedReady", Use.Motion }, { "GardenPicked", Use.Motion },
             { "DayLabourPaid", Use.Away }, { "DietPlanChanged", Use.StateOnly }, { "HomeUseEaten", Use.Away }, { "TreePlanted", Use.Motion }, { "TreeMatured", Use.Motion },
             { "FruitRipe", Use.Motion }, { "FruitPicked", Use.Motion }, { "TreeRemoved", Use.StateOnly }, { "TreeSpent", Use.StateOnly }, 
@@ -670,6 +692,12 @@ namespace Sim.View.Views
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
             { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            // Spec 023 (the Township).
+            { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
+            { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
+            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
+            { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
+            { "CivicBuilt", Use.Away }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },

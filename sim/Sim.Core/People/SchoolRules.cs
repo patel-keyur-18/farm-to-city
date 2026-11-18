@@ -117,6 +117,8 @@ namespace Sim.Core.People
             foreach (Citizen c in sim.State.Citizens.Citizens)
             {
                 if (!c.Living || CitizenRules.Age(sim, c) < from) continue;
+                Household home = sim.State.Citizens.Household(c.HouseholdId);
+                if (home != null && HouseholdRules.InBuildersHome(sim, home)) continue; // a builder's family is a resident, not one of your people (spec 024 §3.3)
                 counted++;
                 if (c.Literate) literate++;
             }
@@ -149,17 +151,33 @@ namespace Sim.Core.People
             foreach (Citizen c in sim.State.Citizens.Citizens)
             {
                 if (!IsPupilAge(d, c, (int)((closing - c.BornSeason) * perSeason))) continue;
+                if (!Covered(sim, c)) continue; // spec 023 §3.6: out of the school's reach, no school year
                 if (++c.SchoolYears < d.PrimaryYears) continue;
                 c.Education = 1;
                 sim.Emit(new CitizenLiterate(t, c.Id, c.Name, LiterateHow.School));
             }
+            Progress.EraRules.OnTown(sim); // a child learned to read: the Township's literacy goal (spec 023 §3.4)
+        }
+
+        /// <summary>The citizen's home is within the school's reach (spec 023 §3.6, one rule for every civic building).</summary>
+        public static bool Covered(Simulation sim, Citizen c) { return HomeCovered(sim, sim.State.Citizens.Household(c.HouseholdId)); }
+
+        /// <summary>The school counts as met for a household: it is open, and any children are within its reach.</summary>
+        public static bool Met(Simulation sim, Household x) { return IsOpen(sim) && (HomeCovered(sim, x) || !HouseholdRules.HasChildren(sim, x)); }
+
+        /// <summary>A household's home is within the school's reach. Reach counts from the Township only: before it every home is served, as in Phases 1 and 2 (spec 023 §3.6).</summary>
+        public static bool HomeCovered(Simulation sim, Household x)
+        {
+            if (!Town.TownshipRules.Reached(sim)) return true;
+            Land.Building home = x == null ? null : sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            return home == null || Town.CoverageRules.Within(sim, home.TileId, Def(sim).Tile, Def(sim).Reach);
         }
 
         /// <summary>The district's teachers: one for every <c>seatsPerTeacher</c> pupils, at least one once open.</summary>
         public static int Teachers(Simulation sim)
         {
             if (!IsOpen(sim)) return 0;
-            int n = Pupils(sim).Count, seats = Def(sim).SeatsPerTeacher;
+            int n = Pupils(sim).Count + Town.CohortRules.Pupils(sim), seats = Def(sim).SeatsPerTeacher; // the old village's unlettered children join free (spec 023 §3.5)
             return System.Math.Max(1, (n + seats - 1) / seats);
         }
 
@@ -222,6 +240,7 @@ namespace Sim.Core.People
                 s.ClassEndsAt = 0;
                 s.ClassJobId = 0;
                 sim.CompleteJob(job);
+                Progress.EraRules.OnTown(sim); // a class ended: the Township's literacy goal (spec 023 §3.4)
             }
         }
     }

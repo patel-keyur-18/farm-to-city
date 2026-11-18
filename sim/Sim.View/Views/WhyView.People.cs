@@ -197,7 +197,9 @@ namespace Sim.View.Views
             int count = (int)id;
             long until = PeopleRules.LabourUntil(sim);
             WhyVm vm = New(ctx, "why.hire.title", Money(ctx, PeopleRules.LabourCost(sim, count, until)));
-            Row(vm, ctx, "why.hire.wage", Money(ctx, MarketRules.Indexed(sim, sim.Config.Game.People.Pool.DailyWage)));
+            long pool = sim.Config.Game.People.Pool.DailyWage, dayWage = Sim.Core.Town.PolicyRules.DayWageFloor(sim, MarketRules.Indexed(sim, pool), pool);
+            Row(vm, ctx, "why.hire.wage", Money(ctx, dayWage));
+            MinWage(vm, ctx, pool, dayWage, true);
             Row(vm, ctx, "why.hire.until", ctx.Fmt.Duration(System.Math.Max(0, until - ctx.Now)));
             Text(vm, ctx, "why.hire.care");
             Text(vm, ctx, "why.hire.leave");
@@ -296,6 +298,20 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>
+        /// While the minimum-wage policy is in force a wage ask or renewal is at least the market wage + 10% (spec 022 §3.5, ADR 0118 §18): one row
+        /// with the floor, and a sentence saying whether it changes today's figure.
+        /// </summary>
+        internal static void MinWage(WhyVm vm, ViewContext ctx, long marketWage, long figure, bool day = false)
+        {
+            Simulation sim = ctx.Sim;
+            if (!Sim.Core.Town.PolicyRules.Effective(sim, Sim.Core.Town.PolicyId.MinWage)) return;
+            long floor = day ? Sim.Core.Town.PolicyRules.DayWageFloor(sim, 0, marketWage) : Sim.Core.Town.PolicyRules.WageFloor(sim, 0, marketWage);
+            string pct = ctx.Fmt.Percent(sim.Config.Game.Treasury.Policies.MinWageAbove);
+            Row(vm, ctx, "why.minWage.row", Money(ctx, floor), "pct", pct);
+            Text(vm, ctx, figure > floor ? "why.minWage.above" : "why.minWage.binds");
+        }
+
         private static WhyVm HandHours(ViewContext ctx, long id)
         {
             Hand h = HandOf(ctx, id);
@@ -316,6 +332,7 @@ namespace Sim.View.Views
             if (h.HousingInKind > 0)
                 Row(vm, ctx, "why.handWage.inKind", Money(ctx, h.Wage), "wage", Money(ctx, h.Wage + h.HousingInKind), "house", Money(ctx, h.HousingInKind));
             else if (house > 0) Text(vm, ctx, "why.handWage.inKindNext", "house", Money(ctx, house));
+            MinWage(vm, ctx, ctx.Sim.Config.Game.People.Hand.MarketWage, h.Wage + h.HousingInKind);
             vm.Footnote = ctx.Strings.Get("why.handWage.lesson");
             return vm;
         }
@@ -369,6 +386,7 @@ namespace Sim.View.Views
             Text(vm, ctx, place == 0 ? "why.jobUsual.hand" : "why.jobUsual.business");
             Text(vm, ctx, HiringRules.Farms(ctx.Sim, place) ? "why.jobUsual.farming" : "why.jobUsual.crafting");
             Text(vm, ctx, "why.jobUsual.skill");
+            MinWage(vm, ctx, HiringRules.MarketWage(ctx.Sim, place), HiringRules.AskedWage(ctx.Sim, place, Fixed.FromInt(50), false));
             return vm;
         }
 
@@ -387,6 +405,7 @@ namespace Sim.View.Views
             Text(vm, ctx, a.CitizenId != 0 ? "why.jobWage.town" : "why.jobWage.migrant");
             Text(vm, ctx, "why.jobWage.low");
             Text(vm, ctx, "why.jobWage.high");
+            MinWage(vm, ctx, HiringRules.MarketWage(ctx.Sim, a.Place), asked);
             vm.Footnote = ctx.Strings.Get("why.jobWage.lesson");
             return vm;
         }

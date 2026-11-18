@@ -20,7 +20,7 @@ namespace Sim.View.Views
 
         /// <summary>The balance sheet's rows, in order: what you own, what you owe, then the totals.</summary>
         internal static readonly string[] OwnKeys = { "cash", "deposit", "prepaid", "owed", "goods", "land", "buildings", "trees", "livestock", "equipment", "businesses" };
-        internal static readonly string[] OweKeys = { "loans", "interest" };
+        internal static readonly string[] OweKeys = { "loans", "interest", "taxOwed" };
 
         /// <summary>A why id for a row: the season and the row's place in its page.</summary>
         public static long WhyId(long period, int index) { return period * 1000 + index; }
@@ -197,8 +197,9 @@ namespace Sim.View.Views
                 case "businesses": return n.Businesses;
                 case "loans": return n.LoanPrincipal;
                 case "interest": return n.InterestPayable;
-                case "own": return n.Total + n.LoanPrincipal + n.InterestPayable;
-                case "owe": return n.LoanPrincipal + n.InterestPayable;
+                case "taxOwed": return n.TaxOwed; // house tax carried from a close you couldn't pay (spec 022 §3.1, schema 20)
+                case "own": return n.Total + n.LoanPrincipal + n.InterestPayable + n.TaxOwed;
+                case "owe": return n.LoanPrincipal + n.InterestPayable + n.TaxOwed;
                 default: return n.Total;
             }
         }

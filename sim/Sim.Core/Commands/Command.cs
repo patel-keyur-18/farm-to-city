@@ -241,6 +241,44 @@ namespace Sim.Core.Commands
 
         /// <summary>The policy isn't enacted, so there is nothing to repeal.</summary>
         NotActive,
+
+        // Spec 023 (the Township, ADR 0116)
+        /// <summary>Fewer households of yours than the petition needs (township.json's road.petitionHouseholds).</summary>
+        TooFewHouseholds,
+
+        /// <summary>The civic building's plot is taken: it is commissioned already (spec 023 §3.7).</summary>
+        PlotTaken,
+
+        /// <summary>The post's building isn't built, or has no post (spec 023 §3.7).</summary>
+        NoBuilding,
+
+        /// <summary>The post is advertised or filled already.</summary>
+        AlreadyFilled,
+
+        /// <summary>Nobody holds the post, so there is nobody to let go.</summary>
+        NoStaff,
+
+        // Spec 024 (land value, zoning, selling and leasing)
+        /// <summary>Before the Township: land value, slow sales, zoning and leasing out begin with it (spec 024 §3.1).</summary>
+        NoTownship,
+
+        /// <summary>The acre is listed for sale: it is locked until it sells or the listing is taken off (spec 024 §3.4).</summary>
+        Listed,
+
+        /// <summary>The parcel is not listed for sale.</summary>
+        NotListed,
+
+        /// <summary>The parcel is not zoned for anything but farming.</summary>
+        NotZoned,
+
+        /// <summary>The parcel is already zoned so.</summary>
+        AlreadyZoned,
+
+        /// <summary>The parcel is leased out (or about to be): it is locked until the lease ends (spec 024 §3.6).</summary>
+        Leased,
+
+        /// <summary>The parcel is not leased out.</summary>
+        NotLeased,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

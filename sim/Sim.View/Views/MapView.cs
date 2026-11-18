@@ -97,6 +97,9 @@ namespace Sim.View.Views
         /// <summary>A road acre's links to the road acres beside it: 1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1 (and off the map's edge).</summary>
         public int RoadLinks { get; internal set; }
 
+        /// <summary>The district road on the south edge is drawn paved once the link road is built (spec 023 §3.3); lanes stay dirt.</summary>
+        public bool Paved { get; internal set; }
+
         /// <summary>The place on a village tile (<c>house</c>, <c>temple</c>, …), else null (spec 010 §3.3).</summary>
         public string Place { get; internal set; }
 
@@ -297,6 +300,9 @@ namespace Sim.View.Views
     {
         public int Width { get; internal set; }
         public int Height { get; internal set; }
+
+        /// <summary>The paved link road is built: the district road's row (the last) is tar, here and past the map's edges (spec 023 §3.3).</summary>
+        public bool RoadPaved { get; internal set; }
         public List<TileVm> Tiles { get; } = new List<TileVm>();
         public List<SlotVm> Slots { get; } = new List<SlotVm>();
         public List<OrchardVm> Orchards { get; } = new List<OrchardVm>();
@@ -313,6 +319,16 @@ namespace Sim.View.Views
         /// <summary>The school plot (spec 018), or −1; its stage: 0 the empty plot, 1 being built, 2 open.</summary>
         public int SchoolTile { get; internal set; } = -1;
         public int SchoolStage { get; internal set; }
+
+        /// <summary>The clinic's and the doctor's quarters' plots (spec 023 §3.1, from the Village), or −1; their stage: 0 the empty plot, 1 being built, 2 standing.</summary>
+        public int ClinicTile { get; internal set; } = -1;
+        public int ClinicStage { get; internal set; }
+        public int QuartersTile { get; internal set; } = -1;
+        public int QuartersStage { get; internal set; }
+
+        /// <summary>The civic plots' tiles (watchman's post, hall, playground; spec 023 §3.7) and whether each stands (0 the empty plot, 2 built), in <c>CivicDef</c> order.</summary>
+        public int[] CivicTile { get; internal set; } = { -1, -1, -1 };
+        public int[] CivicStage { get; internal set; } = { 0, 0, 0 };
 
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
@@ -412,7 +428,7 @@ namespace Sim.View.Views
             var map = new MapVm
             {
                 Width = defs.Map.Width, Height = defs.Map.Height, SimTime = now,
-                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400,
+                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400, RoadPaved = Sim.Core.Town.RoadRules.IsBuilt(sim),
             };
 
             var places = new Dictionary<int, string>();
@@ -431,9 +447,10 @@ namespace Sim.View.Views
                     WellAcre = LandSystem.IsWellTile(defs, t.Id) && !IrrigationRules.Pumped(sim, t.Id), Pumped = IrrigationRules.Pumped(sim, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
-                if (!parcel.Owned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
+                if (!parcel.Owned && !parcel.BuilderOwned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
                 if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map.Width, defs.Map.Height, t.ParcelId, !pdef.ForSale, map.Season);
-                if (vm.Kind == TileKind.Road) vm.RoadLinks = RoadLinks(land, defs.Map, t.Id);
+                if (parcel.BuilderOwned) { vm.Neighbour = NeighbourLand.Fallow; vm.NeighbourCrop = null; vm.TubeWell = false; vm.Haystack = false; } // builders' homes stand on bare ground (spec 024 §3.3)
+                if (vm.Kind == TileKind.Road) { vm.RoadLinks = RoadLinks(land, defs.Map, t.Id); vm.Paved = map.RoadPaved && vm.Y == defs.Map.Height - 1; }
                 if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
                 Crop crop = sim.State.Farm.CropOn(t.Id);
@@ -513,8 +530,9 @@ namespace Sim.View.Views
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)
-                if (b.TileId >= 0) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
+                if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
             AddSchool(ctx, map);
+            AddClinic(ctx, map);
             AddHouses(ctx, map);
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
@@ -811,6 +829,24 @@ namespace Sim.View.Views
 
         /// <summary>School hours on the map, 9:00 to 14:00 (spec 018 preview, owner 2026-11-07).</summary>
         public static bool SchoolHours(long secondOfDay) { return secondOfDay >= 9 * 3600 && secondOfDay < 14 * 3600; }
+
+        /// <summary>The clinic's and the quarters' plots and stages (spec 023 §3.1): the empty plot, the site, the building.</summary>
+        private static void AddClinic(ViewContext ctx, MapVm map)
+        {
+            Simulation sim = ctx.Sim;
+            if (!Sim.Core.Town.ClinicRules.On(sim)) return;
+            Sim.Core.Town.ClinicState st = Sim.Core.Town.ClinicRules.State(sim);
+            map.ClinicTile = Sim.Core.Town.ClinicRules.Def(sim).Tile;
+            map.ClinicStage = st.Status == Sim.Core.Town.ClinicStatus.Open ? 2 : st.Status == Sim.Core.Town.ClinicStatus.Building ? 1 : 0;
+            map.QuartersTile = Sim.Core.Town.ClinicRules.QuartersDef(sim).Tile;
+            map.QuartersStage = st.Quarters == Sim.Core.Town.QuartersStatus.Built ? 2 : st.Quarters == Sim.Core.Town.QuartersStatus.Building ? 1 : 0;
+            if (!Sim.Core.Town.CivicRules.On(sim)) return;
+            for (int i = 0; i < Sim.Core.Definitions.CivicDef.Count; i++)
+            {
+                map.CivicTile[i] = Sim.Core.Town.CivicRules.Def(sim, i).Tile;
+                map.CivicStage[i] = Sim.Core.Town.CivicRules.Post(sim, i).Built ? 2 : 0;
+            }
+        }
 
         /// <summary>The school plot and its stage, and in school hours the first pupils (by id) and the teacher in its yard.</summary>
         private static void AddSchool(ViewContext ctx, MapVm map)

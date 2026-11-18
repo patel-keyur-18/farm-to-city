@@ -175,6 +175,7 @@ namespace Game.Presentation
                     _sheet.Show(Repay.Build(_ctx, r.Id), refreshOnly);
                     break;
                 case "LandLoan": _sheet.Show(LandLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
+                case "SellLand": _sheet.Show(SellLandSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Founder": _sheet.Show(FounderSheet.Build(_ctx), refreshOnly); break;
                 case "Good": _sheet.Show(GoodSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Offer": _sheet.Show(GoodSheet.Offer(_ctx, (int)r.Id, r.Arg), refreshOnly); break;
@@ -189,6 +190,9 @@ namespace Game.Presentation
                 case "AnimalLoan": _sheet.Show(AnimalLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "HouseLoan": _sheet.Show(HouseLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case SchoolSheet.LoanKind: _sheet.Show(SchoolSheet.LoanSheet(_ctx), refreshOnly); break; // spec 018 §7
+                case RoadSheet.LoanKind: _sheet.Show(RoadSheet.LoanSheet(_ctx), refreshOnly); break; // spec 023 §3.3
+                case ClinicSheet.ClinicLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, false), refreshOnly); break; // spec 023 §3.1
+                case ClinicSheet.QuartersLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, true), refreshOnly); break;
                 case EquipmentSheet.Kind: _sheet.Show(EquipmentSheet.Build(_ctx), refreshOnly); break; // spec 013 §7
                 case MachineLoanSheet.Kind: _sheet.Show(MachineLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Animal":

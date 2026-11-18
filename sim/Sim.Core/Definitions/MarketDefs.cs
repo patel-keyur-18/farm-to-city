@@ -100,6 +100,17 @@ namespace Sim.Core.Definitions
         /// <summary>Coins per kg on the current road tier.</summary>
         public Fixed TransportCostPerKg { get; }
 
+        /// <summary>Every tier's cost a kg, in the file's order (lookup only).</summary>
+        private readonly string[] _tierNames;
+        private readonly Fixed[] _tierCosts;
+
+        /// <summary>Coins per kg on <paramref name="tier"/> (track, road, highway), or null for an unknown tier.</summary>
+        public Fixed? CostOfTier(string tier)
+        {
+            for (int i = 0; i < _tierNames.Length; i++) if (_tierNames[i] == tier) return _tierCosts[i];
+            return null;
+        }
+
         /// <summary>[good index][season index] (Spring, Summer, Monsoon, Winter).</summary>
         private readonly Fixed[][] _seasonalFactor;
 
@@ -109,11 +120,13 @@ namespace Sim.Core.Definitions
         /// <summary>Per good, in quantity units a day (grams); 0 for inputs.</summary>
         private readonly long[] _demandPerDay, _valleySupplyPerDay, _importCapacityPerDay;
 
-        public RegionDef(string roadTier, Fixed transportCostPerKg, Fixed[][] seasonalFactor, long[] traderBuyPerDay,
+        public RegionDef(string roadTier, Fixed transportCostPerKg, string[] tierNames, Fixed[] tierCosts, Fixed[][] seasonalFactor, long[] traderBuyPerDay,
             long[] demandPerDay, long[] valleySupplyPerDay, long[] importCapacityPerDay)
         {
             RoadTier = roadTier;
             TransportCostPerKg = transportCostPerKg;
+            _tierNames = tierNames;
+            _tierCosts = tierCosts;
             _seasonalFactor = seasonalFactor;
             _traderBuyPerDay = traderBuyPerDay;
             _demandPerDay = demandPerDay;

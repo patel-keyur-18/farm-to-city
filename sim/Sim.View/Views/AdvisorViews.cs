@@ -185,6 +185,10 @@ namespace Sim.View.Views
                     for (int d = 0; d < TreasuryState.Departments; d++)
                         if (last.Rows[d].Needs > 0 && t.Condition[d] < n.Threshold) return new long[] { d, t.Condition[d].Raw };
                     return null;
+                case "policyPaused":
+                    for (int i = 0; i < PolicyState.Count; i++)
+                        if (t.Policies[i].Status == PolicyStatus.Paused) return new long[] { i, PolicyRules.Cost(sim, (PolicyId)i) };
+                    return null;
                 case "grantAtRisk":
                     return last.Rows[Health].Needs > 0 && (t.Unpaid[Health] > 0 || t.Condition[Health] < n.Threshold) ? new long[] { Health } : null;
                 case "thinBalance":
@@ -278,6 +282,7 @@ namespace Sim.View.Views
                     return s.Get(key, "n", f.Integer(n[0]), "premium", f.Percent(sim.Config.Game.School.LiteratePremium), "cost", f.Coins(n[1]));
                 case "deptOver": return s.Get(key, "dept", TreasurySheet.Department(ctx, (int)n[0]), "needs", f.Coins(n[1]), "budget", f.Coins(n[2]));
                 case "serviceLow": return s.Get(key, "dept", TreasurySheet.Department(ctx, (int)n[0]), "service", f.Percent(Fixed.FromRaw(n[1])));
+                case "policyPaused": return s.Get(key, "policy", PolicySheet.Name(ctx, (int)n[0]), "cost", f.Coins(n[1]));
                 case "grantAtRisk": return s.Get(key);
                 case "thinBalance": return s.Get(key, "cash", f.Coins(n[0]), "due", f.Coins(n[1]));
                 default: return s.Get(key);

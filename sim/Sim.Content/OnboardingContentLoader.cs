@@ -12,7 +12,7 @@ namespace Sim.Content
         public static readonly string[] OnboardingEvents =
         {
             "GardenPicked", "SoldToTrader", "MarketSales", "MandiTripReturned", "AwayAdvanceCompleted", "CropHarvested",
-            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "EraUnlocked(village)", "OrdersPosted",
+            "PestWarning", "SeasonClosed", "FounderSick", "EraUnlocked(hamlet)", "EraUnlocked(village)", "EraUnlocked(township)", "OrdersPosted",
         };
 
         /// <summary>The commands a <c>rejection</c> trigger can name.</summary>
@@ -95,7 +95,7 @@ namespace Sim.Content
                 }
                 string cp = Join(p, "conditions");
                 JObject c = Object(Required(x, p, "conditions"), cp);
-                OnlyFields(c, cp, "acresHarvestedInSeason", "meanCareAtLeast", "handHutsAtLeast", "profitableSeasonsAtLeast", "householdsAtLeast", "businessSeasonsAtLeast", "school", "developerOnly");
+                OnlyFields(c, cp, "acresHarvestedInSeason", "meanCareAtLeast", "handHutsAtLeast", "profitableSeasonsAtLeast", "householdsAtLeast", "businessSeasonsAtLeast", "school", "developerOnly", "townshipGate");
                 if (!c.HasValues) throw new ContentException(cp, "an era needs at least one condition");
                 int Count(string name, int min) { return c[name] == null ? 0 : BoundedInt(c, cp, name, min, 1000); }
                 int acres = Count("acresHarvestedInSeason", 1);
@@ -105,7 +105,9 @@ namespace Sim.Content
                 if (c["school"] != null && !school) throw new ContentException(Join(cp, "school"), "leave it out instead of false");
                 bool developerOnly = c["developerOnly"] != null && Bool(c["developerOnly"], Join(cp, "developerOnly"));
                 if (c["developerOnly"] != null && !developerOnly) throw new ContentException(Join(cp, "developerOnly"), "leave it out instead of false");
-                eras.Add(new EraDef(id, acres, care, Count("handHutsAtLeast", 0), Count("profitableSeasonsAtLeast", 0), Count("householdsAtLeast", 1), Count("businessSeasonsAtLeast", 1), school, developerOnly));
+                bool gate = c["townshipGate"] != null && Bool(c["townshipGate"], Join(cp, "townshipGate"));
+                if (c["townshipGate"] != null && !gate) throw new ContentException(Join(cp, "townshipGate"), "leave it out instead of false");
+                eras.Add(new EraDef(id, acres, care, Count("handHutsAtLeast", 0), Count("profitableSeasonsAtLeast", 0), Count("householdsAtLeast", 1), Count("businessSeasonsAtLeast", 1), school, developerOnly, gate));
             }
             return new OnboardingDefs(steps.AsReadOnly(), chapters.AsReadOnly(), eras.AsReadOnly());
         }

@@ -27,7 +27,7 @@ namespace Sim.Core.Definitions
         public static readonly string[] NoteIds =
         {
             "missedPayment", "debt", "overdraft", "profitNotCash", "pests", "feed", "soil", "dry", "raise", "tired", "children", "adultClass",
-            "deptOver", "serviceLow", "grantAtRisk", "thinBalance",
+            "deptOver", "serviceLow", "policyPaused", "grantAtRisk", "thinBalance",
         };
 
         /// <summary>Notes whose condition takes a threshold.</summary>

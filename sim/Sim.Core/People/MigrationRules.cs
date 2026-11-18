@@ -88,11 +88,13 @@ namespace Sim.Core.People
             if (free == null)
             {
                 s.NextFamilyAt = 0;
+                Town.ZoningRules.TurnAway(sim, t); // from the Township a family that finds no home is remembered for the builders (spec 024 §3.3)
                 return;
             }
+            Town.ZoningRules.HousesFree(sim);
             if (s.NextFamilyAt == 0)
             {
-                Hand alone = HandAlone(sim);
+                Hand alone = free.Builders ? null : HandAlone(sim); // a hand is offered only your own houses
                 if (alone != null)
                 {
                     s.OfferHandId = alone.Id;
@@ -116,7 +118,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>18 ± 6 h in seconds, seeded.</summary>
-        private static long Wait(Simulation sim, long t)
+        internal static long Wait(Simulation sim, long t)
         {
             PopulationDefs p = sim.Config.Game.Population;
             int jitter = p.FamilyJitterHours;
@@ -204,6 +206,37 @@ namespace Sim.Core.People
         }
 
         /// <summary>
+        /// The district's doctor moves into the quarters (spec 023 §3.1): a household of one to three, seeded by the doctor's number — the doctor
+        /// (30–45), a spouse, perhaps one child — the adults literate. Their budget is the district's salary against the quarters' rent. Returns it.
+        /// </summary>
+        internal static Household ArriveDoctor(Simulation sim, Building home, int number)
+        {
+            CitizensState s = sim.State.Citizens;
+            PopulationDefs p = sim.Config.Game.Population;
+            long key = DoctorKey + number;
+            var x = new Household { Id = s.NextHouseholdId++, HomeId = home.Id };
+            s.Households.Add(x);
+            int size = Between(sim, key, SizeKey, ForHousehold, 1, 3);
+            int village = Between(sim, key, VillageKey, ForHousehold, 0, p.Villages.Count - 1);
+            int age = Between(sim, key, AgeKey, ForHousehold, 30, 45);
+            bool female = Rng.Chance(PopulationRules.Roll(sim, RngStream.Migration, key, GenderKey, ForHousehold), Fixed.FromRatio(1, 2));
+            Citizen doctor = Person(sim, x, female, age, village);
+            doctor.Education = 2;
+            if (size >= 2)
+            {
+                Citizen spouse = Person(sim, x, !female, System.Math.Max(p.AdultFrom, age - Between(sim, key, SpouseAgeKey, ForHousehold, 0, 4)), village);
+                spouse.Education = 2;
+                Marry(doctor, spouse);
+                if (size == 3) Children(sim, x, female ? spouse : doctor, female ? doctor : spouse, 1, village);
+            }
+            sim.Emit(new FamilyMovedIn(sim.State.Clock.SimTime, x.Id, home.Id, x.Members.Count, doctor.Name, 0));
+            return x; // the caller marks it the doctor's, then sets its budget
+        }
+
+        /// <summary>The doctor's draws are keyed apart from every household's (an id counts up from 1).</summary>
+        private const long DoctorKey = 1_000_000;
+
+        /// <summary>
         /// The hand's answer (§3.13). Yes: his household moves into the house with a seeded spouse and 0–2 children from his home
         /// village, and his hut is free; his wage drops by the rent from his next renewal (§3.6). Not now: strangers may come.
         /// </summary>
@@ -247,6 +280,7 @@ namespace Sim.Core.People
             long season = CitizenRules.SeasonOf(sim, sim.State.Clock.SimTime);
             foreach (Household x in new List<Household>(s.Households))
             {
+                if (Town.ClinicRules.IsDoctorHome(sim, x)) continue; // the district's doctor stays (spec 023 §3.9)
                 x.LowSeasons = x.Happiness < Fixed.FromInt(p.LeaveBelow) ? x.LowSeasons + 1 : 0;
                 bool rent = x.RentBehind >= p.RentBehindSeasons;
                 if (x.LowSeasons < LeaseRules.Patience(sim, x) && !rent) continue; // a settled family is patient (US-240, §3.14)

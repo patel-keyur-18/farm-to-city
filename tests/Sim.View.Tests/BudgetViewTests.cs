@@ -93,6 +93,7 @@ namespace Sim.View.Tests
         {
             Simulation sim = Situations.Township();
             Assert.That(sim.Execute(new TreasuryViewTests.DrainTreasury()).Accepted, Is.True);
+            TreasuryViewTests.EmptyOldVillage(sim);
             Ok(sim, new AcceptBudget(sim.State.Clock.SimTime));
             long close = (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason;
             sim.AdvanceTo(close - 12 * 3600);

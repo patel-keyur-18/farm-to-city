@@ -24,7 +24,6 @@ namespace Game.Presentation.Map
         /// <summary>Each place's building first, then its yard's props.</summary>
         private static readonly Dictionary<string, VillagePiece[]> VillageLayout = new Dictionary<string, VillagePiece[]>
         {
-            { "house_1", new[] { new VillagePiece("village_house_0_w", -0.12f, 0.05f), new VillagePiece("village_haystack", 0.25f, 0.22f), new VillagePiece("village_charpai", 0.22f, -0.2f) } },
             { "dealer", new[] { new VillagePiece("village_dealer_e", 0.10f, 0f), new VillagePiece("village_tree", -0.3f, 0.28f) } },
             { "temple", new[] { new VillagePiece("village_temple_e", -0.1f, 0f), new VillagePiece("village_peepal", 0.26f, 0.24f) } },
             { "pond", new[] { new VillagePiece("village_pond", 0.05f, 0f) } },
@@ -32,13 +31,9 @@ namespace Game.Presentation.Map
             { "grocery", new[] { new VillagePiece("village_grocery_s", 0f, -0.12f), new VillagePiece("village_handpump", 0.36f, -0.36f) } },
             { "tea_stall", new[] { new VillagePiece("village_tea_stall_s", 0f, -0.18f), new VillagePiece("village_charpai", 0.26f, 0.08f) } },
             { "banyan", new[] { new VillagePiece("village_banyan", 0f, 0.05f) } },
-            { "house_2", new[] { new VillagePiece("village_house_1_n", -0.05f, 0.12f), new VillagePiece("village_charpai", -0.22f, -0.26f), new VillagePiece("village_cow", 0.22f, -0.2f) } },
             { "chemist", new[] { new VillagePiece("village_chemist_e", 0.10f, 0f) } },
-            { "house_3", new[] { new VillagePiece("village_house_2_n", 0f, 0.1f), new VillagePiece("village_buffalo", -0.26f, -0.24f) } },
             { "school_plot", new[] { new VillagePiece("place_school_plot", 0f, 0f), new VillagePiece("village_tree", -0.38f, -0.40f) } }, // its sprite follows the school (MapPresenter.School)
-            { "house_4", new[] { new VillagePiece("village_house_0_w", -0.12f, 0f), new VillagePiece("village_haystack", 0.25f, -0.22f) } },
             { "dairy", new[] { new VillagePiece("village_dairy_e", 0.08f, 0f) } },
-            { "house_5", new[] { new VillagePiece("village_house_1_w", -0.1f, 0f), new VillagePiece("village_tree", 0.28f, -0.25f) } },
             { "house_6", new[] { new VillagePiece("village_house_2_s", 0f, 0.05f), new VillagePiece("village_haystack", -0.28f, 0.25f) } },
         };
 

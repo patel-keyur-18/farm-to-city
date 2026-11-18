@@ -46,6 +46,10 @@ namespace Sim.Core.Saves
             DepositSavings, WithdrawSavings, SetSavingsCover, CoverFromSavings, TakeBackSavingsCover,
             RenewLease,
             GiveToTreasury, CommissionWorks, SetBudget, AcceptBudget, SetTaxRate, UndoTaxRate, SeeTaxTour, EnactPolicy, RepealPolicy, SeePolicyTour,
+            PetitionRoad, BuildClinic, BuildDoctorQuarters,
+            PostCivicJob, DismissStaff,
+            ListParcel, CancelSale, ZoneParcel, UnzoneParcel,
+            LeaseOutLand, EndLease,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -168,6 +172,14 @@ namespace Sim.Core.Saves
                 case RenewLease c: At(c, Tag.RenewLease); w.WriteLong(c.HouseholdId); w.WriteInt((int)c.Choice); break;
                 case GiveToTreasury c: At(c, Tag.GiveToTreasury); w.WriteLong(c.Amount); break;
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
+                case PostCivicJob c: At(c, Tag.PostCivicJob); w.WriteInt(c.Civic); break;
+                case DismissStaff c: At(c, Tag.DismissStaff); w.WriteInt(c.Civic); break;
+                case ListParcel c: At(c, Tag.ListParcel); w.WriteString(c.ParcelId); break;
+                case CancelSale c: At(c, Tag.CancelSale); w.WriteString(c.ParcelId); break;
+                case ZoneParcel c: At(c, Tag.ZoneParcel); w.WriteString(c.ParcelId); break;
+                case UnzoneParcel c: At(c, Tag.UnzoneParcel); w.WriteString(c.ParcelId); break;
+                case LeaseOutLand c: At(c, Tag.LeaseOutLand); w.WriteString(c.ParcelId); break;
+                case EndLease c: At(c, Tag.EndLease); w.WriteString(c.ParcelId); break;
                 case SetBudget c: At(c, Tag.SetBudget); w.WriteInt(c.Department); w.WriteLong(c.Amount); break;
                 case AcceptBudget c: At(c, Tag.AcceptBudget); break;
                 case SetTaxRate c: At(c, Tag.SetTaxRate); w.WriteInt((int)c.Tax); w.WriteLong(c.Rate.Raw); break;
@@ -176,6 +188,18 @@ namespace Sim.Core.Saves
                 case EnactPolicy c: At(c, Tag.EnactPolicy); w.WriteInt((int)c.Policy); break;
                 case RepealPolicy c: At(c, Tag.RepealPolicy); w.WriteInt((int)c.Policy); break;
                 case SeePolicyTour c: At(c, Tag.SeePolicyTour); break;
+                case PetitionRoad c:
+                    At(c, Tag.PetitionRoad); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case BuildClinic c:
+                    At(c, Tag.BuildClinic); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
+                case BuildDoctorQuarters c:
+                    At(c, Tag.BuildDoctorQuarters); w.WriteBool(c.Financing != null);
+                    if (c.Financing != null) { w.WriteString(c.Financing.LenderId); w.WriteLong(c.Financing.Amount); w.WriteInt(c.Financing.TermSeasons); }
+                    break;
                 case PutCash c: At(c, Tag.PutCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case TakeCash c: At(c, Tag.TakeCash); w.WriteLong(c.BusinessId); w.WriteLong(c.Amount); break;
                 case BuyAnimal c:
@@ -314,6 +338,14 @@ namespace Sim.Core.Saves
                 case Tag.RenewLease: return new RenewLease(at, r.ReadLong(), (LeaseChoice)r.ReadInt());
                 case Tag.GiveToTreasury: return new GiveToTreasury(at, r.ReadLong());
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
+                case Tag.PostCivicJob: return new PostCivicJob(at, r.ReadInt());
+                case Tag.DismissStaff: return new DismissStaff(at, r.ReadInt());
+                case Tag.ListParcel: return new ListParcel(at, r.ReadString());
+                case Tag.CancelSale: return new CancelSale(at, r.ReadString());
+                case Tag.ZoneParcel: return new ZoneParcel(at, r.ReadString());
+                case Tag.UnzoneParcel: return new UnzoneParcel(at, r.ReadString());
+                case Tag.LeaseOutLand: return new LeaseOutLand(at, r.ReadString());
+                case Tag.EndLease: return new EndLease(at, r.ReadString());
                 case Tag.SetBudget: return new SetBudget(at, r.ReadInt(), r.ReadLong());
                 case Tag.AcceptBudget: return new AcceptBudget(at);
                 case Tag.SetTaxRate: return new SetTaxRate(at, (Town.TaxKind)r.ReadInt(), Maths.Fixed.FromRaw(r.ReadLong()));
@@ -322,6 +354,9 @@ namespace Sim.Core.Saves
                 case Tag.EnactPolicy: return new EnactPolicy(at, (Town.PolicyId)r.ReadInt());
                 case Tag.RepealPolicy: return new RepealPolicy(at, (Town.PolicyId)r.ReadInt());
                 case Tag.SeePolicyTour: return new SeePolicyTour(at);
+                case Tag.PetitionRoad: return new PetitionRoad(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                case Tag.BuildClinic: return new BuildClinic(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
+                case Tag.BuildDoctorQuarters: return new BuildDoctorQuarters(at, r.ReadBool() ? new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()) : null);
                 case Tag.PutCash: return new PutCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.TakeCash: return new TakeCash(at, r.ReadLong(), r.ReadLong());
                 case Tag.BuildFamilyHouseLoan: return new BuildFamilyHouse(at, r.ReadInt(), new Financing(r.ReadString(), r.ReadLong(), r.ReadInt()));

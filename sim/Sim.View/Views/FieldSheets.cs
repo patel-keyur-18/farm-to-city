@@ -30,6 +30,7 @@ namespace Sim.View.Views
                 case Terrain.Village: return Place(ctx, tile);
                 case Terrain.Road: case Terrain.Commons: case Terrain.Bank: return VillageLand(ctx, tile);
             }
+            if (parcel.BuilderOwned) return ZoningViews.BuildersAcre(ctx, tile, parcel); // spec 024 §3.3
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
             if (tile.Terrain == Terrain.Quarters) return Quarters(ctx, tile);
@@ -46,8 +47,11 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.fertility"), ctx.Fmt.Decimal1(tile.Fertility) + " / 100", "fertility", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.moisture"), ctx.Fmt.Integer(tile.Moisture.RoundToLong()) + " / 100", "moisture", tileId));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
-            IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
-            EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
+            if (!parcel.Leased) // a leased acre is the tenant's: no water to install, no tools
+            {
+                IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
+                EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
+            }
 
             if (crop == null && orchard != null)
             {
@@ -58,13 +62,26 @@ namespace Sim.View.Views
                 OrchardSheet.AddActions(ctx, vm, orchard);
                 return vm;
             }
+            if (crop == null && parcel.Leased)
+            {
+                // Leased out (spec 024 §3.6): the tenant has it; no sowing, building or zoning, only the rent and the way to end the lease.
+                vm.Subtitle = ctx.Strings.Get(Sim.Core.Town.LandLeaseRules.StatusOf(parcel) == Sim.Core.Land.LeaseStatus.Starting ? "lease.subLocked" : "lease.subLeased", "what", vm.Subtitle);
+                LineVm value = LandValueViews.AcreRow(ctx, tileId);
+                if (value != null) vm.Lines.Add(value);
+                LandLeaseViews.AddFieldRows(ctx, vm, tileId);
+                LandLeaseViews.AddActions(ctx, vm, tileId);
+                return vm;
+            }
             if (crop == null)
             {
+                ZoningViews.AddFieldRows(ctx, vm, tileId); // land value and the zone, from the Township (spec 024 §3.3)
                 AddPeopleRows(ctx, vm, Sim.Core.People.OrderTargetKind.Field, tileId);
                 vm.Actions.Add(ActionVm.Open("sow", ctx.Strings.Get("action.sow"), new SheetRequest("Sow", tileId)));
                 if (OrchardRules.On(sim)) vm.Actions.Add(OrchardSheet.PlantAction(ctx, tileId)); // from the Hamlet (ADR 0090 §2)
                 // From the Hamlet an empty field can hold family houses instead (spec 014 §3.13).
                 if (sim.State.Citizens != null && defs.Population != null && Sim.Core.People.HouseRules.Unlocked(sim)) vm.Actions.Add(HomesteadSheet.BuildHere(ctx, tileId));
+                LandLeaseViews.AddActions(ctx, vm, tileId); // lease it out, from the Township (spec 024 §3.6)
+                ZoningViews.AddFieldActions(ctx, vm, tileId);
                 return vm;
             }
 
@@ -134,6 +151,8 @@ namespace Sim.View.Views
             long resale = Money.RoundToCoin(Money.MulRate(price, defs.Land.QuickSaleFactor));
             var vm = new SheetVm { Icon = "land", Title = ctx.Strings.Get("land.title"), Subtitle = ctx.Strings.Plural("land.acres", def.Tiles.Count) };
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.price"), ctx.Fmt.Coins(price), "landPrice", tile.Id));
+            LineVm value = LandValueViews.AcreRow(ctx, tile.Id); // from the Township (spec 024 §3.1)
+            if (value != null) vm.Lines.Add(value);
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.cash"), ctx.Fmt.Coins(sim.State.Ledger.Cash), "cash"));
             vm.Lines.Add(new LineVm(ctx.Strings.Get("land.resale"), ctx.Fmt.Coins(resale), "resale", tile.Id));
             vm.Actions.Add(ActionVm.Checked(ctx, "buy", ctx.Strings.Get("action.buy"), ctx.Fmt.Coins(price), ActionKind.Primary, at => new BuyParcel(at, def.Id)));
@@ -166,6 +185,10 @@ namespace Sim.View.Views
             if (kind == "dealer") vm.Actions.Add(ActionVm.Open("buyInputs", ctx.Strings.Get("place.dealer.buy"), new SheetRequest("BuyInputs", 0)));
             if (kind == "dairy") Dairy(ctx, vm);
             if (kind == "school_plot") SchoolSheet.Fill(ctx, vm); // spec 018 §7
+            if (kind == "council_hall") RoadSheet.Fill(ctx, vm); // spec 023 §3.3
+            if (kind == "clinic_plot") ClinicSheet.Fill(ctx, vm); // spec 023 §3.1, US-148
+            if (kind == "quarters_plot") ClinicSheet.FillQuarters(ctx, vm);
+            if (CivicSheet.OfPlot(kind) >= 0) CivicSheet.Fill(ctx, vm, CivicSheet.OfPlot(kind)); // spec 023 §3.7, US-148 part 2
             if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
             return vm;
         }

@@ -24,6 +24,15 @@ namespace Sim.Core.People
         /// <summary>An elder's chance of passing away this season (§3.9): base × 2^((age − 60) ÷ doubling), capped, × 1.5 in poor health.</summary>
         public static Fixed DeathChance(Simulation sim, Citizen c)
         {
+            Fixed chance = DeathChanceWithout(sim, c);
+            if (chance == Fixed.Zero) return chance;
+            Fixed e = Town.ClinicRules.Effect(sim, sim.State.Citizens.Household(c.HouseholdId));
+            return e == Fixed.Zero ? chance : chance * (Fixed.One - Town.ClinicRules.Def(sim).DeathCut * e); // spec 023 §3.2: the clinic's cut
+        }
+
+        /// <summary>The same chance without the clinic's cut: what the roll would have been, to count the elders who stayed well (spec 023 §3.2).</summary>
+        public static Fixed DeathChanceWithout(Simulation sim, Citizen c)
+        {
             PopulationDefs p = sim.Config.Game.Population;
             int age = CitizenRules.Age(sim, c);
             if (age < p.ElderFrom || c.Job == CitizenJob.Hand) return Fixed.Zero; // a hand retires at 60, never dies under contract
@@ -67,7 +76,13 @@ namespace Sim.Core.People
             {
                 if (!c.Living) continue;
                 Fixed chance = DeathChance(sim, c);
-                if (chance == Fixed.Zero || !Rng.Chance(Roll(sim, RngStream.Deaths, c.Id, DeathRoll, season), chance)) continue;
+                if (chance == Fixed.Zero) continue;
+                ulong roll = Roll(sim, RngStream.Deaths, c.Id, DeathRoll, season);
+                if (!Rng.Chance(roll, chance))
+                {
+                    if (Rng.Chance(roll, DeathChanceWithout(sim, c))) Town.ClinicRules.CountElderWell(sim); // the clinic's cut saved this one
+                    continue;
+                }
                 int age = CitizenRules.Age(sim, c);
                 Household x = s.Household(c.HouseholdId);
                 c.Gone = CitizenGone.Died;
@@ -75,6 +90,7 @@ namespace Sim.Core.People
                 c.Job = CitizenJob.None;
                 c.Story.Add(new StoryLine(StoryKind.Died, t, 0));
                 x.Members.Remove(c.Id);
+                Town.ClinicRules.CitizenDied(sim, c); // the doctor's death ends his post (spec 023 §3.1)
                 x.MourningSeason = season; // the household mourns this season (§3.9)
                 bool empty = x.Members.Count == 0;
                 if (empty) s.Households.Remove(x); // an elder living alone: the house is free for a new family (§3.10)
@@ -182,16 +198,22 @@ namespace Sim.Core.People
             if (home != x) Progress.EraRules.OnTown(sim); // a new household formed: the Village's gate (spec 018 §3.6)
         }
 
-        /// <summary>A family house nobody lives in and not offered to a hand (§3.13), in building order; null if none.</summary>
+        /// <summary>
+        /// A family house nobody lives in and not offered to a hand (§3.13), in building order, yours before a builder's (builders build for the families
+        /// who found no home; a house you built is filled first, spec 024 §3.3); null if none.
+        /// </summary>
         public static Building FreeHouse(Simulation sim)
         {
             CitizensState s = sim.State.Citizens;
+            Building builders = null;
             foreach (Building b in sim.State.Land.Buildings)
             {
                 if (!HouseRules.IsHouse(sim, b) || b.Id == s.OfferHouseId) continue;
-                if (s.Households.Find(x => x.HomeId == b.Id) == null) return b;
+                if (s.Households.Find(x => x.HomeId == b.Id) != null) continue;
+                if (!b.Builders) return b;
+                if (builders == null) builders = b;
             }
-            return null;
+            return builders;
         }
 
         /// <summary>A seeded name of the gender, one no living citizen has if any is left.</summary>

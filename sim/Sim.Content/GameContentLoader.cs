@@ -60,6 +60,7 @@ namespace Sim.Content
                 // The treasury opens in a later era than the school's, so it needs the eras (spec 021 §4).
                 if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
                 if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);
+                if (game.Treasury != null) game.Township = LoadTownship(read("township.json"), market.Region, map, buildings, onboarding, game.Treasury); // the Township's road comes with the treasury (spec 023 §4)
             }
             return game;
         }
@@ -371,8 +372,9 @@ namespace Sim.Content
 
             p = "population.school";
             JObject q = Object(Required(Object(Parse(populationJson, "population"), "population"), "population", "school"), p);
-            OnlyFields(q, p, "seatsPerTeacher", "pupilAge", "primaryYears", "upkeepPerSeason", "adultClass", "literatePremium", "literacyFromAge");
+            OnlyFields(q, p, "seatsPerTeacher", "reach", "pupilAge", "primaryYears", "upkeepPerSeason", "adultClass", "literatePremium", "literacyFromAge");
             s.SeatsPerTeacher = BoundedInt(q, p, "seatsPerTeacher", 1, 100);
+            s.Reach = BoundedInt(q, p, "reach", 100, 100000); // spec 023 §3.6: a home farther than this from the school gets no school year
             string ap = Join(p, "pupilAge");
             JObject age = Object(Required(q, p, "pupilAge"), ap);
             OnlyFields(age, ap, "min", "max");

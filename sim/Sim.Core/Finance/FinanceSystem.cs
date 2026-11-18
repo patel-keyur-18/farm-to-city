@@ -93,6 +93,7 @@ namespace Sim.Core.Finance
             sim.State.Finance.LastSeasonStartEntry = sim.State.Finance.SeasonStartEntry; // spec 019 §3.9: your season starts here
             sim.State.Finance.SeasonStartEntry = ledger.NextEntryId;
             sim.State.Finance.Sales.Roll();
+            Town.RoadRules.RollSeason(sim);
             Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
 
             // Settle and pay upfront (these entries belong to the new season).
@@ -107,6 +108,7 @@ namespace Sim.Core.Finance
             Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
             People.SchoolRules.Close(sim); // spec 018 §3.1: the school's upkeep for the new season, a gift to the village
             Town.TaxRules.BillFounder(sim); // spec 022 §3.1: your house tax, the office's share, what's unpaid carried
+            Town.CohortRules.PayTax(sim); // spec 023 §3.5: the old village's house tax, from its leisure and savings
             Town.TaxRules.BillShops(sim); // spec 022 §3.2: the village's shops on a reference profit
             Sim.Core.Equipment.EquipmentRules.Close(sim); // spec 013 §3.5: leases, maintenance and diesel for the new season
             report.People = seen.After(sim).AsReadOnly();

@@ -1,0 +1,32 @@
+{
+  "road": { "petitionHouseholds": 10, "share": 25000, "days": 4, "tier": "road" },
+  "clinic": {
+    "unlockEra": "village", "place": "clinic_plot", "share": 48000, "buildHours": 48, "doctorArrivesHours": 24,
+    "sickCut": 0.5, "lossCut": 0.5, "gainBoost": 0.5, "deathCut": 0.25, "reach": 2000, "capacity": 400
+  },
+  "quarters": { "place": "quarters_plot", "building": "doctor_quarters", "rent": 3750, "buildHours": 48 },
+  "doctor": { "salary": 30000, "leaveCloses": 2, "returnCondition": 0.70 },
+  "gate": { "households": 15, "businesses": 3, "literacy": 0.60 },
+  "cohort": {
+    "households": 30, "peoplePerHousehold": 5, "literacy": 0.65, "income": 36000, "leaveBelow": 35, "leaveCloses": 2,
+    "childShare": 0.30, "elderShare": 0.10, "pupilShare": 0.0667
+  },
+  "safetyBase": 0.5,
+  "landValue": {
+    "square": "banyan", "water": "pond", "squareReach": 500, "waterReach": 300,
+    "road": { "district": 0.20, "lane": 0.10 },
+    "service": { "school": 0.08, "clinic": 0.08, "square": 0.06, "water": 0.04 },
+    "jobs": { "each": 0.02, "max": 5, "reach": 1000 },
+    "size": { "over": 20, "per10": 0.02, "max": 0.20 },
+    "floor": 0.80, "ceiling": 1.80,
+    "rentPlace": { "base": 0.85, "slope": 1.75, "min": 0.85, "max": 1.50 },
+    "slowSaleSeconds": 172800,
+    "leaseYield": 0.025
+  },
+  "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
+  "civic": {
+    "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },
+    "hall": { "place": "hall_plot", "work": "community_hall", "upkeepLine": "hall", "wageLine": "caretaker", "reach": 1000, "capacity": 250, "gain": 0.2, "staffHours": 24, "leaveCloses": 2 },
+    "playground": { "place": "playground_plot", "work": "playground", "upkeepLine": "playground", "reach": 600, "capacity": 60, "gain": 0.3, "staffHours": 0, "leaveCloses": 2 }
+  }
+}

@@ -64,6 +64,15 @@ namespace Sim.Core
                 handlers.Add(new People.SchoolRules.ClassEnds());
             }
             if (config.Game?.Businesses != null) handlers.Add(new Business.BusinessRules.Build());
+            if (config.Game?.Township != null) handlers.Add(new Land.LandSystem.SlowSaleDue());
+            if (config.Game?.Township != null)
+            {
+                handlers.Add(new Town.RoadRules.Build());
+                handlers.Add(new Town.ClinicRules.Build());
+                handlers.Add(new Town.ClinicRules.BuildQuarters());
+                handlers.Add(new Town.ClinicRules.Arrive());
+                handlers.Add(new Town.CivicRules.Arrive());
+            }
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
             {
@@ -105,6 +114,7 @@ namespace Sim.Core
                 if (config.Game.Orchard != null) state.Orchards = new Farm.OrchardState();
                 if (config.Game.Shops != null) state.Shops = Business.ShopsState.New(config);
                 if (config.Game.Treasury != null) state.Treasury = new Town.TreasuryState();
+                if (config.Game.Township != null) state.Township = new Town.TownshipState();
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();
@@ -268,6 +278,9 @@ namespace Sim.Core
             State.Scheduler.Schedule(dueTime, ItemClass.Job, handler.System, targetId, job.Id);
             return job;
         }
+
+        /// <summary>Removes a job that has not run; the scheduler skips its item when it comes (a listing taken off the market).</summary>
+        internal void CancelJob(long jobId) { State.Jobs.Remove(jobId); }
 
         /// <summary>Marks a job Done and removes it from the job table.</summary>
         internal void CompleteJob(Job job)
