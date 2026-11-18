@@ -176,6 +176,23 @@ namespace Sim.Core.Town
             sim.Emit(new DoctorComing(t, s.ArrivesAt));
         }
 
+        /// <summary>
+        /// A citizen died: if it was the doctor, his post ends (his household, if any is left, leaves with the quarters' rent unpaid) and a new doctor is
+        /// called at once, so the clinic is never staffed by nobody.
+        /// </summary>
+        internal static void CitizenDied(Simulation sim, Citizen c)
+        {
+            ClinicState s = State(sim);
+            if (s == null || s.Doctor != DoctorStatus.InPost || s.DoctorId != c.Id) return;
+            Household x = sim.State.Citizens.Household(s.HouseholdId);
+            if (x != null && x.Members.Count > 0) CitizenRules.Leave(sim, x);
+            s.Doctor = DoctorStatus.None;
+            s.HouseholdId = 0;
+            s.DoctorId = 0;
+            s.UnderCloses = 0;
+            MaybeCallDoctor(sim);
+        }
+
         /// <summary>The clinic is finished (spec 023 §3.1): it stands, and with the quarters the doctor is called.</summary>
         internal sealed class Build : IJobHandler
         {
@@ -234,6 +251,7 @@ namespace Sim.Core.Town
                 s.Doctor = DoctorStatus.InPost;
                 s.HouseholdId = x.Id;
                 s.ArrivesAt = 0;
+                s.DoctorId = x.Members[0];
                 s.DoctorName = sim.State.Citizens.Citizen(x.Members[0]).Name;
                 s.SinceSeason = CitizenRules.SeasonOf(sim, t);
                 s.UnderCloses = 0;
@@ -282,6 +300,7 @@ namespace Sim.Core.Town
             if (x != null) CitizenRules.Leave(sim, x);
             s.Doctor = DoctorStatus.Left;
             s.HouseholdId = 0;
+            s.DoctorId = 0;
             s.UnderCloses = 0;
             sim.Emit(new DoctorLeft(sim.State.Clock.SimTime));
         }

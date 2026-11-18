@@ -1,6 +1,6 @@
 # 0121. Land value as built: from the Township, per acre, read at the close
 
-- Status: Proposed (2026-11-18); the owner reviews US-143 with the story
+- Status: Accepted (owner, 2026-11-18, US-143 approved)
 - Date: 2026-11-18
 - Deciders: Keyur Patel
 - Related ADRs: 0028, 0110, 0117, 0119

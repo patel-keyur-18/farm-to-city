@@ -9,6 +9,12 @@ namespace Sim.Core.People
     /// <summary>Households' budgets by Engel's law, food met, savings and health (spec 014 §3.4–3.6).</summary>
     public static class HouseholdRules
     {
+        public static bool HasChildren(Simulation sim, Household x)
+        {
+            foreach (long id in x.Members) if (IsChild(sim, sim.State.Citizens.Citizen(id))) return true;
+            return false;
+        }
+
         public static bool IsChild(Simulation sim, Citizen c) { return CitizenRules.Age(sim, c) < sim.Config.Game.Population.AdultFrom; }
 
         public static bool IsElder(Simulation sim, Citizen c) { return CitizenRules.Age(sim, c) >= sim.Config.Game.Population.ElderFrom; }
@@ -57,7 +63,6 @@ namespace Sim.Core.People
             return b != null && PeopleRules.IsHandHut(sim, b);
         }
 
-        /// <summary>A family house the founder rents out (§3.4).</summary>
         /// <summary>The household lives in a builder's home (spec 024 §3.3): a resident of the town, not one of your households; its rent is the builder's.</summary>
         public static bool InBuildersHome(Simulation sim, Household x)
         {
@@ -65,6 +70,7 @@ namespace Sim.Core.People
             return b != null && b.Builders;
         }
 
+        /// <summary>A family house the founder rents out (§3.4).</summary>
         public static bool InFamilyHouse(Simulation sim, Household x)
         {
             Building b = sim.State.Land.Buildings.Find(y => y.Id == x.HomeId);
@@ -215,6 +221,7 @@ namespace Sim.Core.People
             if (s == null) return;
             PopulationDefs p = sim.Config.Game.Population;
             foreach (Household x in s.Households) HouseRules.CollectRent(sim, x); // first, for the season that ended (§3.12)
+            Town.CohortRules.EnsureJoined(sim); // a Township reached before the old village could join (an older save)
             Town.LandValueRules.Read(sim); // spec 024 §3.9: land value is read once, before this season's leases renew
             Town.LandLeaseRules.Close(sim); // leases end or pay their rent upfront (spec 024 §3.6)
             Town.ZoningRules.Close(sim); // then builders buy a parcel if families are waiting (spec 024 §3.3)

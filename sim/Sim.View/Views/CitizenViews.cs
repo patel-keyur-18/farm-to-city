@@ -48,7 +48,12 @@ namespace Sim.View.Views
                 rows.Add(Row(ctx, x.Id, "needs.hall", CivicRules.Belonging(sim, x, sim.Config.Game.Population.Belonging), CivicNote(ctx, x, CivicDef.Hall)));
 
             rows.Add(LineVm.Header(s.Get("needs.growth")));
-            if (SchoolRules.IsOpen(sim)) rows.Add(Row(ctx, x.Id, "needs.school", Fixed.One, s.Get("needs.schoolMet"))); // spec 018 §3.2
+            if (SchoolRules.IsOpen(sim) && !SchoolRules.Met(sim, x))
+            {
+                Sim.Core.Land.Building far = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+                rows.Add(Row(ctx, x.Id, "needs.school", Fixed.Zero, s.Get("needs.schoolFar", "m", ctx.Fmt.Integer(CoverageRules.Metres(sim, far.TileId, SchoolRules.Def(sim).Tile)), "reach", ctx.Fmt.Integer(SchoolRules.Def(sim).Reach)))); // out of the school's reach: the children get no school year (spec 023 §3.6)
+            }
+            else if (SchoolRules.IsOpen(sim)) rows.Add(Row(ctx, x.Id, "needs.school", Fixed.One, s.Get("needs.schoolMet"))); // spec 018 §3.2
             else rows.Add(new LineVm(s.Get("needs.school"), s.Get("needs.notCounted")) { Note = s.Get("needs.schoolNotYet") });
             rows.Add(Row(ctx, x.Id, "needs.leisure", x.Leisure > 0 ? Fixed.One : Fixed.Zero, x.Leisure > 0 ? s.Get("needs.leisureMet") : s.Get("needs.leisureShort")));
             if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Playground) && HasChildren(sim, x))

@@ -1,6 +1,6 @@
 # 0122. Zoning and builders as built: per parcel, residential only, builders' homes are not yours
 
-- Status: Proposed (2026-11-18); the owner reviews US-142 with the story
+- Status: Accepted (owner, 2026-11-18, US-142 approved)
 - Date: 2026-11-18
 - Deciders: Keyur Patel
 - Related ADRs: 0064, 0107, 0119, 0121

@@ -45,7 +45,7 @@
 | 16 | Zone a parcel, then look at **Lease out** | Greyed with "Take it back to farming first." | | Editor ✓ (`s22-261-greyed.png`) |
 | 17 | A town left alone with every tax at 0 | The town keeps working (builders' families bring grants); no service goes below 100% in the bots' runs | | `TaxGateTests` (bots) |
 | 18 | Both frame-time p95s (main ≤ 8.3 ms, GPU ≤ 11 ms), golden replays, a 72 h catch-up with a Township open | Pass | **Device only** | |
-| 19 | Render statistics at the three views (all, village, farm) | No metric over 10% above the last reading | | Editor ✓ (see the pull request) |
+| 19 | Render statistics at the three views (all, village, farm) | No metric over 10% above the last reading | | Editor ✓ 2026-11-18, Township with the works built and land leased and zoned: all 1010 draw calls / 16,577 triangles / 1,187 sprites; village 568 / 9,262 / 660; farm 364 / 5,974 / 411; nothing grew over 10% |
 
 **Your questions:**
 1. Is it clear which rent is a house's and which is leased land's?

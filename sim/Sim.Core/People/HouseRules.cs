@@ -99,7 +99,7 @@ namespace Sim.Core.People
             if (fromSavings > x.Savings)
             {
                 x.RentBehind++;
-                sim.Emit(new RentMissed(t, x.Id, x.Rent, x.RentBehind));
+                if (!HouseholdRules.InBuildersHome(sim, x)) sim.Emit(new RentMissed(t, x.Id, x.Rent, x.RentBehind)); // a builder's tenant is the builder's worry, not your alert
                 return;
             }
             x.Savings -= fromSavings;

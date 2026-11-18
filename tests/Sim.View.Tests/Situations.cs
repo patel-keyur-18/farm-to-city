@@ -284,6 +284,36 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
+        public static Simulation TownshipBuilt()
+        {
+            Simulation sim = Township();
+            Ok(sim, new SetCashForTest(T(sim), 600_000_000_00));
+            Ok(sim, new GiveToTreasury(T(sim), 5_000_000 * 100));
+            typeof(Sim.Core.Town.RoadState).GetProperty("Status").GetSetMethod(true).Invoke(sim.State.Township.Road, new object[] { Sim.Core.Town.RoadStatus.Built }); // the petition needs households a Situation doesn't have
+            Ok(sim, new BuildClinic(T(sim)));
+            Ok(sim, new BuildDoctorQuarters(T(sim)));
+            sim.AdvanceTo(T(sim) + 72 * Hour);
+            for (int civic = 0; civic < 3; civic++) sim.Execute(new CommissionWorks(T(sim), Sim.Core.Town.CivicRules.Def(sim, civic).Work));
+            sim.AdvanceTo(T(sim) + 72 * Hour);
+            var bought = new List<string>();
+            for (int pass = 0; pass < 3 && bought.Count < 3; pass++) // each purchase can make the next acre adjacent
+                foreach (ParcelDef p in sim.Config.Game.Map.Parcels)
+                {
+                    int id = sim.Config.Game.Map.IndexOfParcel(p.Id);
+                    if (bought.Count == 3 || !p.ForSale || sim.State.Land.Parcels[id].Owned || !Sim.Core.Town.ZoningRules.Serviced(sim, id) || !LandSystem.IsAdjacentToOwned(sim, id)) continue;
+                    if (sim.Execute(new BuyParcel(T(sim), p.Id)).Accepted) bought.Add(p.Id);
+                }
+            Assert.That(bought.Count, Is.EqualTo(3));
+            Ok(sim, new LeaseOutLand(T(sim), bought[0]));
+            Ok(sim, new ZoneParcel(T(sim), bought[1]));
+            Ok(sim, new ListParcel(T(sim), bought[2]));
+            sim.AdvanceTo(T(sim) + 3 * Day);
+            sim.DrainEvents();
+            Assert.That(sim.State.Land.Parcels[sim.Config.Game.Map.IndexOfParcel(bought[0])].Leased, Is.True);
+            return sim;
+        }
+
         public static IEnumerable<Simulation> All()
         {
             yield return Rich();
@@ -299,6 +329,7 @@ namespace Sim.View.Tests
             yield return Irrigated();
             yield return Equipped();
             yield return Township();
+            yield return TownshipBuilt();
         }
     }
 }
@@ -322,6 +353,9 @@ namespace Sim.View.Tests
             Simulation sim = ctx.Sim;
             yield return N("menu", MenuSheet.Build(ctx));
             yield return N("lands", LandsSheet.Build(ctx));
+            if (Sim.Core.Town.LandValueRules.On(sim))
+                foreach (Parcel p in sim.State.Land.Parcels.Where(p => p.Owned && !p.Protected))
+                    yield return N("sell land " + p.Id, SellLandSheet.Build(ctx, sim.Config.Game.Map.Parcels[p.Id].Tiles[0])); // spec 024 AC-11: every land-value number has a Why?
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

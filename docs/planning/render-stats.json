@@ -32,5 +32,8 @@
   {"label":"US-142","view":"farm","date":"2026-11-18","drawCalls":391,"batches":391,"setPassCalls":8,"triangles":7339,"visibleSprites":440,"sprites":1438},
   {"label":"US-261","view":"all","date":"2026-11-18","drawCalls":1004,"batches":1004,"setPassCalls":10,"triangles":18118,"visibleSprites":1200,"sprites":1417},
   {"label":"US-261","view":"village","date":"2026-11-18","drawCalls":568,"batches":568,"setPassCalls":9,"triangles":10199,"visibleSprites":668,"sprites":1417},
-  {"label":"US-261","view":"farm","date":"2026-11-18","drawCalls":366,"batches":366,"setPassCalls":8,"triangles":7008,"visibleSprites":418,"sprites":1417}
+  {"label":"US-261","view":"farm","date":"2026-11-18","drawCalls":366,"batches":366,"setPassCalls":8,"triangles":7008,"visibleSprites":418,"sprites":1417},
+  {"label":"US-263 Sprint 22 close","view":"all","date":"2026-11-18","drawCalls":1010,"batches":1010,"setPassCalls":8,"triangles":16577,"visibleSprites":1187,"sprites":1492},
+  {"label":"US-263 Sprint 22 close","view":"village","date":"2026-11-18","drawCalls":568,"batches":568,"setPassCalls":7,"triangles":9262,"visibleSprites":660,"sprites":1492},
+  {"label":"US-263 Sprint 22 close","view":"farm","date":"2026-11-18","drawCalls":364,"batches":364,"setPassCalls":6,"triangles":5974,"visibleSprites":411,"sprites":1492}
 ]

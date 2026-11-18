@@ -90,7 +90,7 @@ A button on the map opens one overlay at a time: **fertility**, **land value**, 
 
 ### 3.9 Processing order
 
-At each season close, after the treasury (spec 021 §3.10): re-read `LV` for every acre; builders' purchases (one acre); permit fee into the treasury; zoned shops' pitches; slow sales that have waited out their days; leases' rents (upfront); upgrades by builders; the new season's rents at the renewals.
+At each season close, after the treasury (spec 021 §3.10), **as built:** the old season's rents are collected; a town that reached the Township before the old village could join is joined; `LV` is re-read for every acre; **leases** end or pay their rent upfront (US-261); then **builders'** purchases (one parcel) and the permit fee into the treasury; then the new season's rents at the renewals. **Slow sales** complete on their own job when their 2 days are up (not at the close). Zoned shops' pitches and builders' upgrades are cut (ADR 0122) or Sprint 23's (US-152).
 
 ### 3.10 Clear for an average player
 
@@ -165,14 +165,14 @@ At each season close, after the treasury (spec 021 §3.10): re-read `LV` for eve
 | AC-2 | Rent's place follows `LV` between 0.85 and 1.50; a lease's rise is still capped and never pushes a family out | `LandValueTests.RentPlace`, `LeaseTests` (spec 014) |
 | AC-3 | The house tax's base follows `LV` and never passes 15% of the rent | `TaxTests.HouseTax_Guard` (extended) |
 | AC-4 | A residential acre sells to a builder at its land value when 2 families were turned away, road and water present; at most one acre a season; the builder's 2 homes are the builder's | `ZoningTests.BuilderBuys`, `ZoningTests.Pace` |
-| AC-5 | A commercial acre gives a newcomer's shop a pitch and pays you its rent | `ZoningTests.Commercial` |
-| AC-6 | The permit fee is 2% of land value into the treasury | `ZoningTests.PermitFee` |
+| AC-5 | **Cut for now (ADR 0122):** a commercial acre gives a newcomer's shop a pitch and pays you its rent | none (cut) |
+| AC-6 | The permit fee is 2% of land value into the treasury | `ZoningTests.BuilderBuys` |
 | AC-7 | A town with no zoning still grows by builders buying neighbours' for-sale road acres (the ring's land too from Sprint 23), slowly; nothing breaks | `ZoningTests.LeftAlone` |
-| AC-8 | A quick sale pays 80%; a slow sale pays 100% after 2 days and can be cancelled | `SaleTests.Slow`, `SaleTests.Cancel` |
+| AC-8 | A quick sale pays 80%; a slow sale pays 100% after 2 days and can be cancelled | `LandValueTests.SlowSale`, `LandValueTests.QuickAndCancel` |
 | AC-9 | Leasing out pays upfront at the close, blocks farming, building and selling, and ends at the next close | `LeaseOutTests.*` |
 | AC-10 | Upgrades are offered only past the thresholds; the rent moves at the renewal | `UpgradeTests.*` |
-| AC-11 | An overlay changes no state; each acre's number equals the sim's; every number has a *Why?* | `OverlayViewTests`, `WhyTests.EveryLandValueHasWhy` |
-| AC-12 | Saves round-trip zones, leases, slow sales and building kinds; every older schema loads | `MigrationTests.Schema20_Zoning` |
+| AC-11 | An overlay changes no state; each acre's number equals the sim's; every number has a *Why?* | `OverlayViewTests` (US-153, Sprint 23), `WhyTests.EveryNumberHasWhy` (over `Situations.TownshipBuilt`), `LandValueViewTests` |
+| AC-12 | Saves round-trip zones, leases, slow sales and building kinds; every older schema loads | `MigrationTests.Schema20_Township` |
 | AC-13 | The cards and overlays respond to scripted touch in the Editor | the stories' Editor tours |
 
 ## 9. Balancing hooks

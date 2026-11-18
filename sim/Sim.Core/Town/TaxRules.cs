@@ -120,7 +120,7 @@ namespace Sim.Core.Town
 
         private static bool IsTaxed(Simulation sim, Building b)
         {
-            return (HouseRules.IsHouse(sim, b) && !b.Builders) || sim.Config.Game.Buildings[b.Def].Id == HomeBuildingId; // a builder's house is taxed to the builder (spec 024 §3.2)
+            return (HouseRules.IsHouse(sim, b) && !b.Builders) || sim.Config.Game.Buildings[b.Def].Id == HomeBuildingId; // a builder's house is off your bill: the builder's tax is not modelled (spec 024 §3.2)
         }
 
         /// <summary>The office's share of what is billed (spec 021 §3.3): the payer pays only this.</summary>

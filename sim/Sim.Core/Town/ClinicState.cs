@@ -64,6 +64,9 @@ namespace Sim.Core.Town
         /// <summary>The doctor's name (an index into the names, as a citizen's) kept after he leaves, for the sheet and the letter.</summary>
         public int DoctorName { get; internal set; }
 
+        /// <summary>The doctor himself (a citizen id) while in post; 0 otherwise. His death ends his post (the household may stay).</summary>
+        public long DoctorId { get; internal set; }
+
         /// <summary>The season he arrived, and how many doctors have come.</summary>
         public long SinceSeason { get; internal set; }
         public int Doctors { get; internal set; }
@@ -100,6 +103,7 @@ namespace Sim.Core.Town
             h.WriteLong(ArrivalJobId);
             h.WriteLong(HouseholdId);
             h.WriteInt(DoctorName);
+            h.WriteLong(DoctorId);
             h.WriteLong(SinceSeason);
             h.WriteInt(Doctors);
             h.WriteInt(UnderCloses);
@@ -114,7 +118,7 @@ namespace Sim.Core.Town
             {
                 Status = (ClinicStatus)r.ReadInt(), StartedAt = r.ReadLong(), ReadyAt = r.ReadLong(), JobId = r.ReadLong(), Share = r.ReadLong(),
                 Quarters = (QuartersStatus)r.ReadInt(), QuartersReadyAt = r.ReadLong(), QuartersJobId = r.ReadLong(), QuartersCost = r.ReadLong(), QuartersId = r.ReadLong(),
-                Doctor = (DoctorStatus)r.ReadInt(), ArrivesAt = r.ReadLong(), ArrivalJobId = r.ReadLong(), HouseholdId = r.ReadLong(), DoctorName = r.ReadInt(),
+                Doctor = (DoctorStatus)r.ReadInt(), ArrivesAt = r.ReadLong(), ArrivalJobId = r.ReadLong(), HouseholdId = r.ReadLong(), DoctorName = r.ReadInt(), DoctorId = r.ReadLong(),
                 SinceSeason = r.ReadLong(), Doctors = r.ReadInt(), UnderCloses = r.ReadInt(),
                 SickAvoidedThis = r.ReadInt(), SickAvoidedLast = r.ReadInt(), RegainedThis = r.ReadInt(), RegainedLast = r.ReadInt(),
                 EldersWellThis = r.ReadInt(), EldersWellLast = r.ReadInt(),

@@ -123,6 +123,7 @@ namespace Sim.Core.Land
             if (parcel.Listed) return Commands.RejectReason.Listed;
             Commands.RejectReason r = CanSell(sim, parcel);
             if (r != Commands.RejectReason.None) return r;
+            if (Town.LandLeaseRules.HasOrder(sim, id)) return Commands.RejectReason.ParcelInUse; // a hand's order is never taken off silently (ADR 0039)
             long price = SlowPrice(sim, parcel);
             if (price < Finance.CreditSystem.RequiredOnSale(sim, id)) return Commands.RejectReason.LoanSecured;
             long t = sim.State.Clock.SimTime;
@@ -173,6 +174,9 @@ namespace Sim.Core.Land
             LandState land = sim.State.Land;
             parcel.Owned = false;
             parcel.Lease = 0; // a seized acre's lease goes with it
+            parcel.Zone = 0; // and its zone: whoever buys it next decides again (spec 024 §3.3)
+            if (parcel.SlowSaleJobId != 0) sim.CancelJob(parcel.SlowSaleJobId); // and a slow sale that was waiting
+            parcel.SlowSaleEnds = 0; parcel.SlowSalePrice = 0; parcel.SlowSaleJobId = 0;
             parcel.CostBasis = 0;
             parcel.AcquiredAt = 0;
             land.Slots.RemoveAll(slot => land.Tiles[slot.TileId].ParcelId == parcel.Id);

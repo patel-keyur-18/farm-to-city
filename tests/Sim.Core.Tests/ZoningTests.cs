@@ -105,7 +105,6 @@ namespace Sim.Core.Tests
             sim.DrainEvents();
 
             long price = LandRules.ParcelPrice(sim, P(sim, "e1"));
-            long fees = sim.State.Treasury.Ledger.Balance(Account.Fees);
             CloseWith(sim, 2 * acres);
             Parcel p = P(sim, "e1");
             Assert.That((p.Owned, p.BuilderOwned), Is.EqualTo((false, true)));
@@ -117,7 +116,8 @@ namespace Sim.Core.Tests
             Assert.That(homes.Select(b => b.TileId).Distinct().Count(), Is.EqualTo(acres));
             Assert.That(TownshipRules.State(sim).TurnedAway, Is.LessThan(2 * acres), "the families waiting are used up");
             // AC-6: the permit fee, 2% of the land value, into the town's purse
-            Assert.That(sim.State.Treasury.Ledger.Balance(Account.Fees) - fees, Is.EqualTo(Money.MulRate(sold.Price, ZoningRules.Def(sim).PermitFee)).Within(sold.Price / 20));
+            Assert.That(sim.State.Treasury.Ledger.Entries.Where(e => e.Reference == "fee:builder").Sum(e => e.Postings.Where(x => x.Account == Account.Cash).Sum(x => x.Amount)), Is.EqualTo(Money.MulRate(sold.Price, ZoningRules.Def(sim).PermitFee)), "2% of the land value, to the coin");
+            Assert.That(Money.MulRate(sold.Price, ZoningRules.Def(sim).PermitFee), Is.GreaterThan(0));
             Assert.That(sim.Execute(new BuyParcel(sim.State.Clock.SimTime, "e1")).Reason, Is.EqualTo(RejectReason.NotForSale), "never for sale again");
         }
 
@@ -145,18 +145,17 @@ namespace Sim.Core.Tests
             Simulation sim = Township();
             int first = ZoningRules.Candidates(sim).First();
             Assert.That(sim.State.Land.Parcels[first].Owned, Is.False);
-            long cash = sim.State.Ledger.Cash;
             CloseWith(sim, ZoningRules.Need(sim, first));
             Assert.That(sim.State.Land.Parcels[first].BuilderOwned, Is.True);
             Assert.That(sim.State.Land.Buildings.Count(b => b.Builders), Is.EqualTo(2 * ZoningRules.HomeTiles(sim, first).Count));
-            Assert.That(sim.State.Ledger.Cash, Is.GreaterThanOrEqualTo(cash - 10_000_000), "nothing paid to you or by you");
+            Assert.That(sim.State.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.sellParcel"), Is.False, "a neighbour's land: nothing is paid to you");
             Assert.That(sim.DrainEvents().OfType<AcreSoldToBuilder>().Single().Yours, Is.False);
             Assert.That(ZoningRules.Candidates(sim), Does.Not.Contain(first));
             // nothing needs doing: without families waiting nothing is bought
             Simulation quiet = Township();
-            Families(quiet, 0);
-            quiet.AdvanceTo(quiet.State.Clock.SimTime + 30);
-            Assert.That(quiet.State.Land.Parcels.Any(p => p.BuilderOwned), Is.False);
+            CloseWith(quiet, 0);
+            CloseWith(quiet, 0);
+            Assert.That(quiet.State.Land.Parcels.Any(p => p.BuilderOwned), Is.False, "two closes with no family waiting: nothing is bought");
         }
 
         // spec 024 §3.3: a builder's family is a resident, not one of your households; it pays you no rent and its house pays you no tax.
@@ -173,6 +172,15 @@ namespace Sim.Core.Tests
             Assert.That(x, Is.Not.Null, "a family moved into a builder's home");
             Assert.That(EraRules.Households(sim), Is.EqualTo(sim.State.Citizens.Households.Count - sim.State.Citizens.Households.Count(h => HouseholdRules.InBuildersHome(sim, h))));
             Assert.That(sim.State.Citizens.Households.Count, Is.GreaterThan(EraRules.Households(sim)));
+            // review fixes: a builder's tenant who misses the rent is the builder's worry (no alert for you), and its people are not in your literacy
+            x.Savings = 0; x.Income = 0; x.Rent = 5_000_00;
+            sim.DrainEvents();
+            HouseRules.CollectRent(sim, x);
+            Assert.That(sim.DrainEvents().OfType<RentMissed>().Count(), Is.EqualTo(0));
+            Assert.That(x.RentBehind, Is.GreaterThan(0));
+            SchoolRules.Literacy(sim, out _, out int counted);
+            int from = SchoolRules.Def(sim).LiteracyFromAge;
+            Assert.That(counted, Is.EqualTo(sim.State.Citizens.Citizens.Count(c => c.Living && CitizenRules.Age(sim, c) >= from && !HouseholdRules.InBuildersHome(sim, sim.State.Citizens.Household(c.HouseholdId)))));
             Assert.That(TaxRules.YourHouseBill(sim, Fixed.Parse("0.016"), out int houses), Is.GreaterThanOrEqualTo(0));
             Assert.That(houses, Is.EqualTo(sim.State.Land.Buildings.Count(b => HouseRules.IsHouse(sim, b) && !b.Builders) + sim.State.Land.Buildings.Count(b => !HouseRules.IsHouse(sim, b) && sim.Config.Game.Buildings[b.Def].Id == "hut" )), "only your houses are billed");
             // rent: paid by the family, not received by you

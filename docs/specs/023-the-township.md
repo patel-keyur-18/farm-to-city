@@ -236,16 +236,16 @@ Every number has a *Why?* (`WhyTests` sweeps them).
 | AC-1 | The clinic and quarters build in 48 h from the share and the cost (both gifts or assets as §3.1); the doctor arrives 24 h after both stand; before the Township you owe nothing recurring | `ClinicTests.Build`, `ClinicTests.Doctor` |
 | AC-2 | The five effects of §3.2 hold with `e` from condition, reach and capacity; "sick days avoided" is an exact count | `ClinicTests.Effects`, `ClinicTests.Avoided` |
 | AC-3 | The petition needs 10 households; the share is a gift; the road is built in 4 days; the tier and prices follow; the season page's line is kilos × 0.50 × index | `RoadTests.Petition`, `RoadTests.Prices` |
-| AC-4 | The gate checks the five goals at each close and when a goal changes; only open businesses with a profitable season count; the doctor's household counts; unlock once | `TownshipTests.Gate`, `TownshipTests.Businesses`, `TownshipTests.Once` |
-| AC-5 | At the unlock the treasury opens, the cohort joins and the takeover begins at the first close | `TownshipTests.Unlock` |
+| AC-4 | The gate checks the five goals at each close and when a goal changes; only open businesses with a profitable season count; the doctor's household counts; unlock once | `TownshipTests.Gate`, `TownshipTests.Goals_NeverUnmeet`, `TownshipTests.Unlock_Once`, `GateTests.TownshipExploits` |
+| AC-5 | At the unlock the treasury opens, the cohort joins and the takeover begins at the first close | `TownshipTests.Unlock_Once` |
 | AC-6 | The cohort's household count, residents, tax base, pupils and literacy follow §3.5; a household leaves at the second close under 35 | `CohortTests.Join`, `CohortTests.Leaves` |
-| AC-7 | Reach, capacity and staff gate every building's benefit (§3.6); a home out of reach says why | `CoverageTests.Reach`, `CoverageTests.Capacity`, `CoverageTests.Staff` |
-| AC-8 | The three civic buildings' costs, upkeep, effects and the *Safety* part (§3.7); the card's budget guard says the shortfall | `CivicTests.Effects`, `CivicTests.Guard` |
-| AC-9 | Appointments fill in 24 h, are paid as a Safety line and the cohort's income, leave after two unpaid closes, and can be dismissed | `CivicTests.Staff` |
-| AC-10 | The treasury's lines of §3.8 start when their building and staff exist; a default town breaks even within two years | `TownshipTests.Lines`, `GateTests.TownshipSolvent` |
+| AC-7 | Reach, capacity and staff gate every building's benefit (§3.6); a home out of reach says why | `ClinicTests.Effects` (reach), `ClinicTests.SchoolReach`, `ClinicTests.Staff`, `CivicTests.Effects_ReachAndCapacity` |
+| AC-8 | The three civic buildings' costs, upkeep, effects and the *Safety* part (§3.7); the card's budget guard says the shortfall | `CivicTests.Effects_Safety`, `CivicTests.Effects_BelongingAndLeisure`, `CivicTests.Guard` |
+| AC-9 | Appointments fill in 24 h, are paid as a Safety line and the cohort's income, leave after two unpaid closes, and can be dismissed | `CivicTests.Staff_Appointed`, `CivicTests.Staff_PaidAndDismissed`, `CivicTests.Staff_LeavesUnpaid` |
+| AC-10 | The treasury's lines of §3.8 start when their building and staff exist; a default town breaks even within two years | `TownshipTests.Unlock_Once` (the lines start), `GateTests.TownshipSolvent` |
 | AC-11 | The doctor leaves at the third unpaid close, returns at 70% with the cash, the quarters stay reserved, the era stays | `ClinicTests.Leaves`, `ClinicTests.Returns` |
-| AC-12 | A schema-19 save loads into 20 with none of this and round-trips; a town with all of it saves and loads to the same hash | `MigrationTests.Schema19_Township`, `TownshipTests.SaveRoundTrip` |
-| AC-13 | Every number on the new sheets has a *Why?*; strings are complete | `WhyTests.EveryTownshipNumberHasWhy` |
+| AC-12 | A schema-19 save loads into 20 with none of this and round-trips; a town with all of it saves and loads to the same hash | `MigrationTests.Schema19_OpenTreasury`, `MigrationTests.Schema20_Township`, `TownshipTests.SaveRoundTrip` |
+| AC-13 | Every number on the new sheets has a *Why?*; strings are complete | `WhyTests.EveryNumberHasWhy` (over `Situations.TownshipBuilt`), `RoadViewTests.EveryRowHasWhy`, `ClinicViewTests`, `CivicViewTests` |
 | AC-14 | Each sheet and card renders and responds to scripted touch in the Editor | the stories' Editor tours (checklist) |
 | AC-15 | The competent bot unlocks at a median of day 85–125, the saver 115–160, every run gets there | `GateTests.Township` |
 | AC-16 | The exploit checks hold: padding households, business churn, adult-class loops, milking the treasury | `GateTests.TownshipExploits` |

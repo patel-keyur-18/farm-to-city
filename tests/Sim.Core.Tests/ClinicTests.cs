@@ -188,6 +188,8 @@ namespace Sim.Core.Tests
             Ok(sim, new BuildSchool(sim.State.Clock.SimTime));
             sim.AdvanceTo(sim.State.Clock.SimTime + 49 * Hour);
             Household fam = sim.State.Citizens.Households[0];
+            Assert.That(SchoolRules.HomeCovered(sim, fam), Is.True, "before the Township every home is served, as in Phases 1 and 2");
+            TreasuryTests.Township(sim);
             Citizen child = new Citizen { Id = sim.State.Citizens.NextCitizenId++, BornSeason = CitizenRules.BornFor(sim, 8), HouseholdId = fam.Id, Health = Fixed.One };
             sim.State.Citizens.Citizens.Add(child);
             fam.Members.Add(child.Id);
@@ -198,6 +200,7 @@ namespace Sim.Core.Tests
             Simulation near = Start();
             Ok(near, new BuildSchool(near.State.Clock.SimTime));
             near.AdvanceTo(near.State.Clock.SimTime + 49 * Hour);
+            TreasuryTests.Township(near);
             Household home = near.State.Citizens.Households[0];
             Citizen kid = new Citizen { Id = near.State.Citizens.NextCitizenId++, BornSeason = CitizenRules.BornFor(near, 8), HouseholdId = home.Id, Health = Fixed.One };
             near.State.Citizens.Citizens.Add(kid);
@@ -227,10 +230,38 @@ namespace Sim.Core.Tests
         public void Avoided()
         {
             Simulation sim = WithDoctor();
-            for (int i = 0; i < 12; i++) sim.AdvanceTo(TreasuryTests.NextClose(sim) + 1);
             ClinicState s = ClinicRules.State(sim);
-            Assert.That(s.SickAvoidedThis + s.SickAvoidedLast + s.RegainedThis + s.RegainedLast + s.EldersWellThis + s.EldersWellLast, Is.GreaterThanOrEqualTo(0));
+            int counted = 0; // the counts roll over at each close: add up every season's, not just the last two
+            for (int i = 0; i < 8; i++)
+            {
+                foreach (Citizen c in sim.State.Citizens.Citizens) c.Health = Fixed.Parse("0.5"); // a town that needs a doctor (a healthy one counts nothing)
+                sim.State.Farm.Founder.Health = Fixed.Parse("0.6");
+                sim.AdvanceTo(TreasuryTests.NextClose(sim) + 1);
+                counted += s.SickAvoidedLast + s.RegainedLast + s.EldersWellLast;
+            }
+            Assert.That(counted, Is.GreaterThan(0), "a doctor's town counts the sick days he saved, the health he regained and the elders he kept");
         }
+
+        // Review fix: the doctor's death ends his post (the clinic is never staffed by nobody) and a new doctor is called at once.
+        [Test]
+        public void DoctorDies()
+        {
+            Simulation sim = WithDoctor();
+            ClinicState s = ClinicRules.State(sim);
+            Citizen doctor = sim.State.Citizens.Citizen(s.DoctorId);
+            Assert.That(doctor, Is.Not.Null, "the doctor is a citizen the clinic knows");
+            Household home = sim.State.Citizens.Household(s.HouseholdId);
+            home.Members.Remove(doctor.Id);
+            if (home.Members.Count == 0) sim.State.Citizens.Households.Remove(home);
+            ClinicRules.CitizenDied(sim, doctor);
+            Assert.That((s.Doctor, s.HouseholdId, s.DoctorId), Is.EqualTo((DoctorStatus.Coming, 0L, 0L)), "nobody is in post; another doctor is on his way");
+            Assert.That(ClinicRules.InPost(sim), Is.False);
+            sim.AdvanceTo(sim.State.Clock.SimTime + (Def(sim) + 2) * Hour);
+            Assert.That(ClinicRules.InPost(sim), Is.True, "a new doctor takes the quarters");
+            Assert.That(s.DoctorId, Is.Not.EqualTo(doctor.Id));
+        }
+
+        private static int Def(Simulation sim) { return ClinicRules.Def(sim).DoctorArrivesHours; }
 
         // AC-11: at the Township the doctor leaves at the second close in a row with Health under 50% (the third unpaid close); the quarters stay reserved.
         [Test]

@@ -960,14 +960,14 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-263 | Carried from Sprint 21 (the items below) | [F15.2](features/F15.2-taxes-and-policies.md) | 6 | Must | To do |
+| US-263 | Carried from Sprint 21 (the items below) | [F15.2](features/F15.2-taxes-and-policies.md) | 6 | Must | Done (2026-11-18; the balance numbers are in ADR 0124) |
 | US-146 | Roads and highway: the paved link road | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Must | Approved (2026-11-17) |
-| US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | Part 1 (the clinic) approved; part 2 (the civic buildings, appointments, planner note, minimum-wage *Why?*) built and Editor-checked (2026-11-18), waiting for the owner's review |
-| US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Built and Editor-checked (2026-11-17); T5 (`TownshipBot`, `GateTests.Township`) with US-100; the owner's review |
-| US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Built (2026-11-18): Township pace and solvency measured, gate eased to 15 households and the treasury's costs lowered with the owner (ADR 0120); the owner's review |
-| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | Built and Editor-checked (2026-11-18, ADR 0121); balance with US-142 and US-261; the owner's review |
-| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | Approved (2026-11-18, ADR 0122); the commercial zone and builders' pucca cut; the owner's review |
-| US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | Built and Editor-checked (2026-11-18, ADR 0123); the balance pass measures leasing against hiring; the owner's review |
+| US-148 | Civic buildings: the clinic, then the watchman's post, hall and playground | [F15.6](features/F15.6-civic-services-and-coverage.md) | 8 | Must | Approved (2026-11-18): the clinic and the civic buildings; the independent review's fixes (a doctor's death, the school's reach) are in ADR 0124 |
+| US-103 | The Township unlock and the old village | [F09.4](features/F09.4-era-unlocks-village-to-city.md) | 5 | Must | Approved (2026-11-18) |
+| US-100 | Era-gate reachability | [F20.1](features/F20.1-balancer-and-health-checks.md) | 3 | Must | Approved (2026-11-18): pace and solvency measured, gate eased to 15 households (ADR 0120) |
+| US-143 | Land value | [F15.3](features/F15.3-zoning-and-land-value.md) | 5 | Must | Approved (2026-11-18, ADR 0121) |
+| US-142 | Zoning | [F15.3](features/F15.3-zoning-and-land-value.md) | 8 | Must | Approved (2026-11-18, ADR 0122); the commercial zone and builders' pucca cut |
+| US-261 | Lease land out | [F15.3](features/F15.3-zoning-and-land-value.md) | 3 | Should | Approved (2026-11-18, ADR 0123); leasing stays below hiring (ADR 0124) |
 
 **US-263, the carried items (6 points; each is also ticked in its own story's tasks):**
 
@@ -980,7 +980,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | 5 | **A planner note for a paused policy**, and **a *Why?* that names the minimum wage** wherever a wage is asked | with the civic buildings (US-148 T3, the planner's notes) |
 | 6 | **Builders' houses billed to their owner, not you**: `TaxRules.YourHouseBill` gets an owner check (a building's `Owner`, schema 20) | **Done 2026-11-18** with zoning (US-142) |
 | 7 | **`TaxGateTests`: every tax at 0** (services decay, happiness at least 5 lower within 8 seasons, never stuck), **every tax at the cap**, and **the 200-seed hands-off Township** with every service at 100% on default rates and no policy (the full run, in the background, no content edits while it runs) | with US-100 |
-| 8 | **The policy-affordability balance** (decided with the owner, see "Decisions I need" below) | with US-100's measurements |
+| 8 | **The policy-affordability balance** (decided with the owner, see "Decisions I need" below) | **Done 2026-11-18** (`GateTests.PolicyAffordability`: every policy affordable alone, no service below 100%; ADR 0124) |
 
 **Order of work** (one stop for the owner's review after each story and each spec; every sheet previewed as an artifact that looks exactly like the game before its UI code):
 
@@ -1016,13 +1016,13 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone (final integrated Editor smoke 2026-11-18)
 - [x] Spec 024 approved and ADR 0119 accepted (2026-11-17)
-- [ ] Save schema 20: migration, `schema19` open-treasury fixture, `schema20` fixture (clinic, road, cohort, posts, gate, owed tax, zones, leases, owners), every older schema loads
-- [ ] Sheets and cards previewed to and approved by the owner before each story's code
-- [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, `TownshipSolvent`, the tax extremes, the 200-seed hands-off Township, contradictions flagged
-- [ ] Render statistics read for each visible story and any growth over 10% reported
+- [x] Save schema 20: migration, `schema19` open-treasury fixture, `schema20` fixture (clinic, road, cohort, posts, gate, owed tax, zones, leases, owners), every older schema loads
+- [x] Sheets and cards previewed to and approved by the owner before each story's code
+- [x] Balance (ADR 0124): the 20% rule, the Village 28–45 days, the Township's pace, `TownshipSolvent`, the tax extremes, the 200-seed hands-off Township, contradictions flagged
+- [x] Render statistics read for each visible story and any growth over 10% reported (none grew; row 19)
 - [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone written down (the owner)
-- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request
+- [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and ADR 0124
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, the milestone `Phase 3 · Township` and the project `FarmToCity` (status In Progress); the owner merges it

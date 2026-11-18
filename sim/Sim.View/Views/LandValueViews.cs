@@ -95,7 +95,7 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("sellLand.nowReceive", "percent", ctx.Fmt.Percent(defs.Land.QuickSaleFactor)), ctx.Fmt.Coins(quick), "resale", tileId));
             vm.Lines.Add(LineVm.Header(s.Get("sellLand.slow")));
             vm.Lines.Add(new LineVm(s.Get("sellLand.slowReceive", "wait", LandValueViews.Days(ctx, LandValueRules.Def(sim).SlowSaleSeconds)), ctx.Fmt.Coins(value), "landPrice", tileId));
-            vm.Lines.Add(new LineVm(s.Get("sellLand.more"), "+" + ctx.Fmt.Coins(value - quick), null));
+            vm.Lines.Add(new LineVm(s.Get("sellLand.more"), "+" + ctx.Fmt.Coins(value - quick), "landPrice", tileId));
             vm.Lines.Add(new LineVm(s.Get("sellLand.note"), null));
             string id = d.Id;
             vm.Actions.Add(ActionVm.Checked(ctx, "sellSlow:" + id, s.Get("action.sellSlow"), s.Get("sellLand.slowDetail", "price", ctx.Fmt.Coins(value), "wait", LandValueViews.Days(ctx, LandValueRules.Def(sim).SlowSaleSeconds)),

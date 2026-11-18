@@ -85,7 +85,7 @@ namespace Sim.Core.Town
         {
             if (CoverageRules.Within(sim, tileId, d.WaterTile, d.WaterReach)) return true;
             foreach (Building b in sim.State.Land.Buildings)
-                if (b.TileId >= 0 && sim.Config.Game.Buildings[b.Def].Id == "well" && CoverageRules.Within(sim, tileId, b.TileId, d.WaterReach)) return true;
+                if (b.TileId >= 0 && sim.Config.Game.Buildings[b.Def].Id == BuildingDef.WellId && CoverageRules.Within(sim, tileId, b.TileId, d.WaterReach)) return true;
             return false;
         }
 

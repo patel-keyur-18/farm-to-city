@@ -8,7 +8,7 @@ using Sim.Core.Progress;
 namespace Sim.Core.Town
 {
     /// <summary>
-    /// The Township's gate (spec 023 §3.4, US-103, ADR 0116): twenty households of yours (the doctor's counts), the clinic open with its
+    /// The Township's gate (spec 023 §3.4, US-103, ADR 0116): fifteen households of yours (the doctor's counts), the clinic open with its
     /// doctor, the paved link road, three open businesses each with a profitable season, and literacy at 60% of your households' people
     /// aged 7 and over. Checked at each season close and when a goal changes; a goal once met stays met (a household leaving never takes
     /// the Township back); the era unlocks once.
@@ -28,6 +28,17 @@ namespace Sim.Core.Town
         public static int Households(Simulation sim) { return EraRules.Households(sim); }
 
         /// <summary>Open businesses of yours that have had a profitable season (spec 023 §3.4): a closed one doesn't count.</summary>
+        /// <summary>The town has reached the Township era (by its gate or the developer panel).</summary>
+        public static bool Reached(Simulation sim)
+        {
+            EraState e = sim.State.Era;
+            var eras = sim.Config.Game?.Onboarding?.Eras;
+            if (e == null || eras == null) return false;
+            for (int i = 0; i <= e.Current && i < eras.Count; i++)
+                if (eras[i].TownshipGate || eras[i].Id == "township") return true;
+            return false;
+        }
+
         public static int Businesses(Simulation sim)
         {
             int n = 0;

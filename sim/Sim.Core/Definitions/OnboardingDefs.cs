@@ -136,7 +136,7 @@ namespace Sim.Core.Definitions
         /// <summary>No gate yet: only the developer panel's Next era reaches it (the Township before spec 023 builds its gate, spec 021 §3.1).</summary>
         public bool DeveloperOnly { get; }
 
-        /// <summary>The Township's gate (spec 023 §3.4): twenty households, the clinic and its doctor, the paved road, three businesses with a profitable season, literacy; its numbers are in <c>township.json</c>.</summary>
+        /// <summary>The Township's gate (spec 023 §3.4): fifteen households, the clinic and its doctor, the paved road, three businesses with a profitable season, literacy; its numbers are in <c>township.json</c>.</summary>
         public bool TownshipGate { get; }
 
         public EraDef(string id, int acresHarvestedInSeason, Fixed meanCareAtLeast, int handHutsAtLeast, int profitableSeasonsAtLeast,

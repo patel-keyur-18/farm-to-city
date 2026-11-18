@@ -53,7 +53,7 @@ namespace Sim.View.Views
             {
                 vm.Lines.Add(new LineVm(s.Get("road.earned"), ctx.Fmt.Coins(st.EarnedThis), "road", Earned));
                 vm.Lines.Add(new LineVm(s.Get("road.effect"), EffectText(ctx), "road", Effect));
-                vm.Lines.Add(new LineVm(s.Get("road.upkeep"), s.Get("road.upkeepValue")));
+                vm.Lines.Add(new LineVm(s.Get("road.upkeep"), s.Get(Sim.Core.Town.TreasuryRules.IsOpen(ctx.Sim) ? "road.upkeepTreasury" : "road.upkeepValue")));
                 vm.Lines.Add(new LineVm(s.Get("road.builtNote"), null));
             }
         }

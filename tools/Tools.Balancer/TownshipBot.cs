@@ -28,11 +28,19 @@ namespace Tools.Balancer
         /// <summary>Houses being built at once.</summary>
         public int Concurrent { get; set; } = 1;
 
+        /// <summary>What the bot does with land it has no use for (spec 024 §9, the land stress bots): nothing, lease it out, zone it for builders, or buy and hold it for the town's growth.</summary>
+        public enum LandUse { None, Lease, Zone, Hold }
+
+        public LandUse Land { get; set; }
+
+        /// <summary>A policy to enact as soon as the town can (spec 022: the policy-affordability measurement, US-263 item 8), or null.</summary>
+        public PolicyId? Policy { get; set; }
+
         private readonly List<int> _houseAcres = new List<int>();
 
         public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "tea_stall", "veg_stall") { }
 
-        public override string Name { get { return Saver ? "township-saver" : "township"; } }
+        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()); } }
 
         /// <summary>A bought acre kept for houses is never sown.</summary>
         protected override bool KeepsClear(Simulation sim, int tile) { return _houseAcres.Contains(tile) || base.KeepsClear(sim, tile); }
@@ -46,6 +54,42 @@ namespace Tools.Balancer
             Road(sim, t);
             Class(sim, t);
             MoreHomes(sim, t);
+            if (Policy != null && sim.State.Treasury.Opened && PolicyRules.CanEnact(sim, Policy.Value) == RejectReason.None && !PolicyRules.Of(sim, Policy.Value).Repealing) Ok(sim, new EnactPolicy(t, Policy.Value));
+            if (Land != LandUse.None && sim.State.Township != null && sim.State.Township.Cohort.Joined) UseLand(sim, t);
+        }
+
+        /// <summary>The land stress bots: idle parcels leased or zoned; and each buys one serviced parcel a season to do it with (the holder sells it slowly once its value has risen a tenth).</summary>
+        private void UseLand(Simulation sim, long t)
+        {
+            if (t % 86_400 / 3600 != 11) return;
+            GameDefs defs = sim.Config.Game;
+            foreach (Parcel p in sim.State.Land.Parcels)
+            {
+                if (!p.Owned) continue;
+                string id = defs.Map.Parcels[p.Id].Id;
+                if (Land == LandUse.Lease && LandLeaseRules.CanLease(sim, p.Id) == RejectReason.None) Ok(sim, new LeaseOutLand(t, id));
+                else if (Land == LandUse.Zone && ZoningRules.CanZone(sim, p.Id) == RejectReason.None && ZoningRules.ZoneOf(p) == Zone.Agricultural) Ok(sim, new ZoneParcel(t, id));
+                else if (Land == LandUse.Hold && !p.Protected && !p.Listed && p.CostBasis > 0 && LandRules.ParcelPrice(sim, p) * 10 >= p.CostBasis * 11) Ok(sim, new ListParcel(t, id));
+            }
+            if (sim.State.Clock.SimTime % sim.Clock.SecondsPerSeason >= 86_400) return; // a season's wait between buys
+            foreach (Parcel p in sim.State.Land.Parcels)
+            {
+                if (p.Owned || !defs.Map.Parcels[p.Id].ForSale || !ZoningRules.Serviced(sim, p.Id) || !LandSystemAdjacent(sim, p.Id)) continue;
+                long price = LandRules.ParcelPrice(sim, p);
+                if (sim.State.Ledger.Cash < price + HomeReserve(sim)) continue; // the first season it can afford one
+                if (Ok(sim, new BuyParcel(t, defs.Map.Parcels[p.Id].Id, null))) return;
+            }
+        }
+
+        private static bool LandSystemAdjacent(Simulation sim, int parcel)
+        {
+            foreach (int tile in sim.Config.Game.Map.Parcels[parcel].Tiles)
+            {
+                int x = tile % sim.Config.Game.Map.Width, y = tile / sim.Config.Game.Map.Width;
+                foreach (int n in new[] { y > 0 ? tile - sim.Config.Game.Map.Width : -1, x > 0 ? tile - 1 : -1, x < sim.Config.Game.Map.Width - 1 ? tile + 1 : -1, y < sim.Config.Game.Map.Height - 1 ? tile + sim.Config.Game.Map.Width : -1 })
+                    if (n >= 0 && sim.State.Land.Parcels[sim.State.Land.Tiles[n].ParcelId].Owned) return true;
+            }
+            return false;
         }
 
         private long Spare(Simulation sim) { return sim.State.Ledger.Cash - HomeReserve(sim); }

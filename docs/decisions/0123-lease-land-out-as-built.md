@@ -1,6 +1,6 @@
 # 0123. Leasing land out as built: per parcel, rent 2.5% of its land value upfront at the close, a locked acre
 
-- Status: Proposed (2026-11-18); the owner reviews US-261 with the story
+- Status: Accepted (owner, 2026-11-18, US-261 approved)
 - Date: 2026-11-18
 - Deciders: Keyur Patel
 - Related ADRs: 0030, 0039, 0078, 0119, 0121, 0122

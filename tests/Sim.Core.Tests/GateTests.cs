@@ -345,6 +345,57 @@ namespace Sim.Core.Tests
             }
         }
 
+        // US-263 item 8 (spec 022 §9, decided with the numbers): can a default Township carry each policy on its own? The Township bot enacts one policy as
+        // soon as it can; the treasury never goes below zero, every book reconciles, and the median town ends two years on still holding cash, though a policy
+        // may be paused at a close it can't pay (that is the rule, not a failure: a policy is paid in full or paused, ADR 0118). Printed: the treasury and the
+        // lowest service, to read how much each policy costs the town.
+        [Test]
+        public void PolicyAffordability()
+        {
+            SimConfig config = LiveTownship();
+            foreach (Sim.Core.Town.PolicyId policy in new[] { Sim.Core.Town.PolicyId.Meals, Sim.Core.Town.PolicyId.Subsidy, Sim.Core.Town.PolicyId.Grant, Sim.Core.Town.PolicyId.MinWage, Sim.Core.Town.PolicyId.RentControl })
+            {
+                Gate.TownshipResult r = Gate.Township(config, () => new TownshipBot(false) { Policy = policy }, 12, 80);
+                var after = r.TreasuryAfter.OrderBy(c => c).ToList();
+                TestContext.Out.WriteLine("POLICY " + policy + ": treasury two years on " + string.Join(" ", r.TreasuryAfter.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; lowest service " + string.Join(" ", r.LowestService.Select(x => x.ToString("0.00"))) + "; broken " + r.Broken);
+                Assert.That(r.Broken, Is.Zero, policy + ": never below zero, books reconcile");
+                Assert.That(after[after.Count / 2], Is.GreaterThan(0), policy + ": the median town still holds cash two years on");
+            }
+        }
+
+        // Spec 024 §9 (US-142, US-143, US-261): the land stress bots. The same Township bot that leases every idle parcel out, zones every idle bought
+        // parcel for builders, or buys a serviced parcel a season and sells it slowly once its land value has risen a tenth, over 16 seeds to 60 seasons
+        // (the Township about season 25, so about 35 seasons of it): none ends above 1.2 × the plain bot's net worth (ADR 0016's 20%), so land is never
+        // the best use of money. Leasing's rent is 2.5% of land value against 5,800 an acre a season from a hired hand and 20,000 farmed by you
+        // (`economy`: an acre costs 6.0 seasons of an owner-operated acre's net at land value 1.0).
+        [Test]
+        public void LandStress()
+        {
+            SimConfig config = LiveTownship();
+            double Worth(TownshipBot.LandUse use)
+            {
+                var worth = new double[16];
+                var extra = new int[16]; // parcels beyond the inherited six that the bot ended up owning or sold to builders: a stress bot that does nothing proves nothing
+                System.Threading.Tasks.Parallel.For(0, 16, i =>
+                {
+                    var bot = new TownshipBot(false) { Land = use };
+                    Economy.Run run = Economy.RunBot(config, bot, 60, (ulong)(i + 1), null);
+                    worth[i] = (double)Sim.Core.Finance.Reporting.NetWorth(run.Sim).Total / 100.0 / ((double)run.Sim.State.Market.PriceIndex.Raw / 4294967296.0);
+                    extra[i] = run.Sim.State.Land.Parcels.Count(p => p.Owned && !p.Protected) + run.Sim.State.Land.Parcels.Count(p => p.BuilderOwned);
+                });
+                TestContext.Out.WriteLine("LAND " + use + ": extra parcels owned or sold on, median " + extra.OrderBy(x => x).ElementAt(8) + ", most " + extra.Max());
+                return worth.OrderBy(w => w).ElementAt(8);
+            }
+            double plain = Worth(TownshipBot.LandUse.None);
+            TestContext.Out.WriteLine("LAND plain net worth median " + plain.ToString("0"));
+            foreach (TownshipBot.LandUse use in new[] { TownshipBot.LandUse.Lease, TownshipBot.LandUse.Zone, TownshipBot.LandUse.Hold })
+            {
+                double w = Worth(use);
+                TestContext.Out.WriteLine("LAND " + use + " net worth median " + w.ToString("0") + " = " + (w / plain).ToString("0.000") + " × plain");
+                Assert.That(w, Is.LessThanOrEqualTo(plain * 1.2), use + ": land is never the best use of money (ADR 0016)");
+            }
+        }
+
         // Spec 023 §3.8, §9, AC-10 (US-100): a Township left alone at default taxes with no civic building breaks even within two years: the treasury
         // takes in what it pays out in the second year (measured −5,000 to +54,000 a second year, owner-approved 2026-11-18 with the clerk's wage 20,000, the
         // doctor's allowance 20,000 and the clinic's upkeep 1,500), every service stays at 100%, the doctor is in post and the old village stays.

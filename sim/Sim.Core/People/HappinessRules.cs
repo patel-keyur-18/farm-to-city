@@ -58,7 +58,7 @@ namespace Sim.Core.People
                 : three.MulRatio(1, 3);
             Fixed belonging = Sim.Core.Town.CivicRules.Belonging(sim, x, p.Belonging); // the temple and the banyan square, and the community hall
             Fixed leisure = Sim.Core.Town.CivicRules.Leisure(sim, x, x.Leisure > 0 ? p.Leisure : Fixed.Zero);
-            Fixed growth = SchoolRules.IsOpen(sim) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure; // the layer's mean once the school counts (ADR 0095 §6)
+            Fixed growth = SchoolRules.Met(sim, x) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure; // the layer's mean once the school counts (ADR 0095 §6)
             x.Survival = survival;
             x.Security = security;
             x.Belonging = belonging;

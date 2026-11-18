@@ -139,6 +139,34 @@ namespace Sim.Core.Tests
             Assert.That(After(false), Is.GreaterThan(Fixed.FromInt(10).Raw), "unleased: fallow recovers");
         }
 
+        // Review fixes: a seized or sold parcel loses its zone, its lease and a waiting slow sale; a listing is refused on an acre a hand has an order on.
+        [Test]
+        public void ReleaseClearsEverything()
+        {
+            Simulation sim = Township();
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new ZoneParcel(t, "e1"));
+            Ok(sim, new ListParcel(t, "e1"));
+            Parcel p = P(sim, "e1");
+            long job = p.SlowSaleJobId;
+            Assert.That(job, Is.Not.EqualTo(0));
+            p.Lease = (int)LeaseStatus.Active;
+            LandSystem.Release(sim, p);
+            Assert.That((p.Zone, p.Lease, p.Listed, p.SlowSaleJobId), Is.EqualTo((0, 0, false, 0L)));
+            Assert.That(sim.State.Jobs.Find(job), Is.Null, "the waiting sale is cancelled");
+        }
+
+        [Test]
+        public void ListRefusedWithAnOrder()
+        {
+            Simulation sim = Township();
+            Assert.That(sim.State.People, Is.Not.Null);
+            int tile = sim.Config.Game.Map.Parcels[sim.Config.Game.Map.IndexOfParcel("e1")].Tiles[0];
+            sim.State.People.Orders.Add(new Sim.Core.People.StandingOrder { HandId = 1, Kind = Sim.Core.People.OrderTargetKind.Field, Target = tile });
+            Assert.That(sim.Execute(new ListParcel(sim.State.Clock.SimTime, "e1")).Reason, Is.EqualTo(RejectReason.ParcelInUse));
+            Assert.That(sim.Execute(new LeaseOutLand(sim.State.Clock.SimTime, "e1")).Reason, Is.EqualTo(RejectReason.ParcelInUse));
+        }
+
         // AC-12: a running lease survives a save and load; the hash matches.
         [Test]
         public void SavesRoundTrip()

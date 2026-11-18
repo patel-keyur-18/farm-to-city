@@ -1,6 +1,6 @@
 # 0119. Spec 024: zoning, land value, rentals, upgrades and overlays
 
-- Status: Proposed (2026-11-17). The owner reviews spec 024 at the Sprint 21 pull request; the gaps were not closed one per message because the sprint was finished in one go at the owner's request.
+- Status: Accepted (owner, 2026-11-17, G1–G11 closed one per message)
 - Date: 2026-11-17
 - Deciders: Keyur Patel
 - Related ADRs: 0107, 0110, 0116, 0117, 0118

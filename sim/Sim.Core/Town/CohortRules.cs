@@ -4,6 +4,7 @@ using Sim.Core.Finance;
 using Sim.Core.Market;
 using Sim.Core.Maths;
 using Sim.Core.People;
+using Sim.Core.Progress;
 
 namespace Sim.Core.Town
 {
@@ -153,6 +154,16 @@ namespace Sim.Core.Town
             LandValueRules.Read(sim); // land value exists from the Township on (spec 024 §3.1)
             Refresh(sim);
             sim.Emit(new CohortJoined(s.JoinedAt, s.Households, People(sim)));
+        }
+
+        /// <summary>
+        /// A town that reached the Township before the old village could join (a save made by the developer panel's Next era under schema 19) is
+        /// joined at its next close, so land value, zoning and leasing switch on for it too.
+        /// </summary>
+        internal static void EnsureJoined(Simulation sim)
+        {
+            if (sim.State.Township == null || sim.State.Township.Cohort.Joined || !TownshipRules.Reached(sim)) return;
+            Join(sim);
         }
 
         /// <summary>The close, after the treasury's (spec 023 §3.10): happiness, then a household under the line for two closes running leaves.</summary>

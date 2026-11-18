@@ -90,6 +90,7 @@ namespace Sim.Core.People
                 c.Job = CitizenJob.None;
                 c.Story.Add(new StoryLine(StoryKind.Died, t, 0));
                 x.Members.Remove(c.Id);
+                Town.ClinicRules.CitizenDied(sim, c); // the doctor's death ends his post (spec 023 §3.1)
                 x.MourningSeason = season; // the household mourns this season (§3.9)
                 bool empty = x.Members.Count == 0;
                 if (empty) s.Households.Remove(x); // an elder living alone: the house is free for a new family (§3.10)

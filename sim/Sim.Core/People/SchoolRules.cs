@@ -117,6 +117,8 @@ namespace Sim.Core.People
             foreach (Citizen c in sim.State.Citizens.Citizens)
             {
                 if (!c.Living || CitizenRules.Age(sim, c) < from) continue;
+                Household home = sim.State.Citizens.Household(c.HouseholdId);
+                if (home != null && HouseholdRules.InBuildersHome(sim, home)) continue; // a builder's family is a resident, not one of your people (spec 024 §3.3)
                 counted++;
                 if (c.Literate) literate++;
             }
@@ -158,9 +160,15 @@ namespace Sim.Core.People
         }
 
         /// <summary>The citizen's home is within the school's reach (spec 023 §3.6, one rule for every civic building).</summary>
-        public static bool Covered(Simulation sim, Citizen c)
+        public static bool Covered(Simulation sim, Citizen c) { return HomeCovered(sim, sim.State.Citizens.Household(c.HouseholdId)); }
+
+        /// <summary>The school counts as met for a household: it is open, and any children are within its reach.</summary>
+        public static bool Met(Simulation sim, Household x) { return IsOpen(sim) && (HomeCovered(sim, x) || !HouseholdRules.HasChildren(sim, x)); }
+
+        /// <summary>A household's home is within the school's reach. Reach counts from the Township only: before it every home is served, as in Phases 1 and 2 (spec 023 §3.6).</summary>
+        public static bool HomeCovered(Simulation sim, Household x)
         {
-            Household x = sim.State.Citizens.Household(c.HouseholdId);
+            if (!Town.TownshipRules.Reached(sim)) return true;
             Land.Building home = x == null ? null : sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
             return home == null || Town.CoverageRules.Within(sim, home.TileId, Def(sim).Tile, Def(sim).Reach);
         }

@@ -24,6 +24,19 @@ namespace Sim.Core.Tests
             return sim;
         }
 
+        // Review fix: a town that reached the Township before the old village could join (a schema-19 save) is joined at its next close.
+        [Test]
+        public void JoinsAtTheCloseIfMissed()
+        {
+            Simulation sim = Township();
+            CohortRules.State(sim).Joined = false;
+            CohortRules.State(sim).Households = 0;
+            Assert.That(LandValueRules.On(sim), Is.False);
+            sim.AdvanceTo(TreasuryTests.NextClose(sim) + Hour);
+            Assert.That((CohortRules.Joined(sim), CohortRules.State(sim).Households), Is.EqualTo((true, 30)));
+            Assert.That(LandValueRules.On(sim), Is.True, "land value, zoning and leasing switch on");
+        }
+
         // AC-6: 30 households and 150 people join at the unlock; they are residents, and the school's pupils.
         [Test]
         public void Join()
