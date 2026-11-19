@@ -27,7 +27,7 @@ The player turns a farm of rain-fed acres and hand tools into a capital-backed f
 - A combine harvester, hired or bought (ADR 0089: harvesting is a free tap in Phase 2, so a hired combine would buy nothing), cold storage, a tube well per acre, solar pumps: Phase 3.
 - Droughts, floods and hailstorms as events: the event engine (F16.1).
 - Apple orchards: hill parcels, Phase 3.
-- Hands driving the tractor for neighbours (custom hiring as a business): Phase 3.
+- Hands driving the tractor for neighbours (custom hiring as a business): Phase 3. **Built in Sprint 23 (US-256, ADR 0137):** a switch on a bought tractor, 8 acres a morning at 80 an acre, farm income; a business with its own books is Phase 4.
 
 ## 3. Rules and formulas
 

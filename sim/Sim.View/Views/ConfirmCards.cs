@@ -42,7 +42,7 @@ namespace Sim.View.Views
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
                 typeof(SellToTrader), typeof(DeliverOrder), typeof(GoToMandi), typeof(Buy), typeof(BuyMedicine), typeof(HireLabourers), typeof(Offer), typeof(Withdraw),
-                typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetKeepHeifers), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
+                typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetKeepHeifers), typeof(SetHireOut), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
                 typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),

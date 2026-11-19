@@ -167,6 +167,9 @@ namespace Sim.Core.Commands
         UnknownMachine,
         NoShedRoom,
         PartOfMachine,
+        /// <summary>Hiring out (US-256): a leased machine can't be let on; nobody to drive it.</summary>
+        LeasedMachine,
+        NoHandToDrive,
 
         // Spec 013 §3.3 (orchards, ADR 0090)
         NoOrchard,

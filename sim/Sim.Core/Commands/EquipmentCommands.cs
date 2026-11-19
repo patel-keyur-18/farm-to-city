@@ -211,4 +211,31 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>
+    /// Hire your bought machine out to neighbours on the days it works, or stop (US-256, ADR 0137). Switching on needs a hired hand to drive it
+    /// and a machine of yours, not leased; switching off always works.
+    /// </summary>
+    public sealed class SetHireOut : TimedCommand
+    {
+        public long MachineId { get; }
+        public bool On { get; }
+
+        public SetHireOut(long at, long machineId, bool on) : base(at)
+        {
+            MachineId = machineId;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Machine m = EquipmentRules.Find(sim, MachineId);
+            if (m == null) return CommandResult.Reject(RejectReason.UnknownMachine);
+            if (On && m.Leased) return CommandResult.Reject(RejectReason.LeasedMachine);
+            if (On && EquipmentRules.Defs(sim).Machines[m.Kind].CustomAcresPerDay == 0) return CommandResult.Reject(RejectReason.UnknownMachine);
+            if (On && !EquipmentRules.HasDriver(sim)) return CommandResult.Reject(RejectReason.NoHandToDrive);
+            m.HireOut = On;
+            return CommandResult.Ok;
+        }
+    }
 }

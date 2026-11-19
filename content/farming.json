@@ -25,12 +25,12 @@
   "equipment": {
     "machines": [
       { "id": "ox_plough", "nameKey": "machine.ox_plough", "unlockEra": "hamlet", "price": 10000, "lifeSeasons": 20, "bullocks": 2,
-        "leasePerSeason": 0, "hirePerDay": 900, "maintenanceShare": 0, "dieselPerAcreSeason": 0, "acres": 6, "labourCut": 0.15, "tools": 1.03, "cartKg": 500, "loan": false },
+        "leasePerSeason": 0, "hirePerDay": 900, "maintenanceShare": 0, "dieselPerAcreSeason": 0, "acres": 6, "labourCut": 0.15, "tools": 1.03, "cartKg": 500, "customAcresPerDay": 0, "loan": false },
       { "id": "tractor", "nameKey": "machine.tractor", "unlockEra": "village", "price": 600000, "lifeSeasons": 60, "bullocks": 0,
-        "leasePerSeason": 30000, "hirePerDay": 2000, "maintenanceShare": 0.015, "dieselPerAcreSeason": 600, "acres": 20, "labourCut": 0.35, "tools": 1.06, "cartKg": 2000, "loan": true }
+        "leasePerSeason": 30000, "hirePerDay": 2000, "maintenanceShare": 0.015, "dieselPerAcreSeason": 600, "acres": 20, "labourCut": 0.35, "tools": 1.06, "cartKg": 2000, "customAcresPerDay": 8, "loan": true }
     ],
     "bullock": "bullock",
-    "breakdownMaintained": 0.005, "breakdownSkipped": 0.04, "repairShare": 0.05, "resaleShare": 0.8,
+    "breakdownMaintained": 0.005, "breakdownSkipped": 0.04, "repairShare": 0.05, "resaleShare": 0.8, "customFeeShare": 0.8, "customWear": 2,
     "workFromHour": 7, "workToHour": 19, "parkTile": 167
   },
   "orchard": {

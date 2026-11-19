@@ -213,6 +213,65 @@ namespace Sim.Core.Equipment
             return v;
         }
 
+        // ---- hiring out to neighbours (US-256, ADR 0137) ----
+
+        /// <summary>A hired hand who can drive it: any hand not away on a course or on sick leave.</summary>
+        public static bool HasDriver(Simulation sim)
+        {
+            if (sim.State.People == null) return false;
+            foreach (People.Hand h in sim.State.People.Hands) if (!People.WorkRules.Away(h)) return true;
+            return false;
+        }
+
+        /// <summary>Working for neighbours on the coming mornings: the switch on, yours (not leased), running, with a hand to drive it.</summary>
+        public static bool HiringOut(Simulation sim, Machine m) { return m.HireOut && !m.Leased && Running(sim, m) && HasDriver(sim); }
+
+        /// <summary>What neighbours pay for a day at the cap: the share of the day's hire for the acres they want (spec 025 §3.8).</summary>
+        public static long HireFee(Simulation sim, MachineDef d)
+        {
+            return Money.RoundToCoin(Money.MulRate(Hire(sim, d) * d.CustomAcresPerDay / d.Acres, Defs(sim).CustomFeeShare));
+        }
+
+        /// <summary>The diesel those acres burn, at a season's diesel an acre spread over the days it works (yours to pay).</summary>
+        public static long HireDiesel(Simulation sim, MachineDef d) { return Money.RoundToCoin(Diesel(sim, d, 1) * d.CustomAcresPerDay / d.Acres); }
+
+        /// <summary>The fee for one acre, and what a day's work costs in repairs on average (its extra chance of breaking × a repair).</summary>
+        public static long HireFeePerAcre(Simulation sim, MachineDef d) { return Money.MulRate(Hire(sim, d) / d.Acres, Defs(sim).CustomFeeShare); }
+
+        public static long HireWear(Simulation sim, Machine m)
+        {
+            Fixed chance = m.Maintained ? Defs(sim).BreakdownMaintained : Defs(sim).BreakdownSkipped;
+            return Money.MulRate(Repair(sim, m), chance * Fixed.FromInt(Defs(sim).CustomWear - 1));
+        }
+
+        /// <summary>What a season of hiring out leaves after diesel and the expected repairs (it can be negative on a bad price).</summary>
+        public static long HireNetPerSeason(Simulation sim, Machine m)
+        {
+            MachineDef d = Defs(sim).Machines[m.Kind];
+            return (HireFee(sim, d) - HireDiesel(sim, d) - HireWear(sim, m)) * sim.Clock.DaysPerSeason;
+        }
+
+        /// <summary>The machine's own cost of standing there a season: its depreciation and its maintenance.</summary>
+        public static long StandingCostPerSeason(Simulation sim, Machine m) { return m.Cost / Defs(sim).Machines[m.Kind].LifeSeasons + Maintenance(sim, m); }
+
+        /// <summary>This season's days worked for neighbours: acres, fees and diesel (from the season's entries).</summary>
+        public static void HiredOutSeason(Simulation sim, Machine m, out int acres, out long fees, out long diesel)
+        {
+            acres = 0; fees = 0; diesel = 0;
+            long from = sim.State.Finance.SeasonStartEntry;
+            string reference = "machine:" + m.Id;
+            foreach (JournalEntry e in sim.State.Ledger.Entries)
+            {
+                if (e.Id < from || e.DescriptionKey != "ledger.machineHireOut" || e.Reference != reference) continue;
+                acres += Defs(sim).Machines[m.Kind].CustomAcresPerDay;
+                foreach (Posting p in e.Postings)
+                {
+                    if (p.Account == Account.MachineHire) fees -= p.Amount;
+                    else if (p.Account == Account.Power) diesel += p.Amount;
+                }
+            }
+        }
+
         // ---- the close, the day ----
 
         /// <summary>
@@ -298,6 +357,17 @@ namespace Sim.Core.Equipment
                     continue;
                 }
                 Fixed chance = m.Maintained ? Defs(sim).BreakdownMaintained : Defs(sim).BreakdownSkipped;
+                if (HiringOut(sim, m))
+                {
+                    long fee = HireFee(sim, d), fuel = HireDiesel(sim, d);
+                    if (!changed) FarmSystem.Accrue(sim);
+                    changed = true;
+                    var postings = new List<Posting> { new Posting(Account.Cash, fee - fuel), new Posting(Account.MachineHire, -fee) };
+                    if (fuel != 0) postings.Add(new Posting(Account.Power, fuel));
+                    sim.State.Ledger.Post(t, sim.Period, "ledger.machineHireOut", "machine:" + m.Id, postings.ToArray());
+                    sim.Emit(new MachineHiredOut(t, m.Id, d.Id, d.CustomAcresPerDay, fee, fuel));
+                    chance = chance * Fixed.FromInt(Defs(sim).CustomWear); // a day's work for neighbours wears it
+                }
                 Fixed u = Fixed.FromRaw((long)(Rng.Next(sim.State.Seed, RngStream.Equipment, (ulong)m.Id, day) >> 32));
                 if (u >= chance) continue;
                 if (!changed) FarmSystem.Accrue(sim);

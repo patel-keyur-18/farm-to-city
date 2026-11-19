@@ -66,7 +66,7 @@ namespace Sim.View.Views
         {
             Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.SeedsAndPlanting, Account.FertiliserAndSpraying,
             Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent, Account.Depreciation, Account.TransportAndSelling,
-            Account.Power, Account.Repairs,
+            Account.Power, Account.Repairs, Account.MachineHire,
         };
 
         // The *why your cash moved* lines, in the order shown.
@@ -243,6 +243,7 @@ namespace Sim.View.Views
             switch (a)
             {
                 case Account.MilkSales: return "milk";
+                case Account.MachineHire: return "tractor";
                 case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return "animal_buffalo";
                 case Account.RentReceived: return "family_house";
                 case Account.LandRentReceived: return "land";

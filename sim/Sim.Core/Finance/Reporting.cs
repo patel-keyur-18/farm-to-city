@@ -6,7 +6,7 @@ namespace Sim.Core.Finance
     /// <summary>The season report (spec 005 §3.4 step 3, ADR 0032 grouping) and net worth (§3.5).</summary>
     public static class Reporting
     {
-        private static readonly Account[] FarmIncome = { Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales };
+        private static readonly Account[] FarmIncome = { Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.MachineHire };
         private static readonly Account[] FarmCosts =
         {
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,

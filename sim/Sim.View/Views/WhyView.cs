@@ -125,7 +125,7 @@ namespace Sim.View.Views
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },
             { "treasuryFund", TreasuryFund },
             // Equipment (spec 013 §3.2).
-            { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
+            { "machine", Machine }, { "machineValue", MachineValue }, { "hireFee", HireFee }, { "hireCost", HireCost }, { "hirePays", HirePays }, { "fieldTools", FieldTools },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

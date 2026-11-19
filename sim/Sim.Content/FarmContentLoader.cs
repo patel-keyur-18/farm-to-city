@@ -360,7 +360,7 @@ namespace Sim.Content
             if (o["equipment"] == null) return null;
             string p = Join(root, "equipment");
             JObject d = Object(o["equipment"], p);
-            OnlyFields(d, p, "machines", "bullock", "breakdownMaintained", "breakdownSkipped", "repairShare", "resaleShare", "workFromHour", "workToHour", "parkTile");
+            OnlyFields(d, p, "machines", "bullock", "breakdownMaintained", "breakdownSkipped", "repairShare", "resaleShare", "customFeeShare", "customWear", "workFromHour", "workToHour", "parkTile");
             int Era(JObject x, string xp)
             {
                 string id = String(Required(x, xp, "unlockEra"), Join(xp, "unlockEra"));
@@ -380,7 +380,7 @@ namespace Sim.Content
                 string mp = Index(Join(p, "machines"), i);
                 JObject m = Object(tokens[i], mp);
                 OnlyFields(m, mp, "id", "nameKey", "unlockEra", "price", "lifeSeasons", "bullocks", "leasePerSeason", "hirePerDay", "maintenanceShare",
-                    "dieselPerAcreSeason", "acres", "labourCut", "tools", "cartKg", "loan");
+                    "dieselPerAcreSeason", "acres", "labourCut", "tools", "cartKg", "customAcresPerDay", "loan");
                 var def = new MachineDef
                 {
                     Id = UniqueId(m, mp, machines.ConvertAll(x => x.Id)), NameKey = String(Required(m, mp, "nameKey"), Join(mp, "nameKey")), UnlockEra = Era(m, mp),
@@ -388,7 +388,7 @@ namespace Sim.Content
                     Bullocks = BoundedInt(m, mp, "bullocks", 0, 4), LeasePerSeason = Money(Required(m, mp, "leasePerSeason"), Join(mp, "leasePerSeason")),
                     HirePerDay = Money(Required(m, mp, "hirePerDay"), Join(mp, "hirePerDay")), MaintenanceShare = Bounded(m, mp, "maintenanceShare", "0", "0.5"),
                     DieselPerAcreSeason = Money(Required(m, mp, "dieselPerAcreSeason"), Join(mp, "dieselPerAcreSeason")), Acres = BoundedInt(m, mp, "acres", 1, 200),
-                    LabourCut = Bounded(m, mp, "labourCut", "0", "0.9"), Tools = Bounded(m, mp, "tools", "1", "1.5"), CartKg = BoundedInt(m, mp, "cartKg", 0, 10000),
+                    LabourCut = Bounded(m, mp, "labourCut", "0", "0.9"), Tools = Bounded(m, mp, "tools", "1", "1.5"), CartKg = BoundedInt(m, mp, "cartKg", 0, 10000), CustomAcresPerDay = BoundedInt(m, mp, "customAcresPerDay", 0, 100),
                     Loan = Bool(Required(m, mp, "loan"), Join(mp, "loan")),
                 };
                 if (def.Price <= 0 || def.HirePerDay <= 0) throw new ContentException(mp, "a machine needs a price and a day's hire");
@@ -402,10 +402,12 @@ namespace Sim.Content
                 Machines = machines.AsReadOnly(), Bullock = bullock,
                 BreakdownMaintained = Bounded(d, p, "breakdownMaintained", "0", "1"), BreakdownSkipped = Bounded(d, p, "breakdownSkipped", "0", "1"),
                 RepairShare = Bounded(d, p, "repairShare", "0", "1"), ResaleShare = Bounded(d, p, "resaleShare", "0", "1"),
+                CustomFeeShare = Bounded(d, p, "customFeeShare", "0", "1"), CustomWear = BoundedInt(d, p, "customWear", 1, 10),
                 WorkFromHour = BoundedInt(d, p, "workFromHour", 0, 23), WorkToHour = BoundedInt(d, p, "workToHour", 1, 24), ParkTile = park,
             };
             if (e.WorkToHour <= e.WorkFromHour) throw new ContentException(Join(p, "workToHour"), "must be after workFromHour");
             if (e.BreakdownSkipped < e.BreakdownMaintained) throw new ContentException(Join(p, "breakdownSkipped"), "skipping maintenance never lowers the chance");
+            foreach (MachineDef m in machines) if (m.CustomAcresPerDay > m.Acres) throw new ContentException(p, "neighbours' acres a day can't exceed what the machine covers");
             return e;
         }
 

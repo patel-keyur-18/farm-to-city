@@ -49,6 +49,9 @@ namespace Sim.Core.Finance
         FruitSales = 4010,
         MilkSales = 4020,
         LivestockSales = 4030,
+
+        /// <summary>What neighbours pay for your tractor's days on their fields (US-256, ADR 0137): farm income, matching the diesel and repairs it costs. Schema 21.</summary>
+        MachineHire = 4040,
         DayLabourEarnings = 4100,
         RentReceived = 4200,
 
@@ -138,7 +141,7 @@ namespace Sim.Core.Finance
             Account.MoneylenderLoans, Account.Overdraft, Account.BankLoans, Account.InterestPayable,
             Account.OpeningEquity, Account.RetainedEarnings, Account.OwnersCapital,
             Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.DayLabourEarnings, Account.RentReceived, Account.BusinessDrawingsIncome, Account.InterestOnSavings, Account.LandRentReceived,
-            Account.Sales, Account.ServiceIncome, Account.GainOnAssetSales, Account.DebtWrittenOff, Account.HerdGrowth,
+            Account.Sales, Account.ServiceIncome, Account.GainOnAssetSales, Account.DebtWrittenOff, Account.HerdGrowth, Account.MachineHire,
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.LivingCosts, Account.HealthCosts,
             Account.GiftsToVillage, Account.Rent, Account.Interest, Account.PenaltyInterest, Account.Depreciation, Account.LossOnAssetSales,
             Account.TransportAndSelling, Account.CostOfGoodsSold, Account.Power, Account.Repairs,
@@ -165,7 +168,7 @@ namespace Sim.Core.Finance
                 case Account.GiftsToVillage: return 15;
                 case Account.BankDeposit: case Account.InterestOnSavings: return 16;
                 case Account.LandRentReceived: return 20;
-                case Account.HerdGrowth: return 21;
+                case Account.HerdGrowth: case Account.MachineHire: return 21;
                 case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;

@@ -202,7 +202,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - depreciation
 - a resale value
 
-Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2 (spec 013, ADR 0075): an ox plough with a pair of bullocks in a second cattle shed (Hamlet, ADR 0088) and a tractor (Village) cover a number of acres, cut their labour and raise the Tools factor of a crop sown with them; the combine harvester waits for Phase 3 (ADR 0089). Skipped maintenance raises the chance of a breakdown (24 h out and a repair). On the map machines are seen at work on your fields by day; at night the bullocks rest in their shed and the tractor parks on the farm lane (ADR 0088).
+Players can buy, lease, or hire a machine for a day from a neighbour. In Phase 2 (spec 013, ADR 0075): an ox plough with a pair of bullocks in a second cattle shed (Hamlet, ADR 0088) and a tractor (Village) cover a number of acres, cut their labour and raise the Tools factor of a crop sown with them; the combine harvester waits for Phase 3 (ADR 0089). Skipped maintenance raises the chance of a breakdown (24 h out and a repair). On the map machines are seen at work on your fields by day; at night the bullocks rest in their shed and the tractor parks on the farm lane (ADR 0088). **Your tractor for neighbours (Phase 3, US-256, ADR 0137):** a switch on a bought tractor sends it, with a hired hand driving, to plough up to 8 acres a morning for neighbours at 80% of the day's hire; the diesel and wear are yours, the income is farm income, and it helps with running costs but never pays for the tractor.
 
 **Storage and selling**
 

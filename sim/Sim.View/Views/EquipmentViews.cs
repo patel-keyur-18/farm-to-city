@@ -72,6 +72,7 @@ namespace Sim.View.Views
                     });
                 }
             }
+            if (d.CustomAcresPerDay > 0) HireOut(ctx, vm, m, d);
             long mid = m.Id;
             vm.Lines.Add(new LineVm(s.Get(m.Leased ? "equipment.giveBack" : "equipment.sell"), null)
             {
@@ -80,6 +81,41 @@ namespace Sim.View.Views
                     m.Leased ? null : d.Bullocks > 0 ? s.Get("equipment.withPair", "price", ctx.Fmt.Coins(EquipmentRules.SaleValue(sim, m))) : ctx.Fmt.Coins(EquipmentRules.SaleValue(sim, m)),
                     ActionKind.Secondary, at => new SellMachine(at, mid)),
             });
+        }
+
+        /// <summary>The *Hiring out* block (US-256, Preview 10): the switch, this season's work for neighbours and an honest "does it pay?".</summary>
+        private static void HireOut(ViewContext ctx, SheetVm vm, Machine m, MachineDef d)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            vm.Lines.Add(LineVm.Header(s.Get("equipment.hireOutHeader")));
+            if (m.Leased)
+            {
+                vm.Lines.Add(new LineVm(s.Get("equipment.hireOut"), s.Get("equipment.hireOutLeased")) { Note = s.Get("equipment.hireOutLeasedNote") });
+                return;
+            }
+            long id = m.Id;
+            bool on = m.HireOut, broken = EquipmentRules.Broken(sim, m);
+            string state = !on ? s.Get("equipment.hireOutOff") : broken ? s.Get("equipment.hireOutResting") : m.Unpaid ? s.Get("equipment.hireOutIdle")
+                : !EquipmentRules.HasDriver(sim) ? s.Get("equipment.hireOutNoHand") : s.Get("equipment.hireOutOn", "acres", ctx.Fmt.Integer(d.CustomAcresPerDay));
+            string note = on && broken ? s.Get(m.RepairDue > 0 ? "equipment.hireOutWaitsRepair" : "equipment.hireOutBroken", "time", ctx.Fmt.Duration(m.BrokenUntil - ctx.Now))
+                : s.Get("equipment.hireOutNote", "acres", ctx.Fmt.Integer(d.CustomAcresPerDay), "fee", ctx.Fmt.Paise(EquipmentRules.HireFeePerAcre(sim, d)));
+            long net = EquipmentRules.HireNetPerSeason(sim, m);
+            vm.Lines.Add(new LineVm(s.Get("equipment.hireOut"), state, "hireFee", id)
+            {
+                Icon = Icon(d), Note = note, NoteTone = on && (broken || m.Unpaid || !EquipmentRules.HasDriver(sim)) ? Tone.Warn : Tone.Plain,
+                Action = ActionVm.Checked(ctx, "hireOut:" + id, s.Get(on ? "equipment.hireOutStop" : "equipment.hireOutStart"), on || net <= 0 ? null : s.Get("equipment.hireOutAbout", "net", ctx.Fmt.Coins(net)),
+                    ActionKind.Secondary, at => new SetHireOut(at, id, !on)),
+            });
+            EquipmentRules.HiredOutSeason(sim, m, out int acres, out long fees, out long diesel);
+            if (on || acres > 0)
+                vm.Lines.Add(new LineVm(s.Get("equipment.hireSeason"), s.Get("equipment.hireSeasonValue", "acres", ctx.Fmt.Integer(acres), "fees", ctx.Fmt.Coins(fees)), "hireCost", id)
+                    { Note = s.Get("equipment.hireSeasonNote", "diesel", ctx.Fmt.Coins(diesel)) });
+            long standing = EquipmentRules.StandingCostPerSeason(sim, m);
+            vm.Lines.Add(new LineVm(s.Get("equipment.hirePays"), on ? s.Get(net >= 0 ? "equipment.hirePaysAbout" : "equipment.hirePaysLoses", "net", ctx.Fmt.Coins(System.Math.Abs(net))) : s.Get("equipment.hirePaysNot"), "hirePays", id)
+                { Note = on ? s.Get("equipment.hirePaysSum", "fee", ctx.Fmt.Coins(EquipmentRules.HireFee(sim, d) * sim.Clock.DaysPerSeason), "diesel", ctx.Fmt.Coins(EquipmentRules.HireDiesel(sim, d) * sim.Clock.DaysPerSeason),
+                        "wear", ctx.Fmt.Coins(EquipmentRules.HireWear(sim, m) * sim.Clock.DaysPerSeason), "standing", ctx.Fmt.Coins(standing))
+                    : s.Get("equipment.hirePaysNote", "standing", ctx.Fmt.Coins(standing)) });
         }
 
         private static void Offers(ViewContext ctx, SheetVm vm, int k, MachineDef d)

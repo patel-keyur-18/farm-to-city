@@ -71,6 +71,23 @@ namespace Sim.Core.Events
         protected override string Describe() { return "MachineBroke(id=" + MachineId + ", kind=" + Kind + ", cost=" + Cost + ", paid=" + Paid + ")"; }
     }
 
+    /// <summary>A machine of yours worked neighbours' fields this morning (US-256): the acres, the fee paid and the diesel it burnt.</summary>
+    public sealed class MachineHiredOut : SimEvent
+    {
+        public long MachineId { get; }
+        public string Kind { get; }
+        public int Acres { get; }
+        public long Fee { get; }
+        public long Diesel { get; }
+
+        public MachineHiredOut(long simTime, long machineId, string kind, int acres, long fee, long diesel) : base(simTime)
+        {
+            MachineId = machineId; Kind = kind; Acres = acres; Fee = fee; Diesel = diesel;
+        }
+
+        protected override string Describe() { return "MachineHiredOut(id=" + MachineId + ", kind=" + Kind + ", acres=" + Acres + ", fee=" + Fee + ", diesel=" + Diesel + ")"; }
+    }
+
     /// <summary>A broken machine works again.</summary>
     public sealed class MachineRepaired : SimEvent
     {
