@@ -1,6 +1,6 @@
 # 0130. Utilities as built: five works, one department, going without costs health, land value and Belonging
 
-- Status: Proposed (owner approved Preview 4 on 2026-11-19 with the recommendations below; the story review comes next)
+- Status: Accepted (owner approved Preview 4 and then the story, 2026-11-19)
 - Date: 2026-11-19
 - Deciders: Keyur Patel
 - Amends: spec 025 §3.1, §5
