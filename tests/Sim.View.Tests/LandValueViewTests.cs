@@ -166,5 +166,14 @@ namespace Sim.View.Tests
             string text = LeaseViews.Parts(ViewKit2.Context(sim), x);
             Assert.That(text, Does.Contain("from the land's value"));
         }
+
+        // Every part an acre's value can have is said in words (the smoke and the missing drains were left out and the ? threw): LandPart keys are all in the table.
+        [Test]
+        public void EveryPartHasWords()
+        {
+            ViewContext ctx = ViewKit2.Context(Township());
+            foreach (string key in new[] { "district", "lane", "school", "clinic", "square", "water", "jobs", "size", "smoke", "drains" })
+                Assert.That(ctx.Strings.Has("why.landValue." + key), Is.True, key);
+        }
     }
 }

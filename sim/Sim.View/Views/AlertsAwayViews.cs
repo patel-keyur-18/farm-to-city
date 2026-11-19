@@ -595,6 +595,7 @@ namespace Sim.View.Views
                     case DoctorUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorUnpaid"), "place_clinic_plot")); break; // spec 023 §3.9
                     case CohortHouseholdLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.cohortLeft"), "place_council_hall")); break; // spec 023 §3.5
                     case BuildHeld bh: rows.Add(Row(s.Get("away.town"), s.Get("away.buildHeld", "what", s.Get("build.kind." + bh.Kind), "good", BuildingSheet.Good(ctx, bh.Good)), "brick")); break; // spec 025 §3.2
+                    case HouseUpgraded hu when hu.Owner == 0: rows.Add(Row(s.Get("away.town"), s.Get("away.houseUpgraded", "home", TownWords.Home(ctx, hu.BuildingId)), "family_house")); break; // US-152
                     case UtilityBuilt ub: rows.Add(Row(s.Get("away.town"), s.Get("away.utilityBuilt", "name", UtilitySheet.Name(ctx, ub.Utility)), "place_" + UtilitySheet.Ids[ub.Utility] + "_plot")); break; // spec 025 §3.1
                     case GridConnected _: rows.Add(Row(s.Get("away.town"), s.Get("away.gridConnected"), "place_grid_plot")); break;
                     case CivicBuilt cb: rows.Add(Row(s.Get("away.town"), s.Get("away.civicBuilt"), "place_" + CivicSheet.Ids[cb.Civic] + "_plot")); break; // spec 023 §3.7
@@ -701,7 +702,7 @@ namespace Sim.View.Views
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
             { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
-            { "CivicBuilt", Use.Away }, { "UtilityBuilt", Use.Away }, { "GridConnected", Use.Away }, { "BuildStarted", Use.StateOnly }, { "BuildHeld", Use.Away }, { "BuildFinished", Use.StateOnly }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
+            { "HouseUpgradeStarted", Use.Motion }, { "HouseUpgraded", Use.Away }, { "CivicBuilt", Use.Away }, { "UtilityBuilt", Use.Away }, { "GridConnected", Use.Away }, { "BuildStarted", Use.StateOnly }, { "BuildHeld", Use.Away }, { "BuildFinished", Use.StateOnly }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },

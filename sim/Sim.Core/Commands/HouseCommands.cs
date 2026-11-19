@@ -61,6 +61,19 @@ namespace Sim.Core.Commands
         }
     }
 
+    /// <summary>
+    /// Makes a kutcha family house pucca (spec 024 §3.7, US-152): paid in full at the start (materials and masons, as a new house is), the family
+    /// stays, and the house is pucca when the build is done. Rejected when it is not offered.
+    /// </summary>
+    public sealed class UpgradeHouse : TimedCommand
+    {
+        public long BuildingId { get; }
+
+        public UpgradeHouse(long at, long buildingId) : base(at) { BuildingId = buildingId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return Town.UpgradeRules.Order(sim, BuildingId); }
+    }
+
     /// <summary>A hand's answer to a free family house (spec 014 §3.13): yes brings his family, not now lets strangers come.</summary>
     public sealed class AnswerFamilyRequest : TimedCommand
     {

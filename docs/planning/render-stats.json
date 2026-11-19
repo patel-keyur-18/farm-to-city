@@ -411,5 +411,8 @@
   {"label":"US-253 the ring (open; hills one in three, meadow, zoom cap 90%)","view":"farm","date":"2026-11-18","drawCalls":350,"batches":350,"setPassCalls":9,"triangles":9431,"visibleSprites":397,"sprites":2295},
   {"label":"US-253 the ring (open; zoom cap 85%)","view":"all","date":"2026-11-18","drawCalls":1103,"batches":1103,"setPassCalls":12,"triangles":31302,"visibleSprites":1366,"sprites":2250},
   {"label":"US-253 the ring (open; zoom cap 85%)","view":"village","date":"2026-11-18","drawCalls":479,"batches":479,"setPassCalls":9,"triangles":13850,"visibleSprites":572,"sprites":2250},
-  {"label":"US-253 the ring (open; zoom cap 85%)","view":"farm","date":"2026-11-18","drawCalls":349,"batches":349,"setPassCalls":9,"triangles":9429,"visibleSprites":396,"sprites":2250}
+  {"label":"US-253 the ring (open; zoom cap 85%)","view":"farm","date":"2026-11-18","drawCalls":349,"batches":349,"setPassCalls":9,"triangles":9429,"visibleSprites":396,"sprites":2250},
+  {"label":"US-152","view":"all","date":"2026-11-19","drawCalls":1070,"batches":1070,"setPassCalls":12,"triangles":24046,"visibleSprites":1304,"sprites":2222},
+  {"label":"US-152","view":"village","date":"2026-11-19","drawCalls":476,"batches":476,"setPassCalls":9,"triangles":9588,"visibleSprites":563,"sprites":2222},
+  {"label":"US-152","view":"farm","date":"2026-11-19","drawCalls":365,"batches":365,"setPassCalls":9,"triangles":6915,"visibleSprites":401,"sprites":2222}
 ]

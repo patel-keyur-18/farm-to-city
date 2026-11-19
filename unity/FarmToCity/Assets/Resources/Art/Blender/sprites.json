@@ -2991,6 +2991,62 @@
    "name": "portrait_town_m"
   },
   {
+   "w": 268,
+   "h": 244,
+   "pivotX": 0.45858,
+   "pivotY": 0.37378,
+   "name": "pucca_house_building_e"
+  },
+  {
+   "w": 268,
+   "h": 248,
+   "pivotX": 0.4593,
+   "pivotY": 0.31917,
+   "name": "pucca_house_building_n"
+  },
+  {
+   "w": 268,
+   "h": 242,
+   "pivotX": 0.5407,
+   "pivotY": 0.35691,
+   "name": "pucca_house_building_s"
+  },
+  {
+   "w": 268,
+   "h": 248,
+   "pivotX": 0.54142,
+   "pivotY": 0.31917,
+   "name": "pucca_house_building_w"
+  },
+  {
+   "w": 252,
+   "h": 276,
+   "pivotX": 0.49048,
+   "pivotY": 0.29884,
+   "name": "pucca_house_e"
+  },
+  {
+   "w": 252,
+   "h": 256,
+   "pivotX": 0.49048,
+   "pivotY": 0.30751,
+   "name": "pucca_house_n"
+  },
+  {
+   "w": 252,
+   "h": 280,
+   "pivotX": 0.50952,
+   "pivotY": 0.29495,
+   "name": "pucca_house_s"
+  },
+  {
+   "w": 252,
+   "h": 256,
+   "pivotX": 0.50952,
+   "pivotY": 0.30751,
+   "name": "pucca_house_w"
+  },
+  {
    "w": 124,
    "h": 118,
    "pivotX": 0.5247,

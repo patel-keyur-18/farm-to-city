@@ -34,7 +34,7 @@ namespace Sim.View.Views
         {
             var k = new Dictionary<Type, ConfirmKind>();
             void Add(ConfirmKind kind, params Type[] types) { foreach (Type t in types) k[t] = kind; }
-            Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
+            Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
                 typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
@@ -132,6 +132,7 @@ namespace Sim.View.Views
             if (c is SetSavingsCover) Standing(ctx, vm);
             else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
             else if (c is BuildFamilyHouse house && house.Financing == null && Sim.Core.Town.ConstructionRules.On(sim)) BuildingSheet.CardRows(ctx, vm, Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1), "build.cardNowYours", "build.cardAfterYours", sim.State.Ledger.Cash, after.State.Ledger.Cash);
+            else if (c is UpgradeHouse upgrade) UpgradeSheet.Card(ctx, vm, sim, after, upgrade);
             else if (c is CommissionWorks works) Works(ctx, vm, sim, after, works);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
@@ -145,6 +146,7 @@ namespace Sim.View.Views
             if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
                 vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
             if (c is BuildFamilyHouse bf && Sim.Core.Town.ConstructionRules.On(sim)) vm.Warning = BuildingSheet.Timing(ctx, after, true) + BuildingSheet.KilnSaving(ctx, Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1)); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
+            if (c is UpgradeHouse uh) vm.Warning = UpgradeSheet.Warning(ctx, sim, after, uh); // US-152: when it is ready and what the rent does
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
             {

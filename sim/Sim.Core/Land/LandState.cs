@@ -195,9 +195,12 @@ namespace Sim.Core.Land
 
         public bool Builders { get { return Owner == 1; } }
 
+        /// <summary>A family house made pucca (spec 024 §3.7, US-152): it lets at the pucca rent.</summary>
+        public bool Pucca { get; internal set; }
+
         internal Building Clone()
         {
-            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated, Owner = Owner };
+            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated, Owner = Owner, Pucca = Pucca };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -209,6 +212,7 @@ namespace Sim.Core.Land
             h.WriteLong(Depreciated);
             h.WriteInt(SeasonsDepreciated);
             if (h.Hashing ? Owner != 0 : !(h is SaveWriter w && w.Schema < 20)) h.WriteInt(Owner); // schema 20; hashed once a builder's
+            if (h.Hashing ? Pucca : !(h is SaveWriter p && p.Schema < MapMigration.RingSchema)) h.WriteBool(Pucca); // schema 21; hashed once a house is pucca
         }
 
         internal static Building ReadFrom(SaveReader r)
@@ -219,6 +223,7 @@ namespace Sim.Core.Land
                 SeasonsDepreciated = r.ReadInt(),
             };
             if (r.Schema >= 20) b.Owner = r.ReadInt();
+            if (r.Schema >= MapMigration.RingSchema) b.Pucca = r.ReadBool();
             return b;
         }
     }

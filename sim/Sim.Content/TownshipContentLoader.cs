@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +113,7 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map) };
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root) };
         }
 
         /// <summary>The utilities (spec 025 §3.1): each step's plot, work, lines, reach and capacity, and what going without costs.</summary>
@@ -225,6 +225,15 @@ namespace Sim.Content
                 MasonDay = Money(Required(j, p, "masonDay"), Join(p, "masonDay")), GangPrice = Bounded(j, p, "gangPrice", "1", "3"), GangHours = Bounded(j, p, "gangHours", "1", "3"),
                 MaxMasons = BoundedInt(j, p, "maxMasons", 1, 10), RestockHour = BoundedInt(j, p, "restockHour", 0, 23), MasonShare = BoundedInt(j, p, "masonShare", 0, 100), Kinds = kinds,
             };
+        }
+
+        /// <summary>Pucca upgrades (spec 024 §3.7): the land value that offers one and the pucca rent; its materials are the <c>pucca_upgrade</c> construction kind.</summary>
+        private static UpgradeDef LoadUpgrade(JObject o, string root)
+        {
+            string p = Join(root, "upgrade");
+            JObject j = Object(Required(o, root, "upgrade"), p);
+            OnlyFields(j, p, "puccaMinLandValue", "puccaRent");
+            return new UpgradeDef { PuccaMinLandValue = Bounded(j, p, "puccaMinLandValue", "1", "3"), PuccaRent = Money(Required(j, p, "puccaRent"), Join(p, "puccaRent")) };
         }
 
         private static ZoningDef LoadZoning(JObject o, string root)

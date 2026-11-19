@@ -24,8 +24,11 @@ namespace Sim.Core.Town
         public int Parcel { get; internal set; } = -1;
         public int Units { get; internal set; } = 1;
 
-        /// <summary>Your house's <see cref="Sim.Core.People.Construction"/> (the site on the map), else 0.</summary>
+        /// <summary>Your house's <see cref="Sim.Core.People.Construction"/> (the site on the map), else 0; for an upgrade, the id of the <see cref="Sim.Core.Land.Building"/> being made pucca.</summary>
         public long House { get; internal set; }
+
+        /// <summary>A family house being made pucca (US-152): <see cref="House"/> is its building.</summary>
+        public bool Upgrade { get { return Kind == Sim.Core.Definitions.UpgradeDef.Kind; } }
 
         /// <summary>What was paid at the start (1/100 coin), the masons' part of it, and the masons reserved (empty: the district's gang).</summary>
         public long Paid { get; internal set; }

@@ -122,9 +122,9 @@ namespace Sim.Core.People
         }
 
         /// <summary>The market rent of a house on a tile at today's prices: the base × the place × the index, to a whole coin.</summary>
-        public static long MarketRent(Simulation sim, int tileId)
+        public static long MarketRent(Simulation sim, int tileId, bool pucca = false)
         {
-            long rent = Money.MulRate(MarketRules.Indexed(sim, P(sim).BaseRent), Place(sim, tileId));
+            long rent = Money.MulRate(MarketRules.Indexed(sim, pucca ? sim.Config.Game.Township.Upgrade.PuccaRent : P(sim).BaseRent), Place(sim, tileId)); // a pucca house lets for more (spec 024 §3.7)
             return rent / Money.Coin * Money.Coin;
         }
 
@@ -138,7 +138,7 @@ namespace Sim.Core.People
         public static long MarketRentFor(Simulation sim, Household x)
         {
             Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
-            return home == null || !HouseRules.IsHouse(sim, home) ? 0 : MarketRent(sim, home.TileId);
+            return home == null || !HouseRules.IsHouse(sim, home) ? 0 : MarketRent(sim, home.TileId, home.Pucca);
         }
 
         /// <summary>A household with a lease: in a family house with nobody working as your hand (the house is his pay otherwise).</summary>
@@ -154,10 +154,10 @@ namespace Sim.Core.People
         public static long SeasonsLeft(Simulation sim, Household x) { return System.Math.Max(0, P(sim).LeaseSeasons - (Season(sim) - x.LeaseStart)); }
 
         /// <summary>What a renewal could take now (§3.14).</summary>
-        public static LeaseOptions Options(Simulation sim, Household x)
+        public static LeaseOptions Options(Simulation sim, Household x, long marketRent = -1)
         {
             PopulationDefs p = P(sim);
-            long current = x.LeaseRent, market = MarketRentFor(sim, x);
+            long current = x.LeaseRent, market = marketRent >= 0 ? marketRent : MarketRentFor(sim, x); // a given market rent: what a renewal would take if the house were pucca (US-152)
             var o = new LeaseOptions { Current = current, Market = market, Income = x.Income };
             o.Bearable = Money.MulRate(x.Income, p.BurdenLimit) / Money.Coin * Money.Coin;
             if (current > market)

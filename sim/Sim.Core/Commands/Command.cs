@@ -282,6 +282,10 @@ namespace Sim.Core.Commands
 
         /// <summary>The land is closed: the ring until the Township, the hills until they open (spec 025 §3.4).</summary>
         LandClosed,
+
+        // Spec 024 §3.7 (pucca upgrades, US-152)
+        /// <summary>No such building.</summary>
+        UnknownBuilding,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

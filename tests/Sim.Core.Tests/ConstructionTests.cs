@@ -45,7 +45,8 @@ namespace Sim.Core.Tests
             foreach (BuildKindDef k in d.Kinds)
             {
                 long materials = k.Bricks * d.BrickPrice + k.Cement * d.CementPrice + k.Timber * d.TimberPrice, masons = k.MasonDays * d.MasonDay;
-                long expected = k.Work == null ? sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value : sim.Config.Game.Treasury.Works.First(w => w.Id == k.Work).Cost;
+                long house = sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value;
+                long expected = k.Id == UpgradeDef.Kind ? 240_000_00L - house : k.Work == null ? house : sim.Config.Game.Treasury.Works.First(w => w.Id == k.Work).Cost; // the pucca upgrade is spec 024 §3.7's 2,40,000 pucca house less the kutcha one
                 Assert.That(materials + masons, Is.EqualTo(expected).Within(expected / 50), k.Id + " at the base prices");
             }
             BuildQuote q = ConstructionRules.Quote(sim, "family_house", BuildProject.Yours, 1);

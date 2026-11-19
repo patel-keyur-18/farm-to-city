@@ -82,6 +82,8 @@ A parcel's price (what you pay) is spec 002's price × `LV`, so land near a grow
 | Hand's hut → kutcha house | the difference in value (**45,000**) | the hut's household is a family and a family house is allowed (spec 014) |
 | Kutcha → pucca house | the difference (**1,80,000** of the pucca house's 2,40,000) | `LV` ≥ **1.15**, water (§3.1), and the household's income allows the pucca rent: the rent (7,000 × the rent's place, as kutcha's 2,500) ≤ 30% of its income |
 
+**As built (US-152, ADR 0131):** the hut → kutcha upgrade is cut (a hand's hut holds one hand alone, so its household is never a family). The pucca upgrade is a **build**: bricks, cement, timber and mason-days (the `pucca_upgrade` kind; 1,80,000 within 2% at the base prices, 48 hours ÷ masons), paid at the start and drawn from the trader's day. A house is offered at `LV` ≥ 1.15 with clean water near, an acre that is neither listed nor leased, and (for a tenant) the pucca rent within 30% of the family's income; an empty or a hand's house needs no such test. The payback is the sum: about **40** seasons. Builders upgrade one of their homes a close by the same rules.
+
 (G6) The upgrade takes 48 h and the family stays; the card shows the cost, the new rent at the renewal and "pays back in about 48 seasons" (a slow, low-yield choice, said plainly); there is no extra pucca benefit now. A builder upgrades its own houses by the same thresholds, by itself: that is how the town's houses become pucca. Yours is a tap card (spec 008): cost, the new rent at the lease's next renewal, who pays. The tenant's rent moves at the renewal (spec 014 §3.14), never at once.
 
 ### 3.8 Overlays (US-153, G7)
@@ -90,7 +92,7 @@ A button on the map opens one overlay at a time: **fertility**, **land value**, 
 
 ### 3.9 Processing order
 
-At each season close, after the treasury (spec 021 §3.10), **as built:** the old season's rents are collected; a town that reached the Township before the old village could join is joined; `LV` is re-read for every acre; **leases** end or pay their rent upfront (US-261); then **builders'** purchases (one parcel) and the permit fee into the treasury; then the new season's rents at the renewals. **Slow sales** complete on their own job when their 2 days are up (not at the close). Zoned shops' pitches and builders' upgrades are cut (ADR 0122) or Sprint 23's (US-152).
+At each season close, after the treasury (spec 021 §3.10), **as built:** the old season's rents are collected; a town that reached the Township before the old village could join is joined; `LV` is re-read for every acre; **leases** end or pay their rent upfront (US-261); then **builders'** purchases (one parcel) and the permit fee into the treasury; then the new season's rents at the renewals. **Slow sales** complete on their own job when their 2 days are up (not at the close). Zoned shops' pitches are cut (ADR 0122); the builders' upgrades are US-152's (ADR 0131), made once the builders have bought.
 
 ### 3.10 Clear for an average player
 

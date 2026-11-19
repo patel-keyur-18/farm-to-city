@@ -227,6 +227,7 @@ namespace Sim.Core.People
             Town.LandValueRules.Read(sim); // spec 024 §3.9: land value is read once, before this season's leases renew
             Town.LandLeaseRules.Close(sim); // leases end or pay their rent upfront (spec 024 §3.6)
             Town.ZoningRules.Close(sim); // then builders buy a parcel if families are waiting (spec 024 §3.3)
+            Town.UpgradeRules.Close(sim); // and make one of their homes pucca, where it is offered (spec 024 §3.7)
             foreach (Household x in s.Households)
             {
                 Fixed e = Town.ClinicRules.Effect(sim, x); // spec 023 §3.2: the clinic's reach, capacity and the Health service

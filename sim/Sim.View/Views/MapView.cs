@@ -196,6 +196,10 @@ namespace Sim.View.Views
         public long Id { get; internal set; }
         public string DefId { get; internal set; }
         public int TileId { get; internal set; }
+
+        /// <summary>A family house made pucca (US-152), or one being made so (drawn with its scaffolding).</summary>
+        public bool Pucca { get; internal set; }
+        public bool Upgrading { get; internal set; }
     }
 
     /// <summary>A hand's hut being built (spec 006 §3.4): drawn as its building stage on the acre's edge.</summary>
@@ -579,7 +583,7 @@ namespace Sim.View.Views
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)
-                if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
+                if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId, Pucca = b.Pucca, Upgrading = Sim.Core.Town.UpgradeRules.Underway(sim, b.Id) != null }); // the godown is in the mandi town (ADR 0087)
             AddSchool(ctx, map);
             AddClinic(ctx, map);
             AddHouses(ctx, map);

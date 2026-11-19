@@ -3077,7 +3077,11 @@ HOUSE_SCALE = 0.70       # times BUILDING_SCALE: two homes with their courtyards
 
 
 def model_family_house(stage):
-    """A family house: a two-room pucca house, lime-washed over brick with an ochre dado, a flat roof with a parapet and a
+    return group(family_house_parts(stage), scale=BUILDING_SCALE * HOUSE_SCALE)
+
+
+def family_house_parts(stage):
+    """A family house (the kutcha house of the game): a two-room house, lime-washed over brick with an ochre dado, a flat roof with a parapet and a
     terracotta-tiled verandah on two posts; in front a low courtyard wall (aangan) with a gate gap, a tulsi, a charpai and pots.
     stage 'done' or 'building' (the plinth, half-raised brick walls, bamboo scaffolding, a brick stack and a sand heap)."""
     o = []
@@ -3115,7 +3119,7 @@ def model_family_house(stage):
             for j in range(2):
                 o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.09 + j * 0.055, -0.12, 0.009 + i * 0.018), brick))
         o.append(dome("sand", 0.045, 0.032, (0.09, -0.12, 0.006), toon("sand", 0xE2C98E)))
-        return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
+        return o
     # The house: walls with a dado, a flat roof and parapet, two doors and a window, a tiled verandah on two posts.
     o.append(box("walls", (w, d, 0.15), (0, cy, 0.035 + 0.075), lime))
     o.append(box("dado", (w + 0.004, d + 0.004, 0.04), (0, cy, 0.055), dado, outline=False))
@@ -3145,6 +3149,77 @@ def model_family_house(stage):
         o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.15, 0.045), toon("wood", WOOD), segs=6))
     o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.15, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False,
                       rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    for i, (x, c) in enumerate(((-0.03, 0xE2582C), (0.02, 0xF2C94C), (0.07, 0x2E6FBA))):
+        o.append(box("cloth%d" % i, (0.035, 0.004, 0.03), (x, -0.15, 0.07), toon("cloth%d" % i, c), outline=False))
+    return o
+
+
+def model_pucca_house(stage):
+    """A pucca house (US-152): the family house made of brick and concrete and raised a floor: a lime-washed ground floor with its ochre dado,
+    a concrete slab with a front balcony and a grille railing, an upper floor washed pale blue with glazed windows and sunshades, a flat roof
+    with a parapet and the black water tank, the courtyard wall, the gate, the tulsi and the washing as before.
+    stage 'done', or 'building' (the family's house as it stands, with bamboo scaffolding to the roof, a brick stack and a sand heap)."""
+    if stage == "building":
+        o = family_house_parts("done")
+        bam = toon("bamboo", BAMBOO)
+        w, d, cy = 0.31, 0.18, 0.06
+        for x in (-w / 2 - 0.03, 0.0, w / 2 + 0.03):
+            o.append(cylinder("spole%d" % int(x * 100), 0.004, 0.004, 0.30, (x, cy - d / 2 - 0.035, 0.15), bam, segs=6))
+        for z in (0.08, 0.16, 0.24):
+            o.append(cylinder("srail%d" % int(z * 100), 0.003, 0.003, w + 0.06, (0, cy - d / 2 - 0.035, z), bam, segs=6, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+            o.append(box("splank%d" % int(z * 100), (w + 0.04, 0.04, 0.006), (0, cy - d / 2 - 0.045, z + 0.004), toon("plank", 0xB98A55), outline=False))
+        brick = toon("brick", 0xB5653E)
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.17 + j * 0.055, -0.20, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.045, 0.032, (0.15, -0.20, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
+    o = []
+    w, d, cy = 0.31, 0.18, 0.06
+    ay0, ay1 = -0.17, cy - d / 2
+    lime, dado = toon("famLime", 0xF3E9D6), toon("famDado", 0xC9794A)
+    upper, slab = toon("puccaUpper", 0xA9D3E8), toon("puccaSlab", 0xD8CDB8)
+    plinth, steel = toon("plinth", PLINTH), toon("puccaSteel", 0x2F6FA8)
+    glass, frame = toon("puccaGlass", 0x7FB6D6), toon("wood_dark", WOOD_DARK)
+    o.append(box("yard", (w + 0.04, ay1 - ay0, 0.006), (0, (ay0 + ay1) / 2, 0.003), toon("aangan", 0xD8BF92), outline=False))
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.035), (0, cy, 0.0175), plinth, bevel=0.005))
+    wall, cap = toon("yardWall", 0xE6D6B6), toon("wallCap", 0xB98A55)
+    for sx in (-1, 1):
+        o.append(box("sideWall%d" % sx, (0.018, ay1 - ay0, 0.05), (sx * (w / 2 + 0.01), (ay0 + ay1) / 2, 0.025), wall))
+        o.append(box("frontWall%d" % sx, (w / 2 - 0.045, 0.018, 0.05), (sx * (w / 4 + 0.032), ay0, 0.025), wall))
+        o.append(box("cap%d" % sx, (w / 2 - 0.04, 0.024, 0.008), (sx * (w / 4 + 0.032), ay0, 0.054), cap, outline=False))
+        o.append(box("gatePost%d" % sx, (0.022, 0.022, 0.075), (sx * 0.045, ay0, 0.0375), lime))
+    # Ground floor.
+    o.append(box("walls", (w, d, 0.15), (0, cy, 0.11), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.04), (0, cy, 0.055), dado, outline=False))
+    for x in (-0.085, 0.085):
+        o.append(box("door%d" % (x > 0), (0.05, 0.010, 0.10), (x, cy - d / 2 - 0.004, 0.085), steel))
+    o.append(box("windowG", (0.05, 0.010, 0.045), (0.0, cy - d / 2 - 0.004, 0.13), glass))
+    # The concrete slab with its front balcony and a grille railing.
+    o.append(box("slab", (w + 0.014, d + 0.014, 0.016), (0, cy, 0.193), slab))
+    o.append(box("balcony", (w - 0.02, 0.07, 0.012), (0, cy - d / 2 - 0.035, 0.193), slab))
+    o.append(box("railTop", (w - 0.02, 0.008, 0.008), (0, cy - d / 2 - 0.068, 0.236), frame, outline=False))
+    for i in range(7):
+        o.append(box("bar%d" % i, (0.005, 0.005, 0.04), (-0.125 + i * 0.0417, cy - d / 2 - 0.068, 0.214), frame, outline=False))
+    # Upper floor: pale blue wash, three glazed windows with sunshades, a door to the balcony.
+    o.append(box("upper", (w - 0.01, d - 0.01, 0.115), (0, cy, 0.2585 + 0.0), upper))
+    o.append(box("doorU", (0.05, 0.010, 0.09), (0.095, cy - d / 2 + 0.001, 0.245), steel))
+    for x in (-0.095, -0.015):
+        o.append(box("windowU%d" % (x > 0), (0.05, 0.010, 0.05), (x, cy - d / 2 + 0.001, 0.265), glass))
+        o.append(box("shade%d" % (x > 0), (0.066, 0.028, 0.008), (x, cy - d / 2 - 0.012, 0.298), slab))
+    o.append(box("roof", (w + 0.004, d + 0.004, 0.016), (0, cy, 0.325), slab))
+    o.append(box("parapet", (w + 0.008, d + 0.008, 0.02), (0, cy, 0.341), toon("famLimeShade", 0xE2D5BC)))
+    back_details(o, w, d, 0.255, frame)
+    for part in o[-3:]:
+        part.location.y += cy
+    o.append(cylinder("tank", 0.03, 0.03, 0.045, (-0.10, cy + 0.03, 0.375), toon("tank", 0x2E2E2E), segs=14))
+    # The courtyard as before: tulsi, a pot and the washing line.
+    o.append(box("tulsiBase", (0.035, 0.035, 0.045), (-0.10, -0.13, 0.0225), lime, bevel=0.004))
+    o.append(sphere("tulsi", 0.022, (-0.10, -0.13, 0.064), toon("tulsiLeaf", 0x3F8A3A), segs=10, rings=6))
+    o.extend(matka("pot1", (0.12, -0.13, 0.006)))
+    for x in (-w / 2 + 0.01, w / 2 - 0.01):
+        o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.15, 0.045), toon("wood", WOOD), segs=6))
+    o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.15, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
     for i, (x, c) in enumerate(((-0.03, 0xE2582C), (0.02, 0xF2C94C), (0.07, 0x2E6FBA))):
         o.append(box("cloth%d" % i, (0.035, 0.004, 0.03), (x, -0.15, 0.07), toon("cloth%d" % i, c), outline=False))
     return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
@@ -4187,6 +4262,8 @@ def icon_people(kind):
 for _f, _deg in FACINGS.items():
     SPRITES["family_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("done"), d)))()
     SPRITES["family_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("building"), d)))()
+    SPRITES["pucca_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_pucca_house("done"), d)))()  # US-152
+    SPRITES["pucca_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_pucca_house("building"), d)))()
 # ---------------------------------------------------------------- the school (spec 018, US-131): previewed to the owner first
 
 def model_school(stage):

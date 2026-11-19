@@ -31,6 +31,9 @@ namespace Sim.Core.Definitions
         public SmokeDef Smoke { get; set; }
         public UtilitiesDef Utilities { get; set; }
 
+        /// <summary>Making a family house pucca (spec 024 §3.7, US-152).</summary>
+        public UpgradeDef Upgrade { get; set; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {
@@ -238,6 +241,17 @@ namespace Sim.Core.Definitions
 
 namespace Sim.Core.Definitions
 {
+    /// <summary>Making a kutcha family house pucca (spec 024 §3.7, <c>township.json</c> <c>upgrade</c>): offered from this land value; a pucca house lets at this rent × the place.</summary>
+    public sealed class UpgradeDef
+    {
+        public const string Kind = "pucca_upgrade";
+
+        public Fixed PuccaMinLandValue { get; internal set; }
+
+        /// <summary>A season's rent of a pucca house at the base index (1/100 coin), before the place and prices.</summary>
+        public long PuccaRent { get; internal set; }
+    }
+
     /// <summary>Zoning and builders (spec 024 §3.3, <c>township.json</c> <c>zoning</c>).</summary>
     public sealed class ZoningDef
     {

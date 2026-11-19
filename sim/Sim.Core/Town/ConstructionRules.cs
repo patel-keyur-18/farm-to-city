@@ -297,7 +297,7 @@ namespace Sim.Core.Town
             p.StartedAt = t;
             p.ReadyAt = t + p.Hours * 3600L;
             p.JobId = sim.ScheduleJob(Job, p.Id, p.ReadyAt).Id;
-            if (p.House != 0)
+            if (p.House != 0 && !p.Upgrade)
             {
                 Construction c = sim.State.Citizens.Constructions.Find(x => x.Id == p.House);
                 if (c != null) { c.ReadyAt = p.ReadyAt; c.JobId = p.JobId; }
@@ -348,7 +348,7 @@ namespace Sim.Core.Town
         {
             TownshipState s = sim.State.Township;
             if (s == null) return;
-            BuildProject p = s.Projects.Find(x => x.House == houseConstructionId && x.Owner == BuildProject.Yours);
+            BuildProject p = s.Projects.Find(x => x.House == houseConstructionId && x.Owner == BuildProject.Yours && !x.Upgrade);
             if (p == null) return;
             if (p.Working) sim.CompleteJob(sim.State.Jobs.Find(p.JobId));
             s.Projects.Remove(p);
@@ -370,7 +370,8 @@ namespace Sim.Core.Town
                 }
             }
             s.Projects.Remove(p);
-            if (p.Owner == BuildProject.Yours)
+            if (p.Upgrade) UpgradeRules.OnBuilt(sim, p);
+            else if (p.Owner == BuildProject.Yours)
             {
                 CitizensState cs = sim.State.Citizens;
                 Construction c = cs.Constructions.Find(x => x.Id == p.House);

@@ -41,7 +41,8 @@
       { "id": "community_hall", "work": "community_hall", "bricks": 4000, "cement": 30, "timber": 15, "masonDays": 18, "hours": 72 },
       { "id": "water_tower", "work": "water_tower", "bricks": 6000, "cement": 60, "timber": 30, "masonDays": 42, "hours": 96 },
       { "id": "drains", "work": "drains", "bricks": 5000, "cement": 50, "timber": 15, "masonDays": 42, "hours": 96 },
-      { "id": "collection_post", "work": "collection_post", "bricks": 3000, "cement": 20, "timber": 13, "masonDays": 12, "hours": 48 }
+      { "id": "collection_post", "work": "collection_post", "bricks": 3000, "cement": 20, "timber": 13, "masonDays": 12, "hours": 48 },
+      { "id": "pucca_upgrade", "bricks": 8000, "cement": 80, "timber": 24, "masonDays": 55, "hours": 48 }
     ]
   },
   "utilities": {
@@ -54,6 +55,7 @@
     "drains": { "place": "drains_plot", "work": "drains", "upkeepLine": "drains", "reach": 500, "capacity": 300 },
     "collection": { "place": "collection_plot", "work": "collection_post", "upkeepLine": "collection", "extraLine": "collector", "reach": 100000, "capacity": 400 }
   },
+  "upgrade": { "puccaMinLandValue": 1.15, "puccaRent": 7000 },
   "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {
     "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },

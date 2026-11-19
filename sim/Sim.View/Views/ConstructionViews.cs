@@ -63,7 +63,7 @@ namespace Sim.View.Views
 
         internal static BuildProject Of(Simulation sim, Construction c)
         {
-            return sim.State.Township?.Projects.Find(x => x.House == c.Id && x.Owner == BuildProject.Yours);
+            return sim.State.Township?.Projects.Find(x => x.House == c.Id && x.Owner == BuildProject.Yours && !x.Upgrade);
         }
 
         // ---- the sheet: building materials ----

@@ -707,6 +707,9 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             var vm = new SheetVm { Icon = "family_house", Title = s.Get("homestead.title"), Subtitle = s.Get("homestead.subtitle", "n", ctx.Fmt.Integer(sim.Config.Game.Population.HousesPerAcre)) };
             AddHouses(ctx, vm, tile.Id);
+            if (Sim.Core.Town.UpgradeRules.On(sim) && HouseRules.HousesOn(sim, tile.Id) > 0) vm.Lines.Add(new LineVm(s.Get("upgrade.note"), null));
+            LineVm value = LandValueViews.AcreRow(ctx, tile.Id); // from the Township (spec 024 §3.1)
+            if (value != null) vm.Lines.Add(value);
             int free = sim.Config.Game.Population.HousesPerAcre - HouseRules.HousesOn(sim, tile.Id);
             if (free > 0) vm.Lines.Add(new LineVm(s.Plural("homestead.free", free), null));
             if (free > 0) vm.Actions.Add(BuildHere(ctx, tile.Id));
@@ -726,6 +729,7 @@ namespace Sim.View.Views
                 if (x != null) line.Action = ActionVm.Open("household:" + x.Id, s.Get("action.see"), new SheetRequest("Household", x.Id));
                 else line.Note = s.Get("town.houseEmptyNote");
                 vm.Lines.Add(line);
+                UpgradeSheet.Rows(ctx, vm, b); // pucca: the offer, why not, or the work under way (US-152)
             }
             foreach (Construction c in sim.State.Citizens.Constructions)
                 if (c.TileId == tileId)

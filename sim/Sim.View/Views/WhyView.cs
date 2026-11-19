@@ -117,7 +117,7 @@ namespace Sim.View.Views
             { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
             // The school (spec 018).
-            { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
+            { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { UpgradeSheet.Why, UpgradeHouseWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
             { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
             // The town treasury (spec 021).

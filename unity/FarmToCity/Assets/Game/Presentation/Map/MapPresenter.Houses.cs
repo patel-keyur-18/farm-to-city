@@ -42,7 +42,7 @@ namespace Game.Presentation.Map
             {
                 if (b.DefId != Sim.Core.Definitions.PopulationDefs.HouseId) continue;
                 seen.Add(b.Id);
-                PlaceHouse(map, _houses, b.Id, b.TileId, "family_house_", used, animate);
+                PlaceHouse(map, _houses, b.Id, b.TileId, b.Pucca ? "pucca_house_" : b.Upgrading ? "pucca_house_building_" : "family_house_", used, animate); // US-152: pucca, or the house in its scaffolding
             }
             foreach (long id in new List<long>(_houses.Keys)) if (!seen.Contains(id)) { Destroy(_houses[id].gameObject); _houses.Remove(id); }
             seen.Clear();

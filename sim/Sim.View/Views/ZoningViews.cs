@@ -64,6 +64,7 @@ namespace Sim.View.Views
             foreach (Household x in sim.State.Citizens.Households) if (HouseholdRules.InBuildersHome(sim, x)) families++;
             vm.Lines.Add(LineVm.Header(s.Get("builders.header")));
             vm.Lines.Add(new LineVm(s.Get("builders.homes"), ctx.Fmt.Integer(homes), WaitingWhy, -1) { Icon = "family_house" });
+            UpgradeSheet.TownRows(ctx, vm);
             vm.Lines.Add(new LineVm(s.Get("builders.families"), ctx.Fmt.Integer(families), WaitingWhy, -1));
             vm.Lines.Add(new LineVm(s.Get("builders.familiesNote"), null));
             vm.Lines.Add(new LineVm(s.Get("builders.waiting"), ctx.Fmt.Integer(t.TurnedAway), WaitingWhy, -1));
