@@ -305,6 +305,9 @@ namespace Sim.View.Views
 
         /// <summary>Her place on the acre, 0–3 (place 0 is the neem's shade, with no manger).</summary>
         public int Place { get; internal set; }
+
+        /// <summary>A growing heifer, drawn at 70% (ADR 0135).</summary>
+        public bool Young { get; internal set; }
     }
 
     /// <summary>A machine on the map (ADR 0088): at work on a field by day, or the tractor parked on the farm lane.</summary>
@@ -673,7 +676,7 @@ namespace Sim.View.Views
             {
                 if (a.Shed != shed) continue;
                 string pose = a.SickDays > 0 || hour >= 20 || hour < 6 ? "lie" : hour < 9 ? "eat" : new[] { "stand", "eat", "lie" }[(int)((a.Id + hour / 3) % 3)];
-                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = sim.Config.Game.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
+                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = sim.Config.Game.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4, Young = a.Stage == Sim.Core.Livestock.AnimalStage.Heifer });
                 n++;
             }
         }

@@ -157,6 +157,21 @@ namespace Sim.Core.Commands
 
 namespace Sim.Core.Commands
 {
+    /// <summary>Keep heifer calves instead of selling every calf at the fair, or not (spec 025 §3.8, ADR 0135; off by default).</summary>
+    public sealed class SetKeepHeifers : TimedCommand
+    {
+        public bool On { get; }
+
+        public SetKeepHeifers(long at, bool on) : base(at) { On = on; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (sim.State.Livestock == null || LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
+            sim.State.Livestock.KeepHeifers = On;
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>Buy the green fodder shortfall from neighbours every morning, or not (spec 012 §3.7; on by default).</summary>
     public sealed class SetBuyGreenFodder : TimedCommand
     {

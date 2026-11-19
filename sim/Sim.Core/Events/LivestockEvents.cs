@@ -96,13 +96,50 @@ namespace Sim.Core.Events
         public long AnimalId { get; }
         public long Amount { get; }
 
-        public CalfBorn(long simTime, long animalId, long amount) : base(simTime)
+        /// <summary>A bull calf, sold while heifers are being kept (ADR 0135).</summary>
+        public bool Bull { get; }
+
+        public CalfBorn(long simTime, long animalId, long amount, bool bull = false) : base(simTime)
         {
             AnimalId = animalId;
             Amount = amount;
+            Bull = bull;
         }
 
-        protected override string Describe() { return "CalfBorn(animal=" + AnimalId + ", amount=" + Amount + ")"; }
+        protected override string Describe() { return "CalfBorn(animal=" + AnimalId + ", amount=" + Amount + (Bull ? ", bull" : "") + ")"; }
+    }
+
+    /// <summary>She calved a heifer and it was kept (spec 025 §3.8, ADR 0135): <see cref="HeiferId"/>, worth <see cref="Value"/> on the books.</summary>
+    public sealed class CalfKept : SimEvent
+    {
+        public long MotherId { get; }
+        public long HeiferId { get; }
+        public long Value { get; }
+
+        public CalfKept(long simTime, long motherId, long heiferId, long value) : base(simTime) { MotherId = motherId; HeiferId = heiferId; Value = value; }
+
+        protected override string Describe() { return "CalfKept(mother=" + MotherId + ", heifer=" + HeiferId + ", value=" + Value + ")"; }
+    }
+
+    /// <summary>She calved a heifer to keep, but the shed was full: sold at the fair for <see cref="Amount"/> (ADR 0135).</summary>
+    public sealed class CalfNoRoom : SimEvent
+    {
+        public long MotherId { get; }
+        public long Amount { get; }
+
+        public CalfNoRoom(long simTime, long motherId, long amount) : base(simTime) { MotherId = motherId; Amount = amount; }
+
+        protected override string Describe() { return "CalfNoRoom(mother=" + MotherId + ", amount=" + Amount + ")"; }
+    }
+
+    /// <summary>A heifer is grown: a milking cow from day 0 (ADR 0135).</summary>
+    public sealed class HeiferGrown : SimEvent
+    {
+        public long AnimalId { get; }
+
+        public HeiferGrown(long simTime, long animalId) : base(simTime) { AnimalId = animalId; }
+
+        protected override string Describe() { return "HeiferGrown(animal=" + AnimalId + ")"; }
     }
 
     /// <summary>Straw or feed will last less than <c>lowDays</c> game days (spec 012 §3.7); once until refilled.</summary>

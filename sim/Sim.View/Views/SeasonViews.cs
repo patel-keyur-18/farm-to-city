@@ -72,7 +72,7 @@ namespace Sim.View.Views
         // The *why your cash moved* lines, in the order shown.
         internal static readonly string[] MovedOrder =
         {
-            "paidAhead", "wear", "owed", "interestOwed", "interestPaid", "repaid", "borrowed", "boughtBuildings", "boughtLivestock", "boughtTrees",
+            "paidAhead", "wear", "herdGrowth", "owed", "interestOwed", "interestPaid", "repaid", "borrowed", "boughtBuildings", "boughtLivestock", "boughtTrees",
             "boughtLand", "boughtEquipment", "boughtInvestmentInBusinesses", "savedIn", "savedOut", "sold", "fromBusiness", "other",
         };
 
@@ -117,7 +117,8 @@ namespace Sim.View.Views
                         }
                         else labourers += p.Amount;
                     }
-                    else if (p.Account != Account.Cash) Add(moved, MovedKey(p), -p.Amount);
+                    else if (p.Account != Account.Cash)
+                        Add(moved, p.Account == Account.Livestock && System.Linq.Enumerable.Any(e.Postings, q => q.Account == Account.HerdGrowth) ? "herdGrowth" : MovedKey(p), -p.Amount); // a heifer's rise in worth: not a purchase (ADR 0135)
                 }
             }
             long Of(Account a) { return income[System.Array.IndexOf(Accounts.All, a)]; }

@@ -207,7 +207,7 @@ namespace Sim.Core.Livestock
             LivestockState s = sim.State.Livestock;
             if (s == null) return Fixed.Zero;
             Fixed hours = Fixed.Zero;
-            foreach (Animal a in s.Animals) hours += Defs(sim).Animals[a.Kind].LabourHoursPerDay;
+            foreach (Animal a in s.Animals) hours += a.Stage == AnimalStage.Heifer ? Defs(sim).Livestock.HeiferLabourHours : Defs(sim).Animals[a.Kind].LabourHoursPerDay;
             return hours;
         }
 
@@ -215,8 +215,33 @@ namespace Sim.Core.Livestock
         public static long SellPrice(Simulation sim, Animal a)
         {
             AnimalDef def = Defs(sim).Animals[a.Kind];
-            long price = Market.MarketRules.Indexed(sim, def.Price);
+            long price = a.Stage == AnimalStage.Heifer ? HeiferValue(sim, a) : Market.MarketRules.Indexed(sim, def.Price); // a heifer at her worth for her age (ADR 0135)
             return Finance.Money.RoundToCoin(Finance.Money.MulRate(price, def.SellShare * a.Health));
+        }
+
+        /// <summary>Game days a heifer grows: her seasons × the season's days (ADR 0135).</summary>
+        public static int GrowDays(Simulation sim, AnimalDef def)
+        {
+            return def.GrowSeasons * (int)(sim.Clock.SecondsPerSeason / ClockDef.SecondsPerDay);
+        }
+
+        /// <summary>
+        /// A heifer's worth for her age (ADR 0135): the calf's price at birth, rising evenly to a grown animal's price at her first calving,
+        /// both at today's index.
+        /// </summary>
+        public static long HeiferValue(Simulation sim, Animal a)
+        {
+            AnimalDef def = Defs(sim).Animals[a.Kind];
+            long calf = Market.MarketRules.Indexed(sim, def.CalfPrice), grown = Market.MarketRules.Indexed(sim, def.Price);
+            long days = GrowDays(sim, def);
+            long done = System.Math.Min(a.StageDay, days);
+            return calf + (grown - calf) * done / days;
+        }
+
+        /// <summary>Whole game days she still needs to grow (0 once grown).</summary>
+        public static int GrowDaysLeft(Simulation sim, Animal a)
+        {
+            return System.Math.Max(0, GrowDays(sim, Defs(sim).Animals[a.Kind]) - a.StageDay);
         }
 
         public static Animal Find(Simulation sim, long id)

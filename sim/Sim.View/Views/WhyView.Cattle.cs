@@ -144,7 +144,8 @@ namespace Sim.View.Views
             if (a == null) return New(ctx, "why.animal.gone", null);
             AnimalDef d = LivestockRules.Defs(sim).Animals[a.Kind];
             WhyVm vm = New(ctx, "why.animalSell.title", Money(ctx, LivestockRules.SellPrice(sim, a)), "name", a.Name);
-            Row(vm, ctx, "why.animalSell.price", Money(ctx, Sim.Core.Market.MarketRules.Indexed(sim, d.Price)));
+            if (a.Stage == AnimalStage.Heifer) Row(vm, ctx, "why.animalSell.priceHeifer", Money(ctx, LivestockRules.HeiferValue(sim, a)));
+            else Row(vm, ctx, "why.animalSell.price", Money(ctx, Sim.Core.Market.MarketRules.Indexed(sim, d.Price)));
             Row(vm, ctx, "why.animalSell.share", Pct(ctx, d.SellShare));
             Row(vm, ctx, "why.animalSell.health", Pct(ctx, a.Health));
             vm.Footnote = ctx.Strings.Get("why.animalSell.lesson");

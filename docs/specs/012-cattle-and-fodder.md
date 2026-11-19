@@ -34,7 +34,7 @@ The player buys a buffalo or a cow, keeps her fed from their own land, and the v
 **Out** (and where it goes instead):
 - Goats and poultry: later (ADR 0056). No pigs.
 - Silage and chaff cutters: Phase 3 with the equipment ladder (spec 013 / F13.2).
-- Raising calves into heifers, growing the herd from your own calves, breed improvement: later (Phase 3).
+- Raising calves into heifers and growing the herd from your own calves: Phase 3, built (US-254, ADR 0135); breed improvement: later.
 - Ageing and culling of animals: later. Animals don't age in Phase 2.
 - Bullocks for ploughing: the equipment ladder (spec 013, ADR 0075): a pair lives in the second shed (ADR 0088), fed like cattle, no milk.
 - A dairy business (processing milk, a milk round): spec 016 (open conflict noted in `STATUS.md`).
@@ -125,7 +125,7 @@ Example (one buffalo, day 3 of lactation, fully fed, healthy, Care 1.0): 182.4 L
 | --- | --- |
 | Days | At each 6:00 pass, after milking, each animal's `stageDay` grows by 1 |
 | Dry | After `milkDays` she goes dry (no milk, feed × `dryFeedFactor`). Emits `AnimalDry`. *Why?*: "Dry before her next calf: 5 days" |
-| Calving | After `dryDays` she calves: day 0 of a new lactation. Her calf is sold at the fair at once for `calfPrice × PriceIndex`: Dr Cash, Cr 4030 Livestock sales. Emits `CalfBorn(animalId, amount)` |
+| Calving | After `dryDays` she calves: day 0 of a new lactation. Her calf is sold at the fair at once for `calfPrice × PriceIndex`: Dr Cash, Cr 4030 Livestock sales. Emits `CalfBorn(animalId, amount)`. **Phase 3 (US-254, ADR 0135):** with *Heifer calves* switched to *Kept*, half the calves are heifers and are kept (a place free) and raised; bull calves are still sold |
 | Breeding | Implied: the co-op's technician serves her in time; its cost is inside the vet cost per season (§3.10) |
 
 ### 3.7 Feeding (every morning, live or away)

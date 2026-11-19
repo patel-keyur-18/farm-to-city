@@ -8,6 +8,9 @@ namespace Sim.Core.Livestock
     {
         Milking = 0,
         Dry = 1,
+
+        /// <summary>A kept heifer growing into a cow (spec 025 §3.8, ADR 0135): no milk, a place, a share of the ration.</summary>
+        Heifer = 2,
     }
 
     /// <summary>A buffalo or a cow in the shed (spec 012 §4).</summary>
@@ -57,6 +60,9 @@ namespace Sim.Core.Livestock
         /// <summary>Her shed: 0 the cattle acre's, 1 the second shed (ADR 0088). Save schema 14; older saves have one shed.</summary>
         public int Shed { get; internal set; }
 
+        /// <summary>The mother's name, for a kept heifer's row ("Gauri's heifer"); null for the rest. Save schema 21.</summary>
+        public string MotherName { get; internal set; }
+
         internal Animal Clone() { return (Animal)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -78,6 +84,7 @@ namespace Sim.Core.Livestock
             h.WriteLong(Earned);
             h.WriteLong(LastMilkMl);
             if (!(h is SaveWriter w && w.Schema < 14)) h.WriteInt(Shed);
+            if (h.Hashing ? MotherName != null : !(h is SaveWriter hw && hw.Schema < MapMigration.RingSchema)) h.WriteString(MotherName ?? ""); // schema 21; hashed once a heifer is kept
         }
 
         internal static Animal ReadFrom(SaveReader r)
@@ -90,6 +97,7 @@ namespace Sim.Core.Livestock
                 LastMilkMl = r.ReadLong(),
             };
             if (r.Schema >= 14) a.Shed = r.ReadInt();
+            if (r.Schema >= MapMigration.RingSchema) { string m = r.ReadString(); a.MotherName = m.Length == 0 ? null : m; }
             if (a.Shed < 0 || a.Shed > 1) throw new SaveContentException("an animal in shed " + a.Shed);
             return a;
         }
@@ -146,6 +154,9 @@ namespace Sim.Core.Livestock
         /// <summary>Buy the green fodder shortfall from neighbours (§3.7; on by default).</summary>
         public bool BuyGreenFodder { get; internal set; } = true;
 
+        /// <summary>Keep heifer calves instead of selling every calf at the fair (spec 025 §3.8, ADR 0135; off by default). Save schema 21.</summary>
+        public bool KeepHeifers { get; internal set; }
+
         /// <summary>A low warning was given for straw or feed and the place hasn't been refilled above it since (§3.7).</summary>
         public bool StrawLow { get; internal set; }
         public bool FeedLow { get; internal set; }
@@ -190,6 +201,7 @@ namespace Sim.Core.Livestock
             h.WriteLong(LastHomeMl);
             LastFeeding.WriteTo(h);
             if (!(h is SaveWriter w && w.Schema < 14)) h.WriteInt(ShedTile);
+            if (h.Hashing ? KeepHeifers : !(h is SaveWriter kw && kw.Schema < MapMigration.RingSchema)) h.WriteBool(KeepHeifers);
         }
 
         internal static LivestockState ReadFrom(SaveReader r)
@@ -211,6 +223,7 @@ namespace Sim.Core.Livestock
             s.LastHomeMl = r.ReadLong();
             s.LastFeeding = FeedingReport.ReadFrom(r);
             if (r.Schema >= 14) s.ShedTile = r.ReadInt();
+            if (r.Schema >= MapMigration.RingSchema) s.KeepHeifers = r.ReadBool();
             if (s.ShedTile < -1) throw new SaveContentException("a shed on tile " + s.ShedTile);
             return s;
         }

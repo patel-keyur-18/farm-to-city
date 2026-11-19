@@ -21,7 +21,7 @@ namespace Sim.Content
             JObject l = Object(Required(o, root, "livestock"), lp);
             OnlyFields(l, lp, "realDaysPerGameDay", "feedHour", "shedTile", "unlockEra", "householdLitresPerDay", "greenFodderBuyPrice", "greenFodderSellPrice", "milkBasePerLitre", "milkPerFatPoint",
                 "commonsShare", "minMilkFactor", "hungryBelow", "hungerGraceDays", "hungerHealthLoss", "healthRecoveryPerDay", "minHealth", "feedWeights",
-                "lowDays", "diseaseChance", "unvaccinatedFactor", "sickHealthFactor", "sickHealthLoss", "vaccineCost", "vetVisitCost", "lactationCurve", "names");
+                "lowDays", "diseaseChance", "unvaccinatedFactor", "sickHealthFactor", "sickHealthLoss", "vaccineCost", "vetVisitCost", "lactationCurve", "heifer", "names");
 
             int shedTile = BoundedInt(l, lp, "shedTile", 0, map.Tiles.Count - 1);
             if (map.Tiles[shedTile].Terrain != Terrain.Cattle) throw new ContentException(Join(lp, "shedTile"), "the shed goes on the cattle acre (ADR 0064)");
@@ -41,8 +41,16 @@ namespace Sim.Content
             Fixed sum = green + straw + feed, eps = Fixed.Parse("0.000001");
             if (sum < Fixed.One - eps || sum > Fixed.One + eps) throw new ContentException(wp, "the weights must add up to 1");
 
+            string hp = Join(lp, "heifer");
+            JObject hf = Object(Required(l, lp, "heifer"), hp);
+            OnlyFields(hf, hp, "share", "rationShare", "labourHoursPerDay", "dungShare");
+
             var def = new LivestockDef
             {
+                HeiferShare = Bounded(hf, hp, "share", "0", "1"),
+                HeiferRationShare = Bounded(hf, hp, "rationShare", "0", "1"),
+                HeiferLabourHours = Bounded(hf, hp, "labourHoursPerDay", "0", "8"),
+                HeiferDungShare = Bounded(hf, hp, "dungShare", "0", "1"),
                 RealDaysPerGameDay = Bounded(l, lp, "realDaysPerGameDay", "1", "60"),
                 FeedHour = BoundedInt(l, lp, "feedHour", 0, 23),
                 ShedTile = shedTile,
@@ -80,7 +88,7 @@ namespace Sim.Content
                 string p = Index(root + ".animals", i);
                 JObject a = Object(tokens[i], p);
                 OnlyFields(a, p, "id", "nameKey", "price", "milkPerDay", "fatPercent", "seasonMilk", "milkDays", "dryDays", "ration", "dryFeedFactor",
-                    "labourHoursPerDay", "dungCompostKgPerDay", "calfPrice", "sellShare", "draught", "names");
+                    "labourHoursPerDay", "dungCompostKgPerDay", "calfPrice", "growSeasons", "sellShare", "draught", "names");
                 string id = UniqueId(a, p, animals.ConvertAll(x => x.Id));
                 long price = Money(Required(a, p, "price"), Join(p, "price"));
                 if (price <= 0) throw new ContentException(Join(p, "price"), "must be more than 0");
@@ -96,7 +104,10 @@ namespace Sim.Content
                     Bounded(r, rp, "green", "0", "100"), Bounded(r, rp, "straw", "0", "40"), Bounded(r, rp, "feed", "0", "20"),
                     Bounded(a, p, "dryFeedFactor", "0", "1"), Bounded(a, p, "labourHoursPerDay", "0", "8"),
                     Bounded(a, p, "dungCompostKgPerDay", "0", "50"), Money(Required(a, p, "calfPrice"), Join(p, "calfPrice")),
-                    Bounded(a, p, "sellShare", "0", "1"), a["draught"] != null && Bool(a["draught"], Join(p, "draught"))));
+                    Bounded(a, p, "sellShare", "0", "1"), a["draught"] != null && Bool(a["draught"], Join(p, "draught")),
+                    a["growSeasons"] == null ? 0 : BoundedInt(a, p, "growSeasons", 1, 40)));
+                if (!animals[animals.Count - 1].Draught && animals[animals.Count - 1].GrowSeasons == 0)
+                    throw new ContentException(Join(p, "growSeasons"), "a cow or buffalo needs the seasons a heifer takes to grow");
                 if (animals[animals.Count - 1].Draught && (animals[animals.Count - 1].MilkPerDay != Fixed.Zero || animals[animals.Count - 1].CalfPrice != 0))
                     throw new ContentException(p, "a draught animal gives no milk and no calves");
                 if (a["names"] != null)

@@ -42,6 +42,9 @@ namespace Game.Presentation.Map
 
         private CattleYard _cattle, _secondCattle;
 
+        /// <summary>A growing heifer is the cow's sprite at this scale (ADR 0135).</summary>
+        private const float YoungScale = 0.7f;
+
         /// <summary>A point on an acre (render.py's world units: +x lower right, +y upper right) in the map's space.</summary>
         private Vector3 OnAcre(int tile, Vector2 p) { return TileCentre(tile) + new Vector3((p.x + p.y) * HalfWidth, (p.y - p.x) * _grid.HalfHeight, 0f); }
 
@@ -136,8 +139,10 @@ namespace Game.Presentation.Map
                 if (!y.Animals.TryGetValue(a.Id, out SpriteRenderer r))
                 {
                     y.Animals[a.Id] = r = AcrePiece(y.Tile, "animal" + a.Id, "animal_" + a.Kind + "_" + pose, p);
-                    if (animate) Pop(r.transform, 1f);
+                    if (animate) Pop(r.transform, a.Young ? YoungScale : 1f);
+                    r.transform.localScale = Vector3.one * (a.Young ? YoungScale : 1f);
                 }
+                else if (!a.Young && r.transform.localScale.x < 0.99f) r.transform.localScale = Vector3.one; // grown: full size
                 r.sprite = s;
                 r.transform.position = OnAcre(y.Tile, p);
                 r.sortingOrder = AcreOrder(y.Tile, p) + 1;
