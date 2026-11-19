@@ -42,7 +42,7 @@ namespace Sim.Core.Maths
         public static Fixed FromRatio(long numerator, long denominator)
         {
             if (denominator == 0) throw new DivideByZeroException("Fixed.FromRatio: denominator is zero.");
-            return FromBigRatio(new BigInteger(numerator) << FractionBits, denominator);
+            return Ratio(numerator, denominator);
         }
 
         /// <summary>Exact conversion from a decimal (used by the content loader; never via double).</summary>
@@ -87,7 +87,8 @@ namespace Sim.Core.Maths
         public Fixed MulRatio(long numerator, long denominator)
         {
             if (denominator == 0) throw new DivideByZeroException("Fixed.MulRatio: denominator is zero.");
-            return FromBigRatio(new BigInteger(Raw) * numerator, denominator);
+            Wide.Multiply(Magnitude(Raw), Magnitude(numerator), out ulong hi, out ulong lo);
+            return Rounded(hi, lo, Magnitude(denominator), (Raw < 0) != (numerator < 0) != (denominator < 0));
         }
 
         /// <summary>The largest integer ≤ this value.</summary>
@@ -96,7 +97,9 @@ namespace Sim.Core.Maths
         /// <summary>The nearest integer, ties away from zero.</summary>
         public long RoundToLong()
         {
-            return (long)FromBigRatio(new BigInteger(Raw), OneRaw).Raw;
+            ulong n = Magnitude(Raw);
+            ulong q = (n >> FractionBits) + ((n >> (FractionBits - 1)) & 1); // half away from zero; at most 2^31
+            return Raw < 0 ? -(long)q : (long)q;
         }
 
         public static Fixed operator +(Fixed a, Fixed b) { return new Fixed(checked(a.Raw + b.Raw)); }
@@ -119,7 +122,7 @@ namespace Sim.Core.Maths
         public static Fixed operator /(Fixed a, Fixed b)
         {
             if (b.Raw == 0) throw new DivideByZeroException("Fixed divide by zero.");
-            return FromBigRatio(new BigInteger(a.Raw) << FractionBits, b.Raw);
+            return Ratio(a.Raw, b.Raw);
         }
 
         // ---- Powers (spec 004 §3.7): integer arithmetic only, bit-identical on every platform ----
@@ -187,8 +190,25 @@ namespace Sim.Core.Maths
                 if (y.Raw <= 0) throw new ArgumentOutOfRangeException(nameof(y), "Pow(0, y) needs y > 0.");
                 return Zero;
             }
-            return Exp2(y * Log2(x));
+            // The same powers come round every hour (a market good's demand and supply barely move): a pure function, so the answer is remembered.
+            if (_powCache == null) _powCache = new PowEntry[PowCacheSize];
+            int slot = (int)(((ulong)x.Raw * 0x9E3779B97F4A7C15UL ^ (ulong)y.Raw * 0xC2B2AE3D27D4EB4FUL) >> (64 - PowCacheBits));
+            PowEntry e = _powCache[slot];
+            if (e.Valid && e.X == x.Raw && e.Y == y.Raw) return new Fixed(e.Result);
+            Fixed result = Exp2(y * Log2(x));
+            _powCache[slot] = new PowEntry { Valid = true, X = x.Raw, Y = y.Raw, Result = result.Raw };
+            return result;
         }
+
+        private const int PowCacheBits = 10, PowCacheSize = 1 << PowCacheBits;
+
+        private struct PowEntry
+        {
+            public bool Valid;
+            public long X, Y, Result;
+        }
+
+        [ThreadStatic] private static PowEntry[] _powCache;
 
         public static bool operator ==(Fixed a, Fixed b) { return a.Raw == b.Raw; }
         public static bool operator !=(Fixed a, Fixed b) { return a.Raw != b.Raw; }
@@ -222,6 +242,28 @@ namespace Sim.Core.Maths
                 sb.Append('.').Append(digits);
             }
             return sb.ToString();
+        }
+
+        /// <summary>numerator × 2^32 ÷ denominator, rounded to nearest (ties away from zero), without allocating.</summary>
+        private static Fixed Ratio(long numerator, long denominator)
+        {
+            ulong n = Magnitude(numerator);
+            return Rounded(n >> FractionBits, n << FractionBits, Magnitude(denominator), (numerator < 0) != (denominator < 0));
+        }
+
+        /// <summary>The 128-bit magnitude (hi:lo) ÷ d, rounded to nearest (ties away from zero) and signed; throws when the result does not fit a long. Same results as <see cref="FromBigRatio"/>.</summary>
+        private static Fixed Rounded(ulong hi, ulong lo, ulong d, bool negative)
+        {
+            if (hi >= d) throw new OverflowException("Fixed result out of range.");
+            ulong q = Wide.Divide(hi, lo, d, out ulong r);
+            if (r >= d - r) { if (++q == 0) throw new OverflowException("Fixed result out of range."); }
+            if (negative)
+            {
+                if (q > (1UL << 63)) throw new OverflowException("Fixed result out of range.");
+                return new Fixed(q == (1UL << 63) ? long.MinValue : -(long)q);
+            }
+            if (q > long.MaxValue) throw new OverflowException("Fixed result out of range.");
+            return new Fixed((long)q);
         }
 
         /// <summary>Rounds numerator ÷ denominator to nearest (ties away from zero) as a raw value.</summary>
