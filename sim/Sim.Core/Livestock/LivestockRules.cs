@@ -244,6 +244,39 @@ namespace Sim.Core.Livestock
             return System.Math.Max(0, GrowDays(sim, Defs(sim).Animals[a.Kind]) - a.StageDay);
         }
 
+        /// <summary>
+        /// What the chaff cutter saves a game day at today's prices if every feed were bought (ADR 0136): the green fodder it saves after the
+        /// commons' share at the neighbours' price, and the straw it saves at the input price. Feed from your own fields costs nothing in your books, so there it saves less.
+        /// </summary>
+        public static long ChaffSavingPerDay(Simulation sim)
+        {
+            LivestockDefs defs = Defs(sim);
+            LivestockDef ld = defs.Livestock;
+            long green = 0, straw = 0;
+            foreach (Animal a in sim.State.Livestock.Animals)
+            {
+                var n = LivestockSystem.NeedOf(sim, a, false);
+                green += n.Green;
+                straw += n.Straw;
+            }
+            Fixed commons = ld.CommonsShare[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)];
+            long greenSaved = (ld.ChaffCutterSaving * (Fixed.One - commons)).MulRatio(green, 1).RoundToLong();
+            long strawSaved = ld.ChaffCutterSaving.MulRatio(straw, 1).RoundToLong();
+            return Finance.Money.Value(greenSaved, ld.GreenFodderBuyPrice * sim.State.Market.PriceIndex, 1000)
+                + Finance.Money.Value(strawSaved, Market.MarketRules.InputPrice(sim, defs.Straw), sim.Config.Game.Market.Goods[defs.Straw].UnitSize);
+        }
+
+        /// <summary>Game days the silage in the pit lasts if your fields gave nothing: the green fodder the herd needs after the commons (long.MaxValue with no herd).</summary>
+        public static long SilageDays(Simulation sim)
+        {
+            LivestockState s = sim.State.Livestock;
+            long need = 0;
+            foreach (Animal a in s.Animals) need += LivestockSystem.NeedOf(sim, a).Green;
+            Fixed commons = Defs(sim).Livestock.CommonsShare[(int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock)];
+            need = ((Fixed.One - commons)).MulRatio(need, 1).RoundToLong();
+            return need <= 0 ? long.MaxValue : s.SilageGrams / need;
+        }
+
         public static Animal Find(Simulation sim, long id)
         {
             LivestockState s = sim.State.Livestock;

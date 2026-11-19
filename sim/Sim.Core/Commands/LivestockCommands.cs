@@ -157,6 +157,46 @@ namespace Sim.Core.Commands
 
 namespace Sim.Core.Commands
 {
+    /// <summary>Builds the silage pit beside the shed (US-255, ADR 0136): once, the first shed standing; paid at once, capitalised to Buildings.</summary>
+    public sealed class BuildSilagePit : TimedCommand
+    {
+        public BuildSilagePit(long at) : base(at) { }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            LivestockState s = sim.State.Livestock;
+            if (s == null || LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
+            if (s.SilagePit) return CommandResult.Reject(RejectReason.AlreadyBuilt);
+            long cost = MarketRules.Indexed(sim, LivestockRules.Defs(sim).Livestock.SilagePitCost);
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            long t = sim.State.Clock.SimTime;
+            sim.State.Ledger.Post(t, sim.Period, "ledger.silagePit", "shed", new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
+            s.SilagePit = true;
+            sim.Emit(new SilagePitBuilt(t, cost));
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Buys the chaff cutter (US-255, ADR 0136): once, the first shed standing; paid at once, capitalised to Equipment.</summary>
+    public sealed class BuyChaffCutter : TimedCommand
+    {
+        public BuyChaffCutter(long at) : base(at) { }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            LivestockState s = sim.State.Livestock;
+            if (s == null || LivestockRules.Shed(sim) == null) return CommandResult.Reject(RejectReason.NoShed);
+            if (s.ChaffCutter) return CommandResult.Reject(RejectReason.AlreadyBuilt);
+            long cost = MarketRules.Indexed(sim, LivestockRules.Defs(sim).Livestock.ChaffCutterCost);
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            long t = sim.State.Clock.SimTime;
+            sim.State.Ledger.Post(t, sim.Period, "ledger.chaffCutter", "shed", new Posting(Account.Equipment, cost), new Posting(Account.Cash, -cost));
+            s.ChaffCutter = true;
+            sim.Emit(new ChaffCutterBought(t, cost));
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>Keep heifer calves instead of selling every calf at the fair, or not (spec 025 §3.8, ADR 0135; off by default).</summary>
     public sealed class SetKeepHeifers : TimedCommand
     {

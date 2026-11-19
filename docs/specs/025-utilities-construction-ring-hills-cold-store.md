@@ -122,6 +122,8 @@ Each utility and each held build is explained on the Town sheet's *Infrastructur
 
 **As built (US-254, ADR 0135, supersedes the figures above):** a switch on the shed sheet keeps heifer calves (off by default; half the calves are heifers, bulls are sold; kept only if a shed place is free). A heifer grows **8 seasons (cow) or 10 (buffalo)**, eats 40% of a grown ration, works 0.5 h a day, and grows only on a fed day. Her book value is her worth for her age (the calf's price rising evenly to a grown animal's price), the rise posted as **4810 Herd growth (not cash)** in *Other income*, outside farm profit and the cash flow; selling her gives that worth × 0.80 × health; she is no loan collateral until grown. The shed sheet says what raising costs against buying.
 | US-255 Silage, chaff cutter, more sheds | Silage keeps green fodder over the dry season (fodder cost −15%), a chaff cutter cuts the feed's hours 10%, a third shed | Could |
+
+**As built (US-255, ADR 0136, supersedes the figures above):** a **silage pit** beside the shed (10,000, 20 t): the morning's spare cut goes in at 85% instead of being sold standing, and the pit feeds before any fodder is bought. A **chaff cutter** (30,000): the herd's green fodder and straw need falls by 20%. Both are one-off, paid at once, on a *Feed stores* block of the shed sheet with an honest payback. **The third shed is cut to Phase 4's dairy farms** (the sheet says two is the most a yard keeps).
 | US-256 Your tractor for neighbours | Hire your tractor out by the day when idle: 80% of the hire rate, passive income, never the best use of it | Could |
 | US-257 Tube well and solar pumps | A tube well on an acre waters 2 acres more (cost 40,000); a solar pump cuts pumping power by 80% (cost 60,000) | Could |
 

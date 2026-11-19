@@ -100,12 +100,14 @@ namespace Sim.Core.Livestock
         }
 
         /// <summary>One animal's ration for the coming game day in grams: green, straw, feed (feed × dryFeedFactor while dry; §3.7).</summary>
-        public static (long Green, long Straw, long Feed) NeedOf(Simulation sim, Animal a)
+        public static (long Green, long Straw, long Feed) NeedOf(Simulation sim, Animal a, bool withCutter = true)
         {
             AnimalDef d = LivestockRules.Defs(sim).Animals[a.Kind];
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
             Fixed feed = a.Stage == AnimalStage.Dry ? d.Feed * d.DryFeedFactor : d.Feed;
-            Fixed share = a.Stage == AnimalStage.Heifer ? LivestockRules.Defs(sim).Livestock.HeiferRationShare : Fixed.One; // a growing heifer eats a share of a grown animal's ration (ADR 0135)
-            return (Grams(LivestockRules.PerGameDay(sim, d.Green) * share), Grams(LivestockRules.PerGameDay(sim, d.Straw) * share), Grams(LivestockRules.PerGameDay(sim, feed) * share));
+            Fixed share = a.Stage == AnimalStage.Heifer ? ld.HeiferRationShare : Fixed.One; // a growing heifer eats a share of a grown animal's ration (ADR 0135)
+            Fixed roughage = withCutter && sim.State.Livestock.ChaffCutter ? Fixed.One - ld.ChaffCutterSaving : Fixed.One; // chopped, the stalks are eaten, not trampled (ADR 0136)
+            return (Grams(LivestockRules.PerGameDay(sim, d.Green) * share * roughage), Grams(LivestockRules.PerGameDay(sim, d.Straw) * share * roughage), Grams(LivestockRules.PerGameDay(sim, feed) * share));
         }
 
         /// <summary>
@@ -139,7 +141,25 @@ namespace Sim.Core.Livestock
             long left = report.GreenNeed - report.GreenCommons;
             report.GreenOwn = System.Math.Min(left, ownCut);
             left -= report.GreenOwn;
-            SellStanding(sim, report, ownCut - report.GreenOwn);
+            // The silage pit feeds before anything is bought (ADR 0136); the spare cut goes into it before it is sold standing.
+            long silage = System.Math.Min(left, s.SilageGrams);
+            s.SilageGrams -= silage;
+            left -= silage;
+            report.SilageFed = silage;
+            long spare = ownCut - report.GreenOwn;
+            if (spare > 0 && s.SilagePit)
+            {
+                long room = (long)ld.SilagePitKg * 1000 - s.SilageGrams;
+                Fixed keep = Fixed.One - ld.SilageLossShare;
+                long used = keep <= Fixed.Zero ? 0 : System.Math.Min(spare, (Fixed.FromInt(1) / keep).MulRatio(System.Math.Max(0, room), 1).RoundToLong());
+                long stored = (keep * Fixed.FromInt(1)).MulRatio(used, 1).RoundToLong();
+                if (stored > room) stored = room;
+                s.SilageGrams += stored;
+                report.SilagePut = stored;
+                report.SilageLost = used - stored;
+                spare -= used;
+            }
+            SellStanding(sim, report, spare);
             if (left > 0 && s.BuyGreenFodder)
             {
                 Fixed price = ld.GreenFodderBuyPrice * sim.State.Market.PriceIndex;
@@ -155,7 +175,7 @@ namespace Sim.Core.Livestock
             report.StrawGiven = TakeFeed(sim, defs.Straw, report.StrawNeed);
             report.FeedGiven = TakeFeed(sim, defs.Feed, report.FeedNeed);
 
-            long green = report.GreenCommons + report.GreenOwn + report.GreenBought;
+            long green = report.GreenCommons + report.GreenOwn + report.SilageFed + report.GreenBought;
             // 1 − Σ weight × shortfall: exactly 1 when every feed is met, whatever the weights' rounding.
             Fixed score = Fixed.One - ld.GreenWeight * (Fixed.One - Share(green, report.GreenNeed))
                 - ld.StrawWeight * (Fixed.One - Share(report.StrawGiven, report.StrawNeed)) - ld.FeedWeight * (Fixed.One - Share(report.FeedGiven, report.FeedNeed));
@@ -177,7 +197,7 @@ namespace Sim.Core.Livestock
                 if (a.Health > Fixed.One) a.Health = Fixed.One;
             }
             sim.Emit(new AnimalsFed(t, report.GreenNeed, green, report.GreenBoughtAmount, report.GreenSold, report.GreenSoldAmount, report.StrawGiven,
-                report.FeedGiven, score));
+                report.FeedGiven, score, report.SilageFed, report.SilagePut));
         }
 
         private static Fixed Share(long given, long need) { return need <= 0 || given >= need ? Fixed.One : Fixed.FromRatio(given, need); }

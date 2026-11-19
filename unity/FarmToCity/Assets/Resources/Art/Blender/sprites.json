@@ -338,6 +338,13 @@
    "name": "cattle_shed_building"
   },
   {
+   "w": 178,
+   "h": 140,
+   "pivotX": 0.47403,
+   "pivotY": 0.43952,
+   "name": "chaff_cutter"
+  },
+  {
    "w": 98,
    "h": 98,
    "pivotX": 0.5,
@@ -3080,6 +3087,13 @@
    "pivotX": 0.5,
    "pivotY": 0.21349,
    "name": "sign_sale"
+  },
+  {
+   "w": 208,
+   "h": 150,
+   "pivotX": 0.5,
+   "pivotY": 0.46072,
+   "name": "silage_pit"
   },
   {
    "w": 174,

@@ -38,7 +38,7 @@ The player buys a buffalo or a cow, keeps her fed from their own land, and the v
 - Ageing and culling of animals: later. Animals don't age in Phase 2.
 - Bullocks for ploughing: the equipment ladder (spec 013, ADR 0075): a pair lives in the second shed (ADR 0088), fed like cattle, no milk.
 - A dairy business (processing milk, a milk round): spec 016 (open conflict noted in `STATUS.md`).
-- More than one shed: a second shed in Phase 2 (ADR 0088, US-234); more in Phase 3.
+- More than one shed: a second shed in Phase 2 (ADR 0088, US-234); a third moves to the dairy farm business in Phase 4 (ADR 0136).
 
 ## 3. Rules and formulas
 

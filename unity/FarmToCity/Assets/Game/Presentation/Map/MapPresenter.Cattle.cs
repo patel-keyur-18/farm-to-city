@@ -16,7 +16,7 @@ namespace Game.Presentation.Map
     public sealed partial class MapPresenter
     {
         private static readonly Vector2 CattleShed = new Vector2(-0.04f, 0.33f), CattleStraw = new Vector2(0.38f, 0.32f), CattleNeem = new Vector2(-0.34f, -0.32f),
-            CattleTrough = new Vector2(0.36f, -0.12f), CattlePit = new Vector2(0.36f, -0.38f), CattleSign = new Vector2(-0.05f, 0.12f);
+            CattleTrough = new Vector2(0.36f, -0.12f), CattleSilage = new Vector2(0.10f, -0.38f), CattlePit = new Vector2(0.36f, -0.38f), CattleSign = new Vector2(-0.05f, 0.12f);
 
         /// <summary>The animals' places (0 is the neem's shade, with no manger); each manger is at her head.</summary>
         private static readonly Vector2[] CattlePlaces = { new Vector2(-0.16f, -0.24f), new Vector2(-0.24f, 0.12f), new Vector2(0.18f, 0.06f), new Vector2(0.02f, -0.08f) };
@@ -33,7 +33,7 @@ namespace Game.Presentation.Map
             public bool Second;
             public Vector2[] Places;
             public int NoManger; // the place without a manger: the neem's shade, or the open ground
-            public SpriteRenderer Shed, Straw, Neem, Trough, Pit, Sign;
+            public SpriteRenderer Shed, Straw, Neem, Trough, Pit, Sign, Silage;
             public readonly SpriteRenderer[] Mangers = new SpriteRenderer[4];
             public readonly Dictionary<long, SpriteRenderer> Animals = new Dictionary<long, SpriteRenderer>();
             public readonly List<SpriteRenderer> Static = new List<SpriteRenderer>();
@@ -73,6 +73,8 @@ namespace Game.Presentation.Map
             y.Straw = AcrePiece(t, "strawStack", "straw_stack_empty", CattleStraw);
             y.Neem = AcrePiece(t, "neem", "tree_neem", CattleNeem);
             y.Trough = AcrePiece(t, "waterTrough", "water_trough", CattleTrough);
+            y.Silage = AcrePiece(t, "silagePit", "silage_pit", CattleSilage);
+            y.Silage.gameObject.SetActive(false);
             for (int i = 1; i < 4; i++) y.Mangers[i] = AcrePiece(t, "manger" + i, "cattle_manger", CattlePlaces[i] + MangerAtHead);
             _cattle = y;
         }
@@ -125,6 +127,7 @@ namespace Game.Presentation.Map
             for (int i = 0; i < 4; i++)
                 if (y.Mangers[i] != null) y.Mangers[i].gameObject.SetActive(built && (!y.Second || occupied[i])); // the second acre: a manger where an animal stands
             y.Straw.sprite = SpriteBank.Rendered(StrawSprites[Mathf.Clamp(acre.Straw, 0, 3)]);
+            if (y.Silage != null) { y.Silage.gameObject.SetActive(acre.Silage); y.Silage.color = _tint; } // the silage pit beside the straw stack (US-255)
             foreach (SpriteRenderer r in new[] { y.Pit, y.Sign, y.Shed, y.Straw, y.Neem, y.Trough, y.Mangers[0], y.Mangers[1], y.Mangers[2], y.Mangers[3] }) if (r != null) r.color = _tint;
 
             var seen = new HashSet<long>();

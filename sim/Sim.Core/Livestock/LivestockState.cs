@@ -118,22 +118,35 @@ namespace Sim.Core.Livestock
         public long FeedNeed { get; internal set; }
         public long FeedGiven { get; internal set; }
 
+        /// <summary>The silage pit's morning (US-255, ADR 0136): grams of silage fed, the spare cut put in the pit (after the loss) and the grams lost making it. Save schema 21.</summary>
+        public long SilageFed { get; internal set; }
+        public long SilagePut { get; internal set; }
+        public long SilageLost { get; internal set; }
+
         internal FeedingReport Clone() { return (FeedingReport)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
         {
             foreach (long v in new[] { GreenNeed, GreenCommons, GreenOwn, GreenBought, GreenBoughtAmount, GreenSold, GreenSoldAmount, StrawNeed, StrawGiven, FeedNeed, FeedGiven })
                 h.WriteLong(v);
+            if (h.Hashing ? SilageFed != 0 || SilagePut != 0 || SilageLost != 0 : !(h is SaveWriter w && w.Schema < MapMigration.RingSchema))
+            {
+                h.WriteLong(SilageFed);
+                h.WriteLong(SilagePut);
+                h.WriteLong(SilageLost);
+            }
         }
 
         internal static FeedingReport ReadFrom(SaveReader r)
         {
-            return new FeedingReport
+            var f = new FeedingReport
             {
                 GreenNeed = r.ReadLong(), GreenCommons = r.ReadLong(), GreenOwn = r.ReadLong(), GreenBought = r.ReadLong(), GreenBoughtAmount = r.ReadLong(),
                 GreenSold = r.ReadLong(), GreenSoldAmount = r.ReadLong(), StrawNeed = r.ReadLong(), StrawGiven = r.ReadLong(), FeedNeed = r.ReadLong(),
                 FeedGiven = r.ReadLong(),
             };
+            if (r.Schema >= MapMigration.RingSchema) { f.SilageFed = r.ReadLong(); f.SilagePut = r.ReadLong(); f.SilageLost = r.ReadLong(); }
+            return f;
         }
     }
 
@@ -156,6 +169,15 @@ namespace Sim.Core.Livestock
 
         /// <summary>Keep heifer calves instead of selling every calf at the fair (spec 025 §3.8, ADR 0135; off by default). Save schema 21.</summary>
         public bool KeepHeifers { get; internal set; }
+
+        /// <summary>The silage pit is built, and the grams of silage in it (US-255, ADR 0136). Save schema 21.</summary>
+        public bool SilagePit { get; internal set; }
+        public long SilageGrams { get; internal set; }
+
+        /// <summary>The chaff cutter is bought (US-255): the herd's green fodder and straw need falls by its saving. Save schema 21.</summary>
+        public bool ChaffCutter { get; internal set; }
+
+        internal void SetSilageForTest(long grams) { SilageGrams = grams; } // for the tests: a nearly full pit
 
         /// <summary>A low warning was given for straw or feed and the place hasn't been refilled above it since (§3.7).</summary>
         public bool StrawLow { get; internal set; }
@@ -202,6 +224,12 @@ namespace Sim.Core.Livestock
             LastFeeding.WriteTo(h);
             if (!(h is SaveWriter w && w.Schema < 14)) h.WriteInt(ShedTile);
             if (h.Hashing ? KeepHeifers : !(h is SaveWriter kw && kw.Schema < MapMigration.RingSchema)) h.WriteBool(KeepHeifers);
+            if (h.Hashing ? SilagePit || ChaffCutter : !(h is SaveWriter sw && sw.Schema < MapMigration.RingSchema)) // schema 21; hashed once either is built
+            {
+                h.WriteBool(SilagePit);
+                h.WriteLong(SilageGrams);
+                h.WriteBool(ChaffCutter);
+            }
         }
 
         internal static LivestockState ReadFrom(SaveReader r)
@@ -223,7 +251,8 @@ namespace Sim.Core.Livestock
             s.LastHomeMl = r.ReadLong();
             s.LastFeeding = FeedingReport.ReadFrom(r);
             if (r.Schema >= 14) s.ShedTile = r.ReadInt();
-            if (r.Schema >= MapMigration.RingSchema) s.KeepHeifers = r.ReadBool();
+            if (r.Schema >= MapMigration.RingSchema) { s.KeepHeifers = r.ReadBool(); s.SilagePit = r.ReadBool(); s.SilageGrams = r.ReadLong(); s.ChaffCutter = r.ReadBool(); }
+            if (s.SilageGrams < 0) throw new SaveContentException("negative silage");
             if (s.ShedTile < -1) throw new SaveContentException("a shed on tile " + s.ShedTile);
             return s;
         }

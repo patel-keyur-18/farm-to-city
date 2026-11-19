@@ -21,7 +21,7 @@ namespace Sim.Content
             JObject l = Object(Required(o, root, "livestock"), lp);
             OnlyFields(l, lp, "realDaysPerGameDay", "feedHour", "shedTile", "unlockEra", "householdLitresPerDay", "greenFodderBuyPrice", "greenFodderSellPrice", "milkBasePerLitre", "milkPerFatPoint",
                 "commonsShare", "minMilkFactor", "hungryBelow", "hungerGraceDays", "hungerHealthLoss", "healthRecoveryPerDay", "minHealth", "feedWeights",
-                "lowDays", "diseaseChance", "unvaccinatedFactor", "sickHealthFactor", "sickHealthLoss", "vaccineCost", "vetVisitCost", "lactationCurve", "heifer", "names");
+                "lowDays", "diseaseChance", "unvaccinatedFactor", "sickHealthFactor", "sickHealthLoss", "vaccineCost", "vetVisitCost", "lactationCurve", "heifer", "silage", "chaffCutter", "names");
 
             int shedTile = BoundedInt(l, lp, "shedTile", 0, map.Tiles.Count - 1);
             if (map.Tiles[shedTile].Terrain != Terrain.Cattle) throw new ContentException(Join(lp, "shedTile"), "the shed goes on the cattle acre (ADR 0064)");
@@ -45,8 +45,18 @@ namespace Sim.Content
             JObject hf = Object(Required(l, lp, "heifer"), hp);
             OnlyFields(hf, hp, "share", "rationShare", "labourHoursPerDay", "dungShare");
 
+            string sp = Join(lp, "silage"), cp = Join(lp, "chaffCutter");
+            JObject sj = Object(Required(l, lp, "silage"), sp), cj = Object(Required(l, lp, "chaffCutter"), cp);
+            OnlyFields(sj, sp, "pitCost", "pitKg", "lossShare");
+            OnlyFields(cj, cp, "cost", "saving");
+
             var def = new LivestockDef
             {
+                SilagePitCost = Money(Required(sj, sp, "pitCost"), Join(sp, "pitCost")),
+                SilagePitKg = BoundedInt(sj, sp, "pitKg", 1000, 1000000),
+                SilageLossShare = Bounded(sj, sp, "lossShare", "0", "0.9"),
+                ChaffCutterCost = Money(Required(cj, cp, "cost"), Join(cp, "cost")),
+                ChaffCutterSaving = Bounded(cj, cp, "saving", "0", "0.9"),
                 HeiferShare = Bounded(hf, hp, "share", "0", "1"),
                 HeiferRationShare = Bounded(hf, hp, "rationShare", "0", "1"),
                 HeiferLabourHours = Bounded(hf, hp, "labourHoursPerDay", "0", "8"),

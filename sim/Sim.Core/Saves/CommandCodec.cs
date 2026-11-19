@@ -54,6 +54,7 @@ namespace Sim.Core.Saves
             UpgradeHouse,
             RentColdStore,
             SetKeepHeifers,
+            BuildSilagePit, BuyChaffCutter,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -177,6 +178,8 @@ namespace Sim.Core.Saves
                 case UpgradeHouse c: At(c, Tag.UpgradeHouse); w.WriteLong(c.BuildingId); break;
                 case RentColdStore c: At(c, Tag.RentColdStore); w.WriteInt(c.Tonnes); break;
                 case SetKeepHeifers c: At(c, Tag.SetKeepHeifers); w.WriteBool(c.On); break;
+                case BuildSilagePit c: At(c, Tag.BuildSilagePit); break;
+                case BuyChaffCutter c: At(c, Tag.BuyChaffCutter); break;
                 case GiveToTreasury c: At(c, Tag.GiveToTreasury); w.WriteLong(c.Amount); break;
                 case CommissionWorks c when c.Gift > 0: At(c, Tag.CommissionWorksGift); w.WriteString(c.WorkId); w.WriteLong(c.Gift); break;
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
@@ -347,6 +350,8 @@ namespace Sim.Core.Saves
                 case Tag.UpgradeHouse: return new UpgradeHouse(at, r.ReadLong());
                 case Tag.RentColdStore: return new RentColdStore(at, r.ReadInt());
                 case Tag.SetKeepHeifers: return new SetKeepHeifers(at, r.ReadBool());
+                case Tag.BuildSilagePit: return new BuildSilagePit(at);
+                case Tag.BuyChaffCutter: return new BuyChaffCutter(at);
                 case Tag.GiveToTreasury: return new GiveToTreasury(at, r.ReadLong());
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
                 case Tag.CommissionWorksGift: return new CommissionWorks(at, r.ReadString(), r.ReadLong());

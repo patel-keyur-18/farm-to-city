@@ -2505,6 +2505,39 @@ def model_water_trough():
     return group(o, scale=1.3)
 
 
+def model_silage_pit():
+    """The silage pit (US-255, spec 025 §3.8): a brick-lined pit sunk beside the shed, covered with a dark green tarpaulin held down with old tyres,
+    a brick rim round it and a few sacks of salt at one end."""
+    brick, tarp, tyre = toon("brick", BRICK), toon("tarp", 0x2F4A36), toon("tyre", 0x25262A)
+    o = [box("rim", (0.34, 0.22, 0.03), (0, 0, 0.015), brick, bevel=0.004),
+         box("sheet", (0.30, 0.18, 0.012), (0, 0, 0.036), tarp, bevel=0.004)]
+    o.append(sphere("mound", 0.15, (0, 0, 0.036), toon("tarp2", 0x365840), scale=(1.0, 0.62, 0.16), segs=18, rings=8))
+    for i, (x, y) in enumerate(((-0.10, -0.04), (0.0, 0.05), (0.10, -0.03), (-0.05, 0.05), (0.06, -0.06), (-0.12, 0.04))):
+        o.append(cylinder("tyre%d" % i, 0.024, 0.024, 0.014, (x, y, 0.062), tyre, segs=14))
+        o.append(cylinder("hub%d" % i, 0.012, 0.012, 0.016, (x, y, 0.063), toon("tarp", 0x2F4A36), segs=10, outline=False))
+    o.append(box("salt", (0.05, 0.035, 0.03), (0.20, 0.0, 0.015), toon("salt", 0xE8E4D8)))
+    return group(o, scale=YARD_PROP_SCALE)
+
+
+def model_chaff_cutter():
+    """The chaff cutter (US-255, spec 025 §3.8): a hand-fed machine on a timber stand, a feed table, the blade wheel in its guard, a green motor
+    on a belt, and a heap of cut chaff below the chute."""
+    wood, steel, motor = toon("wood", WOOD), toon("steel", 0xC9CDD2), toon("motor", 0x3F7F4F)
+    o = [box("stand", (0.20, 0.12, 0.05), (0, 0, 0.025), wood, bevel=0.003),
+         box("table", (0.22, 0.06, 0.012), (-0.06, 0, 0.056), steel, bevel=0.002),
+         cylinder("wheel", 0.045, 0.045, 0.012, (0.05, 0.0, 0.085), steel, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+         cylinder("hubwheel", 0.012, 0.012, 0.016, (0.05, 0.0, 0.085), toon("lock", 0x6F7A82), segs=10, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False),
+         box("guard", (0.06, 0.03, 0.05), (0.05, 0.0, 0.082), toon("guard", 0xA33B2F), outline=False),
+         cylinder("motor", 0.026, 0.026, 0.07, (0.10, 0.07, 0.06), motor, segs=14, rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+         box("belt", (0.055, 0.008, 0.004), (0.075, 0.04, 0.07), toon("tyre", 0x25262A), outline=False)]
+    o.append(sphere("chaff", 0.05, (0.12, -0.05, 0.012), toon("straw", STRAW), scale=(1.0, 0.7, 0.35), segs=12, rings=6))
+    return group(o, scale=YARD_PROP_SCALE)
+
+
+SPRITES["silage_pit"] = model_silage_pit
+SPRITES["chaff_cutter"] = model_chaff_cutter
+
+
 def model_neem():
     """A neem tree: a straight dark trunk and a rounded crown of small, fine leaves in clusters; it shades the cattle."""
     bark = toon("neemBark", 0x5E4430)

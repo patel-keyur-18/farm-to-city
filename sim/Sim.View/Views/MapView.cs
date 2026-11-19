@@ -292,6 +292,9 @@ namespace Sim.View.Views
 
         /// <summary>The compost pit: 0 empty, 1 half, 2 full.</summary>
         public int Compost { get; internal set; }
+
+        /// <summary>The silage pit beside the straw stack is built (US-255, ADR 0136).</summary>
+        public bool Silage { get; internal set; }
         public List<AnimalVm> Animals { get; } = new List<AnimalVm>();
     }
 
@@ -614,6 +617,7 @@ namespace Sim.View.Views
             vm.Locked = !Sim.Core.Livestock.LivestockRules.Unlocked(sim);
             vm.Shed = Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? 2 : s.ShedReadyAt > 0 ? 1 : 0;
             if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            vm.Silage = vm.Shed == 2 && s.SilagePit;
             AddAnimals(sim, vm, 0, secondOfDay);
             return vm;
         }

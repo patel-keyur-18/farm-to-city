@@ -26,6 +26,8 @@
     "vetVisitCost": 1500,
     "lactationCurve": [ [0, 1.10], [3, 1.20], [13, 0.66] ],
     "heifer": { "share": 0.5, "rationShare": 0.4, "labourHoursPerDay": 0.5, "dungShare": 0.4 },
+    "silage": { "pitCost": 10000, "pitKg": 20000, "lossShare": 0.15 },
+    "chaffCutter": { "cost": 30000, "saving": 0.20 },
     "names": [ "Lakshmi", "Gauri", "Kamdhenu", "Nandini", "Ganga", "Radha", "Sundari", "Kali",
                "Shyama", "Kapila", "Surbhi", "Bhuri", "Rani", "Chandni", "Moti", "Ganga Jal" ]
   },

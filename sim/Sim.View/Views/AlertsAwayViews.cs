@@ -392,6 +392,7 @@ namespace Sim.View.Views
             long paid = 0, held = 0;
             long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0, interest = 0, savingsPaid = 0;
             int calfCount = 0, vetCount = 0, keptCount = 0, noRoomCount = 0, grownCount = 0;
+            long silagePut = 0, silageFed = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -421,7 +422,7 @@ namespace Sim.View.Views
                         break;
                     case MandiTripReturned r: vm.MandiSales += r.Net; break;
                     case MilkCollected mc: milkMl += mc.Millilitres - mc.HomeMillilitres; milkPaid += mc.Amount; break;
-                    case AnimalsFed af: fodderBought += af.GreenBoughtAmount; fodderSold += af.GreenSoldAmount; break;
+                    case AnimalsFed af: fodderBought += af.GreenBoughtAmount; fodderSold += af.GreenSoldAmount; silagePut += af.SilagePut; silageFed += af.SilageFed; break;
                     case CalfBorn cb: calves += cb.Amount; calfCount++; break;
                     case CalfNoRoom nr: calves += nr.Amount; calfCount++; noRoomCount++; break;
                     case CalfKept _: keptCount++; break;
@@ -505,6 +506,8 @@ namespace Sim.View.Views
             rows.AddRange(ShopAway.Rows(ctx, events));
 
             if (fodderBought > 0) rows.Add(new LineVm(s.Get("away.fodderBought"), "−" + ctx.Fmt.Coins(fodderBought), "away", (long)AwayRow.Dairy) { Icon = "green_fodder" });
+            if (silagePut > 0) rows.Add(new LineVm(s.Get("away.silagePut"), ctx.Fmt.Kg(silagePut), "away", (long)AwayRow.Dairy) { Icon = "silage_pit" });
+            if (silageFed > 0) rows.Add(new LineVm(s.Get("away.silageFed"), ctx.Fmt.Kg(silageFed), "away", (long)AwayRow.Dairy) { Icon = "silage_pit" });
             if (keptCount > 0) rows.Add(new LineVm(s.Plural("away.heifersKept", keptCount), null, "away", (long)AwayRow.Dairy) { Icon = "animal_cow" });
             if (noRoomCount > 0) rows.Add(new LineVm(s.Plural("away.heifersNoRoom", noRoomCount), null, "away", (long)AwayRow.Dairy) { Icon = "animal_cow" });
             if (grownCount > 0) rows.Add(new LineVm(s.Plural("away.heifersGrown", grownCount), null, "away", (long)AwayRow.Dairy) { Icon = "animal_cow" });
@@ -724,7 +727,7 @@ namespace Sim.View.Views
             { "OrchardSoldOnTrees", Use.Motion }, { "OrchardGone", Use.StateOnly },
             { "MachineBought", Use.Motion }, { "MachineLeased", Use.Motion }, { "MachineHired", Use.Motion }, { "MachineSold", Use.Motion }, { "MachineReturned", Use.Away },
             { "MachineBroke", Use.Alert }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
-            { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "CalfKept", Use.Away }, { "CalfNoRoom", Use.Away }, { "HeiferGrown", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
+            { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "SilagePitBuilt", Use.Motion }, { "ChaffCutterBought", Use.Motion }, { "CalfKept", Use.Away }, { "CalfNoRoom", Use.Away }, { "HeiferGrown", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
         };
     }
 }

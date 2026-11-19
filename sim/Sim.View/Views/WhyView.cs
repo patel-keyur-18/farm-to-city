@@ -93,7 +93,7 @@ namespace Sim.View.Views
             { "era", EraWhy },
             // The dairy co-op (spec 012, ADR 0061).
             { "milkPrice", MilkPrice }, { "milkToday", MilkToday }, { "shedCost", ShedCost }, { "animalMilk", AnimalMilk }, { "animalFed", AnimalFed },
-            { "animalHealth", AnimalHealth }, { "animalMoney", AnimalMoney }, { "animalSell", AnimalSell }, { "animalBuy", AnimalBuy }, { "heiferKeep", HeiferKeep }, { "heiferRaise", HeiferRaise }, { "heiferGrowing", HeiferGrowing }, { "heiferWorth", HeiferWorth }, { "greenFodder", GreenFodder },
+            { "animalHealth", AnimalHealth }, { "animalMoney", AnimalMoney }, { "animalSell", AnimalSell }, { "animalBuy", AnimalBuy }, { "heiferKeep", HeiferKeep }, { "heiferRaise", HeiferRaise }, { "silagePit", SilagePit }, { "shedLimit", ShedLimit }, { "chaffCutter", ChaffCutter }, { "heiferGrowing", HeiferGrowing }, { "heiferWorth", HeiferWorth }, { "greenFodder", GreenFodder },
             { "feedStock", FeedStock }, { "animalWork", AnimalWork }, { "fodderCut", FodderCut },
             // Your people (spec 014 §7).
             { "townHappiness", TownHappiness }, { "employment", Employment }, { "household.income", HouseholdIncome }, { "household.budget", HouseholdBudget },

@@ -87,6 +87,7 @@ namespace Sim.View.Views
             vm.Lines.Add(GreenRow(ctx));
             vm.Lines.Add(PlaceRow(ctx, defs.Straw, "shed.straw", Store.CapacityGrams(sim, GoodPlace.StrawStack), st.StrawLow));
             vm.Lines.Add(PlaceRow(ctx, defs.Feed, "shed.feedRoom", Store.CapacityGrams(sim, GoodPlace.FeedRoom), st.FeedLow));
+            FeedStoresRows(ctx, vm, defs);
             vm.Lines.Add(CompostRow(ctx, defs));
             vm.Lines.Add(new LineVm(s.Get("shed.work"), s.Get("shed.workValue", "hours", ctx.Fmt.Decimal1(LivestockRules.LabourDemand(sim))), "animalWork", 0));
             vm.Lines.Add(LookAfter(ctx));
@@ -166,6 +167,51 @@ namespace Sim.View.Views
             return (LivestockRules.GrowDaysLeft(sim, a) + perSeason - 1) / perSeason;
         }
 
+        /// <summary>The Feed stores block (US-255, ADR 0136): the silage pit, the chaff cutter, and the shed limit in words.</summary>
+        private static void FeedStoresRows(ViewContext ctx, SheetVm vm, LivestockDefs defs)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            LivestockState st = sim.State.Livestock;
+            LivestockDef ld = defs.Livestock;
+            vm.Lines.Add(LineVm.Header(s.Get("shed.stores.title")));
+            long pitCost = MarketRules.Indexed(sim, ld.SilagePitCost);
+            var pit = new LineVm(s.Get("shed.silage"), !st.SilagePit ? s.Get("shed.silageNone")
+                : st.SilageGrams == 0 ? s.Get("shed.silageEmptyValue", "cap", ctx.Fmt.Kg(ld.SilagePitKg * 1000L))
+                : s.Get("shed.silageValue", "have", ctx.Fmt.Kg(st.SilageGrams), "cap", ctx.Fmt.Kg(ld.SilagePitKg * 1000L), "days", SilageLasts(ctx)), "silagePit", 0) { Icon = "silage_pit", Note = s.Get(st.SilagePit ? "shed.silageNote" : "shed.silageNoteNew", "t", ctx.Fmt.Integer(ld.SilagePitKg / 1000), "loss", ctx.Fmt.Percent(ld.SilageLossShare), "gain", ctx.Fmt.Decimal2(SilageGainPerKg(ctx))) };
+            if (!st.SilagePit) pit.Action = ActionVm.Checked(ctx, "buildSilage", s.Get("shed.silageBuild"), ctx.Fmt.Coins(pitCost), ActionKind.Primary, at => new BuildSilagePit(at));
+            vm.Lines.Add(pit);
+            long cutCost = MarketRules.Indexed(sim, ld.ChaffCutterCost);
+            long perDay = LivestockRules.ChaffSavingPerDay(sim), perSeason = perDay * (sim.Clock.SecondsPerSeason / Sim.Core.Definitions.ClockDef.SecondsPerDay);
+            string note = st.Animals.Count == 0 ? s.Get("shed.chaffNoHerd")
+                : st.ChaffCutter ? s.Get("shed.chaffNote", "day", ctx.Fmt.Coins(perDay), "season", ctx.Fmt.Coins(perSeason))
+                : perSeason <= 0 ? s.Get("shed.chaffNoHerd")
+                : s.Get("shed.chaffNoteNew", "pct", ctx.Fmt.Percent(ld.ChaffCutterSaving), "n", ctx.Fmt.Integer(st.Animals.Count), "day", ctx.Fmt.Coins(perDay), "season", ctx.Fmt.Coins(perSeason),
+                    "pay", s.Plural("why.seasons", (cutCost + perSeason - 1) / perSeason));
+            var cut = new LineVm(s.Get("shed.chaff"), s.Get(st.ChaffCutter ? "shed.chaffOn" : "shed.chaffNone", "pct", ctx.Fmt.Percent(ld.ChaffCutterSaving)), "chaffCutter", 0) { Icon = "chaff_cutter", Note = note };
+            if (!st.ChaffCutter) cut.Action = ActionVm.Checked(ctx, "buyChaff", s.Get("shed.chaffBuy"), ctx.Fmt.Coins(cutCost), ActionKind.Primary, at => new BuyChaffCutter(at));
+            vm.Lines.Add(cut);
+            int sheds = LivestockRules.SecondShed(sim) != null ? 2 : 1;
+            vm.Lines.Add(new LineVm(s.Get("shed.shedsRow"), s.Get("shed.shedsValue", "n", ctx.Fmt.Integer(sheds)), "shedLimit", 0) { Note = s.Get("shed.shedsNote") });
+        }
+
+        /// <summary>What a kg put in the pit gains over selling it standing: what it saves when eaten (kept share × the fodder price) less the standing price.</summary>
+        internal static Fixed SilageGainPerKgFixed(Simulation sim)
+        {
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
+            return ((Fixed.One - ld.SilageLossShare) * ld.GreenFodderBuyPrice - ld.GreenFodderSellPrice) * sim.State.Market.PriceIndex;
+        }
+
+        private static Fixed SilageGainPerKg(ViewContext ctx) { return SilageGainPerKgFixed(ctx.Sim); }
+
+        /// <summary>"lasts 6 days" if your fields gave nothing, or "nothing yet" for an empty pit.</summary>
+        private static string SilageLasts(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            long days = LivestockRules.SilageDays(sim);
+            return days == long.MaxValue ? ctx.Strings.Get("shed.silageNoHerd") : ctx.Strings.Plural("why.days", days);
+        }
+
         /// <summary>The Calves block (ADR 0135): the switch, and what raising a heifer costs against buying one.</summary>
         private static void CalvesRows(ViewContext ctx, SheetVm vm, LivestockDefs defs)
         {
@@ -204,7 +250,9 @@ namespace Sim.View.Views
             foreach (Animal a in st.Animals) needNow += LivestockSystem.NeedOf(sim, a).Green;
             // A first animal hasn't had a morning here yet: what she'll need from 6:00.
             string value = f.GreenNeed == 0 ? needNow > 0 ? s.Get("shed.greenFrom", "need", ctx.Fmt.Kg(needNow)) : s.Get("shed.greenNone")
+                : f.SilageFed > 0 ? s.Get("shed.greenValueSilage", "need", ctx.Fmt.Kg(f.GreenNeed), "commons", ctx.Fmt.Kg(f.GreenCommons), "own", ctx.Fmt.Kg(f.GreenOwn), "silage", ctx.Fmt.Kg(f.SilageFed), "bought", ctx.Fmt.Kg(f.GreenBought))
                 : s.Get("shed.greenValue", "need", ctx.Fmt.Kg(f.GreenNeed), "commons", ctx.Fmt.Kg(f.GreenCommons), "own", ctx.Fmt.Kg(f.GreenOwn), "bought", ctx.Fmt.Kg(f.GreenBought));
+            if (f.SilagePut > 0) value += " · " + s.Get("shed.greenSpare", "put", ctx.Fmt.Kg(f.SilagePut), "lost", ctx.Fmt.Kg(f.SilageLost));
             bool on = st.BuyGreenFodder;
             var line = new LineVm(s.Get("shed.green"), value, "greenFodder", 0) { Icon = "green_fodder" };
             line.Note = s.Get(on ? "shed.buyingOn" : "shed.buyingOff");

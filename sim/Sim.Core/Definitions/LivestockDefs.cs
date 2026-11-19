@@ -140,6 +140,15 @@ namespace Sim.Core.Definitions
         public Fixed HeiferRationShare { get; set; }
         public Fixed HeiferLabourHours { get; set; }
         public Fixed HeiferDungShare { get; set; }
+
+        /// <summary>The silage pit (US-255, ADR 0136): its price (money, × PriceIndex), its room in kg and the share of the spare cut lost making silage.</summary>
+        public long SilagePitCost { get; set; }
+        public int SilagePitKg { get; set; }
+        public Fixed SilageLossShare { get; set; }
+
+        /// <summary>The chaff cutter: its price (money, × PriceIndex) and the share of the green fodder and straw need it saves.</summary>
+        public long ChaffCutterCost { get; set; }
+        public Fixed ChaffCutterSaving { get; set; }
     }
 
     /// <summary>Spec 012's content: the shared rules, the animals, and where the shed and the feeds are.</summary>

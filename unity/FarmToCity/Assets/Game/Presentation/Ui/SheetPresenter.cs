@@ -125,7 +125,7 @@ namespace Game.Presentation.Ui
                 case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
-                case "hand_hut": case "hand_hut_building": case "granary": case "cold_store": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut; // granary: your godown in town (ADR 0087)
+                case "hand_hut": case "hand_hut_building": case "granary": case "cold_store": case "silage_pit": case "chaff_cutter": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut; // granary: your godown in town (ADR 0087)
                 case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "school": case "school_building": return IconBank.Good(icon); // spec 018
