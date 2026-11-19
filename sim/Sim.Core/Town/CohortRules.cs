@@ -120,12 +120,13 @@ namespace Sim.Core.Town
             Fixed survival = b.FoodMet < Fixed.One ? b.FoodMet : Fixed.One;
             Fixed three = Fixed.One + ClinicRules.HealthCareMetTown(sim, p.Chemist) + Fixed.One;
             Fixed security = CivicRules.On(sim) && CivicRules.SafetyCounts(sim) ? (three + CivicRules.SafetyTown(sim)).MulRatio(1, 4) : three.MulRatio(1, 3);
-            Fixed belonging = CivicRules.BelongingTown(sim, p.Belonging);
+            Fixed belonging = UtilityRules.BelongingTown(sim, CivicRules.BelongingTown(sim, p.Belonging));
             long taxFromLeisure = System.Math.Min(s.TaxThis, b.Leisure * s.Households);
             Fixed kept = b.Leisure <= 0 ? Fixed.Zero : Fixed.FromRatio(b.Leisure * s.Households - taxFromLeisure, b.Leisure * s.Households);
             Fixed leisure = b.Leisure > 0 && kept > Fixed.Zero ? p.Leisure * kept : Fixed.Zero;
             if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Playground)) leisure += CivicRules.Def(sim, CivicDef.Playground).Gain * CivicRules.EffectTown(sim, CivicDef.Playground); // children in the old village play too
             if (leisure > Fixed.One) leisure = Fixed.One;
+            leisure = UtilityRules.LeisureTown(sim, leisure);
             Fixed growth = SchoolRules.IsOpen(sim) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure;
             s.Survival = survival; s.Security = security; s.Belonging = belonging; s.Growth = growth;
             Fixed score = p.SurvivalWeight * survival + p.SecurityWeight * security * Gate(p, survival)

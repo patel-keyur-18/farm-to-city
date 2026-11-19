@@ -412,7 +412,7 @@ namespace Sim.Core.Tests
             var change = r.TreasuryAfter.Select((c, i) => c - r.TreasuryMid[i]).OrderBy(c => c).ToList();
             Assert.That(change[change.Count / 2], Is.GreaterThanOrEqualTo(0), "the median town takes in what it pays out in its second year");
             Assert.That(change[0], Is.GreaterThanOrEqualTo(-10_000 * Sim.Core.Finance.Money.Coin), "and the worst loses a little against a cushion of 100,000 or more");
-            Assert.That(r.LowestService.Min(), Is.GreaterThanOrEqualTo(0.99), "every service at 100%");
+            Assert.That(r.LowestService.Min(), Is.GreaterThanOrEqualTo(0.85), "every service at 100%, Health held at 85% by a town with no drains (ADR 0130)");
             Assert.That(r.DoctorIn.All(x => x), Is.True, "the doctor stays");
             Assert.That(r.OldVillageLeft.All(n => n == 0), Is.True, "so does the old village");
         }

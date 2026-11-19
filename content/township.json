@@ -38,8 +38,21 @@
       { "id": "family_house", "bricks": 2400, "cement": 16, "timber": 12, "masonDays": 20, "hours": 48 },
       { "id": "watchman_post", "work": "watchman_post", "bricks": 1200, "cement": 8, "timber": 7, "masonDays": 9, "hours": 48 },
       { "id": "playground", "work": "playground", "bricks": 300, "cement": 4, "timber": 6, "masonDays": 9, "hours": 24 },
-      { "id": "community_hall", "work": "community_hall", "bricks": 4000, "cement": 30, "timber": 15, "masonDays": 18, "hours": 72 }
+      { "id": "community_hall", "work": "community_hall", "bricks": 4000, "cement": 30, "timber": 15, "masonDays": 18, "hours": 72 },
+      { "id": "water_tower", "work": "water_tower", "bricks": 6000, "cement": 60, "timber": 30, "masonDays": 42, "hours": 96 },
+      { "id": "drains", "work": "drains", "bricks": 5000, "cement": 50, "timber": 15, "masonDays": 42, "hours": 96 },
+      { "id": "collection_post", "work": "collection_post", "bricks": 3000, "cement": 20, "timber": 13, "masonDays": 12, "hours": 48 }
     ]
+  },
+  "utilities": {
+    "minCondition": 0.50, "townSize": 40, "giftRound": 10000,
+    "waterHealth": 0.04, "drainsHealth": 0.02, "drainsHealthCap": 0.85, "drainsLandValue": 0.04,
+    "wasteBelonging": 0.05, "powerLeisure": 0.10, "eveningHours": 2,
+    "tower": { "place": "tower_plot", "work": "water_tower", "upkeepLine": "tower", "reach": 400, "capacity": 400 },
+    "generator": { "place": "generator_plot", "work": "diesel_generator", "upkeepLine": "generator", "extraLine": "generatorFuel", "reach": 600, "capacity": 300 },
+    "grid": { "place": "grid_plot", "work": "grid_connection", "upkeepLine": "grid", "reach": 100000, "capacity": 100000 },
+    "drains": { "place": "drains_plot", "work": "drains", "upkeepLine": "drains", "reach": 500, "capacity": 300 },
+    "collection": { "place": "collection_plot", "work": "collection_post", "upkeepLine": "collection", "extraLine": "collector", "reach": 100000, "capacity": 400 }
   },
   "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {

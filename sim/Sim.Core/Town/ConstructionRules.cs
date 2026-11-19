@@ -383,7 +383,12 @@ namespace Sim.Core.Town
                     sim.Emit(new FamilyHouseBuilt(t, b.Id, c.TileId));
                 }
             }
-            else if (p.Owner == BuildProject.Town) CivicRules.OnCommissioned(sim, Def(sim).Kind(p.Kind).Work, p.Paid);
+            else if (p.Owner == BuildProject.Town)
+            {
+                string work = Def(sim).Kind(p.Kind).Work;
+                if (UtilityRules.OfWork(sim, work) >= 0) UtilityRules.OnBuilt(sim, work);
+                else CivicRules.OnCommissioned(sim, work, p.Paid);
+            }
             else ZoningRules.FinishHomes(sim, p);
             sim.Emit(new BuildFinished(t, p.Id, p.Kind, p.Owner, p.Tile));
         }

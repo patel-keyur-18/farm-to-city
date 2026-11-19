@@ -27,7 +27,7 @@ namespace Sim.View.Views
             int capacity = HappinessRules.Capacity(sim, x);
             rows.Add(Row(ctx, x.Id, "needs.shelter", HappinessRules.Shelter(sim, x), x.Members.Count <= capacity ? s.Get("needs.shelterMet")
                 : s.Get("needs.shelterShort", "n", ctx.Fmt.Integer(x.Members.Count), "cap", ctx.Fmt.Integer(capacity))));
-            rows.Add(Row(ctx, x.Id, "needs.water", Fixed.One, s.Get("needs.waterMet")));
+            AddWater(ctx, x, rows);
 
             rows.Add(LineVm.Header(s.Get("needs.security")));
             HappinessRules.Jobs(sim, x, out int inTown, out int adults);
@@ -44,6 +44,7 @@ namespace Sim.View.Views
 
             rows.Add(LineVm.Header(s.Get("needs.belonging")));
             rows.Add(Row(ctx, x.Id, "needs.worship", sim.Config.Game.Population.Belonging, s.Get("needs.worshipNotYet")));
+            AddWaste(ctx, x, rows);
             if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Hall))
                 rows.Add(Row(ctx, x.Id, "needs.hall", CivicRules.Belonging(sim, x, sim.Config.Game.Population.Belonging), CivicNote(ctx, x, CivicDef.Hall)));
 
@@ -59,6 +60,35 @@ namespace Sim.View.Views
             if (CivicRules.On(sim) && CivicRules.Built(sim, CivicDef.Playground) && HasChildren(sim, x))
                 rows.Add(Row(ctx, x.Id, "needs.play", CivicRules.Leisure(sim, x, Fixed.Zero), CivicNote(ctx, x, CivicDef.Playground)));
             return rows;
+        }
+
+        /// <summary>The Water row (spec 025 §3.1): met by the pond, a well or the tower, or no clean water near and what that costs in health; and, in a big town, the drains.</summary>
+        private static void AddWater(ViewContext ctx, Household x, List<LineVm> rows)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            if (!UtilityRules.On(sim) || home == null || home.TileId < 0) { rows.Add(Row(ctx, x.Id, "needs.water", Fixed.One, s.Get("needs.waterMet"))); return; }
+            UtilitiesDef d = UtilityRules.Defs(sim);
+            bool pond = Sim.Core.Town.LandValueRules.PondOrWell(sim, home.TileId);
+            Fixed water = UtilityRules.Water(sim, home.TileId);
+            if (pond) rows.Add(Row(ctx, x.Id, "needs.water", Fixed.One, s.Get("needs.waterMet")));
+            else if (water > Fixed.Zero) rows.Add(Row(ctx, x.Id, "needs.water", Fixed.One, s.Get("needs.waterTower", "m", ctx.Fmt.Integer(CoverageRules.Metres(sim, home.TileId, UtilityRules.Def(sim, UtilityDef.Tower).Tile)))));
+            else rows.Add(new LineVm(s.Get("needs.water"), s.Get("needs.waterNone"), "household.happiness", x.Id)
+                { Note = s.Get("needs.waterFar", "n", ctx.Fmt.Integer((d.WaterHealth * Fixed.FromInt(100)).RoundToLong()), "m", ctx.Fmt.Integer(UtilityRules.Def(sim, UtilityDef.Tower).Reach)), NoteTone = Tone.Warn });
+            if (UtilityRules.Big(sim) && UtilityRules.Protection(sim, UtilityDef.Drains, home.TileId) <= Fixed.Zero)
+                rows.Add(new LineVm(s.Get("needs.drains"), s.Get("needs.drainsNone"), "household.happiness", x.Id) { Note = s.Get("needs.drainsFar", "n", ctx.Fmt.Integer((d.DrainsHealth * Fixed.FromInt(100)).RoundToLong())), NoteTone = Tone.Warn });
+        }
+
+        /// <summary>The waste row (spec 025 §3.1): in a big town, no collection means a lower Belonging.</summary>
+        private static void AddWaste(ViewContext ctx, Household x, List<LineVm> rows)
+        {
+            Simulation sim = ctx.Sim;
+            if (!UtilityRules.Big(sim)) return;
+            Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            if (home != null && home.TileId >= 0 && UtilityRules.Protection(sim, UtilityDef.Collection, home.TileId) > Fixed.Zero) return;
+            var s = ctx.Strings;
+            rows.Add(new LineVm(s.Get("needs.waste"), s.Get("needs.wasteNone"), "household.happiness", x.Id) { Note = s.Get("needs.wasteFar", "n", ctx.Fmt.Integer((UtilityRules.Defs(sim).WasteBelonging * Fixed.FromInt(100)).RoundToLong())), NoteTone = Tone.Warn });
         }
 
         private static bool HasChildren(Simulation sim, Household x)

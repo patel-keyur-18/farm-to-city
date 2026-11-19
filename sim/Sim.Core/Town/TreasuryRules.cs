@@ -192,6 +192,7 @@ namespace Sim.Core.Town
                 case LineRequires.Road: return RoadRules.IsBuilt(sim);
                 case LineRequires.Policy: return PolicyRules.LineActive(sim, line.Policy);
                 case LineRequires.CivicBuilt: return CivicRules.Built(sim, line.Civic);
+                case LineRequires.UtilityBuilt: return UtilityRules.LineOn(sim, line.Utility);
                 case LineRequires.CivicStaffed: return CivicRules.Staffed(sim, line.Civic) && CivicRules.Post(sim, line.Civic).Status == PostStatus.InPost;
                 default: return true;
             }
@@ -209,6 +210,7 @@ namespace Sim.Core.Town
             return sum;
         }
 
+        private const int HealthDept = 1;
         private const int EducationDept = 2; // the third department, in payment order (spec 021 §3.4)
 
         /// <summary>The Education service is at or above its minimum (or there is no treasury): a school year counts (spec 021 §3.5).</summary>
@@ -276,7 +278,7 @@ namespace Sim.Core.Town
         }
 
         /// <summary>Capital works (spec 021 §3.7): paid from the town's cash to a supplier, kept at cost at 1600 and depreciated at each close.</summary>
-        internal static Commands.RejectReason Commission(Simulation sim, string workId)
+        internal static Commands.RejectReason Commission(Simulation sim, string workId, long gift = 0)
         {
             if (!IsOpen(sim)) return Commands.RejectReason.NoTreasury;
             TownWorkDef work = null;
@@ -284,17 +286,26 @@ namespace Sim.Core.Town
             if (work == null) return Commands.RejectReason.UnknownWork;
             int lane = LaneRules.OfWork(sim, workId);
             if (lane >= 0) { Commands.RejectReason why = LaneRules.CanCommission(sim, lane); if (why != Commands.RejectReason.None) return why; }
+            else if (UtilityRules.OfWork(sim, workId) >= 0) { Commands.RejectReason why = UtilityRules.CanCommission(sim, workId); if (why != Commands.RejectReason.None) return why; }
             else if (CivicRules.CanCommission(sim, workId) != Commands.RejectReason.None) return Commands.RejectReason.PlotTaken;
+            int utility = UtilityRules.OfWork(sim, workId);
             BuildKindDef made = lane < 0 && ConstructionRules.On(sim) ? ConstructionRules.Def(sim).KindOfWork(workId) : null; // from the Township a civic building takes materials and masons (spec 025 §3.2)
             BuildQuote quote = made == null ? null : ConstructionRules.Quote(sim, made.Id, BuildProject.Town, 1);
             long cost = quote != null ? quote.Total : MarketRules.Indexed(sim, work.Cost), now = sim.State.Clock.SimTime;
             TreasuryState s = State(sim);
+            if (gift > 0) // the one-tap top-up: no gift unless the work goes ahead
+            {
+                if (gift < Def(sim).GiftMinimum) return Commands.RejectReason.BelowGiftMinimum;
+                if (!sim.State.Ledger.CanAfford(gift) || !s.Ledger.CanAfford(cost - gift)) return Commands.RejectReason.InsufficientFunds;
+                Give(sim, gift);
+            }
             if (!s.Ledger.CanAfford(cost)) return Commands.RejectReason.InsufficientFunds;
             s.Ledger.Post(now, sim.Period, "ledger.townWorks", "works:" + workId, new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
             s.Works.Add(new WorkRecord { WorkId = workId, Cost = cost, LifeSeasons = work.LifeSeasons, At = now });
             sim.Emit(new WorksCommissioned(now, workId, cost));
             if (lane >= 0) LaneRules.OnCommissioned(sim, lane);
-            else if (quote != null) ConstructionRules.Start(sim, made.Id, BuildProject.Town, CivicRules.Def(sim, CivicRules.OfWork(sim, workId)).Tile, 1, -1, quote, cost, 0);
+            else if (quote != null) ConstructionRules.Start(sim, made.Id, BuildProject.Town, utility >= 0 ? UtilityRules.Def(sim, utility).Tile : CivicRules.Def(sim, CivicRules.OfWork(sim, workId)).Tile, 1, -1, quote, cost, 0);
+            else if (utility >= 0) UtilityRules.OnBuilt(sim, workId);
             else CivicRules.OnCommissioned(sim, workId, cost);
             return Commands.RejectReason.None;
         }
@@ -437,13 +448,14 @@ namespace Sim.Core.Town
                 }
 
             CivicRules.NotePaid(sim, amounts, paid); // spec 023 §3.7: the wages reach the old village; an unpaid post falls vacant
+            UtilityRules.NotePaid(sim, paid); // spec 025 §3.1: the collector's wage
 
             // The policies move on: paid ones start or go on, unpaid ones pause, repealed ones end (spec 022 §3.6); an ended one leaves its budget.
             var fullyPaid = new bool[PolicyState.Count];
             for (int i = 0; i < n; i++) if (d.Lines[i].Policy >= 0) fullyPaid[d.Lines[i].Policy] = LineActive(sim, d.Lines[i]) && paid[i] >= amounts[i];
             PolicyRules.AtClose(sim, fullyPaid);
             for (int i = 0; i < n; i++)
-                if (d.Lines[i].Policy >= 0 && s.Seen(d.Lines[i].Id) && !LineActive(sim, d.Lines[i]))
+                if ((d.Lines[i].Policy >= 0 || d.Lines[i].Utility >= 0) && s.Seen(d.Lines[i].Id) && !LineActive(sim, d.Lines[i]))
                 {
                     s.SetSeen(d.Lines[i].Id, false);
                     int dp = d.Lines[i].Department;
@@ -463,6 +475,7 @@ namespace Sim.Core.Town
                 Fixed from = s.Condition[dept];
                 Fixed to = from + (row.Funding - from) * d.ConditionStep;
                 if (to > Fixed.One) to = Fixed.One;
+                if (dept == HealthDept && to > UtilityRules.HealthCap(sim)) to = UtilityRules.HealthCap(sim); // no drains in a big town (spec 025 §3.1)
                 if (to < Fixed.Zero) to = Fixed.Zero;
                 s.Condition[dept] = to;
                 row.Condition = to;

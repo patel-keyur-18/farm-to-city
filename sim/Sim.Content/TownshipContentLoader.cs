@@ -14,7 +14,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +113,58 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root) };
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map) };
+        }
+
+        /// <summary>The utilities (spec 025 §3.1): each step's plot, work, lines, reach and capacity, and what going without costs.</summary>
+        private static UtilitiesDef LoadUtilities(JObject o, string root, TreasuryDef treasury, MapDef map)
+        {
+            string p = Join(root, "utilities");
+            JObject j = Object(Required(o, root, "utilities"), p);
+            var fields = new System.Collections.Generic.List<string>(UtilityIds) { "minCondition", "townSize", "giftRound", "waterHealth", "drainsHealth", "drainsHealthCap", "drainsLandValue", "wasteBelonging", "powerLeisure", "eveningHours" };
+            OnlyFields(j, p, fields.ToArray());
+            var steps = new System.Collections.Generic.List<UtilityDef>();
+            for (int i = 0; i < UtilityIds.Length; i++)
+            {
+                string ip = Join(p, UtilityIds[i]);
+                JObject b = Object(Required(j, p, UtilityIds[i]), ip);
+                OnlyFields(b, ip, "place", "work", "upkeepLine", "extraLine", "reach", "capacity");
+                string work = String(Required(b, ip, "work"), Join(ip, "work"));
+                bool known = false;
+                foreach (TownWorkDef w in treasury.Works) if (w.Id == work) known = true;
+                if (!known) throw new ContentException(Join(ip, "work"), "unknown work '" + work + "' (treasury.json works)");
+                steps.Add(new UtilityDef
+                {
+                    Index = i, Id = UtilityIds[i], Tile = PlotTile(b, ip, UtilityIds[i] + "_plot", map), Work = work,
+                    Reach = BoundedInt(b, ip, "reach", 100, 1000000), Capacity = BoundedInt(b, ip, "capacity", 1, 1000000),
+                    UpkeepLine = UtilityLine(treasury, b, ip, "upkeepLine", i, true), ExtraLine = UtilityLine(treasury, b, ip, "extraLine", i, false),
+                });
+            }
+            return new UtilitiesDef
+            {
+                Steps = steps.AsReadOnly(), MinCondition = Bounded(j, p, "minCondition", "0", "1"), TownSize = BoundedInt(j, p, "townSize", 0, 100000), GiftRound = Money(Required(j, p, "giftRound"), Join(p, "giftRound")),
+                WaterHealth = Bounded(j, p, "waterHealth", "0", "1"), DrainsHealth = Bounded(j, p, "drainsHealth", "0", "1"), DrainsHealthCap = Bounded(j, p, "drainsHealthCap", "0", "1"),
+                DrainsLandValue = Bounded(j, p, "drainsLandValue", "0", "1"), WasteBelonging = Bounded(j, p, "wasteBelonging", "0", "1"), PowerLeisure = Bounded(j, p, "powerLeisure", "0", "1"),
+                EveningHours = BoundedInt(j, p, "eveningHours", 0, 6),
+            };
+        }
+
+        private static int UtilityLine(TreasuryDef treasury, JObject b, string path, string field, int utility, bool required)
+        {
+            if (b[field] == null)
+            {
+                if (required) throw new ContentException(Join(path, field), "required");
+                return -1;
+            }
+            string id = String(b[field], Join(path, field));
+            for (int i = 0; i < treasury.Lines.Count; i++)
+            {
+                LineDef l = treasury.Lines[i];
+                if (l.Id != id) continue;
+                if (l.Requires != LineRequires.UtilityBuilt || l.Utility != utility) throw new ContentException(Join(path, field), "line '" + id + "' doesn't open with this utility");
+                return i;
+            }
+            throw new ContentException(Join(path, field), "unknown line '" + id + "'");
         }
 
         /// <summary>Smoke (spec 025 §3.3, §3.4): each source's reach, land value and health, and the cap on an acre's total.</summary>

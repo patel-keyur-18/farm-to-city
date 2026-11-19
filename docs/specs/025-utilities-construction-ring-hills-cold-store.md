@@ -59,6 +59,8 @@ Each utility is a *work* the treasury commissions (spec 021 `CommissionWorks`, t
 
 **Phase 3 rule: a town left alone always works.** No utility is required to reach the Township or to keep living; without them the town grows slower (builders skip uncovered land, §3.2) and is a little less happy, never stuck.
 
+**As built (US-144, ADR 0130, owner 2026-11-19).** Five works through `CommissionWorks`, no `ConnectGrid`; the tower, drains and collection post take materials and masons (the post: 3,000 bricks, 20 bags, 1.3 m³, 12 mason-days, 48 h), the generator and the grid are fitted the same day. The top-up is part of the command (an optional gift, the shortfall rounded up to the next 10,000). One Utilities department; its condition under 50% means a utility covers nobody. The sickness effects are health lost a season (4 points without clean water, 2 without drains) because households have no sick-day roll; "2 more shop hours" is two hours past the usual close at the usual wage; drains' land value −0.04 only on acres with a home; drains and collection are missed from 40 residents. The generator's smoke footprint is the overlay's (US-153), not drawn under the sheet.
+
 ### 3.2 Construction (US-145)
 
 From the Township, **a new building** (yours, the treasury's, a builder's; not a hut, a fence, a channel or a machine) needs **materials**, **masons** and **time**.

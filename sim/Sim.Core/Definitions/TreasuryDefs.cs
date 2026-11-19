@@ -43,6 +43,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>While a civic building's post is filled (spec 023 §3.7): the watchman's or caretaker's wage.</summary>
         CivicStaffed = 7,
+
+        /// <summary>While a utility stands and works (spec 025 §3.1): its upkeep, fuel or collector's wage.</summary>
+        UtilityBuilt = 8,
     }
 
     /// <summary>One of the seven departments, in the order they are paid (spec 021 §3.4, spec 022 §3.5).</summary>
@@ -76,8 +79,12 @@ namespace Sim.Core.Definitions
         /// <summary>The civic building a <see cref="LineRequires.CivicBuilt"/> or <see cref="LineRequires.CivicStaffed"/> line belongs to (an index of <see cref="CivicDef"/>), else -1.</summary>
         public int Civic { get; }
 
-        public LineDef(string id, int department, bool wage, LineAmount source, long amount, LineRequires requires, int policy = -1, int civic = -1)
+        /// <summary>The utility a <see cref="LineRequires.UtilityBuilt"/> line belongs to (an index of <see cref="UtilityDef"/>), else -1.</summary>
+        public int Utility { get; }
+
+        public LineDef(string id, int department, bool wage, LineAmount source, long amount, LineRequires requires, int policy = -1, int civic = -1, int utility = -1)
         {
+            Utility = utility;
             Civic = civic;
             Policy = policy;
             Id = id;

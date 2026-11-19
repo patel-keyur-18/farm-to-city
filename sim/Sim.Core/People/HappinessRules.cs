@@ -56,8 +56,8 @@ namespace Sim.Core.People
             Fixed security = Sim.Core.Town.CivicRules.On(sim) && Sim.Core.Town.CivicRules.SafetyCounts(sim)
                 ? (three + Sim.Core.Town.CivicRules.Safety(sim, x)).MulRatio(1, 4) // spec 023 §3.7: the Township's fourth part
                 : three.MulRatio(1, 3);
-            Fixed belonging = Sim.Core.Town.CivicRules.Belonging(sim, x, p.Belonging); // the temple and the banyan square, and the community hall
-            Fixed leisure = Sim.Core.Town.CivicRules.Leisure(sim, x, x.Leisure > 0 ? p.Leisure : Fixed.Zero);
+            Fixed belonging = Sim.Core.Town.UtilityRules.Belonging(sim, x, Sim.Core.Town.CivicRules.Belonging(sim, x, p.Belonging)); // the temple and the banyan square, and the community hall
+            Fixed leisure = Sim.Core.Town.UtilityRules.Leisure(sim, x, Sim.Core.Town.CivicRules.Leisure(sim, x, x.Leisure > 0 ? p.Leisure : Fixed.Zero));
             Fixed growth = SchoolRules.Met(sim, x) ? (Fixed.One + leisure).MulRatio(1, 2) : leisure; // the layer's mean once the school counts (ADR 0095 §6)
             x.Survival = survival;
             x.Security = security;

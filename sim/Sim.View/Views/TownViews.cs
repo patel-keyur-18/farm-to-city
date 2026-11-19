@@ -263,6 +263,7 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
             OldVillage(ctx, vm); // spec 023 §3.5
             ZoningViews.TownRows(ctx, vm); // spec 024 §3.3
+            UtilitySheet.TownRows(ctx, vm); // spec 025 §3.1
 
             List<string> news = TownNews.ThisSeason(ctx);
             if (news.Count > 0)

@@ -50,6 +50,7 @@ namespace Sim.Core.Saves
             PostCivicJob, DismissStaff,
             ListParcel, CancelSale, ZoneParcel, UnzoneParcel,
             LeaseOutLand, EndLease,
+            CommissionWorksGift,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -171,6 +172,7 @@ namespace Sim.Core.Saves
                 case TakeBackSavingsCover c: At(c, Tag.TakeBackSavingsCover); break;
                 case RenewLease c: At(c, Tag.RenewLease); w.WriteLong(c.HouseholdId); w.WriteInt((int)c.Choice); break;
                 case GiveToTreasury c: At(c, Tag.GiveToTreasury); w.WriteLong(c.Amount); break;
+                case CommissionWorks c when c.Gift > 0: At(c, Tag.CommissionWorksGift); w.WriteString(c.WorkId); w.WriteLong(c.Gift); break;
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
                 case PostCivicJob c: At(c, Tag.PostCivicJob); w.WriteInt(c.Civic); break;
                 case DismissStaff c: At(c, Tag.DismissStaff); w.WriteInt(c.Civic); break;
@@ -338,6 +340,7 @@ namespace Sim.Core.Saves
                 case Tag.RenewLease: return new RenewLease(at, r.ReadLong(), (LeaseChoice)r.ReadInt());
                 case Tag.GiveToTreasury: return new GiveToTreasury(at, r.ReadLong());
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
+                case Tag.CommissionWorksGift: return new CommissionWorks(at, r.ReadString(), r.ReadLong());
                 case Tag.PostCivicJob: return new PostCivicJob(at, r.ReadInt());
                 case Tag.DismissStaff: return new DismissStaff(at, r.ReadInt());
                 case Tag.ListParcel: return new ListParcel(at, r.ReadString());

@@ -27,11 +27,13 @@ namespace Sim.Core.Tests
             Simulation sim = TownshipTests.Start(cohort: true);
             TreasuryTests.Era(sim, "village");
             TreasuryTests.Township(sim);
-            Ok(sim, new GiveToTreasury(sim.State.Clock.SimTime, 100_000 * Coin));
+            Ok(sim, new GiveToTreasury(sim.State.Clock.SimTime, 600_000 * Coin));
             foreach (string lane in new[] { "lane_w1", "lane_w2", "lane_e1" }) Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, lane));
+            foreach (string work in new[] { "diesel_generator", "water_tower" }) Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, work)); // US-144: the generator fitted, the tower under way
             sim.AdvanceTo(TreasuryTests.NextClose(sim) + 3 * Hour);
             sim.DrainEvents();
             Assert.That(sim.State.Township.LanesBuilt, Is.EqualTo(0b10011));
+            Assert.That(sim.State.Township.UtilitiesBuilt & 0b10, Is.EqualTo(0b10), "the generator stands");
             Directory.CreateDirectory(Dir);
             File.WriteAllBytes(Ring21Fixture, SaveCodec.Write(sim.State, SaveTests.Config(), Wall0));
             var pin = new Pinned { Schema = 21, Hash = "0x" + sim.State.ComputeHash().ToString("X16"), Facts = Facts(sim.State) };
@@ -51,6 +53,7 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Land.Tiles.Count, Is.EqualTo(432));
             Assert.That(r.State.Township.LanesBuilt, Is.EqualTo(0b10011), "two west sections and the first east one");
             Assert.That(r.State.Township.LandValues.Length, Is.EqualTo(432), "the ring is read too");
+            Assert.That(r.State.Township.UtilitiesBuilt & 0b10, Is.EqualTo(0b10), "the generator (US-144) stands");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "round-trips");

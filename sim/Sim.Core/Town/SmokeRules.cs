@@ -23,7 +23,7 @@ namespace Sim.Core.Town
             public Source(int tile, SmokeSource def) { Tile = tile; Def = def; }
         }
 
-        /// <summary>The smoking buildings now, in a fixed order: your open kilns by id.</summary>
+        /// <summary>The smoking buildings now, in a fixed order: your open kilns by id, then the generator.</summary>
         public static List<Source> Sources(Simulation sim)
         {
             var list = new List<Source>();
@@ -31,6 +31,8 @@ namespace Sim.Core.Town
             if (d == null) return list;
             SmokeSource kiln = d.Source("kiln");
             if (kiln != null) foreach (Business.Business b in KilnRules.Open(sim)) list.Add(new Source(b.TileId, kiln));
+            SmokeSource generator = d.Source("generator");
+            if (generator != null && UtilityRules.Defs(sim) != null && UtilityRules.Active(sim, UtilityDef.Generator)) list.Add(new Source(UtilityRules.Def(sim, UtilityDef.Generator).Tile, generator)); // until the grid replaces it
             return list;
         }
 

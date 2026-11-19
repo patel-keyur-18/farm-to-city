@@ -141,7 +141,7 @@ namespace Sim.View.Views
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
-            if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
+            if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else if (Sim.Core.Town.UtilityRules.OfWork(sim, cw.WorkId) >= 0) UtilitySheet.Guard(ctx, vm, after, cw.WorkId); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
             if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
                 vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
             if (c is BuildFamilyHouse bf && Sim.Core.Town.ConstructionRules.On(sim)) vm.Warning = BuildingSheet.Timing(ctx, after, true) + BuildingSheet.KilnSaving(ctx, Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1)); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
@@ -157,6 +157,11 @@ namespace Sim.View.Views
                 vm.GoLabel = cash < 0 ? s.Get("confirm.verbFor", "verb", verb, "amount", ctx.Fmt.Coins(-cash)) : verb;
             }
             if (c is CommissionWorks bw && Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(bw.WorkId) != null) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
+            if (c is CommissionWorks uw && Sim.Core.Town.UtilityRules.OfWork(sim, uw.WorkId) >= 0)
+            {
+                long paid = sim.State.Treasury.Cash - after.State.Treasury.Cash + uw.Gift;
+                vm.GoLabel = uw.Gift > 0 ? s.Get("utility.cardGoGift", "gift", ctx.Fmt.Coins(uw.Gift)) : s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(paid));
+            }
             if (c is CommissionWorks lw && Sim.Core.Town.LaneRules.OfWork(sim, lw.WorkId) >= 0) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
             return vm;
         }
@@ -278,6 +283,8 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             int lane = Sim.Core.Town.LaneRules.OfWork(sim, works.WorkId);
             if (lane >= 0) { LaneSheet.Card(ctx, vm, after, lane); return; }
+            int utility = Sim.Core.Town.UtilityRules.OfWork(sim, works.WorkId);
+            if (utility >= 0) { UtilitySheet.Card(ctx, vm, sim, after, works, utility); return; } // spec 025 §3.1
             int civic = Sim.Core.Town.CivicRules.OfWork(sim, works.WorkId);
             Sim.Core.Definitions.BuildKindDef made = civic >= 0 && Sim.Core.Town.ConstructionRules.On(sim) ? Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(works.WorkId) : null;
             if (made != null) // from the Township a civic building takes materials and masons (spec 025 §3.2)

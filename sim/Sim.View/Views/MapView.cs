@@ -363,6 +363,10 @@ namespace Sim.View.Views
         public int[] CivicTile { get; internal set; } = { -1, -1, -1 };
         public int[] CivicStage { get; internal set; } = { 0, 0, 0 };
 
+        /// <summary>The five utilities' plots (spec 025 §3.1) and their stage: 0 the plot, 2 standing, 3 the generator switched off by the grid.</summary>
+        public int[] UtilityTile { get; internal set; } = { -1, -1, -1, -1, -1 };
+        public int[] UtilityStage { get; internal set; } = { 0, 0, 0, 0, 0 };
+
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
         public int Pitches { get; internal set; }
@@ -910,6 +914,12 @@ namespace Sim.View.Views
             {
                 map.CivicTile[i] = Sim.Core.Town.CivicRules.Def(sim, i).Tile;
                 map.CivicStage[i] = Sim.Core.Town.CivicRules.Post(sim, i).Built ? 2 : 0;
+            }
+            if (Sim.Core.Town.UtilityRules.Defs(sim) == null) return;
+            for (int u = 0; u < Sim.Core.Definitions.UtilityDef.Count; u++)
+            {
+                map.UtilityTile[u] = Sim.Core.Town.UtilityRules.Def(sim, u).Tile;
+                map.UtilityStage[u] = Sim.Core.Town.UtilityRules.SwitchedOff(sim, u) ? 3 : Sim.Core.Town.UtilityRules.Built(sim, u) ? 2 : 0;
             }
         }
 

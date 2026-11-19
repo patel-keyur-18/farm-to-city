@@ -21,7 +21,8 @@ namespace Sim.Core.Tests
         /// <summary>A Township with the old village in, two families of yours and the treasury rich enough to commission all three.</summary>
         private static Simulation Township(System.Func<string, string, string> edit = null, long treasuryCoins = 1_000_000)
         {
-            Simulation sim = TownshipTests.Start(cohort: true, edit);
+            // These tests are about the civic buildings: the utilities' absence (US-144) is not missed in them, so the town is never "big enough" to need drains or collection.
+            Simulation sim = TownshipTests.Start(cohort: true, (f, j) => { j = f == "township.json" ? j.Replace("\"townSize\": 40", "\"townSize\": 100000") : j; return edit == null ? j : edit(f, j); });
             TownshipTests.Families(sim, 2);
             TreasuryTests.Township(sim);
             Fund(sim, treasuryCoins * Coin);

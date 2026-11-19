@@ -200,6 +200,7 @@ namespace Sim.Core.People
             Fixed health = x.FoodMet < Fixed.One ? c.Health - loss * (Fixed.One - x.FoodMet) : c.Health + gain;
             if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
             health -= Town.SmokeRules.Health(sim, x); // spec 025: a kiln's or a generator's smoke
+            health -= Town.UtilityRules.Strain(sim, x); // spec 025 §3.1: no clean water near, no drains
             return health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
         }
 

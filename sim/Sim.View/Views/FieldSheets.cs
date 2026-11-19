@@ -189,6 +189,7 @@ namespace Sim.View.Views
             if (kind == "council_hall") RoadSheet.Fill(ctx, vm); // spec 023 §3.3
             if (kind == "clinic_plot") ClinicSheet.Fill(ctx, vm); // spec 023 §3.1, US-148
             if (kind == "quarters_plot") ClinicSheet.FillQuarters(ctx, vm);
+            if (Sim.Core.Town.UtilityRules.OfPlot(sim, kind) >= 0) UtilitySheet.Fill(ctx, vm, Sim.Core.Town.UtilityRules.OfPlot(sim, kind)); // spec 025 §3.1, US-144
             if (CivicSheet.OfPlot(kind) >= 0) CivicSheet.Fill(ctx, vm, CivicSheet.OfPlot(kind)); // spec 023 §3.7, US-148 part 2
             if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
             return vm;

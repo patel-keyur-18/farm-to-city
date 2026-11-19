@@ -164,6 +164,7 @@ namespace Game.Presentation.Ui
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
+                    if (icon.StartsWith("utility_", StringComparison.Ordinal)) return SpriteBank.Rendered("village_" + icon.Substring(8) + "_e"); // the utilities (spec 025 §3.1)
                     if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");
                     if (icon.StartsWith("animal_", StringComparison.Ordinal) || icon.StartsWith("seed_", StringComparison.Ordinal)) return IconBank.Good(icon);
                     if (icon.StartsWith("portrait_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);

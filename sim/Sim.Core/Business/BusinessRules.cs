@@ -526,7 +526,7 @@ namespace Sim.Core.Business
         public static bool Overtime(Simulation sim, Business b, int hour)
         {
             BusinessTypeDef t = TypeOf(sim, b);
-            return hour < t.OpenHour || hour >= t.CloseHour;
+            return hour < t.OpenHour || hour >= t.CloseHour + Town.UtilityRules.EveningHours(sim, b); // with power in reach the evening is at the usual wage (spec 025 §3.1)
         }
 
         /// <summary>Hours a day it's open past the village's usual day: a long day for its worker.</summary>

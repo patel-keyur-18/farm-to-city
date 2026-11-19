@@ -2767,6 +2767,13 @@
    "name": "place_clinic_plot"
   },
   {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_collection_plot"
+  },
+  {
    "w": 374,
    "h": 326,
    "pivotX": 0.50447,
@@ -2779,6 +2786,27 @@
    "pivotX": 0.51399,
    "pivotY": 0.33893,
    "name": "place_dealer"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_drains_plot"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_generator_plot"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_grid_plot"
   },
   {
    "w": 338,
@@ -2849,6 +2877,13 @@
    "pivotX": 0.5,
    "pivotY": 0.24832,
    "name": "place_temple"
+  },
+  {
+   "w": 470,
+   "h": 288,
+   "pivotX": 0.5,
+   "pivotY": 0.47287,
+   "name": "place_tower_plot"
   },
   {
    "w": 470,
@@ -3369,6 +3404,13 @@
    "name": "village_clinic_e"
   },
   {
+   "w": 426,
+   "h": 264,
+   "pivotX": 0.50359,
+   "pivotY": 0.46869,
+   "name": "village_collection_e"
+  },
+  {
    "w": 314,
    "h": 326,
    "pivotX": 0.49541,
@@ -3458,6 +3500,34 @@
    "pivotX": 0.50777,
    "pivotY": 0.3391,
    "name": "village_dealer_w"
+  },
+  {
+   "w": 426,
+   "h": 260,
+   "pivotX": 0.50359,
+   "pivotY": 0.47542,
+   "name": "village_drains_e"
+  },
+  {
+   "w": 426,
+   "h": 418,
+   "pivotX": 0.50359,
+   "pivotY": 0.29577,
+   "name": "village_generator_e"
+  },
+  {
+   "w": 426,
+   "h": 364,
+   "pivotX": 0.50359,
+   "pivotY": 0.34078,
+   "name": "village_generator_off_e"
+  },
+  {
+   "w": 426,
+   "h": 374,
+   "pivotX": 0.50359,
+   "pivotY": 0.33083,
+   "name": "village_grid_e"
   },
   {
    "w": 284,
@@ -3696,6 +3766,13 @@
    "pivotX": 0.5,
    "pivotY": 0.25983,
    "name": "village_temple_w"
+  },
+  {
+   "w": 426,
+   "h": 362,
+   "pivotX": 0.50359,
+   "pivotY": 0.34156,
+   "name": "village_tower_e"
   },
   {
    "w": 182,

@@ -25,11 +25,14 @@ namespace Sim.Core.Commands
     {
         public string WorkId { get; }
 
-        public CommissionWorks(long at, string workId) : base(at) { WorkId = workId; }
+        /// <summary>A gift to the town in the same tap (the card's one-tap top-up, spec 025 §3.1): given first, only if the work then goes ahead; 0 for none.</summary>
+        public long Gift { get; }
+
+        public CommissionWorks(long at, string workId, long gift = 0) : base(at) { WorkId = workId; Gift = gift; }
 
         protected override CommandResult ApplyAt(Simulation sim)
         {
-            RejectReason r = Town.TreasuryRules.Commission(sim, WorkId);
+            RejectReason r = Town.TreasuryRules.Commission(sim, WorkId, Gift);
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }

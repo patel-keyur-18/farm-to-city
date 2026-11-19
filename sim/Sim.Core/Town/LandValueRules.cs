@@ -60,7 +60,7 @@ namespace Sim.Core.Town
             ClinicDef clinic = ClinicRules.Def(sim);
             if (clinic != null && ClinicRules.IsOpen(sim) && CoverageRules.Within(sim, tileId, clinic.Tile, clinic.Reach)) list.Add(new LandPart("clinic", d.Clinic, 0));
             if (CoverageRules.Within(sim, tileId, d.SquareTile, d.SquareReach)) list.Add(new LandPart("square", d.Square, 0));
-            if (HasWater(sim, d, tileId)) list.Add(new LandPart("water", d.Water, 0));
+            if (HasWater(sim, tileId)) list.Add(new LandPart("water", d.Water, 0));
             int jobs = Jobs(sim, d, tileId);
             if (jobs > 0) list.Add(new LandPart("jobs", d.JobEach * Fixed.FromInt(jobs), jobs));
             int hh = EraRules.Households(sim);
@@ -70,6 +70,7 @@ namespace Sim.Core.Town
             if (size > Fixed.Zero) list.Add(new LandPart("size", size, hh));
             Fixed smoke = SmokeRules.LandValue(sim, tileId, out int smokers);
             if (smoke > Fixed.Zero) list.Add(new LandPart("smoke", Fixed.Zero - smoke, smokers)); // a kiln or a generator's smoke (spec 025)
+            if (UtilityRules.DrainsMissing(sim, tileId)) list.Add(new LandPart("drains", Fixed.Zero - UtilityRules.Defs(sim).DrainsLandValue, 0)); // a home with no drains (spec 025 §3.1)
             return list;
         }
 
@@ -82,9 +83,13 @@ namespace Sim.Core.Town
             return lv < d.Floor ? d.Floor : lv > d.Ceiling ? d.Ceiling : lv;
         }
 
+        /// <summary>The pond, a well or a working water tower in reach (the tower's own 400 m; spec 025 §3.1).</summary>
+        public static bool HasWater(Simulation sim, int tileId) { return UtilityRules.HasWater(sim, tileId); }
+
         /// <summary>The pond, or any well, within the water reach (a pump or a borewell waters fields and does not count; spec 024 §3.1).</summary>
-        private static bool HasWater(Simulation sim, LandValueDef d, int tileId)
+        public static bool PondOrWell(Simulation sim, int tileId)
         {
+            LandValueDef d = Def(sim);
             if (CoverageRules.Within(sim, tileId, d.WaterTile, d.WaterReach)) return true;
             foreach (Building b in sim.State.Land.Buildings)
                 if (b.TileId >= 0 && sim.Config.Game.Buildings[b.Def].Id == BuildingDef.WellId && CoverageRules.Within(sim, tileId, b.TileId, d.WaterReach)) return true;

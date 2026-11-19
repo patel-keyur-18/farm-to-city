@@ -11,6 +11,7 @@ namespace Sim.Content
     {
         /// <summary>The seven departments in the order they are paid (spec 021 §3.4; spec 022 §3.5's seventh, Policies).</summary>
         internal static readonly string[] CivicIds = { "watchman", "hall", "playground" };
+        internal static readonly string[] UtilityIds = { "tower", "generator", "grid", "drains", "collection" };
         private static readonly string[] DepartmentIds = { "office", "health", "education", "roads", "safety", "utilities", "policies" };
 
         private static readonly Account[] DepartmentAccounts =
@@ -57,7 +58,7 @@ namespace Sim.Content
             {
                 string p = Index(Join(root, "lines"), i);
                 JObject l = Object(ls[i], p);
-                OnlyFields(l, p, "id", "department", "kind", "amount", "requires", "civic");
+                OnlyFields(l, p, "id", "department", "kind", "amount", "requires", "civic", "utility");
                 string id = UniqueId(l, p, ids);
                 ids.Add(id);
                 string dep = String(Required(l, p, "department"), Join(p, "department"));
@@ -91,7 +92,8 @@ namespace Sim.Content
                 else if (req == "road") requires = LineRequires.Road;
                 else if (req == "civic") requires = LineRequires.CivicBuilt;
                 else if (req == "civicStaffed") requires = LineRequires.CivicStaffed;
-                else throw new ContentException(Join(p, "requires"), "must be treasury, school, clinic, clinicOpen, road, civic or civicStaffed");
+                else if (req == "utility") requires = LineRequires.UtilityBuilt;
+                else throw new ContentException(Join(p, "requires"), "must be treasury, school, clinic, clinicOpen, road, civic, civicStaffed or utility");
                 int civic = -1;
                 if (requires == LineRequires.CivicBuilt || requires == LineRequires.CivicStaffed)
                 {
@@ -100,7 +102,14 @@ namespace Sim.Content
                     if (civic < 0) throw new ContentException(Join(p, "civic"), "must be watchman, hall or playground");
                 }
                 else if (l["civic"] != null) throw new ContentException(Join(p, "civic"), "only civic lines name a civic building");
-                lines.Add(new LineDef(id, d, kind == "wage", source, amount, requires, -1, civic));
+                int utility = -1;
+                if (requires == LineRequires.UtilityBuilt)
+                {
+                    utility = System.Array.IndexOf(UtilityIds, String(Required(l, p, "utility"), Join(p, "utility")));
+                    if (utility < 0) throw new ContentException(Join(p, "utility"), "must be tower, generator, grid, drains or collection");
+                }
+                else if (l["utility"] != null) throw new ContentException(Join(p, "utility"), "only utility lines name a utility");
+                lines.Add(new LineDef(id, d, kind == "wage", source, amount, requires, -1, civic, utility));
             }
 
             for (int i = 0; i < PolicyIds.Length; i++) // each policy's cost is a line in its department (spec 022 §3.5)

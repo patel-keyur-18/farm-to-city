@@ -38,6 +38,7 @@ namespace Game.Presentation.Art
             if (goodId == "clinic" || goodId == "clinic_building") return SpriteBank.Rendered(goodId == "clinic" ? "village_clinic_e" : "village_clinic_building_e") ?? Basket; // spec 023 §3.1
             if (goodId == "watchman_post" || goodId == "community_hall" || goodId == "playground") return SpriteBank.Rendered(goodId == "watchman_post" ? "village_watchman_e" : goodId == "community_hall" ? "village_hall_e" : "village_playground_e") ?? Basket; // spec 023 §3.7
             if (goodId == "doctor_quarters" || goodId == "doctor_quarters_building") return SpriteBank.Rendered(goodId == "doctor_quarters" ? "village_quarters_e" : "village_quarters_building_e") ?? Basket;
+            if (goodId.StartsWith("utility_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("village_" + goodId.Substring(8) + "_e") ?? Basket; // the utilities (spec 025 §3.1)
             if (goodId == "pitch") return SpriteBank.Rendered("pitch_empty_1") ?? Basket;
             if (goodId.StartsWith("newcomer_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId + "_cart_s") ?? Basket; // a newcomer's cart (spec 017 §3.7)
             if (goodId == "star") return Star(2) ?? Basket; // a shop's stars (spec 017 §3.5)

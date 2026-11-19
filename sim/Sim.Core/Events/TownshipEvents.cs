@@ -164,6 +164,24 @@ namespace Sim.Core.Events
         protected override string Describe() { return "CivicBuilt " + Civic; }
     }
 
+    /// <summary>A utility now stands (spec 025 §3.1, US-144): <see cref="Utility"/> is an index of <c>UtilityDef</c>.</summary>
+    public sealed class UtilityBuilt : SimEvent
+    {
+        public int Utility { get; }
+
+        public UtilityBuilt(long simTime, int utility) : base(simTime) { Utility = utility; }
+
+        protected override string Describe() { return "UtilityBuilt " + Utility; }
+    }
+
+    /// <summary>The grid replaced a standing generator: it is switched off and its upkeep and smoke stop (spec 025 §3.1).</summary>
+    public sealed class GridConnected : SimEvent
+    {
+        public GridConnected(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "GridConnected"; }
+    }
+
     /// <summary>The treasury built a section of a ring lane (spec 025 §3.4): <see cref="Section"/> is an index of the map's lanes.</summary>
     public sealed class LaneBuilt : SimEvent
     {

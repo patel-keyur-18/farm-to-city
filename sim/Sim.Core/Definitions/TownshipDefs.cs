@@ -29,6 +29,7 @@ namespace Sim.Core.Definitions
 
         /// <summary>What a smoking building does to the land and the homes near it (spec 025 §3.4, §3.3): the generator's and the kiln's.</summary>
         public SmokeDef Smoke { get; set; }
+        public UtilitiesDef Utilities { get; set; }
 
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
@@ -264,6 +265,55 @@ namespace Sim.Core.Definitions
         public int Reach { get; internal set; }
         public Fixed LandValue { get; internal set; }
         public Fixed Health { get; internal set; }
+    }
+
+    /// <summary>
+    /// One utility (spec 025 §3.1, US-144): a plot on the map, the treasury work that builds it, its reach in metres and capacity in people, and the
+    /// treasury lines it opens (upkeep, and a second line: the generator's fuel or the collector's wage).
+    /// </summary>
+    public sealed class UtilityDef
+    {
+        public const int Tower = 0, Generator = 1, Grid = 2, Drains = 3, Collection = 4, Count = 5;
+
+        public int Index { get; internal set; }
+        public string Id { get; internal set; }
+        public int Tile { get; internal set; }
+        public string Work { get; internal set; }
+        public int UpkeepLine { get; internal set; } = -1;
+        public int ExtraLine { get; internal set; } = -1;
+        public int Reach { get; internal set; }
+        public int Capacity { get; internal set; }
+
+        /// <summary>The reach or capacity is the whole town's (past this, the sheets say so).</summary>
+        public const int Whole = 5000;
+    }
+
+    /// <summary>The utilities (<c>township.json</c> <c>utilities</c>) and what going without each costs.</summary>
+    public sealed class UtilitiesDef
+    {
+        public System.Collections.Generic.IReadOnlyList<UtilityDef> Steps { get; internal set; }
+
+        /// <summary>Under this condition of the Utilities department a utility covers nobody.</summary>
+        public Fixed MinCondition { get; internal set; }
+
+        /// <summary>Residents from which drains and collection are missed.</summary>
+        public int TownSize { get; internal set; }
+
+        /// <summary>A top-up gift is the shortfall rounded up to this (1/100 coin).</summary>
+        public long GiftRound { get; internal set; }
+
+        /// <summary>Health lost a season in a home beyond clean water; beyond drains; the cap on Health's condition without drains.</summary>
+        public Fixed WaterHealth { get; internal set; }
+        public Fixed DrainsHealth { get; internal set; }
+        public Fixed DrainsHealthCap { get; internal set; }
+
+        /// <summary>Land value lost on a built-up acre beyond drains.</summary>
+        public Fixed DrainsLandValue { get; internal set; }
+
+        /// <summary>Belonging lost without collection; the leisure share power adds; shop hours power gives at the usual wage.</summary>
+        public Fixed WasteBelonging { get; internal set; }
+        public Fixed PowerLeisure { get; internal set; }
+        public int EveningHours { get; internal set; }
     }
 
     /// <summary>Smoke (spec 025): the sources by id and the most land value smoke takes from one acre in all.</summary>
