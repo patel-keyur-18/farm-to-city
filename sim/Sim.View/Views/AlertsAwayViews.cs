@@ -726,7 +726,7 @@ namespace Sim.View.Views
             // Spec 019 §3.5 (the savings deposit).
             { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.
-            { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
+            { "PumpInstalled", Use.Motion }, { "SolarPanelFitted", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.
             { "OrchardPlanted", Use.Motion }, { "OrchardBearing", Use.Motion }, { "OrchardRipe", Use.Motion }, { "OrchardPicked", Use.Motion },
             { "OrchardSoldOnTrees", Use.Motion }, { "OrchardGone", Use.StateOnly },

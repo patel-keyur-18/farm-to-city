@@ -54,4 +54,15 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "WaterAcresSet(source=" + Source + ", acres=" + Acres + ")"; }
     }
+
+    /// <summary>A solar panel is fitted to the pump (source 1) or the borewell (2) (US-257).</summary>
+    public sealed class SolarPanelFitted : SimEvent
+    {
+        public int Source { get; }
+        public long Cost { get; }
+
+        public SolarPanelFitted(long simTime, int source, long cost) : base(simTime) { Source = source; Cost = cost; }
+
+        protected override string Describe() { return "SolarPanelFitted(source=" + Source + ", cost=" + Cost + ")"; }
+    }
 }

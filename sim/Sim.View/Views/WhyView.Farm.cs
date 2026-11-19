@@ -80,7 +80,23 @@ namespace Sim.View.Views
                 PumpedDef p = source == 1 ? d.Pump : d.Borewell;
                 string name = ctx.Strings.Get(source == 1 ? "water.pump" : "water.borewell");
                 Row(vm, ctx, "why.irrigation.pumped", Num(ctx, p.MoistureFloor) + " / 100", "source", name);
-                Row(vm, ctx, "why.irrigation.power", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, p.PowerPerAcreSeason)));
+                long acre = Sim.Core.Market.MarketRules.Indexed(sim, p.PowerPerAcreSeason);
+                bool solar = IrrigationRules.Solar(sim, source);
+                Row(vm, ctx, "why.irrigation.power", ctx.Fmt.Coins(solar ? acre - Sim.Core.Finance.Money.RoundToCoin(Sim.Core.Finance.Money.MulRate(acre, p.SolarCut)) : acre));
+                if (solar) Row(vm, ctx, "why.irrigation.without", ctx.Fmt.Coins(acre));
+                long saving = IrrigationRules.PanelSaving(sim, source);
+                string src = ctx.Strings.Get(source == 1 ? "irrigation.nounPump" : "irrigation.nounBorewell");
+                Row(vm, ctx, "why.irrigation.panelCost", ctx.Fmt.Coins(IrrigationRules.PanelCost(sim, source)), "source", src);
+                if (saving > 0)
+                {
+                    int pays = IrrigationRules.PaybackSeasons(sim, source), life = IrrigationRules.LifeSeasons(sim, source);
+                    Row(vm, ctx, "why.irrigation.panelSaves", ctx.Fmt.Coins(saving), "source", src, "acres", ctx.Fmt.Integer(IrrigationRules.Acres(sim, source).Count));
+                    Row(vm, ctx, "why.irrigation.panelPays", ctx.Strings.Plural("why.seasons", pays));
+                    Row(vm, ctx, "why.irrigation.panelLife", ctx.Strings.Plural("why.seasons", life), "source", src);
+                    Row(vm, ctx, "why.irrigation.panelPlain", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, sim.Config.Game.Buildings[p.Building].Value)), "source", src);
+                    Text(vm, ctx, pays > life ? "why.irrigation.panelNever" : "why.irrigation.panelEarns", "source", src);
+                }
+                else Text(vm, ctx, "why.irrigation.panelNone");
                 if (!IrrigationRules.Running(sim, source)) Text(vm, ctx, "why.irrigation.unpaid");
                 any = true;
             }

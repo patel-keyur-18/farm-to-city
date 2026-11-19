@@ -63,6 +63,8 @@ namespace Game.Presentation.Map
             foreach (TileVm t in map.Tiles) if (t.Pumped) key.Append('p').Append(t.Id);
             foreach (BuildingVm b in map.Buildings)
                 if (b.DefId == "drip" || b.DefId == "borewell" || b.DefId == "pump") key.Append(b.DefId[0]).Append(b.TileId);
+            if (map.SolarPump) key.Append("sp");
+            if (map.SolarBorewell) key.Append("sb");
             string k = key.ToString();
             if (k == _irrigationFor) { foreach (SpriteRenderer r in _irrigation) r.color = _tint; return; }
             _irrigationFor = k;
@@ -72,9 +74,13 @@ namespace Game.Presentation.Map
             bool pump = false;
             foreach (BuildingVm b in map.Buildings)
             {
-                if (b.DefId == "pump") pump = true;
+                if (b.DefId == "pump") { pump = true; if (map.SolarPump) Irrigation("solar_panel", b.TileId, new Vector2(0.30f, -0.18f), 0, 1f); } // beside the well (US-257)
                 if (b.DefId == "drip") Irrigation("drip", b.TileId, Vector2.zero, CropBase + Order(b.TileId, _width, 19), 1f);
-                if (b.DefId == "borewell") Irrigation("tubewell", b.TileId, new Vector2(-0.34f, 0.34f), 0, 0.8f);
+                if (b.DefId == "borewell")
+                {
+                    Irrigation("tubewell", b.TileId, new Vector2(-0.34f, 0.34f), 0, 0.8f);
+                    if (map.SolarBorewell) Irrigation("solar_panel", b.TileId, new Vector2(-0.10f, 0.40f), 0, 0.9f);
+                }
             }
             foreach (TileVm t in map.Tiles)
                 if (t.Pumped && !HasBorewell(map, t.Id)) Irrigation("pump_outlet", t.Id, new Vector2(-0.24f, 0.24f), 0, 1f);

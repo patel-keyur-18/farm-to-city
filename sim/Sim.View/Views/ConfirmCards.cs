@@ -36,7 +36,7 @@ namespace Sim.View.Views
             void Add(ConfirmKind kind, params Type[] types) { foreach (Type t in types) k[t] = kind; }
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
-                typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
+                typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
                 typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
@@ -382,6 +382,7 @@ namespace Sim.View.Views
                 Sim.Core.People.Hand hand = ctx.Sim.State.People?.Hand(dh.HandId);
                 return hand == null ? null : Sim.View.Views.PeopleWords.Name(ctx, hand.Name);
             }
+            if (c is FitSolarPanel fs) return ctx.Strings.Get(fs.Source == 1 ? "water.pump" : "water.borewell"); // which source the panel is for
             string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : c is ListParcel lp ? lp.ParcelId : c is CancelSale cs ? cs.ParcelId : c is ZoneParcel zp2 ? zp2.ParcelId : c is LeaseOutLand lo ? lo.ParcelId : c is EndLease el ? el.ParcelId : null;
             int p = id == null ? -1 : defs.Map.IndexOfParcel(id);
             if (p < 0) return null;

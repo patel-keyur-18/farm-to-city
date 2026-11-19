@@ -319,11 +319,12 @@ namespace Sim.Content
             {
                 string xp = Join(p, name);
                 JObject x = Object(Required(d, p, name), xp);
-                OnlyFields(x, xp, "building", "unlockEra", "acres", "moistureFloor", "powerPerAcreSeason");
+                OnlyFields(x, xp, "building", "unlockEra", "acres", "moistureFloor", "powerPerAcreSeason", "solarCost", "solarCut");
                 return new PumpedDef
                 {
                     Building = Building(x, xp), UnlockEra = Era(x, xp), Acres = BoundedInt(x, xp, "acres", 1, 40),
                     MoistureFloor = Bounded(x, xp, "moistureFloor", "0", "100"), PowerPerAcreSeason = Money(Required(x, xp, "powerPerAcreSeason"), Join(xp, "powerPerAcreSeason")),
+                    SolarCost = Money(Required(x, xp, "solarCost"), Join(xp, "solarCost")), SolarCut = Bounded(x, xp, "solarCut", "0", "1"),
                 };
             }
 

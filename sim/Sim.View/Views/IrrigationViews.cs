@@ -24,7 +24,7 @@ namespace Sim.View.Views
             int source = IrrigationRules.SourceOf(sim, tile);
             if (source != 0)
             {
-                string name = s.Get(source == 1 ? "water.pump" : "water.borewell");
+                string name = s.Get((source == 1 ? "water.pump" : "water.borewell") + (IrrigationRules.Solar(sim, source) ? "Solar" : ""));
                 string part = IrrigationRules.HasDrip(sim, tile) ? s.Get("water.drip", "source", name.ToLowerInvariant()) : name;
                 if (!IrrigationRules.Running(sim, source)) part = s.Get("water.off", "what", part);
                 parts.Add(part);
@@ -51,6 +51,10 @@ namespace Sim.View.Views
                 return;
             }
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.waterFrom"), Water(ctx, tile), "irrigation", tile));
+            int src = IrrigationRules.SourceOf(sim, tile);
+            if (src != 0 && IrrigationRules.Solar(sim, src))
+                vm.Lines.Add(new LineVm(ctx.Strings.Get("irrigation.solarRow"), ctx.Strings.Get("irrigation.solarOn", "pct", ctx.Fmt.Percent((src == 1 ? IrrigationRules.Def(sim).Pump : IrrigationRules.Def(sim).Borewell).SolarCut)), "irrigation", tile)
+                    { Icon = "solar_panel", Note = ctx.Strings.Get("irrigation.solarNote", "source", ctx.Strings.Get(src == 1 ? "water.pump" : "water.borewell"), "now", ctx.Fmt.Coins(IrrigationRules.PumpPower(sim, src)), "was", ctx.Fmt.Coins(IrrigationRules.PowerWithout(sim, src))) });
             List<ActionVm> buttons = Buttons(ctx, tile);
             for (int i = 0; i < buttons.Count; i += 2)
                 vm.Lines.Add(new LineVm(null, null) { Buttons = buttons.GetRange(i, System.Math.Min(2, buttons.Count - i)) });
@@ -77,6 +81,13 @@ namespace Sim.View.Views
                     list.Add(Act(ctx, "drillBorewell", s.Get("irrigation.drill"), Price(ctx, d.Borewell.Building), ActionKind.Secondary, "borewell", at => new DrillBorewell(at, tile)));
                 else if (source != 1)
                     list.Add(Toggle(ctx, 2, tile, source == 2, d.Borewell.Acres));
+            }
+            if (source != 0 && !IrrigationRules.Solar(sim, source))
+            {
+                long cost = IrrigationRules.PanelCost(sim, source), saving = IrrigationRules.PanelSaving(sim, source);
+                int which = source;
+                list.Add(Act(ctx, "solar" + (source == 1 ? "Pump" : "Borewell"), s.Get(source == 1 ? "irrigation.solarPump" : "irrigation.solarBorewell"),
+                    saving > 0 ? s.Get("irrigation.solarDetail", "price", ctx.Fmt.Coins(cost), "saving", ctx.Fmt.Coins(saving)) : ctx.Fmt.Coins(cost), ActionKind.Secondary, "solar_panel", at => new FitSolarPanel(at, which)));
             }
             if (IrrigationRules.Unlocked(sim, d.Canal.UnlockEra) && !IrrigationRules.Channelled(sim, tile))
                 list.Add(Act(ctx, "buildChannel", s.Get("irrigation.channel"), Price(ctx, d.Canal.Building), ActionKind.Secondary, "channel", at => new BuildChannel(at, tile)));

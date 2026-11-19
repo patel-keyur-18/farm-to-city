@@ -131,6 +131,8 @@ Each utility and each held build is explained on the Town sheet's *Infrastructur
 
 **Decided (G7): all four are in Sprint 23, cut first.** US-257 changes: the tube well is dropped (the borewell of ADR 0086 is it: 4 acres for 30,000; a second source on an acre is refused by ADR 0087), and the solar pump stays only if its payback is under about 20 seasons (80% off a borewell's 250 an acre a season is at most 800 on 4 acres, against 60,000: about 75 seasons, so it probably moves to Phase 4 with solar and wind). US-256 gets a demand cap (neighbours' acres a day) and an exploit check in US-248. Their numbers are set when the story is picked up.
 
+**As built (US-257, ADR 0138):** the solar pump is a **solar panel for each pumped source** (the pump on the well, the borewell), 60,000 each, paid at once, taking **80% off that source's power**; a picture button on a field the source waters, shown with its honest payback (**75 seasons against a pump that lasts 40**, kept for the balance pass; the owner chose to build it at these numbers). Drawn beside the well and the borewell.
+
 ## 4. Data
 
 **New or changed definitions** (`content/`):

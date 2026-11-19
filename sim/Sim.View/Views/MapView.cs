@@ -330,6 +330,10 @@ namespace Sim.View.Views
         /// <summary>The paved link road is built: the district road's row (the last) is tar, here and past the map's edges (spec 023 §3.3).</summary>
         public bool RoadPaved { get; internal set; }
 
+        /// <summary>A solar panel is fitted to the well's pump or to the borewell (US-257): drawn beside it.</summary>
+        public bool SolarPump { get; internal set; }
+        public bool SolarBorewell { get; internal set; }
+
         /// <summary>The ring is open (the Township, spec 025 §3.4) and the 16 × 12 map's place in the grid: the camera stays inside it until then.</summary>
         public bool RingOpen { get; internal set; }
         public int LegacyX { get; internal set; }
@@ -475,7 +479,7 @@ namespace Sim.View.Views
             var map = new MapVm
             {
                 Width = defs.Map.Width, Height = defs.Map.Height, SimTime = now,
-                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400, RoadPaved = Sim.Core.Town.RoadRules.IsBuilt(sim),
+                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400, RoadPaved = Sim.Core.Town.RoadRules.IsBuilt(sim), SolarPump = sim.State.Irrigation != null && sim.State.Irrigation.PumpSolar > 0, SolarBorewell = sim.State.Irrigation != null && sim.State.Irrigation.BorewellSolar > 0,
                 RingOpen = defs.Map.LegacyTiles == 0 || Sim.Core.Town.TownshipRules.Reached(sim),
                 LegacyX = defs.Map.LegacyTiles == 0 ? 0 : defs.Map.X(0), LegacyY = defs.Map.LegacyTiles == 0 ? 0 : defs.Map.Y(0),
                 LegacyW = defs.Map.LegacyTiles == 0 ? defs.Map.Width : defs.Map.LegacyWidth, LegacyH = defs.Map.LegacyTiles == 0 ? defs.Map.Height : defs.Map.LegacyTiles / defs.Map.LegacyWidth,

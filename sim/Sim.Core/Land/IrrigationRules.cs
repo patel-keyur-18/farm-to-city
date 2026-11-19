@@ -181,8 +181,47 @@ namespace Sim.Core.Land
         public static long PumpPower(Simulation sim, int source)
         {
             if (!On(sim) || (source == 1 ? Pump(sim) : Borewell(sim)) == null) return 0;
+            return PowerWithout(sim, source) - Saving(sim, source);
+        }
+
+        /// <summary>What the source's power would cost with no panel: its price an acre for the acres on its list.</summary>
+        public static long PowerWithout(Simulation sim, int source)
+        {
+            if (!On(sim) || (source == 1 ? Pump(sim) : Borewell(sim)) == null) return 0;
             PumpedDef d = source == 1 ? Def(sim).Pump : Def(sim).Borewell;
             return MarketRules.Indexed(sim, d.PowerPerAcreSeason * Acres(sim, source).Count);
+        }
+
+        // ---- solar panels (US-257, ADR 0138) ----
+
+        /// <summary>The panel fitted to a source (1 the pump, 2 the borewell).</summary>
+        public static bool Solar(Simulation sim, int source) { return On(sim) && (source == 1 ? sim.State.Irrigation.PumpSolar : sim.State.Irrigation.BorewellSolar) > 0; }
+
+        /// <summary>A panel's price now.</summary>
+        public static long PanelCost(Simulation sim, int source) { return MarketRules.Indexed(sim, (source == 1 ? Def(sim).Pump : Def(sim).Borewell).SolarCost); }
+
+        /// <summary>What a panel takes off the source's power each season, on the acres it waters now (once fitted, what it takes off).</summary>
+        public static long Saving(Simulation sim, int source)
+        {
+            if (!Solar(sim, source)) return 0;
+            return PanelSaving(sim, source);
+        }
+
+        /// <summary>Whole seasons a panel takes to pay for itself (rounded up, so it never looks quicker than it is), or 0 when it would save nothing.</summary>
+        public static int PaybackSeasons(Simulation sim, int source)
+        {
+            long saving = PanelSaving(sim, source), cost = Solar(sim, source) ? (source == 1 ? sim.State.Irrigation.PumpSolar : sim.State.Irrigation.BorewellSolar) : PanelCost(sim, source);
+            return saving <= 0 ? 0 : (int)((cost + saving - 1) / saving);
+        }
+
+        /// <summary>The seasons the source itself lasts (its building's useful life).</summary>
+        public static int LifeSeasons(Simulation sim, int source) { return sim.Config.Game.Buildings[(source == 1 ? Def(sim).Pump : Def(sim).Borewell).Building].UsefulLifeSeasons; }
+
+        /// <summary>The saving a panel gives, fitted or not: the cut of the source's power on the acres it waters now.</summary>
+        public static long PanelSaving(Simulation sim, int source)
+        {
+            PumpedDef d = source == 1 ? Def(sim).Pump : Def(sim).Borewell;
+            return Money.RoundToCoin(Money.MulRate(MarketRules.Indexed(sim, d.PowerPerAcreSeason * Acres(sim, source).Count), d.SolarCut));
         }
 
         public static int ChannelCount(Simulation sim) { return Count(sim, Def(sim).Canal.Building); }
@@ -260,7 +299,17 @@ namespace Sim.Core.Land
                     new Posting(Account.AccumulatedDepreciation, b.Depreciated), new Posting(Account.Buildings, -b.Cost));
                 raised += book;
                 land.Buildings.Remove(b);
-                if (b.Def == d.Borewell.Building) sim.State.Irrigation.BorewellAcres.Clear();
+                if (b.Def == d.Borewell.Building)
+                {
+                    sim.State.Irrigation.BorewellAcres.Clear();
+                    long panel = sim.State.Irrigation.BorewellSolar; // the panel goes with the borewell, at what it cost (it is never depreciated)
+                    if (panel > 0)
+                    {
+                        sim.State.Ledger.Post(t, period, key, "solar:borewell", new Posting(Account.Cash, panel), new Posting(Account.Buildings, -panel));
+                        raised += panel;
+                        sim.State.Irrigation.BorewellSolar = 0;
+                    }
+                }
             }
             IrrigationState s = sim.State.Irrigation;
             s.PumpAcres.RemoveAll(x => land.Tiles[x].ParcelId == parcelId);

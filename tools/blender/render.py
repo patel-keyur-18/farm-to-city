@@ -2538,6 +2538,31 @@ SPRITES["silage_pit"] = model_silage_pit
 SPRITES["chaff_cutter"] = model_chaff_cutter
 
 
+def model_solar_panel(mult=1.0):
+    """A solar panel for a pump (US-257, spec 025 §3.8): a blue photovoltaic panel in a silver frame with cell lines, tilted up on a steel
+    stand with two legs and a brace, and a small grey controller box on a thin post beside it."""
+    frame, cell, steel, box_c = toon("pvFrame", 0xC9CDD2), toon("pvCell", 0x2A4F8F), toon("pvSteel", 0x6F7A82), toon("pvBox", 0x8E959C)
+    tilt = Matrix.Rotation(math.radians(38), 3, "X")
+    o = [box("frame", (0.22, 0.15, 0.010), (0, 0, 0.085), frame, rot=tilt, bevel=0.002),
+         box("cells", (0.200, 0.128, 0.005), (0, -0.002, 0.0905), cell, rot=tilt, outline=False)]
+    for i in (-1, 0, 1):
+        o.append(box("lineV%d" % i, (0.0025, 0.128, 0.006), (i * 0.066, -0.002, 0.0915), frame, rot=tilt, outline=False))
+    o.append(box("lineH", (0.200, 0.0025, 0.006), (0, -0.002, 0.0915), frame, rot=tilt, outline=False))
+    o.append(box("legL", (0.010, 0.010, 0.080), (-0.08, 0.05, 0.040), steel))
+    o.append(box("legR", (0.010, 0.010, 0.080), (0.08, 0.05, 0.040), steel))
+    o.append(box("legFL", (0.010, 0.010, 0.040), (-0.08, -0.05, 0.020), steel))
+    o.append(box("legFR", (0.010, 0.010, 0.040), (0.08, -0.05, 0.020), steel))
+    o.append(box("brace", (0.17, 0.008, 0.008), (0, 0.05, 0.03), steel, outline=False))
+    o.append(box("post", (0.008, 0.008, 0.05), (0.15, 0.0, 0.025), steel))
+    o.append(box("controller", (0.030, 0.016, 0.026), (0.15, 0.0, 0.060), box_c, bevel=0.002))
+    return group(o, rot_z=math.radians(-28), scale=YARD_PROP_SCALE * 1.1 * mult)
+
+
+SPRITES["solar_panel"] = model_solar_panel
+ICONS["icon_solar_panel"] = lambda: model_solar_panel(2.0)  # the field card's picture button, drawn larger
+SPRITES["icon_solar_panel"] = ICONS["icon_solar_panel"]
+
+
 def model_neem():
     """A neem tree: a straight dark trunk and a rounded crown of small, fine leaves in clusters; it shades the cattle."""
     bark = toon("neemBark", 0x5E4430)

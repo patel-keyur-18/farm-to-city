@@ -1693,6 +1693,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_solar_panel"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_spray"
   },
   {
@@ -3094,6 +3101,13 @@
    "pivotX": 0.5,
    "pivotY": 0.46072,
    "name": "silage_pit"
+  },
+  {
+   "w": 140,
+   "h": 168,
+   "pivotX": 0.5,
+   "pivotY": 0.38528,
+   "name": "solar_panel"
   },
   {
    "w": 174,

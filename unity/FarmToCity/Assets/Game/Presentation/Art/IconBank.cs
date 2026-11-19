@@ -29,7 +29,7 @@ namespace Game.Presentation.Art
             if (goodId == "sack") return Sack;
             if (goodId == "gear") return Gear;
             if (goodId == "sign") return SpriteBank.Sign;
-            if (goodId == "hand_hut" || goodId == "hand_hut_building" || goodId == "granary" || goodId == "cold_store" || goodId == "silage_pit" || goodId == "chaff_cutter") return SpriteBank.Rendered(goodId) ?? Basket; // granary: your godown in town (ADR 0087)
+            if (goodId == "hand_hut" || goodId == "hand_hut_building" || goodId == "granary" || goodId == "cold_store" || goodId == "silage_pit" || goodId == "chaff_cutter" || goodId == "solar_panel") return SpriteBank.Rendered(goodId) ?? Basket; // granary: your godown in town (ADR 0087)
             if (goodId == "family_house" || goodId == "family_house_building" || goodId == "flour_mill" || goodId == "flour_mill_building" || goodId == "bakery" || goodId == "bakery_building" || goodId == "dairy" || goodId == "dairy_building" || goodId == "brick_kiln" || goodId == "brick_kiln_building") return SpriteBank.Rendered(goodId + "_s") ?? Basket;
             if (goodId == "veg_stall" || goodId == "tea_stall" || goodId == "sweet_shop") return SpriteBank.Rendered(goodId + "_s") ?? Basket; // shops (spec 017)
             if (goodId.EndsWith("_building", System.StringComparison.Ordinal) && (goodId.StartsWith("veg_stall", System.StringComparison.Ordinal) || goodId.StartsWith("tea_stall", System.StringComparison.Ordinal)
