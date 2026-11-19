@@ -1049,7 +1049,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-242 | The cold store | [F13.3](features/F13.3-orchards-and-granary.md) | 3 | Should | Approved (2026-11-19) |
 | US-254 | Raise calves and grow the herd | [F13.1](features/F13.1-livestock.md) | 3 | Should | Approved (2026-11-19) |
 | US-255 | Silage, a chaff cutter and more sheds | [F13.1](features/F13.1-livestock.md) | 2 | Could | Approved (2026-11-19; the third shed moved to Phase 4) |
-| US-256 | Your tractor for neighbours (with a demand cap) | [F13.2](features/F13.2-irrigation-and-equipment.md) | 3 | Could | Done (owner approval pending) |
+| US-256 | Your tractor for neighbours (with a demand cap) | [F13.2](features/F13.2-irrigation-and-equipment.md) | 3 | Could | Approved (2026-11-19) |
 | US-257 | Solar pumps (the tube well is the borewell) | [F13.2](features/F13.2-irrigation-and-equipment.md) | 2 | Could | To do |
 
 **Order of work** (one stop for the owner's review after each story and each spec; every sheet previewed as an artifact that looks exactly like the game before its UI code):
