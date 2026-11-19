@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using Sim.Core.Definitions;
+using Sim.Core.Maths;
 using static Sim.Content.JsonFields;
 
 namespace Sim.Content
@@ -10,11 +11,11 @@ namespace Sim.Content
         /// <c>township.json</c> (spec 023 §4): the paved link road's petition, share, build days and tier; the clinic, the doctor's quarters and the
         /// doctor (US-148), on the map's <c>clinic_plot</c> and <c>quarters_plot</c>.
         /// </summary>
-        public static TownshipDef LoadTownship(string json, RegionDef region, MapDef map, System.Collections.Generic.IReadOnlyList<BuildingDef> buildings, OnboardingDefs onboarding, TreasuryDef treasury)
+        public static TownshipDef LoadTownship(string json, RegionDef region, MapDef map, System.Collections.Generic.IReadOnlyList<BuildingDef> buildings, OnboardingDefs onboarding, TreasuryDef treasury, MarketDefs market = null)
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade", "coldStore");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +114,7 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root) };
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root), ColdStore = LoadColdStore(o, root, market) };
         }
 
         /// <summary>The utilities (spec 025 §3.1): each step's plot, work, lines, reach and capacity, and what going without costs.</summary>
@@ -234,6 +235,27 @@ namespace Sim.Content
             JObject j = Object(Required(o, root, "upgrade"), p);
             OnlyFields(j, p, "puccaMinLandValue", "puccaRent");
             return new UpgradeDef { PuccaMinLandValue = Bounded(j, p, "puccaMinLandValue", "1", "3"), PuccaRent = Money(Required(j, p, "puccaRent"), Join(p, "puccaRent")) };
+        }
+
+        /// <summary>The cold store (spec 025 §3.6): the rent, the cap and each kept good's share of its spoilage.</summary>
+        private static ColdStoreDef LoadColdStore(JObject o, string root, MarketDefs market)
+        {
+            string p = Join(root, "coldStore");
+            JObject j = Object(Required(o, root, "coldStore"), p);
+            OnlyFields(j, p, "rentPerKgSeason", "maxRentTonnes", "goods");
+            JObject goods = Object(Required(j, p, "goods"), Join(p, "goods"));
+            var factor = new Fixed[market == null ? 0 : market.Goods.Count];
+            foreach (JProperty g in goods.Properties())
+            {
+                string gp = Join(Join(p, "goods"), g.Name);
+                int i = market == null ? -1 : market.IndexOf(g.Name);
+                if (i < 0) throw new ContentException(gp, "unknown good '" + g.Name + "'");
+                if (market.Goods[i].Place != GoodPlace.Store) throw new ContentException(gp, "only goods kept in the hut store go to the cold store");
+                Fixed f = Bounded(goods, Join(p, "goods"), g.Name, "0.01", "1");
+                factor[i] = f;
+            }
+            if (goods.Count == 0) throw new ContentException(Join(p, "goods"), "at least one good");
+            return new ColdStoreDef { RentPerKgSeason = Money(Required(j, p, "rentPerKgSeason"), Join(p, "rentPerKgSeason")), MaxRentTonnes = BoundedInt(j, p, "maxRentTonnes", 1, 1000), Factor = factor };
         }
 
         private static ZoningDef LoadZoning(JObject o, string root)

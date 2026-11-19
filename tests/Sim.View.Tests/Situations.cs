@@ -374,6 +374,7 @@ namespace Sim.View.Tests
             if (Sim.Core.Town.LandValueRules.On(sim))
                 foreach (Parcel p in sim.State.Land.Parcels.Where(p => p.Owned && !p.Protected))
                     yield return N("sell land " + p.Id, SellLandSheet.Build(ctx, sim.Config.Game.Map.Parcels[p.Id].Tiles[0])); // spec 024 AC-11: every land-value number has a Why?
+            if (Sim.Core.Market.ColdStoreRules.On(sim)) yield return N("cold store", ColdStoreSheet.Build(ctx)); // US-242: every number has a Why?
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

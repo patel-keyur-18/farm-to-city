@@ -52,6 +52,7 @@ namespace Sim.Core.Saves
             LeaseOutLand, EndLease,
             CommissionWorksGift,
             UpgradeHouse,
+            RentColdStore,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -173,6 +174,7 @@ namespace Sim.Core.Saves
                 case TakeBackSavingsCover c: At(c, Tag.TakeBackSavingsCover); break;
                 case RenewLease c: At(c, Tag.RenewLease); w.WriteLong(c.HouseholdId); w.WriteInt((int)c.Choice); break;
                 case UpgradeHouse c: At(c, Tag.UpgradeHouse); w.WriteLong(c.BuildingId); break;
+                case RentColdStore c: At(c, Tag.RentColdStore); w.WriteInt(c.Tonnes); break;
                 case GiveToTreasury c: At(c, Tag.GiveToTreasury); w.WriteLong(c.Amount); break;
                 case CommissionWorks c when c.Gift > 0: At(c, Tag.CommissionWorksGift); w.WriteString(c.WorkId); w.WriteLong(c.Gift); break;
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
@@ -341,6 +343,7 @@ namespace Sim.Core.Saves
                 case Tag.TakeBackSavingsCover: return new TakeBackSavingsCover(at);
                 case Tag.RenewLease: return new RenewLease(at, r.ReadLong(), (LeaseChoice)r.ReadInt());
                 case Tag.UpgradeHouse: return new UpgradeHouse(at, r.ReadLong());
+                case Tag.RentColdStore: return new RentColdStore(at, r.ReadInt());
                 case Tag.GiveToTreasury: return new GiveToTreasury(at, r.ReadLong());
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
                 case Tag.CommissionWorksGift: return new CommissionWorks(at, r.ReadString(), r.ReadLong());

@@ -3380,6 +3380,38 @@ def model_granary():
 SPRITES["granary"] = model_granary
 
 
+def model_cold_store():
+    """The cold store in the mandi town (US-242, spec 025 §3.6): an insulated warehouse of white panels on a low plinth with a blue band, a
+    steel cold-room door with a long handle up one step, a flat roof with a compressor unit and its fan, and crates of potatoes by the door."""
+    o = []
+    w, d, h = 0.30, 0.21, 0.15
+    pz = 0.04
+    panel, blue = toon("coldPanel", 0xE9F0F3), toon("coldBlue", 0x4F8FB8)
+    cement, steel = toon("cement", 0xBDB5A6), toon("coldDoor", 0xC9D2D8)
+    o.append(box("plinth", (w + 0.04, d + 0.04, pz), (0, 0, pz / 2), cement, bevel=0.005))
+    o.append(box("step", (0.10, 0.03, pz * 0.5), (0.05, -d / 2 - 0.03, pz / 4), cement))
+    o.append(box("walls", (w, d, h), (0, 0, pz + h / 2), panel))
+    o.append(box("band", (w + 0.004, d + 0.004, 0.03), (0, 0, pz + 0.12), blue, outline=False))
+    for i in range(1, 6):                                      # the panel joints
+        o.append(box("joint%d" % i, (0.002, d + 0.006, h - 0.01), (-w / 2 + i * w / 6, 0, pz + h / 2), toon("coldJoint", 0xC4CFD4), outline=False))
+    o.append(box("door", (0.09, 0.012, 0.11), (0.05, -d / 2 - 0.005, pz + 0.056), steel))
+    o.append(box("doorFrame", (0.104, 0.008, 0.124), (0.05, -d / 2 - 0.002, pz + 0.062), blue, outline=False))
+    o.append(box("handle", (0.006, 0.012, 0.05), (0.085, -d / 2 - 0.016, pz + 0.056), toon("lock", 0x6F7A82), outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.03, 0.014), (0, 0, pz + h + 0.007), toon("coldRoof", 0x8FA6B4), bevel=0.004))
+    o.append(box("unit", (0.085, 0.075, 0.045), (-0.07, 0.01, pz + h + 0.0365), toon("unit", 0xA9B4BA)))
+    o.append(box("fan", (0.06, 0.06, 0.006), (-0.07, 0.01, pz + h + 0.0605), toon("fan", 0x3B4249), outline=False))
+    o.append(box("pipe", (0.012, 0.012, 0.05), (-0.01, 0.01, pz + h + 0.04), toon("unit", 0xA9B4BA), outline=False))
+    wood, potato = toon("wood", WOOD), toon("potato", 0xB98A55)
+    for i, (x, z) in enumerate(((-0.10, 0.0), (-0.045, 0.0), (-0.07, 0.026))):
+        o.append(box("crate%d" % i, (0.05, 0.05, 0.026), (x, -d / 2 - 0.07, z + 0.013), wood))
+        o.append(box("potatoes%d" % i, (0.042, 0.042, 0.008), (x, -d / 2 - 0.07, z + 0.028), potato, outline=False))
+    back_details(o, w, d, pz + 0.1, toon("vent", 0x3B3127))
+    return group(o, scale=BUILDING_SCALE * GRANARY_SCALE)
+
+
+SPRITES["cold_store"] = model_cold_store
+
+
 # ---------------------------------------------------------------- irrigation (spec 013 §3.1, ADR 0086, ADR 0087)
 
 def model_canal():

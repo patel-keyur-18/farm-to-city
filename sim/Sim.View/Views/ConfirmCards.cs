@@ -36,7 +36,7 @@ namespace Sim.View.Views
             void Add(ConfirmKind kind, params Type[] types) { foreach (Type t in types) k[t] = kind; }
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
-                typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
+                typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
                 typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
@@ -119,7 +119,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string name = c.GetType().Name;
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
-            if (c is RentWarehouse && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
+            if ((c is RentWarehouse || c is RentColdStore) && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
             if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);
             long taken = NewLoans(sim, after, out Loan newest);

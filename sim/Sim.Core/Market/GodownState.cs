@@ -27,6 +27,10 @@ namespace Sim.Core.Market
         public int RentedTonnes { get; internal set; }
         public int RentNextTonnes { get; internal set; }
 
+        /// <summary>Whole tonnes rented in the cold store this season, and from the next close (US-242, schema 21).</summary>
+        public int ColdRentedTonnes { get; internal set; }
+        public int ColdRentNextTonnes { get; internal set; }
+
         /// <summary>Let your godown from the next close (renewed each close until switched off), and whether it is let this season.</summary>
         public bool LetNext { get; internal set; }
         public bool LetNow { get; internal set; }
@@ -43,6 +47,11 @@ namespace Sim.Core.Market
             h.WriteBool(LetNext);
             h.WriteBool(LetNow);
             h.WriteInt((int)LastOutcome);
+            if (h.Hashing ? ColdRentedTonnes != 0 || ColdRentNextTonnes != 0 : !(h is SaveWriter cw && cw.Schema < MapMigration.RingSchema)) // schema 21; hashed once cold space is rented
+            {
+                h.WriteInt(ColdRentedTonnes);
+                h.WriteInt(ColdRentNextTonnes);
+            }
         }
 
         internal static GodownState ReadFrom(SaveReader r)
@@ -51,7 +60,8 @@ namespace Sim.Core.Market
             int outcome = r.ReadInt();
             if (outcome < 0 || outcome > 2) throw new SaveFormatException("a let outcome of " + outcome);
             s.LastOutcome = (LetOutcome)outcome;
-            if (s.RentedTonnes < 0 || s.RentNextTonnes < 0) throw new SaveFormatException("negative tonnes rented");
+            if (r.Schema >= MapMigration.RingSchema) { s.ColdRentedTonnes = r.ReadInt(); s.ColdRentNextTonnes = r.ReadInt(); }
+            if (s.RentedTonnes < 0 || s.RentNextTonnes < 0 || s.ColdRentedTonnes < 0 || s.ColdRentNextTonnes < 0) throw new SaveFormatException("negative tonnes rented");
             return s;
         }
     }

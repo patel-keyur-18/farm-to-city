@@ -159,11 +159,14 @@ namespace Sim.Core.Market
             Definitions.MarketDefs defs = sim.Config.Game.Market;
             MarketState m = sim.State.Market;
             long[] dry = GodownRules.Dry(sim); // where each good is at the start of the day's pass
+            long[] cold = ColdStoreRules.Cold(sim);
             for (int g = 0; g < defs.Goods.Count; g++)
             {
                 long inGodown = dry == null ? 0 : dry[g];
-                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g] - inGodown, 1).RoundToLong();
+                long inCold = cold == null ? 0 : cold[g];
+                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g] - inGodown - inCold, 1).RoundToLong();
                 if (inGodown > 0) lost += (defs.Goods[g].SpoilagePerDay * GodownRules.Def(sim).SpoilageFactor).MulRatio(inGodown, 1).RoundToLong();
+                if (inCold > 0) lost += ColdStoreRules.SpoilageInCold(sim, g).MulRatio(inCold, 1).RoundToLong(); // a tenth or a quarter of the rate (US-242)
                 if (lost <= 0) continue;
                 if (defs.Goods[g].Kind == Definitions.GoodKind.Produce) Store.Take(sim, g, lost);
                 else

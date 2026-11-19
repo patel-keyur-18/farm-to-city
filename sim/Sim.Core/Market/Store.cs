@@ -56,9 +56,10 @@ namespace Sim.Core.Market
         {
             var goods = sim.Config.Game.Market.Goods;
             long[] dry = place == GoodPlace.Store ? GodownRules.Dry(sim) : null;
+            long[] cold = place == GoodPlace.Store ? ColdStoreRules.Cold(sim) : null; // what is in the cold store (US-242) isn't in the hut either
             long used = 0;
             for (int g = 0; g < goods.Count; g++)
-                if (goods[g].Place == place) used += WeightGrams(goods[g], sim.State.Market.Stock[g] - (dry == null ? 0 : dry[g]));
+                if (goods[g].Place == place) used += WeightGrams(goods[g], sim.State.Market.Stock[g] - (dry == null ? 0 : dry[g]) - (cold == null ? 0 : cold[g]));
             return used;
         }
 
@@ -71,6 +72,7 @@ namespace Sim.Core.Market
             GoodDef g = sim.Config.Game.Market.Goods[good];
             long free = System.Math.Max(0, CapacityGrams(sim, g.Place) - UsedGrams(sim, g.Place));
             if (GodownRules.Holds(sim, good)) free += System.Math.Max(0, GodownRules.CapacityGrams(sim) - GodownRules.UsedGrams(sim));
+            if (ColdStoreRules.Keeps(sim, good)) free += System.Math.Max(0, ColdStoreRules.CapacityGrams(sim) - ColdStoreRules.UsedGrams(sim));
             return QuantityFitting(g, free);
         }
 

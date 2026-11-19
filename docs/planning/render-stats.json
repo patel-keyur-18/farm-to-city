@@ -418,5 +418,8 @@
   {"label":"US-153 overlays (closed)","view":"all","date":"2026-11-19","drawCalls":928,"batches":928,"setPassCalls":11,"triangles":25497,"visibleSprites":1139,"sprites":2250},
   {"label":"US-153 overlays (closed)","view":"village","date":"2026-11-19","drawCalls":480,"batches":480,"setPassCalls":9,"triangles":13813,"visibleSprites":572,"sprites":2250},
   {"label":"US-153 overlays (closed)","view":"farm","date":"2026-11-19","drawCalls":351,"batches":351,"setPassCalls":9,"triangles":9436,"visibleSprites":397,"sprites":2250},
-  {"label":"US-153 overlays (coverage open; at the same camera it is +4 draw calls and +1,294 triangles over closed: 1109 and 31,275)","view":"all","date":"2026-11-19","drawCalls":1113,"batches":1112,"setPassCalls":12,"triangles":32569,"visibleSprites":1366,"sprites":2250}
+  {"label":"US-153 overlays (coverage open; at the same camera it is +4 draw calls and +1,294 triangles over closed: 1109 and 31,275)","view":"all","date":"2026-11-19","drawCalls":1113,"batches":1112,"setPassCalls":12,"triangles":32569,"visibleSprites":1366,"sprites":2250},
+  {"label":"US-242 cold store (UI only)","view":"all","date":"2026-11-19","drawCalls":801,"batches":801,"setPassCalls":11,"triangles":23756,"visibleSprites":985,"sprites":2250},
+  {"label":"US-242 cold store (UI only)","view":"village","date":"2026-11-19","drawCalls":478,"batches":478,"setPassCalls":9,"triangles":13844,"visibleSprites":570,"sprites":2250},
+  {"label":"US-242 cold store (UI only)","view":"farm","date":"2026-11-19","drawCalls":350,"batches":350,"setPassCalls":9,"triangles":9469,"visibleSprites":396,"sprites":2250}
 ]

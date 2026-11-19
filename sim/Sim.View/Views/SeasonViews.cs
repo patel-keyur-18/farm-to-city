@@ -316,6 +316,9 @@ namespace Sim.View.Views
                     case DueKind.Warehouse:
                         Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.warehouse"), Icon = "sack", Amount = due.Amount, WhyText = s.Get("season.due.warehouse.why") }, s.Get("season.short.warehouse"));
                         break;
+                    case DueKind.ColdStore:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.coldStore"), Icon = "cold_store", Amount = due.Amount, WhyText = s.Get("season.due.coldStore.why") }, s.Get("season.short.coldStore"));
+                        break;
                     case DueKind.Water:
                         Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.water." + due.What), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.water.why") },
                             s.Get("season.short.water." + due.What));

@@ -34,6 +34,9 @@ namespace Sim.Core.Definitions
         /// <summary>Making a family house pucca (spec 024 §3.7, US-152).</summary>
         public UpgradeDef Upgrade { get; set; }
 
+        /// <summary>Cold-store space in the mandi town (spec 025 §3.6, US-242).</summary>
+        public ColdStoreDef ColdStore { get; set; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {
@@ -241,6 +244,20 @@ namespace Sim.Core.Definitions
 
 namespace Sim.Core.Definitions
 {
+    /// <summary>
+    /// Cold-store space in the mandi town (spec 025 §3.6, <c>township.json</c> <c>coldStore</c>): rented by the tonne for a season, from the Township. The goods it
+    /// keeps spoil at <see cref="Factor"/> of their rate there (a tenth for potato, a quarter for fruit).
+    /// </summary>
+    public sealed class ColdStoreDef
+    {
+        /// <summary>Money a kg a season (year-0 coins, indexed when charged).</summary>
+        public long RentPerKgSeason { get; internal set; }
+        public int MaxRentTonnes { get; internal set; }
+
+        /// <summary>By good index: the share of its spoilage rate kept in the cold store, or 0 for a good it does not keep.</summary>
+        public System.Collections.Generic.IReadOnlyList<Fixed> Factor { get; internal set; }
+    }
+
     /// <summary>Making a kutcha family house pucca (spec 024 §3.7, <c>township.json</c> <c>upgrade</c>): offered from this land value; a pucca house lets at this rent × the place.</summary>
     public sealed class UpgradeDef
     {
