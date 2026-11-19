@@ -997,7 +997,7 @@ namespace Game.Presentation.Map
             if (tile >= 0)
             {
                 _ring.transform.position = TileCentre(tile);
-                _ring.sortingOrder = Order(tile, _width, 95);
+                _ring.sortingOrder = OverlayShown ? 9010 : Order(tile, _width, 95); // above an overlay's tint
             }
         }
 

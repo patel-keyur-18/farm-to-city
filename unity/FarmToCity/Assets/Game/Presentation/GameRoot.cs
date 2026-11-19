@@ -238,6 +238,7 @@ namespace Game.Presentation
             _map.Refresh(_mapVm, animate);
             if (_input != null) _input.ApplyRing(_mapVm); // the Township opens the ring (spec 025 §3.4)
             _hud.Refresh(HudView.Build(_ctx), animate);
+            RefreshOverlay();
             if (_open.HasValue && _sheet.IsOpen) ShowCurrentSheet(refreshOnly: true);
         }
 
@@ -335,6 +336,7 @@ namespace Game.Presentation
         private void OnTap(Vector2 screen)
         {
             if (_sheet.IsOpen) { _sheet.Close(); return; }
+            if (_overlay != OverlayKind.None || _overlayUi.ChooserOpen) { OnOverlayTap(screen); return; } // an overlay's tap opens a small card, not the sheet (spec 024 §3.8)
             Hit hit = _map.Pick(_input.ScreenToWorld(screen));
             if (hit.Kind == HitKind.None) return;
             _selected = hit;
@@ -408,6 +410,7 @@ namespace Game.Presentation
 
         private void Display(SheetRequest request)
         {
+            EndOverlay(); // a sheet ends the overlay (spec 024 §3.8); a Why? from its card is not a sheet
             if (request.Kind == "ShowTile")
             {
                 // From the Menu's land list: pan to the parcel and open its sheet.

@@ -150,6 +150,43 @@ namespace Game.Presentation.Art
             }
         }
 
+        /// <summary>The smoke's hatch (spec 024 §3.8): a faint red wash on an acre with red stripes along one of its edges, drawn over an overlay's tint.</summary>
+        public static Sprite OverlayHatch
+        {
+            get
+            {
+                return Get("overlayHatch", () =>
+                {
+                    var p = new Painter(140, 74);
+                    Vector2[] d = { new Vector2(70, 70), new Vector2(136, 37), new Vector2(70, 4), new Vector2(4, 37) };
+                    p.OutlinedPolygon(d, new Color(0.85f, 0.18f, 0.12f, 0.20f), new Color(0.78f, 0.15f, 0.10f, 0.95f), 1.2f);
+                    const int Stripes = 6;
+                    for (int i = 0; i < Stripes; i++)
+                    {
+                        float u = (i + 0.5f) / Stripes; // the diamond is P(u, v) = (4 + 66u + 66v, 37 + 33u - 33v): a stripe is a line of one u
+                        p.Line(new Vector2(4 + 66 * u, 37 + 33 * u), new Vector2(70 + 66 * u, 4 + 33 * u), 3.4f, new Color(0.80f, 0.16f, 0.10f, 0.88f));
+                    }
+                    return p.ToSprite(Ppu, new Vector2(0.5f, 0.5f));
+                });
+            }
+        }
+
+        /// <summary>The Overlays button's picture (US-153): two layers of the map's diamond.</summary>
+        public static Sprite OverlaysIcon
+        {
+            get
+            {
+                return Get("overlaysIcon", () =>
+                {
+                    var p = new Painter(120, 96);
+                    Color wood = Painter.Hex(0x6B4423), cream = Painter.Hex(0xFFF3CF);
+                    p.OutlinedPolygon(new[] { new Vector2(60, 30), new Vector2(112, 52), new Vector2(60, 74), new Vector2(8, 52) }, new Color(0, 0, 0, 0), new Color(wood.r, wood.g, wood.b, 0.75f), 2.4f);
+                    p.OutlinedPolygon(new[] { new Vector2(60, 46), new Vector2(112, 68), new Vector2(60, 90), new Vector2(8, 68) }, cream, wood, 2.8f);
+                    return p.ToSprite(Ppu, new Vector2(0.5f, 0.5f));
+                });
+            }
+        }
+
         public static Sprite SelectionRing
         {
             get

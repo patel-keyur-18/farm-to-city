@@ -95,6 +95,7 @@ namespace Game.Presentation
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
                 OnAlerts = () => OpenSheet(new SheetRequest("Alerts", 0)),
                 OnOrders = () => OpenSheet(new SheetRequest("Orders", 0)),
+                OnOverlays = OnOverlaysButton,
                 OnUrgent = () => _sounds.Play("urgent"),
             };
             _sheet = new SheetPresenter(_safeRoot, _tweens)
@@ -110,6 +111,7 @@ namespace Game.Presentation
                 OkLabel = _strings.Get("action.ok"),
                 WhyLabel = _strings.Get("why.label"),
             };
+            BuildOverlays();
             BuildToast();
             BuildCodexToast();
             BuildMilestoneToast();

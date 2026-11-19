@@ -25,7 +25,8 @@ namespace Game.Presentation.Ui
         private bool _urgentShown, _held;
         private readonly VisualElement _weatherIcon, _storeFill, _timeCard, _cashPill, _storePill, _collectHolder;
         private Button _collect;
-        private readonly VisualElement _people, _badge, _orders, _ordersBadge, _townPill;
+        private readonly VisualElement _people, _badge, _orders, _ordersBadge, _townPill, _overlays;
+        private readonly Label _overlaysWord;
         private readonly Label _population, _happiness;
         private readonly Label _badgeText, _ordersBadgeText;
         private int _badgeShown = -1, _ordersShown = -1;
@@ -45,6 +46,9 @@ namespace Game.Presentation.Ui
         public Action OnMenu { get; set; }
         public Action OnAlerts { get; set; }
         public Action OnOrders { get; set; }
+
+        /// <summary>The Overlays button (US-153): opens the chooser, or ends the overlay that is up.</summary>
+        public Action OnOverlays { get; set; }
 
         /// <summary>An urgent alert has just appeared (the bell, F08.5).</summary>
         public Action OnUrgent { get; set; }
@@ -179,6 +183,20 @@ namespace Game.Presentation.Ui
             menu.RegisterCallback<ClickEvent>(_ => { if (OnMenu != null) OnMenu(); });
             _layer.Add(menu);
 
+            // Above the Menu (US-153): the Overlays button, from the Township. Green and "Close" while an overlay is up.
+            _overlays = RoundButton(150, SpriteBank.OverlaysIcon, 96);
+            _overlays.name = "Overlays";
+            _overlays.style.position = Position.Absolute;
+            _overlays.style.right = 28; _overlays.style.bottom = 196;
+            _overlays[0].style.marginTop = -22;
+            _overlaysWord = UiKit.Text(strings.Get("overlay.button"), 26, UiKit.Ink, UiKit.Heading);
+            _overlaysWord.style.position = Position.Absolute;
+            _overlaysWord.style.bottom = -6;
+            _overlays.Add(_overlaysWord);
+            _overlays.RegisterCallback<ClickEvent>(_ => { if (OnOverlays != null) OnOverlays(); });
+            _overlays.style.display = DisplayStyle.None;
+            _layer.Add(_overlays);
+
             // Bottom-left: Collect all.
             _collectHolder = new VisualElement { pickingMode = PickingMode.Ignore };
             _collectHolder.style.position = Position.Absolute;
@@ -263,6 +281,16 @@ namespace Game.Presentation.Ui
             }
         }
 
+        /// <summary>The Overlays button while an overlay is up: green, reading "Close" (US-153).</summary>
+        public void SetOverlayOpen(bool open)
+        {
+            _overlays.style.backgroundColor = open ? UiKit.Green : UiKit.Sand;
+            UiKit.Border(_overlays, 5, open ? UiKit.GreenDark : UiKit.SandDark);
+            _overlays.style.borderBottomWidth = 9;
+            _overlaysWord.text = _strings.Get(open ? "overlay.close" : "overlay.button");
+            _overlaysWord.style.color = open ? Color.white : UiKit.Ink;
+        }
+
         private static VisualElement RoundButton(float size, Sprite icon, float iconSize)
         {
             var b = new VisualElement();
@@ -330,6 +358,7 @@ namespace Game.Presentation.Ui
                 _weatherIcon.style.backgroundImage = new StyleBackground(IconBank.Weather(hud.WeatherId));
             }
             _forecast.text = hud.ForecastText;
+            _overlays.style.display = hud.OverlaysAvailable ? DisplayStyle.Flex : DisplayStyle.None;
             _store.text = _strings.Get("hud.store") + " " + hud.StoreText;
             if (_alertsShown != hud.AlertCount || _urgentShown != hud.AlertUrgent)
             {
